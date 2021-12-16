@@ -2,4 +2,5 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/AllProjects/GaWebApp/bin/Debug/net6.0
+/GaWebApp/bin
+/GaWebApp/obj
