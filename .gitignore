@@ -2,5 +2,6 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/GaWebApp/bin
-/GaWebApp/obj
+.vs
+/**/bin
+/**/obj

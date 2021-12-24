@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Funcky.DiscriminatedUnion" Version="0.1.0" />
+		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+		<PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Funcky" />
+		<Using Include="JetBrains.Annotations" />
+	</ItemGroup>
+</Project>
