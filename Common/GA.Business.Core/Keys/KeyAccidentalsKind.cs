@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+﻿namespace GA.Business.Core.Keys;
 
 public enum KeyAccidentalsKind
 {
