@@ -38,6 +38,7 @@ public readonly record struct MidiNote : IValue<MidiNote>
     public static MidiNote operator --(MidiNote midiNote) => Create(midiNote.Value - 1);
     public static implicit operator MidiNote(int value) => Create(value);
     public static implicit operator int(MidiNote midiNote) => midiNote.Value;
+    public static implicit operator Pitch(MidiNote midiNote) => midiNote.Pitch;
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

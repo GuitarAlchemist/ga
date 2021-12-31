@@ -7,7 +7,12 @@ namespace GA.Business.Core.Fretboard;
 [PublicAPI]
 public class Fretboard
 {
-    public static readonly Fretboard Default = new(Tuning.Default);
+    public static readonly Fretboard Default = Guitar();
+    private readonly Lazy<IReadOnlyCollection<Position>> _lazyAllPositions;
+    private readonly Lazy<IReadOnlyCollection<Position.Open>> _lazyOpenPositions;
+
+    public static Fretboard Guitar() => new(Tuning.Guitar.Default);
+    public static Fretboard Ukulele() => new(Tuning.Ukulele.Default, 15);
 
     public Fretboard(
         Tuning tuning,
@@ -16,6 +21,9 @@ public class Fretboard
         Tuning = tuning;
         FretCount = fretCount;
         StringCount = tuning.Pitches.Count;
+
+        _lazyAllPositions = new(GetAllPositions);
+        _lazyOpenPositions = new(GetOpenPositions);
     }
 
     public Tuning Tuning { get; }
@@ -23,9 +31,10 @@ public class Fretboard
     public int FretCount { get; }
     public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
     public IReadOnlyCollection<Fret> Frets => Fret.GetCollection(Fret.Min.Value, FretCount);
-    public IReadOnlyCollection<Position> Positions => GetPositions().ToImmutableList();
+    public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
+    public IReadOnlyCollection<Position.Open> OpenPositions => _lazyOpenPositions.Value;
 
-    private IEnumerable<Position> GetPositions()
+    private IReadOnlyCollection<Position> GetAllPositions()
     {
         IEnumerable<Position> StringPositions(Str str)
         {
@@ -39,12 +48,26 @@ public class Fretboard
             }
         }
 
-        foreach (var str in Str.GetCollection(StringCount))
+        IEnumerable<Position> AllPositions()
         {
-            foreach (var position in StringPositions(str))
+            foreach (var str in Str.GetCollection(StringCount))
             {
-                yield return position;
+                foreach (var position in StringPositions(str))
+                {
+                    yield return position;
+                }
             }
         }
+
+        return AllPositions().ToImmutableList();
+
+    }
+
+    private IReadOnlyCollection<Position.Open> GetOpenPositions()
+    {
+        return
+            Str.GetCollection(StringCount)
+               .Select(str => new Position.Open(str, Tuning[str].GetMidiNote()))
+               .ToImmutableList();
     }
 }

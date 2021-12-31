@@ -36,6 +36,9 @@ public readonly record struct Fret : IValue<Fret>, IAll<Fret>
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<Fret>.CheckRange(value, minValue, maxValue);
     public static IReadOnlyCollection<Fret> GetCollection(int start, int count) => ValueUtils<Fret>.Collection(start, count);
 
+    public static implicit operator Fret(int value) => new() { Value = value };
+    public static implicit operator int(Fret fret) => fret.Value;
+
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
