@@ -38,25 +38,23 @@ public class Fretboard
     {
         IEnumerable<Position> StringPositions(Str str)
         {
+            // Muted
             yield return new Position.Muted(str);
 
+            // Fretted (Open)
             var midiNote = Tuning[str].GetMidiNote();
             yield return new Position.Open(str, midiNote++);
+
+            // Fretted
             foreach (var fret in Fret.GetCollection(1, FretCount - 1))
-            {
                 yield return new Position.Fretted(str, fret, midiNote++);
-            }
         }
 
         IEnumerable<Position> AllPositions()
         {
             foreach (var str in Str.GetCollection(StringCount))
-            {
-                foreach (var position in StringPositions(str))
-                {
-                    yield return position;
-                }
-            }
+            foreach (var position in StringPositions(str))
+                yield return position;
         }
 
         return AllPositions().ToImmutableList();
