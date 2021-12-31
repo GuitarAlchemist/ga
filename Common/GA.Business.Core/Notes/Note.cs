@@ -9,8 +9,12 @@ public abstract partial record Note(
     PitchClass PitchClass,
     NaturalNote NaturalNote)
 {
-    public override string ToString() => NaturalNote.ToString();
     public abstract Accidental? Accidental { get; }
+
+    public override string ToString() =>
+        Accidental.HasValue
+            ? $"{NaturalNote}{Accidental.Value}"
+            : $"{NaturalNote}";
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
@@ -40,13 +44,6 @@ public abstract partial record Note(
         private static readonly IImmutableDictionary<PitchClass, Sharp> ValueByPitchClass = Values.ToImmutableDictionary(note => note.PitchClass);
 
         public override Accidental? Accidental => SharpAccidental;
-
-        public override string ToString()
-        {
-            return SharpAccidental != null 
-                ? $"{NaturalNote}{SharpAccidental}" 
-                : base.ToString();
-        }
     }
 
     /// <inheritdoc cref="Note"/>
@@ -77,12 +74,5 @@ public abstract partial record Note(
         private static readonly IImmutableDictionary<PitchClass, Flat> ValueByPitchClass = Values.ToImmutableDictionary(note => note.PitchClass);
 
         public override Accidental? Accidental => FlatAccidental;
-
-        public override string ToString()
-        {
-            return FlatAccidental != null 
-                ? $"{NaturalNote}{FlatAccidental}" 
-                : base.ToString();
-        }
     }
 }
