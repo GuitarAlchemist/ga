@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Keys;
+﻿namespace GA.Business.Core.Tonal;
 
 public enum KeyMode
 {

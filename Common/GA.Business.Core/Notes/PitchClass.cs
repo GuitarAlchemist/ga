@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Notes;
 
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
 /// <inheritdoc cref="IEquatable{PitchClass}" />
@@ -43,6 +44,20 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public override string ToString() => Value.ToString();
 
     public Note.Sharp GetNote() => GetSharpNote();
-    public Note.Sharp GetSharpNote() => Note.Sharp.FromPitchClass(this);
-    public Note.Flat GetFlatNote() => Note.Flat.FromPitchClass(this);
+    public Note.Sharp GetSharpNote() => _sharpNotes[_value];
+    public Note.Flat GetFlatNote() => _flatNotes[_value];
+
+    private static readonly ImmutableArray<Note.Sharp> _sharpNotes =
+        new List<Note.Sharp>
+        {
+            Note.Sharp.C, Note.Sharp.CSharp, Note.Sharp.D, Note.Sharp.DSharp, Note.Sharp.E, Note.Sharp.F,
+            Note.Sharp.FSharp, Note.Sharp.G, Note.Sharp.GSharp, Note.Sharp.A, Note.Sharp.ASharp, Note.Sharp.B
+        }.ToImmutableArray();
+
+    private static readonly ImmutableArray<Note.Flat> _flatNotes =
+        new List<Note.Flat>
+        {
+            Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
+            Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
+        }.ToImmutableArray();
 }

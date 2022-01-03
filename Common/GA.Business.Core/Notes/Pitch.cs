@@ -4,21 +4,33 @@ using Intervals;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
-public abstract partial record Pitch(Octave Octave)
+public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
 {
-    protected abstract PitchClass GetPitchClass();
-
-    public MidiNote GetMidiNote()
+    public int CompareTo(Pitch? other)
     {
-        return new()
-        {
-            Value = 
-                (Octave.Value - Octave.Min.Value) * 12 
-                + GetPitchClass().Value
-        };
+        return other is null ? 1 : MidiNote.CompareTo(other.MidiNote);
     }
 
+    public static bool operator <(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) < 0;
+    public static bool operator >(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) > 0;
+    public static bool operator <=(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) <= 0;
+    public static bool operator >=(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) >= 0;
+
+    protected abstract PitchClass GetPitchClass();
+
+    public PitchClass PitchClass => GetPitchClass();
+    public MidiNote MidiNote => GetMidiNote();
+
     public static implicit operator MidiNote(Pitch pitch) => pitch.GetMidiNote();
+
+    private MidiNote GetMidiNote()
+    {
+        var pitchClass = GetPitchClass();
+        var value = (Octave.Value - Octave.Min.Value) * 12
+                    + pitchClass.Value;
+
+        return new() {Value = value};
+    }
 
     /// <inheritdoc cref="Pitch"/>
     /// <summary>

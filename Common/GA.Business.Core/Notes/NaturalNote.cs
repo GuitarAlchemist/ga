@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using GA.Business.Core.Fretboard.Primitives;
 
 namespace GA.Business.Core.Notes;
 
@@ -39,27 +40,38 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
 
     public static IReadOnlyCollection<NaturalNote> All => ValueUtils<NaturalNote>.All();
 
-    public static NaturalNote operator ++(NaturalNote note) => Create(note.Value + 1);
-    public static NaturalNote operator --(NaturalNote note) => Create(note.Value - 1);
+    public static implicit operator NaturalNote(int value) => new() { Value = value };
+    public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
     public static int CheckRange(int value) => ValueUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
-    public override string ToString()
+    public NaturalNote ToDegree(int diatonicInterval) => Create((Value + diatonicInterval) % 7);
+
+    public PitchClass GetPitchClass() => _value switch
     {
-        return Value switch
-        {
-            0 => "C",
-            1 => "D",
-            2 => "E",
-            3 => "F",
-            4 => "G",
-            5 => "A",
-            6 => "B",
-            _ => ""
-        };
-    }
+        0 => 0,
+        1 => 2,
+        2 => 4,
+        3 => 5,
+        4 => 7,
+        5 => 9,
+        6 => 11,
+        _ => throw new InvalidOperationException()
+    };
+
+    public override string ToString() => _value switch
+    {
+        0 => "C",
+        1 => "D",
+        2 => "E",
+        3 => "F",
+        4 => "G",
+        5 => "A",
+        6 => "B",
+        _ => ""
+    };
 }
 
