@@ -10,24 +10,19 @@ public abstract partial record Position(Str Str)
     /// <summary>
     /// A muted position.
     /// </summary>
-    /// <param name="Str">The <see cref="Str" />.</param>
     public sealed partial record Muted(Str Str) : Position(Str);
 
     /// <inheritdoc cref="Position"/>
     /// <summary>
     /// An open position.
     /// </summary>
-    /// <param name="Str">The <see cref="Str"/>.</param>
-    public sealed partial record Open(Str Str, MidiNote MidiNote) : Fretted(Str, Fret.Open, MidiNote);
+    public sealed partial record Open(Str Str, Pitch Pitch) : Fretted(Str, Fret.Open, Pitch);
 
     /// <inheritdoc cref="Position"/>
     /// <summary>
     /// A fretted position.
     /// </summary>
-    /// <param name="Str">The <see cref="Str"/>.</param>
-    /// <param name="Fret">The <see cref="Str"/>.</param>
-    public partial record Fretted(Str Str, Fret Fret, MidiNote MidiNote) : Position(Str)
+    public partial record Fretted(Str Str, Fret Fret, Pitch Pitch) : Position(Str)
     {
-        public Pitch Pitch => MidiNote.Pitch;
     }
 }

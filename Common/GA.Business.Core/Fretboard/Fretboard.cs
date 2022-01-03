@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using GA.Business.Core.Fretboard.Config;
 using GA.Business.Core.Fretboard.Primitives;
+using GA.Business.Core.Notes;
 
 namespace GA.Business.Core.Fretboard;
 
@@ -9,21 +10,25 @@ public class Fretboard
 {
     public static readonly Fretboard Default = Guitar();
     private readonly Lazy<IReadOnlyCollection<Position>> _lazyAllPositions;
-    private readonly Lazy<IReadOnlyCollection<Position.Open>> _lazyOpenPositions;
+    private readonly Lazy<OpenPositions> _lazyOpenPositions;
+    private readonly Lazy<MutedPositions> _lazyMutedPositions;
+    private readonly Lazy<FrettedPositions> _lazyFrettedPositions;
 
-    public static Fretboard Guitar() => new(Tuning.Guitar.Default);
+    public static Fretboard Guitar() => new(Tuning.Guitar.Default, 22);
     public static Fretboard Ukulele() => new(Tuning.Ukulele.Default, 15);
 
     public Fretboard(
         Tuning tuning,
-        int fretCount = Fret.DefaultCount)
+        int fretCount)
     {
         Tuning = tuning;
         FretCount = fretCount;
         StringCount = tuning.Pitches.Count;
 
         _lazyAllPositions = new(GetAllPositions);
+        _lazyMutedPositions = new(GetMutedPositions);
         _lazyOpenPositions = new(GetOpenPositions);
+        _lazyFrettedPositions = new(GetFrettedPositions);
     }
 
     public Tuning Tuning { get; }
@@ -32,7 +37,9 @@ public class Fretboard
     public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
     public IReadOnlyCollection<Fret> Frets => Fret.GetCollection(Fret.Min.Value, FretCount);
     public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
-    public IReadOnlyCollection<Position.Open> OpenPositions => _lazyOpenPositions.Value;
+    public OpenPositions OpenPositions => _lazyOpenPositions.Value;
+    public FrettedPositions FrettedPositions => _lazyFrettedPositions.Value;
+    public FretPositions this[Fret fret] => new(_lazyFrettedPositions.Value);
 
     private IReadOnlyCollection<Position> GetAllPositions()
     {
@@ -42,12 +49,20 @@ public class Fretboard
             yield return new Position.Muted(str);
 
             // Fretted (Open)
-            var midiNote = Tuning[str].GetMidiNote();
-            yield return new Position.Open(str, midiNote++);
+            var pitch = Tuning[str];
+            var openPosition = new Position.Open(str, pitch);
+            yield return openPosition;
 
             // Fretted
+            var midiNote = pitch.MidiNote;
             foreach (var fret in Fret.GetCollection(1, FretCount - 1))
-                yield return new Position.Fretted(str, fret, midiNote++);
+            {
+                var frettedPosition =  new Position.Fretted(str, fret, pitch);
+                yield return frettedPosition;
+
+                midiNote++;
+                pitch = midiNote.Pitch;
+            }
         }
 
         IEnumerable<Position> AllPositions()
@@ -57,15 +72,49 @@ public class Fretboard
                 yield return position;
         }
 
-        return AllPositions().ToImmutableList();
+        var result = AllPositions().ToImmutableList();
 
+        return result;
     }
 
-    private IReadOnlyCollection<Position.Open> GetOpenPositions()
+    private MutedPositions GetMutedPositions()
     {
-        return
+        var positions =
             Str.GetCollection(StringCount)
-               .Select(str => new Position.Open(str, Tuning[str].GetMidiNote()))
+                .Select(str => new Position.Muted(str))
+                .ToImmutableList();
+
+        var result = new MutedPositions(positions);
+
+        return result;
+    }
+
+    private OpenPositions GetOpenPositions()
+    {
+        var positions =
+            Str.GetCollection(StringCount)
+               .Select(str =>
+               {
+                   var pitch = Tuning[str];
+                   var item = new Position.Open(str, pitch);
+
+                   return item;
+               })
                .ToImmutableList();
+
+        var result = new OpenPositions(positions);
+
+        return result;
+    }
+
+    private FrettedPositions GetFrettedPositions()
+    {
+        var positions = 
+            Positions
+                .Where(position => position is Position.Fretted)
+                .Cast<Position.Fretted>()
+                .ToImmutableList();
+
+        return new(positions);
     }
 }

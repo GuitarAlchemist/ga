@@ -11,7 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C2D782
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Core", "GA.Core\GA.Core.csproj", "{7B106678-09E5-41B2-87D0-98E8C035C7FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GaCLI", "GaCLI\GaCLI.csproj", "{442021D8-8D71-41A0-BC96-B62F44483550}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GaCLI", "GaCLI\GaCLI.csproj", "{442021D8-8D71-41A0-BC96-B62F44483550}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GA.Business.Core.Tests", "Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj", "{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{442021D8-8D71-41A0-BC96-B62F44483550}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{442021D8-8D71-41A0-BC96-B62F44483550}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{442021D8-8D71-41A0-BC96-B62F44483550}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -49,16 +49,16 @@ public readonly record struct Octave : IValue<Octave>, IFormattable
     {
         return Value switch
         {
-            -1 => "double-contra",
-            0 => "sub-contra",
-            1 => "contra",
-            2 => "great",
-            3 => "small",
-            4 => "one-line",
-            5 => "two-line",
-            6 => "three-line",
-            7 => "four-line",
-            8 => "five-line",
+            -1 => "double-contra (-1)",
+            0 => "sub-contra (0)",
+            1 => "contra (1)",
+            2 => "great (2)",
+            3 => "small (3)",
+            4 => "one-line (4)",
+            5 => "two-line (5)",
+            6 => "three-line (6)",
+            7 => "four-line (7)",
+            8 => "five-line (8)",
             _ => ""
         };
     }

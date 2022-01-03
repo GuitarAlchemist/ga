@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Primitives;
+﻿namespace GA.Core;
 
 public class LazyWithExpiration<T>
 {

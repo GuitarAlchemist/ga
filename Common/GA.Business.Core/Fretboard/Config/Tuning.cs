@@ -45,7 +45,7 @@ public class Tuning
     private static IReadOnlyDictionary<Str, Pitch> GetPitchByStr(IEnumerable<Pitch> pitches)
     {
         var pitchesList = pitches.ToImmutableList();
-        var lowestPitchFirst = pitchesList.First().GetMidiNote() < pitchesList.Last().GetMidiNote();
+        var lowestPitchFirst = pitchesList.First() < pitchesList.Last();
         if (lowestPitchFirst) pitchesList = pitchesList.Reverse();
 
         var str = Str.Min;
