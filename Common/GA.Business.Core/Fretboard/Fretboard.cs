@@ -1,7 +1,6 @@
 ﻿using System.Collections.Immutable;
 using GA.Business.Core.Fretboard.Config;
 using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes;
 
 namespace GA.Business.Core.Fretboard;
 
@@ -11,11 +10,10 @@ public class Fretboard
     public static readonly Fretboard Default = Guitar();
     private readonly Lazy<IReadOnlyCollection<Position>> _lazyAllPositions;
     private readonly Lazy<OpenPositions> _lazyOpenPositions;
-    private readonly Lazy<MutedPositions> _lazyMutedPositions;
     private readonly Lazy<FrettedPositions> _lazyFrettedPositions;
 
-    public static Fretboard Guitar() => new(Tuning.Guitar.Default, 22);
-    public static Fretboard Ukulele() => new(Tuning.Ukulele.Default, 15);
+    public static Fretboard Guitar() => new(Tuning.Guitar.Standard, 22);
+    public static Fretboard Ukulele() => new(Tuning.Ukulele.Standard, 15);
 
     public Fretboard(
         Tuning tuning,
@@ -26,7 +24,6 @@ public class Fretboard
         StringCount = tuning.Pitches.Count;
 
         _lazyAllPositions = new(GetAllPositions);
-        _lazyMutedPositions = new(GetMutedPositions);
         _lazyOpenPositions = new(GetOpenPositions);
         _lazyFrettedPositions = new(GetFrettedPositions);
     }
@@ -34,6 +31,7 @@ public class Fretboard
     public Tuning Tuning { get; }
     public int StringCount { get; }
     public int FretCount { get; }
+    public Fret CapoFret { get; } // TODO
     public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
     public IReadOnlyCollection<Fret> Frets => Fret.GetCollection(Fret.Min.Value, FretCount);
     public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
@@ -73,18 +71,6 @@ public class Fretboard
         }
 
         var result = AllPositions().ToImmutableList();
-
-        return result;
-    }
-
-    private MutedPositions GetMutedPositions()
-    {
-        var positions =
-            Str.GetCollection(StringCount)
-                .Select(str => new Position.Muted(str))
-                .ToImmutableList();
-
-        var result = new MutedPositions(positions);
 
         return result;
     }

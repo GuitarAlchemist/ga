@@ -95,7 +95,7 @@ namespace GA.Business.Core.Intervals;
 
         public int CompareTo(Semitone other)
         {
-            return Comparer<int>.Default.Compare(Distance, other.Distance);
+            return Comparer<int>.Standard.Compare(Distance, other.Distance);
         }
 
         /// <summary>

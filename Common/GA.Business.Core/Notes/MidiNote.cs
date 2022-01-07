@@ -34,6 +34,7 @@ public readonly record struct MidiNote : IValue<MidiNote>
 
     public static int CheckRange(int value) => ValueUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MidiNote>.CheckRange(value, minValue, maxValue);
+    public static MidiNote Create(Octave octave, PitchClass pitchClass) => Create((octave.Value - Octave.Min.Value) * 12 + pitchClass.Value);
     public static MidiNote operator ++(MidiNote midiNote) => Create(midiNote._value + 1);
     public static MidiNote operator --(MidiNote midiNote) => Create(midiNote._value - 1);
     public static implicit operator MidiNote(int value) => Create(value);
@@ -48,8 +49,8 @@ public readonly record struct MidiNote : IValue<MidiNote>
     public Note Note => SharpNote;
     public Octave Octave => new() {Value = Octave.Min.Value + _value / 12};
     public Pitch Pitch => SharpPitch;
-    public Note.Sharp SharpNote => PitchClass.GetSharpNote();
-    public Note.Flat FlatNote => PitchClass.GetFlatNote();
+    public Note.Sharp SharpNote => PitchClass.ToSharpNote();
+    public Note.Flat FlatNote => PitchClass.ToFlatNote();
     public Pitch.Sharp SharpPitch => new(SharpNote, Octave);
     public Pitch.Flat FlatPitch => new(FlatNote, Octave);
 }

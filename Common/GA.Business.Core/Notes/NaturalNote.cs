@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using GA.Business.Core.Fretboard.Primitives;
+using PCRE;
 
 namespace GA.Business.Core.Notes;
 
@@ -37,6 +37,36 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static NaturalNote G => Create(4);
     public static NaturalNote A => Create(5);
     public static NaturalNote B => Create(6);
+
+    //language=regexp
+    public static readonly string RegexPattern = "^(?'note'[A-G])$";
+    private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
+
+    public static bool TryParse(string s, out NaturalNote naturalNote)
+    {
+        naturalNote = default;
+        var match = _regex.Match(s);
+        if (!match.Success) return false; // Failure
+
+        var noteGroup = match.Groups["note"];
+        NaturalNote? parsedNaturalNote = noteGroup.Value.ToUpperInvariant() switch
+        {
+            nameof(C) => C,
+            nameof(D) => D,
+            nameof(E) => E,
+            nameof(F) => F,
+            nameof(G) => G,
+            nameof(A) => A,
+            nameof(B) => B,
+            _ => null
+        };
+
+        if (!parsedNaturalNote.HasValue) return false; // Failure
+
+        // Success
+        naturalNote = parsedNaturalNote.Value;
+        return true;
+    }
 
     public static IReadOnlyCollection<NaturalNote> All => ValueUtils<NaturalNote>.All();
 

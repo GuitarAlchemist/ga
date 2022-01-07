@@ -1,11 +1,14 @@
 ﻿using System.Collections.Immutable;
 using GA.Business.Core.Fretboard.Primitives;
+using GA.Business.Core.Intervals;
 
 namespace GA.Business.Core.Fretboard;
 
 public class FretboardConsoleRenderer
 {
-    public static void Render(Fretboard fretboard)
+    public static void Render(
+        Fretboard fretboard,
+        Options? aOptions= null)
     {
         static void MarkerColor() => Console.ForegroundColor = ConsoleColor.Cyan;
         static void FretColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -15,6 +18,7 @@ public class FretboardConsoleRenderer
         
         void RenderPositionsAndFrets()
         {
+            var options = aOptions ?? Options.Default;
             var positionsByStr = fretboard.Positions.ToLookup(position => position.Str);
             var openPitches = fretboard.OpenPositions.Select(open => open.Pitch).ToImmutableHashSet();
             foreach (var str in fretboard.Strings)
@@ -31,17 +35,19 @@ public class FretboardConsoleRenderer
                         _ => { }, // Don't render
                         open =>
                         {
+                            var pitch = open.Pitch;
+                            var sPitch = Pad($"({pitch})");
                             OpenPitchColor();
-                            var sPitch = Pad($"({open.Pitch})");
                             Console.Write($"{sPitch} ║");
                         },
                         fretted =>
                         {
                             FrettedPosition();
-                            Console.Write(Pad($"{fretted.Pitch}"));
+                            var pitch = fretted.Pitch;
+                            Console.Write(Pad($"{pitch}"));
 
                             FretColor();
-                            if (openPitches.Contains(fretted.Pitch)) OpenPitchColor();
+                            if (openPitches.Contains(pitch)) OpenPitchColor();
                             Console.Write("|");
                         });
                     Console.Write(" ");
@@ -53,9 +59,10 @@ public class FretboardConsoleRenderer
 
         static void RenderFretMarkers(
             IEnumerable<Fret> frets,
-            Func<Fret, string> markerTextCallback)
+            Func<Fret, string> markerTextCallback,
+            int? offset = 0)
         {
-            Console.Write(new string(' ', 8));
+            if (offset.HasValue) Console.Write(new string(' ', offset.Value));
             var fretMarkers = new HashSet<Fret>(new Fret[] { 3, 5, 7, 9, 12, 15, 17, 19, 21, 24 });
             foreach (var fret in frets)
             {
@@ -70,7 +77,12 @@ public class FretboardConsoleRenderer
 
         // Render
         RenderPositionsAndFrets();
-        RenderFretMarkers(fretboard.Frets, fret => fret % 12 == 0 ? "**" : "*");
-        RenderFretMarkers(fretboard.Frets, fret => fret.Value.ToString());
+        RenderFretMarkers(fretboard.Frets, fret => fret % 12 == 0 ? "**" : "*", 9);
+        RenderFretMarkers(fretboard.Frets, fret => fret.Value.ToString(), 12);
+    }
+
+    public readonly record struct Options(bool LeftHanded)
+    {
+        public static readonly Options Default = new(LeftHanded:false); // TODO: Add support for left handed
     }
 }
