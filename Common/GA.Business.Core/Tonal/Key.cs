@@ -63,7 +63,12 @@ public abstract partial record Key(KeySignature KeySignature)
                 yield return root;
 
                 var sharpNotes = KeySignature.SharpNotes.ToImmutableHashSet();
-                var naturalNote = root.NaturalNote;
+
+                NaturalNote naturalNote = default;
+                root.Switch(
+                    _ => throw new InvalidOperationException(),
+                    sharp => naturalNote = sharp.NaturalNote,
+                    flat => naturalNote = flat.NaturalNote);
                 bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
                 for (var i = 0; i < 6; i++)
                 {
@@ -82,7 +87,12 @@ public abstract partial record Key(KeySignature KeySignature)
                 yield return root;
 
                 var flatNotes = KeySignature.FlatNotes.ToImmutableHashSet();
-                var naturalNote = root.NaturalNote;
+
+                NaturalNote naturalNote = default;
+                root.Switch(
+                    _ => throw new InvalidOperationException(),
+                    sharp => naturalNote = sharp.NaturalNote,
+                    flat => naturalNote = flat.NaturalNote);
                 bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
                 for (var i = 0; i < 6; i++)
                 {

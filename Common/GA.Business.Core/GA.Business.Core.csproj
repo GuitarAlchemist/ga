@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="Funcky.DiscriminatedUnion" Version="0.1.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+		<PackageReference Include="PCRE.NET" Version="0.18.1" />
 		<PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
 	</ItemGroup>
 
