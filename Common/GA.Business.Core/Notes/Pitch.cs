@@ -26,6 +26,8 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
     {
         public override PitchClass PitchClass => Note.PitchClass;
 
+        public static Chromatic FromPitch(Pitch pitch) => pitch.PitchClass.ToChromaticPitch(pitch.Octave);
+
         public override string ToString()
         {
             var sharp = Note.ToSharp();
@@ -175,6 +177,8 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
         private static Sharp Sharp4(Note.Sharp note) => new(note, 4);
         private static Sharp Sharp5(Note.Sharp note) => new(note, 5);
 
+        public static Sharp FromPitch(Pitch pitch) => pitch.PitchClass.ToSharpPitch(pitch.Octave);
+
         public override PitchClass PitchClass => Note.PitchClass;
         public override string ToString() => $"{Note}{Octave.Value}";
     }
@@ -200,6 +204,8 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
         public static Flat A(Octave octave) => new(Notes.Note.Flat.A, octave);
         public static Flat ASharp(Octave octave) => new(Notes.Note.Flat.BFlat, octave);
         public static Flat B(Octave octave) => new(Notes.Note.Flat.B, octave);
+
+        public static Flat FromPitch(Pitch pitch) => pitch.PitchClass.ToFlatPitch(pitch.Octave);
 
         public override PitchClass PitchClass => Note.PitchClass;
         public override string ToString() => $"{Note}{Octave.Value}";

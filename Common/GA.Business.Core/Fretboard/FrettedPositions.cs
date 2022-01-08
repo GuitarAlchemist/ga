@@ -1,17 +1,13 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Primitives;
+﻿namespace GA.Business.Core.Fretboard;
 
-namespace GA.Business.Core.Fretboard;
+using Primitives;
 
 public class FrettedPositions : Positions<Position.Fretted>
 {
-    private readonly ILookup<Fret, Position.Fretted> _positionsByFret;
-
-    public FrettedPositions(IReadOnlyCollection<Position.Fretted> positions) 
+    public FrettedPositions(IEnumerable<Position.Fretted> positions) 
         : base(positions)
     {
-        _positionsByFret = positions.ToLookup(position => position.Fret);
     }
 
-    public FretPositions this[Fret fret] => new(_positionsByFret[fret].ToImmutableList());
+    public FretPositions this[Fret fret] => new(this, fret);
 }

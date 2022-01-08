@@ -25,13 +25,22 @@ public class Tuning
     /// </summary>
     public static class Guitar
     {
+        public const int DefaultFretCount = 22;
+
         public static Tuning Standard => CreateTuning("Standard", E2, A2, D3, G3, B3, E4);
         public static Tuning DropD => CreateTuning("Drop D", D2, A2, D3, G3, B3, E4);
         public static Tuning DoubleDropD => CreateTuning("Double drop D", D2, A2, D3, G3, B3, D4);
         public static Tuning Dadgad => CreateTuning("DAGGAD", D2, A2, D3, G3, A3, D4);
         public static Tuning OpenD => CreateTuning("Open D", D2, A2, D3, FSharp3, A3, D4);
 
-        private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) => new(new(nameof(Guitar), tuningName), pitches);
+        private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) =>
+            new(
+                new(
+                    nameof(Guitar), 
+                    tuningName,
+                    22)
+                , pitches
+            );
     }
 
     /// <summary>
@@ -39,6 +48,8 @@ public class Tuning
     /// </summary>
     public static class Bass
     {
+        public const int DefaultFretCount = 22;
+
         public static Tuning Standard => CreateTuning("Standard", E1, A1, D2, G2);
         public static Tuning Tenor => CreateTuning("Tenor", A1, D2, G2, C3);
 
@@ -52,6 +63,8 @@ public class Tuning
         [PublicAPI]
         public static class SixString
         {
+            public const int DefaultFretCount = 22;
+
             public static Tuning Standard => CreateTuning("Standard", B0, E1, A1, D2, G2, C3);
         }
 
@@ -60,6 +73,8 @@ public class Tuning
 
     public static class Ukulele
     {
+        public const int DefaultFretCount = 15;
+
         public static Tuning Standard => CreateTuning("Standard", E2, A2, D3, G3, B3, E4);
 
         private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) => new(new(nameof(Ukulele), tuningName), pitches);
@@ -67,6 +82,8 @@ public class Tuning
 
     public static class Banjo
     {
+        public const int DefaultFretCount = 22;
+
         public static Tuning Cello => CreateTuning("Cello", E2, A2, D3, G3, B3, E4);
 
         private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) => new(new(nameof(Banjo), tuningName), pitches);
@@ -74,6 +91,8 @@ public class Tuning
 
     public static class Mandolin
     {
+        public const int DefaultFretCount = 17;
+
         public static Tuning Standard => CreateTuning("Standard", G3, D4, A4, E5);
 
         private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) => new(new(nameof(Mandolin), tuningName), pitches);
@@ -81,6 +100,8 @@ public class Tuning
 
     public static class Balalaika
     {
+        public const int DefaultFretCount = 16;
+
         public static Tuning Alto => CreateTuning("Alto", E3, E3, A3);
         public static Tuning Bass => CreateTuning("Bass", E2, A2, D3);
         public static Tuning Contrabass => CreateTuning("Contrabass", E1, A1, D2);

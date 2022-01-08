@@ -13,7 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Core", "GA.Core\GA.Core.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GaCLI", "GaCLI\GaCLI.csproj", "{442021D8-8D71-41A0-BC96-B62F44483550}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GA.Business.Core.Tests", "Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj", "{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core.Tests", "Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj", "{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{983FAA86-8005-4CFF-8796-E6D1A3B14F61}"
+	ProjectSection(SolutionItems) = preProject
+		docs\TuningChart.pdf = docs\TuningChart.pdf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

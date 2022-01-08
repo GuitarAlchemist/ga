@@ -57,33 +57,33 @@ Chonguri - F Major F3 A3 F4 C4
 Cistre E2 A2 D3 D3 E3 E3 A3 A3 C#4 C#4 E4 E4
 Cittern - Bell B3 B3 D4 D4 F4 F4 A4 A4 D5 D5
 Cittern - Celtic: 5ths
- Tuning Longscale C2 C2 G2 G2 D3 D3 A3 A3 E4 E4
+Tuning Longscale C2 C2 G2 G2 D3 D3 A3 A3 E4 E4
 Cittern - Celtic: Longscale C2 C2 G2 G2 D3 D3 G3 G3 D4 D4
 Cittern - Celtic: Longscale D2 D2 A2 A2 E3 E3 A3 A3 E4 E4
 Cittern - Celtic: Shortscale G2 G2 D3 D3 A3 A3 D4 D4 A4 A4
 Cittern - Celtic: 5ths
- Tuning Shortscale G2 G2 D3 D3 A3 A3 E4 E4 B4 B4
+Tuning Shortscale G2 G2 D3 D3 A3 A3 E4 E4 B4 B4
 Cittern - Celtic : Irish Tuning D2 D2 G2 G2 D3 D3 A3 A3 D4 D4
 Cittern - Celtic: Mandocello+
- Longscale C2 C2 G2 G2 D3 D3 A3 A3 D4 D4
+Longscale C2 C2 G2 G2 D3 D3 A3 A3 D4 D4
 Cittern - Celtic: Mandocello+
- Shortscale G2 G2 D3 D3 A3 A3 E4 E4 A4 A4
+Shortscale G2 G2 D3 D3 A3 A3 E4 E4 A4 A4
 Cittern - Celtic: Modal C
- Longscale C2 C2 G2 G2 C3 C3 G3 G3 C4 C4
+Longscale C2 C2 G2 G2 C3 C3 G3 G3 C4 C4
 Cittern - Celtic: Modal C
- Shortscale G2 G2 C3 C3 G3 G3 C4 C4 G4 G4
+Shortscale G2 G2 C3 C3 G3 G3 C4 C4 G4 G4
 Cittern - Celtic: Modal D
- Longscale D2 D2 A2 A2 D3 D3 A3 A3 D4 D4
+Longscale D2 D2 A2 A2 D3 D3 A3 A3 D4 D4
 Cittern - Celtic: Modal D
- Shortscale A2 A2 D3 D3 A3 A3 D4 D4 A4 A4
+Shortscale A2 A2 D3 D3 A3 A3 D4 D4 A4 A4
 Cittern - Celtic: Modal F
- Shortscale F2 F2 C3 C3 F3 F3 C4 C4 F4 F4
+Shortscale F2 F2 C3 C3 F3 F3 C4 C4 F4 F4
 Cittern - Celtic: Modal G
- Longscale D2 D2 G2 G2 D3 D3 G3 G3 D4 D4
+Longscale D2 D2 G2 G2 D3 D3 G3 G3 D4 D4
 Cittern - Celtic: Modal G
- Shortscale G2 G2 D3 D3 G3 G3 D4 D4 G4 G4
+Shortscale G2 G2 D3 D3 G3 G3 D4 D4 G4 G4
 Cittern - Celtic: Modal A
- Longscale E2 E2 A2 A2 E3 E3 A3 A3 E4 E4 
+Longscale E2 E2 A2 A2 E3 E3 A3 A3 E4 E4 
 Cittern - 16th/17th Century B3 B3 G4 G4 G3 D4 D4 E4 E4
 Cittern - French Tuning A4 A4 G4 G4 G3 D4 D4 E4 E4
 Cuatro - Puerto Rican B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
@@ -158,7 +158,7 @@ Mandolin - 5 Course C3 C3 G3 G3 D4 D4 A4 A4 E5 E5
 Mandolin - Electric 5-String C3 G3 D4 A4 E5
 Mandolin - Cremona G3 D4 A4 E5
 Mandolin -
- Genuese E3 E3 A3 A3 D3 D4 G4 G4 B4 B4 E5 E5
+Genuese E3 E3 A3 A3 D3 D4 G4 G4 B4 B4 E5 E5
 Mandolin - Neopolitan G3 G4 D4 D4 A4 A4 E5 E5
 Mandolin - Piccolo C4 C4 G4 G4 D5 D5 A5 A5
 Mandolin Banjo G3 G3 D4 D4 A5 A5 E5 E5
@@ -168,10 +168,8 @@ Mandolino - Milanese G3 B3 E4 A4 D5 G5
 Mandore - Modal C C4 G4 C5 G5
 Mandore - Modal G G3 D4 G4 D5
 Mandore - French E2 A2 D3 G3 B3 E4
-Mandriola
- or Tricordia G2 G3 G3 D3 D4 D4 A3 A4 A4 E4 E5 E5
-Mandriola
- (unison pairs) G3 G3 G3 D4 D4 D4 A4 A4 A4 E5 E5 E5
+Mandriola or Tricordia G2 G3 G3 D3 D4 D4 A3 A4 A4 E4 E5 E5
+Mandriola (unison pairs) G3 G3 G3 D4 D4 D4 A4 A4 A4 E5 E5 E5
 Mejorana -Standard Tuning D4 A4 A3 B3 E4
 Mejorana - Alternative Tuning D4 G4 G3 B3 E3
 Mondol E2 E2 A2 A2 D3 D3 G3 G3 B3 B3
@@ -180,14 +178,11 @@ Panduri E3 B3 A4
 Panduri G3 A3 C4
 Pedal Steel Guitar - C6 C2 F2 A2 C3 E3 G3 A3 C4 E4 G4
 Pedal Steel Guitar - E9 B2 D3 E3 F#3 G#3 B3 E4 G#4 Eb4 F#4
-Pedal Steel Guitar -
- Universal 12 Str. Bb2 Eb2 G2 Bb2 D3 F3 G3 Bb3 D4 F4 G4 E4
+Pedal Steel Guitar - Universal 12 Str. Bb2 Eb2 G2 Bb2 D3 F3 G3 Bb3 D4 F4 G4 E4
 Phin G4 D4 A4
 Pipa A2 D2 G3 A3
-Portuguese Guitarra -
- Coimbra C3 C2 G3 G2 A3 A2 D3 D3 G3 G3 A3 A3
-Portuguese Guitarra -
- Lisboa D3 D2 A3 A2 B3 B2 E3 E3 A3 A3 B3 B3
+Portuguese Guitarra - Coimbra C3 C2 G3 G2 A3 A2 D3 D3 G3 G3 A3 A3
+Portuguese Guitarra - Lisboa D3 D2 A3 A2 B3 B2 E3 E3 A3 A3 B3 B3
 Rajão D4 G4 C4 E4 A4 A4
 Ramkie C3 F3 A3 C4
 Requinto A2 D3 G3 C4 E4 A4
@@ -200,13 +195,10 @@ Ruan - Tenor C2 G2 D3 A3
 Ruan - Zhong G2 D2 G3 D3
 Russian Guitar D2 G2 B2 D3 G3 B3 D4
 Saz - Azeri/Qopuz D4 D4 D4 G3 G3 C4 C4 C4
-Saz - Baglama: Bozuk Duzen
- 6 String Tuning G2 G3 D2 D3 A2 A3
-Saz - Baglama: Bozuk Duzen
- 7 String Tuning G2 G3 D2 D3 A2 A3 A3
+Saz - Baglama: Bozuk Duzen 6 String Tuning G2 G3 D2 D3 A2 A3
+Saz - Baglama: Bozuk Duzen 7 String Tuning G2 G3 D2 D3 A2 A3 A3
 Seis - Puerto Rican F#3 F#2 B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
-Seis - Puerto Rican:
- Guitar Tuning F#3 F#2 B3 B2 E4 E3 A3 A3 C#4 C#4 F#4 F#4
+Seis - Puerto Rican: Guitar Tuning F#3 F#2 B3 B2 E4 E3 A3 A3 C#4 C#4 F#4 F#4
 Setar C3 C4 G3 C4
 Sitar C5 C4 G3 C2 G2 C3 F3
 Soprano Guitar E3 A4 D4 G4 B4 E5
@@ -255,91 +247,23 @@ Waldzither - Hamburger C3 G3 G3 C4 C4 E4 E4 G4 G4
 Waldzither - Thüringer C3 G3 G3 C4 C4 E4 E4 G4 G4
 Yueh Chin or Yueh Qin G3 D4 G4 D5
 Zister - Thüringer C3 G3 G3 C4 C4 E4 E4 G4 G4
-Instruments with 13 or more strings
-Angelique (Theorbo)
-16 15 14 13 12 11 10 9
-D2 E2 F2 G2 A2 B2 C3 D3
-8 7 6 5 4 3 2 1
-E3 F3 G3 A3 B3 C4 D4 E4
-Archlute - 14 Course
-14 13 12 11 10 9 8
-F2 G2 A2 Bb2 C3 D3 E3
-7 6 5 4 3 2 1
-F3 G3 C4 F4 A4 D5 G5
-Bandola - Colombian
-16 15 14 13 12 11 10 9
-F#3 F#3 B3 B3 E4 E4 E4 A4
-8 7 6 5 4 3 2 1
-A4 A4 D5 D5 D5 G5 G5 G5
-Bandolin - Ecuadorean
-15 14 13 12 11 10 9 8
-E5 E4 E5 A5 A4 A5 D5 D4
-7 6 5 4 3 2 1
-D5 F5 F5 F5 B5 B5 B5
-Bandurria - Peruvian
-16 15 14 13 12 11 10 9
-D5 D4 D5 D5 G4 G3 G4 G4
-8 7 6 5 4 3 2 1
-B4 B4 B4 B4 E5 E5 E5 E5
-Bandurria - Phillipines
-14 13 12 11 10 9 8
-F#3 B3 B3 E4 E4 A4 A4
-7 6 5 4 3 2 1
-A4 D5 D5 D5 G5 G5 G5
-Baroque Lute
-13 12 11 10 9 8 7
-A2 B2 C3 D3 E3 F3 G3
-6 5 4 3 2 1
-A3 D4 F4 A4 D5 F5
-Guitarrón Chileno
-24 23 22 21 20 19 18 17
-F#5 A4 D4 D4 D3 D3 D2 G4
-16 15 14 13 12 11 10 9
-G4 G4 G3 G3 C4 C4 C3 C2
-8 7 6 5 4 3 2 1
-E4 E4 E4 A4 A4 A4 G4 B4
-Laud - Phillipines
-14 13 12 11 10 9 8
-F#2 B2 B2 E3 E3 A3 A3
-7 6 5 4 3 2 1
-A3 D4 D4 D4 G4 G4 G4
-Liuto Attiorbato (Theorbo)
-27 26 25 24 23 22 21 20 19
-F1 F2 G1 G2 A1 A2 B1 B2 C2
-18 17 16 15 14 13 12 11 10
-C3 D2 D3 E2 E3 F2 F2 G2 G2
-9 8 7 6 5 4 3 2 1
-C3 C3 F3 F3 A3 A3 D4 D4 G4
-Octavina
-14 13 12 11 10 9 8
-F#2 B2 B2 E3 E3 A3 A3
-7 6 5 4 3 2 1
-A3 D4 D4 D4 G4 G4 G4
-Sächsische Theorbenzister
-16 15 14 13 12 11 10 9
-B2 C2 D3 E3 F3 G3 A3 B3
-8 7 6 5 4 3 2 1
-C4 C4 F4 F4 A4 A4 C4 C4
-Swedish Lute
-15 14 13 12 11 10 9 8
-A2 B2 C#3 D3 E3 F#3 G3 A3
-7 6 5 4 3 2 1
-B3 C#4 D4 E4 A4 C#5 E5
-Theorbo - 15 Course
-15 14 13 12 11 10 9 8
-F2 G2 A2 B2 C3 D3 E3 F3
-7 6 5 4 3 2 1
-G3 A3 D4 G4 B4 E4 A4
-Viola da Terceira - 15 String
-15 14 13 12 11 10 9 8
-E3 E3 E2 A3 A3 A2 D3 D3
-7 6 5 4 3 2 1
-D2 G3 G2 B3 B3 E3 E3
-Viola da Terceira - 18 String
-18 17 16 15 14 13 12 11 10
-V V V E3 E3 E2 A3 A3 A2
-9 8 7 6 5 4 3 2 1
-D3 D3 D2 G3 G2 B3 B3 E3 E3
+
+# Instruments with 13 or more strings
+Angelique (Theorbo) D2 E2 F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 B3 C4 D4 E4
+Archlute - 14 Course F2 G2 A2 Bb2 C3 D3 E3 F3 G3 C4 F4 A4 D5 G5
+Bandola - Colombian F#3 F#3 B3 B3 E4 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+Bandolin - Ecuadorean E5 E4 E5 A5 A4 A5 D5 D4 D5 F5 F5 F5 B5 B5 B5
+Bandurria - Peruvian D5 D4 D5 D5 G4 G3 G4 G4 B4 B4 B4 B4 E5 E5 E5 E5
+Bandurria - Phillipines F#3 B3 B3 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+Baroque Lute A2 B2 C3 D3 E3 F3 G3 A3 D4 F4 A4 D5 F5
+Guitarrón Chileno F#5 A4 D4 D4 D3 D3 D2 G4 G4 G4 G3 G3 C4 C4 C3 C2 E4 E4 E4 A4 A4 A4 G4 B4
+Laud - Phillipines F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+Liuto Attiorbato (Theorbo) F1 F2 G1 G2 A1 A2 B1 B2 C2 C3 D2 D3 E2 E3 F2 F2 G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4
+Octavina F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+Sächsische Theorbenzister B2 C2 D3 E3 F3 G3 A3 B3 C4 C4 F4 F4 A4 A4 C4 C4
+Swedish Lute A2 B2 C#3 D3 E3 F#3 G3 A3 B3 C#4 D4 E4 A4 C#5 E5
+Theorbo - 15 Course F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 D4 G4 B4 E4 A4
+Viola da Terceira - 15 String E3 E3 E2 A3 A3 A2 D3 D3 D2 G3 G2 B3 B3 E3 E3
 
 ============================================
 

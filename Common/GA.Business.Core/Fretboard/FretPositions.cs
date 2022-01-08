@@ -5,13 +5,23 @@ namespace GA.Business.Core.Fretboard;
 
 public class FretPositions : Positions<Position.Fretted>
 {
-    public FretPositions(IReadOnlyCollection<Position.Fretted> positions) 
-        : base(positions)
+    public FretPositions(
+        IReadOnlyCollection<Position.Fretted> positions,
+        Fret fret) 
+            : base(GetPositions(positions, fret))
     {
-        var frets = positions.Select(position => position.Fret).Distinct().ToImmutableList();
+        Fret = fret;
+    }
 
-        if (frets.Count != 1) throw new InvalidOperationException();
-        Fret = frets.First();
+    private static IEnumerable<Position.Fretted> GetPositions(
+        IReadOnlyCollection<Position.Fretted> positions,
+        Fret fret)
+    {
+        var result = positions
+            .Where(fretted => fretted.Fret == fret)
+            .ToImmutableList();
+
+        return result;
     }
 
     public Fret Fret { get; }
