@@ -12,8 +12,12 @@ public class Fretboard
     private readonly Lazy<OpenPositions> _lazyOpenPositions;
     private readonly Lazy<FrettedPositions> _lazyFrettedPositions;
 
-    public static Fretboard Guitar() => new(Tuning.Guitar.Standard, 22);
-    public static Fretboard Ukulele() => new(Tuning.Ukulele.Standard, 15);
+    public static Fretboard Guitar() => new(Tuning.Guitar.Standard, Tuning.Guitar.DefaultFretCount);
+    public static Fretboard Bass() => new(Tuning.Bass.Standard, Tuning.Bass.DefaultFretCount);
+    public static Fretboard Ukulele() => new(Tuning.Ukulele.Standard, Tuning.Ukulele.DefaultFretCount);
+    public static Fretboard Banjo() => new(Tuning.Banjo.Cello, Tuning.Banjo.DefaultFretCount);
+    public static Fretboard Mandolin() => new(Tuning.Mandolin.Standard, Tuning.Mandolin.DefaultFretCount);
+    public static Fretboard Balalaika() => new(Tuning.Balalaika.Alto, Tuning.Balalaika.DefaultFretCount);
 
     public Fretboard(
         Tuning tuning,
@@ -31,13 +35,13 @@ public class Fretboard
     public Tuning Tuning { get; }
     public int StringCount { get; }
     public int FretCount { get; }
-    public Fret CapoFret { get; } // TODO
+    public Fret? CapoFret { get; set; }
     public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
     public IReadOnlyCollection<Fret> Frets => Fret.GetCollection(Fret.Min.Value, FretCount);
     public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
     public OpenPositions OpenPositions => _lazyOpenPositions.Value;
     public FrettedPositions FrettedPositions => _lazyFrettedPositions.Value;
-    public FretPositions this[Fret fret] => new(_lazyFrettedPositions.Value);
+    public FretPositions this[Fret fret] => FrettedPositions[fret];
 
     private IReadOnlyCollection<Position> GetAllPositions()
     {
@@ -55,11 +59,10 @@ public class Fretboard
             var midiNote = pitch.MidiNote;
             foreach (var fret in Fret.GetCollection(1, FretCount - 1))
             {
+                midiNote++;
+                pitch = midiNote.ToSharpPitch();
                 var frettedPosition =  new Position.Fretted(str, fret, pitch);
                 yield return frettedPosition;
-
-                midiNote++;
-                pitch = midiNote.Pitch;
             }
         }
 
@@ -92,6 +95,7 @@ public class Fretboard
 
         return result;
     }
+
 
     private FrettedPositions GetFrettedPositions()
     {

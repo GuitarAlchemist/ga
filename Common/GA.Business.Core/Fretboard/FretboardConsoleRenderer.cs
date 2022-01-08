@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Intervals;
+using GA.Business.Core.Notes;
+using GA.Core;
 
 namespace GA.Business.Core.Fretboard;
 
@@ -12,15 +13,20 @@ public class FretboardConsoleRenderer
     {
         static void MarkerColor() => Console.ForegroundColor = ConsoleColor.Cyan;
         static void FretColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
-        static void FrettedPosition() => Console.ForegroundColor = ConsoleColor.White;
-        static void OpenPitchColor() => Console.ForegroundColor = ConsoleColor.Blue;
+        static void FrettedPositionColor() => Console.ForegroundColor = ConsoleColor.White;
+        static void OpenPositionColor() => Console.ForegroundColor = ConsoleColor.Blue;
+        static void CapoColor() => Console.ForegroundColor = ConsoleColor.DarkCyan;
+        static void NotAvailablePositionColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
         static string Pad(string s, int padTotalLength = 4) => s.PadRight(padTotalLength);
         
         void RenderPositionsAndFrets()
         {
-            var options = aOptions ?? Options.Default;
+            var options = aOptions ?? Options.Default; // TODO
             var positionsByStr = fretboard.Positions.ToLookup(position => position.Str);
-            var openPitches = fretboard.OpenPositions.Select(open => open.Pitch).ToImmutableHashSet();
+            var openPitches =
+                fretboard.CapoFret.HasValue
+                    ? fretboard[fretboard.CapoFret.Value].Select(fretted => fretted.Pitch).ToImmutableHashSet()
+                    : fretboard.OpenPositions.Select(open => open.Pitch).ToImmutableHashSet();
             foreach (var str in fretboard.Strings)
             {
                 MarkerColor();
@@ -35,19 +41,31 @@ public class FretboardConsoleRenderer
                         _ => { }, // Don't render
                         open =>
                         {
-                            var pitch = open.Pitch;
-                            var sPitch = Pad($"({pitch})");
-                            OpenPitchColor();
-                            Console.Write($"{sPitch} ║");
+                            // Open position
+                            var sOpen =  Pad($"({open.Pitch})");
+                            if (fretboard.CapoFret.HasValue) 
+                                NotAvailablePositionColor();
+                            else 
+                                OpenPositionColor();
+                            Console.Write($"{sOpen}");
+
+                            // Nut
+                            OpenPositionColor();
+                            Console.Write(" ║");
                         },
                         fretted =>
                         {
-                            FrettedPosition();
-                            var pitch = fretted.Pitch;
+                            // Fretted position
+                            var (_, fret, pitch) = fretted;
+                            if (fretboard.CapoFret.TryGetValue(out var capoFret) && fret < capoFret)
+                                NotAvailablePositionColor();
+                            else
+                                FrettedPositionColor();
                             Console.Write(Pad($"{pitch}"));
 
+                            // Fret
                             FretColor();
-                            if (openPitches.Contains(pitch)) OpenPitchColor();
+                            if (openPitches.Contains(pitch)) OpenPositionColor();
                             Console.Write("|");
                         });
                     Console.Write(" ");
