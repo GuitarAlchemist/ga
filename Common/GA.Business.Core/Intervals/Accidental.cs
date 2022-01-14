@@ -1,4 +1,5 @@
 ﻿using GA.Business.Core.Notes;
+using GA.Business.Core.Notes.Primitives;
 
 namespace GA.Business.Core.Intervals;
 
@@ -21,7 +22,7 @@ public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
     public static readonly Accidental Sharp = Create(1);
     public static readonly Accidental DoubleSharp = Create(2);
     public static IReadOnlyCollection<Accidental> All => ValueUtils<Accidental>.All();
-    public static Accidental Create(int value) => new() { Value = value };
+    public static Accidental Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Accidental operator !(Accidental accidental) => Create(-accidental.Value);
     public static Accidental operator ++(Accidental accidental) => Create(accidental.Value + 1);

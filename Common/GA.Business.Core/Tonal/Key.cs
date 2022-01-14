@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using GA.Business.Core.Notes;
+using GA.Business.Core.Notes.Primitives;
 
 namespace GA.Business.Core.Tonal;
 

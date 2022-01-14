@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using GA.Business.Core.Intervals;
 
-namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes.Primitives;
 
 /// <inheritdoc cref="IEquatable{Fret}" />
 /// <inheritdoc cref="IComparable{Fret}" />
@@ -25,7 +25,7 @@ public readonly record struct MidiNote : IValue<MidiNote>
     private const int _minValue = 0;
     private const int _maxValue = 127;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static MidiNote Create(int value) => new() { Value = value };
+    private static MidiNote Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static MidiNote Min => Create(_minValue);
     public static MidiNote Max => Create(_maxValue);

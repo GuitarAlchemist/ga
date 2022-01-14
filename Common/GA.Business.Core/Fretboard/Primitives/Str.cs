@@ -27,7 +27,7 @@ public readonly record struct Str : IValue<Str>
     private const int _minValue = 1;
     private const int _maxValue = 26;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Str Create(int value) => new() { Value = value };
+    private static Str Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
     public static Str operator ++(Str str) => Create(str._value + 1);
 
     /// <summary>

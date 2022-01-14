@@ -24,7 +24,7 @@ public readonly record struct Fret : IValue<Fret>, IAll<Fret>
     private const int _minValue = 0;
     private const int _maxValue = 36;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Fret Create(int value) => new() { Value = value };
+    private static Fret Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Fret Min => Create(_minValue);
     public static Fret Max => Create(_maxValue);

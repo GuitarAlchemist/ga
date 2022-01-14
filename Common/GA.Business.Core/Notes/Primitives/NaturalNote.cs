@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using PCRE;
 
-namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes.Primitives;
 
 /// <inheritdoc cref="IEquatable{Noteing}" />
 /// <inheritdoc cref="IComparable{Noteing}" />
@@ -25,7 +25,7 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     private const int _minValue = 0;
     private const int _maxValue = 6;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NaturalNote Create(int value) => new() { Value = value };
+    private static NaturalNote Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static NaturalNote Min => Create(_minValue);
     public static NaturalNote Max => Create(_maxValue);

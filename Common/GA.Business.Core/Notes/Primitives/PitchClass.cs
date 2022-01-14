@@ -1,9 +1,8 @@
-﻿using GA.Business.Core.Intervals;
-
-namespace GA.Business.Core.Notes;
-
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using GA.Business.Core.Intervals;
+
+namespace GA.Business.Core.Notes.Primitives;
 
 /// <inheritdoc cref="IEquatable{PitchClass}" />
 /// <inheritdoc cref="IComparable{PitchClass}" />
@@ -27,7 +26,7 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     private const int _minValue = 0;
     private const int _maxValue = 11;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static PitchClass Create(int value) => new() { Value = value };
+    private static PitchClass Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static PitchClass Min => Create(_minValue);
     public static PitchClass Max => Create(_maxValue);
@@ -57,18 +56,18 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     private static readonly ImmutableList<Note.Chromatic> _chromaticNotes =
         new List<Note.Chromatic>
         {
-            Note.Chromatic.Value0,
-            Note.Chromatic.Value1,
-            Note.Chromatic.Value2,
-            Note.Chromatic.Value3,
-            Note.Chromatic.Value4,
-            Note.Chromatic.Value5,
-            Note.Chromatic.Value6,
-            Note.Chromatic.Value7,
-            Note.Chromatic.Value8,
-            Note.Chromatic.Value9,
-            Note.Chromatic.Value10,
-            Note.Chromatic.Value11
+            Note.Chromatic.C,
+            Note.Chromatic.CSharpDb,
+            Note.Chromatic.D,
+            Note.Chromatic.DSharpEb,
+            Note.Chromatic.E,
+            Note.Chromatic.F,
+            Note.Chromatic.FSharpGb,
+            Note.Chromatic.G,
+            Note.Chromatic.GSharpAb,
+            Note.Chromatic.A,
+            Note.Chromatic.ASharpBb,
+            Note.Chromatic.B
         }.ToImmutableList();
 
     private static readonly ImmutableList<Note.Sharp> _sharpNotes =
