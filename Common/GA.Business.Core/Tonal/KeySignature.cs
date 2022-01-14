@@ -1,9 +1,10 @@
-﻿using System.Collections.Immutable;
-using GA.Core;
+﻿using GA.Business.Core.Notes.Primitives;
 
 namespace GA.Business.Core.Tonal;
 
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using GA.Core;
 using Notes;
 
 /// <summary>
@@ -24,7 +25,7 @@ public readonly record struct KeySignature : IValue<KeySignature>
     private const int _minValue = -7;
     private const int _maxValue = 7;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static KeySignature Create(int value) => new() { Value = value };
+    private static KeySignature Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static int CheckRange(int value) => ValueUtils<KeySignature>.CheckRange(value, _minValue, _maxValue);    
 

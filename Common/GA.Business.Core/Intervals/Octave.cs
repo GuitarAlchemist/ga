@@ -2,6 +2,7 @@
 
 namespace GA.Business.Core.Intervals;
 
+[PublicAPI]
 public readonly record struct Octave : IValue<Octave>, IFormattable
 {
     #region Relational members
@@ -17,7 +18,7 @@ public readonly record struct Octave : IValue<Octave>, IFormattable
     private const int _minValue = -1;
     private const int _maxValue = 8;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Octave Create(int value) => new() { Value = value };
+    private static Octave Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Octave Min => Create(_minValue);
     public static Octave Max => Create(_maxValue);

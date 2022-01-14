@@ -1,4 +1,5 @@
-﻿using PCRE;
+﻿using GA.Business.Core.Notes.Primitives;
+using PCRE;
 
 namespace GA.Business.Core.Notes;
 
@@ -60,7 +61,7 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
             if (!noteGroup.IsDefined) return false; // Missing note
             if (!octaveGroup.IsDefined) return false; // Missing octave
 
-            // Natural note
+            // NaturalMinor note
             if (!NaturalNote.TryParse(noteGroup.Value, out var naturalNote)) return false;
 
             // Sharp accidental

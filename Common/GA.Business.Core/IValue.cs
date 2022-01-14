@@ -21,5 +21,4 @@ public interface IValue<TSelf> : IComparable<TSelf>, IComparable
     public static abstract TSelf Max { get; }
 
     public int Value { get; init; }
-
 }

@@ -1,6 +1,6 @@
 ﻿using PCRE;
 
-namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes.Primitives;
 
 [PublicAPI]
 public readonly record struct SharpAccidental : IValue<SharpAccidental>
