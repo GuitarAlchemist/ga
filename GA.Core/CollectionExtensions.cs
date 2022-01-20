@@ -1,40 +1,52 @@
-﻿namespace GA.Core;
+﻿using System.Collections;
+using JetBrains.Annotations;
 
-using System.Collections;
+namespace GA.Core;
 
+[PublicAPI]
 public static class CollectionExtensions
 {
-    public static IEnumerable<T> AsPrintable<T>(this IEnumerable<T> items) => new PrintableEnumerable<T>(items);
-    public static IReadOnlyCollection<T> AsPrintable<T>(this IReadOnlyCollection<T> items) => new PrintableReadOnlyCollection<T>(items);
-
-    private class PrintableEnumerable<T> : IEnumerable<T>
+    /// <summary>
+    /// Rotate the items of a collection
+    /// </summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="items">The source items collection.</param>
+    /// <param name="start">The start <see cref="Index"/>.</param>
+    /// <returns>The rotated <see cref="IReadOnlyCollection{T}"/>.</returns>
+    public static IReadOnlyCollection<T> Rotate<T>(
+        this IReadOnlyCollection<T> items,
+        Index start = default)
     {
-        private readonly IEnumerable<T> _items;
-
-        public PrintableEnumerable(IEnumerable<T> items)
-        {
-            _items = items ?? throw new ArgumentNullException(nameof(items));
-        }
-
-        public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public override string ToString() => string.Join(" ", _items);
+        return new RotatedCollection<T>(items, start);
     }
 
-    private class PrintableReadOnlyCollection<T> : IReadOnlyCollection<T>
+    [PublicAPI]
+    public class RotatedCollection<T> : IReadOnlyCollection<T>
     {
         private readonly IReadOnlyCollection<T> _items;
+        private Index _index = Index.Start;
 
-        public PrintableReadOnlyCollection(IReadOnlyCollection<T> items)
+        public RotatedCollection(
+            IReadOnlyCollection<T> items,
+            Index start = default)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
+            if (start.Value > 0) IncrementIndex(start.Value);
         }
 
-        public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
+        public int Count => _items.Count;
+        public Index Index => _index;
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            yield return _items.ElementAt(_index);
+            IncrementIndex();
+        }
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public override string ToString() => string.Join(" ", _items);
-        public int Count => _items.Count;
+        public override string ToString() => string.Join(" ", this);
+
+        private void IncrementIndex(int count = 1) => _index = (_index.Value + count) % Count;
     }
 }

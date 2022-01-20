@@ -28,15 +28,26 @@ public readonly record struct Semitones : IValue<Semitones>
     private const int _maxValue = 12 * 12; // +12 octaves, 12 semitones each
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Semitones Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-    public static Semitones operator ++(Semitones str) => Create(str._value + 1);
 
     public static Semitones Min => Create(_minValue);
     public static Semitones Max => Create(_maxValue);
+    public static Semitones Unison => Create(0);
+    public static Semitones Semitone => Create(1);
+    public static Semitones Tone => Create(2);
+    public static Semitones Tritone => Create(6);
+    public static Semitones Octave(int octaveCount = 1) => Create(12 * octaveCount);
+
     public static int CheckRange(int value) => ValueUtils<Semitones>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<Semitones>.CheckRange(value, minValue, maxValue);
 
     public static implicit operator Semitones(int value) => new() { Value = value };
-    public static implicit operator int(Semitones str) => str._value;
+    public static implicit operator int(Semitones semitones) => semitones._value;
+
+    public static Semitones operator !(Semitones semitones) => Create(-semitones.Value);
+    public static Semitones operator ++(Semitones semitones) => Create(semitones.Value + 1);
+    public static Semitones operator --(Semitones semitones) => Create(semitones.Value - 1);
+    public static Semitones operator +(Semitones a, Semitones b) => Create(a.Value + b.Value);
+    public static Semitones operator -(Semitones a, Semitones b) => Create(a.Value - b.Value);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

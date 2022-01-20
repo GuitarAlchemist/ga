@@ -1,7 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace GA.Business.Core.Notes.Primitives;
+
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+
 using PCRE;
 
-namespace GA.Business.Core.Notes.Primitives;
+using GA.Business.Core.Intervals.Primitives;
 
 /// <inheritdoc cref="IEquatable{Noteing}" />
 /// <inheritdoc cref="IComparable{Noteing}" />
@@ -21,6 +25,11 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static bool operator >=(NaturalNote left, NaturalNote right) => left.CompareTo(right) >= 0;
 
     #endregion
+
+    static NaturalNote()
+    {
+        _lazySimpleIntervalDictionary = new(GetIntervalDictionary);
+    }
 
     private const int _minValue = 0;
     private const int _maxValue = 6;
@@ -68,40 +77,92 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         return true;
     }
 
-    public static IReadOnlyCollection<NaturalNote> All => ValueUtils<NaturalNote>.All();
+    public static IReadOnlyCollection<NaturalNote> All => ValueUtils<NaturalNote>.GetAll();
 
     public static implicit operator NaturalNote(int value) => new() { Value = value };
     public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;
+
+    public static NaturalNote operator +(NaturalNote naturalNote, DiatonicNumber diatonicNumber) => Add(naturalNote, diatonicNumber);
+    public static DiatonicNumber operator -(NaturalNote naturalNote1, NaturalNote naturalNote2) => GetSimpleInterval(naturalNote1, naturalNote2);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
     public static int CheckRange(int value) => ValueUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
-    public NaturalNote ToDegree(int diatonicInterval) => Create((Value + diatonicInterval) % 7);
+    public NaturalNote ToDegree(int count) => Create((Value + count) % 7);
 
-    public PitchClass GetPitchClass() => _value switch
+    public PitchClass ToPitchClass()
     {
-        0 => 0,
-        1 => 2,
-        2 => 4,
-        3 => 5,
-        4 => 7,
-        5 => 9,
-        6 => 11,
-        _ => throw new InvalidOperationException()
-    };
+        /*
+            See DiatonicScale.Major.Intervals:
+            C: 0
+            D: 2  (T => +2)
+            E: 4  (T => +2)
+            F: 5  (H => +1)
+            G: 7  (T => +2)
+            A: 9  (T => +2)
+            B: 11 (T => +2)
+         */
+
+        return _value switch
+        {
+            0 => new() {Value = 0}, // C
+            1 => new() {Value = 2}, // D
+            2 => new() {Value = 4}, // E
+            3 => new() {Value = 5}, // F
+            4 => new() {Value = 7}, // G
+            5 => new() {Value = 9}, // A
+            6 => new() {Value = 11}, // B
+            _ => throw new InvalidOperationException()
+        };
+    }
 
     public override string ToString() => _value switch
     {
-        0 => "C",
-        1 => "D",
-        2 => "E",
-        3 => "F",
-        4 => "G",
-        5 => "A",
-        6 => "B",
+        0 => nameof(C),
+        1 => nameof(D),
+        2 => nameof(E),
+        3 => nameof(F),
+        4 => nameof(G),
+        5 => nameof(A),
+        6 => nameof(B),
         _ => ""
     };
+
+    private static NaturalNote Add(NaturalNote naturalNote, DiatonicNumber diatonicNumber)
+    {
+        var result = new NaturalNote
+        {
+            Value = (naturalNote.Value + diatonicNumber.Value - 1) % 7
+        };
+
+        return result;
+    }
+
+    #region Simple Intervals
+
+    public DiatonicNumber GetSimpleInterval(NaturalNote other) => GetSimpleInterval(this, other);
+    private static readonly Lazy<IReadOnlyDictionary<(NaturalNote, NaturalNote), DiatonicNumber>> _lazySimpleIntervalDictionary;
+    private static DiatonicNumber GetSimpleInterval(NaturalNote note1, NaturalNote note2) => _lazySimpleIntervalDictionary.Value[(note1, note2)];
+
+    private static ImmutableDictionary<(NaturalNote, NaturalNote), DiatonicNumber> GetIntervalDictionary()
+    {
+        var dict = new Dictionary<(NaturalNote, NaturalNote), DiatonicNumber>();
+
+        foreach (var note1 in All)
+        {
+            foreach (var diatonicNumber in DiatonicNumber.All)
+            {
+                var note2 = note1 + diatonicNumber;
+                var tuple = (note1, note2);
+                dict[tuple] = diatonicNumber;
+            }
+        }
+
+        return dict.ToImmutableDictionary();
+    }
+
+    #endregion
 }
 

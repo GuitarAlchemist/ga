@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
+using GA.Business.Core.Intervals.Primitives;
+
 [PublicAPI]
 public readonly record struct FlatAccidental : IValue<FlatAccidental>
 {
@@ -13,19 +15,20 @@ public readonly record struct FlatAccidental : IValue<FlatAccidental>
     public static readonly FlatAccidental DoubleFlat = new() { Value = -2 };
     public static readonly FlatAccidental Flat = new() { Value = -1 };
 
+    public static implicit operator Semitones(FlatAccidental value) => value.ToSemitones();
+
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
     public static int CheckRange(int value) => ValueUtils<FlatAccidental>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<FlatAccidental>.CheckRange(value, minValue, maxValue);
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            -3 => "bbb",
-            -2 => "bb",
-            -1 => "b",
-            _ => string.Empty
-        };
-    }
+        -3 => "bbb",
+        -2 => "bb",
+        -1 => "b",
+        _ => string.Empty
+    };
+
+    public Semitones ToSemitones() => new() {Value = _value};
 }

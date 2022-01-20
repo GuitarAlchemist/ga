@@ -1,6 +1,7 @@
-﻿using PCRE;
+﻿namespace GA.Business.Core.Notes.Primitives;
 
-namespace GA.Business.Core.Notes.Primitives;
+using GA.Business.Core.Intervals.Primitives;
+using PCRE;
 
 [PublicAPI]
 public readonly record struct SharpAccidental : IValue<SharpAccidental>
@@ -13,6 +14,8 @@ public readonly record struct SharpAccidental : IValue<SharpAccidental>
 
     public static readonly SharpAccidental Sharp = new() { Value = 1 };
     public static readonly SharpAccidental DoubleSharp = new() { Value = 2 };
+
+    public static implicit operator Semitones(SharpAccidental value) => value.ToSemitones();
 
     //language=regexp
     public static readonly string RegexPattern = "^(#|x)$";
@@ -44,13 +47,12 @@ public readonly record struct SharpAccidental : IValue<SharpAccidental>
     public static int CheckRange(int value) => ValueUtils<SharpAccidental>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<SharpAccidental>.CheckRange(value, minValue, maxValue);
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            1 => "#",
-            2 => "x",
-            _ => string.Empty
-        };
-    }
+        1 => "#",
+        2 => "x",
+        _ => string.Empty
+    };
+
+    public Semitones ToSemitones() => new() {Value = _value};
 }

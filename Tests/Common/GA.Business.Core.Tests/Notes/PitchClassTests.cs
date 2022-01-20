@@ -1,13 +1,13 @@
-﻿using NUnit.Framework;
+﻿using GA.Business.Core.Notes.Primitives;
+using NUnit.Framework;
 
-namespace GA.Business.Core.Tests.Notes
+namespace GA.Business.Core.Tests.Notes;
+
+public class PitchClassTests
 {
-    public class PitchClassTests
+    [Test(TestOf = typeof(PitchClass))]
+    public void Test1()
     {
-        [Test]
-        public void Test1()
-        {
-            Assert.Pass();
-        }
+        Assert.Pass();
     }
 }

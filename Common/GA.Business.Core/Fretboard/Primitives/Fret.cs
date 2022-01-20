@@ -29,11 +29,11 @@ public readonly record struct Fret : IValue<Fret>, IAll<Fret>
     public static Fret Min => Create(_minValue);
     public static Fret Max => Create(_maxValue);
     public static Fret Open => Create(0);
-    public static IReadOnlyCollection<Fret> All => ValueUtils<Fret>.All();
+    public static IReadOnlyCollection<Fret> All => ValueUtils<Fret>.GetAll();
 
     public static int CheckRange(int value) => ValueUtils<Fret>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<Fret>.CheckRange(value, minValue, maxValue);
-    public static IReadOnlyCollection<Fret> GetCollection(int start, int count) => ValueUtils<Fret>.Collection(start, count);
+    public static IReadOnlyCollection<Fret> GetCollection(int start, int count) => ValueUtils<Fret>.GetRange(start, count);
 
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;

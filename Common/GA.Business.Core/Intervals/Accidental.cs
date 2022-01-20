@@ -1,4 +1,4 @@
-﻿using GA.Business.Core.Notes;
+﻿using GA.Business.Core.Intervals.Primitives;
 using GA.Business.Core.Notes.Primitives;
 
 namespace GA.Business.Core.Intervals;
@@ -21,10 +21,11 @@ public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
     public static readonly Accidental Natural = Create(0);
     public static readonly Accidental Sharp = Create(1);
     public static readonly Accidental DoubleSharp = Create(2);
-    public static IReadOnlyCollection<Accidental> All => ValueUtils<Accidental>.All();
+    public static IReadOnlyCollection<Accidental> All => ValueUtils<Accidental>.GetAll();
     public static Accidental Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Accidental operator !(Accidental accidental) => Create(-accidental.Value);
+    public static Accidental operator -(Accidental accidental) => Create(-accidental.Value);
     public static Accidental operator ++(Accidental accidental) => Create(accidental.Value + 1);
     public static Accidental operator --(Accidental accidental) => Create(accidental.Value - 1);
     public static Accidental operator +(Accidental a, Accidental b) => Create(a.Value + b.Value);
@@ -33,25 +34,24 @@ public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
     public static implicit operator Accidental(int value) => Create(value);
     public static implicit operator Accidental?(SharpAccidental? sharpAccidental) => sharpAccidental == null ? null : Create(sharpAccidental.Value.Value);
     public static implicit operator Accidental?(FlatAccidental? flatAccidental) => flatAccidental == null ? null : Create(flatAccidental.Value.Value);
+    public static implicit operator Semitones(Accidental value) => value.ToSemitones();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
     public static int CheckRange(int value) => ValueUtils<Accidental>.CheckRange(value, _minValue, _maxValue);
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            -3 => "bbb",
-            -2 => "bb",
-            -1 => "b",
-            0 => "\u266E",
-            1 => "#",
-            2 => "x",
-            3 => "???",
-            _ => string.Empty
-        };
-    }
+        -3 => "bbb",
+        -2 => "bb",
+        -1 => "b",
+        0 => "\u266E",
+        1 => "#",
+        2 => "x",
+        _ => string.Empty
+    };
+
+    public Semitones ToSemitones() => new() {Value = _value};
 }
 
 

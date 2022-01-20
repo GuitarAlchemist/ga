@@ -30,7 +30,7 @@ public readonly record struct MidiNote : IValue<MidiNote>
     public static MidiNote Min => Create(_minValue);
     public static MidiNote Max => Create(_maxValue);
     public static MidiNote Open => Create(0);
-    public static IReadOnlyCollection<MidiNote> All => ValueUtils<MidiNote>.All();
+    public static IReadOnlyCollection<MidiNote> All => ValueUtils<MidiNote>.GetAll();
 
     public static int CheckRange(int value) => ValueUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MidiNote>.CheckRange(value, minValue, maxValue);
@@ -55,8 +55,8 @@ public readonly record struct MidiNote : IValue<MidiNote>
 
     public Pitch ToPitch() => ToSharpPitch();
     public Note.Chromatic ToChromaticNote() => PitchClass.ToChromaticNote();
-    public Note.Sharp ToSharpNote() => PitchClass.ToSharpNote();
-    public Note.Flat ToFlatNote() => PitchClass.ToFlatNote();
+    public Note.SharpKey ToSharpNote() => PitchClass.ToSharpNote();
+    public Note.FlatKeyNote ToFlatNote() => PitchClass.ToFlatNote();
     public Pitch.Chromatic ToChromaticPitch() => new(ToChromaticNote(), Octave);
     public Pitch.Sharp ToSharpPitch() => new(ToSharpNote(), Octave);
     public Pitch.Flat ToFlatPitch() => new(ToFlatNote(), Octave);
