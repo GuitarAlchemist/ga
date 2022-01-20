@@ -49,4 +49,6 @@ public sealed class ReadOnlyCollectionWrapper<TValue> : IReadOnlyCollection<TVal
     public IEnumerator<TValue> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
     public int Count { get; }
+    public override string ToString() => string.Join(" ", _items.Select(value => value.ToString()));
+
 }

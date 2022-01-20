@@ -29,10 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Common\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>
 </Project>

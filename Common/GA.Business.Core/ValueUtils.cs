@@ -1,7 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using GA.Core;
 
 namespace GA.Business.Core;
 
+[PublicAPI]
 public static class ValueUtils<TValue>
     where TValue : struct, IValue<TValue>
 {
@@ -15,6 +18,8 @@ public static class ValueUtils<TValue>
     {
         if (value < minValue)
         {
+            Debugger.Break();
+
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
@@ -22,6 +27,8 @@ public static class ValueUtils<TValue>
 
         if (value > maxValue)
         {
+            Debugger.Break();
+
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{valueExpression} ({value}) cannot be greater than {maxValueExpression} ({maxValue}).");
@@ -30,6 +37,6 @@ public static class ValueUtils<TValue>
         return value;
     }
 
-    public static IReadOnlyCollection<TValue> All() => ReadOnlyCollectionWrapper<TValue>.Create();
-    public static IReadOnlyCollection<TValue> Collection(int start, int count) => ReadOnlyCollectionWrapper<TValue>.Create(start, count);
+    public static IReadOnlyCollection<TValue> GetAll() => ReadOnlyCollectionWrapper<TValue>.Create();
+    public static IReadOnlyCollection<TValue> GetRange(int start, int count) => ReadOnlyCollectionWrapper<TValue>.Create(start, count);
 }

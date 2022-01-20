@@ -40,7 +40,7 @@ public readonly record struct Str : IValue<Str>
     public static Str Max => Create(_maxValue);
     public static int CheckRange(int value) => ValueUtils<Str>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<Str>.CheckRange(value, minValue, maxValue);
-    public static IReadOnlyCollection<Str> GetCollection(int count) => ValueUtils<Str>.Collection(_minValue, count);
+    public static IReadOnlyCollection<Str> GetCollection(int count) => ValueUtils<Str>.GetRange(_minValue, count);
 
     public static implicit operator Str(int value) => new() { Value = value };
     public static implicit operator int(Str str) => str._value;

@@ -32,44 +32,43 @@ public abstract partial record Key(KeySignature KeySignature)
 
         public override KeyMode KeyMode => KeyMode.Major;
 
-        public Note GetRoot() => KeySignature.Value switch
+        public Note.KeyNote GetRoot() => KeySignature.Value switch
         {
-            -7 => Note.Flat.CFlat,
-            -6 => Note.Flat.GFlat,
-            -5 => Note.Flat.DFlat,
-            -4 => Note.Flat.AFlat,
-            -3 => Note.Flat.EFlat,
-            -2 => Note.Flat.BFlat,
-            -1 => Note.Flat.FFlat,
-            0 => Note.Sharp.C,
-            1 => Note.Sharp.G,
-            2 => Note.Sharp.D,
-            3 => Note.Sharp.A,
-            4 => Note.Sharp.E,
-            5 => Note.Sharp.B,
-            6 => Note.Sharp.FSharp,
-            7 => Note.Sharp.CSharp,
+            -7 => Note.FlatKeyNote.CFlat,
+            -6 => Note.FlatKeyNote.GFlat,
+            -5 => Note.FlatKeyNote.DFlat,
+            -4 => Note.FlatKeyNote.AFlat,
+            -3 => Note.FlatKeyNote.EFlat,
+            -2 => Note.FlatKeyNote.BFlat,
+            -1 => Note.FlatKeyNote.FFlat,
+            0 => Note.SharpKey.C,
+            1 => Note.SharpKey.G,
+            2 => Note.SharpKey.D,
+            3 => Note.SharpKey.A,
+            4 => Note.SharpKey.E,
+            5 => Note.SharpKey.B,
+            6 => Note.SharpKey.FSharp,
+            7 => Note.SharpKey.CSharp,
             _ => throw new InvalidOperationException()
         };
 
-        public IImmutableList<Note> GetNotes()
+        /// <summary>
+        /// Gets all notes in the key (e.g. C D E F G A B)
+        /// </summary>
+        /// <returns></returns>
+        public IImmutableList<Note.KeyNote> GetNotes()
         {
             return KeySignature.Value < 0 
                 ? GetFlatNodes().ToImmutableList() 
                 : GetSharpNotes().ToImmutableList();
 
-            IEnumerable<Note> GetSharpNotes()
+            IEnumerable<Note.KeyNote> GetSharpNotes()
             {
                 var root = GetRoot();
                 yield return root;
 
-                var sharpNotes = KeySignature.SharpNotes.ToImmutableHashSet();
-
-                NaturalNote naturalNote = default;
-                root.Switch(
-                    _ => throw new InvalidOperationException(),
-                    sharp => naturalNote = sharp.NaturalNote,
-                    flat => naturalNote = flat.NaturalNote);
+                var naturalNote = root.NaturalNote;
+                var sharpNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
                 bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
                 for (var i = 0; i < 6; i++)
                 {
@@ -78,22 +77,17 @@ public abstract partial record Key(KeySignature KeySignature)
                     yield return
                         HasSharp(naturalNote)
                             ? new(naturalNote, SharpAccidental.Sharp)
-                            : new Note.Sharp(naturalNote);
+                            : new Note.SharpKey(naturalNote);
                 }
             }
 
-            IEnumerable<Note> GetFlatNodes()
+            IEnumerable<Note.KeyNote> GetFlatNodes()
             {
                 var root = GetRoot();
                 yield return root;
 
-                var flatNotes = KeySignature.FlatNotes.ToImmutableHashSet();
-
-                NaturalNote naturalNote = default;
-                root.Switch(
-                    _ => throw new InvalidOperationException(),
-                    sharp => naturalNote = sharp.NaturalNote,
-                    flat => naturalNote = flat.NaturalNote);
+                var naturalNote = root.NaturalNote;
+                var flatNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
                 bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
                 for (var i = 0; i < 6; i++)
                 {
@@ -102,7 +96,7 @@ public abstract partial record Key(KeySignature KeySignature)
                     yield return
                         HasFlat(naturalNote)
                             ? new(naturalNote, FlatAccidental.Flat)
-                            : new Note.Flat(naturalNote);
+                            : new Note.FlatKeyNote(naturalNote);
                 }
             }
         }
@@ -132,21 +126,21 @@ public abstract partial record Key(KeySignature KeySignature)
 
         public Note GetRoot() => KeySignature.Value switch
         {
-            -7 => Note.Flat.AFlat,
-            -6 => Note.Flat.EFlat,
-            -5 => Note.Flat.BFlat,
-            -4 => Note.Flat.FFlat,
-            -3 => Note.Flat.C,
-            -2 => Note.Flat.G,
-            -1 => Note.Flat.D,
-            0 => Note.Sharp.A,
-            1 => Note.Sharp.E,
-            2 => Note.Sharp.B,
-            3 => Note.Sharp.FSharp,
-            4 => Note.Sharp.CSharp,
-            5 => Note.Sharp.GSharp,
-            6 => Note.Sharp.DSharp,
-            7 => Note.Sharp.ASharp,
+            -7 => Note.FlatKeyNote.AFlat,
+            -6 => Note.FlatKeyNote.EFlat,
+            -5 => Note.FlatKeyNote.BFlat,
+            -4 => Note.FlatKeyNote.FFlat,
+            -3 => Note.FlatKeyNote.C,
+            -2 => Note.FlatKeyNote.G,
+            -1 => Note.FlatKeyNote.D,
+            0 => Note.SharpKey.A,
+            1 => Note.SharpKey.E,
+            2 => Note.SharpKey.B,
+            3 => Note.SharpKey.FSharp,
+            4 => Note.SharpKey.CSharp,
+            5 => Note.SharpKey.GSharp,
+            6 => Note.SharpKey.DSharp,
+            7 => Note.SharpKey.ASharp,
             _ => throw new InvalidOperationException()
         };
     }

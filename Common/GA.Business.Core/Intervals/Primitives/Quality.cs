@@ -8,11 +8,8 @@ namespace GA.Business.Core.Intervals.Primitives;
 /// <summary>
 /// An interval quality
 /// </summary>
-/// <remarks>
-/// See https://en.wikipedia.org/wiki/Semitone
-/// </remarks>
 [PublicAPI]
-public readonly record struct Quality : IValue<Quality>
+public readonly record struct Quality : IValue<Quality>, IFormattable
 {
     #region Relational members
 
@@ -24,8 +21,8 @@ public readonly record struct Quality : IValue<Quality>
 
     #endregion
 
-    private const int _minValue = -2;
-    private const int _maxValue = 2;
+    private const int _minValue = -3;
+    private const int _maxValue = 3;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Quality Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -38,11 +35,13 @@ public readonly record struct Quality : IValue<Quality>
     public static implicit operator int(Quality quality) => quality._value;
     public static Quality operator !(Quality quality) => quality.ToInverse();
 
+    public static Quality DoublyDiminished => Create(-3);
     public static Quality Diminished => Create(-2);
     public static Quality Minor => Create(-1);
     public static Quality Perfect => Create(0);
     public static Quality Major => Create(1);
     public static Quality Augmented => Create(2);
+    public static Quality DoublyAugmented => Create(3);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
@@ -56,6 +55,43 @@ public readonly record struct Quality : IValue<Quality>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Quality ToInverse() => Create(-Value);
 
-    public override string ToString() => Value.ToString();
+    public string Name => Value switch
+    {
+        -3 => nameof(DoublyDiminished),
+        -2 => nameof(Diminished),
+        -1 => nameof(Minor),
+        0 => nameof(Perfect),
+        1 => nameof(Major),
+        2 => nameof(Augmented),
+        3 => nameof(DoublyAugmented),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public string ShortName => Value switch
+    {
+        -3 => "dd",
+        -2 => "d",
+        -1 => "m",
+        0 => "P",
+        1 => "M",
+        2 => "A",
+        3 => "AA",
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public override string ToString() => ToString("G");
+    public string ToString(string format) => ToString(format, null);
+    public string ToString(string? format, IFormatProvider? formatProvider)
+    {
+        format ??= "G";
+        return format.ToUpperInvariant() switch
+        {
+            "G" => ShortName,
+            "V" => Value.ToString(),
+            "N" => Name,
+            "S" => ShortName,
+            _ => throw new FormatException($"The {format} format string is not supported.")
+        };
+    }
 }
 
