@@ -6,7 +6,7 @@ namespace GA.Business.Core.Intervals.Primitives;
 /// <inheritdoc cref="IComparable{String}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
-/// A chromatic interval expressed in semitones
+/// A chromatic interval size expressed in semitones.
 /// </summary>
 /// <remarks>
 /// See https://en.wikipedia.org/wiki/Semitone

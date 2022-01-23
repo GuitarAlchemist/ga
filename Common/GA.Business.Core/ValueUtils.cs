@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using GA.Core;
+﻿namespace GA.Business.Core;
 
-namespace GA.Business.Core;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 [PublicAPI]
 public static class ValueUtils<TValue>
@@ -37,6 +36,6 @@ public static class ValueUtils<TValue>
         return value;
     }
 
-    public static IReadOnlyCollection<TValue> GetAll() => ReadOnlyCollectionWrapper<TValue>.Create();
-    public static IReadOnlyCollection<TValue> GetRange(int start, int count) => ReadOnlyCollectionWrapper<TValue>.Create(start, count);
+    public static IReadOnlyCollection<TValue> GetAll() => ReadOnlyValues<TValue>.Create();
+    public static IReadOnlyCollection<TValue> GetRange(int start, int count) => ReadOnlyValues<TValue>.Create(start, count);
 }

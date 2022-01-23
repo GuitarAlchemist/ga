@@ -1,12 +1,14 @@
 ﻿namespace GA.Business.Core.Notes;
 
 using System.Collections.Immutable;
+
+using GA.Core;
+using GA.Business.Core.Intervals.Primitives;
+using Tonal;
 using Intervals;
 using Primitives;
-using GA.Business.Core.Intervals.Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
-
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
@@ -16,6 +18,9 @@ public abstract partial record Note
     /// Gets the <see cref="PitchClass"/>.
     /// </summary>
     public abstract PitchClass PitchClass { get; }
+
+    public static IReadOnlyCollection<SharpKey> AllSharp => SharpKey.All;
+    public static IReadOnlyCollection<FlatKey> AllFlat => FlatKey.All;
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
@@ -39,7 +44,7 @@ public abstract partial record Note
 
         public override PitchClass PitchClass { get; } = PitchClass;
         public SharpKey ToSharp() => PitchClass.ToSharpNote();
-        public FlatKeyNote ToFlat() => PitchClass.ToFlatNote();
+        public FlatKey ToFlat() => PitchClass.ToFlatNote();
 
         public static implicit operator Chromatic(NaturalNote naturalNote) => new(naturalNote.ToPitchClass());
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2) => note1.PitchClass - note2.PitchClass;
@@ -58,10 +63,31 @@ public abstract partial record Note
     /// </summary>
     /// <param name="NaturalNote"></param>
     [PublicAPI]
-    public abstract record KeyNote(NaturalNote NaturalNote) : Note
+    public abstract record KeyNote(NaturalNote NaturalNote) : Note, IComparable<KeyNote>
     {
+        #region Relational Members
+
+        public int CompareTo(KeyNote? other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            var naturalNoteComparison = NaturalNote.CompareTo(other.NaturalNote);
+            if (naturalNoteComparison != 0) return naturalNoteComparison;
+            return Nullable.Compare(Accidental, other.Accidental);
+        }
+
+        public static bool operator <(KeyNote? left, KeyNote? right) => Comparer<KeyNote>.Default.Compare(left, right) < 0;
+        public static bool operator >(KeyNote? left, KeyNote? right) => Comparer<KeyNote>.Default.Compare(left, right) > 0;
+        public static bool operator <=(KeyNote? left, KeyNote? right) => Comparer<KeyNote>.Default.Compare(left, right) <= 0;
+        public static bool operator >=(KeyNote? left, KeyNote? right) => Comparer<KeyNote>.Default.Compare(left, right) >= 0;
+
+        #endregion
+
         public abstract AccidentalKind AccidentalKind { get; }
         public abstract Accidental? Accidental { get; }
+        public override PitchClass PitchClass => GetPitchClass();
+
+        protected abstract PitchClass GetPitchClass();
     }
 
     /// <inheritdoc cref="Note"/>
@@ -84,11 +110,10 @@ public abstract partial record Note
         public static SharpKey ASharp => new(NaturalNote.A, Sharp);
         public static SharpKey B => new(NaturalNote.B);
 
-        public static IReadOnlyCollection<SharpKey> All => new[] { C, D, E, F, G, A, B }.ToImmutableList();
-
         public static implicit operator Chromatic(SharpKey sharpKey) => new(sharpKey.PitchClass);
 
-        public override PitchClass PitchClass => new() { Value = NaturalNote.ToPitchClass().Value + (SharpAccidental?.Value ?? 0) };
+        public static IReadOnlyCollection<SharpKey> All => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
+
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
         public override Accidental? Accidental => SharpAccidental;
 
@@ -96,6 +121,17 @@ public abstract partial record Note
             SharpAccidental.HasValue
                 ? $"{NaturalNote}{SharpAccidental.Value}"
                 : $"{NaturalNote}";
+
+        protected override PitchClass GetPitchClass()
+        {
+            var result = new PitchClass
+            {
+                Value = NaturalNote.ToPitchClass().Value + (SharpAccidental?.Value ?? 0)
+            };
+
+            return result;
+        }
+
     }
 
     /// <inheritdoc cref="Note"/>
@@ -103,26 +139,28 @@ public abstract partial record Note
     /// A note from a flat musical key.
     /// </summary>
     [PublicAPI]
-    public sealed partial record FlatKeyNote(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote)
+    public sealed partial record FlatKey(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote)
     {
-        public static FlatKeyNote CFlat => new(NaturalNote.C, Flat);
-        public static FlatKeyNote C => new(NaturalNote.C);
-        public static FlatKeyNote DFlat => new(NaturalNote.D, Flat);
-        public static FlatKeyNote D => new(NaturalNote.D);
-        public static FlatKeyNote EFlat => new(NaturalNote.E, Flat);
-        public static FlatKeyNote E => new(NaturalNote.E);
-        public static FlatKeyNote FFlat => new(NaturalNote.F, Flat);
-        public static FlatKeyNote F => new(NaturalNote.F);
-        public static FlatKeyNote GFlat => new(NaturalNote.G, Flat);
-        public static FlatKeyNote G => new(NaturalNote.G);
-        public static FlatKeyNote AFlat => new(NaturalNote.A, Flat);
-        public static FlatKeyNote A => new(NaturalNote.A);
-        public static FlatKeyNote BFlat => new(NaturalNote.B, Flat);
-        public static FlatKeyNote B => new(NaturalNote.B);
+        public static FlatKey CFlat => new(NaturalNote.C, Flat);
+        public static FlatKey C => new(NaturalNote.C);
+        public static FlatKey DFlat => new(NaturalNote.D, Flat);
+        public static FlatKey D => new(NaturalNote.D);
+        public static FlatKey EFlat => new(NaturalNote.E, Flat);
+        public static FlatKey E => new(NaturalNote.E);
+        public static FlatKey FFlat => new(NaturalNote.F, Flat);
+        public static FlatKey F => new(NaturalNote.F);
+        public static FlatKey GFlat => new(NaturalNote.G, Flat);
+        public static FlatKey G => new(NaturalNote.G);
+        public static FlatKey AFlat => new(NaturalNote.A, Flat);
+        public static FlatKey A => new(NaturalNote.A);
+        public static FlatKey BFlat => new(NaturalNote.B, Flat);
+        public static FlatKey B => new(NaturalNote.B);
 
-        public static implicit operator Chromatic(FlatKeyNote flatKeyNote) => new(flatKeyNote.PitchClass);
+        public static IReadOnlyCollection<FlatKey> All => new[] { C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B }.ToImmutableList();
 
-        public override PitchClass PitchClass => new() { Value = NaturalNote.ToPitchClass().Value + FlatAccidental?.Value ?? 0 };
+        public static implicit operator Chromatic(FlatKey flatKeyNote) => new(flatKeyNote.PitchClass);
+
+        public override PitchClass PitchClass => GetPitchClass();
         public override AccidentalKind AccidentalKind => AccidentalKind.Flat;
         public override Accidental? Accidental => FlatAccidental;
 
@@ -130,6 +168,14 @@ public abstract partial record Note
             FlatAccidental.HasValue
                 ? $"{NaturalNote}{FlatAccidental.Value}"
                 : $"{NaturalNote}";
+
+        protected override PitchClass GetPitchClass()
+        {
+            var value = NaturalNote.ToPitchClass().Value + FlatAccidental?.Value ?? 0;
+            var result = new PitchClass { Value = value };
+
+            return result;
+        }
     }
 
     /// <inheritdoc cref="Note"/>
@@ -140,30 +186,171 @@ public abstract partial record Note
     public sealed partial record AccidentedNote(NaturalNote NaturalNote, Accidental? Accidental = null) : Note
     {
         public static implicit operator Chromatic(AccidentedNote accidentedNote) => new(accidentedNote.PitchClass);
-
-        public override PitchClass PitchClass => new() { Value = NaturalNote.ToPitchClass().Value + (Accidental?.Value ?? 0) };
-
         public static implicit operator AccidentedNote(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
         public static Interval.Simple operator -(AccidentedNote note1, AccidentedNote note2) => note1.GetInterval(note2);
+        public static IReadOnlyCollection<AccidentedNote> All => AllNotes.Instance;
 
-        public Interval.Simple GetInterval(AccidentedNote other)
+        public override PitchClass PitchClass => GetPitchClass();
+
+        public override string ToString() => $"{NaturalNote}{Accidental}";
+
+        public Interval.Simple GetInterval(AccidentedNote other) => SimpleIntervals.Get(this, other);
+
+        private PitchClass GetPitchClass()
         {
-            // See https://www.omnicalculator.com/other/music-interval#musical-intervals-chart
-
-            // Quantity
-            var otherNaturalNote = other.NaturalNote;
-            var quantity = NaturalNote.GetSimpleInterval(otherNaturalNote);
-
-            // Quality
-            var otherAccidental = other.Accidental ?? Intervals.Accidental.Natural;
-            var accidental = other.Accidental ?? Intervals.Accidental.Natural;
-            Quality quality = (otherAccidental.Value - accidental.Value);
-
-            return new()
+            var result = new PitchClass
             {
-                Quantity = quantity,
-                Quality = quality
+                Value = NaturalNote.ToPitchClass().Value + (Accidental?.Value ?? 0)
             };
+
+            return result;
         }
+
+        private class AllNotes : LazyCollectionBase<AccidentedNote>
+        {
+            public static readonly AllNotes Instance = new();
+
+            public AllNotes()
+                : base(GetAll())
+            {
+            }
+
+            private static IEnumerable<AccidentedNote> GetAll()
+            {
+                foreach (var naturalNote in NaturalNote.All)
+                    foreach (var accidental in Intervals.Accidental.All)
+                        yield return new(naturalNote, accidental);
+            }
+        }
+
+        private class SimpleIntervals : LazyIndexerBase<(AccidentedNote, AccidentedNote), Interval.Simple>
+        {
+            public static Interval.Simple Get(AccidentedNote note1, AccidentedNote note2) => _instance[(note1, note2)];
+
+            private static readonly IReadOnlyDictionary<NaturalNote, Key> _keyByNaturalNote =
+                new Dictionary<NaturalNote, Key>
+                {
+                    [NaturalNote.C] = Key.Major.C,
+                    [NaturalNote.D] = Key.Major.D,
+                    [NaturalNote.E] = Key.Major.E,
+                    [NaturalNote.F] = Key.Major.F,
+                    [NaturalNote.G] = Key.Major.G,
+                    [NaturalNote.A] = Key.Major.A,
+                    [NaturalNote.B] = Key.Major.B
+                }.ToImmutableDictionary();
+
+            private static readonly SimpleIntervals _instance = new();
+
+            public SimpleIntervals()
+                : base(GetKeyValuePairs())
+            {
+            }
+
+            private static IEnumerable<KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple>> GetKeyValuePairs()
+            {
+                var startNotes = new SortedSet<KeyNote>();
+                startNotes.UnionWith(AllSharp);
+                startNotes.UnionWith(AllFlat);
+
+                foreach (var startNote in startNotes)
+                foreach (var diatonicNumber in DiatonicNumber.All)
+                {
+                    var isPerfect = diatonicNumber.IsPerfect;
+                    if (isPerfect)
+                    {
+                        yield return CreateItem(
+                            startNote, 
+                            diatonicNumber, 
+                            Quality.Perfect, 
+                            Quality.Augmented, 
+                            Quality.Diminished);
+                    }
+                    else
+                    {
+                        yield return CreateItem(
+                            startNote, 
+                            diatonicNumber, 
+                            Quality.Major,
+                            Quality.Augmented,
+                            Quality.Minor);
+                    }
+                }
+
+                static KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple> CreateItem(
+                    KeyNote startNote,
+                    DiatonicNumber diatonicNumber,
+                    Quality quality,
+                    Quality sharpQuality,
+                    Quality flatQuality)
+                {
+                    // Compute end note
+                    var endNote = new AccidentedNote(startNote.NaturalNote + diatonicNumber, quality.ToAccidental());
+
+                    // Adjust quality for key accidental
+                    var key = _keyByNaturalNote[startNote.NaturalNote];
+                    if (key.IsNoteAccidental(endNote.NaturalNote))
+                    {
+                        switch (key.AccidentalKind)
+                        {
+                            case AccidentalKind.Sharp:
+                                quality = flatQuality;
+                                break;
+                            case AccidentalKind.Flat:
+                                quality = sharpQuality;
+                                break;
+                        }
+                    }
+
+                    // Create item
+                    var itemKey = (note1: startNote, note2: endNote);
+                    var itemValue = new Interval.Simple { Size = diatonicNumber, Quality = quality };
+                    var item = new KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple>(itemKey, itemValue);
+                    return item;
+                }
+            }
+        }
+
+        /*
+         
+        TODO - Compound intervals
+
+        private class CompoundIntervals : LazyIndexerBase<(AccidentedNote, AccidentedNote), Interval.Compound>
+        {
+            public static Interval.Compound Get(AccidentedNote note1, AccidentedNote note2) => _instance[(note1, note2)];
+
+            private static readonly CompoundIntervals _instance = new();
+
+            public CompoundIntervals()
+                : base(GetKeyValuePairs())
+            {
+            }
+
+            private static IEnumerable<KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound>> GetKeyValuePairs()
+            {
+                var startNotes = new SortedSet<KeyNote>();
+                startNotes.UnionWith(AllSharp);
+                startNotes.UnionWith(AllFlat);
+
+                foreach (var startNote in startNotes)
+                foreach (var diatonicNumber in CompoundDiatonicNumber.All)
+                foreach (var quality in diatonicNumber.ToSimple().AvailableQualities)
+                {
+                    var item = CreateItem(startNote, diatonicNumber, quality);
+                    yield return item;
+                }
+
+                static KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound> CreateItem(
+                    KeyNote startNote, 
+                    CompoundDiatonicNumber diatonicNumber, 
+                    Quality quality)
+                {
+                    var endNote = new AccidentedNote(startNote.NaturalNote + diatonicNumber, quality.ToAccidental());
+                    var key = (note1: startNote, note2: endNote);
+                    var value = new Interval.Compound() {Size = diatonicNumber, Quality = quality};
+                    var item = new KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound>(key, value);
+                    return item;
+                }
+            }
+        */
     }
 }

@@ -2,43 +2,37 @@
 
 using System.Collections;
 
-public sealed class ReadOnlyCollectionWrapper<TValue> : IReadOnlyCollection<TValue>
+public sealed class ReadOnlyValues<TValue> : IReadOnlyCollection<TValue>
     where TValue : struct, IValue<TValue>
 {
-    public static ReadOnlyCollectionWrapper<TValue> Create(int start, int count)
+    public static ReadOnlyValues<TValue> Create(int start, int count)
     {
-        var minValue = start;
-        var maxValue = start + count - 1;
-        // ValueUtils<TValue>.CheckRange(minValue);
-        // ValueUtils<TValue>.CheckRange(maxValue);
-
         var collection =
-            Enumerable.Range(minValue, count)
+            Enumerable.Range(start, count)
                 .Select(i => new TValue { Value = i });
 
-        var result = new ReadOnlyCollectionWrapper<TValue>(collection, count);
+        var result = new ReadOnlyValues<TValue>(collection, count);
 
         return result;
-
     }
 
-    public static ReadOnlyCollectionWrapper<TValue> Create()
+    public static ReadOnlyValues<TValue> Create()
     {
         var minValue = TValue.Min.Value;
         var maxValue = TValue.Max.Value;
-        var count = maxValue - minValue;
+        var count = maxValue - minValue + 1;
         var collection =
             Enumerable.Range(minValue, count)
                 .Select(i => new TValue { Value = i });
 
-        var result = new ReadOnlyCollectionWrapper<TValue>(collection, count);
+        var result = new ReadOnlyValues<TValue>(collection, count);
 
         return result;
     }
 
     private readonly IEnumerable<TValue> _items;
 
-    public ReadOnlyCollectionWrapper(
+    public ReadOnlyValues(
         IEnumerable<TValue> items,
         int count)
     {
@@ -50,5 +44,4 @@ public sealed class ReadOnlyCollectionWrapper<TValue> : IReadOnlyCollection<TVal
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
     public int Count { get; }
     public override string ToString() => string.Join(" ", _items.Select(value => value.ToString()));
-
 }

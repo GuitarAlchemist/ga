@@ -1,17 +1,19 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using System.Collections.Immutable;
+
 using System.Runtime.CompilerServices;
+using GA.Business.Core.Intervals.Primitives;
+using Tonal;
+using GA.Core;
 
 using PCRE;
 
-using GA.Business.Core.Intervals.Primitives;
 
 /// <inheritdoc cref="IEquatable{Noteing}" />
 /// <inheritdoc cref="IComparable{Noteing}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
-/// A musical natural note (<href="https://en.wikipedia.org/wiki/Musical_note"></href>, <href="https://en.wikipedia.org/wiki/Natural_(music)"></href>)
+/// A musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(music))
 /// </summary>
 [PublicAPI]
 public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNote>
@@ -25,11 +27,6 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static bool operator >=(NaturalNote left, NaturalNote right) => left.CompareTo(right) >= 0;
 
     #endregion
-
-    static NaturalNote()
-    {
-        _lazySimpleIntervalDictionary = new(GetIntervalDictionary);
-    }
 
     private const int _minValue = 0;
     private const int _maxValue = 6;
@@ -77,13 +74,13 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         return true;
     }
 
-    public static IReadOnlyCollection<NaturalNote> All => ValueUtils<NaturalNote>.GetAll();
+    public static IReadOnlyCollection<NaturalNote> All => GetAll();
 
     public static implicit operator NaturalNote(int value) => new() { Value = value };
     public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;
 
     public static NaturalNote operator +(NaturalNote naturalNote, DiatonicNumber diatonicNumber) => Add(naturalNote, diatonicNumber);
-    public static DiatonicNumber operator -(NaturalNote naturalNote1, NaturalNote naturalNote2) => GetSimpleInterval(naturalNote1, naturalNote2);
+    public static DiatonicNumber operator -(NaturalNote naturalNote1, NaturalNote naturalNote2) => Intervals.Get(naturalNote1, naturalNote2);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
@@ -91,6 +88,7 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
     public NaturalNote ToDegree(int count) => Create((Value + count) % 7);
+    public DiatonicNumber GetInterval(NaturalNote other) => Intervals.Get(this, other);
 
     public PitchClass ToPitchClass()
     {
@@ -107,15 +105,22 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
 
         return _value switch
         {
-            0 => new() {Value = 0}, // C
-            1 => new() {Value = 2}, // D
-            2 => new() {Value = 4}, // E
-            3 => new() {Value = 5}, // F
-            4 => new() {Value = 7}, // G
-            5 => new() {Value = 9}, // A
-            6 => new() {Value = 11}, // B
+            0 => new() { Value = 0 }, // C
+            1 => new() { Value = 2 }, // D
+            2 => new() { Value = 4 }, // E
+            3 => new() { Value = 5 }, // F
+            4 => new() { Value = 7 }, // G
+            5 => new() { Value = 9 }, // A
+            6 => new() { Value = 11 }, // B
             _ => throw new InvalidOperationException()
         };
+    }
+
+    public Key ToKey()
+    {
+        // var a = new Dictionary<>()
+
+        return null; // TODO
     }
 
     public override string ToString() => _value switch
@@ -130,6 +135,8 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         _ => ""
     };
 
+    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueUtils<NaturalNote>.GetAll();
+
     private static NaturalNote Add(NaturalNote naturalNote, DiatonicNumber diatonicNumber)
     {
         var result = new NaturalNote
@@ -140,29 +147,21 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         return result;
     }
 
-    #region Simple Intervals
-
-    public DiatonicNumber GetSimpleInterval(NaturalNote other) => GetSimpleInterval(this, other);
-    private static readonly Lazy<IReadOnlyDictionary<(NaturalNote, NaturalNote), DiatonicNumber>> _lazySimpleIntervalDictionary;
-    private static DiatonicNumber GetSimpleInterval(NaturalNote note1, NaturalNote note2) => _lazySimpleIntervalDictionary.Value[(note1, note2)];
-
-    private static ImmutableDictionary<(NaturalNote, NaturalNote), DiatonicNumber> GetIntervalDictionary()
+    private class Intervals : LazyIndexerBase<(NaturalNote, NaturalNote), DiatonicNumber>
     {
-        var dict = new Dictionary<(NaturalNote, NaturalNote), DiatonicNumber>();
+        private static readonly Intervals _instance = new();
+        public static DiatonicNumber Get(NaturalNote note1, NaturalNote note2) => _instance[(note1, note2)];
 
-        foreach (var note1 in All)
+        public Intervals() 
+            : base(GetKeyValuePairs())
         {
-            foreach (var diatonicNumber in DiatonicNumber.All)
-            {
-                var note2 = note1 + diatonicNumber;
-                var tuple = (note1, note2);
-                dict[tuple] = diatonicNumber;
-            }
         }
 
-        return dict.ToImmutableDictionary();
+        private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), DiatonicNumber>> GetKeyValuePairs()
+        {
+            foreach (var note1 in All)
+            foreach (var value in DiatonicNumber.All)
+                yield return new((note1, note1 + value), value);
+        }
     }
-
-    #endregion
 }
-

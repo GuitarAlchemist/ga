@@ -2,7 +2,9 @@
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Tonal;
 
-var notes = Key.Major.G.GetNotes();
+var notes1 = KeySignature.Sharp(1).SharpNotes;
+var notes2 = KeySignature.Sharp(2).SharpNotes;
+
 
 var fretBoard = Fretboard.Guitar();
 var aa = fretBoard.OpenPositions;

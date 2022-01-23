@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core;
 
+[PublicAPI]
 public interface IAll<out TSelf>
     where TSelf : struct, IValue<TSelf>
 {

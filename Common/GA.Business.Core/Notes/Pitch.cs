@@ -189,22 +189,22 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
     /// A flat pitch.
     /// </summary>
     [PublicAPI]
-    public sealed partial record Flat(Note.FlatKeyNote Note, Octave Octave) : Pitch(Octave)
+    public sealed partial record Flat(Note.FlatKey Note, Octave Octave) : Pitch(Octave)
     {
         public static Flat Default => C(0);
 
-        public static Flat C(Octave octave) => new(Notes.Note.FlatKeyNote.C, octave);
-        public static Flat DFlat(Octave octave) => new(Notes.Note.FlatKeyNote.DFlat, octave);
-        public static Flat D(Octave octave) => new(Notes.Note.FlatKeyNote.D, octave);
-        public static Flat EFlat(Octave octave) => new(Notes.Note.FlatKeyNote.EFlat, octave);
-        public static Flat E(Octave octave) => new(Notes.Note.FlatKeyNote.E, octave);
-        public static Flat F(Octave octave) => new(Notes.Note.FlatKeyNote.F, octave);
-        public static Flat GFlat(Octave octave) => new(Notes.Note.FlatKeyNote.GFlat, octave);
-        public static Flat G(Octave octave) => new(Notes.Note.FlatKeyNote.G, octave);
-        public static Flat AFlat(Octave octave) => new(Notes.Note.FlatKeyNote.AFlat, octave);
-        public static Flat A(Octave octave) => new(Notes.Note.FlatKeyNote.A, octave);
-        public static Flat ASharp(Octave octave) => new(Notes.Note.FlatKeyNote.BFlat, octave);
-        public static Flat B(Octave octave) => new(Notes.Note.FlatKeyNote.B, octave);
+        public static Flat C(Octave octave) => new(Notes.Note.FlatKey.C, octave);
+        public static Flat DFlat(Octave octave) => new(Notes.Note.FlatKey.DFlat, octave);
+        public static Flat D(Octave octave) => new(Notes.Note.FlatKey.D, octave);
+        public static Flat EFlat(Octave octave) => new(Notes.Note.FlatKey.EFlat, octave);
+        public static Flat E(Octave octave) => new(Notes.Note.FlatKey.E, octave);
+        public static Flat F(Octave octave) => new(Notes.Note.FlatKey.F, octave);
+        public static Flat GFlat(Octave octave) => new(Notes.Note.FlatKey.GFlat, octave);
+        public static Flat G(Octave octave) => new(Notes.Note.FlatKey.G, octave);
+        public static Flat AFlat(Octave octave) => new(Notes.Note.FlatKey.AFlat, octave);
+        public static Flat A(Octave octave) => new(Notes.Note.FlatKey.A, octave);
+        public static Flat ASharp(Octave octave) => new(Notes.Note.FlatKey.BFlat, octave);
+        public static Flat B(Octave octave) => new(Notes.Note.FlatKey.B, octave);
 
         public static Flat FromPitch(Pitch pitch) => pitch.PitchClass.ToFlatPitch(pitch.Octave);
 

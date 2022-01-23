@@ -56,7 +56,7 @@ public readonly record struct MidiNote : IValue<MidiNote>
     public Pitch ToPitch() => ToSharpPitch();
     public Note.Chromatic ToChromaticNote() => PitchClass.ToChromaticNote();
     public Note.SharpKey ToSharpNote() => PitchClass.ToSharpNote();
-    public Note.FlatKeyNote ToFlatNote() => PitchClass.ToFlatNote();
+    public Note.FlatKey ToFlatNote() => PitchClass.ToFlatNote();
     public Pitch.Chromatic ToChromaticPitch() => new(ToChromaticNote(), Octave);
     public Pitch.Sharp ToSharpPitch() => new(ToSharpNote(), Octave);
     public Pitch.Flat ToFlatPitch() => new(ToFlatNote(), Octave);
