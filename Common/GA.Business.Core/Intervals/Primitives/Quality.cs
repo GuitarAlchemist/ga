@@ -55,6 +55,9 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Quality ToInverse() => Create(-Value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Accidental? ToAccidental() => ToAccidentalInternal(this);
+
     public string Name => Value switch
     {
         -3 => nameof(DoublyDiminished),
@@ -92,6 +95,12 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
             "S" => ShortName,
             _ => throw new FormatException($"The {format} format string is not supported.")
         };
+    }
+
+    private static Accidental? ToAccidentalInternal(Quality quality)
+    {
+        if (quality == Perfect || quality == Major) return null;
+        return Accidental.Create(quality.Value);
     }
 }
 

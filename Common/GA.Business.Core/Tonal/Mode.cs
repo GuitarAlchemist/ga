@@ -1,10 +1,10 @@
-﻿using System.ComponentModel;
-using GA.Business.Core.Intervals;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Tonal.Primitives;
-using GA.Core;
+﻿namespace GA.Business.Core.Tonal;
 
-namespace GA.Business.Core.Tonal;
+using System.ComponentModel;
+
+using Intervals;
+using Primitives;
+
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
@@ -26,8 +26,6 @@ public abstract partial record Mode
 
         public IEnumerable<Interval.Compound> GetIntervals(MajorScaleDegree startDegree)
         {
-            var notes = Note.SharpKey.All;
-
             return null; // TODO
         }
     }

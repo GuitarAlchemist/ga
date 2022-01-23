@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-using GA.Business.Core.Notes.Primitives;
+﻿namespace GA.Business.Core.Intervals.Primitives;
 
-namespace GA.Business.Core.Intervals.Primitives;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 /// <inheritdoc cref="IEquatable{String}" />
 /// <inheritdoc cref="IComparable{String}" />
@@ -14,7 +14,7 @@ namespace GA.Business.Core.Intervals.Primitives;
 /// https://hellomusictheory.com/learn/intervals/
 /// </remarks>
 [PublicAPI]
-public readonly record struct DiatonicNumber : IValue<DiatonicNumber>, IAll<DiatonicNumber>
+public readonly record struct DiatonicNumber : IDiatonicNumber<DiatonicNumber>
 {
     #region Relational members
 
@@ -55,7 +55,61 @@ public readonly record struct DiatonicNumber : IValue<DiatonicNumber>, IAll<Diat
     public static IReadOnlyCollection<DiatonicNumber> Range(int start, int count) => ValueUtils<DiatonicNumber>.GetRange(start, count);
     public static IReadOnlyCollection<DiatonicNumber> Range(int count) => ValueUtils<DiatonicNumber>.GetRange(-_minValue, count);
 
-    public Semitones ToSemitones()
+    public CompoundDiatonicNumber ToCompound() => new() {Value = _value + 8};
+
+    /// <summary>
+    /// Qualities available for a perfect interval
+    /// </summary>
+    /// <remarks>
+    /// See https://musictheory.pugetsound.edu/mt21c/AugmentedAndDiminishedIntervals.html
+    /// </remarks>
+    public static readonly IReadOnlySet<Quality> PerfectQualities = new[] {Quality.Diminished, Quality.Perfect, Quality.Augmented}.ToImmutableHashSet();
+
+    /// <summary>
+    /// Qualities available for an imperfect interval.
+    /// </summary>
+    /// <remarks>
+    /// See https://musictheory.pugetsound.edu/mt21c/AugmentedAndDiminishedIntervals.html
+    /// </remarks>
+    public static readonly IReadOnlySet<Quality> ImperfectQualities = new[] {Quality.Diminished, Quality.Minor, Quality.Major, Quality.Augmented }.ToImmutableHashSet();
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    /// <summary>
+    /// Gets available qualities ({d, P, A} if perfect interval, {d, m, M, A} if imperfect interval) 
+    /// </summary>
+    /// <returns>The <see cref="IReadOnlyCollection{Quality}"/>.</returns>
+    public IReadOnlySet<Quality> AvailableQualities => IsPerfect ? PerfectQualities : ImperfectQualities;
+
+    /// <summary>
+    /// Indicates whether the diatonic number represent a perfect interval.
+    /// </summary>
+    /// <returns>True for perfect interval, false otherwise.</returns>
+    public bool IsPerfect => IsPerfectInternal(this);
+
+    /// <summary>
+    /// Indicates whether the diatonic number represent an imperfect interval.
+    /// </summary>
+    /// <returns>True for imperfect interval, false otherwise.</returns>
+    public bool IsImperfect => !IsPerfectInternal(this);
+
+    /// <summary>
+    /// Gets the inverse interval diatonic interval number.
+    /// </summary>
+    /// <remarks>
+    /// Inverse diatonic intervals add up to 9 - see explanation here: https://www.essential-music-theory.com/inverted-intervals.html
+    /// </remarks>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DiatonicNumber ToInverse() => Create(9 - Value);
+
+    /// <summary>
+    /// Create a chromatic interval
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public Semitones ToChromatic()
     {
         return Value switch
         {
@@ -71,42 +125,11 @@ public readonly record struct DiatonicNumber : IValue<DiatonicNumber>, IAll<Diat
         };
     }
 
-    /// <summary>
-    /// Indicates whether the diatonic number is perfect.(Unison, Fourth, Fifth, Octave)
-    /// </summary>
-    /// <returns>True is the diatonic number represents a perfect interval</returns>
-    public bool IsPerfect()
+    private static bool IsPerfectInternal(DiatonicNumber number) => number.Value switch
     {
-        switch (Value)
-        {
-            case 1:
-            case 4:
-            case 5:
-            case 8:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>
-    /// Indicates whether the diatonic number is imperfect.(Second, Third, Sixth, Seventh)
-    /// </summary>
-    /// <returns>True is the diatonic number represents a perfect interval</returns>
-    public bool IsImperfect() => !IsPerfect();
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
-
-    /// <summary>
-    /// Gets the inverse interval diatonic interval number.
-    /// </summary>
-    /// <remarks>
-    /// Inverse diatonic intervals add up to 9 - see explanation here:  https://www.essential-music-theory.com/inverted-intervals.html
-    /// </remarks>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DiatonicNumber ToInverse() => Create(9 - Value);
+        1 or 4 or 5 or 8 => true, // Unison, Fourth, Fifth, Octave
+        _ => false,
+    };
 
     public override string ToString() => Value.ToString();
 }

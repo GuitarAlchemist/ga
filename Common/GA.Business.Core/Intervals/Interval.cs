@@ -16,29 +16,19 @@ public abstract partial record Interval
     [PublicAPI]
     public sealed partial record Chromatic : Interval
     {
-        public Semitones Quantity { get; init; }
+        public Semitones Size { get; init; }
 
         public static Chromatic Unison => Create(Semitones.Unison);
         public static Chromatic Semitone => Create(Semitones.Semitone);
         public static Chromatic Tone => Create(Semitones.Tone);
         public static Chromatic Tritone => Create(Semitones.Tritone);
         public static Chromatic Octave => Create(Semitones.Octave());
-        private static Chromatic Create(Semitones quantity) => new() {Quantity = quantity};
+        private static Chromatic Create(Semitones size) => new() {Size = size};
 
-        public static implicit operator Chromatic(int quantity) => new() { Quantity = quantity};
-        public static implicit operator int(Chromatic interval) => interval.Quantity.Value;
-        public static implicit operator Semitones(Chromatic interval) => interval.Quantity;
-        public static Chromatic operator !(Chromatic interval) => Create(!interval.Quantity);
-
-        
-        /*
-        public void ToSimple()
-        {
-            foreach (var number in DiatonicNumber.Range(7))
-            {
-            }
-        }
-         */
+        public static implicit operator Chromatic(int size) => new() { Size = size};
+        public static implicit operator int(Chromatic interval) => interval.Size.Value;
+        public static implicit operator Semitones(Chromatic interval) => interval.Size;
+        public static Chromatic operator !(Chromatic interval) => Create(!interval.Size);
     }
 
     /// <summary>
@@ -51,9 +41,9 @@ public abstract partial record Interval
 
     public sealed partial record Simple : Diatonic, IFormattable
     {
-        public DiatonicNumber Quantity { get; init; }
+        public DiatonicNumber Size { get; init; }
 
-        public string ShortName => $"{Quality}{Quantity}";
+        public string ShortName => $"{Quality}{Size}";
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)
@@ -67,15 +57,15 @@ public abstract partial record Interval
             };
         }
 
-        public Simple ToInverse() => new() {Quantity = !Quantity, Quality = !Quality};
+        public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
         public static Simple operator !(Simple interval) => interval.ToInverse();
     }
 
     public sealed partial record Compound : Diatonic, IFormattable
     {
-        public CompoundDiatonicNumber Quantity { get; init; }
+        public CompoundDiatonicNumber Size { get; init; }
 
-        public string ShortName => $"{Quality}{Quantity}";
+        public string ShortName => $"{Quality}{Size}";
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)

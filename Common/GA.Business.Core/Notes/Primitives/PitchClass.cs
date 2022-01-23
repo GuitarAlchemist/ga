@@ -40,7 +40,7 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public static implicit operator PitchClass(int value) => Create(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.SharpKey(PitchClass pitchClass) => pitchClass.ToSharpNote();
-    public static implicit operator Note.FlatKeyNote(PitchClass pitchClass) => pitchClass.ToFlatNote();
+    public static implicit operator Note.FlatKey(PitchClass pitchClass) => pitchClass.ToFlatNote();
     public static Interval.Chromatic operator -(PitchClass a, PitchClass b) => a.Value + -b.Value;
 
     private readonly int _value;
@@ -51,7 +51,7 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
     public Note.SharpKey ToSharpNote() => _sharpNotes[_value];
-    public Note.FlatKeyNote ToFlatNote() => _flatNotes[_value];
+    public Note.FlatKey ToFlatNote() => _flatNotes[_value];
     public Pitch.Chromatic ToChromaticPitch(Octave octave) => new(_chromaticNotes[_value], octave);
     public Pitch.Sharp ToSharpPitch(Octave octave) => new(_sharpNotes[_value], octave);
     public Pitch.Flat ToFlatPitch(Octave octave) => new(_flatNotes[_value], octave);
@@ -80,10 +80,10 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
             Note.SharpKey.FSharp, Note.SharpKey.G, Note.SharpKey.GSharp, Note.SharpKey.A, Note.SharpKey.ASharp, Note.SharpKey.B
         }.ToImmutableList();
 
-    private static readonly ImmutableList<Note.FlatKeyNote> _flatNotes =
-        new List<Note.FlatKeyNote>
+    private static readonly ImmutableList<Note.FlatKey> _flatNotes =
+        new List<Note.FlatKey>
         {
-            Note.FlatKeyNote.C, Note.FlatKeyNote.DFlat, Note.FlatKeyNote.D, Note.FlatKeyNote.EFlat, Note.FlatKeyNote.E, Note.FlatKeyNote.F,
-            Note.FlatKeyNote.GFlat, Note.FlatKeyNote.G, Note.FlatKeyNote.AFlat, Note.FlatKeyNote.A, Note.FlatKeyNote.BFlat, Note.FlatKeyNote.B
+            Note.FlatKey.C, Note.FlatKey.DFlat, Note.FlatKey.D, Note.FlatKey.EFlat, Note.FlatKey.E, Note.FlatKey.F,
+            Note.FlatKey.GFlat, Note.FlatKey.G, Note.FlatKey.AFlat, Note.FlatKey.A, Note.FlatKey.BFlat, Note.FlatKey.B
         }.ToImmutableList();
 }

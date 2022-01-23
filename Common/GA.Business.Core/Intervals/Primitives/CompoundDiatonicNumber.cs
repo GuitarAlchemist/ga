@@ -12,7 +12,7 @@ namespace GA.Business.Core.Intervals.Primitives;
 /// https://en.wikipedia.org/wiki/Interval_(music)#Compound_intervals
 /// </remarks>
 [PublicAPI]
-public readonly record struct CompoundDiatonicNumber : IValue<CompoundDiatonicNumber>
+public readonly record struct CompoundDiatonicNumber : IDiatonicNumber<CompoundDiatonicNumber>
 {
     #region Relational members
 
@@ -46,8 +46,12 @@ public readonly record struct CompoundDiatonicNumber : IValue<CompoundDiatonicNu
     public static CompoundDiatonicNumber Fifteenth => Create(15);
     public static CompoundDiatonicNumber DoubleOctave => Create(15);
 
+    public static IReadOnlyCollection<CompoundDiatonicNumber> All => ValueUtils<CompoundDiatonicNumber>.GetAll();
+
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
+
+    public DiatonicNumber ToSimple() => new() {Value = _value - 8};
 
     public override string ToString() => Value.ToString();
 }
