@@ -11,42 +11,51 @@ public static class CollectionExtensions
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="items">The source items collection.</param>
-    /// <param name="start">The start <see cref="Index"/>.</param>
-    /// <returns>The rotated <see cref="IReadOnlyCollection{T}"/>.</returns>
-    public static IReadOnlyCollection<T> Rotate<T>(
+    /// <param name="shift">The shift.</param>
+    /// <returns>The rotated <see cref="IReadOnlyList{T}"/>.</returns>
+    public static IReadOnlyList<T> Rotate<T>(
         this IReadOnlyCollection<T> items,
-        Index start = default)
+        int shift = 0)
     {
-        return new RotatedCollection<T>(items, start);
+        return new RotatedCollection<T>(items, shift);
     }
 
     [PublicAPI]
-    public class RotatedCollection<T> : IReadOnlyCollection<T>
+    public class RotatedCollection<T> : IReadOnlyList<T>
     {
         private readonly IReadOnlyCollection<T> _items;
-        private Index _index = Index.Start;
+        private readonly int _shift;
 
         public RotatedCollection(
             IReadOnlyCollection<T> items,
-            Index start = default)
+            int shift = 0)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
-            if (start.Value > 0) IncrementIndex(start.Value);
+            _shift = shift;
         }
-
-        public int Count => _items.Count;
-        public Index Index => _index;
 
         public IEnumerator<T> GetEnumerator()
         {
-            yield return _items.ElementAt(_index);
-            IncrementIndex();
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            for (var i = 0; i < _items.Count; i++)
+            {
+                var index = (i + _shift) % Count;
+                yield return _items.ElementAt(index);
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public int Count => _items.Count;
+
+        public T this[int aIndex] 
+        {
+            get
+            {
+                var index = (aIndex + _shift) % Count;
+                return _items.ElementAt(index);
+            }
+        }
 
         public override string ToString() => string.Join(" ", this);
-
-        private void IncrementIndex(int count = 1) => _index = (_index.Value + count) % Count;
     }
 }

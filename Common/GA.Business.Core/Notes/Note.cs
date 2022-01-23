@@ -86,6 +86,7 @@ public abstract partial record Note
         public abstract AccidentalKind AccidentalKind { get; }
         public abstract Accidental? Accidental { get; }
         public override PitchClass PitchClass => GetPitchClass();
+        public AccidentedNote ToAccidentedNote() => new(NaturalNote, Accidental);
 
         protected abstract PitchClass GetPitchClass();
     }
@@ -217,8 +218,17 @@ public abstract partial record Note
 
             private static IEnumerable<AccidentedNote> GetAll()
             {
+                var accidentals = new[]
+                {
+                    Intervals.Accidental.DoubleFlat,
+                    Intervals.Accidental.Flat,
+                    Intervals.Accidental.Natural,
+                    Intervals.Accidental.Sharp,
+                    Intervals.Accidental.DoubleSharp,
+                };
+
                 foreach (var naturalNote in NaturalNote.All)
-                    foreach (var accidental in Intervals.Accidental.All)
+                    foreach (var accidental in accidentals)
                         yield return new(naturalNote, accidental);
             }
         }

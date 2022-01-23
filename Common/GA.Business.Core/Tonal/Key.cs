@@ -2,7 +2,6 @@
 
 using System.Collections.Immutable;
 
-
 using Intervals;
 using GA.Business.Core.Notes.Primitives;
 using GA.Core;
@@ -14,7 +13,66 @@ public abstract partial record Key(KeySignature KeySignature)
 {
     public abstract KeyMode KeyMode { get; }
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
+    public abstract Note.KeyNote Root { get; }
     public bool IsNoteAccidental(NaturalNote note) => KeySignature.Contains(note);
+
+    /// <summary>
+    /// Gets all notes in the key.
+    /// </summary>
+    /// <returns></returns>
+    public IReadOnlyCollection<Note.KeyNote> GetNotes()
+    {
+        var items = KeySignature.Value < 0
+            ? GetFlatNotes().ToImmutableList()
+            : GetSharpNotes().ToImmutableList();
+        var result = new ReadOnlyItems<Note.KeyNote>(items);
+
+        return result;
+
+        IEnumerable<Note.KeyNote> GetSharpNotes()
+        {
+            var root = Root;
+            yield return root;
+
+            var naturalNote = root.NaturalNote;
+            var sharpNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
+            bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
+            for (var i = 0; i < 6; i++)
+            {
+                naturalNote = naturalNote.ToDegree(1);
+
+                yield return
+                    HasSharp(naturalNote)
+                        ? new(naturalNote, SharpAccidental.Sharp)
+                        : new Note.SharpKey(naturalNote);
+            }
+        }
+
+        IEnumerable<Note.KeyNote> GetFlatNotes()
+        {
+            var root = Root;
+            yield return root;
+
+            var naturalNote = root.NaturalNote;
+            var flatNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
+            bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
+            for (var i = 0; i < 6; i++)
+            {
+                naturalNote = naturalNote.ToDegree(1);
+
+                yield return
+                    HasFlat(naturalNote)
+                        ? new(naturalNote, FlatAccidental.Flat)
+                        : new Note.FlatKey(naturalNote);
+            }
+        }
+    }
+
+
+    public Interval.Simple GetInterval(Note.AccidentedNote note)
+    {
+        return note.GetInterval(Root);
+    }
 
     [PublicAPI]
     public sealed partial record Major(KeySignature KeySignature) 
@@ -37,59 +95,7 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Major CSharp => new(7);
 
         public override KeyMode KeyMode => KeyMode.Major;
-        public Note.KeyNote Root => GetRoot(KeySignature);
-
-        /// <summary>
-        /// Gets all notes in the key (e.g. C D E F G A B)
-        /// </summary>
-        /// <returns></returns>
-        public IReadOnlyCollection<Note.KeyNote> GetNotes()
-        {
-            var items = KeySignature.Value < 0
-                ? GetFlatNotes().ToImmutableList()
-                : GetSharpNotes().ToImmutableList();
-            var result = new ReadOnlyItems<Note.KeyNote>(items);
-
-            return result;
-
-            IEnumerable<Note.KeyNote> GetSharpNotes()
-            {
-                var root = GetRoot(KeySignature);
-                yield return root;
-
-                var naturalNote = root.NaturalNote;
-                var sharpNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
-                bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
-                for (var i = 0; i < 6; i++)
-                {
-                    naturalNote = naturalNote.ToDegree(1);
-
-                    yield return
-                        HasSharp(naturalNote)
-                            ? new(naturalNote, SharpAccidental.Sharp)
-                            : new Note.SharpKey(naturalNote);
-                }
-            }
-
-            IEnumerable<Note.KeyNote> GetFlatNotes()
-            {
-                var root = GetRoot(KeySignature);
-                yield return root;
-
-                var naturalNote = root.NaturalNote;
-                var flatNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
-                bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
-                for (var i = 0; i < 6; i++)
-                {
-                    naturalNote = naturalNote.ToDegree(1);
-
-                    yield return
-                        HasFlat(naturalNote)
-                            ? new(naturalNote, FlatAccidental.Flat)
-                            : new Note.FlatKey(naturalNote);
-                }
-            }
-        }
+        public override Note.KeyNote Root => GetRoot(KeySignature);
 
         public override string ToString()
         {
@@ -157,7 +163,7 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Minor ASharp => new(7);
 
         public override KeyMode KeyMode => KeyMode.Minor;
-        public Note.KeyNote Root => GetRoot(KeySignature);
+        public override Note.KeyNote Root => GetRoot(KeySignature);
 
         public override string ToString()
         {

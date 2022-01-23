@@ -99,6 +99,25 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
 
     private static Accidental? ToAccidentalInternal(Quality quality)
     {
+        switch (quality._value)
+        {
+            case -3:
+                return Accidental.TripleFlat;
+            case -2:
+                return Accidental.DoubleFlat;
+            case -1:
+                return Accidental.Flat;
+            case 0:
+                break;
+            case 1:
+                break;
+            case 2:
+                return Accidental.DoubleSharp;
+            case 3:
+                return Accidental.TripleSharp;
+        }
+
+
         if (quality == Perfect || quality == Major) return null;
         return Accidental.Create(quality.Value);
     }
