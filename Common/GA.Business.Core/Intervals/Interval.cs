@@ -12,6 +12,7 @@ public abstract partial record Interval
     /// </summary>
     /// <remarks>
     /// https://viva.pressbooks.pub/openmusictheory/chapter/intervals-in-integer-notation/
+    /// http://musictheoryblog.blogspot.com/2007/01/intervals.html
     /// </remarks>
     [PublicAPI]
     public sealed partial record Chromatic : Interval
@@ -31,9 +32,6 @@ public abstract partial record Interval
         public static Chromatic operator !(Chromatic interval) => Create(!interval.Size);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
     public partial record Diatonic : Interval
     {
         public Quality Quality { get; init; }
@@ -44,6 +42,8 @@ public abstract partial record Interval
         public DiatonicNumber Size { get; init; }
 
         public string ShortName => $"{Quality}{Size}";
+        public string AccidentedName => GetAccidentedName(Quality, Size);
+
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)
@@ -53,12 +53,22 @@ public abstract partial record Interval
             {
                 "G" => ShortName,
                 "S" => ShortName,
+                "A" => AccidentedName,
                 _ => throw new FormatException($"The {format} format string is not supported.")
             };
         }
 
         public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
         public static Simple operator !(Simple interval) => interval.ToInverse();
+
+        private static string GetAccidentedName(
+            Quality quality,DiatonicNumber 
+             size)
+        {
+            var accidental = quality.ToAccidental();
+            if (accidental.HasValue) return size.ToString();
+            return $"{accidental}{size}";
+        }
     }
 
     public sealed partial record Compound : Diatonic, IFormattable

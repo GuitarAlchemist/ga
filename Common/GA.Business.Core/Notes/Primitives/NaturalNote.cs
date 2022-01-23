@@ -1,13 +1,12 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-
 using System.Runtime.CompilerServices;
-using GA.Business.Core.Intervals.Primitives;
-using Tonal;
-using GA.Core;
 
 using PCRE;
 
+using GA.Business.Core.Intervals.Primitives;
+using Tonal;
+using GA.Core;
 
 /// <inheritdoc cref="IEquatable{Noteing}" />
 /// <inheritdoc cref="IComparable{Noteing}" />

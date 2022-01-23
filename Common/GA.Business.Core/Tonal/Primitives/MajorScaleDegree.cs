@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 /// An music degree major scale - See https://en.wikipedia.org/wiki/Degree_(music)
 /// </summary>
 [PublicAPI]
-public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>
+public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<MajorScaleDegree>
 {
     #region Relational members
 
@@ -48,6 +48,8 @@ public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>
     public static MajorScaleDegree Submediant => Create(6);
     /// <summary> 7th degree </summary>
     public static MajorScaleDegree LeadingTone => Create(7);
+
+    public static IReadOnlyCollection<MajorScaleDegree> All => ValueUtils<MajorScaleDegree>.GetAll();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

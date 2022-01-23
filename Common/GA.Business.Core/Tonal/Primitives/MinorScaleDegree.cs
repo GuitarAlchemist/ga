@@ -50,6 +50,8 @@ public readonly record struct MinorScaleDegree : IValue<MinorScaleDegree>
     /// <summary> 7th degree (b7) </summary>
     public static MinorScaleDegree Subtonic => Create(7);
 
+    public static IReadOnlyCollection<MinorScaleDegree> All => ValueUtils<MinorScaleDegree>.GetAll();
+
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 

@@ -33,16 +33,37 @@ public static class PrintCollectionExtensions
     private class PrintableReadOnlyCollection<T> : IReadOnlyCollection<T>
     {
         private readonly IReadOnlyCollection<T> _items;
+        private readonly string? _itemFormat;
+        private readonly IFormatProvider? _itemFormatProvider;
 
-        public PrintableReadOnlyCollection(IReadOnlyCollection<T> items)
+        public PrintableReadOnlyCollection(
+            IReadOnlyCollection<T> items,
+            string? itemFormat = null,
+            IFormatProvider? itemFormatProvider = null)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
+            _itemFormat = itemFormat;
+            _itemFormatProvider = itemFormatProvider;
         }
 
         public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public override string ToString() => string.Join(" ", _items);
+        public override string ToString()
+        {
+            return string.Join(" ", _items.Where(item => item != null).Select(PrintItem()));
+
+            Func<T, string?> PrintItem()
+            {
+                return arg =>
+                {
+                    ArgumentNullException.ThrowIfNull(arg);
+
+                    if (arg is IFormattable f) return f.ToString(_itemFormat, _itemFormatProvider);
+                    return arg.ToString();
+                };
+            }
+        }
         public int Count => _items.Count;
     }
 

@@ -7,10 +7,10 @@ namespace GA.Business.Core.Intervals;
 /// Signature.
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(music)" />
-public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
+public readonly record struct Accidental : IValue<Accidental>
 {
     private const int _minValue = -3;
-    private const int _maxValue = 2;
+    private const int _maxValue = 3;
 
     public static Accidental Min => Create(_minValue);
     public static Accidental Max => Create(_maxValue);
@@ -21,7 +21,8 @@ public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
     public static readonly Accidental Natural = Create(0);
     public static readonly Accidental Sharp = Create(1);
     public static readonly Accidental DoubleSharp = Create(2);
-    public static IReadOnlyCollection<Accidental> All => ValueUtils<Accidental>.GetAll();
+    public static readonly Accidental TripleSharp = Create(3);
+    // public static IReadOnlyCollection<Accidental> All => ValueUtils<Accidental>.GetAll();
     public static Accidental Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Accidental operator !(Accidental accidental) => Create(-accidental.Value);
@@ -48,6 +49,7 @@ public readonly record struct Accidental : IValue<Accidental>, IAll<Accidental>
         0 => "\u266E",
         1 => "#",
         2 => "x",
+        3 => "#x",
         _ => string.Empty
     };
 
