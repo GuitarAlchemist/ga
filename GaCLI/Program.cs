@@ -1,14 +1,15 @@
 ﻿using GA.Business.Core.Fretboard;
+using GA.Business.Core.Intervals;
 using GA.Business.Core.Tonal;
 
-var dorianIntervals = Mode.MajorScale.Dorian.Intervals;
-var phrygianIntervals = Mode.MajorScale.Phrygian.Intervals;
-var lydianIntervals = Mode.MajorScale.Lydian.Intervals;
-var mixolydianIntervals = Mode.MajorScale.Mixolydian.Intervals;
-var aeolianIntervals = Mode.MajorScale.Aeolian.Intervals;
-var locrianIntervals = Mode.MajorScale.Locrian.Intervals;
+var dorianMode = Mode.MajorScale.Dorian;
+var phrygian = Mode.MajorScale.Phrygian;
+var lydian = Mode.MajorScale.Lydian;
+var mixolydian = Mode.MajorScale.Mixolydian;
+var aeolian = Mode.MajorScale.Aeolian;
+var locrian = Mode.MajorScale.Locrian;
 
-var a = Mode.MinorScale.Aeolian.Intervals;
+var s = lydian.ToString();
 
 var fretBoard = Fretboard.Guitar();
 var aa = fretBoard.OpenPositions;

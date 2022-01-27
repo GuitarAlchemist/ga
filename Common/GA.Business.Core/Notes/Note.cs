@@ -114,6 +114,7 @@ public abstract partial record Note
         public static implicit operator Chromatic(SharpKey sharpKey) => new(sharpKey.PitchClass);
 
         public static IReadOnlyCollection<SharpKey> All => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
+        public static IReadOnlyCollection<SharpKey> Natural=> new[] { C, D, E, F, G, A, B }.ToImmutableList();
 
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
         public override Accidental? Accidental => SharpAccidental;
@@ -259,59 +260,59 @@ public abstract partial record Note
             private static IEnumerable<KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple>> GetKeyValuePairs()
             {
                 var startNotes = new SortedSet<KeyNote>();
-                startNotes.UnionWith(AllSharp);
-                startNotes.UnionWith(AllFlat);
+                startNotes.UnionWith(SharpKey.Natural);
 
                 foreach (var startNote in startNotes)
-                foreach (var diatonicNumber in DiatonicNumber.All)
-                {
-                    var isPerfect = diatonicNumber.IsPerfect;
-                    if (isPerfect)
+                    foreach (var diatonicNumber in DiatonicNumber.All)
                     {
                         yield return CreateItem(
-                            startNote, 
-                            diatonicNumber, 
-                            Quality.Perfect, 
-                            Quality.Augmented, 
-                            Quality.Diminished);
+                            startNote,
+                            diatonicNumber);
                     }
-                    else
-                    {
-                        yield return CreateItem(
-                            startNote, 
-                            diatonicNumber, 
-                            Quality.Major,
-                            Quality.Augmented,
-                            Quality.Minor);
-                    }
-                }
 
                 static KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple> CreateItem(
                     KeyNote startNote,
-                    DiatonicNumber diatonicNumber,
-                    Quality quality,
-                    Quality sharpQuality,
-                    Quality flatQuality)
+                    DiatonicNumber diatonicNumber)
                 {
                     // Compute end note
-                    var endNote = new AccidentedNote(startNote.NaturalNote + diatonicNumber, quality.ToAccidental());
+                    var endNaturalNote = startNote.NaturalNote + diatonicNumber;
 
-                    // Adjust quality for key accidental
+                    // Compute key accidental
                     var key = _keyByNaturalNote[startNote.NaturalNote];
-                    if (key.IsNoteAccidental(endNote.NaturalNote))
+                    Accidental? keyAccidental = null;
+                    if (key.IsNoteAccidental(endNaturalNote))
                     {
-                        switch (key.AccidentalKind)
+                        keyAccidental =
+                            key.AccidentalKind == AccidentalKind.Sharp
+                                ? Intervals.Accidental.Flat
+                                : Intervals.Accidental.Sharp;
+                    }
+
+                    // Compute interval quality
+                    Quality quality;
+                    if (diatonicNumber.IsPerfect)
+                    {
+                        quality = keyAccidental?.Value switch
                         {
-                            case AccidentalKind.Sharp:
-                                quality = flatQuality;
-                                break;
-                            case AccidentalKind.Flat:
-                                quality = sharpQuality;
-                                break;
-                        }
+                            -1 => Quality.Diminished,
+                            1 => Quality.Augmented,
+                            null => Quality.Perfect,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    }
+                    else
+                    {
+                        quality = keyAccidental?.Value switch
+                        {
+                            -1 => Quality.Minor,
+                            null => Quality.Major,
+                            1 => Quality.Augmented,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
                     }
 
                     // Create item
+                    var endNote = new AccidentedNote(endNaturalNote);
                     var itemKey = (note1: startNote, note2: endNote);
                     var itemValue = new Interval.Simple { Size = diatonicNumber, Quality = quality };
                     var item = new KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Simple>(itemKey, itemValue);
@@ -322,45 +323,8 @@ public abstract partial record Note
 
         /*
          
-        TODO - Compound intervals
+        TODO - Compound intervals ?
 
-        private class CompoundIntervals : LazyIndexerBase<(AccidentedNote, AccidentedNote), Interval.Compound>
-        {
-            public static Interval.Compound Get(AccidentedNote note1, AccidentedNote note2) => _instance[(note1, note2)];
-
-            private static readonly CompoundIntervals _instance = new();
-
-            public CompoundIntervals()
-                : base(GetKeyValuePairs())
-            {
-            }
-
-            private static IEnumerable<KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound>> GetKeyValuePairs()
-            {
-                var startNotes = new SortedSet<KeyNote>();
-                startNotes.UnionWith(AllSharp);
-                startNotes.UnionWith(AllFlat);
-
-                foreach (var startNote in startNotes)
-                foreach (var diatonicNumber in CompoundDiatonicNumber.All)
-                foreach (var quality in diatonicNumber.ToSimple().AvailableQualities)
-                {
-                    var item = CreateItem(startNote, diatonicNumber, quality);
-                    yield return item;
-                }
-
-                static KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound> CreateItem(
-                    KeyNote startNote, 
-                    CompoundDiatonicNumber diatonicNumber, 
-                    Quality quality)
-                {
-                    var endNote = new AccidentedNote(startNote.NaturalNote + diatonicNumber, quality.ToAccidental());
-                    var key = (note1: startNote, note2: endNote);
-                    var value = new Interval.Compound() {Size = diatonicNumber, Quality = quality};
-                    var item = new KeyValuePair<(AccidentedNote, AccidentedNote), Interval.Compound>(key, value);
-                    return item;
-                }
-            }
         */
     }
 }
