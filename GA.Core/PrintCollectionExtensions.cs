@@ -7,14 +7,30 @@ using System.Collections;
 public static class PrintCollectionExtensions
 {
     [PublicAPI]
-    public static IEnumerable<T> AsPrintable<T>(this IEnumerable<T> items) => new PrintableEnumerable<T>(items);
+    public static IEnumerable<T> AsPrintable<T>(this IEnumerable<T> items)
+        where T: notnull
+    {
+        return new PrintableEnumerable<T>(items);
+    }
+
 
     [PublicAPI]
-    public static IReadOnlyCollection<T> AsPrintable<T>(this IReadOnlyCollection<T> items) => new PrintableReadOnlyCollection<T>(items);
+    public static IReadOnlyCollection<T> AsPrintable<T>(
+        this IReadOnlyCollection<T> items, 
+        string? itemFormat = null,
+        IFormatProvider? itemFormatProvider = null)
+           where T: notnull
+    {
+        return new PrintableReadOnlyCollection<T>(items, itemFormat, itemFormatProvider);
+    }
 
     [PublicAPI]
-    public static IReadOnlySet<T> AsPrintable<T>(this IReadOnlySet<T> items) => new PrintableReadOnlySet<T>(items);
-
+    public static IReadOnlySet<T> AsPrintable<T>(this IReadOnlySet<T> items)
+        where T: notnull
+    {
+        return new PrintableReadOnlySet<T>(items);
+    }
+    
     private class PrintableEnumerable<T> : IEnumerable<T>
     {
         private readonly IEnumerable<T> _items;
@@ -31,6 +47,7 @@ public static class PrintCollectionExtensions
     }
 
     private class PrintableReadOnlyCollection<T> : IReadOnlyCollection<T>
+        where T: notnull
     {
         private readonly IReadOnlyCollection<T> _items;
         private readonly string? _itemFormat;
@@ -51,7 +68,7 @@ public static class PrintCollectionExtensions
 
         public override string ToString()
         {
-            return string.Join(" ", _items.Where(item => item != null).Select(PrintItem()));
+            return string.Join(" ", _items.Select(PrintItem()));
 
             Func<T, string?> PrintItem()
             {

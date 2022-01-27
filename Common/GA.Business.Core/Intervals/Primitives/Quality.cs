@@ -1,6 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace GA.Business.Core.Intervals.Primitives;
 
-namespace GA.Business.Core.Intervals.Primitives;
+using System.Runtime.CompilerServices;
 
 /// <inheritdoc cref="IEquatable{String}" />
 /// <inheritdoc cref="IComparable{String}" />
@@ -26,6 +26,14 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Quality Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
+    public const int DoublyDiminishedValue = -3;
+    public const int DiminishedValue = -2;
+    public const int MinorValue = -1;
+    public const int PerfectValue = 0;
+    public const int MajorValue = 1;
+    public const int AugmentedValue = 2;
+    public const int DoublyAugmentedValue = 3;
+
     public static Quality Min => Create(_minValue);
     public static Quality Max => Create(_maxValue);
     public static int CheckRange(int value) => ValueUtils<Quality>.CheckRange(value, _minValue, _maxValue);
@@ -35,13 +43,13 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
     public static implicit operator int(Quality quality) => quality._value;
     public static Quality operator !(Quality quality) => quality.ToInverse();
 
-    public static Quality DoublyDiminished => Create(-3);
-    public static Quality Diminished => Create(-2);
-    public static Quality Minor => Create(-1);
-    public static Quality Perfect => Create(0);
-    public static Quality Major => Create(1);
-    public static Quality Augmented => Create(2);
-    public static Quality DoublyAugmented => Create(3);
+    public static Quality DoublyDiminished => Create(DoublyDiminishedValue);
+    public static Quality Diminished => Create(DiminishedValue);
+    public static Quality Minor => Create(MinorValue);
+    public static Quality Perfect => Create(PerfectValue);
+    public static Quality Major => Create(MajorValue);
+    public static Quality Augmented => Create(AugmentedValue);
+    public static Quality DoublyAugmented => Create(DoublyAugmentedValue);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
@@ -55,10 +63,7 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Quality ToInverse() => Create(-Value);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Accidental? ToAccidental() => ToAccidentalInternal(this);
-
-    public string Name => Value switch
+    public string LongName => Value switch
     {
         -3 => nameof(DoublyDiminished),
         -2 => nameof(Diminished),
@@ -90,36 +95,44 @@ public readonly record struct Quality : IValue<Quality>, IFormattable
         return format.ToUpperInvariant() switch
         {
             "G" => ShortName,
-            "V" => Value.ToString(),
-            "N" => Name,
+            "L" => LongName,
             "S" => ShortName,
             _ => throw new FormatException($"The {format} format string is not supported.")
         };
     }
 
-    private static Accidental? ToAccidentalInternal(Quality quality)
+    public Accidental? ToAccidental(bool isPerfectInterval)
     {
-        switch (quality._value)
+        return isPerfectInterval
+            ? GetPerfectIntervalAccidental(_value)
+            : GetImperfectIntervalAccidental(_value);
+
+        static Accidental? GetPerfectIntervalAccidental(in int value)
         {
-            case -3:
-                return Accidental.TripleFlat;
-            case -2:
-                return Accidental.DoubleFlat;
-            case -1:
-                return Accidental.Flat;
-            case 0:
-                break;
-            case 1:
-                break;
-            case 2:
-                return Accidental.DoubleSharp;
-            case 3:
-                return Accidental.TripleSharp;
+            return value switch
+            {
+                DoublyDiminishedValue => Accidental.DoubleFlat,
+                DiminishedValue => Accidental.Flat,
+                PerfectValue => null,
+                AugmentedValue => Accidental.Sharp,
+                DoublyAugmentedValue => Accidental.DoubleSharp,
+                _ => throw new InvalidOperationException()
+            };
         }
 
-
-        if (quality == Perfect || quality == Major) return null;
-        return Accidental.Create(quality.Value);
+        static Accidental? GetImperfectIntervalAccidental(in int value)
+        {
+            return value switch
+            {
+                DoublyDiminishedValue => Accidental.TripleFlat,
+                DiminishedValue => Accidental.DoubleFlat,
+                MinorValue => Accidental.Flat,
+                MajorValue => null,
+                AugmentedValue => Accidental.Sharp,
+                DoublyAugmentedValue => Accidental.DoubleSharp,
+                _ => throw new InvalidOperationException()
+            };
+        }
     }
 }
 

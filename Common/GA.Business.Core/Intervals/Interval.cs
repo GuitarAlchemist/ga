@@ -39,10 +39,29 @@ public abstract partial record Interval
 
     public sealed partial record Simple : Diatonic, IFormattable
     {
+        #region Formats
+
+        [PublicAPI]
+        public static class Format
+        {
+            /// <summary>
+            /// Short name format (e.g. "A4")
+            /// </summary>
+            public const string ShortName = "G";
+
+            /// <summary>
+            /// Accidented 
+            /// </summary>
+            public const string AccidentedName = "A";
+        }
+
+        #endregion
+
         public DiatonicNumber Size { get; init; }
 
-        public string ShortName => $"{Quality}{Size}";
-        public string AccidentedName => GetAccidentedName(Quality, Size);
+        public string Name => $"{Quality}{Size}";
+        public string LongName => $"{Quality}{Size}";
+        public string AccidentedName => GetAccidentedName(Size, Quality);
 
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
@@ -51,8 +70,8 @@ public abstract partial record Interval
             format ??= "G";
             return format.ToUpperInvariant() switch
             {
-                "G" => ShortName,
-                "S" => ShortName,
+                "G" => Name,
+                "L" => LongName,
                 "A" => AccidentedName,
                 _ => throw new FormatException($"The {format} format string is not supported.")
             };
@@ -62,12 +81,18 @@ public abstract partial record Interval
         public static Simple operator !(Simple interval) => interval.ToInverse();
 
         private static string GetAccidentedName(
-            Quality quality,DiatonicNumber 
-             size)
+            DiatonicNumber size,
+            Quality quality)
+
         {
-            var accidental = quality.ToAccidental();
-            if (accidental.HasValue) return size.ToString();
-            return $"{accidental}{size}";
+            var isPerfectInterval = size.IsPerfect;
+            var accidental = quality.ToAccidental(isPerfectInterval);
+            var result =
+                accidental.HasValue 
+                    ? $"{size}"
+                    : $"{accidental}{size}";
+
+            return result;
         }
     }
 

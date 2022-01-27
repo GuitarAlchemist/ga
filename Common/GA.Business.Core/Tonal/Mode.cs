@@ -11,6 +11,9 @@ using Primitives;
 [DiscriminatedUnion(Flatten = true)]
 public abstract partial record Mode
 {
+    public abstract IReadOnlyCollection<Interval.Simple> Intervals { get; }
+    public ModeQualities Qualities => new (this);
+
     protected abstract ModalScaleDegree ScaleDegree { get; }
 
     /// <summary>
@@ -31,7 +34,7 @@ public abstract partial record Mode
         public static MajorScale Aeolian => new(6);
         public static MajorScale Locrian => new(7);
 
-        public IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
+        public override IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
 
@@ -63,8 +66,7 @@ public abstract partial record Mode
                     var result = 
                         notes.Select(note => startNote.GetInterval(note))
                              .ToImmutableList()
-                             .AsPrintable();
-
+                             .AsPrintable(Interval.Simple.Format.AccidentedName);
                     return result;
                 }
             }
@@ -84,7 +86,7 @@ public abstract partial record Mode
         public static MinorScale Lydian => new(6);
         public static MinorScale Mixolydian => new(7);
 
-        public IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
+        public override IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
 
@@ -116,7 +118,7 @@ public abstract partial record Mode
                     var result = 
                         notes.Select(note => startNote.GetInterval(note))
                             .ToImmutableList()
-                            .AsPrintable();
+                            .AsPrintable(Interval.Simple.Format.AccidentedName);
 
                     return result;
                 }
@@ -145,6 +147,7 @@ public abstract partial record Mode
         public static HarmonicMinorMode Alteredd7 => new();
 
         public ModalScaleDegree Degree { get; init; }
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ImmutableList.Create<Interval.Simple>(); // TODO
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
     }
@@ -168,6 +171,7 @@ public abstract partial record Mode
         public static MelodicMinorMode Altered => new();
 
         public ModalScaleDegree Degree { get; init; }
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ImmutableList.Create<Interval.Simple>();
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
     }
