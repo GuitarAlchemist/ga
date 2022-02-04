@@ -8,29 +8,31 @@ public static class PrintCollectionExtensions
 {
     [PublicAPI]
     public static IEnumerable<T> AsPrintable<T>(this IEnumerable<T> items)
-        where T: notnull
+        where T : notnull
     {
+        if (items is PrintableEnumerable<T> printable) return printable;
         return new PrintableEnumerable<T>(items);
     }
 
-
     [PublicAPI]
     public static IReadOnlyCollection<T> AsPrintable<T>(
-        this IReadOnlyCollection<T> items, 
+        this IReadOnlyCollection<T> items,
         string? itemFormat = null,
         IFormatProvider? itemFormatProvider = null)
-           where T: notnull
+           where T : notnull
     {
+        if (items is PrintableReadOnlyCollection<T> printable) return printable;
         return new PrintableReadOnlyCollection<T>(items, itemFormat, itemFormatProvider);
     }
 
     [PublicAPI]
     public static IReadOnlySet<T> AsPrintable<T>(this IReadOnlySet<T> items)
-        where T: notnull
+        where T : notnull
     {
+        if (items is PrintableReadOnlySet<T> printable) return printable;
         return new PrintableReadOnlySet<T>(items);
     }
-    
+
     private class PrintableEnumerable<T> : IEnumerable<T>
     {
         private readonly IEnumerable<T> _items;
@@ -47,7 +49,7 @@ public static class PrintCollectionExtensions
     }
 
     private class PrintableReadOnlyCollection<T> : IReadOnlyCollection<T>
-        where T: notnull
+        where T : notnull
     {
         private readonly IReadOnlyCollection<T> _items;
         private readonly string? _itemFormat;
@@ -76,8 +78,16 @@ public static class PrintCollectionExtensions
                 {
                     ArgumentNullException.ThrowIfNull(arg);
 
-                    if (arg is IFormattable f) return f.ToString(_itemFormat, _itemFormatProvider);
-                    return arg.ToString();
+                    if (arg is IFormattable f)
+                    {
+                        var result = f.ToString(_itemFormat, _itemFormatProvider);
+                        return result;
+                    }
+                    else
+                    {
+                        var result = arg.ToString();
+                        return result;
+                    }
                 };
             }
         }
@@ -95,7 +105,7 @@ public static class PrintCollectionExtensions
 
         public int Count => _items.Count;
 
-        public bool Contains(T item)=> _items.Contains(item);
+        public bool Contains(T item) => _items.Contains(item);
         public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
         public bool IsProperSubsetOf(IEnumerable<T> other) => _items.IsProperSubsetOf(other);
         public bool IsProperSupersetOf(IEnumerable<T> other) => _items.IsProperSupersetOf(other);
@@ -108,3 +118,4 @@ public static class PrintCollectionExtensions
         public override string ToString() => string.Join(" ", _items);
     }
 }
+

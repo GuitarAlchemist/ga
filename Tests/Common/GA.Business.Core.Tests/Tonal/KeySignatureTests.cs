@@ -8,26 +8,26 @@ namespace GA.Business.Core.Tests.Tonal
         [Test]
         public void KeySignatureTest_Sharp()
         {
-            Assert.AreEqual("", KeySignature.Sharp(0).SharpNotes.ToString());
-            Assert.AreEqual("F", KeySignature.Sharp(1).SharpNotes.ToString());
-            Assert.AreEqual("F C", KeySignature.Sharp(2).SharpNotes.ToString());
-            Assert.AreEqual("F C G", KeySignature.Sharp(3).SharpNotes.ToString());
-            Assert.AreEqual("F C G D", KeySignature.Sharp(4).SharpNotes.ToString());
-            Assert.AreEqual("F C G D A", KeySignature.Sharp(5).SharpNotes.ToString());
-            Assert.AreEqual("F C G D A E", KeySignature.Sharp(6).SharpNotes.ToString());
-            Assert.AreEqual("F C G D A E B", KeySignature.Sharp(7).SharpNotes.ToString());
+            Assert.AreEqual("", KeySignature.Sharp(0).SignatureNotes.ToString());
+            Assert.AreEqual("F#", KeySignature.Sharp(1).SignatureNotes.ToString());
+            Assert.AreEqual("F# C#", KeySignature.Sharp(2).SignatureNotes.ToString());
+            Assert.AreEqual("F# C# G#", KeySignature.Sharp(3).SignatureNotes.ToString());
+            Assert.AreEqual("F# C# G# D#", KeySignature.Sharp(4).SignatureNotes.ToString());
+            Assert.AreEqual("F# C# G# D# A#", KeySignature.Sharp(5).SignatureNotes.ToString());
+            Assert.AreEqual("F# C# G# D# A# E#", KeySignature.Sharp(6).SignatureNotes.ToString());
+            Assert.AreEqual("F# C# G# D# A# E# B#", KeySignature.Sharp(7).SignatureNotes.ToString());
         }
 
         [Test]
         public void KeySignatureTest_Flat()
         {
-            Assert.AreEqual("B", KeySignature.Flat(1).FlatNotes.ToString());
-            Assert.AreEqual("B E", KeySignature.Flat(2).FlatNotes.ToString());
-            Assert.AreEqual("B E A", KeySignature.Flat(3).FlatNotes.ToString());
-            Assert.AreEqual("B E A D", KeySignature.Flat(4).FlatNotes.ToString());
-            Assert.AreEqual("B E A D G", KeySignature.Flat(5).FlatNotes.ToString());
-            Assert.AreEqual("B E A D G C", KeySignature.Flat(6).FlatNotes.ToString());
-            Assert.AreEqual("B E A D G C F", KeySignature.Flat(7).FlatNotes.ToString());
+            Assert.AreEqual("Bb", KeySignature.Flat(1).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb", KeySignature.Flat(2).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb Ab", KeySignature.Flat(3).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb Ab Db", KeySignature.Flat(4).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb Ab Db Gb", KeySignature.Flat(5).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb Ab Db Gb Cb", KeySignature.Flat(6).SignatureNotes.ToString());
+            Assert.AreEqual("Bb Eb Ab Db Gb Cb Fb", KeySignature.Flat(7).SignatureNotes.ToString());
         }
     }
 }

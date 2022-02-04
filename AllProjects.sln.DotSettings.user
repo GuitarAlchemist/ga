@@ -16,6 +16,11 @@
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Notes.NoteTests.Test_Chromatic_GetInterval&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1e4bc421_002Dfc07_002D45d7_002Dbc9b_002D25b46efef86f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KeySignatureTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Tonal.KeySignatureTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58d49584_002Dd00d_002D4cfd_002D8e77_002D733c589f2dda/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="KeySignatureTest_C_Am" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Tonal.KeySignatureTests&lt;/TestId&gt;&#xD;
@@ -26,6 +31,10 @@
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 262 Col 41)</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Notes/f:Note.cs</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Owner/@EntryValue">NumberedBookmarkManager</s:String></wpf:ResourceDictionary>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 7 Col 28)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Tonal/f:IntervalsByMode.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Owner/@EntryValue">NumberedBookmarkManager</s:String>
+	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 36 Col 20)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Intervals/f:ModeFormula.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Owner/@EntryValue">NumberedBookmarkManager</s:String></wpf:ResourceDictionary>

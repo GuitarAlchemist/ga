@@ -57,11 +57,14 @@ public abstract partial record Interval
 
         #endregion
 
-        public DiatonicNumber Size { get; init; }
+        public static readonly Simple Unison = new() {Number = DiatonicNumber.Unison, Quality = Quality.Perfect};
+        public static readonly Simple MinorThird = new() {Number = DiatonicNumber.Third, Quality = Quality.Minor};
 
-        public string Name => $"{Quality}{Size}";
-        public string LongName => $"{Quality}{Size}";
-        public string AccidentedName => GetAccidentedName(Size, Quality);
+        public DiatonicNumber Number { get; init; }
+
+        public string Name => $"{Quality}{Number}";
+        public string LongName => $"{Quality}{Number}";
+        public string AccidentedName => GetAccidentedName(Number, Quality);
 
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
@@ -77,7 +80,7 @@ public abstract partial record Interval
             };
         }
 
-        public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
+        public Simple ToInverse() => new() {Number = !Number, Quality = !Quality};
         public static Simple operator !(Simple interval) => interval.ToInverse();
 
         private static string GetAccidentedName(
@@ -88,9 +91,9 @@ public abstract partial record Interval
             var isPerfectInterval = size.IsPerfect;
             var accidental = quality.ToAccidental(isPerfectInterval);
             var result =
-                accidental.HasValue 
-                    ? $"{size}"
-                    : $"{accidental}{size}";
+                accidental.HasValue
+                    ? $"{accidental.Value}{size}"
+                    : $"{size}";
 
             return result;
         }
@@ -98,9 +101,9 @@ public abstract partial record Interval
 
     public sealed partial record Compound : Diatonic, IFormattable
     {
-        public CompoundDiatonicNumber Size { get; init; }
+        public CompoundDiatonicNumber Number { get; init; }
 
-        public string ShortName => $"{Quality}{Size}";
+        public string ShortName => $"{Quality}{Number}";
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)

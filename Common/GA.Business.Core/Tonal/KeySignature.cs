@@ -2,7 +2,9 @@
 
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using System.Collections;
 
+using Notes;
 using GA.Core;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
@@ -12,7 +14,7 @@ using Intervals;
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)
 /// </summary>
 [PublicAPI]
-public readonly record struct KeySignature : IValue<KeySignature>
+public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyCollection<Note.KeyNote>
 {
     #region Relational members
 
@@ -26,7 +28,7 @@ public readonly record struct KeySignature : IValue<KeySignature>
 
     private const int _minValue = -7;
     private const int _maxValue = 7;
-    private readonly Lazy<IReadOnlyCollection<NaturalNote>> _lazyAccidentedNotes;
+    private readonly Lazy<IReadOnlyCollection<Note.KeyNote>> _lazyAccidentedNotes;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()
@@ -48,15 +50,17 @@ public readonly record struct KeySignature : IValue<KeySignature>
     public AccidentalKind AccidentalKind => _value < 0 ? AccidentalKind.Flat : AccidentalKind.Sharp;
     public bool IsSharpKey => _value >= 0;
     public bool IsFlatKey => _value < 0;
-    public IReadOnlyCollection<NaturalNote> SharpNotes => GetSharpNotes(Value).AsPrintable();
-    public IReadOnlyCollection<NaturalNote> FlatNotes => GetFlatNotes(-Value).AsPrintable();
-    public IReadOnlyCollection<NaturalNote> AccidentedNotes => _lazyAccidentedNotes.Value;
+    public IReadOnlyCollection<Note.KeyNote> SignatureNotes => _lazyAccidentedNotes.Value;
 
-    private static IReadOnlyCollection<NaturalNote> GetAccidentedNotes(int value)
+    private static IReadOnlyCollection<Note.KeyNote> GetAccidentedNotes(int value)
     {
         var count = Math.Abs(value);
-        var accidentedNotes = value < 0 ? GetFlatNotes(count) : GetSharpNotes(count);
-        var result = accidentedNotes.AsPrintable();
+        var notes = 
+            value < 0 
+                ? GetFlatNotes(count).Cast<Note.KeyNote>() 
+                : GetSharpNotes(count);
+
+        var result = notes.ToImmutableList().AsPrintable();
 
         return result;
     }
@@ -64,26 +68,38 @@ public readonly record struct KeySignature : IValue<KeySignature>
     public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);
     public static KeySignature Flat([ValueRange(1, 7)] int count) => new(-count);
 
-    public bool Contains(NaturalNote note) => AccidentedNotes.Contains(note);
+    public bool Contains(NaturalNote note) => SignatureNotes.Any(keyNote => keyNote.NaturalNote == note);
 
-    public override string ToString()
+    public IEnumerator<Note.KeyNote> GetEnumerator()
     {
-        if (Value == 0) return string.Empty;
-        return _value < 0 ? $"{-Value} flat(s)" : $"{Value} sharp(s)";
+        return _lazyAccidentedNotes.Value.GetEnumerator();
     }
 
-    private static IReadOnlyCollection<NaturalNote> GetSharpNotes(int count)
+    public override string ToString() => _lazyAccidentedNotes.Value.ToString()!;
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable) _lazyAccidentedNotes.Value).GetEnumerator();
+    }
+
+    private static IReadOnlyCollection<Note.SharpKey> GetSharpNotes(int count)
     {
         var result =
-            GetNotes(NaturalNote.F, count, DiatonicNumber.Fifth).ToImmutableList(); // See https://en.wikipedia.org/wiki/Circle_of_fifths
+            GetNotes(NaturalNote.F, count, DiatonicNumber.Fifth)
+                .Select(note => new Note.SharpKey(note, SharpAccidental.Sharp))
+                .ToImmutableList()
+                .AsPrintable();// See https://en.wikipedia.org/wiki/Circle_of_fifths
 
         return result;
     }
 
-    private static IReadOnlyCollection<NaturalNote> GetFlatNotes(int count)
+    private static IReadOnlyCollection<Note.FlatKey> GetFlatNotes(int count)
     {
-        var result = 
-            GetNotes(NaturalNote.B, count, DiatonicNumber.Fourth).ToImmutableList(); // See https://en.wikipedia.org/wiki/Circle_of_fifths
+        var result =
+            GetNotes(NaturalNote.B, count, DiatonicNumber.Fourth)
+                .Select(note => new Note.FlatKey(note, FlatAccidental.Flat))
+                .ToImmutableList()
+                .AsPrintable(); // See https://en.wikipedia.org/wiki/Circle_of_fifths
 
         return result;
     }
@@ -101,4 +117,6 @@ public readonly record struct KeySignature : IValue<KeySignature>
             item = item.ToDegree(increment.Value - 1);
         }
     }
+
+    public int Count => _lazyAccidentedNotes.Value.Count;
 }

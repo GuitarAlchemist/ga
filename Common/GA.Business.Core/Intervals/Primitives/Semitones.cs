@@ -31,6 +31,7 @@ public readonly record struct Semitones : IValue<Semitones>
 
     public static Semitones Min => Create(_minValue);
     public static Semitones Max => Create(_maxValue);
+    public static Semitones None => Create(0);
     public static Semitones Unison => Create(0);
     public static Semitones Semitone => Create(1);
     public static Semitones Tone => Create(2);

@@ -25,7 +25,7 @@ public readonly record struct CompoundDiatonicNumber : IDiatonicNumber<CompoundD
     #endregion
 
     private const int _minValue = 9;
-    private const int _maxValue = 15;
+    private const int _maxValue = 16;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static CompoundDiatonicNumber Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -54,5 +54,6 @@ public readonly record struct CompoundDiatonicNumber : IDiatonicNumber<CompoundD
     public DiatonicNumber ToSimple() => new() {Value = _value - 8};
 
     public override string ToString() => Value.ToString();
+    public bool IsPerfect => ToSimple().IsPerfect;
 }
 

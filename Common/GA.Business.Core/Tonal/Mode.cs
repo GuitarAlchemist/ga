@@ -1,18 +1,25 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using System.Collections.Immutable;
-using System.ComponentModel;
-
-using GA.Core;
+using Scales;
 using Intervals;
 using Primitives;
 
+/// <remarks>
+/// https://www.pianoscales.org/major.html
+/// https://www.pianoscales.org/minor.html#natural
+/// https://www.pianoscales.org/minor-harmonic.html
+/// https://www.pianoscales.org/minor-melodic.html
+/// TODO: Add support for chords - Making chords from scales http://www.ethanhein.com/wp/2015/making-chords-from-scales/
+/// </remarks>
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
 public abstract partial record Mode
 {
+    public abstract string Name { get; }
     public abstract IReadOnlyCollection<Interval.Simple> Intervals { get; }
-    public ModeQualities Qualities => new (this);
+    public bool IsMinorMode => Intervals.Contains(Interval.Simple.MinorThird);
+    public ModeFormula Formula => new (this);
+    public Mode RefMode => IsMinorMode ? Major.Aeolian : Major.Ionian;
 
     protected abstract ModalScaleDegree ScaleDegree { get; }
 
@@ -24,155 +31,143 @@ public abstract partial record Mode
     /// Mnemonic : I Don’t Particularly Like Modes A Lot
     /// </remarks>
     [PublicAPI]
-    public sealed partial record MajorScale(MajorScaleDegree Degree) : Mode
+    public sealed partial record Major(MajorScaleDegree Degree) : Mode
     {
-        public static MajorScale Ionian => new(1);
-        public static MajorScale Dorian => new(2);
-        public static MajorScale Phrygian => new(3);
-        public static MajorScale Lydian => new(4);
-        public static MajorScale Mixolydian => new(5);
-        public static MajorScale Aeolian => new(6);
-        public static MajorScale Locrian => new(7);
+        public static Major Ionian => new(1);
+        public static Major Dorian => new(2);
+        public static Major Phrygian => new(3);
+        public static Major Lydian => new(4);
+        public static Major Mixolydian => new(5);
+        public static Major Aeolian => new(6);
+        public static Major Locrian => new(7);
 
-        public override IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
-
-        protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
-
-        #region region Intervals
-
-        private class IntervalsIndexer : LazyIndexerBase<MajorScaleDegree, IReadOnlyCollection<Interval.Simple>>
+        public override string Name => Degree.Value switch
         {
-            private static readonly IntervalsIndexer _instance = new();
-            public static IReadOnlyCollection<Interval.Simple> Get(MajorScaleDegree degree) => _instance[degree];
+            1 => nameof(Ionian),
+            2 => nameof(Dorian),
+            3 => nameof(Phrygian),
+            4 => nameof(Lydian),
+            5 => nameof(Mixolydian),
+            6 => nameof(Aeolian),
+            7 => nameof(Locrian),
+            _ => throw new ArgumentOutOfRangeException(nameof(Degree))
+        };
+            
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ModeIntervalsByDegree.Instance[ScaleDegree];
 
-            public IntervalsIndexer() 
-                : base(GetKeyValuePairs())
-            {
-            }
-
-            private static IEnumerable<KeyValuePair<MajorScaleDegree, IReadOnlyCollection<Interval.Simple>>> GetKeyValuePairs()
-            {
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var degree in MajorScaleDegree.All)
-                {
-                    var intervals = GetIntervals(degree).AsPrintable();
-                    yield return new(degree, intervals);
-                }
-
-                static IReadOnlyCollection<Interval.Simple> GetIntervals(MajorScaleDegree degree)
-                {
-                    var notes = Key.Major.C.GetNotes().Rotate(degree.Value - 1);
-                    var startNote = notes[0].ToAccidentedNote();
-                    var result = 
-                        notes.Select(note => startNote.GetInterval(note))
-                             .ToImmutableList()
-                             .AsPrintable(Interval.Simple.Format.AccidentedName);
-                    return result;
-                }
-            }
-        }
-
-        #endregion
-    }
-
-    [PublicAPI]
-    public sealed partial record MinorScale(MinorScaleDegree Degree) : Mode
-    {
-        public static MinorScale Aeolian => new(1);
-        public static MinorScale Locrian => new(2);
-        public static MinorScale Ionian => new(3);
-        public static MinorScale Dorian => new(4);
-        public static MinorScale Phrygian => new(5);
-        public static MinorScale Lydian => new(6);
-        public static MinorScale Mixolydian => new(7);
-
-        public override IReadOnlyCollection<Interval.Simple> Intervals => IntervalsIndexer.Get(Degree);
+        public override string ToString() => Formula.ToString();
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
 
-        #region region Intervals
-
-        private class IntervalsIndexer : LazyIndexerBase<MinorScaleDegree, IReadOnlyCollection<Interval.Simple>>
+        private class ModeIntervalsByDegree : ModeIntervalsByDegreeBase
         {
-            private static readonly IntervalsIndexer _instance = new();
-            public static IReadOnlyCollection<Interval.Simple> Get(MinorScaleDegree degree) => _instance[degree];
-
-            public IntervalsIndexer() 
-                : base(GetKeyValuePairs())
-            {
-            }
-
-            private static IEnumerable<KeyValuePair<MinorScaleDegree, IReadOnlyCollection<Interval.Simple>>> GetKeyValuePairs()
-            {
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var degree in MinorScaleDegree.All)
-                {
-                    var intervals = GetIntervals(degree).AsPrintable();
-                    yield return new(degree, intervals);
-                }
-
-                static IReadOnlyCollection<Interval.Simple> GetIntervals(MinorScaleDegree degree)
-                {
-                    var notes = Key.Minor.A.GetNotes().Rotate(degree.Value - 1);
-                    var startNote = notes[0].ToAccidentedNote();
-                    var result = 
-                        notes.Select(note => startNote.GetInterval(note))
-                            .ToImmutableList()
-                            .AsPrintable(Interval.Simple.Format.AccidentedName);
-
-                    return result;
-                }
-            }
+            public static readonly ModeIntervalsByDegree Instance = new();
+            public ModeIntervalsByDegree() : base(Scale.Major) { }
         }
-
-        #endregion
     }
 
     [PublicAPI]
-    public sealed partial record HarmonicMinorMode : Mode
+    public sealed partial record NaturalMinor(MinorScaleDegree Degree) : Mode
     {
-        [Description("Harmonic minor")]
-        public static HarmonicMinorMode HarmonicMinor => new();
-        [Description("locrian \u266E6")]
-        public static HarmonicMinorMode LocrianNaturalSixth => new();
-        [Description("Ionian augmented")]
-        public static HarmonicMinorMode IonianAugmented => new();
-        [Description("Dorian \u266F4")]
-        public static HarmonicMinorMode DorianSharpFourth => new();
-        [Description("Phrygian dominant")]
-        public static HarmonicMinorMode PhrygianDominant => new();
-        [Description("lydian \u266F2")]
-        public static HarmonicMinorMode LydianSharpSecond => new();
-        [Description("altered bb7")]
-        public static HarmonicMinorMode Alteredd7 => new();
+        public static NaturalMinor Aeolian => new(1);
+        public static NaturalMinor Locrian => new(2);
+        public static NaturalMinor Ionian => new(3);
+        public static NaturalMinor Dorian => new(4);
+        public static NaturalMinor Phrygian => new(5);
+        public static NaturalMinor Lydian => new(6);
+        public static NaturalMinor Mixolydian => new(7);
 
-        public ModalScaleDegree Degree { get; init; }
-        public override IReadOnlyCollection<Interval.Simple> Intervals => ImmutableList.Create<Interval.Simple>(); // TODO
+        public override string Name => Degree.Value switch
+        {
+            1 => nameof(Aeolian),
+            2 => nameof(Locrian),
+            3 => nameof(Ionian),
+            4 => nameof(Dorian),
+            5 => nameof(Phrygian),
+            6 => nameof(Lydian),
+            7 => nameof(Mixolydian),
+            _ => throw new ArgumentOutOfRangeException(nameof(Degree))
+        };
+
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ModeIntervalsByDegree.Instance[ScaleDegree];
+
+        public override string ToString() => Formula.ToString();
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
+
+        private class ModeIntervalsByDegree : ModeIntervalsByDegreeBase
+        {
+            public static readonly ModeIntervalsByDegree Instance = new();
+            public ModeIntervalsByDegree() : base(Scale.NaturalMinor) { }
+        }
     }
 
     [PublicAPI]
-    public sealed partial record MelodicMinorMode : Mode
+    public sealed partial record HarmonicMinor(ModalScaleDegree Degree) : Mode
     {
-        [Description("Melodic minor")]
-        public static MelodicMinorMode MelodicMinor => new();
-        [Description("Dorian \u266D2")]
-        public static MelodicMinorMode DorianFlatSecond => new();
-        [Description("Lydian \u266F5")]
-        public static MelodicMinorMode LydianAugmented => new();
-        [Description("Lydian dominant")]
-        public static MelodicMinorMode LydianDominant => new();
-        [Description("Mixolydian \u266D6")]
-        public static MelodicMinorMode MixolydianFlatSixth => new();
-        [Description("Locrian \u266E2")]
-        public static MelodicMinorMode LocrianNaturalSecond => new();
-        [Description("Altered")]
-        public static MelodicMinorMode Altered => new();
+        public static HarmonicMinor HarmonicMinorScale => new(1);
+        public static HarmonicMinor LocrianNaturalSixth => new(2);
+        public static HarmonicMinor IonianAugmented => new(3);
+        public static HarmonicMinor DorianSharpFourth => new(4);
+        public static HarmonicMinor PhrygianDominant => new(5);
+        public static HarmonicMinor LydianSharpSecond => new(6);
+        public static HarmonicMinor Alteredd7 => new(7);
 
-        public ModalScaleDegree Degree { get; init; }
-        public override IReadOnlyCollection<Interval.Simple> Intervals => ImmutableList.Create<Interval.Simple>();
+        public override string Name => Degree.Value switch
+        {
+            1 => "Harmonic minor",
+            2 => "locrian \u266E6",
+            3 => "Ionian augmented",
+            4 => "Dorian \u266F4",
+            5 => "Phrygian dominant",
+            6 => "lydian \u266F2",
+            7 => "altered bb7",
+            _ => throw new ArgumentOutOfRangeException(nameof(Degree))
+        };
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ModeIntervalsByDegree.Instance[Degree];
+
+        public override string ToString() => Formula.ToString();
 
         protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
+
+        private class ModeIntervalsByDegree : ModeIntervalsByDegreeBase
+        {
+            public static readonly ModeIntervalsByDegree Instance = new();
+            public ModeIntervalsByDegree() : base(Scale.HarmonicMinor) { }
+        }
+    }
+
+    [PublicAPI]
+    public sealed partial record MelodicMinorMode(ModalScaleDegree Degree) : Mode
+    {
+        public static MelodicMinorMode MelodicMinor => new(1);
+        public static MelodicMinorMode DorianFlatSecond => new(2);
+        public static MelodicMinorMode LydianAugmented => new(3);
+        public static MelodicMinorMode LydianDominant => new(4);
+        public static MelodicMinorMode MixolydianFlatSixth => new(5);
+        public static MelodicMinorMode LocrianNaturalSecond => new(6);
+        public static MelodicMinorMode Altered => new(7);
+
+        public override string Name => Degree.Value switch
+        {
+            1 => "Melodic minor",
+            2 => "Dorian \u266D2",
+            3 => "Lydian \u266F5",
+            4 => "Lydian dominant",
+            5 => "Mixolydian \u266D6",
+            6 => "Locrian \u266E2",
+            7 => "Altered",
+            _ => throw new ArgumentOutOfRangeException(nameof(Degree))
+        };
+
+        public override IReadOnlyCollection<Interval.Simple> Intervals => ModeIntervalsByDegree.Instance[Degree];
+
+        protected override ModalScaleDegree ScaleDegree => new() {Value = Degree.Value};
+
+        private class ModeIntervalsByDegree : ModeIntervalsByDegreeBase
+        {
+            public static readonly ModeIntervalsByDegree Instance = new();
+            public ModeIntervalsByDegree() : base(Scale.MelodicMinor) { }
+        }
     }
 }

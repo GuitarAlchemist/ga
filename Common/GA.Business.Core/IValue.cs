@@ -1,11 +1,11 @@
 ﻿namespace GA.Business.Core;
 
-public interface IValue<TSelf> : IComparable<TSelf>, IComparable
+public interface IValue<TSelf> : IReadOnlyValue, IComparable<TSelf>, IComparable
     where TSelf : struct, IValue<TSelf>
 {
     int IComparable<TSelf>.CompareTo(TSelf other) => Value.CompareTo(other.Value);
     int IComparable.CompareTo(object? obj)
-    {
+    { 
         if (ReferenceEquals(null, obj)) return 1;
         return obj is TSelf other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(TSelf)}");
     }
@@ -20,5 +20,5 @@ public interface IValue<TSelf> : IComparable<TSelf>, IComparable
     /// </summary>
     public static abstract TSelf Max { get; }
 
-    public int Value { get; init; }
+    public new int Value { get; init; }
 }
