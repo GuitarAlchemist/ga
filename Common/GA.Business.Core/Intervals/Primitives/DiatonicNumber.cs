@@ -58,7 +58,7 @@ public readonly record struct DiatonicNumber : IDiatonicNumber<DiatonicNumber>
     public CompoundDiatonicNumber ToCompound() => new() {Value = _value + 8};
 
     /// <summary>
-    /// Qualities available for a perfect interval
+    /// Formula available for a perfect interval
     /// </summary>
     /// <remarks>
     /// See https://musictheory.pugetsound.edu/mt21c/AugmentedAndDiminishedIntervals.html
@@ -66,7 +66,7 @@ public readonly record struct DiatonicNumber : IDiatonicNumber<DiatonicNumber>
     public static readonly IReadOnlySet<Quality> PerfectQualities = new[] {Quality.Diminished, Quality.Perfect, Quality.Augmented}.ToImmutableHashSet();
 
     /// <summary>
-    /// Qualities available for an imperfect interval.
+    /// Formula available for an imperfect interval.
     /// </summary>
     /// <remarks>
     /// See https://musictheory.pugetsound.edu/mt21c/AugmentedAndDiminishedIntervals.html

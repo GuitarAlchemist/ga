@@ -48,7 +48,6 @@ public readonly record struct ModalScaleDegree : IValue<ModalScaleDegree>
     /// <summary> 7th degree </summary>
     public static ModalScaleDegree LeadingTone => Create(7);
 
-
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 

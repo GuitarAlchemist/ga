@@ -79,7 +79,7 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;
 
     public static NaturalNote operator +(NaturalNote naturalNote, DiatonicNumber diatonicNumber) => Add(naturalNote, diatonicNumber);
-    public static DiatonicNumber operator -(NaturalNote naturalNote1, NaturalNote naturalNote2) => Intervals.Get(naturalNote1, naturalNote2);
+    public static DiatonicNumber operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(startNote, endNote);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
@@ -87,12 +87,12 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
     public NaturalNote ToDegree(int count) => Create((Value + count) % 7);
-    public DiatonicNumber GetInterval(NaturalNote other) => Intervals.Get(this, other);
+    public DiatonicNumber GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(this, other);
 
     public PitchClass ToPitchClass()
     {
         /*
-            See DiatonicScale.Major.Intervals:
+            See DiatonicScale.Major.Simple:
             C: 0
             D: 2  (T => +2)
             E: 4  (T => +2)
@@ -146,21 +146,24 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         return result;
     }
 
-    private class Intervals : LazyIndexerBase<(NaturalNote, NaturalNote), DiatonicNumber>
+    private class NaturalNoteIntervals : LazyIndexerBase<(NaturalNote, NaturalNote), DiatonicNumber>
     {
-        private static readonly Intervals _instance = new();
-        public static DiatonicNumber Get(NaturalNote note1, NaturalNote note2) => _instance[(note1, note2)];
+        private static readonly NaturalNoteIntervals _instance = new();
+        public static DiatonicNumber Get(NaturalNote startNote, NaturalNote endNote) => _instance[(startNote, endNote)];
 
-        public Intervals() 
+        public NaturalNoteIntervals() 
             : base(GetKeyValuePairs())
         {
         }
 
         private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), DiatonicNumber>> GetKeyValuePairs()
         {
-            foreach (var note1 in All)
-            foreach (var value in DiatonicNumber.All)
-                yield return new((note1, note1 + value), value);
+            foreach (var startNote in All)
+            foreach (var number in DiatonicNumber.All)
+            {
+                var endNote = startNote + number;
+                yield return new((startNote, endNote),  number);
+            }
         }
     }
 }

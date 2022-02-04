@@ -11,6 +11,8 @@ using Notes;
 [DiscriminatedUnion]
 public abstract partial record Key(KeySignature KeySignature)
 {
+    public static Key FromRoot(NaturalNote naturalNote) => KeyByRoot.Get(naturalNote);
+
     public abstract KeyMode KeyMode { get; }
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
     public abstract Note.KeyNote Root { get; }
@@ -35,7 +37,7 @@ public abstract partial record Key(KeySignature KeySignature)
             yield return root;
 
             var naturalNote = root.NaturalNote;
-            var sharpNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
+            var sharpNotes = KeySignature.SignatureNotes.Select(note => note.NaturalNote).ToImmutableHashSet();
             bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
             for (var i = 0; i < 6; i++)
             {
@@ -54,7 +56,7 @@ public abstract partial record Key(KeySignature KeySignature)
             yield return root;
 
             var naturalNote = root.NaturalNote;
-            var flatNotes = KeySignature.AccidentedNotes.ToImmutableHashSet();
+            var flatNotes = KeySignature.SignatureNotes.Select(note => note.NaturalNote).ToImmutableHashSet();
             bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
             for (var i = 0; i < 6; i++)
             {
@@ -68,11 +70,7 @@ public abstract partial record Key(KeySignature KeySignature)
         }
     }
 
-
-    public Interval.Simple GetInterval(Note.AccidentedNote note)
-    {
-        return note.GetInterval(Root);
-    }
+    public Interval.Simple GetInterval(Note.AccidentedNote note) => note.GetInterval(Root);
 
     [PublicAPI]
     public sealed partial record Major(KeySignature KeySignature) 
@@ -93,13 +91,16 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Major B => new(5);
         public static Major FSharp => new(6);
         public static Major CSharp => new(7);
+        public static IReadOnlyCollection<Major> GetAll() => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
 
         public override KeyMode KeyMode => KeyMode.Major;
         public override Note.KeyNote Root => GetRoot(KeySignature);
 
-        public override string ToString()
+        public override string ToString() => GetKeyName(KeySignature);
+
+        public static string GetKeyName(KeySignature keySignature)
         {
-            return KeySignature.Value switch
+            return keySignature.Value switch
             {
                 -7 => "Key of Cb",
                 -6 => "Key of Gb",
@@ -161,6 +162,7 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Minor GSharp => new(5);
         public static Minor DSharp => new(6);
         public static Minor ASharp => new(7);
+        public static IReadOnlyCollection<Minor> GetAll() => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
 
         public override KeyMode KeyMode => KeyMode.Minor;
         public override Note.KeyNote Root => GetRoot(KeySignature);

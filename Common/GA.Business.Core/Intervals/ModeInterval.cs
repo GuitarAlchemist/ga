@@ -1,41 +1,22 @@
-﻿namespace GA.Business.Core.Intervals;
+﻿using GA.Business.Core.Intervals.Primitives;
 
-using System.Text;
-using Primitives;
+namespace GA.Business.Core.Intervals;
 
-public sealed class ModeInterval
+public sealed class ModeInterval : ModeIntervalBase<DiatonicNumber>
 {
-    public DiatonicNumber Degree { get; init; }
-    public Quality Quality { get; init; }
-    public Quality RefQuality { get; init; }
-    public bool IsColorTone => Quality != RefQuality;
-
-    public override string ToString()
+    public ModeInterval(
+        DiatonicNumber degree, 
+        Quality quality, 
+        Quality refQuality) 
+            : base(degree, quality, refQuality)
     {
-        var sb = new StringBuilder();
-        var isAccidentalPrinted = false;
-        var accidental = Quality.ToAccidental(Degree.IsPerfect);
-        if (IsColorTone)
-        {
-            sb.Append(">");
-            if (!accidental.HasValue)
-            {
-                var refAccidental = RefQuality.ToAccidental(Degree.IsPerfect);
-                if (refAccidental.HasValue)
-                {
-                    sb.Append(Accidental.Natural.ToString());
-                    isAccidentalPrinted = true;
-                }
-            }
-        }
+    }
 
-        if (!isAccidentalPrinted && accidental.HasValue)
-        {
-            sb.Append(accidental.Value.ToString());
-        }
-        sb.Append(Degree);
-        var result =sb.ToString().PadLeft(3);
-
-        return result;
+    public ModeCompoundInterval ToCompound()
+    {
+        return new(
+            Degree.ToCompound(), 
+            Quality, 
+            RefQuality);
     }
 }

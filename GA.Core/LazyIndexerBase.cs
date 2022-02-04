@@ -6,9 +6,5 @@ public abstract class LazyIndexerBase<TKey, TValue>
     public TValue this[TKey key] => _lazyDictionary[key];
 
     private readonly LazyReadOnlyDictionary<TKey, TValue> _lazyDictionary;
-
-    protected LazyIndexerBase(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
-    {
-        _lazyDictionary = new(keyValuePairs);
-    }
+    protected LazyIndexerBase(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) => _lazyDictionary = new(keyValuePairs);
 }

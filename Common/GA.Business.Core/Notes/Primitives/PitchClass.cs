@@ -34,7 +34,7 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public static PitchClass Max => Create(_maxValue);
     public static IReadOnlyCollection<PitchClass> All => ValueUtils<PitchClass>.GetAll();
 
-    public static int CheckRange(int value) => ValueUtils<PitchClass>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value) => ValueUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<PitchClass>.CheckRange(value, minValue, maxValue);
     public static IReadOnlyCollection<PitchClass> GetCollection(int start, int count) => ValueUtils<PitchClass>.GetRange(start, count);
     public static implicit operator PitchClass(int value) => Create(value);
@@ -44,7 +44,12 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public static Interval.Chromatic operator -(PitchClass a, PitchClass b) => a.Value + -b.Value;
 
     private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    public int Value
+    {
+        get => _value;
+        init => _value = CheckRange(value);
+    }
 
     public void CheckMaxValue(int maxValue) => ValueUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
     public override string ToString() => Value.ToString();
