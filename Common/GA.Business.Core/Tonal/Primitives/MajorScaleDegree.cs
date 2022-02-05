@@ -34,21 +34,6 @@ public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<
     public static implicit operator MajorScaleDegree(int value) => Create(value);
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;
 
-    /// <summary> 1st degree </summary>
-    public static MajorScaleDegree Tonic => Create(1);
-    /// <summary> 2nd degree </summary>
-    public static MajorScaleDegree Supertonic => Create(2);
-    /// <summary> 3nd degree </summary>
-    public static MajorScaleDegree Mediant => Create(3);
-    /// <summary> 4th degree </summary>
-    public static MajorScaleDegree Subdominant => Create(4);
-    /// <summary> 5th degree </summary>
-    public static MajorScaleDegree Dominant => Create(5);
-    /// <summary> 6th degree </summary>
-    public static MajorScaleDegree Submediant => Create(6);
-    /// <summary> 7th degree </summary>
-    public static MajorScaleDegree LeadingTone => Create(7);
-
     public static IReadOnlyCollection<MajorScaleDegree> All => ValueUtils<MajorScaleDegree>.GetAll();
 
     private readonly int _value;
@@ -56,17 +41,17 @@ public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<
 
     public override string ToString() => Value.ToString();
 
-    public string ToFunction()
+    public ScaleDegreeFunction ToFunction()
     {
         return _value switch
         {
-            1 => "Tonic",
-            2 => "Supertonic",
-            3 => "Mediant",
-            4 => "Sub-dominant",
-            5 => "Dominant",
-            6 => "Sub-mediant",
-            7 => "Leading tone",
+            1 => ScaleDegreeFunction.Tonic,
+            2 => ScaleDegreeFunction.Supertonic,
+            3 => ScaleDegreeFunction.Mediant,
+            4 => ScaleDegreeFunction.Subdominant,
+            5 => ScaleDegreeFunction.Dominant,
+            6 => ScaleDegreeFunction.Submediant,
+            7 => ScaleDegreeFunction.LeadingTone,
             _ => throw new ArgumentOutOfRangeException(nameof(_value))
         };
     }

@@ -1,8 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Immutable;
-using GA.Business.Core.Intervals;
+﻿namespace GA.Business.Core.Tonal;
 
-namespace GA.Business.Core.Tonal;
+using System.Collections;
+using System.Collections.Immutable;
+
+using Intervals;
+
 
 [PublicAPI]
 [DiscriminatedUnion]
@@ -12,7 +14,7 @@ public abstract partial record DiatonicScale
     private static Interval.Chromatic S => Interval.Chromatic.Semitone;
 
     /// <summary>
-    /// Major scale
+    /// MajorScaleMode scale
     /// </summary>
     /// <remarks>
     /// See https://en.wikipedia.org/wiki/Major_scale

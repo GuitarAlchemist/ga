@@ -13,6 +13,8 @@ public class Scale : IReadOnlyCollection<Note>
     public static Scale NaturalMinor => new(Key.Major.A.GetNotes());
     public static Scale HarmonicMinor => new(A, B, C, D, E, F, GSharp, A);
     public static Scale MelodicMinor => new(A, B, C, D, E, FSharp, GSharp, A);
+    public static Scale MajorPentatonic => new(C, D, E, G, A);
+    public static Scale WholeTone => new(C, D, E, FSharp, GSharp, ASharp);
 
     private readonly IReadOnlyCollection<Note> _notes;
 
