@@ -92,7 +92,7 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     public PitchClass ToPitchClass()
     {
         /*
-            See DiatonicScale.Major.Simple:
+            Major scale:
             C: 0
             D: 2  (T => +2)
             E: 4  (T => +2)

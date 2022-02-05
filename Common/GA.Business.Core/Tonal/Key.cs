@@ -19,7 +19,7 @@ public abstract partial record Key(KeySignature KeySignature)
     public bool IsNoteAccidental(NaturalNote note) => KeySignature.Contains(note);
 
     /// <summary>
-    /// Gets all notes in the key.
+    /// Gets the 7 notes in the key.
     /// </summary>
     /// <returns></returns>
     public IReadOnlyCollection<Note.KeyNote> GetNotes()

@@ -1,36 +1,28 @@
 ﻿namespace GA.Business.Core.Intervals;
 
 using System.Collections;
-using Primitives;
-using Tonal;
+using System.Collections.Immutable;
+
+using Tonal.Modes;
 using GA.Core;
 
 public class ModeFormula : IReadOnlyCollection<ModeInterval>
 {
     private readonly IReadOnlyCollection<ModeInterval> _modeIntervals;
 
-    public ModeFormula(Mode mode)
+    public ModeFormula(ScaleMode mode)
     {
         Mode = mode ?? throw new ArgumentNullException(nameof(mode));
 
         _modeIntervals = GetModeIntervals(mode);
     }
 
-    public Mode Mode { get; }
+    public ScaleMode Mode { get; }
 
-    private static IReadOnlyCollection<ModeInterval> GetModeIntervals(Mode mode)
+    private static IReadOnlyCollection<ModeInterval> GetModeIntervals(ScaleMode mode)
     {
         var qualityByNumber = mode.Intervals.ToQualityByNumber();
         var refQualityByNumber = mode.RefMode.Intervals.ToQualityByNumber();
-
-        var modeIntervals = new List<ModeInterval>();
-        foreach (var interval in mode.Intervals)
-        {
-            modeIntervals.Add(CreateModeInterval(interval));
-        }
-        modeIntervals.Add(new(DiatonicNumber.Octave, Quality.Perfect, Quality.Perfect));
-        var result = modeIntervals.AsReadOnly().AsPrintable();
-        return result;
 
         ModeInterval CreateModeInterval(Interval.Simple interval)
         {
@@ -40,6 +32,13 @@ public class ModeFormula : IReadOnlyCollection<ModeInterval>
 
             return new(number, quality, refQuality);
         }
+
+        var result =
+            mode.Intervals
+                .Select(CreateModeInterval)
+                .ToImmutableList()
+                .AsPrintable();
+        return result;
     }
 
     public IEnumerator<ModeInterval> GetEnumerator() => _modeIntervals.GetEnumerator();
