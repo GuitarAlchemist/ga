@@ -1,6 +1,8 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+﻿
+namespace GA.Business.Core.Notes.Primitives;
 
 using System.Runtime.CompilerServices;
+using System.Collections.Immutable;
 
 using PCRE;
 
@@ -74,6 +76,7 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     }
 
     public static IReadOnlyCollection<NaturalNote> All => GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(note => note.Value).ToImmutableList();
 
     public static implicit operator NaturalNote(int value) => new() { Value = value };
     public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;

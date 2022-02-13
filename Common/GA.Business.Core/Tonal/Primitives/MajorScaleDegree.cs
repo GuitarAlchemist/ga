@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+﻿using System.Collections.Immutable;
+
+namespace GA.Business.Core.Tonal.Primitives;
 
 using System.Runtime.CompilerServices;
 
@@ -29,12 +31,21 @@ public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<
     public static MajorScaleDegree Min => Create(_minValue);
     public static MajorScaleDegree Max => Create(_maxValue);
 
+    public static MajorScaleDegree Ionian => new() {Value = 1};
+    public static MajorScaleDegree Dorian => new() {Value = 2};
+    public static MajorScaleDegree Phrygian => new() {Value = 3};
+    public static MajorScaleDegree Lydian => new() {Value = 4};
+    public static MajorScaleDegree Mixolydian => new() {Value = 5};
+    public static MajorScaleDegree Aeolian => new() {Value = 6};
+    public static MajorScaleDegree Locrian => new() {Value = 7};
+
     public static int CheckRange(int value) => ValueUtils<MajorScaleDegree>.CheckRange(value, _minValue, _maxValue);
 
     public static implicit operator MajorScaleDegree(int value) => Create(value);
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;
 
     public static IReadOnlyCollection<MajorScaleDegree> All => ValueUtils<MajorScaleDegree>.GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(degree => degree.Value).ToImmutableList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

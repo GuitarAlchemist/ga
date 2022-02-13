@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 
 using Intervals;
 
-
 /// <inheritdoc cref="IEquatable{PitchClass}" />
 /// <inheritdoc cref="IComparable{PitchClass}" />
 /// <inheritdoc cref="IComparable" />
@@ -33,9 +32,8 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public static PitchClass Min => Create(_minValue);
     public static PitchClass Max => Create(_maxValue);
     public static IReadOnlyCollection<PitchClass> All => ValueUtils<PitchClass>.GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(pitchClass => pitchClass.Value).ToImmutableList();
 
-    public static int CheckRange(int value) => ValueUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<PitchClass>.CheckRange(value, minValue, maxValue);
     public static IReadOnlyCollection<PitchClass> GetCollection(int start, int count) => ValueUtils<PitchClass>.GetRange(start, count);
     public static implicit operator PitchClass(int value) => Create(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
@@ -48,7 +46,7 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public int Value
     {
         get => _value;
-        init => _value = CheckRange(value);
+        init => _value = ValueUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
     }
 
     public void CheckMaxValue(int maxValue) => ValueUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);

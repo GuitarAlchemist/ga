@@ -1,8 +1,8 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Scales;
-using GA.Business.Core.Tonal.Primitives;
+﻿namespace GA.Business.Core.Tonal.Modes;
 
-namespace GA.Business.Core.Tonal.Modes;
+using System.Collections.Immutable;
+using Scales;
+using Primitives;
 
 /// <summary>
 /// See https://en.wikipedia.org/wiki/Minor_scale
@@ -22,21 +22,25 @@ public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
     public static HarmonicMinorMode Alteredd7 => new(7);
 
     public static IReadOnlyCollection<HarmonicMinorMode> All => HarmonicMinorScaleDegree.All.Select(degree => new HarmonicMinorMode(degree)).ToImmutableList();
+    public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
+    public static HarmonicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 
     public HarmonicMinorMode(HarmonicMinorScaleDegree degree)
         : base(Scale.HarmonicMinor, degree)
     {
     }
 
-    public override string Name => ScaleDegree.Value switch
+    public override string Name => ParentScaleDegree.Value switch
     {
-        1 => "HarmonicMinorMode minor",
+        1 => "Harmonic minor",
         2 => "locrian \u266E6",
         3 => "Ionian augmented",
         4 => "Dorian \u266F4",
         5 => "Phrygian dominant",
         6 => "Lydian \u266F2",
         7 => "Altered bb7",
-        _ => throw new ArgumentOutOfRangeException(nameof(ScaleDegree))
+        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
+
+    private static Lazy<ScaleModeCollection<HarmonicMinorScaleDegree, HarmonicMinorMode>> _lazyModeByDegree = new(() => new(All));
 }

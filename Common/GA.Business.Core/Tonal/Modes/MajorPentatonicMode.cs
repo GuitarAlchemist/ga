@@ -9,14 +9,14 @@ public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>
 {
     public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.All.Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
 
-    public override string Name => ScaleDegree.Value switch
+    public override string Name => ParentScaleDegree.Value switch
     {
         1 => "Major pentatonic",
         2 => "Egyptian",
         3 => "Blues minor",
         4 => "Blues major",
         5 => "Minor pentatonic",
-        _ => throw new ArgumentOutOfRangeException(nameof(ScaleDegree))
+        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
     public override string ToString() => $"{Name} - {Formula}";

@@ -1,4 +1,5 @@
-﻿using GA.Core.Extensions;
+﻿using System.Collections.Immutable;
+using GA.Core.Extensions;
 
 namespace GA.Business.Core;
 
@@ -47,5 +48,6 @@ public static class ValueUtils<TValue>
     }
 
     public static IReadOnlyCollection<TValue> GetAll() => ReadOnlyValues<TValue>.Create();
+    public static IReadOnlyCollection<int> GetAllValues() => GetAll().Select(value => value.Value).ToImmutableList();
     public static IReadOnlyCollection<TValue> GetRange(int start, int count) => ReadOnlyValues<TValue>.Create(start, count);
 }

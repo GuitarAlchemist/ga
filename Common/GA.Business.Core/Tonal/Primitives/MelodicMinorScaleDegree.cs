@@ -2,37 +2,47 @@
 
 using System.Runtime.CompilerServices;
 
-/// <inheritdoc cref="IEquatable{MajorPentatonicScaleDegree}" />
-/// <inheritdoc cref="IComparable{MajorPentatonicScaleDegree}" />
+/// <inheritdoc cref="IEquatable{MelodicMinorScaleDegree}" />
+/// <inheritdoc cref="IComparable{MelodicMinorScaleDegree}" />
 /// <inheritdoc cref="IComparable" />
+/// <summary>
+/// An music minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
+/// </summary>
 [PublicAPI]
-public readonly record struct MajorPentatonicScaleDegree : IValue<MajorPentatonicScaleDegree>
+public readonly record struct MelodicMinorScaleDegree : IValue<MelodicMinorScaleDegree>
 {
     #region Relational members
 
-    public int CompareTo(MajorPentatonicScaleDegree other) => _value.CompareTo(other._value);
-    public static bool operator <(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) => left.CompareTo(right) < 0;
-    public static bool operator >(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) => left.CompareTo(right) > 0;
-    public static bool operator <=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) => left.CompareTo(right) >= 0;
+    public int CompareTo(MelodicMinorScaleDegree other) => _value.CompareTo(other._value);
+    public static bool operator <(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) => left.CompareTo(right) < 0;
+    public static bool operator >(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) => left.CompareTo(right) > 0;
+    public static bool operator <=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) => left.CompareTo(right) <= 0;
+    public static bool operator >=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 
     private const int _minValue = 1;
-    private const int _maxValue = 5;
+    private const int _maxValue = 7;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static MajorPentatonicScaleDegree Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    private static MelodicMinorScaleDegree Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static MajorPentatonicScaleDegree Min => Create(_minValue);
-    public static MajorPentatonicScaleDegree Max => Create(_maxValue);
+    public static MelodicMinorScaleDegree Min => Create(_minValue);
+    public static MelodicMinorScaleDegree Max => Create(_maxValue);
+    public static MelodicMinorScaleDegree MelodicMinorModeMinor => new() {Value = 1};
+    public static MelodicMinorScaleDegree DorianFlatSecond => new() {Value = 2};
+    public static MelodicMinorScaleDegree LydianAugmented => new() {Value = 3};
+    public static MelodicMinorScaleDegree LydianDominant => new() {Value = 4};
+    public static MelodicMinorScaleDegree MixolydianFlatSixth => new() {Value = 5};
+    public static MelodicMinorScaleDegree LocrianNaturalSecond => new() {Value = 6};
+    public static MelodicMinorScaleDegree Altered => new() {Value = 7};
 
-    public static int CheckRange(int value) => ValueUtils<MajorPentatonicScaleDegree>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MajorPentatonicScaleDegree>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueUtils<MelodicMinorScaleDegree>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MelodicMinorScaleDegree>.CheckRange(value, minValue, maxValue);
 
-    public static implicit operator MajorPentatonicScaleDegree(int value) => Create(value);
-    public static implicit operator int(MajorPentatonicScaleDegree degree) => degree.Value;
+    public static implicit operator MelodicMinorScaleDegree(int value) => Create(value);
+    public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<MajorPentatonicScaleDegree> All => ValueUtils<MajorPentatonicScaleDegree>.GetAll();
+    public static IReadOnlyCollection<MelodicMinorScaleDegree> All => ValueUtils<MelodicMinorScaleDegree>.GetAll();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
@@ -46,8 +56,10 @@ public readonly record struct MajorPentatonicScaleDegree : IValue<MajorPentatoni
             1 => ScaleDegreeFunction.Tonic,
             2 => ScaleDegreeFunction.Supertonic,
             3 => ScaleDegreeFunction.Mediant,
-            4 => ScaleDegreeFunction.Dominant,
-            5 => ScaleDegreeFunction.Submediant,
+            4 => ScaleDegreeFunction.Subdominant,
+            5 => ScaleDegreeFunction.Dominant,
+            6 => ScaleDegreeFunction.Submediant,
+            7 => ScaleDegreeFunction.LeadingTone, // Same as major scale
             _ => throw new ArgumentOutOfRangeException(nameof(_value))
         };
     }

@@ -28,6 +28,13 @@ public readonly record struct HarmonicMinorScaleDegree : IValue<HarmonicMinorSca
 
     public static HarmonicMinorScaleDegree Min => Create(_minValue);
     public static HarmonicMinorScaleDegree Max => Create(_maxValue);
+    public static HarmonicMinorScaleDegree HarmonicMinor => new() {Value = 1};
+    public static HarmonicMinorScaleDegree LocrianNaturalSixth => new() {Value = 2};
+    public static HarmonicMinorScaleDegree IonianAugmented => new() {Value = 3};
+    public static HarmonicMinorScaleDegree DorianSharpFourth => new() {Value = 4};
+    public static HarmonicMinorScaleDegree PhrygianDominant => new() {Value = 5};
+    public static HarmonicMinorScaleDegree LydianSharpSecond => new() {Value = 6};
+    public static HarmonicMinorScaleDegree Alteredd7 => new() {Value = 7};
 
     public static int CheckRange(int value) => ValueUtils<HarmonicMinorScaleDegree>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<HarmonicMinorScaleDegree>.CheckRange(value, minValue, maxValue);

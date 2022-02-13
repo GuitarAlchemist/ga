@@ -18,12 +18,16 @@ public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>
 
     public static IReadOnlyCollection<MelodicMinorMode> All => MelodicMinorScaleDegree.All.Select(degree => new MelodicMinorMode(degree)).ToImmutableList();
 
+    public static MelodicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
+    public static MelodicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
+
+
     public MelodicMinorMode(MelodicMinorScaleDegree degree)
         : base(Scale.MelodicMinor, degree)
     {
     }
 
-    public override string Name => ScaleDegree.Value switch
+    public override string Name => ParentScaleDegree.Value switch
     {
         1 => "MelodicMinorMode minor",
         2 => "Dorian \u266D2",
@@ -32,9 +36,10 @@ public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>
         5 => "Mixolydian \u266D6",
         6 => "Locrian \u266E2",
         7 => "Altered",
-        _ => throw new ArgumentOutOfRangeException(nameof(ScaleDegree))
+        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
     public override string ToString() => $"{Name} - {Formula}";
 
+    private static Lazy<ScaleModeCollection<MelodicMinorScaleDegree, MelodicMinorMode>> _lazyModeByDegree = new(() => new(All));
 }
