@@ -1,6 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace GA.Business.Core.Intervals.Primitives;
 
-namespace GA.Business.Core.Intervals.Primitives;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 /// <inheritdoc cref="IEquatable{String}" />
 /// <inheritdoc cref="IComparable{String}" />
@@ -44,14 +45,36 @@ public readonly record struct CompoundDiatonicNumber : IDiatonicNumber<CompoundD
     public static CompoundDiatonicNumber Thirteenth => Create(13);
     public static CompoundDiatonicNumber Fourteenth => Create(14);
     public static CompoundDiatonicNumber Fifteenth => Create(15);
-    public static CompoundDiatonicNumber DoubleOctave => Create(15);
+    public static CompoundDiatonicNumber DoubleOctave => Create(16);
 
     public static IReadOnlyCollection<CompoundDiatonicNumber> All => ValueUtils<CompoundDiatonicNumber>.GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(number => number .Value).ToImmutableList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
     public DiatonicNumber ToSimple() => new() {Value = _value - 8};
+
+    /// <summary>
+    /// Get the semitones distance for the interval.
+    /// </summary>
+    /// <returns>The <see cref="Semitones"/></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public Semitones ToSemitones()
+    {
+        return Value switch
+        {
+            9 => 12, // Octave
+            10 => 14, // Octave + Tone (+2)
+            11 => 16, // Octave +Tone (+2)
+            12 => 17, // Octave + Half-Tone (+1)
+            13 => 19, // Octave + Tone (+2)
+            14 => 21, // Octave + Tone (+2)
+            15 => 23, // Octave + Tone (+2)
+            16 => 24, // Octave + Half-Tone (+1)
+            _ => throw new ArgumentOutOfRangeException(nameof(Value))
+        };
+    }
 
     public override string ToString() => Value.ToString();
     public bool IsPerfect => ToSimple().IsPerfect;

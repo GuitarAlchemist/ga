@@ -52,6 +52,7 @@ public readonly record struct DiatonicNumber : IDiatonicNumber<DiatonicNumber>
     public static DiatonicNumber Octave => Create(8);
 
     public static IReadOnlyCollection<DiatonicNumber> All => ValueUtils<DiatonicNumber>.GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(number => number .Value).ToImmutableList();
     public static IReadOnlyCollection<DiatonicNumber> Range(int start, int count) => ValueUtils<DiatonicNumber>.GetRange(start, count);
     public static IReadOnlyCollection<DiatonicNumber> Range(int count) => ValueUtils<DiatonicNumber>.GetRange(-_minValue, count);
 
@@ -105,22 +106,22 @@ public readonly record struct DiatonicNumber : IDiatonicNumber<DiatonicNumber>
     public DiatonicNumber ToInverse() => Create(9 - Value);
 
     /// <summary>
-    /// Create a chromatic interval
+    /// Get the semitones distance for the interval.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The <see cref="Semitones"/></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public Semitones ToChromatic()
+    public Semitones ToSemitones()
     {
         return Value switch
         {
-            1 => 0,
-            2 => 2, // Tone (+2)
-            3 => 4, // Tone (+2)
-            4 => 5, // Half-Tone (+1)
-            5 => 7, // Tone (+2)
-            6 => 9, // Tone (+2)
-            7 => 11, // Tone (+2)
-            8 => 12, // Half-Tone (+1)
+            1 => new() {Value = 0},
+            2 => new() {Value = 2}, // Tone (+2)
+            3 => new() {Value = 4}, // Tone (+2)
+            4 => new() {Value = 5}, // Half-Tone (+1)
+            5 => new() {Value = 7}, // Tone (+2)
+            6 => new() {Value = 9}, // Tone (+2)
+            7 => new() {Value = 11}, // Tone (+2)
+            8 => new() {Value = 12}, // Half-Tone (+1)
             _ => throw new ArgumentOutOfRangeException(nameof(Value))
         };
     }

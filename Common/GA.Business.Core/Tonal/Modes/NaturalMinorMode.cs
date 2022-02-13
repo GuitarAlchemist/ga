@@ -15,15 +15,16 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
     public static NaturalMinorMode Lydian => new(6);
     public static NaturalMinorMode Mixolydian => new(7);
 
-    public static IReadOnlyCollection<NaturalMinorMode> All =>
-        NaturalMinorScaleDegree.All.Select(degree => new NaturalMinorMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<NaturalMinorMode> All => NaturalMinorScaleDegree.All.Select(degree => new NaturalMinorMode(degree)).ToImmutableList();
+    public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
+    public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 
     public NaturalMinorMode(NaturalMinorScaleDegree degree)
         : base(Scale.NaturalMinor, degree)
     {
     }
 
-    public override string Name => ScaleDegree.Value switch
+    public override string Name => ParentScaleDegree.Value switch
     {
         1 => nameof(Aeolian),
         2 => nameof(Locrian),
@@ -32,8 +33,10 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
         5 => nameof(Phrygian),
         6 => nameof(Lydian),
         7 => nameof(Mixolydian),
-        _ => throw new ArgumentOutOfRangeException(nameof(ScaleDegree))
+        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
     public override string ToString() => $"{Name} - {Formula}";
+
+    private static Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(All));
 }

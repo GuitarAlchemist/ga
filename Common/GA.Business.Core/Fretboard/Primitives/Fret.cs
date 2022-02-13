@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
 /// <inheritdoc cref="IEquatable{Fret}" />
@@ -30,6 +31,7 @@ public readonly record struct Fret : IValue<Fret>, IAll<Fret>
     public static Fret Max => Create(_maxValue);
     public static Fret Open => Create(0);
     public static IReadOnlyCollection<Fret> All => ValueUtils<Fret>.GetAll();
+    public static IReadOnlyCollection<int> AllValues => All.Select(fret => fret.Value).ToImmutableList();
 
     public static int CheckRange(int value) => ValueUtils<Fret>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<Fret>.CheckRange(value, minValue, maxValue);

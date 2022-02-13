@@ -28,6 +28,13 @@ public readonly record struct NaturalMinorScaleDegree : IValue<NaturalMinorScale
 
     public static NaturalMinorScaleDegree Min => Create(_minValue);
     public static NaturalMinorScaleDegree Max => Create(_maxValue);
+    public static NaturalMinorScaleDegree Aeolian => new() {Value = 1};
+    public static NaturalMinorScaleDegree Locrian => new() {Value = 2};
+    public static NaturalMinorScaleDegree Ionian => new() {Value = 3};
+    public static NaturalMinorScaleDegree Dorian => new() {Value = 4};
+    public static NaturalMinorScaleDegree Phrygian => new() {Value = 5};
+    public static NaturalMinorScaleDegree Lydian => new() {Value = 6};
+    public static NaturalMinorScaleDegree Mixolydian => new() {Value = 7};
 
     public static int CheckRange(int value) => ValueUtils<NaturalMinorScaleDegree>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalMinorScaleDegree>.CheckRange(value, minValue, maxValue);
