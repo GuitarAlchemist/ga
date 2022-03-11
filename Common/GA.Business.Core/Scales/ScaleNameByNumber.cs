@@ -6,6 +6,7 @@ using GA.Core;
 public class ScaleNameByNumber : LazyIndexerBase<int, string>
 {
     public static bool IsValidScaleNumber(int scaleNumber) => Instance.Dictionary.ContainsKey(scaleNumber);
+    public static IReadOnlyList<int> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
     public static string Get(int scaleNumber) => IsValidScaleNumber(scaleNumber) ? Instance[scaleNumber] : string.Empty;
 
     public ScaleNameByNumber() : base(GetScaleNameByNumber()) { }
