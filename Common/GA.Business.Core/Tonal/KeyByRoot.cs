@@ -1,5 +1,4 @@
-﻿
-namespace GA.Business.Core.Tonal;
+﻿namespace GA.Business.Core.Tonal;
 
 using System.Collections.Immutable;
 
