@@ -1,9 +1,18 @@
 ﻿namespace GA.Business.Core.Scales;
 
+using System.Collections.Immutable;
+
 using PCRE;
 
 public class ScaleIdentity
 {
+    public static IReadOnlyList<ScaleIdentity> GetAll()
+    {
+        return ScaleNameByNumber.ValidScaleNumbers
+            .Select(scaleNumber => new ScaleIdentity(scaleNumber))
+            .ToImmutableList();
+    }
+
     public static bool TryCreate(
         int scaleNumber,
         out ScaleIdentity scaleIdentity)

@@ -1,8 +1,22 @@
 ﻿using GA.Business.Core.Fretboard;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Notes;
+using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 using GA.Business.Core.Tonal.Primitives;
+
+var scaleIdentities = ScaleIdentity.GetAll();
+
+foreach (var scaleIdentity in scaleIdentities)
+{
+    var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
+    if (string.IsNullOrEmpty(youTubeUrl)) continue;
+    Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
+    Console.WriteLine("IanRingSiteUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
+    
+    Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
+    Console.WriteLine();
+}
 
 var majorModes = MajorScaleMode.All;
 var harmonicMinorModes = HarmonicMinorMode.All;
