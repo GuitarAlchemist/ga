@@ -14,8 +14,7 @@ using static Notes.Note.AccidentedNote;
 /// A music scale
 /// </summary>
 /// <remarks>
-/// See https://www.youtube.com/c/TheExcitingUniverseofMusicTheory/videos, https://ianring.com/musictheory/
-/// TODO: Add scale number support
+/// See https://www.youtube.com/c/TheExcitingUniverseofMusicTheory/videos, https://ianring.com/musictheory/, http://allthescales.org/
 /// </remarks>
 public class Scale : IReadOnlyCollection<Note>
 {
@@ -50,7 +49,8 @@ public class Scale : IReadOnlyCollection<Note>
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
     public int Count => _notes.Count;
-    public int Identity => _notes.ToPitchClassSet().GetIdentity();
+    public int ScaleNumber => _notes.ToPitchClassSet().GetIdentity();
+    public ScaleIdentity ScaleIdentity => new(ScaleNumber);
 
     #region Inner classes
 

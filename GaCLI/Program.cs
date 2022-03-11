@@ -1,4 +1,6 @@
 ﻿using GA.Business.Core.Fretboard;
+using GA.Business.Core.Intervals;
+using GA.Business.Core.Notes;
 using GA.Business.Core.Tonal.Modes;
 using GA.Business.Core.Tonal.Primitives;
 
@@ -9,17 +11,30 @@ var melodicMinorModes = MelodicMinorMode.All;
 foreach (var mode in majorModes)
 {
     Console.WriteLine(mode.Name);
-    Console.WriteLine("Notes:     " + mode.Notes);
-    Console.WriteLine("Intervals: " + mode.Intervals);
-    Console.WriteLine("Formula:   " + mode.Formula.ToString().Trim());
-    Console.WriteLine("Identity:  " + mode.Identity);
-    Console.WriteLine("Listen:    " + $"https://ianring.com/musictheory/scales/{mode.Identity}");
+    Console.WriteLine("Notes:          " + mode.Notes);
+    Console.WriteLine("Intervals:      " + mode.Intervals);
+    Console.WriteLine("Formula:        " + mode.Formula.ToString().Trim());
+    var scaleIdentity = mode.ScaleIdentity;
+    Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
+    Console.WriteLine("IanRingSiteUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
+
+    var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
+    Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
     Console.WriteLine();
 }
 
-var ionianIdentity = MajorScaleMode.Get(MajorScaleDegree.Ionian).Identity;
-var dorianIdentity = MajorScaleMode.Get(MajorScaleDegree.Dorian).Identity;
+var notes = MajorScaleMode.Dorian.Notes;
+var intervals = new List<(Note, Note,Interval.Simple)>();
+for (var i = 0; i < notes.Count; i++)
+{
+    var note1 = notes.ElementAt(i);
+    var i2 = (i + 6) % notes.Count;
+    var note2 =  notes.ElementAt(i2);
+    var interval = note1.GetInterval(note2);
+    intervals.Add((note1, note2, interval));
+}
 
+var sIntervals = intervals.ToString();
 /*
 
 Ideas: 

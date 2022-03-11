@@ -24,7 +24,8 @@ public abstract class ScaleMode
     public bool IsMinorMode => Intervals.Contains(Interval.Simple.MinorThird);
     public ModeFormula Formula => new(this);
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
-    public int Identity => Intervals.ToPitchClassSet().GetIdentity();
+    public int ScaleNumber => Intervals.ToPitchClassSet().GetIdentity();
+    public ScaleIdentity ScaleIdentity => new(ScaleNumber);
 }
 
 public abstract class ScaleMode<TScaleDegree> : ScaleMode

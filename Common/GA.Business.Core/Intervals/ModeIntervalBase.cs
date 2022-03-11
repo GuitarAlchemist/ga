@@ -1,13 +1,10 @@
 ﻿namespace GA.Business.Core.Intervals;
 
 using System.Text;
+
 using Primitives;
 
-public abstract class ModeIntervalBase
-{
-}
-
-public abstract class ModeIntervalBase<TDegree> : ModeIntervalBase
+public abstract class ModeIntervalBase<TDegree>
     where TDegree : IDiatonicNumber
 {
     protected ModeIntervalBase(
