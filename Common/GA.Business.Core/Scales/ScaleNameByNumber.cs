@@ -3,16 +3,20 @@
 using System.Collections.Immutable;
 using GA.Core;
 
-public class ScaleNameByNumber : LazyIndexerBase<int, string>
+public class ScaleNameByNumber : LazyIndexerBase<ScaleNumber, string>
 {
-    public static bool IsValidScaleNumber(int scaleNumber) => Instance.Dictionary.ContainsKey(scaleNumber);
-    public static IReadOnlyList<int> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
-    public static string Get(int scaleNumber) => IsValidScaleNumber(scaleNumber) ? Instance[scaleNumber] : string.Empty;
+    public static bool IsValidScaleNumber(ScaleNumber scaleNumber) => Instance.Dictionary.ContainsKey(scaleNumber);
+    public static IReadOnlyList<ScaleNumber> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+    public static string Get(ScaleNumber scaleNumber)
+    {
+        if (!IsValidScaleNumber(scaleNumber)) return string.Empty;
+        return Instance[scaleNumber];
+    }
 
     public ScaleNameByNumber() : base(GetScaleNameByNumber()) { }
 
     internal static readonly ScaleNameByNumber Instance = new();
-    private static IReadOnlyDictionary<int, string> GetScaleNameByNumber()
+    private static IReadOnlyDictionary<ScaleNumber, string> GetScaleNameByNumber()
     {
         // ReSharper disable StringLiteralTypo
 
@@ -30,7 +34,7 @@ public class ScaleNameByNumber : LazyIndexerBase<int, string>
                 view-source:https://ianring.com/musictheory/scales/finder.php / scalenames
          */
 
-        var dict = new Dictionary<int, string>
+        var dict = new Dictionary<ScaleNumber, string>
         {
             [0] = "UMBRian",
             [1] = "Unison",
