@@ -14,7 +14,11 @@ using static Notes.Note.AccidentedNote;
 /// A music scale
 /// </summary>
 /// <remarks>
-/// See https://www.youtube.com/c/TheExcitingUniverseofMusicTheory/videos, https://ianring.com/musictheory/, http://allthescales.org/
+/// See https://www.youtube.com/c/TheExcitingUniverseofMusicTheory/videos
+/// http://allthescales.org/
+/// https://ianring.com/musictheory/
+/// https://ianring.com/musictheory/scales/
+/// https://chromatone.center/theory/scales/study.html
 /// </remarks>
 public class Scale : IReadOnlyCollection<Note>
 {

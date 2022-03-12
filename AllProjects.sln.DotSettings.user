@@ -16,12 +16,12 @@
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Notes.NoteTests.Test_Chromatic_GetInterval&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1e4bc421_002Dfc07_002D45d7_002Dbc9b_002D25b46efef86f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KeySignatureTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1e4bc421_002Dfc07_002D45d7_002Dbc9b_002D25b46efef86f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="KeySignatureTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Tonal.KeySignatureTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58d49584_002Dd00d_002D4cfd_002D8e77_002D733c589f2dda/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="KeySignatureTest_C_Am" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58d49584_002Dd00d_002D4cfd_002D8e77_002D733c589f2dda/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KeySignatureTest_C_Am" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Tonal.KeySignatureTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net6.0::GA.Business.Core.Tests.Fretboard.FretboardTests.Test1&lt;/TestId&gt;&#xD;
@@ -31,7 +31,7 @@
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 23 Col 69)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 19 Col 25)</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">442021D8-8D71-41A0-BC96-B62F44483550/f:Program.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>

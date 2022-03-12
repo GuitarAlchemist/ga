@@ -26,14 +26,13 @@ public class ScaleIdentity
     public ScaleIdentity(int scaleNumber)
     {
         if (!ScaleNameByNumber.IsValidScaleNumber(scaleNumber)) throw new InvalidOperationException($"Invalid scale number: {scaleNumber}");
-
-        ScaleNumber = scaleNumber;
+        ScaleNumber = new(scaleNumber);
     }
 
-    public int ScaleNumber { get; }
-    public string ScaleName => ScaleNameByNumber.Get(ScaleNumber);
-    public string IanRingSiteUrl => $"https://ianring.com/musictheory/scales/{ScaleNumber}";
-
+    public ScaleNumber ScaleNumber { get; }
+    public string ScaleName => ScaleNameByNumber.Get(ScaleNumber.Value);
+    public string ScaleVideoUrl => ScaleVideoUrlByNumber.Get(ScaleNumber.Value);
+    public string IanRingSiteUrl => $"https://ianring.com/musictheory/scales/{ScaleNumber.Value}";
 
     //language=regex
     private const string _regexPattern = @"""(?'youtubeurl'https:\/\/www\.youtube\.com\/embed\/[^""]*)""";
@@ -51,5 +50,4 @@ public class ScaleIdentity
     }
 
     public override string ToString() => ScaleName;
-
 }

@@ -7,6 +7,20 @@ using Primitives;
 
 public class PitchClassSet : IReadOnlySet<PitchClass>
 {
+    public static PitchClassSet FromIdentity(int identity)
+    {
+        var hashset = new HashSet<PitchClass>();
+        foreach (var pitchClass in PitchClass.All)
+        {
+            if ((identity & 1) == 1) hashset.Add(pitchClass);
+            identity = identity >> 1;
+        }
+
+        var result = new PitchClassSet(hashset);
+
+        return result;
+    }
+
     private readonly ImmutableHashSet<PitchClass> _set;
 
     public PitchClassSet(IEnumerable<PitchClass> pitchClasses)
@@ -24,6 +38,15 @@ public class PitchClassSet : IReadOnlySet<PitchClass>
             var weight = 1 << index++;
             if (_set.Contains(pitchClass)) result += weight;
         }
+
+        return result;
+    }
+
+    public IReadOnlyCollection<Note.Chromatic> GetNotes()
+    {
+        var result = 
+            _set.Select(pitchClass => new Note.Chromatic(pitchClass))
+                .ToImmutableList();
 
         return result;
     }

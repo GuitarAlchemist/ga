@@ -1,9 +1,31 @@
-﻿using GA.Business.Core.Fretboard;
+﻿using System.Collections.Immutable;
+using GA.Business.Core.Atonal;
+using GA.Business.Core.Fretboard;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
-using GA.Business.Core.Tonal.Primitives;
+
+var allValid = ScaleNumber.GetAllValid().ToImmutableList();
+
+var allValidSevenNotes = allValid.Where(number => number.Notes.Count == 7);
+var lookup = allValidSevenNotes.ToLookup(number => number.IntervalVector);
+var vectors =
+    lookup
+        .Where(grouping => grouping.Count() > 1)
+        .OrderByDescending(numbers => numbers.Count())
+        .Select(numbers => numbers.Key)
+        .Distinct()
+        .ToImmutableList();
+
+foreach (var vector in vectors)
+{
+    var group = lookup[vector];
+    foreach (var num in group)
+    {
+        var name = ScaleNameByNumber.Get(num);
+    }
+}   
 
 var scaleIdentities = ScaleIdentity.GetAll();
 
@@ -12,7 +34,7 @@ foreach (var scaleIdentity in scaleIdentities)
     var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
     if (string.IsNullOrEmpty(youTubeUrl)) continue;
     Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
-    Console.WriteLine("IanRingSiteUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
+    Console.WriteLine("ScalePageUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
     
     Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
     Console.WriteLine();
@@ -30,7 +52,7 @@ foreach (var mode in majorModes)
     Console.WriteLine("Formula:        " + mode.Formula.ToString().Trim());
     var scaleIdentity = mode.ScaleIdentity;
     Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
-    Console.WriteLine("IanRingSiteUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
+    Console.WriteLine("ScalePageUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
 
     var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
     Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
