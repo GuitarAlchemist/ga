@@ -4,14 +4,19 @@ using System.Collections.Immutable;
 using Intervals.Primitives;
 using Notes;
 
+/// <summary>
+///  Interval vector class.
+/// </summary>
+/// <remarks>
+/// See Prime Form: https://www.youtube.com/watch?v=KFKMvFzobbw
+/// </remarks>
 public class IntervalVector
 {
     #region Equality members
 
-    protected bool Equals(IntervalVector other)
-    {
-        return _value == other._value;
-    }
+    public static bool operator ==(IntervalVector? left, IntervalVector? right) => Equals(left, right);
+    public static bool operator !=(IntervalVector? left, IntervalVector? right) => !Equals(left, right);
+    protected bool Equals(IntervalVector other) => Value == other.Value;
 
     public override bool Equals(object? obj)
     {
@@ -21,29 +26,23 @@ public class IntervalVector
         return Equals((IntervalVector) obj);
     }
 
-    public override int GetHashCode()
-    {
-        return _value;
-    }
+    public override int GetHashCode() => Value;
 
     #endregion
-
-    private readonly int _value;
 
     public IntervalVector(IReadOnlyCollection<Note> notes)
     {
         if (notes == null) throw new ArgumentNullException(nameof(notes));
 
         var intervalHistogram = GetIntervalHistogram(notes);
-        _value = GetValue(intervalHistogram);
+        Value = GetValue(intervalHistogram);
     }
 
-    public IntervalVector(int scaleNumber) 
-        : this(GetNotes(scaleNumber))
-    {
-    }
+    public int Value { get; }
 
-    public override string ToString() => _value.ToString();
+    public static implicit operator int(IntervalVector vector) => vector.Value;
+
+    public override string ToString() => Value.ToString();
 
     private static IReadOnlyCollection<int> GetIntervalHistogram(IReadOnlyCollection<Note> notes)
     {
@@ -85,12 +84,6 @@ public class IntervalVector
         }
 
         return result;
-    }
-
-    private static IReadOnlyCollection<Note.Chromatic> GetNotes(int scaleNumber)
-    {
-        var pitchClassSet = PitchClassSet.FromIdentity(scaleNumber);
-        return pitchClassSet.GetNotes();
     }
 }
 

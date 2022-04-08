@@ -3,7 +3,6 @@
 using System.Collections;
 using System.Collections.Immutable;
 
-using Notes.Extensions;
 using Intervals;
 using Notes;
 using Tonal;
@@ -53,8 +52,7 @@ public class Scale : IReadOnlyCollection<Note>
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
     public int Count => _notes.Count;
-    public int ScaleNumber => _notes.ToPitchClassSet().GetIdentity();
-    public ScaleIdentity ScaleIdentity => new(ScaleNumber);
+    public PitchClassSetIdentity ScaleIdentity => PitchClassSetIdentity.FromNotes(_notes);
 
     #region Inner classes
 

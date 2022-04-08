@@ -3,20 +3,20 @@
 using System.Collections.Immutable;
 using GA.Core;
 
-public class ScaleNameByNumber : LazyIndexerBase<ScaleNumber, string>
+public class ScaleNameByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
 {
-    public static bool IsValidScaleNumber(ScaleNumber scaleNumber) => Instance.Dictionary.ContainsKey(scaleNumber);
-    public static IReadOnlyList<ScaleNumber> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
-    public static string Get(ScaleNumber scaleNumber)
+    public static bool IsValidScaleNumber(PitchClassSetIdentity pitchClassSetIdentity) => Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
+    public static IReadOnlyList<PitchClassSetIdentity> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+    public static string Get(PitchClassSetIdentity pitchClassSetIdentity)
     {
-        if (!IsValidScaleNumber(scaleNumber)) return string.Empty;
-        return Instance[scaleNumber];
+        if (!IsValidScaleNumber(pitchClassSetIdentity)) return string.Empty;
+        return Instance[pitchClassSetIdentity];
     }
 
-    public ScaleNameByNumber() : base(GetScaleNameByNumber()) { }
+    public ScaleNameByIdentity() : base(GetScaleNameByNumber()) { }
 
-    internal static readonly ScaleNameByNumber Instance = new();
-    private static IReadOnlyDictionary<ScaleNumber, string> GetScaleNameByNumber()
+    internal static readonly ScaleNameByIdentity Instance = new();
+    private static IReadOnlyDictionary<PitchClassSetIdentity, string> GetScaleNameByNumber()
     {
         // ReSharper disable StringLiteralTypo
 
@@ -34,7 +34,7 @@ public class ScaleNameByNumber : LazyIndexerBase<ScaleNumber, string>
                 view-source:https://ianring.com/musictheory/scales/finder.php / scalenames
          */
 
-        var dict = new Dictionary<ScaleNumber, string>
+        var dict = new Dictionary<PitchClassSetIdentity, string>
         {
             [0] = "UMBRian",
             [1] = "Unison",

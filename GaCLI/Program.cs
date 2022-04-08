@@ -4,11 +4,18 @@ using GA.Business.Core.Fretboard;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
+using GA.Business.Core.Tonal;
 using GA.Business.Core.Tonal.Modes;
 
-var allValid = ScaleNumber.GetAllValid().ToImmutableList();
+var keyOfB = Key.Major.B;
+var keyOfBNotes = keyOfB.GetNotes();
+
+var allValid = PitchClassSetIdentity.GetAllValid().ToImmutableList();
 
 var allValidSevenNotes = allValid.Where(number => number.Notes.Count == 7);
+
+var aaaa = allValid.Where(number => number.IntervalVector == 254361).ToImmutableList();
+
 var lookup = allValidSevenNotes.ToLookup(number => number.IntervalVector);
 var vectors =
     lookup
@@ -18,27 +25,16 @@ var vectors =
         .Distinct()
         .ToImmutableList();
 
+
 foreach (var vector in vectors)
 {
     var group = lookup[vector];
     foreach (var num in group)
     {
-        var name = ScaleNameByNumber.Get(num);
+        var name = ScaleNameByIdentity.Get(num);
     }
 }   
 
-var scaleIdentities = ScaleIdentity.GetAll();
-
-foreach (var scaleIdentity in scaleIdentities)
-{
-    var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
-    if (string.IsNullOrEmpty(youTubeUrl)) continue;
-    Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
-    Console.WriteLine("ScalePageUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
-    
-    Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
-    Console.WriteLine();
-}
 
 var majorModes = MajorScaleMode.All;
 var harmonicMinorModes = HarmonicMinorMode.All;
@@ -50,12 +46,9 @@ foreach (var mode in majorModes)
     Console.WriteLine("Notes:          " + mode.Notes);
     Console.WriteLine("Intervals:      " + mode.Intervals);
     Console.WriteLine("Formula:        " + mode.Formula.ToString().Trim());
-    var scaleIdentity = mode.ScaleIdentity;
-    Console.WriteLine("ScaleNumber:    " + scaleIdentity.ScaleNumber);
-    Console.WriteLine("ScalePageUrl: " + $"{scaleIdentity.IanRingSiteUrl}");
-
-    var youTubeUrl = await scaleIdentity.GetYouTubeUrlAsync();
-    Console.WriteLine("YoutubeUrl:     " + $"{youTubeUrl}");
+    Console.WriteLine("ScaleNumber:    " + mode.ModeIdentity);
+    Console.WriteLine("ScalePageUrl: " + $"{mode.ModeIdentity.ScalePageUrl}");
+    Console.WriteLine("ScaleVideoUrl: " + $"{mode.ModeIdentity.ScaleVideoUrl}");
     Console.WriteLine();
 }
 

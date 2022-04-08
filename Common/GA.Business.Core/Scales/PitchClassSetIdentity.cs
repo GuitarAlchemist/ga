@@ -1,13 +1,21 @@
 ﻿namespace GA.Business.Core.Scales;
 
+using Notes.Extensions;
+
 using Atonal;
 using Notes;
 
-public class ScaleNumber
+/// <summary>
+/// Unique identifier for a pitch class set.
+/// </summary>
+/// <remarks>
+/// See <see cref="https://ianring.com/musictheory/scales/"/>
+/// </remarks>
+public class PitchClassSetIdentity
 {
     #region Equality members
 
-    protected bool Equals(ScaleNumber other)
+    protected bool Equals(PitchClassSetIdentity other)
     {
         return Value == other.Value;
     }
@@ -17,7 +25,7 @@ public class ScaleNumber
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((ScaleNumber) obj);
+        return Equals((PitchClassSetIdentity) obj);
     }
 
     public override int GetHashCode()
@@ -25,20 +33,21 @@ public class ScaleNumber
         return Value;
     }
 
-    public static bool operator ==(ScaleNumber? left, ScaleNumber? right)
+    public static bool operator ==(PitchClassSetIdentity? left, PitchClassSetIdentity? right)
     {
         return Equals(left, right);
     }
 
-    public static bool operator !=(ScaleNumber? left, ScaleNumber? right)
+    public static bool operator !=(PitchClassSetIdentity? left, PitchClassSetIdentity? right)
     {
         return !Equals(left, right);
     }
 
     #endregion
 
+    public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes) => new(notes.ToPitchClassSet().GetIdentity());
 
-    public static IEnumerable<ScaleNumber>  GetAllValid()
+    public static IEnumerable<PitchClassSetIdentity>  GetAllValid()
     {
         var count = 1 << 12;
         for (var i = 0; i < count; i++)
@@ -48,32 +57,33 @@ public class ScaleNumber
         }
     }
 
-    public ScaleNumber(int value)
+
+    public PitchClassSetIdentity(int value)
     {
         Value = value;
 
         PitchClassSet = PitchClassSet.FromIdentity(Value);
         Notes = PitchClassSet.GetNotes();
-        IntervalVector = new(Value);
+        IntervalVector = new(Notes);
         IsValid = PitchClassSet.Contains(0);
     }
 
-    public static implicit operator ScaleNumber(int value) => new(value);
-    public static implicit operator int(ScaleNumber scaleNumber) => scaleNumber.Value;
+    public static implicit operator PitchClassSetIdentity(int value) => new(value);
+    public static implicit operator int(PitchClassSetIdentity pitchClassSetIdentity) => pitchClassSetIdentity.Value;
 
     public int Value { get; }
     public PitchClassSet PitchClassSet { get; }
     public IReadOnlyCollection<Note.Chromatic> Notes { get; }
     public IntervalVector IntervalVector { get; }
     public bool IsValid { get; }
-    public string ScaleName => ScaleNameByNumber.Get(this);
-    public string ScaleVideoUrl => ScaleVideoUrlByNumber.Get(this);
+    public string ScaleName => ScaleNameByIdentity.Get(this);
+    public string ScaleVideoUrl => ScaleVideoUrlByIdentity.Get(this);
     public string ScalePageUrl => $"https://ianring.com/musictheory/scales/{Value}";
 
 
     public override string ToString()
     {
-        var name = ScaleNameByNumber.Get(this);
+        var name = ScaleNameByIdentity.Get(this);
         ;
         if (string.IsNullOrEmpty(name)) return Value.ToString();
         return $"{Value} ({name})";
