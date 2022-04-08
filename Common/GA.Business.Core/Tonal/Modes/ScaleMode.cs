@@ -10,6 +10,9 @@ using Scales;
 /// <summary>
 /// See https://en.wikipedia.org/wiki/Mode_(music)
 /// </summary>
+/// <remarks>
+/// This class handles only the main modes (Modes could be generalized to all modal scale groups)
+/// </remarks>
 public abstract class ScaleMode
 {
     protected ScaleMode(Scale parentScale)
@@ -24,8 +27,7 @@ public abstract class ScaleMode
     public bool IsMinorMode => Intervals.Contains(Interval.Simple.MinorThird);
     public ModeFormula Formula => new(this);
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
-    public int ScaleNumber => Intervals.ToPitchClassSet().GetIdentity();
-    public ScaleIdentity ScaleIdentity => new(ScaleNumber);
+    public PitchClassSetIdentity ModeIdentity => PitchClassSetIdentity.FromNotes(Notes);
 }
 
 public abstract class ScaleMode<TScaleDegree> : ScaleMode

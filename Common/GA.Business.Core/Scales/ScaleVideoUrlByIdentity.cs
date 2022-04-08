@@ -3,23 +3,23 @@
 using System.Collections.Immutable;
 using GA.Core;
 
-public class ScaleVideoUrlByNumber : LazyIndexerBase<ScaleNumber, string>
+public class ScaleVideoUrlByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
 {
-    public static bool IsValidScaleNumber(ScaleNumber scaleNumber) => Instance.Dictionary.ContainsKey(scaleNumber);
-    public static IReadOnlyList<ScaleNumber> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
-    public static string Get(ScaleNumber scaleNumber)
+    public static bool IsValidScaleNumber(PitchClassSetIdentity pitchClassSetIdentity) => Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
+    public static IReadOnlyList<PitchClassSetIdentity> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+    public static string Get(PitchClassSetIdentity pitchClassSetIdentity)
     {
-        if (!IsValidScaleNumber(scaleNumber)) return string.Empty;
-        return Instance[scaleNumber];
+        if (!IsValidScaleNumber(pitchClassSetIdentity)) return string.Empty;
+        return Instance[pitchClassSetIdentity];
     }
 
-    public ScaleVideoUrlByNumber() : base(GetVideoUrlByNumber()) { }
+    public ScaleVideoUrlByIdentity() : base(GetVideoUrlByNumber()) { }
 
-    internal static readonly ScaleVideoUrlByNumber Instance = new();
-    private static IReadOnlyDictionary<ScaleNumber, string> GetVideoUrlByNumber()
+    internal static readonly ScaleVideoUrlByIdentity Instance = new();
+    private static IReadOnlyDictionary<PitchClassSetIdentity, string> GetVideoUrlByNumber()
     {
         // ReSharper disable StringLiteralTypo
-        var dict = new Dictionary<ScaleNumber, string>
+        var dict = new Dictionary<PitchClassSetIdentity, string>
         {
             [273] = "https://www.youtube.com/embed/ZZMC-i1DVtE",
             [275] = "https://www.youtube.com/embed/9Vbv6tD0cqo",
