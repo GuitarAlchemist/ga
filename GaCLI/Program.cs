@@ -1,12 +1,15 @@
 ﻿using System.Collections.Immutable;
-using GA.Business.Core.Atonal;
+
 using GA.Business.Core.Fretboard;
+using GA.Business.Core.Fretboard.Engine;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal;
 using GA.Business.Core.Tonal.Modes;
 
+
+var kfp = KeyFretPositions.CreateCollection(Fretboard.Default);
 var keyOfB = Key.Major.B;
 var keyOfBNotes = keyOfB.GetNotes();
 

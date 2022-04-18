@@ -12,6 +12,22 @@ using Notes;
 public abstract partial record Key(KeySignature KeySignature)
 {
     public static Key FromRoot(NaturalNote naturalNote) => KeyByRoot.Get(naturalNote);
+    public static IReadOnlyCollection<Key> GetAll(KeyMode keyMode) =>
+        keyMode switch
+        {
+            KeyMode.Major => Major.GetAll(),
+            KeyMode.Minor => Minor.GetAll(),
+            _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
+        };
+
+    public static IReadOnlyCollection<Key> GetAll()
+    {
+        var list = new List<Key>();
+        list.AddRange(GetAll(KeyMode.Major));
+        list.AddRange(GetAll(KeyMode.Minor));
+
+        return list.AsReadOnly();
+    }
 
     public abstract KeyMode KeyMode { get; }
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
