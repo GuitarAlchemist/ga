@@ -39,19 +39,19 @@ public static class ChromaticNoteExtensions
         if (note1 == null) throw new ArgumentNullException(nameof(note1));
         if (note2 == null) throw new ArgumentNullException(nameof(note2));
 
-        var pitchClass1 = note1.PitchClass;
-        var pitchClass2 = note2.PitchClass;
+        var PitchClass1 = note1.PitchClass;
+        var PitchClass2 = note2.PitchClass;
 
-        if (pitchClass1 > pitchClass2)
+        if (PitchClass1 > PitchClass2)
         {
-            lowPitchClass = pitchClass2;
-            highPitchClass = pitchClass1;
+            lowPitchClass = PitchClass2;
+            highPitchClass = PitchClass1;
             notesInverted = true;
         }
         else
         {
-            lowPitchClass = pitchClass1;
-            highPitchClass = pitchClass2;
+            lowPitchClass = PitchClass1;
+            highPitchClass = PitchClass2;
             notesInverted = false;
         }
     }

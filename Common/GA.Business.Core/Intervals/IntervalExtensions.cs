@@ -18,14 +18,14 @@ public static class IntervalExtensions
 
     public static PitchClassSet ToPitchClassSet(this IEnumerable<Interval.Simple> intervals)
     {
-        var pitchClasses = new List<PitchClass>();
+        var PitchClasses = new List<PitchClass>();
         foreach (var interval in intervals)
         {
             var value = interval.ToSemitones().Value;
-            var pitchClass = new PitchClass {Value = value};
-            pitchClasses.Add(pitchClass);
+            var PitchClass = new PitchClass {Value = value};
+            PitchClasses.Add(PitchClass);
         }
 
-        return new(pitchClasses);
+        return new(PitchClasses);
     }
 }
