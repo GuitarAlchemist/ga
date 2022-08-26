@@ -1,8 +1,8 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Config;
-using GA.Business.Core.Fretboard.Primitives;
+﻿namespace GA.Business.Core.Fretboard;
 
-namespace GA.Business.Core.Fretboard;
+using System.Collections.Immutable;
+using Config;
+using Primitives;
 
 [PublicAPI]
 public class Fretboard

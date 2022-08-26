@@ -14,7 +14,8 @@ using Intervals;
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)
 /// </summary>
 [PublicAPI]
-public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyCollection<Note.KeyNote>
+public readonly record struct KeySignature : IValueObject<KeySignature>, 
+                                             IReadOnlyCollection<Note.KeyNote>
 {
     #region Relational members
 
@@ -29,15 +30,18 @@ public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyColl
     private const int _minValue = -7;
     private const int _maxValue = 7;
     private readonly Lazy<IReadOnlyCollection<Note.KeyNote>> _lazyAccidentedNotes;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()
     {
         _value = value;
         _lazyAccidentedNotes = new(() => GetAccidentedNotes(value));
     }
 
-    public static int CheckRange(int value) => ValueUtils<KeySignature>.CheckRange(value, _minValue, _maxValue);    
+    public static int CheckRange(int value) => ValueObjectUtils<KeySignature>.CheckRange(value, _minValue, _maxValue);    
 
     public static KeySignature Min => new(_minValue);
     public static KeySignature Max => new(_maxValue);
@@ -70,22 +74,14 @@ public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyColl
 
     public bool Contains(NaturalNote note) => SignatureNotes.Any(keyNote => keyNote.NaturalNote == note);
 
-    public IEnumerator<Note.KeyNote> GetEnumerator()
-    {
-        return _lazyAccidentedNotes.Value.GetEnumerator();
-    }
-
+    public IEnumerator<Note.KeyNote> GetEnumerator() => _lazyAccidentedNotes.Value.GetEnumerator();
     public override string ToString() => _lazyAccidentedNotes.Value.ToString()!;
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable) _lazyAccidentedNotes.Value).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _lazyAccidentedNotes.Value).GetEnumerator();
 
     private static IReadOnlyCollection<Note.SharpKey> GetSharpNotes(int count)
     {
         var result =
-            GetNotes(NaturalNote.F, count, DiatonicNumber.Fifth)
+            GetNotes(NaturalNote.F, count, IntervalSize.Fifth)
                 .Select(note => new Note.SharpKey(note, SharpAccidental.Sharp))
                 .ToImmutableList()
                 .AsPrintable();// See https://en.wikipedia.org/wiki/Circle_of_fifths
@@ -96,7 +92,7 @@ public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyColl
     private static IReadOnlyCollection<Note.FlatKey> GetFlatNotes(int count)
     {
         var result =
-            GetNotes(NaturalNote.B, count, DiatonicNumber.Fourth)
+            GetNotes(NaturalNote.B, count, IntervalSize.Fourth)
                 .Select(note => new Note.FlatKey(note, FlatAccidental.Flat))
                 .ToImmutableList()
                 .AsPrintable(); // See https://en.wikipedia.org/wiki/Circle_of_fifths
@@ -107,14 +103,14 @@ public readonly record struct KeySignature : IValue<KeySignature>, IReadOnlyColl
     private static IEnumerable<NaturalNote> GetNotes(
         NaturalNote firstItem,
         int count,
-        DiatonicNumber increment)
+        IntervalSize increment)
     {
         var item = firstItem;
         for (var i = 0; i < count; i++)
         {
             yield return item;
 
-            item = item.ToDegree(increment.Value - 1);
+            item += increment;
         }
     }
 

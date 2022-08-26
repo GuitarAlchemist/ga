@@ -22,18 +22,22 @@ using static Notes.Note.AccidentedNote;
 public class Scale : IReadOnlyCollection<Note>
 {
     public static Scale Major => new(Key.Major.C.GetNotes());
-    public static Scale NaturalMinor => new(Key.Major.A.GetNotes());
-    public static Scale HarmonicMinor => new(A, B, C, D, E, F, GSharp);
-    public static Scale MelodicMinor => new(A, B, C, D, E, FSharp, GSharp);
+    public static Scale NaturalMinor => Minor.Natural;
+    public static Scale HarmonicMinor => Minor.Harmonic;
+    public static Scale MelodicMinor => Minor.Melodic;
     public static Scale MajorPentatonic => new(C, D, E, G, A);
 
     /// <summary>
     /// https://ianring.com/musictheory/scales/1365
     /// </summary>
     public static Scale WholeTone => new(C, D, E, FSharp, GSharp, ASharp);
+    public static Scale ChromaticSharp => new(C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp);
+    public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
+
+    public static IEnumerable<string> GetNames() => ScaleNamesGenerator.Get();
 
     private readonly IReadOnlyCollection<Note> _notes;
-    private readonly LazyScaleIntervals _lazyScaleIntervals;
+    private readonly LazyScaleIntervals _intervals;
 
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())
@@ -44,17 +48,24 @@ public class Scale : IReadOnlyCollection<Note>
     {
         if (notes == null) throw new ArgumentNullException(nameof(notes));
         _notes = notes.ToImmutableList().AsPrintable();
-        _lazyScaleIntervals = new(_notes);
+        _intervals = new(_notes);
     }
 
-    public IReadOnlyCollection<Interval.Simple> Intervals => _lazyScaleIntervals;
+    public IReadOnlyCollection<Interval.Simple> Intervals => _intervals;
+    public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(_notes);
 
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
     public int Count => _notes.Count;
-    public PitchClassSetIdentity ScaleIdentity => PitchClassSetIdentity.FromNotes(_notes);
-
+    
     #region Inner classes
+
+    public static class Minor
+    {
+        public static Scale Natural => new(Key.Major.A.GetNotes());
+        public static Scale Harmonic => new(A, B, C, D, E, F, GSharp);
+        public static Scale Melodic => new(A, B, C, D, E, FSharp, GSharp);
+    }
 
     private class LazyScaleIntervals : LazyCollectionBase<Interval.Simple>
     {
@@ -73,6 +84,36 @@ public class Scale : IReadOnlyCollection<Note>
                     .AsPrintable(Interval.Simple.Format.ShortName);
 
             return result;
+        }
+    }
+
+    private static class ScaleNamesGenerator
+    {
+        public static IEnumerable<string> Get()
+        {
+            var allValid = PitchClassSetIdentity.GetAllValid().ToImmutableList();
+
+            var allValidSevenNotes = allValid.Where(number => number.Notes.Count == 7);
+
+            var lookup = allValidSevenNotes.ToLookup(number => number.IntervalVector);
+            var vectors =
+                lookup
+                    .Where(grouping => grouping.Count() > 1)
+                    .OrderByDescending(numbers => numbers.Count())
+                    .Select(numbers => numbers.Key)
+                    .Distinct()
+                    .ToImmutableList();
+
+            var result = new List<string>();
+            foreach (var vector in vectors)
+            {
+                var group = lookup[vector];
+                foreach (var num in group)
+                {
+                    var name = ScaleNameByIdentity.Get(num);
+                    yield return name;
+                }
+            }
         }
     }
 

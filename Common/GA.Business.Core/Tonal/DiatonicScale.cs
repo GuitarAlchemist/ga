@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 
 using Intervals;
 
-
 [PublicAPI]
 [DiscriminatedUnion]
 public abstract partial record DiatonicScale

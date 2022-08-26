@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 using GA.Core;
 
 public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>, IIndexer<TScaleModeDegree, TScaleMode>
-    where TScaleModeDegree : IReadOnlyValue
+    where TScaleModeDegree : IValueObject
     where TScaleMode : ScaleMode<TScaleModeDegree>
 {
     private readonly ImmutableDictionary<TScaleModeDegree, TScaleMode> _modeByDegree;

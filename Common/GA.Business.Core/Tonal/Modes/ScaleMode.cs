@@ -27,11 +27,11 @@ public abstract class ScaleMode
     public bool IsMinorMode => Intervals.Contains(Interval.Simple.MinorThird);
     public ModeFormula Formula => new(this);
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
-    public PitchClassSetIdentity ModeIdentity => PitchClassSetIdentity.FromNotes(Notes);
+    public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(Notes);
 }
 
 public abstract class ScaleMode<TScaleDegree> : ScaleMode
-    where TScaleDegree : IReadOnlyValue
+    where TScaleDegree : IValueObject
 {
     public TScaleDegree ParentScaleDegree { get; }
     public override IReadOnlyCollection<Note> Notes => new ModeNotesByScaleDegree(ParentScale)[ParentScaleDegree];

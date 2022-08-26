@@ -1,9 +1,9 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes;
-using static GA.Business.Core.Notes.Pitch.Sharp;
+﻿namespace GA.Business.Core.Fretboard.Config;
 
-namespace GA.Business.Core.Fretboard.Config;
+using System.Collections.Immutable;
+using Primitives;
+using Notes;
+using static Notes.Pitch.Sharp;
 
 /// <summary>
 /// Guitar tuning
@@ -33,7 +33,9 @@ public class Tuning
         public static Tuning Dadgad => CreateTuning("DAGGAD", D2, A2, D3, G3, A3, D4);
         public static Tuning OpenD => CreateTuning("Open D", D2, A2, D3, FSharp3, A3, D4);
 
-        private static Tuning CreateTuning(string tuningName, params Pitch[] pitches) =>
+        private static Tuning CreateTuning(
+            string tuningName, 
+            params Pitch[] pitches) =>
             new(
                 new(
                     nameof(Guitar), 
@@ -125,14 +127,14 @@ public class Tuning
     {
         TuningInfo = tuningInfo;
         Pitches = pitches ?? throw new ArgumentNullException(nameof(pitches));
-        _pitchByStr = GetPitchByStr(pitches);
+        _pitchByStr = PitchByStr(pitches);
     }
 
     public TuningInfo TuningInfo { get; }
     public PitchCollection Pitches { get; }
     public Pitch this[Str str] => _pitchByStr[str];
 
-    private static IReadOnlyDictionary<Str, Pitch> GetPitchByStr(IEnumerable<Pitch> pitches)
+    private static IReadOnlyDictionary<Str, Pitch> PitchByStr(IEnumerable<Pitch> pitches)
     {
         var pitchesList = pitches.ToImmutableList();
         var lowestPitchFirst = pitchesList.First() < pitchesList.Last();

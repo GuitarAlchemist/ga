@@ -4,37 +4,36 @@ using System.Text;
 
 using Primitives;
 
-public abstract class ModeIntervalBase<TDegree>
-    where TDegree : IDiatonicNumber
+public abstract class ModeIntervalBase<TIntervalSize>
+    where TIntervalSize : IIntervalSize
 {
     protected ModeIntervalBase(
-        TDegree degree, 
-        Quality quality, 
-        Quality refQuality)
+        TIntervalSize size, 
+        IntervalQuality quality, 
+        IntervalQuality refQuality)
     {
-        Degree = degree;
+        Size = size;
         Quality = quality;
         RefQuality = refQuality;
     }
 
-    public TDegree Degree { get; }
-    public Quality Quality { get; }
-    public Quality RefQuality { get; }
+    public TIntervalSize Size { get; }
+    public IntervalQuality Quality { get; }
+    public IntervalQuality RefQuality { get; }
     public bool IsColorTone => Quality != RefQuality;
-    public bool IsPerfect => Degree.IsPerfect;
+    public IntervalSizeConsonance Consonance => Size.Consonance;
 
     public override string ToString()
     {
         var sb = new StringBuilder();
         var isAccidentalPrinted = false;
-        var isPerfect = IsPerfect;
-        var accidental = Quality.ToAccidental(isPerfect);
+        var accidental = Quality.ToAccidental(Consonance);
         if (IsColorTone)
         {
             sb.Append(">");
             if (!accidental.HasValue)
             {
-                var refAccidental = RefQuality.ToAccidental(isPerfect);
+                var refAccidental = RefQuality.ToAccidental(Consonance);
                 if (refAccidental.HasValue)
                 {
                     sb.Append(Accidental.Natural.ToString());
@@ -47,7 +46,7 @@ public abstract class ModeIntervalBase<TDegree>
         {
             sb.Append(accidental.Value.ToString());
         }
-        sb.Append(Degree);
+        sb.Append(Size);
         var result =sb.ToString().PadLeft(3);
 
         return result;

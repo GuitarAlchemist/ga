@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.31911.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GaWebApp", "GaWebApp\GaWebApp.csproj", "{38D64048-BF4C-4901-9570-9E89F68E0DF6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core", "Common\GA.Business.Core\GA.Business.Core.csproj", "{44AA465B-6C3C-4439-B8C9-6624B0230D4F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C2D782E1-D535-4614-B458-E1ABA1B4F5B1}"
@@ -17,8 +15,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core.Tests", "T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{983FAA86-8005-4CFF-8796-E6D1A3B14F61}"
 	ProjectSection(SolutionItems) = preProject
+		DevNotes.txt = DevNotes.txt
 		docs\TuningChart.pdf = docs\TuningChart.pdf
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.WebBlazorApp", "GA.WebBlazorApp\GA.WebBlazorApp.csproj", "{150B48D2-FB05-42AB-B4BF-7028F92CA52B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Querying", "GA.Business.Querying\GA.Business.Querying.csproj", "{F365B48C-7F5A-4C33-A973-6B16B090168F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,10 +29,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{38D64048-BF4C-4901-9570-9E89F68E0DF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38D64048-BF4C-4901-9570-9E89F68E0DF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38D64048-BF4C-4901-9570-9E89F68E0DF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38D64048-BF4C-4901-9570-9E89F68E0DF6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44AA465B-6C3C-4439-B8C9-6624B0230D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{44AA465B-6C3C-4439-B8C9-6624B0230D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44AA465B-6C3C-4439-B8C9-6624B0230D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -46,6 +45,14 @@ Global
 		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{150B48D2-FB05-42AB-B4BF-7028F92CA52B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{150B48D2-FB05-42AB-B4BF-7028F92CA52B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{150B48D2-FB05-42AB-B4BF-7028F92CA52B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{150B48D2-FB05-42AB-B4BF-7028F92CA52B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F365B48C-7F5A-4C33-A973-6B16B090168F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F365B48C-7F5A-4C33-A973-6B16B090168F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F365B48C-7F5A-4C33-A973-6B16B090168F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F365B48C-7F5A-4C33-A973-6B16B090168F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +60,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{44AA465B-6C3C-4439-B8C9-6624B0230D4F} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{7B106678-09E5-41B2-87D0-98E8C035C7FD} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{F365B48C-7F5A-4C33-A973-6B16B090168F} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}

@@ -3,16 +3,15 @@
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
+using GA.Business.Core.Extensions;
 using Intervals;
 
-/// <inheritdoc cref="IEquatable{PitchClass}" />
-/// <inheritdoc cref="IComparable{PitchClass}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
 /// A pitch class between 0 and 11 (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
 [PublicAPI]
-public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
+public readonly record struct PitchClass : IValueObject<PitchClass>,
+                                           IValueObjectCollection<PitchClass>
 {
     #region Relational members
 
@@ -27,15 +26,16 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     private const int _minValue = 0;
     private const int _maxValue = 11;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static PitchClass Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static PitchClass Min => Create(_minValue);
-    public static PitchClass Max => Create(_maxValue);
-    public static IReadOnlyCollection<PitchClass> All => ValueUtils<PitchClass>.GetAll();
-    public static IReadOnlyCollection<int> AllValues => All.Select(pitchClass => pitchClass.Value).ToImmutableList();
+    public static PitchClass Min => FromValue(_minValue);
+    public static PitchClass Max => FromValue(_maxValue);
+    public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.GetCollection();
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> AllValues => Items.Select(pitchClass => pitchClass.Value).ToImmutableList();
 
-    public static IReadOnlyCollection<PitchClass> GetCollection(int start, int count) => ValueUtils<PitchClass>.GetRange(start, count);
-    public static implicit operator PitchClass(int value) => Create(value);
+    public static IReadOnlyCollection<PitchClass> GetCollection(int start, int count) => ValueObjectUtils<PitchClass>.GetRange(start, count);
+    public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.SharpKey(PitchClass pitchClass) => pitchClass.ToSharpNote();
     public static implicit operator Note.FlatKey(PitchClass pitchClass) => pitchClass.ToFlatNote();
@@ -46,10 +46,10 @@ public readonly record struct PitchClass : IValue<PitchClass>, IAll<PitchClass>
     public int Value
     {
         get => _value;
-        init => _value = ValueUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
+        init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
     }
 
-    public void CheckMaxValue(int maxValue) => ValueUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
     public override string ToString() => Value.ToString();
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];

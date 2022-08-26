@@ -10,7 +10,7 @@ namespace GA.Business.Core.Notes.Primitives;
 /// An MIDI note between 0 and 127
 /// </summary>
 [PublicAPI]
-public readonly record struct MidiNote : IValue<MidiNote>
+public readonly record struct MidiNote : IValueObject<MidiNote>
 {
     #region Relational members
 
@@ -25,21 +25,21 @@ public readonly record struct MidiNote : IValue<MidiNote>
     private const int _minValue = 0;
     private const int _maxValue = 127;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static MidiNote Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static MidiNote FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static MidiNote Min => Create(_minValue);
-    public static MidiNote Max => Create(_maxValue);
-    public static MidiNote Open => Create(0);
-    public static IReadOnlyCollection<MidiNote> All => ValueUtils<MidiNote>.GetAll();
+    public static MidiNote Min => FromValue(_minValue);
+    public static MidiNote Max => FromValue(_maxValue);
+    public static MidiNote Open => FromValue(0);
+    public static IReadOnlyCollection<MidiNote> All => ValueObjectUtils<MidiNote>.GetCollection();
 
-    public static int CheckRange(int value) => ValueUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MidiNote>.CheckRange(value, minValue, maxValue);
-    public static MidiNote Create(Octave octave, PitchClass pitchClass) => Create((octave.Value - Octave.Min.Value) * 12 + pitchClass.Value);
-    public static MidiNote operator ++(MidiNote midiNote) => Create(midiNote._value + 1);
-    public static MidiNote operator --(MidiNote midiNote) => Create(midiNote._value - 1);
-    public static MidiNote operator +(MidiNote midiNote, int increment) => Create(midiNote._value + increment);
-    public static MidiNote operator -(MidiNote midiNote, int increment) => Create(midiNote._value - increment);
-    public static implicit operator MidiNote(int value) => Create(value);
+    public static int CheckRange(int value) => ValueObjectUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MidiNote>.CheckRange(value, minValue, maxValue);
+    public static MidiNote Create(Octave octave, PitchClass pitchClass) => FromValue((octave.Value - Octave.Min.Value) * 12 + pitchClass.Value);
+    public static MidiNote operator ++(MidiNote midiNote) => FromValue(midiNote._value + 1);
+    public static MidiNote operator --(MidiNote midiNote) => FromValue(midiNote._value - 1);
+    public static MidiNote operator +(MidiNote midiNote, int increment) => FromValue(midiNote._value + increment);
+    public static MidiNote operator -(MidiNote midiNote, int increment) => FromValue(midiNote._value - increment);
+    public static implicit operator MidiNote(int value) => FromValue(value);
     public static implicit operator int(MidiNote midiNote) => midiNote._value;
     public static implicit operator Pitch.Chromatic(MidiNote midiNote) => midiNote.ToChromaticPitch();
     public static implicit operator Pitch.Sharp(MidiNote midiNote) => midiNote.ToSharpPitch();

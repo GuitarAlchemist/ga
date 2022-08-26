@@ -1,0 +1,135 @@
+﻿@using GA.WebBlazorApp.Components.Grids.Dtos
+@using GA.Core.Extensions
+@using GA.WebBlazorApp.Components.Grids.Common
+@using GA.WebBlazorApp.Extensions
+
+<GridLoaderProgress @ref="_progress"></GridLoaderProgress>
+<div class="generic-datagrid-container">
+    <div @ref="_gridElement"
+         id="@Id"
+         class="ag-theme-balham-dark"
+         style="height: 100%; width: 100%">
+    </div>
+    <div class="overlay-full-screen" title="Full Screen" @onclick="HandleClickFullScreen">
+        <i class="fas fa-expand"></i>
+    </div>
+</div>
+
+@inject IJSRuntime JsRuntime;
+@inject ILogger<GenericDataGrid> Logger;
+@inject GenericDataGridLoader GridLoader;
+
+@code {
+    private GridLoaderProgress? _progress;
+    private ElementReference _gridElement;
+    private IJSObjectReference? _jsModule;
+    private IJSObjectReference? _jsGridOptions;
+
+    [Parameter]
+    public string Id { get; set; } = $"generic-data-grid-{Guid.NewGuid():N}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            // Import JavaScript module
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Modules/genericDataGrid.js");
+            if (_jsModule == null) throw new InvalidOperationException();
+
+            // Initialize the grid
+            await GridInitAsync();
+        }
+    }
+
+    private async Task GridInitAsync(IReadOnlyCollection<DataGridColumn>? gridColumns = null)
+    {
+        if (string.IsNullOrEmpty(_gridElement.Id)) throw new InvalidOperationException();
+
+        try
+        {
+            // Initialize the ag-grid instance
+            object? columnsArray = null;
+            if (gridColumns != null) columnsArray = gridColumns.ToArray();
+            var dotNetObjectRef = DotNetObjectReference.Create(this);
+            if (_jsModule != null)
+            {
+                _jsGridOptions = await _jsModule.InvokeAsync<IJSObjectReference>(
+                    "gridInit",
+                    dotNetObjectRef,
+                    _gridElement,
+                    _jsGridOptions,
+                    columnsArray);
+
+                // Initialize Grid Loader
+                await GridLoader.InitializeAsync(new(_jsGridOptions));
+            }
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace("Failed initializing generic data grid");
+            Logger.LogError(msg);
+            await JsRuntime.LogAsync(msg);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Loads grid data.
+    /// </summary>
+    public async Task LoadAsync<T>()
+    {
+        var type = typeof(T);
+
+        try
+        {
+            // API request
+            _progress?.Report(new BeginUpdate($"Loading data (Type: {type.Name})"));
+            var data = await GetDataGrid(type);
+            _progress?.Report(new CountUpdate(data.Rows.Count));
+
+            // Re-initialize the grid with columns
+            await GridInitAsync(data.Columns);
+            await InvokeAsync(StateHasChanged);
+
+            // Load grid data
+            await GridLoader.LoadDataAsync(data, _progress);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250));
+            await AutoSizeAllAsync();
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace($"Failed loading data (Type: {type.Name})");
+            Logger.LogWarning(msg);
+        }
+        finally
+        {
+            _progress?.Report(new EndUpdate());
+        }
+
+        async Task<DataGrid> GetDataGrid(Type type)
+        {
+            await Task.CompletedTask;
+
+            return new(null!, null!);
+        }
+    }
+
+    private async Task HandleClickFullScreen()
+    {
+        await JsRuntime.OpenFullScreenByIdAsync(Id);
+    }
+
+    public ValueTask<bool> GoToTopNodeAsync() => _jsGridOptions?.InvokeAsync<bool>("goToTopNode") ?? new(false);
+    public ValueTask<bool> GoToBottomNodeAsync() => _jsGridOptions?.InvokeAsync<bool>("goToBottomNode") ?? new(false);
+    public ValueTask AutoSizeAllAsync()
+    {
+        if (_jsGridOptions == null) return default;
+        return _jsGridOptions.InvokeVoidAsync("autoSizeAll");
+    }
+
+}

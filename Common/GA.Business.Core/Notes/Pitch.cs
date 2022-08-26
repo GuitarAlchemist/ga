@@ -62,7 +62,7 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
             if (!octaveGroup.IsDefined) return false; // Missing octave
 
             // NaturalMinor note
-            if (!NaturalNote.TryParse(noteGroup.Value, out var naturalNote)) return false;
+            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote)) return false;
 
             // SharpKey accidental
             SharpAccidental? accidental = null;
@@ -73,7 +73,7 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
             var octave = new Octave() {Value = parsedOctaveValue};
 
             var note = new Note.SharpKey(naturalNote, accidental);
-            parsedPitch = new Sharp(note, octave);
+            parsedPitch = new(note, octave);
             return true;
 
         }

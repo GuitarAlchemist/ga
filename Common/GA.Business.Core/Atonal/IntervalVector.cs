@@ -5,9 +5,10 @@ using Intervals.Primitives;
 using Notes;
 
 /// <summary>
-///  Interval vector class.
+/// Interval vector class
 /// </summary>
 /// <remarks>
+/// See https://en.wikipedia.org/wiki/Interval_vector
 /// See Prime Form: https://www.youtube.com/watch?v=KFKMvFzobbw
 /// </remarks>
 public class IntervalVector
@@ -22,7 +23,7 @@ public class IntervalVector
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
+        if (obj.GetType() != GetType()) return false;
         return Equals((IntervalVector) obj);
     }
 
@@ -32,10 +33,7 @@ public class IntervalVector
 
     public IntervalVector(IReadOnlyCollection<Note> notes)
     {
-        if (notes == null) throw new ArgumentNullException(nameof(notes));
-
-        var intervalHistogram = GetIntervalHistogram(notes);
-        Value = GetValue(intervalHistogram);
+        Value = GetValue(notes);
     }
 
     public int Value { get; }
@@ -44,34 +42,10 @@ public class IntervalVector
 
     public override string ToString() => Value.ToString();
 
-    private static IReadOnlyCollection<int> GetIntervalHistogram(IReadOnlyCollection<Note> notes)
+    private static int GetValue(IReadOnlyCollection<Note> notes)
     {
         if (notes == null) throw new ArgumentNullException(nameof(notes));
-
-        var histogram = new[] {0, 0, 0, 0, 0, 0};
-        var maxSemitones = (Semitones) 6;
-        foreach (var note1 in notes)
-        {
-            foreach (var note2 in notes)
-            {
-                if (note1 == note2) continue;
-                var semitones = note1.GetInterval(note2).ToSemitones();
-                if (semitones < 1) continue;
-                if (semitones > maxSemitones) continue; // Beyond symmetry boundary, don't measure twice
-                var i = (int) semitones - 1;
-                if (semitones == maxSemitones) histogram[i] = 1; // On symmetry boundary, don't measure twice
-                else histogram[i] += 1;
-            }
-        }
-
-        var result = histogram.ToImmutableList();
-
-        return result;
-    }
-
-    private static int GetValue(IEnumerable<int> intervalHistogram)
-    {
-        if (intervalHistogram == null) throw new ArgumentNullException(nameof(intervalHistogram));
+        var intervalHistogram = GetIntervalHistogram(notes);
 
         var result = 0;
         var weight = 1;
@@ -84,6 +58,31 @@ public class IntervalVector
         }
 
         return result;
+
+        static ImmutableList<int> GetIntervalHistogram(IReadOnlyCollection<Note> notes)
+        {
+            if (notes == null) throw new ArgumentNullException(nameof(notes));
+
+            var histogram = new[] {0, 0, 0, 0, 0, 0};
+            var maxSemitones = (Semitones) 6;
+            foreach (var note1 in notes)
+            {
+                foreach (var note2 in notes)
+                {
+                    if (note1 == note2) continue;
+                    var semitones = note1.GetInterval(note2).ToSemitones();
+                    if (semitones < 1) continue;
+                    if (semitones > maxSemitones) continue; // Beyond symmetry boundary, don't measure twice
+                    var i = (int) semitones - 1;
+                    if (semitones == maxSemitones) histogram[i] = 1; // On symmetry boundary, don't measure twice
+                    else histogram[i] += 1;
+                }
+            }
+
+            var result = histogram.ToImmutableList();
+
+            return result;
+        }
     }
 }
 

@@ -265,12 +265,12 @@ public abstract partial record Note : IComparable<Note>
             if (startNote == endNote) return Interval.Simple.Unison;
 
             var key = Key.FromRoot(startNote.NaturalNote);
-            var number = endNote.NaturalNote - startNote.NaturalNote;
+            var size = endNote.NaturalNote - startNote.NaturalNote;
             var qualityIncrement = GetQualityIncrement(key, startNote, endNote);
-            var quality = GetQuality(number, qualityIncrement);
+            var quality = GetQuality(size, qualityIncrement);
             var result = new Interval.Simple
             {
-                Number = number,
+                Size = size,
                 Quality = quality
             };
 
@@ -288,7 +288,7 @@ public abstract partial record Note : IComparable<Note>
 
                 // Quality - End note
                 var (endNaturalNote, endNoteAccidental) = endNote;
-                if (key.IsNoteAccidental(endNaturalNote))
+                if (key.KeySignature.Contains(endNaturalNote))
                 {
                     var expectedEndNoteAccidental =
                         key.AccidentalKind == AccidentalKind.Flat
@@ -306,19 +306,19 @@ public abstract partial record Note : IComparable<Note>
                 return result;
             }
 
-            static Quality GetQuality(
-                DiatonicNumber number,
+            static IntervalQuality GetQuality(
+                IntervalSize number,
                 Semitones qualityIncrement)
             {
-                if (number.IsPerfect)
+                if (number.Consonance == IntervalSizeConsonance.Perfect)
                 {
                     var result = qualityIncrement.Value switch
                     {
-                        -2 => Quality.DoublyDiminished,
-                        -1 => Quality.Diminished,
-                        0 => Quality.Perfect,
-                        1 => Quality.Augmented,
-                        2 => Quality.DoublyAugmented,
+                        -2 => IntervalQuality.DoublyDiminished,
+                        -1 => IntervalQuality.Diminished,
+                        0 => IntervalQuality.Perfect,
+                        1 => IntervalQuality.Augmented,
+                        2 => IntervalQuality.DoublyAugmented,
                         _ => throw new NotSupportedException()
                     };
 
@@ -328,12 +328,12 @@ public abstract partial record Note : IComparable<Note>
                 {
                     var result = qualityIncrement.Value switch
                     {
-                        -3 => Quality.DoublyDiminished,
-                        -2 => Quality.Diminished,
-                        -1 => Quality.Minor,
-                        0 => Quality.Major,
-                        1 => Quality.Augmented,
-                        2 => Quality.DoublyAugmented,
+                        -3 => IntervalQuality.DoublyDiminished,
+                        -2 => IntervalQuality.Diminished,
+                        -1 => IntervalQuality.Minor,
+                        0 => IntervalQuality.Major,
+                        1 => IntervalQuality.Augmented,
+                        2 => IntervalQuality.DoublyAugmented,
                         _ => throw new NotSupportedException()
                     };
 
@@ -362,7 +362,7 @@ public abstract partial record Note : IComparable<Note>
                     Intervals.Accidental.DoubleSharp,
                 };
 
-                foreach (var naturalNote in NaturalNote.All)
+                foreach (var naturalNote in NaturalNote.Items)
                     foreach (var accidental in accidentals)
                         yield return new(naturalNote, accidental);
             }

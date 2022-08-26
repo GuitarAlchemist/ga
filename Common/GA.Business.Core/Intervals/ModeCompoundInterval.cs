@@ -2,18 +2,18 @@
 
 namespace GA.Business.Core.Intervals;
 
-public sealed class ModeCompoundInterval : ModeIntervalBase<CompoundDiatonicNumber>
+public sealed class ModeCompoundInterval : ModeIntervalBase<CompoundIntervalSize>
 {
     public ModeCompoundInterval(
-        CompoundDiatonicNumber degree, 
-        Quality quality, 
-        Quality refQuality) 
+        CompoundIntervalSize degree, 
+        IntervalQuality quality, 
+        IntervalQuality refQuality) 
             : base(degree, quality, refQuality)
     {
     }
     
     public ModeInterval ToSimple()
     {
-        return new(Degree.ToSimple(), Quality, RefQuality);
+        return new(Size.ToSimple(), Quality, RefQuality);
     }
 }

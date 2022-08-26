@@ -1,21 +1,29 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using GA.Business.Core.Intervals.Primitives;
 using PCRE;
 
+using GA.Business.Core.Intervals.Primitives;
+using System.Runtime.CompilerServices;
+
 [PublicAPI]
-public readonly record struct SharpAccidental : IValue<SharpAccidental>
+public readonly record struct SharpAccidental : IValueObject<SharpAccidental>
 {
     private const int _minValue = 1;
     private const int _maxValue = 2;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static SharpAccidental Min => new() { Value = _minValue };
     public static SharpAccidental Max => new() { Value = _maxValue };
 
-    public static readonly SharpAccidental Sharp = new() { Value = 1 };
-    public static readonly SharpAccidental DoubleSharp = new() { Value = 2 };
+    public static SharpAccidental Sharp => FromValue(1);
+    public static SharpAccidental DoubleSharp = FromValue(2);
 
+    public static implicit operator SharpAccidental(int value) => new() { Value = value };
+    public static implicit operator int(SharpAccidental item) => item._value;
     public static implicit operator Semitones(SharpAccidental value) => value.ToSemitones();
+
+    public Semitones ToSemitones() => new() {Value = _value};
 
     //language=regexp
     public static readonly string RegexPattern = "^(#|x)$";
@@ -44,8 +52,8 @@ public readonly record struct SharpAccidental : IValue<SharpAccidental>
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
-    public static int CheckRange(int value) => ValueUtils<SharpAccidental>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<SharpAccidental>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<SharpAccidental>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<SharpAccidental>.CheckRange(value, minValue, maxValue);
 
     public override string ToString() => _value switch
     {
@@ -53,6 +61,4 @@ public readonly record struct SharpAccidental : IValue<SharpAccidental>
         2 => "x",
         _ => string.Empty
     };
-
-    public Semitones ToSemitones() => new() {Value = _value};
 }

@@ -32,56 +32,55 @@ public abstract partial record Key(KeySignature KeySignature)
     public abstract KeyMode KeyMode { get; }
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
     public abstract Note.KeyNote Root { get; }
-    public bool IsNoteAccidental(NaturalNote note) => KeySignature.Contains(note);
 
     /// <summary>
     /// Gets the 7 notes in the key.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The <see cref="Note.KeyNote"/> collection.</returns>
     public IReadOnlyCollection<Note.KeyNote> GetNotes()
     {
+        var accidentedNotes = 
+            KeySignature.SignatureNotes
+                .Select(note => note.NaturalNote)
+                .ToImmutableHashSet();
         var items = KeySignature.Value < 0
-            ? GetFlatNotes().ToImmutableList()
-            : GetSharpNotes().ToImmutableList();
+            ? GetFlatNotes(Root, accidentedNotes).ToImmutableList()
+            : GetSharpNotes(Root, accidentedNotes).ToImmutableList();
         var result = new ReadOnlyItems<Note.KeyNote>(items);
 
         return result;
 
-        IEnumerable<Note.KeyNote> GetSharpNotes()
+        static IEnumerable<Note.KeyNote> GetSharpNotes(
+            Note.KeyNote root,
+            IReadOnlySet<NaturalNote> accidentedNotes)
         {
-            var root = Root;
             yield return root;
 
             var naturalNote = root.NaturalNote;
-            var sharpNotes = KeySignature.SignatureNotes.Select(note => note.NaturalNote).ToImmutableHashSet();
-            bool HasSharp(NaturalNote note) => sharpNotes.Contains(note);
             for (var i = 0; i < 6; i++)
             {
-                naturalNote = naturalNote.ToDegree(1);
-
-                yield return
-                    HasSharp(naturalNote)
-                        ? new(naturalNote, SharpAccidental.Sharp)
-                        : new Note.SharpKey(naturalNote);
+                naturalNote++;
+                var item = accidentedNotes.Contains(naturalNote)
+                    ? new(naturalNote, SharpAccidental.Sharp)
+                    : new Note.SharpKey(naturalNote);
+                yield return item;
             }
         }
 
-        IEnumerable<Note.KeyNote> GetFlatNotes()
+        static IEnumerable<Note.KeyNote> GetFlatNotes(
+            Note.KeyNote root,
+            IReadOnlySet<NaturalNote> accidentedNotes)
         {
-            var root = Root;
             yield return root;
 
             var naturalNote = root.NaturalNote;
-            var flatNotes = KeySignature.SignatureNotes.Select(note => note.NaturalNote).ToImmutableHashSet();
-            bool HasFlat(NaturalNote note) => flatNotes.Contains(note);
             for (var i = 0; i < 6; i++)
             {
-                naturalNote = naturalNote.ToDegree(1);
-
-                yield return
-                    HasFlat(naturalNote)
-                        ? new(naturalNote, FlatAccidental.Flat)
-                        : new Note.FlatKey(naturalNote);
+                naturalNote++;
+                var item = accidentedNotes.Contains(naturalNote)
+                    ? new(naturalNote, FlatAccidental.Flat)
+                    : new Note.FlatKey(naturalNote);
+                yield return item;
             }
         }
     }
@@ -107,35 +106,32 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Major B => new(5);
         public static Major FSharp => new(6);
         public static Major CSharp => new(7);
-        public static IReadOnlyCollection<Major> GetAll() => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
+        public new static IReadOnlyCollection<Major> GetAll() => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
 
         public override KeyMode KeyMode => KeyMode.Major;
         public override Note.KeyNote Root => GetRoot(KeySignature);
 
         public override string ToString() => GetKeyName(KeySignature);
 
-        public static string GetKeyName(KeySignature keySignature)
+        public static string GetKeyName(KeySignature keySignature) => keySignature.Value switch
         {
-            return keySignature.Value switch
-            {
-                -7 => "Key of Cb",
-                -6 => "Key of Gb",
-                -5 => "Key of Db",
-                -4 => "Key of Ab",
-                -3 => "Key of Eb",
-                -2 => "Key of Bb",
-                -1 => "Key of F",
-                0 => "Key of C",
-                1 => "Key of G",
-                2 => "Key of D",
-                3 => "Key of A",
-                4 => "Key of E",
-                5 => "Key of B",
-                6 => "Key of F#",
-                7 => "Key of C#",
-                _ => string.Empty
-            };
-        }
+            -7 => "Key of Cb",
+            -6 => "Key of Gb",
+            -5 => "Key of Db",
+            -4 => "Key of Ab",
+            -3 => "Key of Eb",
+            -2 => "Key of Bb",
+            -1 => "Key of F",
+            0 => "Key of C",
+            1 => "Key of G",
+            2 => "Key of D",
+            3 => "Key of A",
+            4 => "Key of E",
+            5 => "Key of B",
+            6 => "Key of F#",
+            7 => "Key of C#",
+            _ => string.Empty
+        };
 
         private static Note.KeyNote GetRoot(KeySignature keySignature) => keySignature.Value switch
         {
@@ -156,7 +152,6 @@ public abstract partial record Key(KeySignature KeySignature)
             7 => Note.SharpKey.CSharp,
             _ => throw new InvalidOperationException()
         };
-
     }
 
     [PublicAPI]
@@ -178,33 +173,30 @@ public abstract partial record Key(KeySignature KeySignature)
         public static Minor GSharp => new(5);
         public static Minor DSharp => new(6);
         public static Minor ASharp => new(7);
-        public static IReadOnlyCollection<Minor> GetAll() => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
+        public new static IReadOnlyCollection<Minor> GetAll() => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
 
         public override KeyMode KeyMode => KeyMode.Minor;
         public override Note.KeyNote Root => GetRoot(KeySignature);
 
-        public override string ToString()
+        public override string ToString() => KeySignature.Value switch
         {
-            return KeySignature.Value switch
-            {
-                -7 => "Key of Abm",
-                -6 => "Key of Ebm",
-                -5 => "Key of Bbm",
-                -4 => "Key of Fm",
-                -3 => "Key of Cb",
-                -2 => "Key of Gm",
-                -1 => "Key of Dm",
-                0 => "Key of Am",
-                1 => "Key of Em",
-                2 => "Key of Bm",
-                3 => "Key of F#m",
-                4 => "Key of C#m",
-                5 => "Key of G#m",
-                6 => "Key of D#m",
-                7 => "Key of A#m",
-                _ => string.Empty
-            };
-        }
+            -7 => "Key of Abm",
+            -6 => "Key of Ebm",
+            -5 => "Key of Bbm",
+            -4 => "Key of Fm",
+            -3 => "Key of Cb",
+            -2 => "Key of Gm",
+            -1 => "Key of Dm",
+            0 => "Key of Am",
+            1 => "Key of Em",
+            2 => "Key of Bm",
+            3 => "Key of F#m",
+            4 => "Key of C#m",
+            5 => "Key of G#m",
+            6 => "Key of D#m",
+            7 => "Key of A#m",
+            _ => string.Empty
+        };
 
         private static Note.KeyNote GetRoot(KeySignature keySignature) => keySignature.Value switch
         {

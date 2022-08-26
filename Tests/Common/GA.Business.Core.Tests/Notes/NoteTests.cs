@@ -1,26 +1,24 @@
-﻿using GA.Business.Core.Notes.Extensions;
-using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Tonal;
-
-namespace GA.Business.Core.Tests.Notes;
+﻿namespace GA.Business.Core.Tests.Notes;
 
 using NUnit.Framework;
 
-using Intervals;
+using GA.Business.Core.Notes.Primitives;
+using GA.Business.Core.Tonal;
 using GA.Business.Core.Notes;
+using Intervals;
 
 public class NoteTests
 {
     [Test(TestOf = typeof(Note.Chromatic))]
     public void Test_Chromatic_GetInterval()
     {
-        Assert.AreEqual((Interval.Chromatic)0, Note.Chromatic.C.GetInterval(Note.Chromatic.C));
-        Assert.AreEqual((Interval.Chromatic)2, Note.Chromatic.C.GetInterval(Note.Chromatic.D));
-        Assert.AreEqual((Interval.Chromatic)4, Note.Chromatic.C.GetInterval(Note.Chromatic.E));
-        Assert.AreEqual((Interval.Chromatic)5, Note.Chromatic.C.GetInterval(Note.Chromatic.F));
-        Assert.AreEqual((Interval.Chromatic)7, Note.Chromatic.C.GetInterval(Note.Chromatic.G));
-        Assert.AreEqual((Interval.Chromatic)9, Note.Chromatic.C.GetInterval(Note.Chromatic.A));
-        Assert.AreEqual((Interval.Chromatic)11, Note.Chromatic.C.GetInterval(Note.Chromatic.B));
+        Assert.AreEqual(Interval.Simple.P1, Note.Chromatic.C.GetInterval(Note.Chromatic.C));
+        Assert.AreEqual(Interval.Simple.M2, Note.Chromatic.C.GetInterval(Note.Chromatic.D));
+        Assert.AreEqual(Interval.Simple.M3, Note.Chromatic.C.GetInterval(Note.Chromatic.E));
+        Assert.AreEqual(Interval.Simple.P4, Note.Chromatic.C.GetInterval(Note.Chromatic.F));
+        Assert.AreEqual(Interval.Simple.P5, Note.Chromatic.C.GetInterval(Note.Chromatic.G));
+        Assert.AreEqual(Interval.Simple.M6, Note.Chromatic.C.GetInterval(Note.Chromatic.A));
+        Assert.AreEqual(Interval.Simple.M7, Note.Chromatic.C.GetInterval(Note.Chromatic.B));
     }
 
     [Test(TestOf = typeof(Note.AccidentedNote))]
@@ -37,7 +35,6 @@ public class NoteTests
         var c = new Note.AccidentedNote(NaturalNote.C);
         var d = new Note.AccidentedNote(NaturalNote.D);
         var e = new Note.AccidentedNote(NaturalNote.E);
-
 
         var i1 = f.GetInterval(f);
         var i2 = f.GetInterval(g);

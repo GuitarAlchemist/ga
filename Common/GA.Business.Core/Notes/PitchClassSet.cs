@@ -10,7 +10,7 @@ public class PitchClassSet : IReadOnlySet<PitchClass>
     public static PitchClassSet FromIdentity(int identity)
     {
         var hashset = new HashSet<PitchClass>();
-        foreach (var pitchClass in PitchClass.All)
+        foreach (var pitchClass in PitchClass.Items)
         {
             if ((identity & 1) == 1) hashset.Add(pitchClass);
             identity = identity >> 1;
@@ -33,7 +33,7 @@ public class PitchClassSet : IReadOnlySet<PitchClass>
     {
         var result = 0;
         var index = 0;
-        foreach (var pitchClass in PitchClass.All)
+        foreach (var pitchClass in PitchClass.Items)
         {
             var weight = 1 << index++;
             if (_set.Contains(pitchClass)) result += weight;
