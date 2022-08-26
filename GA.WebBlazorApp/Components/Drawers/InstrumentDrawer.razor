@@ -1,0 +1,75 @@
+﻿@using MudBlazor
+
+<MudDrawer Open="@IsOpen" OpenChanged="isOpen => IsOpen = isOpen"
+           Anchor="@Anchor.Right" Variant="@DrawerVariant.Temporary"
+           Width="400px" Height="100vh" Elevation="0">
+    <div class="main-panel">
+        <div class="nav-flex-container">
+            <div class="nav-content">
+                <MudTextField T="string" 
+                              Label="Instrument"
+                              DebounceInterval="250" Class="m-2"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search"/>
+            </div>
+            <div class="nav-scrollable-content">
+                <MudNavMenu Dense="true">
+                    @{
+                    }
+                </MudNavMenu>
+            </div>
+        </div>
+    </div>
+</MudDrawer>
+
+<style>
+    /* See https://codepen.io/akan-the-animator/pen/ZEXZpzp */
+
+    .main-panel {
+        display: flex;
+        min-height: 0; /* can NOT work without this line!! */
+    }
+
+    .nav-flex-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-content {
+    }
+
+    .nav-scrollable-content {
+        flex-grow: 1;
+        overflow: scroll;
+    }
+
+    .main-content {
+        width: 80%;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    public async Task OpenAsync()
+    {
+        IsOpen = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task OpenAsync(string category)
+    {
+        IsOpen = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task CloseAsync()
+    {
+        IsOpen = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

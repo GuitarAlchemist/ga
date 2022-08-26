@@ -26,11 +26,11 @@ public class ModeFormula : IReadOnlyCollection<ModeInterval>
 
         ModeInterval CreateModeInterval(Interval.Simple interval)
         {
-            var number = interval.Number;
-            var quality = qualityByNumber[number];
-            var refQuality = refQualityByNumber[number];
+            var size = interval.Size;
+            var quality = qualityByNumber[size];
+            var refQuality = refQualityByNumber[size];
 
-            return new(number, quality, refQuality);
+            return new(size, quality, refQuality);
         }
 
         var result =

@@ -38,7 +38,7 @@ public abstract partial record Interval
 
     public abstract record Diatonic : Interval
     {
-        public Quality Quality { get; init; }
+        public IntervalQuality Quality { get; init; }
     }
 
     public sealed partial record Simple : Diatonic, IFormattable
@@ -61,16 +61,31 @@ public abstract partial record Interval
 
         #endregion
 
-        public static readonly Simple Unison = new() {Number = DiatonicNumber.Unison, Quality = Quality.Perfect};
-        public static readonly Simple MinorThird = new() {Number = DiatonicNumber.Third, Quality = Quality.Minor};
+        public static readonly Simple Unison = new() {Size = IntervalSize.Unison, Quality = IntervalQuality.Perfect};
+        public static readonly Simple MinorThird = new() {Size = IntervalSize.Third, Quality = IntervalQuality.Minor};
+
+        // ReSharper disable InconsistentNaming
+        public static Simple P1 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Unison};
+        public static Simple m2 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Second};
+        public static Simple M2 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Second};
+        public static Simple m3 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Third};
+        public static Simple M3 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Third};
+        public static Simple P4 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Fourth};
+        public static Simple P5 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Fifth};
+        public static Simple m6 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Sixth};
+        public static Simple M6 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Sixth};
+        public static Simple m7 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Seventh};
+        public static Simple M7 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Seventh};
+        public static Simple P8 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Octave};
+        // ReSharper restore InconsistentNaming
 
         public static Simple operator !(Simple interval) => interval.ToInverse();
 
-        public DiatonicNumber Number { get; init; }
+        public IntervalSize Size { get; init; }
 
-        public string Name => $"{Quality}{Number}";
-        public string LongName => $"{Quality}{Number}";
-        public string AccidentedName => GetAccidentedName(Number, Quality);
+        public string Name => $"{Quality}{Size}";
+        public string LongName => $"{Quality}{Size}";
+        public string AccidentedName => GetAccidentedName(Size, Quality);
 
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
@@ -86,12 +101,12 @@ public abstract partial record Interval
             };
         }
 
-        public Simple ToInverse() => new() {Number = !Number, Quality = !Quality};
+        public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
 
         public override Semitones ToSemitones()
         {
-            var result = Number.ToSemitones();
-            var accidental = Quality.ToAccidental(Number.IsPerfect);
+            var result = Size.ToSemitones();
+            var accidental = Quality.ToAccidental(Size.Consonance);
             if (accidental.HasValue)
             {
                 result += accidental.Value;
@@ -101,14 +116,14 @@ public abstract partial record Interval
         }
         
         private static string GetAccidentedName(
-            DiatonicNumber number,
-            Quality quality)
+            IntervalSize size,
+            IntervalQuality quality)
         {
-            var accidental = quality.ToAccidental(number.IsPerfect);
+            var accidental = quality.ToAccidental(size.Consonance);
             var result =
                 accidental.HasValue
-                    ? $"{accidental.Value}{number}"
-                    : $"{number}";
+                    ? $"{accidental.Value}{size}"
+                    : $"{size}";
 
             return result;
         }
@@ -116,18 +131,17 @@ public abstract partial record Interval
 
     public sealed partial record Compound : Diatonic, IFormattable
     {
-        public CompoundDiatonicNumber Number { get; init; }
+        public CompoundIntervalSize Size { get; init; }
 
-        public string ShortName => $"{Quality}{Number}";
+        public string ShortName => $"{Quality}{Size}";
 
         public override Semitones ToSemitones()
         {
             var result = 
-                Number.ToSemitones() + 
-                Quality.ToAccidental(Number.IsPerfect)?.Value ?? 0;
+                Size.ToSemitones() + 
+                Quality.ToAccidental(Size.Consonance)?.Value ?? 0;
 
             return result;
-
         }
 
         public override string ToString() => ToString("G");

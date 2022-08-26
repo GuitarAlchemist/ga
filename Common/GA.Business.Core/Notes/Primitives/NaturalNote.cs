@@ -1,5 +1,4 @@
-﻿
-namespace GA.Business.Core.Notes.Primitives;
+﻿namespace GA.Business.Core.Notes.Primitives;
 
 using System.Runtime.CompilerServices;
 using System.Collections.Immutable;
@@ -7,17 +6,15 @@ using System.Collections.Immutable;
 using PCRE;
 
 using GA.Business.Core.Intervals.Primitives;
-using Tonal;
 using GA.Core;
+using GA.Business.Core.Extensions;
 
-/// <inheritdoc cref="IEquatable{Noteing}" />
-/// <inheritdoc cref="IComparable{Noteing}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
 /// A musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(music))
 /// </summary>
 [PublicAPI]
-public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNote>
+public readonly record struct NaturalNote : IValueObject<NaturalNote>, 
+                                            IValueObjectCollection<NaturalNote>
 {
     #region Relational members
 
@@ -32,26 +29,37 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
     private const int _minValue = 0;
     private const int _maxValue = 6;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NaturalNote Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static NaturalNote FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static NaturalNote Min => Create(_minValue);
-    public static NaturalNote Max => Create(_maxValue);
+    public static NaturalNote Min => FromValue(_minValue);
+    public static NaturalNote Max => FromValue(_maxValue);
 
-    public static NaturalNote C => Create(0);
-    public static NaturalNote D => Create(1);
-    public static NaturalNote E => Create(2);
-    public static NaturalNote F => Create(3);
-    public static NaturalNote G => Create(4);
-    public static NaturalNote A => Create(5);
-    public static NaturalNote B => Create(6);
+    public static NaturalNote C => FromValue(0);
+    public static NaturalNote D => FromValue(1);
+    public static NaturalNote E => FromValue(2);
+    public static NaturalNote F => FromValue(3);
+    public static NaturalNote G => FromValue(4);
+    public static NaturalNote A => FromValue(5);
+    public static NaturalNote B => FromValue(6);
 
     //language=regexp
     public static readonly string RegexPattern = "^(?'note'[A-G])$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
-    public static bool TryParse(string s, out NaturalNote naturalNote)
+    public static NaturalNote Parse(string s, IFormatProvider? provider)
     {
-        naturalNote = default;
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    public static bool TryParse(
+        string? s, 
+        IFormatProvider? provider, 
+        out NaturalNote result)
+    {
+        result = default;
+        if (string.IsNullOrEmpty(s)) return false;
+
         var match = _regex.Match(s);
         if (!match.Success) return false; // Failure
 
@@ -71,26 +79,40 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         if (!parsedNaturalNote.HasValue) return false; // Failure
 
         // Success
-        naturalNote = parsedNaturalNote.Value;
+        result = parsedNaturalNote.Value;
         return true;
     }
 
-    public static IReadOnlyCollection<NaturalNote> All => GetAll();
-    public static IReadOnlyCollection<int> AllValues => All.Select(note => note.Value).ToImmutableList();
+    public static IReadOnlyCollection<NaturalNote> Items => GetAll();
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> AllValues => Items.Select(note => note.Value).ToImmutableList();
 
-    public static implicit operator NaturalNote(int value) => new() { Value = value };
-    public static implicit operator int(NaturalNote naturalNote) => naturalNote.Value;
-
-    public static NaturalNote operator +(NaturalNote naturalNote, DiatonicNumber diatonicNumber) => Add(naturalNote, diatonicNumber);
-    public static DiatonicNumber operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(startNote, endNote);
+    public static implicit operator NaturalNote(int value) => new() {Value = value};
+    public static implicit operator int(NaturalNote item) => item.Value;
+    public static NaturalNote operator ++(NaturalNote naturalNote) => FromValue((naturalNote.Value + 1) % 7);
+    public static NaturalNote operator --(NaturalNote naturalNote) => FromValue((naturalNote.Value - 1) % 7);
+    public static NaturalNote operator +(NaturalNote naturalNote, IntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
+    public static IntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(startNote, endNote);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
-    public static int CheckRange(int value) => ValueUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
-    public NaturalNote ToDegree(int count) => Create((Value + count) % 7);
-    public DiatonicNumber GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(this, other);
+    public IntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(this, other);
+
+    public IReadOnlyCollection<NaturalNote> GetDegrees(int count)
+    {
+        var list = new List<NaturalNote>();
+        var item = this;
+        for (var i = 0; i < count - 1; i++)
+        {
+            list.Add(item);
+            item++;
+        }
+
+        return list.AsReadOnly();
+    }
 
     public PitchClass ToPitchClass()
     {
@@ -118,13 +140,6 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         };
     }
 
-    public Key ToKey()
-    {
-        // var a = new Dictionary<>()
-
-        return null; // TODO
-    }
-
     public override string ToString() => _value switch
     {
         0 => nameof(C),
@@ -134,35 +149,25 @@ public readonly record struct NaturalNote : IValue<NaturalNote>, IAll<NaturalNot
         4 => nameof(G),
         5 => nameof(A),
         6 => nameof(B),
-        _ => ""
+        _ => string.Empty
     };
 
-    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueUtils<NaturalNote>.GetAll();
+    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueObjectUtils<NaturalNote>.GetCollection();
 
-    private static NaturalNote Add(NaturalNote naturalNote, DiatonicNumber diatonicNumber)
-    {
-        var result = new NaturalNote
-        {
-            Value = (naturalNote.Value + diatonicNumber.Value - 1) % 7
-        };
-
-        return result;
-    }
-
-    private class NaturalNoteIntervals : LazyIndexerBase<(NaturalNote, NaturalNote), DiatonicNumber>
+    private class NaturalNoteIntervals : LazyIndexerBase<(NaturalNote, NaturalNote), IntervalSize>
     {
         private static readonly NaturalNoteIntervals _instance = new();
-        public static DiatonicNumber Get(NaturalNote startNote, NaturalNote endNote) => _instance[(startNote, endNote)];
+        public static IntervalSize Get(NaturalNote startNote, NaturalNote endNote) => _instance[(startNote, endNote)];
 
         public NaturalNoteIntervals() 
             : base(GetKeyValuePairs())
         {
         }
 
-        private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), DiatonicNumber>> GetKeyValuePairs()
+        private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), IntervalSize>> GetKeyValuePairs()
         {
-            foreach (var startNote in All)
-            foreach (var number in DiatonicNumber.All)
+            foreach (var startNote in Items)
+            foreach (var number in IntervalSize.Items)
             {
                 var endNote = startNote + number;
                 yield return new((startNote, endNote),  number);

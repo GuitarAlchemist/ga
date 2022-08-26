@@ -9,7 +9,7 @@ using Notes;
 /// Unique identifier for a pitch class set.
 /// </summary>
 /// <remarks>
-/// See <see cref="https://ianring.com/musictheory/scales/"/>
+/// See https://ianring.com/musictheory/scales/
 /// </remarks>
 public class PitchClassSetIdentity
 {
@@ -24,7 +24,7 @@ public class PitchClassSetIdentity
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
+        if (obj.GetType() != GetType()) return false;
         return Equals((PitchClassSetIdentity) obj);
     }
 
@@ -47,7 +47,7 @@ public class PitchClassSetIdentity
 
     public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes) => new(notes.ToPitchClassSet().GetIdentity());
 
-    public static IEnumerable<PitchClassSetIdentity>  GetAllValid()
+    public static IEnumerable<PitchClassSetIdentity> GetAllValid()
     {
         var count = 1 << 12;
         for (var i = 0; i < count; i++)
@@ -56,7 +56,6 @@ public class PitchClassSetIdentity
             yield return new(i);
         }
     }
-
 
     public PitchClassSetIdentity(int value)
     {
@@ -79,7 +78,6 @@ public class PitchClassSetIdentity
     public string ScaleName => ScaleNameByIdentity.Get(this);
     public string ScaleVideoUrl => ScaleVideoUrlByIdentity.Get(this);
     public string ScalePageUrl => $"https://ianring.com/musictheory/scales/{Value}";
-
 
     public override string ToString()
     {

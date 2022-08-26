@@ -9,10 +9,10 @@ using GA.Core;
 
 public static class IntervalExtensions
 {
-    public static Indexer<DiatonicNumber, Quality> ToQualityByNumber(this IEnumerable<Interval.Simple> intervals) =>
+    public static Indexer<IntervalSize, IntervalQuality> ToQualityByNumber(this IEnumerable<Interval.Simple> intervals) =>
         new(
-            intervals.DistinctBy(simple => simple.Number)
-                     .ToDictionary(interval => interval.Number,
+            intervals.DistinctBy(simple => simple.Size)
+                     .ToDictionary(interval => interval.Size,
                                    interval => interval.Quality)
         );
 

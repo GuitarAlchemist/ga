@@ -9,3 +9,5 @@ _ReSharper.*
 bin
 obj
 packages
+/.idea
+/.vscode

@@ -2,11 +2,8 @@
 
 using System.Runtime.CompilerServices;
 
-/// <inheritdoc cref="IEquatable{MajorPentatonicScaleDegree}" />
-/// <inheritdoc cref="IComparable{MajorPentatonicScaleDegree}" />
-/// <inheritdoc cref="IComparable" />
 [PublicAPI]
-public readonly record struct MajorPentatonicScaleDegree : IValue<MajorPentatonicScaleDegree>
+public readonly record struct MajorPentatonicScaleDegree : IValueObject<MajorPentatonicScaleDegree>
 {
     #region Relational members
 
@@ -21,18 +18,18 @@ public readonly record struct MajorPentatonicScaleDegree : IValue<MajorPentatoni
     private const int _minValue = 1;
     private const int _maxValue = 5;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static MajorPentatonicScaleDegree Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static MajorPentatonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static MajorPentatonicScaleDegree Min => Create(_minValue);
-    public static MajorPentatonicScaleDegree Max => Create(_maxValue);
+    public static MajorPentatonicScaleDegree Min => FromValue(_minValue);
+    public static MajorPentatonicScaleDegree Max => FromValue(_maxValue);
 
-    public static int CheckRange(int value) => ValueUtils<MajorPentatonicScaleDegree>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueUtils<MajorPentatonicScaleDegree>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MajorPentatonicScaleDegree>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MajorPentatonicScaleDegree>.CheckRange(value, minValue, maxValue);
 
-    public static implicit operator MajorPentatonicScaleDegree(int value) => Create(value);
+    public static implicit operator MajorPentatonicScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorPentatonicScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<MajorPentatonicScaleDegree> All => ValueUtils<MajorPentatonicScaleDegree>.GetAll();
+    public static IReadOnlyCollection<MajorPentatonicScaleDegree> All => ValueObjectUtils<MajorPentatonicScaleDegree>.GetCollection();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

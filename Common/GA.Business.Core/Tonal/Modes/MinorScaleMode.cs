@@ -3,12 +3,12 @@
 using Scales;
 
 public abstract class MinorScaleMode<TScaleDegree> : ScaleMode<TScaleDegree>
-    where TScaleDegree : IReadOnlyValue
+    where TScaleDegree : IValueObject
 {
     protected MinorScaleMode(
         Scale scale,
         TScaleDegree degree)
-        : base(scale, degree)
+            : base(scale, degree)
     {
     }
 }

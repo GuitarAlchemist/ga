@@ -1,0 +1,68 @@
+﻿@using MudBlazor
+@using GA.Core.Extensions
+
+<MudPopover Open="@_viewModel.IsLoading"
+            Fixed="false" Style="margin: 4px; padding: 4px"
+            AnchorOrigin="Origin.TopCenter"
+            TransformOrigin="Origin.TopCenter">
+    <div class="d-flex flex-column">
+        <MudText Typo="Typo.caption">@_viewModel.Text</MudText>
+        <MudProgressLinear Size="Size.Small" Color="Color.Info"
+                           Indeterminate="@(_viewModel.Max == 0)"
+                           Max="@_viewModel.Max"
+                           Value="@_viewModel.Value">
+            <ChildContent>
+                <div style="color: white; font-family: monospace; font-size: 6px">
+                    @_viewModel.Percentage
+                </div>
+            </ChildContent>
+        </MudProgressLinear>
+    </div>
+</MudPopover>
+
+@implements IProgress<GridLoaderProgressUpdate>
+
+@code
+{
+    private GridLoaderProgressViewModel _viewModel = GridLoaderProgressViewModel.Default;
+
+    [Parameter]
+    public string? BeginText { get; set; }
+
+    public record GridLoaderProgressViewModel
+    {
+        public static GridLoaderProgressViewModel Default => new() { IsLoading = false, Max = 0, Value = 0 };
+
+        public bool IsLoading { get; init; }
+        public int Max { get; init; }
+        public int Value { get; init; }
+        public string? Text { get; init; }
+        public string Percentage
+        {
+            get
+            {
+                if (Max == 0) return string.Empty;
+                var ratio = (double)Value / Max;
+                var result = $"{ratio:P0}";
+
+                return result;
+            }
+        }
+    }
+
+    public async void Report(GridLoaderProgressUpdate? value)
+    {
+        if (value == null) return;
+
+        _viewModel = value switch
+        {
+            BeginUpdate update => _viewModel with { IsLoading = true, Max = 0, Text = update.Text.Coalesce(() => "Loading data") },
+            CountUpdate update => _viewModel with { Max = update.Count ?? 0, Value = 0, Text = "Populating grid rows" },
+            IndexUpdate update => _viewModel with { Value = update.Index, Text = $"Populating grid rows ({update.Index} / {_viewModel.Max})" },
+            EndUpdate => GridLoaderProgressViewModel.Default,
+            _ => _viewModel
+            };
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

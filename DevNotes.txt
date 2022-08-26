@@ -1,0 +1,16 @@
+TODO:
+
+- Add vector/data frame/matrix support
+
+. Add Blazor/ag-grid support 
+. Explore Existing frameworks
+https://github.com/SciSharp/Pandas.NET
+https://fslab.org/XPlot//chart/google-annotation-chart.html
+
+- Concepts to explore
+
+. Scale grouping (Modal scales, non-modal scales, symmetries, bracelet notation, etc...)
+. Invariants (Instrument/tuning invariants, music invariants)
+. Harmonic Entropy - How confused is my brain when it hears an interval?
+http://www.tonalsoft.com/enc/h/harmonic-entropy.aspx
+https://en.wikipedia.org/wiki/Paul_Erlich

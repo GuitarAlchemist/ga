@@ -9,12 +9,13 @@ namespace GA.Business.Core.Fretboard.Engine;
 /// (Fret, Key, KeyPositionCollection) tuple
 /// </summary>
 /// <remarks>
-/// Emergent property: Open fret/capo generates positions that are present in keys
-/// . For open positions, rank keys
-/// . For positions at a given fret, rank keys
-/// . For a given key, rank the frets
-/// UI: Grid needed
-/// . Surface grouping (e.g. Key, Fret) => emergent property/relationships
+/// Goal:
+/// Declare a relationship between Open fret/capo position and keys
+/// The objective is surfacing "opportunities" to the user - Example
+/// The fretboard context is required (Tuning)
+/// 1) Open position works best for certain keys => List keys (Keys with the highest open positions count first) 
+/// 2) Capo position =>  List keys (Keys with the most open positions first)
+/// 3) Given key => List the capo positions/open position (Capo positions with the highest open positions count first)
 /// </remarks>
 public record KeyFretPositions(
     Fret Fret,

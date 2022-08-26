@@ -1,17 +1,16 @@
-﻿using System.Collections.Immutable;
+﻿namespace GA.Business.Core.Tonal.Primitives;
 
-namespace GA.Business.Core.Tonal.Primitives;
-
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
-/// <inheritdoc cref="IEquatable{MajorScaleDegree}" />
-/// <inheritdoc cref="IComparable{MajorScaleDegree}" />
-/// <inheritdoc cref="IComparable" />
+using Extensions;
+
 /// <summary>
 /// An music degree major scale - See https://en.wikipedia.org/wiki/Degree_(music)
 /// </summary>
 [PublicAPI]
-public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<MajorScaleDegree>
+public readonly record struct MajorScaleDegree : IValueObject<MajorScaleDegree>, 
+                                                 IValueObjectCollection<MajorScaleDegree>
 {
     #region Relational members
 
@@ -26,44 +25,53 @@ public readonly record struct MajorScaleDegree : IValue<MajorScaleDegree>, IAll<
     private const int _minValue = 1;
     private const int _maxValue = 7;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static MajorScaleDegree Create([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static MajorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
-    public static MajorScaleDegree Min => Create(_minValue);
-    public static MajorScaleDegree Max => Create(_maxValue);
+    public static MajorScaleDegree Min => FromValue(_minValue);
+    public static MajorScaleDegree Max => FromValue(_maxValue);
 
-    public static MajorScaleDegree Ionian => new() {Value = 1};
-    public static MajorScaleDegree Dorian => new() {Value = 2};
-    public static MajorScaleDegree Phrygian => new() {Value = 3};
-    public static MajorScaleDegree Lydian => new() {Value = 4};
-    public static MajorScaleDegree Mixolydian => new() {Value = 5};
-    public static MajorScaleDegree Aeolian => new() {Value = 6};
-    public static MajorScaleDegree Locrian => new() {Value = 7};
+    public static MajorScaleDegree Ionian => FromValue(DegreeValue.IonianValue);
+    public static MajorScaleDegree Dorian =>  FromValue(DegreeValue.DorianValue);
+    public static MajorScaleDegree Phrygian => FromValue(DegreeValue.PhrygianValue);
+    public static MajorScaleDegree Lydian => FromValue(DegreeValue.LydianValue);
+    public static MajorScaleDegree Mixolydian => FromValue(DegreeValue.MixolydianValue);
+    public static MajorScaleDegree Aeolian => FromValue(DegreeValue.AeolianValue);
+    public static MajorScaleDegree Locrian => FromValue(DegreeValue.LocrianValue);
 
-    public static int CheckRange(int value) => ValueUtils<MajorScaleDegree>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MajorScaleDegree>.CheckRange(value, _minValue, _maxValue);
 
-    public static implicit operator MajorScaleDegree(int value) => Create(value);
+    public static implicit operator MajorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<MajorScaleDegree> All => ValueUtils<MajorScaleDegree>.GetAll();
-    public static IReadOnlyCollection<int> AllValues => All.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<MajorScaleDegree> Items => ValueObjectUtils<MajorScaleDegree>.GetCollection();
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> AllValues => Items.Select(degree => degree.Value).ToImmutableList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
     public override string ToString() => Value.ToString();
 
-    public ScaleDegreeFunction ToFunction()
+    public ScaleDegreeFunction ToFunction() => _value switch
     {
-        return _value switch
-        {
-            1 => ScaleDegreeFunction.Tonic,
-            2 => ScaleDegreeFunction.Supertonic,
-            3 => ScaleDegreeFunction.Mediant,
-            4 => ScaleDegreeFunction.Subdominant,
-            5 => ScaleDegreeFunction.Dominant,
-            6 => ScaleDegreeFunction.Submediant,
-            7 => ScaleDegreeFunction.LeadingTone,
-            _ => throw new ArgumentOutOfRangeException(nameof(_value))
-        };
+        DegreeValue.IonianValue => ScaleDegreeFunction.Tonic,
+        DegreeValue.DorianValue=> ScaleDegreeFunction.Supertonic,
+        DegreeValue.PhrygianValue => ScaleDegreeFunction.Mediant,
+        DegreeValue.LydianValue => ScaleDegreeFunction.Subdominant,
+        DegreeValue.MixolydianValue => ScaleDegreeFunction.Dominant,
+        DegreeValue.AeolianValue => ScaleDegreeFunction.Submediant,
+        DegreeValue.LocrianValue => ScaleDegreeFunction.LeadingTone,
+        _ => throw new ArgumentOutOfRangeException(nameof(_value))
+    };
+
+    public static class DegreeValue
+    {
+        public const int IonianValue = 1;
+        public const int DorianValue = 2;
+        public const int PhrygianValue = 3;
+        public const int LydianValue = 4;
+        public const int MixolydianValue = 5;
+        public const int AeolianValue = 6;
+        public const int LocrianValue = 7;
     }
 }
