@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Scales;
 
 using Notes.Extensions;
-
 using Atonal;
 using Notes;
 
@@ -15,41 +14,30 @@ public class PitchClassSetIdentity
 {
     #region Equality members
 
-    protected bool Equals(PitchClassSetIdentity other)
-    {
-        return Value == other.Value;
-    }
-
+    protected bool Equals(PitchClassSetIdentity other) => Value == other.Value;
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
+        if (obj.GetType() != this.GetType()) return false;
         return Equals((PitchClassSetIdentity) obj);
     }
 
-    public override int GetHashCode()
-    {
-        return Value;
-    }
-
-    public static bool operator ==(PitchClassSetIdentity? left, PitchClassSetIdentity? right)
-    {
-        return Equals(left, right);
-    }
-
-    public static bool operator !=(PitchClassSetIdentity? left, PitchClassSetIdentity? right)
-    {
-        return !Equals(left, right);
-    }
-
+    public override int GetHashCode() => Value;
+    public static bool operator ==(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => Equals(left, right);
+    public static bool operator !=(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => !Equals(left, right);
+    
     #endregion
 
     public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes) => new(notes.ToPitchClassSet().GetIdentity());
 
+    /// <summary>
+    /// Gets all valid pitch class set identities.
+    /// </summary>
+    /// <returns></returns>
     public static IEnumerable<PitchClassSetIdentity> GetAllValid()
     {
-        var count = 1 << 12;
+        const int count = 1 << 12;
         for (var i = 0; i < count; i++)
         {
             if ((i & 1) == 0) continue; // Does not contain root, invalid
@@ -82,7 +70,6 @@ public class PitchClassSetIdentity
     public override string ToString()
     {
         var name = ScaleNameByIdentity.Get(this);
-        ;
         if (string.IsNullOrEmpty(name)) return Value.ToString();
         return $"{Value} ({name})";
     }

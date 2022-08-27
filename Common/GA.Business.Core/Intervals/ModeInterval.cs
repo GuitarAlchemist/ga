@@ -12,11 +12,6 @@ public sealed class ModeInterval : ModeIntervalBase<IntervalSize>
     {
     }
 
-    public ModeCompoundInterval ToCompound()
-    {
-        return new(
-            Size.ToCompound(), 
-            Quality, 
-            RefQuality);
-    }
+    public ModeCompoundInterval ToCompound() => new(Size.ToCompound(), Quality, RefQuality);
+
 }

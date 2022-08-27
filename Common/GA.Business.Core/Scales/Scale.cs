@@ -36,9 +36,6 @@ public class Scale : IReadOnlyCollection<Note>
 
     public static IEnumerable<string> GetNames() => ScaleNamesGenerator.Get();
 
-    private readonly IReadOnlyCollection<Note> _notes;
-    private readonly LazyScaleIntervals _intervals;
-
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())
     {
@@ -47,17 +44,21 @@ public class Scale : IReadOnlyCollection<Note>
     public Scale(IEnumerable<Note> notes)
     {
         if (notes == null) throw new ArgumentNullException(nameof(notes));
-        _notes = notes.ToImmutableList().AsPrintable();
-        _intervals = new(_notes);
+        Notes = notes.ToImmutableList().AsPrintable();
+        Intervals = new LazyScaleIntervals(Notes);
+        Identity = PitchClassSetIdentity.FromNotes(Notes);
     }
 
-    public IReadOnlyCollection<Interval.Simple> Intervals => _intervals;
-    public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(_notes);
+    private IReadOnlyCollection<Note> Notes { get; }
+    public IReadOnlyCollection<Interval.Simple> Intervals { get; }
+    public PitchClassSetIdentity Identity { get; }
 
-    public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
-    public int Count => _notes.Count;
-    
+    public IEnumerator<Note> GetEnumerator() => Notes.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Notes).GetEnumerator();
+    public int Count => Notes.Count;
+
+    public override string ToString() => Identity.ScaleName;
+
     #region Inner classes
 
     public static class Minor
@@ -93,9 +94,7 @@ public class Scale : IReadOnlyCollection<Note>
         {
             var allValid = PitchClassSetIdentity.GetAllValid().ToImmutableList();
 
-            var allValidSevenNotes = allValid.Where(number => number.Notes.Count == 7);
-
-            var lookup = allValidSevenNotes.ToLookup(number => number.IntervalVector);
+            var lookup = allValid.ToLookup(number => number.IntervalVector);
             var vectors =
                 lookup
                     .Where(grouping => grouping.Count() > 1)
@@ -104,7 +103,6 @@ public class Scale : IReadOnlyCollection<Note>
                     .Distinct()
                     .ToImmutableList();
 
-            var result = new List<string>();
             foreach (var vector in vectors)
             {
                 var group = lookup[vector];
