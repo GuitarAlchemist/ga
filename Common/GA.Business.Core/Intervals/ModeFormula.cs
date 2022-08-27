@@ -8,16 +8,16 @@ using GA.Core;
 
 public class ModeFormula : IReadOnlyCollection<ModeInterval>
 {
-    private readonly IReadOnlyCollection<ModeInterval> _modeIntervals;
-
     public ModeFormula(ScaleMode mode)
     {
         Mode = mode ?? throw new ArgumentNullException(nameof(mode));
-
-        _modeIntervals = GetModeIntervals(mode);
+        Intervals = GetModeIntervals(mode);
+        ColorTones = Intervals.Where(interval => interval.IsColorTone).ToImmutableList();
     }
 
     public ScaleMode Mode { get; }
+    public IReadOnlyCollection<ModeInterval> Intervals { get; }
+    public IReadOnlyCollection<ModeInterval> ColorTones { get; }
 
     private static IReadOnlyCollection<ModeInterval> GetModeIntervals(ScaleMode mode)
     {
@@ -41,9 +41,9 @@ public class ModeFormula : IReadOnlyCollection<ModeInterval>
         return result;
     }
 
-    public IEnumerator<ModeInterval> GetEnumerator() => _modeIntervals.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _modeIntervals).GetEnumerator();
-    public int Count => _modeIntervals.Count;
+    public IEnumerator<ModeInterval> GetEnumerator() => Intervals.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Intervals).GetEnumerator();
+    public int Count => Intervals.Count;
 
-    public override string ToString() => _modeIntervals.ToString() ?? string.Empty;
+    public override string ToString() => Intervals.ToString() ?? string.Empty;
 }

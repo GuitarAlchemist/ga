@@ -1,21 +1,28 @@
-﻿using GA.Business.Core.Fretboard;
+﻿using System.Collections.Immutable;
+using GA.Business.Core.Fretboard;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Notes;
+using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 
-var notes = MajorScaleMode.Dorian.Notes;
-
-var intervals = new List<(Note, Note,Interval.Simple)>();
-for (var i = 0; i < notes.Count; i++)
+var aa = Scale.GetNames().ToImmutableList();
+foreach (var mode in MajorScaleMode.All)
 {
-    var note1 = notes.ElementAt(i);
-    var i2 = (i + 6) % notes.Count;
-    var note2 =  notes.ElementAt(i2);
-    var interval = note1.GetInterval(note2);
-    intervals.Add((note1, note2, interval));
+    var formula = mode.Formula;
+    var colorTones = formula.ColorTones;
 }
 
-var sIntervals = intervals.ToString();
+//var intervals = new List<(Note, Note,Interval.Simple)>();
+//for (var i = 0; i < notes.Count; i++)
+//{
+//    var note1 = notes.ElementAt(i);
+//    var i2 = (i + 6) % notes.Count;
+//    var note2 =  notes.ElementAt(i2);
+//    var interval = note1.GetInterval(note2);
+//    intervals.Add((note1, note2, interval));
+//}
+
+//var sIntervals = intervals.ToString();
 
 /*
 

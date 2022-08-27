@@ -1,13 +1,14 @@
 TODO:
 
-- Add vector/data frame/matrix support
+- Data: 
+- UI: Add vector/data frame/matrix support
 
 . Add Blazor/ag-grid support 
 . Explore Existing frameworks
 https://github.com/SciSharp/Pandas.NET
 https://fslab.org/XPlot//chart/google-annotation-chart.html
 
-- Concepts to explore
+- Concepts (Explore):
 
 . Scale grouping (Modal scales, non-modal scales, symmetries, bracelet notation, etc...)
 . Invariants (Instrument/tuning invariants, music invariants)
