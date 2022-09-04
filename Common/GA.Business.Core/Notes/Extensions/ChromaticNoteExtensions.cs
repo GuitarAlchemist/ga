@@ -5,8 +5,13 @@ using Primitives;
 
 public static class ChromaticNoteExtensions
 {
-    public static PitchClassSet ToPitchClassSet(this IEnumerable<Note> notes) => 
-        new(notes.Select(note => note.PitchClass));
+    public static PitchClassSet ToPitchClassSet(this IEnumerable<Note> notes)
+    {
+        var pitchClasses = 
+            notes.Select(note => note.PitchClass)
+                .ToImmutableArray();
+        return new(pitchClasses, true);
+    }
 
     public static Interval.Chromatic GetInterval(
         this Note.Chromatic note,
@@ -39,19 +44,19 @@ public static class ChromaticNoteExtensions
         if (note1 == null) throw new ArgumentNullException(nameof(note1));
         if (note2 == null) throw new ArgumentNullException(nameof(note2));
 
-        var PitchClass1 = note1.PitchClass;
-        var PitchClass2 = note2.PitchClass;
+        var pitchClass1 = note1.PitchClass;
+        var pitchClass2 = note2.PitchClass;
 
-        if (PitchClass1 > PitchClass2)
+        if (pitchClass1 > pitchClass2)
         {
-            lowPitchClass = PitchClass2;
-            highPitchClass = PitchClass1;
+            lowPitchClass = pitchClass2;
+            highPitchClass = pitchClass1;
             notesInverted = true;
         }
         else
         {
-            lowPitchClass = PitchClass1;
-            highPitchClass = PitchClass2;
+            lowPitchClass = pitchClass1;
+            highPitchClass = pitchClass2;
             notesInverted = false;
         }
     }

@@ -3,7 +3,6 @@
 using PCRE;
 
 using GA.Business.Core.Intervals.Primitives;
-using System.Runtime.CompilerServices;
 
 [PublicAPI]
 public readonly record struct SharpAccidental : IValueObject<SharpAccidental>

@@ -1,9 +1,7 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes;
-using GA.Core;
+﻿namespace GA.Business.Core.Fretboard;
 
-namespace GA.Business.Core.Fretboard;
+using Primitives;
+using GA.Core;
 
 public class FretboardConsoleRenderer
 {

@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using System.Runtime.CompilerServices;
-
 using GA.Business.Core.Intervals.Primitives;
 
 [PublicAPI]

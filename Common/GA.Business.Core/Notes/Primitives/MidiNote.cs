@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-using GA.Business.Core.Intervals;
+﻿namespace GA.Business.Core.Notes.Primitives;
 
-namespace GA.Business.Core.Notes.Primitives;
+using Intervals;
+
 
 /// <inheritdoc cref="IEquatable{Fret}" />
 /// <inheritdoc cref="IComparable{Fret}" />

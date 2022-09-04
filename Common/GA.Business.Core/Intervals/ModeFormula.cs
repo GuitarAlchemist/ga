@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 using Tonal.Modes;
 using GA.Core;
 

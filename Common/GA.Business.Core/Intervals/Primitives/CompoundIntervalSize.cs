@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
-
 /// <summary>
 /// An compound diatonic interval number
 /// </summary>

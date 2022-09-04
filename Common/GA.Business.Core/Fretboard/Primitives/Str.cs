@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
-using System.Runtime.CompilerServices;
-
 /// <summary>
 /// An instrument string (Between <see cref="Min"/> and <see cref="Max" />)
 /// </summary>

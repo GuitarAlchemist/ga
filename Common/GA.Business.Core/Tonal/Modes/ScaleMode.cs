@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using System.Collections.Immutable;
-
+using Atonal;
 using GA.Core;
 using Intervals;
 using Notes;
@@ -28,6 +27,7 @@ public abstract class ScaleMode
     public ModeFormula Formula => new(this);
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
     public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(Notes);
+    public PitchClassSet PitchClassSet => Identity.PitchClassSet;
 }
 
 public abstract class ScaleMode<TScaleDegree> : ScaleMode

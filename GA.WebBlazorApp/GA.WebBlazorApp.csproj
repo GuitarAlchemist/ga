@@ -11,15 +11,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
-		<PackageReference Include="MudBlazor" Version="6.0.10" />
+		<PackageReference Include="MudBlazor" Version="6.0.15" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Common\GA.Core.UI\GA.Core.UI.csproj" />
 		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Components\Grids\Data\" />
 	</ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Primitives;
+﻿namespace GA.Business.Core.Fretboard;
 
-namespace GA.Business.Core.Fretboard;
+using Primitives;
+
 
 public class FretPositions : Positions<Position.Fretted>
 {

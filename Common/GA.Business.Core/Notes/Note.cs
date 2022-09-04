@@ -1,8 +1,6 @@
 ﻿
 namespace GA.Business.Core.Notes;
 
-using System.Collections.Immutable;
-
 using GA.Core;
 using GA.Business.Core.Intervals.Primitives;
 using Tonal;
@@ -43,6 +41,19 @@ public abstract partial record Note : IComparable<Note>
         var startNote = ToAccidentedNote();
         var endNote = other.ToAccidentedNote();
         return startNote.GetInterval(endNote);
+    }
+
+    /// <summary>
+    /// Gets the shortest distance between two notes.
+    /// </summary>
+    /// <remarks>See https://en.wikipedia.org/wiki/Interval_class</remarks>
+    /// <param name="other">The other <see cref="Note"/></param>
+    /// <returns>The <see cref="Semitones"/> distance</returns>
+    public Semitones GetIntervalClass(Note other)
+    {
+        var dist1 = (GetInterval(other).ToSemitones() +12) % 12;
+        var dist2 = (other.GetInterval(this).ToSemitones() + 12) % 12;
+        return dist1 <= dist2 ? dist1 : dist2;
     }
 
     public static IReadOnlyCollection<SharpKey> AllSharp => SharpKey.All;

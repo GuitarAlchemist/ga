@@ -1,0 +1,89 @@
+﻿@using GA.Core.Extensions
+@using GA.Core.UI.Dtos
+
+<div @ref="_gridElement"
+     id="@Id"
+     class="@AgTheme"
+     style="height: 100%; width: 100%">
+</div>
+
+@inject IJSRuntime JSRuntime
+@inject ILogger<TabularDataGrid> Logger
+@inject AgGridTabularDataLoader RowsLoader
+
+@code {
+    private ElementReference? _gridElement;
+    private IJSObjectReference? _jsModule;
+    private IJSObjectReference? _jsGridOptions;
+
+    [Parameter]
+    public string Id { get; set; } = $"tabular-data-grid-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public string AgTheme { get; set; } = "ag-theme-balham-dark";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            // Import JavaScript module
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/tabularDataGrid.js");
+            if (_jsModule == null) throw new InvalidOperationException();
+        }
+    }
+
+    /// <summary>
+    /// Load grid data.
+    /// </summary>
+    public async Task LoadAsync(TabularData data)
+    {
+        try
+        {
+            // Re-initialize grid columns
+            await GridInitAsync(data.Columns);
+            await InvokeAsync(StateHasChanged);
+
+            // Load grid rows
+            await RowsLoader.LoadAsync(data.Rows);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250));
+            await AutoSizeAllAsync();
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace("Failed reloading data grid");
+            Logger.LogWarning(msg);
+        }
+    }
+
+    private async Task GridInitAsync(IReadOnlyCollection<TabularDataColumn> columns)
+    {
+        if (_jsModule == null) return;
+        if (string.IsNullOrEmpty(_gridElement?.Id)) throw new InvalidOperationException();
+
+        try
+        {
+            _jsGridOptions = await _jsModule.InvokeAsync<IJSObjectReference>(
+                "gridInit",
+                _gridElement,
+                _jsGridOptions,
+                columns.ToArray());
+
+            // Initialize Grid Loader
+            await RowsLoader.InitializeAsync(new(_jsGridOptions));
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace("Failed initializing data grid");
+            Logger.LogError(msg);
+            await JSRuntime.LogAsync(msg);
+            throw;
+        }
+    }
+
+    public ValueTask<bool> GoToTopNodeAsync() => _jsGridOptions.InvokeAsync<bool>("goToTopNode");
+    public ValueTask<bool> GoToBottomNodeAsync() => _jsGridOptions.InvokeAsync<bool>("goToBottomNode");
+    public ValueTask AutoSizeAllAsync() => _jsGridOptions.InvokeVoidAsync("autoSizeAll");
+}

@@ -1,4 +1,4 @@
-using GA.WebBlazorApp.Components.Grids;
+using GA.Core.UI.Components.Grids;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -21,7 +21,9 @@ builder.Services.AddMudServices(
         config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
     });
 
-builder.Services.AddSingleton<GenericDataGridLoader>();
+builder.Services.AddScoped<AgGridTabularDataLoader>();
+
+// builder.Services.AddSingleton<GenericDataGridLoader>();
 
 var app = builder.Build();
 

@@ -1,9 +1,29 @@
 ﻿@page "/"
-@using GA.WebBlazorApp.Components.Grids
+@using MudBlazor
+@using GA.Core.UI.Components.Grids
+@using GA.Core.UI.Dtos
 
-<div style="height: 100%">
-    <GenericDataGrid></GenericDataGrid>
+<div style="height: 90vh; width: 100%">
+    <MudButton @onclick="Callback">Load</MudButton>
+    <TabularDataGrid @ref="_grid"></TabularDataGrid>
 </div>
 
 @code {
+    private TabularDataGrid? _grid;
+
+    private async Task Callback()
+    {
+        if (_grid != null)
+        {
+            var columns = new List<TabularDataColumn>();
+            var data = new TabularData(columns, GetRows());
+            await _grid.LoadAsync(data);
+        }
+
+        IEnumerable<TabularDataRow> GetRows()
+        {
+            yield return new TabularDataRow();
+        }
+    }
+
 }

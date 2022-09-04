@@ -1,70 +1,115 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 using Primitives;
+using Atonal;
+using System.Collections.Generic;
 
+/// <summary>
+/// Represents the tones in this scale as a collection of <see cref="PitchClass"/>
+/// </summary>
+/// <remarks>
+/// Example:
+/// Dorian scale (See https://ianring.com/musictheory/scales/1709)
+///    Pitch class set = {0,2,3,5,7,9,10}
+/// </remarks>
 public class PitchClassSet : IReadOnlySet<PitchClass>
 {
-    public static PitchClassSet FromIdentity(int identity)
+    public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
     {
-        var hashset = new HashSet<PitchClass>();
+        var pitchClasses = new List<PitchClass>();
+        var identityValue = identity.Value;
         foreach (var pitchClass in PitchClass.Items)
         {
-            if ((identity & 1) == 1) hashset.Add(pitchClass);
-            identity = identity >> 1;
+            if (PitchClassSetIdentity.IsValid(identityValue)) pitchClasses.Add(pitchClass);
+            identityValue >>= 1;
         }
 
-        var result = new PitchClassSet(hashset);
+        var result = new PitchClassSet(pitchClasses);
 
         return result;
     }
 
-    private readonly ImmutableHashSet<PitchClass> _set;
-
-    public PitchClassSet(IEnumerable<PitchClass> pitchClasses)
+    public static IEnumerable<PitchClassSet> Enumerate()
     {
-        if (pitchClasses == null) throw new ArgumentNullException(nameof(pitchClasses));
-        _set = new HashSet<PitchClass>(pitchClasses).ToImmutableHashSet();
+        var identities = PitchClassSetIdentity.ValidIdentities();
+        foreach (var identity in identities)
+        {
+            yield return FromIdentity(identity);
+        }
     }
 
-    public int GetIdentity()
+    private readonly IReadOnlySet<PitchClass> _pitchClasses;
+
+    public PitchClassSet(
+        IReadOnlyCollection<PitchClass> pitchClasses, 
+        bool normalize = false)
     {
-        var result = 0;
+        if (pitchClasses == null) throw new ArgumentNullException(nameof(pitchClasses));
+        var distinctPitchClasses = pitchClasses.Distinct().ToImmutableList();
+
+        if (normalize)
+        {
+            var firstPitchClass = distinctPitchClasses.First();
+            _pitchClasses = distinctPitchClasses.Select(pc => PitchClass.FromValue((pc.Value - firstPitchClass.Value) % 12)).ToImmutableSortedSet();
+        }
+        else
+        {
+            _pitchClasses = distinctPitchClasses.ToImmutableSortedSet();
+        }
+    }
+
+    public PitchClassSetIdentity Identity => GetIdentity();
+    public IReadOnlyCollection<Note.Chromatic> Notes => GetNotes();
+    public IntervalVector IntervalVector => new(Notes);
+    public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalVector);
+    public ModalFamily? ModalFamily
+    {
+        get
+        {
+            if (ModalFamily.TryGetValue(IntervalVector, out var modalFamily)) return modalFamily;
+            return null;
+        }
+    }
+
+    public override string ToString() => @$"{{{string.Join(",", _pitchClasses)}}} ({GetIdentity().Value})";
+
+    // ReSharper disable once InconsistentNaming
+    private PitchClassSetIdentity GetIdentity()
+    {
+        var value = 0;
         var index = 0;
         foreach (var pitchClass in PitchClass.Items)
         {
             var weight = 1 << index++;
-            if (_set.Contains(pitchClass)) result += weight;
+            if (_pitchClasses.Contains(pitchClass)) value += weight;
         }
 
-        return result;
+        return new(value);
     }
 
-    public IReadOnlyCollection<Note.Chromatic> GetNotes()
+    // ReSharper disable once InconsistentNaming
+    private IReadOnlyCollection<Note.Chromatic> GetNotes()
     {
         var result = 
-            _set.Select(pitchClass => new Note.Chromatic(pitchClass))
+            _pitchClasses.Select(pitchClass => new Note.Chromatic(pitchClass))
                 .ToImmutableList();
 
         return result;
     }
 
-    public override string ToString() => @$"{{{string.Join(", ", _set)}}}";
 
     #region IReadOnlySet members
 
-    public IEnumerator<PitchClass> GetEnumerator() => _set.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _set).GetEnumerator();
-    public int Count => _set.Count;
-    public bool Contains(PitchClass item) => _set.Contains(item);
-    public bool IsProperSubsetOf(IEnumerable<PitchClass> other) => _set.IsProperSubsetOf(other);
-    public bool IsProperSupersetOf(IEnumerable<PitchClass> other) => _set.IsProperSupersetOf(other);
-    public bool IsSubsetOf(IEnumerable<PitchClass> other) => _set.IsSubsetOf(other);
-    public bool IsSupersetOf(IEnumerable<PitchClass> other) => _set.IsSupersetOf(other);
-    public bool Overlaps(IEnumerable<PitchClass> other) => _set.Overlaps(other);
-    public bool SetEquals(IEnumerable<PitchClass> other) => _set.SetEquals(other);
+    public IEnumerator<PitchClass> GetEnumerator() => _pitchClasses.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _pitchClasses).GetEnumerator();
+    public int Count => _pitchClasses.Count;
+    public bool Contains(PitchClass item) => _pitchClasses.Contains(item);
+    public bool IsProperSubsetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsProperSubsetOf(other);
+    public bool IsProperSupersetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsProperSupersetOf(other);
+    public bool IsSubsetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsSubsetOf(other);
+    public bool IsSupersetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsSupersetOf(other);
+    public bool Overlaps(IEnumerable<PitchClass> other) => _pitchClasses.Overlaps(other);
+    public bool SetEquals(IEnumerable<PitchClass> other) => _pitchClasses.SetEquals(other);
 
     #endregion
 }

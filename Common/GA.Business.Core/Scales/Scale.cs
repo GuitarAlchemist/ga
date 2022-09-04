@@ -1,13 +1,11 @@
 ﻿namespace GA.Business.Core.Scales;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 using Intervals;
 using Notes;
 using Tonal;
 using GA.Core;
 using static Notes.Note.AccidentedNote;
+using Atonal;
 
 /// <summary>
 /// A music scale
@@ -34,7 +32,6 @@ public class Scale : IReadOnlyCollection<Note>
     public static Scale ChromaticSharp => new(C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp);
     public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
 
-    public static IEnumerable<string> GetNames() => ScaleNamesGenerator.Get();
 
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())
@@ -85,33 +82,6 @@ public class Scale : IReadOnlyCollection<Note>
                     .AsPrintable(Interval.Simple.Format.ShortName);
 
             return result;
-        }
-    }
-
-    private static class ScaleNamesGenerator
-    {
-        public static IEnumerable<string> Get()
-        {
-            var allValid = PitchClassSetIdentity.GetAllValid().ToImmutableList();
-
-            var lookup = allValid.ToLookup(number => number.IntervalVector);
-            var vectors =
-                lookup
-                    .Where(grouping => grouping.Count() > 1)
-                    .OrderByDescending(numbers => numbers.Count())
-                    .Select(numbers => numbers.Key)
-                    .Distinct()
-                    .ToImmutableList();
-
-            foreach (var vector in vectors)
-            {
-                var group = lookup[vector];
-                foreach (var num in group)
-                {
-                    var name = ScaleNameByIdentity.Get(num);
-                    yield return name;
-                }
-            }
         }
     }
 

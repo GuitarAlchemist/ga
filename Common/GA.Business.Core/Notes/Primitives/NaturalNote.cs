@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using System.Runtime.CompilerServices;
-using System.Collections.Immutable;
-
 using PCRE;
 
 using GA.Business.Core.Intervals.Primitives;

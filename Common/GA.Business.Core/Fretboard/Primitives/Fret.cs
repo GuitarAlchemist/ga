@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
-using System.Runtime.CompilerServices;
-
 /// <inheritdoc cref="IEquatable{Fret}" />
 /// <inheritdoc cref="IComparable{Fret}" />
 /// <inheritdoc cref="IComparable" />

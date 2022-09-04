@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using System.Collections.Immutable;
-
 using Intervals;
 using GA.Business.Core.Notes.Primitives;
 using GA.Core;
