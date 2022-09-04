@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-using System.Runtime.CompilerServices;
-
 using Modes;
 
 /// <summary>

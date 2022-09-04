@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard;
 
-using System.Collections;
-using System.Collections.Immutable;
 using Primitives;
 using GA.Core;
 

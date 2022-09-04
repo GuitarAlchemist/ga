@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 [PublicAPI]
 public class PitchCollection : IReadOnlyCollection<Pitch>
 {

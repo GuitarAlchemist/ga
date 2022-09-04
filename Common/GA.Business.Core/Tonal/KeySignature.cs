@@ -1,9 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
-using System.Collections;
-
 using Notes;
 using GA.Core;
 using GA.Business.Core.Notes.Primitives;

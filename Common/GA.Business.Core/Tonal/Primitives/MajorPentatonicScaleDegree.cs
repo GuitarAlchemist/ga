@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-using System.Runtime.CompilerServices;
-
 [PublicAPI]
 public readonly record struct MajorPentatonicScaleDegree : IValueObject<MajorPentatonicScaleDegree>
 {

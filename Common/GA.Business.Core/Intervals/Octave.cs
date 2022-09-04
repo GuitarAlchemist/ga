@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace GA.Business.Core.Intervals;
+﻿namespace GA.Business.Core.Intervals;
 
 [PublicAPI]
 public readonly record struct Octave : IValueObject<Octave>, 

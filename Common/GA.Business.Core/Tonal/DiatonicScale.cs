@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 using Intervals;
 
 [PublicAPI]

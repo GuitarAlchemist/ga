@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using System.Runtime.CompilerServices;
-
 /// <summary>
 /// A chromatic interval size expressed in semitones.
 /// </summary>

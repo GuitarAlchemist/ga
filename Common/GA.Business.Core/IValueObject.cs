@@ -1,8 +1,8 @@
 ﻿namespace GA.Business.Core;
 
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+
 using GA.Core.Extensions;
 
 /// <summary>

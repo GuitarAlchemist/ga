@@ -1,7 +1,7 @@
 TODO:
 
-- Data: 
-- UI: Add vector/data frame/matrix support
+- UI: Add data frame/matrix support
+- UI: Add VexFlow blazor support (https://www.vexflow.com/)
 
 . Add Blazor/ag-grid support 
 . Explore Existing frameworks

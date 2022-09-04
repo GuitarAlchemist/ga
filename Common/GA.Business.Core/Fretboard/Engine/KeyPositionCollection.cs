@@ -1,10 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Engine;
 
-using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Immutable;
-using System.Text;
-
 using Primitives;
 using Tonal;
 

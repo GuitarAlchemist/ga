@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using System.Collections;
-using System.Collections.Immutable;
-
 using GA.Core;
 
 public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>, IIndexer<TScaleModeDegree, TScaleMode>

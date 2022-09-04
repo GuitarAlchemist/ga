@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.DesignPatterns;
 
 /// <summary>
-/// Async initializable object abstraction.
+/// Async initializable object abstraction (No inits).
 /// </summary>
 public interface IAsyncInitializable
 {
@@ -9,7 +9,7 @@ public interface IAsyncInitializable
 }
 
 /// <summary>
-/// Async initializable object abstraction (With inits object).
+/// Async initializable object abstraction (With inits).
 /// </summary>
 public interface IAsyncInitializable<in TInits>
 {

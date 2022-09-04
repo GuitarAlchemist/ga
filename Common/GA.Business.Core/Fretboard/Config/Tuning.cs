@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Config;
 
-using System.Collections.Immutable;
 using Primitives;
 using Notes;
 using static Notes.Pitch.Sharp;
