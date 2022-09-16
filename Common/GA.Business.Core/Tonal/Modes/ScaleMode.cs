@@ -1,22 +1,30 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+﻿using GA.Business.Core.SetTheory;
 
-using Atonal;
+namespace GA.Business.Core.Tonal.Modes;
+
+using GA.Business.Core.Intervals.Primitives;
 using GA.Core;
+using GA.Core.Extensions;
 using Intervals;
 using Notes;
 using Scales;
 
 /// <summary>
-/// See https://en.wikipedia.org/wiki/Mode_(music)
+/// See https://en.wikipedia.org/wiki/Mode_(Objects)
 /// </summary>
 /// <remarks>
 /// This class handles only the main modes (Modes could be generalized to all modal scale groups)
 /// </remarks>
 public abstract class ScaleMode
 {
+    private readonly Lazy<ModeFormula> _lazyModeFormula;
+    private readonly Lazy<IReadOnlyCollection<Note>> _lazyColorNotes;
+
     protected ScaleMode(Scale parentScale)
     {
         ParentScale = parentScale ?? throw new ArgumentNullException(nameof(parentScale));
+        _lazyModeFormula = new(() => new(this));
+        _lazyColorNotes = new(() => ModeColorNotes(Formula.ColorTones).AsPrintable());
     } 
 
     public Scale ParentScale { get; }
@@ -24,10 +32,25 @@ public abstract class ScaleMode
     public abstract IReadOnlyCollection<Note> Notes { get; }
     public abstract IReadOnlyCollection<Interval.Simple> Intervals { get; }
     public bool IsMinorMode => Intervals.Contains(Interval.Simple.MinorThird);
-    public ModeFormula Formula => new(this);
+    public ModeFormula Formula => _lazyModeFormula.Value;
+    public IReadOnlyCollection<Note> ColorNotes => _lazyColorNotes.Value;
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
     public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(Notes);
-    public PitchClassSet PitchClassSet => Identity.PitchClassSet;
+
+    private ImmutableList<Note> ModeColorNotes(
+        IEnumerable<ModeInterval> colorTones)
+    {
+        var rootNote = Notes.First();
+        var tuples = new List<(Note Note, Semitones Semitones)>();
+        foreach (var note in Notes)
+        {
+            var semitones = rootNote.GetInterval(note).ToSemitones();
+            tuples.Add((note, semitones));
+        }
+        var noteBySemitones = tuples.ToImmutableDictionary(tuple => tuple.Semitones, tuple => tuple.Note);
+
+        return colorTones.Select(colorTone => noteBySemitones[colorTone.ToSemitones()]).ToImmutableList();
+    }
 }
 
 public abstract class ScaleMode<TScaleDegree> : ScaleMode
@@ -38,6 +61,15 @@ public abstract class ScaleMode<TScaleDegree> : ScaleMode
     public override IReadOnlyCollection<Interval.Simple> Intervals => new ModeIntervalsByScaleDegree(ParentScale)[ParentScaleDegree];
     public override string ToString() => $"{Name} - {Formula}";
 
+    /*
+    TODO: Provide abstraction for this:
+
+    public static IReadOnlyCollection<MajorScaleMode> Items => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree)).ToImmutableList();
+    public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
+    public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
+    private static Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Items));
+    */
+    
     protected ScaleMode(
         Scale parentScale, 
         TScaleDegree parentScaleDegree) 

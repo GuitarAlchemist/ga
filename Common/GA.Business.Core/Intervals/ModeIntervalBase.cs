@@ -21,6 +21,14 @@ public abstract class ModeIntervalBase<TIntervalSize>
     public bool IsColorTone => Quality != RefQuality;
     public IntervalSizeConsonance Consonance => Size.Consonance;
 
+    public Semitones ToSemitones()
+    {
+        var result = Size.ToSemitones();
+        var accidental = Quality.ToAccidental(Consonance);
+        if (accidental.HasValue) result += accidental.Value.ToSemitones();
+        return result;
+    }
+
     public override string ToString()
     {
         var sb = new StringBuilder();

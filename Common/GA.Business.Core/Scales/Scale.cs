@@ -1,17 +1,18 @@
-﻿namespace GA.Business.Core.Scales;
+﻿using GA.Business.Core.SetTheory;
+
+namespace GA.Business.Core.Scales;
 
 using Intervals;
 using Notes;
 using Tonal;
 using GA.Core;
 using static Notes.Note.AccidentedNote;
-using Atonal;
 
 /// <summary>
-/// A music scale
+/// A Objects scale
 /// </summary>
 /// <remarks>
-/// See https://www.youtube.com/c/TheExcitingUniverseofMusicTheory/videos
+/// See https://www.youtube.com/c/TheExcitingUniverseofmusictheory/videos
 /// http://allthescales.org/
 /// https://ianring.com/musictheory/
 /// https://ianring.com/musictheory/scales/
@@ -32,6 +33,8 @@ public class Scale : IReadOnlyCollection<Note>
     public static Scale ChromaticSharp => new(C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp);
     public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
 
+    public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
+    public static IEnumerable<Scale> All => PitchClassSetIdentity.Objects.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
 
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())
@@ -49,12 +52,19 @@ public class Scale : IReadOnlyCollection<Note>
     private IReadOnlyCollection<Note> Notes { get; }
     public IReadOnlyCollection<Interval.Simple> Intervals { get; }
     public PitchClassSetIdentity Identity { get; }
+    public bool IsModal => Identity.PitchClassSet.IsModal;
+    public ModalFamily? ModalFamily => ModalFamily.TryGetValue(Identity.PitchClassSet.IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
     public IEnumerator<Note> GetEnumerator() => Notes.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Notes).GetEnumerator();
     public int Count => Notes.Count;
 
-    public override string ToString() => Identity.ScaleName;
+    public override string ToString()
+    {
+        var scaleName = Identity.ScaleName;
+        if (string.IsNullOrEmpty(scaleName)) return Notes.ToString()!;
+        return $"{scaleName} - {Notes}";
+    }
 
     #region Inner classes
 

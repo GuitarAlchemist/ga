@@ -1,4 +1,5 @@
 ﻿using GA.Business.Core.Notes.Primitives;
+using GA.Business.Core.SetTheory;
 using PCRE;
 
 namespace GA.Business.Core.Notes;

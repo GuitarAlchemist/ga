@@ -6,10 +6,11 @@ using Modes;
 /// <inheritdoc cref="IComparable{MelodicMinorScaleDegree}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
-/// An music minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
+/// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
-public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<MelodicMinorScaleDegree>
+public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<MelodicMinorScaleDegree>, 
+                                                        IMusicObjectCollection<MelodicMinorScaleDegree>
 {
     #region Relational members
 
@@ -42,7 +43,7 @@ public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<Me
     public static implicit operator MelodicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<MelodicMinorScaleDegree> All => ValueObjectUtils<MelodicMinorScaleDegree>.GetCollection();
+    public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.GetCollection();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

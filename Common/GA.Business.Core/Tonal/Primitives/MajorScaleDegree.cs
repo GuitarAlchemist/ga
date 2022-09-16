@@ -2,8 +2,9 @@
 
 using Extensions;
 
+
 /// <summary>
-/// An music degree major scale - See https://en.wikipedia.org/wiki/Degree_(music)
+/// An Objects degree major scale - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
 public readonly record struct MajorScaleDegree : IValueObject<MajorScaleDegree>, 

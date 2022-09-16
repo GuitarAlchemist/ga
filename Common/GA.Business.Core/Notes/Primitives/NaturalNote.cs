@@ -5,9 +5,10 @@ using PCRE;
 using GA.Business.Core.Intervals.Primitives;
 using GA.Core;
 using GA.Business.Core.Extensions;
+using SetTheory;
 
 /// <summary>
-/// A musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(music))
+/// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))
 /// </summary>
 [PublicAPI]
 public readonly record struct NaturalNote : IValueObject<NaturalNote>, 

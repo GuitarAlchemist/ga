@@ -32,6 +32,7 @@ public class ValueObjectCollection<TValue> : IReadOnlyCollection<TValue>
     public int Count { get; }
     public override string ToString() => string.Join(" ", _items.Select(value => value.ToString()));
 
+    // ReSharper disable once InconsistentNaming
     private static ImmutableArray<TValue> GetItems(int start, int count)
     {
         var items =

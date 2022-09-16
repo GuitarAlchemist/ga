@@ -29,7 +29,7 @@ public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, ICompar
     }
     
     // ReSharper disable once UnusedMemberInSuper.Global - Flag method
-    static abstract TSelf FromValue(int value);
+    public static abstract TSelf FromValue(int value);
     static abstract implicit operator TSelf(int value);
     static abstract implicit operator int(TSelf fret);
 

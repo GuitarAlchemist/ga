@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Notes.Extensions;
+﻿using GA.Business.Core.SetTheory;
+
+namespace GA.Business.Core.Notes.Extensions;
 
 using Intervals;
 using Primitives;

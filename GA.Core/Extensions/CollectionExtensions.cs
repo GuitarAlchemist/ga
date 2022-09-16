@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using JetBrains.Annotations;
-
-namespace GA.Core;
+﻿namespace GA.Core.Extensions;
 
 [PublicAPI]
 public static class CollectionExtensions
@@ -47,7 +44,7 @@ public static class CollectionExtensions
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public int Count => _items.Count;
 
-        public T this[int aIndex] 
+        public T this[int aIndex]
         {
             get
             {

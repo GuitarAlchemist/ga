@@ -1,9 +1,9 @@
-﻿
-namespace GA.Business.Core.Notes;
+﻿namespace GA.Business.Core.Notes;
 
 using GA.Core;
 using GA.Business.Core.Intervals.Primitives;
 using Tonal;
+using SetTheory;
 using Intervals;
 using Primitives;
 using static Primitives.SharpAccidental;
@@ -29,6 +29,19 @@ public abstract partial record Note : IComparable<Note>
 
     #endregion
 
+    #region Equality Members
+
+    public virtual bool Equals(Note? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return PitchClass.Equals(other.PitchClass);
+    }
+
+    public override int GetHashCode() => PitchClass.GetHashCode();
+
+    #endregion
+
     /// <summary>
     /// Gets the <see cref="PitchClass"/>.
     /// </summary>
@@ -36,6 +49,7 @@ public abstract partial record Note : IComparable<Note>
 
     public abstract AccidentedNote ToAccidentedNote();
 
+    // ReSharper disable once InconsistentNaming
     public virtual Interval.Simple GetInterval(Note other)
     {
         var startNote = ToAccidentedNote();
@@ -49,11 +63,11 @@ public abstract partial record Note : IComparable<Note>
     /// <remarks>See https://en.wikipedia.org/wiki/Interval_class</remarks>
     /// <param name="other">The other <see cref="Note"/></param>
     /// <returns>The <see cref="Semitones"/> distance</returns>
-    public Semitones GetIntervalClass(Note other)
+    // ReSharper disable once InconsistentNaming
+    public IntervalClass GetIntervalClass(Note other)
     {
-        var dist1 = (GetInterval(other).ToSemitones() +12) % 12;
-        var dist2 = (other.GetInterval(this).ToSemitones() + 12) % 12;
-        return dist1 <= dist2 ? dist1 : dist2;
+        var semitones = GetInterval(other).ToSemitones();
+        return IntervalClass.FromSemitones(semitones);
     }
 
     public static IReadOnlyCollection<SharpKey> AllSharp => SharpKey.All;
@@ -97,7 +111,7 @@ public abstract partial record Note : IComparable<Note>
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
-    /// A note from a musical key (Sharp or flat key).
+    /// A note from a Musical key (Sharp or flat key).
     /// </summary>
     /// <param name="NaturalNote"></param>
     [PublicAPI]
@@ -132,7 +146,7 @@ public abstract partial record Note : IComparable<Note>
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
-    /// A note from a sharp musical key.
+    /// A note from a sharp Musical key.
     /// </summary>
     [PublicAPI]
     public sealed partial record SharpKey(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote)
@@ -175,7 +189,7 @@ public abstract partial record Note : IComparable<Note>
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
-    /// A note from a flat musical key.
+    /// A note from a flat Musical key.
     /// </summary>
     [PublicAPI]
     public sealed partial record FlatKey(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote)

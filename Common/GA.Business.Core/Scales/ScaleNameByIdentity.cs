@@ -1,6 +1,7 @@
-﻿namespace GA.Business.Core.Scales;
+﻿using GA.Business.Core.SetTheory;
 
-using Atonal;
+namespace GA.Business.Core.Scales;
+
 using GA.Core;
 
 public class ScaleNameByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
@@ -13,14 +14,24 @@ public class ScaleNameByIdentity : LazyIndexerBase<PitchClassSetIdentity, string
         return Instance[pitchClassSetIdentity];
     }
 
-    public ScaleNameByIdentity() : base(GetScaleNameByNumber()) { }
+    public ScaleNameByIdentity() : base(GetScaleNameByIdentity()) { }
 
     internal static readonly ScaleNameByIdentity Instance = new();
-    private static IReadOnlyDictionary<PitchClassSetIdentity, string> GetScaleNameByNumber()
+
+    // ReSharper disable once InconsistentNaming
+    private static IReadOnlyDictionary<PitchClassSetIdentity, string> GetScaleNameByIdentity()
     {
         // TODO: Populate? (Cannot use copyrighted resource from Ian Ring's website)
         var dict = new Dictionary<PitchClassSetIdentity, string>
         {
+            [1365] = "Whole Tone",
+            [1387] = "Locrian",
+            [1451] = "Phrygian",
+            [1453] = "Aeolian",
+            [1709] = "Dorian",
+            [1717] = "Mixolydian",
+            [2741] = "Major",
+            [2773] = "Lydian",
         };
         // ReSharper restore StringLiteralTypo
 

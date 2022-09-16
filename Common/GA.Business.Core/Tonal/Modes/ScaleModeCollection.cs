@@ -3,7 +3,7 @@
 using GA.Core;
 
 public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>, IIndexer<TScaleModeDegree, TScaleMode>
-    where TScaleModeDegree : IValueObject
+    where TScaleModeDegree : struct, IValueObject<TScaleModeDegree>
     where TScaleMode : ScaleMode<TScaleModeDegree>
 {
     private readonly ImmutableDictionary<TScaleModeDegree, TScaleMode> _modeByDegree;

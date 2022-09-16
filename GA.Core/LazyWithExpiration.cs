@@ -17,7 +17,7 @@ public class LazyWithExpiration<T>
 
     public void Reset()
     {
-        lazyObject = new Lazy<T>( func );
+        lazyObject = new( func );
         expired = false;
     }
 

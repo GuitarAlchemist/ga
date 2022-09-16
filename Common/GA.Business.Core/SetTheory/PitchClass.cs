@@ -1,10 +1,11 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+﻿namespace GA.Business.Core.SetTheory;
 
-using GA.Business.Core.Extensions;
+using Extensions;
 using Intervals;
+using Notes;
 
 /// <summary>
-/// A pitch class between 0 and 11 (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
+/// All pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
 [PublicAPI]
 public readonly record struct PitchClass : IValueObject<PitchClass>,

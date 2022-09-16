@@ -6,7 +6,7 @@ using GA.Business.Core.Notes.Primitives;
 /// <summary>
 /// Signature.
 /// </summary>
-/// <see href="http://en.wikipedia.org/wiki/Accidental_(music)" />
+/// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
 public readonly record struct Accidental : IValueObject<Accidental>
 
 {

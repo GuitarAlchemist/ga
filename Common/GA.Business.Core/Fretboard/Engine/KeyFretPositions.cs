@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Notes.Primitives;
+using GA.Business.Core.SetTheory;
 using GA.Business.Core.Tonal;
 
 namespace GA.Business.Core.Fretboard.Engine;
