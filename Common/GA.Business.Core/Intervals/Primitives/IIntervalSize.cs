@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
 /// <summary>
-/// See https://music.utk.edu/theorycomp/courses/murphy/documents/Intervals.pdf
+/// See https://Objects.utk.edu/theorycomp/courses/murphy/documents/Intervals.pdf
 /// </summary>
 public interface IIntervalSize : IValueObject
 {
@@ -9,6 +9,8 @@ public interface IIntervalSize : IValueObject
     /// Gets the <see cref="IntervalSizeConsonance"/>
     /// </summary>
     IntervalSizeConsonance Consonance { get; }
+
+    Semitones ToSemitones();
 }
 
 [PublicAPI]

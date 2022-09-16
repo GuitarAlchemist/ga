@@ -3,10 +3,11 @@
 using Modes;
 
 /// <summary>
-/// An music minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
+/// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
-public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<NaturalMinorScaleDegree>
+public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<NaturalMinorScaleDegree>,
+                                                        IMusicObjectCollection<NaturalMinorScaleDegree>
 {
     #region Relational members
 
@@ -39,7 +40,7 @@ public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<Na
     public static implicit operator NaturalMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<NaturalMinorScaleDegree> All => ValueObjectUtils<NaturalMinorScaleDegree>.GetCollection();
+    public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.GetCollection();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

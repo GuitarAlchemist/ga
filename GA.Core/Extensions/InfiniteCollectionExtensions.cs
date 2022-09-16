@@ -1,8 +1,4 @@
-﻿namespace GA.Core;
-
-using JetBrains.Annotations;
-
-using System.Collections;
+﻿namespace GA.Core.Extensions;
 
 [PublicAPI]
 public static class InfiniteCollectionExtensions
@@ -26,7 +22,7 @@ public static class InfiniteCollectionExtensions
             IReadOnlyCollection<T> items,
             int? skip = null)
         {
-            _items = items ?? throw new ArgumentNullException(nameof(items)); 
+            _items = items ?? throw new ArgumentNullException(nameof(items));
             if (skip.HasValue) IncrementIndex(skip.Value);
         }
 
@@ -41,7 +37,7 @@ public static class InfiniteCollectionExtensions
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public override string ToString() => $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}" ;
+        public override string ToString() => $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}";
 
         private void IncrementIndex(int count = 1) => _index = (_index.Value + count) % CycleItemCount;
     }

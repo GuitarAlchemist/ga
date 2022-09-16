@@ -4,7 +4,7 @@
 /// An compound diatonic interval number
 /// </summary>
 /// <remarks>
-/// https://en.wikipedia.org/wiki/Interval_(music)#Compound_intervals
+/// https://en.wikipedia.org/wiki/Interval_(Objects)#Compound_intervals
 /// </remarks>
 [PublicAPI]
 public readonly record struct CompoundIntervalSize : IIntervalSize<CompoundIntervalSize>

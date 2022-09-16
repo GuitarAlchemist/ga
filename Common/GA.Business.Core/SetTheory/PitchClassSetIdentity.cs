@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core.Atonal;
+﻿namespace GA.Business.Core.SetTheory;
 
-using Notes.Extensions;
 using Notes;
+using GA.Business.Core.Notes.Extensions;
 using Scales;
 
 /// <summary>
@@ -14,7 +14,7 @@ using Scales;
 /// Dorian https://ianring.com/musictheory/scales/1709
 /// Phrygian https://ianring.com/musictheory/scales/1451
 /// </remarks>
-public class PitchClassSetIdentity
+public class PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentity>
 {
     #region Equality members
 
@@ -33,32 +33,30 @@ public class PitchClassSetIdentity
 
     #endregion
 
-    public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes)
-    {
-        var pitchClassSet = notes.ToPitchClassSet();
-        return pitchClassSet.Identity;
-    }
+    public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes) => notes.ToPitchClassSet().Identity;
+    public static PitchClassSetIdentity FromNotes(params Note[] notes) => FromNotes(notes.ToImmutableArray());
 
-    public static bool IsValid(int value) => (value & 1) == 1; // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be valid
+    public static bool ContainsRoot(int value) => (value & 1) == 1; // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be a valid scale
 
     /// <summary>
     /// Gets all valid pitch class set identities.
     /// </summary>
     /// <returns>The <see cref="IEnumerable{PitchClassSetIdentity}"/></returns>
-    public static IEnumerable<PitchClassSetIdentity> ValidIdentities()
+    // ReSharper disable once InconsistentNaming
+    public static IEnumerable<PitchClassSetIdentity> Objects
     {
-        const int count = 1 << 12;
-        for (var value = 0; value < count; value++)
+        get
         {
-            if (!IsValid(value)) continue;
-            yield return new(value);
+            const int count = 1 << 12; // 4096 combinations
+            for (var value = 0; value < count; value++)
+            {
+                yield return new(value);
+            }
         }
     }
 
     public PitchClassSetIdentity(int value)
     {
-        if (!IsValid(value)) throw new ArgumentException("Value must be odd");
-
         Value = value;
     }
 
@@ -67,11 +65,13 @@ public class PitchClassSetIdentity
 
     public int Value { get; }
     public PitchClassSet PitchClassSet => PitchClassSet.FromIdentity(this);
-    public IReadOnlyCollection<Note.Chromatic> Notes => PitchClassSet.Notes;
-    public IntervalVector IntervalVector => new(Notes);
     public string ScaleName => ScaleNameByIdentity.Get(this);
     public string ScaleVideoUrl => ScaleVideoUrlByIdentity.Get(this);
     public string ScalePageUrl => $"https://ianring.com/musictheory/scales/{Value}";
 
-    public override string ToString() => $"{Value} ({PitchClassSet})";
+    public override string ToString()
+    {
+        if (string.IsNullOrEmpty(ScaleName)) return $"{Value}: {PitchClassSet.Notes}";
+        return  $"{Value}: {ScaleName} {PitchClassSet.Notes}";
+    }
 }

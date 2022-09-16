@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Common\GA.Business.Core\GA.Business.Core.csproj" />
 		<ProjectReference Include="..\Common\GA.Core.UI\GA.Core.UI.csproj" />
 		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>

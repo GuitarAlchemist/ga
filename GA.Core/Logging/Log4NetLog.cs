@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Xml;
-using JetBrains.Annotations;
 using log4net;
 
 namespace GA.Core.Logging;

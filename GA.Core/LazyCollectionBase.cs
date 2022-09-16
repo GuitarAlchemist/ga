@@ -2,8 +2,6 @@
 
 namespace GA.Core;
 
-using System.Collections;
-
 public abstract class LazyCollectionBase<TItem> : IReadOnlyCollection<TItem> 
     where TItem : class
 {

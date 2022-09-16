@@ -9,7 +9,7 @@ public abstract class TuningParserBase
 }
 
 /// <summary>
-/// See https://www.stringsbymail.com/TuningChart.pdf - © Fretted Friends Music 2008
+/// See https://www.stringsbymail.com/TuningChart.pdf - © Fretted Friends Objects 2008
 /// </summary>
 public class FrettedFriendsTuningParser : TuningParserBase
 {

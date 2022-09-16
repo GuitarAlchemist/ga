@@ -14,7 +14,7 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
     public static NaturalMinorMode Lydian => new(6);
     public static NaturalMinorMode Mixolydian => new(7);
 
-    public static IReadOnlyCollection<NaturalMinorMode> All => NaturalMinorScaleDegree.All.Select(degree => new NaturalMinorMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<NaturalMinorMode> All => NaturalMinorScaleDegree.Objects.Select(degree => new NaturalMinorMode(degree)).ToImmutableList();
     public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 

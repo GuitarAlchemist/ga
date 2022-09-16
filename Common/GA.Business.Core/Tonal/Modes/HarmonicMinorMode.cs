@@ -20,7 +20,7 @@ public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
     public static HarmonicMinorMode LydianSharpSecond => new(6);
     public static HarmonicMinorMode Alteredd7 => new(7);
 
-    public static IReadOnlyCollection<HarmonicMinorMode> All => HarmonicMinorScaleDegree.All.Select(degree => new HarmonicMinorMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<HarmonicMinorMode> All => HarmonicMinorScaleDegree.Objects.Select(degree => new HarmonicMinorMode(degree)).ToImmutableList();
     public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static HarmonicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 

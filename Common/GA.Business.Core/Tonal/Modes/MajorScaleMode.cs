@@ -10,7 +10,7 @@ using Primitives;
 /// Mnemonic : I Don’t Particularly Like Modes A Lot
 /// </remarks>
 [PublicAPI]
-public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>
+public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>, IMusicObjectCollection<MajorScaleMode>
 {
     public static MajorScaleMode Ionian => new(MajorScaleDegree.Ionian);
 
@@ -24,9 +24,10 @@ public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>
     public static MajorScaleMode Aeolian => new(MajorScaleDegree.Aeolian);
     public static MajorScaleMode Locrian => new(MajorScaleDegree.Locrian);
 
-    public static IReadOnlyCollection<MajorScaleMode> All => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree)).ToImmutableList();
+    public static IEnumerable<MajorScaleMode> Objects => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree));
     public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
+    private static Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
 
     public MajorScaleMode(MajorScaleDegree degree)
         : base(Scale.Major, degree)
@@ -45,5 +46,5 @@ public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    private static Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(All));
+
 }

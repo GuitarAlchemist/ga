@@ -36,7 +36,7 @@ public class Fretboard
     public int FretCount { get; }
     public Fret? CapoFret { get; set; }
     public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
-    public IReadOnlyCollection<Fret> Frets => Fret.GetCollection(Fret.Min.Value, FretCount);
+    public IReadOnlyCollection<Fret> Frets => Fret.Collection(Fret.Min.Value, FretCount);
     public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
     public OpenPositions OpenPositions => _lazyOpenPositions.Value;
     public FrettedPositions FrettedPositions => _lazyFrettedPositions.Value;
@@ -56,7 +56,7 @@ public class Fretboard
 
             // Fretted
             var midiNote = pitch.MidiNote;
-            foreach (var fret in Fret.GetCollection(1, FretCount - 1))
+            foreach (var fret in Fret.Collection(1, FretCount - 1))
             {
                 midiNote++;
                 pitch = midiNote.ToSharpPitch();

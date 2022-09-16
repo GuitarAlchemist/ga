@@ -9,7 +9,7 @@ using Extensions;
 /// The size of a diatonic number
 /// </summary>
 /// <remarks>
-/// https://en.wikipedia.org/wiki/Interval_(music)
+/// https://en.wikipedia.org/wiki/Interval_(Objects)
 /// https://hellomusictheory.com/learn/intervals/
 /// </remarks>
 [PublicAPI]
@@ -92,7 +92,7 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
     /// Gets the inverse interval diatonic interval number.
     /// </summary>
     /// <remarks>
-    /// Inverse diatonic intervals add up to 9 - see explanation here: https://www.essential-music-theory.com/inverted-intervals.html
+    /// Inverse diatonic intervals add up to 9 - see explanation here: https://www.essential-Objects-theory.com/inverted-intervals.html
     /// </remarks>
     /// <returns>The <see cref="IntervalSize"/></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

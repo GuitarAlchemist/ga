@@ -8,15 +8,19 @@ public class ModeFormula : IReadOnlyCollection<ModeInterval>
     public ModeFormula(ScaleMode mode)
     {
         Mode = mode ?? throw new ArgumentNullException(nameof(mode));
-        Intervals = GetModeIntervals(mode);
-        ColorTones = Intervals.Where(interval => interval.IsColorTone).ToImmutableList();
+
+        var modeIntervals = ModeIntervals(mode);
+        var colorTones = ModeColorTones(modeIntervals);
+
+        Intervals = modeIntervals.AsPrintable();
+        ColorTones = colorTones.AsPrintable();
     }
 
     public ScaleMode Mode { get; }
     public IReadOnlyCollection<ModeInterval> Intervals { get; }
     public IReadOnlyCollection<ModeInterval> ColorTones { get; }
 
-    private static IReadOnlyCollection<ModeInterval> GetModeIntervals(ScaleMode mode)
+    private static ImmutableList<ModeInterval> ModeIntervals(ScaleMode mode)
     {
         var qualityByNumber = mode.Intervals.ToQualityByNumber();
         var refQualityByNumber = mode.RefMode.Intervals.ToQualityByNumber();
@@ -33,11 +37,20 @@ public class ModeFormula : IReadOnlyCollection<ModeInterval>
         var result =
             mode.Intervals
                 .Select(CreateModeInterval)
-                .ToImmutableList()
-                .AsPrintable();
+                .ToImmutableList();
         return result;
     }
 
+    private static ImmutableList<ModeInterval> ModeColorTones(ImmutableList<ModeInterval> modeIntervals)
+    {
+        var result = 
+            modeIntervals
+                .Where(interval => interval.IsColorTone)
+                .ToImmutableList();
+
+        return result;
+    }
+    
     public IEnumerator<ModeInterval> GetEnumerator() => Intervals.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Intervals).GetEnumerator();
     public int Count => Intervals.Count;

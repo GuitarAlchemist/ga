@@ -14,7 +14,7 @@ public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>
     public static MelodicMinorMode LocrianNaturalSecond => new(6);
     public static MelodicMinorMode Altered => new(7);
 
-    public static IReadOnlyCollection<MelodicMinorMode> All => MelodicMinorScaleDegree.All.Select(degree => new MelodicMinorMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<MelodicMinorMode> All => MelodicMinorScaleDegree.Objects.Select(degree => new MelodicMinorMode(degree)).ToImmutableList();
 
     public static MelodicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MelodicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];

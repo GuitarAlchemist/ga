@@ -2,27 +2,52 @@
 @using MudBlazor
 @using GA.Core.UI.Components.Grids
 @using GA.Core.UI.Dtos
+@using GA.Business.Core.Scales
 
 <div style="height: 90vh; width: 100%">
-    <MudButton @onclick="Callback">Load</MudButton>
+    <MudButton @onclick="HandleLoadClicked">Load</MudButton>
     <TabularDataGrid @ref="_grid"></TabularDataGrid>
 </div>
 
 @code {
     private TabularDataGrid? _grid;
 
-    private async Task Callback()
+    private async Task HandleLoadClicked()
     {
         if (_grid != null)
         {
-            var columns = new List<TabularDataColumn>();
+            var columns = new List<TabularDataColumn>
+            {
+                new("Id"),
+                new("IsModal", "Bool"),
+                new("ScaleName"),
+                new("Cardinality"),
+                new("IntervalVector"),
+                new("PageUrl"),
+                new("VideoUrl"),
+            };
+
             var data = new TabularData(columns, GetRows());
             await _grid.LoadAsync(data);
         }
 
         IEnumerable<TabularDataRow> GetRows()
         {
-            yield return new TabularDataRow();
+            var scales = Scale.All;
+            foreach (var scale in scales)
+            {
+                var identity = scale.Identity;
+                yield return new()
+                    {
+                        ["Id"] = identity.Value,
+                        ["IsModal"] = scale.IsModal,
+                        ["ScaleName"] = identity.ScaleName,
+                        ["Cardinality"] = scale.Count,
+                        ["IntervalVector"] = identity.PitchClassSet.IntervalClassVector.Value,
+                        ["PageUrl"] = identity.ScalePageUrl,
+                        ["VideoUrl"] = identity.ScaleVideoUrl
+                    };
+            }
         }
     }
 
