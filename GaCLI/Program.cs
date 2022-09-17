@@ -5,7 +5,10 @@ using GA.Business.Core.Scales;
 using GA.Business.Core.SetTheory;
 using GA.Business.Core.Tonal.Modes;
 
-var pf = PitchClassSet.PrimeForms();
+var pcObjects = PitchClassSet.Objects;
+var groups = pcObjects.GroupBy(set => set.IntervalClassVector);
+
+var pf = PitchClassSet.PrimeForms;
 var id = PitchClassSetIdentity.FromNotes(Note.Chromatic.C, Note.Chromatic.E, Note.Chromatic.GSharpAb);
 var idTranspositions = id.PitchClassSet.Transpositions;
 

@@ -14,8 +14,25 @@ using Scales;
 /// Dorian https://ianring.com/musictheory/scales/1709
 /// Phrygian https://ianring.com/musictheory/scales/1451
 /// </remarks>
-public class PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentity>
+public sealed class PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentity>, 
+                                            IComparable<PitchClassSetIdentity>
 {
+    #region Relational Members
+
+    public int CompareTo(PitchClassSetIdentity? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (ReferenceEquals(null, other)) return 1;
+        return Value.CompareTo(other.Value);
+    }
+
+    public static bool operator <(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => Comparer<PitchClassSetIdentity>.Default.Compare(left, right) < 0;
+    public static bool operator >(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => Comparer<PitchClassSetIdentity>.Default.Compare(left, right) > 0;
+    public static bool operator <=(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => Comparer<PitchClassSetIdentity>.Default.Compare(left, right) <= 0;
+    public static bool operator >=(PitchClassSetIdentity? left, PitchClassSetIdentity? right) => Comparer<PitchClassSetIdentity>.Default.Compare(left, right) >= 0;
+
+    #endregion
+
     #region Equality members
 
     protected bool Equals(PitchClassSetIdentity other) => Value == other.Value;
@@ -71,7 +88,7 @@ public class PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentit
 
     public override string ToString()
     {
-        if (string.IsNullOrEmpty(ScaleName)) return $"{Value}: {PitchClassSet.Notes}";
-        return  $"{Value}: {ScaleName} {PitchClassSet.Notes}";
+        if (string.IsNullOrEmpty(ScaleName)) return $"{Value}";
+        return  $"{Value} ({ScaleName})";
     }
 }

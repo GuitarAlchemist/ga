@@ -2,6 +2,7 @@
 
 using GA.Core;
 using Notes;
+using Primitives;
 
 // TODO
 public class ForteNumber
@@ -36,11 +37,52 @@ public class SetClass
 /// See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes
 /// </remarks>
 [PublicAPI]
-public class PitchClassSet : IReadOnlySet<PitchClass>,
-                             IMusicObjectCollection<PitchClassSet>
+public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
+                                    IMusicObjectCollection<PitchClassSet>, IComparable<PitchClassSet>
 {
+    #region Relational Members
+
+    public int CompareTo(PitchClassSet? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (ReferenceEquals(null, other)) return 1;
+        return Identity.CompareTo(other.Identity);
+    }
+
+    public static bool operator <(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) < 0;
+    public static bool operator >(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) > 0;
+    public static bool operator <=(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) <= 0;
+    public static bool operator >=(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) >= 0;
+
+    #endregion
+
+    #region Equality Members
+
+    private bool Equals(PitchClassSet other) => Identity.Equals(other.Identity);
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is PitchClassSet other && Equals(other);
+    public override int GetHashCode() => Identity.GetHashCode();
+    public static bool operator ==(PitchClassSet? left, PitchClassSet? right) => Equals(left, right);
+    public static bool operator !=(PitchClassSet? left, PitchClassSet? right) => !Equals(left, right);
+
+    #endregion
+
+    #region IReadOnlySet members
+
+    public IEnumerator<PitchClass> GetEnumerator() => _pitchClassesSet.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_pitchClassesSet).GetEnumerator();
+    public int Count => _pitchClassesSet.Count;
+    public bool Contains(PitchClass item) => _pitchClassesSet.Contains(item);
+    public bool IsProperSubsetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsProperSubsetOf(other);
+    public bool IsProperSupersetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsProperSupersetOf(other);
+    public bool IsSubsetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsSubsetOf(other);
+    public bool IsSupersetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsSupersetOf(other);
+    public bool Overlaps(IEnumerable<PitchClass> other) => _pitchClassesSet.Overlaps(other);
+    public bool SetEquals(IEnumerable<PitchClass> other) => _pitchClassesSet.SetEquals(other);
+
+    #endregion
+
     public static IEnumerable<PitchClassSet> Objects => PitchClassSetIdentity.Objects.Select(identity => identity.PitchClassSet);
-    public static ImmutableHashSet<PitchClassSet> PrimeForms() => _primeForms.Value;
+    public static ImmutableHashSet<PitchClassSet> PrimeForms => _primeForms.Value;
 
     public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
     {
@@ -60,16 +102,17 @@ public class PitchClassSet : IReadOnlySet<PitchClass>,
 
     public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
 
-    private static readonly Lazy<ILookup<IntervalClassVector, PitchClassSet>> _lazySetsByIntervalContent;
+    private static readonly Lazy<ILookup<(Cardinality, IntervalClassVector), PitchClassSet>> _lazyTranspositions;
     private static readonly Lazy<ImmutableHashSet<PitchClassSet>> _primeForms;
-    private readonly IReadOnlySet<PitchClass> _pitchClasses;
+    private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
+
 
     static PitchClassSet()
     {
-        _lazySetsByIntervalContent = new(() => Objects.ToLookup(set => set.IntervalClassVector));
+        _lazyTranspositions = new(() => Objects.ToLookup(set => (set.Cardinality, set.IntervalClassVector)));
         _primeForms = new(GetPrimeForms);
 
-        static ImmutableHashSet<PitchClassSet> GetPrimeForms() => _lazySetsByIntervalContent.Value
+        static ImmutableHashSet<PitchClassSet> GetPrimeForms() => _lazyTranspositions.Value
             .Select(grouping => grouping.MinBy(set => set.Identity.Value)!)
             .OrderBy(set => set.Identity.Value)
             .ToImmutableHashSet();
@@ -82,65 +125,61 @@ public class PitchClassSet : IReadOnlySet<PitchClass>,
         if (pitchClasses == null) throw new ArgumentNullException(nameof(pitchClasses));
         var distinctPitchClasses = pitchClasses.Distinct().ToImmutableList();
 
+        ImmutableSortedSet<PitchClass> pitchClassesSet;
         if (normalize)
         {
             var firstPitchClass = distinctPitchClasses.First();
-            _pitchClasses = distinctPitchClasses.Select(pc => PitchClass.FromValue((pc.Value - firstPitchClass.Value) % 12)).ToImmutableSortedSet();
+            pitchClassesSet = distinctPitchClasses.Select(pc => PitchClass.FromValue((pc.Value - firstPitchClass.Value) % 12)).ToImmutableSortedSet();
         }
         else
         {
-            _pitchClasses = distinctPitchClasses.ToImmutableSortedSet();
+            pitchClassesSet = distinctPitchClasses.ToImmutableSortedSet();
+        }
+
+        _pitchClassesSet = pitchClassesSet;
+        Identity = GetIdentity(pitchClassesSet);
+        Cardinality = Cardinality.FromValue(pitchClassesSet.Count);
+
+        // ReSharper disable once InconsistentNaming
+        static PitchClassSetIdentity GetIdentity(IReadOnlySet<PitchClass> pitchClassesSet)
+        {
+            var value = 0;
+            var index = 0;
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            foreach (var pitchClass in PitchClass.Items)
+            {
+                var weight = 1 << index++;
+                if (pitchClassesSet.Contains(pitchClass)) value += weight;
+            }
+
+            return new(value);
         }
     }
 
-    public PitchClassSetIdentity Identity => GetIdentity();
+    public PitchClassSetIdentity Identity { get; }
+    public Cardinality Cardinality { get; }
     public PrintableReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
     public IntervalClassVector IntervalClassVector => new(Notes);
-    public IReadOnlyCollection<PitchClassSet> Transpositions => _lazySetsByIntervalContent.Value[IntervalClassVector].ToImmutableList();
+    public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality,IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
     public bool IsPrimeForm => _primeForms.Value.Contains(this);
 
-    public override string ToString() => Identity.ToString();
-
-    // ReSharper disable once InconsistentNaming
-    private PitchClassSetIdentity GetIdentity()
+    public override string ToString()
     {
-        var value = 0;
-        var index = 0;
-        // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var pitchClass in PitchClass.Items)
-        {
-            var weight = 1 << index++;
-            if (_pitchClasses.Contains(pitchClass)) value += weight;
-        }
-
-        return new(value);
+        var sb = new StringBuilder();
+        sb.Append("{");
+        sb.Append(string.Join(" ", _pitchClassesSet));
+        sb.Append("}");
+        return sb.ToString();
     }
 
     // ReSharper disable once InconsistentNaming
     private IReadOnlyCollection<Note.Chromatic> GetNotes()
     {
         var result =
-            _pitchClasses.Select(pitchClass => new Note.Chromatic(pitchClass))
+            _pitchClassesSet.Select(pitchClass => new Note.Chromatic(pitchClass))
                 .ToImmutableList();
 
         return result;
     }
-
-    #region IReadOnlySet members
-
-    public IEnumerator<PitchClass> GetEnumerator() => _pitchClasses.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_pitchClasses).GetEnumerator();
-    public int Count => _pitchClasses.Count;
-    public bool Contains(PitchClass item) => _pitchClasses.Contains(item);
-    public bool IsProperSubsetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsProperSubsetOf(other);
-    public bool IsProperSupersetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsProperSupersetOf(other);
-    public bool IsSubsetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsSubsetOf(other);
-    public bool IsSupersetOf(IEnumerable<PitchClass> other) => _pitchClasses.IsSupersetOf(other);
-    public bool Overlaps(IEnumerable<PitchClass> other) => _pitchClasses.Overlaps(other);
-    public bool SetEquals(IEnumerable<PitchClass> other) => _pitchClasses.SetEquals(other);
-
-    #endregion
-
-
 }

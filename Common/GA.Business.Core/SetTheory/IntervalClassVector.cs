@@ -19,11 +19,24 @@ using Notes;
 /// - Dorian      => 254361
 /// </remarks>
 [PublicAPI]
-public class IntervalClassVector : IIndexer<IntervalClass, int>, 
-                                   IReadOnlyCollection<int>
+public sealed class IntervalClassVector : IIndexer<IntervalClass, int>, 
+                                          IReadOnlyCollection<int>, IComparable<IntervalClassVector>
 {
-    private readonly ImmutableDictionary<IntervalClass, int> _countByIc;
-    private readonly ImmutableList<int> _orderedIcCounts;
+    #region Relational Members
+
+    public int CompareTo(IntervalClassVector? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (ReferenceEquals(null, other)) return 1;
+        return Value.CompareTo(other.Value);
+    }
+
+    public static bool operator <(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
+    public static bool operator >(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) > 0;
+    public static bool operator <=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) <= 0;
+    public static bool operator >=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) >= 0;
+
+    #endregion
 
     #region Equality members
 
@@ -56,6 +69,9 @@ public class IntervalClassVector : IIndexer<IntervalClass, int>,
     public int Count => _orderedIcCounts.Count;
 
     #endregion
+
+    private readonly ImmutableDictionary<IntervalClass, int> _countByIc;
+    private readonly ImmutableList<int> _orderedIcCounts;
 
     public IntervalClassVector(IReadOnlyCollection<Note> notes)
     {
