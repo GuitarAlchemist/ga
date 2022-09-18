@@ -52,8 +52,8 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
 
     public static IReadOnlyCollection<IntervalSize> Items => ValueObjectCollection<IntervalSize>.Create();
     public static IReadOnlyCollection<int> Values => Items.ToValues();
-    public static IReadOnlyCollection<IntervalSize> Range(int start, int count) => ValueObjectUtils<IntervalSize>.GetRange(start, count);
-    public static IReadOnlyCollection<IntervalSize> Range(int count) => ValueObjectUtils<IntervalSize>.GetRange(-_minValue, count);
+    public static IReadOnlyCollection<IntervalSize> Range(int start, int count) => ValueObjectUtils<IntervalSize>.GetItems(start, count);
+    public static IReadOnlyCollection<IntervalSize> Range(int count) => ValueObjectUtils<IntervalSize>.GetItems(-_minValue, count);
 
     public CompoundIntervalSize ToCompound() => new() {Value = _value + 8};
 

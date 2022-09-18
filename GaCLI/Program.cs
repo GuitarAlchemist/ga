@@ -5,8 +5,17 @@ using GA.Business.Core.Scales;
 using GA.Business.Core.SetTheory;
 using GA.Business.Core.Tonal.Modes;
 
-var pcObjects = PitchClassSet.Objects;
-var groups = pcObjects.GroupBy(set => set.IntervalClassVector);
+var identities = PitchClassSetIdentity.Items;
+var pcsObjects = PitchClassSet.Objects;
+var byCard = pcsObjects.GroupBy(set => set.Cardinality).ToImmutableList();
+foreach (var cardGroup in byCard)
+{
+    var first = cardGroup.First();
+    Console.WriteLine(first.Cardinality.ToString());
+    var url = first.Identity.ScalePageUrl;
+    Console.WriteLine(url);
+}
+var groups = pcsObjects.GroupBy(set => set.IntervalClassVector).ToImmutableList();
 
 var pf = PitchClassSet.PrimeForms;
 var id = PitchClassSetIdentity.FromNotes(Note.Chromatic.C, Note.Chromatic.E, Note.Chromatic.GSharpAb);

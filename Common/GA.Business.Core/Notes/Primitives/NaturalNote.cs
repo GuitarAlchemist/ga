@@ -150,7 +150,7 @@ public readonly record struct NaturalNote : IValueObject<NaturalNote>,
         _ => string.Empty
     };
 
-    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueObjectUtils<NaturalNote>.GetCollection();
+    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueObjectUtils<NaturalNote>.Items;
 
     private class NaturalNoteIntervals : LazyIndexerBase<(NaturalNote, NaturalNote), IntervalSize>
     {

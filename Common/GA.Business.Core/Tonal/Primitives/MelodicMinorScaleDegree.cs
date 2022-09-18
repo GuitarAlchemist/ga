@@ -43,7 +43,7 @@ public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<Me
     public static implicit operator MelodicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
 
-    public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.GetCollection();
+    public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

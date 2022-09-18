@@ -20,8 +20,8 @@ public readonly record struct Fret : IValueObject<Fret>,
 
     #endregion
 
-    public static IReadOnlyCollection<Fret> Items => ValueObjectCollection<Fret>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectCollection<Fret>.Values;
+    public static IReadOnlyCollection<Fret> Items => ValueObjectUtils<Fret>.Items;
+    public static IReadOnlyCollection<int> Values => ValueObjectUtils<Fret>.Values;
 
     private const int _minValue = 0;
     private const int _maxValue = 36;
@@ -34,7 +34,8 @@ public readonly record struct Fret : IValueObject<Fret>,
 
     public static int CheckRange(int value) => IValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
-    public static IReadOnlyCollection<Fret> Collection(int start, int count) => ValueObjectUtils<Fret>.GetRange(start, count);
+    // ReSharper disable once InconsistentNaming
+    public static IReadOnlyCollection<Fret> GetItems(int start, int count) => ValueObjectUtils<Fret>.GetItems(start, count);
 
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;

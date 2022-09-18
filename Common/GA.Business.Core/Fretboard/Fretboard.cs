@@ -35,13 +35,14 @@ public class Fretboard
     public int StringCount { get; }
     public int FretCount { get; }
     public Fret? CapoFret { get; set; }
-    public IReadOnlyCollection<Str> Strings => Str.GetCollection(StringCount);
-    public IReadOnlyCollection<Fret> Frets => Fret.Collection(Fret.Min.Value, FretCount);
+    public IReadOnlyCollection<Str> Strings => Str.GetItems(StringCount);
+    public IReadOnlyCollection<Fret> Frets => Fret.GetItems(Fret.Min.Value, FretCount);
     public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
     public OpenPositions OpenPositions => _lazyOpenPositions.Value;
     public FrettedPositions FrettedPositions => _lazyFrettedPositions.Value;
     public FretPositions this[Fret fret] => FrettedPositions[fret];
 
+    // ReSharper disable once InconsistentNaming
     private IReadOnlyCollection<Position> GetAllPositions()
     {
         IEnumerable<Position> StringPositions(Str str)
@@ -56,7 +57,7 @@ public class Fretboard
 
             // Fretted
             var midiNote = pitch.MidiNote;
-            foreach (var fret in Fret.Collection(1, FretCount - 1))
+            foreach (var fret in Fret.GetItems(1, FretCount - 1))
             {
                 midiNote++;
                 pitch = midiNote.ToSharpPitch();
@@ -67,7 +68,7 @@ public class Fretboard
 
         IEnumerable<Position> AllPositions()
         {
-            foreach (var str in Str.GetCollection(StringCount))
+            foreach (var str in Str.GetItems(StringCount))
             foreach (var position in StringPositions(str))
                 yield return position;
         }
@@ -80,7 +81,7 @@ public class Fretboard
     private OpenPositions GetOpenPositions()
     {
         var positions =
-            Str.GetCollection(StringCount)
+            Str.GetItems(StringCount)
                .Select(str =>
                {
                    var pitch = Tuning[str];

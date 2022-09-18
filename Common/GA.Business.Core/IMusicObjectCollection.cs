@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core;
 
-public interface IMusicObjectCollection<out TSelf>
+public interface IMusicObjectCollection<out T>
 {
-    // ReSharper disable once InconsistentNaming
-    public static abstract IEnumerable<TSelf> Objects { get; }
+    public static abstract IEnumerable<T> Objects { get; }
 }

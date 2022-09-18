@@ -40,7 +40,7 @@ public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<Na
     public static implicit operator NaturalMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
 
-    public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.GetCollection();
+    public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

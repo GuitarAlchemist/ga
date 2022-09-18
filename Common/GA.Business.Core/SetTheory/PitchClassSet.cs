@@ -152,7 +152,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
                 if (pitchClassesSet.Contains(pitchClass)) value += weight;
             }
 
-            return new(value);
+            return value;
         }
     }
 

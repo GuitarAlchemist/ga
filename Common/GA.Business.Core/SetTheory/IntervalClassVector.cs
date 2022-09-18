@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.SetTheory;
 
+using GA.Business.Core.SetTheory.Primitives;
 using GA.Core;
 using Notes;
 
@@ -42,7 +43,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     public static bool operator ==(IntervalClassVector? left, IntervalClassVector? right) => Equals(left, right);
     public static bool operator !=(IntervalClassVector? left, IntervalClassVector? right) => !Equals(left, right);
-    protected bool Equals(IntervalClassVector other) => Value == other.Value;
+    public bool Equals(IntervalClassVector other) => Value == other.Value;
 
     public override bool Equals(object? obj)
     {
@@ -58,7 +59,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     #region Indexer members
 
-    public int this[IntervalClass ic] => _countByIc[ic];
+    public int this[IntervalClass ic] => _countByIc.TryGetValue(ic, out var count) ? count : 0;
 
     #endregion
 
@@ -102,7 +103,6 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
         static ImmutableList<int> GetOrderedIcCounts(ImmutableDictionary<IntervalClass, int> countByIc) =>
             IntervalClass.Items.Where(ic => ic.Value > 0) // Omit the unison
-                .Reverse()
                 .Select(ic => countByIc.TryGetValue(ic, out var count) ? count : 0)
                 .ToImmutableList();
 
@@ -113,7 +113,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
             foreach (var count in orderedIcCounts)
             {
                 result += weight * count;
-                weight *= 10;
+                weight *= 12;
             }
 
             return result;

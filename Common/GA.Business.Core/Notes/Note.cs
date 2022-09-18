@@ -8,6 +8,7 @@ using Intervals;
 using Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
+using GA.Business.Core.SetTheory.Primitives;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
