@@ -1,13 +1,14 @@
 ﻿namespace GA.Business.Core.SetTheory.Primitives;
 
-/// <inheritdoc cref="IEquatable{Fret}" />
-/// <inheritdoc cref="IComparable{Fret}" />
-/// <inheritdoc cref="IComparable" />
+/// <inheritdoc cref="IValueObject{Cardinality}" />
+/// <inheritdoc cref="IName" />
 /// <summary>
 /// An non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 [PublicAPI]
-public readonly record struct Cardinality : IValueObject<Cardinality>
+public readonly record struct Cardinality : IValueObject<Cardinality>,
+                                            IName,
+                                            IValueObjectCollection<Cardinality>
 {
     #region Relational members
 
@@ -19,8 +20,8 @@ public readonly record struct Cardinality : IValueObject<Cardinality>
 
     #endregion
 
-    public static IReadOnlyCollection<Cardinality> Items => Fretboard.Primitives.ValueObjectCollection<Cardinality>.Items;
-    public static IReadOnlyCollection<int> Values => Fretboard.Primitives.ValueObjectCollection<Cardinality>.Values;
+    public static IReadOnlyCollection<Cardinality> Items => ValueObjectUtils<Cardinality>.Items;
+    public static IReadOnlyCollection<int> Values => ValueObjectUtils<Cardinality>.Values;
 
     private const int _minValue = 0;
     private const int _maxValue = 12;
@@ -40,5 +41,23 @@ public readonly record struct Cardinality : IValueObject<Cardinality>
     public int Value { get => _value; init => _value = CheckRange(value); }
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<Cardinality>.CheckRange(Value, _minValue, maxValue);
-    public override string ToString() => Value.ToString();
+    public override string ToString() => string.IsNullOrEmpty(Name) ? Value.ToString() : $"{Value} ({Name})";
+    public string Name => _cardinalityNames[_value];
+
+    private static ImmutableDictionary<int, string> _cardinalityNames = new Dictionary<int, string>
+    {
+        [0] = string.Empty,
+        [1] = "Monotonic",
+        [2] = "Ditonic",
+        [3] = "Tritonic",
+        [4] = "Tetratonic",
+        [5] = "Pentatonic",
+        [6] = "Hexatonic",
+        [7] = "Heptatonic",
+        [8] = "Octatonic",
+        [9] = "Enneatonic",
+        [10] = "Decatonic",
+        [11] = "Hendecatonic",
+        [12] = "Dodecatonic",
+    }.ToImmutableDictionary();
 }

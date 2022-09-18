@@ -1,6 +1,6 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.SetTheory.Primitives;
 
-using Fretboard.Primitives;
+using Core;
 using Intervals.Primitives;
 
 /// <inheritdoc cref="IEquatable{IntervalClass}" />
@@ -39,8 +39,8 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
     private const int _maxValue = 6;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IntervalClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-    public static IReadOnlyCollection<IntervalClass> Items => ValueObjectCollection<IntervalClass>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectCollection<IntervalClass>.Values;
+    public static IReadOnlyCollection<IntervalClass> Items => ValueObjectUtils<IntervalClass>.Items;
+    public static IReadOnlyCollection<int> Values => ValueObjectUtils<IntervalClass>.Values;
     public static IntervalClass FromSemitones(Semitones semitones)
     {
         var value = semitones % 12; // Apply octave equivalence

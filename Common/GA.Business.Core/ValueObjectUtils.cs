@@ -4,8 +4,8 @@ using System.Diagnostics;
 using GA.Core.Extensions;
 
 [PublicAPI]
-public static class ValueObjectUtils<TValue>
-    where TValue : struct, IValueObject<TValue>
+public static class ValueObjectUtils<TSelf>
+    where TSelf : struct, IValueObject<TSelf>
 {
     public static int CheckRange(
         int value, 
@@ -29,7 +29,7 @@ public static class ValueObjectUtils<TValue>
 
             throw new ArgumentOutOfRangeException(
                 valueExpression,
-                $"{typeof(TValue)} {valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
+                $"{typeof(TSelf)} {valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
         }
 
         if (value > maxValue)
@@ -38,13 +38,14 @@ public static class ValueObjectUtils<TValue>
 
             throw new ArgumentOutOfRangeException(
                 valueExpression,
-                $"{typeof(TValue)} {valueExpression} ({value}) cannot be greater than {maxValueExpression} ({maxValue}).");
+                $"{typeof(TSelf)} {valueExpression} ({value}) cannot be greater than {maxValueExpression} ({maxValue}).");
         }
 
         return value;
     }
 
-    public static IReadOnlyCollection<TValue> GetCollection() => ValueObjectCollection<TValue>.Create();
-    public static IReadOnlyCollection<int> GetValues() => GetCollection().Select(value => value.Value).ToImmutableList();
-    public static IReadOnlyCollection<TValue> GetRange(int start, int count) => ValueObjectCollection<TValue>.Create(start, count);
+    public static IReadOnlyCollection<TSelf> Items => ValueObjectCollection<TSelf>.Create();
+    // ReSharper disable once InconsistentNaming
+    public static IReadOnlyCollection<TSelf> GetItems(int start, int count) => ValueObjectCollection<TSelf>.Create(start, count);
+    public static IReadOnlyCollection<int> Values => Items.Select(value => value.Value).ToImmutableList();
 }

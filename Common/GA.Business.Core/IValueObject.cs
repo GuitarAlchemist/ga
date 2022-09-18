@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core;
+﻿using GA.Business.Core.Fretboard.Primitives;
+
+namespace GA.Business.Core;
 
 using System.Diagnostics;
 using System.Runtime.Versioning;
@@ -10,7 +12,7 @@ using GA.Core.Extensions;
 /// </summary>
 public interface IValueObject
 {
-    public int Value { get; init; }
+    int Value { get; init; }
 }
 
 /// <summary>
@@ -49,7 +51,8 @@ public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, ICompar
     /// <param name="start"></param>
     /// <param name="count"></param>
     /// <returns></returns>
-    public static IReadOnlyCollection<TSelf> GetRange(int start, int count) => ValueObjectCollection<TSelf>.Create(start, count);
+    // ReSharper disable once InconsistentNaming
+    public static IReadOnlyCollection<TSelf> GetRange(int start, int count) => ValueObjectUtils<TSelf>.GetItems(start, count);
 
     /// <summary>
     /// Ensures value in range.

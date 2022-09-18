@@ -28,11 +28,10 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
 
     public static PitchClass Min => FromValue(_minValue);
     public static PitchClass Max => FromValue(_maxValue);
-    public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.GetCollection();
+    public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
     public static IReadOnlyCollection<int> Values => Items.ToValues();
     public static IReadOnlyCollection<int> AllValues => Items.Select(pitchClass => pitchClass.Value).ToImmutableList();
 
-    public static IReadOnlyCollection<PitchClass> GetCollection(int start, int count) => ValueObjectUtils<PitchClass>.GetRange(start, count);
     public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.SharpKey(PitchClass pitchClass) => pitchClass.ToSharpNote();

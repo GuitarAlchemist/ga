@@ -27,7 +27,7 @@ public readonly record struct MajorPentatonicScaleDegree : IValueObject<MajorPen
     public static implicit operator MajorPentatonicScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorPentatonicScaleDegree degree) => degree.Value;
 
-    public static IReadOnlyCollection<MajorPentatonicScaleDegree> All => ValueObjectUtils<MajorPentatonicScaleDegree>.GetCollection();
+    public static IReadOnlyCollection<MajorPentatonicScaleDegree> All => ValueObjectUtils<MajorPentatonicScaleDegree>.Items;
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

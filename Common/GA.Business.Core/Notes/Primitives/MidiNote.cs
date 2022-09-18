@@ -32,7 +32,7 @@ public readonly record struct MidiNote : IValueObject<MidiNote>
     public static MidiNote Min => FromValue(_minValue);
     public static MidiNote Max => FromValue(_maxValue);
     public static MidiNote Open => FromValue(0);
-    public static IReadOnlyCollection<MidiNote> All => ValueObjectUtils<MidiNote>.GetCollection();
+    public static IReadOnlyCollection<MidiNote> All => ValueObjectUtils<MidiNote>.Items;
 
     public static int CheckRange(int value) => ValueObjectUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MidiNote>.CheckRange(value, minValue, maxValue);

@@ -35,7 +35,8 @@ public readonly record struct Str : IValueObject<Str>
     public static Str Max => FromValue(_maxValue);
     public static int CheckRange(int value) => ValueObjectUtils<Str>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Str>.CheckRange(value, minValue, maxValue);
-    public static IReadOnlyCollection<Str> GetCollection(int count) => ValueObjectUtils<Str>.GetRange(_minValue, count);
+    // ReSharper disable once InconsistentNaming
+    public static IReadOnlyCollection<Str> GetItems(int count) => ValueObjectUtils<Str>.GetItems(_minValue, count);
 
     public static implicit operator Str(int value) => new() { Value = value };
     public static implicit operator int(Str str) => str._value;
