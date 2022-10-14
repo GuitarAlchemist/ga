@@ -1,11 +1,15 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
+
+
+
 using PCRE;
 
 using GA.Business.Core.Intervals.Primitives;
 using GA.Core;
 using GA.Business.Core.Extensions;
-using SetTheory;
+using Atonal;
+
 
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))

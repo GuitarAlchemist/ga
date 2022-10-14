@@ -1,11 +1,14 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Scales;
 
-namespace GA.Business.Core.Scales;
+using GA.Core;
+using Atonal;
+using Atonal.Primitives;
+
+
 
 using Intervals;
 using Notes;
 using Tonal;
-using GA.Core;
 using static Notes.Note.AccidentedNote;
 
 /// <summary>
@@ -18,7 +21,8 @@ using static Notes.Note.AccidentedNote;
 /// https://ianring.com/musictheory/scales/
 /// https://chromatone.center/theory/scales/study.html
 /// </remarks>
-public class Scale : IReadOnlyCollection<Note>
+public class Scale : IReadOnlyCollection<Note>,
+                     IMusicObjectCollection<Scale>
 {
     public static Scale Major => new(Key.Major.C.GetNotes());
     public static Scale NaturalMinor => Minor.Natural;
@@ -34,7 +38,7 @@ public class Scale : IReadOnlyCollection<Note>
     public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
 
     public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
-    public static IEnumerable<Scale> All => PitchClassSetIdentity.Objects.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
+    public static IEnumerable<Scale> Objects => PitchClassSetIdentity.Objects.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
 
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())

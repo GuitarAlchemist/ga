@@ -1,9 +1,12 @@
 ﻿using System.Collections.Immutable;
+using GA.Business.Core.Atonal;
+using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
-using GA.Business.Core.SetTheory;
 using GA.Business.Core.Tonal.Modes;
+
+Console.WriteLine(Environment.Version);
 
 var identities = PitchClassSetIdentity.Items;
 var pcsObjects = PitchClassSet.Objects;
@@ -21,7 +24,7 @@ var pf = PitchClassSet.PrimeForms;
 var id = PitchClassSetIdentity.FromNotes(Note.Chromatic.C, Note.Chromatic.E, Note.Chromatic.GSharpAb);
 var idTranspositions = id.PitchClassSet.Transpositions;
 
-var scales = Scale.All.ToImmutableList();
+var scales = Scale.Objects.ToImmutableList();
 var modalScales = 
     scales.Where(scale => scale.Identity.PitchClassSet.IsModal)
           .OrderBy(scale => scale.Count)

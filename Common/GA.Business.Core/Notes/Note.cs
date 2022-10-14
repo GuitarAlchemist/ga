@@ -2,13 +2,13 @@
 
 using GA.Core;
 using GA.Business.Core.Intervals.Primitives;
+using GA.Business.Core.Atonal.Primitives;
+using Atonal;
 using Tonal;
-using SetTheory;
 using Intervals;
 using Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
-using GA.Business.Core.SetTheory.Primitives;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
@@ -318,8 +318,8 @@ public abstract partial record Note : IComparable<Note>
                 {
                     var expectedEndNoteAccidental =
                         key.AccidentalKind == AccidentalKind.Flat
-                            ? Intervals.Accidental.Flat
-                            : Intervals.Accidental.Sharp;
+                            ? Intervals.Primitives.Accidental.Flat
+                            : Intervals.Primitives.Accidental.Sharp;
 
                     if (endNoteAccidental == expectedEndNoteAccidental) return result;
 
@@ -381,11 +381,11 @@ public abstract partial record Note : IComparable<Note>
             {
                 var accidentals = new[]
                 {
-                    Intervals.Accidental.DoubleFlat,
-                    Intervals.Accidental.Flat,
-                    Intervals.Accidental.Natural,
-                    Intervals.Accidental.Sharp,
-                    Intervals.Accidental.DoubleSharp,
+                    Intervals.Primitives.Accidental.DoubleFlat,
+                    Intervals.Primitives.Accidental.Flat,
+                    Intervals.Primitives.Accidental.Natural,
+                    Intervals.Primitives.Accidental.Sharp,
+                    Intervals.Primitives.Accidental.DoubleSharp,
                 };
 
                 foreach (var naturalNote in NaturalNote.Items)

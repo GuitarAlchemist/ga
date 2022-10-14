@@ -1,0 +1,62 @@
+﻿@using GA.Core.Extensions
+
+<div id="alphaTab" data-tex="true" data-layout-mode="horizontal">
+    @AlphaTex
+</div>
+
+@inject IJSRuntime JsRuntime
+@implements IAsyncDisposable
+
+@code {
+    [Parameter]
+    public string? AlphaTex { get; set; } // See https://docs.alphatab.net/master/alphatex/
+
+    private ElementReference? _element;
+
+    private Lazy<Task<IJSObjectReference>> _jsModuleTask = null!;
+    private string? _alphaText;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _jsModuleTask = new(() => JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/alphaTabComponent.js").AsTask());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            await InitAsync();
+        }
+    }
+
+    private async Task InitAsync()
+    {
+        // if (string.IsNullOrEmpty(_element?.Id)) throw new InvalidOperationException();
+
+        try
+        {
+            var jsModule = await _jsModuleTask.Value;
+            await jsModule.InvokeVoidAsync("init");
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace("Failed initializing");
+            await JsRuntime.LogAsync(msg);
+            throw;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModuleTask.IsValueCreated)
+        {
+            var jsModule = await _jsModuleTask.Value;
+            await jsModule.DisposeAsync();
+        }
+    }
+
+}

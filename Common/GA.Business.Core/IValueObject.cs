@@ -1,6 +1,4 @@
-﻿using GA.Business.Core.Fretboard.Primitives;
-
-namespace GA.Business.Core;
+﻿namespace GA.Business.Core;
 
 using System.Diagnostics;
 using System.Runtime.Versioning;

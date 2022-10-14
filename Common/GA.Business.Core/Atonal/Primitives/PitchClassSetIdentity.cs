@@ -1,9 +1,8 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Atonal.Primitives;
 
 using Notes;
-using GA.Business.Core.Notes.Extensions;
 using Scales;
-using GA.Business.Core.Fretboard.Primitives;
+using GA.Business.Core.Notes.Extensions;
 
 /// <summary>
 /// Unique identifier for a pitch class set.
@@ -17,14 +16,15 @@ using GA.Business.Core.Fretboard.Primitives;
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentity>,
-                                                      IValueObject<PitchClassSetIdentity>
+                                                      IValueObject<PitchClassSetIdentity>,
+                                                      IValueObjectCollection<PitchClassSetIdentity>
 {
     #region Relational Members
 
     public int CompareTo(PitchClassSetIdentity other) => Value.CompareTo(other.Value);
     public static bool operator <(PitchClassSetIdentity left, PitchClassSetIdentity right) => left.CompareTo(right) < 0;
     public static bool operator >(PitchClassSetIdentity left, PitchClassSetIdentity right) => left.CompareTo(right) > 0;
-    public static bool operator <=(PitchClassSetIdentity left, PitchClassSetIdentity right) =>left.CompareTo(right) <= 0;
+    public static bool operator <=(PitchClassSetIdentity left, PitchClassSetIdentity right) => left.CompareTo(right) <= 0;
     public static bool operator >=(PitchClassSetIdentity left, PitchClassSetIdentity right) => left.CompareTo(right) >= 0;
 
     #endregion
@@ -63,6 +63,6 @@ public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<Pit
     public override string ToString()
     {
         if (string.IsNullOrEmpty(ScaleName)) return $"{Value}";
-        return  $"{Value} ({ScaleName})";
+        return $"{Value} ({ScaleName})";
     }
 }

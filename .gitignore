@@ -11,3 +11,5 @@ obj
 packages
 /.idea
 /.vscode
+/Experiments/Vite/node_modules
+/Experiments/Vite/package-lock.json

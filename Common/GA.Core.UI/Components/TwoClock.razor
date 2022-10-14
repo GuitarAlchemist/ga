@@ -1,0 +1,43 @@
+﻿@using GA.Core.Extensions
+
+<div @ref="_element" 
+     style="height: 100%; width: 100%">
+</div>
+
+@inject IJSRuntime JsRuntime
+
+@code {
+    private ElementReference? _element;
+    private IJSObjectReference? _jsModule;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            // Import JavaScript module
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/clockDiagrams.js");
+            if (_jsModule == null) throw new InvalidOperationException();
+
+            await InitAsync();
+        }
+    }
+
+    private async Task InitAsync()
+    {
+        if (_jsModule == null) return;
+        if (string.IsNullOrEmpty(_element?.Id)) throw new InvalidOperationException();
+
+        try
+        {
+            await _jsModule.InvokeVoidAsync("init", _element);
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.GetMessageAndStackTrace("Failed initializing");
+            await JsRuntime.LogAsync(msg);
+            throw;
+        }
+    }
+}

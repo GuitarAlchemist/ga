@@ -1,6 +1,6 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Notes.Primitives;
 
-namespace GA.Business.Core.Notes.Primitives;
+using Atonal;
 
 using Intervals;
 

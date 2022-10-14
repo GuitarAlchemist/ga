@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "preserveConstEnums": true,
+    "target": "Es2017",
+    "moduleResolution": "Node"
+  },
+  "include": [ "./**/*.ts" ],
+  "exclude": [ "node_modules" ],
+  "compileOnSave": true
+}

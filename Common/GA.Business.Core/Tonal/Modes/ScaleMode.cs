@@ -1,6 +1,8 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Tonal.Modes;
 
-namespace GA.Business.Core.Tonal.Modes;
+using GA.Business.Core.Atonal.Primitives;
+
+
 
 using GA.Business.Core.Intervals.Primitives;
 using GA.Core;

@@ -1,7 +1,6 @@
-﻿namespace GA.Business.Core.SetTheory.Primitives;
+﻿namespace GA.Business.Core.Atonal.Primitives;
 
-using Core;
-using Intervals.Primitives;
+using GA.Business.Core.Intervals.Primitives;
 
 /// <inheritdoc cref="IEquatable{IntervalClass}" />
 /// <inheritdoc cref="IComparable{IntervalClass}" />
