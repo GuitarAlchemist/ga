@@ -1,8 +1,8 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Atonal;
 
-using GA.Core;
-using Notes;
 using Primitives;
+using Notes;
+using GA.Core;
 
 // TODO
 public class ForteNumber
@@ -100,12 +100,24 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
         return result;
     }
 
+    public static PitchClassSet FromNotes(IEnumerable<Note> notes)
+    {
+        var pitchClasses = 
+            notes.Select(note => note.PitchClass)
+                .ToImmutableArray();
+
+        var result = new PitchClassSet(pitchClasses);
+
+        return result;
+    }
+
+    public static PitchClassSet FromNotes(params Note[] notes) => FromNotes(notes.AsEnumerable());
+
     public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
 
     private static readonly Lazy<ILookup<(Cardinality, IntervalClassVector), PitchClassSet>> _lazyTranspositions;
     private static readonly Lazy<ImmutableHashSet<PitchClassSet>> _primeForms;
     private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
-
 
     static PitchClassSet()
     {
@@ -120,13 +132,13 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     public PitchClassSet(
         IReadOnlyCollection<PitchClass> pitchClasses,
-        bool normalize = false)
+        PitchClassSetOrder order = default)
     {
         if (pitchClasses == null) throw new ArgumentNullException(nameof(pitchClasses));
         var distinctPitchClasses = pitchClasses.Distinct().ToImmutableList();
 
         ImmutableSortedSet<PitchClass> pitchClassesSet;
-        if (normalize)
+        if (order == PitchClassSetOrder.ScaleOrder)
         {
             var firstPitchClass = distinctPitchClasses.First();
             pitchClassesSet = distinctPitchClasses.Select(pc => PitchClass.FromValue((pc.Value - firstPitchClass.Value) % 12)).ToImmutableSortedSet();
@@ -163,13 +175,14 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
     public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality,IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
     public bool IsPrimeForm => _primeForms.Value.Contains(this);
+    private PitchClassSet PrimeForm => Transpositions.First(set => set.IsPrimeForm);
 
     public override string ToString()
     {
         var sb = new StringBuilder();
-        sb.Append("{");
+        sb.Append("(");
         sb.Append(string.Join(" ", _pitchClassesSet));
-        sb.Append("}");
+        sb.Append(")");
         return sb.ToString();
     }
 

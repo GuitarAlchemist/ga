@@ -1,12 +1,8 @@
 TODO:
 
-- UI: Add data frame/matrix support
-- UI: Add VexFlow blazor support (https://www.vexflow.com/)
+- UI: Add VexFlow/VexTab/VexChord blazor support (https://www.vexflow.com/)
+- UI: Add simple piano blazor support https://codepen.io/gabrielcarol/pen/rGeEbY
 
-. Add Blazor/ag-grid support 
-. Explore Existing frameworks
-https://github.com/SciSharp/Pandas.NET
-https://fslab.org/XPlot//chart/google-annotation-chart.html
 
 - Concepts (Explore):
 
@@ -15,3 +11,6 @@ https://fslab.org/XPlot//chart/google-annotation-chart.html
 . Harmonic Entropy - How confused is my brain when it hears an interval?
 http://www.tonalsoft.com/enc/h/harmonic-entropy.aspx
 https://en.wikipedia.org/wiki/Paul_Erlich
+
+. The quadruple hierarchy
+https://www.youtube.com/watch?v=uqpYxHJC9pI

@@ -4,6 +4,7 @@ using Intervals;
 using GA.Business.Core.Notes.Primitives;
 using GA.Core;
 using Notes;
+using GA.Business.Core.Intervals.Primitives;
 
 [PublicAPI]
 [DiscriminatedUnion]

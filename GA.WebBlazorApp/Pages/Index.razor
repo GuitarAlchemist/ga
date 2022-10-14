@@ -1,54 +1,19 @@
 ﻿@page "/"
-@using MudBlazor
-@using GA.Core.UI.Components.Grids
-@using GA.Core.UI.Dtos
-@using GA.Business.Core.Scales
 
-<div style="height: 90vh; width: 100%">
-    <MudButton @onclick="HandleLoadClicked">Load</MudButton>
-    <TabularDataGrid @ref="_grid"></TabularDataGrid>
-</div>
+@using GA.Core.UI.Components
+
+<AlphaTab AlphaTex="@_text"></AlphaTab>
 
 @code {
-    private TabularDataGrid? _grid;
 
-    private async Task HandleLoadClicked()
-    {
-        if (_grid != null)
-        {
-            var columns = new List<TabularDataColumn>
-            {
-                new("Id"),
-                new("IsModal", "Bool"),
-                new("ScaleName"),
-                new("Cardinality"),
-                new("IntervalVector"),
-                new("PageUrl"),
-                new("VideoUrl"),
-            };
-
-            var data = new TabularData(columns, GetRows());
-            await _grid.LoadAsync(data);
-        }
-
-        IEnumerable<TabularDataRow> GetRows()
-        {
-            var scales = Scale.All;
-            foreach (var scale in scales)
-            {
-                var identity = scale.Identity;
-                yield return new()
-                    {
-                        ["Id"] = identity.Value,
-                        ["IsModal"] = scale.IsModal,
-                        ["ScaleName"] = identity.ScaleName,
-                        ["Cardinality"] = scale.Count,
-                        ["IntervalVector"] = identity.PitchClassSet.IntervalClassVector.Value,
-                        ["PageUrl"] = identity.ScalePageUrl,
-                        ["VideoUrl"] = identity.ScaleVideoUrl
-                    };
-            }
-        }
-    }
+        private const string? _text = @"
+    \title ""Canon Rock""
+    \subtitle ""JerryC""
+    \tempo 90
+        .
+    15.2{v d}.4 :16 17.2{h} 15.2 :8 14.2 14.1 17.1{b(0 4 4 0)}.4 |
+    15.1.8 :16 14.1{tu 3} 15.1{tu 3} 14.1{tu 3} :8 17.2 15.1 14.1 :16 12.1{tu 3} 14.1{tu 3} 12.1{tu 3} :8 15.2 14.2 |   
+";
 
 }
+

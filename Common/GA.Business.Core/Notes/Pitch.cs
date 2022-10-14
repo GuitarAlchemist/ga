@@ -1,9 +1,9 @@
-﻿using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Notes;
+
 using PCRE;
 
-namespace GA.Business.Core.Notes;
-
+using Atonal;
+using Primitives;
 using Intervals;
 
 [PublicAPI]

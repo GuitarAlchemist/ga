@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Atonal;
+
+using Primitives;
 
 /// <summary>
 /// Group of pitch class sets that share the same interval vector

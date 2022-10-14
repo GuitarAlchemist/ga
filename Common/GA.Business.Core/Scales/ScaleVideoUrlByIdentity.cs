@@ -1,8 +1,9 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Scales;
 
-namespace GA.Business.Core.Scales;
+
 
 using GA.Core;
+using Atonal.Primitives;
 
 public class ScaleVideoUrlByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
 {

@@ -1,15 +1,16 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Atonal;
 
-using GA.Business.Core.SetTheory.Primitives;
-using GA.Core;
+using Primitives;
 using Notes;
+using GA.Core;
 
 /// <summary>
-/// An interval vector represents 
+/// An interval vector represents the ordered occurence for each interval class (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
 /// </summary>
 /// <remarks>
-/// https://en.wikipedia.org/wiki/Interval_vector
 /// https://musictheory.pugetsound.edu/mt21c/IntervalVector.html
+/// https://viva.pressbooks.pub/openmusictheory/chapter/interval-class-vectors/
+/// https://en.wikipedia.org/wiki/Interval_vector
 /// https://harmoniousapp.net/p/d0/Glossary-Atonal-Theory
 /// http://www.jaytomlin.com/music/settheory/help.html
 /// https://viva.pressbooks.pub/openmusictheory/chapter/interval-class-vectors/
@@ -20,7 +21,7 @@ using Notes;
 /// - Dorian      => 254361
 /// </remarks>
 [PublicAPI]
-public sealed class IntervalClassVector : IIndexer<IntervalClass, int>, 
+public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
                                           IReadOnlyCollection<int>, IComparable<IntervalClassVector>
 {
     #region Relational Members

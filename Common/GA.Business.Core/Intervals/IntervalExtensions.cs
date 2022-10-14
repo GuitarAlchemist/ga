@@ -1,11 +1,8 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Intervals;
 
-namespace GA.Business.Core.Intervals;
-
-using Primitives;
-using Notes;
-using GA.Business.Core.Notes.Primitives;
 using GA.Core;
+using Primitives;
+using Atonal;
 
 public static class IntervalExtensions
 {

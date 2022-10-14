@@ -1,6 +1,7 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Scales;
 
-namespace GA.Business.Core.Scales;
+using Atonal.Primitives;
+
 
 using GA.Core;
 

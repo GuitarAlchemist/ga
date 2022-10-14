@@ -1,19 +1,11 @@
-﻿using GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Notes.Extensions;
 
-namespace GA.Business.Core.Notes.Extensions;
-
+using Atonal;
 using Intervals;
-using Primitives;
 
 public static class ChromaticNoteExtensions
 {
-    public static PitchClassSet ToPitchClassSet(this IEnumerable<Note> notes)
-    {
-        var pitchClasses = 
-            notes.Select(note => note.PitchClass)
-                .ToImmutableArray();
-        return new(pitchClasses, true);
-    }
+    public static PitchClassSet ToPitchClassSet(this IEnumerable<Note> notes) => PitchClassSet.FromNotes(notes);
 
     public static Interval.Chromatic GetInterval(
         this Note.Chromatic note,
@@ -23,7 +15,7 @@ public static class ChromaticNoteExtensions
         if (other == null) throw new ArgumentNullException(nameof(other));
         if (note == other) return Interval.Chromatic.Unison;
 
-        GetOrderedPitchClasses(
+        OrderedPitchClasses(
             note,
             other,
             out var lowPitchClass,
@@ -36,7 +28,7 @@ public static class ChromaticNoteExtensions
         return result;
     }
 
-    private static void GetOrderedPitchClasses(
+    private static void OrderedPitchClasses(
         Note note1,
         Note note2,
         out PitchClass lowPitchClass,

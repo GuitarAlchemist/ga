@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.SetTheory.Primitives;
+﻿namespace GA.Business.Core.Atonal.Primitives;
 
 /// <inheritdoc cref="IValueObject{Cardinality}" />
 /// <inheritdoc cref="IName" />

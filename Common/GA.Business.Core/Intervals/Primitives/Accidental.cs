@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core.Intervals;
+﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using Primitives;
 using GA.Business.Core.Notes.Primitives;
+using Core;
 
 /// <summary>
 /// Signature.
@@ -59,7 +59,7 @@ public readonly record struct Accidental : IValueObject<Accidental>
         _ => string.Empty
     };
 
-    public Semitones ToSemitones() => new() {Value = _value};
+    public Semitones ToSemitones() => new() { Value = _value };
 }
 
 

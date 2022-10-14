@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.SetTheory;
+﻿namespace GA.Business.Core.Atonal;
 
 using Extensions;
 using Intervals;
@@ -47,7 +47,13 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
     }
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
-    public override string ToString() => Value.ToString();
+
+    public override string ToString() => _value switch
+    {
+        10 => "T",
+        11 => "E",
+        _ => _value.ToString()
+    };
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
     public Note.SharpKey ToSharpNote() => _sharpNotes[_value];
