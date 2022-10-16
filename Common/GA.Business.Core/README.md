@@ -4,7 +4,7 @@ Guitar Alchemist
 
 ## Description
 
-.NET library to manipulate music/fretted instrument concepts like notes, intervals, keys, scales, etc...  (Experimental)
+.NET library to manipulate music/fretted instrument objects like notes, intervals, keys, scales, etc...  (Experimental)
 
 ## Authors
 
