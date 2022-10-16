@@ -16,7 +16,7 @@ public class ForteNumber
 /// </summary>
 public class SetClass
 {
-    private static readonly Lazy<IReadOnlyCollection<SetClass>> _lazyObjects;
+    private static readonly Lazy<IReadOnlyCollection<SetClass>> _lazyObjects = null!;
 
     public SetClass(PitchClassSetIdentity identity)
     {

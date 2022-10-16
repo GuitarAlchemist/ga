@@ -63,15 +63,6 @@ public abstract class ScaleMode<TScaleDegree> : ScaleMode
     public override IReadOnlyCollection<Interval.Simple> Intervals => new ModeIntervalsByScaleDegree(ParentScale)[ParentScaleDegree];
     public override string ToString() => $"{Name} - {Formula}";
 
-    /*
-    TODO: Provide abstraction for this:
-
-    public static IReadOnlyCollection<MajorScaleMode> Items => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree)).ToImmutableList();
-    public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
-    public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Items));
-    */
-    
     protected ScaleMode(
         Scale parentScale, 
         TScaleDegree parentScaleDegree) 

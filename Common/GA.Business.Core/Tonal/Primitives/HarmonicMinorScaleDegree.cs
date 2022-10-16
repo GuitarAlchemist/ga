@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
+using Extensions;
 using Modes;
 
 /// <inheritdoc cref="IEquatable{HarmonicMinorScaleDegree}" />
@@ -44,6 +45,8 @@ public readonly record struct HarmonicMinorScaleDegree : IMinorScaleModeDegree<H
     public static implicit operator int(HarmonicMinorScaleDegree degree) => degree.Value;
 
     public static IEnumerable<HarmonicMinorScaleDegree> Objects => IValueObject<HarmonicMinorScaleDegree>.GetRange(_minValue, _maxValue - _minValue);
+    public static IReadOnlyCollection<HarmonicMinorScaleDegree> Items => ValueObjectUtils<HarmonicMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

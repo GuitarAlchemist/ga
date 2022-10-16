@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
+using Extensions;
 using Modes;
 
 /// <summary>
@@ -41,6 +42,8 @@ public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<Na
     public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
 
     public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

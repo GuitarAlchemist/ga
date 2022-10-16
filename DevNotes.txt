@@ -2,7 +2,7 @@ TODO:
 
 - UI: Add VexFlow/VexTab/VexChord blazor support (https://www.vexflow.com/)
 - UI: Add simple piano blazor support https://codepen.io/gabrielcarol/pen/rGeEbY
-
+- Explore dotnet interactive extensions https://plbonneville.com/blog/introducing-the-dotnet-interactive-notebooks-razor-extension/
 
 - Concepts (Explore):
 
@@ -14,3 +14,5 @@ https://en.wikipedia.org/wiki/Paul_Erlich
 
 . The quadruple hierarchy
 https://www.youtube.com/watch?v=uqpYxHJC9pI
+
+

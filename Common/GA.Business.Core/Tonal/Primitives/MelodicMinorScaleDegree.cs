@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+﻿using GA.Business.Core.Extensions;
+
+namespace GA.Business.Core.Tonal.Primitives;
 
 using Modes;
 
@@ -44,6 +46,8 @@ public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<Me
     public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
 
     public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<MelodicMinorScaleDegree> Items => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValues();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

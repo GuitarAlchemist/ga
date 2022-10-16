@@ -10,7 +10,8 @@ using Primitives;
 /// A mode of the harmonic minor scale.
 /// </summary>
 [PublicAPI]
-public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
+public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>,
+                                        IMusicObjectCollection<HarmonicMinorMode>
 {
     public static HarmonicMinorMode HarmonicMinorModeMinorScale => new(1);
     public static HarmonicMinorMode LocrianNaturalSixth => new(2);
@@ -20,9 +21,10 @@ public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
     public static HarmonicMinorMode LydianSharpSecond => new(6);
     public static HarmonicMinorMode Alteredd7 => new(7);
 
-    public static IReadOnlyCollection<HarmonicMinorMode> All => HarmonicMinorScaleDegree.Objects.Select(degree => new HarmonicMinorMode(degree)).ToImmutableList();
+    public static IEnumerable<HarmonicMinorMode> Objects => HarmonicMinorScaleDegree.Items.Select(degree => new HarmonicMinorMode(degree));
     public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static HarmonicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
+    private static readonly Lazy<ScaleModeCollection<HarmonicMinorScaleDegree, HarmonicMinorMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
 
     public HarmonicMinorMode(HarmonicMinorScaleDegree degree)
         : base(Scale.HarmonicMinor, degree)
@@ -40,6 +42,4 @@ public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
         7 => "Altered bb7",
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
-
-    private static Lazy<ScaleModeCollection<HarmonicMinorScaleDegree, HarmonicMinorMode>> _lazyModeByDegree = new(() => new(All));
 }
