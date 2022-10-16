@@ -1,6 +1,9 @@
 ﻿using GA.Business.Core.Tonal.Modes;
 
-foreach (var mode in MajorScaleMode.Objects)
+var modes = MajorScaleMode.Objects;
+var modes1 = MelodicMinorMode.Objects;
+
+foreach (var mode in modes)
 {
     Console.WriteLine($@"{mode.Name} mode");
     Console.WriteLine($@"All notes   : {mode.Notes}");
