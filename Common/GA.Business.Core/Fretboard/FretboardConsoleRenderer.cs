@@ -13,7 +13,7 @@ public class FretboardConsoleRenderer
         static void FretColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
         static void FrettedPositionColor() => Console.ForegroundColor = ConsoleColor.White;
         static void OpenPositionColor() => Console.ForegroundColor = ConsoleColor.Blue;
-        static void CapoColor() => Console.ForegroundColor = ConsoleColor.DarkCyan;
+        // static void CapoColor() => Console.ForegroundColor = ConsoleColor.DarkCyan;
         static void NotAvailablePositionColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
         static string Pad(string s, int padTotalLength = 4) => s.PadRight(padTotalLength);
         

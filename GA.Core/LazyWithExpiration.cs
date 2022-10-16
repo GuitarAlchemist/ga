@@ -2,43 +2,42 @@
 
 public class LazyWithExpiration<T>
 {
-    private volatile bool expired;
-    private TimeSpan expirationTime;
-    private Func<T> func;
-    private Lazy<T> lazyObject;
+    private volatile bool _expired;
+    private readonly TimeSpan _expirationTime;
+    private readonly Func<T> _func;
+    private Lazy<T> _lazyObject = null!;
 
-    public LazyWithExpiration( Func<T> func, TimeSpan expirationTime )
+    public LazyWithExpiration(
+        Func<T> func, 
+        TimeSpan expirationTime)
     {
-        this.expirationTime = expirationTime;
-        this.func = func;
+        _expirationTime = expirationTime;
+        _func = func;
 
         Reset();
     }
 
     public void Reset()
     {
-        lazyObject = new( func );
-        expired = false;
+        _lazyObject = new(_func);
+        _expired = false;
     }
 
     public T Value
     {
         get
         {
-            if ( expired )
-                Reset();
-
-            if ( !lazyObject.IsValueCreated )
+            if (_expired ) Reset();
+            if (!_lazyObject.IsValueCreated)
             {
-                Task.Factory.StartNew( () =>
+                Task.Factory.StartNew(() =>
                 {
-                    Thread.Sleep( expirationTime );
-                    expired = true;
-                } );
+                    Thread.Sleep( _expirationTime );
+                    _expired = true;
+                });
             }
 
-            return lazyObject.Value;
+            return _lazyObject.Value;
         }
     }
-
 }

@@ -4,7 +4,8 @@ using Scales;
 using Primitives;
 
 [PublicAPI]
-public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
+public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>,
+                                       IMusicObjectCollection<NaturalMinorMode>
 {
     public static NaturalMinorMode Aeolian => new(1);
     public static NaturalMinorMode Locrian => new(2);
@@ -14,9 +15,11 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
     public static NaturalMinorMode Lydian => new(6);
     public static NaturalMinorMode Mixolydian => new(7);
 
-    public static IReadOnlyCollection<NaturalMinorMode> All => NaturalMinorScaleDegree.Objects.Select(degree => new NaturalMinorMode(degree)).ToImmutableList();
+    
+    public static IEnumerable<NaturalMinorMode> Objects => NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
     public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
+    private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
 
     public NaturalMinorMode(NaturalMinorScaleDegree degree)
         : base(Scale.NaturalMinor, degree)
@@ -36,6 +39,4 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>
     };
 
     public override string ToString() => $"{Name} - {Formula}";
-
-    private static Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(All));
 }

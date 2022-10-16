@@ -13,3 +13,5 @@ packages
 /.vscode
 /Experiments/Vite/node_modules
 /Experiments/Vite/package-lock.json
+
+.fake

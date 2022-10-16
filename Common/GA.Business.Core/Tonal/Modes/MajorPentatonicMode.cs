@@ -4,9 +4,10 @@ using Scales;
 using Primitives;
 
 [PublicAPI]
-public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>
+public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>,
+                                          IMusicObjectCollection<MajorPentatonicMode>
 {
-    public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.All.Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
 
     public override string Name => ParentScaleDegree.Value switch
     {
@@ -24,4 +25,10 @@ public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>
         : base(Scale.MajorPentatonic, degree)
     {
     }
+
+    public static IEnumerable<MajorPentatonicMode> Objects => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree));
+    public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree) => _lazyModeByDegree.Value[degree];
+    public static MajorPentatonicMode Get(int degree) => _lazyModeByDegree.Value[degree];
+    private static readonly Lazy<ScaleModeCollection<MajorPentatonicScaleDegree, MajorPentatonicMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
+
 }
