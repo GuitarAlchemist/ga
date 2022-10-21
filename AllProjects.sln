@@ -33,17 +33,22 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UseGaNugetPackageExample", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notebooks", "Notebooks", "{4B000918-9823-4B1D-89EE-09C44B573BEC}"
 	ProjectSection(SolutionItems) = preProject
-		Notebooks\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scale Modes - harmonic minor scale.ipynb
-		Notebooks\Scale Modes - major scale.ipynb = Notebooks\Scale Modes - major scale.ipynb
-		Notebooks\Scale Modes - melodic minor scale - Copy.ipynb = Notebooks\Scale Modes - melodic minor scale - Copy.ipynb
+		Notebooks\F# test.ipynb = Notebooks\F# test.ipynb
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modes", "Modes", "{6A5463C6-84EF-4638-9655-BEE526813734}"
 	ProjectSection(SolutionItems) = preProject
 		Notebooks\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scale Modes - harmonic minor scale.ipynb
 		Notebooks\Scale Modes - major scale.ipynb = Notebooks\Scale Modes - major scale.ipynb
-		Notebooks\Scale Modes - melodic minor scale - Copy.ipynb = Notebooks\Scale Modes - melodic minor scale - Copy.ipynb
+		Notebooks\Scale Modes - melodic minor scale.ipynb = Notebooks\Scale Modes - melodic minor scale.ipynb
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCEFA941-139E-4850-B5FF-B7A1AA9CDF8D}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\Samples\ExtensionLab-EF.ipynb = Notebooks\Samples\ExtensionLab-EF.ipynb
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GA.Business.Config", "Common\GA.Business.Config\GA.Business.Config.fsproj", "{ABE045B5-BC92-4041-9E6F-10284512F4E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +92,10 @@ Global
 		{1E3BF245-A62B-4949-AD91-A87E0B453089}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E3BF245-A62B-4949-AD91-A87E0B453089}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E3BF245-A62B-4949-AD91-A87E0B453089}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABE045B5-BC92-4041-9E6F-10284512F4E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABE045B5-BC92-4041-9E6F-10284512F4E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABE045B5-BC92-4041-9E6F-10284512F4E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABE045B5-BC92-4041-9E6F-10284512F4E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +108,8 @@ Global
 		{B39C3492-FBD3-4EDA-98B7-207DEF406392} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{1E3BF245-A62B-4949-AD91-A87E0B453089} = {C939F925-0AD8-45CD-8D5D-9FAA5FDD26D1}
 		{6A5463C6-84EF-4638-9655-BEE526813734} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
+		{BCEFA941-139E-4850-B5FF-B7A1AA9CDF8D} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
+		{ABE045B5-BC92-4041-9E6F-10284512F4E4} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}

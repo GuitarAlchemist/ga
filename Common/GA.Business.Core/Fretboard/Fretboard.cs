@@ -6,17 +6,9 @@ using Primitives;
 [PublicAPI]
 public class Fretboard
 {
-    public static readonly Fretboard Default = Guitar();
     private readonly Lazy<IReadOnlyCollection<Position>> _lazyAllPositions;
     private readonly Lazy<OpenPositions> _lazyOpenPositions;
     private readonly Lazy<FrettedPositions> _lazyFrettedPositions;
-
-    public static Fretboard Guitar() => new(Tuning.Guitar.Standard, Tuning.Guitar.DefaultFretCount);
-    public static Fretboard Bass() => new(Tuning.Bass.Standard, Tuning.Bass.DefaultFretCount);
-    public static Fretboard Ukulele() => new(Tuning.Ukulele.Standard, Tuning.Ukulele.DefaultFretCount);
-    public static Fretboard Banjo() => new(Tuning.Banjo.Cello, Tuning.Banjo.DefaultFretCount);
-    public static Fretboard Mandolin() => new(Tuning.Mandolin.Standard, Tuning.Mandolin.DefaultFretCount);
-    public static Fretboard Balalaika() => new(Tuning.Balalaika.Alto, Tuning.Balalaika.DefaultFretCount);
 
     public Fretboard(
         Tuning tuning,
@@ -24,7 +16,7 @@ public class Fretboard
     {
         Tuning = tuning;
         FretCount = fretCount;
-        StringCount = tuning.Pitches.Count;
+        StringCount = tuning.PitchCollection.Count;
 
         _lazyAllPositions = new(GetAllPositions);
         _lazyOpenPositions = new(GetOpenPositions);

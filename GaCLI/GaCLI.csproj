@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
     <ProjectReference Include="..\Common\GA.Business.Core\GA.Business.Core.csproj" />
   </ItemGroup>
 

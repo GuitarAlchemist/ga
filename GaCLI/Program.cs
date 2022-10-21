@@ -1,12 +1,12 @@
 ﻿using System.Collections.Immutable;
+
+using GA.Business.Config;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
-
-Console.WriteLine(Environment.Version);
 
 var identities = PitchClassSetIdentity.Items;
 var pcsObjects = PitchClassSet.Objects;
@@ -67,7 +67,8 @@ Console.ReadKey();
 
 void RenderFretboard()
 {
-    var fretBoard = Fretboard.Guitar();
+    var tuning = new Tuning(PitchCollection.Parse(Config.Tuning.Guitar.Standard.Tuning));
+    var fretBoard = new Fretboard(tuning, 24);
     var aa = fretBoard.OpenPositions;
     var bb = fretBoard.Positions;
     Console.WriteLine($"Tuning: {fretBoard.Tuning}");
