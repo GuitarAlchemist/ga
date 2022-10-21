@@ -8,6 +8,16 @@ using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 
+var instrument = Instruments.Instrument.Guitar;
+var props = instrument.GetType().GetProperties();
+
+foreach (var prop in props)
+{
+    Console.WriteLine(prop.Name);
+}
+
+return;
+
 var identities = PitchClassSetIdentity.Items;
 var pcsObjects = PitchClassSet.Objects;
 var byCard = pcsObjects.GroupBy(set => set.Cardinality).ToImmutableList();
@@ -67,7 +77,7 @@ Console.ReadKey();
 
 void RenderFretboard()
 {
-    var tuning = new Tuning(PitchCollection.Parse(Config.Tuning.Guitar.Standard.Tuning));
+    var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Guitar.Standard.Tuning));
     var fretBoard = new Fretboard(tuning, 24);
     var aa = fretBoard.OpenPositions;
     var bb = fretBoard.Positions;

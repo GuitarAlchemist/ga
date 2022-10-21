@@ -32,16 +32,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UseGaNugetPackageExample", "Experiments\UseGaNugetPackageExample\UseGaNugetPackageExample.csproj", "{1E3BF245-A62B-4949-AD91-A87E0B453089}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notebooks", "Notebooks", "{4B000918-9823-4B1D-89EE-09C44B573BEC}"
-	ProjectSection(SolutionItems) = preProject
-		Notebooks\F# test.ipynb = Notebooks\F# test.ipynb
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modes", "Modes", "{6A5463C6-84EF-4638-9655-BEE526813734}"
-	ProjectSection(SolutionItems) = preProject
-		Notebooks\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scale Modes - harmonic minor scale.ipynb
-		Notebooks\Scale Modes - major scale.ipynb = Notebooks\Scale Modes - major scale.ipynb
-		Notebooks\Scale Modes - melodic minor scale.ipynb = Notebooks\Scale Modes - melodic minor scale.ipynb
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCEFA941-139E-4850-B5FF-B7A1AA9CDF8D}"
 	ProjectSection(SolutionItems) = preProject
@@ -49,6 +39,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCEF
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GA.Business.Config", "Common\GA.Business.Config\GA.Business.Config.fsproj", "{ABE045B5-BC92-4041-9E6F-10284512F4E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Instruments", "Instruments", "{4D843DFB-7896-46CA-A7F7-4309198B3347}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\Instruments\Instruments.ipynb = Notebooks\Instruments\Instruments.ipynb
+		Notebooks\Instruments\Guitar Tunings.ipynb = Notebooks\Instruments\Guitar Tunings.ipynb
+		Notebooks\Instruments\Ukulele Tunings.ipynb = Notebooks\Instruments\Ukulele Tunings.ipynb
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scales", "Scales", "{3C7DA2B8-7207-4293-9FDB-C545BBDD8EEE}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb
+		Notebooks\Scales\Scale Modes - major scale.ipynb = Notebooks\Scales\Scale Modes - major scale.ipynb
+		Notebooks\Scales\Scale Modes - melodic minor scale.ipynb = Notebooks\Scales\Scale Modes - melodic minor scale.ipynb
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,9 +111,10 @@ Global
 		{200591AB-B9A5-45DE-B825-4BEE349B744E} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{B39C3492-FBD3-4EDA-98B7-207DEF406392} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{1E3BF245-A62B-4949-AD91-A87E0B453089} = {C939F925-0AD8-45CD-8D5D-9FAA5FDD26D1}
-		{6A5463C6-84EF-4638-9655-BEE526813734} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{BCEFA941-139E-4850-B5FF-B7A1AA9CDF8D} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{ABE045B5-BC92-4041-9E6F-10284512F4E4} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{4D843DFB-7896-46CA-A7F7-4309198B3347} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
+		{3C7DA2B8-7207-4293-9FDB-C545BBDD8EEE} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}
