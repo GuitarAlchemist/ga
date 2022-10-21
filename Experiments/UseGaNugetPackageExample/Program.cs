@@ -1,7 +1,7 @@
-﻿using GA.Business.Core.Tonal.Modes;
+﻿using GA.Business.Config;
+using GA.Business.Core.Tonal.Modes;
 
 var modes = MajorScaleMode.Objects;
-var modes1 = MelodicMinorMode.Objects;
 
 foreach (var mode in modes)
 {
@@ -11,3 +11,5 @@ foreach (var mode in modes)
     Console.WriteLine($@"Formula     : {mode.Formula}");
     Console.WriteLine("");       
 }
+
+var a = Instruments.Instrument.Guitar.Standard;

@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GuitarAlchemist.GA.Business.Core" Version="1.0.4" />
+		<PackageReference Include="GuitarAlchemist.GA.Business.Core" Version="1.0.6-alpha-2" />
 	</ItemGroup>
 
 </Project>

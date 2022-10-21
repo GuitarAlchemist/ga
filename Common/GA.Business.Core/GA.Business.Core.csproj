@@ -16,7 +16,11 @@
 		<Copyright> Copyright (c) Stephane Pareilleux 2022</Copyright>
 		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
 		<PackageTags>Music;Guitar</PackageTags>
-		<PackageReleaseNotes>2022-10-15 - Initial version</PackageReleaseNotes>
+		<PackageReleaseNotes>
+2022-10-21 - Attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
+2022-10-21 - Added instruments/tunings config
+2022-10-15 - Initial version
+		</PackageReleaseNotes>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageDescription>
 			Provides classes and interfaces for music and fretted instruments:
@@ -29,9 +33,9 @@
 		</PackageDescription>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.4</PackageVersion>
-		<AssemblyVersion>1.0.4.0</AssemblyVersion>
-		<FileVersion>1.0.4.0</FileVersion>
+		<PackageVersion>1.0.6-alpha-2</PackageVersion>
+		<AssemblyVersion>1.0.6.2</AssemblyVersion>
+		<FileVersion>1.0.6.2</FileVersion>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
@@ -57,6 +61,8 @@
 		</PackageReference>
 		<PackageReference Include="PCRE.NET" Version="0.19.0" />
 		<PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
+        <!-- For GA.Business.Config-->
+		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -72,10 +78,12 @@
 		<ProjectReference Include="..\..\GA.Core\GA.Core.csproj">
 			<PrivateAssets>All</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj">
+			<PrivateAssets>All</PrivateAssets>
+		</ProjectReference>
 	</ItemGroup>
-
 	<ItemGroup>
-	  <Folder Include="Fretboard\Config\" />
+		<Folder Include="Fretboard\Config\" />
 	</ItemGroup>
 
 	<!-- See https://josef.codes/dotnet-pack-include-referenced-projects/ -->

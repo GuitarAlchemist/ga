@@ -1,20 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="Tunings.txt" />
-    <None Include="Tunings.yaml" />
-    <Compile Include="TuningsConfig.fs" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="Tunings.txt" />
+		<None Include="Instruments.yaml">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<Compile Include="Instruments.fs" />
+	</ItemGroup>
 
-  <ItemGroup />
+	<ItemGroup />
 
-  <ItemGroup>
-    <PackageReference Include="FSharp.Configuration" Version="2.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
 </Project>
