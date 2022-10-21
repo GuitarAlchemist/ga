@@ -3,9 +3,6 @@
 using GA.Core;
 using Atonal;
 using Atonal.Primitives;
-
-
-
 using Intervals;
 using Notes;
 using Tonal;
@@ -40,6 +37,8 @@ public class Scale : IReadOnlyCollection<Note>,
     public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
     public static IEnumerable<Scale> Objects => PitchClassSetIdentity.Objects.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
 
+    private readonly IReadOnlyCollection<Note> _notes;
+
     public Scale(params Note.AccidentedNote[] notes) 
         : this(notes.AsEnumerable())
     {
@@ -48,26 +47,25 @@ public class Scale : IReadOnlyCollection<Note>,
     public Scale(IEnumerable<Note> notes)
     {
         if (notes == null) throw new ArgumentNullException(nameof(notes));
-        Notes = notes.ToImmutableList().AsPrintable();
-        Intervals = new LazyScaleIntervals(Notes);
-        Identity = PitchClassSetIdentity.FromNotes(Notes);
+        _notes = notes.ToImmutableList().AsPrintable();
+        Intervals = new LazyScaleIntervals(_notes);
+        Identity = PitchClassSetIdentity.FromNotes(_notes);
     }
 
-    private IReadOnlyCollection<Note> Notes { get; }
     public IReadOnlyCollection<Interval.Simple> Intervals { get; }
     public PitchClassSetIdentity Identity { get; }
     public bool IsModal => Identity.PitchClassSet.IsModal;
     public ModalFamily? ModalFamily => ModalFamily.TryGetValue(Identity.PitchClassSet.IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
-    public IEnumerator<Note> GetEnumerator() => Notes.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Notes).GetEnumerator();
-    public int Count => Notes.Count;
+    public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
+    public int Count => _notes.Count;
 
     public override string ToString()
     {
         var scaleName = Identity.ScaleName;
-        if (string.IsNullOrEmpty(scaleName)) return Notes.ToString()!;
-        return $"{scaleName} - {Notes}";
+        if (string.IsNullOrEmpty(scaleName)) return _notes.ToString()!;
+        return $"{scaleName} - {_notes}";
     }
 
     #region Inner classes

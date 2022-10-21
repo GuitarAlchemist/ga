@@ -1,0 +1,597 @@
+﻿Baglama:
+    Greek: 
+       Tuning: D4 D5 A4 A4 D5 D5
+Bajo:
+    Quinto: 
+       Tuning: A2 A1 D3 D2 G2 G2 C3 C3 F3 F3
+    Sexto: 
+       Tuning: E2 E1 A2 A1 D3 D2 G2 G2 C3 C3 F3 F3
+Balalaika:
+    Alto: 
+        Tuning: E3 E3 A3
+    Bass: 
+        Tuning: E2 A2 D3
+    Contrabass: 
+        Tuning: E1 A1 D2
+    Piccolo: 
+        Tuning: B4 E5 A5
+    Prima: 
+        Tuning: E4 E4 A4
+    Sekunda: 
+        Tuning: A3 A3 D4
+Bandola:
+    Central: 
+        Tuning: E3 E4 A3 A3 D3 D4 G3 G4
+    Andina Colombiana: 
+        Tuning: F#3 F#3 B3 B3 E4 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+    Guayanesa: 
+        Tuning: G3 G4 D3 D4 A4 A4 E5 E5
+    Llanera: 
+        Tuning: A3 D4 F#4 B4
+    Oriental: 
+        Tuning: G3 G3 D4 D4 A4 A4 E5 E5    
+Bandolim:
+    Standard: 
+        Tuning: G3 G3 D4 D4 A4 A4 E5 E5
+Bandora:
+    Standard: 
+        Tuning: G4 C2 D2 G2 C3 E3 A3
+Bandurria:
+    Standard: 
+        Tuning: G#3 G#3 C#4 C#4 F#4 F#4 B4 B4 E5 E5 A5 A5
+    Peruvian: 
+        Tuning: D5 D4 D5 D5 G4 G3 G4 G4 B4 B4 B4 B4 E5 E5 E5 E5
+    Phillipines: 
+        Tuning: F#3 B3 B3 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+Banjo:
+    Cello: 
+        Tuning: C2 G2 D3 A3
+    Tenor (Jazz): 
+        Tuning: C3 G3 D4 A4
+    Tenor (Irish): 
+        Tuning: G2 D3 A3 E3
+    Plectrum: 
+        Tuning: C3 G3 B3 D4
+    5 strings Bluegrass: 
+        Tuning: G4 D3 G3 B3 D4
+    5 strings C Tuning: 
+        Tuning: G4 C3 G3 B3 D4
+Banjolin:
+    Standard: 
+        Tuning: G3 D4 A5 E5
+Banjourine:
+    Standard: 
+        Tuning: C5 G3 C4 E3 G4
+Baritone Guitar:
+    Standard 1: 
+        Tuning: B1 E2 A2 D3 F#3 B3
+    Standard 2: 
+        Tuning: A1 D2 G2 C3 E3 A3
+    Octave Lower: 
+        Tuning: E1 A1 D2 G2 B2 E3
+Bass Guitar:
+    Standard: 
+        Tuning: E1 A1 D2 G2
+    5 strings: 
+        Tuning: B0 E1 A1 D2 G2
+    6 strings: 
+        Tuning: B0 E1 A1 D2 G2 C3
+Bordonua:
+    Standard: 
+        Tuning: A2 A3 D4 D3 F#3 F#4 B3 B3 E4 E4
+Bouzouki:
+    Greek Tetrachordo: 
+        Tuning: C3 C4 F3 F4 A3 A3 D4 D4
+    Greek Trichordo: 
+        Tuning: D3 D4 A3 A3 D4 D4
+    Irish GDAD (Oct.): 
+        Tuning: G3 G2 D4 D3 A3 A3 D4 D4
+    Irish GDAD (Pairs): 
+        Tuning: G2 G2 D3 D3 A3 A3 D4 D4
+    Irish 5ths (Oct.): 
+        Tuning: G3 G2 D4 D3 A3 A3 E4 E4
+    Irish 5ths (Pairs): 
+        Tuning: G2 G2 D3 D3 A3 A3 E4 E4
+    Irish Modal D (Octaves): 
+        Tuning: A3 A2 D4 D3 A3 A3 D4 D4
+    Irish Modal D (Unison Pairs): 
+        Tuning: A2 A2 D3 D3 A3 A3 D4 D4
+Braguinha:
+    Standard: 
+        Tuning: D4 G4 B4 D5
+Cavaquinho:
+    Standard: 
+        Tuning: D4 G4 B4 D5
+    A Major: 
+        Tuning: A4 A4 C#5 E5
+    A Major (version 2): 
+        Tuning: E4 A4 C#5 E5
+    C Major: 
+        Tuning: G4 C5 E5 G5
+    G Major: 
+        Tuning: G4 G4 B4 D5
+Chanzy:
+    Standard: 
+        Tuning: F2 C3 F3
+Charango:
+    Standard: 
+        Tuning: G4 G4 C4 C4 E5 E4 A4 A4 E5 E5
+    Ranka: 
+        Tuning: D4 D4 A4 A4 G4 G4 C5 C5 G5 G6
+Charangon:
+    1:
+        Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
+    2: 
+        Tuning: G6 D4 D4 G4 G4 B5 B4 E5 E5 B5 B5
+Chitarra Battente:
+    Standard: 
+        Tuning: A3 D4 G3 B3 E4
+Chonguri:
+    D Minor: 
+        Tuning: D2 F2 D3 A2
+    F Major: 
+        Tuning: F3 A3 F4 C4
+Cistre:
+    Standard: 
+        Tuning: E2 A2 D3 D3 E3 E3 A3 A3 C#4 C#4 E4 E4
+Cittern:
+    Bell: 
+        Tuning: B3 B3 D4 D4 F4 F4 A4 A4 D5 D5
+    Celtic 5ths Longscale: 
+        Tuning: C2 C2 G2 G2 D3 D3 A3 A3 E4 E4
+    Celtic Longscale 1: 
+        Tuning: C2 C2 G2 G2 D3 D3 G3 G3 D4 D4
+    Celtic Longscale 2: 
+        Tuning: D2 D2 A2 A2 E3 E3 A3 A3 E4 E4
+    Celtic Shortscale: 
+        Tuning: G2 G2 D3 D3 A3 A3 D4 D4 A4 A4
+    Celtic 5ths Shortscale: 
+        Tuning: G2 G2 D3 D3 A3 A3 E4 E4 B4 B4
+    Celtic Irish: 
+        Tuning: D2 D2 G2 G2 D3 D3 A3 A3 D4 D4
+    Celtic Mandocello Longscale: 
+        Tuning: C2 C2 G2 G2 D3 D3 A3 A3 D4 D4
+    Celtic Mandocello Shortscale: 
+        Tuning: G2 G2 D3 D3 A3 A3 E4 E4 A4 A4
+    Celtic Modal C Longscale: 
+        Tuning: C2 C2 G2 G2 C3 C3 G3 G3 C4 C4
+    Celtic Modal C Shortscale: 
+        Tuning: G2 G2 C3 C3 G3 G3 C4 C4 G4 G4
+    Celtic Modal D Longscale: 
+        Tuning: D2 D2 A2 A2 D3 D3 A3 A3 D4 D4
+    Celtic Modal D Shortscale: 
+        Tuning: A2 A2 D3 D3 A3 A3 D4 D4 A4 A4
+    Celtic Modal F Shortscale: 
+        Tuning: F2 F2 C3 C3 F3 F3 C4 C4 F4 F4
+    Celtic Modal G Longscale: 
+        Tuning: D2 D2 G2 G2 D3 D3 G3 G3 D4 D4
+    Celtic Modal G Shortscale: 
+        Tuning: G2 G2 D3 D3 G3 G3 D4 D4 G4 G4
+    Celtic Modal A Longscale: 
+        Tuning: E2 E2 A2 A2 E3 E3 A3 A3 E4 E4
+    16th/17th Century: 
+        Tuning: B3 B3 G4 G4 G3 D4 D4 E4 E4
+    French Tuning: 
+        Tuning: A4 A4 G4 G4 G3 D4 D4 E4 E4
+Cuatro:
+    Puerto Rican: 
+        Tuning: B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
+    Venezuelan: 
+        Tuning: A3 D4 F#4 B3
+Cumbus:
+    Dan Tyba: 
+        Tuning: G3 C4 D4 G4
+Dobro or Resophonic:
+    Standard: 
+        Tuning: G2 B2 D3 G3 B3 D4
+Domra:
+    Alto: 
+        Tuning: E3 A3 D4
+    Bass: 
+        Tuning: E2 A2 D3
+    Contrabass Major Tuning: 
+        Tuning: A1 D2 G2
+    Contrabass Minor Tuning: 
+        Tuning: E1 A1 D2
+    Mezzosoprano: 
+        Tuning: B3 E4 A4
+    Piccolo: 
+        Tuning: B4 E5 A5
+    Prima: 
+        Tuning: E4 A4 D5
+    Tenor: 
+        Tuning: B2 E3 A3
+    Ukrainian Prima: 
+        Tuning: G3 D4 A4 E5
+Dulcimer:
+    Aeolian Mode D Minor: 
+        Tuning: C4 C4 A3 D3
+    Aeolian Mode C Minor: 
+        Tuning: Bb3 Bb3 G3 C3
+    Dorian Mode D Minor:
+        Tuning: G3 G3 A3 D3
+    Dorian Mode E Minor: 
+        Tuning: A3 A3 B3 E3
+    Ionian Key of D: 
+        Tuning: A3 A3 A3 D3
+    Ionian Key of C: 
+        Tuning: G3 G3 G3 C3
+    Locrian Mode C# Minor: 
+        Tuning: A3 A3 G#3 C#3
+    Locrian Mode D Minor: 
+        Tuning: Bb3 Bb3 A3 D3
+    Lydian Mode C and More: 
+        Tuning: D4 D4 G3 C3
+    Lydian Mode: 
+        Tuning: Bb C4 C4 F3 Bb2
+    Mixolydian Mode: 
+        Tuning: D4 D4 A3 D3
+    Phrygian Mode: 
+        Tuning: Eb4 Eb4 G3 C3
+English Guittar:
+    Standard: 
+        Tuning: C3 E3 G3 G3 C4 C4 E4 E4 G4 G4
+Gekkin:
+    Standard: 
+        Tuning: A3 D4 D4 D5
+Ghita:
+    Standard: 
+        Tuning: C3 F3 C4 G4 C5
+Gittern:
+    Standard: 
+        Tuning: D4 G4 D5 G5
+Grajappi:
+    Standard: 
+        Tuning: F2 F2 B2 B2
+Guitar:
+    Standard: 
+        Tuning: E2 A2 D3 G3 B3 E4
+    DADGAD: 
+        Tuning: D2 A2 D3 G3 A3 D4
+    Double Drop D: 
+        Tuning: D2 A2 D3 G3 B3 D4
+    Drop D: 
+        Tuning: D2 A2 D3 G3 B3 E4
+    Open C Major: 
+        Tuning: C2 G2 C3 G3 C3 E4
+    Open D Major: 
+        Tuning: D2 A2 D3 F#3 A3 D4
+    Open E - 1 Major: 
+        Tuning: E2 B2 E3 G#3 B3 E4
+    Open E - 2 Minor: 
+        Tuning: E2 B2 E3 G3 B3 E4
+    Open G - 1 Major: 
+        Tuning: D2 G2 D3 G3 B3 D4
+    Open G - 2 Minor : 
+        Tuning: D2 G2 D3 G3 Bb3 D4
+    Open A Major: 
+        Tuning: E2 A2 E3 A3 C#3 E4
+    Renaissance: 
+        Tuning: G3 G4 C4 C4 E4 E4 A4
+    Baroque 1: 
+        Tuning: A3 A3 D4 D4 G3 G3 B3 B3 E4 E4
+    Baroque 2: 
+        Tuning: A3 A3 D4 D3 G3 G3 B3 B3 E4 E4
+    12-String: 
+        Tuning: E2 E3 A2 A3 D3 D4 G3 G4 B3 B3 E4 E4
+Guitar Banjo:
+    Standard: 
+        Tuning: E2 A2 D3 G3 B3 E4
+Guitar Decacorde: 
+    Standard: 
+        Tuning: C2 D2 E2 F2 G2 A2 D3 G3 B3 E4 
+Guitarra de Golpe:
+    Standard: 
+        Tuning: D3 G3 C4 E3 A3
+Guitarro or Guitarrico:
+    Standard: 
+        Tuning: B4 F#4 D5 A5 E5
+Guitarrón:
+    Standard: 
+        Tuning: A1 D2 G2 C3 E3 A2
+Halszither:
+    Krienser: 
+        Tuning: G2 G2 D3 D3 G3 G3 B3 B3 D4 D4
+Harzzither:
+    Standard: 
+        Tuning: G3 G3 C4 C4 E4 E4 G4 G4
+Hawaiian Guitar:
+    Tuning 1: 
+        Tuning: E2 A2 E3 A3 C#4 E4
+    Tuning 2: 
+        Tuning: G2 B2 D3 G3 B3 D4
+Huapanguera:
+    Standard: 
+        Tuning: Huapanguera
+Jarana:
+    Huasteca: 
+        Tuning: G3 B3 D4 F#4 A4
+    Jarocha: 
+        Tuning: A3 D4 D4 G3 G4 B3 B3 E4
+Laud:
+    Standard: 
+        Tuning: G#2 G#2 C#3 C#3 F#3 F#3 B3 B3 E4 E4 A4 A4
+Lavta:
+    Standard: 
+        Tuning: C2 C2 G2 G2 D3 D3 A3 A3
+Liuqin:
+    Standard: 
+        Tuning: G3 D4 G4 D5
+Lute:
+    Baroque D Minor:
+        Tuning: A2 D3 F3 A3 D4 F4
+    Medieval: 
+        Tuning: G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4 G4
+    Renaissance Tenor: 
+        Tuning: D2 F2 G2 C3 F3 A3 D4 G4
+Mandobass:
+    Standard: 
+        Tuning: E1 A1 D2 G2
+Mandocello:
+    Standard: 
+        Tuning: C2 C2 G2 G2 D3 D3 A3 A3
+Mandola:
+    Tenor: 
+        Tuning: C3 C3 G3 G3 D4 D4 A4 A4
+Mandolin:
+    Standard: 
+        Tuning: G3 G3 D4 D4 A4 A4 E5 E5
+    5 Course: 
+        Tuning: C3 C3 G3 G3 D4 D4 A4 A4 E5 E5
+    Electric 5-String: 
+        Tuning: C3 G3 D4 A4 E5
+    Cremona: 
+        Tuning: G3 D4 A4 E5
+    Genuese: 
+        Tuning: E3 E3 A3 A3 D3 D4 G4 G4 B4 B4 E5 E5
+    Neopolitan: 
+        Tuning: G3 G4 D4 D4 A4 A4 E5 E5
+    Piccolo: 
+        Tuning: C4 C4 G4 G4 D5 D5 A5 A5
+    Banjo: 
+        Tuning: G3 G3 D4 D4 A5 A5 E5 E5
+Mandolino:
+    Standard: 
+        Tuning: G3 G3 B3 B3 E4 E4 A4 A4 D5 D5 G5 G5
+    Lombardo: 
+        Tuning: G3 B3 E4 A4 D5 G5
+Mandore:
+    Modal C: 
+        Tuning: C4 G4 C5 G5
+    Modal G: 
+        Tuning: G3 D4 G4 D5
+    French: 
+        Tuning: E2 A2 D3 G3 B3 E4
+Mandriola or Tricordia:
+    Standard:  
+        Tuning: G2 G3 G3 D3 D4 D4 A3 A4 A4 E4 E5 E5
+    Unison pairs: 
+        Tuning: G3 G3 G3 D4 D4 D4 A4 A4 A4 E5 E5 E5   
+Mejorana:
+    Standard: 
+        Tuning: D4 A4 A3 B3 E4
+Mondol:
+    Standard: 
+        Tuning: E2 E2 A2 A2 D3 D3 G3 G3 B3 B3
+Octave Guitar:
+    Standard: 
+        Tuning: E3 A3 D4 G4 B5 E5
+Panduri:
+    E:
+        Tuning: E3 B3 A4
+    G: 
+        Tuning: G3 A3 C4
+Pedal Steel Guitar:
+    1: 
+        Tuning: C6 C2 F2 2 C3 E3 G3 A3 C4 E4 G4
+    2: 
+        Tuning: E9 B2 D3 3 F#3 G#3 B3 E4 G#4 Eb4 F#4
+    Universal 12 Strings: 
+        Tuning: Bb2 Eb2 G2 Bb2 D3 F3 G3 Bb3 D4 F4 G4 E4
+Phin:
+    Standard: 
+        Tuning: G4 D4 A4
+Pipa:
+    Standard: 
+        Tuning: A2 D2 G3 A3
+Portuguese Guitarra:
+    Coimbra: 
+        Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3 A3 A3
+    Lisboa: 
+        Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3 B3 B3
+Rajão:
+    Standard:
+        Tuning: D4 G4 C4 E4 A4 A4
+Ramkie:
+    Standard: 
+        Tuning: C3 F3 A3 C4
+Requinto:
+   Standard: 
+       Tuning: A2 D3 G3 C4 E4 A4
+   4 strings - 1: 
+       Tuning: G2 A2 D3 G3
+   4 strings - 2: 
+       Tuning: C2 D2 G2 C3
+   5 Strings: 
+       Tuning: E2 A2 D3 G3 C3
+Ronroco:
+   Standard: 
+       Tuning: G3 G3 C3 C3 E4 E3 A3 A3 E4 E4
+Ruan:
+   Soprano: 
+       Tuning: G2 D3 A3 E4
+   Tenor: 
+       Tuning: C2 G2 D3 A3
+   Zhong: 
+       Tuning: G2 D2 G3 D3
+Russian Guitar:
+   Standard:
+       Tuning: D2 G2 B2 D3 G3 B3 D4
+Saz:
+   Azeri/Qopuz: 
+       Tuning: D4 D4 D4 G3 G3 C4 C4 C4
+   Baglama Bozuk Duzen 6 String: 
+       Tuning: G2 G3 D2 D3 A2 A3
+   Baglama Bozuk Duzen 7 String: 
+       Tuning: Tuning G2 G3 D2 D3 A2 A3 A3
+Seis:
+   Puerto Rican: 
+       Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
+   Puerto Rican Guitar Tuning: 
+       Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 C#4 C#4 F#4 F#4
+Setar:
+   Standard: 
+       Tuning: C3 C4 G3 C4
+Sitar:
+   Standard: 
+       Tuning: C5 C4 G3 C2 G2 C3 F3
+Soprano Guitar:
+   Standard: 
+       Tuning: E3 A4 D4 G4 B4 E5
+Sovacon:
+   Standard: 
+       Tuning: G2 D3 A3 B2
+Strumstick:
+   Standard: 
+       Tuning: G3 D4 G4
+Tambur:
+   Yali: 
+       Tuning: D2 D2 A2 A2 D3 D3
+Tamburitza:
+   Brac: 
+       Tuning: E2 A2 D3 G3
+   Bugarija: 
+       Tuning: G2 B2 D3 G3 G3
+Tar:
+   Standard: 
+       Tuning: C3 C4 G3 G3 C4 C4
+   Tar - Azeri/Caucasus: 
+       Tuning: C4 C4 C5 C5 G2 C3 C4 G3 G3 C4 C4
+Taro Patch:
+   Standard: 
+       Tuning: G3 G4 C4 C3 C4 E4 E4 A4 A4
+Tenor Guitar:
+   Standard: 
+       Tuning: C3 G3 D4 A4
+   Irish: 
+       Tuning: G2 D3 A3 E3
+Timple:
+   Standard: 
+       Tuning: G4 C5 E4 A4 D5
+Tiple:
+   Chilean: 
+       Tuning: D4 D3 D4 G4 G3 G4 B3 B3 B3 E4 E4 E4
+   Columbian: 
+       Tuning: D4 D3 D4 G4 G3 G4 B3 B3 B3 E4 E4 E4
+   Doliente: 
+       Tuning: E3 A3 D4 G4 C5
+   Martin Style: 
+       Tuning: A3 A4 D4 D3 D4 F#4 F#3 F#4 B4 B4
+   Requinto: 
+       Tuning: D4 D4 G4 G4 G4 B4 B4 B4 E4 E4
+Tres Cubano:
+   C Major: 
+       Tuning: G4 G3 C4 C4 E4 E3
+   D Major: 
+       Tuning: A4 A3 D4 D4 F#4 F#4
+Tzouras:
+   Standard: 
+       Tuning: D3 D4 A3 A3 D4 D4
+Ukulele:
+   Soprano, Concert & Tenor C: 
+       Tuning: C6 G4 C4 E4 A4 
+   Soprano, Concert & Tenor D: 
+       Tuning: D6 A4 D4 F#4 B4
+   Baritone: 
+       Tuning: D4 G3 B4 E4
+   Tahitian: 
+       Tuning: G4 G4 C5 C5 E5 E5 A4 A4
+   Ukulele Banjo or Banjolele C: 
+       Tuning: C6 G4 C4 E4 A4
+   Ukulele Banjo or Banjolele D: 
+       Tuning: D6 A4 D4 F#4 B4
+Vihuela:
+   Standard: 
+       Tuning: A3 D4 G4 B3 E4
+Viola:
+   Viola Amarantina: 
+       Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3
+   Viola Beiroa: 
+       Tuning: D3 D3 A3 A2 D3 D2 G3 G2 B3 B3 D3 D3
+   Viola Braguesa: 
+       Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3
+   Viola Caipira: 
+       Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
+   Viola Campaniça: 
+       Tuning: C3 C2 F3 F2 C3 C3 E3 E3 G3 G3
+   Viola da Terra: 
+       Tuning: A4 A4 A4 D4 D4 D3 G3 G3 B3 B3 D4 D4
+   Viola de Arame: 
+       Tuning: G3 G2 D3 D2 G3 G3 B3 D3 D3
+   Viola de Cocho 1: 
+       Tuning: G3 D3 E3 A3 D4
+   Viola de Cocho 2: 
+       Tuning: G3 C3 E3 A3 D4
+   Viola de Diz Cordas: 
+       Tuning: A3 A3 D3 D4 G3 G3 B3 B3 E4 E4
+   Viola Sertaneja: 
+       Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
+   Viola Toeira: 
+       Tuning: A3 A3 A3 D3 D3 D2 G3 G2 B3 B3 E3 E3
+Violão de Sete Cordas:
+   Standard: 
+       Tuning: B1 E2 A2 D3 G3 B3 E4
+Walaycho:
+   Standard F: 
+       Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
+   Standard G: 
+       Tuning: G6 D4 D4 G4 G4 B5 B4 E5 E5 B5 B5
+Waldzither:
+   Hamburger: 
+       Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+   Thüringer: 
+       Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+Yueh Chin or Yueh Qin:
+   Standard: 
+       Tuning: G3 D4 G4 D5
+Zister:
+   Thüringer: 
+       Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+
+# Instruments with 13 or more strings
+Angelique (Theorbo):
+   Standard: 
+       Tuning: D2 E2 F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 B3 C4 D4 E4
+Archlute: 
+   14 Course: 
+       Tuning: F2 G2 A2 Bb2 C3 D3 E3 F3 G3 C4 F4 A4 D5 G5
+Bandolin:
+   Ecuadorean: 
+       Tuning: E5 E4 E5 A5 A4 A5 D5 D4 D5 F5 F5 F5 B5 B5 B5
+Baroque Lute:
+   Standard: 
+       Tuning: A2 B2 C3 D3 E3 F3 G3 A3 D4 F4 A4 D5 F5
+Guitarrón Chileno:
+   Standard: 
+       Tuning: F#5 A4 D4 D4 D3 D3 D2 G4 G4 G4 G3 G3 C4 C4 C3 C2 E4 E4 E4 A4 A4 A4 G4 B4
+Laud - Phillipines:
+   Standard: 
+       Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+Liuto Attiorbato (Theorbo):
+   Standard: 
+       Tuning: F1 F2 G1 G2 A1 A2 B1 B2 C2 C3 D2 D3 E2 E3 F2 F2 G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4
+Octavina:
+   Standard: 
+       Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+Sächsische Theorbenzister:
+   Standard: 
+       Tuning: B2 C2 D3 E3 F3 G3 A3 B3 C4 C4 F4 F4 A4 A4 C4 C4
+Swedish Lute:
+   Standard: 
+       Tuning: A2 B2 C#3 D3 E3 F#3 G3 A3 B3 C#4 D4 E4 A4 C#5 E5
+Theorbo - 15 Course:
+   Standard: 
+       Tuning: F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 D4 G4 B4 E4 A4
+Viola da Terceira - 15 String:
+   Standard: 
+       Tuning: E3 E3 E2 A3 A3 A2 D3 D3 D2 G3 G2 B3 B3 E3 E3
