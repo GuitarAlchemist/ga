@@ -22,8 +22,8 @@ Balalaika:
 Bandola:
     Central: 
         Tuning: E3 E4 A3 A3 D3 D4 G3 G4
-    # Andina Colombiana: 
-    AndinaColombiana: 
+    AndinaColombiana:
+        FullName: Andina Colombiana
         Tuning: F#3 F#3 B3 B3 E4 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
     Guayanesa: 
         Tuning: G3 G4 D3 D4 A4 A4 E5 E5
@@ -47,19 +47,19 @@ Bandurria:
 Banjo:
     Cello: 
         Tuning: C2 G2 D3 A3
-    # Tenor (Jazz): 
-    TenorJazz: 
+    TenorJazz:
+        FullName: Tenor (Jazz)
         Tuning: C3 G3 D4 A4
-    # Tenor (Irish): 
     TenorIrish:
+        FullName: Tenor (Irish)
         Tuning: G2 D3 A3 E3
     Plectrum: 
-        Tuning: C3 G3 B3 D4
-    #5 strings Bluegrass: 
+        Tuning: C3 G3 B3 D4    
     Bluegrass5Strings:    
-        Tuning: G4 D3 G3 B3 D4
-    #5 strings C Tuning: 
+        FullName: 5 strings Bluegrass
+        Tuning: G4 D3 G3 B3 D4    
     CTuning5Strings:
+        FullName: 5 strings C Tuning
         Tuning: G4 C3 G3 B3 D4
 Banjolin:
     Standard: 
@@ -78,35 +78,38 @@ Bass Guitar:
     Standard: 
         Tuning: E1 A1 D2 G2
     FiveStrings:
-    # 5 strings: 
+        FullName: 5 strings
         Tuning: B0 E1 A1 D2 G2
     SixStrings:
-    # 6 strings: 
+        FullName: 6 strings 
         Tuning: B0 E1 A1 D2 G2 C3
 Bordonua:
     Standard: 
         Tuning: A2 A3 D4 D3 F#3 F#4 B3 B3 E4 E4
 Bouzouki:
-    # Greek Tetrachordo: 
     GreekTetrachordo: 
+        FullName: Greek Tetrachordo
         Tuning: C3 C4 F3 F4 A3 A3 D4 D4
-    # Greek Trichordo: 
+    GreekTrichordo:
+        FullName: Greek Trichordo
         Tuning: D3 D4 A3 A3 D4 D4
-    # Irish GDAD (Oct.): 
     IrishGDADOctave: 
+        FullName: Irish GDAD (Oct.)
         Tuning: G3 G2 D4 D3 A3 A3 D4 D4
-    # Irish GDAD (Pairs): 
     IrishGDADPairs: 
+        FullName: Irish GDAD (Pairs)
         Tuning: G2 G2 D3 D3 A3 A3 D4 D4
-    # Irish 5ths (Oct.): 
     IrishFifthsOctave:
+        FullName: Irish 5ths (Oct.) 
         Tuning: G3 G2 D4 D3 A3 A3 E4 E4
     IrishFifthsPairs:
-    # Irish 5ths (Pairs): 
+        FullName: Irish 5ths (Pairs)
         Tuning: G2 G2 D3 D3 A3 A3 E4 E4
-    Irish Modal D (Octaves): 
+    IrishModalDOctaves: 
+        FullName: Irish Modal D (Octaves)
         Tuning: A3 A2 D4 D3 A3 A3 D4 D4
-    Irish Modal D (Unison Pairs): 
+    IrishModalD(UnisonPairs: 
+        FullName: Irish Modal D (Unison Pairs)
         Tuning: A2 A2 D3 D3 A3 A3 D4 D4
 Braguinha:
     Standard: 
@@ -114,17 +117,17 @@ Braguinha:
 Cavaquinho:
     Standard: 
         Tuning: D4 G4 B4 D5
-    # A Major: 
     AMajor: 
+        FullName: A Major
         Tuning: A4 A4 C#5 E5
     AMajorV2: 
-    # A Major (version 2): 
-        Tuning: E4 A4 C#5 E5
-    # C Major: 
+        FullName: A Major (version 2)
+        Tuning: E4 A4 C#5 E5    
     CMajor: 
+        FullName: C Major
         Tuning: G4 C5 E5 G5
     GMajor: 
-    # G Major: 
+        FullName: G Major
         Tuning: G4 G4 B4 D5
 Chanzy:
     Standard: 
@@ -217,35 +220,48 @@ Domra:
         Tuning: E4 A4 D5
     Tenor: 
         Tuning: B2 E3 A3
-    # Ukrainian Prima: 
     UkrainianPrima: 
+        FullName: Ukrainian Prima
         Tuning: G3 D4 A4 E5
 Dulcimer:
-    Aeolian Mode D Minor: 
+    AeolianModeDMinor: 
+        FullName: Aeolian Mode D Minor
         Tuning: C4 C4 A3 D3
-    Aeolian Mode C Minor: 
+    AeolianModeCMinor: 
+        FullName: Aeolian Mode C Minor
         Tuning: Bb3 Bb3 G3 C3
-    Dorian Mode D Minor:
+    DorianModeDMinor:
+        FullName: Dorian Mode D Minor
         Tuning: G3 G3 A3 D3
-    Dorian Mode E Minor: 
+    DorianModeEMinor: 
+        FullName: Dorian Mode E Minor
         Tuning: A3 A3 B3 E3
-    Ionian Key of D: 
+    IonianKeyOfD: 
+        FullName: Ionian Key of D
         Tuning: A3 A3 A3 D3
-    Ionian Key of C: 
+    IonianKeyOfC: 
+        FullName: Ionian Key of C
         Tuning: G3 G3 G3 C3
-    Locrian Mode C# Minor: 
+    LocrianModeOfCSharpMinor: 
+        FullName: Locrian Mode C# Minor
         Tuning: A3 A3 G#3 C#3
-    Locrian Mode D Minor: 
+    LocrianModeDMinor: 
+        FullName: Locrian Mode D Minor
         Tuning: Bb3 Bb3 A3 D3
-    Lydian Mode C and More: 
+    LydianModeCAndMore: 
+        FullName: Lydian Mode C and More
         Tuning: D4 D4 G3 C3
-    Lydian Mode: 
+    LydianMode: 
+        FullName: Lydian Mode
         Tuning: Bb C4 C4 F3 Bb2
-    Mixolydian Mode: 
+    MixolydianMode: 
+        FullName: Mixolydian Mode
         Tuning: D4 D4 A3 D3
-    Phrygian Mode: 
+    PhrygianMode: 
+        FullName: Phrygian Mode 
         Tuning: Eb4 Eb4 G3 C3
-English Guittar:
+# English Guittar:
+EnglishGuittar:
     Standard: 
         Tuning: C3 E3 G3 G3 C4 C4 E4 E4 G4 G4
 Gekkin:
@@ -267,40 +283,40 @@ Guitar:
         Tuning: D2 A2 D3 G3 A3 D4
     Double Drop D: 
         Tuning: D2 A2 D3 G3 B3 D4
-    # Drop D: 
-    DropD: 
+    DropD:
+        FullName: Drop D
         Tuning: D2 A2 D3 G3 B3 E4
     OpenCMajor: 
-    # Open C Major: 
+        FullName: Open C Major
         Tuning: C2 G2 C3 G3 C3 E4
     OpenDMajor: 
-    # Open D Major: 
-        Tuning: D2 A2 D3 F#3 A3 D4
-    # Open E - 1 Major: 
+        FullName: Open D Major
+        Tuning: D2 A2 D3 F#3 A3 D4    
     OpenEMajorV1: 
-        Tuning: E2 B2 E3 G#3 B3 E4
-    # Open E - 2 Minor: 
-    OpenEMajorV2: 
+        FullName: Open E - 1 Major
+        Tuning: E2 B2 E3 G#3 B3 E4    
+    OpenEMajorV2:
+        FullName: Open E - 2 Minor
         Tuning: E2 B2 E3 G3 B3 E4
-    # Open G - 1 Major: 
-    OpenGMajorV1: 
-        Tuning: D2 G2 D3 G3 B3 D4
-    # Open G - 2 Minor : 
-    OpenGMinorV2: 
-        Tuning: D2 G2 D3 G3 Bb3 D4
-    # Open A Major: 
+    OpenGMajorV1:
+        FullName: Open G - 1 Major
+        Tuning: D2 G2 D3 G3 B3 D4    
+    OpenGMinorV2:
+        FullName: Open G - 2 Minor
+        Tuning: D2 G2 D3 G3 Bb3 D4    
     OpenAMajor:
+        FullName: Open A Major
         Tuning: E2 A2 E3 A3 C#3 E4
     Renaissance: 
-        Tuning: G3 G4 C4 C4 E4 E4 A4
-    # Baroque 1: 
+        Tuning: G3 G4 C4 C4 E4 E4 A4    
     Baroque1: 
-        Tuning: A3 A3 D4 D4 G3 G3 B3 B3 E4 E4
-    # Baroque 2: 
+        FullName: Baroque 1
+        Tuning: A3 A3 D4 D4 G3 G3 B3 B3 E4 E4    
     Baroque2:
-        Tuning: A3 A3 D4 D3 G3 G3 B3 B3 E4 E4
-    # 12-String: 
+        FullName: Baroque 2
+        Tuning: A3 A3 D4 D3 G3 G3 B3 B3 E4 E4    
     TwelveStrings: 
+        FullName: 12-String
         Tuning: E2 E3 A2 A3 D3 D4 G3 G4 B3 B3 E4 E4
 Guitar Banjo:
     Standard: 
@@ -345,14 +361,14 @@ Lavta:
 Liuqin:
     Standard: 
         Tuning: G3 D4 G4 D5
-Lute:
-    # Baroque D Minor:
+Lute:    
     BaroqueDMinor:
+        FullName: Baroque D Minor
         Tuning: A2 D3 F3 A3 D4 F4
     Medieval: 
-        Tuning: G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4 G4
-    # Renaissance Tenor: 
+        Tuning: G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4 G4    
     RenaissanceTenor: 
+        FullName: Renaissance Tenor
         Tuning: D2 F2 G2 C3 F3 A3 D4 G4
 Mandobass:
     Standard: 
@@ -365,12 +381,12 @@ Mandola:
         Tuning: C3 C3 G3 G3 D4 D4 A4 A4
 Mandolin:
     Standard: 
-        Tuning: G3 G3 D4 D4 A4 A4 E5 E5
-    # 5 Course: 
+        Tuning: G3 G3 D4 D4 A4 A4 E5 E5   
     FiveCourse:
-        Tuning: C3 C3 G3 G3 D4 D4 A4 A4 E5 E5
-    # Electric 5-String: 
+        FullName: 5 Course
+        Tuning: C3 C3 G3 G3 D4 D4 A4 A4 E5 E5    
     ElectricFiveStrigs: 
+        FullName: Electric 5-String
         Tuning: C3 G3 D4 A4 E5
     Cremona: 
         Tuning: G3 D4 A4 E5
@@ -388,9 +404,11 @@ Mandolino:
     Lombardo: 
         Tuning: G3 B3 E4 A4 D5 G5
 Mandore:
-    Modal C: 
+    ModalC: 
+        FullName: Modal C
         Tuning: C4 G4 C5 G5
-    Modal G: 
+    ModalG: 
+        FullName: Modal G
         Tuning: G3 D4 G4 D5
     French: 
         Tuning: E2 A2 D3 G3 B3 E4
@@ -406,7 +424,8 @@ Mejorana:
 Mondol:
     Standard: 
         Tuning: E2 E2 A2 A2 D3 D3 G3 G3 B3 B3
-Octave Guitar:
+# Octave Guitar:
+OctaveGuitar:
     Standard: 
         Tuning: E3 A3 D4 G4 B5 E5
 Panduri:
@@ -419,8 +438,8 @@ Pedal Steel Guitar:
         Tuning: C6 C2 F2 2 C3 E3 G3 A3 C4 E4 G4
     T2: 
         Tuning: E9 B2 D3 3 F#3 G#3 B3 E4 G#4 Eb4 F#4
-    # Universal 12 Strings: 
     UniversalTwelveStrings:
+        FullName: Universal 12 Strings
         Tuning: Bb2 Eb2 G2 Bb2 D3 F3 G3 Bb3 D4 F4 G4 E4
 Phin:
     Standard: 
@@ -443,14 +462,14 @@ Ramkie:
 Requinto:
    Standard: 
        Tuning: A2 D3 G3 C4 E4 A4
-   # 4 strings - 1:
    FourStringsV1:
+       FullName: 4 strings - 1
        Tuning: G2 A2 D3 G3
-   # 4 strings - 2: 
    FourStringsV2:
+       FullName: 4 strings - 2
        Tuning: C2 D2 G2 C3
-   # 5 Strings: 
    FiveStrings:
+       FullName: 5 Strings
        Tuning: E2 A2 D3 G3 C3
 Ronroco:
    Standard: 
@@ -467,21 +486,21 @@ RussianGuitar:
    Standard:
        Tuning: D2 G2 B2 D3 G3 B3 D4
 Saz:
-   # Azeri/Qopuz: 
    AzeriOrQopuz: 
-       Tuning: D4 D4 D4 G3 G3 C4 C4 C4
-   # Baglama Bozuk Duzen 6 String: 
+       FullName: Azeri/Qopuz
+       Tuning: D4 D4 D4 G3 G3 C4 C4 C4   
    BaglamaBozukDuzenSixStrings:
-       Tuning: G2 G3 D2 D3 A2 A3
-   # Baglama Bozuk Duzen 7 String: 
-   BaglamaBozukDuzenSevenStrings: 
+       FullName: Baglama Bozuk Duzen 6 String
+       Tuning: G2 G3 D2 D3 A2 A3   
+   BaglamaBozukDuzenSevenStrings:
+       FullName: Baglama Bozuk Duzen 7 String
        Tuning: Tuning G2 G3 D2 D3 A2 A3 A3
-Seis:
-   # Puerto Rican: 
-   PuertoRican: 
-       Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
-   # Puerto Rican Guitar Tuning: 
+Seis:   
+   PuertoRican:
+       FullName: Puerto Rican
+       Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 D4 D4 G4 G4   
    PuertoRicanGuitarTuning: 
+       FullName: Puerto Rican Guitar Tuning
        Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 C#4 C#4 F#4 F#4
 Setar:
    Standard: 
@@ -509,9 +528,9 @@ Tamburitza:
        Tuning: G2 B2 D3 G3 G3
 Tar:
    Standard: 
-       Tuning: C3 C4 G3 G3 C4 C4
-   # Tar - Azeri/Caucasus: 
+       Tuning: C3 C4 G3 G3 C4 C4   
    TarAzeriOrCaucasus:
+       FullName: Tar - Azeri/Caucasus
        Tuning: C4 C4 C5 C5 G2 C3 C4 G3 G3 C4 C4
 # Taro Patch:
 TaroPatch:
@@ -548,62 +567,62 @@ TresCubano:
 Tzouras:
    Standard: 
        Tuning: D3 D4 A3 A3 D4 D4
-Ukulele:
-   #Soprano C, Concert & Tenor C:
+Ukulele:   
    SopranoConcertAndTenorC:
-       Tuning: C6 G4 C4 E4 A4 
-   #Soprano, Concert & Tenor D: 
+       FullName: Soprano C, Concert & Tenor C
+       Tuning: C6 G4 C4 E4 A4    
    SopranoConcertAndTenorD:
+       FullName: Soprano, Concert & Tenor D
        Tuning: D6 A4 D4 F#4 B4
    Baritone: 
        Tuning: D4 G3 B4 E4
    Tahitian: 
-       Tuning: G4 G4 C5 C5 E5 E5 A4 A4
-   # Ukulele Banjo or Banjolele C: 
+       Tuning: G4 G4 C5 C5 E5 E5 A4 A4   
    BanjoOrBanjoleteC:
+       FullName: Ukulele Banjo or Banjolele C
        Tuning: C6 G4 C4 E4 A4
-   BanjoOrBanjoleteD:
-   # Ukulele Banjo or Banjolele D: 
+   BanjoOrBanjoleteD:   
+       FullName: Ukulele Banjo or Banjolele D
        Tuning: D6 A4 D4 F#4 B4
 Vihuela:
    Standard: 
        Tuning: A3 D4 G4 B3 E4
-Viola:
-   # Viola Amarantina: 
-   Amarantina: 
-       Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3
-   # Viola Beiroa: 
-   Beiroa: 
-       Tuning: D3 D3 A3 A2 D3 D2 G3 G2 B3 B3 D3 D3
-   # Viola Braguesa: 
+Viola:   
+   Amarantina:
+       FullName: Viola Amarantina
+       Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3   
+   Beiroa:
+       FullName: Viola Beiroa
+       Tuning: D3 D3 A3 A2 D3 D2 G3 G2 B3 B3 D3 D3   
    Braguesa: 
-       Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3
-   # Viola Caipira: 
+       FullName: Viola Braguesa
+       Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3   
    Caipira: 
+       FullName: Viola Caipira
        Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
-   # Viola Campaniça: 
    Campaniça: 
-       Tuning: C3 C2 F3 F2 C3 C3 E3 E3 G3 G3
-   # Viola da Terra: 
+       FullName: Viola Campaniça
+       Tuning: C3 C2 F3 F2 C3 C3 E3 E3 G3 G3   
    DaTerra:
-       Tuning: A4 A4 A4 D4 D4 D3 G3 G3 B3 B3 D4 D4
-   # Viola de Arame: 
+       FullName: Viola da Terra
+       Tuning: A4 A4 A4 D4 D4 D3 G3 G3 B3 B3 D4 D4   
    DeArame: 
-       Tuning: G3 G2 D3 D2 G3 G3 B3 D3 D3
-   # Viola de Cocho 1: 
+       FullName: Viola de Arame
+       Tuning: G3 G2 D3 D2 G3 G3 B3 D3 D3   
    DeCocho1: 
-       Tuning: G3 D3 E3 A3 D4
-   # Viola de Cocho 2: 
+       FullName: Viola de Cocho 1
+       Tuning: G3 D3 E3 A3 D4   
    DeCocho 2: 
-       Tuning: G3 C3 E3 A3 D4
-   # Viola de Diz Cordas: 
+       FullName: Viola de Cocho 2
+       Tuning: G3 C3 E3 A3 D4   
    DeDizCordas: 
+       FullName: Viola de Diz Cordas
        Tuning: A3 A3 D3 D4 G3 G3 B3 B3 E4 E4
-   # Viola Sertaneja: 
    Sertaneja: 
-       Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
-   # Viola Toeira: 
+       FullName: Viola Sertaneja
+       Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4   
    Toeira: 
+       FullName: Viola Toeira
        Tuning: A3 A3 A3 D3 D3 D2 G3 G2 B3 B3 E3 E3
 # Violão de Sete Cordas:
 ViolãoDeSeteCordas:
