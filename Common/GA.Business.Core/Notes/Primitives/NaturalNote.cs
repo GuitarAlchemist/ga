@@ -6,9 +6,9 @@
 using PCRE;
 
 using GA.Business.Core.Intervals.Primitives;
-using GA.Core;
 using GA.Business.Core.Extensions;
 using Atonal;
+using GA.Core.Collections;
 
 
 /// <summary>

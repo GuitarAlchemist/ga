@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Fretboard.Engine;
 
 using System.Collections.ObjectModel;
+
 using Primitives;
 using Tonal;
 
@@ -15,11 +16,11 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
     /// Create a <see cref="KeyPositionCollection"/> instance.
     /// </summary>
     /// <param name="key">The <see cref="Key"/>.</param>
-    /// <param name="positions">The <see cref="Position.Fretted"/> collection</param>
+    /// <param name="positions">The <see cref="Position.Played"/> collection</param>
     /// <exception cref="ArgumentNullException">Thrown when a parameter is null.</exception>
     public KeyPositionCollection(
         Key key,
-        IReadOnlyCollection<Position.Fretted> positions)
+        IReadOnlyCollection<Position.Played> positions)
     {
         Key = key ?? throw new ArgumentNullException(nameof(key));
         if (positions == null) throw new ArgumentNullException(nameof(positions));
@@ -39,12 +40,10 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
     public override string ToString()
     {
         var sb = new StringBuilder();
-        foreach (var keyPosition in _keyPositions)
+        foreach (var (position, keyNote) in _keyPositions)
         {
             if (sb.Length > 0) sb.Append(", ");
-            var keyNote = keyPosition.KeyNote;
-            var position = keyPosition.Position;
-            var s = $"str {position.Str} ({keyNote})";
+            var s = $"str {position.Location.Str} ({keyNote})";
             sb.Append(s);
         }
 
@@ -53,7 +52,7 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
 
     private static ReadOnlyCollection<KeyPosition> GetKeyPositions(
         Key key,
-        IEnumerable<Position.Fretted> positions)
+        IEnumerable<Position.Played> positions)
     {
         if (key == null) throw new ArgumentNullException(nameof(key));
         if (positions == null) throw new ArgumentNullException(nameof(positions));

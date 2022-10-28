@@ -38,12 +38,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCEF
 		Notebooks\Samples\ExtensionLab-EF.ipynb = Notebooks\Samples\ExtensionLab-EF.ipynb
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GA.Business.Config", "Common\GA.Business.Config\GA.Business.Config.fsproj", "{ABE045B5-BC92-4041-9E6F-10284512F4E4}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GA.Business.Config", "Common\GA.Business.Config\GA.Business.Config.fsproj", "{ABE045B5-BC92-4041-9E6F-10284512F4E4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Instruments", "Instruments", "{4D843DFB-7896-46CA-A7F7-4309198B3347}"
 	ProjectSection(SolutionItems) = preProject
-		Notebooks\Instruments\Instruments.ipynb = Notebooks\Instruments\Instruments.ipynb
 		Notebooks\Instruments\Guitar Tunings.ipynb = Notebooks\Instruments\Guitar Tunings.ipynb
+		Notebooks\Instruments\Instruments.ipynb = Notebooks\Instruments\Instruments.ipynb
 		Notebooks\Instruments\Ukulele Tunings.ipynb = Notebooks\Instruments\Ukulele Tunings.ipynb
 	EndProjectSection
 EndProject
@@ -52,6 +52,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scales", "Scales", "{3C7DA2
 		Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb
 		Notebooks\Scales\Scale Modes - major scale.ipynb = Notebooks\Scales\Scale Modes - major scale.ipynb
 		Notebooks\Scales\Scale Modes - melodic minor scale.ipynb = Notebooks\Scales\Scale Modes - melodic minor scale.ipynb
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experiments", "Experiments", "{B2A60697-DB61-4FE8-BE50-B40C7B00D16A}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\Experiments\F Sharp.ipynb = Notebooks\Experiments\F Sharp.ipynb
+		Notebooks\Experiments\Random number.ipynb = Notebooks\Experiments\Random number.ipynb
 	EndProjectSection
 EndProject
 Global
@@ -115,6 +121,7 @@ Global
 		{ABE045B5-BC92-4041-9E6F-10284512F4E4} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{4D843DFB-7896-46CA-A7F7-4309198B3347} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{3C7DA2B8-7207-4293-9FDB-C545BBDD8EEE} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
+		{B2A60697-DB61-4FE8-BE50-B40C7B00D16A} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}

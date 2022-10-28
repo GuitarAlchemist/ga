@@ -1,4 +1,4 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Collections;
 
 public interface IIndexer<in TKey, out TValue>
 {

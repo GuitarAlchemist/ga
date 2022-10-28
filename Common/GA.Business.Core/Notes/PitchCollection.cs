@@ -1,7 +1,9 @@
-﻿namespace GA.Business.Core.Notes;
+﻿using GA.Core.Collections;
+
+namespace GA.Business.Core.Notes;
 
 [PublicAPI]
-public class PitchCollection : IReadOnlyCollection<Pitch>
+public class PitchCollection : LazyPrintableCollectionBase<Pitch>
 {
     public static readonly PitchCollection Empty = new();
 
@@ -29,16 +31,6 @@ public class PitchCollection : IReadOnlyCollection<Pitch>
         return true;
     }
 
-    public PitchCollection(params Pitch[] items) : this(items.ToImmutableList()) { }
-    public IEnumerator<Pitch> GetEnumerator() => _items.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count => _items.Count;
-
-    private readonly IReadOnlyCollection<Pitch> _items;
-    private PitchCollection() => _items = ImmutableList<Pitch>.Empty;
-    private PitchCollection(IEnumerable<Pitch> items)
-    {
-        if (items == null) throw new ArgumentNullException(nameof(items));
-        _items = items.ToImmutableList();
-    }
+    public PitchCollection(params Pitch[] items) : base(items) { }
+    private PitchCollection(IReadOnlyCollection<Pitch> items) : base(items) { }
 }

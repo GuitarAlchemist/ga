@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <MyriadConfigFile>myriadConfig.toml</MyriadConfigFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="myriadConfig.toml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Myriad.Core" Version="0.8.1" />
+    <PackageReference Include="Myriad.Plugins" Version="0.8.1" />
+    <PackageReference Include="Myriad.Sdk" Version="0.8.1" />
+  </ItemGroup>
+
+</Project>

@@ -11,20 +11,21 @@ public class FretboardConsoleRenderer
     {
         static void MarkerColor() => Console.ForegroundColor = ConsoleColor.Cyan;
         static void FretColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
-        static void FrettedPositionColor() => Console.ForegroundColor = ConsoleColor.White;
+        static void FingeredPositionColor() => Console.ForegroundColor = ConsoleColor.White;
         static void OpenPositionColor() => Console.ForegroundColor = ConsoleColor.Blue;
         // static void CapoColor() => Console.ForegroundColor = ConsoleColor.DarkCyan;
         static void NotAvailablePositionColor() => Console.ForegroundColor = ConsoleColor.DarkGray;
-        static string Pad(string s, int padTotalLength = 4) => s.PadRight(padTotalLength);
+        static string Pad(string s, int padTotalLength = 5) => s.PadRight(padTotalLength);
         
         void RenderPositionsAndFrets()
         {
             var options = aOptions ?? Options.Default; // TODO
-            var positionsByStr = fretboard.Positions.ToLookup(position => position.Str);
+            var playedPositions = fretboard.Positions.Played;
+            var openFret = fretboard.Capo ?? Fret.Open;
             var openPitches =
-                fretboard.CapoFret.HasValue
-                    ? fretboard[fretboard.CapoFret.Value].Select(fretted => fretted.Pitch).ToImmutableHashSet()
-                    : fretboard.OpenPositions.Select(open => open.Pitch).ToImmutableHashSet();
+                fretboard.Positions.Played[openFret]
+                    .Select(fretted => fretted.Pitch)
+                    .ToImmutableHashSet();
             foreach (var str in fretboard.Strings)
             {
                 MarkerColor();
@@ -32,40 +33,38 @@ public class FretboardConsoleRenderer
                 Console.ResetColor();
 
                 // String positions
-                var stringPositions = positionsByStr[str];
-                foreach (var position in stringPositions)
+                foreach (var playedPosition in playedPositions[str])
                 {
-                    position.Switch(
-                        _ => { }, // Don't render
-                        open =>
-                        {
-                            // Open position
-                            var sOpen =  Pad($"({open.Pitch})");
-                            if (fretboard.CapoFret.HasValue) 
-                                NotAvailablePositionColor();
-                            else 
-                                OpenPositionColor();
-                            Console.Write($"{sOpen}");
+                    var (location, pitch) = playedPosition;
 
-                            // Nut
+                    if (location.Fret == Fret.Open)
+                    {
+                        // Open position
+                        var sOpen =  Pad($"({playedPosition.Pitch})");
+                        if (fretboard.Capo.HasValue) 
+                            NotAvailablePositionColor();
+                        else 
                             OpenPositionColor();
-                            Console.Write(" ║");
-                        },
-                        fretted =>
-                        {
-                            // Fretted position
-                            var (_, fret, pitch) = fretted;
-                            if (fretboard.CapoFret.TryGetValue(out var capoFret) && fret < capoFret)
-                                NotAvailablePositionColor();
-                            else
-                                FrettedPositionColor();
-                            Console.Write(Pad($"{pitch}"));
+                        Console.Write($"{sOpen}");
 
-                            // Fret
-                            FretColor();
-                            if (openPitches.Contains(pitch)) OpenPositionColor();
-                            Console.Write("|");
-                        });
+                        // Nut
+                        OpenPositionColor();
+                        Console.Write(" ║");
+                    }
+                    else
+                    {
+                        // Fingered positions
+                        if (fretboard.Capo.TryGetValue(out var capoFret) && location.Fret < capoFret)
+                            NotAvailablePositionColor();
+                        else
+                            FingeredPositionColor();
+                        Console.Write(Pad($"{pitch}"));
+
+                        // Fret
+                        FretColor();
+                        if (openPitches.Contains(pitch)) OpenPositionColor(); // Same as open pitch
+                        Console.Write("|");
+                    }
                     Console.Write(" ");
                 }
 

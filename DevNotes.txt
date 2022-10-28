@@ -1,6 +1,6 @@
 TODO:
 
-- Explore Myriad code generator https://moiraesoftware.github.io/myriad/
+- UI: Add simple text freboatd visualizer for notebooks
 - UI: Add VexFlow/VexTab/VexChord blazor support (https://www.vexflow.com/)
 - UI: Add simple piano blazor support https://codepen.io/gabrielcarol/pen/rGeEbY
 - Explore dotnet interactive extensions https://plbonneville.com/blog/introducing-the-dotnet-interactive-notebooks-razor-extension/

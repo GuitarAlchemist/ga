@@ -5,7 +5,7 @@ using GA.Business.Core.Atonal.Primitives;
 
 
 using GA.Business.Core.Intervals.Primitives;
-using GA.Core;
+using GA.Core.Collections;
 using GA.Core.Extensions;
 using Intervals;
 using Notes;

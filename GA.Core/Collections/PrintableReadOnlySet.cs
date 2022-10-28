@@ -1,10 +1,19 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Collections;
 
-public class PrintableReadOnlySet<T> : IReadOnlySet<T>
+public sealed class PrintableReadOnlySet<T> : PrintableBase<T>, IReadOnlySet<T>
 {
     private readonly IReadOnlySet<T> _items;
 
-    public PrintableReadOnlySet(IReadOnlySet<T> items)
+    public PrintableReadOnlySet(IReadOnlySet<T> items) 
+        : this(items, null)
+    {
+    }
+
+    public PrintableReadOnlySet(
+        IReadOnlySet<T> items,
+        string? itemFormat = null,
+        IFormatProvider? itemFormatProvider = null) 
+        : base(items, itemFormat, itemFormatProvider)
     {
         _items = items ?? throw new ArgumentNullException(nameof(items));
     }
@@ -20,6 +29,4 @@ public class PrintableReadOnlySet<T> : IReadOnlySet<T>
     public bool Overlaps(IEnumerable<T> other) => _items.Overlaps(other);
     public bool SetEquals(IEnumerable<T> other) => _items.SetEquals(other);
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
-
-    public override string ToString() => string.Join(" ", _items);
 }

@@ -1,14 +1,26 @@
 ﻿namespace GA.Business.Core.Fretboard;
 
+using GA.Core;
 using Config;
+using Positions;
+using Notes;
 using Primitives;
 
+/// <summary>
+/// Represent available positions for a given instrument/tuning
+/// </summary>
 [PublicAPI]
 public class Fretboard
 {
-    private readonly Lazy<IReadOnlyCollection<Position>> _lazyAllPositions;
-    private readonly Lazy<OpenPositions> _lazyOpenPositions;
-    private readonly Lazy<FrettedPositions> _lazyFrettedPositions;
+    public static readonly Fretboard Default = new();
+
+    private static readonly string _defaultTuning = Instruments.Instrument.Guitar.Standard.Tuning;
+    private readonly Lazy<PositionCollection> _lazyPositions;
+    
+    public Fretboard() : this(
+        new(PitchCollection.Parse(_defaultTuning)), 24)
+    {
+    }
 
     public Fretboard(
         Tuning tuning,
@@ -18,85 +30,45 @@ public class Fretboard
         FretCount = fretCount;
         StringCount = tuning.PitchCollection.Count;
 
-        _lazyAllPositions = new(GetAllPositions);
-        _lazyOpenPositions = new(GetOpenPositions);
-        _lazyFrettedPositions = new(GetFrettedPositions);
+        _lazyPositions = new(GetPositions);
+
+        PositionCollection GetPositions()
+        {
+            var list = new List<Position>();
+            foreach (var str in Strings)
+            {
+                // Muted
+                list.Add(new Position.Muted(str));
+
+                // Played 
+                var midiNote = Tuning[str].MidiNote;
+                var frets = Fret.Range(0, FretCount - 1);
+                foreach (var fret in frets)
+                {
+                    list.Add(new Position.Played(new(str, fret), midiNote++.ToSharpPitch()));
+                }
+            }
+            return new(list);
+        }
     }
 
     public Tuning Tuning { get; }
     public int StringCount { get; }
     public int FretCount { get; }
-    public Fret? CapoFret { get; set; }
-    public IReadOnlyCollection<Str> Strings => Str.GetItems(StringCount);
-    public IReadOnlyCollection<Fret> Frets => Fret.GetItems(Fret.Min.Value, FretCount);
-    public IReadOnlyCollection<Position> Positions => _lazyAllPositions.Value;
-    public OpenPositions OpenPositions => _lazyOpenPositions.Value;
-    public FrettedPositions FrettedPositions => _lazyFrettedPositions.Value;
-    public FretPositions this[Fret fret] => FrettedPositions[fret];
+    public Fret? Capo { get; set; }
+    public IReadOnlyCollection<Str> Strings => Str.Range(StringCount);
+    public IReadOnlyCollection<Fret> Frets => Fret.Range(Fret.Min.Value, FretCount);
+    public PositionCollection Positions => _lazyPositions.Value;
 
-    // ReSharper disable once InconsistentNaming
-    private IReadOnlyCollection<Position> GetAllPositions()
+    public override string ToString()
     {
-        IEnumerable<Position> StringPositions(Str str)
-        {
-            // Muted
-            yield return new Position.Muted(str);
+        var sb = new StringBuilder(Tuning.ToString());
+        sb.Append($" - {FretCount} frets");
+        if (!Capo.HasValue) return sb.ToString();
 
-            // Fretted (Open)
-            var pitch = Tuning[str];
-            var openPosition = new Position.Open(str, pitch);
-            yield return openPosition;
-
-            // Fretted
-            var midiNote = pitch.MidiNote;
-            foreach (var fret in Fret.GetItems(1, FretCount - 1))
-            {
-                midiNote++;
-                pitch = midiNote.ToSharpPitch();
-                var frettedPosition =  new Position.Fretted(str, fret, pitch);
-                yield return frettedPosition;
-            }
-        }
-
-        IEnumerable<Position> AllPositions()
-        {
-            foreach (var str in Str.GetItems(StringCount))
-            foreach (var position in StringPositions(str))
-                yield return position;
-        }
-
-        var result = AllPositions().ToImmutableList();
-
-        return result;
-    }
-
-    private OpenPositions GetOpenPositions()
-    {
-        var positions =
-            Str.GetItems(StringCount)
-               .Select(str =>
-               {
-                   var pitch = Tuning[str];
-                   var item = new Position.Open(str, pitch);
-
-                   return item;
-               })
-               .ToImmutableList();
-
-        var result = new OpenPositions(positions);
-
-        return result;
-    }
-
-
-    private FrettedPositions GetFrettedPositions()
-    {
-        var positions = 
-            Positions
-                .Where(position => position is Position.Fretted)
-                .Cast<Position.Fretted>()
-                .ToImmutableList();
-
-        return new(positions);
+        // Add capo details
+        var capo = Capo.Value;
+        sb.Append($" (Capo: {(Ordinal) capo.Value})");
+        return sb.ToString();
     }
 }

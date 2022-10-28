@@ -2,29 +2,7 @@
 
 using Primitives;
 using Notes;
-using GA.Core;
-
-// TODO
-public class ForteNumber
-{
-
-}
-
-// TODO
-/// <summary>
-/// An unordered collection of notes, without regards to with octave, what order they are played, reduced to its prime form by transposition
-/// </summary>
-public class SetClass
-{
-    private static readonly Lazy<IReadOnlyCollection<SetClass>> _lazyObjects = null!;
-
-    public SetClass(PitchClassSetIdentity identity)
-    {
-        Identity = identity;
-    }
-
-    public PitchClassSetIdentity Identity { get; }
-}
+using GA.Core.Extensions;
 
 /// <summary>
 /// Represents tones of a scale as a collection of <see cref="PitchClass"/>
@@ -170,7 +148,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     public PitchClassSetIdentity Identity { get; }
     public Cardinality Cardinality { get; }
-    public PrintableReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
+    public IReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
     public IntervalClassVector IntervalClassVector => new(Notes);
     public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality,IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);

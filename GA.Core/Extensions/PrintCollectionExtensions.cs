@@ -1,4 +1,6 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Extensions;
+
+using Collections;
 
 public static class PrintCollectionExtensions
 {

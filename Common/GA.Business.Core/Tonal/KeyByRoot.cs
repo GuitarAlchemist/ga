@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal;
 
 using GA.Business.Core.Notes.Primitives;
-using GA.Core;
+using GA.Core.Collections;
 
 public class KeyByRoot : LazyIndexerBase<NaturalNote, Key>
 {

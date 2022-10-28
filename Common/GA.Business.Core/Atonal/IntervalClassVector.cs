@@ -2,7 +2,7 @@
 
 using Primitives;
 using Notes;
-using GA.Core;
+using GA.Core.Collections;
 
 /// <summary>
 /// An interval vector represents the ordered occurence for each interval class (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
@@ -29,8 +29,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     public int CompareTo(IntervalClassVector? other)
     {
         if (ReferenceEquals(this, other)) return 0;
-        if (ReferenceEquals(null, other)) return 1;
-        return Value.CompareTo(other.Value);
+        return other is null ? 1 : Value.CompareTo(other.Value);
     }
 
     public static bool operator <(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
