@@ -1,6 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using GA.Core;
+using GA.Core.Collections;
 
 public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>, IIndexer<TScaleModeDegree, TScaleMode>
     where TScaleModeDegree : struct, IValueObject<TScaleModeDegree>

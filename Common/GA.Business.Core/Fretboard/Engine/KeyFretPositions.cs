@@ -41,8 +41,8 @@ public record KeyFretPositions(
 
             foreach (var fret in fretboard.Frets)
             {
-                var positions = new List<Position.Fretted>();
-                foreach (var position in fretboard[fret])
+                var positions = new List<Position.Played>();
+                foreach (var position in fretboard.Positions.Played[fret])
                 {
                     var pitchClass = position.Pitch.PitchClass;
                     if (keyPitchClassSet.Contains(pitchClass)) positions.Add(position);

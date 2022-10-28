@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
 
-namespace GA.Core;
+namespace GA.Core.Collections;
 
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
 [PublicAPI]
-public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> 
+public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
     private readonly Lazy<IReadOnlyDictionary<TKey, TValue>> _lazy;
@@ -22,8 +22,8 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
         });
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() =>_lazy.Value.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator()=> ((IEnumerable) _lazy.Value).GetEnumerator();
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _lazy.Value.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_lazy.Value).GetEnumerator();
     public int Count => _lazy.Value.Count;
     public bool ContainsKey(TKey key) => _lazy.Value.ContainsKey(key);
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => _lazy.Value.TryGetValue(key, out value);

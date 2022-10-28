@@ -1,4 +1,4 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Collections;
 
 public abstract class LazyIndexerBase<TKey, TValue>
     where TKey : notnull

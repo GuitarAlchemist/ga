@@ -1,17 +1,15 @@
-﻿using GA.Business.Core.Notes;
+﻿namespace GA.Business.Core.Fretboard.Primitives;
 
-namespace GA.Business.Core.Fretboard.Primitives;
+using Positions;
+using Notes;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
-public abstract partial record Position(Str Str)
+public abstract partial record Position
 {
     /// <inheritdoc cref="Position"/>
-    public sealed partial record Muted(Str Str) : Position(Str);
+    public sealed partial record Muted(Str Str) : Position;
 
     /// <inheritdoc cref="Position"/>
-    public partial record Fretted(Str Str, Fret Fret, Pitch Pitch) : Position(Str);
-
-    /// <inheritdoc cref="Position"/>
-    public sealed partial record Open(Str Str, Pitch Pitch) : Fretted(Str, Fret.Open, Pitch);
+    public sealed partial record Played(PositionLocation Location, Pitch Pitch) : Position;
 }

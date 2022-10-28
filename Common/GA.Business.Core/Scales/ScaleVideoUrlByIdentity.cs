@@ -2,8 +2,8 @@
 
 
 
-using GA.Core;
 using Atonal.Primitives;
+using GA.Core.Collections;
 
 public class ScaleVideoUrlByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
 {

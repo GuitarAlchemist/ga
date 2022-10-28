@@ -34,8 +34,7 @@ public readonly record struct Fret : IValueObject<Fret>,
 
     public static int CheckRange(int value) => IValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
-    // ReSharper disable once InconsistentNaming
-    public static IReadOnlyCollection<Fret> GetItems(int start, int count) => ValueObjectUtils<Fret>.GetItems(start, count);
+    public static IReadOnlyCollection<Fret> Range(int start, int count) => ValueObjectUtils<Fret>.GetItems(start, count);
 
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;

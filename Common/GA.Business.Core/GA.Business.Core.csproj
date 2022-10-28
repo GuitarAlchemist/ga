@@ -17,6 +17,7 @@
 		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
 		<PackageTags>Music;Guitar</PackageTags>
 		<PackageReleaseNotes>
+2022-10-21 - Successful attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
 2022-10-21 - Attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
 2022-10-21 - Added instruments/tunings config
 2022-10-15 - Initial version
@@ -33,9 +34,9 @@
 		</PackageDescription>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.6-alpha-2</PackageVersion>
-		<AssemblyVersion>1.0.6.2</AssemblyVersion>
-		<FileVersion>1.0.6.2</FileVersion>
+		<PackageVersion>1.0.7</PackageVersion>
+		<AssemblyVersion>1.0.7.0</AssemblyVersion>
+		<FileVersion>1.0.7.0</FileVersion>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 

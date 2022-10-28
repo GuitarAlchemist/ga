@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 
-namespace GA.Core;
+namespace GA.Core.Collections;
 
-public abstract class LazyCollectionBase<TItem> : IReadOnlyCollection<TItem> 
+public abstract class LazyCollectionBase<TItem> : IReadOnlyCollection<TItem>
     where TItem : class
 {
     private readonly Lazy<IReadOnlyCollection<TItem>> _lazy;

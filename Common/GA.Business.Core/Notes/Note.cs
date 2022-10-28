@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using GA.Core;
 using GA.Business.Core.Intervals.Primitives;
 using GA.Business.Core.Atonal.Primitives;
 using Atonal;
@@ -9,6 +8,7 @@ using Intervals;
 using Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
+using GA.Core.Collections;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]

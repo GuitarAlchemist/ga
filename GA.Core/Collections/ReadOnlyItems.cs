@@ -1,4 +1,4 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Collections;
 
 public sealed class ReadOnlyItems<TItem> : IReadOnlyCollection<TItem>
     where TItem : class

@@ -26,9 +26,9 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
     [PublicAPI]
     public sealed partial record Chromatic(Note.Chromatic Note, Octave Octave) : Pitch(Octave)
     {
-        public override PitchClass PitchClass => Note.PitchClass;
-
         public static Chromatic FromPitch(Pitch pitch) => pitch.PitchClass.ToChromaticPitch(pitch.Octave);
+
+        public override PitchClass PitchClass => Note.PitchClass;
 
         public override string ToString()
         {
@@ -76,7 +76,6 @@ public abstract partial record Pitch(Octave Octave) : IComparable<Pitch>
             var note = new Note.SharpKey(naturalNote, accidental);
             parsedPitch = new(note, octave);
             return true;
-
         }
 
         public static Sharp Default => C0;

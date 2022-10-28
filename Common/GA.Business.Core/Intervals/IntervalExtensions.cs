@@ -1,8 +1,8 @@
 ﻿namespace GA.Business.Core.Intervals;
 
-using GA.Core;
 using Primitives;
 using Atonal;
+using GA.Core.Collections;
 
 public static class IntervalExtensions
 {
