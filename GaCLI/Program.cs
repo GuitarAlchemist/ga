@@ -8,7 +8,9 @@ using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 
-RenderFretboard();
+RenderGuitarFretboard();
+Console.WriteLine();
+RenderUkuleleFretboard();
 
 return;
 
@@ -69,10 +71,19 @@ Decompose horizontal movement into m3/M3 fret intervals - See https://www.youtub
 
 Console.ReadKey();
 
-static void RenderFretboard()
+static void RenderGuitarFretboard()
 {
     var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Guitar.Standard.Tuning));
     var fretBoard = new Fretboard(tuning, 24);
+    Console.WriteLine(fretBoard.ToString());
+    Console.WriteLine();
+    FretboardConsoleRenderer.Render(fretBoard);
+}
+
+static void RenderUkuleleFretboard()
+{
+    var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Ukulele.Baritone.Tuning));
+    var fretBoard = new Fretboard(tuning, 15);
     Console.WriteLine(fretBoard.ToString());
     Console.WriteLine();
     FretboardConsoleRenderer.Render(fretBoard);
