@@ -1,12 +1,13 @@
-﻿using System.Collections.Immutable;
-
-using GA.Business.Config;
+﻿using GA.Business.Config;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
+using GA.Core.Extensions;
+
+var bb = typeof(Note).Assembly.MethodOverrideTypes("tostring");
 
 RenderGuitarFretboard();
 Console.WriteLine();
@@ -31,7 +32,7 @@ var id = PitchClassSetIdentity.FromNotes(Note.Chromatic.C, Note.Chromatic.E, Not
 var idTranspositions = id.PitchClassSet.Transpositions;
 
 var scales = Scale.Objects.ToImmutableList();
-var modalScales = 
+var modalScales =
     scales.Where(scale => scale.Identity.PitchClassSet.IsModal)
           .OrderBy(scale => scale.Count)
           .ToImmutableList();
@@ -45,7 +46,7 @@ var colorNotes = dorian.ColorNotes;
 var dorianNotes = dorian.Notes;
 var dorianIdentity = MajorScaleMode.Dorian.Identity;
 var isModal = dorianIdentity.PitchClassSet.IsModal;
-var modalFamily = (ModalFamily?) (ModalFamily.TryGetValue(dorianIdentity.PitchClassSet.IntervalClassVector, out var modalFamily1) ? modalFamily1 : null);
+var modalFamily = (ModalFamily?)(ModalFamily.TryGetValue(dorianIdentity.PitchClassSet.IntervalClassVector, out var modalFamily1) ? modalFamily1 : null);
 var aaaa = 42;
 
 //var intervals = new List<(Note, Note,Interval.Simple)>();

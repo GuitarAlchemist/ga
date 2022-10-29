@@ -1,0 +1,71 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<IncludeBuildOutput>true</IncludeBuildOutput>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageDescription>GA dotnet-interactive extensions.</PackageDescription>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Authors>Stephane Pareilleux</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
+		<PackageReleaseNotes>
+			2022-10-29 - Initial version
+		</PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<IsPackable>true</IsPackable>
+		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
+		<PackageVersion>1.0.0-beta</PackageVersion>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		<DebugType>embedded</DebugType>
+		<NoWarn>NU5100,NU5128</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="bin\**" />
+		<EmbeddedResource Remove="bin\**" />
+		<None Remove="bin\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.22504.6" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.22504.6" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.22504.6" />
+		<PackageReference Include="PCRE.NET" Version="0.19.0" />
+		<!-- For GA.Business.Config-->
+		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
+		<!-- Needed when running on the docker jupyter/base-notebook image -->
+		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
+		  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+	  </ProjectReference>
+	</ItemGroup>
+
+	<!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->
+	<ItemGroup>
+		<None 
+			Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" 
+			Pack="true" 
+			PackagePath="lib/$(TargetFramework)" />
+		<None 
+			Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" 
+			Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll"
+			Pack="true" 
+			PackagePath="interactive-extensions/dotnet" />
+	</ItemGroup>
+
+</Project>

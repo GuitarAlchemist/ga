@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<OutputType>Library</OutputType>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<Title>Guitar Alchemist - Core business types</Title>
 		<Authors>Stephane Pareilleux</Authors>
@@ -23,7 +26,6 @@
 2022-10-21 - Added instruments/tunings config
 2022-10-15 - Initial version
 		</PackageReleaseNotes>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageDescription>
 			Provides classes and interfaces for music and fretted instruments:
 
@@ -41,6 +43,15 @@
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Remove="bin\**" />
+		<Compile Remove="DotnetInteractive\**" />
+		<EmbeddedResource Remove="bin\**" />
+		<EmbeddedResource Remove="DotnetInteractive\**" />
+		<None Remove="bin\**" />
+		<None Remove="DotnetInteractive\**" />
+	</ItemGroup>
+
 	<!-- See https://bartwullems.blogspot.com/2022/01/nugetadd-readme-to-your-nuget-package.html -->
 	<PropertyGroup>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -52,11 +63,6 @@
 	<ItemGroup>
 		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.0.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

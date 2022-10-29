@@ -45,5 +45,5 @@ public class Tuning : IIndexer<Str, Pitch>
         return dict.ToImmutableDictionary();
     }
 
-    public override string ToString() => PitchCollection.ToString() ?? string.Empty;
+    public override string ToString() => PitchCollection.ToString();
 }

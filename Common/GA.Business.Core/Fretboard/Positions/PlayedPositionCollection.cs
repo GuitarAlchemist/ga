@@ -17,9 +17,31 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
         _lazyPositionsByLocation = new(() => positions.ToLookup(position => position.Location));
     }
 
+    /// <summary>
+    /// Gets played position by string
+    /// </summary>
+    /// <param name="str">The <see cref="Str"/></param>
+    /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
     public IEnumerable<Position.Played> this[Str str] => _lazyPositionsByStr.Value[str];
+
+    /// <summary>
+    /// Gets played position by fret
+    /// </summary>
+    /// <param name="fret">The <see cref="Fret"/></param>
+    /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
     public IEnumerable<Position.Played> this[Fret fret] => _lazyPositionsByFret.Value[fret];
+
+    /// <summary>
+    /// Gets played position by location
+    /// </summary>
+    /// <param name="location">The <see cref="PositionLocation"/></param>
+    /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
     public IEnumerable<Position.Played> this[PositionLocation location] => _lazyPositionsByLocation.Value[location];
+
+    /// <summary>
+    /// Gets all position locations
+    /// </summary>
+    /// <returns>The <see cref="IEnumerable{PositionLocation}"/></returns>
     public IEnumerable<PositionLocation> Locations => _lazyPositionsByLocation.Value.Select(grouping => grouping.Key);
 
     public PlayedPositionCollection GetRange(Str str, Fret startFret, int fretCount) =>
