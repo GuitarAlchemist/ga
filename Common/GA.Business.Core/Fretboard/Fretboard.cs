@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard;
 
-using GA.Core;
 using Config;
 using Positions;
 using Notes;
@@ -62,13 +61,9 @@ public class Fretboard
 
     public override string ToString()
     {
-        var sb = new StringBuilder(Tuning.ToString());
-        sb.Append($" - {FretCount} frets");
-        if (!Capo.HasValue) return sb.ToString();
-
-        // Add capo details
-        var capo = Capo.Value;
-        sb.Append($" (Capo: {(Ordinal) capo.Value})");
+        var sb = new StringBuilder();
+        using TextWriter writer = new StreamWriter(new MemoryStream());
+        FretboardTextWriterRenderer.Render(this, writer);
         return sb.ToString();
     }
 }
