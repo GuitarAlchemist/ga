@@ -57,8 +57,8 @@ public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<Pit
 
     public PitchClassSet PitchClassSet => PitchClassSet.FromIdentity(this);
     public string ScaleName => ScaleNameByIdentity.Get(this);
-    public string ScaleVideoUrl => ScaleVideoUrlByIdentity.Get(this);
-    public string ScalePageUrl => $"https://ianring.com/musictheory/scales/{Value}";
+    public Uri? ScaleVideoUrl => ScaleVideoUrlByIdentity.Get(this);
+    public Uri ScalePageUrl => new($"https://ianring.com/musictheory/scales/{Value}");
 
     public override string ToString()
     {

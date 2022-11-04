@@ -1,6 +1,5 @@
-﻿namespace GA.InteractiveExtension;
+﻿namespace GA.InteractiveExtension.Ga;
 
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 
 public class GaKernel : Kernel, IKernelCommandHandler<SubmitCode>

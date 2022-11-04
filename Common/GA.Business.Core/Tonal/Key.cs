@@ -1,12 +1,10 @@
-﻿using GA.Core.Collections;
+﻿namespace GA.Business.Core.Tonal;
 
-namespace GA.Business.Core.Tonal;
-
-using Intervals;
+using GA.Core.Collections;
 using GA.Business.Core.Notes.Primitives;
-using GA.Core;
-using Notes;
 using GA.Business.Core.Intervals.Primitives;
+using Notes;
+using Intervals;
 
 [PublicAPI]
 [DiscriminatedUnion]

@@ -1,0 +1,37 @@
+﻿<head>
+    <script type="text/javascript" src="https://unpkg.com/vextab/releases/main.dev.js"></script>
+    <style type="text/css">
+        .vexbox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="vexbox">
+        <div id="boo"></div>
+    </div>
+
+    <script type="text/javascript">
+	let data = `
+options tab-stems=true tab-stem-direction=down
+tabstave notation=true tablature=true time=4/4
+notes :8 3/5 0-2-3/4 0-2/3 0-1-1-0/2 2-0/3 3-2-0/4 3/5
+text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
+`
+	const VF = vextab.Vex.Flow
+	const renderer = new VF.Renderer($('#boo')[0], VF.Renderer.Backends.SVG);
+	vextab.Artist.NOLOGO = true;
+	// Initialize VexTab artist and parser.
+	const artist = new vextab.Artist(10, 10, 750, {
+		scale: 0.8
+	});
+	const tab = new vextab.VexTab(artist);
+	tab.parse(data);
+	artist.render(renderer);
+    </script>
+</body>

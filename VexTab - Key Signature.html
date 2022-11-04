@@ -1,0 +1,19 @@
+﻿<div id="boo"></div>
+
+<script type="text/javascript" src="https://unpkg.com/vextab/releases/main.dev.js"></script>
+
+<script type="text/javascript">
+    let data = 'tabstave notation=true tablature=false key=F';
+    const VF = vextab.Vex.Flow;
+    const renderer = new VF.Renderer($('#boo')[0], VF.Renderer.Backends.SVG);
+    vextab.Artist.NOLOGO = true;
+
+    // Initialize VexTab artist and parser.
+    const artist = new vextab.Artist(10, 10, 750, {
+        scale: 0.8
+    });
+
+    const tab = new vextab.VexTab(artist);
+    tab.parse(data);
+    artist.render(renderer);
+</script>
