@@ -23,12 +23,12 @@
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58d49584_002Dd00d_002D4cfd_002D8e77_002D733c589f2dda/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KeySignatureTest_C_Am" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net7.0::GA.Business.Core.Tests.Atonal.PitchClassSetTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E678F730-F6CA-488B-A41E-013017E7D7C0::net6.0::GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 35 Col 20)</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">A643A661-8BAD-422C-9EEE-8EFB19FB4573/f:GaExtensions.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 8 Col 1)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">A643A661-8BAD-422C-9EEE-8EFB19FB4573/f:TypeFormatterSourceExtensions.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 65 Col 61)</s:String>

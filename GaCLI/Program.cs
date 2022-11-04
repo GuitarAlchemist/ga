@@ -7,8 +7,6 @@ using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 using GA.Core.Extensions;
 
-var bb = typeof(Note).Assembly.MethodOverrideTypes("tostring");
-
 RenderGuitarFretboard();
 Console.WriteLine();
 RenderUkuleleFretboard();
@@ -77,8 +75,6 @@ static void RenderGuitarFretboard()
     var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Guitar.Standard.Tuning));
     var fretBoard = new Fretboard(tuning, 24);
     Console.WriteLine(fretBoard.ToString());
-    Console.WriteLine();
-    FretboardConsoleRenderer.Render(fretBoard);
 }
 
 static void RenderUkuleleFretboard()
@@ -86,7 +82,5 @@ static void RenderUkuleleFretboard()
     var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Ukulele.Baritone.Tuning));
     var fretBoard = new Fretboard(tuning, 15);
     Console.WriteLine(fretBoard.ToString());
-    Console.WriteLine();
-    FretboardConsoleRenderer.Render(fretBoard);
 }
 

@@ -16,7 +16,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{983FAA86-8005-4CFF-8796-E6D1A3B14F61}"
 	ProjectSection(SolutionItems) = preProject
 		DevNotes.txt = DevNotes.txt
+		Mermaid Example 2.html = Mermaid Example 2.html
 		docs\TuningChart.pdf = docs\TuningChart.pdf
+		Mermaid Example 1.html = Mermaid Example 1.html
+		VexFlow Example.html = VexFlow Example.html
+		VexTab - Key Signature.html = VexTab - Key Signature.html
+		VexTab Example 1.html = VexTab Example 1.html
+		VexTab Example 2.html = VexTab Example 2.html
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.WebBlazorApp", "GA.WebBlazorApp\GA.WebBlazorApp.csproj", "{150B48D2-FB05-42AB-B4BF-7028F92CA52B}"
@@ -58,12 +64,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experiments", "Experiments"
 	ProjectSection(SolutionItems) = preProject
 		Notebooks\Experiments\F Sharp.ipynb = Notebooks\Experiments\F Sharp.ipynb
 		Notebooks\Experiments\GA.ipynb = Notebooks\Experiments\GA.ipynb
+		Notebooks\Experiments\Html link test.ipynb = Notebooks\Experiments\Html link test.ipynb
 		Notebooks\Experiments\Random number.ipynb = Notebooks\Experiments\Random number.ipynb
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Interactive", "Common\GA.Interactive\GA.Interactive.csproj", "{058789C3-AD98-478E-95A3-9ED33CA9C126}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GA.InteractiveExtension", "Common\GA.InteractiveExtension\GA.InteractiveExtension.csproj", "{A643A661-8BAD-422C-9EEE-8EFB19FB4573}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.InteractiveExtension", "Common\GA.InteractiveExtension\GA.InteractiveExtension.csproj", "{A643A661-8BAD-422C-9EEE-8EFB19FB4573}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{72EB4535-C097-43BD-BCB2-EA3095ADE06E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.InteractiveExtension.Tests", "Tests\Common\GA.InteractiveExtension\GA.InteractiveExtension.Tests.csproj", "{E678F730-F6CA-488B-A41E-013017E7D7C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -119,6 +130,10 @@ Global
 		{A643A661-8BAD-422C-9EEE-8EFB19FB4573}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A643A661-8BAD-422C-9EEE-8EFB19FB4573}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A643A661-8BAD-422C-9EEE-8EFB19FB4573}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E678F730-F6CA-488B-A41E-013017E7D7C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E678F730-F6CA-488B-A41E-013017E7D7C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E678F730-F6CA-488B-A41E-013017E7D7C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E678F730-F6CA-488B-A41E-013017E7D7C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +141,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{44AA465B-6C3C-4439-B8C9-6624B0230D4F} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{7B106678-09E5-41B2-87D0-98E8C035C7FD} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{72F3861F-75BC-4504-9CC7-B7137D9BB2F1} = {72EB4535-C097-43BD-BCB2-EA3095ADE06E}
 		{F365B48C-7F5A-4C33-A973-6B16B090168F} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{200591AB-B9A5-45DE-B825-4BEE349B744E} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{B39C3492-FBD3-4EDA-98B7-207DEF406392} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
@@ -137,6 +153,7 @@ Global
 		{B2A60697-DB61-4FE8-BE50-B40C7B00D16A} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{058789C3-AD98-478E-95A3-9ED33CA9C126} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{A643A661-8BAD-422C-9EEE-8EFB19FB4573} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{E678F730-F6CA-488B-A41E-013017E7D7C0} = {72EB4535-C097-43BD-BCB2-EA3095ADE06E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}

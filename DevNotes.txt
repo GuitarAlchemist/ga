@@ -1,9 +1,11 @@
 TODO:
 
+- UI: Explore consumption of Javascript in dotnet interactive https://github.com/dotnet/interactive/blob/main/docs/javascript-overview.md
 - UI: Add simple text freboatd visualizer for notebooks
 - UI: Add VexFlow/VexTab/VexChord blazor support (https://www.vexflow.com/)
 - UI: Add simple piano blazor support https://codepen.io/gabrielcarol/pen/rGeEbY
-- Explore dotnet interactive extensions https://plbonneville.com/blog/introducing-the-dotnet-interactive-notebooks-razor-extension/
+- [Done] Explore dotnet interactive extensions https://plbonneville.com/blog/introducing-the-dotnet-interactive-notebooks-razor-extension/
+- Explore chord positions generation (Moveable, Open), then interpret from Atonal perspective
 
 - Concepts (Explore):
 

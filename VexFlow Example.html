@@ -1,0 +1,27 @@
+﻿<div id="outputBravura"></div>
+<script type="module">
+    import { Vex} from "https://cdn.skypack.dev/vexflow";
+
+    Vex.Flow.setMusicFont("Bravura");
+
+    const factory = new Vex.Flow.Factory({
+        renderer: {
+            elementId: "outputBravura",
+            width: 500,
+            height: 130
+        },
+    });
+    const score = factory.EasyScore();
+    factory
+        .System()
+        .addStave({
+            voices: [score.voice(score.notes("C#5/q, B4, A4, G#4", {
+                stem: "up"
+            })), score.voice(score.notes("C#4/h, C#4", {
+                stem: "down"
+            }))],
+        })
+        .addClef("treble")
+        .addTimeSignature("4/4");
+    factory.draw();
+</script>

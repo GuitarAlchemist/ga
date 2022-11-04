@@ -25,7 +25,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<IsPackable>true</IsPackable>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.0-beta</PackageVersion>
+		<PackageVersion>1.0.1-beta5</PackageVersion>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		<DebugType>embedded</DebugType>
@@ -57,15 +57,8 @@
 
 	<!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->
 	<ItemGroup>
-		<None 
-			Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" 
-			Pack="true" 
-			PackagePath="lib/$(TargetFramework)" />
-		<None 
-			Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" 
-			Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll"
-			Pack="true" 
-			PackagePath="interactive-extensions/dotnet" />
+		<None Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+		<None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
 	</ItemGroup>
 
 </Project>

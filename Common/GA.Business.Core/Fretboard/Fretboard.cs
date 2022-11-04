@@ -61,9 +61,11 @@ public class Fretboard
 
     public override string ToString()
     {
-        var sb = new StringBuilder();
-        using TextWriter writer = new StreamWriter(new MemoryStream());
-        FretboardTextWriterRenderer.Render(this, writer);
-        return sb.ToString();
+        using var memoryStream = new MemoryStream();
+        using TextWriter textWriter = new StreamWriter(memoryStream, Encoding.UTF8);
+        FretboardTextWriterRenderer.Render(this, textWriter);
+        var s = Encoding.UTF8.GetString(memoryStream.ToArray());
+        memoryStream.Flush();
+        return s;
     }
 }
