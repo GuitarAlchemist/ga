@@ -1,3 +1,5 @@
+FROM jupyter/base-notebook:latest
+
 # Copy notebooks
 
 COPY ./notebooks/ ${HOME}/notebooks/
