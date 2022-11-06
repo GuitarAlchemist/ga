@@ -9,6 +9,7 @@ _ReSharper.*
 bin
 obj
 packages
+/nuget
 /.idea
 /.vscode
 /Experiments/Vite/node_modules

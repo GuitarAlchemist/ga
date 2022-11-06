@@ -72,6 +72,9 @@ Console.ReadKey();
 
 static void RenderGuitarFretboard()
 {
+    Console.WriteLine(Fretboard.Default);
+
+    return;
     var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Guitar.Standard.Tuning));
     var fretBoard = new Fretboard(tuning, 24);
     Console.WriteLine(fretBoard.ToString());

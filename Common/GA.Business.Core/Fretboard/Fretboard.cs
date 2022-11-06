@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard;
 
-using Config;
 using Positions;
 using Notes;
 using Primitives;
@@ -11,13 +10,17 @@ using Primitives;
 [PublicAPI]
 public class Fretboard
 {
-    public static readonly Fretboard Default = new();
-
-    private static readonly string _defaultTuning = Instruments.Instrument.Guitar.Standard.Tuning;
+    private static Lazy<Tuning> _lazyDefaultTuning = new(
+        () => 
+            new(PitchCollection.Parse(_defaultTuning)));
+    private static readonly string _defaultTuning = "E2 A2 D3 G3 B3 E4";
     private readonly Lazy<PositionCollection> _lazyPositions;
-    
+
+    public static readonly Fretboard Default = new();
+    public static Tuning DefaultTuning => _lazyDefaultTuning.Value;
+
     public Fretboard() : this(
-        new(PitchCollection.Parse(_defaultTuning)), 24)
+        DefaultTuning, 24)
     {
     }
 
