@@ -1,4 +1,6 @@
-﻿namespace GA.InteractiveExtension.VexTab;
+﻿using GA.InteractiveExtension.Formatters;
+
+namespace GA.InteractiveExtension.Markdown;
 
 [TypeFormatterSource(typeof(VexTabMarkdownFormatter))]
 public class VexTabMarkDown

@@ -1,6 +1,7 @@
+using GA.InteractiveExtension.Markdown;
+
 namespace GA.InteractiveExtension.Tests;
 
-using VexTab;
 using Microsoft.DotNet.Interactive.Formatting;
 using FluentAssertions;
 using FluentAssertions.Execution;

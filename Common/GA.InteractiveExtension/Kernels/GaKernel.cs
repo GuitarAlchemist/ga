@@ -1,4 +1,4 @@
-﻿namespace GA.InteractiveExtension.Ga;
+﻿namespace GA.InteractiveExtension.Kernels;
 
 using Microsoft.DotNet.Interactive.Commands;
 

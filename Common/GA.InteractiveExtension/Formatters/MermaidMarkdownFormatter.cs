@@ -1,4 +1,4 @@
-﻿namespace GA.InteractiveExtension.VexTab;
+﻿namespace GA.InteractiveExtension.Formatters;
 
 using Microsoft.DotNet.Interactive.Formatting;
 
