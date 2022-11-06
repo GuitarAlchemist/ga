@@ -15,6 +15,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Figgle" Version="0.4.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.22504.6" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.22504.6" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.22504.6" />

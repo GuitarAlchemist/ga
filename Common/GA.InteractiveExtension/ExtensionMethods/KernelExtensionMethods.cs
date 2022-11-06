@@ -1,24 +1,24 @@
-﻿namespace GA.InteractiveExtension.Ga;
+﻿using GA.InteractiveExtension.Ga;
+
+namespace GA.InteractiveExtension.ExtensionMethods;
 
 using GA.Business.Core.Notes;
 using static PocketViewTags;
 
-public static class KernelExtensions
+public static class KernelExtensionMethods
 {
-    public static async Task<int> UseGaAsync<T>([NotNull] this T kernel)
+    public static async Task<ImmutableList<Type>> UseGaAsync<T>([NotNull] this T kernel)
         where T : Kernel
     {
         if (kernel == null) throw new ArgumentNullException(nameof(kernel));
 
-        var count = 0;
-        count += typeof(Note).Assembly.RegisterFormatters();
+        var types = typeof(Note).Assembly.RegisterFormatters();
 
         RegisterUriFormatter();
-        count++;
 
         await Task.CompletedTask;
 
-        return count;
+        return types;
     }
 
     private static void RegisterUriFormatter()

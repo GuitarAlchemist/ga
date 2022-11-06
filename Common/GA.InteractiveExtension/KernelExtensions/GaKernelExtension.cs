@@ -1,4 +1,4 @@
-﻿namespace GA.InteractiveExtension.Ga;
+﻿namespace GA.InteractiveExtension.KernelExtensions;
 
 using System;
 using Microsoft.DotNet.Interactive.Commands;
@@ -6,7 +6,8 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 
 using Core.Extensions;
-using VexTab;
+using Figgle;
+using GA.InteractiveExtension.ExtensionMethods;
 
 public class GaKernelExtension : IKernelExtension, IStaticContentSource
 {
@@ -16,18 +17,35 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
     {
         try
         {
-            var registeredFormatterCount = await kernel.UseGaAsync();
-            kernel.UseVexTab();
+            {
+                if (KernelInvocationContext.Current is { } currentContext)
+                {
+                    var banner = FiggleFonts.Standard.Render("Guitar Alchemist");
+                    // ReSharper disable StringLiteralTypo
+                    var html = $$""" 
+<pre style="font-family: monospace">{{banner}}</pre>
+""";
+                    // ReSharper restore StringLiteralTypo
+
+                    currentContext.DisplayAs(html, HtmlFormatter.MimeType);
+                }
+            }
+
+            var registeredTypes = await kernel.UseGaAsync();
+            // kernel.UseVexTab();
 
             {
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
-                    currentContext.DisplayAs(
-                        @$"
+                    var sTypes = string.Join(@"", registeredTypes.Select(type => $"<p>{type.FullName}</p>"));
+                    var html = $$""" 
 <details>
-    <summary>Renders Guitar Alchemist objects in dotnet-interactive notebooks ({registeredFormatterCount} formatters registered).</summary>
-</details>",
-                        HtmlFormatter.MimeType);
+    <summary>Renders Guitar Alchemist objects in dotnet-interactive notebooks ({{registeredTypes.Count}} formatters registered).</summary>
+    {{sTypes}}
+</details>    
+""";
+
+                    currentContext.DisplayAs(html, HtmlFormatter.MimeType);
                 }
             }
 
