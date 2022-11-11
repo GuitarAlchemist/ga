@@ -22,12 +22,9 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
                     DisplayGaBanner(currentContext);
-                    DisplayMermaidExample(currentContext, @"
-graph TD
-    A[Client] --> B[Load Balancer]
-    B --> C[Server1]
-    B --> D[Server2]
-");
+
+/*
+
                     DisplayMermaidExample(currentContext, @"
 classDiagram
     Animal <|-- Duck
@@ -55,6 +52,8 @@ classDiagram
                     // DisplayVerivio(currentContext);
                     // DisplayTwoExample(currentContext);
                     // DisplayHelloWorld(currentContext);
+*/
+
                 }
             }
 
