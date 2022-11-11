@@ -1,4 +1,4 @@
-﻿<div id="boo"></div>
+﻿<div id="d480a0b0b6a85684650fb232a86f8b3c1"></div>
 
 <script type="text/javascript" src="https://unpkg.com/vextab/releases/main.dev.js"></script>
 
@@ -10,7 +10,8 @@ notes :8 3/5 0-2-3/4 0-2/3 0-1-1-0/2 2-0/3 3-2-0/4 3/5
 text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
 `;
     const VF = vextab.Vex.Flow;
-    const renderer = new VF.Renderer($('#boo')[0], VF.Renderer.Backends.SVG);
+    const renderTarget = document.getElementById('d480a0b0b6a85684650fb232a86f8b3c1');
+    const renderer = new VF.Renderer(renderTarget, VF.Renderer.Backends.SVG);
     vextab.Artist.NOLOGO = true;
 
     // Initialize VexTab artist and parser.

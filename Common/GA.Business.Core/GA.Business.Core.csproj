@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Configurations>Debug;Release;net7.0</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<LangVersion Condition="'$(Configuration)' != 'net7.0'">preview</LangVersion>
+		<EnablePreviewFeatures Condition="'$(Configuration)' != 'net7.0'">true</EnablePreviewFeatures>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>preview</LangVersion>
-		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -62,15 +64,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.0.0" />
-		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
+		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="PCRE.NET" Version="0.19.0" />
-		<PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
-        <!-- For GA.Business.Config-->
-		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

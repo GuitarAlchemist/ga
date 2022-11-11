@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-	<PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<PropertyGroup Label="Configuration">
 		<TypeScriptTarget>ES2021</TypeScriptTarget>
 		<TypeScriptNoImplicitAny>True</TypeScriptNoImplicitAny>
 		<TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<Configurations>Debug;Release;net7.0</Configurations>
+		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<TypeScriptModuleKind>none</TypeScriptModuleKind>
@@ -27,7 +29,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.10" />
+		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
+		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="6.0.11" />
 		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.8.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

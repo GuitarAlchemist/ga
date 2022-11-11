@@ -1,24 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<Configurations>Debug;Release;net7.0</Configurations>
+		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <LangVersion>preview</LangVersion>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <LangVersion>preview</LangVersion>
+		<LangVersion Condition="'$(Configuration)' != 'net7.0'">preview</LangVersion>
+		<EnablePreviewFeatures Condition="'$(Configuration)' != 'net7.0'">true</EnablePreviewFeatures>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Figgle" Version="0.4.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.22504.6" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.22504.6" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.22504.6" />
+		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.22553.7" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.22553.7" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.22553.7" />
 	</ItemGroup>
 
 	<ItemGroup>

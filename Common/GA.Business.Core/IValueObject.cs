@@ -17,7 +17,6 @@ public interface IValueObject
 /// Value object interface (Strongly typed)
 /// </summary>
 /// <typeparam name="TSelf"></typeparam>
-[RequiresPreviewFeatures]
 public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, IComparable
     where TSelf : struct, IValueObject<TSelf>
 {

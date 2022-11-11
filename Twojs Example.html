@@ -1,0 +1,16 @@
+﻿<div id="draw-shapes"></div>
+
+<script type="module">
+    import Two from 'https://cdn.skypack.dev/two.js@latest';
+
+    var elem = document.getElementById('draw-shapes');
+    var two = new Two({ fitted: true }).appendTo(elem);
+
+    var circle = two.makeCircle(400, 250, 75);
+    circle.fill = 'navy';
+    circle.noStroke();
+
+    let group = two.makeGroup(circle);
+
+    two.update();
+</script>

@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Configurations>Debug;Release;net7.0</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>preview</LangVersion>
-		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IsPackable>true</IsPackable>
@@ -49,14 +49,12 @@
 		<!-- Needed when running on the docker jupyter/base-notebook image -->
 		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
 	</ItemGroup>
-
 	<ItemGroup>
 	  <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
 		  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 	  </ProjectReference>
 	</ItemGroup>
 
-	<!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->
 	<ItemGroup>
 		<None Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
 		<None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
@@ -65,5 +63,21 @@
 	<Target Name="NugetPackAutoVersioning" AfterTargets="Build">
 		<Exec Command="dotnet pack -p:PackageVersion=$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmm&quot;)) --no-build --configuration $(Configuration) --output &quot;$(SolutionDir)nuget&quot;" />
 	</Target>
+
+	<!-- TODO:
+	<Target Name="DeleteOldNugetPackages" AfterTargets="Build">
+		<ItemGroup>
+			<FilesToDelete Include="$(SolutionDir)nuget/$(PackageId).$(AssemblyName).*nupkg"/>
+		</ItemGroup>
+		<Message Text="Deleting Files @(FilesToDelete)"/>
+		<Delete Files="@(FilesToDelete)">
+			<Output 
+				TaskParameter="DeletedFiles"
+				ItemName="FilesDeleted"/>
+		</Delete>
+		<Message Text="Files deleted: @(FilesDeleted)"/>
+	</Target>
+    -->
+
 
 </Project>

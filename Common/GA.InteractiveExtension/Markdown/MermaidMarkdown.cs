@@ -1,6 +1,6 @@
 ﻿namespace GA.InteractiveExtension.Markdown;
 
-using GA.InteractiveExtension.Formatters;
+using Formatters;
 
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.

@@ -44,7 +44,7 @@ public readonly record struct Cardinality : IValueObject<Cardinality>,
     public override string ToString() => string.IsNullOrEmpty(Name) ? Value.ToString() : $"{Value} ({Name})";
     public string Name => _cardinalityNames[_value];
 
-    private static ImmutableDictionary<int, string> _cardinalityNames = new Dictionary<int, string>
+    private static readonly ImmutableDictionary<int, string> _cardinalityNames = new Dictionary<int, string>
     {
         [0] = string.Empty,
         [1] = "Monotonic",
