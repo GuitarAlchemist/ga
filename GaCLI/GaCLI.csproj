@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+	  <Configurations>Debug;Release;net7.0</Configurations>
+	  <OutputType>Exe</OutputType>
+	  <TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+	  <TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <EnablePreviewFeatures>True</EnablePreviewFeatures>
-    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

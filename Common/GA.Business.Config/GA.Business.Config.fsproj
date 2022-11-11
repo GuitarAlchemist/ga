@@ -1,8 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<Configurations>Debug;Release;net7.0</Configurations>
+		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
+		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild> <!-- See https://github.com/fsbolero/Bolero/issues/279 -->
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>

@@ -10,7 +10,7 @@ using Primitives;
 [PublicAPI]
 public class Fretboard
 {
-    private static Lazy<Tuning> _lazyDefaultTuning = new(
+    private static readonly Lazy<Tuning> _lazyDefaultTuning = new(
         () => 
             new(PitchCollection.Parse(_defaultTuning)));
     private static readonly string _defaultTuning = "E2 A2 D3 G3 B3 E4";
