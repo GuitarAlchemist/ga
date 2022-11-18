@@ -94,10 +94,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Interactive.LocalNuGet",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6CA2EDF0-E4DF-4DAC-B03A-43463ABDA847}"
 	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 		RemoveBinObj.ps1 = RemoveBinObj.ps1
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GA.Business.Querying", "Common\GA.Business.Querying\GA.Business.Querying.fsproj", "{901EA9E7-86FF-4559-AA67-DAEE0BA6B55D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GA.Business.Querying", "Common\GA.Business.Querying\GA.Business.Querying.fsproj", "{901EA9E7-86FF-4559-AA67-DAEE0BA6B55D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

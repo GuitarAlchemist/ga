@@ -1,9 +1,4 @@
-﻿https://www.nuget.org/packages/GuitarAlchemist.GA.Business.Core
-
-https://www.nuget.org/packages/GuitarAlchemist.GA.Interactive/1.0.0-beta
-
-
-# Guitar Alchemist
+﻿# Guitar Alchemist
 
 ## What is Guitar Alchemist?
 
@@ -12,7 +7,6 @@ Guitar Alchemist is a tool for exploring the guitar fretboard (Under development
 It is the sequel of the Guitar Alchemist project, started many years ago
 
 ![Guitar Alchemist](http://www.guitaralchemist.com/)
-
 
 Classes currently implemented:
 - Instrument/Tuning (Guitar, Bass, Banjo, Ukulele, and many more...)
