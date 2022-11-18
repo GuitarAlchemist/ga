@@ -5,11 +5,10 @@ using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
-using GA.Core.Extensions;
+using GA.Business.Querying;
 
-RenderGuitarFretboard();
-Console.WriteLine();
-RenderUkuleleFretboard();
+var a = FretboardQueries.memoFib.Invoke(10);
+Console.WriteLine(a);
 
 return;
 

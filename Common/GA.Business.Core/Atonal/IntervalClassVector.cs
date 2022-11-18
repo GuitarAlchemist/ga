@@ -132,9 +132,9 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     public string Description()
     {
         var sb = new StringBuilder();
-        sb.Append("<");
+        sb.Append('<');
         sb.Append(string.Join(" ", _orderedIcCounts));
-        sb.Append(">");
+        sb.Append('>');
         return sb.ToString();
     }
 }

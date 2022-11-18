@@ -15,24 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core.Tests", "T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{983FAA86-8005-4CFF-8796-E6D1A3B14F61}"
 	ProjectSection(SolutionItems) = preProject
-		ag-grid - Example - RequireJS.html = ag-grid - Example - RequireJS.html
-		ag-grid - Example 1.html = ag-grid - Example 1.html
-		d3js Example - RequireJs.html = d3js Example - RequireJs.html
-		DevNotes.txt = DevNotes.txt
-		Force-graph 3d.html = Force-graph 3d.html
-		Force-graph.html = Force-graph.html
-		Mermaid Example 1.html = Mermaid Example 1.html
-		Mermaid Example 2.html = Mermaid Example 2.html
-		Plotly Example.html = Plotly Example.html
-		RequireJS Template.html = RequireJS Template.html
 		docs\TuningChart.pdf = docs\TuningChart.pdf
-		Twojs Example - RequireJs.html = Twojs Example - RequireJs.html
-		Twojs Example.html = Twojs Example.html
-		Verivio Example.html = Verivio Example.html
-		VexFlow Example.html = VexFlow Example.html
-		VexTab - Key Signature.html = VexTab - Key Signature.html
-		VexTab Example 1.html = VexTab Example 1.html
-		VexTab Example 2.html = VexTab Example 2.html
+		docs\Tunings.txt = docs\Tunings.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.WebBlazorApp", "GA.WebBlazorApp\GA.WebBlazorApp.csproj", "{150B48D2-FB05-42AB-B4BF-7028F92CA52B}"
@@ -99,6 +83,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GA.Business.Querying", "Common\GA.Business.Querying\GA.Business.Querying.fsproj", "{901EA9E7-86FF-4559-AA67-DAEE0BA6B55D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{D83C83DA-262F-4C8A-9C81-17D4C6A70EF5}"
+	ProjectSection(SolutionItems) = preProject
+		Scripts\BinObj.fsx = Scripts\BinObj.fsx
+		Scripts\Consume GA NuGet packages.fsx = Scripts\Consume GA NuGet packages.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Html Examples", "Html Examples", "{9325B676-17E0-4A55-A204-4187BDC6FF14}"
+	ProjectSection(SolutionItems) = preProject
+		docs\Html Examples\ag-grid - Example - RequireJS.html = docs\Html Examples\ag-grid - Example - RequireJS.html
+		docs\Html Examples\ag-grid - Example 1.html = docs\Html Examples\ag-grid - Example 1.html
+		docs\Html Examples\d3js Example - RequireJs.html = docs\Html Examples\d3js Example - RequireJs.html
+		docs\Html Examples\Force-graph 3d.html = docs\Html Examples\Force-graph 3d.html
+		docs\Html Examples\Force-graph.html = docs\Html Examples\Force-graph.html
+		docs\Html Examples\Mermaid Example 1.html = docs\Html Examples\Mermaid Example 1.html
+		docs\Html Examples\Mermaid Example 2.html = docs\Html Examples\Mermaid Example 2.html
+		docs\Html Examples\Plotly Example.html = docs\Html Examples\Plotly Example.html
+		docs\Html Examples\RequireJS Template.html = docs\Html Examples\RequireJS Template.html
+		docs\Html Examples\response.html = docs\Html Examples\response.html
+		docs\Html Examples\Twojs Example - RequireJs.html = docs\Html Examples\Twojs Example - RequireJs.html
+		docs\Html Examples\Twojs Example.html = docs\Html Examples\Twojs Example.html
+		docs\Html Examples\Verivio Example.html = docs\Html Examples\Verivio Example.html
+		docs\Html Examples\VexFlow Example.html = docs\Html Examples\VexFlow Example.html
+		docs\Html Examples\VexTab - Key Signature.html = docs\Html Examples\VexTab - Key Signature.html
+		docs\Html Examples\VexTab Example 1.html = docs\Html Examples\VexTab Example 1.html
+		docs\Html Examples\VexTab Example 2.html = docs\Html Examples\VexTab Example 2.html
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -212,6 +223,7 @@ Global
 		{E678F730-F6CA-488B-A41E-013017E7D7C0} = {72EB4535-C097-43BD-BCB2-EA3095ADE06E}
 		{3D4A97EB-78AB-463E-9E25-50277401D41F} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{901EA9E7-86FF-4559-AA67-DAEE0BA6B55D} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{9325B676-17E0-4A55-A204-4187BDC6FF14} = {983FAA86-8005-4CFF-8796-E6D1A3B14F61}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}
