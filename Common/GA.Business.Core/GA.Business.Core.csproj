@@ -73,10 +73,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AdditionalFiles Include="Tunings.txt" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Using Include="Funcky" />
 		<Using Include="JetBrains.Annotations" />
 	</ItemGroup>

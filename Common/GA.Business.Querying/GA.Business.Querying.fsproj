@@ -9,4 +9,9 @@
     <Compile Include="Library.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\GA.Core\GA.Core.csproj" />
+    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
+  </ItemGroup>
+
 </Project>
