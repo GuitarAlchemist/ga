@@ -320,9 +320,9 @@ function booleanFilterCellRenderer(params) {
 
 function getBooleanFilter() {
 
-    function BooleanFilter() { }
+    function booleanFilter() { }
 
-    BooleanFilter.prototype.init = function (params) {
+    booleanFilter.prototype.init = function (params) {
         const uniqueId = Math.random();
         this.filterChangedCallback = params.filterChangedCallback;
         this.eGui = document.createElement('div');
@@ -344,12 +344,12 @@ function getBooleanFilter() {
         this.valueGetter = params.valueGetter;
     };
 
-    BooleanFilter.prototype.getGui = function () {
+    booleanFilter.prototype.getGui = function () {
         this.eGui.querySelectorAll('div')[1].style.backgroundColor = 'transparent';
         return this.eGui;
     };
 
-    BooleanFilter.prototype.doesFilterPass = function (params) {
+    booleanFilter.prototype.doesFilterPass = function (params) {
         const valueGetter = this.valueGetter;
 
         function getBooleanValue() {
@@ -375,15 +375,15 @@ function getBooleanFilter() {
         return true;
     };
 
-    BooleanFilter.prototype.isFilterActive = function () {
+    booleanFilter.prototype.isFilterActive = function () {
         return !this.cbNoFilter.checked;
     };
 
-    BooleanFilter.prototype.getModelAsString = function (model) {
+    booleanFilter.prototype.getModelAsString = function (model) {
         return model ? model : '';
     };
 
-    BooleanFilter.prototype.getModel = function () {
+    booleanFilter.prototype.getModel = function () {
         if (this.cbNoFilter.checked) { return ''; }
         if (this.cbPositive.checked) { return 'True'; }
         if (this.cbNegative.checked) { return 'False'; }
@@ -392,11 +392,11 @@ function getBooleanFilter() {
         console.error('invalid checkbox selection');
     };
 
-    BooleanFilter.prototype.setModel = function () {
+    booleanFilter.prototype.setModel = function () {
         // lazy, setModel() is not used
     };
 
-    return BooleanFilter;
+    return booleanFilter;
 }
 
 function booleanCleaner(value) {

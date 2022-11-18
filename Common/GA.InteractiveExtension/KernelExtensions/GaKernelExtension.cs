@@ -22,37 +22,19 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
                     DisplayGaBanner(currentContext);
+                    // DisplayHelloWorld(currentContext);
 
-/*
+                    DisplayMermaidExample(currentContext, """
+    graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[Server01]
+    B --> D[Server02]
+""");
 
-                    DisplayMermaidExample(currentContext, @"
-classDiagram
-    Animal <|-- Duck
-    Animal <|-- Fish
-    Animal <|-- Zebra
-    Animal : +int age
-    Animal : +String gender
-    Animal: +isMammal()
-    Animal: +mate()
-    class Duck{
-        +String beakColor
-        +swim()
-        +quack()
-    }
-    class Fish{
-        -int sizeInFeet
-        -canEat()
-    }
-    class Zebra{
-        +bool is_wild
-        +run()
-    }
-");
-
+                    DisplayTwoExample(currentContext);
                     // DisplayVerivio(currentContext);
                     // DisplayTwoExample(currentContext);
                     // DisplayHelloWorld(currentContext);
-*/
 
                 }
             }
@@ -207,37 +189,21 @@ classDiagram
     {
         // ReSharper disable StringLiteralTypo
         const string html = $$""" 
+<div id="draw-shapes" style="height: 100px; width: 100px"></div>
+
 <script type="module">
-// Make an instance of two and place it on the page.
-var params = {
-  fullscreen: true
-};
-var elem = document.body;
-var two = new Two(params).appendTo(elem);
+    import Two from 'https://cdn.skypack.dev/two.js@latest';
 
-// Two.js has convenient methods to make shapes and insert them into the scene.
-var radius = 50;
-var x = two.width * 0.5;
-var y = two.height * 0.5 - radius * 1.25;
-var circle = two.makeCircle(x, y, radius);
+    var elem = document.getElementById('draw-shapes');
+    var two = new Two({ fitted: true }).appendTo(elem);
 
-y = two.height * 0.5 + radius * 1.25;
-var width = 100;
-var height = 100;
-var rect = two.makeRectangle(x, y, width, height);
+    var circle = two.makeCircle(400, 250, 75);
+    circle.fill = 'navy';
+    circle.noStroke();
 
-// The object returned has many stylable properties:
-circle.fill = '#FF8000';
-// And accepts all valid CSS color:
-circle.stroke = 'orangered';
-circle.linewidth = 5;
+    let group = two.makeGroup(circle);
 
-rect.fill = 'rgb(0, 200, 255)';
-rect.opacity = 0.75;
-rect.noStroke();
-
-// Don’t forget to tell two to draw everything to the screen
-two.update();
+    two.update();
 </script>
 """;
         // ReSharper restore StringLiteralTypo
@@ -405,7 +371,7 @@ text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
         .then(function(text) {
             app.loadData(text);
         });
-</script> 
+</script>
 """;
         // ReSharper restore StringLiteralTypo
 

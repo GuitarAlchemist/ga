@@ -1,0 +1,28 @@
+<div id="c9ccbb5a-cd84-4910-bf93-a12e384da6ea" style="width: 900px; height: 500px;"></div>
+
+<script type="text/javascript">
+        var renderPlotly = function () {
+            const iplotRequire = require.config({ context: 'iplot', paths: { plotly: 'https://cdn.plot.ly/plotly-1.49.2.min' } }) || require;
+            iplotRequire(['plotly'], function (Plotly) {
+                const data = [{ "y": [1.2, 3.1, 0.4], "mode": "markers", "type": "scatter" }];
+                const layout = { "width": 900.0, "height": 500.0 };
+                Plotly.newPlot('c9ccbb5a-cd84-4910-bf93-a12e384da6ea', data, layout);
+            });
+        };
+
+        // ensure `require` is available globally
+        if ((typeof (require) !== typeof (Function)) || (typeof (require.config) !== typeof (Function))) {
+            let require_script = document.createElement('script');
+            require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+            require_script.setAttribute('type', 'text/javascript');
+
+            require_script.onload = function () {
+                renderPlotly();
+            };
+
+            document.getElementsByTagName('head')[0].appendChild(require_script);
+        }
+        else {
+            renderPlotly();
+        }
+</script>
