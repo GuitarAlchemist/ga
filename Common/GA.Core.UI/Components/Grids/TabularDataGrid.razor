@@ -8,7 +8,7 @@
      style="height: 100%; width: 100%">
 </div>
 
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 @inject ILogger<TabularDataGrid> Logger
 @inject AgGridTabularDataLoader RowsLoader
 
@@ -30,7 +30,7 @@
         if (firstRender)
         {
             // Import JavaScript module
-            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/tabularDataGrid.js");
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/tabularDataGrid.js");
             if (_jsModule == null) throw new InvalidOperationException();
         }
     }
@@ -79,7 +79,7 @@
         {
             var msg = ex.GetMessageAndStackTrace("Failed initializing data grid");
             Logger.LogError(msg);
-            await JSRuntime.LogAsync(msg);
+            await JsRuntime.LogAsync(msg);
             throw;
         }
     }

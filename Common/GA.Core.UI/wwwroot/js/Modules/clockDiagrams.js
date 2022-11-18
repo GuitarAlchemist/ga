@@ -1,4 +1,4 @@
-﻿import * as Two from 'https://cdn.skypack.dev/two.js';
+﻿import * as two from 'https://cdn.skypack.dev/two.js';
 
 export function init(element) {
     if (!element) {

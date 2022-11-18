@@ -1,0 +1,49 @@
+﻿<svg id="renderTarget" width="300" height="300"></svg>
+
+<script type="text/javascript">
+    const libUrl = 'https://d3js.org/d3.v5.min';
+    // https://cdn.jsdelivr.net/npm/ag-grid@18.1.2/dist/ag-grid.js
+
+    const libRender = (lib) => {
+        // YOUR CODE HERE
+    };
+
+    // ==========================================================================================================================
+
+    // ensure `require` is available globally
+    function installRequireScript(onload) {
+        const result = (typeof (window.require) !== typeof (Function)) || (typeof (window.require.config) !== typeof (Function));
+        if ((typeof (window.require) !== typeof (Function)) || (typeof (window.require.config) !== typeof (Function))) {
+            const requireScript = document.createElement('script');
+            requireScript.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+            requireScript.setAttribute('type', 'text/javascript');
+
+            requireScript.onload = onload;
+            document.getElementsByTagName('head')[0].appendChild(requireScript);
+        }
+
+        return result;
+    };
+
+    const loadAndRender = () => {
+        const requireJsConfig = {
+            'paths': {
+                'lib': libUrl
+            }
+        };
+
+        (window.require.config(requireJsConfig) || window.require)(
+            ['lib'],
+            (d3) => {
+                libRender(d3);
+                console.log('Succeeded');
+            },
+            (error) => {
+                console.log('Failed');
+                console.log(error);
+            }
+        );
+    };
+
+    if (!installRequireScript(loadAndRender)) loadAndRender();
+</script>

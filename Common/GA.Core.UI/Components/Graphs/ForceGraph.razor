@@ -1,0 +1,31 @@
+﻿@using GA.Core.Extensions
+@using GA.Core.UI.Dtos
+@using Microsoft.AspNetCore.Components
+
+<div @ref="_forceGraphElement"
+     id="@Id"
+     style="height: 100%; width: 100%">
+</div>
+
+@inject IJSRuntime JsRuntime
+@inject ILogger<ForceGraph> Logger
+
+@code {
+    private ElementReference? _forceGraphElement;
+    private IJSObjectReference? _jsModule;
+
+    [Parameter]
+    public string Id { get; set; } = $"force-graph-{Guid.NewGuid():N}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            // TODO
+            //_jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "https://unpkg.com/force-graph/dist/force-graph.min.js");
+            //if (_jsModule == null) throw new InvalidOperationException();
+        }
+    }
+}

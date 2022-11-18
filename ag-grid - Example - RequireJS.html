@@ -1,0 +1,62 @@
+﻿<div id="myGrid" style="height: 200px; width:500px;" class="ag-theme-alpine"></div>
+
+<script type="text/javascript">
+    const libRender = (agGrid) => {
+        var columnDefs = [
+            { headerName: "Make", field: "make" },
+            { headerName: "Model", field: "model" },
+            { headerName: "Price", field: "price" }
+        ];
+
+        // specify the data
+        var rowData = [
+            { make: "Toyota", model: "Celica", price: 35000 },
+            { make: "Ford", model: "Mondeo", price: 32000 },
+            { make: "Porsche", model: "Boxter", price: 72000 }
+        ];
+
+        // let the grid know which columns and what data to use
+        var gridOptions = {
+            columnDefs: columnDefs,
+            rowData: rowData
+        };
+
+        var gridDiv = document.querySelector('#myGrid');
+        new agGrid.Grid(gridDiv, gridOptions);
+    };
+
+    // --------------------------------------------------------------
+
+    // ensure `require` is available globally
+    function installRequireScript(onload) {
+        const result = (typeof (window.require) !== typeof (Function)) || (typeof (window.require.config) !== typeof (Function));
+        if ((typeof (window.require) !== typeof (Function)) || (typeof (window.require.config) !== typeof (Function))) {
+            const requireScript = document.createElement('script');
+            requireScript.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+            requireScript.setAttribute('type', 'text/javascript');
+
+            requireScript.onload = onload;
+            document.getElementsByTagName('head')[0].appendChild(requireScript);
+        }
+
+        return result;
+    };
+
+    function loadAndRender() {
+        () => {
+            const requireJsConfig = {
+                'paths': {
+                    'lib': 'https://cdn.jsdelivr.net/npm/ag-grid-community@28.2.1/dist/ag-grid-community.amd.min.js'
+                }
+            };
+
+            (window.require.config(requireJsConfig) || window.require)(
+                ['lib'],
+                (lib) => { libRender(lib) },
+                (error) => console.log(error)
+            );
+        };
+    };
+
+    if (!installRequireScript(loadAndRender)) loadAndRender();
+</script>
