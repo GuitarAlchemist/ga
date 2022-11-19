@@ -7,7 +7,9 @@ using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 using GA.Business.Querying;
 
-var a = FretboardQueries.memoFib.Invoke(10);
+var a = Fib.memoFib.Invoke(10);
+var b = Fib.memoFib.Invoke(10);
+var c = Instruments.Instrument.Guitar;
 Console.WriteLine(a);
 
 return;
@@ -22,6 +24,7 @@ foreach (var cardGroup in byCard)
     var url = first.Identity.ScalePageUrl;
     Console.WriteLine(url);
 }
+
 var groups = pcsObjects.GroupBy(set => set.IntervalClassVector).ToImmutableList();
 
 var pf = PitchClassSet.PrimeForms;
@@ -31,8 +34,8 @@ var idTranspositions = id.PitchClassSet.Transpositions;
 var scales = Scale.Objects.ToImmutableList();
 var modalScales =
     scales.Where(scale => scale.Identity.PitchClassSet.IsModal)
-          .OrderBy(scale => scale.Count)
-          .ToImmutableList();
+        .OrderBy(scale => scale.Count)
+        .ToImmutableList();
 
 var icv = Scale.Major.Identity.PitchClassSet.IntervalClassVector;
 var modes = scales.Where(scale => scale.Identity.PitchClassSet.IntervalClassVector == icv).ToImmutableList();
@@ -43,7 +46,10 @@ var colorNotes = dorian.ColorNotes;
 var dorianNotes = dorian.Notes;
 var dorianIdentity = MajorScaleMode.Dorian.Identity;
 var isModal = dorianIdentity.PitchClassSet.IsModal;
-var modalFamily = (ModalFamily?)(ModalFamily.TryGetValue(dorianIdentity.PitchClassSet.IntervalClassVector, out var modalFamily1) ? modalFamily1 : null);
+var modalFamily =
+    (ModalFamily?) (ModalFamily.TryGetValue(dorianIdentity.PitchClassSet.IntervalClassVector, out var modalFamily1)
+        ? modalFamily1
+        : null);
 var aaaa = 42;
 
 //var intervals = new List<(Note, Note,Interval.Simple)>();
@@ -72,17 +78,11 @@ Console.ReadKey();
 static void RenderGuitarFretboard()
 {
     Console.WriteLine(Fretboard.Default);
-
-    return;
-    var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Guitar.Standard.Tuning));
-    var fretBoard = new Fretboard(tuning, 24);
-    Console.WriteLine(fretBoard.ToString());
 }
 
 static void RenderUkuleleFretboard()
 {
-    var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument.Ukulele.Baritone.Tuning));
+    var tuning = new Tuning(PitchCollection.Parse(Instruments.Instrument. Ukulele.Baritone.Tuning));
     var fretBoard = new Fretboard(tuning, 15);
     Console.WriteLine(fretBoard.ToString());
 }
-

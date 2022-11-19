@@ -11,6 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="Tunings.toml" />
 		<None Include="Tunings.txt" />
 		<None Include="Instruments.yaml">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

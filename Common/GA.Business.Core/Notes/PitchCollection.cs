@@ -1,10 +1,18 @@
 ﻿namespace GA.Business.Core.Notes;
 
+using GA.Core;
 using GA.Core.Collections;
 
 [PublicAPI]
-public class PitchCollection : LazyPrintableCollectionBase<Pitch>
+public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<PitchCollection>
 {
+    #region IParsable{PitchCollection} members
+
+    public static PitchCollection Parse(string s, IFormatProvider? provider) => Parse(s);
+    public static bool TryParse(string? s, IFormatProvider? provider, out PitchCollection result) => TryParse(s, out result);
+
+    #endregion
+
     public static readonly PitchCollection Empty = new();
 
     public static PitchCollection Parse(string s)
