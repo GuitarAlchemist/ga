@@ -1,24 +1,10 @@
 ﻿namespace GA.Business.Querying
 
-open GA.Business.Core.Notes
-open GA.Business.Core.Intervals
-open GA.Business.Core.Fretboard
-open System.Collections.Generic
+(* http://dungpa.github.io/fsharp-cheatsheet/ *)
 
 [<AutoOpen>]
-module FretboardQueries =
+module Fib =
     (* See https://thesharperdev.com/posts/fsharp-fibonacci-five-ways/ *)
-    let memoize f =
-        let dict = Dictionary<_, _>();
-        fun key ->
-            let exist, value = dict.TryGetValue key
-            match exist with
-            | true -> value
-            | false -> 
-                let value = f key
-                dict.Add(key, value)
-                value
-
     let rec fib(n: int):int = 
         match n with
         | 1 | 2 -> n
