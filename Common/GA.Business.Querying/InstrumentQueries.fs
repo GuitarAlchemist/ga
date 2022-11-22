@@ -4,13 +4,16 @@ open GA.Business.Core.Notes
 open GA.Business.Core.Fretboard
 open GA.Business.Config.Instruments
 
-(* http://dungpa.github.io/fsharp-cheatsheet/ 
-*)
+(* http://dungpa.github.io/fsharp-cheatsheet/ *)
           
 [<AutoOpen>]
 module InstrumentQueries =
-  
     let guitarTuning() = Instrument.Guitar.Standard.Tuning |> parse<PitchCollection>
+
+    let parseTuning(sTuning : string): Tuning option =
+        match sTuning |> parse<PitchCollection> with
+        | Some pitchCollection -> new Tuning(pitchCollection) |> Some
+        | _ -> None
 
     type Instrument =
         | Guitar
@@ -21,8 +24,6 @@ module InstrumentQueries =
             match inst with
             | Guitar -> Instrument.Guitar.Standard.Tuning
             | _ -> null
-        let tuning =
-            match sTuning |> parse<PitchCollection> with
-            | Some pitchCollection -> new Tuning(pitchCollection) |> Some
-            | _ -> None
-        tuning
+        sTuning |> parseTuning
+
+    let freboard() = Fretboard.Default
