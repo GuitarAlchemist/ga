@@ -1,11 +1,18 @@
 ﻿namespace GA.Business.Core;
 
+[PublicAPI]
 public class ValueObjectCollection<T> : IReadOnlyCollection<T>
     where T : struct, IValueObject<T>
 {
     public static ValueObjectCollection<T> Create(int start, int count)
     {
         var items = GetItems(start, count);
+        return new(items, items.Length);
+    }
+
+    public static ValueObjectCollection<T> CreateWithHead(T head, int start, int count)
+    {
+        var items = GetItemsWithHead(head, start, count);
         return new(items, items.Length);
     }
 
@@ -32,13 +39,14 @@ public class ValueObjectCollection<T> : IReadOnlyCollection<T>
     public int Count { get; }
     public override string ToString() => string.Join(" ", _items.Select(value => value.ToString()));
 
-    // ReSharper disable once InconsistentNaming
-    private static ImmutableArray<T> GetItems(int start, int count)
-    {
-        var items =
-            Enumerable.Range(start, count)
-                .Select(i => new T {Value = i})
-                .ToImmutableArray();
-        return items;
-    }
+    private static ImmutableArray<T> GetItems(int start, int count) =>
+        Enumerable.Range(start, count)
+                  .Select(i => new T {Value = i})
+                  .ToImmutableArray();
+
+    private static ImmutableArray<T> GetItemsWithHead(T head, int start, int count) =>
+        new[] {head}
+            .Union(Enumerable.Range(start, count)
+            .Select(i => new T {Value = i}))
+            .ToImmutableArray();
 }
