@@ -46,4 +46,3 @@ public readonly record struct Str : IValueObject<Str>
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<Str>.CheckRange(Value, _minValue, maxValue);
     public override string ToString() => Value.ToString();
 }
-

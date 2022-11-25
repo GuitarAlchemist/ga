@@ -1,7 +1,5 @@
 ﻿namespace GA.Core.Combinatorics;
 
-using System.Collections.Immutable;
-using System.Numerics;
 using Collections;
 
 /// <summary>
@@ -26,75 +24,128 @@ using Collections;
 /// 9 words: (a,a),(a,b),(a,c),(b,a),(b,b),(b,c),(c,a),(c,b),(c,c)
 /// 
 /// </remarks>
-public class VariationsWithRepetitions<T> : IIndexer<BigInteger, ImmutableArray<T>>,
-                                            IIndexer<IReadOnlyCollection<T>, BigInteger>,
-                                            IEnumerable<ImmutableArray<T>>
+[PublicAPI]
+public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
+                                            IEnumerable<Variation<T>>
     where T : notnull
 {
+    #region IIndexer{BigInteger, Variation{T}} Members
+    /// <summary>
+    /// Gets a variation.
+    /// </summary>
+    /// <param name="index">The <see cref="BigInteger"/> key.</param>
+    /// <returns>The <see cref="ImmutableArray{T}"/></returns>
+    public Variation<T> this[BigInteger index] => GetVariation(index);
+
+    #endregion
+
+    #region IEnumerable{Variation{T}}
+
+    public IEnumerator<Variation<T>> GetEnumerator()
+    {
+        var key = BigInteger.Zero;
+        while (key.CompareTo(Count) != 0) yield return GetVariation(key++);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    #endregion
+
+    /// <summary>
+    /// The number of possible variations.
+    /// </summary>
+    public BigInteger Count { get; }
+
     private readonly BigInteger _base;
     private readonly int _length;
-    private readonly ImmutableDictionary<T, int> _indexByItem;
-    private readonly ImmutableDictionary<int, T> _itemByIndex;
+    private readonly ImmutableDictionary<T, int> _indexByElement;
+    private readonly ImmutableDictionary<int, T> _elementByIndex;
+    private readonly Lazy<ImmutableHashSet<T>> _lazyElementsSet;
 
+    /// <summary>
+    /// Creates a <see cref="VariationsWithRepetitions{T}"/> instance.
+    /// </summary>
+    /// <remarks>
+    /// - <see cref="elements"/> : the "alphabet"
+    /// - <see cref="length"/>   : the length of generated "words"
+    /// </remarks>
+    /// <param name="elements">The initial <see cref="IReadOnlyCollection{T}"/>.</param>
+    /// <param name="length"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public VariationsWithRepetitions(
-        IReadOnlyCollection<T> collection,
+        IReadOnlyCollection<T> elements,
         int length)
     {
-        _base = new(collection.Count);
+        Elements = elements ?? throw new ArgumentNullException(nameof(elements));
+        _base = new(elements.Count);
         Count = BigInteger.Pow(_base, length);
         _length = length;
-        
-        _indexByItem =
-            collection.Select((o, i) => (o, i))
+
+        _indexByElement =
+            elements.Select((o, i) => (o, i))
                 .ToImmutableDictionary(
                     tuple => tuple.o,
                     tuple => tuple.i);
-        _itemByIndex =
-            collection.Select((o, i) => (o, i))
+        _elementByIndex =
+            elements.Select((o, i) => (o, i))
                 .ToImmutableDictionary(
                     tuple => tuple.i,
                     tuple => tuple.o);
+
+        _lazyElementsSet = new(() => Elements.ToImmutableHashSet());
     }
 
-    public BigInteger Count { get; }
-    public ImmutableArray<T> this[BigInteger key] => GetArray(key);
-    public BigInteger this[IReadOnlyCollection<T> items] => GetIdentity(items);
+    /// <summary>
+    /// The possible <see cref="IReadOnlyCollection{T}"/> elements to choose from (The "alphabet").
+    /// </summary>
+    public IReadOnlyCollection<T> Elements { get; }
 
-    private BigInteger GetIdentity(IEnumerable<T> items)
+    /// <summary>
+    /// Gets the key for a variation.
+    /// </summary>
+    /// <param name="variation">The <see cref="ImmutableArray{T}"/></param>
+    /// <returns></returns>
+    public BigInteger GetKey(IEnumerable<T> variation)
     {
-        // id = index(item0) + index(item1) * _base ^ 1 + index(item2) * _base ^ 2 + etc...
-        // id = Sum(index(itemX * _base ^ X); X: 0..count(items)
+        var variationArray = variation.Take(_length).ToImmutableArray();
+        if (!_lazyElementsSet.Value.IsSupersetOf(variationArray))
+        {
+            var invalidItems = variationArray.Except(_lazyElementsSet.Value).ToImmutableArray();
+            var sInvalidItems = string.Join(", ", invalidItems.Take(5));
+            if (invalidItems.Length >= 5) sInvalidItems += "...";
+            throw new ArgumentException($"Invalid {nameof(variation)} - {invalidItems.Length} items are not in initial collection: {sInvalidItems}");
+        }
+
+        // Decompose the key is a series of items
+        // key = index(item0) + index(item1) * _base ^ 1 + index(item2) * _base ^ 2 + etc...
+        // key = Sum(index(itemX * _base ^ X); X: 0..count(items)
         var result = new BigInteger(0);
         var weight = new BigInteger(1);
-        foreach (var item in items)
+        var values = variationArray.Select(item => _indexByElement[item]);
+        foreach (var value in values)
         {
-            var value = _indexByItem[item];
             result += value * weight;
-            weight *=  _base;
+            weight *= _base;
         }
         return result;
     }
 
-    private ImmutableArray<T> GetArray(BigInteger id)
+    /// <summary>
+    /// Gets a variation for its index.
+    /// </summary>
+    /// <param name="index">The variation index.</param> in lexicographical order (See https://en.wikipedia.org/wiki/Lexicographic_order)
+    private Variation<T> GetVariation(BigInteger index)
     {
-        var items = new T[_length];
+        var arrayBuilder = ImmutableArray.CreateBuilder<T>(_length);
+        var dividend = index;
         for (var i = 0; i < _length; i++)
         {
-            var itemIndex = (int) BigInteger.Remainder(id, _base);
-            items[i] = _itemByIndex[itemIndex];
-            id = BigInteger.Divide(id, _base);
+            var elementIndex = (int)BigInteger.Remainder(dividend, _base);
+            arrayBuilder.Add(_elementByIndex[elementIndex]);
+            dividend = BigInteger.Divide(index, _base);
         }
-        return items.ToImmutableArray();
+
+        return new(index, arrayBuilder.ToImmutable());
     }
 
-    public IEnumerator<ImmutableArray<T>> GetEnumerator()
-    {
-        var id = BigInteger.Zero;
-        while (id.CompareTo(Count) != 0)
-        {
-            yield return GetArray(id++);
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

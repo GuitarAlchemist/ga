@@ -2,7 +2,6 @@
 
 namespace GA.Core.Collections;
 
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
 [PublicAPI]

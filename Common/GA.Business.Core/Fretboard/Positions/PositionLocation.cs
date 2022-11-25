@@ -2,7 +2,7 @@
 
 using Primitives;
 
-public readonly record struct PositionLocation(Str Str, Fret Fret)
+public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
 {
     #region RelationalMembers
 
