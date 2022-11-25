@@ -40,9 +40,9 @@
 		</PackageDescription>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.9</PackageVersion>
-		<AssemblyVersion>1.0.9.0</AssemblyVersion>
-		<FileVersion>1.0.9.0</FileVersion>
+		<PackageVersion>1.0.10-beta1</PackageVersion>
+		<AssemblyVersion>1.0.10.0</AssemblyVersion>
+		<FileVersion>1.0.10.0</FileVersion>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
@@ -64,8 +64,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Combinatorics" Version="2.0.0" />
-		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.0.0" />
+		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
+		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.1.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
