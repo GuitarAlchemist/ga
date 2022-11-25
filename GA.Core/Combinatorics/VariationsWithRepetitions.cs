@@ -30,10 +30,11 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     where T : notnull
 {
     #region IIndexer{BigInteger, Variation{T}} Members
+
     /// <summary>
-    /// Gets a variation.
+    /// Gets a variation given its index.
     /// </summary>
-    /// <param name="index">The <see cref="BigInteger"/> key.</param>
+    /// <param name="index">The <see cref="BigInteger"/> Lexicographical-order index</param>
     /// <returns>The <see cref="ImmutableArray{T}"/></returns>
     public Variation<T> this[BigInteger index] => GetVariation(index);
 
@@ -43,8 +44,8 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
 
     public IEnumerator<Variation<T>> GetEnumerator()
     {
-        var key = BigInteger.Zero;
-        while (key.CompareTo(Count) != 0) yield return GetVariation(key++);
+        var index = BigInteger.Zero;
+        while (index.CompareTo(Count) != 0) yield return GetVariation(index++);
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -101,11 +102,11 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     public IReadOnlyCollection<T> Elements { get; }
 
     /// <summary>
-    /// Gets the key for a variation.
+    /// Gets the index of a variation.
     /// </summary>
     /// <param name="variation">The <see cref="ImmutableArray{T}"/></param>
     /// <returns></returns>
-    public BigInteger GetKey(IEnumerable<T> variation)
+    public BigInteger GetIndex(IEnumerable<T> variation)
     {
         var variationArray = variation.Take(_length).ToImmutableArray();
         if (!_lazyElementsSet.Value.IsSupersetOf(variationArray))
@@ -116,9 +117,8 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
             throw new ArgumentException($"Invalid {nameof(variation)} - {invalidItems.Length} items are not in initial collection: {sInvalidItems}");
         }
 
-        // Decompose the key is a series of items
-        // key = index(item0) + index(item1) * _base ^ 1 + index(item2) * _base ^ 2 + etc...
-        // key = Sum(index(itemX * _base ^ X); X: 0..count(items)
+        // Decompose the variation index is a series of items
+        // index = indexof(item0) + indexof(item1) * _base ^ 1 + indexof(item2) * _base ^ 2 + etc...
         var result = new BigInteger(0);
         var weight = new BigInteger(1);
         var values = variationArray.Select(item => _indexByElement[item]);
@@ -142,7 +142,7 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         {
             var elementIndex = (int)BigInteger.Remainder(dividend, _base);
             arrayBuilder.Add(_elementByIndex[elementIndex]);
-            dividend = BigInteger.Divide(index, _base);
+            dividend = BigInteger.Divide(dividend, _base);
         }
 
         return new(index, arrayBuilder.ToImmutable());
