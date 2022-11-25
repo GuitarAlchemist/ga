@@ -7,26 +7,18 @@ using Primitives;
 /// </summary>
 public class ModalFamily
 {
-    private static readonly Lazy<Dictionary<IntervalClassVector, ModalFamily>> _lazyModalFamilies;
-    private static readonly Lazy<IReadOnlySet<IntervalClassVector>> _lazyModalIntervalVectors;
     public static IEnumerable<ModalFamily> All => _lazyModalFamilies.Value.Values;
     public static IReadOnlySet<IntervalClassVector> ModalIntervalVectors => _lazyModalIntervalVectors.Value;
     public static bool TryGetValue(IntervalClassVector intervalVector, out ModalFamily? modalFamily) => _lazyModalFamilies.Value.TryGetValue(intervalVector, out modalFamily);
 
     static ModalFamily()
     {
-        _lazyModalFamilies = new(ModalFamilyByIntervalVector);
-        _lazyModalIntervalVectors = new(ModalIntervalVectors);
-
-        static Dictionary<IntervalClassVector, ModalFamily> ModalFamilyByIntervalVector() =>
-            ModalFamilyCollection.SharedInstance
-                .ToDictionary(
-                    family => family.IntervalClassVector, 
-                    family => family);
-
-        static ImmutableHashSet<IntervalClassVector> ModalIntervalVectors() =>
-            _lazyModalFamilies.Value.Keys.ToImmutableHashSet();
+        _lazyModalFamilies = new(() => ModalFamilyCollection.SharedInstance.ToDictionary(family => family.IntervalClassVector, family => family));
+        _lazyModalIntervalVectors = new(() => _lazyModalFamilies.Value.Keys.ToImmutableHashSet());
     }
+
+    private static readonly Lazy<Dictionary<IntervalClassVector, ModalFamily>> _lazyModalFamilies;
+    private static readonly Lazy<IReadOnlySet<IntervalClassVector>> _lazyModalIntervalVectors;
 
     internal ModalFamily(
         int noteCount,
@@ -54,7 +46,7 @@ public class ModalFamily
 
         public IEnumerator<ModalFamily> GetEnumerator()
         {
-            var scaleSets = PitchClassSet.Objects.Where(set => PitchClassSetIdentity.ContainsRoot(set.Identity.Value));
+            var scaleSets = PitchClassSet.Objects.Where(pcs => PitchClassSetIdentity.ContainsRoot(pcs.Identity.Value));
             var scaleSetsByCount = scaleSets.ToLookup(set => set.Count);
             foreach (var countGrouping in scaleSetsByCount)
             {

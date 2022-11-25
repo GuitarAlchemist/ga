@@ -158,9 +158,9 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
     public override string ToString()
     {
         var sb = new StringBuilder();
-        sb.Append("(");
+        sb.Append('(');
         sb.Append(string.Join(" ", _pitchClassesSet));
-        sb.Append(")");
+        sb.Append(')');
         return sb.ToString();
     }
 

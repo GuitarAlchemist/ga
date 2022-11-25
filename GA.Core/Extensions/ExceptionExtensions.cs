@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace GA.Core.Extensions;
+﻿namespace GA.Core.Extensions;
 
 public static class ExceptionExtensions
 {
