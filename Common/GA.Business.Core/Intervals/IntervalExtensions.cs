@@ -7,22 +7,19 @@ using GA.Core.Collections;
 public static class IntervalExtensions
 {
     public static Indexer<IntervalSize, IntervalQuality> ToQualityByNumber(this IEnumerable<Interval.Simple> intervals) =>
-        new(
-            intervals.DistinctBy(simple => simple.Size)
-                     .ToDictionary(interval => interval.Size,
-                                   interval => interval.Quality)
-        );
+        new(intervals.DistinctBy(i => i.Size)
+                     .ToImmutableDictionary(i => i.Size, i => i.Quality));
 
     public static PitchClassSet ToPitchClassSet(this IEnumerable<Interval.Simple> intervals)
     {
-        var PitchClasses = new List<PitchClass>();
+        var pitchClasses = new List<PitchClass>();
         foreach (var interval in intervals)
         {
             var value = interval.ToSemitones().Value;
-            var PitchClass = new PitchClass {Value = value};
-            PitchClasses.Add(PitchClass);
+            var pitchClass = new PitchClass {Value = value};
+            pitchClasses.Add(pitchClass);
         }
 
-        return new(PitchClasses);
+        return new(pitchClasses);
     }
 }

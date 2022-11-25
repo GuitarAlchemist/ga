@@ -1,36 +1,30 @@
-﻿using GA.Business.Core.Fretboard.Primitives;
+﻿using GA.Business.Core.Atonal.Primitives;
+using GA.Business.Core.Notes;
 using GA.Core.Combinatorics;
 
-var moveableVariations = new MoveableVariations();
-var normalForms = new List<Variation<Fret>>();
-foreach (var variation in moveableVariations)
+var a = new OrderedCartesianProduct<Note.SharpKey, IntervalClass>();
+
+var b = a.GetTuples();
+
+/*
+var normByTuple = new Dictionary<(Note, Note), int>();
+foreach (var note1 in Note.AllSharp)
 {
-    var index = moveableVariations.GetIndex(variation);
-
-    if (index != variation.Index) throw new InvalidOperationException("That sucks!");
-
-    var isNormalForm = variation.Any(fret => fret == Fret.One);
-    if (!isNormalForm) continue;
-    normalForms.Add(variation);
+    foreach (var note2 in Note.AllSharp)
+    {
+        var norm = note1.GetNorm(note2);
+        var tuple = (note1, note2);
+        normByTuple.Add(tuple, norm);
+    }
 }
+var dict1 = normByTuple.ToImmutableDictionary();
 
-var variationsCount = moveableVariations.Count;
-var variationsArray  = moveableVariations.ToImmutableArray();
+*/
 
-// Console.WriteLine($"{string.Join(" ", movable)} => {variations.Count} variations");
-foreach (var variation in moveableVariations)
+
+
+
+foreach (var variation in new VariationsWithRepetitions<ushort>(new ushort[] { 0, 1 }, 12))
 {
     Console.WriteLine(variation.ToString());
-}
-
-/// <summary>
-/// - Muted fret + frets 1..5;
-/// - 6 string
-/// </summary>
-public sealed class MoveableVariations : VariationsWithRepetitions<Fret>
-{
-    public MoveableVariations(int strCount = 6) 
-        : base(Fret.Set(-1, 1..5), strCount)
-    {
-    }
 }

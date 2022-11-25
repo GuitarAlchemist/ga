@@ -15,7 +15,7 @@ foreach (var mode in modes)
     Console.WriteLine("");       
 }
 
-// -----------------------------------------------------------------
+// ----------------------------------------------------------------
 
 var a = Instruments.Instrument;
 
@@ -26,7 +26,8 @@ foreach (var prop in instrument.GetType().GetProperties())
     Console.WriteLine(prop.Name);
 }
 
-// -----------------------------------------------------------------
+// ----------------------------------------------------------------
+// Fretboard: All fret combinations for the first 5 frets, 6 string
 
 var moveableVariations = new MoveableVariations();
 var normalForms = new List<Variation<Fret>>();
@@ -41,11 +42,14 @@ foreach (var variation in moveableVariations)
     normalForms.Add(variation);
 }
 
-var variationsCount = moveableVariations.Count;
-var variationsArray  = moveableVariations.ToImmutableArray();
-
-// Console.WriteLine($"{string.Join(" ", movable)} => {variations.Count} variations");
 foreach (var variation in moveableVariations)
+{
+    Console.WriteLine(variation.ToString());
+}
+
+// ----------------------------------------------------------------
+// Experiment: 12 semitone switches
+foreach (var variation in new VariationsWithRepetitions<ushort>(new ushort[] {0, 1}, 12))
 {
     Console.WriteLine(variation.ToString());
 }

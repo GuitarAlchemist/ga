@@ -39,3 +39,4 @@ Stephane Pareilleux
 * [Gabriel Carol](https://codepen.io/gabrielcarol/pen/rGeEbY)
 * [Pier-Luc BonneVille](https://plbonneville.com/)
 * [Paul Erlich](https://en.wikipedia.org/wiki/Paul_Erlich)
+* [Daniel Weibel](https://weibeld.net/)

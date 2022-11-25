@@ -1,18 +1,19 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using GA.Business.Core.Intervals.Primitives;
-using GA.Business.Core.Atonal.Primitives;
 using Atonal;
 using Tonal;
 using Intervals;
 using Primitives;
+using GA.Core.Collections;
+using GA.Business.Core.Intervals.Primitives;
+using GA.Business.Core.Atonal.Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
-using GA.Core.Collections;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
-public abstract partial record Note : IComparable<Note>
+public abstract partial record Note : IComparable<Note>,
+                                      INormed<Note, IntervalClass>
 {
     #region Relational Comparers
 
@@ -30,13 +31,18 @@ public abstract partial record Note : IComparable<Note>
 
     #endregion
 
+    #region INormed<Note> Members
+
+    public static IntervalClass GetNorm(Note note1, Note note2) => note1.GetIntervalClass(note2);
+
+    #endregion
+
     #region Equality Members
 
     public virtual bool Equals(Note? other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return PitchClass.Equals(other.PitchClass);
+        if (other is null) return false;
+        return ReferenceEquals(this, other) || PitchClass.Equals(other.PitchClass);
     }
 
     public override int GetHashCode() => PitchClass.GetHashCode();
@@ -48,6 +54,10 @@ public abstract partial record Note : IComparable<Note>
     /// </summary>
     public abstract PitchClass PitchClass { get; }
 
+    /// <summary>
+    /// Get the accidented note for the note.
+    /// </summary>
+    /// <returns>The <see cref="AccidentedNote"/></returns>
     public abstract AccidentedNote ToAccidentedNote();
 
     // ReSharper disable once InconsistentNaming
@@ -55,7 +65,7 @@ public abstract partial record Note : IComparable<Note>
     {
         var startNote = ToAccidentedNote();
         var endNote = other.ToAccidentedNote();
-        return startNote.GetInterval(endNote);
+        return endNote < startNote ? endNote.GetInterval(startNote) : startNote.GetInterval(endNote);
     }
 
     /// <summary>
@@ -71,8 +81,8 @@ public abstract partial record Note : IComparable<Note>
         return IntervalClass.FromSemitones(semitones);
     }
 
-    public static IReadOnlyCollection<SharpKey> AllSharp => SharpKey.All;
-    public static IReadOnlyCollection<FlatKey> AllFlat => FlatKey.All;
+    public static IReadOnlyCollection<SharpKey> AllSharp => SharpKey.Items;
+    public static IReadOnlyCollection<FlatKey> AllFlat => FlatKey.Items;
 
     /// <inheritdoc cref="Note"/>
     /// <summary>
@@ -150,7 +160,7 @@ public abstract partial record Note : IComparable<Note>
     /// A note from a sharp Musical key.
     /// </summary>
     [PublicAPI]
-    public sealed partial record SharpKey(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote)
+    public sealed partial record SharpKey(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote), IItemCollection<SharpKey>
     {
         public static SharpKey C => new(NaturalNote.C);
         public static SharpKey CSharp => new(NaturalNote.C, Sharp);
@@ -167,7 +177,7 @@ public abstract partial record Note : IComparable<Note>
 
         public static implicit operator Chromatic(SharpKey sharpKey) => new(sharpKey.PitchClass);
 
-        public static IReadOnlyCollection<SharpKey> All => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
+        public static IReadOnlyCollection<SharpKey> Items => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
         public static IReadOnlyCollection<SharpKey> Natural => new[] { C, D, E, F, G, A, B }.ToImmutableList();
 
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
@@ -193,7 +203,7 @@ public abstract partial record Note : IComparable<Note>
     /// A note from a flat Musical key.
     /// </summary>
     [PublicAPI]
-    public sealed partial record FlatKey(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote)
+    public sealed partial record FlatKey(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote), IItemCollection<FlatKey>
     {
         public static FlatKey CFlat => new(NaturalNote.C, Flat);
         public static FlatKey C => new(NaturalNote.C);
@@ -210,7 +220,7 @@ public abstract partial record Note : IComparable<Note>
         public static FlatKey BFlat => new(NaturalNote.B, Flat);
         public static FlatKey B => new(NaturalNote.B);
 
-        public static IReadOnlyCollection<FlatKey> All => new[] { C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B }.ToImmutableList();
+        public static IReadOnlyCollection<FlatKey> Items => new[] { C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B }.ToImmutableList();
 
         public static implicit operator Chromatic(FlatKey flatKeyNote) => new(flatKeyNote.PitchClass);
 
@@ -238,12 +248,12 @@ public abstract partial record Note : IComparable<Note>
     /// A note with an optional accidental
     /// </summary>
     [PublicAPI]
-    public sealed partial record AccidentedNote(NaturalNote NaturalNote, Accidental? Accidental = null) : Note
+    public sealed partial record AccidentedNote(NaturalNote NaturalNote, Accidental? Accidental = null) : Note, IItemCollection<AccidentedNote>
     {
         public static implicit operator Chromatic(AccidentedNote accidentedNote) => new(accidentedNote.PitchClass);
         public static implicit operator AccidentedNote(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
         public static Interval.Simple operator -(AccidentedNote note1, AccidentedNote note2) => note1.GetInterval(note2);
-        public static IReadOnlyCollection<AccidentedNote> All => AllNotes.Instance;
+        public static IReadOnlyCollection<AccidentedNote> Items => AllNotes.Instance;
 
         public static AccidentedNote C => new(NaturalNote.C);
         public static AccidentedNote Cb => new(NaturalNote.C, Flat);

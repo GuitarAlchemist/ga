@@ -2,8 +2,10 @@
 
 using Collections;
 
+
+
 /// <summary>
-/// Arrange collection items into all possible arrays (Collection items can be used multiples times) - Also called "k-tuple"
+/// Arrange collection items into all possible variations (Collection items can be used multiples times) - Also called "k-tuple"
 /// </summary>
 /// <typeparam name="T"></typeparam>
 /// <remarks>
@@ -71,13 +73,17 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     /// - <see cref="length"/>   : the length of generated "words"
     /// </remarks>
     /// <param name="elements">The initial <see cref="IReadOnlyCollection{T}"/>.</param>
-    /// <param name="length"></param>
+    /// <param name="length">The number of items in each variation.</param>
+    /// <param name="predicate">Initial elements predicate (Optional).</param>
     /// <exception cref="ArgumentNullException"></exception>
     public VariationsWithRepetitions(
         IReadOnlyCollection<T> elements,
-        int length)
+        int length,
+        Func<T, bool>? predicate = null)
     {
-        Elements = elements ?? throw new ArgumentNullException(nameof(elements));
+        if (elements == null) throw new ArgumentNullException(nameof(elements));;
+        if (predicate != null) {elements = elements.Where(predicate).ToImmutableList();}
+        Elements = elements;
         _base = new(elements.Count);
         Count = BigInteger.Pow(_base, length);
         _length = length;
@@ -130,6 +136,14 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         return result;
     }
 
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append(string.Join(" ", Elements));
+        sb.Append($" => {Count} variations");
+        return sb.ToString();
+    }
+
     /// <summary>
     /// Gets a variation for its index.
     /// </summary>
@@ -147,5 +161,4 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
 
         return new(index, arrayBuilder.ToImmutable());
     }
-
 }
