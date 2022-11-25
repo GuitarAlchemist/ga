@@ -68,27 +68,14 @@ public readonly record struct Fret : IValueObject<Fret>,
 
     private class Defaults
     {
-        public Defaults()
-        {
-            DefaultMin = FromValue(_minValue);
-            DefaultMax = FromValue(_maxValue);
-            DefaultMuted = FromValue(-1);
-            DefaultOpen = FromValue(0);
-            DefaultOne = FromValue(1);
-            DefaultTwo = FromValue(2);
-            DefaultThree = FromValue(3);
-            DefaultFour = FromValue(4);
-            DefaultFive = FromValue(5);
-        }
-
-        public Fret DefaultMin { get; }
-        public Fret DefaultMax { get; }
-        public Fret DefaultMuted { get; }
-        public Fret DefaultOpen { get; }
-        public Fret DefaultOne { get; }
-        public Fret DefaultTwo { get; }
-        public Fret DefaultThree { get; }
-        public Fret DefaultFour { get; }
-        public Fret DefaultFive { get; }
+        public Fret DefaultMin { get; }= FromValue(_minValue);
+        public Fret DefaultMax { get; } =FromValue(_maxValue);
+        public Fret DefaultMuted { get; }= FromValue(-1);
+        public Fret DefaultOpen { get; } = FromValue(0);
+        public Fret DefaultOne { get; } = FromValue(1);
+        public Fret DefaultTwo { get; } = FromValue(2);
+        public Fret DefaultThree { get; } = FromValue(3);
+        public Fret DefaultFour { get; } = FromValue(4);
+        public Fret DefaultFive { get; } = FromValue(5);
     }
 }
