@@ -1,4 +1,4 @@
-﻿namespace GA.Core.Collections;
+﻿namespace GA.Core;
 
 /// <summary>
 /// Interface for classes that define a norm between two object instances 

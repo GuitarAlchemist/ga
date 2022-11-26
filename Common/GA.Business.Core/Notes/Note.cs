@@ -1,10 +1,11 @@
 ﻿namespace GA.Business.Core.Notes;
 
+using GA.Core;
+using GA.Core.Collections;
 using Atonal;
 using Tonal;
 using Intervals;
 using Primitives;
-using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 using GA.Business.Core.Atonal.Primitives;
 using static Primitives.SharpAccidental;

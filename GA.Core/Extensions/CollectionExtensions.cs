@@ -3,6 +3,8 @@
 [PublicAPI]
 public static class CollectionExtensions
 {
+    public static Lazy<ImmutableList<T>> ToLazyImmutableList<T>(this IEnumerable<T> items) => new(items.ToImmutableList);
+
     /// <summary>
     /// Rotate the items of a collection
     /// </summary>

@@ -1,14 +1,13 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core;
 using GA.Business.Core.Notes.Primitives;
-using Core;
 
 /// <summary>
 /// Signature.
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
 public readonly record struct Accidental : IValueObject<Accidental>
-
 {
     private const int _minValue = -3;
     private const int _maxValue = 3;

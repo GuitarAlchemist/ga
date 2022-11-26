@@ -2,6 +2,8 @@
 
 using PCRE;
 
+using GA.Core;
+using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 [PublicAPI]

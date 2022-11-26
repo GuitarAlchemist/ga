@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core;
+﻿namespace GA.Core;
 
 [PublicAPI]
 public interface IValueObjectCollection<out TSelf>

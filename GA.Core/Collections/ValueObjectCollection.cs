@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core;
+﻿namespace GA.Core.Collections;
 
 [PublicAPI]
 public class ValueObjectCollection<T> : IReadOnlyCollection<T>

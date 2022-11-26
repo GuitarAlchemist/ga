@@ -1,6 +1,9 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
-/// <inheritdoc cref="IValueObject{Cardinality}" />
+using GA.Core;
+using GA.Core.Collections;
+
+/// <inheritdoc cref="IValueObject" />
 /// <inheritdoc cref="IName" />
 /// <summary>
 /// An non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)

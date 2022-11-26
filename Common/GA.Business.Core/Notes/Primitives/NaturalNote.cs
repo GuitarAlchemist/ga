@@ -1,14 +1,14 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-
+using GA.Core.Extensions;
 
 
 using PCRE;
 
-using GA.Business.Core.Intervals.Primitives;
-using GA.Business.Core.Extensions;
-using Atonal;
+using GA.Core;
 using GA.Core.Collections;
+using Atonal;
+using GA.Business.Core.Intervals.Primitives;
 
 
 /// <summary>

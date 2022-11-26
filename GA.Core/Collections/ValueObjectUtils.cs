@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core;
+﻿namespace GA.Core.Collections;
 
 using System.Diagnostics;
-using GA.Core.Extensions;
+using Extensions;
 
 [PublicAPI]
 public static class ValueObjectUtils<TSelf>

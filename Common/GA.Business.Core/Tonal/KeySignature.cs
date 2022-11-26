@@ -1,10 +1,11 @@
 ﻿namespace GA.Business.Core.Tonal;
 
+using GA.Core;
+using GA.Core.Collections;
+using GA.Core.Extensions;
 using Notes;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
-using Intervals;
-using GA.Core.Extensions;
 
 /// <summary>
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)

@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
+using GA.Core;
 using Scales;
 
 public abstract class MinorScaleMode<TScaleDegree> : ScaleMode<TScaleDegree>

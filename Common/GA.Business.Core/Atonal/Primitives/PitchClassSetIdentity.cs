@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
 using Notes;
 using Scales;
 using GA.Business.Core.Notes.Extensions;

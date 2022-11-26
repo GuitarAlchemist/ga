@@ -2,8 +2,6 @@
 
 using Collections;
 
-
-
 /// <summary>
 /// Arrange collection items into all possible variations (Collection items can be used multiples times) - Also called "k-tuple"
 /// </summary>
@@ -81,7 +79,7 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         int length,
         Func<T, bool>? predicate = null)
     {
-        if (elements == null) throw new ArgumentNullException(nameof(elements));;
+        if (elements == null) throw new ArgumentNullException(nameof(elements));
         if (predicate != null) {elements = elements.Where(predicate).ToImmutableList();}
         Elements = elements;
         _base = new(elements.Count);
@@ -154,11 +152,10 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         var dividend = index;
         for (var i = 0; i < _length; i++)
         {
-            var elementIndex = (int)BigInteger.Remainder(dividend, _base);
+            var elementIndex = (int) BigInteger.Remainder(dividend, _base);
             arrayBuilder.Add(_elementByIndex[elementIndex]);
             dividend = BigInteger.Divide(dividend, _base);
         }
-
         return new(index, arrayBuilder.ToImmutable());
     }
 }

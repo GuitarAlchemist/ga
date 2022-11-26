@@ -1,5 +1,8 @@
 ﻿namespace GA.Business.Core.Intervals;
 
+using GA.Core;
+using GA.Core.Collections;
+
 [PublicAPI]
 public readonly record struct Octave : IValueObject<Octave>, 
                                        IFormattable
@@ -45,23 +48,20 @@ public readonly record struct Octave : IValueObject<Octave>,
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
-    public override string ToString()
+    public override string ToString() => Value switch
     {
-        return Value switch
-        {
-            -1 => "double-contra (-1)",
-            0 => "sub-contra (0)",
-            1 => "contra (1)",
-            2 => "great (2)",
-            3 => "small (3)",
-            4 => "one-line (4)",
-            5 => "two-line (5)",
-            6 => "three-line (6)",
-            7 => "four-line (7)",
-            8 => "five-line (8)",
-            _ => ""
-        };
-    }
+        -1 => "double-contra (-1)",
+        0 => "sub-contra (0)",
+        1 => "contra (1)",
+        2 => "great (2)",
+        3 => "small (3)",
+        4 => "one-line (4)",
+        5 => "two-line (5)",
+        6 => "three-line (6)",
+        7 => "four-line (7)",
+        8 => "five-line (8)",
+        _ => ""
+    };
 
     public string ToString(string? format, IFormatProvider? formatProvider)
     {

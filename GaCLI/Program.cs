@@ -2,26 +2,11 @@
 using GA.Business.Core.Notes;
 using GA.Core.Combinatorics;
 
-var a = new OrderedCartesianProduct<Note.SharpKey, IntervalClass>();
-
-var b = a.GetTuples();
-
-/*
-var normByTuple = new Dictionary<(Note, Note), int>();
-foreach (var note1 in Note.AllSharp)
+foreach (var pair in new NormedCartesianProduct<Note.SharpKey, IntervalClass>().Pairs)
 {
-    foreach (var note2 in Note.AllSharp)
-    {
-        var norm = note1.GetNorm(note2);
-        var tuple = (note1, note2);
-        normByTuple.Add(tuple, norm);
-    }
+    var s = pair.ToString();
+    Console.WriteLine(s);
 }
-var dict1 = normByTuple.ToImmutableDictionary();
-
-*/
-
-
 
 
 foreach (var variation in new VariationsWithRepetitions<ushort>(new ushort[] { 0, 1 }, 12))
