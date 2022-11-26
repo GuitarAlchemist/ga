@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core;
+
 /// <summary>
 /// See https://Objects.utk.edu/theorycomp/courses/murphy/documents/Intervals.pdf
 /// </summary>

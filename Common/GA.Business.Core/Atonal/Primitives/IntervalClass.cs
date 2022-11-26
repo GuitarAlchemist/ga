@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 /// <inheritdoc cref="IEquatable{IntervalClass}" />
@@ -62,5 +64,16 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
     public int Value { get => _value; init => _value = CheckRange(value); }
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<IntervalClass>.CheckRange(Value, _minValue, maxValue);
-    public override string ToString() => Value.ToString();
+
+    public override string ToString() => _value switch
+    {
+        0 => "0 (Unison)",
+        1 => "1 (m2, M7)",
+        2 => "2 (M2, m7)",
+        3 => "3 (m3, M6)",
+        4 => "4 (M3, m6)",
+        5 => "5 (P4, P5)",
+        6 => "6 (Tritone = A4, d5)",
+        _ => throw new InvalidOperationException()
+    };
 }

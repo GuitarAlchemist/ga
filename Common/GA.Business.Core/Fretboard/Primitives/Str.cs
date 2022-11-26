@@ -1,5 +1,8 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
+
 /// <summary>
 /// An instrument string (Between <see cref="Min"/> and <see cref="Max" />)
 /// </summary>

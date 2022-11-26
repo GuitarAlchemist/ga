@@ -1,5 +1,8 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
+
 /// <inheritdoc cref="IEquatable{String}" />
 /// <inheritdoc cref="IComparable{String}" />
 /// <inheritdoc cref="IComparable" />

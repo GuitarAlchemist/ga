@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Extensions;
+﻿namespace GA.Core.Extensions;
 
 public static class ValueObjectExtensions
 {

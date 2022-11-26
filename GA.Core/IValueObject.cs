@@ -1,7 +1,9 @@
-﻿namespace GA.Business.Core;
+﻿namespace GA.Core;
 
 using System.Diagnostics;
-using GA.Core.Extensions;
+
+using Collections;
+using Extensions;
 
 /// <summary>
 /// Interface for an object identified by its value.

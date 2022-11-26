@@ -1,12 +1,10 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using GA.Business.Core.Atonal.Primitives;
-
-
-
-using GA.Business.Core.Intervals.Primitives;
+using GA.Core;
 using GA.Core.Collections;
 using GA.Core.Extensions;
+using GA.Business.Core.Atonal.Primitives;
+using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using Notes;
 using Scales;

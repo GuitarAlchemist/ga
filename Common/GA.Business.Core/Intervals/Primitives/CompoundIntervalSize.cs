@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core.Collections;
+
 /// <summary>
 /// An compound diatonic interval number
 /// </summary>

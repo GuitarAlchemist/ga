@@ -1,5 +1,8 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
+
 /// <summary>
 /// A chromatic interval size expressed in semitones.
 /// </summary>

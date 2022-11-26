@@ -1,6 +1,8 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using Extensions;
+using GA.Core;
+using GA.Core.Extensions;
+using GA.Core.Collections;
 using Intervals;
 using Notes;
 

@@ -1,6 +1,10 @@
-﻿using GA.Business.Core.Extensions;
+﻿namespace GA.Business.Core.Tonal.Primitives;
 
-namespace GA.Business.Core.Tonal.Primitives;
+using GA.Core.Collections;
+using GA.Core.Extensions;
+
+
+
 
 using Modes;
 

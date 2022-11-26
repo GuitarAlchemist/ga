@@ -1,9 +1,9 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
+using GA.Core;
+using GA.Core.Collections;
 using Atonal;
-
 using Intervals;
-
 
 /// <inheritdoc cref="IEquatable{Fret}" />
 /// <inheritdoc cref="IComparable{Fret}" />
