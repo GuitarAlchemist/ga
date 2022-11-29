@@ -36,7 +36,7 @@ public class ModalFamily
     public IReadOnlyCollection<PitchClassSet> Modes { get; }
     public PitchClassSet PrimeMode { get; }
 
-    public override string ToString() => $"{NoteCount} notes - {IntervalClassVector.Description()} ({Modes.Count} items)";
+    public override string ToString() => $"{NoteCount} notes - {IntervalClassVector} ({Modes.Count} items)";
 
     #region Inner classes
 

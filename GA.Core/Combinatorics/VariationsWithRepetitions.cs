@@ -3,7 +3,7 @@
 using Collections;
 
 /// <summary>
-/// Arrange collection items into all possible variations (Collection items can be used multiples times) - Also called "k-tuple"
+/// Ordered arrangements of elements where repetition is allowed - Also called "k-tuple"
 /// </summary>
 /// <typeparam name="T"></typeparam>
 /// <remarks>
@@ -70,29 +70,29 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     /// - <see cref="elements"/> : the "alphabet"
     /// - <see cref="length"/>   : the length of generated "words"
     /// </remarks>
-    /// <param name="elements">The initial <see cref="IReadOnlyCollection{T}"/>.</param>
+    /// <param name="elements">The initial <see cref="IEnumerable{T}"/>.</param>
     /// <param name="length">The number of items in each variation.</param>
     /// <param name="predicate">Initial elements predicate (Optional).</param>
     /// <exception cref="ArgumentNullException"></exception>
     public VariationsWithRepetitions(
-        IReadOnlyCollection<T> elements,
+        IEnumerable<T> elements,
         int length,
         Func<T, bool>? predicate = null)
     {
         if (elements == null) throw new ArgumentNullException(nameof(elements));
         if (predicate != null) {elements = elements.Where(predicate).ToImmutableList();}
-        Elements = elements;
-        _base = new(elements.Count);
+        Elements = elements.ToImmutableList();
+        _base = new(Elements.Count);
         Count = BigInteger.Pow(_base, length);
         _length = length;
 
         _indexByElement =
-            elements.Select((o, i) => (o, i))
+            Elements.Select((o, i) => (o, i))
                 .ToImmutableDictionary(
                     tuple => tuple.o,
                     tuple => tuple.i);
         _elementByIndex =
-            elements.Select((o, i) => (o, i))
+            Elements.Select((o, i) => (o, i))
                 .ToImmutableDictionary(
                     tuple => tuple.i,
                     tuple => tuple.o);
@@ -136,8 +136,10 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
 
     public override string ToString()
     {
+        var len = Elements.Max(element => element.ToString()!.Length);
+
         var sb = new StringBuilder();
-        sb.Append(string.Join(" ", Elements));
+        sb.Append(string.Join(" ", Elements.Select(element => element.ToString()!.PadLeft(len))));
         sb.Append($" => {Count} variations");
         return sb.ToString();
     }

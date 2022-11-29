@@ -44,7 +44,7 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
     public static IReadOnlyCollection<int> Values => ValueObjectUtils<IntervalClass>.Values;
     public static IntervalClass FromSemitones(Semitones semitones)
     {
-        var value = semitones % 12; // Apply octave equivalence
+        var value = Math.Abs(semitones.Value) % 12; // Apply octave equivalence
         value = value > _maxValue ? 12 - value : value; // Apply interval inversion equivalence
         return FromValue(value);
     }
@@ -73,7 +73,7 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
         3 => "3 (m3, M6)",
         4 => "4 (M3, m6)",
         5 => "5 (P4, P5)",
-        6 => "6 (Tritone = A4, d5)",
+        6 => "6 (A4, d5; Tritone)",
         _ => throw new InvalidOperationException()
     };
 }

@@ -87,7 +87,6 @@ public readonly record struct NaturalNote : IValueObject<NaturalNote>,
 
     public static IReadOnlyCollection<NaturalNote> Items => GetAll();
     public static IReadOnlyCollection<int> Values => Items.ToValues();
-    public static IReadOnlyCollection<int> AllValues => Items.Select(note => note.Value).ToImmutableList();
 
     public static implicit operator NaturalNote(int value) => new() {Value = value};
     public static implicit operator int(NaturalNote item) => item.Value;
