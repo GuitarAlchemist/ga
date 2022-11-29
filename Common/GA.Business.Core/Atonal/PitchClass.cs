@@ -3,6 +3,7 @@
 using GA.Core;
 using GA.Core.Extensions;
 using GA.Core.Collections;
+using Primitives;
 using Intervals;
 using Notes;
 
@@ -11,7 +12,8 @@ using Notes;
 /// </summary>
 [PublicAPI]
 public readonly record struct PitchClass : IValueObject<PitchClass>,
-                                           IValueObjectCollection<PitchClass>
+                                           IValueObjectCollection<PitchClass>,
+                                           IIntervalClassType<PitchClass>
 {
     #region Relational members
 
@@ -20,6 +22,12 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
     public static bool operator >(PitchClass left, PitchClass right) => left.CompareTo(right) > 0;
     public static bool operator <=(PitchClass left, PitchClass right) => left.CompareTo(right) <= 0;
     public static bool operator >=(PitchClass left, PitchClass right) => left.CompareTo(right) >= 0;
+
+    #endregion
+
+    #region NormedType Members
+
+    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(item2 - item1);
 
     #endregion
 
@@ -32,7 +40,6 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
     public static PitchClass Max => FromValue(_maxValue);
     public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
     public static IReadOnlyCollection<int> Values => Items.ToValues();
-    public static IReadOnlyCollection<int> AllValues => Items.Select(pitchClass => pitchClass.Value).ToImmutableList();
 
     public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
@@ -60,9 +67,9 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
     public Note.SharpKey ToSharpNote() => _sharpNotes[_value];
     public Note.FlatKey ToFlatNote() => _flatNotes[_value];
-    public Pitch.Chromatic ToChromaticPitch(Octave octave) => new(_chromaticNotes[_value], octave);
-    public Pitch.Sharp ToSharpPitch(Octave octave) => new(_sharpNotes[_value], octave);
-    public Pitch.Flat ToFlatPitch(Octave octave) => new(_flatNotes[_value], octave);
+    public Pitch.Chromatic ToChromaticPitch(Octave octave) => new(ToChromaticNote(), octave);
+    public Pitch.Sharp ToSharpPitch(Octave octave) => new(ToSharpNote(), octave);
+    public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
 
     private static readonly ImmutableList<Note.Chromatic> _chromaticNotes =
         new List<Note.Chromatic>

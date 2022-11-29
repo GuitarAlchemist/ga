@@ -149,7 +149,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
     public PitchClassSetIdentity Identity { get; }
     public Cardinality Cardinality { get; }
     public IReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
-    public IntervalClassVector IntervalClassVector => new(Notes);
+    public IntervalClassVector IntervalClassVector => _pitchClassesSet.ToIntervalClassVector();
     public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality,IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
     public bool IsPrimeForm => _primeForms.Value.Contains(this);

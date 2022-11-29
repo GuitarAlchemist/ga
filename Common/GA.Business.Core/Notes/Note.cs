@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using GA.Core;
 using GA.Core.Collections;
 using Atonal;
 using Tonal;
@@ -14,7 +13,7 @@ using static Primitives.FlatAccidental;
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
 public abstract partial record Note : IComparable<Note>,
-                                      INormed<Note, IntervalClass>
+                                      IIntervalClassType<Note>
 {
     #region Relational Comparers
 
@@ -34,7 +33,7 @@ public abstract partial record Note : IComparable<Note>,
 
     #region INormed<Note> Members
 
-    public static IntervalClass GetNorm(Note note1, Note note2) => note1.GetIntervalClass(note2);
+    public static IntervalClass GetNorm(Note item1, Note item2) => item1.GetIntervalClass(item2);
 
     #endregion
 
@@ -180,6 +179,7 @@ public abstract partial record Note : IComparable<Note>,
 
         public static IReadOnlyCollection<SharpKey> Items => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
         public static IReadOnlyCollection<SharpKey> Natural => new[] { C, D, E, F, G, A, B }.ToImmutableList();
+        public static ImmutableArray<SharpKey> Create(params SharpKey[] notes) => notes.ToImmutableArray();
 
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
         public override Accidental? Accidental => SharpAccidental;
@@ -222,6 +222,7 @@ public abstract partial record Note : IComparable<Note>,
         public static FlatKey B => new(NaturalNote.B);
 
         public static IReadOnlyCollection<FlatKey> Items => new[] { C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B }.ToImmutableList();
+        public static ImmutableArray<SharpKey> Create(params SharpKey[] notes) => notes.ToImmutableArray();
 
         public static implicit operator Chromatic(FlatKey flatKeyNote) => new(flatKeyNote.PitchClass);
 
@@ -255,6 +256,7 @@ public abstract partial record Note : IComparable<Note>,
         public static implicit operator AccidentedNote(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
         public static Interval.Simple operator -(AccidentedNote note1, AccidentedNote note2) => note1.GetInterval(note2);
         public static IReadOnlyCollection<AccidentedNote> Items => AllNotes.Instance;
+        public static ImmutableArray<SharpKey> Create(params SharpKey[] notes) => notes.ToImmutableArray();
 
         public static AccidentedNote C => new(NaturalNote.C);
         public static AccidentedNote Cb => new(NaturalNote.C, Flat);

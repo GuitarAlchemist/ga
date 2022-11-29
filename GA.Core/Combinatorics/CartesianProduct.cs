@@ -1,29 +1,38 @@
 ﻿namespace GA.Core.Combinatorics;
 
-using Collections;
-using Extensions;
-
 /// <summary>
-/// (T x T) variations
+/// (T x T) variations (Typed pair)
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 /// <typeparam name="TPair">The item pair type.</typeparam>
 [PublicAPI]
 public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
-    where T : IItemCollection<T>
-    where TPair : IPair<T>
+    // where T : IItemCollection<T>
+    where T : notnull
+    where TPair : Pair<T>
 {
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public IEnumerator<TPair> GetEnumerator() => Pairs.GetEnumerator();
+    #region IEnumerable<TPair> Members
 
-    private readonly PairFactory<T, TPair>? _pairFactory;
-        
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public IEnumerator<TPair> GetEnumerator()
+    {
+        var pairs = Variations.GetPairs();
+        return _selector == null ? 
+            pairs.Cast<TPair>().GetEnumerator() : 
+            pairs.Select(pair => _selector(pair)).GetEnumerator();
+    }
+
+    #endregion
+
+    private readonly Func<Pair<T>, TPair>? _selector;
+
     protected CartesianProduct(
-        PairFactory<T, TPair>? pairFactory,
+        IEnumerable<T> items,
+        Func<Pair<T>, TPair>? selector = null,
         Func<T, bool>? predicate = null)
     {
-        _pairFactory = pairFactory;
-        Variations = new(T.Items, 2, predicate);
+        _selector = selector;
+        Variations = new(items, 2, predicate);
     }
 
     /// <summary>
@@ -32,12 +41,9 @@ public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
     public VariationsWithRepetitions<T> Variations { get; }
 
     /// <summary>
-    /// Gets the collection of <see cref="Tuple{T,T}"/>.
+    /// Gets the <see cref="BigInteger"/> pair count.
     /// </summary>
-    public IEnumerable<TPair> Pairs => 
-        _pairFactory == null 
-            ? Variations.GetPairs().Cast<TPair>() 
-            : Variations.GetPairs(_pairFactory);
+    public BigInteger Count => Variations.Count;
 
     public override string ToString()
     {
@@ -47,9 +53,6 @@ public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
         sb.Append($" => {t} x {t}: {Count} variations");
         return sb.ToString();
     }
-
-
-    public BigInteger Count => Variations.Count;
 }
 
 /// <summary>
@@ -58,10 +61,18 @@ public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
 /// <typeparam name="T">The item type.</typeparam>
 [PublicAPI]
 public class CartesianProduct<T> : CartesianProduct<T, Pair<T>>
-    where T : IItemCollection<T>
+    where T: notnull
 {
-    public CartesianProduct(Func<T, bool>? predicate = null)
-        : base(null, predicate)
+    public CartesianProduct(IEnumerable<T> items)
+        : base(items, null)
     {
+    }
+
+    public CartesianProduct(
+        IEnumerable<T> items,
+        Func<T, bool>? predicate)
+            : base(items, null, predicate)
+    {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
     }
 }
