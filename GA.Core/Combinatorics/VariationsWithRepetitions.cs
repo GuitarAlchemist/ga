@@ -25,11 +25,11 @@ using Collections;
 /// 
 /// </remarks>
 [PublicAPI]
-public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
-                                            IEnumerable<Variation<T>>
+public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
+                                            IIndexer<BigInteger, Variation<T>>
     where T : notnull
 {
-    #region IIndexer{BigInteger, Variation{T}} Members
+    #region IVariationList{T} Members
 
     /// <summary>
     /// Gets a variation given its index.
@@ -37,10 +37,6 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     /// <param name="index">The <see cref="BigInteger"/> Lexicographical-order index</param>
     /// <returns>The <see cref="ImmutableArray{T}"/></returns>
     public Variation<T> this[BigInteger index] => GetVariation(index);
-
-    #endregion
-
-    #region IEnumerable{Variation{T}}
 
     public IEnumerator<Variation<T>> GetEnumerator()
     {
@@ -57,8 +53,6 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     /// </summary>
     public BigInteger Count { get; }
 
-    private readonly BigInteger _base;
-    private readonly int _length;
     private readonly ImmutableDictionary<T, int> _indexByElement;
     private readonly ImmutableDictionary<int, T> _elementByIndex;
     private readonly Lazy<ImmutableHashSet<T>> _lazyElementsSet;
@@ -80,11 +74,11 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         Func<T, bool>? predicate = null)
     {
         if (elements == null) throw new ArgumentNullException(nameof(elements));
-        if (predicate != null) {elements = elements.Where(predicate).ToImmutableList();}
+        if (predicate != null) elements = elements.Where(predicate).ToImmutableList();
         Elements = elements.ToImmutableList();
-        _base = new(Elements.Count);
-        Count = BigInteger.Pow(_base, length);
-        _length = length;
+        Base = new(Elements.Count);
+        Count = BigInteger.Pow(Base, length);
+        Length = length;
 
         _indexByElement =
             Elements.Select((o, i) => (o, i))
@@ -106,13 +100,23 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     public IReadOnlyCollection<T> Elements { get; }
 
     /// <summary>
+    /// Gets the number of items in the produced variations (<see cref="Variation{T}.Count"/>.
+    /// </summary>
+    public int Length { get; }
+
+    /// <summary>
+    /// Gets the <see cref="BigInteger"/> number base for computing variation indices.
+    /// </summary>
+    public BigInteger Base { get; }
+
+    /// <summary>
     /// Gets the index of a variation.
     /// </summary>
     /// <param name="variation">The <see cref="ImmutableArray{T}"/></param>
     /// <returns></returns>
     public BigInteger GetIndex(IEnumerable<T> variation)
     {
-        var variationArray = variation.Take(_length).ToImmutableArray();
+        var variationArray = variation.Take(Length).ToImmutableArray();
         if (!_lazyElementsSet.Value.IsSupersetOf(variationArray))
         {
             var invalidItems = variationArray.Except(_lazyElementsSet.Value).ToImmutableArray();
@@ -129,7 +133,7 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
         foreach (var value in values)
         {
             result += value * weight;
-            weight *= _base;
+            weight *= Base;
         }
         return result;
     }
@@ -150,13 +154,13 @@ public class VariationsWithRepetitions<T> : IIndexer<BigInteger, Variation<T>>,
     /// <param name="index">The variation index.</param> in lexicographical order (See https://en.wikipedia.org/wiki/Lexicographic_order)
     private Variation<T> GetVariation(BigInteger index)
     {
-        var arrayBuilder = ImmutableArray.CreateBuilder<T>(_length);
+        var arrayBuilder = ImmutableArray.CreateBuilder<T>(Length);
         var dividend = index;
-        for (var i = 0; i < _length; i++)
+        for (var i = 0; i < Length; i++)
         {
-            var elementIndex = (int) BigInteger.Remainder(dividend, _base);
+            var elementIndex = (int)BigInteger.Remainder(dividend, Base);
             arrayBuilder.Add(_elementByIndex[elementIndex]);
-            dividend = BigInteger.Divide(dividend, _base);
+            dividend = BigInteger.Divide(dividend, Base);
         }
         return new(index, arrayBuilder.ToImmutable());
     }

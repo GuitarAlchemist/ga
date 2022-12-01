@@ -1,9 +1,8 @@
-﻿using System.Collections.ObjectModel;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Tonal;
+﻿namespace GA.Business.Core.Fretboard.Engine;
 
-namespace GA.Business.Core.Fretboard.Engine;
+using Primitives;
+using Tonal;
+using Atonal;
 
 /// <summary>
 /// (Fret, Key, KeyPositionCollection) tuple
@@ -44,7 +43,7 @@ public record KeyFretPositions(
                 var positions = new List<Position.Played>();
                 foreach (var position in fretboard.Positions.Played[fret])
                 {
-                    var pitchClass = position.Pitch.PitchClass;
+                    var pitchClass = position.MidiNote.PitchClass;
                     if (keyPitchClassSet.Contains(pitchClass)) positions.Add(position);
                 }
 

@@ -16,6 +16,6 @@ public static class AtonalExtensions
         where T : IIntervalClassType<T>
     {
         if (items == null) throw new ArgumentNullException(nameof(items));
-        return new(items.ToNormedCartesianProduct<T, IntervalClass>().ByNormCounts());
+        return new(items.ToNormedCartesianProduct<T, IntervalClass>().ByNormCounts(pair => pair.Norm.Value > 0));
     }
 }

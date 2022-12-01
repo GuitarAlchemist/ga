@@ -22,9 +22,9 @@ public class FretboardConsoleRenderer
             var options = aOptions ?? Options.Default; // TODO
             var playedPositions = fretboard.Positions.Played;
             var openFret = fretboard.Capo ?? Fret.Open;
-            var openPitches =
+            var openMidiNotes =
                 fretboard.Positions.Played[openFret]
-                    .Select(fretted => fretted.Pitch)
+                    .Select(fretted => fretted.MidiNote)
                     .ToImmutableHashSet();
             foreach (var str in fretboard.Strings)
             {
@@ -35,12 +35,12 @@ public class FretboardConsoleRenderer
                 // String positions
                 foreach (var playedPosition in playedPositions[str])
                 {
-                    var (location, pitch) = playedPosition;
+                    var (location, midiNote) = playedPosition;
 
                     if (location.Fret == Fret.Open)
                     {
                         // Open position
-                        var sOpen =  Pad($"({playedPosition.Pitch})");
+                        var sOpen =  Pad($"({playedPosition.MidiNote.ToSharpPitch()})");
                         if (fretboard.Capo.HasValue) 
                             NotAvailablePositionColor();
                         else 
@@ -58,11 +58,11 @@ public class FretboardConsoleRenderer
                             NotAvailablePositionColor();
                         else
                             FingeredPositionColor();
-                        Console.Write(Pad($"{pitch}"));
+                        Console.Write(Pad($"{midiNote}"));
 
                         // Fret
                         FretColor();
-                        if (openPitches.Contains(pitch)) OpenPositionColor(); // Same as open pitch
+                        if (openMidiNotes.Contains(midiNote)) OpenPositionColor(); // Same as open pitch
                         Console.Write("|");
                     }
                     Console.Write(" ");
