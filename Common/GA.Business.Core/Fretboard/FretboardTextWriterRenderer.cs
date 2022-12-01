@@ -35,7 +35,7 @@ public class FretboardTextWriterRenderer
                 var (location, pitch) = playedPosition;
                 if (location.Fret == Fret.Open)
                 {
-                    textWriter.Write($"{Pad($"({playedPosition.Pitch})")}");
+                    textWriter.Write($"{Pad($"({playedPosition.MidiNote.ToSharpPitch()})")}");
                     textWriter.Write(" ║");
                 }
                 else

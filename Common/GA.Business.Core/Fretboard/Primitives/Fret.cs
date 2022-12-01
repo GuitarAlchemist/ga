@@ -7,7 +7,7 @@ using GA.Core.Collections;
 /// <inheritdoc cref="IComparable{Fret}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
-/// An non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
+/// An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 [PublicAPI]
 public readonly record struct Fret : IValueObject<Fret>, 
@@ -57,6 +57,8 @@ public readonly record struct Fret : IValueObject<Fret>,
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
+    public bool IsMuted => this == Muted;
+    public bool IsOpen => this == Open;
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 

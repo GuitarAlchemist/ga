@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Engine;
 
-using System.Collections.ObjectModel;
-
 using Primitives;
 using Tonal;
 
@@ -66,7 +64,7 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         var list = new List<KeyPosition>();
         foreach (var position in positions)
         {
-            var keyNote = noteByPitchClass[position.Pitch.PitchClass];
+            var keyNote = noteByPitchClass[position.MidiNote.PitchClass];
             var keyPosition = new KeyPosition(position, keyNote);
             list.Add(keyPosition);
         }

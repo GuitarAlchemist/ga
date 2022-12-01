@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// (T x T) variations (Typed pair)
+/// TxT variations (With custom pair type).
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 /// <typeparam name="TPair">The item pair type.</typeparam>
@@ -56,7 +56,7 @@ public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
 }
 
 /// <summary>
-/// (T x T) variations
+/// TxT variations.
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 [PublicAPI]

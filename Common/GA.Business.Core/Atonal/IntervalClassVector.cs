@@ -4,7 +4,7 @@ using Primitives;
 using GA.Core.Collections;
 
 /// <summary>
-/// An interval vector represents the ordered occurence for each interval class (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
+/// Ordered occurence for each interval class,  (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
 /// </summary>
 /// <remarks>
 /// https://musictheory.pugetsound.edu/mt21c/IntervalVector.html

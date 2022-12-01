@@ -6,7 +6,7 @@ using Combinatorics;
 public static class CombinatoricsExtensions
 {
     /// <summary>
-    /// Get the cartesian product.
+    /// Get the TxT cartesian product.
     /// </summary>
     /// <typeparam name="T">The item type,</typeparam>
     /// <param name="items">The <see cref="IEnumerable{T}"/>,</param>

@@ -18,4 +18,6 @@ public static class VariationExtensions
     public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T)> Get11Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple11());
     public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T)> Get12Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple12());
     public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T, T)> Get13Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple13());
+
+    public static ImmutableDictionary<BigInteger, Variation<T>> ToIndexDictionary<T>(this IEnumerable<Variation<T>> items) => items.ToImmutableDictionary(variation => variation.Index);
 }

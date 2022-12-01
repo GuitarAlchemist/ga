@@ -10,8 +10,7 @@ using Primitives;
 [PublicAPI]
 public class Fretboard
 {
-    private static readonly Lazy<Tuning> _lazyDefaultTuning = new(() => new(PitchCollection.Parse(_defaultTuning)));
-    private static readonly string _defaultTuning = "E2 A2 D3 G3 B3 E4";
+    private static readonly Lazy<Tuning> _lazyDefaultTuning = new(() => new(PitchCollection.Parse("E2 A2 D3 G3 B3 E4")));
     private readonly Lazy<PositionCollection> _lazyPositions;
 
     public static readonly Fretboard Default = new();
@@ -45,7 +44,8 @@ public class Fretboard
                 var frets = Fret.Range(0, FretCount - 1);
                 foreach (var fret in frets)
                 {
-                    list.Add(new Position.Played(new(str, fret), midiNote++.ToSharpPitch()));
+                    var positionLocation = new PositionLocation(str, fret);
+                    list.Add(new Position.Played(positionLocation, midiNote++));
                 }
             }
             return new(list);

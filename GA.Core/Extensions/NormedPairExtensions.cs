@@ -27,14 +27,17 @@ public static class NormedPairExtensions
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TNorm">The norm type.</typeparam>
     /// <param name="normedPairs">The collection of <see cref="NormedPair{T, TNorm}"/></param>
+    /// <param name="predicate">The predicate of <see cref="NormedPair{T, TNorm"/> </param>
     /// <returns>The <see cref="ImmutableSortedDictionary{TKey,TValue}"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static ImmutableSortedDictionary<TNorm, int> ByNormCounts<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs)
-        where T : INormedType<T, TNorm>
-        where TNorm : struct
+    public static ImmutableSortedDictionary<TNorm, int> ByNormCounts<T, TNorm>(
+        this IEnumerable<NormedPair<T, TNorm>> normedPairs,
+        Func<NormedPair<T, TNorm>, bool>? predicate = null)
+            where T : INormedType<T, TNorm>
+            where TNorm : struct
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
-
+        if (predicate != null) normedPairs = normedPairs.Where(predicate);
         return normedPairs.ByNorm().GetCounts();
     }
 }

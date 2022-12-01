@@ -7,25 +7,25 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
 {
     private readonly Lazy<ILookup<Str, Position.Played>> _lazyPositionsByStr;
     private readonly Lazy<ILookup<Fret, Position.Played>> _lazyPositionsByFret;
-    private readonly Lazy<ILookup<PositionLocation, Position.Played>> _lazyPositionsByLocation;
+    private readonly Lazy<ImmutableDictionary<PositionLocation, Position.Played>> _lazyPositionsByLocation;
 
     public PlayedPositionCollection(IReadOnlyCollection<Position.Played> positions)
         : base(positions)
     {
         _lazyPositionsByStr = new(() => positions.ToLookup(position => position.Location.Str));
         _lazyPositionsByFret = new(() => positions.ToLookup(position => position.Location.Fret));
-        _lazyPositionsByLocation = new(() => positions.ToLookup(position => position.Location));
+        _lazyPositionsByLocation = new(() => positions.ToImmutableDictionary(position => position.Location));
     }
 
     /// <summary>
-    /// Gets played position by string
+    /// Gets played positions by string
     /// </summary>
     /// <param name="str">The <see cref="Str"/></param>
     /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
     public IEnumerable<Position.Played> this[Str str] => _lazyPositionsByStr.Value[str];
 
     /// <summary>
-    /// Gets played position by fret
+    /// Gets played positions by fret
     /// </summary>
     /// <param name="fret">The <see cref="Fret"/></param>
     /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
@@ -36,7 +36,7 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
     /// </summary>
     /// <param name="location">The <see cref="PositionLocation"/></param>
     /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
-    public IEnumerable<Position.Played> this[PositionLocation location] => _lazyPositionsByLocation.Value[location];
+    public Position.Played this[PositionLocation location] => _lazyPositionsByLocation.Value[location];
 
     /// <summary>
     /// Gets all position locations
