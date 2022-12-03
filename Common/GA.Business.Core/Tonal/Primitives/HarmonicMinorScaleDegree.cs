@@ -50,7 +50,7 @@ public readonly record struct HarmonicMinorScaleDegree : IMinorScaleModeDegree<H
 
     public static IEnumerable<HarmonicMinorScaleDegree> Objects => IValueObject<HarmonicMinorScaleDegree>.GetRange(_minValue, _maxValue - _minValue);
     public static IReadOnlyCollection<HarmonicMinorScaleDegree> Items => ValueObjectUtils<HarmonicMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

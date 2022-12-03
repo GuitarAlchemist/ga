@@ -18,9 +18,9 @@ public interface IValueObject
 /// </summary>
 /// <typeparam name="TSelf"></typeparam>
 public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, IComparable
-    where TSelf : struct, IValueObject<TSelf>
+    where TSelf : IValueObject<TSelf>, new()
 {
-    int IComparable<TSelf>.CompareTo(TSelf other) => Value.CompareTo(other.Value);
+    int IComparable<TSelf>.CompareTo(TSelf? other) => Value.CompareTo(other?.Value);
     int IComparable.CompareTo(object? obj)
     { 
         if (ReferenceEquals(null, obj)) return 1;

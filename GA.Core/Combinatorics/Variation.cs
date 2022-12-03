@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// A k-tuple variation. 
+/// A k-tuple variation.
 /// </summary>
 /// <typeparam name="T">The element type.</typeparam>
 /// <seealso cref="VariationsWithRepetitions{T}"/>

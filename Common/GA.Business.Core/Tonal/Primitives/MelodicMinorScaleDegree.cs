@@ -51,7 +51,7 @@ public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<Me
 
     public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
     public static IReadOnlyCollection<MelodicMinorScaleDegree> Items => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

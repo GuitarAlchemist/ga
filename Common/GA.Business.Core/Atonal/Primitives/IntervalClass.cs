@@ -41,7 +41,7 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IntervalClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
     public static IReadOnlyCollection<IntervalClass> Items => ValueObjectUtils<IntervalClass>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectUtils<IntervalClass>.Values;
+    public static ImmutableList<int> Values => ValueObjectUtils<IntervalClass>.Values;
     public static IntervalClass FromSemitones(Semitones semitones)
     {
         var value = Math.Abs(semitones.Value) % 12; // Apply octave equivalence

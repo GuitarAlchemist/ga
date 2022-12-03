@@ -47,7 +47,7 @@ public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<Na
 
     public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
     public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

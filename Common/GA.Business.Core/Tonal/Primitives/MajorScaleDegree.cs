@@ -46,7 +46,7 @@ public readonly record struct MajorScaleDegree : IValueObject<MajorScaleDegree>,
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;
 
     public static IReadOnlyCollection<MajorScaleDegree> Items => ValueObjectUtils<MajorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static ImmutableList<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
