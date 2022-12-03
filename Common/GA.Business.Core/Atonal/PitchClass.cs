@@ -39,7 +39,7 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
     public static PitchClass Min => FromValue(_minValue);
     public static PitchClass Max => FromValue(_maxValue);
     public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static ImmutableList<int> Values => Items.ToValueList();
 
     public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;

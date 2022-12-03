@@ -24,7 +24,7 @@ public readonly record struct Cardinality : IValueObject<Cardinality>,
     #endregion
 
     public static IReadOnlyCollection<Cardinality> Items => ValueObjectUtils<Cardinality>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectUtils<Cardinality>.Values;
+    public static ImmutableList<int> Values => ValueObjectUtils<Cardinality>.Values;
 
     private const int _minValue = 0;
     private const int _maxValue = 12;

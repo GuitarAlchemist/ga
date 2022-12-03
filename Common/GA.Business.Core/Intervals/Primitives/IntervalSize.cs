@@ -52,7 +52,7 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
     public static IntervalSize Octave => FromValue(IntervalSizeValues.OctaveValue);
 
     public static IReadOnlyCollection<IntervalSize> Items => ValueObjectCollection<IntervalSize>.Create();
-    public static IReadOnlyCollection<int> Values => Items.ToValues();
+    public static ImmutableList<int> Values => Items.ToValueList();
     public static IReadOnlyCollection<IntervalSize> Range(int start, int count) => ValueObjectUtils<IntervalSize>.GetItems(start, count);
     public static IReadOnlyCollection<IntervalSize> Range(int count) => ValueObjectUtils<IntervalSize>.GetItems(-_minValue, count);
 

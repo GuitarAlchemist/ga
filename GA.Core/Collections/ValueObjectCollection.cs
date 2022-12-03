@@ -2,7 +2,7 @@
 
 [PublicAPI]
 public class ValueObjectCollection<T> : IReadOnlyCollection<T>
-    where T : struct, IValueObject<T>
+    where T : IValueObject<T>, new()
 {
     public static ValueObjectCollection<T> Create(int start, int count)
     {

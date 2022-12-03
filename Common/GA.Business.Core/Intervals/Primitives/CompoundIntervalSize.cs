@@ -44,7 +44,7 @@ public readonly record struct CompoundIntervalSize : IIntervalSize<CompoundInter
     public static CompoundIntervalSize DoubleOctave => FromValue(16);
 
     public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(number => number .Value).ToImmutableList();
+    public static ImmutableList<int> Values => Items.Select(number => number .Value).ToImmutableList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

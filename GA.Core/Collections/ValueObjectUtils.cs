@@ -5,7 +5,7 @@ using Extensions;
 
 [PublicAPI]
 public static class ValueObjectUtils<TSelf>
-    where TSelf : struct, IValueObject<TSelf>
+    where TSelf : IValueObject<TSelf>, new()
 {
     public static int CheckRange(
         int value, 
@@ -48,5 +48,5 @@ public static class ValueObjectUtils<TSelf>
     // ReSharper disable once InconsistentNaming
     public static IReadOnlyCollection<TSelf> GetItems(int start, int count) => ValueObjectCollection<TSelf>.Create(start, count);
     public static IReadOnlyCollection<TSelf> GetItemsWithHead(TSelf head, int start, int count) => ValueObjectCollection<TSelf>.CreateWithHead(head, start, count);
-    public static IReadOnlyCollection<int> Values => Items.Select(value => value.Value).ToImmutableList();
+    public static ImmutableList<int> Values => Items.Select(value => value.Value).ToImmutableList();
 }

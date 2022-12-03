@@ -9,7 +9,7 @@ using Atonal;
 /// </summary>
 /// <remarks>
 /// Goal:
-/// Declare a relationship between Open fret/capo position and keys
+/// Declare a Equivalence between Open fret/capo position and keys
 /// The objective is surfacing "opportunities" to the user - Example
 /// The fretboard context is required (Tuning)
 /// 1) Open position works best for certain keys => List keys (Keys with the highest open positions count first) 

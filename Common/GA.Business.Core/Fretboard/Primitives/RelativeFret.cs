@@ -27,7 +27,7 @@ public readonly record struct RelativeFret : IValueObject<RelativeFret>,
     #endregion
 
     public static IReadOnlyCollection<RelativeFret> Items => ValueObjectUtils<RelativeFret>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectUtils<RelativeFret>.Values;
+    public static ImmutableList<int> Values => ValueObjectUtils<RelativeFret>.Values;
 
     private const int _minValue = 0;
     private const int _maxValue = 4;

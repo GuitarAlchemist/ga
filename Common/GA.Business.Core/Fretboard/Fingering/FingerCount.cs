@@ -24,7 +24,7 @@ public readonly record struct FingerCount : IValueObject<FingerCount>,
     #endregion
 
     public static IReadOnlyCollection<FingerCount> Items => ValueObjectUtils<FingerCount>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectUtils<FingerCount>.Values;
+    public static ImmutableList<int> Values => ValueObjectUtils<FingerCount>.Values;
 
     private const int _minValue = -1;
     private const int _maxValue = 36;

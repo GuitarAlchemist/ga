@@ -1,9 +1,15 @@
 ﻿namespace GA.Core.Extensions;
 
+using Collections;
+
 [PublicAPI]
 public static class CollectionExtensions
 {
     public static Lazy<ImmutableList<T>> ToLazyImmutableList<T>(this IEnumerable<T> items) => new(items.ToImmutableList);
+
+    public static LazyCollection<T> ToLazyCollection<T>(this IEnumerable<T> items) 
+        where T : class 
+            => new(items);
 
     /// <summary>
     /// Rotate the items of a collection

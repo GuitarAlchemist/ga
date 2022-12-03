@@ -32,7 +32,7 @@ public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<Pit
     #endregion
 
     public static IReadOnlyCollection<PitchClassSetIdentity> Items => ValueObjectUtils<PitchClassSetIdentity>.Items;
-    public static IReadOnlyCollection<int> Values => ValueObjectUtils<PitchClassSetIdentity>.Values;
+    public static ImmutableList<int> Values => ValueObjectUtils<PitchClassSetIdentity>.Values;
     public static IEnumerable<PitchClassSetIdentity> Objects => Items;
 
     private const int _minValue = 0;
