@@ -9,12 +9,13 @@ using static Primitives.RelativeFretVector;
 /// Collection of <see cref="RelativeFretVector"/>
 /// </summary>
 [PublicAPI]
-public class RelativeFretVectorCollection : IEnumerable<RelativeFretVector>
+public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVector>
 {
-    #region IEnumerable{RelativeFretVector} Members
+    #region IReadOnlyCollection{RelativeFretVector} Members
 
     public IEnumerator<RelativeFretVector> GetEnumerator() => _factory.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public int Count { get; }
 
     #endregion
 
@@ -27,7 +28,7 @@ public class RelativeFretVectorCollection : IEnumerable<RelativeFretVector>
     public RelativeFretVectorCollection(int strCount = 6)
     {
         var variations = new VariationsWithRepetitions<RelativeFret>(RelativeFret.Items, strCount);
-        Count = variations.Count;
+        Count = (int) variations.Count;
         _factory = new(variations);
         Normalized = this.OfType<Normalized>().ToLazyCollection();
         Translated = this.OfType<Translated>().ToLazyCollection();
@@ -47,9 +48,4 @@ public class RelativeFretVectorCollection : IEnumerable<RelativeFretVector>
     /// Gets the <see cref="RelativeFretVector.Translated"/>
     /// </summary>
     public IReadOnlyCollection<Translated> Translated { get; }
-
-    /// <summary>
-    /// Gets the <see cref="BigInteger"/> index.
-    /// </summary>
-    public BigInteger Count { get; }
 }
