@@ -12,6 +12,7 @@ public class Fretboard
 {
     private static readonly Lazy<Tuning> _lazyDefaultTuning = new(() => new(PitchCollection.Parse("E2 A2 D3 G3 B3 E4")));
     private readonly Lazy<PositionCollection> _lazyPositions;
+    private readonly Lazy<RelativeFretVectorCollection> _lazyRelativePositions;
 
     public static readonly Fretboard Default = new();
     public static Tuning DefaultTuning => _lazyDefaultTuning.Value;
@@ -30,6 +31,7 @@ public class Fretboard
         StringCount = tuning.PitchCollection.Count;
 
         _lazyPositions = new(GetPositions);
+        _lazyRelativePositions = new(new RelativeFretVectorCollection(StringCount));
 
         PositionCollection GetPositions()
         {
@@ -59,6 +61,7 @@ public class Fretboard
     public IReadOnlyCollection<Str> Strings => Str.Range(StringCount);
     public IReadOnlyCollection<Fret> Frets => Fret.Range(Fret.Min.Value, FretCount);
     public PositionCollection Positions => _lazyPositions.Value;
+    public RelativeFretVectorCollection RelativePositions => _lazyRelativePositions.Value;
 
     public override string ToString()
     {

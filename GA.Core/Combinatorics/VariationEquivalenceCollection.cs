@@ -11,68 +11,70 @@ public abstract class VariationEquivalenceCollection
     /// Concrete collection of variation translation equivalences.
     /// </summary>
     public class Translation<T> : VariationEquivalenceCollection
-        where T: struct, IValueObject<T>
-{
-    private readonly Lazy<ImmutableList<VariationEquivalence.Translation>> _lazyEquivalences;
-    private readonly Lazy<ImmutableDictionary<BigInteger, VariationEquivalence.Translation>> _lazyToEquivalences;
-    private readonly Lazy<ILookup<BigInteger, VariationEquivalence.Translation>> _lazyFromEquivalences;
-
-    public Translation(VariationsWithRepetitions<T> variationsWithRepetitions) 
-        : this(variationsWithRepetitions.GetIndex, 
-               variationsWithRepetitions)
+        where T : struct, IValueObject<T>
     {
-    }
+        private readonly Lazy<ImmutableList<VariationEquivalence.Translation>> _lazyEquivalences;
+        private readonly Lazy<ImmutableDictionary<BigInteger, VariationEquivalence.Translation>> _lazyToEquivalences;
+        private readonly Lazy<ILookup<BigInteger, VariationEquivalence.Translation>> _lazyFromEquivalences;
 
-    public Translation(
-        Func<IEnumerable<T>, BigInteger> indexProvider,
-        IEnumerable<Variation<T>> variations)
-    {
-        if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
-        if (variations == null) throw new ArgumentNullException(nameof(variations));
-
-        _lazyEquivalences = new(() => GetTranslationEquivalences(indexProvider, variations));
-        _lazyToEquivalences = new(() => Equivalences.ToImmutableDictionary(Equivalence => Equivalence.ToIndex));
-        _lazyFromEquivalences = new(() => Equivalences.ToLookup(Equivalence => Equivalence.FromIndex));
-    }
-
-    public IReadOnlyCollection<VariationEquivalence.Translation> Equivalences => _lazyEquivalences.Value;
-    public ImmutableDictionary<BigInteger, VariationEquivalence.Translation> To => _lazyToEquivalences.Value;
-    public ILookup<BigInteger, VariationEquivalence.Translation> From => _lazyFromEquivalences.Value;
-
-    private static ImmutableList<VariationEquivalence.Translation> GetTranslationEquivalences(
-        Func<IEnumerable<T>, BigInteger> indexProvider,
-        IEnumerable<Variation<T>> variations)
-    {
-        if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
-        if (variations == null) throw new ArgumentNullException(nameof(variations));
-
-        var mapItemsBuilder = ImmutableList.CreateBuilder<VariationEquivalence.Translation>();
-        foreach (var variation in variations)
+        public Translation(VariationsWithRepetitions<T> variationsWithRepetitions)
+            : this(variationsWithRepetitions.GetIndex,
+                   variationsWithRepetitions)
         {
-            if (TryGetEquivalence(variation, indexProvider, out var mapItem)) mapItemsBuilder.Add(mapItem);
         }
-        return mapItemsBuilder.ToImmutable();
 
-        static bool TryGetEquivalence(
-            Variation<T> variation,
+        public Translation(
             Func<IEnumerable<T>, BigInteger> indexProvider,
-            out VariationEquivalence.Translation Equivalence)
+            IEnumerable<Variation<T>> variations)
         {
-            var isNormalized = variation.Any(T => T.Value == 0);
-            if (isNormalized) // Already normalized, no Equivalence
-            {
-                Equivalence = VariationEquivalence.Translation.None;
-                return false;
-            }
+            if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
+            if (variations == null) throw new ArgumentNullException(nameof(variations));
 
-            // The two variations have a translation Equivalence
-            Equivalence = new(
-                indexProvider(variation.ToNormalizedArray()),
-                variation.Index,
-                variation.Min().Value);
-            return true;
+            _lazyEquivalences = new(() => GetTranslationEquivalences(indexProvider, variations));
+            _lazyToEquivalences = new(() => Equivalences.ToImmutableDictionary(Equivalence => Equivalence.ToIndex));
+            _lazyFromEquivalences = new(() => Equivalences.ToLookup(Equivalence => Equivalence.FromIndex));
+        }
+
+        public IReadOnlyCollection<VariationEquivalence.Translation> Equivalences => _lazyEquivalences.Value;
+        public ImmutableDictionary<BigInteger, VariationEquivalence.Translation> To => _lazyToEquivalences.Value;
+        public ILookup<BigInteger, VariationEquivalence.Translation> From => _lazyFromEquivalences.Value;
+
+        public override string ToString() => $"{Equivalences.Count}";
+
+        private static ImmutableList<VariationEquivalence.Translation> GetTranslationEquivalences(
+            Func<IEnumerable<T>, BigInteger> indexProvider,
+            IEnumerable<Variation<T>> variations)
+        {
+            if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
+            if (variations == null) throw new ArgumentNullException(nameof(variations));
+
+            var mapItemsBuilder = ImmutableList.CreateBuilder<VariationEquivalence.Translation>();
+            foreach (var variation in variations)
+            {
+                if (TryGetEquivalence(variation, indexProvider, out var mapItem)) mapItemsBuilder.Add(mapItem);
+            }
+            return mapItemsBuilder.ToImmutable();
+
+            static bool TryGetEquivalence(
+                Variation<T> variation,
+                Func<IEnumerable<T>, BigInteger> indexProvider,
+                out VariationEquivalence.Translation equivalence)
+            {
+                var isNormalized = variation.Any(T => T.Value == 0);
+                if (isNormalized) // Already normalized, no Equivalence
+                {
+                    equivalence = VariationEquivalence.Translation.None;
+                    return false;
+                }
+
+                // The two variations have a translation Equivalence
+                equivalence = new(
+                    indexProvider(variation.ToNormalizedArray()),
+                    variation.Index,
+                    variation.Min().Value);
+                return true;
+            }
         }
     }
-}
 }
 
