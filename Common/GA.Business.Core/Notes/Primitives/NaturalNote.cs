@@ -1,23 +1,33 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using GA.Core.Extensions;
-
-
 using PCRE;
 
-using GA.Core;
-using GA.Core.Collections;
 using Atonal;
-using GA.Business.Core.Intervals.Primitives;
 
+using GA.Core.Collections;
+using GA.Core.Extensions;
+using GA.Business.Core.Intervals.Primitives;
 
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))
 /// </summary>
 [PublicAPI]
-public readonly record struct NaturalNote : IValueObject<NaturalNote>, 
-                                            IValueObjectCollection<NaturalNote>
+public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
 {
+    #region IStaticReadonlyCollection<NaturalNote> Members
+
+    public static IReadOnlyCollection<NaturalNote> Items => GetAll();
+    public static IReadOnlyList<int> Values => Items.ToValueList();
+
+    #endregion
+
+    #region IValueObject<NaturalNote>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(NaturalNote other) => Value.CompareTo(other.Value);
@@ -85,9 +95,6 @@ public readonly record struct NaturalNote : IValueObject<NaturalNote>,
         return true;
     }
 
-    public static IReadOnlyCollection<NaturalNote> Items => GetAll();
-    public static ImmutableList<int> Values => Items.ToValueList();
-
     public static implicit operator NaturalNote(int value) => new() {Value = value};
     public static implicit operator int(NaturalNote item) => item.Value;
     public static NaturalNote operator ++(NaturalNote naturalNote) => FromValue((naturalNote.Value + 1) % 7);
@@ -95,8 +102,6 @@ public readonly record struct NaturalNote : IValueObject<NaturalNote>,
     public static NaturalNote operator +(NaturalNote naturalNote, IntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
     public static IntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(startNote, endNote);
 
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
     public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 

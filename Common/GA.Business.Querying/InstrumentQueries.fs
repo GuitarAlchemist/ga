@@ -26,4 +26,6 @@ module InstrumentQueries =
             | _ -> null
         sTuning |> parseTuning
 
-    let freboard() = Fretboard.Default
+    let fretboard() = Fretboard.Default
+
+    

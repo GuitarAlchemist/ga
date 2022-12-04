@@ -27,7 +27,7 @@ public static class CombinatoricsExtensions
     /// <returns>The <see cref="CartesianProduct{T,TPair}"/>.</returns>
     public static NormedCartesianProduct<T, TNorm> ToNormedCartesianProduct<T, TNorm>(
         this IEnumerable<T> items, 
-        Func<T, bool>? predicate = null) where T : INormedType<T, TNorm>
+        Func<T, bool>? predicate = null) where T : IStaticNorm<T, TNorm>
                                          where TNorm : struct
             => new(items, predicate);
 }

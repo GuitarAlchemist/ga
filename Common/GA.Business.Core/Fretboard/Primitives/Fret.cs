@@ -10,9 +10,22 @@ using GA.Core.Collections;
 /// An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 [PublicAPI]
-public readonly record struct Fret : IValueObject<Fret>, 
-                                     IValueObjectCollection<Fret>
+public readonly record struct Fret : IStaticValueObjectList<Fret>
 {
+    #region IStaticValueObjectList<Fret> Members
+
+    public static IReadOnlyCollection<Fret> Items => ValueObjectUtils<Fret>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<Fret>.Values;
+
+    #endregion
+
+    #region IValueObject<Fret>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(Fret other) => _value.CompareTo(other._value);
@@ -22,9 +35,6 @@ public readonly record struct Fret : IValueObject<Fret>,
     public static bool operator >=(Fret left, Fret right) => left.CompareTo(right) >= 0;
 
     #endregion
-
-    public static IReadOnlyCollection<Fret> Items => ValueObjectUtils<Fret>.Items;
-    public static ImmutableList<int> Values => ValueObjectUtils<Fret>.Values;
 
     private const int _minValue = -1;
     private const int _maxValue = 36;
@@ -55,8 +65,6 @@ public readonly record struct Fret : IValueObject<Fret>,
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;
 
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
     public bool IsMuted => this == Muted;
     public bool IsOpen => this == Open;
 

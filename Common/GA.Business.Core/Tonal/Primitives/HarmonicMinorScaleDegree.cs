@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-
-
 using GA.Core;
 using GA.Core.Collections;
 using GA.Core.Extensions;
@@ -14,9 +12,16 @@ using Modes;
 /// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
 /// </summary>
 [PublicAPI]
-public readonly record struct HarmonicMinorScaleDegree : IMinorScaleModeDegree<HarmonicMinorScaleDegree>, 
-                                                         IMusicObjectCollection<HarmonicMinorScaleDegree>
+public readonly record struct HarmonicMinorScaleDegree : IStaticReadonlyCollection<HarmonicMinorScaleDegree>,
+                                                         IMinorScaleModeDegree<HarmonicMinorScaleDegree>
 {
+    #region MyRegion IStaticReadonlyCollection{HarmonicMinorScaleDegree}
+
+    public static IReadOnlyCollection<HarmonicMinorScaleDegree> Items => ValueObjectUtils<HarmonicMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(HarmonicMinorScaleDegree other) => _value.CompareTo(other._value);
@@ -47,10 +52,6 @@ public readonly record struct HarmonicMinorScaleDegree : IMinorScaleModeDegree<H
 
     public static implicit operator HarmonicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(HarmonicMinorScaleDegree degree) => degree.Value;
-
-    public static IEnumerable<HarmonicMinorScaleDegree> Objects => IValueObject<HarmonicMinorScaleDegree>.GetRange(_minValue, _maxValue - _minValue);
-    public static IReadOnlyCollection<HarmonicMinorScaleDegree> Items => ValueObjectUtils<HarmonicMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

@@ -16,6 +16,20 @@ using GA.Core.Extensions;
 [PublicAPI]
 public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
 {
+    #region IIntervalSize<IntervalSize> Members
+
+    public static IReadOnlyCollection<IntervalSize> Items => ValueObjectCollection<IntervalSize>.Create();
+    public static IReadOnlyList<int> Values => Items.ToValueList();
+
+    #endregion
+
+    #region IValueObject<IntervalSize>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(IntervalSize other) => _value.CompareTo(other._value);
@@ -51,8 +65,6 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
     public static IntervalSize Seventh => FromValue(IntervalSizeValues.SeventhValue);
     public static IntervalSize Octave => FromValue(IntervalSizeValues.OctaveValue);
 
-    public static IReadOnlyCollection<IntervalSize> Items => ValueObjectCollection<IntervalSize>.Create();
-    public static ImmutableList<int> Values => Items.ToValueList();
     public static IReadOnlyCollection<IntervalSize> Range(int start, int count) => ValueObjectUtils<IntervalSize>.GetItems(start, count);
     public static IReadOnlyCollection<IntervalSize> Range(int count) => ValueObjectUtils<IntervalSize>.GetItems(-_minValue, count);
 
@@ -73,9 +85,6 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
     /// See https://musictheory.pugetsound.edu/mt21c/AugmentedAndDiminishedIntervals.html
     /// </remarks>
     public static readonly IReadOnlySet<IntervalQuality> ImperfectQualities = new[] {IntervalQuality.Diminished, IntervalQuality.Minor, IntervalQuality.Major, IntervalQuality.Augmented }.ToImmutableHashSet();
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     /// <summary>
     /// Gets available qualities ({d, P, A} if perfect interval, {d, m, M, A} if imperfect interval) 

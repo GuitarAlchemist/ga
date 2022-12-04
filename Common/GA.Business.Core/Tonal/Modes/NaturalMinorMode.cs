@@ -1,11 +1,12 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
+using GA.Core.Collections;
 using Scales;
 using Primitives;
 
 [PublicAPI]
 public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>,
-                                       IMusicObjectCollection<NaturalMinorMode>
+                                       IStaticEnumerable<NaturalMinorMode>
 {
     public static NaturalMinorMode Aeolian => new(1);
     public static NaturalMinorMode Locrian => new(2);
@@ -16,10 +17,10 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>,
     public static NaturalMinorMode Mixolydian => new(7);
 
     
-    public static IEnumerable<NaturalMinorMode> Objects => NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
+    public static IEnumerable<NaturalMinorMode> Items => NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
     public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
+    private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
 
     public NaturalMinorMode(NaturalMinorScaleDegree degree)
         : base(Scale.NaturalMinor, degree)

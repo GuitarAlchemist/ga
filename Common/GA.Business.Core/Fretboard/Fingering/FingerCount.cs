@@ -10,9 +10,22 @@ using GA.Core.Collections;
 /// Finger count needed for a position on left hand or right hand for lefties (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 [PublicAPI]
-public readonly record struct FingerCount : IValueObject<FingerCount>, 
-                                            IValueObjectCollection<FingerCount>
+public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
 {
+    #region IStaticValueObjectList<FingerCount> Members
+
+    public static IReadOnlyCollection<FingerCount> Items => ValueObjectUtils<FingerCount>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<FingerCount>.Values;
+
+    #endregion
+
+    #region IValueObject<FingerCount>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(FingerCount other) => _value.CompareTo(other._value);
@@ -22,9 +35,6 @@ public readonly record struct FingerCount : IValueObject<FingerCount>,
     public static bool operator >=(FingerCount left, FingerCount right) => left.CompareTo(right) >= 0;
 
     #endregion
-
-    public static IReadOnlyCollection<FingerCount> Items => ValueObjectUtils<FingerCount>.Items;
-    public static ImmutableList<int> Values => ValueObjectUtils<FingerCount>.Values;
 
     private const int _minValue = -1;
     private const int _maxValue = 36;
@@ -45,9 +55,6 @@ public readonly record struct FingerCount : IValueObject<FingerCount>,
 
     public static implicit operator FingerCount(int value) => new() { Value = value };
     public static implicit operator int(FingerCount fingerCount) => fingerCount.Value;
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 

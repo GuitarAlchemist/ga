@@ -13,9 +13,22 @@ using GA.Core.Collections;
 /// Assuming maximum hand extent is 5 frets.
 /// </remarks>
 [PublicAPI]
-public readonly record struct RelativeFret : IValueObject<RelativeFret>, 
-                                             IValueObjectCollection<RelativeFret>
+public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret>
 {
+    #region IStaticValueObjectList<RelativeFret> Members
+
+    public static IReadOnlyCollection<RelativeFret> Items => ValueObjectUtils<RelativeFret>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.Values;
+
+    #endregion
+
+    #region IValueObject<RelativeFret>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(RelativeFret other) => _value.CompareTo(other._value);
@@ -25,9 +38,6 @@ public readonly record struct RelativeFret : IValueObject<RelativeFret>,
     public static bool operator >=(RelativeFret left, RelativeFret right) => left.CompareTo(right) >= 0;
 
     #endregion
-
-    public static IReadOnlyCollection<RelativeFret> Items => ValueObjectUtils<RelativeFret>.Items;
-    public static ImmutableList<int> Values => ValueObjectUtils<RelativeFret>.Values;
 
     private const int _minValue = 0;
     private const int _maxValue = 4;
@@ -48,9 +58,6 @@ public readonly record struct RelativeFret : IValueObject<RelativeFret>,
 
     public static implicit operator RelativeFret(int value) => new() { Value = value };
     public static implicit operator int(RelativeFret relativeFret) => relativeFret.Value;
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 

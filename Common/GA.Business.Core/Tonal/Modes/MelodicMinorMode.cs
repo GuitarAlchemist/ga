@@ -1,11 +1,12 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
+using GA.Core.Collections;
 using Scales;
 using Primitives;
 
 [PublicAPI]
 public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>,
-                                       IMusicObjectCollection<MelodicMinorMode>
+                                       IStaticEnumerable<MelodicMinorMode>
 {
     public static MelodicMinorMode MelodicMinorModeMinor => new(1);
     public static MelodicMinorMode DorianFlatSecond => new(2);
@@ -15,10 +16,10 @@ public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>,
     public static MelodicMinorMode LocrianNaturalSecond => new(6);
     public static MelodicMinorMode Altered => new(7);
 
-    public static IEnumerable<MelodicMinorMode> Objects => MelodicMinorScaleDegree.Items.Select(degree => new MelodicMinorMode(degree));
+    public static IEnumerable<MelodicMinorMode> Items => MelodicMinorScaleDegree.Items.Select(degree => new MelodicMinorMode(degree));
     public static MelodicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MelodicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static readonly Lazy<ScaleModeCollection<MelodicMinorScaleDegree, MelodicMinorMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
+    private static readonly Lazy<ScaleModeCollection<MelodicMinorScaleDegree, MelodicMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
 
     public MelodicMinorMode(MelodicMinorScaleDegree degree)
         : base(Scale.MelodicMinor, degree)

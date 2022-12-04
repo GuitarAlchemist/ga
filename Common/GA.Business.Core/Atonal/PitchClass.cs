@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using GA.Core;
 using GA.Core.Extensions;
 using GA.Core.Collections;
 using Primitives;
@@ -11,10 +10,34 @@ using Notes;
 /// All pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
 [PublicAPI]
-public readonly record struct PitchClass : IValueObject<PitchClass>,
-                                           IValueObjectCollection<PitchClass>,
-                                           IIntervalClassType<PitchClass>
+public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
+                                           IStaticIntervalClassNorm<PitchClass>
 {
+    #region IStaticValueObjectList<PitchClass> Members
+
+    public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
+    public static IReadOnlyList<int> Values => Items.ToValueList();
+
+    #endregion
+
+    #region IStaticIntervalClassNorm<PitchClass> Members
+
+    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(item2.Value - item1.Value);
+
+    #endregion
+
+    #region IValueObject<PitchClass> Members
+
+    private readonly int _value;
+
+    public int Value
+    {
+        get => _value;
+        init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
+    }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(PitchClass other) => _value.CompareTo(other._value);
@@ -25,12 +48,6 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
 
     #endregion
 
-    #region NormedType Members
-
-    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(item2 - item1);
-
-    #endregion
-
     private const int _minValue = 0;
     private const int _maxValue = 11;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,22 +55,11 @@ public readonly record struct PitchClass : IValueObject<PitchClass>,
 
     public static PitchClass Min => FromValue(_minValue);
     public static PitchClass Max => FromValue(_maxValue);
-    public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
-    public static ImmutableList<int> Values => Items.ToValueList();
-
     public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.SharpKey(PitchClass pitchClass) => pitchClass.ToSharpNote();
     public static implicit operator Note.FlatKey(PitchClass pitchClass) => pitchClass.ToFlatNote();
     public static Interval.Chromatic operator -(PitchClass a, PitchClass b) => a.Value + -b.Value;
-
-    private readonly int _value;
-
-    public int Value
-    {
-        get => _value;
-        init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
-    }
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
 

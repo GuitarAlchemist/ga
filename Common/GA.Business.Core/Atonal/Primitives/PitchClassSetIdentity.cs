@@ -17,10 +17,22 @@ using GA.Business.Core.Notes.Extensions;
 /// Phrygian https://ianring.com/musictheory/scales/1451
 /// </remarks>
 [PublicAPI]
-public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<PitchClassSetIdentity>,
-                                                      IValueObject<PitchClassSetIdentity>,
-                                                      IValueObjectCollection<PitchClassSetIdentity>
+public readonly record struct PitchClassSetIdentity : IStaticValueObjectList<PitchClassSetIdentity>
 {
+    #region IStaticValueObjectList<PitchClassSetIdentity> Members
+
+    public static IReadOnlyCollection<PitchClassSetIdentity> Items => ValueObjectUtils<PitchClassSetIdentity>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClassSetIdentity>.Values;
+
+    #endregion
+
+    #region IValueObject<PitchClassSetIdentity>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational Members
 
     public int CompareTo(PitchClassSetIdentity other) => Value.CompareTo(other.Value);
@@ -31,17 +43,10 @@ public readonly record struct PitchClassSetIdentity : IMusicObjectCollection<Pit
 
     #endregion
 
-    public static IReadOnlyCollection<PitchClassSetIdentity> Items => ValueObjectUtils<PitchClassSetIdentity>.Items;
-    public static ImmutableList<int> Values => ValueObjectUtils<PitchClassSetIdentity>.Values;
-    public static IEnumerable<PitchClassSetIdentity> Objects => Items;
-
     private const int _minValue = 0;
     private const int _maxValue = (1 << 12) - 1; // 4096 combinations
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PitchClassSetIdentity FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     public static PitchClassSetIdentity Min => FromValue(_minValue);
     public static PitchClassSetIdentity Max => FromValue(_maxValue);

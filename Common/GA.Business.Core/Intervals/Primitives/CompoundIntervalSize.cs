@@ -11,6 +11,47 @@ using GA.Core.Collections;
 [PublicAPI]
 public readonly record struct CompoundIntervalSize : IIntervalSize<CompoundIntervalSize>
 {
+    #region IStaticValueObjectList<CompoundIntervalSize> Members
+
+    public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
+    public static IReadOnlyList<int> Values => Items.Select(number => number .Value).ToImmutableList();
+
+    #endregion
+
+    #region IValueObject<CompoundIntervalSize>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
+    #region IIntervalSize Members
+
+    public IntervalSizeConsonance Consonance => ToSimple().Consonance;
+
+    /// <summary>
+    /// Get the semitones distance for the interval.
+    /// </summary>
+    /// <returns>The <see cref="Semitones"/></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public Semitones ToSemitones()
+    {
+        return Value switch
+        {
+            9 => 12, // Octave
+            10 => 14, // Octave + Tone (+2)
+            11 => 16, // Octave +Tone (+2)
+            12 => 17, // Octave + Half-Tone (+1)
+            13 => 19, // Octave + Tone (+2)
+            14 => 21, // Octave + Tone (+2)
+            15 => 23, // Octave + Tone (+2)
+            16 => 24, // Octave + Half-Tone (+1)
+            _ => throw new ArgumentOutOfRangeException(nameof(Value))
+        };
+    }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(CompoundIntervalSize other) => _value.CompareTo(other._value);
@@ -43,36 +84,8 @@ public readonly record struct CompoundIntervalSize : IIntervalSize<CompoundInter
     public static CompoundIntervalSize Fifteenth => FromValue(15);
     public static CompoundIntervalSize DoubleOctave => FromValue(16);
 
-    public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
-    public static ImmutableList<int> Values => Items.Select(number => number .Value).ToImmutableList();
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
-
     public IntervalSize ToSimple() => new() {Value = _value - 8};
 
-    /// <summary>
-    /// Get the semitones distance for the interval.
-    /// </summary>
-    /// <returns>The <see cref="Semitones"/></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public Semitones ToSemitones()
-    {
-        return Value switch
-        {
-            9 => 12, // Octave
-            10 => 14, // Octave + Tone (+2)
-            11 => 16, // Octave +Tone (+2)
-            12 => 17, // Octave + Half-Tone (+1)
-            13 => 19, // Octave + Tone (+2)
-            14 => 21, // Octave + Tone (+2)
-            15 => 23, // Octave + Tone (+2)
-            16 => 24, // Octave + Half-Tone (+1)
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
-
     public override string ToString() => Value.ToString();
-    public IntervalSizeConsonance Consonance => ToSimple().Consonance;
 }
 

@@ -10,7 +10,7 @@ using Extensions;
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
 public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T, TNorm>>
-    where T : INormedType<T, TNorm>
+    where T : IStaticNorm<T, TNorm>
     where TNorm : struct
 {
     /// <summary>
@@ -20,7 +20,7 @@ public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T
     /// <param name="predicate">A <see cref="Func{T, Boolean}"/> (Optional).</param>
     /// <returns>The <see cref="ImmutableDictionary{TNorm, Int32}"/>.</returns>
     public static ImmutableSortedDictionary<TNorm, int> NormCounts<TItemsCollection>(Func<T, bool>? predicate = null)
-        where TItemsCollection : IItemCollection<T>
+        where TItemsCollection : IStaticReadonlyCollection<T>
         => NormCounts(TItemsCollection.Items, predicate);
 
     /// <summary>

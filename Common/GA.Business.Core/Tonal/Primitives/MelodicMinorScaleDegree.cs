@@ -2,10 +2,6 @@
 
 using GA.Core.Collections;
 using GA.Core.Extensions;
-
-
-
-
 using Modes;
 
 /// <inheritdoc cref="IEquatable{MelodicMinorScaleDegree}" />
@@ -15,9 +11,16 @@ using Modes;
 /// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
-public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<MelodicMinorScaleDegree>, 
-                                                        IMusicObjectCollection<MelodicMinorScaleDegree>
+public readonly record struct MelodicMinorScaleDegree : IStaticReadonlyCollection<MelodicMinorScaleDegree>,
+                                                        IMinorScaleModeDegree<MelodicMinorScaleDegree>
 {
+    #region IStaticReadonlyCollection<MelodicMinorScaleDegree> Members
+
+    public static IReadOnlyCollection<MelodicMinorScaleDegree> Items => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(MelodicMinorScaleDegree other) => _value.CompareTo(other._value);
@@ -48,10 +51,6 @@ public readonly record struct MelodicMinorScaleDegree : IMinorScaleModeDegree<Me
 
     public static implicit operator MelodicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
-
-    public static IEnumerable<MelodicMinorScaleDegree> Objects => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<MelodicMinorScaleDegree> Items => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

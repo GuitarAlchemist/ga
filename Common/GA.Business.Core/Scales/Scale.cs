@@ -20,7 +20,7 @@ using GA.Core.Extensions;
 /// https://chromatone.center/theory/scales/study.html
 /// </remarks>
 public class Scale : IReadOnlyCollection<Note>,
-                     IMusicObjectCollection<Scale>
+                     IStaticEnumerable<Scale>
 {
     public static Scale Major => new(Key.Major.C.GetNotes());
     public static Scale NaturalMinor => Minor.Natural;
@@ -36,7 +36,7 @@ public class Scale : IReadOnlyCollection<Note>,
     public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
 
     public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
-    public static IEnumerable<Scale> Objects => PitchClassSetIdentity.Objects.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
+    public static IEnumerable<Scale> Items => PitchClassSetIdentity.Items.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
 
     private readonly IReadOnlyCollection<Note> _notes;
 

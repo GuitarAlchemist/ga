@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
+using GA.Core.Collections;
 using GA.Core;
 
 /// <summary>
@@ -16,9 +17,8 @@ public interface IIntervalSize : IValueObject
 }
 
 [PublicAPI]
-public interface IIntervalSize<TSelf> : IIntervalSize,
-                                          IValueObject<TSelf>,
-                                          IValueObjectCollection<TSelf>
+public interface IIntervalSize<TSelf> : IStaticValueObjectList<TSelf>,
+                                        IIntervalSize
     where TSelf : struct,
                   IIntervalSize<TSelf>
 {

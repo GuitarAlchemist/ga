@@ -6,7 +6,7 @@ using Primitives;
 using static Primitives.RelativeFretVector;
 
 /// <summary>
-/// Collection of <see cref="RelativeFretVector"/>
+/// Collection of all possible <see cref="RelativeFretVector"/> variations and their equivalences by translation.
 /// </summary>
 [PublicAPI]
 public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVector>
@@ -24,8 +24,8 @@ public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVect
     /// <summary>
     /// Creates a <see cref="RelativeFretVectorCollection"/> instance.
     /// </summary>
-    /// <param name="strCount">The number of strings (Defaulted to 6 string0)</param>
-    public RelativeFretVectorCollection(int strCount = 6)
+    /// <param name="strCount">The number of strings.</param>
+    public RelativeFretVectorCollection(int strCount)
     {
         var variations = new VariationsWithRepetitions<RelativeFret>(RelativeFret.Items, strCount);
         Count = (int) variations.Count;

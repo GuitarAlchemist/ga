@@ -1,9 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-
-
-
-using GA.Core;
 using GA.Core.Collections;
 using GA.Core.Extensions;
 
@@ -11,9 +7,22 @@ using GA.Core.Extensions;
 /// An Objects degree major scale - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
-public readonly record struct MajorScaleDegree : IValueObject<MajorScaleDegree>, 
-                                                 IValueObjectCollection<MajorScaleDegree>
+public readonly record struct MajorScaleDegree : IStaticValueObjectList<MajorScaleDegree>
 {
+    #region IStaticValueObjectList<MajorScaleDegree> Members
+
+    public static IReadOnlyCollection<MajorScaleDegree> Items => ValueObjectUtils<MajorScaleDegree>.Items;
+    public static IReadOnlyList<int> Values => Items.ToValueList();
+
+    #endregion
+
+    #region IValueObject<MajorScaleDegree>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(MajorScaleDegree other) => _value.CompareTo(other._value);
@@ -44,12 +53,6 @@ public readonly record struct MajorScaleDegree : IValueObject<MajorScaleDegree>,
 
     public static implicit operator MajorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;
-
-    public static IReadOnlyCollection<MajorScaleDegree> Items => ValueObjectUtils<MajorScaleDegree>.Items;
-    public static ImmutableList<int> Values => Items.ToValueList();
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     public override string ToString() => Value.ToString();
 

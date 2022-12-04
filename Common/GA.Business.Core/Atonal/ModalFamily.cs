@@ -46,7 +46,7 @@ public class ModalFamily
 
         public IEnumerator<ModalFamily> GetEnumerator()
         {
-            var scaleSets = PitchClassSet.Objects.Where(pcs => PitchClassSetIdentity.ContainsRoot(pcs.Identity.Value));
+            var scaleSets = PitchClassSet.Items.Where(pcs => PitchClassSetIdentity.ContainsRoot(pcs.Identity.Value));
             var scaleSetsByCount = scaleSets.ToLookup(set => set.Count);
             foreach (var countGrouping in scaleSetsByCount)
             {
