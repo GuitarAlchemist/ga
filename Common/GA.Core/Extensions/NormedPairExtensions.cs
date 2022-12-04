@@ -13,7 +13,7 @@ public static class NormedPairExtensions
     /// <param name="normedPairs">The collection of <see cref="NormedPair{T, TNorm}"/></param>
     /// <returns>The <see cref="ILookup{TKey,TElement}"/> where the key type is <see cref="TNorm"/> and the element type is <see cref="Pair{T}"/></returns>
     public static ILookup<TNorm, Pair<T>> ByNorm<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs) 
-        where T : INormedType<T, TNorm>
+        where T : IStaticNorm<T, TNorm>
         where TNorm : struct
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
@@ -33,7 +33,7 @@ public static class NormedPairExtensions
     public static ImmutableSortedDictionary<TNorm, int> ByNormCounts<T, TNorm>(
         this IEnumerable<NormedPair<T, TNorm>> normedPairs,
         Func<NormedPair<T, TNorm>, bool>? predicate = null)
-            where T : INormedType<T, TNorm>
+            where T : IStaticNorm<T, TNorm>
             where TNorm : struct
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));

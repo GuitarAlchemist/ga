@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Expressions.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="Fib.fs" />
     <Compile Include="InstrumentQueries.fs" />

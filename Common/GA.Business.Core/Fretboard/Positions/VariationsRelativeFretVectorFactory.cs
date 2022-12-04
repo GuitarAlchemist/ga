@@ -31,11 +31,17 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
     /// </summary>
     public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; }
 
+    /// <summary>
+    /// Create a vector from a variation.
+    /// </summary>
+    /// <param name="variation">The <see cref="Variation{RelativeFret}"/></param>
+    /// <returns>The <see cref="RelativeFretVector"/>.</returns>
     private RelativeFretVector Create(Variation<RelativeFret> variation)
     {
         var isNormalized = variation.Min().Value == 0;
         if (isNormalized)
         {
+            // The variation represents vector is its normalized form
             var equivalences = Equivalences.From[variation.Index].ToImmutableArray();
             var translated =
                 equivalences
@@ -45,9 +51,9 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
             return new Normalized(variation, new NormalizedTranslations(translated));
         }
 
-        // Translation
+        // The variation represents vector is its translated form
         var equivalence = Equivalences.To[variation.Index];
-        return new Translated(variation, () => (Normalized) Create(_variations[equivalence!.FromIndex]));
+        return new Translated(variation, () => (Normalized) Create(_variations[equivalence.FromIndex]));
     }
 
     private class NormalizedTranslations : LazyCollectionBase<Translated>

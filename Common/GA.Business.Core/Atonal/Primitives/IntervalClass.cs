@@ -23,9 +23,22 @@ using GA.Business.Core.Intervals.Primitives;
 /// http://www.jaytomlin.com/music/settheory/help.html
 /// </remarks>
 [PublicAPI]
-public readonly record struct IntervalClass : IValueObject<IntervalClass>,
-                                              IValueObjectCollection<IntervalClass>
+public readonly record struct IntervalClass : IStaticValueObjectList<IntervalClass>
 {
+    #region IStaticValueObjectList<IntervalClass> Members
+
+    public static IReadOnlyCollection<IntervalClass> Items => ValueObjectUtils<IntervalClass>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<IntervalClass>.Values;
+   
+    #endregion
+
+    #region IValueObject<IntervalClass>
+
+    private readonly int _value;
+    public int Value { get => _value; init => _value = CheckRange(value); }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(IntervalClass other) => _value.CompareTo(other._value);
@@ -40,8 +53,6 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
     private const int _maxValue = 6;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IntervalClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-    public static IReadOnlyCollection<IntervalClass> Items => ValueObjectUtils<IntervalClass>.Items;
-    public static ImmutableList<int> Values => ValueObjectUtils<IntervalClass>.Values;
     public static IntervalClass FromSemitones(Semitones semitones)
     {
         var value = Math.Abs(semitones.Value) % 12; // Apply octave equivalence
@@ -59,9 +70,6 @@ public readonly record struct IntervalClass : IValueObject<IntervalClass>,
 
     public static implicit operator IntervalClass(int value) => new() { Value = value };
     public static implicit operator int(IntervalClass ic) => ic.Value;
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<IntervalClass>.CheckRange(Value, _minValue, maxValue);
 

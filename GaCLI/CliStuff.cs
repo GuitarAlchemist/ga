@@ -1,8 +1,4 @@
 ﻿
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Core.Combinatorics;
-
 namespace GaCLI;
 
 using GA.Business.Config;
@@ -18,7 +14,7 @@ public class SomeStuff
     private void Stuff1()
     {
         var identities = PitchClassSetIdentity.Items;
-        var pcsObjects = PitchClassSet.Objects;
+        var pcsObjects = PitchClassSet.Items;
         var byCard = pcsObjects.GroupBy(set => set.Cardinality).ToImmutableList();
         foreach (var cardGroup in byCard)
         {
@@ -34,7 +30,7 @@ public class SomeStuff
         var id = PitchClassSetIdentity.FromNotes(Note.Chromatic.C, Note.Chromatic.E, Note.Chromatic.GSharpAb);
         var idTranspositions = id.PitchClassSet.Transpositions;
 
-        var scales = Scale.Objects.ToImmutableList();
+        var scales = Scale.Items.ToImmutableList();
         var modalScales =
             scales.Where(scale => scale.Identity.PitchClassSet.IsModal)
                 .OrderBy(scale => scale.Count)

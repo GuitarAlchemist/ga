@@ -7,7 +7,7 @@
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
 public sealed record NormedPair<T, TNorm>(Pair<T> Pair) : Pair<T>(Pair)
-    where T : INormedType<T, TNorm>
+    where T : IStaticNorm<T, TNorm>
     where TNorm : struct
 {
     /// <summary>

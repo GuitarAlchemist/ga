@@ -1,12 +1,12 @@
 ﻿namespace GA.Core;
 
 /// <summary>
-/// Interface for a type that define a norm (Absolute distance between 2 items) between two object instances 
+/// Interface for classes defining a <typeparamref name="TSelf"/> to <typeparamref name="TSelf"/> <see cref="TNorm"/> norm.
 /// </summary>
-/// <typeparam name="TSelf">The type that defines a norm</typeparam>
-/// <typeparam name="TNorm">The norm type</typeparam>
+/// <typeparam name="TSelf">The class type.</typeparam>
+/// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
-public interface INormedType<in TSelf, out TNorm>
+public interface IStaticNorm<in TSelf, out TNorm>
     where TNorm : struct
 {
     /// <summary>

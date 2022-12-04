@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using GA.Core.Collections;
 using Primitives;
 using Notes;
 using GA.Core.Extensions;
@@ -16,7 +17,8 @@ using GA.Core.Extensions;
 /// </remarks>
 [PublicAPI]
 public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
-                                    IMusicObjectCollection<PitchClassSet>, IComparable<PitchClassSet>
+                                    IComparable<PitchClassSet>,
+                                    IStaticEnumerable<PitchClassSet>
 {
     #region Relational Members
 
@@ -59,7 +61,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     #endregion
 
-    public static IEnumerable<PitchClassSet> Objects => PitchClassSetIdentity.Objects.Select(identity => identity.PitchClassSet);
+    public static IEnumerable<PitchClassSet> Items => PitchClassSetIdentity.Items.Select(identity => identity.PitchClassSet);
     public static ImmutableHashSet<PitchClassSet> PrimeForms => _primeForms.Value;
 
     public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
@@ -99,7 +101,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     static PitchClassSet()
     {
-        _lazyTranspositions = new(() => Objects.ToLookup(set => (set.Cardinality, set.IntervalClassVector)));
+        _lazyTranspositions = new(() => Items.ToLookup(set => (set.Cardinality, set.IntervalClassVector)));
         _primeForms = new(GetPrimeForms);
 
         static ImmutableHashSet<PitchClassSet> GetPrimeForms() => _lazyTranspositions.Value

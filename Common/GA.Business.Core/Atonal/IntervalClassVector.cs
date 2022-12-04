@@ -71,7 +71,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     private readonly ImmutableSortedDictionary<IntervalClass, int> _countByIc;
     public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIc) => _countByIc = countByIc ?? throw new ArgumentNullException(nameof(countByIc));
-    public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) where T : IIntervalClassType<T> => items.ToIntervalClassVector();
+    public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) where T : IStaticIntervalClassNorm<T> => items.ToIntervalClassVector();
 
     public int Value { get; }
     public int Hemitonia => this[IntervalClass.Hemitone];

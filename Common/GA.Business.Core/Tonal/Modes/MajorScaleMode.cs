@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
+using GA.Core.Collections;
 using Scales;
 using Primitives;
 
@@ -11,7 +12,7 @@ using Primitives;
 /// </remarks>
 [PublicAPI]
 public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>, 
-                                     IMusicObjectCollection<MajorScaleMode>
+                                     IStaticEnumerable<MajorScaleMode>
 {
     public static MajorScaleMode Ionian => new(MajorScaleDegree.Ionian);
 
@@ -25,10 +26,10 @@ public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>,
     public static MajorScaleMode Aeolian => new(MajorScaleDegree.Aeolian);
     public static MajorScaleMode Locrian => new(MajorScaleDegree.Locrian);
 
-    public static IEnumerable<MajorScaleMode> Objects => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree));
+    public static IEnumerable<MajorScaleMode> Items => MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree));
     public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static readonly Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Objects.ToImmutableList()));
+    private static readonly Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
 
     public MajorScaleMode(MajorScaleDegree degree)
         : base(Scale.Major, degree)

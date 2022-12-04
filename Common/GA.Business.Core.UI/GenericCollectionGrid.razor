@@ -3,7 +3,7 @@
 @using System.Reflection
 @using System.Collections.Immutable
 
-@typeparam T where T : IMusicObjectCollection<T>
+@typeparam T where T : GA.Core.Collections.IStaticReadonlyCollection<T>
 
 <div style="height: 90vh; width: 100%">
     <TabularDataGrid @ref="_grid"></TabularDataGrid>
@@ -40,7 +40,7 @@
             return data;
 
             static IEnumerable<TabularDataRow> GetRows(IReadOnlyCollection<PropertyInfo> properties) =>
-                T.Objects.Select(obj =>
+                T.Items.Select(obj =>
                 {
                     var row = new TabularDataRow();
                     foreach (var property in properties)

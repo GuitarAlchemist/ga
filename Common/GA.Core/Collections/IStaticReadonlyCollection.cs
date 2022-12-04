@@ -1,6 +1,9 @@
 ﻿namespace GA.Core.Collections;
 
-public interface IItemCollection<out TSelf>
+/// <summary>
+/// Interface for classes that define a read-only collection at the type level.
+/// </summary>
+public interface IStaticReadonlyCollection<out TSelf>
     where TSelf: notnull
 {
     /// <summary>

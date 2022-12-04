@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-
-
-
 using GA.Core.Collections;
 using GA.Core.Extensions;
 using Modes;
@@ -11,9 +8,16 @@ using Modes;
 /// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>
 [PublicAPI]
-public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<NaturalMinorScaleDegree>,
-                                                        IMusicObjectCollection<NaturalMinorScaleDegree>
+public readonly record struct NaturalMinorScaleDegree : IStaticReadonlyCollection<NaturalMinorScaleDegree>,
+                                                        IMinorScaleModeDegree<NaturalMinorScaleDegree>
 {
+    #region IStaticReadonlyCollection<NaturalMinorScaleDegree> Members
+
+    public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
+    public static IReadOnlyCollection<int> Values => Items.ToValueList();
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(NaturalMinorScaleDegree other) => _value.CompareTo(other._value);
@@ -44,10 +48,6 @@ public readonly record struct NaturalMinorScaleDegree : IMinorScaleModeDegree<Na
 
     public static implicit operator NaturalMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
-
-    public static IEnumerable<NaturalMinorScaleDegree> Objects => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.ToValueList();
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
