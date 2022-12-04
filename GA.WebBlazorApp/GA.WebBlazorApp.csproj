@@ -18,7 +18,6 @@
 		<ProjectReference Include="..\Common\GA.Business.Core.UI\GA.Business.Core.UI.csproj" />
 		<ProjectReference Include="..\Common\GA.Business.Core\GA.Business.Core.csproj" />
 		<ProjectReference Include="..\Common\GA.Core.UI\GA.Core.UI.csproj" />
-		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>
 
 </Project>

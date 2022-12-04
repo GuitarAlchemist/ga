@@ -39,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\GA.Core\GA.Core.csproj" />
+	  <ProjectReference Include="..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>
 
 </Project>

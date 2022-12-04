@@ -80,12 +80,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\GA.Core\GA.Core.csproj">
-			<PrivateAssets>All</PrivateAssets>
-		</ProjectReference>
 		<ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj">
 			<PrivateAssets>All</PrivateAssets>
 		</ProjectReference>
+		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Fretboard\Config\" />
