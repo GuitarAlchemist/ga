@@ -16,10 +16,16 @@ using GA.Core.Extensions;
 /// See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes
 /// </remarks>
 [PublicAPI]
-public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
-                                    IComparable<PitchClassSet>,
-                                    IStaticEnumerable<PitchClassSet>
+public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
+                                    IReadOnlySet<PitchClass>,
+                                    IComparable<PitchClassSet>
 {
+    #region IStaticEnumerable<PitchClassSet> Members
+
+    public static IEnumerable<PitchClassSet> Items => PitchClassSetIdentity.Items.Select(identity => identity.PitchClassSet);
+
+    #endregion
+
     #region Relational Members
 
     public int CompareTo(PitchClassSet? other)
@@ -61,7 +67,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     #endregion
 
-    public static IEnumerable<PitchClassSet> Items => PitchClassSetIdentity.Items.Select(identity => identity.PitchClassSet);
+
     public static ImmutableHashSet<PitchClassSet> PrimeForms => _primeForms.Value;
 
     public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
@@ -82,7 +88,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
 
     public static PitchClassSet FromNotes(IEnumerable<Note> notes)
     {
-        var pitchClasses = 
+        var pitchClasses =
             notes.Select(note => note.PitchClass)
                 .ToImmutableArray();
 
@@ -152,7 +158,7 @@ public sealed class PitchClassSet : IReadOnlySet<PitchClass>,
     public Cardinality Cardinality { get; }
     public IReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
     public IntervalClassVector IntervalClassVector => _pitchClassesSet.ToIntervalClassVector();
-    public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality,IntervalClassVector)].ToImmutableList();
+    public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality, IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
     public bool IsPrimeForm => _primeForms.Value.Contains(this);
     private PitchClassSet PrimeForm => Transpositions.First(set => set.IsPrimeForm);

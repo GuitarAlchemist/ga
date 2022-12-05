@@ -21,8 +21,23 @@ using GA.Core.Collections;
 /// </remarks>
 [PublicAPI]
 public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
-                                          IReadOnlyCollection<int>, IComparable<IntervalClassVector>
+                                          IReadOnlyCollection<int>, 
+                                          IComparable<IntervalClassVector>
 {
+    #region Indexer members
+
+    public int this[IntervalClass ic] => _countByIc.TryGetValue(ic, out var count) ? count : 0;
+
+    #endregion
+
+    #region IReadOnlyCollection<int> members
+
+    public IEnumerator<int> GetEnumerator() => _countByIc.Values.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _countByIc.Values.GetEnumerator();
+    public int Count => _countByIc.Count;
+
+    #endregion
+
     #region Relational Members
 
     public int CompareTo(IntervalClassVector? other)
@@ -52,20 +67,6 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     }
 
     public override int GetHashCode() => Value;
-
-    #endregion
-
-    #region Indexer members
-
-    public int this[IntervalClass ic] => _countByIc.TryGetValue(ic, out var count) ? count : 0;
-
-    #endregion
-
-    #region IReadOnlyCollection<int> members
-
-    public IEnumerator<int> GetEnumerator() => _countByIc.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => _countByIc.Values.GetEnumerator();
-    public int Count => _countByIc.Count;
 
     #endregion
 

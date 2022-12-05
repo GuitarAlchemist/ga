@@ -1,19 +1,19 @@
 ﻿@using GA.Core.Extensions
 
-<div @ref="_forceGraphElement"
+<div @ref="_forceGraph3dElement"
      id="@Id"
      style="height: 100%; width: 100%">
 </div>
 
 @inject IJSRuntime JSRuntime
-@inject ILogger<ForceGraph> Logger
+@inject ILogger<ForceGraph3d> Logger
 
 @code {
-    private ElementReference? _forceGraphElement;
+    private ElementReference? _forceGraph3dElement;
     private IJSObjectReference? _jsModule;
 
     [Parameter]
-    public string Id { get; set; } = $"force-graph-{Guid.NewGuid():N}";
+    public string Id { get; set; } = $"force-graph-3d-{Guid.NewGuid():N}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -22,25 +22,25 @@
         if (firstRender)
         {
             // Import JavaScript module
-            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/forceGraph.js");
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/forceGraph3d.js");
             if (_jsModule == null) throw new InvalidOperationException();
 
             await GridInitAsync();
         }
     }
 
-    private async Task GridInitAsync(string libUrl = "https://unpkg.com/force-graph/dist/force-graph.min.js")
+    private async Task GridInitAsync(string libUrl = "https://unpkg.com/3d-force-graph")
     {
         if (_jsModule == null) return;
-        if (string.IsNullOrEmpty(_forceGraphElement?.Id)) throw new InvalidOperationException();
+        if (string.IsNullOrEmpty(_forceGraph3dElement?.Id)) throw new InvalidOperationException();
 
         try
         {
-            await _jsModule.InvokeVoidAsync("forceGraphInit", _forceGraphElement, libUrl);
+            await _jsModule.InvokeVoidAsync("forceGraph3dInit", _forceGraph3dElement, libUrl);
         }
         catch (Exception ex)
         {
-            var msg = ex.GetMessageAndStackTrace("Failed initializing force graph");
+            var msg = ex.GetMessageAndStackTrace("Failed initializing force graph 3d");
             Logger.LogError(msg);
             // await JSRuntime.ConsoleLogAsync(msg);
             throw;
