@@ -1,6 +1,5 @@
 ﻿namespace GA.Core.Collections;
 
-using System.Diagnostics;
 using Extensions;
 
 [PublicAPI]

@@ -37,7 +37,7 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
                      .ToImmutableDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
     }
 
-    public override string ToString() => string.Join(" ", _relativeFretByStr.Values);
+    public override string ToString() => "+ " + string.Join(" ", _relativeFretByStr.Values);
 
     /// <summary>
     /// A relative fret vector where the minimum relative fret is 0 (e.g. "0 2 2 2 0 0")

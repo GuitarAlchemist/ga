@@ -22,18 +22,30 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
                     DisplayGaBanner(currentContext);
+                    // DisplayForceGraph(currentContext);
                     // DisplayHelloWorld(currentContext);
 
-                    DisplayMermaidExample(currentContext, """
-    graph TD
-    A[Client] --> B[Load Balancer]
-    B --> C[Server01]
-    B --> D[Server02]
-""");
+//                    DisplayMermaidExample1(currentContext, """
+//    graph TD
+//    A[Client] --> B[Load Balancer]
+//    B --> C[Server01]
+//    B --> D[Server02]
+//""");
 
-                    DisplayTwoExample(currentContext);
+                    DisplayForceGraph(currentContext);
+
+//                    DisplayMermaidExample2(currentContext, 
+//"""
+//graph TD
+//A[Client] --> B[Load Balancer]
+//B --> C[Server01]
+//B --> D[Server02]
+//""");
+
+                    // DisplayVexFlow(currentContext);
+
                     // DisplayVerivio(currentContext);
-                    // DisplayTwoExample(currentContext);
+                    //DisplayTwoExample(currentContext);
                     // DisplayHelloWorld(currentContext);
 
                 }
@@ -211,7 +223,7 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
         currentContext.DisplayAs(html, HtmlFormatter.MimeType);
     }
 
-    private static void DisplayMermaidExample(
+    private static void DisplayMermaidExample1(
         KernelInvocationContext currentContext, 
         string markup)
     {
@@ -276,11 +288,32 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
         currentContext.DisplayAs(html, HtmlFormatter.MimeType);
     }
 
+
+    private static void DisplayMermaidExample2(
+        KernelInvocationContext currentContext,
+        string markup)
+    {
+        // ReSharper disable StringLiteralTypo
+        var html = $$""" 
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+    
+<pre class="mermaid">
+{{markup}}
+</pre>
+""";
+        // ReSharper restore StringLiteralTypo
+
+        currentContext.DisplayAs(html, HtmlFormatter.MimeType);
+    }
+
     private static void DisplayVexTab(KernelInvocationContext currentContext)
     {
         // ReSharper disable StringLiteralTypo
         var html = $$""" 
-<div id="d480a0b0b6a85684650fb232a86f8b3c1"></div>
+<div id="d480a0b0b6a85684650fb232a86f8b3c1" style="ba"></div>
 
 <script type="text/javascript" src="https://unpkg.com/vextab/releases/main.dev.js"></script>
 
@@ -314,8 +347,8 @@ text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
     private static void DisplayVexFlow(KernelInvocationContext currentContext)
     {
         // ReSharper disable StringLiteralTypo
-        var html = $$""" 
-<div id="d480a0b0b6a85684650fb232a86f8b3c1"></div>
+        const string html = $$""" 
+<div id="d480a0b0b6a85684650fb232a86f8b3c1" style="background-color: white"></div>
 
 <script type="module">
     import { Vex} from "https://cdn.skypack.dev/vexflow";
@@ -343,7 +376,7 @@ text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
         .addTimeSignature("4/4");
     factory.draw();
 </script>
-""";
+""" ;
         // ReSharper restore StringLiteralTypo
 
         currentContext.DisplayAs(html, HtmlFormatter.MimeType);
@@ -371,6 +404,47 @@ text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
         .then(function(text) {
             app.loadData(text);
         });
+</script>
+""";
+        // ReSharper restore StringLiteralTypo
+
+        currentContext.DisplayAs(html, HtmlFormatter.MimeType);
+    }
+
+
+    private static void DisplayForceGraph(KernelInvocationContext currentContext)
+    {
+        // ReSharper disable StringLiteralTypo
+        var html = $$""" 
+<div id="graph" style="background: white"></div>
+
+<script type="module">
+    await import('https://unpkg.com/force-graph/dist/force-graph.min.js');
+
+    const gData = {
+      nodes: [...Array(9).keys()].map(i => ({ id: i })),
+      links: [
+        { source: 1, target: 4, curvature: 0 },
+        { source: 1, target: 4, curvature: 0.5 },
+        { source: 1, target: 4, curvature: -0.5 },
+        { source: 5, target: 2, curvature: 0.3 },
+        { source: 2, target: 5, curvature: 0.3 },
+        { source: 0, target: 3, curvature: 0 },
+        { source: 3, target: 3, curvature: 0.5 },
+        { source: 0, target: 4, curvature: 0.2 },
+        { source: 4, target: 5, curvature: 0.5 },
+        { source: 5, target: 6, curvature: 0.7 },
+        { source: 6, target: 7, curvature: 1 },
+        { source: 7, target: 8, curvature: 2 },
+        { source: 8, target: 0, curvature: 0.5 }
+      ]
+    };
+
+    const Graph = ForceGraph()
+      (document.getElementById('graph'))
+        .linkDirectionalParticles(2)
+        .linkCurvature('curvature')
+        .graphData(gData);
 </script>
 """;
         // ReSharper restore StringLiteralTypo

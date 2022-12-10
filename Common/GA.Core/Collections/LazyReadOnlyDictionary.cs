@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace GA.Core.Collections;
+﻿namespace GA.Core.Collections;
 
 using System.Diagnostics.CodeAnalysis;
 
