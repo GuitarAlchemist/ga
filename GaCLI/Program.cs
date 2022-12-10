@@ -1,4 +1,5 @@
 ﻿using GA.Business.Core.Atonal;
+using GA.Business.Core.Fretboard;
 
 var combinations = PitchClassCombinations.SharedInstance;
 foreach (var combination in combinations)
@@ -9,13 +10,8 @@ foreach (var combination in combinations)
     if (index != index2) throw new InvalidOperationException("That sucks!");
 }
 
-//foreach (var variation in FingerVariations.SharedInstance)
-//{
-//    Console.WriteLine(variation.ToString());
-//}
-
-//foreach (var vector in Fretboard.Default.RelativePositions)
-//{
-//    Console.WriteLine(vector);
-//}
+foreach (var vector in Fretboard.Default.RelativePositions)
+{
+    Console.WriteLine(vector);
+}
 
