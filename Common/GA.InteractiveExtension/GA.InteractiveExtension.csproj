@@ -8,7 +8,7 @@
 		<Nullable>enable</Nullable>
 		<LangVersion Condition="'$(Configuration)' != 'net7.0'">latest</LangVersion>
 		<EnablePreviewFeatures Condition="'$(Configuration)' != 'net7.0'">true</EnablePreviewFeatures>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

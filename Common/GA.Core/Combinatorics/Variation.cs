@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// A k-tuple variation.
+/// A variation.
 /// </summary>
 /// <typeparam name="T">The element type.</typeparam>
 /// <seealso cref="VariationsWithRepetitions{T}"/>
@@ -18,19 +18,36 @@ public readonly struct Variation<T> : IReadOnlyList<T>
     #endregion
 
     private readonly IReadOnlyList<T> _items;
+    private readonly VariationFormat? _variationFormat;
 
     public Variation(
-        BigInteger index, 
-        ImmutableArray<T> items)
+        BigInteger index,
+        ImmutableArray<T> items,
+        VariationFormat? variationFormat = null)
     {
         Index = index;
         _items = items;
+        _variationFormat = variationFormat;
     }
 
     /// <summary>
-    /// The variation <see cref="BigInteger"/> index (Lexicographical order).
+    /// The current variation <see cref="BigInteger"/> index (Lexicographical order).
     /// </summary>
     public BigInteger Index { get; }
 
-    public override string ToString() => $"{Index,-10}: {string.Join(" ", _items.Reverse())}";
+    public override string ToString() => Print(this, _variationFormat);
+
+    public static string Print(
+        Variation<T> variation,
+        VariationFormat? variationFormat = null)
+    {
+        var sb = new StringBuilder();
+        if (variationFormat != null) sb.Append(variation.Index.ToString(variationFormat.IndexFormat));
+        else sb.Append(variation.Index);
+        sb.Append(": ");
+        var sItems = string.Join(" ", variation.Reverse());
+        // if (variationFormat != null) sItems = sItems.PadLeft(variationFormat.Padding);
+        sb.Append(sItems);
+        return sb.ToString();
+    }
 }

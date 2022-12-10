@@ -6,7 +6,7 @@
 		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

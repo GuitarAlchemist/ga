@@ -29,7 +29,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
                                             IIndexer<BigInteger, Variation<T>>
     where T : notnull
 {
-    #region IVariationList{T} Members
+    #region IIndexer<BigInteger, Variation<T>>
 
     /// <summary>
     /// Gets a variation given its index.
@@ -37,6 +37,10 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     /// <param name="index">The <see cref="BigInteger"/> Lexicographical-order index</param>
     /// <returns>The <see cref="ImmutableArray{T}"/></returns>
     public Variation<T> this[BigInteger index] => GetVariation(index);
+
+    #endregion
+
+    #region IEnumerable{T} Members
 
     public IEnumerator<Variation<T>> GetEnumerator()
     {
@@ -78,6 +82,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         Elements = elements.ToImmutableList();
         Base = new(Elements.Count);
         Count = BigInteger.Pow(Base, length);
+        IndexFormat = $"D{(int)Math.Floor(BigInteger.Log10(Count) + 1)}";
         Length = length;
 
         _indexByElement =
@@ -94,13 +99,15 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         _lazyElementsSet = new(() => Elements.ToImmutableHashSet());
     }
 
+    public string IndexFormat { get; }
+
     /// <summary>
     /// The possible <see cref="IReadOnlyCollection{T}"/> elements to choose from (The "alphabet").
     /// </summary>
     public IReadOnlyCollection<T> Elements { get; }
 
     /// <summary>
-    /// Gets the number of items in the produced variations (<see cref="Variation{T}.Count"/>.
+    /// Gets the number of elements in a variation.
     /// </summary>
     public int Length { get; }
 
@@ -113,7 +120,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     /// Gets the index of a variation.
     /// </summary>
     /// <param name="variation">The <see cref="ImmutableArray{T}"/></param>
-    /// <returns></returns>
+    /// <returns>The <see cref="BigInteger"/> index.</returns>
     public BigInteger GetIndex(IEnumerable<T> variation)
     {
         var variationArray = variation.Take(Length).ToImmutableArray();
@@ -132,7 +139,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         var values = variationArray.Select(item => _indexByElement[item]);
         foreach (var value in values)
         {
-            result += value * weight;
+            result += new BigInteger(value) * weight;
             weight *= Base;
         }
         return result;

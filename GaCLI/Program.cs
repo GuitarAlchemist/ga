@@ -1,14 +1,21 @@
 ﻿using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard;
 
-//var relFretVectors = new RelativeFretVectorCollection();
-//var equiv = relFretVectors.Equivalences;
-//var normalized = relFretVectors.Normalized;
-//var translated = relFretVectors.Translated;
-
-var aa = Fretboard.Default;
-
-foreach (var variation in PitchClassVariations.SharedInstance)
+var combinations = PitchClassCombinations.SharedInstance;
+foreach (var combination in combinations)
 {
-    Console.WriteLine(variation.ToString());
+    Console.WriteLine(combination.ToString());
+    var index = combination.Index;
+    var index2 = combinations.GetIndex(combination);
+    if (index != index2) throw new InvalidOperationException("That sucks!");
 }
+
+//foreach (var variation in FingerVariations.SharedInstance)
+//{
+//    Console.WriteLine(variation.ToString());
+//}
+
+//foreach (var vector in Fretboard.Default.RelativePositions)
+//{
+//    Console.WriteLine(vector);
+//}
+

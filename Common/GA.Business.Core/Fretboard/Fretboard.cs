@@ -32,35 +32,31 @@ public class Fretboard
 
         _lazyPositions = new(GetPositions);
         _lazyRelativePositions = new(new RelativeFretVectorCollection(StringCount));
-
-        PositionCollection GetPositions()
-        {
-            var list = new List<Position>();
-            foreach (var str in Strings)
-            {
-                // Muted
-                list.Add(new Position.Muted(str));
-
-                // Played 
-                var midiNote = Tuning[str].MidiNote;
-                var frets = Fret.Range(0, FretCount - 1);
-                foreach (var fret in frets)
-                {
-                    var positionLocation = new PositionLocation(str, fret);
-                    list.Add(new Position.Played(positionLocation, midiNote++));
-                }
-            }
-            return new(list);
-        }
     }
 
     public Tuning Tuning { get; }
     public int StringCount { get; }
     public int FretCount { get; }
     public Fret? Capo { get; set; }
+
+    /// <summary>
+    /// Gets the <see cref="IReadOnlyCollection{Str}"/>
+    /// </summary>
     public IReadOnlyCollection<Str> Strings => Str.Range(StringCount);
+
+    /// <summary>
+    /// Gets the <see cref="IReadOnlyCollection{Fret}"/>
+    /// </summary>
     public IReadOnlyCollection<Fret> Frets => Fret.Range(Fret.Min.Value, FretCount);
+
+    /// <summary>
+    /// Gets the <see cref="PositionCollection"/>
+    /// </summary>
     public PositionCollection Positions => _lazyPositions.Value;
+
+    /// <summary>
+    /// Gets the <see cref="RelativeFretVectorCollection"/>
+    /// </summary>
     public RelativeFretVectorCollection RelativePositions => _lazyRelativePositions.Value;
 
     public override string ToString()
@@ -71,5 +67,25 @@ public class Fretboard
         var s = Encoding.UTF8.GetString(memoryStream.ToArray());
         memoryStream.Flush();
         return s;
+    }
+
+    private PositionCollection GetPositions()
+    {
+        var list = new List<Position>();
+        foreach (var str in Strings)
+        {
+            // Muted
+            list.Add(new Position.Muted(str));
+
+            // Played 
+            var midiNote = Tuning[str].MidiNote;
+            var frets = Fret.Range(0, FretCount - 1);
+            foreach (var fret in frets)
+            {
+                var positionLocation = new PositionLocation(str, fret);
+                list.Add(new Position.Played(positionLocation, midiNote++));
+            }
+        }
+        return new(list);
     }
 }
