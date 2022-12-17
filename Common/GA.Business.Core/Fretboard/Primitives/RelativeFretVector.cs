@@ -14,7 +14,7 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     #region IIndexer<Str, RelativeFret> Members
 
     public RelativeFret this[Str key] => throw new NotImplementedException();
-    public BigInteger Index => _variation.Index;
+    public int Index => (int) _variation.Index;
 
     #endregion
 
@@ -80,15 +80,15 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         }
 
         /// <summary>
-        /// The translation amount.
+        /// The translation displacement amount compared to the prime form.
         /// </summary>
-        public int Value => this.Min().Value;
+        public int Increment => this.Min().Value;
 
         /// <summary>
         /// Gets the <see cref="PrimeForm"/>.
         /// </summary>
         public PrimeForm PrimeForm => _primeFormFactory.Invoke();
 
-        public override string ToString() => $"{base.ToString()} (+ {Value} from {PrimeForm})";
+        public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeForm})";
     }
 }
