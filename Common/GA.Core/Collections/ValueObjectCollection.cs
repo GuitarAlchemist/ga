@@ -2,7 +2,7 @@
 
 [PublicAPI]
 public class ValueObjectCollection<T> : IReadOnlyCollection<T>
-    where T : IValueObject<T>, new()
+    where T : IValueObject<T>
 {
     public static ValueObjectCollection<T> Create(int start, int count)
     {
@@ -41,12 +41,12 @@ public class ValueObjectCollection<T> : IReadOnlyCollection<T>
 
     private static ImmutableArray<T> GetItems(int start, int count) =>
         Enumerable.Range(start, count)
-                  .Select(i => new T {Value = i})
+                  .Select(T.FromValue)
                   .ToImmutableArray();
 
     private static ImmutableArray<T> GetItemsWithHead(T head, int start, int count) =>
         new[] {head}
             .Union(Enumerable.Range(start, count)
-            .Select(i => new T {Value = i}))
+            .Select(T.FromValue))
             .ToImmutableArray();
 }
