@@ -36,7 +36,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     /// </summary>
     /// <param name="index">The <see cref="BigInteger"/> Lexicographical-order index</param>
     /// <returns>The <see cref="ImmutableArray{T}"/></returns>
-    public Variation<T> this[BigInteger index] => GetVariation(index);
+    public Variation<T> this[BigInteger index] => CreateVariation(index);
 
     #endregion
 
@@ -45,7 +45,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     public IEnumerator<Variation<T>> GetEnumerator()
     {
         var index = BigInteger.Zero;
-        while (index.CompareTo(Count) != 0) yield return GetVariation(index++);
+        while (index.CompareTo(Count) != 0) yield return CreateVariation(index++);
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -156,10 +156,10 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     }
 
     /// <summary>
-    /// Gets a variation for its index.
+    /// Create a variation from an index.
     /// </summary>
     /// <param name="index">The variation index.</param> in lexicographical order (See https://en.wikipedia.org/wiki/Lexicographic_order)
-    private Variation<T> GetVariation(BigInteger index)
+    private Variation<T> CreateVariation(BigInteger index)
     {
         var arrayBuilder = ImmutableArray.CreateBuilder<T>(Length);
         var dividend = index;

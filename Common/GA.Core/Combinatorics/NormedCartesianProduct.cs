@@ -10,7 +10,7 @@ using Extensions;
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
 public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T, TNorm>>
-    where T : IStaticNorm<T, TNorm>
+    where T : IStaticNorm<T, TNorm>, IValueObject
     where TNorm : struct
 {
     /// <summary>

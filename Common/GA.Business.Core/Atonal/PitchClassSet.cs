@@ -16,6 +16,7 @@ using GA.Core.Extensions;
 /// See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes
 /// </remarks>
 [PublicAPI]
+// TODO: Rewrite class to generate all values from PitchClass Combinations
 public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
                                     IReadOnlySet<PitchClass>,
                                     IComparable<PitchClassSet>
@@ -67,7 +68,6 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
 
     #endregion
 
-
     public static ImmutableHashSet<PitchClassSet> PrimeForms => _primeForms.Value;
 
     public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
@@ -85,19 +85,6 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
 
         return result;
     }
-
-    public static PitchClassSet FromNotes(IEnumerable<Note> notes)
-    {
-        var pitchClasses =
-            notes.Select(note => note.PitchClass)
-                .ToImmutableArray();
-
-        var result = new PitchClassSet(pitchClasses);
-
-        return result;
-    }
-
-    public static PitchClassSet FromNotes(params Note[] notes) => FromNotes(notes.AsEnumerable());
 
     public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
 
@@ -158,6 +145,7 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
     public Cardinality Cardinality { get; }
     public IReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
     public IntervalClassVector IntervalClassVector => _pitchClassesSet.ToIntervalClassVector();
+    // TODO: Depreprecate this
     public IReadOnlyCollection<PitchClassSet> Transpositions => _lazyTranspositions.Value[(Cardinality, IntervalClassVector)].ToImmutableList();
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
     public bool IsPrimeForm => _primeForms.Value.Contains(this);

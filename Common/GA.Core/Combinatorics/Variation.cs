@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// A variation.
+/// A variation (Item in a combination or arrangement of items)
 /// </summary>
 /// <typeparam name="T">The element type.</typeparam>
 /// <seealso cref="VariationsWithRepetitions{T}"/>

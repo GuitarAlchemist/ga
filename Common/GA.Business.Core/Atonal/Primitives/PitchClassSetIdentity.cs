@@ -2,9 +2,7 @@
 
 using GA.Core;
 using GA.Core.Collections;
-using Notes;
 using Scales;
-using GA.Business.Core.Notes.Extensions;
 
 /// <summary>
 /// Unique identifier for a pitch class set.
@@ -58,9 +56,6 @@ public readonly record struct PitchClassSetIdentity : IStaticValueObjectList<Pit
 
     public static implicit operator PitchClassSetIdentity(int value) => new() { Value = value };
     public static implicit operator int(PitchClassSetIdentity fret) => fret.Value;
-
-    public static PitchClassSetIdentity FromNotes(IEnumerable<Note> notes) => notes.ToPitchClassSet().Identity; // TODO: Remove, this is not needed if once using PitchClassVariations
-    public static PitchClassSetIdentity FromNotes(params Note[] notes) => FromNotes(notes.ToImmutableArray()); // TODO: Remove, this is not needed if once using PitchClassVariations
 
     public static bool ContainsRoot(int value) => (value & 1) == 1; // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be a valid scale
 

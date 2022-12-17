@@ -2,9 +2,10 @@
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Tonal.Modes;
+using GA.Core.Combinatorics;
 
 
-var combinations = PitchClassCombinations.SharedInstance;
+var combinations = new Combinations<PitchClass>();
 foreach (var combination in combinations)
 {
     Console.WriteLine(combination.ToString());

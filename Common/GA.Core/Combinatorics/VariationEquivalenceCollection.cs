@@ -1,7 +1,5 @@
 ﻿namespace GA.Core.Combinatorics;
 
-using Extensions;
-
 /// <summary>
 /// Abstract collection of variation equivalences.
 /// </summary>
@@ -31,8 +29,8 @@ public abstract class VariationEquivalenceCollection
             if (variations == null) throw new ArgumentNullException(nameof(variations));
 
             _lazyEquivalences = new(() => GetTranslationEquivalences(indexProvider, variations));
-            _lazyToEquivalences = new(() => Equivalences.ToImmutableDictionary(Equivalence => Equivalence.ToIndex));
-            _lazyFromEquivalences = new(() => Equivalences.ToLookup(Equivalence => Equivalence.FromIndex));
+            _lazyToEquivalences = new(() => Equivalences.ToImmutableDictionary(equivalence => equivalence.ToIndex));
+            _lazyFromEquivalences = new(() => Equivalences.ToLookup(equivalence => equivalence.FromIndex));
         }
 
         public IReadOnlyCollection<VariationEquivalence.Translation> Equivalences => _lazyEquivalences.Value;
@@ -60,19 +58,29 @@ public abstract class VariationEquivalenceCollection
                 Func<IEnumerable<T>, BigInteger> indexProvider,
                 out VariationEquivalence.Translation equivalence)
             {
-                var isNormalized = variation.Any(T => T.Value == 0);
-                if (isNormalized) // Already normalized, no Equivalence
+                var isPrimeForm = variation.Any(T => T.Value == 0);
+                if (isPrimeForm) // Already prime form, no Equivalence
                 {
                     equivalence = VariationEquivalence.Translation.None;
                     return false;
                 }
 
-                // The two variations have a translation Equivalence
+                // The two variations have a translation equivalence
                 equivalence = new(
-                    indexProvider(variation.ToNormalizedArray()),
+                    indexProvider(ToPrimeForm(variation)),
                     variation.Index,
                     variation.Min().Value);
                 return true;
+
+                static IEnumerable<T> ToPrimeForm<T>(IEnumerable<T> items) 
+                    where T : struct, IValueObject<T>
+                {
+                    if (items == null) throw new ArgumentNullException(nameof(items));
+                    if (items is not IReadOnlyCollection<T> collection) collection = items.ToImmutableArray();
+
+                    var minItem = collection.Min();
+                    return collection.Select(item => T.FromValue(item.Value - minItem.Value));
+                }
             }
         }
     }

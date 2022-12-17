@@ -33,11 +33,12 @@ public static class NormedPairExtensions
     public static ImmutableSortedDictionary<TNorm, int> ByNormCounts<T, TNorm>(
         this IEnumerable<NormedPair<T, TNorm>> normedPairs,
         Func<NormedPair<T, TNorm>, bool>? predicate = null)
-            where T : IStaticNorm<T, TNorm>
+            where T : IStaticNorm<T, TNorm>, IValueObject
             where TNorm : struct
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
         if (predicate != null) normedPairs = normedPairs.Where(predicate);
+        normedPairs = normedPairs.Where(pair => pair.Item1.Value <= pair.Item2.Value); // De-duplicate pairs
         return normedPairs.ByNorm().GetCounts();
     }
 }
