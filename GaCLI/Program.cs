@@ -1,12 +1,14 @@
 ﻿using GA.Business.Core.Atonal;
+using GA.Business.Core.Extensions;
 using GA.Core.Combinatorics;
 
-var pitchClassCombinations = new Combinations<PitchClass>();
-var lookup = pitchClassCombinations.ToLookup(pitchClass => pitchClass.ToIntervalClassVector());
-var aa = pitchClassCombinations[2741];
-var iv = aa.ToIntervalClassVector();
+var combinations = new Combinations<PitchClass>();
+var lookup = combinations.ToLookup(pitchClass => pitchClass.ToIntervalClassVector());
+var majorScale = combinations[2741];
+var majorScaleIntervalStructure = majorScale.ToIntervalStructure();
+var majorScaleIntervalVector = majorScale.ToIntervalClassVector();
 
-var items = lookup[iv].ToImmutableList();
+var items = lookup[majorScaleIntervalVector].ToImmutableList();
 
 /*
 foreach (var vector in Fretboard.Default.RelativePositions)

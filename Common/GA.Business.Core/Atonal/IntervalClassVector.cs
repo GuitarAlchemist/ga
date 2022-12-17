@@ -27,15 +27,20 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 {
     #region Indexer members
 
-    public int this[IntervalClass ic] => _countByIc.TryGetValue(ic, out var count) ? count : 0;
+    /// <summary>
+    /// Gets the occurence count for the interval class
+    /// </summary>
+    /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
+    /// <returns>The occurence count.</returns>
+    public int this[IntervalClass intervalClass] => _countByIntervalClass.TryGetValue(intervalClass, out var count) ? count : 0;
 
     #endregion
 
     #region IReadOnlyCollection<int> members
 
-    public IEnumerator<int> GetEnumerator() => _countByIc.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => _countByIc.Values.GetEnumerator();
-    public int Count => _countByIc.Count;
+    public IEnumerator<int> GetEnumerator() => _countByIntervalClass.Values.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _countByIntervalClass.Values.GetEnumerator();
+    public int Count => _countByIntervalClass.Count;
 
     #endregion
 
@@ -71,12 +76,12 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     #endregion
 
-    private readonly ImmutableSortedDictionary<IntervalClass, int> _countByIc;
+    private readonly ImmutableSortedDictionary<IntervalClass, int> _countByIntervalClass;
 
-    public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIc)
+    public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIntervalClass)
     {
-        _countByIc = countByIc ?? throw new ArgumentNullException(nameof(countByIc));
-        Value = ToBase12Value(countByIc);
+        _countByIntervalClass = countByIntervalClass ?? throw new ArgumentNullException(nameof(countByIntervalClass));
+        Value = ToBase12Value(countByIntervalClass);
     }
 
     public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) 
@@ -84,7 +89,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
             => items.ToIntervalClassVector();
 
     /// <summary>
-    /// Gets the base 12 value
+    /// Gets the base 12 value (Sum of ordered)
     /// </summary>
     public int Value { get; }
     public int Hemitonia => this[IntervalClass.Hemitone];
@@ -92,16 +97,18 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     public bool IsHemitonic => Hemitonia > 0;
     public bool IsTritonic => Tritonia > 0;
     /// <summary>
-    /// 
+    /// The deep scale property has important implications is the tone commonality and modulation of the diatonic scale.
     /// </summary>
     /// <remarks>
+    /// See https://www.wikiwand.com/en/Common_tone_(scale) - See common tone theorem
+    /// See https://ftp.isdi.co.cu/Biblioteca/BIBLIOTECA%20UNIVERSITARIA%20DEL%20ISDI/COLECCION%20DE%20LIBROS%20ELECTRONICOS/LE-1433/LE-1433.pdf - Page 42 (Modulation, Common Tones, and the Deep Scale)
     /// See https://en.wikipedia.org/wiki/Common_tone_(scale)#Deep_scale_property
     /// </remarks>
-    public bool IsDeepScale => _countByIc.Values.Distinct().Count() == _countByIc.Values.Count(); 
+    public bool IsDeepScale => _countByIntervalClass.Values.Distinct().Count() == _countByIntervalClass.Values.Count(); 
     public static implicit operator int(IntervalClassVector vector) => vector.Value;
     public static implicit operator IntervalClassVector(int value) => FromBase12Value(value);
 
-    public override string ToString() => $"<{string.Join(" ", _countByIc.Values)}>";
+    public override string ToString() => $"<{string.Join(" ", _countByIntervalClass.Values)}>";
 
     private static IntervalClassVector FromBase12Value(int value)
     {
@@ -112,7 +119,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
         {
             var count = dividend % 12;
             dictBuilder.Add(intervalClass, count);
-            dividend /= 10;
+            dividend /= 12;
         }
         return new(dictBuilder.ToImmutable());
     }

@@ -29,8 +29,8 @@ public static class AtonalExtensions
     {
         if (items == null) throw new ArgumentNullException(nameof(items));
         var normedCartesianProduct = items.ToNormedCartesianProduct<T, IntervalClass>();
-        var countByIc = normedCartesianProduct.ByNormCounts(pair => pair.Norm.Value > 0);
-        var result = new IntervalClassVector(countByIc);
+        var countByIntervalClass = normedCartesianProduct.ByNormCounts(pair => pair.Norm.Value > 0);
+        var result = new IntervalClassVector(countByIntervalClass);
 
         return result;
     }
