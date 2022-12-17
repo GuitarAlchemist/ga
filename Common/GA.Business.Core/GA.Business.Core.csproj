@@ -22,6 +22,7 @@
 		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
 		<PackageTags>Music;Guitar</PackageTags>
 		<PackageReleaseNotes>
+2022-12-16 - Fixed bug in IntervalClassVector calculation
 2022-12-10 - Added Fretboard.RelativePositions (All possible relative fret vectors and translation equivalences); Added PitchClassCombinations
 2022-11-24 - Added GA.Core.Combinatorics.VariationsWithRepetitions class
 2022-10-28 - Fixed Instrument types generation from YAML config, fixed fretboard text rendering issues
@@ -41,9 +42,9 @@
 		</PackageDescription>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.12</PackageVersion>
-		<AssemblyVersion>1.0.12.0</AssemblyVersion>
-		<FileVersion>1.0.12.0</FileVersion>
+		<PackageVersion>1.0.13</PackageVersion>
+		<AssemblyVersion>1.0.13.0</AssemblyVersion>
+		<FileVersion>1.0.13.0</FileVersion>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
