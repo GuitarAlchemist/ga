@@ -52,17 +52,20 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     private const int _minValue = 0;
     private const int _maxValue = 6;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IntervalClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-    public static IntervalClass FromSemitones(Semitones semitones)
+    public static IntervalClass FromValue(int value)
     {
-        var value = Math.Abs(semitones.Value) % 12; // Apply octave equivalence
-        value = value > _maxValue ? 12 - value : value; // Apply interval inversion equivalence
-        return FromValue(value);
+        var inOctaveValue = Math.Abs(value) % 12; // Apply octave equivalence
+        var normalizedValue = inOctaveValue > _maxValue ? 12 - value : value; // Apply interval inversion equivalence
+        return new() {Value = normalizedValue};
     }
+
+    public static IntervalClass FromSemitones(Semitones semitones) => FromValue(semitones.Value);
+    public static IReadOnlyCollection<IntervalClass> Range(int start, int count) => ValueObjectUtils<IntervalClass>.GetItems(start, count);
 
     public static IntervalClass Min => FromValue(_minValue);
     public static IntervalClass Max => FromValue(_maxValue);
     public static IntervalClass Hemitone => FromValue(1);
+    public static IntervalClass Tone=> FromValue(2);
     public static IntervalClass Tritone => FromValue(6);
 
     public static int CheckRange(int value) => IValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);

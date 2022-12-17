@@ -5,8 +5,6 @@ using Intervals;
 
 public static class ChromaticNoteExtensions
 {
-    public static PitchClassSet ToPitchClassSet(this IEnumerable<Note> notes) => PitchClassSet.FromNotes(notes);
-
     public static Interval.Chromatic GetInterval(
         this Note.Chromatic note,
         Note.Chromatic other)

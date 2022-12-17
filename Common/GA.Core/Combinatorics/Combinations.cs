@@ -19,7 +19,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
     /// </summary>
     /// <param name="index">The <see cref="BigInteger"/> Lexicographical-order index</param>
     /// <returns>The <see cref="ImmutableArray{T}"/></returns>
-    public Variation<T> this[BigInteger index] => GetVariation(index);
+    public Variation<T> this[BigInteger index] => CreateVariation(index);
 
     #endregion
 
@@ -28,7 +28,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
     public IEnumerator<Variation<T>> GetEnumerator()
     {
         var index = BigInteger.Zero;
-        while (index.CompareTo(Count) != 0) yield return GetVariation(index++);
+        while (index.CompareTo(Count) != 0) yield return CreateVariation(index++);
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -78,7 +78,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
         return weightByItemBuilder.ToImmutable();
     }
 
-    private Variation<T> GetVariation(BigInteger index)
+    private Variation<T> CreateVariation(BigInteger index)
     {
         var arrayBuilder = ImmutableArray.CreateBuilder<T>();
         using var itemsEnumerator = T.Items.GetEnumerator();

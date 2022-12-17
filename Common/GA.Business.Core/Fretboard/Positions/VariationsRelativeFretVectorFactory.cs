@@ -38,28 +38,28 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
     /// <returns>The <see cref="RelativeFretVector"/>.</returns>
     private RelativeFretVector Create(Variation<RelativeFret> variation)
     {
-        var isNormalized = variation.Min().Value == 0;
-        if (isNormalized)
+        var isPrimeForm = variation.Min().Value == 0;
+        if (isPrimeForm)
         {
-            // The variation represents vector is its normalized form
+            // The variation represents vector is its prime form
             var equivalences = Equivalences.From[variation.Index].ToImmutableArray();
-            var translated =
+            var translations =
                 equivalences
                     .Select(translation => _variations[translation.ToIndex])
                     .Select(Create)
-                    .Cast<Translated>();
-            return new Normalized(variation, new NormalizedTranslations(translated));
+                    .Cast<Translation>();
+            return new PrimeForm(variation, new OrderedTranslationCollection(translations));
         }
 
         // The variation represents vector is its translated form
         var equivalence = Equivalences.To[variation.Index];
-        return new Translated(variation, () => (Normalized) Create(_variations[equivalence.FromIndex]));
+        return new Translation(variation, () => (PrimeForm) Create(_variations[equivalence.FromIndex]));
     }
 
-    private class NormalizedTranslations : LazyCollectionBase<Translated>
+    private class OrderedTranslationCollection : LazyCollectionBase<Translation>
     {
-        public NormalizedTranslations(IEnumerable<Translated> items)
-            : base(items, "; ")
+        public OrderedTranslationCollection(IEnumerable<Translation> items)
+            : base(items.OrderBy(translation => translation.Index), "; ")
         {
         }
     }

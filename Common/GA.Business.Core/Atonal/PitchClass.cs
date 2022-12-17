@@ -22,7 +22,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region IStaticIntervalClassNorm<PitchClass> Members
 
-    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(item2.Value - item1.Value);
+    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(Math.Abs(item2.Value - item1.Value));
 
     #endregion
 

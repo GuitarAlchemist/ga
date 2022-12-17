@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using GA.Core;
 using Primitives;
 using GA.Core.Collections;
 
@@ -61,7 +62,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
+        if (obj is null) return false;
         if (ReferenceEquals(this, obj)) return true;
         return obj.GetType() == GetType() && Equals((IntervalClassVector) obj);
     }
@@ -71,15 +72,61 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     #endregion
 
     private readonly ImmutableSortedDictionary<IntervalClass, int> _countByIc;
-    public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIc) => _countByIc = countByIc ?? throw new ArgumentNullException(nameof(countByIc));
-    public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) where T : IStaticIntervalClassNorm<T> => items.ToIntervalClassVector();
 
+    public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIc)
+    {
+        _countByIc = countByIc ?? throw new ArgumentNullException(nameof(countByIc));
+        Value = ToBase12Value(countByIc);
+    }
+
+    public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) 
+        where T : IStaticIntervalClassNorm<T>, IValueObject 
+            => items.ToIntervalClassVector();
+
+    /// <summary>
+    /// Gets the base 12 value
+    /// </summary>
     public int Value { get; }
     public int Hemitonia => this[IntervalClass.Hemitone];
     public int Tritonia => this[IntervalClass.Tritone];
     public bool IsHemitonic => Hemitonia > 0;
     public bool IsTritonic => Tritonia > 0;
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <remarks>
+    /// See https://en.wikipedia.org/wiki/Common_tone_(scale)#Deep_scale_property
+    /// </remarks>
+    public bool IsDeepScale => _countByIc.Values.Distinct().Count() == _countByIc.Values.Count(); 
     public static implicit operator int(IntervalClassVector vector) => vector.Value;
+    public static implicit operator IntervalClassVector(int value) => FromBase12Value(value);
 
     public override string ToString() => $"<{string.Join(" ", _countByIc.Values)}>";
+
+    private static IntervalClassVector FromBase12Value(int value)
+    {
+        var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
+        var dividend = value;
+        var intervalClasses = IntervalClass.Range(1, 6).Reverse();
+        foreach (var intervalClass in intervalClasses)
+        {
+            var count = dividend % 12;
+            dictBuilder.Add(intervalClass, count);
+            dividend /= 10;
+        }
+        return new(dictBuilder.ToImmutable());
+    }
+
+    private static int ToBase12Value(ImmutableSortedDictionary<IntervalClass, int> countByIc)
+    {
+        var weight = 1;
+        var value = 0;
+        foreach (var ic in countByIc.Keys.OrderBy(ic => ic.Value))
+        {
+            var count = countByIc[ic];
+            value += count * weight;
+            weight *= 12;
+        }
+        return value;
+    }
 }

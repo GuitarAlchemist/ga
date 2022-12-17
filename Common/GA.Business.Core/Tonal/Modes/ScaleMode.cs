@@ -3,7 +3,6 @@
 using GA.Core;
 using GA.Core.Collections;
 using GA.Core.Extensions;
-using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using Notes;
@@ -35,7 +34,7 @@ public abstract class ScaleMode
     public ModeFormula Formula => _lazyModeFormula.Value;
     public IReadOnlyCollection<Note> ColorNotes => _lazyColorNotes.Value;
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
-    public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(Notes);
+    // public PitchClassSetIdentity Identity => PitchClassSetIdentity.FromNotes(Notes); // TODO
 
     private ImmutableList<Note> ModeColorNotes(
         IEnumerable<ModeInterval> colorTones)

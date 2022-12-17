@@ -1,17 +1,17 @@
 ﻿using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard;
+using GA.Core.Combinatorics;
 
-var combinations = PitchClassCombinations.SharedInstance;
-foreach (var combination in combinations)
-{
-    Console.WriteLine(combination.ToString());
-    var index = combination.Index;
-    var index2 = combinations.GetIndex(combination);
-    if (index != index2) throw new InvalidOperationException("That sucks!");
-}
+var pitchClassCombinations = new Combinations<PitchClass>();
+var lookup = pitchClassCombinations.ToLookup(pitchClass => pitchClass.ToIntervalClassVector());
+var aa = pitchClassCombinations[2741];
+var iv = aa.ToIntervalClassVector();
 
+var items = lookup[iv].ToImmutableList();
+
+/*
 foreach (var vector in Fretboard.Default.RelativePositions)
 {
     Console.WriteLine(vector);
 }
 
+*/

@@ -5,7 +5,7 @@ using GA.Core.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// A vector of <see cref="RelativeFret"/> with translation equivalences.
+/// List of <see cref="RelativeFret"/> items, indexed by string.
 /// </summary>
 [PublicAPI]
 public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
@@ -40,14 +40,15 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     public override string ToString() => "+fret: " + string.Join(" ", _relativeFretByStr.Values);
 
     /// <summary>
-    /// A relative fret vector where the minimum relative fret is 0 (e.g. "0 2 2 2 0 0")
+    /// A prime form relative fret vector (e.g. "0 2 2 2 0 0")
     /// </summary>
     [PublicAPI]
-    public sealed class Normalized : RelativeFretVector
+    public sealed class PrimeForm : RelativeFretVector
     {
-        public Normalized(
+        public PrimeForm(
             Variation<RelativeFret> variation,
-            IReadOnlyCollection<Translated> translations) : base(variation)
+            IReadOnlyCollection<Translation> translations) 
+                : base(variation)
         {
             Translations = translations;
         }
@@ -55,27 +56,27 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         /// <summary>
         /// Gets the <see cref="IReadOnlyCollection{Translated}"/>
         /// </summary>
-        public IReadOnlyCollection<Translated> Translations { get; }
+        public IReadOnlyCollection<Translation> Translations { get; }
 
         public override string ToString() => Translations.Any() 
-            ? $"{base.ToString()} (Normalized - {Translations.Count} translations)" 
-            : $"{base.ToString()} (Normalized)";
+            ? $"{base.ToString()} (Prime - {Translations.Count} translations)" 
+            : $"{base.ToString()} (Prime)";
     }
 
     /// <summary>
-    /// A relative fret vector where the minimum relative fret is not 0, the vector can be normalized by translation (e.g. "1 3 3 3 1 1" => normalizable to "0 2 2 2 0 0")
+    /// A non-prime relative fret vector (e.g. "1 3 3 3 1 1" => "0 2 2 2 0 0" prime form)
     /// </summary>
     [PublicAPI]
-    public sealed class Translated : RelativeFretVector
+    public sealed class Translation : RelativeFretVector
     {
-        private readonly Func<Normalized> _normalizedVectorFactory;
+        private readonly Func<PrimeForm> _primeFormFactory;
 
-        public Translated(
+        public Translation(
             Variation<RelativeFret> variation,
-            Func<Normalized> normalizedVectorFactory) 
+            Func<PrimeForm> primeFormFactory) 
                 : base(variation)
         {
-            _normalizedVectorFactory = normalizedVectorFactory;
+            _primeFormFactory = primeFormFactory;
         }
 
         /// <summary>
@@ -84,10 +85,10 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         public int Value => this.Min().Value;
 
         /// <summary>
-        /// Gets the <see cref="Normalized"/>.
+        /// Gets the <see cref="PrimeForm"/>.
         /// </summary>
-        public Normalized Normalized => _normalizedVectorFactory.Invoke();
+        public PrimeForm PrimeForm => _primeFormFactory.Invoke();
 
-        public override string ToString() => $"{base.ToString()} (+ {Value} from {Normalized})";
+        public override string ToString() => $"{base.ToString()} (+ {Value} from {PrimeForm})";
     }
 }

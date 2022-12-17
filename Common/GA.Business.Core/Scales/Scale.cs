@@ -50,7 +50,7 @@ public class Scale : IReadOnlyCollection<Note>,
         if (notes == null) throw new ArgumentNullException(nameof(notes));
         _notes = notes.ToImmutableList().AsPrintable();
         Intervals = new LazyScaleIntervals(_notes);
-        Identity = PitchClassSetIdentity.FromNotes(_notes);
+        //Identity = PitchClassSetIdentity.FromNotes(_notes); // TODO
     }
 
     public IReadOnlyCollection<Interval.Simple> Intervals { get; }

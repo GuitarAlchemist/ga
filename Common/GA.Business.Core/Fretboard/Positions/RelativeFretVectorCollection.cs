@@ -30,8 +30,8 @@ public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVect
         var variations = new VariationsWithRepetitions<RelativeFret>(RelativeFret.Items, strCount);
         Count = (int) variations.Count;
         _factory = new(variations);
-        Normalized = this.OfType<Normalized>().ToLazyCollection();
-        Translated = this.OfType<Translated>().ToLazyCollection();
+        PrimeForms = this.OfType<PrimeForm>().ToLazyCollection();
+        Translations = this.OfType<Translation>().ToLazyCollection();
     }
 
     /// <summary>
@@ -40,12 +40,12 @@ public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVect
     public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences => _factory.Equivalences;
 
     /// <summary>
-    /// Gets the <see cref="RelativeFretVector.Normalized"/>
+    /// Gets the <see cref="IReadOnlyCollection{PrimeForm}"/>
     /// </summary>
-    public IReadOnlyCollection<Normalized> Normalized { get; }
+    public IReadOnlyCollection<PrimeForm> PrimeForms { get; }
 
     /// <summary>
-    /// Gets the <see cref="RelativeFretVector.Translated"/>
+    /// Gets the <see cref="IReadOnlyCollection{Translation}"/>
     /// </summary>
-    public IReadOnlyCollection<Translated> Translated { get; }
+    public IReadOnlyCollection<Translation> Translations { get; }
 }
