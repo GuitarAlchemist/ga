@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
+using GA.Core;
 using GA.Core.Combinatorics;
 using GA.Core.Collections;
 using System.Collections.Generic;
@@ -9,12 +10,12 @@ using System.Collections.Generic;
 /// </summary>
 [PublicAPI]
 public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
-                                           IIndexer<Str, RelativeFret>
+                                           IIndexer<Str, RelativeFret>,
+                                           IValueObject
 {
     #region IIndexer<Str, RelativeFret> Members
 
-    public RelativeFret this[Str key] => throw new NotImplementedException();
-    public int Index => (int) _variation.Index;
+    public RelativeFret this[Str str] => _relativeFretByStr[str];
 
     #endregion
 
@@ -27,15 +28,26 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
 
     #endregion
 
+    public int Value => (int) _variation.Index;
+    public abstract bool IsPrime { get; }
+
     private readonly Variation<RelativeFret> _variation;
-    private readonly ImmutableDictionary<Str, RelativeFret> _relativeFretByStr;
+    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr;
 
     protected RelativeFretVector(Variation<RelativeFret> variation)
     {
         _relativeFretByStr =
             variation.Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
-                     .ToImmutableDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
+                     .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
     }
+
+    /// <summary>
+    /// Create a fret vector.
+    /// </summary>
+    /// <param name="startFret">The start <see cref="Fret"/></param>
+    /// <returns>The <see cref="FretVector"/>.</returns>
+    public FretVector ToFretVector(Fret startFret) => 
+        new(_relativeFretByStr.Values.Select(relativeFret => startFret + relativeFret));
 
     public override string ToString() => "+fret: " + string.Join(" ", _relativeFretByStr.Values);
 
@@ -52,6 +64,8 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         {
             Translations = translations;
         }
+
+        public override bool IsPrime => true;
 
         /// <summary>
         /// Gets the <see cref="IReadOnlyCollection{Translated}"/>
@@ -83,6 +97,8 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         /// The translation displacement amount compared to the prime form.
         /// </summary>
         public int Increment => this.Min().Value;
+
+        public override bool IsPrime => false;
 
         /// <summary>
         /// Gets the <see cref="PrimeForm"/>.

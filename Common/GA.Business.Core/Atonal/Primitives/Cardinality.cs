@@ -44,8 +44,8 @@ public readonly record struct Cardinality : IStaticValueObjectList<Cardinality>,
     public static Cardinality Min => FromValue(_minValue);
     public static Cardinality Max => FromValue(_maxValue);
 
-    public static int CheckRange(int value) => IValueObject<Cardinality>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<Cardinality>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<Cardinality>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<Cardinality>.EnsureValueInRange(value, minValue, maxValue);
 
     public static implicit operator Cardinality(int value) => new() { Value = value };
     public static implicit operator int(Cardinality fret) => fret.Value;

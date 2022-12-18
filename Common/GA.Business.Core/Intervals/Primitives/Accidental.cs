@@ -7,7 +7,7 @@ using GA.Business.Core.Notes.Primitives;
 /// Signature.
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
-public readonly record struct Accidental : IValueObject<Accidental>
+public readonly record struct Accidental : IRangeValueObject<Accidental>
 {
     private const int _minValue = -3;
     private const int _maxValue = 3;
@@ -43,7 +43,7 @@ public readonly record struct Accidental : IValueObject<Accidental>
     public int Value
     {
         get => _value;
-        init => _value = IValueObject<Accidental>.EnsureValueInRange(value, _minValue, _maxValue);
+        init => _value = IRangeValueObject<Accidental>.EnsureValueInRange(value, _minValue, _maxValue);
     }
 
     public override string ToString() => _value switch

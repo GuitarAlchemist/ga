@@ -2,7 +2,7 @@
 
 [PublicAPI]
 public class ValueObjectCollection<T> : IReadOnlyCollection<T>
-    where T : IValueObject<T>
+    where T : IRangeValueObject<T>
 {
     public static ValueObjectCollection<T> Create(int start, int count)
     {

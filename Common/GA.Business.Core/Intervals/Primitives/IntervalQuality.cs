@@ -10,7 +10,7 @@ using GA.Core.Collections;
 /// Interval quality class
 /// </summary>
 [PublicAPI]
-public readonly record struct IntervalQuality : IValueObject<IntervalQuality>, 
+public readonly record struct IntervalQuality : IRangeValueObject<IntervalQuality>, 
                                                 IFormattable
 {
     #region Relational members

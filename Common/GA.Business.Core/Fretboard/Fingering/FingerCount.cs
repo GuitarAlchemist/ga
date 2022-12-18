@@ -36,8 +36,8 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
 
     #endregion
 
-    private const int _minValue = -1;
-    private const int _maxValue = 36;
+    private const int _minValue = 0;
+    private const int _maxValue = 5;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FingerCount FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -50,8 +50,8 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
     public static FingerCount Four => _lazyDefaults.Value.DefaultFour;
     public static FingerCount Five => _lazyDefaults.Value.DefaultFive;
 
-    public static int CheckRange(int value) => IValueObject<FingerCount>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<FingerCount>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<FingerCount>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<FingerCount>.EnsureValueInRange(value, minValue, maxValue);
 
     public static implicit operator FingerCount(int value) => new() { Value = value };
     public static implicit operator int(FingerCount fingerCount) => fingerCount.Value;

@@ -4,8 +4,10 @@ public sealed class PrintableEnumerable<T> : PrintableBase<T>, IEnumerable<T>
 {
     private readonly IEnumerable<T> _items;
 
-    public PrintableEnumerable(IEnumerable<T> items) 
-        : base(items)
+    public PrintableEnumerable(
+        IEnumerable<T> items, 
+        string? itemSeparator = " ") 
+            : base(items, itemSeparator: itemSeparator)
     {
         _items = items ?? throw new ArgumentNullException(nameof(items));
     }

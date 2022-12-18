@@ -10,7 +10,7 @@ using GA.Core.Collections;
 /// See https://en.wikipedia.org/wiki/Semitone
 /// </remarks>
 [PublicAPI]
-public readonly record struct Semitones : IValueObject<Semitones>
+public readonly record struct Semitones : IRangeValueObject<Semitones>
 {
     #region Relational members
 

@@ -4,7 +4,7 @@ using GA.Core;
 using GA.Core.Collections;
 
 [PublicAPI]
-public readonly record struct MajorPentatonicScaleDegree : IValueObject<MajorPentatonicScaleDegree>
+public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<MajorPentatonicScaleDegree>
 {
     #region Relational members
 

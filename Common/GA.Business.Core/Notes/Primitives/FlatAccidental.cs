@@ -5,7 +5,7 @@ using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 [PublicAPI]
-public readonly record struct FlatAccidental : IValueObject<FlatAccidental>
+public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
 {
     private const int _minValue = -3;
     private const int _maxValue = 2;

@@ -47,8 +47,8 @@ public readonly record struct HarmonicMinorScaleDegree : IStaticReadonlyCollecti
     public static HarmonicMinorScaleDegree LydianSharpSecond => new() {Value = 6};
     public static HarmonicMinorScaleDegree Alteredd7 => new() {Value = 7};
 
-    public static int CheckRange(int value) => IValueObject<HarmonicMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<HarmonicMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<HarmonicMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<HarmonicMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
     public static implicit operator HarmonicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(HarmonicMinorScaleDegree degree) => degree.Value;

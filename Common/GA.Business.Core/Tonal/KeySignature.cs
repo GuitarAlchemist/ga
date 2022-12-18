@@ -11,7 +11,7 @@ using GA.Business.Core.Intervals.Primitives;
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)
 /// </summary>
 [PublicAPI]
-public readonly record struct KeySignature : IValueObject<KeySignature>, 
+public readonly record struct KeySignature : IRangeValueObject<KeySignature>, 
                                              IReadOnlyCollection<Note.KeyNote>
 {
     #region Relational members

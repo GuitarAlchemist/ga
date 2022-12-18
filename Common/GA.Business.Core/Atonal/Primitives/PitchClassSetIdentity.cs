@@ -51,7 +51,7 @@ public readonly record struct PitchClassSetIdentity : IStaticValueObjectList<Pit
     public static PitchClassSetIdentity Min => FromValue(_minValue);
     public static PitchClassSetIdentity Max => FromValue(_maxValue);
 
-    public static int CheckRange(int value) => IValueObject<PitchClassSetIdentity>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<PitchClassSetIdentity>.EnsureValueInRange(value, _minValue, _maxValue);
     public static IReadOnlyCollection<PitchClassSetIdentity> Collection(int start, int count) => ValueObjectUtils<PitchClassSetIdentity>.GetItems(start, count);
 
     public static implicit operator PitchClassSetIdentity(int value) => new() { Value = value };

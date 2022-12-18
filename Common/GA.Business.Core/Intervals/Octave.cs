@@ -4,7 +4,7 @@ using GA.Core;
 using GA.Core.Collections;
 
 [PublicAPI]
-public readonly record struct Octave : IValueObject<Octave>, 
+public readonly record struct Octave : IRangeValueObject<Octave>, 
                                        IFormattable
 {
     #region Relational members

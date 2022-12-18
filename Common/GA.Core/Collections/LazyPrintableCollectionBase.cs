@@ -12,7 +12,9 @@ public abstract class LazyPrintableCollectionBase<T> : IReadOnlyCollection<T>
     private readonly IReadOnlyCollection<T> _items;
     private readonly Lazy<PrintableReadOnlyCollection<T>> _lazyPrintableCollection;
 
-    protected LazyPrintableCollectionBase(IReadOnlyCollection<T> items)
+    protected LazyPrintableCollectionBase(
+        IReadOnlyCollection<T> items,
+        string? itemSeparator = " ")
     {
         _items = items ?? throw new ArgumentNullException(nameof(items));
         _lazyPrintableCollection = new(() => items.AsPrintable());

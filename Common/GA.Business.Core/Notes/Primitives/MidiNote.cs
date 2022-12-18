@@ -12,7 +12,7 @@ using Intervals;
 /// An MIDI note between 0 and 127
 /// </summary>
 [PublicAPI]
-public readonly record struct MidiNote : IValueObject<MidiNote>
+public readonly record struct MidiNote : IRangeValueObject<MidiNote>
 {
     #region Relational members
 

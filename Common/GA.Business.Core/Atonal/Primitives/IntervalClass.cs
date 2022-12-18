@@ -68,8 +68,8 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     public static IntervalClass Tone=> FromValue(2);
     public static IntervalClass Tritone => FromValue(6);
 
-    public static int CheckRange(int value) => IValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<IntervalClass>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<IntervalClass>.EnsureValueInRange(value, minValue, maxValue);
 
     public static implicit operator IntervalClass(int value) => new() { Value = value };
     public static implicit operator int(IntervalClass ic) => ic.Value;

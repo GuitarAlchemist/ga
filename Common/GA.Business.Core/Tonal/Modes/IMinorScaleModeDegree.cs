@@ -3,7 +3,7 @@
 using GA.Core;
 
 // Flag interface for a minor scale degree
-public interface IMinorScaleModeDegree<TSelf> : IValueObject<TSelf>
-    where TSelf : struct, IValueObject<TSelf>
+public interface IMinorScaleModeDegree<TSelf> : IRangeValueObject<TSelf>
+    where TSelf : struct, IRangeValueObject<TSelf>
 {
 }
