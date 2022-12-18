@@ -7,11 +7,8 @@ using GA.Core.Collections;
 /// <inheritdoc cref="IComparable{RelativeFret}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
-/// An instrument RelativeFret (Between <see cref="Min" /> and <see cref="Max" />)
+/// A positive distance between two frets (Ranges from <see cref="Min" /> to <see cref="Max" />)
 /// </summary>
-/// <remarks>
-/// Assuming maximum hand extent is 5 frets.
-/// </remarks>
 [PublicAPI]
 public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret>
 {
@@ -40,7 +37,7 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     #endregion
 
     private const int _minValue = 0;
-    private const int _maxValue = 4;
+    private const int _maxValue = 36;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RelativeFret FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -52,8 +49,8 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     public static RelativeFret Three => _lazyDefaults.Value.DefaultThree;
     public static RelativeFret Four => _lazyDefaults.Value.DefaultFour;
 
-    public static int CheckRange(int value) => IValueObject<RelativeFret>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<RelativeFret>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<RelativeFret>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<RelativeFret>.EnsureValueInRange(value, minValue, maxValue);
     public static IReadOnlyCollection<RelativeFret> Range(int start, int count) => ValueObjectUtils<RelativeFret>.GetItems(start, count);
 
     public static implicit operator RelativeFret(int value) => new() { Value = value };

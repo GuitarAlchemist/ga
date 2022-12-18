@@ -51,8 +51,8 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     public static Fret Four => _lazyDefaults.Value.DefaultFour;
     public static Fret Five => _lazyDefaults.Value.DefaultFive;
 
-    public static int CheckRange(int value) => IValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
     public static IReadOnlyCollection<Fret> Range(int start, int count) => ValueObjectUtils<Fret>.GetItems(start, count);
     public static IReadOnlyCollection<Fret> Range(int start, int count, bool includeOpen) => includeOpen ? ValueObjectUtils<Fret>.GetItemsWithHead(Open, start, count) : Range(start, count);
     public static ImmutableSortedSet<Fret> Set(Range range) => Set(Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value));
@@ -64,6 +64,7 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
 
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;
+    public static Fret operator +(Fret fret, RelativeFret relativeFret) => new() { Value = fret.Value + relativeFret.Value};
 
     public bool IsMuted => this == Muted;
     public bool IsOpen => this == Open;

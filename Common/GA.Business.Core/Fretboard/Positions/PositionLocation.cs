@@ -2,9 +2,21 @@
 
 using Primitives;
 
-public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
+public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret, IComparable<PositionLocation>
 {
     #region RelationalMembers
+
+    public int CompareTo(PositionLocation other)
+    {
+        var strComparison = Str.CompareTo(other.Str);
+        if (strComparison != 0) return strComparison;
+        return Fret.CompareTo(other.Fret);
+    }
+
+    public static bool operator <(PositionLocation left, PositionLocation right) => left.CompareTo(right) < 0;
+    public static bool operator >(PositionLocation left, PositionLocation right) => left.CompareTo(right) > 0;
+    public static bool operator <=(PositionLocation left, PositionLocation right) => left.CompareTo(right) <= 0;
+    public static bool operator >=(PositionLocation left, PositionLocation right) => left.CompareTo(right) >= 0;
 
     public static IComparer<PositionLocation> StrComparer { get; } = new StrRelationalComparer();
     private sealed class StrRelationalComparer : IComparer<PositionLocation>
@@ -20,5 +32,5 @@ public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
     public bool IsMuted => Fret == Fret.Muted;
     public bool IsOpen => Fret == Fret.Open;
 
-    public override string ToString() => $"str: {Str}; fret: {Fret}";
+    public override string ToString() => $"{Str},{Fret}";
 }

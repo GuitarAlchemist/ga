@@ -4,7 +4,7 @@ using Extensions;
 
 [PublicAPI]
 public static class ValueObjectUtils<TSelf>
-    where TSelf : IValueObject<TSelf>
+    where TSelf : IRangeValueObject<TSelf>
 {
     public static int CheckRange(
         int value, 

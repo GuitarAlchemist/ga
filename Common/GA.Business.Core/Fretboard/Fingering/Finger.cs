@@ -49,8 +49,8 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
     public static Finger Ring => _lazyDefaults.Value.DefaultRing;
     public static Finger Pinky => _lazyDefaults.Value.DefaultPinky;
 
-    public static int CheckRange(int value) => IValueObject<Finger>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IValueObject<Finger>.EnsureValueInRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => IRangeValueObject<Finger>.EnsureValueInRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<Finger>.EnsureValueInRange(value, minValue, maxValue);
     public static IReadOnlyCollection<Finger> Range(int start, int count) => ValueObjectUtils<Finger>.GetItems(start, count);
 
     public static implicit operator Finger(int value) => new() { Value = value };

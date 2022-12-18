@@ -59,7 +59,7 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
     private class OrderedTranslationCollection : LazyCollectionBase<Translation>
     {
         public OrderedTranslationCollection(IEnumerable<Translation> items)
-            : base(items.OrderBy(translation => translation.Index), "; ")
+            : base(items.OrderBy(translation => translation.Increment), "; ")
         {
         }
     }

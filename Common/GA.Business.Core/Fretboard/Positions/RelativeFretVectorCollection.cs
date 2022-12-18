@@ -25,9 +25,13 @@ public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVect
     /// Creates a <see cref="RelativeFretVectorCollection"/> instance.
     /// </summary>
     /// <param name="strCount">The number of strings.</param>
-    public RelativeFretVectorCollection(int strCount)
+    /// <param name="fretExtent">The maximum fret extent.</param>
+    public RelativeFretVectorCollection(
+        int strCount, 
+        int fretExtent = 5)
     {
-        var variations = new VariationsWithRepetitions<RelativeFret>(RelativeFret.Items, strCount);
+        var items = RelativeFret.Range(0, fretExtent);
+        var variations = new VariationsWithRepetitions<RelativeFret>(items, strCount);
         Count = (int) variations.Count;
         _factory = new(variations);
         PrimeForms = this.OfType<PrimeForm>().ToLazyCollection();

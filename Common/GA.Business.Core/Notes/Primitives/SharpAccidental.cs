@@ -7,7 +7,7 @@ using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 [PublicAPI]
-public readonly record struct SharpAccidental : IValueObject<SharpAccidental>
+public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidental>
 {
     private const int _minValue = 1;
     private const int _maxValue = 2;

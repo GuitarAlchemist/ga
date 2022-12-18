@@ -10,7 +10,7 @@ using GA.Core.Collections;
 /// String 1 is the string with the highest pitch.
 /// </remarks>
 [PublicAPI]
-public readonly record struct Str : IValueObject<Str>
+public readonly record struct Str : IRangeValueObject<Str>
 {
     #region Relational members
 

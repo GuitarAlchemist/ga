@@ -9,7 +9,7 @@ public abstract class VariationEquivalenceCollection
     /// Concrete collection of variation translation equivalences.
     /// </summary>
     public class Translation<T> : VariationEquivalenceCollection
-        where T : struct, IValueObject<T>
+        where T : struct, IRangeValueObject<T>
     {
         private readonly Lazy<ImmutableList<VariationEquivalence.Translation>> _lazyEquivalences;
         private readonly Lazy<ImmutableDictionary<BigInteger, VariationEquivalence.Translation>> _lazyToEquivalences;
@@ -73,7 +73,7 @@ public abstract class VariationEquivalenceCollection
                 return true;
 
                 static IEnumerable<T> ToPrimeForm<T>(IEnumerable<T> items) 
-                    where T : struct, IValueObject<T>
+                    where T : struct, IRangeValueObject<T>
                 {
                     if (items == null) throw new ArgumentNullException(nameof(items));
                     if (items is not IReadOnlyCollection<T> collection) collection = items.ToImmutableArray();

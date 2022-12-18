@@ -6,16 +6,18 @@ public sealed class PrintableReadOnlyCollection<T> : PrintableBase<T>, IReadOnly
     private readonly IReadOnlyCollection<T> _items;
 
     public PrintableReadOnlyCollection(
-        IReadOnlyCollection<T> items) 
-            : this(items, null)
+        IReadOnlyCollection<T> items,
+        string? itemSeparator = " ") 
+            : this(items, null, null, itemSeparator)
     {
     }
 
     public PrintableReadOnlyCollection(
         IReadOnlyCollection<T> items,
         string? itemFormat = null,
-        IFormatProvider? itemFormatProvider = null) 
-            : base(items, itemFormat, itemFormatProvider)
+        IFormatProvider? itemFormatProvider = null,
+        string? itemSeparator = " ") 
+            : base(items, itemFormat, itemFormatProvider, itemSeparator)
     {
         _items = items ?? throw new ArgumentNullException(nameof(items));
     }

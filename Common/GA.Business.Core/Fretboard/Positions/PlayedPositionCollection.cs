@@ -36,7 +36,7 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
     /// </summary>
     /// <param name="location">The <see cref="PositionLocation"/></param>
     /// <returns>The collection of <see cref="Position.Played"/> positions</returns>
-    public Position.Played this[PositionLocation location] => _lazyPositionsByLocation.Value[location];
+    public Position.Played this[PositionLocation location] => FromLocation(location);
 
     /// <summary>
     /// Gets all position locations
@@ -49,4 +49,14 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
             .Take(fretCount)
             .ToImmutableList()
         );
+
+    /// <summary>
+    /// Creates a new played position collection for the given locations.
+    /// </summary>
+    /// <param name="positionLocations">The <see cref="IEnumerable{PositionLocation}"/>.</param>
+    /// <returns>The resulting <see cref="PlayedPositionCollection"/>.</returns>
+    public PlayedPositionCollection FromLocations(IEnumerable<PositionLocation> positionLocations) =>
+        new(positionLocations.Select(FromLocation).OrderBy(played => played).ToImmutableArray());
+
+    private Position.Played FromLocation(PositionLocation location) => _lazyPositionsByLocation.Value[location];
 }
