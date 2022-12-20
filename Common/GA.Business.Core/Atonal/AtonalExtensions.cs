@@ -21,17 +21,15 @@ public static class AtonalExtensions
     /// <summary>
     /// Gets the interval class vector.
     /// </summary>
-    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticIntervalClassNorm{TSelf}"/>).</typeparam>
+    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticNorm{T, IntervalClass}"/>).</typeparam>
     /// <param name="items"></param>
     /// <returns></returns>
     public static IntervalClassVector ToIntervalClassVector<T>(this IEnumerable<T> items)
-        where T : IValueObject, IStaticIntervalClassNorm<T>
+        where T : IValueObject, IStaticNorm<T, IntervalClass>
     {
         if (items == null) throw new ArgumentNullException(nameof(items));
         var normedCartesianProduct = items.ToNormedCartesianProduct<T, IntervalClass>();
-        var countByIntervalClass = normedCartesianProduct.ByNormCounts(pair => pair.Norm.Value > 0);
-        var result = new IntervalClassVector(countByIntervalClass);
-
-        return result;
+        var countByNorm = normedCartesianProduct.ByNormCounts(pair => pair.Norm.Value > 0);
+        return new(countByNorm);
     }
 }

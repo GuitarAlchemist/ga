@@ -5,13 +5,14 @@ using GA.Core.Collections;
 using Primitives;
 using Intervals;
 using Notes;
+using GA.Core;
 
 /// <summary>
 /// All pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
-                                           IStaticIntervalClassNorm<PitchClass>
+                                           IStaticNorm<PitchClass, IntervalClass>
 {
     #region IStaticValueObjectList<PitchClass> Members
 

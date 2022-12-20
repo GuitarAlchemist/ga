@@ -9,10 +9,11 @@ using GA.Business.Core.Intervals.Primitives;
 using GA.Business.Core.Atonal.Primitives;
 using static Primitives.SharpAccidental;
 using static Primitives.FlatAccidental;
+using GA.Core;
 
 [PublicAPI]
 [DiscriminatedUnion(Flatten = true)]
-public abstract partial record Note : IStaticIntervalClassNorm<Note>,
+public abstract partial record Note : IStaticNorm<Note, IntervalClass>,
                                       IComparable<Note>
 {
     #region IStaticIntervalClassNorm<Note> Members

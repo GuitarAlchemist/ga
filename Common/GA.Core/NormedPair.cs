@@ -8,7 +8,7 @@
 [PublicAPI]
 public sealed record NormedPair<T, TNorm>(Pair<T> Pair) : Pair<T>(Pair)
     where T : IStaticNorm<T, TNorm>
-    where TNorm : struct
+    where TNorm : struct, IValueObject<TNorm>
 {
     /// <summary>
     /// Gets the <see cref="TNorm"/> norm.

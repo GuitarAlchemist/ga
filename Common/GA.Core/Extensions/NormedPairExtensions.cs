@@ -14,7 +14,7 @@ public static class NormedPairExtensions
     /// <returns>The <see cref="ILookup{TKey,TElement}"/> where the key type is <see cref="TNorm"/> and the element type is <see cref="Pair{T}"/></returns>
     public static ILookup<TNorm, Pair<T>> ByNorm<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs) 
         where T : IStaticNorm<T, TNorm>
-        where TNorm : struct
+        where TNorm : struct, IValueObject<TNorm>
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
 
@@ -22,7 +22,7 @@ public static class NormedPairExtensions
     }
 
     /// <summary>
-    /// Get the counts for each <see cref="TNorm"/>.
+    /// Get the counts for each possible <see cref="TNorm"/>.
     /// </summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TNorm">The norm type.</typeparam>
@@ -34,11 +34,19 @@ public static class NormedPairExtensions
         this IEnumerable<NormedPair<T, TNorm>> normedPairs,
         Func<NormedPair<T, TNorm>, bool>? predicate = null)
             where T : IStaticNorm<T, TNorm>, IValueObject
-            where TNorm : struct
+            where TNorm : struct, IStaticReadonlyCollection<TNorm>, IValueObject<TNorm>
     {
         if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
         if (predicate != null) normedPairs = normedPairs.Where(predicate);
         normedPairs = normedPairs.Where(pair => pair.Item1.Value <= pair.Item2.Value); // De-duplicate pairs
-        return normedPairs.ByNorm().GetCounts();
+        var countByNorm = normedPairs.ByNorm().GetCounts();
+
+        var dictBuilder = ImmutableSortedDictionary.CreateBuilder<TNorm, int>();
+        foreach (var norm in TNorm.Items)
+        {
+            if (countByNorm.TryGetValue(norm, out var count)) dictBuilder[norm] = count;
+            else dictBuilder[norm] = 0;
+        }
+        return dictBuilder.ToImmutable();
     }
 }
