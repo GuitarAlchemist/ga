@@ -6,11 +6,11 @@ using Intervals.Primitives;
 public static class PitchClassExtensions
 {
     /// <summary>
-    /// Create the interval structure from pitch classes.
+    /// Create the interval pattern from pitch classes.
     /// </summary>
     /// <param name="pitchClasses">The <see cref="IEnumerable{PitchClass}"/>.</param>
-    /// <returns>The <see cref="IntervalStructure"/>.</returns>
-    public static IntervalStructure ToIntervalStructure(this IEnumerable<PitchClass> pitchClasses)
+    /// <returns>The <see cref="IntervalPattern"/>.</returns>
+    public static IntervalPattern ToIntervalPattern(this IEnumerable<PitchClass> pitchClasses)
     {
         var pitchClassList = pitchClasses.ToList();
         var semitonesListBuilder = ImmutableList.CreateBuilder<Semitones>();

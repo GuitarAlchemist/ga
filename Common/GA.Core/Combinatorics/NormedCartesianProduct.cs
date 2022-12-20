@@ -11,7 +11,7 @@ using Extensions;
 [PublicAPI]
 public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T, TNorm>>
     where T : IStaticNorm<T, TNorm>, IValueObject
-    where TNorm : struct
+    where TNorm : struct, IValueObject<TNorm>, IStaticReadonlyCollection<TNorm>
 {
     /// <summary>
     /// Get the counts for each <see cref="TNorm"/>.

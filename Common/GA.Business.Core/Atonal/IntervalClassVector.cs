@@ -78,14 +78,24 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     private readonly ImmutableSortedDictionary<IntervalClass, int> _countByIntervalClass;
 
-    public IntervalClassVector(ImmutableSortedDictionary<IntervalClass, int> countByIntervalClass)
+    public IntervalClassVector(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass)
     {
-        _countByIntervalClass = countByIntervalClass ?? throw new ArgumentNullException(nameof(countByIntervalClass));
-        Value = ToBase12Value(countByIntervalClass);
+        if (countByIntervalClass == null) throw new ArgumentNullException(nameof(countByIntervalClass));
+
+        var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
+        foreach (var intervalClass in IntervalClass.Items)
+        {
+            if (countByIntervalClass.TryGetValue(intervalClass, out var count)) dictBuilder[intervalClass] = count;
+            else dictBuilder[intervalClass] = 0;
+        }
+
+        var dict = dictBuilder.ToImmutable();
+        _countByIntervalClass = dict;
+        Value = ToBase12Value(dict);
     }
 
     public static IntervalClassVector CreateFrom<T>(IEnumerable<T> items) 
-        where T : IStaticIntervalClassNorm<T>, IValueObject 
+        where T : IStaticNorm<T, IntervalClass>, IValueObject
             => items.ToIntervalClassVector();
 
     /// <summary>
@@ -124,7 +134,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
         return new(dictBuilder.ToImmutable());
     }
 
-    private static int ToBase12Value(ImmutableSortedDictionary<IntervalClass, int> countByIc)
+    private static int ToBase12Value(IReadOnlyDictionary<IntervalClass, int> countByIc)
     {
         var weight = 1;
         var value = 0;

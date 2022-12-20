@@ -1,5 +1,6 @@
 ﻿namespace GA.Core.Extensions;
 
+using Collections;
 using Combinatorics;
 
 [PublicAPI]
@@ -29,6 +30,5 @@ public static class CombinatoricsExtensions
         this IEnumerable<T> items, 
         Func<T, bool>? predicate = null) 
         where T : IStaticNorm<T, TNorm>, IValueObject
-        where TNorm : struct
-            => new(items, predicate);
+        where TNorm : struct, IValueObject<TNorm>, IStaticReadonlyCollection<TNorm> => new(items, predicate);
 }
