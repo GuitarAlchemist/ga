@@ -16,6 +16,8 @@ Classes currently implemented:
 - Interval, scale, Modes (Major scale, harmonic minor scale, melodic minor scale)
 - Atonal classes: Pitch class, Pitch class set
 
+[Legacy code (Delphi)](https://github.com/GuitarAlchemist/ga/blob/main/Guitar%20Alchemist%20-%20legacy%20(Delphi).zip)
+
 [GuitarAlchemist.GA.Business.Core NuGet package](https://www.nuget.org/packages/GuitarAlchemist.GA.Business.Core)
 
 ## .NET Interactive extensions 
