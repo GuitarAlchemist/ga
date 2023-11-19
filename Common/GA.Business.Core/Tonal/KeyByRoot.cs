@@ -3,11 +3,9 @@
 using GA.Business.Core.Notes.Primitives;
 using GA.Core.Collections;
 
-public class KeyByRoot : LazyIndexerBase<NaturalNote, Key>
+public class KeyByRoot() : LazyIndexerBase<NaturalNote, Key>(GetKeyByRoot())
 {
     public static Key Get(NaturalNote naturalNote) => _instance[naturalNote];
-
-    public KeyByRoot() : base(GetKeyByRoot()) { }
 
     private static readonly KeyByRoot _instance = new();
     private static IReadOnlyDictionary<NaturalNote, Key> GetKeyByRoot()

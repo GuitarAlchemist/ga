@@ -52,47 +52,33 @@ public abstract class ScaleMode
     }
 }
 
-public abstract class ScaleMode<TScaleDegree> : ScaleMode
+public abstract class ScaleMode<TScaleDegree>(Scale parentScale,
+    TScaleDegree parentScaleDegree) : ScaleMode(parentScale)
     where TScaleDegree : IValueObject
 {
-    public TScaleDegree ParentScaleDegree { get; }
+    public TScaleDegree ParentScaleDegree { get; } = parentScaleDegree;
     public override IReadOnlyCollection<Note> Notes => new ModeNotesByScaleDegree(ParentScale)[ParentScaleDegree];
     public override IReadOnlyCollection<Interval.Simple> Intervals => new ModeIntervalsByScaleDegree(ParentScale)[ParentScaleDegree];
     public override string ToString() => $"{Name} - {Formula}";
 
-    protected ScaleMode(
-        Scale parentScale, 
-        TScaleDegree parentScaleDegree) 
-            : base(parentScale)
-    {
-        ParentScaleDegree = parentScaleDegree;
-    }
-
     #region Inner classes
 
-    private class ModeNotesByScaleDegree : IIndexer<TScaleDegree, IReadOnlyCollection<Note>>
+    private class ModeNotesByScaleDegree(Scale parentScale) : IIndexer<TScaleDegree, IReadOnlyCollection<Note>>
     {
-        public ModeNotesByScaleDegree(Scale parentScale) => _notesByRotation = new(parentScale);
-        private readonly NotesByRotation _notesByRotation;
+        private readonly NotesByRotation _notesByRotation = new(parentScale);
 
         public IReadOnlyCollection<Note> this[TScaleDegree degree] => _notesByRotation[degree.Value - 1];
     }
 
-    private class ModeIntervalsByScaleDegree : IIndexer<TScaleDegree, IReadOnlyCollection<Interval.Simple>>
+    private class ModeIntervalsByScaleDegree(Scale parentScale) : IIndexer<TScaleDegree, IReadOnlyCollection<Interval.Simple>>
     {
-        public ModeIntervalsByScaleDegree(Scale parentScale) => _intervalsByRotation = new(parentScale);
-        private readonly IntervalsByRotation _intervalsByRotation;
+        private readonly IntervalsByRotation _intervalsByRotation = new(parentScale);
 
         public IReadOnlyCollection<Interval.Simple> this[TScaleDegree degree] => _intervalsByRotation[degree.Value - 1];
     }
 
-    private class NotesByRotation : LazyIndexerBase<int, IReadOnlyCollection<Note>>
+    private class NotesByRotation(IReadOnlyCollection<Note> parentScaleNotes) : LazyIndexerBase<int, IReadOnlyCollection<Note>>(GetKeyValuePairs(parentScaleNotes))
     {
-        public NotesByRotation(IReadOnlyCollection<Note> parentScaleNotes) 
-            : base(GetKeyValuePairs(parentScaleNotes))
-        {
-        }
-
         private static IEnumerable<KeyValuePair<int, IReadOnlyCollection<Note>>> GetKeyValuePairs(IReadOnlyCollection<Note> parentScaleNotes)
         {
             for (var rotateCount = 0; rotateCount < parentScaleNotes.Count; rotateCount++)
@@ -104,13 +90,9 @@ public abstract class ScaleMode<TScaleDegree> : ScaleMode
         }
     }
 
-    private class IntervalsByRotation : LazyIndexerBase<int, IReadOnlyCollection<Interval.Simple>>
+    private class IntervalsByRotation(IReadOnlyCollection<Note> seedScaleNotes) : LazyIndexerBase<int, IReadOnlyCollection<Interval.Simple>>(GetKeyValuePairs(seedScaleNotes))
     {
         // parentScaleNotes = Key.MajorScaleMode.C.GetNotes();
-        public IntervalsByRotation(IReadOnlyCollection<Note> seedScaleNotes) 
-            : base(GetKeyValuePairs(seedScaleNotes))
-        {
-        }
 
         private static IEnumerable<KeyValuePair<int, IReadOnlyCollection<Interval.Simple>>> GetKeyValuePairs(IReadOnlyCollection<Note> seedScaleNotes)
         {

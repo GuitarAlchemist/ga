@@ -1,21 +1,16 @@
 ﻿namespace GA.Core.Collections;
 
-public sealed class PrintableReadOnlySet<T> : PrintableBase<T>, IReadOnlySet<T>
+public sealed class PrintableReadOnlySet<T>(
+        IReadOnlySet<T> items,
+        string? itemFormat = null,
+        IFormatProvider? itemFormatProvider = null)
+    : PrintableBase<T>(items, itemFormat, itemFormatProvider), IReadOnlySet<T>
 {
-    private readonly IReadOnlySet<T> _items;
+    private readonly IReadOnlySet<T> _items = items ?? throw new ArgumentNullException(nameof(items));
 
     public PrintableReadOnlySet(IReadOnlySet<T> items) 
         : this(items, null)
     {
-    }
-
-    public PrintableReadOnlySet(
-        IReadOnlySet<T> items,
-        string? itemFormat = null,
-        IFormatProvider? itemFormatProvider = null) 
-        : base(items, itemFormat, itemFormatProvider)
-    {
-        _items = items ?? throw new ArgumentNullException(nameof(items));
     }
 
     public int Count => _items.Count;

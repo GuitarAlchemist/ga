@@ -64,25 +64,13 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
 
     private class Defaults
     {
-        public Defaults()
-        {
-            DefaultMin = FromValue(_minValue);
-            DefaultMax = FromValue(_maxValue);
-            DefaultZero = FromValue(0);
-            DefaultOne = FromValue(1);
-            DefaultTwo = FromValue(2);
-            DefaultThree = FromValue(3);
-            DefaultFour = FromValue(4);
-            DefaultFive = FromValue(5);
-        }
-
-        public FingerCount DefaultMin { get; }
-        public FingerCount DefaultMax { get; }
-        public FingerCount DefaultZero { get; }
-        public FingerCount DefaultOne { get; }
-        public FingerCount DefaultTwo { get; }
-        public FingerCount DefaultThree { get; }
-        public FingerCount DefaultFour { get; }
-        public FingerCount DefaultFive { get; }
+        public FingerCount DefaultMin { get; } = FromValue(_minValue);
+        public FingerCount DefaultMax { get; } = FromValue(_maxValue);
+        public FingerCount DefaultZero { get; } = FromValue(0);
+        public FingerCount DefaultOne { get; } = FromValue(1);
+        public FingerCount DefaultTwo { get; } = FromValue(2);
+        public FingerCount DefaultThree { get; } = FromValue(3);
+        public FingerCount DefaultFour { get; } = FromValue(4);
+        public FingerCount DefaultFive { get; } = FromValue(5);
     }
 }

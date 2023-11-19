@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -41,11 +40,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Figgle" Version="0.4.1" />
+		<PackageReference Include="Figgle" Version="0.5.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.22553.7" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.22553.7" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.22553.7" />
-		<PackageReference Include="PCRE.NET" Version="0.19.0" />
+		<PackageReference Include="PCRE.NET" Version="0.20.0" />
 		<!-- Needed when running on the docker jupyter/base-notebook image -->
 		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
 	</ItemGroup>

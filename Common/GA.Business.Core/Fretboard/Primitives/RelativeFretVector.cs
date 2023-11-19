@@ -55,22 +55,17 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     /// A prime form relative fret vector (e.g. "0 2 2 2 0 0")
     /// </summary>
     [PublicAPI]
-    public sealed class PrimeForm : RelativeFretVector
-    {
-        public PrimeForm(
+    public sealed class PrimeForm(
             Variation<RelativeFret> variation,
-            IReadOnlyCollection<Translation> translations) 
-                : base(variation)
-        {
-            Translations = translations;
-        }
-
+            IReadOnlyCollection<Translation> translations)
+        : RelativeFretVector(variation)
+    {
         public override bool IsPrime => true;
 
         /// <summary>
         /// Gets the <see cref="IReadOnlyCollection{Translated}"/>
         /// </summary>
-        public IReadOnlyCollection<Translation> Translations { get; }
+        public IReadOnlyCollection<Translation> Translations { get; } = translations;
 
         public override string ToString() => Translations.Any() 
             ? $"{base.ToString()} (Prime - {Translations.Count} translations)" 
@@ -81,18 +76,10 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     /// A non-prime relative fret vector (e.g. "1 3 3 3 1 1" => "0 2 2 2 0 0" prime form)
     /// </summary>
     [PublicAPI]
-    public sealed class Translation : RelativeFretVector
+    public sealed class Translation(Variation<RelativeFret> variation,
+            Func<PrimeForm> primeFormFactory)
+        : RelativeFretVector(variation)
     {
-        private readonly Func<PrimeForm> _primeFormFactory;
-
-        public Translation(
-            Variation<RelativeFret> variation,
-            Func<PrimeForm> primeFormFactory) 
-                : base(variation)
-        {
-            _primeFormFactory = primeFormFactory;
-        }
-
         /// <summary>
         /// The translation displacement amount compared to the prime form.
         /// </summary>
@@ -103,7 +90,7 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         /// <summary>
         /// Gets the <see cref="PrimeForm"/>.
         /// </summary>
-        public PrimeForm PrimeForm => _primeFormFactory.Invoke();
+        public PrimeForm PrimeForm => primeFormFactory.Invoke();
 
         public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeForm})";
     }

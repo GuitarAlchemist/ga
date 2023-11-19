@@ -3,7 +3,7 @@
 using Atonal.Primitives;
 using GA.Core.Collections;
 
-public class ScaleNumberByName : LazyIndexerBase<string, PitchClassSetIdentity>
+public class ScaleNumberByName() : LazyIndexerBase<string, PitchClassSetIdentity>(GetScaleNumberByName())
 {
     public static int Get(string name) => _instance[name];
 
@@ -20,8 +20,6 @@ public class ScaleNumberByName : LazyIndexerBase<string, PitchClassSetIdentity>
     }
 
     private static readonly ScaleNumberByName _instance = new();
-
-    public ScaleNumberByName() : base(GetScaleNumberByName()) { }
 
     private static IReadOnlyDictionary<string, PitchClassSetIdentity> GetScaleNumberByName() => ScaleNameByIdentity.Instance.Dictionary.ToImmutableDictionary(pair => pair.Value, pair => pair.Key);
 }

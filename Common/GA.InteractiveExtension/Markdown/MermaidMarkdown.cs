@@ -8,23 +8,16 @@ using Formatters;
 using Microsoft.DotNet.Interactive.Formatting;
 
 [TypeFormatterSource(typeof(MermaidMarkdownFormatter))]
-public class MermaidMarkdown
+public class MermaidMarkdown(string value)
 {
-    internal string Background { get; set; }
-    internal string Width { get; set; }
-    internal string Height { get; set; }
+    internal string Background { get; set; } = "white";
+    internal string Width { get; set; } = string.Empty;
+    internal string Height { get; set; } = string.Empty;
+
     public override string ToString()
     {
         return _value;
     }
 
-    private readonly string _value;
-
-    public MermaidMarkdown(string value)
-    {
-        Background = "white";
-        Width = string.Empty;
-        Height = string.Empty;
-        _value = value ?? throw new ArgumentNullException(nameof(value));
-    }
+    private readonly string _value = value ?? throw new ArgumentNullException(nameof(value));
 }

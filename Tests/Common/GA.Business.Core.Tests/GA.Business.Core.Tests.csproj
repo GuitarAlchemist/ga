@@ -1,19 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<Configurations>Debug;Release</Configurations>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
-		<PackageReference Include="NUnit" Version="3.13.3" />
-		<PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
-		<PackageReference Include="coverlet.collector" Version="3.2.0">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="NUnit" Version="3.14.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+		<PackageReference Include="coverlet.collector" Version="6.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

@@ -6,7 +6,11 @@
 /// <typeparam name="T">The item type.</typeparam>
 /// <typeparam name="TPair">The item pair type.</typeparam>
 [PublicAPI]
-public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
+public abstract class CartesianProduct<T, TPair>(
+        IEnumerable<T> items,
+        Func<Pair<T>, TPair>? selector = null,
+        Func<T, bool>? predicate = null)
+    : IEnumerable<TPair>
     // where T : IItemCollection<T>
     where T : notnull
     where TPair : Pair<T>
@@ -17,28 +21,17 @@ public abstract class CartesianProduct<T, TPair> : IEnumerable<TPair>
     public IEnumerator<TPair> GetEnumerator()
     {
         var pairs = Variations.GetPairs();
-        return _selector == null ? 
+        return selector == null ? 
             pairs.Cast<TPair>().GetEnumerator() : 
-            pairs.Select(pair => _selector(pair)).GetEnumerator();
+            pairs.Select(selector).GetEnumerator();
     }
 
     #endregion
 
-    private readonly Func<Pair<T>, TPair>? _selector;
-
-    protected CartesianProduct(
-        IEnumerable<T> items,
-        Func<Pair<T>, TPair>? selector = null,
-        Func<T, bool>? predicate = null)
-    {
-        _selector = selector;
-        Variations = new(items, 2, predicate);
-    }
-
     /// <summary>
     /// Gets the <see cref="VariationsWithRepetitions{T}"/>
     /// </summary>
-    public VariationsWithRepetitions<T> Variations { get; }
+    public VariationsWithRepetitions<T> Variations { get; } = new(items, 2, predicate);
 
     /// <summary>
     /// Gets the <see cref="BigInteger"/> pair count.

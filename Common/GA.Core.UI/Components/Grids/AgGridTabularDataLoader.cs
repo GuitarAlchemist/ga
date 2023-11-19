@@ -8,16 +8,11 @@ using Dtos;
 /// Loads data to an ag-grid instance through the gridOptions Javascript object.
 /// </summary>
 /// <inheritdoc />
-public class AgGridTabularDataLoader : IAsyncInitializable<AgGridTabularDataLoader.Inits>
+[method: UsedImplicitly]
+public class AgGridTabularDataLoader(ILogger<AgGridTabularDataLoader> logger) : IAsyncInitializable<AgGridTabularDataLoader.Inits>
 {
-    private readonly ILogger<AgGridTabularDataLoader> _logger;
+    private readonly ILogger<AgGridTabularDataLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private Inits? _inits;
-
-    [UsedImplicitly]
-    public AgGridTabularDataLoader(ILogger<AgGridTabularDataLoader> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Loads grid data on the ag-grid (Client-side)

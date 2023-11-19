@@ -5,8 +5,9 @@ using Scales;
 using Primitives;
 
 [PublicAPI]
-public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>,
-                                       IStaticEnumerable<MelodicMinorMode>
+public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScaleMode<MelodicMinorScaleDegree>(
+        Scale.MelodicMinor, degree),
+    IStaticEnumerable<MelodicMinorMode>
 {
     public static MelodicMinorMode MelodicMinorModeMinor => new(1);
     public static MelodicMinorMode DorianFlatSecond => new(2);
@@ -20,11 +21,6 @@ public sealed class MelodicMinorMode : MinorScaleMode<MelodicMinorScaleDegree>,
     public static MelodicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MelodicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
     private static readonly Lazy<ScaleModeCollection<MelodicMinorScaleDegree, MelodicMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
-
-    public MelodicMinorMode(MelodicMinorScaleDegree degree)
-        : base(Scale.MelodicMinor, degree)
-    {
-    }
 
     public override string Name => ParentScaleDegree.Value switch
     {

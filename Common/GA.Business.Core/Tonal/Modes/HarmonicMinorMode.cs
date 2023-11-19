@@ -1,7 +1,6 @@
-﻿using GA.Core.Collections;
+﻿namespace GA.Business.Core.Tonal.Modes;
 
-namespace GA.Business.Core.Tonal.Modes;
-
+using GA.Core.Collections;
 using Scales;
 using Primitives;
 
@@ -12,8 +11,9 @@ using Primitives;
 /// A mode of the harmonic minor scale.
 /// </summary>
 [PublicAPI]
-public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>,
-                                        IStaticEnumerable<HarmonicMinorMode>
+public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorScaleMode<HarmonicMinorScaleDegree>(
+        Scale.HarmonicMinor, degree),
+    IStaticEnumerable<HarmonicMinorMode>
 {
     public static HarmonicMinorMode HarmonicMinorModeMinorScale => new(1);
     public static HarmonicMinorMode LocrianNaturalSixth => new(2);
@@ -27,11 +27,6 @@ public sealed class HarmonicMinorMode : MinorScaleMode<HarmonicMinorScaleDegree>
     public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static HarmonicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
     private static readonly Lazy<ScaleModeCollection<HarmonicMinorScaleDegree, HarmonicMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
-
-    public HarmonicMinorMode(HarmonicMinorScaleDegree degree)
-        : base(Scale.HarmonicMinor, degree)
-    {
-    }
 
     public override string Name => ParentScaleDegree.Value switch
     {

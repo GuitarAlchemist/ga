@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
-		<LangVersion Condition="'$(Configuration)' != 'net7.0'">preview</LangVersion>
-		<EnablePreviewFeatures Condition="'$(Configuration)' != 'net7.0'">true</EnablePreviewFeatures>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>preview</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -68,12 +66,12 @@
 	<ItemGroup>
 		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
 		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.1.0" />
-		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="PCRE.NET" Version="0.19.0" />
+		<PackageReference Include="PCRE.NET" Version="0.20.0" />
 	</ItemGroup>
 
 	<ItemGroup>

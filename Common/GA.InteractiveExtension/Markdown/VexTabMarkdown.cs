@@ -3,19 +3,12 @@
 namespace GA.InteractiveExtension.Markdown;
 
 [TypeFormatterSource(typeof(VexTabMarkdownFormatter))]
-public class VexTabMarkDown
+public class VexTabMarkDown(string value)
 {
-    private readonly string _value;
+    private readonly string _value = value ?? throw new ArgumentNullException(nameof(value));
 
-    internal string Width { get; set; }
-    internal string Height { get; set; }
+    internal string Width { get; set; } = string.Empty;
+    internal string Height { get; set; } = string.Empty;
 
     public override string ToString() => _value;
-
-    public VexTabMarkDown(string value)
-    {
-        Width = string.Empty;
-        Height = string.Empty;
-        _value = value ?? throw new ArgumentNullException(nameof(value));
-    }
 }

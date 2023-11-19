@@ -3,7 +3,7 @@
 using Atonal.Primitives;
 using GA.Core.Collections;
 
-public class ScaleVideoUrlByIdentity : LazyIndexerBase<PitchClassSetIdentity, Uri>
+public class ScaleVideoUrlByIdentity() : LazyIndexerBase<PitchClassSetIdentity, Uri>(GetVideoUrlByNumber())
 {
     public static bool IsValidScaleNumber(PitchClassSetIdentity pitchClassSetIdentity) => Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
     public static IReadOnlyList<PitchClassSetIdentity> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
@@ -11,8 +11,6 @@ public class ScaleVideoUrlByIdentity : LazyIndexerBase<PitchClassSetIdentity, Ur
     {
         return IsValidScaleNumber(pitchClassSetIdentity) ? Instance[pitchClassSetIdentity] : null;
     }
-
-    public ScaleVideoUrlByIdentity() : base(GetVideoUrlByNumber()) { }
 
     internal static readonly ScaleVideoUrlByIdentity Instance = new();
     private static IReadOnlyDictionary<PitchClassSetIdentity, Uri> GetVideoUrlByNumber()

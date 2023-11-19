@@ -5,7 +5,7 @@
 using Atonal.Primitives;
 using GA.Core.Collections;
 
-public class ScaleNameByIdentity : LazyIndexerBase<PitchClassSetIdentity, string>
+public class ScaleNameByIdentity() : LazyIndexerBase<PitchClassSetIdentity, string>(GetScaleNameByIdentity())
 {
     public static bool IsValidScaleNumber(PitchClassSetIdentity pitchClassSetIdentity) => Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
     public static IReadOnlyList<PitchClassSetIdentity> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
@@ -14,8 +14,6 @@ public class ScaleNameByIdentity : LazyIndexerBase<PitchClassSetIdentity, string
         if (!IsValidScaleNumber(pitchClassSetIdentity)) return string.Empty;
         return Instance[pitchClassSetIdentity];
     }
-
-    public ScaleNameByIdentity() : base(GetScaleNameByIdentity()) { }
 
     internal static readonly ScaleNameByIdentity Instance = new();
 

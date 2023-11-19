@@ -1,10 +1,4 @@
 ﻿namespace GA.Core.Collections;
 
-public class LazyCollection<T> : LazyCollectionBase<T> 
-    where T : class
-{
-    public LazyCollection(IEnumerable<T> items) 
-        : base(items)
-    {
-    }
-}
+public class LazyCollection<T>(IEnumerable<T> items) : LazyCollectionBase<T>(items)
+    where T : class;

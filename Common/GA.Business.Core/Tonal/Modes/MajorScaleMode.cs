@@ -11,8 +11,8 @@ using Primitives;
 /// Mnemonic : I Don’t Particularly Like Modes A Lot
 /// </remarks>
 [PublicAPI]
-public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>, 
-                                     IStaticEnumerable<MajorScaleMode>
+public sealed class MajorScaleMode(MajorScaleDegree degree) : ScaleMode<MajorScaleDegree>(Scale.Major, degree),
+    IStaticEnumerable<MajorScaleMode>
 {
     public static MajorScaleMode Ionian => new(MajorScaleDegree.Ionian);
 
@@ -30,11 +30,6 @@ public sealed class MajorScaleMode : ScaleMode<MajorScaleDegree>,
     public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
     private static readonly Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
-
-    public MajorScaleMode(MajorScaleDegree degree)
-        : base(Scale.Major, degree)
-    {
-    }
 
     public override string Name => ParentScaleDegree.Value switch
     {

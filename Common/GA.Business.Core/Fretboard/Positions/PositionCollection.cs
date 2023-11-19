@@ -44,10 +44,4 @@ public class PositionCollection<T> : LazyPrintableCollectionBase<T>
 }
 
 [PublicAPI]
-public class PositionCollection : PositionCollection<Position>
-{
-    public PositionCollection(IReadOnlyCollection<Position> positions)
-        : base(positions)
-    {
-    }
-}
+public class PositionCollection(IReadOnlyCollection<Position> positions) : PositionCollection<Position>(positions);

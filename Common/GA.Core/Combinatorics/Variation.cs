@@ -6,7 +6,11 @@
 /// <typeparam name="T">The element type.</typeparam>
 /// <seealso cref="VariationsWithRepetitions{T}"/>
 /// <inheritdoc cref="IReadOnlyList{T>"/>
-public readonly struct Variation<T> : IReadOnlyList<T>
+public readonly struct Variation<T>(
+        BigInteger index,
+        ImmutableArray<T> items,
+        VariationFormat? variationFormat = null)
+    : IReadOnlyList<T>
 {
     #region IReadOnlyList<T> members
 
@@ -17,25 +21,14 @@ public readonly struct Variation<T> : IReadOnlyList<T>
 
     #endregion
 
-    private readonly IReadOnlyList<T> _items;
-    private readonly VariationFormat? _variationFormat;
-
-    public Variation(
-        BigInteger index,
-        ImmutableArray<T> items,
-        VariationFormat? variationFormat = null)
-    {
-        Index = index;
-        _items = items;
-        _variationFormat = variationFormat;
-    }
+    private readonly IReadOnlyList<T> _items = items;
 
     /// <summary>
     /// The current variation <see cref="BigInteger"/> index (Lexicographical order).
     /// </summary>
-    public BigInteger Index { get; }
+    public BigInteger Index { get; } = index;
 
-    public override string ToString() => Print(this, _variationFormat);
+    public override string ToString() => Print(this, variationFormat);
 
     public static string Print(
         Variation<T> variation,
