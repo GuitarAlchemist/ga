@@ -2,22 +2,14 @@
 
 using Primitives;
 
-public abstract class ModeIntervalBase<TIntervalSize>
+public abstract class ModeIntervalBase<TIntervalSize>(TIntervalSize size,
+    IntervalQuality quality,
+    IntervalQuality refQuality)
     where TIntervalSize : IIntervalSize
 {
-    protected ModeIntervalBase(
-        TIntervalSize size, 
-        IntervalQuality quality, 
-        IntervalQuality refQuality)
-    {
-        Size = size;
-        Quality = quality;
-        RefQuality = refQuality;
-    }
-
-    public TIntervalSize Size { get; }
-    public IntervalQuality Quality { get; }
-    public IntervalQuality RefQuality { get; }
+    public TIntervalSize Size { get; } = size;
+    public IntervalQuality Quality { get; } = quality;
+    public IntervalQuality RefQuality { get; } = refQuality;
     public bool IsColorTone => Quality != RefQuality;
     public IntervalSizeConsonance Consonance => Size.Consonance;
 

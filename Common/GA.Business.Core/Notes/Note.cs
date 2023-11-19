@@ -398,14 +398,9 @@ public abstract partial record Note : IStaticNorm<Note, IntervalClass>,
             }
         }
 
-        private class AllNotes : LazyCollectionBase<AccidentedNote>
+        private class AllNotes() : LazyCollectionBase<AccidentedNote>(GetAll())
         {
             public static readonly AllNotes Instance = new();
-
-            public AllNotes()
-                : base(GetAll())
-            {
-            }
 
             private static IEnumerable<AccidentedNote> GetAll()
             {

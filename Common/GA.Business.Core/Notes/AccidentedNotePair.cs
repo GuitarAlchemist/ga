@@ -1,6 +1,8 @@
 ﻿namespace GA.Business.Core.Notes;
 
-public class AccidentedNotePair
+public class AccidentedNotePair(
+    Note.AccidentedNote note1, 
+    Note.AccidentedNote note2)
 {
     #region Equality members
 
@@ -17,16 +19,8 @@ public class AccidentedNotePair
 
     #endregion
 
-    public AccidentedNotePair(
-        Note.AccidentedNote note1, 
-        Note.AccidentedNote note2)
-    {
-        Note1 = note1;
-        Note2 = note2;
-    }
-
-    public Note.AccidentedNote Note1 { get; }
-    public Note.AccidentedNote Note2 { get; }
+    public Note.AccidentedNote Note1 { get; } = note1;
+    public Note.AccidentedNote Note2 { get; } = note2;
 
     public override string ToString() => $"({Note1},{Note2})";
 }

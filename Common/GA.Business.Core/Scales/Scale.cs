@@ -78,13 +78,8 @@ public class Scale : IReadOnlyCollection<Note>,
         public static Scale Melodic => new(A, B, C, D, E, FSharp, GSharp);
     }
 
-    private class LazyScaleIntervals : LazyCollectionBase<Interval.Simple>
+    private class LazyScaleIntervals(IReadOnlyCollection<Note> notes) : LazyCollectionBase<Interval.Simple>(GetAll(notes))
     {
-        public LazyScaleIntervals(IReadOnlyCollection<Note> notes) 
-            : base(GetAll(notes))
-        {
-        }
-
         private static IEnumerable<Interval.Simple> GetAll(IReadOnlyCollection<Note> notes)
         {
             var startNote = notes.ElementAt(0);

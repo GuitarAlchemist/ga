@@ -9,7 +9,9 @@ using Extensions;
 /// <typeparam name="T">The item type.</typeparam>
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
-public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T, TNorm>>
+public class NormedCartesianProduct<T, TNorm>(
+    IEnumerable<T> items,
+    Func<T, bool>? predicate = null) : CartesianProduct<T, NormedPair<T, TNorm>>(items, pair => new(pair), predicate)
     where T : IStaticNorm<T, TNorm>, IValueObject
     where TNorm : struct, IValueObject<TNorm>, IStaticReadonlyCollection<TNorm>
 {
@@ -31,13 +33,6 @@ public class NormedCartesianProduct<T, TNorm> : CartesianProduct<T, NormedPair<T
     /// <returns>The <see cref="ImmutableDictionary{TNorm, Int32}"/>.</returns>
     public static ImmutableSortedDictionary<TNorm, int> NormCounts(IEnumerable<T> items, Func<T, bool>? predicate  = null) 
         => new NormedCartesianProduct<T, TNorm>(items, predicate).ByNormCounts();
-
-    public NormedCartesianProduct(
-        IEnumerable<T> items,
-        Func<T, bool>? predicate = null) 
-            : base(items, pair => new(pair), predicate)
-    {
-    }
 
     public override string ToString()
     {

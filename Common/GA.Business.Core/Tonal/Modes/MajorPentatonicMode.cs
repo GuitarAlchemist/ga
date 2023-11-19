@@ -5,8 +5,9 @@ using Scales;
 using Primitives;
 
 [PublicAPI]
-public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>,
-                                          IStaticEnumerable<MajorPentatonicMode>
+public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : ScaleMode<MajorPentatonicScaleDegree>(
+    Scale.MajorPentatonic, degree),
+    IStaticEnumerable<MajorPentatonicMode>
 {
     public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
 
@@ -21,11 +22,6 @@ public sealed class MajorPentatonicMode : ScaleMode<MajorPentatonicScaleDegree>,
     };
 
     public override string ToString() => $"{Name} - {Formula}";
-
-    public MajorPentatonicMode(MajorPentatonicScaleDegree degree)
-        : base(Scale.MajorPentatonic, degree)
-    {
-    }
 
     public static IEnumerable<MajorPentatonicMode> Items => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree));
     public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree) => _lazyModeByDegree.Value[degree];

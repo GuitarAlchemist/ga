@@ -1,6 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Positions;
 
-public class PositionLocationSet : IReadOnlySet<PositionLocation>
+public class PositionLocationSet(IEnumerable<PositionLocation> positions) : IReadOnlySet<PositionLocation>
 {
     #region Equality Members
 
@@ -35,12 +35,7 @@ public class PositionLocationSet : IReadOnlySet<PositionLocation>
 
     #endregion
 
-    private readonly ImmutableSortedSet<PositionLocation> _set;
-
-    public PositionLocationSet(IEnumerable<PositionLocation> positions) 
-    {
-        _set = positions.ToImmutableSortedSet(PositionLocation.StrComparer);
-    }
+    private readonly ImmutableSortedSet<PositionLocation> _set = ImmutableSortedSet.ToImmutableSortedSet(positions, PositionLocation.StrComparer);
 
     public override string ToString() => string.Join(" ", _set.Select(location => location.Fret));
 }

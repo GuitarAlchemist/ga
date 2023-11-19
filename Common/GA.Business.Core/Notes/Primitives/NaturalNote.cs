@@ -160,15 +160,10 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
 
     private static IReadOnlyCollection<NaturalNote> GetAll() => ValueObjectUtils<NaturalNote>.Items;
 
-    private class NaturalNoteIntervals : LazyIndexerBase<(NaturalNote, NaturalNote), IntervalSize>
+    private class NaturalNoteIntervals() : LazyIndexerBase<(NaturalNote, NaturalNote), IntervalSize>(GetKeyValuePairs())
     {
         private static readonly NaturalNoteIntervals _instance = new();
         public static IntervalSize Get(NaturalNote startNote, NaturalNote endNote) => _instance[(startNote, endNote)];
-
-        public NaturalNoteIntervals() 
-            : base(GetKeyValuePairs())
-        {
-        }
 
         private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), IntervalSize>> GetKeyValuePairs()
         {

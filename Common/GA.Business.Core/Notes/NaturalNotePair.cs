@@ -1,8 +1,10 @@
-﻿using GA.Business.Core.Notes.Primitives;
+﻿namespace GA.Business.Core.Notes;
 
-namespace GA.Business.Core.Notes;
+using Primitives;
 
-public class NaturalNotePair
+
+public class NaturalNotePair(NaturalNote note1, 
+    NaturalNote note2)
 {
     #region Equality members
 
@@ -19,16 +21,8 @@ public class NaturalNotePair
 
     #endregion
 
-    public NaturalNotePair(
-        NaturalNote note1, 
-        NaturalNote note2)
-    {
-        Note1 = note1;
-        Note2 = note2;
-    }
-
-    public NaturalNote Note1 { get; }
-    public NaturalNote Note2 { get; }
+    public NaturalNote Note1 { get; } = note1;
+    public NaturalNote Note2 { get; } = note2;
 
     public override string ToString() => $"({Note1},{Note2})";
 }

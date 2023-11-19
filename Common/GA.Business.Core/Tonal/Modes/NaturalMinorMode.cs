@@ -5,8 +5,9 @@ using Scales;
 using Primitives;
 
 [PublicAPI]
-public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>,
-                                       IStaticEnumerable<NaturalMinorMode>
+public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScaleMode<NaturalMinorScaleDegree>(
+        Scale.NaturalMinor, degree),
+    IStaticEnumerable<NaturalMinorMode>
 {
     public static NaturalMinorMode Aeolian => new(1);
     public static NaturalMinorMode Locrian => new(2);
@@ -21,11 +22,6 @@ public sealed class NaturalMinorMode : MinorScaleMode<NaturalMinorScaleDegree>,
     public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
     public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
     private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
-
-    public NaturalMinorMode(NaturalMinorScaleDegree degree)
-        : base(Scale.NaturalMinor, degree)
-    {
-    }
 
     public override string Name => ParentScaleDegree.Value switch
     {

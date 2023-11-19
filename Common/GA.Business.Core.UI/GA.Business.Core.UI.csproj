@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<Configurations>Debug;Release</Configurations>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion Condition="'$(Configuration)' != 'net7.0'">preview</LangVersion>
-		<EnablePreviewFeatures Condition="'$(Configuration)' != 'net7.0'">true</EnablePreviewFeatures>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,8 +14,8 @@
 
 	<ItemGroup>
 		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
-		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="6.0.11" />
-		<PackageReference Include="MudBlazor" Version="6.1.4" />
+		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+		<PackageReference Include="MudBlazor" Version="6.11.0" />
 	</ItemGroup>
 
 	<ItemGroup>

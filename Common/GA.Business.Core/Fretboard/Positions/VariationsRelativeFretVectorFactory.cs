@@ -9,7 +9,7 @@ using static Primitives.RelativeFretVector;
 /// Factory for <see cref="RelativeFretVector"/> variations.
 /// </summary>
 [PublicAPI]
-public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVector>
+public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<RelativeFret> variations) : IEnumerable<RelativeFretVector>
 {
     #region IEnumerable<RelativeFretVector> Members
 
@@ -18,18 +18,12 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
 
     #endregion
 
-    private readonly VariationsWithRepetitions<RelativeFret> _variations;
-
-    public VariationsRelativeFretVectorFactory(VariationsWithRepetitions<RelativeFret> variations)
-    {
-        _variations = variations ?? throw new ArgumentNullException(nameof(variations));
-        Equivalences = new(variations);
-    }
+    private readonly VariationsWithRepetitions<RelativeFret> _variations = variations ?? throw new ArgumentNullException(nameof(variations));
 
     /// <summary>
     /// Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}"/>.
     /// </summary>
-    public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; }
+    public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; } = new(variations);
 
     /// <summary>
     /// Create a vector from a variation.
@@ -56,11 +50,5 @@ public class VariationsRelativeFretVectorFactory : IEnumerable<RelativeFretVecto
         return new Translation(variation, () => (PrimeForm) Create(_variations[equivalence.FromIndex]));
     }
 
-    private class OrderedTranslationCollection : LazyCollectionBase<Translation>
-    {
-        public OrderedTranslationCollection(IEnumerable<Translation> items)
-            : base(items.OrderBy(translation => translation.Increment), "; ")
-        {
-        }
-    }
+    private class OrderedTranslationCollection(IEnumerable<Translation> items) : LazyCollectionBase<Translation>(items.OrderBy(translation => translation.Increment), "; ");
 }

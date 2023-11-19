@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<Configurations>Debug;Release</Configurations>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -13,11 +12,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
 		<PackageReference Include="log4net" Version="2.0.15" />
 		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.JSInterop" Version="7.0.0" />
-		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.JSInterop" Version="6.0.11" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.JSInterop" Version="8.0.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

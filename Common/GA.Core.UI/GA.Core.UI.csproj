@@ -7,9 +7,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
-		<TargetFramework Condition="'$(Configuration)' == 'net7.0'">net7.0</TargetFramework>
-		<TargetFramework Condition="'$(Configuration)' != 'net7.0'">net6.0</TargetFramework>
+		<Configurations>Debug;Release</Configurations>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<TypeScriptModuleKind>none</TypeScriptModuleKind>
@@ -31,8 +30,8 @@
 
 	<ItemGroup>
 		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
-		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="6.0.11" />
-		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.9.3">
+		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.2.2">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
