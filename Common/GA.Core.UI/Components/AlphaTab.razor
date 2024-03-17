@@ -12,11 +12,10 @@
     [Parameter]
     public string? AlphaTex { get; set; } // See https://docs.alphatab.net/master/alphatex/
 
-    private ElementReference? _element;
+    // private ElementReference? _element;
 
     private Lazy<Task<IJSObjectReference>> _jsModuleTask = null!;
-    private string? _alphaText;
-
+    
     protected override void OnInitialized()
     {
         base.OnInitialized();

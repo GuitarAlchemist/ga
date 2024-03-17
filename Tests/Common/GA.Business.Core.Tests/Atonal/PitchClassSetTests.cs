@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tests.Atonal;
 
-using NUnit.Framework;
-
 using GA.Business.Core.Notes;
 using GA.Business.Core.Atonal;
 
@@ -11,6 +9,6 @@ public class PitchClassSetTests
     public void Test_NormalOrder()
     {
         // https://learnmusictheory.net/PDFs/pdffiles/06-10-SetTheorySimplified.pdf
-        // Assert.AreEqual(Interval.Simple.P1, Note.Chromatic.C.GetInterval(Note.Chromatic.C));
+        // Assert.AreEqual(Interval.Simple.P1, Note.Chromatic.Cm.GetInterval(Note.Chromatic.Cm));
     }
 }

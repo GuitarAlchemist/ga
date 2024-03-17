@@ -12,7 +12,7 @@ public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollec
 
     public ScaleModeCollection(IReadOnlyCollection<TScaleMode> modes)
     {
-        if (modes == null) throw new ArgumentNullException(nameof(modes));
+        ArgumentNullException.ThrowIfNull(modes);
 
         _modeByDegree = modes.ToImmutableDictionary(mode => mode.ParentScaleDegree);
         _modeByDegreeValue = modes.ToImmutableDictionary(mode => mode.ParentScaleDegree.Value);

@@ -3,10 +3,11 @@
 using GA.Core.Collections;
 
 /// <summary>
-/// An compound diatonic interval number
+/// A compound interval size (Between 9 and 16 semitones)
 /// </summary>
 /// <remarks>
 /// https://en.wikipedia.org/wiki/Interval_(Objects)#Compound_intervals
+/// Implements <see cref="IIntervalSize{CompoundIntervalSize}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct CompoundIntervalSize : IIntervalSize<CompoundIntervalSize>

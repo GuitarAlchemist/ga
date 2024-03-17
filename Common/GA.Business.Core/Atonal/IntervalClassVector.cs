@@ -1,8 +1,8 @@
 ﻿namespace GA.Business.Core.Atonal;
 
 using GA.Core;
-using Primitives;
 using GA.Core.Collections;
+using Primitives;
 
 /// <summary>
 /// Ordered occurence for each interval class,  (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
@@ -16,7 +16,7 @@ using GA.Core.Collections;
 /// https://viva.pressbooks.pub/openmusictheory/chapter/interval-class-vectors/
 /// See Prime Form: https://www.youtube.com/watch?v=KFKMvFzobbw
 /// 
-/// All major scale modes share the same interval vector - Example:
+/// Items major scale modes share the same interval vector - Example:
 /// - Major scale => 254361
 /// - Dorian      => 254361
 /// </remarks>
@@ -32,7 +32,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     /// </summary>
     /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
     /// <returns>The occurence count.</returns>
-    public int this[IntervalClass intervalClass] => _countByIntervalClass.TryGetValue(intervalClass, out var count) ? count : 0;
+    public int this[IntervalClass intervalClass] => CollectionExtensions.GetValueOrDefault(_countByIntervalClass, intervalClass, 0);
 
     #endregion
 
@@ -80,13 +80,12 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     public IntervalClassVector(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass)
     {
-        if (countByIntervalClass == null) throw new ArgumentNullException(nameof(countByIntervalClass));
+        ArgumentNullException.ThrowIfNull(countByIntervalClass);
 
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
         foreach (var intervalClass in IntervalClass.Items)
         {
-            if (countByIntervalClass.TryGetValue(intervalClass, out var count)) dictBuilder[intervalClass] = count;
-            else dictBuilder[intervalClass] = 0;
+            dictBuilder[intervalClass] = countByIntervalClass.GetValueOrDefault(intervalClass, 0);
         }
 
         var dict = dictBuilder.ToImmutable();

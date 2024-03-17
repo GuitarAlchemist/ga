@@ -32,8 +32,7 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
     public int CompareTo(PitchClassSet? other)
     {
         if (ReferenceEquals(this, other)) return 0;
-        if (ReferenceEquals(null, other)) return 1;
-        return Identity.CompareTo(other.Identity);
+        return other is null ? 1 : Identity.CompareTo(other.Identity);
     }
 
     public static bool operator <(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) < 0;
@@ -107,7 +106,8 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
         IReadOnlyCollection<PitchClass> pitchClasses,
         PitchClassSetOrder order = default)
     {
-        if (pitchClasses == null) throw new ArgumentNullException(nameof(pitchClasses));
+        ArgumentNullException.ThrowIfNull(pitchClasses);
+        
         var distinctPitchClasses = pitchClasses.Distinct().ToImmutableList();
 
         ImmutableSortedSet<PitchClass> pitchClassesSet;

@@ -21,7 +21,7 @@ var majorTriadMembers = icvLookup[majorTriadIntervalVector].ToImmutableList();
 var isLookup = combinations.ToLookup(pitchClasses => pitchClasses.ToIntervalPattern());
 var isMembers = isLookup[majorScaleIntervalPattern].ToImmutableList();
 
-var dummy = 1;
+_ = 1;
 
 // -----------------------------------------------------------
 

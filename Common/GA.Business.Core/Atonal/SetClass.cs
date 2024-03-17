@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using Primitives;
-
 /*
 /// <summary>
 /// An unordered collection of notes, without regards to with octave, what order they are played, reduced to its prime form by transposition

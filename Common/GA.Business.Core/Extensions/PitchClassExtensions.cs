@@ -9,8 +9,8 @@ public static class PitchClassExtensions
     /// Create the interval pattern from pitch classes.
     /// </summary>
     /// <param name="pitchClasses">The <see cref="IEnumerable{PitchClass}"/>.</param>
-    /// <returns>The <see cref="IntervalPattern"/>.</returns>
-    public static IntervalPattern ToIntervalPattern(this IEnumerable<PitchClass> pitchClasses)
+    /// <returns>The <see cref="ScaleIntervalPattern"/>.</returns>
+    public static ScaleIntervalPattern ToIntervalPattern(this IEnumerable<PitchClass> pitchClasses)
     {
         var pitchClassList = pitchClasses.ToList();
         var semitonesListBuilder = ImmutableList.CreateBuilder<Semitones>();

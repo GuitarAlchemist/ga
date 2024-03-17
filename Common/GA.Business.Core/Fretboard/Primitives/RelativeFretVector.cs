@@ -76,9 +76,7 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     /// A non-prime relative fret vector (e.g. "1 3 3 3 1 1" => "0 2 2 2 0 0" prime form)
     /// </summary>
     [PublicAPI]
-    public sealed class Translation(Variation<RelativeFret> variation,
-            Func<PrimeForm> primeFormFactory)
-        : RelativeFretVector(variation)
+    public sealed class Translation(Variation<RelativeFret> variation, Func<PrimeForm> primeFormFactory) : RelativeFretVector(variation)
     {
         /// <summary>
         /// The translation displacement amount compared to the prime form.
@@ -90,7 +88,7 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
         /// <summary>
         /// Gets the <see cref="PrimeForm"/>.
         /// </summary>
-        public PrimeForm PrimeForm => primeFormFactory.Invoke();
+        public new PrimeForm PrimeForm => primeFormFactory.Invoke();
 
         public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeForm})";
     }

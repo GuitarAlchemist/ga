@@ -21,7 +21,7 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         IReadOnlyCollection<Position.Played> positions)
     {
         Key = key ?? throw new ArgumentNullException(nameof(key));
-        if (positions == null) throw new ArgumentNullException(nameof(positions));
+        ArgumentNullException.ThrowIfNull(positions);
 
         _keyPositions = GetKeyPositions(key, positions);
     }
@@ -52,8 +52,8 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         Key key,
         IEnumerable<Position.Played> positions)
     {
-        if (key == null) throw new ArgumentNullException(nameof(key));
-        if (positions == null) throw new ArgumentNullException(nameof(positions));
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(positions);
 
         var keyNotes = key.GetNotes();
         var noteByPitchClass = 

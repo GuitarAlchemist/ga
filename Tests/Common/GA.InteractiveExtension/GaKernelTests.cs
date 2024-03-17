@@ -15,9 +15,9 @@ public class GaKernelTests
     {
         const string markdown = @"
 graph TD
-    A[Client] --> B[Load Balancer]
-    B --> C[Server1]
-    B --> D[Server2]";
+    Am[Client] --> B[Load Balancer]
+    B --> Cm[Server1]
+    B --> Dm[Server2]";
 
         var formatted = new MermaidMarkdown(markdown).ToDisplayString(HtmlFormatter.MimeType);
         var doc = new HtmlDocument();
@@ -40,7 +40,7 @@ graph TD
     {
         // ReSharper disable once StringLiteralTypo
         const string markdown = @"
-tabstave notation=true time=4/4 key=Ab
+tabstave notation=true time=4/4 key=Abm
 tuning=eb
 notes :8 5s7s8/5 ^3^ :q (5/2.6/3)h(7/3) :8d 5/4 :16 5/5";
 

@@ -2,10 +2,18 @@
 
 using Primitives;
 
+/// <summary>
+/// Abstract interval record class (Concretes sub-classes: <see cref="Chromatic"/> | <see cref="Simple"/> | <see cref="Compound"/>)
+/// </summary>
 [PublicAPI]
-[DiscriminatedUnion(Flatten = true)]
-public abstract partial record Interval
+public abstract record Interval
 {
+    /// <summary>
+    /// Get the number of semitones for the current <see cref="Interval"/>
+    /// </summary>
+    /// <returns>
+    /// The <see cref="Semitones"/>
+    /// </returns>
     public abstract Semitones ToSemitones();
 
     /// <inheritdoc cref="Interval"/>
@@ -13,12 +21,15 @@ public abstract partial record Interval
     /// A chromatic interval
     /// </summary>
     /// <remarks>
-    /// https://viva.pressbooks.pub/openmusictheory/chapter/intervals-in-integer-notation/
-    /// http://musictheoryblog.blogspot.com/2007/01/intervals.html
+    /// <see href="https://viva.pressbooks.pub/openmusictheory/chapter/intervals-in-integer-notation/"/> 
+    /// <see href="http://musictheoryblog.blogspot.com/2007/01/intervals.html"/> 
     /// </remarks>
     [PublicAPI]
-    public sealed partial record Chromatic : Interval
+    public sealed record Chromatic : Interval
     {
+        /// <summary>
+        /// Gets <see cref="Semitones"/> interval size
+        /// </summary>
         public Semitones Size { get; init; }
 
         public static Chromatic Unison => Create(Semitones.Unison);
@@ -38,10 +49,13 @@ public abstract partial record Interval
 
     public abstract record Diatonic : Interval
     {
+        /// <summary>
+        /// Gets <see cref="IntervalQuality"/>
+        /// </summary>
         public IntervalQuality Quality { get; init; }
     }
 
-    public sealed partial record Simple : Diatonic, IFormattable
+    public sealed record Simple : Diatonic, IFormattable
     {
         #region Formats
 
@@ -81,13 +95,16 @@ public abstract partial record Interval
 
         public static Simple operator !(Simple interval) => interval.ToInverse();
 
+        /// <summary>
+        /// Gets the <see cref="IntervalSize"/>
+        /// </summary>
         public IntervalSize Size { get; init; }
 
         public string Name => $"{Quality}{Size}";
         public string LongName => $"{Quality}{Size}";
         public string AccidentedName => GetAccidentedName(Size, Quality);
 
-        public override string ToString() => ToString("G");
+        public override string ToString() => ToString("Gm");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
@@ -103,15 +120,12 @@ public abstract partial record Interval
 
         public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
 
+        /// <inheritdoc />
         public override Semitones ToSemitones()
         {
             var result = Size.ToSemitones();
             var accidental = Quality.ToAccidental(Size.Consonance);
-            if (accidental.HasValue)
-            {
-                result += accidental.Value;
-            }
-
+            if (accidental.HasValue) result += accidental.Value;
             return result;
         }
         
@@ -129,21 +143,15 @@ public abstract partial record Interval
         }
     }
 
-    public sealed partial record Compound : Diatonic, IFormattable
+    public sealed record Compound : Diatonic, IFormattable
     {
+        /// <summary>
+        /// Gets the <see cref="CompoundIntervalSize"/>
+        /// </summary>
         public CompoundIntervalSize Size { get; init; }
 
         public string ShortName => $"{Quality}{Size}";
-
-        public override Semitones ToSemitones()
-        {
-            var result = 
-                Size.ToSemitones() + 
-                Quality.ToAccidental(Size.Consonance)?.Value ?? 0;
-
-            return result;
-        }
-
+        public override Semitones ToSemitones() => Size.ToSemitones() + Quality.ToAccidental(Size.Consonance)?.Value ?? 0;
         public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)

@@ -31,7 +31,7 @@ public class FretVector : IReadOnlyCollection<Fret>,
 
     public FretVector(IEnumerable<Fret> frets)
     {
-        if (frets == null) throw new ArgumentNullException(nameof(frets));
+        ArgumentNullException.ThrowIfNull(frets);
 
         var str = Str.Min;
         var fretByStrBuilder = ImmutableSortedDictionary.CreateBuilder<Str, Fret>();

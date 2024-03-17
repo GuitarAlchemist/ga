@@ -19,7 +19,8 @@ public class Tuning : IIndexer<Str, Pitch>
 
     public Tuning(PitchCollection pitchCollection)
     {
-        if (pitchCollection == null) throw new ArgumentNullException(nameof(pitchCollection));
+        ArgumentNullException.ThrowIfNull(pitchCollection);
+        
         PitchCollection = pitchCollection ?? throw new ArgumentNullException(nameof(pitchCollection));
         _pitchByStr = GetPitchByStr(pitchCollection);
     }

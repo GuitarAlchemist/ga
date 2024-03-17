@@ -57,7 +57,7 @@ public static class TypeFormatterSourceExtensions
         MarkdownHtmlGeneratorConfig config,
         string markDown)
     {
-        if (config == null) throw new ArgumentNullException(nameof(config));
+        ArgumentNullException.ThrowIfNull(config);
 
         var code = $$""" 
 <script type="text/javascript">
@@ -166,10 +166,10 @@ public static class TypeFormatterSourceExtensions
     system
         .addStave({
             voices: [
-                score.voice(score.notes('C#5/q, B4, A4, G#4', {
+                score.voice(score.notes('Cm#5/q, B4, A4, Gm#4', {
                     stem: 'up'
                 })),
-                score.voice(score.notes('C#4/h, C#4', {
+                score.voice(score.notes('Cm#4/h, Cm#4', {
                     stem: 'down'
                 })),
             ],

@@ -28,7 +28,7 @@ var modes = MajorScaleMode.Items;
 foreach (var mode in modes)
 {
     Console.WriteLine($@"{mode.Name} mode");
-    Console.WriteLine($@"All notes   : {mode.Notes}");
+    Console.WriteLine($@"Items notes   : {mode.Notes}");
     Console.WriteLine($@"Color notes : {mode.ColorNotes}");
     Console.WriteLine($@"Formula     : {mode.Formula}");
     Console.WriteLine("");       

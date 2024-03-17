@@ -3,24 +3,24 @@
 using Extensions;
 
 /// <summary>
-/// Interface for a value object where the min and max values are known (Strongly typed)
+/// Interface for a value object with <see cref="TSelf"/> min/max static values
 /// </summary>
 /// <typeparam name="TSelf"></typeparam>
 public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
     /// <summary>
-    /// Gets a <see cref="TSelf"/> instance with the minimum value.<see cref="TSelf"/>.
+    /// Gets the <typeparamref name="TSelf"/> min value
     /// </summary>
     static abstract TSelf Min { get; }
 
     /// <summary>
-    /// Gets a <see cref="TSelf"/> instance with the maximum value.<see cref="TSelf"/>.
+    /// Gets the <typeparamref name="TSelf"/> max value
     /// </summary>
     static abstract TSelf Max { get; }
 
     /// <summary>
-    /// Ensures value in range.
+    /// Ensures value in range
     /// </summary>
     /// <param name="value">The value that represents the object.</param>
     /// <param name="minValue">The minimum valid value</param>
@@ -32,20 +32,26 @@ public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
     /// <returns>The object value (Optionally normalized).</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static int EnsureValueInRange(
-        int value, 
+        int value,
         int minValue,
         int maxValue,
         bool normalize = false,
-        [CallerArgumentExpression("value")] string? valueExpression = null,
-        [CallerArgumentExpression("minValue")] string? minValueExpression = null,
-        [CallerArgumentExpression("maxValue")] string? maxValueExpression = null)
+        [CallerArgumentExpression(nameof(value))] string? valueExpression = null,
+        [CallerArgumentExpression(nameof(minValue))] string? minValueExpression = null,
+        [CallerArgumentExpression(nameof(maxValue))] string? maxValueExpression = null)
     {
         if (value >= minValue && value <= maxValue) return value;
 
         // Attempt to normalize the value
         var count = maxValue - minValue;
 
-        if (normalize) value = minValue + (value - minValue).Mod(count) + 1;
+        if (normalize)
+        {
+            value =
+                minValue
+                +
+                (value - minValue).Mod(count) + 1;
+        }
 
         if (value < minValue)
         {

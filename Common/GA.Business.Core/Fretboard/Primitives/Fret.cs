@@ -3,12 +3,12 @@
 using GA.Core;
 using GA.Core.Collections;
 
-/// <inheritdoc cref="IEquatable{Fret}" />
-/// <inheritdoc cref="IComparable{Fret}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
 /// An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IEquatable{Fret}" /> <see cref="IComparable{Fret}" />, <see cref="IComparable" />
+/// </remarks>
 [PublicAPI]
 public readonly record struct Fret : IStaticValueObjectList<Fret>
 {

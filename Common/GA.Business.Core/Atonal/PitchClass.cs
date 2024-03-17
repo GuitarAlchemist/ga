@@ -8,8 +8,11 @@ using Notes;
 using GA.Core;
 
 /// <summary>
-/// All pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
+/// Items pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IStaticValueObjectList{PitchClass}"/>, <see cref="IStaticNorm{PitchClass, IntervalClass}"/>
+/// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
                                            IStaticNorm<PitchClass, IntervalClass>
@@ -58,8 +61,8 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public static PitchClass Max => FromValue(_maxValue);
     public static implicit operator PitchClass(int value) => FromValue(value);
     public static implicit operator int(PitchClass octave) => octave.Value;
-    public static implicit operator Note.SharpKey(PitchClass pitchClass) => pitchClass.ToSharpNote();
-    public static implicit operator Note.FlatKey(PitchClass pitchClass) => pitchClass.ToFlatNote();
+    public static implicit operator Note.Sharp(PitchClass pitchClass) => pitchClass.ToSharpNote();
+    public static implicit operator Note.Flat(PitchClass pitchClass) => pitchClass.ToFlatNote();
     public static Interval.Chromatic operator -(PitchClass a, PitchClass b) => a.Value + -b.Value;
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
@@ -67,13 +70,13 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public override string ToString() => _value switch
     {
         10 => "T",
-        11 => "E",
+        11 => "Em",
         _ => _value.ToString()
     };
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
-    public Note.SharpKey ToSharpNote() => _sharpNotes[_value];
-    public Note.FlatKey ToFlatNote() => _flatNotes[_value];
+    public Note.Sharp ToSharpNote() => _sharpNotes[_value];
+    public Note.Flat ToFlatNote() => _flatNotes[_value];
     public Pitch.Chromatic ToChromaticPitch(Octave octave) => new(ToChromaticNote(), octave);
     public Pitch.Sharp ToSharpPitch(Octave octave) => new(ToSharpNote(), octave);
     public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
@@ -95,17 +98,17 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             Note.Chromatic.B
         }.ToImmutableList();
 
-    private static readonly ImmutableList<Note.SharpKey> _sharpNotes =
-        new List<Note.SharpKey>
+    private static readonly ImmutableList<Note.Sharp> _sharpNotes =
+        new List<Note.Sharp>
         {
-            Note.SharpKey.C, Note.SharpKey.CSharp, Note.SharpKey.D, Note.SharpKey.DSharp, Note.SharpKey.E, Note.SharpKey.F,
-            Note.SharpKey.FSharp, Note.SharpKey.G, Note.SharpKey.GSharp, Note.SharpKey.A, Note.SharpKey.ASharp, Note.SharpKey.B
+            Note.Sharp.C, Note.Sharp.CSharp, Note.Sharp.D, Note.Sharp.DSharp, Note.Sharp.E, Note.Sharp.F,
+            Note.Sharp.FSharp, Note.Sharp.G, Note.Sharp.GSharp, Note.Sharp.A, Note.Sharp.ASharp, Note.Sharp.B
         }.ToImmutableList();
 
-    private static readonly ImmutableList<Note.FlatKey> _flatNotes =
-        new List<Note.FlatKey>
+    private static readonly ImmutableList<Note.Flat> _flatNotes =
+        new List<Note.Flat>
         {
-            Note.FlatKey.C, Note.FlatKey.DFlat, Note.FlatKey.D, Note.FlatKey.EFlat, Note.FlatKey.E, Note.FlatKey.F,
-            Note.FlatKey.GFlat, Note.FlatKey.G, Note.FlatKey.AFlat, Note.FlatKey.A, Note.FlatKey.BFlat, Note.FlatKey.B
+            Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
+            Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
         }.ToImmutableList();
 }

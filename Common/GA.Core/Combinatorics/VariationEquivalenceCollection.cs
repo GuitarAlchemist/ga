@@ -25,8 +25,8 @@ public abstract class VariationEquivalenceCollection
             Func<IEnumerable<T>, BigInteger> indexProvider,
             IEnumerable<Variation<T>> variations)
         {
-            if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
-            if (variations == null) throw new ArgumentNullException(nameof(variations));
+            ArgumentNullException.ThrowIfNull(indexProvider);
+            ArgumentNullException.ThrowIfNull(variations);
 
             _lazyEquivalences = new(() => GetTranslationEquivalences(indexProvider, variations));
             _lazyToEquivalences = new(() => Equivalences.ToImmutableDictionary(equivalence => equivalence.ToIndex));
@@ -43,8 +43,8 @@ public abstract class VariationEquivalenceCollection
             Func<IEnumerable<T>, BigInteger> indexProvider,
             IEnumerable<Variation<T>> variations)
         {
-            if (indexProvider == null) throw new ArgumentNullException(nameof(indexProvider));
-            if (variations == null) throw new ArgumentNullException(nameof(variations));
+            ArgumentNullException.ThrowIfNull(indexProvider);
+            ArgumentNullException.ThrowIfNull(variations);
 
             var mapItemsBuilder = ImmutableList.CreateBuilder<VariationEquivalence.Translation>();
             foreach (var variation in variations)
@@ -75,7 +75,8 @@ public abstract class VariationEquivalenceCollection
                 static IEnumerable<T> ToPrimeForm<T>(IEnumerable<T> items) 
                     where T : struct, IRangeValueObject<T>
                 {
-                    if (items == null) throw new ArgumentNullException(nameof(items));
+                    ArgumentNullException.ThrowIfNull(items);
+                    
                     if (items is not IReadOnlyCollection<T> collection) collection = items.ToImmutableArray();
 
                     var minItem = collection.Min();

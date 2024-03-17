@@ -28,8 +28,8 @@ public static class PrintCollectionExtensions
 
     [PublicAPI]
     public static PrintableReadOnlySet<T> AsPrintable<T>(
-        this IReadOnlySet<T> items, 
-        string? itemSeparator)
+        this IImmutableSet<T> items, 
+        string? itemSeparator = " ")
             where T : notnull
     {
         if (items is PrintableReadOnlySet<T> printable) return printable;

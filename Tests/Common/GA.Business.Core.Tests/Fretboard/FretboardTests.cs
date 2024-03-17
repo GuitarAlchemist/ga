@@ -1,6 +1,4 @@
-﻿using NUnit.Framework;
-
-namespace GA.Business.Core.Tests.Fretboard
+﻿namespace GA.Business.Core.Tests.Fretboard
 {
     public class FretboardTests
     {

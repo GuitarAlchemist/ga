@@ -4,10 +4,10 @@ using GA.Core;
 using GA.Core.Collections;
 
 /// <summary>
-/// A chromatic interval size expressed in semitones.
+/// A chromatic interval size expressed in semitones (From -12 octaves to +12 octaves) - <see href="https://en.wikipedia.org/wiki/Semitone"/>
 /// </summary>
 /// <remarks>
-/// See https://en.wikipedia.org/wiki/Semitone
+/// Implements <see cref="IRangeValueObject{Semitones}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct Semitones : IRangeValueObject<Semitones>
