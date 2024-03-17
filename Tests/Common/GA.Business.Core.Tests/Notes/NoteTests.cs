@@ -1,9 +1,6 @@
 ﻿namespace GA.Business.Core.Tests.Notes;
 
-using NUnit.Framework;
-
 using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Tonal;
 using GA.Business.Core.Notes;
 using Intervals;
 

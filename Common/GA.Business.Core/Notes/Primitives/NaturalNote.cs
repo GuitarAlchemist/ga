@@ -11,6 +11,9 @@ using GA.Business.Core.Intervals.Primitives;
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IStaticValueObjectList{NaturalNote}"/>
+/// </remarks>
 [PublicAPI]
 public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
 {
@@ -40,6 +43,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
 
     private const int _minValue = 0;
     private const int _maxValue = 6;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NaturalNote FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -55,7 +59,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
     public static NaturalNote B => FromValue(6);
 
     //language=regexp
-    public static readonly string RegexPattern = "^(?'note'[A-G])$";
+    public static readonly string RegexPattern = "^(?'note'[Am-Gm])$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     public static NaturalNote Parse(string s, IFormatProvider? provider)
@@ -167,11 +171,14 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
 
         private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), IntervalSize>> GetKeyValuePairs()
         {
+            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var startNote in Items)
-            foreach (var number in IntervalSize.Items)
             {
-                var endNote = startNote + number;
-                yield return new((startNote, endNote),  number);
+                foreach (var number in IntervalSize.Items)
+                {
+                    var endNote = startNote + number;
+                    yield return new((startNote, endNote),  number);
+                }
             }
         }
     }

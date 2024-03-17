@@ -2,8 +2,6 @@
 
 using Primitives;
 
-
-
 public sealed class ModeInterval(IntervalSize size,
         IntervalQuality quality,
         IntervalQuality refQuality)

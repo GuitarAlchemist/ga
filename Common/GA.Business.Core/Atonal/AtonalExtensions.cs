@@ -27,7 +27,8 @@ public static class AtonalExtensions
     public static IntervalClassVector ToIntervalClassVector<T>(this IEnumerable<T> items)
         where T : IValueObject, IStaticNorm<T, IntervalClass>
     {
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
+        
         var normedCartesianProduct = items.ToNormedCartesianProduct<T, IntervalClass>();
         var countByNorm = normedCartesianProduct.ByNormCounts(pair => pair.Norm.Value > 0);
         return new(countByNorm);

@@ -4,19 +4,17 @@ using GA.Business.Core.Notes.Primitives;
 using Positions;
 
 [PublicAPI]
-[DiscriminatedUnion(Flatten = true)]
-public abstract partial record Position
+public abstract record Position
 {
     /// <inheritdoc cref="Position"/>
-    public sealed partial record Muted(Str Str) : Position, IComparable<Muted>
+    public sealed record Muted(Str Str) : Position, IComparable<Muted>
     {
         #region Relational Members
 
         public int CompareTo(Muted? other)
         {
             if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
-            return Str.CompareTo(other.Str);
+            return other is null ? 1 : Str.CompareTo(other.Str);
         }
 
         public static bool operator <(Muted? left, Muted? right) => Comparer<Muted>.Default.Compare(left, right) < 0;
@@ -26,31 +24,18 @@ public abstract partial record Position
 
         #endregion
 
-        #region Equality Members
-
-        public bool Equals(Muted? other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Str.Equals(other.Str);
-        }
-
-        public override int GetHashCode() => Str.Value;
-
-        #endregion
-
         public override string ToString() => $"X{Str}";
     }
 
     /// <inheritdoc cref="Position"/>
-    public sealed partial record Played(PositionLocation Location, MidiNote MidiNote) : Position, IComparable<Played>
+    public sealed record Played(PositionLocation Location, MidiNote MidiNote) : Position, IComparable<Played>
     {
         #region Relational Members
 
         public int CompareTo(Played? other)
         {
             if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
+            if (other is null) return 1;
             return Location.CompareTo(other.Location);
         }
 
@@ -65,7 +50,7 @@ public abstract partial record Position
 
         public bool Equals(Played? other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) && Location.Equals(other.Location);
         }

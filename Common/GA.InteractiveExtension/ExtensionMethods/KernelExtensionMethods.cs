@@ -10,7 +10,7 @@ public static class KernelExtensionMethods
     public static async Task<ImmutableList<Type>> UseGaAsync<T>([NotNull] this T kernel)
         where T : Kernel
     {
-        if (kernel == null) throw new ArgumentNullException(nameof(kernel));
+        ArgumentNullException.ThrowIfNull(kernel);
 
         var types = typeof(Note).Assembly.RegisterFormatters();
 

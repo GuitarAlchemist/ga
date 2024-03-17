@@ -7,6 +7,8 @@ public abstract class PrintableBase<T>(IEnumerable<T> items,
 {
     private readonly IEnumerable<T> _items = items ?? throw new ArgumentNullException(nameof(items));
 
+    public string PrintOut => ToString();
+
     public override string ToString()
     {
         return string.Join(itemSeparator ?? " ", _items.Select(PrintItem()));

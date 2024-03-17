@@ -6,7 +6,7 @@ public static class ModeIntervalExtensions
 {
     public static IReadOnlyCollection<ModeCompoundInterval> ToCompound(this IReadOnlyCollection<ModeInterval> modeIntervals)
     {
-        if (modeIntervals == null) throw new ArgumentNullException(nameof(modeIntervals));
+        ArgumentNullException.ThrowIfNull(modeIntervals);
 
         return 
             modeIntervals.Select(interval => interval.ToCompound())

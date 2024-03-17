@@ -3,7 +3,6 @@
 		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
-		<LangVersion>preview</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -65,7 +64,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
-		<PackageReference Include="Funcky.DiscriminatedUnion" Version="1.1.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
@@ -75,7 +73,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="Funcky" />
 		<Using Include="JetBrains.Annotations" />
 	</ItemGroup>
 

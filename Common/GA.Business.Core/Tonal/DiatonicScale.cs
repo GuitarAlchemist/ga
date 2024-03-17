@@ -3,8 +3,7 @@
 using Intervals;
 
 [PublicAPI]
-[DiscriminatedUnion]
-public abstract partial record DiatonicScale
+public abstract record DiatonicScale
 {
     private static Interval.Chromatic T => Interval.Chromatic.Tone;
     private static Interval.Chromatic S => Interval.Chromatic.Semitone;

@@ -27,9 +27,9 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 
 //                    DisplayMermaidExample1(currentContext, """
 //    graph TD
-//    A[Client] --> B[Load Balancer]
-//    B --> C[Server01]
-//    B --> D[Server02]
+//    Am[Client] --> B[Load Balancer]
+//    B --> Cm[Server01]
+//    B --> Dm[Server02]
 //""");
 
                     DisplayForceGraph(currentContext);
@@ -37,9 +37,9 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 //                    DisplayMermaidExample2(currentContext, 
 //"""
 //graph TD
-//A[Client] --> B[Load Balancer]
-//B --> C[Server01]
-//B --> D[Server02]
+//Am[Client] --> B[Load Balancer]
+//B --> Cm[Server01]
+//B --> Dm[Server02]
 //""");
 
                     // DisplayVexFlow(currentContext);
@@ -116,7 +116,7 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 
     private static void DisplayGaBanner(KernelInvocationContext currentContext)
     {
-        if (currentContext == null) throw new ArgumentNullException(nameof(currentContext));
+        ArgumentNullException.ThrowIfNull(currentContext);
 
         var banner = FiggleFonts.Standard.Render("Guitar Alchemist");
         // ReSharper disable StringLiteralTypo
@@ -322,7 +322,7 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 options tab-stems=true tab-stem-direction=down
 tabstave notation=true tablature=true time=4/4
 notes :8 3/5 0-2-3/4 0-2/3 0-1-1-0/2 2-0/3 3-2-0/4 3/5
-text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
+text :8,.1,Cm,Dm,Em,Fm,Gm,Am,B,Cm,Cm,B,Am,Gm,Fm,Em,Dm,Cm
 `;
     const VF = vextab.Vex.Flow;
     const renderTarget = document.getElementById('d480a0b0b6a85684650fb232a86f8b3c1');
@@ -366,9 +366,9 @@ text :8,.1,C,D,E,F,G,A,B,C,C,B,A,G,F,E,D,C
     factory
         .System()
         .addStave({
-            voices: [score.voice(score.notes("C#5/q, B4, A4, G#4", {
+            voices: [score.voice(score.notes("Cm#5/q, B4, A4, Gm#4", {
                 stem: "up"
-            })), score.voice(score.notes("C#4/h, C#4", {
+            })), score.voice(score.notes("Cm#4/h, Cm#4", {
                 stem: "down"
             }))],
         })

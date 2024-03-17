@@ -5,12 +5,12 @@ using GA.Core.Collections;
 using GA.Core.Extensions;
 using Modes;
 
-/// <inheritdoc cref="IEquatable{HarmonicMinorScaleDegree}" />
-/// <inheritdoc cref="IComparable{HarmonicMinorScaleDegree}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
-/// An Objects minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
+/// Harmonic Minor scale degree - See https://en.wikipedia.org/wiki/Degree_(music)
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IStaticReadonlyCollection{HarmonicMinorScaleDegree}"/>, <see cref="IMinorScaleModeDegree{HarmonicMinorScaleDegree}"/>
+/// </remarks>
 [PublicAPI]
 public readonly record struct HarmonicMinorScaleDegree : IStaticReadonlyCollection<HarmonicMinorScaleDegree>,
                                                          IMinorScaleModeDegree<HarmonicMinorScaleDegree>

@@ -36,7 +36,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
 
     #endregion
 
-    private static Lazy<ImmutableDictionary<T, BigInteger>> _lazyWeightByItem;
+    private static readonly Lazy<ImmutableDictionary<T, BigInteger>> _lazyWeightByItem;
     private readonly VariationsWithRepetitions<bool> _boolVariations;
     private readonly VariationFormat _variationFormat;
 

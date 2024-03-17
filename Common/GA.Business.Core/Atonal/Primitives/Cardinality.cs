@@ -3,11 +3,12 @@
 using GA.Core;
 using GA.Core.Collections;
 
-/// <inheritdoc cref="IValueObject" />
-/// <inheritdoc cref="IName" />
 /// <summary>
-/// An non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
+/// A non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IStaticValueObjectList{Cardinality}" />, <see cref="IName" />
+/// </remarks>
 [PublicAPI]
 public readonly record struct Cardinality : IStaticValueObjectList<Cardinality>,
                                             IName

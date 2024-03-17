@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. Items rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // https://github.com/dotnet/interactive/blob/fe5e38dea599d0cc4e5086554d2a34fd0e92295c/src/Microsoft.DotNet.Interactive.ExtensionLab.Tests/StringExtensions.cs#L10
 

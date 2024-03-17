@@ -3,6 +3,9 @@
 using GA.Core;
 using GA.Core.Collections;
 
+/// <remarks>
+/// Implements <see cref="IStaticReadonlyCollection{HarmonicMinorScaleDegree}"/>, <see cref="IRangeValueObject{MajorPentatonicScaleDegree}"/>
+/// </remarks>
 [PublicAPI]
 public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<MajorPentatonicScaleDegree>
 {

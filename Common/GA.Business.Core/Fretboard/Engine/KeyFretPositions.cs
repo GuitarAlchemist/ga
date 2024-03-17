@@ -9,7 +9,7 @@ using Atonal;
 /// </summary>
 /// <remarks>
 /// Goal:
-/// Declare a Equivalence between Open fret/capo position and keys
+/// Declare an equivalence between Open fret/capo position and keys
 /// The objective is surfacing "opportunities" to the user - Example
 /// The fretboard context is required (Tuning)
 /// 1) Open position works best for certain keys => List keys (Keys with the highest open positions count first) 
@@ -29,11 +29,10 @@ public record KeyFretPositions(
     /// <exception cref="ArgumentNullException"></exception>
     public static ReadOnlyCollection<KeyFretPositions> CreateCollection(Fretboard fretboard)
     {
-        if (fretboard == null) throw new ArgumentNullException(nameof(fretboard));
+        ArgumentNullException.ThrowIfNull(nameof(fretboard));
 
         var list = new List<KeyFretPositions>();
-
-        foreach (var key in Key.GetAll())
+        foreach (var key in Key.GetItems())
         {
             var keyNotes = key.GetNotes();
             var keyPitchClassSet = new HashSet<PitchClass>(keyNotes.Select(note => note.PitchClass));

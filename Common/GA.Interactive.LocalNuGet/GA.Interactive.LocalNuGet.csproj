@@ -29,7 +29,6 @@
 		<FileVersion>1.0.0.0</FileVersion>
 		<DebugType>embedded</DebugType>
 		<NoWarn>NU5100,NU5128,NU5104</NoWarn>
-		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

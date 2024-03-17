@@ -16,7 +16,7 @@ public static class NormedPairExtensions
         where T : IStaticNorm<T, TNorm>
         where TNorm : struct, IValueObject<TNorm>
     {
-        if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
+        ArgumentNullException.ThrowIfNull(normedPairs);
 
         return normedPairs.ToLookup(pair => pair.Norm, pair => new Pair<T>(pair.Item1, pair.Item2));
     }
@@ -36,7 +36,8 @@ public static class NormedPairExtensions
             where T : IStaticNorm<T, TNorm>, IValueObject
             where TNorm : struct, IStaticReadonlyCollection<TNorm>, IValueObject<TNorm>
     {
-        if (normedPairs == null) throw new ArgumentNullException(nameof(normedPairs));
+        ArgumentNullException.ThrowIfNull(normedPairs);
+        
         if (predicate != null) normedPairs = normedPairs.Where(predicate);
         normedPairs = normedPairs.Where(pair => pair.Item1.Value <= pair.Item2.Value); // De-duplicate pairs
         var countByNorm = normedPairs.ByNorm().GetCounts();

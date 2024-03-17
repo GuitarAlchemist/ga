@@ -2,8 +2,6 @@
 
 using Primitives;
 
-
-
 public sealed class ModeCompoundInterval(
         CompoundIntervalSize degree,
         IntervalQuality quality,

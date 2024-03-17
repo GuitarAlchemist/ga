@@ -9,8 +9,9 @@ public static class ChromaticNoteExtensions
         this Note.Chromatic note,
         Note.Chromatic other)
     {
-        if (note == null) throw new ArgumentNullException(nameof(note));
-        if (other == null) throw new ArgumentNullException(nameof(other));
+        ArgumentNullException.ThrowIfNull(note);
+        ArgumentNullException.ThrowIfNull(other);
+        
         if (note == other) return Interval.Chromatic.Unison;
 
         OrderedPitchClasses(
@@ -33,8 +34,8 @@ public static class ChromaticNoteExtensions
         out PitchClass highPitchClass,
         out bool notesInverted)
     {
-        if (note1 == null) throw new ArgumentNullException(nameof(note1));
-        if (note2 == null) throw new ArgumentNullException(nameof(note2));
+        ArgumentNullException.ThrowIfNull(note1);
+        ArgumentNullException.ThrowIfNull(note2);
 
         var pitchClass1 = note1.PitchClass;
         var pitchClass2 = note2.PitchClass;

@@ -6,14 +6,26 @@ using Extensions;
 public static class ValueObjectUtils<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
+    /// <summary>
+    /// Checks whether the value is in range
+    /// </summary>
+    /// <param name="value">The <see cref="int"/> value</param>
+    /// <param name="minValue">The min <see cref="int"/> value</param>
+    /// <param name="maxValue">The max <see cref="int"/> value</param>
+    /// <param name="normalize">A <see cref="bool"/> flag indicating whether the value should be normalized</param>
+    /// <param name="valueExpression">a <see cref="Nullable{String}"/></param>
+    /// <param name="minValueExpression">a <see cref="Nullable{String}"/></param>
+    /// <param name="maxValueExpression">a <see cref="Nullable{String}"/></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
     public static int CheckRange(
         int value, 
         int minValue,
         int maxValue,
         bool normalize = false,
-        [CallerArgumentExpression("value")] string? valueExpression = null,
-        [CallerArgumentExpression("minValue")] string? minValueExpression = null,
-        [CallerArgumentExpression("maxValue")] string? maxValueExpression = null)
+        [CallerArgumentExpression(nameof(value))] string? valueExpression = null,
+        [CallerArgumentExpression(nameof(minValue))] string? minValueExpression = null,
+        [CallerArgumentExpression(nameof(maxValue))] string? maxValueExpression = null)
     {
         if (value >= minValue && value <= maxValue) return value;
 
@@ -31,6 +43,7 @@ public static class ValueObjectUtils<TSelf>
                 $"{typeof(TSelf)} {valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
         }
 
+        // ReSharper disable once InvertIf
         if (value > maxValue)
         {
             Debugger.Break();

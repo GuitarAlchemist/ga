@@ -2,7 +2,10 @@
 
 using GA.Core;
 
-// Flag interface for a minor scale degree
+/// <summary>
+/// Marker interface for a minor scale degree
+/// </summary>
+/// <typeparam name="TSelf">The concrete type</typeparam>
 public interface IMinorScaleModeDegree<TSelf> : IRangeValueObject<TSelf>
     where TSelf : struct, IRangeValueObject<TSelf>
 {

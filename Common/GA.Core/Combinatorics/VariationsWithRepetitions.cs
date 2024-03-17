@@ -77,7 +77,8 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         int length,
         Func<T, bool>? predicate = null)
     {
-        if (elements == null) throw new ArgumentNullException(nameof(elements));
+        ArgumentNullException.ThrowIfNull(elements);
+        
         if (predicate != null) elements = elements.Where(predicate).ToImmutableList();
         Elements = elements.ToImmutableList();
         Base = new(Elements.Count);

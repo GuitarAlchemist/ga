@@ -16,6 +16,13 @@ public interface IIntervalSize : IValueObject
     Semitones ToSemitones();
 }
 
+/// <summary>
+/// Interval size (Strongly typed)
+/// </summary>
+/// <remarks>
+/// Derives from <see cref="IStaticValueObjectList{TSelf}"/>, <see cref="IIntervalSize"/>
+/// </remarks>
+/// <typeparam name="TSelf"></typeparam>
 [PublicAPI]
 public interface IIntervalSize<TSelf> : IStaticValueObjectList<TSelf>,
                                         IIntervalSize

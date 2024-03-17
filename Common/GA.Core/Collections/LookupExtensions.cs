@@ -6,7 +6,7 @@ public static class LookupExtensions
     public static ImmutableSortedDictionary<TKey, int> GetCounts<TKey, TElement>(this ILookup<TKey, TElement> lookup) 
         where TKey : notnull
     {
-        if (lookup == null) throw new ArgumentNullException(nameof(lookup));
+        ArgumentNullException.ThrowIfNull(lookup);
 
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<TKey, int>();
         foreach (var grouping in lookup)

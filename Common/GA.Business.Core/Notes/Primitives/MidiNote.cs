@@ -5,12 +5,12 @@ using GA.Core.Collections;
 using Atonal;
 using Intervals;
 
-/// <inheritdoc cref="IEquatable{Fret}" />
-/// <inheritdoc cref="IComparable{Fret}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
-/// An MIDI note between 0 and 127
+/// A MIDI note (0 to 127)
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IRangeValueObject{MidiNote}"/>
+/// </remarks>
 [PublicAPI]
 public readonly record struct MidiNote : IRangeValueObject<MidiNote>
 {
@@ -57,8 +57,8 @@ public readonly record struct MidiNote : IRangeValueObject<MidiNote>
 
     public Pitch ToPitch() => ToSharpPitch();
     public Note.Chromatic ToChromaticNote() => PitchClass.ToChromaticNote();
-    public Note.SharpKey ToSharpNote() => PitchClass.ToSharpNote();
-    public Note.FlatKey ToFlatNote() => PitchClass.ToFlatNote();
+    public Note.Sharp ToSharpNote() => PitchClass.ToSharpNote();
+    public Note.Flat ToFlatNote() => PitchClass.ToFlatNote();
     public Pitch.Chromatic ToChromaticPitch() => new(ToChromaticNote(), Octave);
     public Pitch.Sharp ToSharpPitch() => new(ToSharpNote(), Octave);
     public Pitch.Flat ToFlatPitch() => new(ToFlatNote(), Octave);

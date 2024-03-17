@@ -10,7 +10,7 @@ using GA.Core.Collections;
 using GA.Core.Extensions;
 
 /// <summary>
-/// A Objects scale
+/// A scale
 /// </summary>
 /// <remarks>
 /// See https://www.youtube.com/c/TheExcitingUniverseofmusictheory/videos
@@ -47,7 +47,8 @@ public class Scale : IReadOnlyCollection<Note>,
 
     public Scale(IEnumerable<Note> notes)
     {
-        if (notes == null) throw new ArgumentNullException(nameof(notes));
+        ArgumentNullException.ThrowIfNull(notes);
+        
         _notes = notes.ToImmutableList().AsPrintable();
         Intervals = new LazyScaleIntervals(_notes);
         //Identity = PitchClassSetIdentity.FromNotes(_notes); // TODO

@@ -26,7 +26,7 @@ public class Log4NetLog
             var repo = LogManager.CreateRepository(
                 Assembly.GetEntryAssembly(),
                 typeof(log4net.Repository.Hierarchy.Hierarchy));
-            log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
+            log4net.Config.XmlConfigurator.Configure(repo, log4netConfig[nameof(log4net)]);
         }
 
         // Mark as configured

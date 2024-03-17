@@ -7,8 +7,8 @@ public class FretboardTextWriterRenderer
 {
     public static void Render(Fretboard fretboard, TextWriter textWriter)
     {
-        if (textWriter == null) throw new ArgumentNullException(nameof(textWriter));
-        if (fretboard == null) throw new ArgumentNullException(nameof(fretboard));
+        ArgumentNullException.ThrowIfNull(textWriter);
+        ArgumentNullException.ThrowIfNull(fretboard);
 
         RenderPositionsAndFrets();
         RenderFretMarkers(fretboard.Frets, fret => fret % 12 == 0 ? "**" : "*", 9);

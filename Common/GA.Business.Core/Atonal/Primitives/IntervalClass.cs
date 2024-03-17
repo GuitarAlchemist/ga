@@ -4,9 +4,6 @@ using GA.Core;
 using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
-/// <inheritdoc cref="IEquatable{IntervalClass}" />
-/// <inheritdoc cref="IComparable{IntervalClass}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
 /// An interval class (Between <see cref="Min" /> and <see cref="Max" />)
 /// IC   Included intervals     Tonal CounterPart
@@ -21,6 +18,8 @@ using GA.Business.Core.Intervals.Primitives;
 /// <remarks>
 /// See https://en.wikipedia.org/wiki/Interval_class
 /// http://www.jaytomlin.com/music/settheory/help.html
+///
+/// Implements <see cref="IStaticValueObjectList{IntervalClass}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct IntervalClass : IStaticValueObjectList<IntervalClass>

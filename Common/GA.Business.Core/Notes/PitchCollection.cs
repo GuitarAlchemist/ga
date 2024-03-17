@@ -23,7 +23,8 @@ public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<Pit
     
     public static bool TryParse(string s, out PitchCollection parsedPitchCollection)
     {
-        if (s == null) throw new ArgumentNullException(nameof(s));
+        ArgumentNullException.ThrowIfNull(s);
+        
         parsedPitchCollection = Empty;
 
         var segments = s.Split(" ");

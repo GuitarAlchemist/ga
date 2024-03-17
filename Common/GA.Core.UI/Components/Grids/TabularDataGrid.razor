@@ -84,7 +84,10 @@
         }
     }
 
-    public ValueTask<bool> GoToTopNodeAsync() => _jsGridOptions.InvokeAsync<bool>("goToTopNode");
-    public ValueTask<bool> GoToBottomNodeAsync() => _jsGridOptions.InvokeAsync<bool>("goToBottomNode");
-    public ValueTask AutoSizeAllAsync() => _jsGridOptions.InvokeVoidAsync("autoSizeAll");
+    public ValueTask<bool> GoToTopNodeAsync() => 
+        _jsGridOptions?.InvokeAsync<bool>("goToTopNode") ?? ValueTask.FromResult(false);
+    public ValueTask<bool> GoToBottomNodeAsync() => 
+        _jsGridOptions?.InvokeAsync<bool>("goToBottomNode") ?? ValueTask.FromResult(false);
+    public ValueTask AutoSizeAllAsync() =>
+        _jsGridOptions?.InvokeVoidAsync("autoSizeAll") ?? ValueTask.CompletedTask;
 }

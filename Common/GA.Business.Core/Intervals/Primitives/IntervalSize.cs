@@ -3,15 +3,14 @@
 using GA.Core.Collections;
 using GA.Core.Extensions;
 
-/// <inheritdoc cref="IEquatable{String}" />
-/// <inheritdoc cref="IComparable{String}" />
-/// <inheritdoc cref="IComparable" />
 /// <summary>
-/// The size of a diatonic number
+/// A simple interval size (Between 1 and 8 semitones)
 /// </summary>
 /// <remarks>
 /// https://en.wikipedia.org/wiki/Interval_(Objects)
 /// https://hellomusictheory.com/learn/intervals/
+///
+/// Implements <see cref="IIntervalSize{IntervalSize}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
@@ -87,7 +86,7 @@ public readonly record struct IntervalSize : IIntervalSize<IntervalSize>
     public static readonly IReadOnlySet<IntervalQuality> ImperfectQualities = new[] {IntervalQuality.Diminished, IntervalQuality.Minor, IntervalQuality.Major, IntervalQuality.Augmented }.ToImmutableHashSet();
 
     /// <summary>
-    /// Gets available qualities ({d, P, A} if perfect interval, {d, m, M, A} if imperfect interval) 
+    /// Gets available qualities ({d, P, Am} if perfect interval, {d, m, M, Am} if imperfect interval) 
     /// </summary>
     /// <returns>The <see cref="IReadOnlyCollection{Quality}"/>.</returns>
     public IReadOnlySet<IntervalQuality> AvailableQualities => Consonance == IntervalSizeConsonance.Perfect ? PerfectQualities : ImperfectQualities;

@@ -4,24 +4,64 @@ using GA.Core;
 using GA.Business.Core.Notes.Primitives;
 
 /// <summary>
-/// Signature.
+/// Accidental record struct (𝄫♭ | 𝄫 | ♭ | ♮ | ♯ | 𝄪 | ♯𝄪)
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
 public readonly record struct Accidental : IRangeValueObject<Accidental>
 {
-    private const int _minValue = -3;
-    private const int _maxValue = 3;
+    #region IRangeValueObject
 
     public static Accidental Min => FromValue(_minValue);
     public static Accidental Max => FromValue(_maxValue);
 
-    public static readonly Accidental TripleFlat = FromValue(-3);
-    public static readonly Accidental DoubleFlat = FromValue(-2);
-    public static readonly Accidental Flat = FromValue(-1);
-    public static readonly Accidental Natural = FromValue(0);
-    public static readonly Accidental Sharp = FromValue(1);
-    public static readonly Accidental DoubleSharp = FromValue(2);
-    public static readonly Accidental TripleSharp = FromValue(3);
+    public int Value
+    {
+        get => _value;
+        init => _value = IRangeValueObject<Accidental>.EnsureValueInRange(value, _minValue, _maxValue);
+    }
+
+    private readonly int _value;
+
+    #endregion
+
+    private const int _minValue = -3;
+    private const int _maxValue = 3;
+
+    /// <summary>
+    /// Gets the "𝄫♭" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental TripleFlat => FromValue(-3);
+
+    /// <summary>
+    /// Gets the "𝄫" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental DoubleFlat => FromValue(-2);
+
+    /// <summary>
+    /// Gets the "♭" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental Flat => FromValue(-1);
+
+    /// <summary>
+    /// Gets the "♮" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental Natural => FromValue(0);
+
+    /// <summary>
+    /// Gets the "♯" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental Sharp => FromValue(1);
+
+    /// <summary>
+    /// Gets the "𝄪" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental DoubleSharp => FromValue(2);
+
+    /// <summary>
+    /// Gets the "♯𝄪" <see cref="Accidental"/>
+    /// </summary>
+    public static Accidental TripleSharp => FromValue(3);
+
     public static Accidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
     public static Accidental operator !(Accidental accidental) => FromValue(-accidental.Value);
@@ -38,23 +78,15 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>
     public static implicit operator Accidental?(FlatAccidental? flatAccidental) => flatAccidental == null ? null : FromValue(flatAccidental.Value.Value);
     public static implicit operator Semitones(Accidental value) => value.ToSemitones();
 
-    private readonly int _value;
-
-    public int Value
-    {
-        get => _value;
-        init => _value = IRangeValueObject<Accidental>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
-
     public override string ToString() => _value switch
     {
-        -3 => "bbb",
-        -2 => "bb",
-        -1 => "b",
-        0 => "\u266E",
-        1 => "#",
-        2 => "x",
-        3 => "#x",
+        -3 => "𝄫♭",
+        -2 => "𝄫",
+        -1 => "♭",
+        0 => "♮",
+        1 => "♯",
+        2 => "𝄪",
+        3 => "♯𝄪",
         _ => string.Empty
     };
 

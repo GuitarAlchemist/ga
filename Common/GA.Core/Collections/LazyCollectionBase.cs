@@ -10,7 +10,8 @@ public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
         IEnumerable<T> items,
         string separator)
     {
-        if (items == null) throw new ArgumentNullException(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
+        
         _lazy = new(items.ToImmutableList);
         _separator = separator;
     }
