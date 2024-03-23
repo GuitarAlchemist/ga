@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using GA.Core.Collections;
-
 /// <summary>
 /// A compound interval size (Between 9 and 16 semitones)
 /// </summary>

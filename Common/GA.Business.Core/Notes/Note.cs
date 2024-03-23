@@ -1,13 +1,11 @@
 ﻿namespace GA.Business.Core.Notes;
 
-using GA.Core.Collections;
 using Atonal;
-using Tonal;
+using GA.Business.Core.Atonal.Primitives;
+using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using Primitives;
-using GA.Business.Core.Intervals.Primitives;
-using GA.Business.Core.Atonal.Primitives;
-using GA.Core;
+using Tonal;
 
 /// <summary>
 /// An abstract note

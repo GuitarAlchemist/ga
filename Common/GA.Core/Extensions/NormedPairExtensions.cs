@@ -1,4 +1,6 @@
-﻿namespace GA.Core.Extensions;
+﻿using GA.Core.Collections.Abstractions;
+
+namespace GA.Core.Extensions;
 
 using Collections;
 

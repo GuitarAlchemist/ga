@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using GA.Core.Collections;
-using GA.Core.Extensions;
-
 /// <summary>
 /// A simple interval size (Between 1 and 8 semitones)
 /// </summary>

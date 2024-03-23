@@ -1,10 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using GA.Core;
 using Intervals;
 using Notes;
-using GA.Core.Collections;
-using GA.Core.Extensions;
 using Primitives;
 
 [PublicAPI]

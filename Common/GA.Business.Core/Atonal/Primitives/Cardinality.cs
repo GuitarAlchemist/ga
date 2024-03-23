@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <summary>
 /// A non-muted instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>

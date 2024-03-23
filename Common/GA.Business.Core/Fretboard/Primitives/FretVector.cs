@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
 using Positions;
-using GA.Core.Collections;
 
 [PublicAPI]
 public class FretVector : IReadOnlyCollection<Fret>,

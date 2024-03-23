@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using GA.Core;
-
 /// <summary>
 /// Marker interface for a minor scale degree
 /// </summary>

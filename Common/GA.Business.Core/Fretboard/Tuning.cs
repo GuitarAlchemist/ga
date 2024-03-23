@@ -2,7 +2,6 @@
 
 using Primitives;
 using Notes;
-using GA.Core.Collections;
 
 /// <summary>
 /// Guitar tuning

@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Scales;
 
 using Atonal.Primitives;
-using GA.Core.Collections;
 
 public class ScaleNumberByName() : LazyIndexerBase<string, PitchClassSetIdentity>(GetScaleNumberByName())
 {

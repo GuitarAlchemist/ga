@@ -1,8 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
-using GA.Core;
 using GA.Core.Combinatorics;
-using GA.Core.Collections;
 using System.Collections.Generic;
 
 /// <summary>

@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-using GA.Core.Collections;
-using GA.Core.Extensions;
 using Modes;
 
 /// <inheritdoc cref="IEquatable{MelodicMinorScaleDegree}" />

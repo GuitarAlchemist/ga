@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <remarks>
 /// Implements <see cref="IStaticReadonlyCollection{HarmonicMinorScaleDegree}"/>, <see cref="IRangeValueObject{MajorPentatonicScaleDegree}"/>
 /// </remarks>

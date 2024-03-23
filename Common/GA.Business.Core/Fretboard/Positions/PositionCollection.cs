@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Positions;
 
-using GA.Core.Collections;
 using Primitives;
 
 [PublicAPI]

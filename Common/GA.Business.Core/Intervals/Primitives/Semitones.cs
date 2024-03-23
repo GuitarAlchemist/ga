@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <summary>
 /// A chromatic interval size expressed in semitones (From -12 octaves to +12 octaves) - <see href="https://en.wikipedia.org/wiki/Semitone"/>
 /// </summary>

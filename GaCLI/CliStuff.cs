@@ -3,8 +3,6 @@ namespace GaCLI;
 
 using GA.Business.Config;
 using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;

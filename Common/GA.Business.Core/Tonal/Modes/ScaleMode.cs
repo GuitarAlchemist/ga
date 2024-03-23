@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using GA.Core;
-using GA.Core.Collections;
-using GA.Core.Extensions;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using Notes;

@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using GA.Core.Collections;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;

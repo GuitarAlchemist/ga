@@ -3,9 +3,6 @@
 using PCRE;
 
 using Atonal;
-
-using GA.Core.Collections;
-using GA.Core.Extensions;
 using GA.Business.Core.Intervals.Primitives;
 
 /// <summary>

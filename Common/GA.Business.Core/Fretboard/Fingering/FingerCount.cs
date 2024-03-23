@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Fingering;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <inheritdoc cref="IEquatable{FingerCount}" />
 /// <inheritdoc cref="IComparable{FingerCount}" />
 /// <inheritdoc cref="IComparable" />

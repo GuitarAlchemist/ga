@@ -3,7 +3,6 @@
 
 
 using Atonal.Primitives;
-using GA.Core.Collections;
 
 public class ScaleNameByIdentity() : LazyIndexerBase<PitchClassSetIdentity, string>(GetScaleNameByIdentity())
 {

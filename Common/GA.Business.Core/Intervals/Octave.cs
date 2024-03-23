@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <summary>
 /// Octave (Double-contra | sub-contra | contra | great | small | 1 line | 2 lines | 3 lines | 4 lines | 5 lines | 6 lines)
 /// </summary>

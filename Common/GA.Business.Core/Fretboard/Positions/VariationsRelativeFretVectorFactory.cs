@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Positions;
 
-using GA.Core.Collections;
 using GA.Core.Combinatorics;
 using Primitives;
 using static Primitives.RelativeFretVector;
