@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Notes;
 
 using GA.Core;
-using GA.Core.Collections;
 
 [PublicAPI]
 public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<PitchCollection>

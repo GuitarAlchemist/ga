@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using GA.Core;
-using GA.Core.Collections;
-using GA.Core.Extensions;
 using Notes;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
@@ -12,12 +9,19 @@ using KeyNote = Notes.Note.KeyNote;
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IRangeValueObject{KeySignature}"/>, <see cref="KeyNote"/>
+/// Implements <see cref="IRangeValueObject{KeySignature}"/> | <see cref="IStaticReadonlyCollectionFromValues{KeySignature}"/> | <see cref="IReadOnlyCollection{KeyNote}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct KeySignature : IRangeValueObject<KeySignature>, 
+                                             IStaticReadonlyCollectionFromValues<KeySignature>,
                                              IReadOnlyCollection<KeyNote>
 {
+    #region IStaticReadonlyCollectionFromValues<KeySignature> Members
+    
+    public static IReadOnlyCollection<KeySignature> Items => IStaticReadonlyCollectionFromValues<KeySignature>.Items;    
+    
+    #endregion
+    
     #region Relational members
 
     public int CompareTo(KeySignature other) => _value.CompareTo(other._value);

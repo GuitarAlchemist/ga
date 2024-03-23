@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Intervals;
 
 using Tonal.Modes;
-using GA.Core.Extensions;
 
 public class ModeFormula : IReadOnlyCollection<ModeInterval>
 {

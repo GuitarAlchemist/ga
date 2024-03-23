@@ -1,9 +1,6 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
 using PCRE;
-
-using GA.Core;
-using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 /// <summary>

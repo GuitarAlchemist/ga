@@ -1,7 +1,5 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
-using GA.Core;
-using GA.Core.Collections;
 using GA.Business.Core.Intervals.Primitives;
 
 /// <summary>

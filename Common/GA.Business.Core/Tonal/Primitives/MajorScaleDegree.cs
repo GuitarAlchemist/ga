@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives;
 
-using GA.Core.Collections;
-using GA.Core.Extensions;
-
 /// <summary>
 /// An Objects degree major scale - See https://en.wikipedia.org/wiki/Degree_(Objects)
 /// </summary>

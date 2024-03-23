@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using GA.Core;
 using GA.Business.Core.Notes.Primitives;
 
 /// <summary>

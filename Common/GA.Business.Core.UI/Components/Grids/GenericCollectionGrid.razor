@@ -3,7 +3,7 @@
 @using System.Reflection
 @using System.Collections.Immutable
 
-@typeparam T where T : GA.Core.Collections.IStaticReadonlyCollection<T>
+@typeparam T where T : GA.Core.Collections.Abstractions.IStaticReadonlyCollection<T>
 
 <div style="height: 90vh; width: 100%">
     <TabularDataGrid @ref="_grid"></TabularDataGrid>

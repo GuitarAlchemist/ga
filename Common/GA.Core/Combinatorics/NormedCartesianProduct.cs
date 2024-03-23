@@ -1,4 +1,6 @@
-﻿namespace GA.Core.Combinatorics;
+﻿using GA.Core.Collections.Abstractions;
+
+namespace GA.Core.Combinatorics;
 
 using Collections;
 using Extensions;

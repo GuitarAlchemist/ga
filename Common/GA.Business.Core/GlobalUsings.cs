@@ -8,3 +8,7 @@ global using System.Linq;
 global using System.Numerics;
 global using System.Runtime.CompilerServices;
 global using System.Text;
+global using GA.Core;
+global using GA.Core.Collections;
+global using GA.Core.Collections.Abstractions;
+global using GA.Core.Extensions;

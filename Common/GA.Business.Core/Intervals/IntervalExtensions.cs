@@ -2,7 +2,6 @@
 
 using Primitives;
 using Atonal;
-using GA.Core.Collections;
 
 public static class IntervalExtensions
 {

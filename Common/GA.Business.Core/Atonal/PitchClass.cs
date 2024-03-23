@@ -1,11 +1,8 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using GA.Core.Extensions;
-using GA.Core.Collections;
 using Primitives;
 using Intervals;
 using Notes;
-using GA.Core;
 
 /// <summary>
 /// Items pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>

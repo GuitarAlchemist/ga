@@ -1,9 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using GA.Core.Collections;
 using Primitives;
 using Notes;
-using GA.Core.Extensions;
 
 /// <summary>
 /// Represents tones of a scale as a collection of <see cref="PitchClass"/>

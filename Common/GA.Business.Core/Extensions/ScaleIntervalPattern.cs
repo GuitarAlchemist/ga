@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Extensions;
 
 using Intervals.Primitives;
-using GA.Core;
 
 /// <summary>
 /// The list of semitones distance between the notes of a scale. (e.g. Major Scale: 2, 2, 1, 2, 2, 2, 1)

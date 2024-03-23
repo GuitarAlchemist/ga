@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core.Atonal;
+﻿using CollectionExtensions = System.Collections.Generic.CollectionExtensions;
 
-using GA.Core;
-using GA.Core.Collections;
+namespace GA.Business.Core.Atonal;
+
 using Primitives;
 
 /// <summary>

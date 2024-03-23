@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard;
 
 using Primitives;
-using GA.Core;
 
 public class FretboardConsoleRenderer
 {

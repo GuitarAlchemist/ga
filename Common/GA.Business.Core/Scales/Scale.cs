@@ -6,8 +6,7 @@ using Intervals;
 using Notes;
 using Tonal;
 using static Notes.Note.AccidentedNote;
-using GA.Core.Collections;
-using GA.Core.Extensions;
+
 
 /// <summary>
 /// A scale

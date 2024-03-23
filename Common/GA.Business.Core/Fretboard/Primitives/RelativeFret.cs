@@ -1,8 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
-using GA.Core;
-using GA.Core.Collections;
-
 /// <inheritdoc cref="IEquatable{RelativeFret}" />
 /// <inheritdoc cref="IComparable{RelativeFret}" />
 /// <inheritdoc cref="IComparable" />

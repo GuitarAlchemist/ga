@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-using GA.Core.Collections;
 using Scales;
 using Primitives;
 
