@@ -1,3 +1,5 @@
+using GA.Business.Core.Intervals.Primitives;
+
 #pragma warning disable CA1861 // Avoid constant arrays as arguments
 
 namespace GA.Business.Core.Tests.Tonal;
@@ -20,11 +22,123 @@ public class KeySignatureTests
     [TestCase(5, new[] { "F#", "C#", "G#", "D#", "A#" })]
     [TestCase(6, new[] { "F#", "C#", "G#", "D#", "A#", "E#" })]
     [TestCase(7, new[] { "F#", "C#", "G#", "D#", "A#", "E#", "B#" })]
-    public void SignatureNotes_CorrectOrderAndAccidentals(int value, string[] expectedAccidentedNotes)
+    public void KeySignature_AccidentedNotes(int value, string[] expected)
     {
+        // Arrange
         var keySignature = KeySignature.FromValue(value);
-        var actualAccidentedNotes = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
-        
-        Assert.AreEqual(expectedAccidentedNotes, actualAccidentedNotes);
+
+        // Act
+        var actual = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
+
+        // Assert
+        Assert.AreEqual(expected, actual);
     }
+    
+    [TestCase(-7, "Bb Eb Ab Db Gb Cb Fb")]
+    [TestCase(-6, "Bb Eb Ab Db Gb Cb")]
+    [TestCase(-5, "Bb Eb Ab Db Gb")]
+    [TestCase(-4, "Bb Eb Ab Db")]
+    [TestCase(-3, "Bb Eb Ab")]
+    [TestCase(-2, "Bb Eb")]
+    [TestCase(-1, "Bb")]
+    [TestCase(0, "")]
+    [TestCase(1, "F#")]
+    [TestCase(2, "F# C#")]
+    [TestCase(3, "F# C# G#")]
+    [TestCase(4, "F# C# G# D#")]
+    [TestCase(5, "F# C# G# D# A#")]
+    [TestCase(6, "F# C# G# D# A# E#")]
+    [TestCase(7, "F# C# G# D# A# E# B#")]
+    public void KeySignature_AccidentedNotes_Printable(int value, string expected)
+    {
+        // Arrange
+        var keySignature = KeySignature.FromValue(value);
+
+        // Act
+        var actual = keySignature.AccidentedNotes.ToString();
+
+        // Assert
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestCase(-7, AccidentalKind.Flat)]
+    [TestCase(-6, AccidentalKind.Flat)]
+    [TestCase(-5, AccidentalKind.Flat)]
+    [TestCase(-4, AccidentalKind.Flat)]
+    [TestCase(-3, AccidentalKind.Flat)]
+    [TestCase(-2, AccidentalKind.Flat)]
+    [TestCase(-1, AccidentalKind.Flat)]
+    [TestCase(0, AccidentalKind.Sharp)] // Assuming that the accidental kind for a neutral key signature is sharp
+    [TestCase(1, AccidentalKind.Sharp)]
+    [TestCase(2, AccidentalKind.Sharp)]
+    [TestCase(3, AccidentalKind.Sharp)]
+    [TestCase(4, AccidentalKind.Sharp)]
+    [TestCase(5, AccidentalKind.Sharp)]
+    [TestCase(6, AccidentalKind.Sharp)]
+    [TestCase(7, AccidentalKind.Sharp)]
+    public void KeySignature_AccidentalKind(int value, AccidentalKind expected)
+    {
+        // Arrange
+        var keySignature = KeySignature.FromValue(value);
+
+        // Act
+        var actual = keySignature.AccidentalKind;
+
+        // Assert
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestCase(-7, false)]
+    [TestCase(-6, false)]
+    [TestCase(-5, false)]
+    [TestCase(-4, false)]
+    [TestCase(-3, false)]
+    [TestCase(-2, false)]
+    [TestCase(-1, false)]
+    [TestCase(0, true)] // Assuming that the key signature for a neutral key is considered a sharp key
+    [TestCase(1, true)]
+    [TestCase(2, true)]
+    [TestCase(3, true)]
+    [TestCase(4, true)]
+    [TestCase(5, true)]
+    [TestCase(6, true)]
+    [TestCase(7, true)]
+    public void KeySignature_IsSharpKey(int value, bool expected)
+    {        
+        // Arrange
+        var keySignature = KeySignature.FromValue(value);
+
+        // Act
+        var actual = keySignature.IsSharpKey;
+
+        // Assert
+        Assert.AreEqual(expected, actual);
+    }
+    
+    [TestCase(-7, true)]
+    [TestCase(-6, true)]
+    [TestCase(-5, true)]
+    [TestCase(-4, true)]
+    [TestCase(-3, true)]
+    [TestCase(-2, true)]
+    [TestCase(-1, true)]
+    [TestCase(0, false)] // Assuming that the key signature for a neutral key is not considered a flat key
+    [TestCase(1, false)]
+    [TestCase(2, false)]
+    [TestCase(3, false)]
+    [TestCase(4, false)]
+    [TestCase(5, false)]
+    [TestCase(6, false)]
+    [TestCase(7, false)]
+    public void KeySignature_IsFlatKey(int value, bool expected)
+    {        
+        // Arrange
+        var keySignature = KeySignature.FromValue(value);
+
+        // Act
+        var actual = keySignature.IsFlatKey;
+
+        // Assert
+        Assert.AreEqual(expected, actual);
+    }    
 }
