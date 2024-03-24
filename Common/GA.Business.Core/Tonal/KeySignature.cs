@@ -65,18 +65,29 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
 
     private const int _minValue = -7;
     private const int _maxValue = 7;
-    private readonly Lazy<IReadOnlyCollection<KeyNote>> _lazyAccidentedNotes;
-    private readonly Lazy<IReadOnlySet<NaturalNote>> _lazyNaturalNotesSet;
+    private readonly Lazy<PrintableReadOnlyCollection<KeyNote>> _lazyAccidentedNotes;
+    private readonly Lazy<PrintableReadOnlySet<NaturalNote>> _lazyAccidentedNaturalNotesSet;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()
     {
         _value = value;
+        
+        // Prepare lazy collections
         var keySignature = this;
         _lazyAccidentedNotes = new(() => GetAccidentedNotes(keySignature).AsPrintable());
-        var signature = this;
-        _lazyNaturalNotesSet = new(() => signature.AccidentedNotes.Select(note => note.NaturalNote).ToImmutableHashSet());
+        _lazyAccidentedNaturalNotesSet = new(() => keySignature.AccidentedNotes.Select(note => note.NaturalNote).ToImmutableHashSet().AsPrintable());
     }
+    
+    /// <summary>
+    /// Gets the <see cref="PrintableReadOnlyCollection{KeyNote}"/> of accidented notes
+    /// </summary>
+    public PrintableReadOnlyCollection<KeyNote> AccidentedNotes => _lazyAccidentedNotes.Value;
+    
+    /// <summary>
+    /// Gets the <see cref="PrintableReadOnlySet{NaturalNote}"/> of accidented notes
+    /// </summary>
+    public PrintableReadOnlySet<NaturalNote> AccidentedNaturalNotesSet => _lazyAccidentedNaturalNotesSet.Value;
 
     /// <summary>
     /// Gets the <see cref="AccidentalKind"/>
@@ -94,16 +105,11 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
     public bool IsFlatKey => _value < 0;
     
     /// <summary>
-    /// Gets the <see cref="PrintableReadOnlyCollection{KeyNote}"/> of accidented notes
-    /// </summary>
-    public PrintableReadOnlyCollection<KeyNote> AccidentedNotes => _lazyAccidentedNotes.Value.AsPrintable();
-    
-    /// <summary>
     /// Indicates if the specified <paramref name="naturalNote"/> is accidented
     /// </summary>
     /// <param name="naturalNote">The <see cref="NaturalNote"/></param>
     /// <returns>True if accidented, false otherwise</returns>
-    public bool IsNoteAccidented(NaturalNote naturalNote) => _lazyNaturalNotesSet.Value.Contains(naturalNote);
+    public bool IsNoteAccidented(NaturalNote naturalNote) => _lazyAccidentedNaturalNotesSet.Value.Contains(naturalNote);
 
     /// <inheritdoc />
     public override string ToString() => _lazyAccidentedNotes.Value.ToString()!;
