@@ -4,6 +4,7 @@ using PCRE;
 
 using Atonal;
 using GA.Business.Core.Intervals.Primitives;
+using static FSharp.Configuration.Yaml.Parser;
 
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))
@@ -146,6 +147,11 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
             _ => throw new InvalidOperationException()
         };
     }
+
+    public Note.Sharp ToSharpNote() => new(this, SharpAccidental.Sharp);
+    public Note.Sharp ToSharpNote(SharpAccidental accidental) => new(this, accidental);
+    public Note.Flat ToFlatNote() => new(this, FlatAccidental.Flat);
+    public Note.Flat ToFlatNote(FlatAccidental accidental) => new(this, accidental);
 
     public override string ToString() => _value switch
     {

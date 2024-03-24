@@ -1,7 +1,7 @@
-using GA.InteractiveExtension.Markdown;
-
+#pragma warning disable CA2252
 namespace GA.InteractiveExtension.Tests;
 
+using Markdown;
 using Microsoft.DotNet.Interactive.Formatting;
 using FluentAssertions;
 using FluentAssertions.Execution;

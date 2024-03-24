@@ -1,28 +1,30 @@
+#pragma warning disable CA1861 // Avoid constant arrays as arguments
+
 namespace GA.Business.Core.Tests.Tonal;
 
 [TestFixture]
 public class KeySignatureTests
 {
-    // Use TestCase attributes to specify each key signature and its expected notes.
-    [TestCase(-7, new[] { "Bbm", "Ebm", "Abm", "Db", "Gb", "Cb", "Fb" })]
-    [TestCase(-6, new[] { "Bbm", "Ebm", "Abm", "Db", "Gb", "Cb" })]
-    [TestCase(-5, new[] { "Bbm", "Ebm", "Abm", "Db", "Gb" })]
-    [TestCase(-4, new[] { "Bbm", "Ebm", "Abm", "Db" })]
-    [TestCase(-3, new[] { "Bbm", "Ebm", "Abm" })]
-    [TestCase(-2, new[] { "Bbm", "Ebm" })]
-    [TestCase(-1, new[] { "Bbm" })]
+    [TestCase(-7, new[] { "Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Fb" })]
+    [TestCase(-6, new[] { "Bb", "Eb", "Ab", "Db", "Gb", "Cb" })]
+    [TestCase(-5, new[] { "Bb", "Eb", "Ab", "Db", "Gb" })]
+    [TestCase(-4, new[] { "Bb", "Eb", "Ab", "Db" })]
+    [TestCase(-3, new[] { "Bb", "Eb", "Ab" })]
+    [TestCase(-2, new[] { "Bb", "Eb" })]
+    [TestCase(-1, new[] { "Bb" })]
     [TestCase(0, new string[] { })]
-    [TestCase(1, new[] { "Fm#" })]
-    [TestCase(2, new[] { "Fm#", "Cm#" })]
-    [TestCase(3, new[] { "Fm#", "Cm#", "Gm#" })]
-    [TestCase(4, new[] { "Fm#", "Cm#", "Gm#", "Dm#" })]
-    [TestCase(5, new[] { "Fm#", "Cm#", "Gm#", "Dm#", "Am#" })]
-    [TestCase(6, new[] { "Fm#", "Cm#", "Gm#", "Dm#", "Am#", "Em#" })]
-    [TestCase(7, new[] { "Fm#", "Cm#", "Gm#", "Dm#", "Am#", "Em#", "B#" })]
-    public void SignatureNotes_CorrectOrderAndAccidentals(int value, string[] expectedNotes)
+    [TestCase(1, new[] { "F#" })]
+    [TestCase(2, new[] { "F#", "C#" })]
+    [TestCase(3, new[] { "F#", "C#", "G#" })]
+    [TestCase(4, new[] { "F#", "C#", "G#", "D#" })]
+    [TestCase(5, new[] { "F#", "C#", "G#", "D#", "A#" })]
+    [TestCase(6, new[] { "F#", "C#", "G#", "D#", "A#", "E#" })]
+    [TestCase(7, new[] { "F#", "C#", "G#", "D#", "A#", "E#", "B#" })]
+    public void SignatureNotes_CorrectOrderAndAccidentals(int value, string[] expectedAccidentedNotes)
     {
         var keySignature = KeySignature.FromValue(value);
-
-        Assert.AreEqual(expectedNotes, keySignature.SignatureNotes.Select(note => note.ToString()).ToArray());
+        var actualAccidentedNotes = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
+        
+        Assert.AreEqual(expectedAccidentedNotes, actualAccidentedNotes);
     }
 }

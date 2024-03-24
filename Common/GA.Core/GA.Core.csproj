@@ -13,8 +13,7 @@
 	<ItemGroup>
 		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
 		<PackageReference Include="log4net" Version="2.0.15" />
-		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.JSInterop" Version="7.0.0" />
-		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.JSInterop" Version="8.0.0" />
+		<PackageReference Include="Microsoft.JSInterop" Version="8.0.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
