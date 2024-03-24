@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;net7.0</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>preview</LangVersion>
 		<UserSecretsId>ffdbf728-ed3e-4a60-a631-d05ac7c087b4</UserSecretsId>
 	</PropertyGroup>
 

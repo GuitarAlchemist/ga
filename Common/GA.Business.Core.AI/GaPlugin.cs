@@ -16,6 +16,6 @@ public class GaPlugin
     [KernelFunction, Description("List notes in a key signature")]
     public static IReadOnlyCollection<Note.KeyNote> KeySignatures(KeySignature keySignature)
     {
-        return keySignature.SignatureNotes;
+        return keySignature.AccidentedNotes;
     }
 }

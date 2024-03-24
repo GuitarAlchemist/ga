@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Querying
 
 open System.Collections.Generic
-open GA.Core
+open System
 
 (* http://dungpa.github.io/fsharp-cheatsheet/ *)
 

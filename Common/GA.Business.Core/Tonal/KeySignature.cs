@@ -1,6 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal;
 
-using Notes;
+using GA.Business.Core.Notes.Extensions;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using KeyNote = Notes.Note.KeyNote;
@@ -12,14 +12,35 @@ using KeyNote = Notes.Note.KeyNote;
 /// Implements <see cref="IRangeValueObject{KeySignature}"/> | <see cref="IStaticReadonlyCollectionFromValues{KeySignature}"/> | <see cref="IReadOnlyCollection{KeyNote}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct KeySignature : IRangeValueObject<KeySignature>, 
+public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
                                              IStaticReadonlyCollectionFromValues<KeySignature>,
                                              IReadOnlyCollection<KeyNote>
 {
     #region IStaticReadonlyCollectionFromValues<KeySignature> Members
+
+    public static IReadOnlyCollection<KeySignature> Items => IStaticReadonlyCollectionFromValues<KeySignature>.Items;
+
+    #endregion
+
+    #region IReadOnlyCollection<KeyValue> Members
+
+    public IEnumerator<KeyNote> GetEnumerator() => _lazyAccidentedNotes.Value.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_lazyAccidentedNotes.Value).GetEnumerator();
+    public int Count => _lazyAccidentedNotes.Value.Count;
     
-    public static IReadOnlyCollection<KeySignature> Items => IStaticReadonlyCollectionFromValues<KeySignature>.Items;    
+    #endregion
+
+    #region IRangeValueObject Members
+
+    public static KeySignature Min => new(_minValue);
+    public static KeySignature Max => new(_maxValue);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
     
+    private readonly int _value;
+    public int Value { get => _value; init => _value = IRangeValueObject<KeySignature>.EnsureValueInRange(value, _minValue, _maxValue); }
+
     #endregion
     
     #region Relational members
@@ -32,101 +53,78 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
 
     #endregion
 
+    #region Static Helpers
+
+    public static implicit operator KeySignature(int value) => new(value);
+    public static implicit operator int(KeySignature keySignature) => keySignature.Value;
+
+    public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);
+    public static KeySignature Flat([ValueRange(1, 7)] int count) => new(-count);
+
+    #endregion
+
     private const int _minValue = -7;
     private const int _maxValue = 7;
     private readonly Lazy<IReadOnlyCollection<KeyNote>> _lazyAccidentedNotes;
     private readonly Lazy<IReadOnlySet<NaturalNote>> _lazyNaturalNotesSet;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()
     {
         _value = value;
-        _lazyAccidentedNotes = new(() => GetAccidentedNotes(value));
+        var keySignature = this;
+        _lazyAccidentedNotes = new(() => GetAccidentedNotes(keySignature).AsPrintable());
         var signature = this;
-        _lazyNaturalNotesSet = new(() => signature.SignatureNotes.Select(note => note.NaturalNote).ToImmutableHashSet());
+        _lazyNaturalNotesSet = new(() => signature.AccidentedNotes.Select(note => note.NaturalNote).ToImmutableHashSet());
     }
 
     /// <summary>
-    /// Checks the range of the Key Signature value
+    /// Gets the <see cref="AccidentalKind"/>
     /// </summary>
-    /// <param name="value">The <see cref="int"/> value</param>
-    /// <returns>The validated <see cref="int"/> value</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
-    public static int CheckRange(int value) => ValueObjectUtils<KeySignature>.CheckRange(value, _minValue, _maxValue);    
-
-    public static KeySignature Min => new(_minValue);
-    public static KeySignature Max => new(_maxValue);
-    public static implicit operator KeySignature(int value) => new(value);
-    public static implicit operator int(KeySignature keySignature) => keySignature.Value;
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
-
     public AccidentalKind AccidentalKind => _value < 0 ? AccidentalKind.Flat : AccidentalKind.Sharp;
-    public bool IsSharpKey => _value >= 0;
-    public bool IsFlatKey => _value < 0;
-    public IReadOnlyCollection<KeyNote> SignatureNotes => _lazyAccidentedNotes.Value;
     
-    private static PrintableReadOnlyCollection<KeyNote> GetAccidentedNotes(int value)
-    {
-        var count = Math.Abs(value);
-        var notes =
-            value < 0
-                ? GetFlatNotes(count).Cast<KeyNote>()
-                : GetSharpNotes(count);
+    /// <summary>
+    /// True if sharp key, false otherwise
+    /// </summary>
+    public bool IsSharpKey => _value >= 0;
+    
+    /// <summary>
+    /// True if flat key, false otherwise
+    /// </summary>
+    public bool IsFlatKey => _value < 0;
+    
+    /// <summary>
+    /// Gets the <see cref="PrintableReadOnlyCollection{KeyNote}"/> of accidented notes
+    /// </summary>
+    public PrintableReadOnlyCollection<KeyNote> AccidentedNotes => _lazyAccidentedNotes.Value.AsPrintable();
+    
+    /// <summary>
+    /// Indicates if the specified <paramref name="naturalNote"/> is accidented
+    /// </summary>
+    /// <param name="naturalNote">The <see cref="NaturalNote"/></param>
+    /// <returns>True if accidented, false otherwise</returns>
+    public bool IsNoteAccidented(NaturalNote naturalNote) => _lazyNaturalNotesSet.Value.Contains(naturalNote);
 
-        var result = notes.ToImmutableList().AsPrintable();
-
-        return result;
-    }
-
-    public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);
-    public static KeySignature Flat([ValueRange(1, 7)] int count) => new(-count);
-
-    public bool Contains(NaturalNote note) => _lazyNaturalNotesSet.Value.Contains(note);
-
-    public IEnumerator<KeyNote> GetEnumerator() => _lazyAccidentedNotes.Value.GetEnumerator();
+    /// <inheritdoc />
     public override string ToString() => _lazyAccidentedNotes.Value.ToString()!;
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _lazyAccidentedNotes.Value).GetEnumerator();
-
-    private static PrintableReadOnlyCollection<Note.Sharp> GetSharpNotes(int count)
+    
+    private static ImmutableList<KeyNote> GetAccidentedNotes(KeySignature keySignature)
     {
-        var result =
-            GetNotes(NaturalNote.F, count, IntervalSize.Fifth)
-                .Select(note => new Note.Sharp(note, SharpAccidental.Sharp))
-                .ToImmutableList()
-                .AsPrintable();// See https://en.wikipedia.org/wiki/Circle_of_fifths
+        var count = Math.Abs(keySignature.Value);
+        IEnumerable<KeyNote> notes =
+            keySignature.IsFlatKey
+                ? GetNotes(NaturalNote.B, count, IntervalSize.Fourth).ToFlatNotes() // Circle of Fourths, starting from B
+                : GetNotes(NaturalNote.F, count, IntervalSize.Fifth).ToSharpNotes(); // Circle of Fifths, starting from F
+        return notes.ToImmutableList();
 
-        return result;
-    }
-
-    private static PrintableReadOnlyCollection<Note.Flat> GetFlatNotes(int count)
-    {
-        var result =
-            GetNotes(NaturalNote.B, count, IntervalSize.Fourth)
-                .Select(note => new Note.Flat(note, FlatAccidental.Flat))
-                .ToImmutableList()
-                .AsPrintable(); // See https://en.wikipedia.org/wiki/Circle_of_fifths
-
-        return result;
-    }
-
-    private static IEnumerable<NaturalNote> GetNotes(
-        NaturalNote firstItem,
-        int count,
-        IntervalSize increment)
-    {
-        var item = firstItem;
-        for (var i = 0; i < count; i++)
+        static IEnumerable<NaturalNote> GetNotes(NaturalNote firstItem, int count, IntervalSize increment)
         {
-            yield return item;
-
-            item += increment;
+            var item = firstItem;
+            for (var i = 0; i < count; i++)
+            {
+                yield return item;
+                item += increment;
+            }
         }
     }
-
-    public int Count => _lazyAccidentedNotes.Value.Count;
 }

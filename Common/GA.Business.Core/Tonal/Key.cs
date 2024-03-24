@@ -29,14 +29,7 @@ public abstract record Key(KeySignature KeySignature)
             _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
         };
 
-    public static IReadOnlyCollection<Key> GetItems()
-    {
-        var builder = ImmutableList.CreateBuilder<Key>();
-        builder.AddRange(GetItems(KeyMode.Major));
-        builder.AddRange(GetItems(KeyMode.Minor));
-        return builder.ToImmutable();
-    }
-
+    public static IReadOnlyCollection<Key> GetItems() => [.. GetItems(KeyMode.Major), .. GetItems(KeyMode.Minor)];
     public abstract KeyMode KeyMode { get; }
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
     public abstract KeyNote Root { get; }
@@ -48,7 +41,7 @@ public abstract record Key(KeySignature KeySignature)
     public IReadOnlyCollection<KeyNote> GetNotes()
     {
         var accidentedNotes = 
-            KeySignature.SignatureNotes
+            KeySignature.AccidentedNotes
                 .Select(note => note.NaturalNote)
                 .ToImmutableHashSet();
         var items = KeySignature.Value < 0
@@ -64,14 +57,17 @@ public abstract record Key(KeySignature KeySignature)
         {
             yield return root;
 
+            // Start with the root note
             var naturalNote = root.NaturalNote;
+            
+            // Iterate through all key notes
             for (var i = 0; i < 6; i++)
             {
                 naturalNote++;
-                var item = accidentedNotes.Contains(naturalNote)
+                Sharp sharpNote = accidentedNotes.Contains(naturalNote)
                     ? new(naturalNote, SharpAccidental.Sharp)
-                    : new Sharp(naturalNote);
-                yield return item;
+                    : new (naturalNote);
+                yield return sharpNote;
             }
         }
 

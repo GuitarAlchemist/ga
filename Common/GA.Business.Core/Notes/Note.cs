@@ -187,8 +187,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     /// A note from a sharp musical key (C | C# | D | D# | E | F | F# | G | G# | A | A# | B)
     /// </summary>
     [PublicAPI]
-    public sealed record Sharp(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote), 
-                                                                                                      IStaticReadonlyCollection<Sharp>
+    public sealed record Sharp(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote), IStaticReadonlyCollection<Sharp>
     {
         #region IStaticReadonlyCollection<Sharp> Members
 
@@ -426,7 +425,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
 
                 // Quality - End note
                 var (endNaturalNote, endNoteAccidental) = endNote;
-                if (key.KeySignature.Contains(endNaturalNote))
+                if (key.KeySignature.IsNoteAccidented(endNaturalNote))
                 {
                     var expectedEndNoteAccidental =
                         key.AccidentalKind == AccidentalKind.Flat

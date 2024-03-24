@@ -12,8 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Condition="'$(Configuration)' == 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
-		<PackageReference Condition="'$(Configuration)' != 'net7.0'" Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
 		<PackageReference Include="MudBlazor" Version="6.11.0" />
 	</ItemGroup>
 
