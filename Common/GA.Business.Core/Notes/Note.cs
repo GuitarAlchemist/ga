@@ -16,8 +16,9 @@ using Tonal;
 public abstract record Note : IStaticNorm<Note, IntervalClass>,
                               IComparable<Note>
 {
-    #region IStaticIntervalClassNorm<Note> Members
+    #region IStaticNorm<Note> Members
 
+    /// <inheritdoc cref="IStaticNorm{TSelf,TNorm}.GetNorm"/>
     public static IntervalClass GetNorm(Note item1, Note item2) => item1.GetIntervalClass(item2);
 
     #endregion
@@ -401,7 +402,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         {
             if (startNote == endNote) return Interval.Simple.Unison;
 
-            var key = Key.FromRootNaturalNote(startNote.NaturalNote);
+            var key = Key.ByRootNaturalNoteIndexer.Get(startNote.NaturalNote);
             var size = endNote.NaturalNote - startNote.NaturalNote;
             var qualityIncrement = GetQualityIncrement(key, startNote, endNote);
             var quality = GetQuality(size, qualityIncrement);

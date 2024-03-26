@@ -1,6 +1,12 @@
-﻿using GaCLI;
+﻿using GA.Business.Core.AI;
+using GA.Business.Core.Tonal;
+using GaCLI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using OpenAI.ChatGpt;
 using OpenAI.ChatGpt.Models.ChatCompletion.Messaging;
 using OpenAI_API;
@@ -11,7 +17,7 @@ var configuration = configurationBuilder.AddUserSecrets<Program>().Build();
 
 // await OpenAiSimpleCompletionAsync();
 // await ChatGptSimpleCompletionAsync();
-await SemanticKernelFirstPrompt(ChatCompletionConfig.FromSection(configuration.GetSection("OpenAi")));
+await SemanticKernelPromptLoop(ChatCompletionConfig.FromSection(configuration.GetSection("OpenAi")));
 
 // -----------------------------------------------------------
 
@@ -19,7 +25,7 @@ await SemanticKernelFirstPrompt(ChatCompletionConfig.FromSection(configuration.G
 
 async Task OpenAiSimpleCompletionAsync(ChatCompletionConfig config)
 {
-    config.Deconstruct(out var modelId, out var endpoint, out var apiKey);
+    config.Deconstruct(out var modelId, out var apiKey);
     
     var openai = new OpenAIAPI(apiKey);
     var request = "What is the relative minor of C major?";
@@ -30,7 +36,7 @@ async Task OpenAiSimpleCompletionAsync(ChatCompletionConfig config)
 
 async Task ChatGptSimpleCompletionAsync(ChatCompletionConfig config)
 {
-    config.Deconstruct(out var modelId, out var endpoint, out var apiKey);
+    config.Deconstruct(out var modelId, out var apiKey);
     
     using var openAiClient = new OpenAiClient(apiKey);
     var request = "What is the relative minor of C major?";
@@ -38,15 +44,72 @@ async Task ChatGptSimpleCompletionAsync(ChatCompletionConfig config)
     WriteLine(response);
 }
 
-async Task SemanticKernelFirstPrompt(ChatCompletionConfig config)
+static async Task SemanticKernelPromptLoop(ChatCompletionConfig config)
 {
-    config.Deconstruct(out var modelId, out var endpoint, out var apiKey);
-    
-    var kernel = Kernel.CreateBuilder()
-        .AddOpenAIChatCompletion(modelId, apiKey)
-        .Build();
+    config.Deconstruct(out var modelId, out var apiKey);
 
-    var request = "What is the relative minor of G major?";
+    var builder = Kernel.CreateBuilder()
+                        .AddOpenAIChatCompletion(modelId, apiKey);
+    builder.Services.AddLogging(c => c.SetMinimumLevel(LogLevel.Trace));
+    builder.Plugins.AddFromType<GaKeyPlugin>();
+    var kernel = builder.Build();
+
+    // Test the plugin
+    var keys = await kernel.InvokeAsync(nameof(GaKeyPlugin),
+        nameof(GaKeyPlugin.GetKeys));
+    WriteLine($"Keys => {keys}");    
+    
+    var keyNotes = await kernel.InvokeAsync(nameof(GaKeyPlugin),
+        nameof(GaKeyPlugin.GetAccidentedNotesInKey), 
+        new KernelArguments
+        {
+            ["key"] = Key.Major.G
+        });
+    WriteLine($"Key of G => {keyNotes}");
+
+    // Create chat history
+    ChatHistory history = [];
+
+    // Start the conversation
+    Write("User > ");
+    while (ReadLine() is { } userInput)
+    {
+        history.AddUserMessage(userInput);
+
+        // Get the response from the AI
+        var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        var result = chatCompletionService.GetStreamingChatMessageContentsAsync(
+            history,
+            executionSettings: new OpenAIPromptExecutionSettings
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions // Enable auto function calling
+            },
+            kernel: kernel);
+
+        // Stream the results
+        var fullMessage = "";
+        var first = true;
+        await foreach (var content in result)
+        {
+            if (content.Role.HasValue && first)
+            {
+                Write("Assistant > ");
+                first = false;
+            }
+            Write(content.Content);
+            fullMessage += content.Content;
+        }
+        WriteLine();
+
+        // Add the message from the agent to the chat history
+        history.AddAssistantMessage(fullMessage);
+
+        // Get user input again
+        Write("User > ");
+    }    
+    
+    //var request = "What is the relative minor of G major?";
+    var request = "What are the accidentals in the key of G";
     WriteLine($"> {request}");
     var response = await kernel.InvokePromptAsync(request);
     WriteLine($"[Response] {response}");

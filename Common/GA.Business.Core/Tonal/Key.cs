@@ -5,33 +5,60 @@ using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using static Notes.Note;
 
+/// <summary>
+/// A musical key (<see cref="Major"/> | <see cref="Minor"/>)
+/// </summary>
+/// <param name="KeySignature"></param>
 [PublicAPI]
 public abstract record Key(KeySignature KeySignature)
 {
     #region Inner Classes
 
-    public class KeyByRootNaturalNote() : LazyIndexerBase<NaturalNote, Key>(GetKeyByRootNaturalNote())
+    /// <summary>
+    /// Indexes keys by their root note's natural note
+    /// </summary>
+    /// <remarks>
+    /// Supports for intervals computations
+    /// </remarks>
+    public class ByRootNaturalNoteIndexer() : LazyIndexerBase<NaturalNote, Key>(Factory())
     {
         public static Key Get(NaturalNote naturalNote) => _instance[naturalNote];
-        private static readonly KeyByRootNaturalNote _instance = new();
-        private static ImmutableDictionary<NaturalNote, Key> GetKeyByRootNaturalNote() => 
-            GetItems().Where(key => !key.Root.Accidental.HasValue).ToImmutableDictionary(key => key.Root.NaturalNote);
+        private static readonly ByRootNaturalNoteIndexer _instance = new();
+        private static ImmutableDictionary<NaturalNote, Key> Factory() => 
+            Items.Where(key => !key.Root.Accidental.HasValue)
+                 .ToImmutableDictionary(key => key.Root.NaturalNote);
     }    
     
     #endregion
-    
-    public static Key FromRootNaturalNote(NaturalNote keyRootNaturalNote) => KeyByRootNaturalNote.Get(keyRootNaturalNote);
-    public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode) =>
-        keyMode switch
-        {
-            KeyMode.Major => Major.Items,
-            KeyMode.Minor => Minor.Items,
-            _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
-        };
 
-    public static IReadOnlyCollection<Key> GetItems() => [.. GetItems(KeyMode.Major), .. GetItems(KeyMode.Minor)];
+    /// <summary>
+    /// Gets the collection of keys for the key mode (Major | Minor)
+    /// </summary>
+    /// <param name="keyMode">The <see cref="KeyMode"/></param>
+    /// <returns>The <see cref="IReadOnlyCollection{Key}"/></returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="KeyMode"/> is not supported</exception>
+    public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode) => keyMode switch
+    {
+        KeyMode.Major => Major.Items,
+        KeyMode.Minor => Minor.Items,
+        _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
+    };
+
+    public static PrintableReadOnlyCollection<Key> Items => Major.Items.Cast<Key>().Concat(Minor.Items).ToImmutableList().AsPrintable();
+    
+    /// <summary>
+    /// Gets the <see cref="KeyMode"/> (Major | Minor)
+    /// </summary>
     public abstract KeyMode KeyMode { get; }
+    
+    /// <summary>
+    /// Gets the <see cref="AccidentalKind"/>
+    /// </summary>
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
+    
+    /// <summary>
+    /// Gets the <see cref="KeyNote"/> key root
+    /// </summary>
     public abstract KeyNote Root { get; }
 
     /// <summary>
@@ -89,8 +116,17 @@ public abstract record Key(KeySignature KeySignature)
         }
     }
 
+    /// <summary>
+    /// Gets the simple interval between the key root note and the specified note
+    /// </summary>
+    /// <param name="note">The <see cref="AccidentedNote"/></param>
+    /// <returns>The <see cref="Interval.Simple"/></returns>
     public Interval.Simple GetInterval(AccidentedNote note) => note.GetInterval(Root);
 
+    /// <summary>
+    /// A major key
+    /// </summary>
+    /// <param name="KeySignature"></param>
     [PublicAPI]
     public sealed record Major(KeySignature KeySignature) 
         : Key(KeySignature)
@@ -121,7 +157,7 @@ public abstract record Key(KeySignature KeySignature)
         public static Major B => new(5);
         public static Major FSharp => new(6);
         public static Major CSharp => new(7);
-        public static IReadOnlyCollection<Major> Items => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
+        public new static IReadOnlyCollection<Major> Items => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
         public static Key FromKeyRoot(KeyNote keyRoot) => MajorKeyByRoot.Get(keyRoot);
 
         public static bool TryParse(string input, out Major majorKey)
@@ -167,18 +203,18 @@ public abstract record Key(KeySignature KeySignature)
             -7 => "Key of Cb",
             -6 => "Key of Gb",
             -5 => "Key of Db",
-            -4 => "Key of Abm",
-            -3 => "Key of Ebm",
-            -2 => "Key of Bbm",
-            -1 => "Key of Fm",
-            0 => "Key of Cm",
-            1 => "Key of Gm",
-            2 => "Key of Dm",
-            3 => "Key of Am",
-            4 => "Key of Em",
+            -4 => "Key of Ab",
+            -3 => "Key of Eb",
+            -2 => "Key of Bb",
+            -1 => "Key of F",
+            0 => "Key of C",
+            1 => "Key of G",
+            2 => "Key of D",
+            3 => "Key of A",
+            4 => "Key of E",
             5 => "Key of B",
-            6 => "Key of Fm#",
-            7 => "Key of Cm#",
+            6 => "Key of F#",
+            7 => "Key of C#",
             _ => string.Empty
         };
 
@@ -203,6 +239,10 @@ public abstract record Key(KeySignature KeySignature)
         };
     }
 
+    /// <summary>
+    /// A minor key
+    /// </summary>
+    /// <param name="KeySignature"></param>
     [PublicAPI]
     public sealed record Minor(KeySignature KeySignature) 
         : Key(KeySignature)
@@ -233,7 +273,7 @@ public abstract record Key(KeySignature KeySignature)
         public static Minor GSharpm => new(5);
         public static Minor DSharpm => new(6);
         public static Minor ASharpm => new(7);
-        public static IReadOnlyCollection<Minor> Items => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
+        public new static IReadOnlyCollection<Minor> Items => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
         
         public static bool TryParse(string input, out Minor minorKey)
         {

@@ -3,8 +3,11 @@
 using Primitives;
 
 /// <summary>
-/// Abstract interval record class (Concretes sub-classes: <see cref="Chromatic"/> | <see cref="Simple"/> | <see cref="Compound"/>)
+/// Interval discriminated union
 /// </summary>
+/// <remarks>
+/// Subclasses: <see cref="Chromatic"/> | <see cref="Diatonic.Simple"/> | <see cref="Diatonic.Compound"/>
+/// </remarks>
 [PublicAPI]
 public abstract record Interval
 {
@@ -15,6 +18,8 @@ public abstract record Interval
     /// The <see cref="Semitones"/>
     /// </returns>
     public abstract Semitones ToSemitones();
+
+    #region Chromatic
 
     /// <inheritdoc cref="Interval"/>
     /// <summary>
@@ -37,9 +42,9 @@ public abstract record Interval
         public static Chromatic Tone => Create(Semitones.Tone);
         public static Chromatic Tritone => Create(Semitones.Tritone);
         public static Chromatic Octave => Create(Semitones.Octave());
-        private static Chromatic Create(Semitones size) => new() {Size = size};
+        private static Chromatic Create(Semitones size) => new() { Size = size };
 
-        public static implicit operator Chromatic(int size) => new() { Size = size};
+        public static implicit operator Chromatic(int size) => new() { Size = size };
         public static implicit operator int(Chromatic interval) => interval.Size.Value;
         public static implicit operator Semitones(Chromatic interval) => interval.Size;
         public static Chromatic operator !(Chromatic interval) => Create(!interval.Size);
@@ -47,6 +52,17 @@ public abstract record Interval
         public override Semitones ToSemitones() => Size;
     }
 
+    #endregion
+
+    #region Diatonic
+
+    /// <summary>
+    /// Diatonic interval discriminated union
+    /// </summary>
+    /// <remarks>
+    /// Inherits from <see cref="Interval"/>
+    /// Subclasses: <see cref="Interval.Diatonic.Simple"/> | <see cref="Interval.Diatonic.Compound"/>
+    /// </remarks>    
     public abstract record Diatonic : Interval
     {
         /// <summary>
@@ -55,6 +71,9 @@ public abstract record Interval
         public IntervalQuality Quality { get; init; }
     }
 
+    /// <summary>
+    /// Simple diatonic interval (Within one octave)
+    /// </summary>
     public sealed record Simple : Diatonic, IFormattable
     {
         #region Formats
@@ -75,36 +94,8 @@ public abstract record Interval
 
         #endregion
 
-        public static readonly Simple Unison = new() {Size = IntervalSize.Unison, Quality = IntervalQuality.Perfect};
-        public static readonly Simple MinorThird = new() {Size = IntervalSize.Third, Quality = IntervalQuality.Minor};
+        #region IFormattable Members
 
-        // ReSharper disable InconsistentNaming
-        public static Simple P1 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Unison};
-        public static Simple m2 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Second};
-        public static Simple M2 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Second};
-        public static Simple m3 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Third};
-        public static Simple M3 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Third};
-        public static Simple P4 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Fourth};
-        public static Simple P5 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Fifth};
-        public static Simple m6 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Sixth};
-        public static Simple M6 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Sixth};
-        public static Simple m7 => new() {Quality = IntervalQuality.Minor, Size = IntervalSize.Seventh};
-        public static Simple M7 => new() {Quality = IntervalQuality.Major, Size = IntervalSize.Seventh};
-        public static Simple P8 => new() {Quality = IntervalQuality.Perfect, Size = IntervalSize.Octave};
-        // ReSharper restore InconsistentNaming
-
-        public static Simple operator !(Simple interval) => interval.ToInverse();
-
-        /// <summary>
-        /// Gets the <see cref="IntervalSize"/>
-        /// </summary>
-        public IntervalSize Size { get; init; }
-
-        public string Name => $"{Quality}{Size}";
-        public string LongName => $"{Quality}{Size}";
-        public string AccidentedName => GetAccidentedName(Size, Quality);
-
-        public override string ToString() => ToString("Gm");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
@@ -118,7 +109,126 @@ public abstract record Interval
             };
         }
 
-        public Simple ToInverse() => new() {Size = !Size, Quality = !Quality};
+        #endregion
+        
+        #region Well-known intervals
+
+#pragma warning disable IDE1006 // Naming Styles
+        
+        // ReSharper disable InconsistentNaming
+
+        
+        /// <summary>
+        /// A unison <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static readonly Simple Unison = new() { Size = IntervalSize.Unison, Quality = IntervalQuality.Perfect };
+        
+        /// <summary>
+        /// A minor third <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static readonly Simple MinorThird = new() { Size = IntervalSize.Third, Quality = IntervalQuality.Minor };
+
+        /// <summary>
+        /// A perfect unison <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple P1 => new() { Quality = IntervalQuality.Perfect, Size = IntervalSize.Unison };
+
+        /// <summary>
+        /// A minor second <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple m2 => new() { Quality = IntervalQuality.Minor, Size = IntervalSize.Second };
+        
+        /// <summary>
+        /// A major second <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple M2 => new() { Quality = IntervalQuality.Major, Size = IntervalSize.Second };
+        
+        /// <summary>
+        /// A minor third <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple m3 => new() { Quality = IntervalQuality.Minor, Size = IntervalSize.Third };
+        
+        /// <summary>
+        /// A major third <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple M3 => new() { Quality = IntervalQuality.Major, Size = IntervalSize.Third };
+        
+        /// <summary>
+        /// A perfect fourth <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple P4 => new() { Quality = IntervalQuality.Perfect, Size = IntervalSize.Fourth };
+        
+        /// <summary>
+        /// A perfect fifth <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple P5 => new() { Quality = IntervalQuality.Perfect, Size = IntervalSize.Fifth };
+        
+        /// <summary>
+        /// A perfect minor sixth <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple m6 => new() { Quality = IntervalQuality.Minor, Size = IntervalSize.Sixth };
+        
+        /// <summary>
+        /// A perfect major sixth <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple M6 => new() { Quality = IntervalQuality.Major, Size = IntervalSize.Sixth };
+        
+        /// <summary>
+        /// A perfect minor seventh <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple m7 => new() { Quality = IntervalQuality.Minor, Size = IntervalSize.Seventh };
+        
+        /// <summary>
+        /// A perfect major seventh <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple M7 => new() { Quality = IntervalQuality.Major, Size = IntervalSize.Seventh };
+        
+        /// <summary>
+        /// A perfect octave <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        public static Simple P8 => new() { Quality = IntervalQuality.Perfect, Size = IntervalSize.Octave };
+        
+        // ReSharper restore InconsistentNaming
+        
+#pragma warning restore IDE1006 // Naming Styles
+        
+        #endregion
+       
+        /// <summary>
+        /// Gets the inverse of the current <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        /// <param name="interval"></param>
+        /// <returns></returns>
+        public static Simple operator !(Simple interval) => interval.ToInverse();
+
+        /// <summary>
+        /// Gets the <see cref="IntervalSize"/>
+        /// </summary>
+        public IntervalSize Size { get; init; }
+
+        /// <summary>
+        /// Gets the interval short name <see cref="string"/> (e.g. "A4")
+        /// </summary>
+        public string Name => $"{Quality}{Size}";
+        
+        /// <summary>
+        /// Gets the interval long name <see cref="string"/> (e.g. "Augmented Fourth")
+        /// </summary>
+        public string LongName => $"{Quality}{Size}";
+        
+        /// <summary>
+        /// Gets the accidented interval name <see cref="string"/> (e.g. "7bb")
+        /// </summary>
+        public string AccidentedName => GetAccidentedName(Size, Quality);
+
+        /// <summary>
+        /// Gets the inverse of the current <see cref="Interval.Diatonic.Simple"/>
+        /// </summary>
+        /// <returns>The <see cref="Interval.Diatonic.Simple"/> inverse interval</returns>
+        public Simple ToInverse() => new() { Size = !Size, Quality = !Quality };
+        
+        /// <inheritdoc />
+        public override string ToString() => ToString("Gm");
 
         /// <inheritdoc />
         public override Semitones ToSemitones()
@@ -128,7 +238,13 @@ public abstract record Interval
             if (accidental.HasValue) result += accidental.Value;
             return result;
         }
-        
+
+        /// <summary>
+        /// Gets the accidented name of the interval (e.g. "7bb")
+        /// </summary>
+        /// <param name="size">The <see cref="IntervalSize"/></param>
+        /// <param name="quality">The <see cref="IntervalQuality"/></param>
+        /// <returns>The accidented name <see cref="string"/></returns>
         private static string GetAccidentedName(
             IntervalSize size,
             IntervalQuality quality)
@@ -143,16 +259,13 @@ public abstract record Interval
         }
     }
 
+    /// <summary>
+    /// Compound diatonic interval (Covers two octaves)
+    /// </summary>    
     public sealed record Compound : Diatonic, IFormattable
     {
-        /// <summary>
-        /// Gets the <see cref="CompoundIntervalSize"/>
-        /// </summary>
-        public CompoundIntervalSize Size { get; init; }
+        #region IFormattable Members
 
-        public string ShortName => $"{Quality}{Size}";
-        public override Semitones ToSemitones() => Size.ToSemitones() + Quality.ToAccidental(Size.Consonance)?.Value ?? 0;
-        public override string ToString() => ToString("G");
         public string ToString(string format) => ToString(format, null);
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
@@ -163,6 +276,26 @@ public abstract record Interval
                 "S" => ShortName,
                 _ => throw new FormatException($"The {format} format string is not supported.")
             };
-        }
+        }        
+
+        #endregion
+        
+        /// <summary>
+        /// Gets the <see cref="CompoundIntervalSize"/>
+        /// </summary>
+        public CompoundIntervalSize Size { get; init; }
+
+        /// <summary>
+        /// Gets the interval short name <see cref="string"/> (e.g. "M9")
+        /// </summary>
+        public string ShortName => $"{Quality}{Size}";
+        
+        /// <inheritdoc cref="Interval.ToSemitones"/>
+        public override Semitones ToSemitones() => Size.ToSemitones() + Quality.ToAccidental(Size.Consonance)?.Value ?? 0;
+
+        /// <inheritdoc />
+        public override string ToString() => ToString("G");
     }
+
+    #endregion
 }

@@ -5,7 +5,7 @@ namespace GA.Business.Core.Atonal;
 using Primitives;
 
 /// <summary>
-/// Ordered occurence for each interval class,  (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
+/// Represents ordered occurence for each interval class, (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
 /// </summary>
 /// <remarks>
 /// https://musictheory.pugetsound.edu/mt21c/IntervalVector.html
@@ -16,7 +16,7 @@ using Primitives;
 /// https://viva.pressbooks.pub/openmusictheory/chapter/interval-class-vectors/
 /// See Prime Form: https://www.youtube.com/watch?v=KFKMvFzobbw
 /// 
-/// Items major scale modes share the same interval vector - Example:
+/// Notes : All major scale modes share the same interval vector - Example:
 /// - Major scale => 254361
 /// - Dorian      => 254361
 /// </remarks>
@@ -101,10 +101,27 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     /// Gets the base 12 value (Sum of ordered)
     /// </summary>
     public int Value { get; }
+    
+    /// <summary>
+    /// Number of semitone intervals in the vector (See https://ianring.com/musictheory/scales/#hemitonia)
+    /// </summary>
     public int Hemitonia => this[IntervalClass.Hemitone];
+    
+    /// <summary>
+    /// Number of tritone intervals in the vector (See https://ianring.com/musictheory/scales/#hemitonia)
+    /// </summary>
     public int Tritonia => this[IntervalClass.Tritone];
+    
+    /// <summary>
+    /// True if the vector has one or more tritone intervals
+    /// </summary>
     public bool IsHemitonic => Hemitonia > 0;
+    
+    /// <summary>
+    /// True if the vector has one or more tritone intervals
+    /// </summary>
     public bool IsTritonic => Tritonia > 0;
+    
     /// <summary>
     /// The deep scale property has important implications is the tone commonality and modulation of the diatonic scale.
     /// </summary>
@@ -119,11 +136,16 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
 
     public override string ToString() => $"<{string.Join(" ", _countByIntervalClass.Values)}>";
 
+    /// <summary>
+    /// Converts a value to a <see cref="IntervalClassVector"/>
+    /// </summary>
+    /// <param name="value">The base 12 <see cref="int"/></param>
+    /// <returns>The <see cref="IntervalClassVector"/></returns>
     private static IntervalClassVector FromBase12Value(int value)
     {
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
         var dividend = value;
-        var intervalClasses = IntervalClass.Range(1, 6).Reverse();
+        var intervalClasses = IntervalClass.Range(1, 6).Reverse(); // Start by least significant weight
         foreach (var intervalClass in intervalClasses)
         {
             var count = dividend % 12;
@@ -133,9 +155,14 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
         return new(dictBuilder.ToImmutable());
     }
 
+    /// <summary>
+    /// Converts the <see cref="IntervalClassVector"/> to a base 12 value
+    /// </summary>
+    /// <param name="countByIc">The <see cref="IReadOnlyDictionary{TKey,TValue}"/> where the key is a <see cref="IntervalClass"/> and the value is a <see cref="int"/> number of occurrences of the interval class</param>
+    /// <returns></returns>
     private static int ToBase12Value(IReadOnlyDictionary<IntervalClass, int> countByIc)
     {
-        var weight = 1;
+        var weight = 1; // Start by least significant weight
         var value = 0;
         foreach (var ic in countByIc.Keys.OrderBy(ic => ic.Value))
         {

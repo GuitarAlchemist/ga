@@ -8,29 +8,25 @@ public class ChatCompletionConfig
     {
         return new ChatCompletionConfig(
             section["ModelId"]!,
-            section["EndPoint"]!,
             section["ApiKey"]!);
     }
     
-    public void Deconstruct(out string modelId, out string endPoint, out string apiKey)
+    public void Deconstruct(out string modelId, out string apiKey)
     {
         modelId = ModelId;
-        endPoint = EndPoint;
         apiKey = ApiKey;
     }
 
     public string ModelId { get; } = null!;
-    public string EndPoint { get; } = null!;
     public string ApiKey { get; } = null!;
 
     public ChatCompletionConfig()
     {
     }
 
-    public ChatCompletionConfig(string modelId, string endPoint, string apiKey)
+    public ChatCompletionConfig(string modelId, string apiKey)
     {
         ModelId = modelId;
-        EndPoint = endPoint;
         ApiKey = apiKey;
     }
 }

@@ -61,8 +61,20 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
 
     public static IntervalClass Min => FromValue(_minValue);
     public static IntervalClass Max => FromValue(_maxValue);
+    
+    /// <summary>
+    /// Gets a hemitone (1 semitone) <see cref="IntervalClass"/>
+    /// </summary>
     public static IntervalClass Hemitone => FromValue(1);
+    
+    /// <summary>
+    /// Gets a tone (2 semitones) <see cref="IntervalClass"/>
+    /// </summary>
     public static IntervalClass Tone=> FromValue(2);
+    
+    /// <summary>
+    /// Gets a tritone (6 semitones) <see cref="IntervalClass"/>
+    /// </summary>
     public static IntervalClass Tritone => FromValue(6);
 
     public static int CheckRange(int value) => IRangeValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);
