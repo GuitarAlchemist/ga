@@ -32,7 +32,7 @@ public record KeyFretPositions(
         ArgumentNullException.ThrowIfNull(nameof(fretboard));
 
         var list = new List<KeyFretPositions>();
-        foreach (var key in Key.GetItems())
+        foreach (var key in Key.Items)
         {
             var keyNotes = key.GetNotes();
             var keyPitchClassSet = new HashSet<PitchClass>(keyNotes.Select(note => note.PitchClass));
