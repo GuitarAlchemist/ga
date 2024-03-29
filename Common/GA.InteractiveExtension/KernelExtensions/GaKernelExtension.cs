@@ -1,14 +1,14 @@
 ﻿namespace GA.InteractiveExtension.KernelExtensions;
 
-using System;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Formatting;
-
-using GA.Business.Core.Fretboard;
 using Core.Extensions;
-using Figgle;
 using ExtensionMethods;
+using Figgle;
+using GA.Business.Core.Fretboard;
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
+using System;
+using VexTab;
 
 public class GaKernelExtension : IKernelExtension, IStaticContentSource
 {
@@ -22,7 +22,8 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
                     DisplayGaBanner(currentContext);
-                    // DisplayForceGraph(currentContext);
+                    // DisplayAgGridExample(currentContext);
+                    
                     // DisplayHelloWorld(currentContext);
 
 //                    DisplayMermaidExample1(currentContext, """
@@ -32,7 +33,7 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 //    B --> Dm[Server02]
 //""");
 
-                    DisplayForceGraph(currentContext);
+                    //DisplayForceGraph(currentContext);
 
 //                    DisplayMermaidExample2(currentContext, 
 //"""
@@ -52,19 +53,19 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
             }
 
             var registeredTypes = await kernel.UseGaAsync();
-            // kernel.UseVexTab();
+             kernel.UseVexTab();
 
             {
                 if (KernelInvocationContext.Current is { } currentContext)
                 {
                     var sTypes = string.Join(@"", registeredTypes.Select(type => $"<p>{type.FullName}</p>"));
-                    var html = $$""" 
+                    var html = $""" 
 <details>
     <summary>
         Renders Guitar Alchemist objects in dotnet-interactive notebooks
-        ({{registeredTypes.Count}} formatters registered)
+        ({registeredTypes.Count} formatters registered)
     </summary>
-    {{sTypes}}
+    {sTypes}
 </details>    
 """;
 
@@ -232,7 +233,7 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
         {
             CacheBusterGuid = Guid.NewGuid(),
             Id = Guid.NewGuid(),
-            LibVersion = "9.1.7"
+            LibVersion = "10.9.0"
         };
 
         var html = $$""" 
@@ -415,38 +416,38 @@ text :8,.1,Cm,Dm,Em,Fm,Gm,Am,B,Cm,Cm,B,Am,Gm,Fm,Em,Dm,Cm
     private static void DisplayForceGraph(KernelInvocationContext currentContext)
     {
         // ReSharper disable StringLiteralTypo
-        var html = $$""" 
-<div id="graph" style="background: white"></div>
+        var html = """
+                   <div id="graph" style="background: white"></div>
 
-<script type="module">
-    await import('https://unpkg.com/force-graph/dist/force-graph.min.js');
-
-    const gData = {
-      nodes: [...Array(9).keys()].map(i => ({ id: i })),
-      links: [
-        { source: 1, target: 4, curvature: 0 },
-        { source: 1, target: 4, curvature: 0.5 },
-        { source: 1, target: 4, curvature: -0.5 },
-        { source: 5, target: 2, curvature: 0.3 },
-        { source: 2, target: 5, curvature: 0.3 },
-        { source: 0, target: 3, curvature: 0 },
-        { source: 3, target: 3, curvature: 0.5 },
-        { source: 0, target: 4, curvature: 0.2 },
-        { source: 4, target: 5, curvature: 0.5 },
-        { source: 5, target: 6, curvature: 0.7 },
-        { source: 6, target: 7, curvature: 1 },
-        { source: 7, target: 8, curvature: 2 },
-        { source: 8, target: 0, curvature: 0.5 }
-      ]
-    };
-
-    const Graph = ForceGraph()
-      (document.getElementById('graph'))
-        .linkDirectionalParticles(2)
-        .linkCurvature('curvature')
-        .graphData(gData);
-</script>
-""";
+                   <script type="module">
+                       await import('https://unpkg.com/force-graph/dist/force-graph.min.js');
+                   
+                       const gData = {
+                         nodes: [...Array(9).keys()].map(i => ({ id: i })),
+                         links: [
+                           { source: 1, target: 4, curvature: 0 },
+                           { source: 1, target: 4, curvature: 0.5 },
+                           { source: 1, target: 4, curvature: -0.5 },
+                           { source: 5, target: 2, curvature: 0.3 },
+                           { source: 2, target: 5, curvature: 0.3 },
+                           { source: 0, target: 3, curvature: 0 },
+                           { source: 3, target: 3, curvature: 0.5 },
+                           { source: 0, target: 4, curvature: 0.2 },
+                           { source: 4, target: 5, curvature: 0.5 },
+                           { source: 5, target: 6, curvature: 0.7 },
+                           { source: 6, target: 7, curvature: 1 },
+                           { source: 7, target: 8, curvature: 2 },
+                           { source: 8, target: 0, curvature: 0.5 }
+                         ]
+                       };
+                   
+                       const Graph = ForceGraph()
+                         (document.getElementById('graph'))
+                           .linkDirectionalParticles(2)
+                           .linkCurvature('curvature')
+                           .graphData(gData);
+                   </script>
+                   """;
         // ReSharper restore StringLiteralTypo
 
         currentContext.DisplayAs(html, HtmlFormatter.MimeType);
