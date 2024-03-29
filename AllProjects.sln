@@ -36,20 +36,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCEF
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GA.Business.Config", "Common\GA.Business.Config\GA.Business.Config.fsproj", "{ABE045B5-BC92-4041-9E6F-10284512F4E4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Instruments", "Instruments", "{4D843DFB-7896-46CA-A7F7-4309198B3347}"
-	ProjectSection(SolutionItems) = preProject
-		Notebooks\Instruments\Guitar Tunings.ipynb = Notebooks\Instruments\Guitar Tunings.ipynb
-		Notebooks\Instruments\Instruments.ipynb = Notebooks\Instruments\Instruments.ipynb
-		Notebooks\Instruments\Ukulele Tunings.ipynb = Notebooks\Instruments\Ukulele Tunings.ipynb
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scales", "Scales", "{3C7DA2B8-7207-4293-9FDB-C545BBDD8EEE}"
-	ProjectSection(SolutionItems) = preProject
-		Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb = Notebooks\Scales\Scale Modes - harmonic minor scale.ipynb
-		Notebooks\Scales\Scale Modes - major scale.ipynb = Notebooks\Scales\Scale Modes - major scale.ipynb
-		Notebooks\Scales\Scale Modes - melodic minor scale.ipynb = Notebooks\Scales\Scale Modes - melodic minor scale.ipynb
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experiments", "Experiments", "{B2A60697-DB61-4FE8-BE50-B40C7B00D16A}"
 	ProjectSection(SolutionItems) = preProject
 		Notebooks\Experiments\agGrid.ipynb = Notebooks\Experiments\agGrid.ipynb
@@ -112,7 +98,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Html Examples", "Html Examp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Core", "Common\GA.Core\GA.Core.csproj", "{7E66265F-5DC1-46F9-9B45-918F210DF785}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GA.Business.Core.AI", "Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj", "{9B05C29E-F080-4C7A-9852-9DC54A3E0DED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core.AI", "Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj", "{9B05C29E-F080-4C7A-9852-9DC54A3E0DED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GA", "GA", "{CA2FDC53-68EE-4C24-B9B8-9C2DC136912F}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\GA\Guitar Tunings.ipynb = Notebooks\GA\Guitar Tunings.ipynb
+		Notebooks\GA\Instruments.ipynb = Notebooks\GA\Instruments.ipynb
+		Notebooks\GA\Scale Modes - harmonic minor scale.ipynb = Notebooks\GA\Scale Modes - harmonic minor scale.ipynb
+		Notebooks\GA\Scale Modes - major scale.ipynb = Notebooks\GA\Scale Modes - major scale.ipynb
+		Notebooks\GA\Scale Modes - melodic minor scale.ipynb = Notebooks\GA\Scale Modes - melodic minor scale.ipynb
+		Notebooks\GA\Ukulele Tunings.ipynb = Notebooks\GA\Ukulele Tunings.ipynb
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Local Ga.Interactive NuGet", "_Local Ga.Interactive NuGet", "{48D79B59-245D-4A7F-815D-3C6A61A727E2}"
+	ProjectSection(SolutionItems) = preProject
+		Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet - Key.ipynb = Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet - Key.ipynb
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -223,8 +224,6 @@ Global
 		{1E3BF245-A62B-4949-AD91-A87E0B453089} = {C939F925-0AD8-45CD-8D5D-9FAA5FDD26D1}
 		{BCEFA941-139E-4850-B5FF-B7A1AA9CDF8D} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{ABE045B5-BC92-4041-9E6F-10284512F4E4} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
-		{4D843DFB-7896-46CA-A7F7-4309198B3347} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
-		{3C7DA2B8-7207-4293-9FDB-C545BBDD8EEE} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{B2A60697-DB61-4FE8-BE50-B40C7B00D16A} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{058789C3-AD98-478E-95A3-9ED33CA9C126} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{A643A661-8BAD-422C-9EEE-8EFB19FB4573} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
@@ -234,6 +233,8 @@ Global
 		{9325B676-17E0-4A55-A204-4187BDC6FF14} = {983FAA86-8005-4CFF-8796-E6D1A3B14F61}
 		{7E66265F-5DC1-46F9-9B45-918F210DF785} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{9B05C29E-F080-4C7A-9852-9DC54A3E0DED} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
+		{CA2FDC53-68EE-4C24-B9B8-9C2DC136912F} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
+		{48D79B59-245D-4A7F-815D-3C6A61A727E2} = {CA2FDC53-68EE-4C24-B9B8-9C2DC136912F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}
