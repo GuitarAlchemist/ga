@@ -7,9 +7,9 @@ public class KeyTests
     public void GetItems_Major_ReturnsMajorKeys()
     {
         var majorKeys = Key.GetItems(KeyMode.Major);
-        Assert.AreEqual(15, majorKeys.Count);
-        Assert.IsTrue(majorKeys.All(key => key.KeyMode == KeyMode.Major));
-        Assert.IsTrue(majorKeys.Select(key => key.ToString()).SequenceEqual(
+        Assert.That(majorKeys.Count, Is.EqualTo(15));
+        Assert.That(majorKeys.All(key => key.KeyMode == KeyMode.Major));
+        Assert.That(majorKeys.Select(key => key.ToString()).SequenceEqual(
         [
             "Key of Cb", 
             "Key of Gb", 
@@ -33,9 +33,10 @@ public class KeyTests
     public void GetItems_Minor_ReturnsMinorKeys()
     {
         var minorKeys = Key.GetItems(KeyMode.Minor);
-        Assert.AreEqual(15, minorKeys.Count);
-        Assert.IsTrue(minorKeys.All(key => key.KeyMode == KeyMode.Minor));
-        Assert.IsTrue(minorKeys.Select(key => key.ToString()).SequenceEqual(
+        Assert.That(minorKeys.Count, Is.EqualTo(15));
+        
+        Assert.That(minorKeys.All(key => key.KeyMode == KeyMode.Minor));
+        Assert.That(minorKeys.Select(key => key.ToString()).SequenceEqual(
         [
             "Key of Abm", 
             "Key of Ebm", 
@@ -59,10 +60,11 @@ public class KeyTests
     public void Items_ReturnsAllKeys()
     {
         var allKeys = Key.Items;
-        Assert.AreEqual(30, allKeys.Count);
-        Assert.AreEqual(15, allKeys.Count(key => key.KeyMode == KeyMode.Major));
-        Assert.AreEqual(15, allKeys.Count(key => key.KeyMode == KeyMode.Minor));
-        Assert.IsTrue(allKeys.Select(key => key.ToString()).SequenceEqual(
+        Assert.That(allKeys.Count, Is.EqualTo(30));
+        Assert.That(allKeys.Count(key => key.KeyMode == KeyMode.Major), Is.EqualTo(15));
+        Assert.That(allKeys.Count(key => key.KeyMode == KeyMode.Minor), Is.EqualTo(15));
+        
+        Assert.That(allKeys.Select(key => key.ToString()).SequenceEqual(
         [
             "Key of Cb", 
             "Key of Gb", 
