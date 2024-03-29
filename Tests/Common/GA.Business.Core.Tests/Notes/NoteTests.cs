@@ -26,7 +26,7 @@ public class NoteTests
     {
         var actualInterval  = startingNote.GetInterval(endingNote);
         
-        Assert.AreEqual(expectedInterval, actualInterval);
+        Assert.That(actualInterval, Is.EqualTo(expectedInterval));
     }
     
     [Test(TestOf = typeof(Note.AccidentedNote))]

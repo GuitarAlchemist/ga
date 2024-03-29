@@ -31,7 +31,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
 
         // Assert
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }
     
     [TestCase(-7, "Bb Eb Ab Db Gb Cb Fb")]
@@ -58,7 +58,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentedNotes.ToString();
 
         // Assert
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }
 
     [TestCase(-7, AccidentalKind.Flat)]
@@ -85,7 +85,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentalKind;
 
         // Assert
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }
 
     [TestCase(-7, false)]
@@ -112,7 +112,7 @@ public class KeySignatureTests
         var actual = keySignature.IsSharpKey;
 
         // Assert
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }
     
     [TestCase(-7, true)]
@@ -139,6 +139,6 @@ public class KeySignatureTests
         var actual = keySignature.IsFlatKey;
 
         // Assert
-        Assert.AreEqual(expected, actual);
+        Assert.That(actual, Is.EqualTo(expected));
     }    
 }

@@ -24,6 +24,6 @@ public class MinorKeyTests
         if (!Key.Minor.TryParse(minorKeyRoot, out var minorKey)) throw new InvalidOperationException();
         var actualNotes = minorKey.GetNotes().Select(note => note.ToString()).ToArray();
 
-        Assert.AreEqual(expectedKeyNotes, actualNotes);
+        Assert.That(expectedKeyNotes, Is.EqualTo(actualNotes));
     }
 }
