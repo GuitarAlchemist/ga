@@ -56,7 +56,7 @@ public class PlayedPositionCollection : PositionCollection<Position.Played>
     /// <param name="positionLocations">The <see cref="IEnumerable{PositionLocation}"/>.</param>
     /// <returns>The resulting <see cref="PlayedPositionCollection"/>.</returns>
     public PlayedPositionCollection FromLocations(IEnumerable<PositionLocation> positionLocations) =>
-        new(positionLocations.Select(FromLocation).OrderBy(played => played).ToImmutableArray());
+        new([.. positionLocations.Select(FromLocation).OrderBy(played => played)]);
 
     private Position.Played FromLocation(PositionLocation location) => _lazyPositionsByLocation.Value[location];
 }

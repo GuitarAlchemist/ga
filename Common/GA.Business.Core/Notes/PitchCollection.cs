@@ -28,7 +28,7 @@ public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<Pit
         var items = new List<Pitch>();
         foreach (var segment in segments)
         {
-            if (!Pitch.Sharp.TryParse(segment, out var pitch)) return false; // Fail if one item fails parsing
+            if (!Pitch.Sharp.TryParse(segment, null, out var pitch)) return false; // Fail if one item fails parsing
             items.Add(pitch);
         }
 

@@ -94,10 +94,9 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
         _lazyTranspositions = new(() => Items.ToLookup(set => (set.Cardinality, set.IntervalClassVector)));
         _primeForms = new(GetPrimeForms);
 
-        static ImmutableHashSet<PitchClassSet> GetPrimeForms() => _lazyTranspositions.Value
+        static ImmutableHashSet<PitchClassSet> GetPrimeForms() => [.. _lazyTranspositions.Value
             .Select(grouping => grouping.MinBy(set => set.Identity.Value)!)
-            .OrderBy(set => set.Identity.Value)
-            .ToImmutableHashSet();
+            .OrderBy(set => set.Identity.Value)];
     }
 
     public PitchClassSet(
@@ -116,7 +115,7 @@ public sealed class PitchClassSet : IStaticEnumerable<PitchClassSet>,
         }
         else
         {
-            pitchClassesSet = distinctPitchClasses.ToImmutableSortedSet();
+            pitchClassesSet = [.. distinctPitchClasses];
         }
 
         _pitchClassesSet = pitchClassesSet;

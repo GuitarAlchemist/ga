@@ -12,3 +12,4 @@ global using GA.Core;
 global using GA.Core.Collections;
 global using GA.Core.Collections.Abstractions;
 global using GA.Core.Extensions;
+global using PCRE;

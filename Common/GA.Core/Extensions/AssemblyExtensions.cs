@@ -22,7 +22,7 @@ public static class AssemblyExtensions
             list.Add(type);
         }
 
-        return list.ToImmutableList();
+        return [.. list];
 
         static bool IsOverride(MethodInfo method) => method.GetBaseDefinition().DeclaringType != method.DeclaringType;
     }

@@ -16,7 +16,7 @@ public abstract record DiatonicScale
     /// </remarks>
     public class Major : IReadOnlyCollection<Interval.Chromatic>
     {
-        private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = new List<Interval.Chromatic> {T, T, S, T, T, T, S}.ToImmutableList();
+        private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = [T, T, S, T, T, T, S];
         public IEnumerator<Interval.Chromatic> GetEnumerator() => _intervals.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public int Count => _intervals.Count;
@@ -24,7 +24,7 @@ public abstract record DiatonicScale
 
     public class Minor : IReadOnlyCollection<Interval.Chromatic>
     {
-        private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = new List<Interval.Chromatic> {T, S, T, T, S, T, T}.ToImmutableList();
+        private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = [T, S, T, T, S, T, T];
         public IEnumerator<Interval.Chromatic> GetEnumerator() => _intervals.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public int Count => _intervals.Count;

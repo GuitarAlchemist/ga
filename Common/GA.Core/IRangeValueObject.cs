@@ -5,7 +5,10 @@ using Extensions;
 /// <summary>
 /// Interface for a value object with <see cref="TSelf"/> min/max static values
 /// </summary>
-/// <typeparam name="TSelf"></typeparam>
+/// <typeparam name="TSelf">This object type</typeparam>
+/// <remarks>
+/// Derives from <see cref="IValueObject{TSelf}"/>
+/// </remarks>
 public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
