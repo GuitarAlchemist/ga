@@ -1,10 +1,8 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using PCRE;
-
 using Atonal;
 using GA.Business.Core.Intervals.Primitives;
-using static FSharp.Configuration.Yaml.Parser;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))
@@ -13,11 +11,11 @@ using static FSharp.Configuration.Yaml.Parser;
 /// Implements <see cref="IStaticValueObjectList{NaturalNote}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
+public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>, IParsable<NaturalNote>
 {
     #region IStaticReadonlyCollection<NaturalNote> Members
 
-    public static IReadOnlyCollection<NaturalNote> Items => GetAll();
+    public static IReadOnlyCollection<NaturalNote> Items => GetItems();
     public static IReadOnlyList<int> Values => Items.ToValueList();
 
     #endregion
@@ -48,6 +46,8 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
     public static NaturalNote Min => FromValue(_minValue);
     public static NaturalNote Max => FromValue(_maxValue);
 
+    #region Well-known natural notes
+
     public static NaturalNote C => FromValue(0);
     public static NaturalNote D => FromValue(1);
     public static NaturalNote E => FromValue(2);
@@ -55,19 +55,23 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
     public static NaturalNote G => FromValue(4);
     public static NaturalNote A => FromValue(5);
     public static NaturalNote B => FromValue(6);
+   
+    #endregion
 
     //language=regexp
-    public static readonly string RegexPattern = "^(?'note'[Am-Gm])$";
+    public static readonly string RegexPattern = "^(?'note'[A-G])$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
+    /// <inheritdoc cref="IParsable{TSelf}.Parse"/>
     public static NaturalNote Parse(string s, IFormatProvider? provider)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;
     }
 
+    /// <inheritdoc cref="IParsable{TSelf}.TryParse"/>
     public static bool TryParse(
-        string? s, 
+        [NotNullWhen(true)] string? s, 
         IFormatProvider? provider, 
         out NaturalNote result)
     {
@@ -102,12 +106,12 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
     public static NaturalNote operator ++(NaturalNote naturalNote) => FromValue((naturalNote.Value + 1) % 7);
     public static NaturalNote operator --(NaturalNote naturalNote) => FromValue((naturalNote.Value - 1) % 7);
     public static NaturalNote operator +(NaturalNote naturalNote, IntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
-    public static IntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(startNote, endNote);
+    public static IntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(new NaturalNotePair(startNote, endNote));
 
     public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
 
-    public IntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(this, other);
+    public IntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(new NaturalNotePair(this, other));
 
     public IReadOnlyCollection<NaturalNote> GetDegrees(int count)
     {
@@ -122,37 +126,59 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
         return list.AsReadOnly();
     }
 
-    public PitchClass ToPitchClass()
+    /// <summary>
+    /// Gets the pitch class of the natural note
+    /// </summary>
+    /// <remarks>
+    /// Major scale:
+    /// C: 0
+    /// D: 2  (T => +2)
+    /// E: 4  (T => +2)
+    /// F: 5  (H => +1)
+    /// G: 7  (T => +2)
+    /// A: 9  (T => +2)
+    /// B: 11 (T => +2)
+    /// </remarks>
+    /// <returns>The <see cref="PitchClass"/></returns>
+    public PitchClass ToPitchClass() => _value switch
     {
-        /*
-            Major scale:
-            C: 0
-            D: 2  (T => +2)
-            E: 4  (T => +2)
-            F: 5  (H => +1)
-            G: 7  (T => +2)
-            A: 9  (T => +2)
-            B: 11 (T => +2)
-         */
+        0 => new() { Value = 0 }, // C
+        1 => new() { Value = 2 }, // D
+        2 => new() { Value = 4 }, // E
+        3 => new() { Value = 5 }, // F
+        4 => new() { Value = 7 }, // G
+        5 => new() { Value = 9 }, // A
+        6 => new() { Value = 11 }, // B
+        _ => throw new InvalidOperationException()
+    };
 
-        return _value switch
-        {
-            0 => new() { Value = 0 }, // C
-            1 => new() { Value = 2 }, // D
-            2 => new() { Value = 4 }, // E
-            3 => new() { Value = 5 }, // F
-            4 => new() { Value = 7 }, // G
-            5 => new() { Value = 9 }, // A
-            6 => new() { Value = 11 }, // B
-            _ => throw new InvalidOperationException()
-        };
-    }
-
+    /// <summary>
+    /// Gets the sharp note from the natural note
+    /// </summary>
+    /// <returns>The <see cref="Note.Sharp"/></returns>
     public Note.Sharp ToSharpNote() => new(this, SharpAccidental.Sharp);
+    
+    /// <summary>
+    /// Gets the sharp note from the natural note (With specific accidental)
+    /// </summary>
+    /// <param name="accidental">The <see cref="SharpAccidental"/></param>
+    /// <returns>The <see cref="Note.Sharp"/></returns>
     public Note.Sharp ToSharpNote(SharpAccidental accidental) => new(this, accidental);
+    
+    /// <summary>
+    /// Gets the flat note from the natural note
+    /// </summary>
+    /// <returns>The <see cref="Note.Flat"/></returns>
     public Note.Flat ToFlatNote() => new(this, FlatAccidental.Flat);
+    
+    /// <summary>
+    /// Gets the flat note from the natural note
+    /// </summary>
+    /// <param name="accidental">The <see cref="FlatAccidental"/></param>
+    /// <returns>The <see cref="Note.Flat"/></returns>
     public Note.Flat ToFlatNote(FlatAccidental accidental) => new(this, accidental);
 
+    /// <inheritdoc />
     public override string ToString() => _value switch
     {
         0 => nameof(C),
@@ -165,24 +191,17 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>
         _ => string.Empty
     };
 
-    private static IReadOnlyCollection<NaturalNote> GetAll() => ValueObjectUtils<NaturalNote>.Items;
+    private static IReadOnlyCollection<NaturalNote> GetItems() => ValueObjectUtils<NaturalNote>.Items;
 
-    private class NaturalNoteIntervals() : LazyIndexerBase<(NaturalNote, NaturalNote), IntervalSize>(GetKeyValuePairs())
+    private class NaturalNoteIntervals() : LazyIndexerBase<NaturalNotePair, IntervalSize>(GetKeyValuePairs())
     {
         private static readonly NaturalNoteIntervals _instance = new();
-        public static IntervalSize Get(NaturalNote startNote, NaturalNote endNote) => _instance[(startNote, endNote)];
+        public static IntervalSize Get(NaturalNotePair key) => _instance[key];
 
-        private static IEnumerable<KeyValuePair<(NaturalNote, NaturalNote), IntervalSize>> GetKeyValuePairs()
-        {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var startNote in Items)
-            {
-                foreach (var number in IntervalSize.Items)
-                {
-                    var endNote = startNote + number;
-                    yield return new((startNote, endNote),  number);
-                }
-            }
-        }
+        private static IEnumerable<KeyValuePair<NaturalNotePair, IntervalSize>> GetKeyValuePairs() =>
+            from startNote in Items
+            from number in IntervalSize.Items
+            let endNote = startNote + number
+            select new KeyValuePair<NaturalNotePair, IntervalSize>(new NaturalNotePair(startNote, endNote), number);
     }
 }

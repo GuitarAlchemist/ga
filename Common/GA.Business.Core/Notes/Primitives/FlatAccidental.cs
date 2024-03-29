@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
 using GA.Business.Core.Intervals.Primitives;
+using System;
 
 /// <summary>
 /// Flat accidental (bbb | bbb | bb)
@@ -9,7 +10,7 @@ using GA.Business.Core.Intervals.Primitives;
 /// Implements <see cref="IRangeValueObject{FlatAccidental}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
+public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>, IParsable<FlatAccidental>
 {
     #region IRangeValueObject Members
 
@@ -22,6 +23,43 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
 
     public static int CheckRange(int value) => ValueObjectUtils<FlatAccidental>.CheckRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<FlatAccidental>.CheckRange(value, minValue, maxValue);
+
+    #endregion
+
+    #region IParsable Members
+
+    //language=regexp
+    public static readonly string RegexPattern = "^(#|x)$";
+    private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
+
+    /// <inheritdoc />
+    public static FlatAccidental Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+    
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out FlatAccidental result)
+    {
+        result = default;
+        var match = _regex.Match(s);
+        if (!match.Success) return false; // Failure
+
+        var group = match.Groups[1];
+        FlatAccidental? parsedFlatAccidental = group.Value.ToUpperInvariant() switch
+        {
+            "#" => Flat,
+            "x" => DoubleFlat,
+            _ => null
+        };
+
+        if (!parsedFlatAccidental.HasValue) return false; // Failure
+
+        // Success
+        result = parsedFlatAccidental.Value;
+        return true;
+    }
 
     #endregion
 

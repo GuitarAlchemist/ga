@@ -18,7 +18,7 @@
   &lt;Nothing /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 13 Col 37)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Coords/@EntryValue">(Doc Ln 14 Col 37)</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Notes/d:Primitives/f:FlatAccidental.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	
@@ -26,8 +26,8 @@
 	
 	
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 66 Col 10)</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">442021D8-8D71-41A0-BC96-B62F44483550/f:Program.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 83 Col 49)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Tonal/f:KeySignature.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/Coords/@EntryValue">(Doc Ln 14 Col 33)</s:String>

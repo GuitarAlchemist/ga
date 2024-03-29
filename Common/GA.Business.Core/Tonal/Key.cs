@@ -12,25 +12,6 @@ using static Notes.Note;
 [PublicAPI]
 public abstract record Key(KeySignature KeySignature)
 {
-    #region Inner Classes
-
-    /// <summary>
-    /// Indexes keys by their root note's natural note
-    /// </summary>
-    /// <remarks>
-    /// Supports for intervals computations
-    /// </remarks>
-    public class ByRootNaturalNoteIndexer() : LazyIndexerBase<NaturalNote, Key>(Factory())
-    {
-        public static Key Get(NaturalNote naturalNote) => _instance[naturalNote];
-        private static readonly ByRootNaturalNoteIndexer _instance = new();
-        private static ImmutableDictionary<NaturalNote, Key> Factory() => 
-            Items.Where(key => !key.Root.Accidental.HasValue)
-                 .ToImmutableDictionary(key => key.Root.NaturalNote);
-    }    
-    
-    #endregion
-
     /// <summary>
     /// Gets the collection of keys for the key mode (Major | Minor)
     /// </summary>
@@ -39,23 +20,26 @@ public abstract record Key(KeySignature KeySignature)
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="KeyMode"/> is not supported</exception>
     public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode) => keyMode switch
     {
-        KeyMode.Major => Major.Items,
-        KeyMode.Minor => Minor.Items,
+        KeyMode.Major => Major.MajorItems,
+        KeyMode.Minor => Minor.MinorItems,
         _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
     };
 
-    public static PrintableReadOnlyCollection<Key> Items => Major.Items.Cast<Key>().Concat(Minor.Items).ToImmutableList().AsPrintable();
+    /// <summary>
+    /// Gets the <see cref="PrintableReadOnlyCollection{Key}"/> keys (15 <see cref="Major"/> keys and 15 <see cref="Minor"/> keys)
+    /// </summary>
+    public static PrintableReadOnlyCollection<Key> Items => Major.MajorItems.Cast<Key>().Concat(Minor.MinorItems).ToImmutableList().AsPrintable();
     
     /// <summary>
     /// Gets the <see cref="KeyMode"/> (Major | Minor)
     /// </summary>
     public abstract KeyMode KeyMode { get; }
-    
+
     /// <summary>
     /// Gets the <see cref="AccidentalKind"/>
     /// </summary>
     public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
-    
+
     /// <summary>
     /// Gets the <see cref="KeyNote"/> key root
     /// </summary>
@@ -67,7 +51,7 @@ public abstract record Key(KeySignature KeySignature)
     /// <returns>The <see cref="KeyNote"/> collection.</returns>
     public IReadOnlyCollection<KeyNote> GetNotes()
     {
-        var accidentedNotes = 
+        var accidentedNotes =
             KeySignature.AccidentedNotes
                 .Select(note => note.NaturalNote)
                 .ToImmutableHashSet();
@@ -86,14 +70,14 @@ public abstract record Key(KeySignature KeySignature)
 
             // Start with the root note
             var naturalNote = root.NaturalNote;
-            
+
             // Iterate through all key notes
             for (var i = 0; i < 6; i++)
             {
                 naturalNote++;
                 Sharp sharpNote = accidentedNotes.Contains(naturalNote)
                     ? new(naturalNote, SharpAccidental.Sharp)
-                    : new (naturalNote);
+                    : new(naturalNote);
                 yield return sharpNote;
             }
         }
@@ -128,20 +112,27 @@ public abstract record Key(KeySignature KeySignature)
     /// </summary>
     /// <param name="KeySignature"></param>
     [PublicAPI]
-    public sealed record Major(KeySignature KeySignature) 
+    public sealed record Major(KeySignature KeySignature)
         : Key(KeySignature)
     {
+        /// <summary>
+        /// Gets the <see cref="PrintableReadOnlyCollection{Major}"/> keys (15 <see cref="Major"/> keys)
+        /// </summary>
+        public static PrintableReadOnlyCollection<Major> MajorItems => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList().AsPrintable();
+        
         #region Inner Classes
 
         public class MajorKeyByRoot() : LazyIndexerBase<KeyNote, Major>(GetMajorKeyByRoot())
         {
             public static readonly MajorKeyByRoot Instance = new();
             public static Key Get(KeyNote keyRoot) => keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
-            private static ImmutableDictionary<KeyNote, Major> GetMajorKeyByRoot() => Items.ToImmutableDictionary(key => key.Root);
+            private static ImmutableDictionary<KeyNote, Major> GetMajorKeyByRoot() => MajorItems.ToImmutableDictionary(key => key.Root);
         }
 
         #endregion
-        
+
+        #region Well-known major keys
+
         public static Major Cb => new(-7);
         public static Major Gb => new(-6);
         public static Major Db => new(-5);
@@ -157,7 +148,9 @@ public abstract record Key(KeySignature KeySignature)
         public static Major B => new(5);
         public static Major FSharp => new(6);
         public static Major CSharp => new(7);
-        public new static IReadOnlyCollection<Major> Items => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList();
+
+        #endregion
+
         public static Key FromKeyRoot(KeyNote keyRoot) => MajorKeyByRoot.Get(keyRoot);
 
         public static bool TryParse(string input, out Major majorKey)
@@ -185,14 +178,14 @@ public abstract record Key(KeySignature KeySignature)
                     majorKey = aMajorKey;
                     return true;
                 }
-                
+
             }
 
             // Failure
             majorKey = default!;
             return false;
         }
-        
+
         public override KeyMode KeyMode => KeyMode.Major;
         public override KeyNote Root => GetRoot(KeySignature);
 
@@ -244,7 +237,7 @@ public abstract record Key(KeySignature KeySignature)
     /// </summary>
     /// <param name="KeySignature"></param>
     [PublicAPI]
-    public sealed record Minor(KeySignature KeySignature) 
+    public sealed record Minor(KeySignature KeySignature)
         : Key(KeySignature)
     {
         #region Inner Classes
@@ -253,10 +246,12 @@ public abstract record Key(KeySignature KeySignature)
         {
             public static readonly MinorKeyByRoot Instance = new();
             public static Key Get(KeyNote keyRoot) => keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
-            private static ImmutableDictionary<KeyNote, Minor> GetMinorKeyByRoot() => Items.ToImmutableDictionary(key => key.Root);
+            private static ImmutableDictionary<KeyNote, Minor> GetMinorKeyByRoot() => MinorItems.ToImmutableDictionary(key => key.Root);
         }
 
         #endregion
+
+        #region Well-known minor keys
         
         public static Minor Abm => new(-7);
         public static Minor Ebm => new(-6);
@@ -273,7 +268,13 @@ public abstract record Key(KeySignature KeySignature)
         public static Minor GSharpm => new(5);
         public static Minor DSharpm => new(6);
         public static Minor ASharpm => new(7);
-        public new static IReadOnlyCollection<Minor> Items => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList();
+        
+        #endregion
+        
+        /// <summary>
+        /// Gets the <see cref="PrintableReadOnlyCollection{Minor}"/> keys (15 <see cref="Minor"/> keys)
+        /// </summary>
+        public static PrintableReadOnlyCollection<Minor> MinorItems => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList().AsPrintable();
         
         public static bool TryParse(string input, out Minor minorKey)
         {
@@ -300,7 +301,7 @@ public abstract record Key(KeySignature KeySignature)
                     minorKey = aMinorKey;
                     return true;
                 }
-                
+
             }
 
             // Failure

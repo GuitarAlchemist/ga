@@ -4,6 +4,7 @@ using GA.Business.Core.Notes.Extensions;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using KeyNote = Notes.Note.KeyNote;
+using static GA.Business.Core.Notes.Note;
 
 /// <summary>
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)
@@ -24,9 +25,9 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
 
     #region IReadOnlyCollection<KeyValue> Members
 
-    public IEnumerator<KeyNote> GetEnumerator() => _lazyAccidentedNotes.Value.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_lazyAccidentedNotes.Value).GetEnumerator();
-    public int Count => _lazyAccidentedNotes.Value.Count;
+    public IEnumerator<KeyNote> GetEnumerator() => AccidentedNotes.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)AccidentedNotes).GetEnumerator();
+    public int Count => AccidentedNotes.Count;
     
     #endregion
 
@@ -39,6 +40,7 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
     public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
     
     private readonly int _value;
+
     public int Value { get => _value; init => _value = IRangeValueObject<KeySignature>.EnsureValueInRange(value, _minValue, _maxValue); }
 
     #endregion
@@ -65,29 +67,26 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
 
     private const int _minValue = -7;
     private const int _maxValue = 7;
-    private readonly Lazy<PrintableReadOnlyCollection<KeyNote>> _lazyAccidentedNotes;
-    private readonly Lazy<PrintableReadOnlySet<NaturalNote>> _lazyAccidentedNaturalNotesSet;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()
     {
         _value = value;
-        
-        // Prepare lazy collections
-        var keySignature = this;
-        _lazyAccidentedNotes = new(() => GetAccidentedNotes(keySignature).AsPrintable());
-        _lazyAccidentedNaturalNotesSet = new(() => keySignature.AccidentedNotes.Select(note => note.NaturalNote).ToImmutableHashSet().AsPrintable());
+
+        var accidentedNotes = GetAccidentedNotes(value).AsPrintable();
+        AccidentedNotes = accidentedNotes;
+        AccidentedNaturalNotesSet = accidentedNotes.Select(note => note.NaturalNote).ToImmutableHashSet().AsPrintable(); 
     }
-    
+
     /// <summary>
     /// Gets the <see cref="PrintableReadOnlyCollection{KeyNote}"/> of accidented notes
     /// </summary>
-    public PrintableReadOnlyCollection<KeyNote> AccidentedNotes => _lazyAccidentedNotes.Value;
-    
+    public PrintableReadOnlyCollection<KeyNote> AccidentedNotes { get; }
+
     /// <summary>
     /// Gets the <see cref="PrintableReadOnlySet{NaturalNote}"/> of accidented notes
     /// </summary>
-    public PrintableReadOnlySet<NaturalNote> AccidentedNaturalNotesSet => _lazyAccidentedNaturalNotesSet.Value;
+    public PrintableReadOnlySet<NaturalNote> AccidentedNaturalNotesSet { get; }
 
     /// <summary>
     /// Gets the <see cref="AccidentalKind"/>
@@ -109,16 +108,16 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
     /// </summary>
     /// <param name="naturalNote">The <see cref="NaturalNote"/></param>
     /// <returns>True if accidented, false otherwise</returns>
-    public bool IsNoteAccidented(NaturalNote naturalNote) => _lazyAccidentedNaturalNotesSet.Value.Contains(naturalNote);
+    public bool IsNoteAccidented(NaturalNote naturalNote) => AccidentedNaturalNotesSet.Contains(naturalNote);
 
     /// <inheritdoc />
-    public override string ToString() => _lazyAccidentedNotes.Value.ToString()!;
+    public override string ToString() => AccidentedNotes.ToString();
     
-    private static ImmutableList<KeyNote> GetAccidentedNotes(KeySignature keySignature)
+    private static ImmutableList<KeyNote> GetAccidentedNotes(int keySignatureValue)
     {
-        var count = Math.Abs(keySignature.Value);
+        var count = Math.Abs(keySignatureValue);
         IEnumerable<KeyNote> notes =
-            keySignature.IsFlatKey
+            keySignatureValue < 0
                 ? GetNotes(NaturalNote.B, count, IntervalSize.Fourth).ToFlatNotes() // Circle of Fourths, starting from B
                 : GetNotes(NaturalNote.F, count, IntervalSize.Fifth).ToSharpNotes(); // Circle of Fifths, starting from F
         return notes.ToImmutableList();

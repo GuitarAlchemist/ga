@@ -3,21 +3,32 @@
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Notes;
 using Intervals;
+using System.Collections.Generic;
 
 public class NoteTests
 {
-    [Test(TestOf = typeof(Note.Chromatic))]
-    public void Test_Chromatic_GetInterval()
+    public static IEnumerable<TestCaseData> GetIntervalTestCases
     {
-        Assert.AreEqual(Interval.Simple.P1, Note.Chromatic.C.GetInterval(Note.Chromatic.C));
-        Assert.AreEqual(Interval.Simple.M2, Note.Chromatic.C.GetInterval(Note.Chromatic.D));
-        Assert.AreEqual(Interval.Simple.M3, Note.Chromatic.C.GetInterval(Note.Chromatic.E));
-        Assert.AreEqual(Interval.Simple.P4, Note.Chromatic.C.GetInterval(Note.Chromatic.F));
-        Assert.AreEqual(Interval.Simple.P5, Note.Chromatic.C.GetInterval(Note.Chromatic.G));
-        Assert.AreEqual(Interval.Simple.M6, Note.Chromatic.C.GetInterval(Note.Chromatic.A));
-        Assert.AreEqual(Interval.Simple.M7, Note.Chromatic.C.GetInterval(Note.Chromatic.B));
+        get
+        {
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.C, Interval.Simple.P1);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.D, Interval.Simple.M2);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.E, Interval.Simple.M3);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.F, Interval.Simple.P4);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.G, Interval.Simple.P5);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.A, Interval.Simple.M6);
+            yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.B, Interval.Simple.M7);
+        }
     }
-
+    
+    [Test, TestCaseSource(nameof(GetIntervalTestCases))]
+    public void Test_Chromatic_GetInterval(Note.Chromatic startingNote, Note.Chromatic endingNote, Interval.Simple expectedInterval)
+    {
+        var actualInterval  = startingNote.GetInterval(endingNote);
+        
+        Assert.AreEqual(expectedInterval, actualInterval);
+    }
+    
     [Test(TestOf = typeof(Note.AccidentedNote))]
     public void Test_2()
     {

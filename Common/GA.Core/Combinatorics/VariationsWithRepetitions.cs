@@ -99,7 +99,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
                     tuple => tuple.i,
                     tuple => tuple.o);
 
-        _lazyElementsSet = new(() => Elements.ToImmutableHashSet());
+        _lazyElementsSet = new(() => [.. Elements]);
     }
 
     public string IndexFormat { get; }

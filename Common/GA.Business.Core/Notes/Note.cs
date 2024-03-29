@@ -51,16 +51,6 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     #endregion
     
     /// <summary>
-    /// Gets the <see cref="IReadOnlyCollection{Sharp}"/>
-    /// </summary>
-    public static IReadOnlyCollection<Sharp> AllSharp => Sharp.Items;
-
-    /// <summary>
-    /// Gets the <see cref="IReadOnlyCollection{Flat}"/>
-    /// </summary>
-    public static IReadOnlyCollection<Flat> AllFlat => Flat.Items;
-
-    /// <summary>
     /// Gets the <see cref="PitchClass"/>
     /// </summary>
     public abstract PitchClass PitchClass { get; }
@@ -74,10 +64,11 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     public abstract AccidentedNote ToAccidentedNote();
 
     /// <summary>
-    /// Gets the unsigned interval between another note and this not
+    /// Gets the unsigned interval between another note and the current note
     /// </summary>
     /// <param name="other">The other <see cref="Note"/></param>
-    /// <returns></returns>
+    /// <returns>The <see cref="Interval.Simple"/></returns>
+    /// <exception cref="ArgumentNullException">Thrown when <see cref="other"/> is null</exception>
     public virtual Interval.Simple GetInterval(Note other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -112,18 +103,22 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     [PublicAPI]
     public sealed record Chromatic(PitchClass PitchClass) : Note
     {
+        #region Well-known chromatic notes
+
         public static Chromatic C => new(0);
-        public static Chromatic CSharpDb => new(1);
+        public static Chromatic CSharpOrDFlat => new(1);
         public static Chromatic D => new(2);
-        public static Chromatic DSharpEb => new(3);
+        public static Chromatic DSharpOrEFlat => new(3);
         public static Chromatic E => new(4);
         public static Chromatic F => new(5);
-        public static Chromatic FSharpGb => new(6);
+        public static Chromatic FSharpOrGFlat => new(6);
         public static Chromatic G => new(7);
-        public static Chromatic GSharpAb => new(8);
+        public static Chromatic GSharpOrAFlat => new(8);
         public static Chromatic A => new(9);
-        public static Chromatic ASharpBb => new(10);
+        public static Chromatic ASharpOrBFlat => new(10);
         public static Chromatic B => new(11);
+        
+        #endregion
 
         public override PitchClass PitchClass { get; } = PitchClass;
         public override AccidentedNote ToAccidentedNote() => ToSharp().ToAccidentedNote();
@@ -133,11 +128,13 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public static implicit operator Chromatic(NaturalNote naturalNote) => new(naturalNote.ToPitchClass());
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2) => note1.PitchClass - note2.PitchClass;
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sharp = ToSharp();
-            var flat = ToFlat();
-            return sharp.SharpAccidental.HasValue ? $"{sharp}/{flat}" : $"{sharp}";
+            return !sharp.SharpAccidental.HasValue 
+                ? $"{sharp}" // No accidental
+                : $"{sharp}/{ToFlat()}"; // With accidental
         }
     }
 
@@ -165,37 +162,64 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
 
         #endregion
         
+        #region Parsing
+        
+       
         public static bool TryParse(string? input, out IReadOnlyCollection<KeyNote> keyNotes)
         {
             var builder = ImmutableList.CreateBuilder<KeyNote>();
             
-            if (Sharp.TryParse(input, out var sharpKeyNote)) builder.Add(sharpKeyNote);
-            if (Flat.TryParse(input, out var flatKeyNote)) builder.Add(flatKeyNote);
+            if (Sharp.TryParse(input, null, out var sharpKeyNote)) builder.Add(sharpKeyNote);
+            if (Flat.TryParse(input, null, out var flatKeyNote)) builder.Add(flatKeyNote);
             keyNotes = builder.ToImmutable();
             return keyNotes.Count > 0;
         }
         
+        #endregion
+        
+        /// <summary>
+        /// Gets the <see cref="AccidentalKind"/>
+        /// </summary>
         public abstract AccidentalKind AccidentalKind { get; }
+        
+        /// <summary>
+        /// Gets the <see cref="Accidental"/>
+        /// </summary>
         public abstract Accidental? Accidental { get; }
-        public override PitchClass PitchClass => GetPitchClass();
-        public override AccidentedNote ToAccidentedNote() => new(NaturalNote, Accidental);
+        
+        /// <summary>
+        /// Gets the chromatic note for the current key note
+        /// </summary>
+        /// <returns> The <see cref="Note.Chromatic"/> </returns>
         public Chromatic ToChromaticNote() => new(PitchClass);
 
+        /// <summary>
+        /// Gets the pitch class for the current key note
+        /// </summary>
+        /// <returns>The <see cref="PitchClass"/></returns>
         protected abstract PitchClass GetPitchClass();
+        
+        /// <inheritdoc />
+        public override PitchClass PitchClass => GetPitchClass();
+        
+        /// <inheritdoc />
+        public override AccidentedNote ToAccidentedNote() => new(NaturalNote, Accidental);
     }
 
     /// <summary>
     /// A note from a sharp musical key (C | C# | D | D# | E | F | F# | G | G# | A | A# | B)
     /// </summary>
     [PublicAPI]
-    public sealed record Sharp(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote), IStaticReadonlyCollection<Sharp>
+    public sealed record Sharp(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null) : KeyNote(NaturalNote), IStaticReadonlyCollection<Sharp>, IParsable<Sharp>
     {
         #region IStaticReadonlyCollection<Sharp> Members
 
-        public static IReadOnlyCollection<Sharp> Items => new[] { C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B }.ToImmutableList();
+        public static IReadOnlyCollection<Sharp> Items => [C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B];
 
         #endregion
 
+        #region Well-known sharp notes
+        
         public static Sharp C => new(NaturalNote.C);
         public static Sharp CSharp => new(NaturalNote.C, Primitives.SharpAccidental.Sharp);
         public static Sharp D => new(NaturalNote.D);
@@ -209,13 +233,25 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public static Sharp ASharp => new(NaturalNote.A, Primitives.SharpAccidental.Sharp);
         public static Sharp B => new(NaturalNote.B);
         
-        public static bool TryParse(string? input, out Sharp sharpNote)
+        #endregion
+
+        #region IParsable<Sharp> Members
+
+        /// <inheritdoc />
+        public static Sharp Parse(string s, IFormatProvider? provider)
         {
-            sharpNote = null!;
-            if (string.IsNullOrWhiteSpace(input)) return false;
+            if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            return result;
+        }
+        
+        /// <inheritdoc />
+        public static bool TryParse(string? s, IFormatProvider? provider, out Sharp result)
+        {
+            result = null!;
+            if (string.IsNullOrWhiteSpace(s)) return false;
             
-            var normalizedInput = input.Trim().ToUpperInvariant().Replace("♯", "#");
-            var aSharpKey = normalizedInput switch
+            var normalizedInput = s.Trim().ToUpperInvariant().Replace("♯", "#");
+            var sharpNote = normalizedInput switch
             {
                 "C" => C,
                 "C#" => CSharp,
@@ -232,23 +268,30 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
                 _ => null
             };
 
-            sharpNote = aSharpKey!;
-            return aSharpKey != null;
+            result = sharpNote!;
+            return sharpNote != null;
         }
 
+        #endregion
+        
         public static implicit operator Chromatic(Sharp sharp) => new(sharp.PitchClass);
 
-        public static IReadOnlyCollection<Sharp> NaturalNotes => new[] { C, D, E, F, G, A, B }.ToImmutableList();
-        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => notes.ToImmutableArray();
+        public static IReadOnlyCollection<Sharp> NaturalNotes => [C, D, E, F, G, A, B];
+        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
+        /// <inheritdoc />
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
+        
+        /// <inheritdoc />
         public override Accidental? Accidental => SharpAccidental;
 
+        /// <inheritdoc />
         public override string ToString() =>
             SharpAccidental.HasValue
                 ? $"{NaturalNote}{SharpAccidental.Value}"
                 : $"{NaturalNote}";
 
+        /// <inheritdoc />
         protected override PitchClass GetPitchClass()
         {
             var value = NaturalNote.ToPitchClass().Value;
@@ -264,36 +307,31 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     /// A flat key note
     /// </summary>
     [PublicAPI]
-    public sealed record Flat(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote), IStaticReadonlyCollection<Flat>
+    public sealed record Flat(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null) : KeyNote(NaturalNote), IStaticReadonlyCollection<Flat>, IParsable<Flat>
     {
         #region IStaticReadonlyCollection<Flat> Members
 
-        public static IReadOnlyCollection<Flat> Items => new[] { C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B }.ToImmutableList();
+        public static IReadOnlyCollection<Flat> Items => [C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B];
 
         #endregion
+        
+        #region IParsable<Sharp> Members
 
-        public static Flat CFlat => new(NaturalNote.C, Primitives.FlatAccidental.Flat);
-        public static Flat C => new(NaturalNote.C);
-        public static Flat DFlat => new(NaturalNote.D, Primitives.FlatAccidental.Flat);
-        public static Flat D => new(NaturalNote.D);
-        public static Flat EFlat => new(NaturalNote.E, Primitives.FlatAccidental.Flat);
-        public static Flat E => new(NaturalNote.E);
-        public static Flat FFlat => new(NaturalNote.F, Primitives.FlatAccidental.Flat);
-        public static Flat F => new(NaturalNote.F);
-        public static Flat GFlat => new(NaturalNote.G, Primitives.FlatAccidental.Flat);
-        public static Flat G => new(NaturalNote.G);
-        public static Flat AFlat => new(NaturalNote.A, Primitives.FlatAccidental.Flat);
-        public static Flat A => new(NaturalNote.A);
-        public static Flat BFlat => new(NaturalNote.B, Primitives.FlatAccidental.Flat);
-        public static Flat B => new(NaturalNote.B);
-
-        public static bool TryParse(string? input, out Flat flatNote)
+        /// <inheritdoc />
+        public static Flat Parse(string s, IFormatProvider? provider)
         {
-            flatNote = null!;
-            if (string.IsNullOrWhiteSpace(input)) return false;
+            if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            return result;
+        }
+        
+        /// <inheritdoc />
+        public static bool TryParse(string? s, IFormatProvider? provider, out Flat result)
+        {
+            result = default!;
+            if (string.IsNullOrWhiteSpace(s)) return false;
 
-            var normalizedInput = input.Trim().Replace("♭", "b").ToUpperInvariant();
-            var aFlatKey = normalizedInput switch
+            var normalizedInput = s.Trim().Replace("♭", "b").ToUpperInvariant();
+            var flatNote = normalizedInput switch
             {
                 "CB" => CFlat,
                 "C" => C,
@@ -312,23 +350,51 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
                 _ => null
             };
 
-            flatNote = aFlatKey!;
-            return aFlatKey != null;        
+            result = flatNote!;
+            return flatNote != null;        
         }
         
-        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => notes.ToImmutableArray();
+        #endregion
+        
+        #region Well-known flat notes
+
+        public static Flat CFlat => new(NaturalNote.C, Primitives.FlatAccidental.Flat);
+        public static Flat C => new(NaturalNote.C);
+        public static Flat DFlat => new(NaturalNote.D, Primitives.FlatAccidental.Flat);
+        public static Flat D => new(NaturalNote.D);
+        public static Flat EFlat => new(NaturalNote.E, Primitives.FlatAccidental.Flat);
+        public static Flat E => new(NaturalNote.E);
+        public static Flat FFlat => new(NaturalNote.F, Primitives.FlatAccidental.Flat);
+        public static Flat F => new(NaturalNote.F);
+        public static Flat GFlat => new(NaturalNote.G, Primitives.FlatAccidental.Flat);
+        public static Flat G => new(NaturalNote.G);
+        public static Flat AFlat => new(NaturalNote.A, Primitives.FlatAccidental.Flat);
+        public static Flat A => new(NaturalNote.A);
+        public static Flat BFlat => new(NaturalNote.B, Primitives.FlatAccidental.Flat);
+        public static Flat B => new(NaturalNote.B);
+        
+        #endregion
+        
+        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
         public static implicit operator Chromatic(Flat flatNote) => new(flatNote.PitchClass);
 
+        /// <inheritdoc />
         public override PitchClass PitchClass => GetPitchClass();
+        
+        /// <inheritdoc />
         public override AccidentalKind AccidentalKind => AccidentalKind.Flat;
+        
+        /// <inheritdoc />
         public override Accidental? Accidental => FlatAccidental;
 
+        /// <inheritdoc />
         public override string ToString() =>
             FlatAccidental.HasValue
                 ? $"{NaturalNote}{FlatAccidental.Value}"
                 : $"{NaturalNote}";
 
+        /// <inheritdoc />
         protected override PitchClass GetPitchClass()
         {
             var value = NaturalNote.ToPitchClass().Value;
@@ -356,8 +422,10 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public static implicit operator AccidentedNote(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
         public static Interval.Simple operator -(AccidentedNote note1, AccidentedNote note2) => note1.GetInterval(note2);
         
-        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => notes.ToImmutableArray();
+        public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
+        #region Well-known accidented notes
+       
         public static AccidentedNote C => new(NaturalNote.C);
         public static AccidentedNote Cb => new(NaturalNote.C, FlatAccidental.Flat);
         public static AccidentedNote CSharp => new(NaturalNote.C, SharpAccidental.Sharp);
@@ -379,12 +447,15 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public static AccidentedNote B => new(NaturalNote.B);
         public static AccidentedNote Bb => new(NaturalNote.B, FlatAccidental.Flat);
         public static AccidentedNote BSharp => new(NaturalNote.B, SharpAccidental.Sharp);
+        
+        #endregion
 
         public override PitchClass PitchClass => GetPitchClass();
         public override AccidentedNote ToAccidentedNote() => this;
         public override Interval.Simple GetInterval(Note other) => GetInterval(other.ToAccidentedNote());
         public Interval.Simple GetInterval(AccidentedNote other) => GetInterval(this, other);
 
+        /// <inheritdoc />
         public override string ToString() => $"{NaturalNote}{Accidental}";
 
         private PitchClass GetPitchClass()
@@ -396,13 +467,31 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
             return result;
         }
 
+        /// <summary>
+        /// Gets the interval between two accidented notes
+        /// </summary>
+        /// <param name="startNote"></param>
+        /// <param name="endNote"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         private static Interval.Simple GetInterval(
             AccidentedNote startNote,
             AccidentedNote endNote)
         {
             if (startNote == endNote) return Interval.Simple.Unison;
 
-            var key = Key.ByRootNaturalNoteIndexer.Get(startNote.NaturalNote);
+            var majorKeyByNaturalNote = new Dictionary<NaturalNote, Key.Major>
+            {
+                [NaturalNote.C] = Key.Major.C,
+                [NaturalNote.D] = Key.Major.D,
+                [NaturalNote.E] = Key.Major.E,
+                [NaturalNote.F] = Key.Major.F,
+                [NaturalNote.G] = Key.Major.G,
+                [NaturalNote.A] = Key.Major.A,
+                [NaturalNote.B] = Key.Major.B
+            };
+
+            if (!majorKeyByNaturalNote.TryGetValue(startNote.NaturalNote, out var key)) throw new InvalidOperationException($"No major key found for {startNote.NaturalNote}");
             var size = endNote.NaturalNote - startNote.NaturalNote;
             var qualityIncrement = GetQualityIncrement(key, startNote, endNote);
             var quality = GetQuality(size, qualityIncrement);

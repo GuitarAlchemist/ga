@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using PCRE;
 using GA.Business.Core.Intervals.Primitives;
 
 /// <summary>
@@ -10,7 +9,7 @@ using GA.Business.Core.Intervals.Primitives;
 /// Implements <see cref="IRangeValueObject{SharpAccidental}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidental>
+public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidental>, IParsable<SharpAccidental>
 {
     #region IRangeValueObject Members
 
@@ -25,24 +24,24 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<SharpAccidental>.CheckRange(value, minValue, maxValue);
 
     #endregion
-
-    public static SharpAccidental Sharp => FromValue(1);
-    public static SharpAccidental DoubleSharp => FromValue(2);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    private const int _minValue = 1;
-    private const int _maxValue = 2;
-    private readonly int _value;
+    
+    #region IParsable Members
 
     //language=regexp
     public static readonly string RegexPattern = "^(#|x)$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
-    public static bool TryParse(string s, out SharpAccidental parsedAccidental)
+    /// <inheritdoc />
+    public static SharpAccidental Parse(string s, IFormatProvider? provider)
     {
-        parsedAccidental = default;
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out SharpAccidental result)
+    {
+        result = default;
         var match = _regex.Match(s);
         if (!match.Success) return false; // Failure
 
@@ -57,13 +56,26 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
         if (!parsedSharpAccidental.HasValue) return false; // Failure
 
         // Success
-        parsedAccidental = parsedSharpAccidental.Value;
+        result = parsedSharpAccidental.Value;
         return true;
-    }
+    }    
+    
+    #endregion
+
+    public static SharpAccidental Sharp => FromValue(1);
+    public static SharpAccidental DoubleSharp => FromValue(2);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+
+    private const int _minValue = 1;
+    private const int _maxValue = 2;
+    private readonly int _value;
 
     public static implicit operator Semitones(SharpAccidental value) => value.ToSemitones();
     public Semitones ToSemitones() => new() {Value = _value};
 
+    /// <inheritdoc />
     public override string ToString() => _value switch
     {
         1 => "#",

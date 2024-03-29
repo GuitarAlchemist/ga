@@ -66,8 +66,8 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     public override string ToString() => _value switch
     {
-        10 => "T",
-        11 => "Em",
+        10 => "T", // Abbreviation for 10
+        11 => "E", // Abbreviation for 11
         _ => _value.ToString()
     };
 
@@ -79,33 +79,30 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
 
     private static readonly ImmutableList<Note.Chromatic> _chromaticNotes =
-        new List<Note.Chromatic>
-        {
+        [
             Note.Chromatic.C,
-            Note.Chromatic.CSharpDb,
+            Note.Chromatic.CSharpOrDFlat,
             Note.Chromatic.D,
-            Note.Chromatic.DSharpEb,
+            Note.Chromatic.DSharpOrEFlat,
             Note.Chromatic.E,
             Note.Chromatic.F,
-            Note.Chromatic.FSharpGb,
+            Note.Chromatic.FSharpOrGFlat,
             Note.Chromatic.G,
-            Note.Chromatic.GSharpAb,
+            Note.Chromatic.GSharpOrAFlat,
             Note.Chromatic.A,
-            Note.Chromatic.ASharpBb,
+            Note.Chromatic.ASharpOrBFlat,
             Note.Chromatic.B
-        }.ToImmutableList();
+        ];
 
     private static readonly ImmutableList<Note.Sharp> _sharpNotes =
-        new List<Note.Sharp>
-        {
-            Note.Sharp.C, Note.Sharp.CSharp, Note.Sharp.D, Note.Sharp.DSharp, Note.Sharp.E, Note.Sharp.F,
-            Note.Sharp.FSharp, Note.Sharp.G, Note.Sharp.GSharp, Note.Sharp.A, Note.Sharp.ASharp, Note.Sharp.B
-        }.ToImmutableList();
+    [
+        Note.Sharp.C, Note.Sharp.CSharp, Note.Sharp.D, Note.Sharp.DSharp, Note.Sharp.E, Note.Sharp.F,
+        Note.Sharp.FSharp, Note.Sharp.G, Note.Sharp.GSharp, Note.Sharp.A, Note.Sharp.ASharp, Note.Sharp.B
+    ];
 
     private static readonly ImmutableList<Note.Flat> _flatNotes =
-        new List<Note.Flat>
-        {
-            Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
-            Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
-        }.ToImmutableList();
+    [
+        Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
+        Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
+    ];
 }

@@ -228,7 +228,10 @@ public abstract record Interval
         public Simple ToInverse() => new() { Size = !Size, Quality = !Quality };
         
         /// <inheritdoc />
-        public override string ToString() => ToString("Gm");
+        /// <remarks>
+        /// Uses <see cref="Format.ShortName"/>
+        /// </remarks>
+        public override string ToString() => ToString(Format.ShortName);
 
         /// <inheritdoc />
         public override Semitones ToSemitones()

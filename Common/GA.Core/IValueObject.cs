@@ -4,7 +4,7 @@
 /// Interface for an object identified by its value.
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IComparable"/>
+/// Derives from <see cref="IComparable"/>
 /// </remarks>
 public interface IValueObject : IComparable
 {
@@ -26,8 +26,8 @@ public interface IValueObject : IComparable
 /// Value object interface (Strongly typed)
 /// </summary>
 /// <typeparam name="TSelf">This object type</typeparam>
-/// Derives from <see cref="IValueObject"/>, <see cref="IComparable{TSelf}"/>
-public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>
+/// Derives from <see cref="IValueObject"/>, <see cref="IComparable{TSelf}"/> and IEquatable{TSelf}
+public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, IEquatable<TSelf>
     where TSelf : IValueObject<TSelf>
 {
     int IComparable<TSelf>.CompareTo(TSelf? other) => Value.CompareTo(other?.Value);
