@@ -46,7 +46,7 @@ public abstract record Key(KeySignature KeySignature)
     public abstract KeyNote Root { get; }
 
     /// <summary>
-    /// Gets the 7 notes in the key.
+    /// Gets the 7 notes in the key
     /// </summary>
     /// <returns>The <see cref="KeyNote"/> collection.</returns>
     public IReadOnlyCollection<KeyNote> GetNotes()
@@ -107,6 +107,8 @@ public abstract record Key(KeySignature KeySignature)
     /// <returns>The <see cref="Interval.Simple"/></returns>
     public Interval.Simple GetInterval(AccidentedNote note) => note.GetInterval(Root);
 
+    #region Major Key
+  
     /// <summary>
     /// A major key
     /// </summary>
@@ -232,6 +234,10 @@ public abstract record Key(KeySignature KeySignature)
         };
     }
 
+    #endregion
+    
+    #region Minor Key
+   
     /// <summary>
     /// A minor key
     /// </summary>
@@ -352,4 +358,6 @@ public abstract record Key(KeySignature KeySignature)
             _ => throw new InvalidOperationException()
         };
     }
+    
+    #endregion
 }

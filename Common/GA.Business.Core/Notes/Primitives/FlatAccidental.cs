@@ -33,7 +33,7 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     /// <inheritdoc />
-    public static FlatAccidental Parse(string s, IFormatProvider? provider)
+    public static FlatAccidental Parse(string s, IFormatProvider? provider = null)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;

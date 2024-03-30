@@ -1,4 +1,6 @@
-﻿using GA.Business.Core.AI;
+﻿using GA.Business.Config;
+using GA.Business.Core.AI;
+using GA.Business.Core.Instruments;
 using GA.Business.Core.Tonal;
 using GaCLI;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,10 @@ using static System.Console;
 
 var configurationBuilder = new ConfigurationBuilder();
 var configuration = configurationBuilder.AddUserSecrets<Program>().Build();
+
+var instrumentFinder = new InstrumentFinder();
+var instruments = instrumentFinder.ListAllInstruments();
+var guitarTunings = instrumentFinder.GetInstrumentTunings("Guitar");
 
 // await OpenAiSimpleCompletionAsync();
 // await ChatGptSimpleCompletionAsync();

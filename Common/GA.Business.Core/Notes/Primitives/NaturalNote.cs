@@ -62,14 +62,14 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     public static readonly string RegexPattern = "^(?'note'[A-G])$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
-    /// <inheritdoc cref="IParsable{TSelf}.Parse"/>
-    public static NaturalNote Parse(string s, IFormatProvider? provider)
+    /// <inheritdoc />
+    public static NaturalNote Parse(string s, IFormatProvider? provider = null)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;
     }
 
-    /// <inheritdoc cref="IParsable{TSelf}.TryParse"/>
+    /// <inheritdoc />
     public static bool TryParse(
         [NotNullWhen(true)] string? s, 
         IFormatProvider? provider, 

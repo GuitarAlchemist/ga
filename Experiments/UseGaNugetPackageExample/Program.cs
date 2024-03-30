@@ -35,10 +35,7 @@ foreach (var mode in modes)
 
 // ----------------------------------------------------------------
 
-var a = Instruments.Instrument;
-
 var instrument = Instruments.Instrument.Ukulele;
-
 foreach (var prop in instrument.GetType().GetProperties())
 {
     Console.WriteLine(prop.Name);

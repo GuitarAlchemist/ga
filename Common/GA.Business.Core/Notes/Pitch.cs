@@ -67,7 +67,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>
         private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
         /// <inheritdoc />
-        public static Sharp Parse(string s, IFormatProvider? provider)
+        public static Sharp Parse(string s, IFormatProvider? provider = null)
         {
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;
@@ -245,7 +245,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>
         private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
         /// <inheritdoc />
-        public static Flat Parse(string s, IFormatProvider? provider)
+        public static Flat Parse(string s, IFormatProvider? provider = null)
         {
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;

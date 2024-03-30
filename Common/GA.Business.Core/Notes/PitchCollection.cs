@@ -1,28 +1,23 @@
 ﻿namespace GA.Business.Core.Notes;
 
 [PublicAPI]
-public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<PitchCollection>
+public sealed class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<PitchCollection>
 {
     #region IParsable{PitchCollection} members
 
-    public static PitchCollection Parse(string s, IFormatProvider? provider) => Parse(s);
-    public static bool TryParse(string? s, IFormatProvider? provider, out PitchCollection result) => TryParse(s, out result);
-
-    #endregion
-
-    public static readonly PitchCollection Empty = new();
-
-    public static PitchCollection Parse(string s)
+    /// <inheritdoc />
+    public static PitchCollection Parse(string s, IFormatProvider? provider = null)
     {
-        if (!TryParse(s, out var result)) throw new PitchCollectionParseException();
+        if (!TryParse(s, null, out var result)) throw new PitchCollectionParseException();
         return result;
     }
-    
-    public static bool TryParse(string s, out PitchCollection parsedPitchCollection)
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out PitchCollection result)
     {
         ArgumentNullException.ThrowIfNull(s);
         
-        parsedPitchCollection = Empty;
+        result = Empty;
 
         var segments = s.Split(" ");
         var items = new List<Pitch>();
@@ -33,10 +28,18 @@ public class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<Pit
         }
 
         // Success
-        parsedPitchCollection = new(items);
+        result = new(items);
         return true;
     }
 
+    #endregion
+
+    /// <summary>
+    /// Empty <see cref="PitchCollection"/>
+    /// </summary>
+    public static readonly PitchCollection Empty = new();
+   
     public PitchCollection(params Pitch[] items) : base(items) { }
-    private PitchCollection(IReadOnlyCollection<Pitch> items) : base(items) { }
+    public PitchCollection(IEnumerable<Pitch> items) : base(items.ToImmutableList()) { }
+    public PitchCollection(IReadOnlyCollection<Pitch> items) : base(items) { }
 }
