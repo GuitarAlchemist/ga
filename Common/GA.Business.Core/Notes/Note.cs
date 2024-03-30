@@ -238,7 +238,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         #region IParsable<Sharp> Members
 
         /// <inheritdoc />
-        public static Sharp Parse(string s, IFormatProvider? provider)
+        public static Sharp Parse(string s, IFormatProvider? provider = null)
         {
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;
@@ -318,7 +318,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         #region IParsable<Sharp> Members
 
         /// <inheritdoc />
-        public static Flat Parse(string s, IFormatProvider? provider)
+        public static Flat Parse(string s, IFormatProvider? provider = null)
         {
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;

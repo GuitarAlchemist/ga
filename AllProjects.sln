@@ -114,7 +114,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GA", "GA", "{CA2FDC53-68EE-
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Local Ga.Interactive NuGet", "_Local Ga.Interactive NuGet", "{48D79B59-245D-4A7F-815D-3C6A61A727E2}"
 	ProjectSection(SolutionItems) = preProject
-		Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet - Key.ipynb = Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet - Key.ipynb
+		Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb = Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb
 	EndProjectSection
 EndProject
 Global

@@ -45,7 +45,6 @@
 		<PackageReference Include="PCRE.NET" Version="1.0.0" />
 		<!-- For GA.Business.Config-->
 		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
-		<!-- Needed when running on the docker jupyter/base-notebook image -->
 		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup>

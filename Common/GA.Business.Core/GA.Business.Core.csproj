@@ -61,6 +61,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="bin\$(Configuration)\net8.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net8.0\" />
 		<None Include="bin\$(Configuration)\net8.0\GA.Core.dll" Pack="true" PackagePath="lib\net8.0\" />
 	</ItemGroup>
 

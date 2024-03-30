@@ -1,15 +1,14 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
 using GA.Core.Combinatorics;
-using System.Collections.Generic;
 
 /// <summary>
 /// List of <see cref="RelativeFret"/> items, indexed by string.
 /// </summary>
 [PublicAPI]
-public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
-                                           IIndexer<Str, RelativeFret>,
-                                           IValueObject
+public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IReadOnlyList<RelativeFret>,
+                                                                              IIndexer<Str, RelativeFret>,
+                                                                              IValueObject
 {
     #region IIndexer<Str, RelativeFret> Members
 
@@ -30,14 +29,9 @@ public abstract class RelativeFretVector : IReadOnlyList<RelativeFret>,
     public abstract bool IsPrime { get; }
 
     private readonly Variation<RelativeFret> _variation;
-    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr;
-
-    protected RelativeFretVector(Variation<RelativeFret> variation)
-    {
-        _relativeFretByStr =
+    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr =
             variation.Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
                      .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
-    }
 
     /// <summary>
     /// Create a fret vector.

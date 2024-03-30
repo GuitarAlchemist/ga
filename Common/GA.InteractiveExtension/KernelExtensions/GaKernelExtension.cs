@@ -121,8 +121,8 @@ public class GaKernelExtension : IKernelExtension, IStaticContentSource
 
         var banner = FiggleFonts.Standard.Render("Guitar Alchemist");
         // ReSharper disable StringLiteralTypo
-        var html = $$""" 
-<pre style="font-family: monospace">{{banner}}</pre>
+        var html = $""" 
+<pre style="font-family: monospace">{banner}</pre>
 """;
         // ReSharper restore StringLiteralTypo
 

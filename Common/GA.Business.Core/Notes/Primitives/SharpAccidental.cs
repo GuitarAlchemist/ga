@@ -32,7 +32,7 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     /// <inheritdoc />
-    public static SharpAccidental Parse(string s, IFormatProvider? provider)
+    public static SharpAccidental Parse(string s, IFormatProvider? provider = null)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;
@@ -42,21 +42,22 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     public static bool TryParse(string? s, IFormatProvider? provider, out SharpAccidental result)
     {
         result = default;
+        if (string.IsNullOrWhiteSpace(s)) return false; // Failure (Empty string)
         var match = _regex.Match(s);
-        if (!match.Success) return false; // Failure
+        if (!match.Success) return false; // Failure (No match)
 
         var group = match.Groups[1];
-        SharpAccidental? parsedSharpAccidental = group.Value.ToUpperInvariant() switch
+        SharpAccidental? accidental = group.Value.ToUpperInvariant() switch
         {
             "#" => Sharp,
             "x" => DoubleSharp,
             _ => null
         };
 
-        if (!parsedSharpAccidental.HasValue) return false; // Failure
+        if (!accidental.HasValue) return false; // Failure
 
         // Success
-        result = parsedSharpAccidental.Value;
+        result = accidental.Value;
         return true;
     }    
     
