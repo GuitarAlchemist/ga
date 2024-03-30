@@ -16,6 +16,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
+		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
 	</ItemGroup>
 
 </Project>

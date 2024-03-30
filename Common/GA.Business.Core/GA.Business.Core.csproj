@@ -15,10 +15,11 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Copyright> Copyright (c) Stephane Pareilleux 2022</Copyright>
+		<Copyright> Copyright (c) Stephane Pareilleux 2024</Copyright>
 		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
 		<PackageTags>Music;Guitar</PackageTags>
 		<PackageReleaseNotes>
+2024-03-29 - Migrated to .NET 8 / Code improvements
 2022-12-16 - Fixed bug in IntervalClassVector calculation
 2022-12-10 - Added Fretboard.RelativePositions (All possible relative fret vectors and translation equivalences); Added PitchClassCombinations
 2022-11-24 - Added GA.Core.Combinatorics.VariationsWithRepetitions class
@@ -39,9 +40,9 @@
 		</PackageDescription>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.13</PackageVersion>
-		<AssemblyVersion>1.0.13.0</AssemblyVersion>
-		<FileVersion>1.0.13.0</FileVersion>
+		<PackageVersion>1.0.16</PackageVersion>
+		<AssemblyVersion>1.0.16.0</AssemblyVersion>
+		<FileVersion>1.0.16.0</FileVersion>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
@@ -60,6 +61,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="bin\$(Configuration)\net8.0\GA.Core.dll" Pack="true" PackagePath="lib\net8.0\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -73,37 +75,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="JetBrains.Annotations" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj">
 			<PrivateAssets>All</PrivateAssets>
 		</ProjectReference>
-		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
+		<ProjectReference Include="..\GA.Core\GA.Core.csproj">
+			<PrivateAssets>All</PrivateAssets>
+		</ProjectReference>
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Fretboard\Config\" />
 	</ItemGroup>
-
-	<!-- See https://josef.codes/dotnet-pack-include-referenced-projects/ -->
-	<PropertyGroup>
-		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-	</PropertyGroup>
-
-	<Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
-		<ItemGroup>
-			<!-- Filter out unnecessary files -->
-			<_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('PrivateAssets', 'All'))" />
-		</ItemGroup>
-
-		<!-- Print batches for debug purposes -->
-		<Message Text="Batch for .nupkg: ReferenceCopyLocalPaths = @(_ReferenceCopyLocalPaths), ReferenceCopyLocalPaths.DestinationSubDirectory = %(_ReferenceCopyLocalPaths.DestinationSubDirectory) Filename = %(_ReferenceCopyLocalPaths.Filename) Extension = %(_ReferenceCopyLocalPaths.Extension)" Importance="High" Condition="'@(_ReferenceCopyLocalPaths)' != ''" />
-
-		<ItemGroup>
-			<!-- Add file to package with consideration of sub folder. If empty, the root folder is chosen. -->
-			<BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)" />
-		</ItemGroup>
-	</Target>
-
 </Project>

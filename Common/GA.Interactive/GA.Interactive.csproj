@@ -19,6 +19,7 @@
 		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
 		<PackageReleaseNotes>
+			2024-04-29 - Added latest GA.Business.Core changes (Migrated to .NET 8)
 			2022-11-24 - Added latest GA.Business.Core changes (VariationsWithRepetitions class)
 			2022-10-29 - Initial version
 		</PackageReleaseNotes>
@@ -26,6 +27,7 @@
 		<IsPackable>true</IsPackable>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
 		<PackageVersion>1.0.1-beta4</PackageVersion>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<AssemblyVersion>1.0.1.4</AssemblyVersion>
 		<FileVersion>1.0.1.4</FileVersion>
 		<DebugType>embedded</DebugType>
@@ -58,6 +60,9 @@
 	<ItemGroup>
 		<None Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
 		<None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+		
+		<!-- See https://devblogs.microsoft.com/nuget/add-a-readme-to-your-nuget-package/#add-a-readme-to-your-package -->
+		<None Include="README.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 
 </Project>
