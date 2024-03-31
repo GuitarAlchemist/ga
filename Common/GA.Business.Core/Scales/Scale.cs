@@ -7,7 +7,6 @@ using Notes;
 using Tonal;
 using static Notes.Note.AccidentedNote;
 
-
 /// <summary>
 /// A scale
 /// </summary>
@@ -18,9 +17,19 @@ using static Notes.Note.AccidentedNote;
 /// https://ianring.com/musictheory/scales/
 /// https://chromatone.center/theory/scales/study.html
 /// </remarks>
-public class Scale : IReadOnlyCollection<Note>,
-                     IStaticEnumerable<Scale>
+public class Scale : IStaticReadonlyCollection<Scale>,
+                     IReadOnlyCollection<Note>
 {
+    #region IStaticReadonlyCollection<Scale> Members
+
+    public static IReadOnlyCollection<Scale> Items =>
+        PitchClassSetIdentity.Items
+            .Where(identity => PitchClassSetIdentity.ContainsRoot(identity))
+            .Select(FromIdentity)
+            .ToLazyCollection();
+
+    #endregion
+    
     public static Scale Major => new(Key.Major.C.GetNotes());
     public static Scale NaturalMinor => Minor.Natural;
     public static Scale HarmonicMinor => Minor.Harmonic;
@@ -35,7 +44,6 @@ public class Scale : IReadOnlyCollection<Note>,
     public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
 
     public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
-    public static IEnumerable<Scale> Items => PitchClassSetIdentity.Items.Where(identity => PitchClassSetIdentity.ContainsRoot(identity)).Select(FromIdentity);
 
     private readonly IReadOnlyCollection<Note> _notes;
 

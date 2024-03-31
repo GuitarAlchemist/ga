@@ -2,7 +2,6 @@
 
 using Atonal;
 using GA.Business.Core.Intervals.Primitives;
-using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 /// A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note, https://en.wikipedia.org/wiki/Natural_(Objects))

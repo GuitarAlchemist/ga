@@ -5,6 +5,7 @@ global using System.Collections.Generic;
 global using System.Collections.Immutable;
 global using System.Collections.ObjectModel;
 global using System.ComponentModel;
+global using System.Diagnostics.CodeAnalysis;
 global using System.Linq;
 global using System.Numerics;
 global using System.Reflection;

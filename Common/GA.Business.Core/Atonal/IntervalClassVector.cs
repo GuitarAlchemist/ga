@@ -16,7 +16,7 @@ using Primitives;
 /// https://viva.pressbooks.pub/openmusictheory/chapter/interval-class-vectors/
 /// See Prime Form: https://www.youtube.com/watch?v=KFKMvFzobbw
 /// 
-/// Notes : All major scale modes share the same interval vector - Example:
+/// Notes :   major scale modes share the same interval vector - Example:
 /// - Major scale => 254361
 /// - Dorian      => 254361
 /// </remarks>
