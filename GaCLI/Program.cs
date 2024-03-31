@@ -1,4 +1,4 @@
-﻿using GA.Business.Config;
+﻿using GA.Business.Core;
 using GA.Business.Core.AI;
 using GA.Business.Core.Instruments;
 using GA.Business.Core.Tonal;
@@ -17,9 +17,18 @@ using static System.Console;
 var configurationBuilder = new ConfigurationBuilder();
 var configuration = configurationBuilder.AddUserSecrets<Program>().Build();
 
-var instrumentFinder = new InstrumentFinder();
-var instruments = instrumentFinder.ListAllInstruments();
-var guitarTunings = instrumentFinder.GetInstrumentTunings("Guitar");
+var names = Assets.Names;
+foreach (var assetName in names)
+{
+    var asset = Assets.Get(assetName);
+    WriteLine($"{assetName}");
+    foreach (var item in asset)
+    {
+        
+    }
+}
+
+FindInstruments();
 
 // await OpenAiSimpleCompletionAsync();
 // await ChatGptSimpleCompletionAsync();
@@ -165,6 +174,12 @@ void Experiment2()
     _ = 1;
 }
 
+void FindInstruments()
+{
+    var instrumentFinder = new InstrumentFinder();
+    var instruments = instrumentFinder.ListAllInstruments();
+    var guitarTunings = instrumentFinder.GetInstrumentTunings("Guitar");
+}
 
 
 /*

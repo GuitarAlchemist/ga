@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core;
+﻿using GA.Business.Core.Notes;
+
+namespace GA.Business.Core;
 
 public interface IName
 {
