@@ -102,6 +102,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.Business.Core.AI", "Comm
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GA", "GA", "{CA2FDC53-68EE-4C24-B9B8-9C2DC136912F}"
 	ProjectSection(SolutionItems) = preProject
+		Notebooks\GA\Assets.ipynb = Notebooks\GA\Assets.ipynb
 		Notebooks\GA\Guitar Tunings.ipynb = Notebooks\GA\Guitar Tunings.ipynb
 		Notebooks\GA\Instruments.ipynb = Notebooks\GA\Instruments.ipynb
 		Notebooks\GA\Keys.ipynb = Notebooks\GA\Keys.ipynb

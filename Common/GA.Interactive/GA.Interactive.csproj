@@ -26,10 +26,10 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<IsPackable>true</IsPackable>
 		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.1-beta4</PackageVersion>
+		<PackageVersion>1.0.1-beta5</PackageVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<AssemblyVersion>1.0.1.4</AssemblyVersion>
-		<FileVersion>1.0.1.4</FileVersion>
+		<AssemblyVersion>1.0.1.5</AssemblyVersion>
+		<FileVersion>1.0.1.5</FileVersion>
 		<DebugType>embedded</DebugType>
 		<NoWarn>NU5100,NU5128,NU5104</NoWarn>
 	</PropertyGroup>
