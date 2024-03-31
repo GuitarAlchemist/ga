@@ -117,6 +117,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Local Ga.Interactive NuGet
 		Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb = Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb
 	EndProjectSection
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GA.Business.Core.TypeProviders", "Common\GA.Business.Core.Generated\GA.Business.Core.TypeProviders.fsproj", "{60E29D23-29FE-417C-A8DB-CD17093459FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -214,6 +216,12 @@ Global
 		{9B05C29E-F080-4C7A-9852-9DC54A3E0DED}.net7.0|Any CPU.Build.0 = Debug|Any CPU
 		{9B05C29E-F080-4C7A-9852-9DC54A3E0DED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B05C29E-F080-4C7A-9852-9DC54A3E0DED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.net7.0|Any CPU.ActiveCfg = Debug|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.net7.0|Any CPU.Build.0 = Debug|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60E29D23-29FE-417C-A8DB-CD17093459FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -237,6 +245,7 @@ Global
 		{9B05C29E-F080-4C7A-9852-9DC54A3E0DED} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 		{CA2FDC53-68EE-4C24-B9B8-9C2DC136912F} = {4B000918-9823-4B1D-89EE-09C44B573BEC}
 		{48D79B59-245D-4A7F-815D-3C6A61A727E2} = {CA2FDC53-68EE-4C24-B9B8-9C2DC136912F}
+		{60E29D23-29FE-417C-A8DB-CD17093459FC} = {C2D782E1-D535-4614-B458-E1ABA1B4F5B1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B6B05916-F30D-48AC-A463-B273D39789E5}

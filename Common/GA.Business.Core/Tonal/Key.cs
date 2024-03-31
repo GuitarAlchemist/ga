@@ -10,8 +10,19 @@ using static Notes.Note;
 /// </summary>
 /// <param name="KeySignature"></param>
 [PublicAPI]
-public abstract record Key(KeySignature KeySignature)
+public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonlyCollection<Key>
 {
+    #region IStaticPrintableReadonlyCollection<Key>
+
+    /// <summary>
+    /// Gets the <see cref="PrintableReadOnlyCollection{Key}"/> keys (15 <see cref="Major"/> keys and 15 <see cref="Minor"/> keys)
+    /// </summary>
+    public static PrintableReadOnlyCollection<Key> Items => Major.MajorItems.Cast<Key>().Concat(Minor.MinorItems).ToImmutableList().AsPrintable();
+
+    #endregion
+
+    #region Static Helpers
+
     /// <summary>
     /// Gets the collection of keys for the key mode (Major | Minor)
     /// </summary>
@@ -25,10 +36,7 @@ public abstract record Key(KeySignature KeySignature)
         _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
     };
 
-    /// <summary>
-    /// Gets the <see cref="PrintableReadOnlyCollection{Key}"/> keys (15 <see cref="Major"/> keys and 15 <see cref="Minor"/> keys)
-    /// </summary>
-    public static PrintableReadOnlyCollection<Key> Items => Major.MajorItems.Cast<Key>().Concat(Minor.MinorItems).ToImmutableList().AsPrintable();
+    #endregion
     
     /// <summary>
     /// Gets the <see cref="KeyMode"/> (Major | Minor)
