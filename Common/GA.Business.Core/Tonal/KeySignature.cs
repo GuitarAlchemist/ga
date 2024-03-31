@@ -4,7 +4,6 @@ using GA.Business.Core.Notes.Extensions;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using KeyNote = Notes.Note.KeyNote;
-using static GA.Business.Core.Notes.Note;
 
 /// <summary>
 /// Key signature (See https://en.wikipedia.org/wiki/Key_signature)

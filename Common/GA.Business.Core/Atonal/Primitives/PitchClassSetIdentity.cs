@@ -64,7 +64,6 @@ public readonly record struct PitchClassSetIdentity : IStaticValueObjectList<Pit
 
     public override string ToString()
     {
-        if (string.IsNullOrEmpty(ScaleName)) return $"{Value}";
-        return $"{Value} ({ScaleName})";
+        return string.IsNullOrEmpty(ScaleName) ? $"{Value}" : $"{Value} ({ScaleName})";
     }
 }

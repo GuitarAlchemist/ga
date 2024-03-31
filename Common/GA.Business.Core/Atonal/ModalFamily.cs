@@ -5,9 +5,14 @@ using Primitives;
 /// <summary>
 /// Group of pitch class sets that share the same interval vector
 /// </summary>
-public class ModalFamily
+public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
 {
-    public static IEnumerable<ModalFamily> All => _lazyModalFamilies.Value.Values;
+    #region IStaticReadonlyCollection<ModalFamily> Members
+
+    public static IReadOnlyCollection<ModalFamily> Items => _lazyModalFamilies.Value.Values;
+
+    #endregion
+    
     public static IReadOnlySet<IntervalClassVector> ModalIntervalVectors => _lazyModalIntervalVectors.Value;
     public static bool TryGetValue(IntervalClassVector intervalVector, out ModalFamily? modalFamily) => _lazyModalFamilies.Value.TryGetValue(intervalVector, out modalFamily);
 
