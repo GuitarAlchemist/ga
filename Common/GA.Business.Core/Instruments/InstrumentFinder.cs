@@ -4,17 +4,17 @@
 public sealed class InstrumentFinder
 {
     #region Inner Classes
-   
+
     [PublicAPI]
     public class InstrumentInfo(
-        string name, 
+        string name,
         IReadOnlyDictionary<string, TuningInfo> tunings)
     {
         /// <summary>
         /// Gets the instrument name <see cref="string"/>
         /// </summary>
         public string Name { get; } = name;
-        
+
         /// <summary>
         /// Gets the instrument tunings <see cref="IReadOnlyDictionary{String,TuningInfo}"/>
         /// </summary>
@@ -36,7 +36,7 @@ public sealed class InstrumentFinder
         /// Gets the tuning 
         /// </summary>
         public string Tuning { get; } = tuning;
-        
+
         /// <summary>
         /// Gets the tuning instance <see cref="object"/>
         /// </summary>
@@ -45,12 +45,12 @@ public sealed class InstrumentFinder
         /// <inheritdoc />
         public override string ToString() => $"{Name} - {Tuning}";
     }
-    
+
     #endregion
-    
-    public static readonly InstrumentFinder Instance = new ();
-    
-    private readonly Dictionary<string, InstrumentInfo> _instruments = [];
+
+    public static readonly InstrumentFinder Instance = new();
+
+    private readonly SortedDictionary<string, InstrumentInfo> _instruments = [];
     private readonly Config.Instruments.Config _config;
 
     public InstrumentFinder()
@@ -64,7 +64,7 @@ public sealed class InstrumentFinder
     /// Gets the instrument names <see cref="IReadOnlyCollection{String}"/>
     /// </summary>
     public IReadOnlyCollection<string> InstrumentNames => _instruments.Values.Select(i => i.Name).ToImmutableList();
-    
+
     /// <summary>
     /// Gets the <see cref="IReadOnlyCollection{InstrumentInfo}"/>
     /// </summary>
@@ -73,7 +73,11 @@ public sealed class InstrumentFinder
     /// <summary>
     ///  Gets the <see cref="ImmutableDictionary{String, InstrumentInfo}"/>
     /// </summary>
-    public ImmutableDictionary<string, InstrumentInfo> InstrumentByName => _instruments.ToImmutableDictionary();
+    public ImmutableSortedDictionary<string, InstrumentInfo> InstrumentByName =>
+        _instruments.ToImmutableSortedDictionary(
+            pair => pair.Key, 
+            pair => pair.Value,
+            StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the instrument, given its name
@@ -81,7 +85,7 @@ public sealed class InstrumentFinder
     /// <param name="name">The instrument name <see cref="string"/></param>
     /// <returns>The <see cref="Nullable{InstrumentInfo}"/></returns>
     public InstrumentInfo? this[string name] => TryGetInstrument(name, out var instrument) ? instrument : null;
-    
+
     /// <summary>
     /// Attempts the retrieve an instrument, given its name
     /// </summary>
@@ -93,12 +97,12 @@ public sealed class InstrumentFinder
         instrumentInfo = null;
         var entry = _instruments.Values.FirstOrDefault(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         if (entry == null) return false; // Failure
-        
+
         // Success
         instrumentInfo = entry;
         return true;
     }
-    
+
     /// <summary>
     /// Populates the instrument from <see cref="Config.Instruments.Config"/>
     /// </summary>
@@ -115,11 +119,11 @@ public sealed class InstrumentFinder
 
             var displayNameProp = instrumentValue.GetType().GetProperty("DisplayName");
             var displayName = displayNameProp != null ? (string)displayNameProp.GetValue(instrumentValue)! : instrumentName;
-            _instruments.Add(instrumentName, new (displayName, CreateTunings(instrumentValue)));
+            _instruments.Add(displayName, new(displayName, CreateTunings(instrumentValue)));
         }
         return;
     }
-    
+
     private static ImmutableDictionary<string, TuningInfo> CreateTunings(object instrumentValue)
     {
         var tuningsBuilder = ImmutableDictionary.CreateBuilder<string, TuningInfo>(StringComparer.OrdinalIgnoreCase);
@@ -127,14 +131,14 @@ public sealed class InstrumentFinder
         {
             var tuningInstance = tuningProp.GetValue(instrumentValue);
             if (tuningInstance == null) continue;
-                
+
             // Attempt to get the DisplayName property from the tuning instance
             var tuningType = tuningInstance.GetType();
             var tuningDisplayNameProp = tuningType.GetProperty("DisplayName");
             var tuningTuningProp = tuningType.GetProperty("Tuning");
             if (tuningTuningProp == null) continue;
             if (tuningTuningProp.GetValue(tuningInstance) is not string tuning) continue;
-                
+
             // If the DisplayName property exists, use it; otherwise, use the property name
             var tuningDisplayName = GetTuningDisplayName(tuningDisplayNameProp, tuningInstance, tuningProp);
 
@@ -145,10 +149,10 @@ public sealed class InstrumentFinder
         static string GetTuningDisplayName(PropertyInfo? tuningDisplayNameProp, object tuningInstance, MemberInfo tuningProp)
         {
             string result;
-            if (tuningDisplayNameProp != null 
-                && 
-                tuningDisplayNameProp.GetValue(tuningInstance) is string displayName 
-                && 
+            if (tuningDisplayNameProp != null
+                &&
+                tuningDisplayNameProp.GetValue(tuningInstance) is string displayName
+                &&
                 !string.IsNullOrWhiteSpace(displayName))
             {
                 result = displayName;
@@ -160,5 +164,5 @@ public sealed class InstrumentFinder
 
             return result;
         }
-    }    
+    }
 }
