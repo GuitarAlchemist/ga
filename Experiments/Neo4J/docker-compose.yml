@@ -1,0 +1,16 @@
+version: '3'
+services:
+  neo4j:
+    image: neo4j
+    container_name: neo4j-container
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - $HOME/neo4j/data:/data
+      - $HOME/neo4j/logs:/logs
+      - $HOME/neo4j/import:/var/lib/neo4j/import
+      - $HOME/neo4j/plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/test
+      - NEO4J_dbms_security_auth__minimum__password__length=4
