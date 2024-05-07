@@ -1,11 +1,12 @@
 ﻿namespace GA.Business.Core.Notes;
 
 using Atonal;
+using Atonal.Abstractions;
 using Primitives;
 using Intervals;
 
 [PublicAPI]
-public abstract record Pitch(Octave Octave) : IComparable<Pitch>
+public abstract record Pitch(Octave Octave) : IComparable<Pitch>, IPitchClass
 {
     #region IComparable<Pitch> Members
 
@@ -17,11 +18,13 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>
 
     #endregion
 
-    /// <summary>
-    /// Gets the <see cref="PitchClass"/>
-    /// </summary>
+    #region IPitchClass Members
+    
+    /// <inheritdoc cref="IPitchClass.PitchClass"/>
     public abstract PitchClass PitchClass { get; }
-
+    
+    #endregion
+    
     /// <summary>
     /// Gets the <see cref="MidiNote"/>
     /// </summary>

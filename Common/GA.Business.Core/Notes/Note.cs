@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Notes;
 
 using Atonal;
+using Atonal.Abstractions;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
@@ -11,10 +12,11 @@ using Tonal;
 /// An abstract note
 /// </summary>
 /// <see cref="Chromatic"/>
-/// <see cref="Sharp"/>, <see cref="Flat"/>, <see cref="AccidentedNote"/>
+/// <see cref="Sharp"/>, <see cref="Flat"/>, <see cref="Accidented"/>
 [PublicAPI]
 public abstract record Note : IStaticNorm<Note, IntervalClass>,
-                              IComparable<Note>
+                              IComparable<Note>,
+                              IPitchClass
 {
     #region IStaticNorm<Note> Members
 
@@ -50,18 +52,20 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
 
     #endregion
     
-    /// <summary>
-    /// Gets the <see cref="PitchClass"/>
-    /// </summary>
+    #region IPitchClass Members
+    
+    /// <inheritdoc cref="IPitchClass.PitchClass"/>
     public abstract PitchClass PitchClass { get; }
+    
+    #endregion
 
     /// <summary>
     /// Get the accidented note
     /// </summary>
     /// <returns>
-    /// The <see cref="AccidentedNote"/>
+    /// The <see cref="Accidented"/>
     /// </returns>
-    public abstract AccidentedNote ToAccidentedNote();
+    public abstract Accidented ToAccidentedNote();
 
     /// <summary>
     /// Gets the unsigned interval between another note and the current note
@@ -121,7 +125,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         #endregion
 
         public override PitchClass PitchClass { get; } = PitchClass;
-        public override AccidentedNote ToAccidentedNote() => ToSharp().ToAccidentedNote();
+        public override Accidented ToAccidentedNote() => ToSharp().ToAccidentedNote();
         public Sharp ToSharp() => PitchClass.ToSharpNote();
         public Flat ToFlat() => PitchClass.ToFlatNote();
 
@@ -203,7 +207,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public override PitchClass PitchClass => GetPitchClass();
         
         /// <inheritdoc />
-        public override AccidentedNote ToAccidentedNote() => new(NaturalNote, Accidental);
+        public override Accidented ToAccidentedNote() => new(NaturalNote, Accidental);
     }
 
     /// <summary>
@@ -410,50 +414,99 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
     /// A note with an optional accidental
     /// </summary>
     [PublicAPI]
-    public sealed record AccidentedNote(NaturalNote NaturalNote, Accidental? Accidental = null) : Note, IStaticReadonlyCollection<AccidentedNote>
+    public sealed record Accidented(NaturalNote NaturalNote, Accidental? Accidental = null) : Note, IStaticReadonlyCollection<Accidented>, IParsable<Accidented>
     {
-        #region IStaticReadonlyCollection<AccidentedNote> Members
+        #region IStaticReadonlyCollection<Accidented> Members
        
-        public static IReadOnlyCollection<AccidentedNote> Items => AllNotes.Instance;
+        public static IReadOnlyCollection<Accidented> Items => AllNotes.Instance;
 
         #endregion
 
-        public static implicit operator Chromatic(AccidentedNote accidentedNote) => new(accidentedNote.PitchClass);
-        public static implicit operator AccidentedNote(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
-        public static Interval.Simple operator -(AccidentedNote note1, AccidentedNote note2) => note1.GetInterval(note2);
+        #region IParsable<Accidented> Members
+
+        public static Accidented Parse(string s, IFormatProvider? provider)
+        {
+            if (!TryParse(s, provider, out var result)) throw new FormatException($"Invalid accidental string format: '{s}'.");
+            return result;
+        }
+
+        public static bool TryParse(string? s, IFormatProvider? provider, out Accidented result)
+        {
+            result = null!;
+            
+            // Ensure valid string
+            if (string.IsNullOrWhiteSpace(s)) return false;
+
+            // Assume the string format generally follows "Note Accidental" (e.g., "C#", "Db", "E")
+            // Split the input string into note and accidental components
+            s = s.Trim();
+            var lengthOfNote = s.Length;
+            NaturalNote? naturalNote = null;
+            Accidental? accidental = null;
+
+            // Try parsing the longest possible NaturalNote first
+            for (var i = Math.Min(2, lengthOfNote); i > 0; i--)
+            {
+                // Ensure natural part can be parsed
+                var notePart = s[..i];
+                if (!NaturalNote.TryParse(notePart, null, out var parsedNote)) continue;
+                
+                naturalNote = parsedNote;
+                var accidentalPart = s.Substring(i).Trim();
+                if (!string.IsNullOrEmpty(accidentalPart))
+                {
+                    // Ensure accidental part can be parsed
+                    if (!Intervals.Primitives.Accidental.TryParse(accidentalPart, null, out var parsedAccidental)) return false; // If there's an accidental part but it can't be parsed
+                    accidental = parsedAccidental;
+                }
+                break;
+            }
+
+            // Ensure valid nature note
+            if (!naturalNote.HasValue) return false;
+
+            result = new Accidented(naturalNote.Value, accidental);
+            return true;
+        }
+        
+        #endregion
+        
+        public static implicit operator Chromatic(Accidented accidented) => new(accidented.PitchClass);
+        public static implicit operator Accidented(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
+        public static Interval.Simple operator -(Accidented note1, Accidented note2) => note1.GetInterval(note2);
         
         public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
         #region Well-known accidented notes
        
-        public static AccidentedNote C => new(NaturalNote.C);
-        public static AccidentedNote Cb => new(NaturalNote.C, FlatAccidental.Flat);
-        public static AccidentedNote CSharp => new(NaturalNote.C, SharpAccidental.Sharp);
-        public static AccidentedNote D => new(NaturalNote.D);
-        public static AccidentedNote Db => new(NaturalNote.D, FlatAccidental.Flat);
-        public static AccidentedNote DSharp => new(NaturalNote.D, SharpAccidental.Sharp);
-        public static AccidentedNote E => new(NaturalNote.E);
-        public static AccidentedNote Eb => new(NaturalNote.E, FlatAccidental.Flat);
-        public static AccidentedNote ESharp => new(NaturalNote.E, SharpAccidental.Sharp);
-        public static AccidentedNote F => new(NaturalNote.F);
-        public static AccidentedNote Fb => new(NaturalNote.F, FlatAccidental.Flat);
-        public static AccidentedNote FSharp => new(NaturalNote.F, SharpAccidental.Sharp);
-        public static AccidentedNote G => new(NaturalNote.G);
-        public static AccidentedNote Gb => new(NaturalNote.G, FlatAccidental.Flat);
-        public static AccidentedNote GSharp => new(NaturalNote.G, SharpAccidental.Sharp);
-        public static AccidentedNote A => new(NaturalNote.A);
-        public static AccidentedNote Ab => new(NaturalNote.A, FlatAccidental.Flat);
-        public static AccidentedNote ASharp => new(NaturalNote.A, SharpAccidental.Sharp);
-        public static AccidentedNote B => new(NaturalNote.B);
-        public static AccidentedNote Bb => new(NaturalNote.B, FlatAccidental.Flat);
-        public static AccidentedNote BSharp => new(NaturalNote.B, SharpAccidental.Sharp);
+        public static Accidented C => new(NaturalNote.C);
+        public static Accidented Cb => new(NaturalNote.C, FlatAccidental.Flat);
+        public static Accidented CSharp => new(NaturalNote.C, SharpAccidental.Sharp);
+        public static Accidented D => new(NaturalNote.D);
+        public static Accidented Db => new(NaturalNote.D, FlatAccidental.Flat);
+        public static Accidented DSharp => new(NaturalNote.D, SharpAccidental.Sharp);
+        public static Accidented E => new(NaturalNote.E);
+        public static Accidented Eb => new(NaturalNote.E, FlatAccidental.Flat);
+        public static Accidented ESharp => new(NaturalNote.E, SharpAccidental.Sharp);
+        public static Accidented F => new(NaturalNote.F);
+        public static Accidented Fb => new(NaturalNote.F, FlatAccidental.Flat);
+        public static Accidented FSharp => new(NaturalNote.F, SharpAccidental.Sharp);
+        public static Accidented G => new(NaturalNote.G);
+        public static Accidented Gb => new(NaturalNote.G, FlatAccidental.Flat);
+        public static Accidented GSharp => new(NaturalNote.G, SharpAccidental.Sharp);
+        public static Accidented A => new(NaturalNote.A);
+        public static Accidented Ab => new(NaturalNote.A, FlatAccidental.Flat);
+        public static Accidented ASharp => new(NaturalNote.A, SharpAccidental.Sharp);
+        public static Accidented B => new(NaturalNote.B);
+        public static Accidented Bb => new(NaturalNote.B, FlatAccidental.Flat);
+        public static Accidented BSharp => new(NaturalNote.B, SharpAccidental.Sharp);
         
         #endregion
 
         public override PitchClass PitchClass => GetPitchClass();
-        public override AccidentedNote ToAccidentedNote() => this;
+        public override Accidented ToAccidentedNote() => this;
         public override Interval.Simple GetInterval(Note other) => GetInterval(other.ToAccidentedNote());
-        public Interval.Simple GetInterval(AccidentedNote other) => GetInterval(this, other);
+        public Interval.Simple GetInterval(Accidented other) => GetInterval(this, other);
 
         /// <inheritdoc />
         public override string ToString() => $"{NaturalNote}{Accidental}";
@@ -470,15 +523,15 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         /// <summary>
         /// Gets the interval between two accidented notes
         /// </summary>
-        /// <param name="startNote"></param>
-        /// <param name="endNote"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
         private static Interval.Simple GetInterval(
-            AccidentedNote startNote,
-            AccidentedNote endNote)
+            Accidented start,
+            Accidented end)
         {
-            if (startNote == endNote) return Interval.Simple.Unison;
+            if (start == end) return Interval.Simple.Unison;
 
             var majorKeyByNaturalNote = new Dictionary<NaturalNote, Key.Major>
             {
@@ -491,9 +544,9 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
                 [NaturalNote.B] = Key.Major.B
             };
 
-            if (!majorKeyByNaturalNote.TryGetValue(startNote.NaturalNote, out var key)) throw new InvalidOperationException($"No major key found for {startNote.NaturalNote}");
-            var size = endNote.NaturalNote - startNote.NaturalNote;
-            var qualityIncrement = GetQualityIncrement(key, startNote, endNote);
+            if (!majorKeyByNaturalNote.TryGetValue(start.NaturalNote, out var key)) throw new InvalidOperationException($"No major key found for {start.NaturalNote}");
+            var size = end.NaturalNote - start.NaturalNote;
+            var qualityIncrement = GetQualityIncrement(key, start, end);
             var quality = GetQuality(size, qualityIncrement);
             var result = new Interval.Simple
             {
@@ -505,8 +558,8 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
 
             static Semitones GetQualityIncrement(
                 Key key, 
-                AccidentedNote startNote,
-                AccidentedNote endNote)
+                Accidented startNote,
+                Accidented endNote)
             {
                 var result = Semitones.None;
 
@@ -569,11 +622,11 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
             }
         }
 
-        private class AllNotes() : LazyCollectionBase<AccidentedNote>(GetAll())
+        private class AllNotes() : LazyCollectionBase<Accidented>(GetAll())
         {
             public static readonly AllNotes Instance = new();
 
-            private static IEnumerable<AccidentedNote> GetAll()
+            private static IEnumerable<Accidented> GetAll()
             {
                 var accidentals = new[]
                 {

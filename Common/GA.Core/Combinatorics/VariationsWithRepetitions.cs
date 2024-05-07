@@ -1,8 +1,6 @@
-﻿using GA.Core.Collections.Abstractions;
+﻿namespace GA.Core.Combinatorics;
 
-namespace GA.Core.Combinatorics;
-
-using Collections;
+using Collections.Abstractions;
 
 /// <summary>
 /// Ordered arrangements of elements where repetition is allowed - Also called "k-tuple"

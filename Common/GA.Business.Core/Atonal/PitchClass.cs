@@ -8,11 +8,14 @@ using Notes;
 /// Items pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
 /// </summary>
 /// <remarks>
+/// 0 => C; 1 => C# or Db; 2 => D; 3 => D# or Eb; 4 => E; 5 => F; 6 => F# or Gb; 7 => G; 8 => G# or Ab; 9 => A; T => A# or Bb; E => B<br/>
+/// <br/>
 /// Implements <see cref="IStaticValueObjectList{PitchClass}"/>, <see cref="IStaticNorm{PitchClass, IntervalClass}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
-                                           IStaticNorm<PitchClass, IntervalClass>
+                                           IStaticNorm<PitchClass, IntervalClass>,
+                                           IParsable<PitchClass>
 {
     #region IStaticValueObjectList<PitchClass> Members
 
@@ -46,6 +49,46 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public static bool operator >(PitchClass left, PitchClass right) => left.CompareTo(right) > 0;
     public static bool operator <=(PitchClass left, PitchClass right) => left.CompareTo(right) <= 0;
     public static bool operator >=(PitchClass left, PitchClass right) => left.CompareTo(right) >= 0;
+
+    #endregion
+
+    #region IParsable Members
+
+    /// <inheritdoc />
+    public static PitchClass Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out PitchClass result)
+    {
+        result = default;
+        if (string.IsNullOrWhiteSpace(s)) return false;
+            
+        var normalizedInput = s.Trim().ToUpperInvariant();
+        if (int.TryParse(normalizedInput, out var i))
+        {
+            if (i is >= 0 and <= 9)
+            {
+                result = FromValue(i);
+                return true;
+            }
+        }
+
+        switch (normalizedInput)
+        {
+            case "T":
+                result = FromValue(10);
+                return true;
+            case "E":
+                result = FromValue(11);
+                return true;
+            default:
+                return false;
+        }
+    }   
 
     #endregion
 

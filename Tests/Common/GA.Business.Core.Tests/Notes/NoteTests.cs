@@ -29,20 +29,20 @@ public class NoteTests
         Assert.That(actualInterval, Is.EqualTo(expectedInterval));
     }
     
-    [Test(TestOf = typeof(Note.AccidentedNote))]
+    [Test(TestOf = typeof(Note.Accidented))]
     public void Test_2()
     {
         var key = Key.Major.F;
         var keyRoot = key.Root;
         var keynotes = key.GetNotes();
 
-        var f = new Note.AccidentedNote(NaturalNote.F);
-        var g = new Note.AccidentedNote(NaturalNote.G);
-        var a = new Note.AccidentedNote(NaturalNote.A);
-        var b = new Note.AccidentedNote(NaturalNote.B);
-        var c = new Note.AccidentedNote(NaturalNote.C);
-        var d = new Note.AccidentedNote(NaturalNote.D);
-        var e = new Note.AccidentedNote(NaturalNote.E);
+        var f = new Note.Accidented(NaturalNote.F);
+        var g = new Note.Accidented(NaturalNote.G);
+        var a = new Note.Accidented(NaturalNote.A);
+        var b = new Note.Accidented(NaturalNote.B);
+        var c = new Note.Accidented(NaturalNote.C);
+        var d = new Note.Accidented(NaturalNote.D);
+        var e = new Note.Accidented(NaturalNote.E);
 
         var i1 = f.GetInterval(f);
         var i2 = f.GetInterval(g);

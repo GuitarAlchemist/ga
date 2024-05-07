@@ -1,6 +1,4 @@
-﻿using GA.Business.Config;
-using GA.Business.Core;
-using GA.Business.Core.AI;
+﻿using GA.Business.Core.AI;
 using GA.Business.Core.Instruments;
 using GA.Business.Core.Tonal;
 using GaCLI;
@@ -18,9 +16,9 @@ using static System.Console;
 var configurationBuilder = new ConfigurationBuilder();
 var configuration = configurationBuilder.AddUserSecrets<Program>().Build();
 
-WriteLine(Assets.Print());
+// WriteLine(Assets.Print());
 
-FindInstruments();
+// FindInstruments();
 
 // await OpenAiSimpleCompletionAsync();
 // await ChatGptSimpleCompletionAsync();
@@ -62,21 +60,24 @@ static async Task SemanticKernelPromptLoop(ChatCompletionConfig config)
     var kernel = builder.Build();
 
     // Test the plugin
-    var keys = await kernel.InvokeAsync(nameof(GaKeyPlugin),
-        nameof(GaKeyPlugin.GetKeys));
+    var keySignatures = await kernel.InvokeAsync(nameof(GaKeyPlugin),nameof(GaKeyPlugin.GetKeySignatures));
+    WriteLine($"Key signatures => {keySignatures}");    
+    
+    var keys = await kernel.InvokeAsync(nameof(GaKeyPlugin), nameof(GaKeyPlugin.GetKeys));
     WriteLine($"Keys => {keys}");    
     
-    var keyNotes = await kernel.InvokeAsync(nameof(GaKeyPlugin),
-        nameof(GaKeyPlugin.GetAccidentedNotesInKey), 
-        new KernelArguments
-        {
-            ["key"] = Key.Major.G
-        });
+    var keyNotes = await kernel.InvokeAsync(nameof(GaKeyPlugin), nameof(GaKeyPlugin.GetAccidentedNotesInKey), new KernelArguments { ["key"] = Key.Major.G });
     WriteLine($"Key of G => {keyNotes}");
 
     // Create chat history
     ChatHistory history = [];
 
+    //var request = "What is the relative minor of G major?";
+    var request = "What are the accidentals in the key of G";
+    WriteLine($"> {request}");
+    var response = await kernel.InvokePromptAsync(request);
+    WriteLine($"[Response] {response}");
+    
     // Start the conversation
     Write("User > ");
     while (ReadLine() is { } userInput)
@@ -114,12 +115,6 @@ static async Task SemanticKernelPromptLoop(ChatCompletionConfig config)
         // Get user input again
         Write("User > ");
     }    
-    
-    //var request = "What is the relative minor of G major?";
-    var request = "What are the accidentals in the key of G";
-    WriteLine($"> {request}");
-    var response = await kernel.InvokePromptAsync(request);
-    WriteLine($"[Response] {response}");
 }
 
 #endregion
@@ -168,7 +163,7 @@ void Experiment2()
 
 void FindInstruments(string name = "Guitar")
 {
-    var guitar = InstrumentFinder.Instance["Guitar"];
+    var guitar = InstrumentFinder.Instance[name];
 }
 
 

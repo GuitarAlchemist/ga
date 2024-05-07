@@ -100,6 +100,8 @@ public abstract class ScaleMode<TScaleDegree>(Scale parentScale,
                 yield return item;
             }
 
+            yield break;
+
             static IReadOnlyCollection<Interval.Simple> GetRotatedIntervals(
                 IEnumerable<Note> seedScaleNotes,
                 int rotateCount)
