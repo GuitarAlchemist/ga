@@ -1,8 +1,7 @@
-﻿using CollectionExtensions = System.Collections.Generic.CollectionExtensions;
-
-namespace GA.Business.Core.Atonal;
+﻿namespace GA.Business.Core.Atonal;
 
 using Primitives;
+using SystemCollectionExtensions = System.Collections.Generic.CollectionExtensions;
 
 /// <summary>
 /// Represents ordered occurence for each interval class, (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
@@ -32,7 +31,7 @@ public sealed class IntervalClassVector : IIndexer<IntervalClass, int>,
     /// </summary>
     /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
     /// <returns>The occurence count.</returns>
-    public int this[IntervalClass intervalClass] => CollectionExtensions.GetValueOrDefault(_countByIntervalClass, intervalClass, 0);
+    public int this[IntervalClass intervalClass] => SystemCollectionExtensions.GetValueOrDefault(_countByIntervalClass, intervalClass, 0);
 
     #endregion
 

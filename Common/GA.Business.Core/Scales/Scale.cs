@@ -5,7 +5,7 @@ using Atonal.Primitives;
 using Intervals;
 using Notes;
 using Tonal;
-using static Notes.Note.AccidentedNote;
+using static Notes.Note.Accidented;
 
 /// <summary>
 /// A scale
@@ -47,7 +47,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     private readonly IReadOnlyCollection<Note> _notes;
 
-    public Scale(params Note.AccidentedNote[] notes) 
+    public Scale(params Note.Accidented[] notes) 
         : this(notes.AsEnumerable())
     {
     }

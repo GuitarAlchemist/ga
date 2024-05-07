@@ -17,7 +17,7 @@ public static class Assets
     public static IReadOnlyCollection<NaturalNote> NaturalNotes => NaturalNote.Items;
     public static IReadOnlyCollection<Note.Flat> FlatNotes => Note.Flat.Items;
     public static IReadOnlyCollection<Note.Sharp> SharpNotes => Note.Sharp.Items;
-    public static IReadOnlyCollection<Note.AccidentedNote> AccidentedNotes => Note.AccidentedNote.Items;
+    public static IReadOnlyCollection<Note.Accidented> AccidentedNotes => Note.Accidented.Items;
     
     public static IReadOnlyCollection<KeySignature> KeySignatures => KeySignature.Items;
     public static IReadOnlyCollection<Key> Keys => Key.Items;

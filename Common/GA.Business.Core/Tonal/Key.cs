@@ -1,9 +1,11 @@
-﻿namespace GA.Business.Core.Tonal;
+﻿using GA.Business.Core.Notes;
+
+namespace GA.Business.Core.Tonal;
 
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
-using static Notes.Note;
+using static Note;
 
 /// <summary>
 /// A musical key (<see cref="Major"/> | <see cref="Minor"/>)
@@ -111,9 +113,9 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
     /// <summary>
     /// Gets the simple interval between the key root note and the specified note
     /// </summary>
-    /// <param name="note">The <see cref="AccidentedNote"/></param>
+    /// <param name="note">The <see cref="Accidented"/></param>
     /// <returns>The <see cref="Interval.Simple"/></returns>
-    public Interval.Simple GetInterval(AccidentedNote note) => note.GetInterval(Root);
+    public Interval.Simple GetInterval(Accidented note) => note.GetInterval(Root);
 
     #region Major Key
   

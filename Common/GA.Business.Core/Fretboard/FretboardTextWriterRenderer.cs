@@ -13,6 +13,7 @@ public class FretboardTextWriterRenderer
         RenderFretMarkers(fretboard.Frets, fret => fret % 12 == 0 ? "**" : "*", 9);
         RenderFretMarkers(fretboard.Frets, fret => fret.Value.ToString(), 12);
         textWriter.Flush();
+        return;
 
         static string Pad(string s, int padTotalLength = 5) => s.PadRight(padTotalLength);
 

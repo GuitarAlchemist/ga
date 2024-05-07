@@ -6,7 +6,7 @@ using GA.Business.Core.Notes.Primitives;
 /// Accidental record struct (𝄫♭ | 𝄫 | ♭ | ♮ | ♯ | 𝄪 | ♯𝄪)
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
-public readonly record struct Accidental : IRangeValueObject<Accidental>
+public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsable<Accidental>
 {
     #region IRangeValueObject
 
@@ -21,6 +21,56 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>
 
     private readonly int _value;
 
+    #endregion
+    
+    #region IParsable<Accidental> Members
+    
+    public static Accidental Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new FormatException($"Invalid accidental string format: '{s}'.");
+        return result;
+    }
+
+    public static bool TryParse(string? s, IFormatProvider? provider, out Accidental result)
+    {
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            result = default;
+            return false;
+        }
+
+        // Normalize the input
+        s = s.Trim().ToLowerInvariant();
+
+        switch (s)
+        {
+            case "bbb" or "𝄫♭":
+                result = DoubleFlat;
+                return true;
+            case "bb" or "𝄫":
+                result = DoubleFlat;
+                return true;
+            case "b" or "♭":
+                result = Flat;
+                return true;
+            case "" or "n" or "♮":
+                result = Natural;
+                return true;
+            case "#" or "♯":
+                result = Sharp;
+                return true;
+            case "##" or "x" or "𝄪":
+                result = DoubleSharp;
+                return true;
+            case "###" or "♯𝄪":
+                result = DoubleSharp;
+                return true;
+            default:
+                result = default;
+                return false;
+        }
+    }    
+    
     #endregion
 
     private const int _minValue = -3;
