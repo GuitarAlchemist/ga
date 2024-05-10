@@ -1,10 +1,19 @@
 ﻿namespace GA.Business.Core.Extensions;
 
 using Atonal;
+using Atonal.Abstractions;
 using Intervals.Primitives;
+using Notes;
 
 public static class PitchClassExtensions
 {
+    /// <summary>
+    /// Converts a pitch class object to a chromatic note
+    /// </summary>
+    /// <param name="pitchClassObject">The <see cref="IPitchClass"/> object</param>
+    /// <returns>The <see cref="Note.Chromatic"/></returns>
+    public static Note.Chromatic ToChromaticNote(this IPitchClass pitchClassObject) => new (pitchClassObject.PitchClass);
+    
     /// <summary>
     /// Create the interval pattern from pitch classes.
     /// </summary>

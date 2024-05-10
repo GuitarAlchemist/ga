@@ -66,6 +66,6 @@ public class CartesianProduct<T> : CartesianProduct<T, Pair<T>>
         Func<T, bool>? predicate)
             : base(items, null, predicate)
     {
-        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+        ArgumentNullException.ThrowIfNull(predicate);
     }
 }

@@ -1,7 +1,4 @@
-﻿using System.Collections.Immutable;
-using GA.Business.Core.Atonal.Primitives;
-
-namespace GA.Business.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
 using Extensions;
 using GA.Business.Core.Atonal;
@@ -86,11 +83,11 @@ public class PitchClassSetTests
     public void Test_PitchClassSet_TranspositionsAndInversions()
     {
         // Arrange
-        const string sMajorTriadInput = "C E G";
-        var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
+        const string sCMajorTriadInput = "C E G";
+        var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
         
         // Act
-        var pitchClassSet = majorTriadNotes.ToPitchClassSet();
+        var pitchClassSet = cMajorTriadNotes.ToPitchClassSet();
         var transpositionsAndInversions = pitchClassSet.TranspositionsAndInversions;
         var orderedTranspositionsAndInversionValues =
             transpositionsAndInversions
@@ -108,11 +105,11 @@ public class PitchClassSetTests
     public void Test_PitchClassSet_IsPrimeForm_False()
     {
         // Arrange
-        const string sMajorTriadInput = "C E G";
-        var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
+        const string sCMajorTriadInput = "C E G";
+        var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
         
         // Act
-        var pitchClassSet = majorTriadNotes.ToPitchClassSet();
+        var pitchClassSet = cMajorTriadNotes.ToPitchClassSet();
         
         // Assert
         Assert.That(pitchClassSet.IsPrimeForm, Is.EqualTo(false)); // 145 => not the prime form
@@ -122,13 +119,43 @@ public class PitchClassSetTests
     public void Test_PitchClassSet_IsPrimeForm_True()
     {
         // Arrange
-        const string sMinorTriadInput = "C Eb G";
-        var minorTriadNotes = AccidentedNoteCollection.Parse(sMinorTriadInput);
+        const string sCMinorTriadInput = "C Eb G";
+        var cMinorTriadNotes = AccidentedNoteCollection.Parse(sCMinorTriadInput);
         
         // Act
-        var pitchClassSet = minorTriadNotes .ToPitchClassSet();
+        var pitchClassSet = cMinorTriadNotes .ToPitchClassSet();
         
         // Assert
         Assert.That(pitchClassSet.IsPrimeForm, Is.EqualTo(true)); // 137 => this is the prime form
+    }
+    
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_NormalForm_CMajorTriad()
+    {
+        const string sCMajorTriadInput = "C E G";
+        var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
+        var cMajorTriadPitchClassSet = cMajorTriadNotes.ToPitchClassSet();
+
+        var normalForm = cMajorTriadPitchClassSet.ToNormalForm();
+    }    
+
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_NormalForm_GMajorTriad()
+    {
+        const string sGMajorTriadInput = "G B D"; // G major triad
+        var gMajorTriadNotes = AccidentedNoteCollection.Parse(sGMajorTriadInput);
+        var gMajorTriadPitchClassSet = gMajorTriadNotes.ToPitchClassSet();
+
+        var normalForm = gMajorTriadPitchClassSet.ToNormalForm();
+    }
+    
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_PrimeForm()
+    {
+        const string sCMajorTriadInput = "C E G";
+        var gMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
+        var majorTriadPitchClassSet = gMajorTriadNotes.ToPitchClassSet();
+
+        var primeForm = majorTriadPitchClassSet.PrimeForm;
     }    
 }

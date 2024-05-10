@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+﻿using GA.Business.Core.Atonal.Abstractions;
+
+namespace GA.Business.Core.Notes.Primitives;
 
 using Atonal;
 using GA.Business.Core.Intervals.Primitives;
@@ -10,7 +12,9 @@ using GA.Business.Core.Intervals.Primitives;
 /// Implements <see cref="IStaticValueObjectList{NaturalNote}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>, IParsable<NaturalNote>
+public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>, 
+                                            IParsable<NaturalNote>,
+                                            IPitchClass
 {
     #region IStaticReadonlyCollection<NaturalNote> Members
 
@@ -34,6 +38,36 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     public static bool operator <=(NaturalNote left, NaturalNote right) => left.CompareTo(right) <= 0;
     public static bool operator >=(NaturalNote left, NaturalNote right) => left.CompareTo(right) >= 0;
 
+    #endregion
+
+    #region IPitchClass Members
+
+    /// <summary>
+    /// Gets the pitch class of the natural note
+    /// </summary>
+    /// <remarks>
+    /// Major scale:
+    /// C: 0
+    /// D: 2  (T => +2)
+    /// E: 4  (T => +2)
+    /// F: 5  (H => +1)
+    /// G: 7  (T => +2)
+    /// A: 9  (T => +2)
+    /// B: 11 (T => +2)
+    /// </remarks>
+    /// <returns>The <see cref="PitchClass"/></returns>    
+    public PitchClass PitchClass => _value switch
+    {
+        0 => new() { Value = 0 }, // C
+        1 => new() { Value = 2 }, // D
+        2 => new() { Value = 4 }, // E
+        3 => new() { Value = 5 }, // F
+        4 => new() { Value = 7 }, // G
+        5 => new() { Value = 9 }, // A
+        6 => new() { Value = 11 }, // B
+        _ => throw new InvalidOperationException()
+    };
+    
     #endregion
 
     private const int _minValue = 0;
@@ -124,32 +158,6 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
 
         return list.AsReadOnly();
     }
-
-    /// <summary>
-    /// Gets the pitch class of the natural note
-    /// </summary>
-    /// <remarks>
-    /// Major scale:
-    /// C: 0
-    /// D: 2  (T => +2)
-    /// E: 4  (T => +2)
-    /// F: 5  (H => +1)
-    /// G: 7  (T => +2)
-    /// A: 9  (T => +2)
-    /// B: 11 (T => +2)
-    /// </remarks>
-    /// <returns>The <see cref="PitchClass"/></returns>
-    public PitchClass ToPitchClass() => _value switch
-    {
-        0 => new() { Value = 0 }, // C
-        1 => new() { Value = 2 }, // D
-        2 => new() { Value = 4 }, // E
-        3 => new() { Value = 5 }, // F
-        4 => new() { Value = 7 }, // G
-        5 => new() { Value = 9 }, // A
-        6 => new() { Value = 11 }, // B
-        _ => throw new InvalidOperationException()
-    };
 
     /// <summary>
     /// Gets the sharp note from the natural note
