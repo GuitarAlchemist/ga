@@ -7,15 +7,11 @@ using Notes;
 /// Represents a distinct ordered set of pitch classes
 /// </summary>
 /// <remarks>
+/// 4096 pitch class sets capture every possible musical object<br/>
+/// <br/>
 /// Example:
-/// Dorian scale (See https://ianring.com/musictheory/scales/1709)
-///    Pitch class set = {0,2,3,5,7,9,10}
-///
-/// See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes
-/// "
-/// 4096 pitch class sets capture every possible musical object,
-/// and let us see some important connections between objects by visualizing any chord or scale on a circle
-/// "
+/// Dorian scale - <see href="https://ianring.com/musictheory/scales/1709">Pitch class set = {0,2,3,5,7,9,10}</see> | <see href="https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes"/><br/><br/>
+/// <br/>
 /// </remarks>
 [PublicAPI]
 public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
@@ -198,7 +194,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public bool IsPrimeForm => PrimeForm != null && Equals(PrimeForm);
 
     /// <summary>
-    /// Gets a flag that indicates whether this pitch class set represents a scale
+    /// True if this pitch class set represents a scale, false otherwise
     /// </summary>
     /// <remarks>
     /// A pitch class set must have a root note to represent a scale
@@ -206,9 +202,14 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public bool IsScale => Contains(0);
 
     /// <summary>
-    /// Gets a flag that indicates whether this pitch class set represents a mode from a scale
+    /// True if this pitch class set represents a scale mode, false otherwise
     /// </summary>
     public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
+
+    /// <summary>
+    /// True is this pitch class set is expressed in normal form, false otherwise
+    /// </summary>
+    public bool IsNormalForm => ToNormalForm().SequenceEqual(this);
 
     /// <summary>
     /// Gets the normal form <see cref="PitchClassSet"/>
@@ -255,18 +256,18 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
         foreach (var rotation in rotations)
         {
-            var intervalVector = CalculateIntervalVector(rotation);
+            var intervalVector = CalculateIntervals(rotation);
             var intervalSpan = intervalVector.Max() - intervalVector.Min();
             if (intervalSpan < minInterval)
             {
-                minInterval = intervalSpan;
+                minInterval = intervalSpan; // Reset min interval
                 normalForm = [.. rotation];
                 continue;
             }
 
             if (intervalSpan == minInterval
                 &&
-                IsMoreCompact(intervalVector, CalculateIntervalVector(normalForm)))
+                IsMoreCompact(intervalVector, CalculateIntervals(normalForm)))
             {
                 normalForm = [.. rotation];
             }
@@ -276,7 +277,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
         return result;
 
-        static ImmutableArray<int> CalculateIntervalVector(IReadOnlyList<PitchClass> pitchClasses)
+        static ImmutableArray<int> CalculateIntervals(IReadOnlyList<PitchClass> pitchClasses)
         {
             var intervals = ImmutableArray.CreateBuilder<int>();
             for (var i = 0; i < pitchClasses.Count; i++)

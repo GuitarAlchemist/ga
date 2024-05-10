@@ -132,30 +132,60 @@ public class PitchClassSetTests
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NormalForm_CMajorTriad()
     {
+        // Arrange
         const string sCMajorTriadInput = "C E G";
         var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
         var cMajorTriadPitchClassSet = cMajorTriadNotes.ToPitchClassSet();
 
+        // Act
         var normalForm = cMajorTriadPitchClassSet.ToNormalForm();
+        
+        // Assert
+        Assert.That(normalForm.Name, Is.EqualTo("0 3 8"));
     }    
 
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NormalForm_GMajorTriad()
     {
+        // Arrange
         const string sGMajorTriadInput = "G B D"; // G major triad
         var gMajorTriadNotes = AccidentedNoteCollection.Parse(sGMajorTriadInput);
         var gMajorTriadPitchClassSet = gMajorTriadNotes.ToPitchClassSet();
 
+        // Act
         var normalForm = gMajorTriadPitchClassSet.ToNormalForm();
+        
+        // Assert
+        Assert.That(normalForm.Name, Is.EqualTo("0 3 8"));
     }
+    
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_IsNormalForm_GMinorTriad()
+    {
+        // Arrange
+        const string sGMinorTriadInput = "G Bb D"; // G minor triad
+        var gMinorTriadNotes = AccidentedNoteCollection.Parse(sGMinorTriadInput);
+        var gMinorTriadPitchClassSet = gMinorTriadNotes.ToPitchClassSet();
+
+        // Act
+        var isNormalForm = gMinorTriadPitchClassSet.IsNormalForm;
+        
+        // Assert
+        Assert.That(isNormalForm, Is.EqualTo(false));
+    }    
     
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_PrimeForm()
     {
+        // Arrange
         const string sCMajorTriadInput = "C E G";
         var gMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
         var majorTriadPitchClassSet = gMajorTriadNotes.ToPitchClassSet();
 
+        // Act
         var primeForm = majorTriadPitchClassSet.PrimeForm;
+        
+        // Assert
+        Assert.That(primeForm?.Name, Is.EqualTo("0 3 7"));
     }    
 }
