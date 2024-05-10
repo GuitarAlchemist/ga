@@ -11,24 +11,27 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
         if (!TryParse(s, null, out var result)) throw new PitchCollectionParseException();
         return result;
     }
-
+    
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out AccidentedNoteCollection result)
     {
         ArgumentNullException.ThrowIfNull(s);
-        
-        result = Empty;
 
-        var segments = s.Split(" ");
-        var items = new List<Note.Accidented>();
-        foreach (var segment in segments)
+        var span = s.AsSpan();
+        result = Empty;
+        var builder = ImmutableList.CreateBuilder<Note.Accidented>();
+        while (span.Length > 0)
         {
-            if (!Note.Accidented.TryParse(segment, null, out var pitch)) return false; // Fail if one item fails parsing
-            items.Add(pitch);
+            var spaceIndex = span.IndexOf(' ');
+            var segment = spaceIndex == -1 ? span : span[..spaceIndex];
+
+            if (!Note.Accidented.TryParse(segment.ToString(), provider, out var pitch)) return false; // Fail if one item fails parsing
+
+            builder.Add(pitch);
+            span = spaceIndex == -1 ? [] : span[(spaceIndex + 1)..];
         }
 
-        // Success
-        result = new(items);
+        result = new AccidentedNoteCollection(builder);
         return true;
     }
 

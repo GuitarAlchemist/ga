@@ -129,8 +129,13 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         public Sharp ToSharp() => PitchClass.ToSharpNote();
         public Flat ToFlat() => PitchClass.ToFlatNote();
 
-        public static implicit operator Chromatic(NaturalNote naturalNote) => new(naturalNote.ToPitchClass());
-        public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2) => note1.PitchClass - note2.PitchClass;
+        public static implicit operator Chromatic(PitchClass pitchClass) => new(pitchClass.Value);
+        
+        public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2)
+        {
+            var normalizedPitchClass = note1.PitchClass - note2.PitchClass; ;
+            return normalizedPitchClass.Value;
+        }
 
         /// <inheritdoc />
         public override string ToString()
@@ -298,7 +303,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         /// <inheritdoc />
         protected override PitchClass GetPitchClass()
         {
-            var value = NaturalNote.ToPitchClass().Value;
+            var value = NaturalNote.PitchClass.Value;
             if (SharpAccidental.HasValue) value += SharpAccidental.Value.Value;
             var result = new PitchClass { Value = value };
 
@@ -401,7 +406,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
         /// <inheritdoc />
         protected override PitchClass GetPitchClass()
         {
-            var value = NaturalNote.ToPitchClass().Value;
+            var value = NaturalNote.PitchClass.Value;
             if (FlatAccidental.HasValue) value += FlatAccidental.Value.Value;
             var result = new PitchClass { Value = value };
 
@@ -513,7 +518,7 @@ public abstract record Note : IStaticNorm<Note, IntervalClass>,
 
         private PitchClass GetPitchClass()
         {
-            var value = NaturalNote.ToPitchClass().Value;
+            var value = NaturalNote.PitchClass.Value;
             if (Accidental.HasValue) value += Accidental.Value.Value;
             var result = new PitchClass { Value = value };
 

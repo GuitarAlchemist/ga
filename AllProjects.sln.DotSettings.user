@@ -23,11 +23,11 @@
 	
 	
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 67 Col 56)</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Atonal/d:Primitives/f:PitchClassSetIdentity.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 255 Col 62)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Atonal/f:PitchClassSet.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/Coords/@EntryValue">(Doc Ln 79 Col 32)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/Coords/@EntryValue">(Doc Ln 80 Col 32)</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Atonal/f:PitchClass.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ProjectPathsToLoadFromDisk/=Common_005CGA_002ECore_002EUI_005CGA_002ECore_002EUI_002Ecsproj/@EntryIndexedValue">False</s:Boolean></wpf:ResourceDictionary>

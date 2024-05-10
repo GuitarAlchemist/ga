@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using GA.Core.Combinatorics;
 using Primitives;
 using Intervals;
 using Notes;
@@ -66,7 +67,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     {
         result = default;
         if (string.IsNullOrWhiteSpace(s)) return false;
-            
+
         var normalizedInput = s.Trim().ToUpperInvariant();
         if (int.TryParse(normalizedInput, out var i))
         {
@@ -88,12 +89,13 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             default:
                 return false;
         }
-    }   
+    }
 
     #endregion
 
     private const int _minValue = 0;
     private const int _maxValue = 11;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
 
@@ -103,7 +105,14 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.Sharp(PitchClass pitchClass) => pitchClass.ToSharpNote();
     public static implicit operator Note.Flat(PitchClass pitchClass) => pitchClass.ToFlatNote();
-    public static Interval.Chromatic operator -(PitchClass a, PitchClass b) => a.Value + -b.Value;
+    
+    /// <summary>
+    /// Computes the normalized pitch class difference between two pitch class items
+    /// </summary>
+    /// <param name="pitchClass1">The first <see cref="PitchClass"/></param>
+    /// <param name="pitchClass2">The second <see cref="PitchClass"/></param>
+    /// <returns></returns>
+    public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) => FastPitchClassCalculator.Subtract(pitchClass1, pitchClass2);
 
     public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
 
@@ -148,4 +157,34 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
         Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
     ];
+
+
+    #region Inner Classes
+
+    /// <summary>
+    /// Class for pre-computing and caching common pitch class operations
+    /// </summary>
+    private class FastPitchClassCalculator
+    {
+        public static PitchClass Subtract(PitchClass pitchClass1, PitchClass pitchClass2) => _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
+
+        /// <summary>
+        /// Pre-computes the normalized difference between all possible combinations of pitch class pairs
+        /// </summary>
+        private static readonly Lazy<ImmutableDictionary<(int, int), PitchClass>> _lazySubtractionDictionary = new(GetSubtractionDictionary);
+        
+        private static ImmutableDictionary<(int, int), PitchClass> GetSubtractionDictionary()
+        {
+            var builder = ImmutableDictionary.CreateBuilder<(int, int), PitchClass>();
+            foreach (var (pcValue1, pcValue2) in new CartesianProduct<int>(Values))
+            {
+                builder.Add(
+                    (pcValue1, pcValue2), 
+                    FromValue((pcValue1 - pcValue2 + 12) % 12));
+            }
+            return builder.ToImmutable(); }
+
+    }
+
+    #endregion
 }

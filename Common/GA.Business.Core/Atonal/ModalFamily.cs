@@ -1,9 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using Primitives;
-
 /// <summary>
-/// Group of pitch class sets that share the same interval vector
+/// Group of pitch class sets representing a scale that share the same interval vector
 /// </summary>
 public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
 {
@@ -86,7 +84,7 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
 
         public IEnumerator<ModalFamily> GetEnumerator()
         {
-            var scaleSets = PitchClassSet.Items.Where(pcs => PitchClassSetIdentity.ContainsRoot(pcs.Identity.Value));
+            var scaleSets = PitchClassSet.Items.Where(pcs => pcs.Contains(0));
             var scaleSetsByCount = scaleSets.ToLookup(set => set.Count);
             foreach (var countGrouping in scaleSetsByCount)
             {
