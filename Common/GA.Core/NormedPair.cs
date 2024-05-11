@@ -7,13 +7,13 @@
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
 public sealed record NormedPair<T, TNorm>(Pair<T> Pair) : Pair<T>(Pair)
-    where T : IStaticNorm<T, TNorm>
+    where T : IStaticPairNorm<T, TNorm>
     where TNorm : struct, IValueObject<TNorm>
 {
     /// <summary>
     /// Gets the <see cref="TNorm"/> norm.
     /// </summary>
-    public TNorm Norm { get; } = T.GetNorm(Pair.Item1, Pair.Item2);
+    public TNorm Norm { get; } = T.GetPairNorm(Pair.Item1, Pair.Item2);
 
     /// <summary>
     /// Creates a 2-tuple.

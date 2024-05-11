@@ -3,7 +3,6 @@
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using GA.InteractiveExtension.Markdown;
-using VexTab;
 
 public static class TypeFormatterSourceExtensions
 {

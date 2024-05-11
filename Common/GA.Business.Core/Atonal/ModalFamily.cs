@@ -89,7 +89,7 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
             foreach (var countGrouping in scaleSetsByCount)
             {
                 var noteCount = countGrouping.Key;
-                var orderedSets = countGrouping.OrderBy(set => set.IntervalClassVector.Value);
+                var orderedSets = countGrouping.OrderBy(set => set.IntervalClassVector.Id);
                 var setsByIntervalClassVector = orderedSets.ToLookup(set => set.IntervalClassVector);
                 var modalGroups = setsByIntervalClassVector.Where(grouping => grouping.Count() > 1);
 

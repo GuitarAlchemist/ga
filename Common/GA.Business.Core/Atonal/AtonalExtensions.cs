@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using Abstractions;
 using Intervals;
 using Notes;
 using Primitives;
@@ -18,11 +19,11 @@ public static class AtonalExtensions
     /// <summary>
     /// Gets the interval class vector.
     /// </summary>
-    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticNorm{T, IntervalClass}"/>).</typeparam>
+    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticPairNormPairNorm{TSelf,TNorm}"/>).</typeparam>
     /// <param name="items"></param>
     /// <returns></returns>
     public static IntervalClassVector ToIntervalClassVector<T>(this IEnumerable<T> items)
-        where T : IValueObject, IStaticNorm<T, IntervalClass>
+        where T : IValueObject, IStaticPairIntervalClassNorm<T>
     {
         ArgumentNullException.ThrowIfNull(items);
         

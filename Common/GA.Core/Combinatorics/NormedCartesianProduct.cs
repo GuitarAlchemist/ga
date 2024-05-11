@@ -1,8 +1,5 @@
-﻿using GA.Core.Collections.Abstractions;
+﻿namespace GA.Core.Combinatorics;
 
-namespace GA.Core.Combinatorics;
-
-using Collections;
 using Extensions;
 
 /// <summary>
@@ -14,7 +11,7 @@ using Extensions;
 public class NormedCartesianProduct<T, TNorm>(
     IEnumerable<T> items,
     Func<T, bool>? predicate = null) : CartesianProduct<T, NormedPair<T, TNorm>>(items, pair => new(pair), predicate)
-    where T : IStaticNorm<T, TNorm>, IValueObject
+    where T : IStaticPairNorm<T, TNorm>, IValueObject
     where TNorm : struct, IValueObject<TNorm>, IStaticReadonlyCollection<TNorm>
 {
     /// <summary>

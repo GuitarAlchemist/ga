@@ -12,25 +12,11 @@ using KeyNote = Notes.Note.KeyNote;
 /// Implements <see cref="IRangeValueObject{KeySignature}"/> | <see cref="IStaticReadonlyCollectionFromValues{KeySignature}"/> | <see cref="IReadOnlyCollection{KeyNote}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
-                                             IStaticReadonlyCollectionFromValues<KeySignature>,
-                                             IReadOnlyCollection<KeyNote>
+public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues<KeySignature>
 {
     #region IStaticReadonlyCollectionFromValues<KeySignature> Members
 
     public static IReadOnlyCollection<KeySignature> Items => IStaticReadonlyCollectionFromValues<KeySignature>.Items;
-
-    #endregion
-
-    #region IReadOnlyCollection<KeyValue> Members
-
-    public IEnumerator<KeyNote> GetEnumerator() => AccidentedNotes.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)AccidentedNotes).GetEnumerator();
-    public int Count => AccidentedNotes.Count;
-    
-    #endregion
-
-    #region IRangeValueObject Members
 
     public static KeySignature Min => new(_minValue);
     public static KeySignature Max => new(_maxValue);
@@ -41,9 +27,15 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
     private readonly int _value;
 
     public int Value { get => _value; init => _value = IRangeValueObject<KeySignature>.EnsureValueInRange(value, _minValue, _maxValue); }
-
-    #endregion
     
+    public static implicit operator KeySignature(int value) => new(value);
+    public static implicit operator int(KeySignature keySignature) => keySignature.Value;
+    
+    private const int _minValue = -7;
+    private const int _maxValue = 7;
+    
+    #endregion
+
     #region Relational members
 
     public int CompareTo(KeySignature other) => _value.CompareTo(other._value);
@@ -55,17 +47,11 @@ public readonly record struct KeySignature : IRangeValueObject<KeySignature>,
     #endregion
 
     #region Static Helpers
-
-    public static implicit operator KeySignature(int value) => new(value);
-    public static implicit operator int(KeySignature keySignature) => keySignature.Value;
-
+    
     public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);
     public static KeySignature Flat([ValueRange(1, 7)] int count) => new(-count);
 
     #endregion
-
-    private const int _minValue = -7;
-    private const int _maxValue = 7;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private KeySignature([ValueRange(_minValue, _maxValue)] int value) : this()

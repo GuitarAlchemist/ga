@@ -1,5 +1,4 @@
 ﻿using GA.Business.Core.Atonal;
-using GA.Business.Core.Notes.Primitives;
 
 namespace GA.Business.Core.Tests.Notes;
 
