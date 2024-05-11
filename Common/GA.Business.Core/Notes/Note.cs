@@ -14,14 +14,14 @@ using Tonal;
 /// <see cref="Chromatic"/>
 /// <see cref="Sharp"/>, <see cref="Flat"/>, <see cref="Accidented"/>
 [PublicAPI]
-public abstract record Note : IStaticNorm<Note, IntervalClass>,
+public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                               IComparable<Note>,
                               IPitchClass
 {
-    #region IStaticNorm<Note> Members
+    #region IStaticPairNorm<Note> Members
 
-    /// <inheritdoc cref="IStaticNorm{TSelf,TNorm}.GetNorm"/>
-    public static IntervalClass GetNorm(Note item1, Note item2) => item1.GetIntervalClass(item2);
+    /// <inheritdoc cref="IStaticPairNorm{TSelf,TNorm}.GetPairNorm"/>
+    public static IntervalClass GetPairNorm(Note item1, Note item2) => item1.GetIntervalClass(item2);
 
     #endregion
 

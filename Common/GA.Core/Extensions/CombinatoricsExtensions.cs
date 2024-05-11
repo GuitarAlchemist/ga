@@ -1,8 +1,5 @@
-﻿using GA.Core.Collections.Abstractions;
+﻿namespace GA.Core.Extensions;
 
-namespace GA.Core.Extensions;
-
-using Collections;
 using Combinatorics;
 
 [PublicAPI]
@@ -31,6 +28,6 @@ public static class CombinatoricsExtensions
     public static NormedCartesianProduct<T, TNorm> ToNormedCartesianProduct<T, TNorm>(
         this IEnumerable<T> items, 
         Func<T, bool>? predicate = null) 
-        where T : IStaticNorm<T, TNorm>, IValueObject
+        where T : IStaticPairNorm<T, TNorm>, IValueObject
         where TNorm : struct, IValueObject<TNorm>, IStaticReadonlyCollection<TNorm> => new(items, predicate);
 }

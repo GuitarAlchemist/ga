@@ -1,7 +1,5 @@
 ﻿namespace GA.Core.Combinatorics;
 
-using Collections.Abstractions;
-
 /// <summary>
 /// Ordered arrangements of elements where repetition is allowed - Also called "k-tuple"
 /// </summary>

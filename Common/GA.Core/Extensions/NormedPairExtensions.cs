@@ -1,6 +1,4 @@
-﻿using GA.Core.Collections.Abstractions;
-
-namespace GA.Core.Extensions;
+﻿namespace GA.Core.Extensions;
 
 using Collections;
 
@@ -15,7 +13,7 @@ public static class NormedPairExtensions
     /// <param name="normedPairs">The collection of <see cref="NormedPair{T, TNorm}"/></param>
     /// <returns>The <see cref="ILookup{TKey,TElement}"/> where the key type is <see cref="TNorm"/> and the element type is <see cref="Pair{T}"/></returns>
     public static ILookup<TNorm, Pair<T>> ByNorm<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs) 
-        where T : IStaticNorm<T, TNorm>
+        where T : IStaticPairNorm<T, TNorm>
         where TNorm : struct, IValueObject<TNorm>
     {
         ArgumentNullException.ThrowIfNull(normedPairs);
@@ -35,7 +33,7 @@ public static class NormedPairExtensions
     public static ImmutableSortedDictionary<TNorm, int> ByNormCounts<T, TNorm>(
         this IEnumerable<NormedPair<T, TNorm>> normedPairs,
         Func<NormedPair<T, TNorm>, bool>? predicate = null)
-            where T : IStaticNorm<T, TNorm>, IValueObject
+            where T : IStaticPairNorm<T, TNorm>, IValueObject
             where TNorm : struct, IStaticReadonlyCollection<TNorm>, IValueObject<TNorm>
     {
         ArgumentNullException.ThrowIfNull(normedPairs);

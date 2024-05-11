@@ -1,4 +1,4 @@
-﻿namespace GA.Core;
+﻿namespace GA.Core.Abstractions;
 
 using Extensions;
 

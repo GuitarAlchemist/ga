@@ -7,4 +7,6 @@ global using System.Diagnostics;
 global using System.Numerics;
 global using System.Runtime.CompilerServices;
 global using System.Text;
+global using GA.Core.Abstractions;
+global using GA.Core.Collections.Abstractions;
 global using JetBrains.Annotations;

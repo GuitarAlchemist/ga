@@ -1,6 +1,5 @@
 ﻿namespace GA.Core.Combinatorics;
 
-using Collections.Abstractions;
 using System.Linq;
 
 /// <summary>

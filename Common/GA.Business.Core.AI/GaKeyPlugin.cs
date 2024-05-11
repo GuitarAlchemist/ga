@@ -1,8 +1,5 @@
-﻿using System.Text;
+﻿namespace GA.Business.Core.AI;
 
-namespace GA.Business.Core.AI;
-
-using GA.Core.Extensions;
 using Tonal;
 
 public class GaKeyPlugin

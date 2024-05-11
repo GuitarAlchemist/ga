@@ -1,9 +1,10 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using Abstractions;
 using GA.Core.Combinatorics;
-using Primitives;
 using Intervals;
 using Notes;
+using Primitives;
 
 /// <summary>
 /// Items pitches related to each other by octave, enharmonic equivalence, or both (<see href="https://en.wikipedia.org/wiki/Pitch_class"/>
@@ -11,45 +12,58 @@ using Notes;
 /// <remarks>
 /// 0 => C; 1 => C# or Db; 2 => D; 3 => D# or Eb; 4 => E; 5 => F; 6 => F# or Gb; 7 => G; 8 => G# or Ab; 9 => A; T => A# or Bb; E => B<br/>
 /// <br/>
-/// Implements <see cref="IStaticValueObjectList{PitchClass}"/>, <see cref="IStaticNorm{PitchClass, IntervalClass}"/>
+/// Implements <see cref="IStaticValueObjectList{PitchClass}"/> | <see cref="IStaticPairIntervalClassNorm{TSelf}"/> | <see cref="IParsable{PitchClass}"/>
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
-                                           IStaticNorm<PitchClass, IntervalClass>,
+                                           IStaticPairIntervalClassNorm<PitchClass>,
                                            IParsable<PitchClass>
 {
     #region IStaticValueObjectList<PitchClass> Members
 
     public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
     public static IReadOnlyList<int> Values => Items.ToValueList();
-
+    
+    /// <inheritdoc />
+    public static PitchClass Min => FromValue(_minValue);
+    
+    /// <inheritdoc />
+    public static PitchClass Max => FromValue(_maxValue);
+  
     #endregion
 
-    #region IStaticIntervalClassNorm<PitchClass> Members
+    #region IStaticPairIntervalClassNorm<PitchClass> Members
 
-    public static IntervalClass GetNorm(PitchClass item1, PitchClass item2) => IntervalClass.FromValue(Math.Abs(item2.Value - item1.Value));
+    /// <inheritdoc cref="IStaticPairIntervalClassNorm{TSelf}.GetPairNorm"/>
+    public static IntervalClass GetPairNorm(PitchClass pitchClass1, PitchClass pitchClass2) => IStaticPairIntervalClassNorm<PitchClass>.GetPairNorm(pitchClass1, pitchClass2);
 
     #endregion
 
     #region IValueObject<PitchClass> Members
 
-    private readonly int _value;
-
+    public static implicit operator PitchClass(int value) => FromValue(value);
+    public static implicit operator int(PitchClass octave) => octave.Value;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    
     public int Value
     {
         get => _value;
         init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
     }
-
+    
     #endregion
 
     #region Relational members
 
-    public int CompareTo(PitchClass other) => _value.CompareTo(other._value);
     public static bool operator <(PitchClass left, PitchClass right) => left.CompareTo(right) < 0;
     public static bool operator >(PitchClass left, PitchClass right) => left.CompareTo(right) > 0;
     public static bool operator <=(PitchClass left, PitchClass right) => left.CompareTo(right) <= 0;
     public static bool operator >=(PitchClass left, PitchClass right) => left.CompareTo(right) >= 0;
+    
+    /// <inheritdoc />
+    public int CompareTo(PitchClass other) => _value.CompareTo(other._value);
 
     #endregion
 
@@ -93,28 +107,24 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #endregion
 
-    private const int _minValue = 0;
-    private const int _maxValue = 11;
+    #region Operators
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    public static PitchClass Min => FromValue(_minValue);
-    public static PitchClass Max => FromValue(_maxValue);
-    public static implicit operator PitchClass(int value) => FromValue(value);
-    public static implicit operator int(PitchClass octave) => octave.Value;
     public static implicit operator Note.Sharp(PitchClass pitchClass) => pitchClass.ToSharpNote();
     public static implicit operator Note.Flat(PitchClass pitchClass) => pitchClass.ToFlatNote();
     
+    #endregion
+    
+    private const int _minValue = 0;
+    private const int _maxValue = 11;
+    private readonly int _value;
+
     /// <summary>
-    /// Computes the normalized pitch class difference between two pitch class items
+    /// Performs a normalized pitch class subtraction between two pitch classes
     /// </summary>
     /// <param name="pitchClass1">The first <see cref="PitchClass"/></param>
     /// <param name="pitchClass2">The second <see cref="PitchClass"/></param>
     /// <returns></returns>
-    public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) => FastPitchClassCalculator.Subtract(pitchClass1, pitchClass2);
-
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<PitchClass>.CheckRange(Value, _minValue, maxValue);
+    public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) => FastPitchClassCalculator.NormalizedSubtraction(pitchClass1, pitchClass2);
 
     public override string ToString() => _value switch
     {
@@ -162,11 +172,14 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     #region Inner Classes
 
     /// <summary>
-    /// Class for pre-computing and caching common pitch class operations
+    /// Fast calculator class caching common pitch class operations
     /// </summary>
+    /// <remarks>
+    /// Internally caches all possible results from operations
+    /// </remarks>
     private class FastPitchClassCalculator
     {
-        public static PitchClass Subtract(PitchClass pitchClass1, PitchClass pitchClass2) => _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
+        public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) => _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
 
         /// <summary>
         /// Pre-computes the normalized difference between all possible combinations of pitch class pairs
@@ -185,6 +198,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             return builder.ToImmutable(); }
 
     }
-
+    
     #endregion
 }

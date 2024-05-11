@@ -3,7 +3,7 @@
 /// <summary>
 /// Interface for classes that define a read-only collection at the class level (Items are retrieved from values)
 /// </summary>
-public interface IStaticReadonlyCollectionFromValues<out TSelf> : IStaticReadonlyCollection<TSelf>
+public interface IStaticReadonlyCollectionFromValues<TSelf> : IStaticReadonlyCollection<TSelf>, IRangeValueObject<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
     /// <summary>
