@@ -2,11 +2,11 @@
 
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
-using GA.InteractiveExtension.Markdown;
+using Markdown;
 
-public static class TypeFormatterSourceExtensions
+public static partial class TypeFormatterSourceExtensions
 {
-    private static readonly Regex _markdownEscapeRegex = new(@"(?<pre>[^\\])(?<newLine>\\n)", RegexOptions.Compiled);
+    private static readonly Regex _markdownEscapeRegex = MyRegex();
 
     /*
     private const string DefaultLibraryVersion = "9.1.7";
@@ -180,5 +180,8 @@ public static class TypeFormatterSourceExtensions
 """;
         return new HtmlString(code);
     }
+
+    [GeneratedRegex(@"(?<pre>[^\\])(?<newLine>\\n)", RegexOptions.Compiled)]
+    private static partial Regex MyRegex();
 }
 

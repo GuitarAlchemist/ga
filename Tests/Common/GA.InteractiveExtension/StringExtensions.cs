@@ -6,11 +6,11 @@ using System.Text.RegularExpressions;
 
 namespace GA.InteractiveExtension.Tests
 {
-    internal static class StringExtensions
+    internal static partial class StringExtensions
     {
         public static string FixedGuid(this string source)
         {
-            var reg = new Regex(@".*\s+id=""(?<id>\S+)""\s*.*", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+            var reg = MyRegex();
             var id1 = reg.Match(source).Groups["id"].Value;
             var id = id1;
             return source.Replace(id, "00000000000000000000000000000000");
@@ -23,5 +23,8 @@ namespace GA.InteractiveExtension.Tests
             var id = id1;
             return source.Replace(id, "00000000000000000000000000000000");
         }
+
+        [GeneratedRegex(@".*\s+id=""(?<id>\S+)""\s*.*", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled, "en-CA")]
+        private static partial Regex MyRegex();
     }
 }

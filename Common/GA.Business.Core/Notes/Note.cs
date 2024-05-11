@@ -105,8 +105,20 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     /// A chromatic note
     /// </summary>
     [PublicAPI]
-    public sealed record Chromatic(PitchClass PitchClass) : Note
+    public sealed record Chromatic(int Value) : Note
     {
+        #region Static Helpers
+
+        public static Chromatic Get(int value) => ByValueIndexer.GetChromaticNote(value);
+        
+        public static ImmutableList<Chromatic> Items => 
+            Enumerable
+                .Range(0, 12)
+                .Select(i => new Chromatic(i))
+                .ToImmutableList();
+
+        #endregion
+        
         #region Well-known chromatic notes
 
         public static Chromatic C => new(0);
@@ -123,12 +135,10 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Chromatic B => new(11);
         
         #endregion
+        
+        #region Operators
 
-        public override PitchClass PitchClass { get; } = PitchClass;
-        public override Accidented ToAccidentedNote() => ToSharp().ToAccidentedNote();
-        public Sharp ToSharp() => PitchClass.ToSharpNote();
-        public Flat ToFlat() => PitchClass.ToFlatNote();
-
+        public static implicit operator Chromatic(int value) => Get(value);
         public static implicit operator Chromatic(PitchClass pitchClass) => new(pitchClass.Value);
         
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2)
@@ -136,6 +146,25 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             var normalizedPitchClass = note1.PitchClass - note2.PitchClass; ;
             return normalizedPitchClass.Value;
         }
+
+        #endregion
+        
+        #region Inner Classes
+
+        private class ByValueIndexer() : LazyIndexerBase<int, Chromatic>(GetDictionary())
+        {
+            public static Chromatic GetChromaticNote(int value) => _instance[value];
+            private static ImmutableDictionary<int, Chromatic> GetDictionary() => Items.ToImmutableDictionary(note => note.Value);
+            
+            private static readonly ByValueIndexer _instance = new();
+        }
+
+        #endregion
+       
+        public override PitchClass PitchClass { get; } = Value;
+        public override Accidented ToAccidentedNote() => ToSharp().ToAccidentedNote();
+        public Sharp ToSharp() => PitchClass.ToSharpNote();
+        public Flat ToFlat() => PitchClass.ToFlatNote();
 
         /// <inheritdoc />
         public override string ToString()

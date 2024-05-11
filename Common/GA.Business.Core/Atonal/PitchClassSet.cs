@@ -112,6 +112,9 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// </summary>
     /// <param name="identity">The <see cref="PitchClassSetIdentity"/></param>
     /// <returns>The <see cref="PitchClassSet"/></returns>
+    /// <remarks>
+    /// TODO: Deprecate this
+    /// </remarks>
     public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
     {
         var pitchClasses = new List<PitchClass>();
@@ -127,7 +130,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
         return result;
     }
-
+    
     public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
 
     private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
@@ -143,7 +146,8 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         var pitchClassesSet = ImmutableSortedSet.CreateRange(pitchClasses);
         _pitchClassesSet = pitchClassesSet;
 
-        Identity = PitchClassSetIdentity.FromPitchClasses(pitchClassesSet);
+        Id = PitchClassSetId.FromPitchClasses(pitchClassesSet);
+        Identity = PitchClassSetIdentity.FromPitchClasses(pitchClassesSet); // TODO: Deprecate this
         Cardinality = Cardinality.FromValue(pitchClassesSet.Count);
     }
 
@@ -156,6 +160,11 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// Gets the <see cref="PitchClassSetIdentity"/>
     /// </summary>
     public PitchClassSetIdentity Identity { get; }
+    
+    /// <summary>
+    /// Gets the <see cref="PitchClassSetId"/>
+    /// </summary>
+    public PitchClassSetId Id { get; }
 
     /// <summary>
     /// Gets the <see cref="Cardinality"/>
@@ -163,9 +172,9 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public Cardinality Cardinality { get; }
 
     /// <summary>
-    /// Gets the <see cref="PrintableReadOnlyCollection{T}"/> where T is <see cref="Note.Chromatic"/>
+    /// Gets the <see cref="ImmutableSortedSet{T}"/> where T is <see cref="Note.Chromatic"/>
     /// </summary>
-    public PrintableReadOnlyCollection<Note.Chromatic> Notes => GetNotes().AsPrintable();
+    public ImmutableSortedSet<Note.Chromatic> Notes => Id.GetChromaticNotes();
 
     /// <summary>
     /// Gets the <see cref="IntervalClassVector"/>
@@ -315,6 +324,8 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     // ReSharper disable once InconsistentNaming
     private ImmutableList<Note.Chromatic> GetNotes()
     {
+        // TODO: This looks wrong
+        
         var result =
             _pitchClassesSet
                 .Select(pitchClass => new Note.Chromatic(pitchClass))
