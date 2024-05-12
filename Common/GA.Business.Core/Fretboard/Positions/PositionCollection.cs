@@ -10,7 +10,7 @@ public class PositionCollection<T> : LazyPrintableCollectionBase<T>
     private readonly Lazy<PlayedPositionCollection> _lazyPlayedPositions;
     private readonly Lazy<PlayedPositionCollection> _lazyOpenPositions;
 
-    public PositionCollection(IReadOnlyCollection<T> positions) : base(positions, "; ")
+    public PositionCollection(IReadOnlyCollection<T> positions) : base(positions)
     {
         _lazyMutedPositions = new(() => new(positions.OfType<Position.Muted>().ToImmutableArray()));
         _lazyPlayedPositions = new(() => new(positions.OfType<Position.Played>().ToImmutableArray()));
