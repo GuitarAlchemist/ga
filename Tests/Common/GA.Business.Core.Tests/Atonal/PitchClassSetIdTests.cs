@@ -15,10 +15,12 @@
             var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
         
             // Act
-            var id = majorTriadPcs.Id;
+            var id = majorTriadPcs.Id; // 145 value / 000010010001 binary value
             var complementId = id.Complement;
         
             // Assert
+            Assert.That(complementId.BinaryValue, Is.EqualTo("111101101110"));
+            Assert.That(complementId.Value, Is.EqualTo(3950));
         }            
     }
 }

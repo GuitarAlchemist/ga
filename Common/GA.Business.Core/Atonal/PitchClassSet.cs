@@ -172,9 +172,9 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public Cardinality Cardinality { get; }
 
     /// <summary>
-    /// Gets the <see cref="ImmutableSortedSet{T}"/> where T is <see cref="Note.Chromatic"/>
+    /// Gets the <see cref="ChromaticNoteSet"/>
     /// </summary>
-    public ImmutableSortedSet<Note.Chromatic> Notes => Id.Notes;
+    public ChromaticNoteSet Notes => Id.Notes;
 
     /// <summary>
     /// Gets the <see cref="IntervalClassVector"/>

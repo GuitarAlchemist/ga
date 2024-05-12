@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
 using Notes;
+using Notes.Extensions;
 
 /// <summary>
 /// A pitch class set ID
@@ -108,16 +109,31 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// <summary>
     /// Gets chromatic notes
     /// </summary>
-    /// <returns>The <see cref="ImmutableSortedSet{T}"/> where T is a <see cref="Note.Chromatic"/></returns>
-    public ImmutableSortedSet<Note.Chromatic> Notes => GetNotesInternal(Value);
+    /// <returns>The <see cref="ChromaticNoteSet"/></returns>
+    public ChromaticNoteSet Notes => GetNotesInternal(Value).ToChromaticNoteSet();
 
     /// <summary>
-    /// Get the complement <see cref="PitchClassSetId"/>
+    /// Gets the binary representation of the Pitch Class ID value <see cref="string"/>
     /// </summary>
+    public string BinaryValue => Convert.ToString(Value, 2).PadLeft(12, '0');
+    
+    /// <summary>
+    /// Get the complement Pitch Class ID
+    /// </summary>
+    /// <remarks>
+    /// A complement operation "mirrors" the notes
+    /// </remarks>
     public PitchClassSetId Complement => new(Value ^ 0b111111111111);
 
+    /// <summary>
+    /// Get the complement of an existing Pitch Class ID
+    /// </summary>
+    /// <param name="id">The <see cref="PitchClassSetId"/></param>
+    /// <returns>The complement <see cref="PitchClassSetId"/></returns>
+    public static PitchClassSetId operator !(PitchClassSetId id) => id.Complement;
+
     /// <inheritdoc />
-    public override string ToString() => $"{Value} ({PrintValueBinary(Value)}; {PrintNotes(Notes)})";
+    public override string ToString() => $"{Value} ({BinaryValue}; {Notes})";
 
     private static ImmutableSortedSet<Note.Chromatic> GetNotesInternal(int value)
     {
@@ -140,7 +156,4 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         }
         return builder.ToImmutable();
     }
-    
-    private static string PrintValueBinary(int value) => Convert.ToString(value, 2).PadLeft(12, '0');
-    private static string PrintNotes(ImmutableSortedSet<Note.Chromatic> notes) => string.Join(" ", notes.Select(n => n.ToString()));
 }

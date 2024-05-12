@@ -42,7 +42,7 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
     /// </summary>
     public static readonly AccidentedNoteCollection Empty = new();
    
-    public AccidentedNoteCollection(params Note.Accidented[] items) : base(items) { }
-    public AccidentedNoteCollection(IEnumerable<Note.Accidented> items) : base(items.ToImmutableList()) { }
-    public AccidentedNoteCollection(IReadOnlyCollection<Note.Accidented> items) : base(items) { }
+    public AccidentedNoteCollection(params Note.Accidented[] notes) : base(notes) { }
+    public AccidentedNoteCollection(IEnumerable<Note.Accidented> notes) : base(notes.ToImmutableList()) { }
+    public AccidentedNoteCollection(IReadOnlyCollection<Note.Accidented> notes) : base(notes) { }
 }
