@@ -9,10 +9,9 @@ using Primitives;
 using Tonal;
 
 /// <summary>
-/// An abstract note
+/// Note discriminated union
 /// </summary>
-/// <see cref="Chromatic"/>
-/// <see cref="Sharp"/>, <see cref="Flat"/>, <see cref="Accidented"/>
+/// <see cref="Chromatic"/> | <see cref="KeyNote"/> |  <see cref="Sharp"/> | <see cref="Flat"/> | <see cref="Accidented"/>
 [PublicAPI]
 public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                               IComparable<Note>,

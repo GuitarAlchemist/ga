@@ -1,8 +1,11 @@
 ﻿namespace GA.Business.Core.Atonal.Abstractions;
 
 /// <summary>
-/// Abstraction for an object that has a pitch class
+/// Abstraction for objects having a Pitch Class property
 /// </summary>
+/// <remarks>
+/// <see cref="Notes.Note"/> | <see cref="Notes.Pitch"/>
+/// </remarks>
 public interface IPitchClass
 {
     /// <summary>

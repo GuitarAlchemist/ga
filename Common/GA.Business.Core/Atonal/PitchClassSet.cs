@@ -174,7 +174,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// <summary>
     /// Gets the <see cref="ImmutableSortedSet{T}"/> where T is <see cref="Note.Chromatic"/>
     /// </summary>
-    public ImmutableSortedSet<Note.Chromatic> Notes => Id.GetChromaticNotes();
+    public ImmutableSortedSet<Note.Chromatic> Notes => Id.Notes;
 
     /// <summary>
     /// Gets the <see cref="IntervalClassVector"/>
