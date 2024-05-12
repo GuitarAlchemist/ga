@@ -5,8 +5,16 @@ using Atonal.Abstractions;
 using Primitives;
 using Intervals;
 
+/// <summary>
+/// Pitch discriminated union
+/// </summary>
+/// <remarks>
+/// <see cref="Chromatic"/> | <see cref="Sharp"/> | <see cref="Flat"/>
+/// </remarks>
+/// <param name="Octave"></param>
 [PublicAPI]
-public abstract record Pitch(Octave Octave) : IComparable<Pitch>, IPitchClass
+public abstract record Pitch(Octave Octave) : IComparable<Pitch>, 
+                                              IPitchClass
 {
     #region IComparable<Pitch> Members
 
@@ -24,13 +32,17 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>, IPitchClass
     public abstract PitchClass PitchClass { get; }
     
     #endregion
+
+    #region Operators
+
+    public static implicit operator MidiNote(Pitch pitch) => pitch.GetMidiNote();
+
+    #endregion
     
     /// <summary>
     /// Gets the <see cref="MidiNote"/>
     /// </summary>
     public MidiNote MidiNote => GetMidiNote();
-
-    public static implicit operator MidiNote(Pitch pitch) => pitch.GetMidiNote();
 
     private MidiNote GetMidiNote() => MidiNote.Create(Octave, PitchClass);
 
