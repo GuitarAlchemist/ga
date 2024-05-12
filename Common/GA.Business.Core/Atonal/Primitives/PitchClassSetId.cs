@@ -14,6 +14,47 @@ using Notes.Extensions;
 [PublicAPI]
 public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromValues<PitchClassSetId>
 {
+    #region Equality Comparers
+
+    /// <summary>
+    /// Gets the default <see cref="IEqualityComparer{PitchClassSetId}"/>
+    /// </summary>
+    public static IEqualityComparer<PitchClassSetId> DefaultComparer { get; } = new ValueEqualityComparer();
+    
+    /// <summary>
+    /// Gets the <see cref="IEqualityComparer{PitchClassSetId}"/> for <see cref="Complement"/> property
+    /// </summary>
+    public static IEqualityComparer<PitchClassSetId> ComplementComparer { get; } = new ComplementEqualityComparer();
+    
+    /// <summary>
+    /// Equality comparer where complementary Pitch Class Set IDs are considered equal
+    /// </summary>
+    /// <remarks>
+    /// e.g. 000010010001 binary value (145 integer value) vs 111101101110 binary value (3950 integer value)
+    /// </remarks>
+    private class ComplementEqualityComparer : IEqualityComparer<PitchClassSetId>
+    {
+        /// <inheritdoc />
+        public bool Equals(PitchClassSetId x, PitchClassSetId y) => x.Value == y.Value || x.Value == (y.Complement.Value);
+
+        /// <inheritdoc />
+        public int GetHashCode(PitchClassSetId obj)
+        {
+            // Calculate hash code based on the canonical smaller value between a set and its complement
+            var complementValue = obj.Complement.Value;
+            var canonicalValue = Math.Min(obj.Value, complementValue);
+            return canonicalValue.GetHashCode();
+        }
+    }
+    
+    private sealed class ValueEqualityComparer : IEqualityComparer<PitchClassSetId>
+    {
+        public bool Equals(PitchClassSetId x, PitchClassSetId y) => x.Value == y.Value;
+        public int GetHashCode(PitchClassSetId obj) => obj.Value;
+    }
+
+    #endregion
+    
     #region Static Helpers
     
     /// <summary>
@@ -101,10 +142,11 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     #endregion
     
-    public PitchClassSetId(int value)
-    {
-        Value = ValueObjectUtils<PitchClassSetId>.CheckRange(value, _minValue, _maxValue);
-    }
+    /// <summary>
+    /// Creates a <see cref="PitchClassSetId"/> instance
+    /// </summary>
+    /// <param name="value">The <see cref="Int32"/> value</param>
+    public PitchClassSetId(int value) => Value = ValueObjectUtils<PitchClassSetId>.CheckRange(value, _minValue, _maxValue);
 
     /// <summary>
     /// Gets chromatic notes
