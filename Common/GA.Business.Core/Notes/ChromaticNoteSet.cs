@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Notes;
 
+using Atonal;
+
 [PublicAPI]
 public sealed class ChromaticNoteSet(ImmutableSortedSet<Note.Chromatic> notes) : PrintableImmutableSet<Note.Chromatic>(notes)
 {
@@ -10,4 +12,6 @@ public sealed class ChromaticNoteSet(ImmutableSortedSet<Note.Chromatic> notes) :
     
     public ChromaticNoteSet(params Note.Chromatic[] notes) : this(notes.ToImmutableSortedSet()) { }
     public ChromaticNoteSet(IEnumerable<Note.Chromatic> notes) : this(GetSet(notes)) { }
+
+    public IEnumerable<PitchClass> PitchClassCollection => Items.Select(note => note.PitchClass);
 }

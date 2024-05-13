@@ -11,14 +11,14 @@ public static class NormedPairExtensions
     /// <typeparam name="T">The element type.</typeparam>
     /// <typeparam name="TNorm">The norm type.</typeparam>
     /// <param name="normedPairs">The collection of <see cref="NormedPair{T, TNorm}"/></param>
-    /// <returns>The <see cref="ILookup{TKey,TElement}"/> where the key type is <see cref="TNorm"/> and the element type is <see cref="Pair{T}"/></returns>
-    public static ILookup<TNorm, Pair<T>> ByNorm<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs) 
+    /// <returns>The <see cref="ILookup{TKey,TElement}"/> where the key type is <see cref="TNorm"/> and the element type is <see cref="OrderedPair{T}"/></returns>
+    public static ILookup<TNorm, OrderedPair<T>> ByNorm<T, TNorm>(this IEnumerable<NormedPair<T, TNorm>> normedPairs) 
         where T : IStaticPairNorm<T, TNorm>
         where TNorm : struct, IValueObject<TNorm>
     {
         ArgumentNullException.ThrowIfNull(normedPairs);
 
-        return normedPairs.ToLookup(pair => pair.Norm, pair => new Pair<T>(pair.Item1, pair.Item2));
+        return normedPairs.ToLookup(pair => pair.Norm, pair => new OrderedPair<T>(pair.Item1, pair.Item2));
     }
 
     /// <summary>

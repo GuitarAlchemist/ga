@@ -3,8 +3,8 @@
 [PublicAPI]
 public static class ListExtensions
 {
-    public static Pair<T> ToPair<T>(this IReadOnlyList<T> list) => new(list[0], list[1]);
-    public static TPair ToPair<T, TPair>(this IReadOnlyList<T> list, Func<T,T,TPair> pairFactory) where TPair : Pair<T> => pairFactory(list[0], list[1]);
+    public static OrderedPair<T> ToPair<T>(this IReadOnlyList<T> list) => new(list[0], list[1]);
+    public static TPair ToPair<T, TPair>(this IReadOnlyList<T> list, Func<T,T,TPair> pairFactory) where TPair : OrderedPair<T> => pairFactory(list[0], list[1]);
     public static Tuple<T, T, T> ToTuple3<T>(this IReadOnlyList<T> list) => new(list[0], list[1], list[2]);
     public static Tuple<T, T, T, T> ToTuple4<T>(this IReadOnlyList<T> list) => new(list[0], list[1], list[2], list[3]);
     public static Tuple<T, T, T, T, T> ToTuple5<T>(this IReadOnlyList<T> list) => new(list[0], list[1], list[2], list[3], list[4]);

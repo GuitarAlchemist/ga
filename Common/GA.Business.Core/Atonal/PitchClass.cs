@@ -16,8 +16,7 @@ using Primitives;
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
-                                           IStaticPairIntervalClassNorm<PitchClass>,
-                                           IParsable<PitchClass>
+                                           IParsable<PitchClass>, IStaticPairIntervalClassNorm<PitchClass>
 {
     #region IStaticValueObjectList<PitchClass> Members
 
@@ -32,11 +31,11 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
   
     #endregion
 
-    #region IStaticPairIntervalClassNorm<PitchClass> Members
-
-    /// <inheritdoc cref="IStaticPairIntervalClassNorm{TSelf}.GetPairNorm"/>
-    public static IntervalClass GetPairNorm(PitchClass pitchClass1, PitchClass pitchClass2) => IStaticPairIntervalClassNorm<PitchClass>.GetPairNorm(pitchClass1, pitchClass2);
-
+    #region IPitchClass<PitchClass> Members
+   
+    /// <inheritdoc cref="IStaticPairIntervalClassNorm{TSelf}.GetNorm"/>
+    public static IntervalClass GetPairNorm(PitchClass pitchClass1, PitchClass pitchClass2) => IStaticPairIntervalClassNorm<PitchClass>.GetNorm(pitchClass1, pitchClass2);
+    
     #endregion
 
     #region IValueObject<PitchClass> Members
@@ -52,7 +51,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         get => _value;
         init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
     }
-    
+
     #endregion
 
     #region Relational members
@@ -167,7 +166,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         Note.Flat.C, Note.Flat.DFlat, Note.Flat.D, Note.Flat.EFlat, Note.Flat.E, Note.Flat.F,
         Note.Flat.GFlat, Note.Flat.G, Note.Flat.AFlat, Note.Flat.A, Note.Flat.BFlat, Note.Flat.B
     ];
-
 
     #region Inner Classes
 

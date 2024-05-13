@@ -25,9 +25,11 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// Gets all 4096 possible pitch class sets (See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes)
     /// <br/><see cref="IReadOnlyCollection{PitchClassSet}"/>
     /// </summary>
-    public static IReadOnlyCollection<PitchClassSet> Items => PitchClassSetIdentity.Items
-        .Select(identity => identity.PitchClassSet)
-        .ToLazyCollection();
+    public static IReadOnlyCollection<PitchClassSet> Items =>
+        PitchClassSetId
+            .Items
+            .Select(id => id.PitchClassSet)
+            .ToLazyCollection();
 
     #endregion
 
@@ -130,27 +132,29 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
         return result;
     }
-    
-    public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
 
+    public static PitchClassSet FromId(PitchClassSetId id) => id.PitchClassSet;
+    
+    // public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
+    
     private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
 
     /// <summary>
-    /// Creates a <see cref="PitchClassSet"/>
+    /// Creates a <see cref="PitchClassSet"/> instance for a collection of Pitch Classes
     /// </summary>
     /// <param name="pitchClasses">The <see cref="IEnumerable{PitchClass}"/></param>
     public PitchClassSet(IEnumerable<PitchClass> pitchClasses)
     {
         ArgumentNullException.ThrowIfNull(pitchClasses);
 
-        var pitchClassesSet = ImmutableSortedSet.CreateRange(pitchClasses);
+        var pitchClassesSet = pitchClasses as ImmutableSortedSet<PitchClass> ?? pitchClasses.ToImmutableSortedSet();
         _pitchClassesSet = pitchClassesSet;
 
         Id = PitchClassSetId.FromPitchClasses(pitchClassesSet);
         Identity = PitchClassSetIdentity.FromPitchClasses(pitchClassesSet); // TODO: Deprecate this
         Cardinality = Cardinality.FromValue(pitchClassesSet.Count);
     }
-
+    
     /// <summary>
     /// Gets the name <see cref="string"/>
     /// </summary>

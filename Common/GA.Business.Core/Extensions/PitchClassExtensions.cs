@@ -12,7 +12,8 @@ public static class PitchClassExtensions
     /// </summary>
     /// <param name="pitchClassObject">The <see cref="IPitchClass"/> object</param>
     /// <returns>The <see cref="Note.Chromatic"/></returns>
-    public static Note.Chromatic ToChromaticNote(this IPitchClass pitchClassObject) => new (pitchClassObject.PitchClass);
+    public static Note.Chromatic ToChromaticNote<T>(this IPitchClass pitchClassObject) 
+        where T : IValueObject => new (pitchClassObject.PitchClass);
     
     /// <summary>
     /// Create the interval pattern from pitch classes.

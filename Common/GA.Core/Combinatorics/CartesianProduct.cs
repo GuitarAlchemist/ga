@@ -8,12 +8,12 @@
 [PublicAPI]
 public abstract class CartesianProduct<T, TPair>(
         IEnumerable<T> items,
-        Func<Pair<T>, TPair>? selector = null,
+        Func<OrderedPair<T>, TPair>? selector = null,
         Func<T, bool>? predicate = null)
     : IEnumerable<TPair>
     // where T : IItemCollection<T>
     where T : notnull
-    where TPair : Pair<T>
+    where TPair : OrderedPair<T>
 {
     #region IEnumerable<TPair> Members
 
@@ -53,7 +53,7 @@ public abstract class CartesianProduct<T, TPair>(
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 [PublicAPI]
-public class CartesianProduct<T> : CartesianProduct<T, Pair<T>>
+public class CartesianProduct<T> : CartesianProduct<T, OrderedPair<T>>
     where T: notnull
 {
     public CartesianProduct(IEnumerable<T> items)
