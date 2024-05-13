@@ -29,5 +29,5 @@ public abstract class PrintableImmutableSet<T>(ImmutableSortedSet<T> items) : La
     {
         if (items is ImmutableSortedSet<T> set) return set;
         return items.ToImmutableSortedSet();
-    }    
+    }
 }

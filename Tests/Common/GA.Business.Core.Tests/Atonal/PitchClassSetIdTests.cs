@@ -4,6 +4,7 @@
     using Extensions;
     using GA.Business.Core.Atonal;
     using GA.Business.Core.Notes;
+    using GA.Core;
 
     public class PitchClassSetIdTests
     {
@@ -40,6 +41,17 @@
 
             // Assert
             Assert.That(id1Hashcode, Is.EqualTo(id2Hashcode));
-        }        
+        }
+        
+        [Test(TestOf = typeof(PitchClassSet))]
+        public void Test_PitchClassSetId_Equivalences()
+        {
+            // Arrange
+            var gen = PitchClassSetIdEquivalences.Create();
+
+            // Act
+
+            // Assert
+        }
     }
 }

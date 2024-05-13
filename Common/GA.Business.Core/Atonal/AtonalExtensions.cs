@@ -17,11 +17,14 @@ public static class AtonalExtensions
         => items.Select(pc => new Note.Chromatic(pc)).ToImmutableList().AsPrintable();
 
     /// <summary>
-    /// Gets the interval class vector.
+    /// Gets the interval class vector
     /// </summary>
-    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticPairNormPairNorm{TSelf,TNorm}"/>).</typeparam>
-    /// <param name="items"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">The items type (Must implement <see cref="IValueObject"/> and <see cref="IStaticPairIntervalClassNorm{T}"/>).</typeparam>
+    /// <param name="items">The <see cref="IEnumerable{T}"/> collection of items</param>
+    /// <remarks>
+    /// The reasoning here is that if the item class type can measure a norm between 2 items Interval Class unit, then an Interval Class Vector can be computed
+    /// </remarks>
+    /// <returns>The <see cref="IntervalClassVector"/></returns>
     public static IntervalClassVector ToIntervalClassVector<T>(this IEnumerable<T> items)
         where T : IValueObject, IStaticPairIntervalClassNorm<T>
     {

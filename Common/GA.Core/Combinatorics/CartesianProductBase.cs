@@ -8,10 +8,10 @@
 [PublicAPI]
 public abstract class CartesianProductBase<T, TPair>(
         IEnumerable<T> items,
-        Func<Pair<T>, TPair>? selector = null,
+        Func<OrderedPair<T>, TPair>? selector = null,
         Func<T, bool>? predicate = null) : IEnumerable<TPair> // where T : IItemCollection<T>
     where T : notnull
-    where TPair : Pair<T>
+    where TPair : OrderedPair<T>
 {
     #region IEnumerable<TPair> Members
 

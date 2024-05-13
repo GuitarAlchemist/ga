@@ -5,8 +5,8 @@ using Extensions;
 [PublicAPI]
 public static class VariationExtensions
 {
-    public static IEnumerable<Pair<T>> GetPairs<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToPair());
-    public static IEnumerable<TPair> GetPairs<T, TPair>(this IEnumerable<Variation<T>> variations, Func<T,T,TPair> pairFactory) where TPair: Pair<T> => variations.Select(variation => variation.ToPair(pairFactory));
+    public static IEnumerable<OrderedPair<T>> GetPairs<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToPair());
+    public static IEnumerable<TPair> GetPairs<T, TPair>(this IEnumerable<Variation<T>> variations, Func<T,T,TPair> pairFactory) where TPair: OrderedPair<T> => variations.Select(variation => variation.ToPair(pairFactory));
     public static IEnumerable<Tuple<T, T, T>> Get3Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple3());
     public static IEnumerable<Tuple<T, T, T, T>> Get4Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple4());
     public static IEnumerable<Tuple<T, T, T, T, T>> Get5Tuples<T>(this IEnumerable<Variation<T>> variations) => variations.Select(variation => variation.ToTuple5());

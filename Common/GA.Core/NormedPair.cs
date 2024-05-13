@@ -6,7 +6,7 @@
 /// <typeparam name="T">The element type.</typeparam>
 /// <typeparam name="TNorm">The norm type.</typeparam>
 [PublicAPI]
-public sealed record NormedPair<T, TNorm>(Pair<T> Pair) : Pair<T>(Pair)
+public sealed record NormedPair<T, TNorm>(OrderedPair<T> Pair) : OrderedPair<T>(Pair)
     where T : IStaticPairNorm<T, TNorm>
     where TNorm : struct, IValueObject<TNorm>
 {

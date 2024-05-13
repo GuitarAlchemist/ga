@@ -16,5 +16,5 @@ public interface IStaticPairIntervalClassNorm<in TSelf> : IStaticPairNorm<TSelf,
     /// <param name="obj1">The first <typeparamref name="TSelf"/> object</param>
     /// <param name="obj2">The second <typeparamref name="TSelf"/> object</param>
     /// <returns>The <see cref="IntervalClass"/></returns>
-    public new static IntervalClass GetPairNorm(TSelf obj1, TSelf obj2) => IntervalClass.FromValue(Math.Abs(obj2.Value - obj1.Value));
+    public new static IntervalClass GetNorm(TSelf obj1, TSelf obj2) => IntervalClass.FromValue(Math.Abs(obj2.Value - obj1.Value));
 }

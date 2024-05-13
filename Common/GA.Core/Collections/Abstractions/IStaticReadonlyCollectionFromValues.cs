@@ -3,7 +3,12 @@
 /// <summary>
 /// Interface for classes that define a read-only collection at the class level (Items are retrieved from values)
 /// </summary>
-public interface IStaticReadonlyCollectionFromValues<TSelf> : IStaticReadonlyCollection<TSelf>, IRangeValueObject<TSelf>
+/// <remarks>
+/// Derives from <see cref="IStaticReadonlyCollection{TSelf}"/> | <see cref="IRangeValueObject{TSelf}"/>
+/// At an upper level IValueObject interface derives from <see cref="IComparable{TSelf}"/> | <see cref="IEquatable{TSelf}"/>
+/// </remarks>
+public interface IStaticReadonlyCollectionFromValues<TSelf> : IStaticReadonlyCollection<TSelf>, 
+                                                              IRangeValueObject<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
     /// <summary>

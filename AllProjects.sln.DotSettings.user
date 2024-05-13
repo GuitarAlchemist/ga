@@ -14,6 +14,7 @@
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net8.0::GA.Business.Core.Tests.Atonal.PitchClassSetTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net8.0::GA.Business.Core.Tests.Atonal.PitchClassSetIdTests.Test_PitchClassSetId_Complement&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net8.0::GA.Business.Core.Tests.Atonal.PitchClassSetIdTests.Test_PitchClassSetId_EqualityComparer_Complement&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::72F3861F-75BC-4504-9CC7-B7137D9BB2F1::net8.0::GA.Business.Core.Tests.Atonal.PitchClassSetIdTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark1/@KeyIndexDefined">True</s:Boolean>
@@ -25,8 +26,8 @@
 	
 	
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/@KeyIndexDefined">True</s:Boolean>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 138 Col 85)</s:String>
-	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Notes/f:Note.cs</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Coords/@EntryValue">(Doc Ln 9 Col 17)</s:String>
+	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/FileId/@EntryValue">44AA465B-6C3C-4439-B8C9-6624B0230D4F/d:Atonal/d:Primitives/f:PitchClassSetEquivalenceGenerator.cs</s:String>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark2/Owner/@EntryValue">NumberedBookmarkManager</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/Housekeeping/Bookmarks/NumberedBookmarks/=Bookmark3/Coords/@EntryValue">(Doc Ln 17 Col 70)</s:String>

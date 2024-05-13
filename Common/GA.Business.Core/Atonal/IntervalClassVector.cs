@@ -39,15 +39,15 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     /// </summary>
     /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
     /// <returns>The occurence count.</returns>
-    public int this[IntervalClass intervalClass] => SystemCollectionExtensions.GetValueOrDefault(Id.Vector, intervalClass, 0);
+    public int this[IntervalClass intervalClass] => SystemCollectionExtensions.GetValueOrDefault(Vector, intervalClass, 0);
 
     #endregion
 
     #region IReadOnlyCollection<int> members
 
-    public IEnumerator<int> GetEnumerator() => Id.Vector.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => Id.Vector.Values.GetEnumerator();
-    public int Count => Id.Vector.Count;
+    public IEnumerator<int> GetEnumerator() => Vector.Values.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => Vector.Values.GetEnumerator();
+    public int Count => Vector.Count;
 
     #endregion
 
@@ -98,6 +98,11 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     public IntervalClassVectorId Id => id;
 
     /// <summary>
+    /// Gets the <see cref="ImmutableSortedDictionary{IntervalClass, Int32}"/>
+    /// </summary>
+    public ImmutableSortedDictionary<IntervalClass, int> Vector => Id.Vector;
+
+    /// <summary>
     /// Number of semitone intervals in the vector (See https://ianring.com/musictheory/scales/#hemitonia)
     /// </summary>
     public int Hemitonia => this[IntervalClass.Hemitone];
@@ -125,7 +130,7 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     /// See https://ftp.isdi.co.cu/Biblioteca/BIBLIOTECA%20UNIVERSITARIA%20DEL%20ISDI/COLECCION%20DE%20LIBROS%20ELECTRONICOS/LE-1433/LE-1433.pdf - Page 42 (Modulation, Common Tones, and the Deep Scale)
     /// See https://en.wikipedia.org/wiki/Common_tone_(scale)#Deep_scale_property
     /// </remarks>
-    public bool IsDeepScale => Id.Vector.Values.Distinct().Count() == Id.Vector.Values.Count();
+    public bool IsDeepScale => Vector.Values.Distinct().Count() == Vector.Values.Count();
 
     /// <inheritdoc />
     /// <remarks>
