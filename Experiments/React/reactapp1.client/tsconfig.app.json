@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // Target the latest ECMAScript version
+    "module": "ESNext", // Use ES module syntax
+    "jsx": "react-jsx", // For React 17+ (new JSX transform)
+    "moduleResolution": "node", // Node.js module resolution
+    "skipLibCheck": true, // Skip checking of type declaration files
+    "strict": true, // Enable all strict type-checking options
+    "allowImportingTsExtensions": true, // Allow importing files with .ts/.tsx extensions
+    "isolatedModules": true, // Ensures each file is treated as its own module
+    "moduleDetection": "force", // Force module detection based on imports
+    "noEmit": true, // Do not emit any output files
+    "noUnusedLocals": true, // Warn on unused local variables
+    "noUnusedParameters": true, // Warn on unused function parameters
+    "noFallthroughCasesInSwitch": true, // Prevent fallthrough in switch statements
+    "lib": [ "ESNext", "DOM" ] // Add the DOM library to ensure browser APIs are included
+  },
+  "include": [ "src/**/*" ] // Include all files in src/ and its subdirectories
+}

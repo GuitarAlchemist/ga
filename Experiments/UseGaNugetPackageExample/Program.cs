@@ -4,7 +4,7 @@ using GA.Business.Core.Fretboard;
 using GA.Business.Core.Tonal.Modes;
 using GA.Core.Combinatorics;
 
-var combinations = new Combinations<PitchClass>();
+var combinations = new Combinations<PitchClass>(PitchClass.Items);
 foreach (var combination in combinations)
 {
     Console.WriteLine(combination.ToString());

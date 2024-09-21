@@ -16,3 +16,5 @@ packages
 /Experiments/Vite/package-lock.json
 
 .fake
+/Experiments/React/.idea
+/Experiments/React/node_modules
