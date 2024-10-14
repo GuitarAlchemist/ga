@@ -22,7 +22,7 @@ public class MinorKeyTests
     public void MinorKey_GetNotes_ReturnsCorrectSequenceOfNotes(string minorKeyRoot, string[] expectedKeyNotes)
     {
         if (!Key.Minor.TryParse(minorKeyRoot, out var minorKey)) throw new InvalidOperationException();
-        var actualNotes = minorKey.GetNotes().Select(note => note.ToString()).ToArray();
+        var actualNotes = minorKey.Notes.Select(note => note.ToString()).ToArray();
 
         Assert.That(expectedKeyNotes, Is.EqualTo(actualNotes));
     }

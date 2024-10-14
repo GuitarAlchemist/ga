@@ -35,10 +35,10 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     #region Indexer members
 
     /// <summary>
-    /// Gets the occurence count for the interval class
+    /// Gets the occurrence count for the interval class
     /// </summary>
     /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
-    /// <returns>The occurence count.</returns>
+    /// <returns>The occurrence count.</returns>
     public int this[IntervalClass intervalClass] => SystemCollectionExtensions.GetValueOrDefault(Vector, intervalClass, 0);
 
     #endregion

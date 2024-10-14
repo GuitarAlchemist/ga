@@ -53,14 +53,16 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
     {
         public static Chromatic FromPitch(Pitch pitch) => pitch.PitchClass.ToChromaticPitch(pitch.Octave);
 
+        /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sharp = Note.ToSharp();
             return sharp.SharpAccidental.HasValue
-                ? $"{sharp}/{Note.ToFlat()}"
-                : $"{sharp}";
+                ? $"{sharp}{Octave.Value}/{Note.ToFlat()}"
+                : $"{sharp}{Octave.Value}";
         }
     }
 

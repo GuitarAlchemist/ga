@@ -9,6 +9,7 @@ public abstract class PrintableBase<T>(IEnumerable<T> items,
 
     public string PrintOut => ToString();
 
+    /// <inheritdoc />
     public override string ToString()
     {
         return string.Join(itemSeparator ?? " ", _items.Select(PrintItem()));

@@ -83,7 +83,7 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     public static implicit operator IntervalClass(int value) => new() { Value = value };
     public static implicit operator int(IntervalClass ic) => ic.Value;
 
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<IntervalClass>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<IntervalClass>.EnsureValueRange(Value, _minValue, maxValue);
 
     public override string ToString() => _value switch
     {

@@ -138,13 +138,13 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     public static implicit operator int(NaturalNote item) => item.Value;
     public static NaturalNote operator ++(NaturalNote naturalNote) => FromValue((naturalNote.Value + 1) % 7);
     public static NaturalNote operator --(NaturalNote naturalNote) => FromValue((naturalNote.Value - 1) % 7);
-    public static NaturalNote operator +(NaturalNote naturalNote, IntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
-    public static IntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(new NaturalNotePair(startNote, endNote));
+    public static NaturalNote operator +(NaturalNote naturalNote, SimpleIntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
+    public static SimpleIntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(new NaturalNotePair(startNote, endNote));
 
-    public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.EnsureValueRange(value, minValue, maxValue);
 
-    public IntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(new NaturalNotePair(this, other));
+    public SimpleIntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(new NaturalNotePair(this, other));
 
     public IReadOnlyCollection<NaturalNote> GetDegrees(int count)
     {
@@ -200,15 +200,15 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
 
     private static IReadOnlyCollection<NaturalNote> GetItems() => ValueObjectUtils<NaturalNote>.Items;
 
-    private class NaturalNoteIntervals() : LazyIndexerBase<NaturalNotePair, IntervalSize>(GetKeyValuePairs())
+    private class NaturalNoteIntervals() : LazyIndexerBase<NaturalNotePair, SimpleIntervalSize>(GetKeyValuePairs())
     {
         private static readonly NaturalNoteIntervals _instance = new();
-        public static IntervalSize Get(NaturalNotePair key) => _instance[key];
+        public static SimpleIntervalSize Get(NaturalNotePair key) => _instance[key];
 
-        private static IEnumerable<KeyValuePair<NaturalNotePair, IntervalSize>> GetKeyValuePairs() =>
+        private static IEnumerable<KeyValuePair<NaturalNotePair, SimpleIntervalSize>> GetKeyValuePairs() =>
             from startNote in Items
-            from number in IntervalSize.Items
+            from number in SimpleIntervalSize.Items
             let endNote = startNote + number
-            select new KeyValuePair<NaturalNotePair, IntervalSize>(new NaturalNotePair(startNote, endNote), number);
+            select new KeyValuePair<NaturalNotePair, SimpleIntervalSize>(new NaturalNotePair(startNote, endNote), number);
     }
 }

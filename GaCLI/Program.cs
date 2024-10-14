@@ -1,6 +1,7 @@
 ﻿using GA.Business.Core.AI;
 using GA.Business.Core.Instruments;
 using GA.Business.Core.Tonal;
+using GA.Core.Extensions;
 using GaCLI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -143,19 +144,19 @@ void Experiment1()
 
 void Experiment2()
 {
-    var combinations = new Combinations<PitchClass>();
+    var combinations = PitchClass.Items.ToCombinations();
     var majorTriad = combinations[145];
     var majorTriadIntervalVector = majorTriad.ToIntervalClassVector();
 
     var majorScale = combinations[2741];
-    var majorScaleIntervalPattern = majorScale.ToIntervalPattern();
+    var majorScaleIntervalPattern = majorScale.ToIntervalStructure();
     var majorScaleIntervalVector = majorScale.ToIntervalClassVector();
 
     var icvLookup = combinations.ToLookup(pitchClasses => pitchClasses.ToIntervalClassVector());
     var majorScaleMembers = icvLookup[majorScaleIntervalVector].ToImmutableList();
     var majorTriadMembers = icvLookup[majorTriadIntervalVector].ToImmutableList();
 
-    var isLookup = combinations.ToLookup(pitchClasses => pitchClasses.ToIntervalPattern());
+    var isLookup = combinations.ToLookup(pitchClasses => pitchClasses.ToIntervalStructure());
     var isMembers = isLookup[majorScaleIntervalPattern].ToImmutableList();
 
     _ = 1;

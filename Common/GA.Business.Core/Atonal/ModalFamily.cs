@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using Primitives;
+
 /// <summary>
 /// Group of pitch class sets representing a scale that share the same interval vector
 /// </summary>
@@ -45,12 +47,13 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     internal ModalFamily(
         int noteCount,
         IntervalClassVector intervalClassVector, 
-        IReadOnlyCollection<PitchClassSet> modes)
+        ImmutableList<PitchClassSet> modes)
     {
         NoteCount = noteCount;
         IntervalClassVector = intervalClassVector;
         Modes = modes;
-        PrimeMode = modes.MinBy(set => set.Identity.Value)!;
+        ModeIds = modes.Select(set => set.Id).ToImmutableList();
+        PrimeMode = modes.MinBy(set => set.Id.Value)!;
     }
 
     /// <summary>
@@ -66,7 +69,9 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     /// <summary>
     /// Gets modes <see cref="IReadOnlyCollection{PitchClassSet}"/> for the modal family
     /// </summary>
-    public IReadOnlyCollection<PitchClassSet> Modes { get; }
+    public ImmutableList<PitchClassSet> Modes { get; }
+
+    public ImmutableList<PitchClassSetId> ModeIds { get; }
     
     /// <summary>
     /// Gets the prime mode <see cref="PitchClassSet"/> for the modal family

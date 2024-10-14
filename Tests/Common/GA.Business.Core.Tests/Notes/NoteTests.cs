@@ -34,7 +34,7 @@ public class NoteTests
     {
         var key = Key.Major.F;
         var keyRoot = key.Root;
-        var keynotes = key.GetNotes();
+        var keynotes = key.Notes;
 
         var f = new Note.Accidented(NaturalNote.F);
         var g = new Note.Accidented(NaturalNote.G);

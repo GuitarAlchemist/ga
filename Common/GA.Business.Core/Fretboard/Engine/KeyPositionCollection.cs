@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Engine;
 
+using Notes;
 using Primitives;
 using Tonal;
 
@@ -55,9 +56,8 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(positions);
 
-        var keyNotes = key.GetNotes();
         var noteByPitchClass = 
-            keyNotes.ToImmutableDictionary(
+            key.Notes.ToImmutableDictionary(
                 note => note.PitchClass, 
                 note => note);
 

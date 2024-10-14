@@ -44,8 +44,8 @@ public readonly record struct MelodicMinorScaleDegree : IStaticReadonlyCollectio
     public static MelodicMinorScaleDegree LocrianNaturalSecond => new() { Value = DegreeValue.LocrianNaturalSecondValue };
     public static MelodicMinorScaleDegree Altered => new() { Value = DegreeValue.AlteredValue };
 
-    public static int CheckRange(int value) => ValueObjectUtils<MelodicMinorScaleDegree>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MelodicMinorScaleDegree>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MelodicMinorScaleDegree>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MelodicMinorScaleDegree>.EnsureValueRange(value, minValue, maxValue);
 
     public static implicit operator MelodicMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;

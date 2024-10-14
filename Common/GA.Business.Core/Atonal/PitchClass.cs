@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal;
 
 using Abstractions;
+using GA.Business.Core.Intervals.Primitives;
 using GA.Core.Combinatorics;
 using Intervals;
 using Notes;
@@ -16,7 +17,8 @@ using Primitives;
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
-                                           IParsable<PitchClass>, IStaticPairIntervalClassNorm<PitchClass>
+                                           IParsable<PitchClass>, 
+                                           IStaticPairIntervalClassNorm<PitchClass>
 {
     #region IStaticValueObjectList<PitchClass> Members
 
@@ -45,11 +47,13 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+
+    public static PitchClass FromSemitones(Semitones semitones) => FromValue(semitones.Value);
     
     public int Value
     {
         get => _value;
-        init => _value = ValueObjectUtils<PitchClass>.CheckRange(value, _minValue, _maxValue, true);
+        init => _value = ValueObjectUtils<PitchClass>.EnsureValueRange(value, _minValue, _maxValue, true);
     }
 
     #endregion

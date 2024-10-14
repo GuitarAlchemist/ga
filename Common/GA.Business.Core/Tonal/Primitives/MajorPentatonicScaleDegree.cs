@@ -24,8 +24,8 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
     public static MajorPentatonicScaleDegree Min => FromValue(_minValue);
     public static MajorPentatonicScaleDegree Max => FromValue(_maxValue);
 
-    public static int CheckRange(int value) => ValueObjectUtils<MajorPentatonicScaleDegree>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MajorPentatonicScaleDegree>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MajorPentatonicScaleDegree>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MajorPentatonicScaleDegree>.EnsureValueRange(value, minValue, maxValue);
 
     public static implicit operator MajorPentatonicScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorPentatonicScaleDegree degree) => degree.Value;

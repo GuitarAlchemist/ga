@@ -35,7 +35,7 @@ public class PositionLocationSet(IEnumerable<PositionLocation> positions) : IRea
 
     #endregion
 
-    private readonly ImmutableSortedSet<PositionLocation> _set = ImmutableSortedSet.ToImmutableSortedSet(positions, PositionLocation.StrComparer);
+    private readonly ImmutableSortedSet<PositionLocation> _set = positions.ToImmutableSortedSet(PositionLocation.StrComparer);
 
     public override string ToString() => string.Join(" ", _set.Select(location => location.Fret));
 }

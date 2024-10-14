@@ -33,8 +33,8 @@ public readonly record struct Str : IRangeValueObject<Str>
     /// The last string (Lowest pitch)
     /// </summary>
     public static Str Max => FromValue(_maxValue);
-    public static int CheckRange(int value) => ValueObjectUtils<Str>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Str>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<Str>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Str>.EnsureValueRange(value, minValue, maxValue);
     public static IReadOnlyCollection<Str> Range(int count) => ValueObjectUtils<Str>.GetItems(_minValue, count);
 
     public static implicit operator Str(int value) => new() { Value = value };
@@ -43,6 +43,6 @@ public readonly record struct Str : IRangeValueObject<Str>
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Str>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Str>.EnsureValueRange(Value, _minValue, maxValue);
     public override string ToString() => Value.ToString();
 }

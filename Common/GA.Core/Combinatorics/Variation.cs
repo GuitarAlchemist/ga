@@ -8,29 +8,27 @@
 /// <inheritdoc cref="IReadOnlyList{T>"/>
 public readonly struct Variation<T>(
         BigInteger index,
-        ImmutableArray<T> items,
-        VariationFormat? variationFormat = null)
-    : IReadOnlyList<T>
+        IReadOnlyList<T> items,
+        VariationFormat? variationFormat = null) : IReadOnlyList<T>
 {
     #region IReadOnlyList<T> members
 
-    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _items).GetEnumerator();
-    public int Count => _items.Count;
-    public T this[int index] => _items[index];
+    public IEnumerator<T> GetEnumerator() => items.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)items).GetEnumerator();
+    public int Count => items.Count;
+    public T this[int aIndex] => items[aIndex];
 
     #endregion
 
-    private readonly IReadOnlyList<T> _items = items;
-
     /// <summary>
-    /// The current variation <see cref="BigInteger"/> index (Lexicographical order).
+    /// The current variation <see cref="BigInteger"/> index (Lexicographical order)
     /// </summary>
     public BigInteger Index { get; } = index;
 
+    /// <inheritdoc />
     public override string ToString() => Print(this, variationFormat);
 
-    public static string Print(
+    private static string Print(
         Variation<T> variation,
         VariationFormat? variationFormat = null)
     {

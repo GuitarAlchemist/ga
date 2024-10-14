@@ -15,7 +15,8 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out AccidentedNoteCollection result)
     {
-        ArgumentNullException.ThrowIfNull(s);
+        result = [];
+        if (string.IsNullOrWhiteSpace(s)) return false;
 
         var span = s.AsSpan();
         result = Empty;

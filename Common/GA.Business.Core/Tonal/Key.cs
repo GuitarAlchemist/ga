@@ -5,6 +5,7 @@ namespace GA.Business.Core.Tonal;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
+using Atonal;
 using static Note;
 
 /// <summary>
@@ -59,7 +60,25 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
     /// Gets the 7 notes in the key
     /// </summary>
     /// <returns>The <see cref="KeyNote"/> collection.</returns>
-    public IReadOnlyCollection<KeyNote> GetNotes()
+    public PrintableReadOnlyCollection<KeyNote> Notes => GetNotes().AsPrintable();
+
+    /// <summary>
+    /// Gets the <see cref="PitchClassSet"/>
+    /// </summary>
+    public PitchClassSet PitchClassSet => new(GetNotes().Select(n => n.PitchClass));
+
+    /// <summary>
+    /// Gets the simple interval between the key root note and the specified note
+    /// </summary>
+    /// <param name="note">The <see cref="Accidented"/></param>
+    /// <returns>The <see cref="Interval.Simple"/></returns>
+    public Interval.Simple GetInterval(Accidented note) => note.GetInterval(Root);
+
+    /// <summary>
+    /// Gets the 7 notes in the key
+    /// </summary>
+    /// <returns>The <see cref="KeyNote"/> collection.</returns>
+    private ReadOnlyItems<KeyNote> GetNotes()
     {
         var accidentedNotes =
             KeySignature.AccidentedNotes
@@ -110,12 +129,6 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         }
     }
 
-    /// <summary>
-    /// Gets the simple interval between the key root note and the specified note
-    /// </summary>
-    /// <param name="note">The <see cref="Accidented"/></param>
-    /// <returns>The <see cref="Interval.Simple"/></returns>
-    public Interval.Simple GetInterval(Accidented note) => note.GetInterval(Root);
 
     #region Major Key
   
@@ -278,7 +291,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         public static Minor Dm => new(-1);
         public static Minor Am => new(0);
         public static Minor Em => new(1);
-        public static Minor B => new(2);
+        public static Minor Bm => new(2);
         public static Minor FSharpm => new(3);
         public static Minor CSharpm => new(4);
         public static Minor GSharpm => new(5);

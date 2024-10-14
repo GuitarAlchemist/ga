@@ -12,7 +12,7 @@ public static class PitchClassSetExtensions
     /// <param name="items">The <see cref="IEnumerable{IPitchClass}"/></param>
     /// <returns>The <see cref="PitchClassSet"/></returns>
     public static PitchClassSet ToPitchClassSet(this IEnumerable<IPitchClass> items) => new(items.Select(item => item.PitchClass));
-    
+
     /// <summary>
     /// Creates a lookup of pitch class sets, by cardinality
     /// </summary>

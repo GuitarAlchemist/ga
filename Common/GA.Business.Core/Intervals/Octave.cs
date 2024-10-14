@@ -45,8 +45,8 @@ public readonly record struct Octave : IRangeValueObject<Octave>,
     public static implicit operator Octave(int value) => FromValue(value);
     public static implicit operator int(Octave octave) => octave.Value;
 
-    public static int CheckRange(int value) => ValueObjectUtils<Octave>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Octave>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<Octave>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Octave>.EnsureValueRange(value, minValue, maxValue);
 
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }

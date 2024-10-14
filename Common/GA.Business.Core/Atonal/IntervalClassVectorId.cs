@@ -64,9 +64,10 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     /// <summary>
     /// Converts a value to an interval vector representation
     /// </summary>
-    /// <param name="value">The base 12 value <see cref="int"/></param>
+    /// <param name="value">The <see cref="int"/> value</param>
+    /// <param name="valueBase">The <see cref="int"/> base to express the value</param>
     /// <returns>The <see cref="Vector"/></returns>
-    private static ImmutableSortedDictionary<IntervalClass, int> GetVector(int value)
+    private static ImmutableSortedDictionary<IntervalClass, int> GetVector(int value, int valueBase = 12)
     {
         // Decompose base 12 value
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
@@ -78,19 +79,20 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
 
         foreach (var intervalClass in intervalClasses)
         {
-            var intervalClassCount = dividend % 12; // Remainder
+            var intervalClassCount = dividend % valueBase; // Remainder
             dictBuilder.Add(intervalClass, intervalClassCount);
-            dividend /= 12;
+            dividend /= valueBase;
         }
         return dictBuilder.ToImmutable();
     }
 
     /// <summary>
-    /// Converts the <see cref="Vector"/> to a base 12 value
+    /// Converts the <see cref="Vector"/> to a value
     /// </summary>
     /// <param name="countByIntervalClass">The <see cref="IReadOnlyDictionary{TKey,TValue}"/> where the key is a <see cref="IntervalClass"/> and the value is a <see cref="int"/> number of occurrences of the interval class</param>
+    /// <param name="valueBase">The value base <see cref="int"/></param>
     /// <returns>The base 12 value <see cref="int"/></returns>
-    private static int ToValue(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass)
+    private static int ToValue(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass, int valueBase = 12)
     {
         // Ensure all interval classes are present as keys
         foreach (var intervalClass in IntervalClass.Items)
@@ -98,14 +100,19 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
             if (!countByIntervalClass.ContainsKey(intervalClass)) throw new ArgumentException($"Missing interval class '{intervalClass}' in {nameof(countByIntervalClass)}.");
         }
 
-        // Compute that value in base 12
+        // Compute the value
         var weight = 1; // Start by least significant weight
         var value = 0;
-        foreach (var ic in countByIntervalClass.Keys.OrderBy(ic => ic.Value))
+        var keys =
+            countByIntervalClass.Keys
+                .Where(ic => ic.Value is >= 1 and <= 6)
+                .OrderByDescending(ic => ic.Value)
+                .ToImmutableArray();
+        foreach (var key in keys)
         {
-            var count = countByIntervalClass[ic];
+            var count = countByIntervalClass[key];
             value += count * weight;
-            weight *= 12;
+            weight *= valueBase;
         }
 
         return value;

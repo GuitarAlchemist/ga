@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "target": "ESNext", // Target the latest ECMAScript version
     "module": "ESNext", // Use ES module syntax
     "jsx": "react-jsx", // For React 17+ (new JSX transform)

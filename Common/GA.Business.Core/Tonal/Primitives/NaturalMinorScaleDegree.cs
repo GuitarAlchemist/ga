@@ -41,8 +41,8 @@ public readonly record struct NaturalMinorScaleDegree : IStaticReadonlyCollectio
     public static NaturalMinorScaleDegree Lydian => new() { Value = DegreeValue.LydianValue };
     public static NaturalMinorScaleDegree Mixolydian => new() { Value = DegreeValue.MixolydianValue };
 
-    public static int CheckRange(int value) => ValueObjectUtils<NaturalMinorScaleDegree>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalMinorScaleDegree>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<NaturalMinorScaleDegree>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalMinorScaleDegree>.EnsureValueRange(value, minValue, maxValue);
 
     public static implicit operator NaturalMinorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
