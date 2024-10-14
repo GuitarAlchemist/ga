@@ -2,7 +2,7 @@
 
 public static class ModeIntervalExtensions
 {
-    public static IReadOnlyCollection<ModeCompoundInterval> ToCompound(this IReadOnlyCollection<ModeInterval> modeIntervals)
+    public static IReadOnlyCollection<ScaleModeCompoundInterval> ToCompound(this IReadOnlyCollection<ScaleModeSimpleInterval> modeIntervals)
     {
         ArgumentNullException.ThrowIfNull(modeIntervals);
 

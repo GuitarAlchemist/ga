@@ -1,0 +1,6 @@
+@GaApi_HostAddress = http://localhost:5232
+
+GET {{GaApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

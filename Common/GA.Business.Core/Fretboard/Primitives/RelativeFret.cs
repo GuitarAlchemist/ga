@@ -55,7 +55,7 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<RelativeFret>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<RelativeFret>.EnsureValueRange(Value, _minValue, maxValue);
 
     public override string ToString() => _value.ToString();
 

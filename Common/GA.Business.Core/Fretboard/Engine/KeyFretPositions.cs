@@ -16,11 +16,13 @@ using Atonal;
 /// 2) Capo position =>  List keys (Keys with the most open positions first)
 /// 3) Given key => List the capo positions/open position (Capo positions with the highest open positions count first)
 /// </remarks>
-public record KeyFretPositions(
+public sealed record KeyFretPositions(
     Fret Fret,
     Key Key,
     KeyPositionCollection KeyPositions)
 {
+    #region Static Helpers
+    
     /// <summary>
     /// Create a collection of <see cref="KeyFretPositions"/> items.
     /// </summary>
@@ -34,7 +36,7 @@ public record KeyFretPositions(
         var list = new List<KeyFretPositions>();
         foreach (var key in Key.Items)
         {
-            var keyNotes = key.GetNotes();
+            var keyNotes = key.Notes;
             var keyPitchClassSet = new HashSet<PitchClass>(keyNotes.Select(note => note.PitchClass));
 
             foreach (var fret in fretboard.Frets)
@@ -53,4 +55,6 @@ public record KeyFretPositions(
 
         return list.AsReadOnly();
     }
+    
+    #endregion
 }

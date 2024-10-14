@@ -46,7 +46,7 @@ public readonly record struct MajorScaleDegree : IStaticValueObjectList<MajorSca
     public static MajorScaleDegree Aeolian => FromValue(DegreeValue.AeolianValue);
     public static MajorScaleDegree Locrian => FromValue(DegreeValue.LocrianValue);
 
-    public static int CheckRange(int value) => ValueObjectUtils<MajorScaleDegree>.CheckRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MajorScaleDegree>.EnsureValueRange(value, _minValue, _maxValue);
 
     public static implicit operator MajorScaleDegree(int value) => FromValue(value);
     public static implicit operator int(MajorScaleDegree degree) => degree.Value;

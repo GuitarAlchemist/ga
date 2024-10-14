@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
+using Extensions;
 using Notes;
 using Notes.Extensions;
 
@@ -126,6 +127,8 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// <inheritdoc />
     public int Value { get; }
 
+    public bool IsClusterFree { get; }
+
     private const int _minValue = 0;
     private const int _maxValue = 4095;
 
@@ -157,7 +160,19 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// Creates a <see cref="PitchClassSetId"/> instance
     /// </summary>
     /// <param name="value">The <see cref="Int32"/> value</param>
-    public PitchClassSetId(int value) => Value = ValueObjectUtils<PitchClassSetId>.CheckRange(value, _minValue, _maxValue);
+    public PitchClassSetId(int value)
+    {
+        Value = ValueObjectUtils<PitchClassSetId>.EnsureValueRange(value, _minValue, _maxValue);
+        IsClusterFree = GetIsClusterFree(value);
+    }
+
+    /// <summary>
+    /// True if this pitch class set represents a scale, false otherwise
+    /// </summary>
+    /// <remarks>
+    /// A pitch class set must have a root note to represent a scale
+    /// </remarks>
+    public bool IsScale => (Value & 1) == 1;  // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be a valid scale
 
     /// <summary>
     /// Gets chromatic notes
@@ -204,7 +219,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// Get the Pitch Class Set object
     /// </summary>
     /// <returns>The <see cref="PitchClassSet"/></returns>
-    public PitchClassSet PitchClassSet => new(Notes.PitchClassCollection);
+    public PitchClassSet ToPitchClassSet() => Notes.ToPitchClassSet();
 
     /// <summary>
     /// Geta all rotations, including the current Pitch Class Set ID
@@ -219,7 +234,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     }
 
     /// <inheritdoc />
-    public override string ToString() => $"{Value} ({BinaryValue}; {Notes})";
+    public override string ToString() => $"{Value.ToString(),-5} ({BinaryValue}; {Notes})";
 
     private static int RotateValue(int value, int count)
     {
@@ -266,5 +281,25 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             noteValue++;
         }
         return builder.ToImmutable();
+    }
+
+    /// <summary>
+    /// Checks if the pitch class set is cluster-free.
+    /// A cluster-free set does not contain any consecutive clusters of 3 notes or more.
+    /// </summary>
+    /// <returns>True if the set is cluster-free, otherwise false.</returns>
+    public static bool GetIsClusterFree(int value)
+    {
+        // Check for three consecutive '1's in a circular manner using modulo arithmetic
+        for (var i = 0; i < 12; i++)
+        {
+            var bit1 = (value >> i) & 1;
+            var bit2 = (value >> ((i + 1) % 12)) & 1;
+            var bit3 = (value >> ((i + 2) % 12)) & 1;
+
+            if (bit1 == 1 && bit2 == 1 && bit3 == 1) return false;
+        }
+
+        return true;
     }
 }

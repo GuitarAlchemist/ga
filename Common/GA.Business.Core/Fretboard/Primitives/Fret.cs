@@ -55,9 +55,9 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     public static ImmutableSortedSet<Fret> Set(Range range) => Set(Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value));
     public static ImmutableSortedSet<Fret> Set(IEnumerable<int> values) => values.Select(FromValue).ToImmutableSortedSet();
     public static ImmutableSortedSet<Fret> Set(params int[] values) => Set(values.AsEnumerable());
-    public static ImmutableSortedSet<Fret> Set(int value1, Range range) => Set(value1, Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value + 1));
-    public static ImmutableSortedSet<Fret> Set(int value1, params int[] values) => Set(value1, values.AsEnumerable());
-    public static ImmutableSortedSet<Fret> Set(int value1, IEnumerable<int> values) => Set(new [] {value1}.Union(values));
+    public static ImmutableSortedSet<Fret> Set(int value, Range range) => Set(value, Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value + 1));
+    public static ImmutableSortedSet<Fret> Set(int value, params int[] values) => Set(value, values.AsEnumerable());
+    public static ImmutableSortedSet<Fret> Set(int value, IEnumerable<int> values) => Set(new [] {value}.Union(values));
 
     public static implicit operator Fret(int value) => new() { Value = value };
     public static implicit operator int(Fret fret) => fret.Value;
@@ -68,7 +68,7 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Fret>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Fret>.EnsureValueRange(Value, _minValue, maxValue);
 
     public override string ToString() => _value switch
     {

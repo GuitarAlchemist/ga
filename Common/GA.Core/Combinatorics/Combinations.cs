@@ -1,5 +1,6 @@
 ﻿namespace GA.Core.Combinatorics;
 
+using GA.Core.Collections.Abstractions;
 using System.Linq;
 
 /// <summary>
@@ -9,7 +10,6 @@ using System.Linq;
 [PublicAPI]
 public class Combinations<T> : IEnumerable<Variation<T>>,
                                IIndexer<BigInteger, Variation<T>>
-    where T: struct, IStaticValueObjectList<T>
 {
     #region IIndexer<BigInteger, Variation<T>>
 
@@ -35,25 +35,22 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
 
     #endregion
 
-    private static readonly Lazy<ImmutableDictionary<T, BigInteger>> _lazyWeightByItem;
+    private readonly Lazy<ImmutableDictionary<T, BigInteger>> _lazyWeightByItem;
     private readonly VariationsWithRepetitions<bool> _boolVariations;
     private readonly VariationFormat _variationFormat;
 
-    static Combinations()
+    public Combinations(IReadOnlyCollection<T> elements)
     {
+        Elements = elements ?? throw new ArgumentNullException(nameof(elements));
         _lazyWeightByItem = new(GetWeightByItem);
-    }
-
-    public Combinations()
-    {
-        _boolVariations = new(new[] {false, true}, T.Items.Count);
-        _variationFormat = new($"D{(int)Math.Floor(BigInteger.Log10(_boolVariations.Count) + 1)}", T.Items.Count * 2);
+        _boolVariations = new([false, true], elements.Count);
+        _variationFormat = new($"D{(int)Math.Floor(BigInteger.Log10(_boolVariations.Count) + 1)}", elements.Count * 2);
     }
 
     /// <summary>
     /// The initial <see cref="IReadOnlyCollection{T}"/> elements to combine.
     /// </summary>
-    public IReadOnlyCollection<T> Elements => T.Items;
+    public IReadOnlyCollection<T> Elements { get; }
 
     public override string ToString() => $"{typeof(T).Name}: {Elements}; {_boolVariations}";
 
@@ -64,11 +61,11 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
     /// <returns>The <see cref="BigInteger"/> index (Lexicographical order).</returns>
     public BigInteger GetIndex(IEnumerable<T> variation) => variation.Aggregate(BigInteger.Zero, (index, item) => index + _lazyWeightByItem.Value[item]);
 
-    private static ImmutableDictionary<T, BigInteger> GetWeightByItem()
+    private ImmutableDictionary<T, BigInteger> GetWeightByItem()
     {
         var weight = BigInteger.One;
         var weightByItemBuilder = ImmutableDictionary.CreateBuilder<T, BigInteger>();
-        foreach (var item in T.Items)
+        foreach (var item in Elements)
         {
             weightByItemBuilder.Add(item, weight);
             weight <<= 1;
@@ -80,7 +77,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
     private Variation<T> CreateVariation(BigInteger index)
     {
         var arrayBuilder = ImmutableArray.CreateBuilder<T>();
-        using var itemsEnumerator = T.Items.GetEnumerator();
+        using var itemsEnumerator = Elements.GetEnumerator();
         foreach (var b in _boolVariations[index])
         {
             itemsEnumerator.MoveNext();

@@ -20,8 +20,8 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     public static implicit operator SharpAccidental(int value) => new() { Value = value };
     public static implicit operator int(SharpAccidental item) => item._value;
 
-    public static int CheckRange(int value) => ValueObjectUtils<SharpAccidental>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<SharpAccidental>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, minValue, maxValue);
 
     #endregion
     

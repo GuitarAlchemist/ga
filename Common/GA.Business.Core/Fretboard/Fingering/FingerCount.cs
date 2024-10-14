@@ -55,7 +55,7 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
 
     private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 
-    public void CheckMaxValue(int maxValue) => ValueObjectUtils<FingerCount>.CheckRange(Value, _minValue, maxValue);
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<FingerCount>.EnsureValueRange(Value, _minValue, maxValue);
 
     public override string ToString() => _value switch {_ => Value.ToString() };
 

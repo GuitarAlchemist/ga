@@ -7,6 +7,11 @@ import {IForecast} from "./IForecast.tsx";
 import VexTabDisplay from "./vextab.tsx";
 import ChordDiagram from "./chord-diagram.tsx";
 import RiggedHand from "./RiggedHand.tsx";
+import BraceletNotation from "./BraceletNotation.tsx";
+import KeyboardDiagram from "./keyboard-diagram.tsx";
+import TonnetzDiagram from './TonnetzDiagram.tsx';
+import ColoredClockDiagram from "./coloredClockDiagram.tsx";
+import GuitarFretboard from "./guitarFretboard.tsx";
 
 function App() {
     const [forecasts, setForecasts] = useState<IForecast[] | null>(null);
@@ -51,6 +56,21 @@ function App() {
     return (
         <div style={{backgroundColor: 'white', height: '100vh', width: '100vw'}}>
             <div>
+                <h1>Bracelet Notation Example</h1>
+                <div style={{display: 'flex'}}>
+                    <ColoredClockDiagram scale={2741} size={300}/>
+                    <BraceletNotation scale={2741} size={150}/>
+                    <KeyboardDiagram scale={2741}/>
+                    <TonnetzDiagram scale={2741}/>
+                </div>
+            </div>
+            <div>
+                <h1>Guitar Fretboard example</h1>
+                <div style={{display: 'flex'}}>
+                    <GuitarFretboard frets={[-1, 3, 2, 3, -1, 3]} />
+                </div>
+            </div>
+            <div>
                 <h1>Chord Diagram Example</h1>
                 <ChordDiagram label="C Major" notes={notes}/>
             </div>
@@ -58,12 +78,16 @@ function App() {
                 <h1>Tab Example</h1>
                 <VexTabDisplay notation="V:1 t=120 3/7 2/8 3/9"/>
             </div>
+
+            {/*
             <div style={{ height: '350px', width: '350px'}}>
                 <h1>Handle Example</h1>
                 <Suspense fallback={<div>Loading 3D Model...</div>}>
                     <RiggedHand/>
                 </Suspense>
             </div>
+            */}
+
             <div className="ag-theme-material" style={{height: '100%', width: '100%'}}>
                 <h1>Weather Forecast</h1>
                 <p>This component demonstrates fetching data from the server.</p>

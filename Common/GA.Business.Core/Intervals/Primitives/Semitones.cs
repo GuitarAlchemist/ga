@@ -7,8 +7,44 @@
 /// Implements <see cref="IRangeValueObject{Semitones}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct Semitones : IRangeValueObject<Semitones>
+public readonly record struct Semitones : IParsable<Semitones>,
+                                          IRangeValueObject<Semitones>
 {
+    #region IParsable<Semitones>
+
+    public static Semitones Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    public static bool TryParse(string? s, IFormatProvider? provider, out Semitones result)
+    {
+        result = default;
+
+        if (int.TryParse(s, out var value))
+        {
+            result = FromValue(value);
+            return true;
+        }
+
+        switch (s)
+        {
+            case "H":
+            case "S":
+                result = FromValue(1);
+                return true;
+            case "T":
+            case "W":
+                result = FromValue(2);
+                return true;
+        }
+
+        return false;
+    }    
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(Semitones other) => _value.CompareTo(other._value);
@@ -33,8 +69,8 @@ public readonly record struct Semitones : IRangeValueObject<Semitones>
     public static Semitones Tritone => FromValue(6);
     public static Semitones Octave(int octaveCount = 1) => FromValue(12 * octaveCount);
 
-    public static int CheckRange(int value) => ValueObjectUtils<Semitones>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Semitones>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<Semitones>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<Semitones>.EnsureValueRange(value, minValue, maxValue);
 
     public static implicit operator Semitones(int value) => new() { Value = value };
     public static implicit operator int(Semitones semitones) => semitones._value;
@@ -48,6 +84,7 @@ public readonly record struct Semitones : IRangeValueObject<Semitones>
     private readonly int _value;
     public int Value { get => _value; init => _value = CheckRange(value); }
 
+    /// <inheritdoc />
     public override string ToString() => Value.ToString();
 }
 

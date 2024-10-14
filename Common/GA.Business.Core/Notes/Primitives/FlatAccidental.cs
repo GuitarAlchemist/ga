@@ -21,8 +21,8 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     public static implicit operator FlatAccidental(int value) => new() { Value = value };
     public static implicit operator int(FlatAccidental item) => item.Value;
 
-    public static int CheckRange(int value) => ValueObjectUtils<FlatAccidental>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<FlatAccidental>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<FlatAccidental>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<FlatAccidental>.EnsureValueRange(value, minValue, maxValue);
 
     #endregion
 

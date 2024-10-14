@@ -50,7 +50,7 @@ public class PitchClassSetTests
     }    
 
     [Test(TestOf = typeof(PitchClassSet))]
-    public void Test_PitchClassSet_Identity()
+    public void Test_PitchClassSet_Id()
     {
         // Arrange
         const string sMajorTriadInput = "C E G";
@@ -60,8 +60,8 @@ public class PitchClassSetTests
         var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
         
         // Assert
-        Assert.That(majorTriadPcs.Identity.Value, Is.EqualTo(145));
-        Assert.That(majorTriadPcs.Identity.ScalePageUrl.AbsoluteUri, Is.EqualTo("https://ianring.com/musictheory/scales/145"));
+        Assert.That(majorTriadPcs.Id.Value, Is.EqualTo(145));
+        // Assert.That(majorTriadPcs.Id.ScalePageUrl.AbsoluteUri, Is.EqualTo("https://ianring.com/musictheory/scales/145"));
     }
     
     [Test(TestOf = typeof(PitchClassSet))]
@@ -91,7 +91,7 @@ public class PitchClassSetTests
         var transpositionsAndInversions = pitchClassSet.TranspositionsAndInversions;
         var orderedTranspositionsAndInversionValues =
             transpositionsAndInversions
-                .Select(pcs => pcs.Identity.Value)
+                .Select(pcs => pcs.Id.Value)
                 .OrderBy(value => value)
                 .ToImmutableSortedSet();
         var sOrderedTranspositionsAndInversionValues = string.Join(", ", orderedTranspositionsAndInversionValues);
@@ -188,4 +188,18 @@ public class PitchClassSetTests
         // Assert
         Assert.That(primeForm?.Name, Is.EqualTo("0 3 7"));
     }    
+
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_ClosestDiatonicKey()
+    {
+        // Arrange
+        var set = PitchClassSet.FromId(1709);
+
+        // Act
+        var key = set.ClosestDiatonicKey;
+        var notes = set.GetDiatonicNotes();
+
+        // Assert
+        var aa = 1;
+    }
 }

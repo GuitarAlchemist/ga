@@ -77,7 +77,7 @@ public class FretboardConsoleRenderer
             int? offset = 0)
         {
             if (offset.HasValue) Console.Write(new string(' ', offset.Value));
-            var fretMarkers = new HashSet<Fret>(new Fret[] { 3, 5, 7, 9, 12, 15, 17, 19, 21, 24 });
+            var fretMarkers = new HashSet<Fret>([3, 5, 7, 9, 12, 15, 17, 19, 21, 24]);
             foreach (var fret in frets)
             {
                 var marker = fretMarkers.Contains(fret) ? markerTextCallback(fret) : "";

@@ -4,10 +4,10 @@ using GA.Business.Core.Notes.Primitives;
 using Positions;
 
 [PublicAPI]
-public abstract record Position
+public abstract record Position(PositionLocation Location)
 {
     /// <inheritdoc cref="Position"/>
-    public sealed record Muted(Str Str) : Position, IComparable<Muted>
+    public sealed record Muted(Str Str) : Position(new PositionLocation(Str, Fret.Muted)), IComparable<Muted>
     {
         #region Relational Members
 
@@ -28,7 +28,7 @@ public abstract record Position
     }
 
     /// <inheritdoc cref="Position"/>
-    public sealed record Played(PositionLocation Location, MidiNote MidiNote) : Position, IComparable<Played>
+    public sealed record Played(PositionLocation Location, MidiNote MidiNote) : Position(Location), IComparable<Played>
     {
         #region Relational Members
 
@@ -60,6 +60,5 @@ public abstract record Position
         #endregion
 
         public override string ToString() => $"{Location} {MidiNote}";
-
     }
 }

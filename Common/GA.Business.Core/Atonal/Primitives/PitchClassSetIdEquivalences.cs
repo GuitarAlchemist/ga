@@ -1,44 +1,68 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
+using System.Diagnostics;
+using static GA.Business.Core.Atonal.Primitives.PitchClassSetIdEquivalences.Relationship;
+
 public class PitchClassSetIdEquivalences
 {
-    public static PitchClassSetIdEquivalences Create()
-    {
-        // var idsByIntervalClassVectorId = PitchClassSetId.Items.ToLookup(id => id.PitchClassSet.IntervalClassVector.Id, id => id);
-        
-        var relationships = new HashSet<Relationship>();
-        foreach (var id in PitchClassSetId.Items)
-        {
-            // Complement relationship
-            relationships.Add(
-                new Relationship(
-                    new(id, id.Complement),
-                    RelationshipKind.Complement)
-            );
+    public static PitchClassSetIdEquivalences Instance => _lazyInstance.Value;
 
-            // Inversion relationship
-            relationships.Add(
-                new Relationship(
-                    new(id, id.Inverse), 
-                    RelationshipKind.Inversion)
-            );
-            
-            // Rotation relationship (1:*)
-            foreach (var rotationId in id.GetRotations())
-            {
-                relationships.Add(
-                    new Relationship(
-                        new(id, rotationId),
-                        RelationshipKind.Rotation)
-                );
-            }
+    private static readonly Lazy<PitchClassSetIdEquivalences> _lazyInstance = new(Create);
+
+    private static PitchClassSetIdEquivalences Create()
+    {
+        var idsByIntervalClassVectorId = PitchClassSetId.Items.ToLookup(id => id.ToPitchClassSet().IntervalClassVector.Id, id => id);
+
+        var aaa = PitchClassSetId.Items.Where(id => id.ToPitchClassSet().IntervalClassVector.Id == 271296)
+            .ToImmutableList();
+
+        var primeFormIds = ImmutableSortedSet.CreateBuilder<PitchClassSetId>();
+        foreach (var grouping in idsByIntervalClassVectorId)
+        {
+            var primeForm = grouping.Order().First();
+            primeFormIds.Add(primeForm);
         }
 
-        var relationshipsByKind = relationships.ToLookup(relationship => relationship.Kind);
-        var complements = relationshipsByKind[RelationshipKind.Complement].ToImmutableList();
-        var inversions = relationshipsByKind[RelationshipKind.Inversion].ToImmutableList();
-        var rotations = relationshipsByKind[RelationshipKind.Rotation].ToImmutableList();
-        
+        foreach (var grouping in idsByIntervalClassVectorId)
+        {
+            if (grouping.Key == 271296)
+            {
+                Debugger.Break();
+            }
+
+            var relationships = new HashSet<Relationship>();
+            foreach (var id in grouping)
+            {
+                // Complement relationship
+                relationships.Add(new Complement(new(id, id.Complement)));
+
+                // Inversion relationship
+                relationships.Add(new Inversion(new(id, id.Inverse)));
+
+                // Rotation relationship (1:*)
+                var idRotations = id.GetRotations().ToImmutableSortedSet();
+                var rotationIndex = 0;
+                foreach (var rotationId in idRotations)
+                {
+                    if (!id.Equals(rotationId))
+                    {
+                        relationships.Add(new Rotation(new(id, rotationId), rotationIndex));
+                    }
+
+                    rotationIndex++;
+                }
+            }
+
+            var relationshipsByKind = relationships.ToLookup(relationship => relationship.Kind);
+            var complements = relationshipsByKind[RelationshipKind.Complement].ToImmutableSortedSet();
+            var inversions = relationshipsByKind[RelationshipKind.Inversion].ToImmutableSortedSet();
+            var rotations = relationshipsByKind[RelationshipKind.Rotation].ToImmutableSortedSet();
+
+            var complementsById = complements.ToDictionary(relationship => relationship.Key.Id1.ToPitchClassSet(), relationship => relationship.Key.Id2.ToPitchClassSet());
+            var inversionsById = inversions.ToDictionary(relationship => relationship.Key.Id1.ToPitchClassSet(), relationship => relationship.Key.Id2.ToPitchClassSet());
+            var rotationsById = rotations.ToLookup(relationship => relationship.Key.Id1.ToPitchClassSet(), relationship => relationship.Key.Id2.ToPitchClassSet());
+        }
+
         // TODO: Finish implementation
 
         return new PitchClassSetIdEquivalences();
@@ -55,12 +79,41 @@ public class PitchClassSetIdEquivalences
         public override string ToString() => Id.ToString();
     }
 
-    public sealed record Relationship(UnorderedIdPair Key, RelationshipKind Kind);
-    
+    public abstract record Relationship(UnorderedIdPair Key, RelationshipKind Kind) : IComparable<Relationship>, IComparable
+    {
+        #region Relational Members
+
+        public int CompareTo(Relationship? other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            var keyComparison = Key.CompareTo(other.Key);
+            return keyComparison != 0 ? keyComparison : Kind.CompareTo(other.Kind);
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            if (ReferenceEquals(this, obj)) return 0;
+            return obj is Relationship other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Relationship)}");
+        }
+
+        public static bool operator <(Relationship? left, Relationship? right) => Comparer<Relationship>.Default.Compare(left, right) < 0;
+        public static bool operator >(Relationship? left, Relationship? right) => Comparer<Relationship>.Default.Compare(left, right) > 0;
+        public static bool operator <=(Relationship? left, Relationship? right) => Comparer<Relationship>.Default.Compare(left, right) <= 0;
+        public static bool operator >=(Relationship? left, Relationship? right) => Comparer<Relationship>.Default.Compare(left, right) >= 0;
+
+        #endregion
+
+        public sealed record Complement(UnorderedIdPair Key) : Relationship(Key, RelationshipKind.Complement);
+        public sealed record Inversion(UnorderedIdPair Key) : Relationship(Key, RelationshipKind.Inversion);
+        public sealed record Rotation(UnorderedIdPair Key, int Distance) : Relationship(Key, RelationshipKind.Rotation);
+    }
+
     public readonly record struct UnorderedIdPair(PitchClassSetId Id1, PitchClassSetId Id2) : IComparable<UnorderedIdPair>, IComparable
     {
         #region Commutative Equality Members
-        
+
         public bool Equals(UnorderedIdPair? other) =>
             other != null
             &&
@@ -74,7 +127,7 @@ public class PitchClassSetIdEquivalences
 
         /// <inheritdoc />
         public override int GetHashCode() => unchecked(Id1.GetHashCode() + Id2.GetHashCode());
-        
+
         #endregion
 
         #region Commutative Relational Members
@@ -83,20 +136,20 @@ public class PitchClassSetIdEquivalences
         public int CompareTo(UnorderedIdPair other)
         {
             // Sort Ids for this instance
-            var (minId, maxId) = Id1.CompareTo(Id2) <= 0 
-                ? (Id1, Id2) 
+            var (minId, maxId) = Id1.CompareTo(Id2) <= 0
+                ? (Id1, Id2)
                 : (Id2, Id1);
-            
+
             // Sort Ids for the other instance
-            var (otherMinId, otherMaxId) = 
-                other.Id1.CompareTo(other.Id2) <= 0 
-                    ? (other.Id1, other.Id2) 
+            var (otherMinId, otherMaxId) =
+                other.Id1.CompareTo(other.Id2) <= 0
+                    ? (other.Id1, other.Id2)
                     : (other.Id2, other.Id1);
 
             // Compare the minimum IDs first
             var minIdComparison = minId.CompareTo(otherMinId);
-            return minIdComparison != 0 
-                ? minIdComparison 
+            return minIdComparison != 0
+                ? minIdComparison
                 : maxId.CompareTo(otherMaxId); // If equal, compare the maximum IDs
         }
 
@@ -107,7 +160,7 @@ public class PitchClassSetIdEquivalences
             UnorderedIdPair other => CompareTo(other),
             _ => throw new ArgumentException($"Object must be of type {nameof(UnorderedIdPair)}")
         };
-        
+
         public static bool operator <(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) < 0;
         public static bool operator >(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) > 0;
         public static bool operator <=(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) <= 0;
@@ -117,11 +170,10 @@ public class PitchClassSetIdEquivalences
 
         /// <inheritdoc />
         public override string ToString() => $"({Id1}, {Id2})";
-    }    
+    }
 
     public enum RelationshipKind
     {
-        IntervalClassVector,
         Complement,
         Inversion,
         Rotation

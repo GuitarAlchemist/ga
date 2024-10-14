@@ -43,4 +43,4 @@ public class PositionCollection<T> : LazyPrintableCollectionBase<T>
 }
 
 [PublicAPI]
-public class PositionCollection(IReadOnlyCollection<Position> positions) : PositionCollection<Position>(positions);
+public class PositionCollection(IEnumerable<Position> positions) : PositionCollection<Position>(positions as IReadOnlyCollection<Position> ?? positions.ToImmutableList());

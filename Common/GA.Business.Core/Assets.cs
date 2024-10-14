@@ -22,11 +22,11 @@ public static class Assets
     public static IReadOnlyCollection<KeySignature> KeySignatures => KeySignature.Items;
     public static IReadOnlyCollection<Key> Keys => Key.Items;
     
-    public static IReadOnlyCollection<IntervalSize> IntervalSizes => IntervalSize.Items;
+    public static IReadOnlyCollection<SimpleIntervalSize> IntervalSizes => SimpleIntervalSize.Items;
     public static IReadOnlyCollection<CompoundIntervalSize> CompoundIntervalSizes => CompoundIntervalSize.Items;
     public static IReadOnlyCollection<PitchClass> PitchClasses => PitchClass.Items;
     public static IReadOnlyCollection<IntervalClass> IntervalClasses => IntervalClass.Items;
-    public static IReadOnlyCollection<PitchClassSetIdentity> PitchClassSetIdentities => PitchClassSetIdentity.Items;
+    public static IReadOnlyCollection<PitchClassSetId> PitchClassSetIds => PitchClassSetId.Items;
     
     public static IReadOnlyCollection<Cardinality> Cardinalities=> Cardinality.Items;
 

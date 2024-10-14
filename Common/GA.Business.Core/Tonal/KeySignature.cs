@@ -64,6 +64,11 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
     }
 
     /// <summary>
+    /// Gets the accidental count <see cref="int"/>
+    /// </summary>
+    public int AccidentalCount => Math.Abs(_value);
+
+    /// <summary>
     /// Gets the <see cref="PrintableReadOnlyCollection{KeyNote}"/> of accidented notes
     /// </summary>
     public PrintableReadOnlyCollection<KeyNote> AccidentedNotes { get; }
@@ -103,11 +108,11 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
         var count = Math.Abs(keySignatureValue);
         IEnumerable<KeyNote> notes =
             keySignatureValue < 0
-                ? GetNotes(NaturalNote.B, count, IntervalSize.Fourth).ToFlatNotes() // Circle of Fourths, starting from B
-                : GetNotes(NaturalNote.F, count, IntervalSize.Fifth).ToSharpNotes(); // Circle of Fifths, starting from F
+                ? GetNotes(NaturalNote.B, count, SimpleIntervalSize.Fourth).ToFlatNotes() // Circle of Fourths, starting from B
+                : GetNotes(NaturalNote.F, count, SimpleIntervalSize.Fifth).ToSharpNotes(); // Circle of Fifths, starting from F
         return notes.ToImmutableList();
 
-        static IEnumerable<NaturalNote> GetNotes(NaturalNote firstItem, int count, IntervalSize increment)
+        static IEnumerable<NaturalNote> GetNotes(NaturalNote firstItem, int count, SimpleIntervalSize increment)
         {
             var item = firstItem;
             for (var i = 0; i < count; i++)

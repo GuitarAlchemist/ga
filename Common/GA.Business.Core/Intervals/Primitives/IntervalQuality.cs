@@ -1,15 +1,60 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-/// <inheritdoc cref="IEquatable{String}" />
-/// <inheritdoc cref="IComparable{String}" />
-/// <inheritdoc cref="IComparable" />
+// ReSharper disable GrammarMistakeInComment
 /// <summary>
 /// Interval quality class
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IEquatable{String}" /> | <see cref="IComparable{String}" /> | <see cref="IComparable" />
+/// <code>
+///               #                            #<br/>
+/// Major =================&gt; Augmented  &lt;================= Perfect<br/>
+///       ====&gt; Minor =====&gt; Diminished &lt;=================<br/>
+///         b           b
+/// </code>
+/// <br/>
+/// </remarks>
+// ReSharper restore GrammarMistakeInComment
 [PublicAPI]
-public readonly record struct IntervalQuality : IRangeValueObject<IntervalQuality>, 
+public readonly record struct IntervalQuality : IParsable<IntervalQuality>,
+                                                IRangeValueObject<IntervalQuality>,
                                                 IFormattable
 {
+    #region IParsable{IntervalQuality}
+
+    /// <inheritdoc />
+    public static IntervalQuality Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out IntervalQuality result)
+    {
+        result = default!;
+
+        IntervalQuality? intervalQuality = s switch
+        {
+            "dd" => DoublyDiminished,
+            "d" => Diminished,
+            "m" => Minor,
+            "P" => Perfect,
+            "M" => Major,
+            "A" => Augmented,
+            "AA" => DoublyAugmented,
+            _ => null
+        };
+
+        if (intervalQuality is not { } quality) return false; // Failure
+
+        // Success
+        result = quality;
+        return true;
+    }
+
+    #endregion
+
     #region Relational members
 
     public int CompareTo(IntervalQuality other) => _value.CompareTo(other._value);
@@ -35,8 +80,8 @@ public readonly record struct IntervalQuality : IRangeValueObject<IntervalQualit
 
     public static IntervalQuality Min => FromValue(_minValue);
     public static IntervalQuality Max => FromValue(_maxValue);
-    public static int CheckRange(int value) => ValueObjectUtils<IntervalQuality>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<IntervalQuality>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<IntervalQuality>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<IntervalQuality>.EnsureValueRange(value, minValue, maxValue);
 
     public static implicit operator IntervalQuality(int value) => new() { Value = value };
     public static implicit operator int(IntervalQuality intervalQuality) => intervalQuality._value;
@@ -54,7 +99,7 @@ public readonly record struct IntervalQuality : IRangeValueObject<IntervalQualit
     public int Value { get => _value; init => _value = CheckRange(value); }
 
     /// <summary>
-    /// Create a new Quality instance with the inverse quality value..
+    /// Create a new Quality instance with the inverse quality value
     /// </summary>
     /// <returns>
     /// The inverse <see cref="IntervalQuality"/>.
@@ -100,38 +145,79 @@ public readonly record struct IntervalQuality : IRangeValueObject<IntervalQualit
         };
     }
 
-    public Accidental? ToAccidental(IntervalSizeConsonance consonance)
+    /// <summary>
+    /// Gets the accidental, given the consonance
+    /// </summary>
+    /// <param name="consonance">The <see cref="IntervalConsonance"/></param>
+    /// <returns>The <see cref="Nullable{Accidental}"/></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public Accidental? ToAccidental(IntervalConsonance consonance)
     {
-        return consonance == IntervalSizeConsonance.Perfect
+        return consonance == IntervalConsonance.Perfect
             ? GetPerfectIntervalAccidental(_value)
             : GetImperfectIntervalAccidental(_value);
 
-        static Accidental? GetPerfectIntervalAccidental(in int value)
+        static Accidental? GetPerfectIntervalAccidental(in int value) => value switch
         {
-            return value switch
-            {
-                DoublyDiminishedValue => Accidental.DoubleFlat,
-                DiminishedValue => Accidental.Flat,
-                PerfectValue => null,
-                AugmentedValue => Accidental.Sharp,
-                DoublyAugmentedValue => Accidental.DoubleSharp,
-                _ => throw new InvalidOperationException()
-            };
+            DoublyDiminishedValue => Accidental.DoubleFlat, // dd => bb
+            DiminishedValue => Accidental.Flat, // d => b
+            PerfectValue => null,
+            AugmentedValue => Accidental.Sharp, // A => #
+            DoublyAugmentedValue => Accidental.DoubleSharp, // AA => ##
+            _ => throw new InvalidOperationException()
+        };
+
+        static Accidental? GetImperfectIntervalAccidental(in int value) => value switch
+        {
+            DoublyDiminishedValue => Accidental.TripleFlat, // dd => bbb
+            DiminishedValue => Accidental.DoubleFlat, // d => bb
+            MinorValue => Accidental.Flat, // m => b
+            MajorValue => null,
+            AugmentedValue => Accidental.Sharp, // A => #
+            DoublyAugmentedValue => Accidental.DoubleSharp, // AA => ##
+            _ => throw new InvalidOperationException()
+        };
+    }
+
+    public static bool TryGetFromAccidental(
+        IntervalConsonance consonance, 
+        Accidental? accidental, 
+        out IntervalQuality quality)
+    {
+        var foundQuality =
+            consonance == IntervalConsonance.Perfect
+                ? GetPerfectIntervalAccidental(accidental)
+                : GetImperfectIntervalAccidental(accidental);
+
+        if (!foundQuality.HasValue)
+        {
+            // Failure
+            quality = default!;
+            return false;
         }
 
-        static Accidental? GetImperfectIntervalAccidental(in int value)
+        // Success
+        quality = foundQuality.Value;
+        return true;
+
+        static IntervalQuality? GetPerfectIntervalAccidental(Accidental? accidental) => accidental?.Value switch
         {
-            return value switch
-            {
-                DoublyDiminishedValue => Accidental.TripleFlat,
-                DiminishedValue => Accidental.DoubleFlat,
-                MinorValue => Accidental.Flat,
-                MajorValue => null,
-                AugmentedValue => Accidental.Sharp,
-                DoublyAugmentedValue => Accidental.DoubleSharp,
-                _ => throw new InvalidOperationException()
-            };
-        }
+            -2 => DoublyDiminished,
+            -1 => Diminished,
+            1 => Augmented,
+            2 => DoublyAugmented,
+            _ => Perfect
+        };
+
+        static IntervalQuality? GetImperfectIntervalAccidental(Accidental? accidental) => accidental?.Value switch
+        {
+            -3 => DoublyDiminished,
+            -2 => Diminished,
+            -1 => Minor,
+            1 => Augmented,
+            2 => DoublyAugmented,
+            _ => Major
+        };
     }
 }
 

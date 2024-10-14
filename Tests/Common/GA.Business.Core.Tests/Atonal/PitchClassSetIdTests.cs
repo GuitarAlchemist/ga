@@ -4,7 +4,6 @@
     using Extensions;
     using GA.Business.Core.Atonal;
     using GA.Business.Core.Notes;
-    using GA.Core;
 
     public class PitchClassSetIdTests
     {
@@ -47,7 +46,7 @@
         public void Test_PitchClassSetId_Equivalences()
         {
             // Arrange
-            var gen = PitchClassSetIdEquivalences.Create();
+            var gen = PitchClassSetIdEquivalences.Instance;
 
             // Act
 

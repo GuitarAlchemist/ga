@@ -64,7 +64,15 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     /// <returns>
     /// The <see cref="Accidented"/>
     /// </returns>
-    public abstract Accidented ToAccidentedNote();
+    public abstract Accidented ToAccidented();
+
+    /// <summary>
+    /// Gets the chromatic note
+    /// </summary>
+    /// <returns>
+    /// The <see cref="Chromatic"/>
+    /// </returns>
+    public Chromatic ToChromatic() => new(PitchClass);
 
     /// <summary>
     /// Gets the unsigned interval between another note and the current note
@@ -76,13 +84,10 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        var startNote = ToAccidentedNote();
-        var endNote = other.ToAccidentedNote();
+        var startNote = ToAccidented();
+        var endNote = other.ToAccidented();
 
-        var result =
-            endNote < startNote 
-                ? endNote.GetInterval(startNote) 
-                : startNote.GetInterval(endNote);
+        var result = startNote.GetInterval(endNote);
 
         return result;
     }
@@ -96,7 +101,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     // ReSharper disable once InconsistentNaming
     public IntervalClass GetIntervalClass(Note other)
     {
-        var semitones = GetInterval(other).ToSemitones();
+        var semitones = GetInterval(other).Semitones;
         return IntervalClass.FromSemitones(semitones);
     }
 
@@ -142,9 +147,11 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2)
         {
-            var normalizedPitchClass = note1.PitchClass - note2.PitchClass; ;
+            var normalizedPitchClass = note1.PitchClass - note2.PitchClass;
             return normalizedPitchClass.Value;
         }
+
+        public static Pitch.Chromatic operator +(Chromatic note, Octave octave) => new (note, octave);
 
         #endregion
         
@@ -161,9 +168,10 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         #endregion
        
         public override PitchClass PitchClass { get; } = Value;
-        public override Accidented ToAccidentedNote() => ToSharp().ToAccidentedNote();
+        public override Accidented ToAccidented() => ToSharp().ToAccidented();
         public Sharp ToSharp() => PitchClass.ToSharpNote();
         public Flat ToFlat() => PitchClass.ToFlatNote();
+
 
         /// <inheritdoc />
         public override string ToString()
@@ -176,7 +184,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     }
 
     /// <summary>
-    /// Am note from a musical key
+    /// A note from a musical key (<see cref="Note.KeyNote.Sharp"/> | <see cref="Note.KeyNote.Flat"/>  | <see cref="Note.KeyNote.Accidented"/>) 
     /// </summary>
     /// <param name="NaturalNote"></param>
     [PublicAPI]
@@ -240,7 +248,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public override PitchClass PitchClass => GetPitchClass();
         
         /// <inheritdoc />
-        public override Accidented ToAccidentedNote() => new(NaturalNote, Accidental);
+        public override Accidented ToAccidented() => new(NaturalNote, Accidental);
     }
 
     /// <summary>
@@ -310,8 +318,8 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         }
 
         #endregion
-        
-        public static implicit operator Chromatic(Sharp sharp) => new(sharp.PitchClass);
+
+        public static implicit operator Chromatic(Sharp sharp) => sharp.ToChromatic();
 
         public static IReadOnlyCollection<Sharp> NaturalNotes => [C, D, E, F, G, A, B];
         public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
@@ -320,7 +328,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
         
         /// <inheritdoc />
-        public override Accidental? Accidental => SharpAccidental;
+        public override Accidental? Accidental =>SharpAccidental;
 
         /// <inheritdoc />
         public override string ToString() =>
@@ -537,8 +545,8 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         #endregion
 
         public override PitchClass PitchClass => GetPitchClass();
-        public override Accidented ToAccidentedNote() => this;
-        public override Interval.Simple GetInterval(Note other) => GetInterval(other.ToAccidentedNote());
+        public override Accidented ToAccidented() => this;
+        public override Interval.Simple GetInterval(Note other) => GetInterval(other.ToAccidented());
         public Interval.Simple GetInterval(Accidented other) => GetInterval(this, other);
 
         /// <inheritdoc />
@@ -553,6 +561,18 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             return result;
         }
 
+        private static readonly Lazy<Dictionary<NaturalNote, Key.Major>> _lazyMajorKeyByNaturalNote = new(
+            () => new Dictionary<NaturalNote, Key.Major>
+            {
+                [NaturalNote.C] = Key.Major.C,
+                [NaturalNote.D] = Key.Major.D,
+                [NaturalNote.E] = Key.Major.E,
+                [NaturalNote.F] = Key.Major.F,
+                [NaturalNote.G] = Key.Major.G,
+                [NaturalNote.A] = Key.Major.A,
+                [NaturalNote.B] = Key.Major.B
+            });
+
         /// <summary>
         /// Gets the interval between two accidented notes
         /// </summary>
@@ -566,17 +586,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         {
             if (start == end) return Interval.Simple.Unison;
 
-            var majorKeyByNaturalNote = new Dictionary<NaturalNote, Key.Major>
-            {
-                [NaturalNote.C] = Key.Major.C,
-                [NaturalNote.D] = Key.Major.D,
-                [NaturalNote.E] = Key.Major.E,
-                [NaturalNote.F] = Key.Major.F,
-                [NaturalNote.G] = Key.Major.G,
-                [NaturalNote.A] = Key.Major.A,
-                [NaturalNote.B] = Key.Major.B
-            };
-
+            var majorKeyByNaturalNote = _lazyMajorKeyByNaturalNote.Value;
             if (!majorKeyByNaturalNote.TryGetValue(start.NaturalNote, out var key)) throw new InvalidOperationException($"No major key found for {start.NaturalNote}");
             var size = end.NaturalNote - start.NaturalNote;
             var qualityIncrement = GetQualityIncrement(key, start, end);
@@ -620,10 +630,10 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             }
 
             static IntervalQuality GetQuality(
-                IntervalSize number,
+                SimpleIntervalSize number,
                 Semitones qualityIncrement)
             {
-                if (number.Consonance == IntervalSizeConsonance.Perfect)
+                if (number.Consonance == IntervalConsonance.Perfect)
                 {
                     var result = qualityIncrement.Value switch
                     {

@@ -22,7 +22,7 @@ public class MajorKeyTests
     public void MajorKey_GetNotes_ReturnsCorrectSequenceOfNotes(string sMajorKeyRoot, string[] expected)
     {
         if (!Key.Major.TryParse(sMajorKeyRoot, out var majorKey)) throw new InvalidOperationException();
-        var actual = majorKey.GetNotes().Select(note => note.ToString()).ToArray();
+        var actual = majorKey.Notes.Select(note => note.ToString()).ToArray();
 
         Assert.That(actual, Is.EqualTo(expected));
     }

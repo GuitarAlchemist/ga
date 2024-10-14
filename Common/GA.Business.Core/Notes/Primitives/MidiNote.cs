@@ -1,16 +1,17 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
 using Atonal;
+using GA.Business.Core.Atonal.Abstractions;
 using Intervals;
 
 /// <summary>
 /// A MIDI note (0 to 127)
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IRangeValueObject{MidiNote}"/>
+/// Implements <see cref="IRangeValueObject{MidiNote}"/> and <see cref="IPitchClass"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct MidiNote : IRangeValueObject<MidiNote>
+public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClass
 {
     #region Relational members
 
@@ -32,8 +33,8 @@ public readonly record struct MidiNote : IRangeValueObject<MidiNote>
     public static MidiNote Open => FromValue(0);
     public static IReadOnlyCollection<MidiNote> All => ValueObjectUtils<MidiNote>.Items;
 
-    public static int CheckRange(int value) => ValueObjectUtils<MidiNote>.CheckRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MidiNote>.CheckRange(value, minValue, maxValue);
+    public static int CheckRange(int value) => ValueObjectUtils<MidiNote>.EnsureValueRange(value, _minValue, _maxValue);
+    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<MidiNote>.EnsureValueRange(value, minValue, maxValue);
     public static MidiNote Create(Octave octave, PitchClass pitchClass) => FromValue((octave.Value - Octave.Min.Value) * 12 + pitchClass.Value);
     public static MidiNote operator ++(MidiNote midiNote) => FromValue(midiNote._value + 1);
     public static MidiNote operator --(MidiNote midiNote) => FromValue(midiNote._value - 1);

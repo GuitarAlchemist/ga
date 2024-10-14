@@ -45,7 +45,7 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
         switch (s)
         {
             case "bbb" or "𝄫♭":
-                result = DoubleFlat;
+                result = TripleFlat;
                 return true;
             case "bb" or "𝄫":
                 result = DoubleFlat;
@@ -63,7 +63,7 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
                 result = DoubleSharp;
                 return true;
             case "###" or "♯𝄪":
-                result = DoubleSharp;
+                result = TripleSharp;
                 return true;
             default:
                 result = default;
@@ -129,13 +129,13 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
 
     public override string ToString() => _value switch
     {
-        -3 => "𝄫♭",
-        -2 => "𝄫",
-        -1 => "♭",
+        -3 => "bbb",
+        -2 => "bb",
+        -1 => "b",
         0 => "♮",
         1 => "♯",
-        2 => "𝄪",
-        3 => "♯𝄪",
+        2 => "x",
+        3 => "♯##",
         _ => string.Empty
     };
 

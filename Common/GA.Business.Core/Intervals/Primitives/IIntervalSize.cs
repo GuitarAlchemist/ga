@@ -6,11 +6,11 @@
 public interface IIntervalSize : IValueObject
 {
     /// <summary>
-    /// Gets the <see cref="IntervalSizeConsonance"/>
+    /// Gets the <see cref="IntervalConsonance"/>
     /// </summary>
-    IntervalSizeConsonance Consonance { get; }
+    IntervalConsonance Consonance { get; }
 
-    Semitones ToSemitones();
+    Semitones Semitones { get; }
 }
 
 /// <summary>

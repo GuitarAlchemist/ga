@@ -7,7 +7,7 @@ public static class ValueObjectUtils<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
     /// <summary>
-    /// Checks whether the value is in range
+    /// Ensure the value is in range
     /// </summary>
     /// <param name="value">The <see cref="int"/> value</param>
     /// <param name="minValue">The min <see cref="int"/> value</param>
@@ -18,7 +18,7 @@ public static class ValueObjectUtils<TSelf>
     /// <param name="maxValueExpression">a <see cref="Nullable{String}"/></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
-    public static int CheckRange(
+    public static int EnsureValueRange(
         int value, 
         int minValue,
         int maxValue,
@@ -54,6 +54,30 @@ public static class ValueObjectUtils<TSelf>
         }
 
         return value;
+    }
+
+    /// <summary>
+    /// Ensure the value is in range
+    /// </summary>
+    /// <param name="value">The <see cref="int"/> value</param>
+    /// <param name="minValue">The min <see cref="int"/> value</param>
+    /// <param name="maxValue">The max <see cref="int"/> value</param>
+    /// <param name="normalize">A <see cref="bool"/> flag indicating whether the value should be normalized</param>
+    /// <returns>True if the value is range, false otherwise</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
+    public static bool IsValueInRange(
+        int value, 
+        int minValue,
+        int maxValue,
+        bool normalize = false)
+    {
+        if (value >= minValue && value <= maxValue) return false;
+
+        // Attempt to normalize the value
+        var count = maxValue - minValue;
+        if (normalize) value = minValue + (value - minValue).Mod(count) + 1;
+        if (value < minValue) return false;
+        return value <= maxValue;
     }
 
     public static IReadOnlyCollection<TSelf> Items => ValueObjectCollection<TSelf>.Create();

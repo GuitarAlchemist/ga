@@ -1,7 +1,13 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using Intervals.Primitives;
 using Primitives;
 using Notes;
+using Notes.Primitives;
+using Scales;
+using Tonal;
+using System.Linq;
+using GA.Core.Collections;
 
 /// <summary>
 /// Represents a distinct ordered set of pitch classes
@@ -28,7 +34,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public static IReadOnlyCollection<PitchClassSet> Items =>
         PitchClassSetId
             .Items
-            .Select(id => id.PitchClassSet)
+            .Select(id => id.ToPitchClassSet())
             .ToLazyCollection();
 
     #endregion
@@ -67,7 +73,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public int CompareTo(PitchClassSet? other)
     {
         if (ReferenceEquals(this, other)) return 0;
-        return other is null ? 1 : Identity.CompareTo(other.Identity);
+        return other is null ? 1 : Id.CompareTo(other.Id);
     }
 
     public static bool operator <(PitchClassSet? left, PitchClassSet? right) => Comparer<PitchClassSet>.Default.Compare(left, right) < 0;
@@ -79,9 +85,9 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
     #region Equality Members
 
-    private bool Equals(PitchClassSet other) => Identity.Equals(other.Identity);
+    private bool Equals(PitchClassSet other) => Id.Equals(other.Id);
     public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is PitchClassSet other && Equals(other);
-    public override int GetHashCode() => Identity.GetHashCode();
+    public override int GetHashCode() => Id.GetHashCode();
     public static bool operator ==(PitchClassSet? left, PitchClassSet? right) => Equals(left, right);
     public static bool operator !=(PitchClassSet? left, PitchClassSet? right) => !Equals(left, right);
 
@@ -109,34 +115,10 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         _lazyIntervalClassVectorGroup = new(() => Items.ToLookup(set => set.IntervalClassVector));
     }
 
-    /// <summary>
-    /// Creates a pitch class set from its identity
-    /// </summary>
-    /// <param name="identity">The <see cref="PitchClassSetIdentity"/></param>
-    /// <returns>The <see cref="PitchClassSet"/></returns>
-    /// <remarks>
-    /// TODO: Deprecate this
-    /// </remarks>
-    public static PitchClassSet FromIdentity(PitchClassSetIdentity identity)
-    {
-        var pitchClasses = new List<PitchClass>();
-        var value = identity.Value;
-        foreach (var pitchClass in PitchClass.Items)
-        {
-            var containsPitchClass = (value & 1) == 1;
-            if (containsPitchClass) pitchClasses.Add(pitchClass);
-            value >>= 1;
-        }
+    public static PitchClassSet FromId(PitchClassSetId id) => id.ToPitchClassSet();
 
-        var result = new PitchClassSet(pitchClasses);
-
-        return result;
-    }
-
-    public static PitchClassSet FromId(PitchClassSetId id) => id.PitchClassSet;
-    
     // public static implicit operator PitchClassSet(PitchClassSetIdentity identity) => FromIdentity(identity);
-    
+
     private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
 
     /// <summary>
@@ -151,20 +133,19 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         _pitchClassesSet = pitchClassesSet;
 
         Id = PitchClassSetId.FromPitchClasses(pitchClassesSet);
-        Identity = PitchClassSetIdentity.FromPitchClasses(pitchClassesSet); // TODO: Deprecate this
         Cardinality = Cardinality.FromValue(pitchClassesSet.Count);
     }
-    
+
     /// <summary>
     /// Gets the name <see cref="string"/>
     /// </summary>
     public string Name => string.Join(" ", _pitchClassesSet);
 
-    /// <summary>
-    /// Gets the <see cref="PitchClassSetIdentity"/>
-    /// </summary>
-    public PitchClassSetIdentity Identity { get; }
-    
+    ///// <summary>
+    ///// Gets the <see cref="PitchClassSetIdentity"/>
+    ///// </summary>
+    //public PitchClassSetIdentity Identity { get; }
+
     /// <summary>
     /// Gets the <see cref="PitchClassSetId"/>
     /// </summary>
@@ -189,6 +170,11 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public IntervalClassVector IntervalClassVector => _pitchClassesSet.ToIntervalClassVector();
 
     /// <summary>
+    /// Gets the <see cref="Nullable{ModalFamily}"/>
+    /// </summary>
+    public ModalFamily? ModalFamily => ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
+
+    /// <summary>
     /// Gets the <see cref="IReadOnlyCollection{PitchClassSet}"/>
     /// </summary>
     public IReadOnlyCollection<PitchClassSet> TranspositionsAndInversions => _lazyIntervalClassVectorGroup.Value[IntervalClassVector].ToImmutableList();
@@ -199,7 +185,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// <remarks>
     /// By definition, the prime form is the <see cref="PitchClassSet"/> with the most compact representation
     /// </remarks>
-    public PitchClassSet? PrimeForm => TranspositionsAndInversions.MinBy(pitchClassSet => pitchClassSet.Identity.Value);
+    public PitchClassSet? PrimeForm => TranspositionsAndInversions.MinBy(pitchClassSet => pitchClassSet.Id.Value);
 
     /// <summary>
     /// Gets a flag that indicates whether this pitch class set is it prime form
@@ -223,6 +209,22 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// True is this pitch class set is expressed in normal form, false otherwise
     /// </summary>
     public bool IsNormalForm => ToNormalForm().SequenceEqual(this);
+
+    public bool IsClusterFree => Id.IsClusterFree;
+
+    /// <summary>
+    /// Gets the complements <see cref="PitchClassSet"/>
+    /// </summary>
+    public PitchClassSet Complement => FromId(Id.Complement);
+
+    /// <summary>
+    /// Gets the inverse <see cref="PitchClassSet"/>
+    /// </summary>
+    public PitchClassSet Inverse => FromId(Id.Inverse);
+
+
+    public Uri? ScaleVideoUrl => ScaleVideoUrlById.Get(Id);
+    public Uri ScalePageUrl => new($"https://ianring.com/musictheory/scales/{Id.Value}");
 
     /// <summary>
     /// Gets the normal form <see cref="PitchClassSet"/>
@@ -322,19 +324,170 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
                 .FirstOrDefault(cmp => cmp != 0) < 0;
     }
 
+    public Key ClosestDiatonicKey => FindClosestDiatonicKey2() ?? Key.Major.C;
+
+    public PrintableReadOnlyCollection<Note.Accidented> GetDiatonicNotes()
+    {
+        var key = ClosestDiatonicKey;
+        var noteByPitchClass = key.Notes.ToDictionary(note => note.PitchClass, note => note);
+
+        var notes = new List<Note.Accidented>();
+        var usedNaturalNotes = new HashSet<NaturalNote>();
+        foreach (var pitchClass in _pitchClassesSet)
+        {
+            if (noteByPitchClass.TryGetValue(pitchClass, out var keyNote))
+            {
+                var note = keyNote.ToAccidented();
+                usedNaturalNotes.Add(note.NaturalNote);
+                notes.Add(note);
+            }
+            else
+            {
+                var closestNote = FindClosestDiatonicNoteWithAccidental(IsModal, usedNaturalNotes, pitchClass, key.Notes);
+                notes.Add(closestNote);
+            }
+        }
+
+        var result = notes.ToImmutableList().AsPrintable();
+
+        return result;
+    }
+
+    private Note.Accidented FindClosestDiatonicNoteWithAccidental(bool isModal,
+        HashSet<NaturalNote> usedNaturalNotes,
+        PitchClass target,
+        IReadOnlyCollection<Note.KeyNote> keyNotes)
+    {
+        Note.Accidented? closestNote = null;
+        var smallestDifference = int.MaxValue;
+        foreach (var keyNote in keyNotes)
+        {
+            var difference = Math.Abs((int)keyNote.PitchClass - (int)target);
+            if (difference >= smallestDifference) continue;
+            smallestDifference = difference;
+            closestNote = keyNote;
+        }
+
+        if (closestNote == null) throw new InvalidOperationException("No closest diatonic note found.");
+
+        // Determine the accidental
+        var accidentalValue = (int)target - (int)closestNote.PitchClass;
+        var accidental =
+            closestNote.Accidental.HasValue
+                ? closestNote.Accidental.Value + accidentalValue
+                : (Accidental)accidentalValue;
+        var result = new Note.Accidented(closestNote.NaturalNote, accidental);
+
+        if (isModal && usedNaturalNotes.Contains(result.NaturalNote))
+        {
+            var candidate = result;
+            var orderedAvailableEnharmonics =
+                Note.Accidented.Items
+                    .Where(note =>
+                        note.PitchClass == candidate.PitchClass
+                        &&
+                        note.NaturalNote != candidate.NaturalNote
+                        &&
+                        !usedNaturalNotes.Contains(note.NaturalNote)
+                        )
+                    .OrderBy(note => Math.Abs(note.Accidental?.Value ?? 0))
+                    .ToImmutableArray();
+            result = orderedAvailableEnharmonics.FirstOrDefault() ?? result;
+        }
+
+        return result;
+    }
+
     /// <inheritdoc />
     public override string ToString() => Name;
 
-    // ReSharper disable once InconsistentNaming
-    private ImmutableList<Note.Chromatic> GetNotes()
+    private Key? FindClosestDiatonicKey()
     {
-        // TODO: This looks wrong
-        
-        var result =
-            _pitchClassesSet
-                .Select(pitchClass => new Note.Chromatic(pitchClass))
+        var normalForm =
+            IsNormalForm ?
+                this :
+            ToNormalForm();
+        // Determine if the pitch class set likely represents a minor scale/chord
+        var containsMinorThird = normalForm.Contains(Note.Chromatic.DSharpOrEFlat.PitchClass);
+        var expectedKeyMode = containsMinorThird ? KeyMode.Minor : KeyMode.Major;
+
+        var keyMatches = new List<(Key Key, int CommonPitchClasses)>();
+        // Compare pitch class set with each key
+        foreach (var key in Key.Items)
+        {
+            var commonPitchClasses = this.Intersect(key.PitchClassSet).Count();
+            keyMatches.Add((key, commonPitchClasses));
+        }
+
+        // Find the maximum number of common pitch classes
+        var maxCommonPitchClasses = keyMatches.Select(tuple => tuple.CommonPitchClasses).Max();
+
+        // Filter and sort candidate keys
+        var candidateKeys = keyMatches
+            .Where(tuple => tuple.CommonPitchClasses == maxCommonPitchClasses)
+            .Select(tuple => tuple.Key)
+            .OrderByDescending(key => key.KeyMode == expectedKeyMode) // prioritize expected key mode
+            .ThenBy(key => key.KeySignature.AccidentalCount)          // then by fewer accidentals
+            .ThenByDescending(key => key.KeySignature.IsSharpKey)     // prefer sharp keys if tied
+            .ThenBy(key => key.KeyMode)                               // then by key mode
+            .ToImmutableList();
+
+        return candidateKeys.FirstOrDefault();
+    }
+
+    private Key? FindClosestDiatonicKey2()
+    {
+        var dict = new Dictionary<Key, IReadOnlyCollection<PitchClass>>();
+        foreach (var key in Key.Items)
+        {
+            var accidentedKeyNotes = key.Notes.Where(note => note.Accidental != null);
+            var accidentedPitchClasses= accidentedKeyNotes.Select(note => note.PitchClass).ToImmutableArray();
+
+            dict.Add(key, accidentedPitchClasses);
+        }
+
+        // Find the closest key
+        var normalForm =
+            IsNormalForm ?
+                this :
+                ToNormalForm();
+        // Determine if the pitch class set likely represents a minor scale/chord
+        var containsMinorThird = normalForm.Contains(Note.Chromatic.DSharpOrEFlat.PitchClass);
+
+        var expectedKeyMode = containsMinorThird ? KeyMode.Minor : KeyMode.Major;
+        var closestKey = IdentifyClosestKey(this, dict.AsReadOnly(), expectedKeyMode);
+
+        return closestKey ?? Key.Major.C;
+    }
+
+    private Key? IdentifyClosestKey(
+        PitchClassSet normalForm,
+        IReadOnlyDictionary<Key, IReadOnlyCollection<PitchClass>> items,
+        KeyMode expectedKeyMode)
+    {
+        var list = new List<(Key Key, PrintableReadOnlyCollection<Note.KeyNote> Matches, PrintableReadOnlyCollection<PitchClass>)>();
+        foreach (var (key, pitchClasses) in items)
+        {
+            var matches = new List<Note.KeyNote>();
+            var keyNotes = key.Notes.ToImmutableList();
+            foreach (var keyNote in keyNotes)
+            {
+                if (normalForm.Contains(keyNote.PitchClass)) matches.Add(keyNote);
+            }
+
+            var pMatches = matches.AsReadOnly().AsPrintable();
+            var pPitchClasses = matches.Select(note => note.PitchClass).OrderBy(pitchClass => pitchClass).ToImmutableList().AsPrintable();
+            list.Add((key, pMatches, pPitchClasses));
+        }
+
+        var orderedList = 
+            list
+                .OrderByDescending(tuple => tuple.Matches.Count)
+                .ThenByDescending(tuple => tuple.Key.KeyMode == expectedKeyMode) // prioritize expected key mode
                 .ToImmutableList();
 
-        return result;
+        return orderedList.Any()
+            ? orderedList.First().Key 
+            : null;
     }
 }

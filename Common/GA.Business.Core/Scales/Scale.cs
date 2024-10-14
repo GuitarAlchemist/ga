@@ -2,10 +2,9 @@
 
 using Atonal;
 using Atonal.Primitives;
+using Extensions;
 using Intervals;
 using Notes;
-using Tonal;
-using static Notes.Note.Accidented;
 
 /// <summary>
 /// A scale
@@ -23,29 +22,28 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     #region IStaticReadonlyCollection<Scale> Members
 
     public static IReadOnlyCollection<Scale> Items =>
-        PitchClassSetIdentity.Items
-            .Where(identity => PitchClassSetIdentity.ContainsRoot(identity))
-            .Select(FromIdentity)
+        PitchClassSet.Items
+            .Where(set => set.Id.IsScale)
+            .Select(set => FromId(set.Id))
             .ToLazyCollection();
 
     #endregion
-    
-    public static Scale Major => new(Key.Major.C.GetNotes());
+
+    public static Scale Major => new("C D E F G A B");
     public static Scale NaturalMinor => Minor.Natural;
     public static Scale HarmonicMinor => Minor.Harmonic;
     public static Scale MelodicMinor => Minor.Melodic;
-    public static Scale MajorPentatonic => new(C, D, E, G, A);
+    public static Scale MajorPentatonic => new("C D E G A");
 
     /// <summary>
     /// https://ianring.com/musictheory/scales/1365
     /// </summary>
-    public static Scale WholeTone => new(C, D, E, FSharp, GSharp, ASharp);
-    public static Scale ChromaticSharp => new(C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp);
-    public static Scale ChromaticFlat => new(C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb);
+    public static Scale WholeTone => new("C D E F# G# A#");
+    public static Scale ChromaticSharp => new("C C# D D# E F F# G G# A A# B");
+    public static Scale ChromaticFlat => new("C Db D Eb E F Gb G Ab A Bb B");
+    public static Scale FromId(PitchClassSetId id) => new(id.Notes);
 
-    public static Scale FromIdentity(PitchClassSetIdentity identity) => new(identity.PitchClassSet.Notes);
-
-    private readonly IReadOnlyCollection<Note> _notes;
+    private readonly PrintableReadOnlyCollection<Note> _notes;
 
     public Scale(params Note.Accidented[] notes) 
         : this(notes.AsEnumerable())
@@ -57,14 +55,21 @@ public class Scale : IStaticReadonlyCollection<Scale>,
         ArgumentNullException.ThrowIfNull(notes);
         
         _notes = notes.ToImmutableList().AsPrintable();
+        PitchClassSet = _notes.ToPitchClassSet();
+        IntervalClassVector = PitchClassSet.IntervalClassVector;
         Intervals = new LazyScaleIntervals(_notes);
-        //Identity = PitchClassSetIdentity.FromNotes(_notes); // TODO
+    }
+
+    public Scale(string notes) 
+        : this(AccidentedNoteCollection.Parse(notes))
+    {
     }
 
     public IReadOnlyCollection<Interval.Simple> Intervals { get; }
-    public PitchClassSetIdentity Identity { get; }
-    public bool IsModal => Identity.PitchClassSet.IsModal;
-    public ModalFamily? ModalFamily => ModalFamily.TryGetValue(Identity.PitchClassSet.IntervalClassVector, out var modalFamily) ? modalFamily : null;
+    public PitchClassSet PitchClassSet { get; }
+    public IntervalClassVector IntervalClassVector { get; }
+    public bool IsModal => PitchClassSet.IsModal;
+    public ModalFamily? ModalFamily => ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
@@ -72,7 +77,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     public override string ToString()
     {
-        var scaleName = Identity.ScaleName;
+        var scaleName = string.Empty; // TODO
         if (string.IsNullOrEmpty(scaleName)) return _notes.ToString()!;
         return $"{scaleName} - {_notes}";
     }
@@ -81,9 +86,9 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     public static class Minor
     {
-        public static Scale Natural => new(Key.Major.A.GetNotes());
-        public static Scale Harmonic => new(A, B, C, D, E, F, GSharp);
-        public static Scale Melodic => new(A, B, C, D, E, FSharp, GSharp);
+        public static Scale Natural => new("A B C D E F G");
+        public static Scale Harmonic => new("A B C D E F G#");
+        public static Scale Melodic => new("A B C D E F# G#");
     }
 
     private class LazyScaleIntervals(IReadOnlyCollection<Note> notes) : LazyCollectionBase<Interval.Simple>(GetAll(notes))
@@ -94,8 +99,8 @@ public class Scale : IStaticReadonlyCollection<Scale>,
             var result = 
                 notes
                     .Select(endNote => startNote.GetInterval(endNote))
-                    .ToImmutableList()
-                    .AsPrintable(Interval.Simple.Format.ShortName);
+                    .ToImmutableSortedSet()
+                    .AsPrintable(Interval.Diatonic.Format.ShortName);
 
             return result;
         }
