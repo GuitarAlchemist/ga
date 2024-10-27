@@ -24,7 +24,7 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     public static IntervalClassVectorId CreateFrom(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass)
     {
         var value = ToValue(countByIntervalClass);
-        return new IntervalClassVectorId(value);
+        return new(value);
     }
 
     #endregion

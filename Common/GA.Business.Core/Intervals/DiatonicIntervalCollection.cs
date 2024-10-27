@@ -34,7 +34,7 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
         }
 
         // Success
-        result = new DiatonicIntervalCollection(builder.ToImmutable());
+        result = new(builder.ToImmutable());
         return true;
     }    
 
@@ -69,6 +69,6 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
             var pitchClass = PitchClass.FromSemitones(interval.Semitones);
             builder.Add(pitchClass);
         }
-        return new PitchClassSet(builder);
+        return new(builder);
     }
 }

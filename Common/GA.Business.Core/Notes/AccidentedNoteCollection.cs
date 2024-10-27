@@ -32,7 +32,7 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
             span = spaceIndex == -1 ? [] : span[(spaceIndex + 1)..];
         }
 
-        result = new AccidentedNoteCollection(builder);
+        result = new(builder);
         return true;
     }
 

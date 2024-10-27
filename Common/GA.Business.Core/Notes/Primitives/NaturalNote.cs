@@ -139,12 +139,12 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     public static NaturalNote operator ++(NaturalNote naturalNote) => FromValue((naturalNote.Value + 1) % 7);
     public static NaturalNote operator --(NaturalNote naturalNote) => FromValue((naturalNote.Value - 1) % 7);
     public static NaturalNote operator +(NaturalNote naturalNote, SimpleIntervalSize intervalSize) => FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
-    public static SimpleIntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(new NaturalNotePair(startNote, endNote));
+    public static SimpleIntervalSize operator -(NaturalNote endNote, NaturalNote startNote) => NaturalNoteIntervals.Get(new(startNote, endNote));
 
     public static int CheckRange(int value) => ValueObjectUtils<NaturalNote>.EnsureValueRange(value, _minValue, _maxValue);
     public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<NaturalNote>.EnsureValueRange(value, minValue, maxValue);
 
-    public SimpleIntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(new NaturalNotePair(this, other));
+    public SimpleIntervalSize GetInterval(NaturalNote other) => NaturalNoteIntervals.Get(new(this, other));
 
     public IReadOnlyCollection<NaturalNote> GetDegrees(int count)
     {
@@ -209,6 +209,6 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
             from startNote in Items
             from number in SimpleIntervalSize.Items
             let endNote = startNote + number
-            select new KeyValuePair<NaturalNotePair, SimpleIntervalSize>(new NaturalNotePair(startNote, endNote), number);
+            select new KeyValuePair<NaturalNotePair, SimpleIntervalSize>(new(startNote, endNote), number);
     }
 }

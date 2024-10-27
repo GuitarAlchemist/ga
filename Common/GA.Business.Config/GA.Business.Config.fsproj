@@ -10,6 +10,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="ModalScales.yaml" />
+		<None Include="Scales.yaml" />
 		<None Include="Tunings.toml" />
 		<None Include="Tunings.txt" />
 		<None Include="Instruments.yaml">

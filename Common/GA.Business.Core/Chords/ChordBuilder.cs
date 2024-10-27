@@ -188,7 +188,7 @@ public class ChordBuilder
             intervalBySize.Values
                 .Select(interval => interval.ToFormulaInterval())
                 .ToImmutableArray();
-        formula = new Formula(formulaIntervals);
+        formula = new(formulaIntervals);
         return true;
     }
 

@@ -272,7 +272,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
             if (IntervalQuality.TryParse(prefix, null, out var quality))
             {
                 // Success
-                result = new Simple { Size = size, Quality = quality };
+                result = new() { Size = size, Quality = quality };
                 return true;
             }
 
@@ -280,7 +280,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
             if (!IntervalQuality.TryGetFromAccidental(size.Consonance, accidental, out quality)) return false;
             {
                 // Success
-                result = new Simple { Size = size, Quality = quality };
+                result = new() { Size = size, Quality = quality };
                 return true;
             }
         }
@@ -523,7 +523,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
             if (IntervalQuality.TryParse(prefix, null, out var quality))
             {
                 // Success
-                result = new Compound { Size = size, Quality = quality };
+                result = new() { Size = size, Quality = quality };
                 return true;
             }
 
@@ -532,7 +532,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
             if (!IntervalQuality.TryGetFromAccidental(consonance, accidental, out quality)) return false;
             {
                 // Success
-                result = new Compound { Size = size, Quality = quality };
+                result = new() { Size = size, Quality = quality };
                 return true;
             }
         }

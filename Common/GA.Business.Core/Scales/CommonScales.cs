@@ -9,7 +9,7 @@ using Notes;
 public class CommonPitchClassSets
 {
     public static CommonPitchClassSets Instance => _lazyInstance.Value;
-    private static readonly Lazy<CommonPitchClassSets> _lazyInstance = new(() => new CommonPitchClassSets()); 
+    private static readonly Lazy<CommonPitchClassSets> _lazyInstance = new(() => new()); 
     private readonly ImmutableList<PitchClassSetId> _pitchClassSetIds;
 
     private CommonPitchClassSets()
@@ -72,10 +72,10 @@ public class CommonScales : IEnumerable<Scale>
     private static ImmutableList<ScaleInfo> GetScaleInfos()
     {
         var scaleInfosBuilder = ImmutableList.CreateBuilder<ScaleInfo>();
-        scaleInfosBuilder.Add(new ScaleInfo("Major", new("C D E F G A B")));
-        scaleInfosBuilder.Add(new ScaleInfo("Natural Minor", new("A B C D E F G")));
-        scaleInfosBuilder.Add(new ScaleInfo("Harmonic Minor", new("A B C D E F G#")));
-        scaleInfosBuilder.Add(new ScaleInfo("Melodic Minor", new("A B C D E F# G#")));
+        scaleInfosBuilder.Add(new("Major", new("C D E F G A B")));
+        scaleInfosBuilder.Add(new("Natural Minor", new("A B C D E F G")));
+        scaleInfosBuilder.Add(new("Harmonic Minor", new("A B C D E F G#")));
+        scaleInfosBuilder.Add(new("Melodic Minor", new("A B C D E F# G#")));
         
         //scaleByName["Pentatonic Major"] = new("C D E G A");
         //scaleByName["Blues"] = new("C Eb F F# G Bb");

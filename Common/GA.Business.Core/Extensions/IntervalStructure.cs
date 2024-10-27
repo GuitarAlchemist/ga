@@ -153,6 +153,6 @@ public class IntervalStructure : IParsable<IntervalStructure>,
             builder.Add(cumulativeInterval);
         }
 
-        return new ChromaticIntervalsFromRoot(builder.ToImmutable());
+        return new(builder.ToImmutable());
     }
 }

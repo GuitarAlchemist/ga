@@ -65,7 +65,7 @@ public class PitchClassSetIdEquivalences
 
         // TODO: Finish implementation
 
-        return new PitchClassSetIdEquivalences();
+        return new();
     }
 
     public sealed class SetClassFeatures(PitchClassSetId id)

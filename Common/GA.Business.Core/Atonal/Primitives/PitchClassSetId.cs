@@ -23,7 +23,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     static PitchClassSetId()
     {
         Items = IStaticReadonlyCollectionFromValues<PitchClassSetId>.Items;
-        _lazyByValue = new Lazy<ImmutableDictionary<int, PitchClassSetId>>(() => Items.ToImmutableDictionary(id => id.Value));
+        _lazyByValue = new(() => Items.ToImmutableDictionary(id => id.Value));
     }
 
     #region Equality Comparers

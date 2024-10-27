@@ -25,17 +25,13 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
                                     IReadOnlySet<PitchClass>,
                                     IComparable<PitchClassSet>
 {
-    #region IStaticEnumerable<PitchClassSet> Members
+    #region IStaticReadonlyCollection<PitchClassSet> Members
 
     /// <summary>
-    /// Gets all 4096 possible pitch class sets (See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes)
+    /// Gets all possible set classes (<see href="https://harmoniousapp.net/p/71/Set-Classes"/>)
     /// <br/><see cref="IReadOnlyCollection{PitchClassSet}"/>
     /// </summary>
-    public static IReadOnlyCollection<PitchClassSet> Items =>
-        PitchClassSetId
-            .Items
-            .Select(id => id.ToPitchClassSet())
-            .ToLazyCollection();
+    public static IReadOnlyCollection<PitchClassSet> Items => AllPitchClassSets.Instance;
 
     #endregion
 
@@ -221,7 +217,6 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// Gets the inverse <see cref="PitchClassSet"/>
     /// </summary>
     public PitchClassSet Inverse => FromId(Id.Inverse);
-
 
     public Uri? ScaleVideoUrl => ScaleVideoUrlById.Get(Id);
     public Uri ScalePageUrl => new($"https://ianring.com/musictheory/scales/{Id.Value}");
@@ -466,7 +461,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         KeyMode expectedKeyMode)
     {
         var list = new List<(Key Key, PrintableReadOnlyCollection<Note.KeyNote> Matches, PrintableReadOnlyCollection<PitchClass>)>();
-        foreach (var (key, pitchClasses) in items)
+        foreach (var (key, _) in items)
         {
             var matches = new List<Note.KeyNote>();
             var keyNotes = key.Notes.ToImmutableList();
@@ -480,14 +475,27 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
             list.Add((key, pMatches, pPitchClasses));
         }
 
-        var orderedList = 
+        // Result
+        if (list.Count == 0) return null;
+
+        var result =
             list
                 .OrderByDescending(tuple => tuple.Matches.Count)
                 .ThenByDescending(tuple => tuple.Key.KeyMode == expectedKeyMode) // prioritize expected key mode
-                .ToImmutableList();
+                .First()
+                .Key;
 
-        return orderedList.Any()
-            ? orderedList.First().Key 
-            : null;
+        return result;
     }
+
+    #region Innner Classes
+    
+    private class AllPitchClassSets : LazyCollectionBase<PitchClassSet>
+    {
+        public static readonly AllPitchClassSets Instance = new();
+        private AllPitchClassSets() : base(Collection, separator: ", ") { }
+        private static IEnumerable<PitchClassSet> Collection => PitchClassSetId.Items.Select(id => id.ToPitchClassSet());
+    }    
+    
+    #endregion
 }
