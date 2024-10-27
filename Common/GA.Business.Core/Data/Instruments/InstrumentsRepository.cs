@@ -1,61 +1,43 @@
-﻿namespace GA.Business.Core.Instruments;
+﻿namespace GA.Business.Core.Data.Instruments;
 
 [PublicAPI]
-public sealed class InstrumentFinder
+public sealed class InstrumentsRepository
 {
     #region Inner Classes
 
-    [PublicAPI]
-    public class InstrumentInfo(
-        string name,
-        IReadOnlyDictionary<string, TuningInfo> tunings)
+    /// <summary>
+    /// Represents information about a musical instrument.
+    /// </summary>
+    /// <param name="Name">The name of the instrument.</param>
+    /// <param name="Tunings">A dictionary of tunings available for this instrument.</param>
+    public record InstrumentInfo(string Name, IReadOnlyDictionary<string, TuningInfo> Tunings)
     {
-        /// <summary>
-        /// Gets the instrument name <see cref="string"/>
-        /// </summary>
-        public string Name { get; } = name;
-
-        /// <summary>
-        /// Gets the instrument tunings <see cref="IReadOnlyDictionary{String,TuningInfo}"/>
-        /// </summary>
-        public IReadOnlyDictionary<string, TuningInfo> Tunings { get; } = tunings;
-
         /// <inheritdoc />
         public override string ToString() => $"{Name} ({Tunings.Count} tunings)";
     }
 
-    [PublicAPI]
-    public class TuningInfo(string name, object tuningInstance, string tuning)
+    /// <summary>
+    /// Represents information about a specific tuning for an instrument.
+    /// </summary>
+    /// <param name="Name">The name of the tuning.</param>
+    /// <param name="TuningInstance">The tuning instance object.</param>
+    /// <param name="Tuning">The string representation of the tuning.</param>
+    public record TuningInfo(string Name, object TuningInstance, string Tuning)
     {
-        /// <summary>
-        /// Gets the tuning name
-        /// </summary>
-        public string Name { get; } = name;
-
-        /// <summary>
-        /// Gets the tuning 
-        /// </summary>
-        public string Tuning { get; } = tuning;
-
-        /// <summary>
-        /// Gets the tuning instance <see cref="object"/>
-        /// </summary>
-        public object TuningInstance { get; } = tuningInstance;
-
         /// <inheritdoc />
         public override string ToString() => $"{Name} - {Tuning}";
     }
 
     #endregion
 
-    public static readonly InstrumentFinder Instance = new();
+    public static readonly InstrumentsRepository Instance = new();
 
     private readonly SortedDictionary<string, InstrumentInfo> _instruments = [];
     private readonly Config.Instruments.Config _config;
 
-    public InstrumentFinder()
+    public InstrumentsRepository()
     {
-        _config = new Config.Instruments.Config();
+        _config = new();
         PopulateInstruments();
         _config.Changed += (_, _) => PopulateInstruments();
     }
@@ -75,7 +57,7 @@ public sealed class InstrumentFinder
     /// </summary>
     public ImmutableSortedDictionary<string, InstrumentInfo> InstrumentByName =>
         _instruments.ToImmutableSortedDictionary(
-            pair => pair.Key, 
+            pair => pair.Key,
             pair => pair.Value,
             StringComparer.OrdinalIgnoreCase);
 
@@ -142,7 +124,7 @@ public sealed class InstrumentFinder
             // If the DisplayName property exists, use it; otherwise, use the property name
             var tuningDisplayName = GetTuningDisplayName(tuningDisplayNameProp, tuningInstance, tuningProp);
 
-            tuningsBuilder.Add(tuningDisplayName, new TuningInfo(tuningDisplayName, tuningInstance, tuning));
+            tuningsBuilder.Add(tuningDisplayName, new(tuningDisplayName, tuningInstance, tuning));
         }
         return tuningsBuilder.ToImmutable();
 

@@ -35,17 +35,11 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public static Scale MelodicMinor => Minor.Melodic;
     public static Scale MajorPentatonic => new("C D E G A");
 
-    /// <summary>
-    /// https://ianring.com/musictheory/scales/1365
-    /// </summary>
-    public static Scale WholeTone => new("C D E F# G# A#");
-    public static Scale ChromaticSharp => new("C C# D D# E F F# G G# A A# B");
-    public static Scale ChromaticFlat => new("C Db D Eb E F Gb G Ab A Bb B");
     public static Scale FromId(PitchClassSetId id) => new(id.Notes);
 
     private readonly PrintableReadOnlyCollection<Note> _notes;
 
-    public Scale(params Note.Accidented[] notes) 
+    public Scale(params Note.Accidented[] notes)
         : this(notes.AsEnumerable())
     {
     }
@@ -53,14 +47,14 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public Scale(IEnumerable<Note> notes)
     {
         ArgumentNullException.ThrowIfNull(notes);
-        
+
         _notes = notes.ToImmutableList().AsPrintable();
         PitchClassSet = _notes.ToPitchClassSet();
         IntervalClassVector = PitchClassSet.IntervalClassVector;
         Intervals = new LazyScaleIntervals(_notes);
     }
 
-    public Scale(string notes) 
+    public Scale(string notes)
         : this(AccidentedNoteCollection.Parse(notes))
     {
     }
@@ -72,7 +66,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public ModalFamily? ModalFamily => ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _notes).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_notes).GetEnumerator();
     public int Count => _notes.Count;
 
     public override string ToString()
@@ -96,7 +90,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
         private static IEnumerable<Interval.Simple> GetAll(IReadOnlyCollection<Note> notes)
         {
             var startNote = notes.ElementAt(0);
-            var result = 
+            var result =
                 notes
                     .Select(endNote => startNote.GetInterval(endNote))
                     .ToImmutableSortedSet()

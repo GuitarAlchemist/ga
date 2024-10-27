@@ -506,7 +506,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             // Ensure valid nature note
             if (!naturalNote.HasValue) return false;
 
-            result = new Accidented(naturalNote.Value, accidental);
+            result = new(naturalNote.Value, accidental);
             return true;
         }
         
@@ -562,7 +562,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         }
 
         private static readonly Lazy<Dictionary<NaturalNote, Key.Major>> _lazyMajorKeyByNaturalNote = new(
-            () => new Dictionary<NaturalNote, Key.Major>
+            () => new()
             {
                 [NaturalNote.C] = Key.Major.C,
                 [NaturalNote.D] = Key.Major.D,

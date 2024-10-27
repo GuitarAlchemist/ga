@@ -1,76 +1,86 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-public class ForteNumber : IEquatable<ForteNumber>, IComparable<ForteNumber>, IComparable
+using Primitives;
+
+/// <summary>
+/// Represents a Forte number, which uniquely identifies a pitch class set in music set theory.
+/// </summary>
+/// <remarks>
+/// A Forte number consists of two parts:
+/// 1. Cardinality: The number of pitch classes in the set (0-12).
+/// 2. Index: A unique identifier for sets with the same cardinality.
+/// 
+/// Forte numbers are used to classify and analyze pitch class sets in atonal music theory.
+/// They provide a standardized way to refer to specific pitch class set types.
+/// 
+/// Example: "3-11" represents the major and minor triads (both have the same Forte number).
+/// 
+/// This struct implements <see cref="IComparable{ForteNumber}"/>, <see cref="IComparable"/>,
+/// and <see cref="IParsable{ForteNumber}"/> for easy comparison and parsing operations.
+/// </remarks>
+[PublicAPI]
+public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparable, IParsable<ForteNumber>
 {
-    #region Equality Members
-    
-    public bool Equals(ForteNumber? other)
+    #region IParsable<ForteNumber> Members
+
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out ForteNumber result)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return Cardinality == other.Cardinality && Index == other.Index;
+        result = default;
+
+        if (s == null) return false;  // Failure
+        var parts = s.Split('-');
+        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality) || !int.TryParse(parts[1], out var index)) return false; // Failure
+
+        // Success
+        result = new(cardinality, index);
+        return true;
     }
 
-    public override bool Equals(object? obj)
+    public static ForteNumber Parse(string s, IFormatProvider? provider = null)
     {
-        if (obj is null) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        return obj.GetType() == GetType() && Equals((ForteNumber)obj);
+        if (!TryParse(s, provider, out var result)) throw new FormatException($"'{s}' is not a valid Forte number.");
+        return result;
     }
 
-    public override int GetHashCode() => HashCode.Combine(Cardinality, Index);
-
-    
     #endregion
 
-    #region Comparison Members
-
-    public int CompareTo(ForteNumber? other)
+    #region IComparable<ForteNumber>/IComparable Members
+    
+    public int CompareTo(ForteNumber other)
     {
-        if (ReferenceEquals(this, other)) return 0;
-        if (other is null) return 1;
         var cardinalityComparison = Cardinality.CompareTo(other.Cardinality);
-        return cardinalityComparison != 0 
-            ? cardinalityComparison 
-            : string.Compare(Index, other.Index, StringComparison.Ordinal);
+        return cardinalityComparison != 0
+            ? cardinalityComparison
+            : Index.CompareTo(other.Index);
     }
 
     public int CompareTo(object? obj)
     {
         if (obj is null) return 1;
-        if (ReferenceEquals(this, obj)) return 0;
-        if (obj is not ForteNumber number) throw new ArgumentException($"Object must be of type {nameof(ForteNumber)}");
-        return CompareTo(number);
-    }    
+        return obj is ForteNumber other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(ForteNumber)}");
+    }
 
-    #endregion    
-    
-    public ForteNumber(int cardinality, string index)
+    #endregion
+   
+    public ForteNumber(Cardinality cardinality, int index)
     {
-        if (string.IsNullOrWhiteSpace(index)) throw new ArgumentException("Index cannot be null or whitespace", nameof(index));
-        
+        if (cardinality < 0 || cardinality > 12) throw new ArgumentOutOfRangeException(nameof(cardinality), "Cardinality must be between 0 and 12.");
+        if (index < 1) throw new ArgumentOutOfRangeException(nameof(index), "Index must be greater than 0.");
+
         Cardinality = cardinality;
         Index = index;
     }
+    
+    /// <summary>
+    /// Gets the <see cref="Cardinality"/>
+    /// </summary>
+    public Cardinality Cardinality { get; }
 
     /// <summary>
-    /// Gets the <see cref="int"/> cardinality
+    /// Gets the index of the Forte number
     /// </summary>
-    public int Cardinality { get; }
-    
-    /// <summary>
-    /// Gets the <see cref="string"/> index
-    /// </summary>
-    public string Index { get; }
-    
+    public int Index { get; }
+
     /// <inheritdoc />
     public override string ToString() => $"{Cardinality}-{Index}";
-
-    public static ForteNumber Parse(string forteNumberString)
-    {
-        var parts = forteNumberString.Split('-');
-        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality)) throw new ArgumentException("Invalid Forte number format", nameof(forteNumberString));
-
-        return new ForteNumber(cardinality, parts[1]);
-    }
 }

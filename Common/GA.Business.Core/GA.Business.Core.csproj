@@ -87,4 +87,9 @@
 	<ItemGroup>
 		<Folder Include="Fretboard\Config\" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="GA.Business.Core">
+	    <HintPath>..\GA.Business.Querying\bin\Debug\net8.0\GA.Business.Core.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 </Project>

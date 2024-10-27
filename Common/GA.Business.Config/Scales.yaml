@@ -1,0 +1,71 @@
+Major:
+  Notes: "C D E F G A B"
+  AlternateNames: ["Ionian"]
+NaturalMinor:
+  Notes: "A B C D E F G"
+  AlternateNames: ["Aeolian"]
+HarmonicMinor:
+  Notes: "A B C D E F G#"
+MelodicMinor:
+  Notes: "A B C D E F# G#"
+MajorPentatonic:
+  Notes: "C D E G A"
+MinorPentatonic:
+  Notes: "C Eb F G Bb"
+WholeTone:
+  Notes: "C D E F# G# A#"
+  AlternateNames: ["Augmented"]
+ChromaticSharp:
+  Notes: "C C# D D# E F F# G G# A A# B"
+ChromaticFlat:
+  Notes: "C Db D Eb E F Gb G Ab A Bb B"
+Blues:
+  Notes: "C Eb F F# G Bb"
+  AlternateNames: ["Blues Scale"]
+HarmonicMajor:
+  Notes: "C D E F G Ab B"
+DoubleHarmonic:
+  Notes: "C Db E F G Ab B"
+  AlternateNames: ["Byzantine"]
+Enigmatic:
+  Notes: "C Db E F# G# A# B"
+NeapolitanMajor:
+  Notes: "C Db Eb F G A B"
+NeapolitanMinor:
+  Notes: "C Db Eb F G Ab B"
+HungarianMajor:
+  Notes: "C D# E F# G A Bb"
+HungarianMinor:
+  Notes: "C D Eb F# G Ab B"
+  AlternateNames: ["Gypsy Minor"]
+Persian:
+  Notes: "C Db E F Gb Ab B"
+Prometheus:
+  Notes: "C D E F# A Bb"
+Augmented:
+  Notes: "C D# E G Ab B"
+Diminished:
+  Notes: "C D Eb F Gb Ab A B"
+  AlternateNames: ["Octatonic"]
+BebopMajor:
+  Notes: "C D E F G G# A B"
+BebopDominant:
+  Notes: "C D E F G A Bb B"
+HalfWholeDiminished:
+  Notes: "C Db Eb E F# G A Bb"
+  AlternateNames: ["Octatonic"]
+WholeHalfDiminished:
+  Notes: "C D Eb F Gb Ab A B"
+  AlternateNames: ["Octatonic"]
+JapaneseHirajoshi:
+  Notes: "C Db F G Ab"
+  AlternateNames: ["Hirajoshi"]
+IndianBhairav:
+  Notes: "C Db E F G Ab B"
+  AlternateNames: ["Bhairav"]
+ArabicHijaz:
+  Notes: "C Db E F G Ab B"
+  AlternateNames: ["Hijaz"]
+JewishAhavaRaba:
+  Notes: "C Db E F G Ab Bb"
+  AlternateNames: ["Ahava Raba", "Freygish"]
