@@ -1,10 +1,9 @@
 ﻿namespace GA.Data.MongoDB.Models;
 
 using global::MongoDB.Bson.Serialization.Attributes;
-using JetBrains.Annotations;
 
 [PublicAPI]
-public class TuningDocument
+public class TuningDocument : DocumentBase
 {
     [BsonElement("name")]
     public string Name { get; set; } = null!;

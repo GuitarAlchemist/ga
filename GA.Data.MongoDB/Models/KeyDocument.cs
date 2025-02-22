@@ -1,5 +1,6 @@
 ﻿namespace GA.Data.MongoDB.Models;
 
+[PublicAPI]
 public class KeyDocument : DocumentBase
 {
     public required string Name { get; set; }

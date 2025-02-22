@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
-using GA.Data.MongoDB.Services;
+﻿using GA.Data.MongoDB.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace GA.Data.MongoDB.Extensions;
 
@@ -26,6 +26,29 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IInstrumentService, InstrumentService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddSyncServices(this IServiceCollection services)
+    {
+        // Get all types from the assembly containing ISyncService
+        var assembly = typeof(ISyncService).Assembly;
+        
+        // Find all non-abstract classes that implement ISyncService
+        var syncServiceTypes = assembly.GetTypes()
+            .Where(t => t.IsClass 
+                && !t.IsAbstract 
+                && t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISyncService<>)));
+
+        // Register each implementation
+        foreach (var serviceType in syncServiceTypes)
+        {
+            services.AddSingleton(typeof(ISyncService), serviceType);
+        }
+
+        // Register MusicalObjectsService
+        services.AddSingleton<MusicalObjectsService>();
 
         return services;
     }

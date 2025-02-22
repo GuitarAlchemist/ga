@@ -1,9 +1,10 @@
 ﻿#pragma warning disable SKEXP0070
 
 using GA.Business.Core.AI;
-using GA.Business.Core.Tonal;
-using GA.Data.MongoDB.Models;
+using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
+using GA.Data.MongoDB.Services.DocumentServices;
+using GA.Data.MongoDB.Extensions;
 using GaCLI;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,14 @@ using static System.Console;
 
 var configurationBuilder = new ConfigurationBuilder();
 var configuration = configurationBuilder.AddUserSecrets<Program>().Build();
+
+// Add MongoDB sync option
+if (args.Length > 0 && args[0] == "sync-mongodb")
+{
+    await RunMongoDbSync();
+    return;
+}
+
 var ollamaBaseUri = new Uri("http://localhost:11434");
 
 //await CheckOllamaModels();
@@ -71,13 +80,36 @@ async Task CheckOllamaModels()
     }
 }
 
-static async Task SyncMongoDB()
+static async Task RunMongoDbSync()
 {
     var builder = Kernel.CreateBuilder();
     var services = builder.Services;
-    services.AddTransient<IMusicalObjectsService, MusicalObjectsService>();
-    services.AddTransient<SyncMusicalObjectsCommand>();    
+    
+    // Add MongoDB configuration
+    services.Configure<MongoDbSettings>(options =>
+    {
+        options.ConnectionString = "mongodb://localhost:27017";
+        options.DatabaseName = "guitaralchemist";
+    });
+
+    // Add required services
+    services.AddLogging(c => c.AddConsole());
+    services.AddTransient<MongoDbService>();
+    services.AddSyncServices();
+    services.AddTransient<Runner>();
+    
     var kernel = builder.Build();
+
+    try 
+    {
+        var runner = kernel.GetRequiredService<Runner>();
+        await runner.ExecuteAsync();
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error during sync: {ex.Message}");
+        WriteLine($"Stack trace: {ex.StackTrace}");
+    }
 }
 
 // -----------------------------------------------------------

@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Data.MongoDB.Models;
 
+[PublicAPI]
 public abstract class DocumentBase
 {
     [BsonId]
@@ -13,4 +14,7 @@ public abstract class DocumentBase
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+    
+    [BsonElement("metadata")]
+    public Dictionary<string, string> Metadata { get; set; } = [];
 }
