@@ -1,8 +1,7 @@
 ﻿namespace GA.Data.MongoDB.Services;
 
 using GA.Business.Core.Data.Instruments;
-using GA.Data.MongoDB.Models;
-using global::MongoDB.Driver;
+using Models;
 
 public class InstrumentService : IInstrumentService
 {
@@ -24,18 +23,33 @@ public class InstrumentService : IInstrumentService
 
     public async Task<InstrumentDocument> CreateInstrumentAsync(InstrumentsRepository.InstrumentInfo instrumentInfo)
     {
+        var timestamp = DateTime.UtcNow;
+        var stringCount = GetStringCount(instrumentInfo);
+        
         var document = new InstrumentDocument
         {
             Name = instrumentInfo.Name,
-            Tunings = instrumentInfo.Tunings.Select(t => new TuningDocument
+            Category = DetermineInstrumentCategory(instrumentInfo.Name),
+            StringCount = stringCount,
+            Family = DetermineInstrumentFamily(instrumentInfo.Name),
+            Tunings = instrumentInfo.Tunings
+                .Where(t => !string.IsNullOrWhiteSpace(t.Value.Tuning))
+                .Select(t => new TuningDocument
+                {
+                    Name = t.Value.Name,
+                    Notes = t.Value.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                    IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
+                    Description = GetTuningDescription(t.Value)
+                }).ToList(),
+            Description = $"Standard {instrumentInfo.Name} with {instrumentInfo.Tunings.Count} available tunings",
+            Metadata = new Dictionary<string, string>
             {
-                Name = t.Value.Name,
-                Notes = t.Value.Tuning.Split(' ').ToList(),
-                IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
-                Description = null
-            }).ToList(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+                ["stringCount"] = stringCount.ToString(),
+                ["hasStandardTuning"] = instrumentInfo.Tunings.Any(t => 
+                    t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase)).ToString()
+            },
+            CreatedAt = timestamp,
+            UpdatedAt = timestamp
         };
 
         await _instruments.InsertOneAsync(document);
@@ -134,5 +148,51 @@ public class InstrumentService : IInstrumentService
             update);
 
         return result.ModifiedCount > 0;
+    }
+
+    private static string DetermineInstrumentCategory(string instrumentName)
+    {
+        return instrumentName.ToLowerInvariant() switch
+        {
+            var name when name.Contains("guitar") => "Guitar",
+            var name when name.Contains("bass") => "Bass",
+            var name when name.Contains("ukulele") => "Ukulele",
+            var name when name.Contains("banjo") => "Banjo",
+            _ => "Other"
+        };
+    }
+
+    private static string DetermineInstrumentFamily(string instrumentName)
+    {
+        return instrumentName.ToLowerInvariant() switch
+        {
+            var name when name.Contains("guitar") || name.Contains("bass") || name.Contains("ukulele") || name.Contains("banjo") 
+                => "String",
+            var name when name.Contains("saxophone") || name.Contains("flute") || name.Contains("clarinet") 
+                => "Wind",
+            var name when name.Contains("drum") || name.Contains("percussion") 
+                => "Percussion",
+            _ => "Other"
+        };
+    }
+
+    private static int GetStringCount(InstrumentsRepository.InstrumentInfo instrument)
+    {
+        var standardTuning = instrument.Tunings.Values
+            .FirstOrDefault(t => t.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase));
+        
+        if (standardTuning != null)
+        {
+            return standardTuning.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+        
+        return instrument.Tunings.Values
+            .FirstOrDefault()?.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
+    }
+
+    private static string? GetTuningDescription(InstrumentsRepository.TuningInfo tuningInfo)
+    {
+        var fullNameProp = tuningInfo.TuningInstance.GetType().GetProperty("FullName");
+        return fullNameProp?.GetValue(tuningInfo.TuningInstance) as string;
     }
 }

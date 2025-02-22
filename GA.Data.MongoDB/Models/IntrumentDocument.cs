@@ -1,17 +1,18 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
-using MongoDB.Driver;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Data.MongoDB.Models;
 
-public class InstrumentDocument
+[PublicAPI]
+public class InstrumentDocument : DocumentBase
 {
-    [BsonId]
-    public ObjectId Id { get; set; }
-
     [BsonElement("name")]
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
+
+    [BsonElement("category")]
+    public required string Category { get; set; } = "Other";
+
+    [BsonElement("stringCount")]
+    public required int StringCount { get; set; }
 
     [BsonElement("tunings")]
     public List<TuningDocument> Tunings { get; set; } = [];
@@ -19,21 +20,9 @@ public class InstrumentDocument
     [BsonElement("description")]
     public string? Description { get; set; }
 
-    [BsonElement("metadata")]
-    public Dictionary<string, string> Metadata { get; set; } = [];
+    [BsonElement("family")]
+    public string? Family { get; set; } // String, Wind, Percussion, etc.
 
-    [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; }
-
-    [BsonElement("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
+    [BsonElement("range")]
+    public string? Range { get; set; } // Musical range of the instrument
 }
-
-public record SyncResult(
-    int NotesAdded,
-    int IntervalsAdded,
-    int KeysAdded,
-    int ScalesAdded,
-    int PitchClassesAdded,
-    List<string> Errors
-);
