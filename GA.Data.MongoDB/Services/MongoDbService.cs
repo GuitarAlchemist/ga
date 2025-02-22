@@ -61,4 +61,57 @@ public class MongoDbService
     
     public IMongoCollection<SetClassDocument> SetClasses => 
         _database.GetCollection<SetClassDocument>("setClasses");
+
+    public async Task CreateIndexesAsync()
+    {
+        var indexKeysDefinitionBuilder = Builders<ChordDocument>.IndexKeys;
+        
+        await Chords.Indexes.CreateOneAsync(
+            new CreateIndexModel<ChordDocument>(
+                indexKeysDefinitionBuilder
+                    .Text(x => x.SearchText)
+                    .Ascending(x => x.Name)
+                    .Ascending(x => x.Root)
+            ));
+
+        // Create vector index for embeddings if using vector search
+        await Chords.Indexes.CreateOneAsync(
+            new CreateIndexModel<ChordDocument>(
+                indexKeysDefinitionBuilder.Ascending(x => x.Embedding)
+            ));
+
+        // Repeat for other collections...
+    }
+
+    public async Task CreateRagIndexesAsync()
+    {
+        // Chord indexes
+        await Chords.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<ChordDocument>(
+                Builders<ChordDocument>.IndexKeys
+                    .Text(x => x.SearchText)
+                    .Ascending(x => x.Root)
+                    .Ascending(x => x.Quality)
+            ),
+            new CreateIndexModel<ChordDocument>(
+                Builders<ChordDocument>.IndexKeys.Ascending(x => x.Embedding)
+            )
+        });
+
+        // Scale indexes
+        await Scales.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<ScaleDocument>(
+                Builders<ScaleDocument>.IndexKeys
+                    .Text(x => x.SearchText)
+                    .Ascending(x => x.Name)
+            ),
+            new CreateIndexModel<ScaleDocument>(
+                Builders<ScaleDocument>.IndexKeys.Ascending(x => x.Embedding)
+            )
+        });
+
+        // Add similar indexes for other RAG-enabled collections...
+    }
 }
