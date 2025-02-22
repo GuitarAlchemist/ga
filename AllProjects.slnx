@@ -1,0 +1,125 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="net7.0" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/Apps/">
+    <Project Path="Apps\ga-server\GaApi\GaApi.csproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+    <Project Path="GaCLI\GaCLI.csproj" />
+  </Folder>
+  <Folder Name="/Common/">
+    <Project Path="Common\GA.Business.Config\GA.Business.Config.fsproj" />
+    <Project Path="Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+    <Project Path="Common\GA.Business.Core.Generated\GA.Business.Core.TypeProviders.fsproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+    <Project Path="Common\GA.Business.Core.UI\GA.Business.Core.UI.csproj" />
+    <Project Path="Common\GA.Business.Core\GA.Business.Core.csproj" />
+    <Project Path="Common\GA.Business.Querying\GA.Business.Querying.fsproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+    <Project Path="Common\GA.Core.UI\GA.Core.UI.csproj" />
+    <Project Path="Common\GA.Core\GA.Core.csproj" />
+    <Project Path="Common\GA.Interactive.LocalNuGet\GA.Interactive.LocalNuGet.csproj" />
+    <Project Path="Common\GA.InteractiveExtension\GA.InteractiveExtension.csproj" />
+    <Project Path="Common\GA.Interactive\GA.Interactive.csproj" />
+  </Folder>
+  <Folder Name="/Data/">
+    <Project Path="GA.Data.MongoDB\GA.Data.MongoDB.csproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+  </Folder>
+  <Folder Name="/Experiments/">
+    <Project Path="Experiments\UseGaNugetPackageExample\UseGaNugetPackageExample.csproj" />
+    <Project Path="GuitarChordProgressionMCTS\GuitarChordProgressionMCTS.csproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+  </Folder>
+  <Folder Name="/Experiments/React/" Id="1f9aa6ea-ebab-9573-82aa-6ea81c144e7a">
+    <Project Path="Experiments\React\reactapp1.client\reactapp1.client.esproj">
+      <Configuration Solution="Debug|Any CPU" Project="Debug|Any CPU|Deploy" />
+      <Configuration Solution="net7.0|Any CPU" Project="Release|Any CPU|Deploy" />
+      <Configuration Solution="Release|Any CPU" Project="Release|Any CPU|Deploy" />
+      <BuildType Solution="net7.0|*" Project="Release" />
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="Experiments\React\ReactApp1.Server\ReactApp1.Server.csproj">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
+  </Folder>
+  <Folder Name="/Notebooks/" />
+  <Folder Name="/Notebooks/Experiments/" Id="bdee034a-c799-bc7a-c77d-b3314dbce1c7">
+    <File Path="Notebooks\Experiments\agGrid.ipynb" />
+    <File Path="Notebooks\Experiments\ASP Net Core.ipynb" />
+    <File Path="Notebooks\Experiments\COVID-19.ipynb" />
+    <File Path="Notebooks\Experiments\d3js.ipynb" />
+    <File Path="Notebooks\Experiments\F Sharp.ipynb" />
+    <File Path="Notebooks\Experiments\GA.ipynb" />
+    <File Path="Notebooks\Experiments\Html link test.ipynb" />
+    <File Path="Notebooks\Experiments\Interactive.ipynb" />
+    <File Path="Notebooks\Experiments\IPlot.ipynb" />
+    <File Path="Notebooks\Experiments\Raphael.ipynb" />
+  </Folder>
+  <Folder Name="/Notebooks/GA/" Id="b23f93fa-c5fd-b215-357a-57da0b21a88a">
+    <File Path="Notebooks\GA\Assets.ipynb" />
+    <File Path="Notebooks\GA\Guitar Tunings.ipynb" />
+    <File Path="Notebooks\GA\Instruments.ipynb" />
+    <File Path="Notebooks\GA\Keys.ipynb" />
+    <File Path="Notebooks\GA\Notes.ipynb" />
+    <File Path="Notebooks\GA\Scale Modes - harmonic minor scale.ipynb" />
+    <File Path="Notebooks\GA\Scale Modes - major scale.ipynb" />
+    <File Path="Notebooks\GA\Scale Modes - melodic minor scale.ipynb" />
+    <File Path="Notebooks\GA\Ukulele Tunings.ipynb" />
+  </Folder>
+  <Folder Name="/Notebooks/GA/_Local Ga.Interactive NuGet/" Id="4c8bf354-d28a-9e4c-b051-93b5982d03fe">
+    <File Path="Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb" />
+  </Folder>
+  <Folder Name="/Notebooks/Samples/" Id="d9a8c0d7-08de-23f4-63b8-02b7beb09fc0">
+    <File Path="Notebooks\Samples\ExtensionLab-EF.ipynb" />
+  </Folder>
+  <Folder Name="/ReactComponents/" />
+  <Folder Name="/Scripts/">
+    <File Path="Scripts\BinObj.fsx" />
+    <File Path="Scripts\Consume GA NuGet packages.fsx" />
+    <File Path="Scripts\ModesConfig.fsx" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="DevNotes.txt" />
+    <File Path="README.md" />
+    <File Path="RemoveBinObj.ps1" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj" />
+    <Project Path="Tests\Common\GA.InteractiveExtension\GA.InteractiveExtension.Tests.csproj" />
+  </Folder>
+  <Folder Name="/_docs/">
+    <File Path="docs\TuningChart.pdf" />
+    <File Path="docs\Tunings.txt" />
+  </Folder>
+  <Folder Name="/_docs/Html Examples/" Id="c5304a1b-6650-134f-36a2-0e5faf1fb60c">
+    <File Path="docs\Html Examples\ag-grid - Example - RequireJS.html" />
+    <File Path="docs\Html Examples\ag-grid - Example 1.html" />
+    <File Path="docs\Html Examples\d3js Example - RequireJs.html" />
+    <File Path="docs\Html Examples\Force-graph 3d.html" />
+    <File Path="docs\Html Examples\Force-graph.html" />
+    <File Path="docs\Html Examples\Mermaid Example 1.html" />
+    <File Path="docs\Html Examples\Mermaid Example 2.html" />
+    <File Path="docs\Html Examples\Plotly Example.html" />
+    <File Path="docs\Html Examples\RequireJS Template.html" />
+    <File Path="docs\Html Examples\response.html" />
+    <File Path="docs\Html Examples\Twojs Example - RequireJs.html" />
+    <File Path="docs\Html Examples\Twojs Example.html" />
+    <File Path="docs\Html Examples\Verivio Example.html" />
+    <File Path="docs\Html Examples\VexFlow Example.html" />
+    <File Path="docs\Html Examples\VexTab - Key Signature.html" />
+    <File Path="docs\Html Examples\VexTab Example 1.html" />
+    <File Path="docs\Html Examples\VexTab Example 2.html" />
+  </Folder>
+  <Project Path="GA.WebBlazorApp\GA.WebBlazorApp.csproj" />
+</Solution>

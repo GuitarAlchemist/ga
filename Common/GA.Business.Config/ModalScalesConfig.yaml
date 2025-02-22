@@ -1,0 +1,186 @@
+﻿- PitchClassSetId: 2741
+  Name: "Major"
+  Modes:
+    - Name: "Ionian"
+      Degree: 1
+      AlternateNames: ["Major"]
+    - Name: "Dorian"
+      Degree: 2
+    - Name: "Phrygian"
+      Degree: 3
+    - Name: "Lydian"
+      Degree: 4
+    - Name: "Mixolydian"
+      Degree: 5
+      AlternateNames: ["Dominant"]
+    - Name: "Aeolian"
+      Degree: 6
+      AlternateNames: ["Natural Minor", "Pure Minor"]
+    - Name: "Locrian"
+      Degree: 7
+
+- PitchClassSetId: 2773
+  Name: "Melodic Minor"
+  Modes:
+    - Name: "Melodic Minor"
+      Degree: 1
+      AlternateNames: ["Jazz Minor"]
+    - Name: "Dorian b2"
+      Degree: 2
+      AlternateNames: ["Phrygian ♯6", "Assyrian"]
+    - Name: "Lydian Augmented"
+      Degree: 3
+    - Name: "Lydian Dominant"
+      Degree: 4
+      AlternateNames: ["Overtone", "Acoustic"]
+    - Name: "Mixolydian b6"
+      Degree: 5
+      AlternateNames: ["Melodic Major", "Hindu"]
+    - Name: "Locrian #2"
+      Degree: 6
+      AlternateNames: ["Half Diminished"]
+    - Name: "Altered"
+      Degree: 7
+      AlternateNames: ["Super Locrian", "Diminished Whole Tone"]
+
+- PitchClassSetId: 2742
+  Name: "Harmonic Minor"
+  Modes:
+    - Name: "Harmonic Minor"
+      Degree: 1
+    - Name: "Locrian #6"
+      Degree: 2
+    - Name: "Ionian #5"
+      Degree: 3
+      AlternateNames: ["Augmented Major"]
+    - Name: "Dorian #4"
+      Degree: 4
+      AlternateNames: ["Ukrainian Dorian"]
+    - Name: "Phrygian Dominant"
+      Degree: 5
+      AlternateNames: ["Spanish Phrygian", "Freygish"]
+    - Name: "Lydian #2"
+      Degree: 6
+    - Name: "Ultralocrian"
+      Degree: 7
+      AlternateNames: ["Altered Diminished"]
+
+- PitchClassSetId: 2906
+  Name: "Harmonic Major"
+  Modes:
+    - Name: "Harmonic Major"
+      Degree: 1
+    - Name: "Dorian b5"
+      Degree: 2
+    - Name: "Phrygian b4"
+      Degree: 3
+    - Name: "Lydian b3"
+      Degree: 4
+    - Name: "Mixolydian b2"
+      Degree: 5
+    - Name: "Lydian Augmented #2"
+      Degree: 6
+    - Name: "Locrian bb7"
+      Degree: 7
+
+- PitchClassSetId: 2905
+  Name: "Double Harmonic Major"
+  Modes:
+    - Name: "Double Harmonic Major"
+      Degree: 1
+      AlternateNames: ["Byzantine", "Arabic"]
+    - Name: "Lydian #2 #6"
+      Degree: 2
+    - Name: "Ultraphrygian"
+      Degree: 3
+    - Name: "Hungarian Minor"
+      Degree: 4
+      AlternateNames: ["Double Harmonic Minor"]
+    - Name: "Oriental"
+      Degree: 5
+    - Name: "Ionian Augmented #2"
+      Degree: 6
+    - Name: "Locrian bb3 bb7"
+      Degree: 7
+
+- PitchClassSetId: 2485
+  Name: "Whole Tone"
+  Modes:
+    - Name: "Whole Tone"
+      Degree: 1
+      AlternateNames: ["Augmented"]
+
+- PitchClassSetId: 2733
+  Name: "Diminished"
+  Modes:
+    - Name: "Diminished"
+      Degree: 1
+      AlternateNames: ["Whole-Half Diminished", "Octatonic"]
+    - Name: "Diminished Dominant"
+      Degree: 2
+      AlternateNames: ["Half-Whole Diminished"]
+
+- PitchClassSetId: 2477
+  Name: "Augmented"
+  Modes:
+    - Name: "Augmented"
+      Degree: 1
+    - Name: "Augmented Dominant"
+      Degree: 2
+    - Name: "Augmented Minor"
+      Degree: 3
+
+# ... (previous scales remain the same)
+
+- PitchClassSetId: 1707
+  Name: "Major Pentatonic"
+  Modes:
+    - Name: "Major Pentatonic"
+      Degree: 1
+    - Name: "Egyptian"
+      Degree: 2
+    - Name: "Blues Minor"
+      Degree: 3
+      AlternateNames: ["Man Gong"]
+    - Name: "Blues Major"
+      Degree: 4
+      AlternateNames: ["Ritsusen"]
+    - Name: "Minor Pentatonic"
+      Degree: 5
+
+- PitchClassSetId: 1709
+  Name: "Minor Pentatonic"
+  Modes:
+    - Name: "Minor Pentatonic"
+      Degree: 1
+    - Name: "Major Pentatonic"
+      Degree: 2
+    - Name: "Egyptian"
+      Degree: 3
+    - Name: "Blues Minor"
+      Degree: 4
+    - Name: "Blues Major"
+      Degree: 5
+
+- PitchClassSetId: 1451
+  Name: "In Sen"
+  Modes:
+    - Name: "In Sen"
+      Degree: 1
+    - Name: "Kokin-Joshi"
+      Degree: 2
+    - Name: "Akebono"
+      Degree: 3
+    - Name: "Iwato"
+      Degree: 4
+    - Name: "Hirajoshi"
+      Degree: 5
+
+- PitchClassSetId: 2485
+  Name: "Prometheus"
+  Modes:
+    - Name: "Prometheus"
+      Degree: 1
+    - Name: "Mystic"
+      Degree: 2
+      AlternateNames: ["Scriabin"]
