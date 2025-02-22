@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public class ChordDocument : DocumentBase
+public class ChordDocument : RagDocumentBase
 {
     [BsonElement("name")]
     public required string Name { get; set; }
@@ -20,12 +20,30 @@ public class ChordDocument : DocumentBase
     [BsonElement("notes")]
     public required List<string> Notes { get; set; }
 
-    [BsonElement("voicings")]
-    public List<int[]> Voicings { get; set; } = []; // Guitar fret positions
+    [BsonElement("relatedScales")]
+    public List<RelatedScale> RelatedScales { get; set; } = [];
 
-    [BsonElement("category")]
-    public string? Category { get; set; } // Triad, Seventh, Extended, etc.
+    [BsonElement("commonProgressions")]
+    public List<RelatedProgression> CommonProgressions { get; set; } = [];
 
-    [BsonElement("description")]
-    public string? Description { get; set; }
+    public override void GenerateSearchText()
+    {
+        var searchParts = new List<string>
+        {
+            Name,
+            Root,
+            Quality,
+            string.Join(" ", Notes),
+            string.Join(" ", RelatedScales.Select(s => s.Name)),
+            string.Join(" ", CommonProgressions.Select(p => p.Name)),
+            Description ?? string.Empty,
+            Usage ?? string.Empty,
+            string.Join(" ", Tags)
+        };
+
+        SearchText = string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
+    }
 }
+
+public record RelatedScale(string Name, List<string> Notes);
+public record RelatedProgression(string Name, List<string> Chords);
