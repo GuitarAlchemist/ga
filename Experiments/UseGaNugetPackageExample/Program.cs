@@ -35,7 +35,7 @@ foreach (var mode in modes)
 
 // ----------------------------------------------------------------
 
-var instrument = Instruments.Instrument.Ukulele;
+var instrument = InstrumentsConfig.Instruments.Ukulele;
 foreach (var prop in instrument.GetType().GetProperties())
 {
     Console.WriteLine(prop.Name);

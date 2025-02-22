@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Data.Instruments;
+﻿using GA.Business.Config;
+
+namespace GA.Business.Core.Data.Instruments;
 
 [PublicAPI]
 public sealed class InstrumentsRepository
@@ -33,7 +35,7 @@ public sealed class InstrumentsRepository
     public static readonly InstrumentsRepository Instance = new();
 
     private readonly SortedDictionary<string, InstrumentInfo> _instruments = [];
-    private readonly Config.Instruments.Config _config;
+    private readonly InstrumentsConfig.Config _config;
 
     public InstrumentsRepository()
     {
@@ -86,12 +88,12 @@ public sealed class InstrumentsRepository
     }
 
     /// <summary>
-    /// Populates the instrument from <see cref="Config.Instruments.Config"/>
+    /// Populates the instrument from <see cref="InstrumentsConfig.Config"/>
     /// </summary>
     private void PopulateInstruments()
     {
         _instruments.Clear();
-        var configType = typeof(Config.Instruments.Config);
+        var configType = typeof(InstrumentsConfig.Config);
 
         foreach (var instrumentProp in configType.GetProperties())
         {

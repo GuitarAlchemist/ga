@@ -2,15 +2,15 @@
 
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<UserSecretsId>ffdbf728-ed3e-4a60-a631-d05ac7c087b4</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
-		<PackageReference Include="MudBlazor" Version="6.19.1" />
+		<PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+		<PackageReference Include="MudBlazor" Version="7.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>

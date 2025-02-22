@@ -1,18 +1,39 @@
 ﻿namespace GA.Business.Core.AI;
 
-using Tonal;
-
 public class GaKeyPlugin
 {
     [KernelFunction, Description("get all key signatures")]
-    public static string GetKeySignatures() => string.Join(", ", KeySignature.Items.Select(signature => signature.ToString()));
+    public static string GetKeySignatures()
+    {
+        var keysBySignature = Key.Items.ToLookup(key => key.KeySignature);
 
-    [KernelFunction, Description("get all keys")]
-    public static string GetKeys() => string.Join(", ", Key.Items.Select(key => key.ToString()));
+        var sb = new StringBuilder();
+        foreach (var keySignature in KeySignature.Items)
+        {
+            if (sb.Length > 0) sb.Append("; ");
+            var description = GetDescription(keySignature);
+            var keys = string.Join(", ", keysBySignature[keySignature]);
+            sb.Append($"{description}: {keySignature.AccidentedNotes} ({keys})");
+        }
+        return sb.ToString();
+
+        string GetDescription(KeySignature item) => item.AccidentalKind switch
+        {
+            AccidentalKind.Sharp when item.AccidentalCount == 0 => "No accidentals",
+            AccidentalKind.Sharp => $"{item.AccidentalCount} sharps",
+            AccidentalKind.Flat => $"{item.AccidentalCount} flats",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    [KernelFunction("get_keys")]
+    [Description("get all musical keys")]
+    [return: Description("An array of musical keys")]
+    public static Task<List<Key>> GetKeys() => Task.FromResult(Key.Items.ToList());
     
-    [KernelFunction, Description("get accidentals in a given key signature")]
+    [KernelFunction("getAccidentedNotesInKeySignature"), Description("get accidentals in a given key signature")]
     public static string GetAccidentedNotesInKeySignature([Description("The key signature to get the accidented notes from")] KeySignature keySignature) => keySignature.AccidentedNotes.ToString();
     
-    [KernelFunction, Description("get accidetals in a given key")]
+    [KernelFunction("getAccidentedNotesInKey"), Description("get accidentals in a given key")]
     public static string GetAccidentedNotesInKey([Description("The key to get the accidentals from")] Key key) => key.KeySignature.AccidentedNotes.ToString();
 }

@@ -1,12 +1,12 @@
 ﻿import React from 'react';
 
-interface BraceletNotationProps {
+interface IBraceletNotationProps {
     scale: number;
     size?: number;
 }
 
-const BraceletNotation: React.FC<BraceletNotationProps> = ({ scale, size = 200 }) => {
-    const margin = size * 0.2; // Increased margin
+const braceletNotation: React.FC<IBraceletNotationProps> = ({ scale, size = 200 }) => {
+    const margin = size * 0.2;
     const effectiveSize = size - 2 * margin;
     const radius = effectiveSize * 0.5;
     const center = size / 2;
@@ -100,4 +100,4 @@ const BraceletNotation: React.FC<BraceletNotationProps> = ({ scale, size = 200 }
     );
 };
 
-export default BraceletNotation;
+export default braceletNotation;

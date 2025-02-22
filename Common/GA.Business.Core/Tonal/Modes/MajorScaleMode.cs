@@ -4,20 +4,18 @@ using Scales;
 using Primitives;
 
 /// <summary>
-/// A major scale mode.
+/// A major scale mode 
 /// </summary>
 /// <remarks>
-/// Mnemonic : I Don’t Particularly Like Modes A Lot
+/// Mnemonic : I Don’t Particularly Like Modes A Lot => Ionian, Dorian, etc...
+///
+/// <see cref="https://ianring.com/musictheory/scales/1709"/>
 /// </remarks>
 [PublicAPI]
 public sealed class MajorScaleMode(MajorScaleDegree degree) : ScaleMode<MajorScaleDegree>(Scale.Major, degree),
     IStaticEnumerable<MajorScaleMode>
 {
     public static MajorScaleMode Ionian => new(MajorScaleDegree.Ionian);
-
-    /// <summary>
-    /// https://ianring.com/musictheory/scales/1709
-    /// </summary>
     public static MajorScaleMode Dorian => new(MajorScaleDegree.Dorian);
     public static MajorScaleMode Phrygian => new(MajorScaleDegree.Phrygian);
     public static MajorScaleMode Lydian => new(MajorScaleDegree.Lydian);

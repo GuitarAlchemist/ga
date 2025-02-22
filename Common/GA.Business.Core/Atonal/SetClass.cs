@@ -18,29 +18,25 @@ using Primitives;
 /// Implement <see cref="IEquatable{SetClass}"/>
 /// </remarks>
 [PublicAPI]
-public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
+public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>, IStaticReadonlyCollection<SetClass>
 {
+    #region IStaticReadonlyCollection Members
+
     /// <summary>
-    /// Gets all 4096 possible pitch class sets (See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes)
+    /// Gets all set classes
     /// <br/><see cref="IReadOnlyCollection{PitchClassSet}"/>
     /// </summary>
     public static IReadOnlyCollection<SetClass> Items => AllSetClasses.Instance;
 
-    /// <summary>
-    /// Gets the <see cref="PitchClassSet"/> prime form
-    /// </summary>
-    public PitchClassSet PrimeForm { get; } = pitchClassSet.PrimeForm ?? throw new ArgumentException("Invalid pitch class set", nameof(pitchClassSet));
-    
-    /// <summary>
-    /// Gets the <see cref="Cardinality"/>
-    /// </summary>
-    public Cardinality Cardinality => PrimeForm.Cardinality;
-    
-    /// <summary>
-    /// Gets the <see cref="IntervalClassVector"/>
-    /// </summary>
-    public IntervalClassVector IntervalClassVector => PrimeForm.IntervalClassVector;
+    #endregion
 
+    /// <summary>
+    /// Gets all modal set classes
+    /// </summary>
+    public static IReadOnlyCollection<SetClass> ModalItems => [..Items.Where(@class => @class.IsModal)];
+    
+    #region Equality Members
+    
     public bool Equals(SetClass? other)
     {
         if (ReferenceEquals(null, other)) return false;
@@ -57,6 +53,35 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     public override int GetHashCode() => PrimeForm.GetHashCode();
     public static bool operator ==(SetClass? left, SetClass? right) => Equals(left, right);
     public static bool operator !=(SetClass? left, SetClass? right) => !Equals(left, right);
+
+    #endregion    
+
+    /// <summary>
+    /// Gets the <see cref="Cardinality"/>
+    /// </summary>
+    public Cardinality Cardinality => PrimeForm.Cardinality;
+    
+    /// <summary>
+    /// Gets the <see cref="IntervalClassVector"/>
+    /// </summary>
+    public IntervalClassVector IntervalClassVector => PrimeForm.IntervalClassVector;
+    
+    /// <summary>
+    /// Gets the <see cref="PitchClassSet"/> prime form
+    /// </summary>
+    public PitchClassSet PrimeForm { get; } = pitchClassSet.PrimeForm ?? throw new ArgumentException("Invalid pitch class set", nameof(pitchClassSet));
+
+    /// <summary>
+    /// Gets the <see cref="ModalFamily"/> of the set class, if it exists
+    /// </summary>
+    public ModalFamily? ModalFamily => ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
+
+    /// <summary>
+    /// Determines whether this set class represents a modal scale
+    /// </summary>
+    public bool IsModal => ModalFamily != null;
+    
+    /// <inheritdoc />
     public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}]";
    
     #region Innner Classes

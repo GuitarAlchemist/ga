@@ -20,8 +20,8 @@ const KeyboardDiagram: React.FC<KeyboardDiagramProps> = ({ scale, width = 200 })
         return whiteKeyIndex * whiteKeyWidth + whiteKeyWidth * 0.7;
     };
 
-    const playedKeyColor = "#4CAF50"; // Green color for played keys
-    const starSize = whiteKeyWidth * 0.2; // Size of the star
+    const playedKeyColor = "#1E90FF"; // Dodger Blue
+    const starSize = whiteKeyWidth * 0.24; // Size of the star
 
     const Star = ({ x, y, size, fill }: { x: number; y: number; size: number; fill: string }) => (
         <path

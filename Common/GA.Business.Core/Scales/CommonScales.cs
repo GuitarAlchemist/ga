@@ -1,64 +1,16 @@
 ﻿namespace GA.Business.Core.Scales;
 
-using Atonal;
-using Atonal.Primitives;
-using Extensions;
-using Microsoft.FSharp.Linq.RuntimeHelpers;
-using Notes;
-
-public class CommonPitchClassSets
-{
-    public static CommonPitchClassSets Instance => _lazyInstance.Value;
-    private static readonly Lazy<CommonPitchClassSets> _lazyInstance = new(() => new()); 
-    private readonly ImmutableList<PitchClassSetId> _pitchClassSetIds;
-
-    private CommonPitchClassSets()
-    {
-        _pitchClassSetIds = GetPitchClassSetIds();
-    }
-
-    private static ImmutableList<PitchClassSetId> GetPitchClassSetIds()
-    {
-        var aa = PitchClassSet.Items.Where(set => set.Cardinality == 7 && set is { IsModal: true }).ToImmutableSortedSet();
-        var aaByModalFamilies = aa.ToLookup(set => set.ModalFamily);
-        var bb =
-            aaByModalFamilies.Where(grouping => grouping.Key.IntervalClassVector.Hemitonia <= 2)
-                .OrderBy(grouping => grouping.Key.IntervalClassVector.Hemitonia);
-
-        var sb = new StringBuilder();
-        foreach (var grouping in aaByModalFamilies)
-        {
-            sb.AppendLine("========");
-            sb.AppendLine(grouping.Key.IntervalClassVector.ToString());
-            foreach (var item in grouping)
-            {
-                sb.AppendLine($"{item.Id} - https://ianring.com/musictheory/scales/{item.Id}");
-            }
-        }
-        var s = sb.ToString();
-
-        // Major scale and modes
-        var majorScalePcs = AccidentedNoteCollection.Parse("C D E F G A B").ToPitchClassSet();
-        var id = majorScalePcs.Id;
-
-        // See https://en.wikipedia.org/wiki/Heptatonic_scale
-        // See https://en.wikipedia.org/wiki/Anhemitonic_scale#Modes_of_the_ancohemitonic_heptatonic_scales_and_the_key_signature_system
-
-        return ImmutableList<PitchClassSetId>.Empty;
-    }
-
-    public sealed record PitchClassSetInfo(PitchClassSetId Id, PitchClassSetObject Object);
-
-    public abstract record PitchClassSetObject
-    {
-        public sealed record Scale() : PitchClassSetObject;
-
-        public sealed record ModalScale() : PitchClassSetObject;
-
-        public sealed record Chord() : PitchClassSetObject;
-    }
-}
-
+/// <summary>
+/// Represents a collection of common scales used in music theory and chord construction.
+/// </summary>
+/// <remarks>
+/// References:
+/// - The Guitar Grimoire: https://mikesimm.djlemonk.com/bblog/Scales-and-Modes.pdf
+/// - Chord Formulas: https://www.smithfowler.org/music/Chord_Formulas.htm
+/// - Guitar Lessons by Brian: https://www.guitarlessonsbybrian.com/chord_formula.pdf
+/// - Music Theory Chord Patterns: https://en.wikibooks.org/wiki/Music_Theory/Complete_List_of_Chord_Patterns
+/// - Jazz Chord Formulas: https://ragajunglism.org/teaching/jazz-chord-formulas/
+/// </remarks>
 public class CommonScales : IEnumerable<Scale>
 {
     public static readonly CommonScales Instance = new();
@@ -69,33 +21,35 @@ public class CommonScales : IEnumerable<Scale>
         _scaleInfos = GetScaleInfos();
     }
 
-    private static ImmutableList<ScaleInfo> GetScaleInfos()
-    {
-        var scaleInfosBuilder = ImmutableList.CreateBuilder<ScaleInfo>();
-        scaleInfosBuilder.Add(new("Major", new("C D E F G A B")));
-        scaleInfosBuilder.Add(new("Natural Minor", new("A B C D E F G")));
-        scaleInfosBuilder.Add(new("Harmonic Minor", new("A B C D E F G#")));
-        scaleInfosBuilder.Add(new("Melodic Minor", new("A B C D E F# G#")));
-        
-        //scaleByName["Pentatonic Major"] = new("C D E G A");
-        //scaleByName["Blues"] = new("C Eb F F# G Bb");
+    private static ImmutableList<ScaleInfo> GetScaleInfos() =>
+    [
+        // Basic scales
+        new("Major", new("C D E F G A B")),
+        new("Natural Minor", new("A B C D E F G")),
+        new("Harmonic Minor", new("A B C D E F G#")),
+        new("Melodic Minor", new("A B C D E F# G#")),
+        new("Major Pentatonic", new("C D E G A")),
+        new("Minor Pentatonic", new("C Eb F G Bb")),
+        new("Blues", new("C Eb F F# G Bb")),
+        // Symmetric scales
+        new("Whole Tone", new("C D E F# G# A#")),
+        new("Diminished (Half-Whole)", new("C Db Eb E F# G A Bb")),
+        new("Diminished (Whole-Half)", new("C D Eb F Gb Ab A B")),
+        new("Augmented", new("C D# E G Ab B")),
+        // Other common scales
+        new("Harmonic Major", new("C D E F G Ab B")),
+        new("Double Harmonic", new("C Db E F G Ab B")),
+        new("Neapolitan Major", new("C Db Eb F G A B")),
+        new("Neapolitan Minor", new("C Db Eb F G Ab B")),
+        new("Hungarian Minor", new("C D Eb F# G Ab B")),
+        new("Enigmatic", new("C Db E F# G# A# B")),
+    ];
 
-        //scaleByName["Whole Tone"] = new("C D E F# G# A#");
-        //scaleByName["Chromatic (Sharp)"] = new("C C# D D# E F F# G G# A A# B");
-        //scaleByName["Chromatic (Flat)"] = new("C Db D Eb E F Gb G Ab A Bb B");
+    public IEnumerator<Scale> GetEnumerator() => _scaleInfos.Select(info => info.Scale).GetEnumerator();
 
-        return scaleInfosBuilder.ToImmutable();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public IEnumerator<Scale> GetEnumerator()
-    {
-        return _scaleInfos.Select(info => info.Scale).GetEnumerator();
-    }
+    public Scale this[string name] => _scaleInfos.First(info => info.Name == name).Scale;
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    private sealed record ScaleInfo(string ScaleName, Scale Scale);
+    private record struct ScaleInfo(string Name, Scale Scale);
 }

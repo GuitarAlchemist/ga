@@ -25,4 +25,4 @@ https://www.fachords.com/fretboard-chord-tone-map/
 . Chord Construction - The 45 Divide
 https://www.guitarlessonworld.com/lessons/chord-construction/
 
-
+. 50 C# optimization tips 

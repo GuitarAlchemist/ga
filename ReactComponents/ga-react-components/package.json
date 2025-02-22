@@ -10,13 +10,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@effect-ts/core": "^0.60.5",
+    "@effect/io": "^0.41.2",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@mantine/core": "^7.13.2",
+    "@mui/material": "^5.15.12",
+    "@mui/icons-material": "^5.15.12",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.0",
     "ag-grid-react": "^32.2.1",
+    "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-icons": "^5.3.0",
     "vexchords": "^1.2.0",
     "vexflow": "^4.2.5",
     "vite-plugin-dts": "^4.2.3"

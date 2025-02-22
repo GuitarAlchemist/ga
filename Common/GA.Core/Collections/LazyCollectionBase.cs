@@ -2,7 +2,6 @@
 
 [PublicAPI]
 public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
-    where T : class
 {
     #region IReadOnlyCollection Members
     
@@ -31,5 +30,5 @@ public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
     public IReadOnlyCollection<T> Value => _lazy.Value;
 
 
-    public override string ToString() => string.Join(_separator, Value.Select(value => value.ToString()));
+    public override string ToString() => string.Join(_separator, Value.Select(item => item?.ToString()));
 }

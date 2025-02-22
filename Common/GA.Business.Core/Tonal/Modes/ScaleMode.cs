@@ -32,8 +32,7 @@ public abstract class ScaleMode
     public IReadOnlyCollection<Note> ColorNotes => _lazyColorNotes.Value;
     public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
 
-    private ImmutableList<Note> ModeColorNotes(
-        IEnumerable<ScaleModeSimpleInterval> colorTones)
+    private ImmutableList<Note> ModeColorNotes(IEnumerable<ScaleModeSimpleInterval> colorTones)
     {
         var rootNote = Notes.First();
         var tuples = new List<(Note Note, Semitones Semitones)>();
@@ -44,7 +43,7 @@ public abstract class ScaleMode
         }
         var noteBySemitones = tuples.ToImmutableDictionary(tuple => tuple.Semitones, tuple => tuple.Note);
 
-        return colorTones.Select(colorTone => noteBySemitones[colorTone.ToSemitones()]).ToImmutableList();
+        return [..colorTones.Select(colorTone => noteBySemitones[colorTone.ToSemitones()])];
     }
 }
 

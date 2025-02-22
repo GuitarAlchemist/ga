@@ -12,6 +12,13 @@ public static class PitchClassSetExtensions
     /// <param name="items">The <see cref="IEnumerable{IPitchClass}"/></param>
     /// <returns>The <see cref="PitchClassSet"/></returns>
     public static PitchClassSet ToPitchClassSet(this IEnumerable<IPitchClass> items) => new(items.Select(item => item.PitchClass));
+    
+    /// <summary>
+    /// Indicates whether the collection of objects represent a modal pitch class set
+    /// </summary>
+    /// <param name="items">The <see cref="IEnumerable{IPitchClass}"/></param>
+    /// <returns>True if modal, false otherwise</returns>
+    public static bool IsModal(this IEnumerable<IPitchClass> items) => items.ToPitchClassSet().IsModal;    
 
     /// <summary>
     /// Creates a lookup of pitch class sets, by cardinality
