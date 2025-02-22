@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Extensions;
 
-using Atonal;
 using Intervals;
 using Intervals.Primitives;
 

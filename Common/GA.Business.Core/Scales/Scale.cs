@@ -24,7 +24,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public static IReadOnlyCollection<Scale> Items =>
         PitchClassSet.Items
             .Where(set => set.Id.IsScale)
-            .Select(set => FromId(set.Id))
+            .Select(set => FromPitchClassSetId(set.Id))
             .ToLazyCollection();
 
     #endregion
@@ -35,8 +35,8 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public static Scale MelodicMinor => Minor.Melodic;
     public static Scale MajorPentatonic => new("C D E G A");
 
-    public static Scale FromId(PitchClassSetId id) => new(id.Notes);
-
+    public static Scale FromPitchClassSetId(PitchClassSetId id) => new(id.Notes);
+    
     private readonly PrintableReadOnlyCollection<Note> _notes;
 
     public Scale(params Note.Accidented[] notes)
@@ -85,9 +85,9 @@ public class Scale : IStaticReadonlyCollection<Scale>,
         public static Scale Melodic => new("A B C D E F# G#");
     }
 
-    private class LazyScaleIntervals(IReadOnlyCollection<Note> notes) : LazyCollectionBase<Interval.Simple>(GetAll(notes))
+    private class LazyScaleIntervals(IReadOnlyCollection<Note> notes) : LazyCollectionBase<Interval.Simple>(GetCollection(notes))
     {
-        private static IEnumerable<Interval.Simple> GetAll(IReadOnlyCollection<Note> notes)
+        private static IEnumerable<Interval.Simple> GetCollection(IReadOnlyCollection<Note> notes)
         {
             var startNote = notes.ElementAt(0);
             var result =

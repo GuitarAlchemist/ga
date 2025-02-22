@@ -46,6 +46,14 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
 
     #endregion
 
+    #region Equality Members
+
+    public bool Equals(KeySignature other) => _value == other._value;
+
+    public override int GetHashCode() =>  _value;
+
+    #endregion
+
     #region Static Helpers
     
     public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);

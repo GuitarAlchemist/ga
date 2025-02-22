@@ -137,11 +137,6 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// </summary>
     public string Name => string.Join(" ", _pitchClassesSet);
 
-    ///// <summary>
-    ///// Gets the <see cref="PitchClassSetIdentity"/>
-    ///// </summary>
-    //public PitchClassSetIdentity Identity { get; }
-
     /// <summary>
     /// Gets the <see cref="PitchClassSetId"/>
     /// </summary>

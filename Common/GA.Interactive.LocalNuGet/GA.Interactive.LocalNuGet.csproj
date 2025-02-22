@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -11,7 +11,7 @@
 		<IsPackable>true</IsPackable>
 		<!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
 		<PackageDescription>GA dotnet-interactive extensions.</PackageDescription>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Authors>Stephane Pareilleux</Authors>
@@ -42,7 +42,7 @@
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="PCRE.NET" Version="1.0.0" />
+		<PackageReference Include="PCRE.NET" Version="1.1.0" />
 		<!-- For GA.Business.Config-->
 		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
 		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />

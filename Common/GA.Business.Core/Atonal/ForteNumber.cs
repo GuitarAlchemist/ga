@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
+using GA.Core.Collections.Abstractions;
 using Primitives;
 
 /// <summary>
@@ -15,12 +16,21 @@ using Primitives;
 /// 
 /// Example: "3-11" represents the major and minor triads (both have the same Forte number).
 /// 
-/// This struct implements <see cref="IComparable{ForteNumber}"/>, <see cref="IComparable"/>,
-/// and <see cref="IParsable{ForteNumber}"/> for easy comparison and parsing operations.
+/// Implements <see cref="IComparable{ForteNumber}"/> | <see cref="IComparable"/> |<see cref="IParsable{ForteNumber}"/>
 /// </remarks>
 [PublicAPI]
-public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparable, IParsable<ForteNumber>
+public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparable, IParsable<ForteNumber>, IStaticReadonlyCollection<ForteNumber>
 {
+    #region IStaticReadonlyCollection Members
+
+    /// <summary>
+    /// Gets all 4096 possible pitch class sets (See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes)
+    /// <br/><see cref="IReadOnlyCollection{PitchClassSet}"/>
+    /// </summary>
+    public static IReadOnlyCollection<ForteNumber> Items => AllForteNumbers.Instance;
+
+    #endregion
+
     #region IParsable<ForteNumber> Members
 
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out ForteNumber result)
@@ -62,6 +72,12 @@ public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparabl
 
     #endregion
    
+    /// <summary>
+    /// Creates a <see cref="ForteNumber"/> instance
+    /// </summary>
+    /// <param name="cardinality">The <see cref="Cardinality"/></param>
+    /// <param name="index"><see cref="Int32"/> index</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public ForteNumber(Cardinality cardinality, int index)
     {
         if (cardinality < 0 || cardinality > 12) throw new ArgumentOutOfRangeException(nameof(cardinality), "Cardinality must be between 0 and 12.");
@@ -82,5 +98,36 @@ public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparabl
     public int Index { get; }
 
     /// <inheritdoc />
-    public override string ToString() => $"{Cardinality}-{Index}";
+    public override string ToString() => $"{Cardinality.Value}-{Index}";
+
+    #region Innner Classes
+
+    private class AllForteNumbers : LazyCollectionBase<ForteNumber>
+    {
+        public static readonly AllForteNumbers Instance = new();
+
+        private AllForteNumbers() : base(Collection(), separator: ", ")
+        {
+        }
+
+        private static IEnumerable<ForteNumber> Collection()
+        {
+            var setClassesByCardinality = SetClass.Items
+                .GroupBy(sc => sc.Cardinality)
+                .ToImmutableDictionary(g => g.Key, g => g.Count());
+           
+            return Enumerable.Range(0, 13)
+                .SelectMany(cardinality => Enumerable.Range(1, GetIndexCount(cardinality, setClassesByCardinality))
+                    .Select(index => new ForteNumber(cardinality, index)));
+
+            static int GetIndexCount(int cardinality, IReadOnlyDictionary<Cardinality, int> setClassesByCardinality) => cardinality switch
+            {
+                0 or 1 or 12 => 1,
+                _ when setClassesByCardinality.TryGetValue(cardinality, out var count) => count,
+                _ => throw new ArgumentOutOfRangeException(nameof(cardinality), "Unexpected cardinality.")
+            };
+        }
+    }
+
+    #endregion
 }

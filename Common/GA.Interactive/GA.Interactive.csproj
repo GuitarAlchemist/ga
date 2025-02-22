@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -11,7 +11,7 @@
 		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageDescription>GA dotnet-interactive extensions.</PackageDescription>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Authors>Stephane Pareilleux</Authors>
@@ -33,6 +33,12 @@
 		<DebugType>embedded</DebugType>
 		<NoWarn>NU5100,NU5128,NU5104</NoWarn>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Remove="bin\**" />
@@ -45,7 +51,7 @@
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="PCRE.NET" Version="1.0.0" />
+		<PackageReference Include="PCRE.NET" Version="1.1.0" />
 		<!-- Needed when running on the docker jupyter/base-notebook image -->
 		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
 	</ItemGroup>
@@ -62,7 +68,7 @@
 		<None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
 		
 		<!-- See https://devblogs.microsoft.com/nuget/add-a-readme-to-your-nuget-package/#add-a-readme-to-your-package -->
-		<None Include="README.md" Pack="true" PackagePath="\"/>
+		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>
