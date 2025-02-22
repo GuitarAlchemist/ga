@@ -24,7 +24,7 @@ public class PitchClassSetSyncService(ILogger<PitchClassSetSyncService> logger, 
                 IsNormalForm = pitchClassSet.IsNormalForm,
                 IsClusterFree = pitchClassSet.Id.IsClusterFree,
                 ScaleVideoUrl = pitchClassSet.ScaleVideoUrl?.ToString(),
-                ScalePageUrl = pitchClassSet.ScalePageUrl.ToString(),
+                ScalePageUrl = pitchClassSet.Id.IsScale ? pitchClassSet.ScalePageUrl.ToString() : string.Empty,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }).ToList();

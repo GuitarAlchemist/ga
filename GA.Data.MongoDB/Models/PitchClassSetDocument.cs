@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Data.MongoDB.Models;
 
+[PublicAPI]
 public class PitchClassSetDocument
 {
     [BsonId]

@@ -14,6 +14,21 @@ public class MongoDbService
         _database = client.GetDatabase(settings.Value.DatabaseName);
     }
 
+    public async Task DropAllCollectionsAsync()
+    {
+        await Notes.DeleteManyAsync(Builders<NoteDocument>.Filter.Empty);
+        await Intervals.DeleteManyAsync(Builders<IntervalDocument>.Filter.Empty);
+        await Keys.DeleteManyAsync(Builders<KeyDocument>.Filter.Empty);
+        await Scales.DeleteManyAsync(Builders<ScaleDocument>.Filter.Empty);
+        await PitchClasses.DeleteManyAsync(Builders<PitchClassDocument>.Filter.Empty);
+        await Instruments.DeleteManyAsync(Builders<InstrumentDocument>.Filter.Empty);
+        await Chords.DeleteManyAsync(Builders<ChordDocument>.Filter.Empty);
+        await Arpeggios.DeleteManyAsync(Builders<ArpeggioDocument>.Filter.Empty);
+        await Progressions.DeleteManyAsync(Builders<ProgressionDocument>.Filter.Empty);
+        await PitchClassSets.DeleteManyAsync(Builders<PitchClassSetDocument>.Filter.Empty);
+        await SetClasses.DeleteManyAsync(Builders<SetClassDocument>.Filter.Empty);
+    }
+
     public IMongoCollection<NoteDocument> Notes => 
         _database.GetCollection<NoteDocument>("notes");
     
@@ -41,10 +56,9 @@ public class MongoDbService
     public IMongoCollection<ProgressionDocument> Progressions =>
         _database.GetCollection<ProgressionDocument>("progressions");
     
-   
-    public IMongoCollection<FingeringDocument> Fingerings =>
-        _database.GetCollection<FingeringDocument>("fingerings");
-    
     public IMongoCollection<PitchClassSetDocument> PitchClassSets => 
-        _database.GetCollection<PitchClassSetDocument>("pitchClassSets");    
+        _database.GetCollection<PitchClassSetDocument>("pitchClassSets");
+    
+    public IMongoCollection<SetClassDocument> SetClasses => 
+        _database.GetCollection<SetClassDocument>("setClasses");
 }
