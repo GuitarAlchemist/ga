@@ -200,6 +200,5 @@ public class PitchClassSetTests
         var notes = set.GetDiatonicNotes();
 
         // Assert
-        var aa = 1;
     }
 }

@@ -17,16 +17,17 @@ public class Log4NetLog
         }
     }
 
-    public static void Configure(string path = "log4net.config")
+    private static void Configure(string path = "log4net.config")
     {
-        var log4netConfig = new XmlDocument();
+        var log4NetConfig = new XmlDocument();
+        if (log4NetConfig == null) throw new ArgumentNullException(nameof(log4NetConfig));
         if (File.Exists(path))
         {
-            log4netConfig.Load(File.OpenRead(path));
+            log4NetConfig.Load(File.OpenRead(path));
             var repo = LogManager.CreateRepository(
-                Assembly.GetEntryAssembly(),
+                repositoryAssembly: Assembly.GetEntryAssembly() ?? throw new InvalidOperationException(),
                 typeof(log4net.Repository.Hierarchy.Hierarchy));
-            log4net.Config.XmlConfigurator.Configure(repo, log4netConfig[nameof(log4net)]);
+            log4net.Config.XmlConfigurator.Configure(repo, log4NetConfig[nameof(log4net)] ?? throw new InvalidOperationException());
         }
 
         // Mark as configured

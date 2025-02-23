@@ -31,8 +31,6 @@ public sealed record KeyFretPositions(
     /// <exception cref="ArgumentNullException"></exception>
     public static ReadOnlyCollection<KeyFretPositions> CreateCollection(Fretboard fretboard)
     {
-        ArgumentNullException.ThrowIfNull(nameof(fretboard));
-
         var list = new List<KeyFretPositions>();
         foreach (var key in Key.Items)
         {

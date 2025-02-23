@@ -6,10 +6,19 @@ using GA.Core.Combinatorics;
 /// List of <see cref="RelativeFret"/> items, indexed by string.
 /// </summary>
 [PublicAPI]
-public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IReadOnlyList<RelativeFret>,
-                                                                              IIndexer<Str, RelativeFret>,
-                                                                              IValueObject
+public abstract class  RelativeFretVector : IEnumerable
 {
+    private readonly Variation<RelativeFret> _variation;
+    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr;
+
+    protected RelativeFretVector(Variation<RelativeFret> variation)
+    {
+        _variation = variation;
+        _relativeFretByStr = variation
+            .Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
+            .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
+    }
+
     #region IIndexer<Str, RelativeFret> Members
 
     public RelativeFret this[Str str] => _relativeFretByStr[str];
@@ -27,11 +36,6 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IR
 
     public int Value => (int) _variation.Index;
     public abstract bool IsPrime { get; }
-
-    private readonly Variation<RelativeFret> _variation;
-    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr =
-            variation.Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
-                     .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
 
     /// <summary>
     /// Create a fret vector.
@@ -68,20 +72,20 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IR
     /// A non-prime relative fret vector (e.g. "1 3 3 3 1 1" => "0 2 2 2 0 0" prime form)
     /// </summary>
     [PublicAPI]
-    public sealed class Translation(Variation<RelativeFret> variation, Func<PrimeForm> primeFormFactory) : RelativeFretVector(variation)
+    public sealed class Translation(
+        Variation<RelativeFret> variation, 
+        Func<PrimeForm> primeFormFactory) 
+            : RelativeFretVector(variation)
     {
-        /// <summary>
-        /// The translation displacement amount compared to the prime form.
-        /// </summary>
-        public int Increment => this.Min().Value;
+        public int Increment => _relativeFretByStr.Values.Min(rf => rf.Value);
 
         public override bool IsPrime => false;
 
         /// <summary>
-        /// Gets the <see cref="PrimeForm"/>.
+        /// Gets the prime form of this translation.
         /// </summary>
-        public new PrimeForm PrimeForm => primeFormFactory.Invoke();
+        public PrimeForm PrimeFormValue => primeFormFactory.Invoke();
 
-        public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeForm})";
+        public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeFormValue})";
     }
 }

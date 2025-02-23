@@ -21,14 +21,14 @@ public class CommonPitchClassSets
         var aa = PitchClassSet.Items.Where(set => set.Cardinality == 7 && set is { IsModal: true }).ToImmutableSortedSet();
         var aaByModalFamilies = aa.ToLookup(set => set.ModalFamily);
         var bb =
-            aaByModalFamilies.Where(grouping => grouping.Key.IntervalClassVector.Hemitonia <= 2)
-                .OrderBy(grouping => grouping.Key.IntervalClassVector.Hemitonia);
+            aaByModalFamilies.Where(grouping => grouping.Key is { IntervalClassVector.Hemitonia: <= 2 })
+                .OrderBy(grouping => grouping.Key!.IntervalClassVector.Hemitonia);
 
         var sb = new StringBuilder();
         foreach (var grouping in aaByModalFamilies)
         {
             sb.AppendLine("========");
-            sb.AppendLine(grouping.Key.IntervalClassVector.ToString());
+            sb.AppendLine(grouping.Key!.IntervalClassVector.ToString());
             foreach (var item in grouping)
             {
                 sb.AppendLine($"{item.Id} - https://ianring.com/musictheory/scales/{item.Id}");

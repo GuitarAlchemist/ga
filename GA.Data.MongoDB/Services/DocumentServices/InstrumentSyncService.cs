@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoDbService mongoDb) 
+public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoDbService mongoDb) 
     : ISyncService<InstrumentDocument>
 {
     public async Task<bool> SyncAsync()
@@ -32,6 +32,7 @@ public class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoD
                                 Notes = AccidentedNoteCollection.TryParse(t.Value.Tuning, null, out var notes)
                                     ? notes.Select(n => n.ToString()).ToList()
                                     : [],
+                                IsStandard = t.Value.IsStandard,
                                 Description = null
                             })
                             .ToList(),

@@ -1,24 +1,15 @@
-﻿namespace GA.Data.MongoDB.Models;
-
-using global::MongoDB.Bson.Serialization.Attributes;
+﻿namespace GA.Data.MongoDB.Models.Rag;
 
 [PublicAPI]
-public abstract class RagDocumentBase : DocumentBase
+public abstract record RagDocumentBase : DocumentBase
 {
-    [BsonElement("description")]
-    public string? Description { get; set; }
-
-    [BsonElement("usage")]
-    public string? Usage { get; set; }
-
-    [BsonElement("searchText")]
+    public string? Description { get; init; }
+    public string? Usage { get; init; }
     public string SearchText { get; set; } = string.Empty;
-
-    [BsonElement("embedding")]
     public List<float>? Embedding { get; set; }
+    public List<string> Tags { get; init; } = [];
 
-    [BsonElement("tags")]
-    public List<string> Tags { get; set; } = [];
+    protected RagDocumentBase() {}
 
     public virtual void GenerateSearchText()
     {

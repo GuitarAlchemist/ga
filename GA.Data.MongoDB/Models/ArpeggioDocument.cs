@@ -1,25 +1,14 @@
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public class ArpeggioDocument : DocumentBase
+public sealed record ArpeggioDocument : DocumentBase
 {
-    [BsonElement("name")]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
+    public required string Root { get; init; }
+    public required List<string> Intervals { get; init; }
+    public required List<string> Notes { get; init; }
+    public string? Category { get; init; }
+    public string? Description { get; init; }
 
-    [BsonElement("root")]
-    public required string Root { get; set; }
-
-    [BsonElement("intervals")]
-    public required List<string> Intervals { get; set; }
-
-    [BsonElement("notes")]
-    public required List<string> Notes { get; set; }
-
-    [BsonElement("category")]
-    public string? Category { get; set; } // Major, Minor, Diminished, etc.
-
-    [BsonElement("description")]
-    public string? Description { get; set; }
+    public ArpeggioDocument() {}
 }

@@ -1,20 +1,17 @@
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public abstract class DocumentBase
+public abstract record DocumentBase
 {
     [BsonId]
-    public ObjectId Id { get; set; }
+    public ObjectId Id { get; init; }
 
-    [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
+    public Dictionary<string, string> Metadata { get; init; } = [];
 
-    [BsonElement("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
-    
-    [BsonElement("metadata")]
-    public Dictionary<string, string> Metadata { get; set; } = [];
+    // Parameterless constructor for MongoDB serialization
+    protected DocumentBase() {}
 }
