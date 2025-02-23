@@ -33,9 +33,12 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
                 var dict = _lazy.Value;
                 if (dict.TryGetValue(key, out var value)) return value;
             }
+#pragma warning disable CS0168 // Variable is declared but never used
             catch (Exception ex)
+#pragma warning restore CS0168 // Variable is declared but never used
             {
                 Debugger.Break();
+                throw;
             }
 
             // Failure
@@ -43,7 +46,6 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
 
             Debugger.Break();
             throw new KeyNotFoundException(msg);
-
         }
     }
 

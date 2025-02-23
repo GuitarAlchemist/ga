@@ -43,6 +43,8 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     public static bool TryParse(string? s, IFormatProvider? provider, out FlatAccidental result)
     {
         result = default;
+        
+        if (string.IsNullOrWhiteSpace(s)) return false; // Failure (Empty string)
         var match = _regex.Match(s);
         if (!match.Success) return false; // Failure
 

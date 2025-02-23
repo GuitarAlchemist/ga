@@ -1,11 +1,13 @@
 ﻿namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public class IntervalDocument : DocumentBase
+public sealed record IntervalDocument : DocumentBase
 {
-    public required string Name { get; set; }
-    public required int Semitones { get; set; }
-    public required string Quality { get; set; }
-    public required int Size { get; set; }
-    public bool IsCompound { get; set; }
+    public required string Name { get; init; }
+    public required int Semitones { get; init; }
+    public required string Quality { get; init; }
+    public required int Size { get; init; }
+    public bool IsCompound { get; init; }
+
+    public IntervalDocument() {}
 }

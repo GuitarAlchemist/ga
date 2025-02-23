@@ -18,6 +18,12 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out DiatonicIntervalCollection result)
     {
+        if (s == null)
+        {
+            result = null!;
+            return false;
+        }
+        
         var builder = ImmutableList.CreateBuilder<Interval.Diatonic>();
         var segments = s.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length == 0)

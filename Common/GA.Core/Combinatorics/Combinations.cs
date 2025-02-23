@@ -9,7 +9,7 @@ using System.Linq;
 /// <typeparam name="T"></typeparam>
 [PublicAPI]
 public class Combinations<T> : IEnumerable<Variation<T>>,
-                               IIndexer<BigInteger, Variation<T>>
+                               IIndexer<BigInteger, Variation<T>> where T : notnull
 {
     #region IIndexer<BigInteger, Variation<T>>
 

@@ -9,6 +9,7 @@
 		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<NoWarn>$(NoWarn);NU5128</NoWarn>
 		<Title>Guitar Alchemist - Core business types</Title>
 		<Authors>Stephane Pareilleux</Authors>
 		<RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
@@ -45,6 +46,7 @@
 		<AssemblyVersion>1.0.17.0</AssemblyVersion>
 		<FileVersion>1.0.17.0</FileVersion>
 		<DebugType>embedded</DebugType>
+		<PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -67,7 +69,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
+		<PackageReference Include="FSharp.Configuration" Version="2.0.0">
+			<ExcludeAssets>all</ExcludeAssets>
+		</PackageReference>
+		<PackageReference Include="FSharp.Core" Version="9.0.201" />
 		<PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
 		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
 		  <PrivateAssets>all</PrivateAssets>

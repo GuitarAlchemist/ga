@@ -1,13 +1,9 @@
 ﻿using GA.Data.MongoDB.Models;
 using GA.Data.MongoDB.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace GaCLI.Commands;
 
-public class Runner(
-    ILogger<Runner> logger,
-    MusicalObjectsService syncService)
+public class Runner(MusicalObjectsService syncService)
 {
     public async Task<int> ExecuteAsync()
     {

@@ -58,7 +58,7 @@ public abstract class VariationEquivalenceCollection
                 Func<IEnumerable<T>, BigInteger> indexProvider,
                 out VariationEquivalence.Translation equivalence)
             {
-                var isPrimeForm = variation.Any(T => T.Value == 0);
+                var isPrimeForm = variation.Any(t => t.Value == 0);
                 if (isPrimeForm) // Already prime form, no Equivalence
                 {
                     equivalence = VariationEquivalence.Translation.None;
@@ -72,8 +72,7 @@ public abstract class VariationEquivalenceCollection
                     variation.Min().Value);
                 return true;
 
-                static IEnumerable<T> ToPrimeForm<T>(IEnumerable<T> items) 
-                    where T : struct, IRangeValueObject<T>
+                static IEnumerable<T> ToPrimeForm(IEnumerable<T> items) 
                 {
                     ArgumentNullException.ThrowIfNull(items);
                     

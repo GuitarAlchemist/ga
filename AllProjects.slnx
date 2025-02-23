@@ -33,6 +33,9 @@
     <Project Path="GA.Data.MongoDB\GA.Data.MongoDB.csproj">
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
     </Project>
+    <Project Path="GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj" Type="Classic C#">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
   </Folder>
   <Folder Name="/Experiments/">
     <Project Path="Experiments\UseGaNugetPackageExample\UseGaNugetPackageExample.csproj" />
@@ -40,21 +43,18 @@
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
     </Project>
   </Folder>
-  <Folder Name="/Experiments/React/" Id="1f9aa6ea-ebab-9573-82aa-6ea81c144e7a">
+  <Folder Name="/Experiments/React/">
     <Project Path="Experiments\React\reactapp1.client\reactapp1.client.esproj">
       <Configuration Solution="Debug|Any CPU" Project="Debug|Any CPU|Deploy" />
       <Configuration Solution="net7.0|Any CPU" Project="Release|Any CPU|Deploy" />
       <Configuration Solution="Release|Any CPU" Project="Release|Any CPU|Deploy" />
-      <BuildType Solution="net7.0|*" Project="Release" />
-      <Build />
-      <Deploy />
     </Project>
     <Project Path="Experiments\React\ReactApp1.Server\ReactApp1.Server.csproj">
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
     </Project>
   </Folder>
   <Folder Name="/Notebooks/" />
-  <Folder Name="/Notebooks/Experiments/" Id="bdee034a-c799-bc7a-c77d-b3314dbce1c7">
+  <Folder Name="/Notebooks/Experiments/">
     <File Path="Notebooks\Experiments\agGrid.ipynb" />
     <File Path="Notebooks\Experiments\ASP Net Core.ipynb" />
     <File Path="Notebooks\Experiments\COVID-19.ipynb" />
@@ -66,7 +66,7 @@
     <File Path="Notebooks\Experiments\IPlot.ipynb" />
     <File Path="Notebooks\Experiments\Raphael.ipynb" />
   </Folder>
-  <Folder Name="/Notebooks/GA/" Id="b23f93fa-c5fd-b215-357a-57da0b21a88a">
+  <Folder Name="/Notebooks/GA/">
     <File Path="Notebooks\GA\Assets.ipynb" />
     <File Path="Notebooks\GA\Guitar Tunings.ipynb" />
     <File Path="Notebooks\GA\Instruments.ipynb" />
@@ -77,10 +77,10 @@
     <File Path="Notebooks\GA\Scale Modes - melodic minor scale.ipynb" />
     <File Path="Notebooks\GA\Ukulele Tunings.ipynb" />
   </Folder>
-  <Folder Name="/Notebooks/GA/_Local Ga.Interactive NuGet/" Id="4c8bf354-d28a-9e4c-b051-93b5982d03fe">
+  <Folder Name="/Notebooks/GA/_Local Ga.Interactive NuGet/">
     <File Path="Notebooks\GA\_Local Ga.Interactive NuGet\Local NuGet smoke test.ipynb" />
   </Folder>
-  <Folder Name="/Notebooks/Samples/" Id="d9a8c0d7-08de-23f4-63b8-02b7beb09fc0">
+  <Folder Name="/Notebooks/Samples/">
     <File Path="Notebooks\Samples\ExtensionLab-EF.ipynb" />
   </Folder>
   <Folder Name="/ReactComponents/" />
@@ -102,7 +102,7 @@
     <File Path="docs\TuningChart.pdf" />
     <File Path="docs\Tunings.txt" />
   </Folder>
-  <Folder Name="/_docs/Html Examples/" Id="c5304a1b-6650-134f-36a2-0e5faf1fb60c">
+  <Folder Name="/_docs/Html Examples/">
     <File Path="docs\Html Examples\ag-grid - Example - RequireJS.html" />
     <File Path="docs\Html Examples\ag-grid - Example 1.html" />
     <File Path="docs\Html Examples\d3js Example - RequireJs.html" />

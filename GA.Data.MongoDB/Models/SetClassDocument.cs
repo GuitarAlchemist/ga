@@ -1,22 +1,13 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace GA.Data.MongoDB.Models;
+﻿namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public class SetClassDocument : DocumentBase
+public sealed record SetClassDocument : DocumentBase
 {
-    [BsonElement("cardinality")]
-    public required int Cardinality { get; set; }
+    public required int Cardinality { get; init; }
+    public required string IntervalClassVector { get; init; }
+    public required int PrimeFormId { get; init; }
+    public required bool IsModal { get; init; }
+    public string? ModalFamily { get; init; }
 
-    [BsonElement("intervalClassVector")]
-    public required string IntervalClassVector { get; set; }
-
-    [BsonElement("primeFormId")]
-    public required int PrimeFormId { get; set; }
-
-    [BsonElement("isModal")]
-    public required bool IsModal { get; set; }
-
-    [BsonElement("modalFamily")]
-    public string? ModalFamily { get; set; }
+    public SetClassDocument() {}
 }

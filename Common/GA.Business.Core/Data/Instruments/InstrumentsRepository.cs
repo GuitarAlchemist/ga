@@ -26,6 +26,13 @@ public sealed class InstrumentsRepository
     /// <param name="Tuning">The string representation of the tuning.</param>
     public record TuningInfo(string Name, object TuningInstance, string Tuning)
     {
+        /// <summary>
+        /// Indicates if this tuning is the standard tuning for the instrument.
+        /// </summary>
+        public bool IsStandard => 
+            Name.Equals("Standard", StringComparison.OrdinalIgnoreCase) || 
+            Name.EndsWith(".Standard", StringComparison.OrdinalIgnoreCase);
+        
         /// <inheritdoc />
         public override string ToString() => $"{Name} - {Tuning}";
     }

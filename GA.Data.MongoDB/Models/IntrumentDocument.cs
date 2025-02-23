@@ -1,28 +1,15 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace GA.Data.MongoDB.Models;
+﻿namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
-public class InstrumentDocument : DocumentBase
+public sealed record InstrumentDocument : DocumentBase
 {
-    [BsonElement("name")]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
+    public required string Category { get; init; } = "Other";
+    public required int StringCount { get; init; }
+    public List<TuningDocument> Tunings { get; init; } = [];
+    public string? Description { get; init; }
+    public string? Family { get; init; }
+    public string? Range { get; init; }
 
-    [BsonElement("category")]
-    public required string Category { get; set; } = "Other";
-
-    [BsonElement("stringCount")]
-    public required int StringCount { get; set; }
-
-    [BsonElement("tunings")]
-    public List<TuningDocument> Tunings { get; set; } = [];
-
-    [BsonElement("description")]
-    public string? Description { get; set; }
-
-    [BsonElement("family")]
-    public string? Family { get; set; } // String, Wind, Percussion, etc.
-
-    [BsonElement("range")]
-    public string? Range { get; set; } // Musical range of the instrument
+    public InstrumentDocument() {}
 }

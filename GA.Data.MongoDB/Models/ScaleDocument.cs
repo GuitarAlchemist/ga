@@ -1,41 +1,23 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿namespace GA.Data.MongoDB.Models;
 
-namespace GA.Data.MongoDB.Models;
+using Rag;
 
-public class ScaleDocument : RagDocumentBase
+[PublicAPI]
+public sealed record ScaleDocument : RagDocumentBase
 {
-    [BsonElement("name")]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
+    public required List<string> Notes { get; init; }
+    public required List<string> Intervals { get; init; }
+    public required string IntervalClassVector { get; init; }
+    public required bool IsModal { get; init; }
+    public string? ModalFamily { get; init; }
+    public required bool IsNormalForm { get; init; }
+    public required bool IsClusterFree { get; init; }
+    public string? ScaleVideoUrl { get; init; }
+    public required string ScalePageUrl { get; init; }
+    public List<string>? Modes { get; init; }
 
-    [BsonElement("notes")]
-    public required List<string> Notes { get; set; }
-
-    [BsonElement("intervals")]
-    public required List<string> Intervals { get; set; }
-
-    [BsonElement("intervalClassVector")]
-    public required string IntervalClassVector { get; set; }
-
-    [BsonElement("isModal")]
-    public required bool IsModal { get; set; }
-
-    [BsonElement("modalFamily")]
-    public string? ModalFamily { get; set; }
-
-    [BsonElement("isNormalForm")]
-    public required bool IsNormalForm { get; set; }
-
-    [BsonElement("isClusterFree")]
-    public required bool IsClusterFree { get; set; }
-
-    [BsonElement("scaleVideoUrl")]
-    public string? ScaleVideoUrl { get; set; }
-
-    [BsonElement("scalePageUrl")]
-    public required string ScalePageUrl { get; set; }
-
-    [BsonElement("modes")]
-    public List<string>? Modes { get; set; }
+    public ScaleDocument() {}
 
     public override void GenerateSearchText()
     {

@@ -1,5 +1,4 @@
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Data.MongoDB.Models;
 
@@ -13,8 +12,8 @@ public class PitchClassSetDocument
     public int Value { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Cardinality { get; set; }
-    public List<int> PitchClasses { get; set; } = new();
-    public List<string> Notes { get; set; } = new();
+    public List<int> PitchClasses { get; set; } = [];
+    public List<string> Notes { get; set; } = [];
     public string IntervalClassVector { get; set; } = string.Empty;
     public string? ModalFamily { get; set; }
     public bool IsModal { get; set; }

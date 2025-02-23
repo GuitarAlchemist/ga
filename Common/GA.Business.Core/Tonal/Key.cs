@@ -84,12 +84,10 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
             KeySignature.AccidentedNotes
                 .Select(note => note.NaturalNote)
                 .ToImmutableHashSet();
-        var items = KeySignature.Value < 0
-            ? GetFlatNotes(Root, accidentedNotes).ToImmutableList()
-            : GetSharpNotes(Root, accidentedNotes).ToImmutableList();
-        var result = new ReadOnlyItems<KeyNote>(items);
-
-        return result;
+        return new ReadOnlyItems<KeyNote>(
+            KeySignature.Value < 0
+                ? GetFlatNotes(Root, accidentedNotes).ToImmutableList()
+                : GetSharpNotes(Root, accidentedNotes).ToImmutableList());
 
         static IEnumerable<KeyNote> GetSharpNotes(
             KeyNote root,

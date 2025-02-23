@@ -260,7 +260,9 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Simple result)
         {
-            result = default!;
+            result = null!;
+            
+            if (string.IsNullOrWhiteSpace(s)) return false; // Failure (Empty string)
 
             var regex = SimpleIntervalRegex();
             var match = regex.Match(s);
@@ -511,7 +513,8 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Compound result)
         {
-            result = default!;
+            result = null!;
+            if (string.IsNullOrWhiteSpace(s)) return false; // Failure (Empty string)
 
             var regex = CompoundIntervalRegex();
             var match = regex.Match(s);
