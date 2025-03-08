@@ -16,6 +16,9 @@ public sealed record ScaleDocument : RagDocumentBase
     public string? ScaleVideoUrl { get; init; }
     public required string ScalePageUrl { get; init; }
     public List<string>? Modes { get; init; }
+    public string? Description { get; init; }
+    public string? Usage { get; init; }
+    public List<string> Tags { get; init; } = [];
 
     public ScaleDocument() {}
 

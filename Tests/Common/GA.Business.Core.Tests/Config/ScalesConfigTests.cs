@@ -2,7 +2,6 @@
 using GA.Business.Core.Config;
 using System.Collections.Generic;
 using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Scales;
 
 [TestFixture]
 public class ScaleConfigTests

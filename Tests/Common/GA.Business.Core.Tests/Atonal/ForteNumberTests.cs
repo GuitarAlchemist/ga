@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Tests.Atonal;
 
 using Core.Atonal;
-using global::GA.Business.Core.Scales;
 
 internal class ForteNumberTests
 {

@@ -5,7 +5,6 @@ using Chords;
 using Core.Atonal;
 using Core.Atonal.Primitives;
 using Extensions;
-using GA.Business.Core.Scales;
 using Intervals;
 
 [TestFixture]

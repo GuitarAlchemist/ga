@@ -1,8 +1,6 @@
 ﻿namespace GA.Business.Core.Chords;
 
 using Atonal;
-using Extensions;
-using Notes;
 using Scales;
 
 public class ChordBuilderEx

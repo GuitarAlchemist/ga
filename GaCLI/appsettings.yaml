@@ -1,0 +1,11 @@
+# Embedding Service Configuration
+EmbeddingService:
+  # Available options: OpenAi | HuggingFace | AzureOpenAi | Cohere | OnnxLocal | Ollama
+  ServiceType: Ollama
+  
+  # Model name - ensure you have pulled this model first using:
+  # ollama pull llama2
+  ModelName: llama2
+  
+  # Default Ollama endpoint - change if running on different port/host
+  OllamaHost: http://localhost:11434

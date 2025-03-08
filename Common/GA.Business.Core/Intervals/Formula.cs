@@ -2,7 +2,6 @@
 
 using Atonal;
 using Extensions;
-using Primitives;
 
 public class Formula : IReadOnlyCollection<FormulaIntervalBase>, IEquatable<Formula>
 {
