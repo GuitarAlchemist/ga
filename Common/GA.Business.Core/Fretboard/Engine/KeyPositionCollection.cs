@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Fretboard.Engine;
 
-using Notes;
 using Primitives;
 using Tonal;
 

@@ -53,6 +53,13 @@
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
     </Project>
   </Folder>
+  <Folder Name="/Experiments/WebGPU/">
+    <Project Path="Experiments\WebGPU\reactapp-webgpu\reactapp-webgpu.esproj">
+      <Configuration Solution="Debug|Any CPU" Project="Debug|Any CPU|Deploy" />
+      <Configuration Solution="net7.0|Any CPU" Project="Release|Any CPU|Deploy" />
+      <Configuration Solution="Release|Any CPU" Project="Release|Any CPU|Deploy" />
+    </Project>
+  </Folder>
   <Folder Name="/Notebooks/" />
   <Folder Name="/Notebooks/Experiments/">
     <File Path="Notebooks\Experiments\agGrid.ipynb" />

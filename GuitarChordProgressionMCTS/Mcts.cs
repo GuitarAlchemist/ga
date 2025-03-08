@@ -3,7 +3,7 @@
 public class Mcts(State initialState, int maxIterations)
 {
     private static readonly Random _random = new();
-    private Node Root { get; } = new(initialState, null);
+    private Node? Root { get; } = new(initialState, null);
     private int MaxIterations { get; } = maxIterations;
 
     // Run the MCTS algorithm
@@ -11,7 +11,7 @@ public class Mcts(State initialState, int maxIterations)
     {
         for (int i = 0; i < MaxIterations; i++)
         {
-            Node selectedNode = Selection(Root); // Select the node to expand
+            Node? selectedNode = Selection(Root); // Select the node to expand
             if (!selectedNode.State.IsTerminal())
             {
                 selectedNode = Expansion(selectedNode); // Expand the node if it's not terminal
@@ -26,7 +26,7 @@ public class Mcts(State initialState, int maxIterations)
 
 
     // Selection phase: select the best node that is not fully expanded
-    private Node Selection(Node node)
+    private Node? Selection(Node? node)
     {
         while (!node.State.IsTerminal() && node.IsFullyExpanded())
         {
@@ -36,7 +36,7 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Expansion phase: Expand the tree by adding a child node with the next possible chord
-    private Node Expansion(Node node)
+    private Node? Expansion(Node? node)
     {
         var possibleStates = node.State.GetPossibleNextStates();
     
@@ -45,7 +45,7 @@ public class Mcts(State initialState, int maxIterations)
             // If the child node is not already present, add it to the tree
             if (!node.Children.Exists(n => n.State.Sequence.SequenceEqual(state.Sequence)))
             {
-                Node childNode = new Node(state, node);
+                Node? childNode = new Node(state, node);
                 node.Children.Add(childNode);
                 Console.WriteLine("Expanding Node, New Sequence Length: " + childNode.State.Sequence.Count);
                 return childNode;
@@ -57,7 +57,7 @@ public class Mcts(State initialState, int maxIterations)
 
 
     // Simulation (rollout) phase with GA optimization
-    private double Simulation(Node node)
+    private double Simulation(Node? node)
     {
         var tempState = new State(node.State.Sequence, node.State.MaxLength, node.State.Key, node.State.MelodyNotes);
 
@@ -92,7 +92,7 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Backpropagation phase
-    private void Backpropagation(Node node, double reward)
+    private void Backpropagation(Node? node, double reward)
     {
         while (node != null)
         {
@@ -103,9 +103,9 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Get the best child node based on UCT value
-    private Node GetBestChild(Node node, double explorationParam)
+    private Node? GetBestChild(Node? node, double explorationParam)
     {
-        Node bestChild = null;
+        Node? bestChild = null;
         double bestValue = double.MinValue;
 
         foreach (var child in node.Children)

@@ -1,6 +1,5 @@
 ﻿using GA.Data.MongoDB.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace GA.Data.MongoDB.Extensions;
 

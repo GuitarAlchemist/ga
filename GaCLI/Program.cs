@@ -1,21 +1,23 @@
-﻿using GA.Business.Core.AI;
-using GA.Data.MongoDB.Configuration;
+﻿using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Extensions;
 using GA.Data.MongoDB.Services.Embeddings;
-using GaCLI;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using static System.Console;
+using GA.Business.Core.ChatBot;
 
-var configurationBuilder = new ConfigurationBuilder();
-var configuration = configurationBuilder
+var configurationBuilder = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddYamlFile("appsettings.yaml", optional: false, reloadOnChange: true)
+    .AddYamlFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.yaml", optional: true, reloadOnChange: true)
     .AddUserSecrets<Program>()
-    .Build();
+    .AddEnvironmentVariables();
+
+var configuration = configurationBuilder.Build();
 
 // Add MongoDB sync option
 if (args.Length > 0 && args[0] == "sync-mongodb")
@@ -42,19 +44,29 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
 
     // Add required services
     services.AddLogging(c => c.AddConsole());
+    services.AddHttpClient();
     services.AddTransient<MongoDbService>();
     services.AddSyncServices();
     services.AddTransient<Runner>();
     
-    // Add embedding service
-    services.AddTransient<IEmbeddingService, OpenAiEmbeddingService>();
-    
-    // Add OpenAI configuration
-    services.Configure<OpenAiSettings>(options =>
+    // Configure embedding services
+    services.Configure<EmbeddingServiceSettings>(options =>
     {
-        options.ApiKey = config["OpenAI:ApiKey"] 
-                         ?? throw new InvalidOperationException("OpenAI API key not found in configuration");
-        options.ModelName = "text-embedding-ada-002";
+        var embeddingSection = config.GetSection("EmbeddingService");
+        options.ServiceType = Enum.Parse<EmbeddingServiceType>(
+            embeddingSection["ServiceType"] ?? "OpenAi");
+        options.ApiKey = embeddingSection["ApiKey"]; // Optional for Ollama
+        options.ModelName = embeddingSection["ModelName"];
+        options.OllamaHost = embeddingSection["OllamaHost"];
+    });
+    
+    services.AddSingleton<EmbeddingServiceFactory>();
+    services.AddScoped<IEmbeddingService>(sp => 
+        sp.GetRequiredService<EmbeddingServiceFactory>().CreateService());
+
+    // Add GuitarAlchemist ChatBot
+    services.AddGuitarAlchemistChatBot(options => {
+        config.GetSection("ChatBot").Bind(options);
     });
 
     var kernel = builder.Build();

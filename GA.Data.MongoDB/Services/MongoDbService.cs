@@ -49,7 +49,7 @@ public class MongoDbService
     public IMongoCollection<PitchClassDocument> PitchClasses => _database.GetCollection<PitchClassDocument>("pitchClasses");
     public IMongoCollection<InstrumentDocument> Instruments => _database.GetCollection<InstrumentDocument>("instruments");
     public IMongoCollection<ChordDocument> Chords => _database.GetCollection<ChordDocument>("chords");
-    public IMongoCollection<ChordRagDocument> ChordsRag => _database.GetCollection<ChordRagDocument>("chordsRag");
+    public IMongoCollection<ChordRagEmbedding> ChordsRag => _database.GetCollection<ChordRagEmbedding>("chordsRag");
     public IMongoCollection<ArpeggioDocument> Arpeggios => _database.GetCollection<ArpeggioDocument>("arpeggios");
     public IMongoCollection<ProgressionDocument> Progressions => _database.GetCollection<ProgressionDocument>("progressions");
     public IMongoCollection<PitchClassSetDocument> PitchClassSets => _database.GetCollection<PitchClassSetDocument>("pitchClassSets");
@@ -163,28 +163,33 @@ public class MongoDbService
                     .Ascending(x => x.IntervalClassVector)
             )
         );
+
+        // Add vector search index for RAG embeddings
+        var indexKeysDefinition = Builders<ChordRagEmbedding>.IndexKeys
+            .Ascending(x => x.Embedding);
+        await ChordsRag.Indexes.CreateOneAsync(
+            new CreateIndexModel<ChordRagEmbedding>(indexKeysDefinition));
     }
 
     public async Task CreateRagIndexesAsync()
     {
-        // Chord RAG indexes
         await ChordsRag.Indexes.CreateManyAsync([
-            new CreateIndexModel<ChordRagDocument>(
-                Builders<ChordRagDocument>.IndexKeys
+            new CreateIndexModel<ChordRagEmbedding>(
+                Builders<ChordRagEmbedding>.IndexKeys
                     .Ascending(x => x.Name)
                     .Ascending(x => x.Root)
                     .Ascending(x => x.Quality)
             ),
-            new CreateIndexModel<ChordRagDocument>(
-                Builders<ChordRagDocument>.IndexKeys
+            new CreateIndexModel<ChordRagEmbedding>(
+                Builders<ChordRagEmbedding>.IndexKeys
                     .Ascending(x => x.Embedding)
             ),
-            new CreateIndexModel<ChordRagDocument>(
-                Builders<ChordRagDocument>.IndexKeys
+            new CreateIndexModel<ChordRagEmbedding>(
+                Builders<ChordRagEmbedding>.IndexKeys
                     .Ascending("RelatedScales.Name")
             ),
-            new CreateIndexModel<ChordRagDocument>(
-                Builders<ChordRagDocument>.IndexKeys
+            new CreateIndexModel<ChordRagEmbedding>(
+                Builders<ChordRagEmbedding>.IndexKeys
                     .Ascending("CommonProgressions.Name")
             )
         ]);

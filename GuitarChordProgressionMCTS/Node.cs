@@ -4,7 +4,7 @@ public class Node(State state, Node? parent)
 {
     public State State { get; set; } = state;
     public Node? Parent { get; set; } = parent;
-    public List<Node> Children { get; set; } = [];
+    public List<Node?> Children { get; set; } = [];
     public int Visits { get; set; } = 0;
     public double TotalScore { get; set; } = 0;
 

@@ -1,5 +1,4 @@
-﻿using GA.Data.MongoDB.Models;
-using GA.Data.MongoDB.Services;
+﻿using GA.Data.MongoDB.Services;
 
 namespace GaCLI.Commands;
 

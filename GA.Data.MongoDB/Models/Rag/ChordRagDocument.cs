@@ -3,7 +3,7 @@
 using References;
 
 [PublicAPI]
-public sealed record ChordRagDocument : RagDocumentBase
+public sealed record ChordRagEmbedding : RagDocumentBase
 {
     public required string Name { get; init; }
     public required string Root { get; init; }
