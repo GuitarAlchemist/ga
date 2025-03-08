@@ -4,13 +4,15 @@ interface WebGPUBraceletNotationProps {
     scale: number;  // This is PitchClassSetId value
     size?: number;
     colorTones?: { [key: number]: string };
+    rootPosition?: number; // Add this new prop
 }
 
-export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({ 
-    scale, 
-    size = 600,
-    colorTones = {} 
-}) => {
+export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
+                                                                                  scale,
+                                                                                  size = 600,
+                                                                                  colorTones = {},
+                                                                                  rootPosition // Position relative to Ionian (0 = Ionian, 1 = Dorian, etc.)
+                                                                              }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const textCanvasRef = useRef<HTMLCanvasElement>(null); // New canvas for text
     const animationFrameRef = useRef<number>();
@@ -36,23 +38,35 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
             if (!ctx) return;
 
             ctx.clearRect(0, 0, size, size);
-            ctx.font = `${size * 0.03}px Arial`;
+            ctx.font = `${size * 0.05}px Arial`; // Increased from 0.03 to 0.05
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#1E90FF'; // Match the blue color of color tones
 
             const radius = size * 0.4;
             const center = size / 2;
-            const labelRadius = radius + size * 0.08; // Position labels slightly outside the points
+            const labelRadius = radius + size * 0.04;
 
             for (let i = 0; i < 12; i++) {
                 if (i in colorTones) {
                     const angle = (i * 30 - 90) * (Math.PI / 180);
                     const x = center + labelRadius * Math.cos(angle);
                     const y = center + labelRadius * Math.sin(angle);
-                    
+
                     ctx.fillText(colorTones[i], x, y);
                 }
+            }
+
+            // Draw root position label
+            if (rootPosition !== undefined) {
+                ctx.font = `bold ${size * 0.03}px Arial`; // Smaller font for "R"
+                ctx.fillStyle = '#FFFFFF'; // White color
+                
+                const rootAngle = (rootPosition * 30 - 90) * (Math.PI / 180);
+                const rootX = center + radius * Math.cos(rootAngle);
+                const rootY = center + radius * Math.sin(rootAngle);
+
+                ctx.fillText('R', rootX, rootY);
             }
         };
 
@@ -63,7 +77,7 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
         return () => {
             textCanvas.remove();
         };
-    }, [scale, size, colorTones]);
+    }, [scale, size, colorTones, rootPosition]);
 
     useEffect(() => {
         const initWebGPU = async () => {
@@ -122,7 +136,7 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
                 const centerX = center + radius * Math.cos(angle);
                 const centerY = center + radius * Math.sin(angle);
                 const isActive = (scale & (1 << i)) !== 0;
-                
+
                 // Determine color based on whether it's a color tone
                 let color: [number, number, number];
                 if (!isActive) {
@@ -282,7 +296,7 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
                 const currentTime = Date.now();
                 const elapsedTime = (currentTime - startTimeRef.current) / 1000; // Convert to seconds
                 const basePointSize = size * 0.04;
-                
+
                 // Create point vertices with animation
                 const pointVertices = new Float32Array(12 * pointSegments * 3 * 5);
 
@@ -291,7 +305,7 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
                     const centerX = center + radius * Math.cos(angle);
                     const centerY = center + radius * Math.sin(angle);
                     const isActive = (scale & (1 << i)) !== 0;
-                    
+
                     // Determine color based on whether it's a color tone
                     let color: [number, number, number];
                     if (!isActive) {
@@ -303,7 +317,7 @@ export const WebGpuBraceletNotation: React.FC<WebGPUBraceletNotationProps> = ({
                     }
 
                     // Animate size only for active circles
-                    const animatedSize = isActive 
+                    const animatedSize = isActive
                         ? basePointSize * (1 + 0.2 * Math.sin(elapsedTime * 3))
                         : basePointSize;
 
