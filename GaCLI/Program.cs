@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using static System.Console;
-using GA.Business.Core.ChatBot;
 
 var configurationBuilder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -65,9 +64,9 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
         sp.GetRequiredService<EmbeddingServiceFactory>().CreateService());
 
     // Add GuitarAlchemist ChatBot
-    services.AddGuitarAlchemistChatBot(options => {
-        config.GetSection("ChatBot").Bind(options);
-    });
+    // services.AddGuitarAlchemistChatBot(options => {
+    //     config.GetSection("ChatBot").Bind(options);
+    // });
 
     var kernel = builder.Build();
 
