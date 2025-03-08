@@ -1,4 +1,5 @@
-import {WebGPUCanvas2} from "./components/WebGPUCanvas2.tsx";
+import {WebGpuBraceletNotation} from "./components/WebGpuBraceletNotation.tsx";
+import WebGPUModesGrid from "./components/WebGPUModesGrid.tsx";
 
 function App() {
     return (
@@ -11,7 +12,8 @@ function App() {
             padding: '20px'
         }}>
             <h1 style={{ color: '#fff', marginBottom: '20px' }}>Guitar stuff</h1>
-            <WebGPUCanvas2 scale={2741}/>
+            <WebGpuBraceletNotation scale={2741} size={300}/>
+            <WebGPUModesGrid />
         </div>
     );
 }
