@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import {WebGpuBraceletNotation} from './WebGpuBraceletNotation';
+import { BrightnessSmiley, BrightnessLevel } from './BrightnessSmiley';
 
 interface WebGPUModesGridProps {
     size?: number;
@@ -66,7 +67,10 @@ const WebGPUModesGrid: React.FC<WebGPUModesGridProps> = ({size = 800}) => {
             symmetryPoints: [],
             colorTones: {
                 1: "♭2",
-                4: "♭5"
+                3: "♭3",
+                6: "♭5",
+                8: "♭6",
+                10: "♭7"
             },
             rootPosition: 11,
             romanNumeral: "vii°",
@@ -272,7 +276,7 @@ const WebGPUModesGrid: React.FC<WebGPUModesGridProps> = ({size = 800}) => {
         mode.symmetryPoints = calculateSymmetryPoints(mode.scale);
     });
 
-    const notationSize = Math.min(size / 3 - 40, 300);
+    const notationSize = Math.min(size / 3 - 60, 260);  // Reduced from 300
 
     return (
         <div style={{
@@ -336,7 +340,10 @@ const WebGPUModesGrid: React.FC<WebGPUModesGridProps> = ({size = 800}) => {
                         gap: '8px',
                         alignItems: 'center'
                     }}>
-                        <span>{mode.brightness}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span>{mode.brightness}</span>
+                            <BrightnessSmiley brightness={mode.brightness as BrightnessLevel} size="1.2em" />
+                        </span>
                         <span style={{
                             color: mode.tension === "○" ? "#00aa00" : "#ff6600",
                             fontSize: '12px'
@@ -378,6 +385,8 @@ const WebGPUModesGrid: React.FC<WebGPUModesGridProps> = ({size = 800}) => {
                         size={notationSize}
                         colorTones={mode.colorTones}
                         rootPosition={mode.rootPosition}
+                        hoveredPosition={hoveredFromScale}
+                        onPositionHover={setHoveredFromScale}
                     />
                     {/* Move the explanation inside the card */}
                     {shouldHighlightMode(mode) && nextModeExplanations[mode.scale] && (
