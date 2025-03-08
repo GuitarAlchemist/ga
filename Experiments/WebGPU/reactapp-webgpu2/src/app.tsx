@@ -1,4 +1,4 @@
-import {WebGPUCanvas} from "./components/WebGPUCanvas.tsx";
+import {WebGPUCanvas2} from "./components/WebGPUCanvas2.tsx";
 
 function App() {
     return (
@@ -11,7 +11,7 @@ function App() {
             padding: '20px'
         }}>
             <h1 style={{ color: '#fff', marginBottom: '20px' }}>Guitar stuff</h1>
-            <WebGPUCanvas />
+            <WebGPUCanvas2 scale={2741}/>
         </div>
     );
 }
