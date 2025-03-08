@@ -12,7 +12,6 @@ function App() {
             padding: '20px'
         }}>
             <h1 style={{ color: '#fff', marginBottom: '20px' }}>Guitar stuff</h1>
-            <WebGpuBraceletNotation scale={2741} size={300}/>
             <WebGPUModesGrid />
         </div>
     );
