@@ -3,7 +3,8 @@ import './App.css';
 import WebGPUMonohedron2 from "./components/WebGpuMonohedron2.tsx";
 
 function App() {
-    const [size, setSize] = useState(0.25);
+    const [size, setSize] = useState(0.15);
+    const [bumpiness, setBumpiness] = useState(0.01);
     const [isFullScreen, setIsFullScreen] = useState(false);
 
     const toggleFullScreen = async () => {
@@ -35,6 +36,7 @@ function App() {
                     alignItems: 'center',
                     gap: '20px',
                 }}>
+                    {/* Size Control */}
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -48,13 +50,13 @@ function App() {
                             color: '#fff',
                             whiteSpace: 'nowrap'
                         }}>
-                            Size: {size.toFixed(2)}
+                            Zoom: {size.toFixed(2)}
                         </label>
                         <input
                             id="size-slider"
                             type="range"
-                            min="0.1"
-                            max="0.5"
+                            min="0.2"
+                            max="16.0"    // Changed from 1.0 to 16.0
                             step="0.01"
                             value={size}
                             onChange={(e) => setSize(parseFloat(e.target.value))}
@@ -64,44 +66,69 @@ function App() {
                             }}
                         />
                     </div>
+
+                    {/* Bumpiness Control */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        backgroundColor: 'rgba(245, 245, 245, 0.1)',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                    }}>
+                        <label htmlFor="bump-slider" style={{ 
+                            fontSize: '14px',
+                            color: '#fff',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            Bump: {bumpiness.toFixed(3)}
+                        </label>
+                        <input
+                            id="bump-slider"
+                            type="range"
+                            min="0.0"
+                            max="0.05"
+                            step="0.001"
+                            value={bumpiness}
+                            onChange={(e) => setBumpiness(parseFloat(e.target.value))}
+                            style={{
+                                width: '150px',
+                                cursor: 'pointer'
+                            }}
+                        />
+                    </div>
+
                     <button
                         onClick={toggleFullScreen}
                         style={{
-                            padding: '8px 16px',
-                            backgroundColor: '#646cff',
-                            color: 'white',
+                            backgroundColor: 'rgba(245, 245, 245, 0.1)',
                             border: 'none',
-                            borderRadius: '4px',
+                            color: '#fff',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
-                            fontSize: '14px',
-                            transition: 'background-color 0.2s'
+                            fontSize: '14px'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4a50bf'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#646cff'}
                     >
                         {isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}
                     </button>
                 </div>
             </div>
             <div style={{
-                position: 'absolute',
-                top: '80px',
-                left: '20px',
-                right: '20px',
-                bottom: '20px',
+                width: '100%',
+                height: 'calc(100vh - 100px)',
                 overflow: 'hidden',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
             }}>
-                <div className="chrome-container">
-                    <WebGPUMonohedron2 
-                        width={window.innerWidth - 40} 
-                        height={window.innerHeight - 100}
-                        size={size}
-                        fullScreen={isFullScreen}
-                    />
-                </div>
+                <WebGPUMonohedron2 
+                    width={window.innerWidth - 40} 
+                    height={window.innerHeight - 100}
+                    size={size}
+                    bumpiness={bumpiness}
+                    fullScreen={isFullScreen}
+                />
             </div>
         </div>
     );
