@@ -10,6 +10,20 @@ export default defineConfig({
         }
     },
     server: {
-        port: 5174
+        port: 5174,
+        watch: {
+            usePolling: true,
+            interval: 100,
+        },
+        headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp'
+        },
+        cors: {
+            origin: '*',
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            preflightContinue: false,
+            optionsSuccessStatus: 204
+        }
     }
-})
+});
