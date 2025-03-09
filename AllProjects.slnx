@@ -58,6 +58,10 @@
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
       <Configuration Solution="Release|Any CPU" Project="Debug|Any CPU" />
     </Project>
+    <Project Path="Experiments\WebGPU\reactapp-webgpu3\reactapp-webgpu3.esproj" Type="{54A90642-561A-4BB1-A94E-469ADEE60C69}">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+      <Configuration Solution="Release|Any CPU" Project="Debug|Any CPU" />
+    </Project>
     <Project Path="Experiments\WebGPU\reactapp-webgpu\reactapp-webgpu.esproj">
       <Configuration Solution="Debug|Any CPU" Project="Debug|Any CPU|Deploy" />
       <Configuration Solution="net7.0|Any CPU" Project="Release|Any CPU|Deploy" />
