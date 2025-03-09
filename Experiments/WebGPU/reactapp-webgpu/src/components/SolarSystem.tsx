@@ -171,32 +171,33 @@ fn fragment_main(input: VertexOutput) -> @location(0) vec4<f32> {
                     speedMultiplier: 0.53,
                     tailLength: 60
                 },
+                // Adjust outer planets to be more visible
                 {
                     name: 'Jupiter',
                     color: CELESTIAL_COLORS.JUPITER,
-                    baseRadius: 0.7,
-                    speedMultiplier: 0.084,
+                    baseRadius: 0.6,     // Reduced from 0.7
+                    speedMultiplier: 0.3, // Increased from 0.084
                     tailLength: 70
                 },
                 {
                     name: 'Saturn',
                     color: CELESTIAL_COLORS.SATURN,
-                    baseRadius: 0.85,
-                    speedMultiplier: 0.034,
+                    baseRadius: 0.7,    // Reduced from 0.85
+                    speedMultiplier: 0.2, // Increased from 0.034
                     tailLength: 80
                 },
                 {
                     name: 'Uranus',
                     color: CELESTIAL_COLORS.URANUS,
-                    baseRadius: 1.0,
-                    speedMultiplier: 0.012,
+                    baseRadius: 0.8,    // Reduced from 1.0
+                    speedMultiplier: 0.15, // Increased from 0.012
                     tailLength: 90
                 },
                 {
                     name: 'Neptune',
                     color: CELESTIAL_COLORS.NEPTUNE,
-                    baseRadius: 1.15,
-                    speedMultiplier: 0.006,
+                    baseRadius: 0.9,    // Reduced from 1.15
+                    speedMultiplier: 0.1, // Increased from 0.006
                     tailLength: 100
                 }
             ];
