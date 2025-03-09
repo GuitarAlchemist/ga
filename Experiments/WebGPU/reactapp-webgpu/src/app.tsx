@@ -1,17 +1,18 @@
-import SolarSystem from "./components/SolarSystem.tsx";
+import SolarSystemSwitcher from "./components/SolarSystemSwitcher";
+import './App.css';
 
 function App() {
     return (
-        <div className="App" style={{ 
-            backgroundColor: '#000', 
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '20px'
-        }}>
-            <h1 style={{ color: '#fff', marginBottom: '20px' }}>WebGPU Solar System</h1>
-            <SolarSystem />
+        <div className="App">
+            <h1 style={{
+                color: '#fff',
+                margin: '0 0 20px 0',
+                width: '100%',
+                textAlign: 'center'
+            }}>WebGPU Solar System</h1>
+            <div className="canvas-container">
+                <SolarSystemSwitcher />
+            </div>
         </div>
     );
 }

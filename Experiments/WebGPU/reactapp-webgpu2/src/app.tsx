@@ -1,5 +1,6 @@
-import {WebGpuBraceletNotation} from "./components/WebGpuBraceletNotation.tsx";
 import WebGPUModesGrid from "./components/WebGPUModesGrid.tsx";
+import {WebGPUMonohedron} from "./components/WebGpuMonohedron.tsx";
+import {WebGPUMonohedron2} from "./components/WebGpuMonohedron2.tsx";
 
 function App() {
     return (
@@ -13,6 +14,7 @@ function App() {
         }}>
             <h1 style={{ color: '#fff', marginBottom: '20px' }}>Guitar stuff</h1>
             <WebGPUModesGrid />
+            <WebGPUMonohedron2 />
         </div>
     );
 }
