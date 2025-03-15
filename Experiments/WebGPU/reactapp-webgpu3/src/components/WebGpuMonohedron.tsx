@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { mat4 } from 'gl-matrix';
 
 interface WebGPUMonohedronProps {

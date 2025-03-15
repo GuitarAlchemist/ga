@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import './App.css';
 import WebGPUMonohedron2 from "./components/WebGpuMonohedron2.tsx";
+import { VersionDisplay } from './components/VersionDisplay';
+import { FpsDisplay } from './components/FpsDisplay';
 
 function App() {
     const [size, setSize] = useState(0.15);
-    const [bumpiness, setBumpiness] = useState(0.01);
+    const bumpiness = 0.01; // Changed to constant since we don't need to modify it
     const [isFullScreen, setIsFullScreen] = useState(false);
 
     const toggleFullScreen = async () => {
@@ -56,7 +58,7 @@ function App() {
                             id="size-slider"
                             type="range"
                             min="0.2"
-                            max="16.0"    // Changed from 1.0 to 16.0
+                            max="16.0"
                             step="0.01"
                             value={size}
                             onChange={(e) => setSize(parseFloat(e.target.value))}
@@ -67,7 +69,7 @@ function App() {
                         />
                     </div>
 
-                    {/* Bumpiness Control */}
+                    {/* Bumpiness Control - Currently hidden
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -97,6 +99,7 @@ function App() {
                             }}
                         />
                     </div>
+                    */}
 
                     <button
                         onClick={toggleFullScreen}
@@ -130,6 +133,8 @@ function App() {
                     fullScreen={isFullScreen}
                 />
             </div>
+            <FpsDisplay />
+            <VersionDisplay />
         </div>
     );
 }
