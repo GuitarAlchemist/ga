@@ -38,6 +38,9 @@
     </Project>
   </Folder>
   <Folder Name="/Experiments/">
+    <Project Path="Experiments\ChatbotExample1\ChatbotExample1.csproj" Type="Classic C#">
+      <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />
+    </Project>
     <Project Path="Experiments\UseGaNugetPackageExample\UseGaNugetPackageExample.csproj" />
     <Project Path="GuitarChordProgressionMCTS\GuitarChordProgressionMCTS.csproj">
       <Configuration Solution="net7.0|Any CPU" Project="Debug|Any CPU" />

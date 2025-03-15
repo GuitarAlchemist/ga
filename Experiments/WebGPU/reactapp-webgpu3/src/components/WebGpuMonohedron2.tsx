@@ -1,5 +1,6 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { mat4 } from 'gl-matrix';
+import { furShader } from '../shaders';
 
 interface WebGPUMonohedronProps {
     width: number;
@@ -10,12 +11,12 @@ interface WebGPUMonohedronProps {
 }
 
 const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
-    width = 400,
-    height = 400,
-    fullScreen = false,
-    size = 0.15,  // Changed from 0.2 to 0.15 (default size)
-    bumpiness = 0.02
-}) => {
+                                                                width = 400,
+                                                                height = 400,
+                                                                fullScreen = false,
+                                                                size = 0.15,  // Changed from 0.2 to 0.15 (default size)
+                                                                bumpiness = 0.02
+                                                            }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const deviceRef = useRef<GPUDevice | null>(null);
     const contextRef = useRef<GPUCanvasContext | null>(null);
@@ -34,7 +35,7 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
 
     // Camera control state
     const [isDragging, setIsDragging] = useState(false);
-    const [cameraAngles, setCameraAngles] = useState({ 
+    const [cameraAngles, setCameraAngles] = useState({
         phi: Math.PI / 4,
         theta: Math.PI / 6
     });
@@ -90,7 +91,7 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
     const createResources = async (device: GPUDevice, format: GPUTextureFormat) => {
         // Create vertex and index buffers
         const geometry = generateGeometry();
-        
+
         vertexBufferRef.current = device.createBuffer({
             size: geometry.vertices.byteLength,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
@@ -107,16 +108,9 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
         new Uint16Array(indexBufferRef.current.getMappedRange()).set(geometry.indices);
         indexBufferRef.current.unmap();
 
-        // Create uniform buffer
-        const uniformBufferSize = 
-            16 * 4 +  // mat4x4 (modelViewProjectionMatrix) - 64 bytes
-            4 * 4 +   // vec3 (cameraPosition) + padding - 16 bytes
-            4 +       // float (size) - 4 bytes
-            4 +       // float (bumpiness) - 4 bytes
-            8;        // additional padding to ensure 16-byte alignment - 8 bytes
-            // Total: 96 bytes
+        // Create uniform buffer with correct size
         uniformBufferRef.current = device.createBuffer({
-            size: uniformBufferSize,
+            size: 112, // 16 * 4 (mat4) + 3 * 4 (vec3) + 4 * 4 (floats) = 112 bytes
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
@@ -143,118 +137,7 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
 
         // Create shader module
         const shaderModule = device.createShaderModule({
-            code: `
-                struct Uniforms {
-                    modelViewProjectionMatrix: mat4x4<f32>,
-                    cameraPosition: vec3<f32>,
-                    size: f32,
-                    bumpiness: f32,
-                }
-
-                @binding(0) @group(0) var<uniform> uniforms: Uniforms;
-
-                struct VertexInput {
-                    @location(0) position: vec3<f32>,
-                    @location(1) normal: vec3<f32>,
-                }
-
-                struct VertexOutput {
-                    @builtin(position) position: vec4<f32>,
-                    @location(0) worldPos: vec3<f32>,
-                    @location(1) normal: vec3<f32>,
-                }
-
-                // Simplified noise function for better performance
-                fn simpleNoise(pos: vec3<f32>) -> f32 {
-                    let freq = 8.0;
-                    return sin(pos.x * freq) * 
-                           sin(pos.y * freq) * 
-                           sin(pos.z * freq) * 0.5;
-                }
-
-                @vertex
-                fn vertexMain(input: VertexInput) -> VertexOutput {
-                    var output: VertexOutput;
-                    
-                    // Scale bumpiness inversely with size to maintain consistent appearance
-                    let scaledBumpiness = uniforms.bumpiness * uniforms.size;
-                    let noise = simpleNoise(input.position);
-                    let displacement = input.normal * noise * scaledBumpiness;
-                    let finalPosition = input.position + displacement;
-                    
-                    output.position = uniforms.modelViewProjectionMatrix * vec4<f32>(finalPosition, 1.0);
-                    output.worldPos = finalPosition;
-                    output.normal = normalize(input.normal + displacement * 0.2);
-                    return output;
-                }
-
-                @fragment
-                fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
-                    // Define lights with increased intensity and better positions for metallic reflection
-                    let light1Pos = vec3<f32>(5.0, 5.0, 5.0);
-                    let light2Pos = vec3<f32>(-5.0, -2.0, 3.0);
-                    let light3Pos = vec3<f32>(0.0, 3.0, -5.0);
-                    let light4Pos = vec3<f32>(-3.0, -4.0, -4.0);
-                    
-                    // Brighter lights with color variation for more dynamic reflections
-                    let light1Color = vec3<f32>(1.0, 0.95, 0.8) * 2.5;   // Warm bright
-                    let light2Color = vec3<f32>(0.8, 0.9, 1.0) * 2.5;    // Cool bright
-                    let light3Color = vec3<f32>(0.7, 0.8, 1.0) * 2.5;    // Blue tint
-                    let light4Color = vec3<f32>(1.0, 0.98, 0.9) * 2.5;   // Slight warm
-
-                    let normal = normalize(input.normal);
-                    let viewDir = normalize(uniforms.cameraPosition - input.worldPos);
-
-                    // Enhanced metallic properties
-                    let metalColor = vec3<f32>(0.92, 0.92, 0.92);    // Brighter base color
-                    let roughness = 0.05;                            // Decreased roughness for sharper reflections
-                    let metallic = 0.95;                            // Increased metallic factor
-                    let specularPower = 32.0;                       // Higher specular power for tighter highlights
-                    
-                    // Initialize final color
-                    var finalColor = vec3<f32>(0.0);
-                    
-                    // Calculate lighting for each light source
-                    let lights = array<vec3<f32>, 4>(light1Pos, light2Pos, light3Pos, light4Pos);
-                    let lightColors = array<vec3<f32>, 4>(light1Color, light2Color, light3Color, light4Color);
-                    
-                    for (var i = 0; i < 4; i++) {
-                        let lightDir = normalize(lights[i] - input.worldPos);
-                        let halfwayDir = normalize(lightDir + viewDir);
-                        
-                        // Enhanced Fresnel effect
-                        let F0 = mix(vec3<f32>(0.04), metalColor, vec3<f32>(metallic));
-                        let cosTheta = max(dot(normal, viewDir), 0.0);
-                        let F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-                        
-                        // Specular reflection
-                        let specular = pow(max(dot(normal, halfwayDir), 0.0), specularPower);
-                        
-                        // Diffuse lighting with proper vector types
-                        let diffuse = max(dot(normal, lightDir), 0.0);
-                        let diffuseColor = vec3<f32>(diffuse);
-                        
-                        // Combine components with metallic weighting
-                        let lightContrib = lightColors[i] * (
-                            diffuseColor * (vec3<f32>(1.0) - vec3<f32>(metallic)) +  // Fixed diffuse calculation
-                            specular * F * (1.0 - roughness) * 2.0                    // Enhanced specular
-                        );
-                        
-                        finalColor += lightContrib;
-                    }
-                    
-                    // Environment reflection approximation
-                    let envReflection = reflect(-viewDir, normal);
-                    let envContrib = pow(max(1.0 - dot(normal, viewDir), 0.0), 3.0) * metalColor * metallic;
-                    finalColor += envContrib * 0.5;
-                    
-                    // Tone mapping and final adjustments
-                    finalColor = finalColor / (finalColor + vec3<f32>(1.0));  // Simple tone mapping
-                    finalColor = pow(finalColor, vec3<f32>(1.0 / 2.2));      // Gamma correction
-                    
-                    return vec4<f32>(finalColor, 1.0);
-                }
-            `
+            code: furShader
         });
 
         // Create render pipeline
@@ -366,7 +249,7 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
     useEffect(() => {
         if (contextRef.current && deviceRef.current) {
             const device = deviceRef.current;
-            
+
             // Reconfigure the context
             contextRef.current.configure({
                 device,
@@ -407,8 +290,8 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
     let lastTime = 0;
 
     const render = (timestamp: number) => {
-        if (!deviceRef.current || !contextRef.current || !uniformBufferRef.current || 
-            !renderPipelineRef.current || !vertexBufferRef.current || !indexBufferRef.current || 
+        if (!deviceRef.current || !contextRef.current || !uniformBufferRef.current ||
+            !renderPipelineRef.current || !vertexBufferRef.current || !indexBufferRef.current ||
             !bindGroupRef.current || !msaaTextureRef.current || !depthTextureRef.current) return;
 
         const device = deviceRef.current;
@@ -450,10 +333,10 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
             mat4.multiply(mvpMatrix, mvpMatrix, modelMatrix);
 
             // Update uniform buffer
-            const uniformData = new Float32Array(24);
+            const uniformData = new Float32Array(28); // Increased size for time
             uniformData.set(Array.from(mvpMatrix), 0);
             uniformData.set([cameraX, cameraY, cameraZ, 0.0], 16);
-            uniformData.set([sizeRef.current, bumpinessRef.current, 0.0, 0.0], 20);
+            uniformData.set([timestamp * 0.001, sizeRef.current, bumpinessRef.current, 0.0], 20);
             device.queue.writeBuffer(uniformBufferRef.current, 0, uniformData);
         }
 
@@ -528,18 +411,20 @@ const WebGPUMonohedron2: React.FC<WebGPUMonohedronProps> = ({
     );
 };
 
-function generateGeometry(size: number = 0.15) { // Changed default size
+function generateGeometry(size: number = 0.15) {
     const vertices: number[] = [];
     const indices: number[] = [];
-    const gridSize = 180; // Number of segments
+    const gridSize = 180;
+    const furLength = 0.02; // Length of fur strands
+    const furDensity = 1; // How many fur strands per vertex
 
-    // Generate vertices for monohedron
+    // Generate base geometry first
     for (let i = 0; i <= gridSize; i++) {
         for (let j = 0; j <= gridSize; j++) {
             const u = (i / gridSize) * 2 * Math.PI;
             const v = (j / gridSize) * 2 * Math.PI;
-            
-            // Monohedron parametric equations with size parameter
+
+            // Base vertex position
             const x = size * (Math.cos(u) * (3 + Math.cos(v)));
             const y = size * (Math.sin(u) * (3 + Math.cos(v)));
             const z = size * (Math.sin(v) + Math.sin(2 * u));
@@ -555,35 +440,53 @@ function generateGeometry(size: number = 0.15) { // Changed default size
                 -size * Math.sin(u) * Math.sin(v),
                 size * Math.cos(v)
             ];
-            
-            // Cross product for normal
+
             const normal = [
                 du[1] * dv[2] - du[2] * dv[1],
                 du[2] * dv[0] - du[0] * dv[2],
                 du[0] * dv[1] - du[1] * dv[0]
             ];
-            
-            // Normalize
+
+            // Normalize normal
             const len = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
             normal[0] /= len;
             normal[1] /= len;
             normal[2] /= len;
 
-            // Add vertex data
+            // Base vertex
             vertices.push(
                 x, y, z,           // position
-                normal[0], normal[1], normal[2]  // normal
+                normal[0], normal[1], normal[2],  // normal
+                0.0,               // fur layer (0 = base)
+                Math.random()      // random value for fur animation
             );
+
+            // Generate fur strands
+            for (let layer = 1; layer <= furDensity; layer++) {
+                const t = layer / furDensity;
+                // Slightly offset fur positions for natural look
+                const offsetX = x + normal[0] * furLength * t + (Math.random() - 0.5) * 0.001;
+                const offsetY = y + normal[1] * furLength * t + (Math.random() - 0.5) * 0.001;
+                const offsetZ = z + normal[2] * furLength * t + (Math.random() - 0.5) * 0.001;
+
+                vertices.push(
+                    offsetX, offsetY, offsetZ,  // position
+                    normal[0], normal[1], normal[2],  // normal
+                    t,                          // fur layer
+                    Math.random()              // random value for fur animation
+                );
+            }
 
             // Generate indices
             if (i < gridSize && j < gridSize) {
-                const current = i * (gridSize + 1) + j;
-                const next = current + 1;
-                const below = current + (gridSize + 1);
-                const belowNext = below + 1;
+                const current = i * (gridSize + 1) * (furDensity + 1) + j * (furDensity + 1);
+                const next = current + (furDensity + 1);
+                const below = current + 1;
+                const belowNext = next + 1;
 
-                indices.push(current, below, next);
-                indices.push(next, below, belowNext);
+                // Base geometry indices
+                indices.push(current, next, below);
+                indices.push(next, belowNext, below);
             }
         }
     }
