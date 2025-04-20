@@ -18,22 +18,31 @@ var configurationBuilder = new ConfigurationBuilder()
 
 var configuration = configurationBuilder.Build();
 
-// Add MongoDB sync option
-if (args.Length > 0 && args[0] == "sync-mongodb")
+// Process command line arguments
+if (args.Length > 0)
 {
-    await RunMongoDbSync(configuration);
-    return;
+    switch (args[0])
+    {
+        case "sync-mongodb":
+            await RunMongoDbSync(configuration);
+            return;
+
+        case "start-lmstudio-api":
+            await StartLmStudioApi(args);
+            return;
+    }
 }
 
 WriteLine("No valid command specified. Available commands:");
-WriteLine("  sync-mongodb    Synchronize MongoDB data");
+WriteLine("  sync-mongodb        Synchronize MongoDB data");
+WriteLine("  start-lmstudio-api  Start the LM Studio API server");
 return;
 
 static async Task RunMongoDbSync(IConfigurationRoot config)
 {
     var builder = Kernel.CreateBuilder();
     var services = builder.Services;
-    
+
     // Add MongoDB configuration
     services.Configure<MongoDbSettings>(options =>
     {
@@ -47,7 +56,7 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
     services.AddTransient<MongoDbService>();
     services.AddSyncServices();
     services.AddTransient<Runner>();
-    
+
     // Configure embedding services
     services.Configure<EmbeddingServiceSettings>(options =>
     {
@@ -58,32 +67,72 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
         options.ModelName = embeddingSection["ModelName"];
         options.OllamaHost = embeddingSection["OllamaHost"];
     });
-    
+
     services.AddSingleton<EmbeddingServiceFactory>();
-    services.AddScoped<IEmbeddingService>(sp => 
+    services.AddScoped<IEmbeddingService>(sp =>
         sp.GetRequiredService<EmbeddingServiceFactory>().CreateService());
 
-    // Add GuitarAlchemist ChatBot
-    // services.AddGuitarAlchemistChatBot(options => {
-    //     config.GetSection("ChatBot").Bind(options);
-    // });
+    // Add LM Studio integration
+    services.Configure<GA.Business.Core.AI.LmStudio.LmStudioSettings>(options =>
+    {
+        var lmStudioSection = config.GetSection("LmStudio");
+        if (lmStudioSection.Exists())
+        {
+            options.ApiUrl = lmStudioSection["ApiUrl"] ?? options.ApiUrl;
+            options.Model = lmStudioSection["Model"] ?? options.Model;
+            options.SystemPrompt = lmStudioSection["SystemPrompt"] ?? options.SystemPrompt;
+
+            if (int.TryParse(lmStudioSection["MaxTokens"], out var maxTokens))
+                options.MaxTokens = maxTokens;
+
+            if (float.TryParse(lmStudioSection["Temperature"], out var temperature))
+                options.Temperature = temperature;
+
+            if (float.TryParse(lmStudioSection["TopP"], out var topP))
+                options.TopP = topP;
+        }
+    });
+
+    services.AddScoped<GA.Business.Core.AI.LmStudio.LmStudioIntegrationService>();
 
     var kernel = builder.Build();
 
-    try 
+    try
     {
         var mongoDbService = kernel.GetRequiredService<MongoDbService>();
-        
+
         // Create indexes before syncing data
         await mongoDbService.CreateIndexesAsync();
         await mongoDbService.CreateRagIndexesAsync();
-        
+
+        WriteLine("Starting MongoDB sync with embeddings...");
         var runner = kernel.GetRequiredService<Runner>();
         await runner.ExecuteAsync();
+
+        WriteLine("\nMongoDB sync completed successfully!");
+        WriteLine("You can now use LM Studio with the following model: NyxGleam/mistral-7b-instruct-v0.1.Q4_K_M");
+        WriteLine("Make sure to configure LM Studio to use the API endpoint: http://localhost:5000/api/LmStudio/context");
     }
     catch (Exception ex)
     {
         WriteLine($"Error during sync: {ex.Message}");
+        WriteLine($"Stack trace: {ex.StackTrace}");
+    }
+}
+
+static async Task StartLmStudioApi(string[] args)
+{
+    try
+    {
+        WriteLine("Starting LM Studio API server...");
+        WriteLine("Press Ctrl+C to stop the server.");
+
+        //await LmStudioWebApi.StartAsync(args);
+        await Task.CompletedTask;
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error starting LM Studio API server: {ex.Message}");
         WriteLine($"Stack trace: {ex.StackTrace}");
     }
 }

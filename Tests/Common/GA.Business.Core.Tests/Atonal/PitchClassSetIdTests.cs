@@ -1,9 +1,11 @@
-﻿namespace GA.Business.Core.Tests.Atonal
+﻿﻿﻿﻿namespace GA.Business.Core.Tests.Atonal
 {
-    using Core.Atonal.Primitives;
-    using Extensions;
+    using GA.Business.Core.Atonal.Primitives;
+    using GA.Business.Core.Extensions;
     using GA.Business.Core.Atonal;
     using GA.Business.Core.Notes;
+    using System.Linq;
+    using System.Collections.Immutable;
 
     public class PitchClassSetIdTests
     {
@@ -42,15 +44,26 @@
             Assert.That(id1Hashcode, Is.EqualTo(id2Hashcode));
         }
 
-        [Test(TestOf = typeof(PitchClassSet))]
+        [Test(TestOf = typeof(PitchClassSetId))]
         public void Test_PitchClassSetId_Equivalences()
         {
             // Arrange
-            var gen = PitchClassSetIdEquivalences.Instance;
+            var equivalences = PitchClassSetIdEquivalences.Instance;
+            const string sMajorTriadInput = "C E G";
+            var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
+            var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
+            var id = majorTriadPcs.Id;
 
             // Act
+            var features = new PitchClassSetIdEquivalences.SetClassFeatures(id);
 
             // Assert
+            Assert.That(features, Is.Not.Null);
+            Assert.That(features.Id, Is.EqualTo(id));
+            Assert.That(features.Complements, Contains.Item(id));
+            Assert.That(features.Complements, Contains.Item(id.Complement));
+            Assert.That(features.Inversions, Contains.Item(id));
+            Assert.That(features.Rotations, Is.Not.Empty);
         }
 
         [Test(TestOf = typeof(PitchClassSetId))]

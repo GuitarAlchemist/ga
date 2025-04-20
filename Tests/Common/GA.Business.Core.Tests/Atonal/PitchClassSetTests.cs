@@ -1,8 +1,11 @@
-﻿namespace GA.Business.Core.Tests.Atonal;
+﻿﻿﻿﻿﻿namespace GA.Business.Core.Tests.Atonal;
 
-using Extensions;
+using GA.Business.Core.Extensions;
 using GA.Business.Core.Atonal;
+using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Notes;
+using GA.Business.Core.Notes.Primitives;
+using System.Linq;
 
 public class PitchClassSetTests
 {
@@ -11,43 +14,43 @@ public class PitchClassSetTests
     {
         // Arrange
         var items = PitchClassSet.Items;
-        
+
         // Act
         var count = items.Count;
-        
+
         // Assert
         Assert.That(count, Is.EqualTo(4096));
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NotesRoundTrip()
     {
         // Arrange
         const string sMajorTriadInput = "C E G";
         var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
-        
+
         // Act
         var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
         var sMajorTriadPcsNotes = string.Join(" ", majorTriadPcs.Notes);
-        
+
         // Assert
         Assert.That(sMajorTriadPcsNotes, Is.EqualTo(sMajorTriadInput));
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NotesRoundTrip_ShuffleNotes()
     {
         // Arrange
         const string sMajorTriadInput = "C G E";
         var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
-        
+
         // Act
         var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
         var sMajorTriadPcsNotes = string.Join(" ", majorTriadPcs.Notes);
-        
+
         // Assert
         Assert.That(sMajorTriadPcsNotes, Is.EqualTo("C E G"));
-    }    
+    }
 
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_Id()
@@ -55,37 +58,37 @@ public class PitchClassSetTests
         // Arrange
         const string sMajorTriadInput = "C E G";
         var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
-        
+
         // Act
         var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
-        
+
         // Assert
         Assert.That(majorTriadPcs.Id.Value, Is.EqualTo(145));
         // Assert.That(majorTriadPcs.Id.ScalePageUrl.AbsoluteUri, Is.EqualTo("https://ianring.com/musictheory/scales/145"));
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_TranspositionsAndInversions_Count()
     {
         // Arrange
         const string sMajorTriadInput = "C E G";
         var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
-        
+
         // Act
         var pitchClassSet = majorTriadNotes.ToPitchClassSet();
         var transpositionsAndInversions = pitchClassSet.TranspositionsAndInversions;
-        
+
         // Assert
         Assert.That(transpositionsAndInversions.Count, Is.EqualTo(24));
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_TranspositionsAndInversions()
     {
         // Arrange
         const string sCMajorTriadInput = "C E G";
         var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
-        
+
         // Act
         var pitchClassSet = cMajorTriadNotes.ToPitchClassSet();
         var transpositionsAndInversions = pitchClassSet.TranspositionsAndInversions;
@@ -95,40 +98,40 @@ public class PitchClassSetTests
                 .OrderBy(value => value)
                 .ToImmutableSortedSet();
         var sOrderedTranspositionsAndInversionValues = string.Join(", ", orderedTranspositionsAndInversionValues);
-        
+
         // Assert
         var expected = "137, 145, 265, 274, 289, 290, 529, 530, 545, 548, 578, 580, 1058, 1060, 1090, 1096, 1156, 1160, 2116, 2120, 2180, 2192, 2312, 2320";
         Assert.That(sOrderedTranspositionsAndInversionValues, Is.EqualTo(expected));
-    }    
-    
+    }
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_IsPrimeForm_False()
     {
         // Arrange
         const string sCMajorTriadInput = "C E G";
         var cMajorTriadNotes = AccidentedNoteCollection.Parse(sCMajorTriadInput);
-        
+
         // Act
         var pitchClassSet = cMajorTriadNotes.ToPitchClassSet();
-        
+
         // Assert
         Assert.That(pitchClassSet.IsPrimeForm, Is.EqualTo(false)); // 145 => not the prime form
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_IsPrimeForm_True()
     {
         // Arrange
         const string sCMinorTriadInput = "C Eb G";
         var cMinorTriadNotes = AccidentedNoteCollection.Parse(sCMinorTriadInput);
-        
+
         // Act
         var pitchClassSet = cMinorTriadNotes .ToPitchClassSet();
-        
+
         // Assert
         Assert.That(pitchClassSet.IsPrimeForm, Is.EqualTo(true)); // 137 => this is the prime form
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NormalForm_CMajorTriad()
     {
@@ -139,10 +142,10 @@ public class PitchClassSetTests
 
         // Act
         var normalForm = cMajorTriadPitchClassSet.ToNormalForm();
-        
+
         // Assert
         Assert.That(normalForm.Name, Is.EqualTo("0 3 8"));
-    }    
+    }
 
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_NormalForm_GMajorTriad()
@@ -154,11 +157,11 @@ public class PitchClassSetTests
 
         // Act
         var normalForm = gMajorTriadPitchClassSet.ToNormalForm();
-        
+
         // Assert
         Assert.That(normalForm.Name, Is.EqualTo("0 3 8"));
     }
-    
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_IsNormalForm_GMinorTriad()
     {
@@ -169,11 +172,11 @@ public class PitchClassSetTests
 
         // Act
         var isNormalForm = gMinorTriadPitchClassSet.IsNormalForm;
-        
+
         // Assert
         Assert.That(isNormalForm, Is.EqualTo(false));
-    }    
-    
+    }
+
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_PrimeForm()
     {
@@ -184,21 +187,52 @@ public class PitchClassSetTests
 
         // Act
         var primeForm = majorTriadPitchClassSet.PrimeForm;
-        
+
         // Assert
         Assert.That(primeForm?.Name, Is.EqualTo("0 3 7"));
-    }    
+    }
 
     [Test(TestOf = typeof(PitchClassSet))]
     public void Test_PitchClassSet_ClosestDiatonicKey()
     {
         // Arrange
-        var set = PitchClassSet.FromId(1709);
+        var set = PitchClassSet.FromId(1709); // Dorian mode
 
         // Act
         var key = set.ClosestDiatonicKey;
         var notes = set.GetDiatonicNotes();
 
         // Assert
+        Assert.That(key, Is.Not.Null);
+        Assert.That(key.KeyMode, Is.EqualTo(KeyMode.Minor)); // Dorian is closer to minor
+        Assert.That(notes, Is.Not.Null);
+        Assert.That(notes.Count, Is.EqualTo(7)); // Dorian has 7 notes
+
+        // The notes should form a coherent scale
+        var noteNames = notes.Select(n => n.ToString()).ToArray();
+        Assert.That(noteNames, Is.EquivalentTo(new[] { "C", "D", "Eb", "F", "G", "A", "Bb" }));
+    }
+
+    [Test(TestOf = typeof(PitchClassSet))]
+    public void Test_PitchClassSet_ClosestDiatonicKey_MajorTriad()
+    {
+        // Arrange
+        const string sMajorTriadInput = "C E G";
+        var majorTriadNotes = AccidentedNoteCollection.Parse(sMajorTriadInput);
+        var majorTriadPcs = majorTriadNotes.ToPitchClassSet();
+
+        // Act
+        var key = majorTriadPcs.ClosestDiatonicKey;
+        var notes = majorTriadPcs.GetDiatonicNotes();
+
+        // Assert
+        Assert.That(key, Is.Not.Null);
+        Assert.That(key.KeyMode, Is.EqualTo(KeyMode.Minor)); // Based on the implementation, it maps to minor key
+        Assert.That(notes, Is.Not.Null);
+        Assert.That(notes.Count, Is.EqualTo(3));
+
+        // The notes should be the C major triad
+        var noteNames = notes.Select(n => n.ToString()).ToArray();
+        Assert.That(noteNames, Is.EquivalentTo(new[] { "C", "E", "G" }));
     }
 }

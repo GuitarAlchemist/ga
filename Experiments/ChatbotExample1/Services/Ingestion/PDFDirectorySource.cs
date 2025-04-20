@@ -1,20 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.SemanticKernel.Text;
+﻿namespace ChatbotExample1.Services.Ingestion;
+
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.WordExtractor;
-using UglyToad.PdfPig;
-using Microsoft.Extensions.AI;
-using UglyToad.PdfPig.Content;
-
-namespace ChatbotExample1.Services.Ingestion;
 
 public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
 {
-    public static string SourceFileId(string path) => Path.GetFileName(path);
+    private static string SourceFileId(string path) => Path.GetFileName(path);
 
     public string SourceId => $"{nameof(PDFDirectorySource)}:{sourceDirectory}";
 
-    public async Task<IEnumerable<IngestedDocument>> GetNewOrModifiedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
+    public async Task<ImmutableList<IngestedDocument>> GetNewOrModifiedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
     {
         var results = new List<IngestedDocument>();
         var sourceFiles = Directory.GetFiles(sourceDirectory, "*.pdf");
@@ -36,26 +33,28 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             }
         }
 
-        return results;
+        return results.ToImmutableList();
     }
 
-    public async Task<IEnumerable<IngestedDocument>> GetDeletedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
+    public async Task<ImmutableList<IngestedDocument>> GetDeletedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
     {
         var sourceFiles = Directory.GetFiles(sourceDirectory, "*.pdf");
         var sourceFileIds = sourceFiles.Select(SourceFileId).ToList();
-        return await existingDocuments
+        var result = await existingDocuments
             .Where(d => !sourceFileIds.Contains(d.Id))
             .ToListAsync();
+        
+        return result.ToImmutableList();
     }
 
-    public async Task<IEnumerable<SemanticSearchRecord>> CreateRecordsForDocumentAsync(IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId)
+    public async Task<ImmutableList<SemanticSearchRecord>> CreateRecordsForDocumentAsync(IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId)
     {
         using var pdf = PdfDocument.Open(Path.Combine(sourceDirectory, documentId));
         var paragraphs = pdf.GetPages().SelectMany(GetPageParagraphs).ToList();
         
         var embeddings = await embeddingGenerator.GenerateAsync(paragraphs.Select(c => c.Text));
 
-        return paragraphs.Zip(embeddings).Select((pair, index) => new SemanticSearchRecord
+        var results = paragraphs.Zip(embeddings).Select((pair, index) => new SemanticSearchRecord
         {
             Key = $"{Path.GetFileNameWithoutExtension(documentId)}_{pair.First.PageNumber}_{pair.First.IndexOnPage}",
             FileName = documentId,
@@ -63,9 +62,13 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             Text = pair.First.Text,
             Vector = pair.Second.Vector,
         });
+
+        return results.ToImmutableList();
     }
 
-    private static IEnumerable<(int PageNumber, int IndexOnPage, string Text)> GetPageParagraphs(Page pdfPage)
+    private record PageParagraph(int PageNumber, int IndexOnPage, string Text);
+
+    private static ImmutableList<PageParagraph> GetPageParagraphs(Page pdfPage)
     {
         var letters = pdfPage.Letters;
         var words = NearestNeighbourWordExtractor.Instance.GetWords(letters);
@@ -74,8 +77,10 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             textBlocks.Select(t => t.Text.ReplaceLineEndings(" ")));
 
 #pragma warning disable SKEXP0050 // Type is for evaluation purposes only
-        return TextChunker.SplitPlainTextParagraphs([pageText], 200)
-            .Select((text, index) => (pdfPage.Number, index, text));
+        var results = TextChunker.SplitPlainTextParagraphs([pageText], 200)
+            .Select((text, index) => new PageParagraph(pdfPage.Number, index, text));
 #pragma warning restore SKEXP0050 // Type is for evaluation purposes only
+        
+        return results.ToImmutableList();
     }
 }

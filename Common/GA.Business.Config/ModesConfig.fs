@@ -37,6 +37,10 @@ module ModesConfig =
     let Mode = modeConfig
     let mutable private version = Guid.NewGuid()
     
+    // Add memoization caches
+    let private modeByNameCache = System.Collections.Concurrent.ConcurrentDictionary<string, ModeInfo>()
+    let private modeByVectorCache = System.Collections.Concurrent.ConcurrentDictionary<string, ModeInfo>()
+    
     let GetVersion() = version
     let ReloadConfig() =
         try
@@ -45,6 +49,9 @@ module ModesConfig =
                 | Some path -> path
                 | None -> failwith "Modes.yaml configuration file not found"
             modeConfig.Load(configPath)
+            // Clear caches when config is reloaded
+            modeByNameCache.Clear()
+            modeByVectorCache.Clear()
             version <- Guid.NewGuid()
             true
         with
@@ -82,3 +89,47 @@ module ModesConfig =
                     }
         )
         |> ImmutableList.CreateRange
+
+    let TryGetModeByName (name: string) : ModeInfo option =
+        let normalizedName = name.ToUpperInvariant()
+        match modeByNameCache.TryGetValue(normalizedName) with
+        | true, mode -> Some mode
+        | false, _ ->
+            let result = 
+                GetAllModes()
+                |> Seq.tryFind (fun mode -> 
+                    String.Equals(mode.Name, name, StringComparison.OrdinalIgnoreCase) ||
+                    match mode.AlternateNames with
+                    | Some alternateNames -> 
+                        alternateNames 
+                        |> Seq.exists (fun altName -> 
+                            String.Equals(altName, name, StringComparison.OrdinalIgnoreCase))
+                    | None -> false)
+            
+            match result with
+            | Some mode -> 
+                modeByNameCache.TryAdd(normalizedName, mode) |> ignore
+                // Also cache alternate names
+                match mode.AlternateNames with
+                | Some alternateNames ->
+                    for altName in alternateNames do
+                        modeByNameCache.TryAdd(altName.ToUpperInvariant(), mode) |> ignore
+                | None -> ()
+                Some mode
+            | None -> None
+            
+    let TryGetModeByIntervalClassVector (intervalClassVector: string) : ModeInfo option =
+        let normalizedVector = intervalClassVector.ToUpperInvariant()
+        match modeByVectorCache.TryGetValue(normalizedVector) with
+        | true, mode -> Some mode
+        | false, _ ->
+            let result =
+                GetAllModes()
+                |> Seq.tryFind (fun mode -> 
+                    String.Equals(mode.IntervalClassVector, intervalClassVector, StringComparison.OrdinalIgnoreCase))
+            
+            match result with
+            | Some mode -> 
+                modeByVectorCache.TryAdd(normalizedVector, mode) |> ignore
+                Some mode
+            | None -> None

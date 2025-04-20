@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Knowledge Context Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            white-space: pre-wrap;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            min-height: 200px;
+        }
+        .copy-button {
+            background-color: #2196F3;
+        }
+        .copy-button:hover {
+            background-color: #0b7dda;
+        }
+        .instructions {
+            background-color: #fffde7;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #fff9c4;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Guitar Knowledge Context Generator</h1>
+    
+    <div class="instructions">
+        <h3>How to use with LM Studio:</h3>
+        <ol>
+            <li>Enter your guitar-related question in the input field below</li>
+            <li>Click "Generate Context" to retrieve relevant information</li>
+            <li>Click "Copy to Clipboard" to copy the context</li>
+            <li>In LM Studio, paste this context at the beginning of your prompt</li>
+            <li>Add your question after the context</li>
+        </ol>
+    </div>
+    
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="query" placeholder="Enter your guitar-related question...">
+            <button onclick="generateContext()">Generate Context</button>
+        </div>
+        
+        <div>
+            <h3>Context (copy this to LM Studio):</h3>
+            <button class="copy-button" onclick="copyToClipboard()">Copy to Clipboard</button>
+            <div id="result">Your context will appear here...</div>
+        </div>
+    </div>
+    
+    <script>
+        async function generateContext() {
+            const query = document.getElementById('query').value;
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+            
+            try {
+                document.getElementById('result').textContent = 'Loading...';
+                
+                const response = await fetch('/api/context', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Format the context for easy copying
+                const formattedContext = `Use the following information to answer the question:\n\n${data.context}\n\nQuestion: ${query}`;
+                
+                document.getElementById('result').textContent = formattedContext;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function copyToClipboard() {
+            const result = document.getElementById('result');
+            const text = result.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Context copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy text. Please select and copy manually.');
+            });
+        }
+    </script>
+</body>
+</html>

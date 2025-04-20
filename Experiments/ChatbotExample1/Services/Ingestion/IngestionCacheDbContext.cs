@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace ChatbotExample1.Services.Ingestion;
+﻿namespace ChatbotExample1.Services.Ingestion;
 
 // A DbContext that keeps track of which documents have been ingested.
 // This makes it possible to avoid re-ingesting documents that have not changed,

@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.VectorData;
+﻿using Microsoft.Extensions.VectorData;
 
 namespace ChatbotExample1.Services.Ingestion;
 
@@ -17,7 +15,7 @@ public class DataIngestor(
         await ingestor.IngestDataAsync(source);
     }
 
-    public async Task IngestDataAsync(IIngestionSource source)
+    private async Task IngestDataAsync(IIngestionSource source)
     {
         var vectorCollection = vectorStore.GetCollection<string, SemanticSearchRecord>("data-chatbotexample1-ingested");
         await vectorCollection.CreateCollectionIfNotExistsAsync();

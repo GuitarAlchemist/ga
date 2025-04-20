@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.VectorData;
 using ChatbotExample1.Components;
 using ChatbotExample1.Services;

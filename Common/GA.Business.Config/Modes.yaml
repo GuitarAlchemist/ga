@@ -127,8 +127,6 @@ Altered:
   Description: "The altered scale, used in jazz (7th mode of the melodic minor scale)."
   AlternateNames: ["Super Locrian", "Diminished Whole Tone"]
 
-# Existing Major, Harmonic Minor, and Melodic Minor modes...
-
 # Pentatonic Modes
 MajorPentatonic:
   IntervalClassVector: "<3 2 0 4 1>"
@@ -140,7 +138,7 @@ SuspendedPentatonic:
   IntervalClassVector: "<3 2 0 4 1>"
   Notes: "C D F G A"
   Description: "The second mode of the pentatonic scale, with a suspended fourth."
-  AlternateNames: ["Egyption Pentatonic", "Suspended Pentatonic", "Pentatonic Mode 2"]
+  AlternateNames: ["Egyptian Pentatonic", "Suspended Pentatonic", "Pentatonic Mode 2"]
 
 BluesPentatonic:
   IntervalClassVector: "<3 2 0 4 1>"
@@ -167,31 +165,18 @@ WholeTone:
   Description: "A symmetric scale composed entirely of whole steps."
   AlternateNames: ["Augmented Scale", "Whole Tone Scale 1"]
 
-# Octatonic Scales (Diminished Scales)
-DiminishedWholeTone:
-  IntervalClassVector: "<4 4 4 4 4>"
-  Notes: "C Db Eb E F# G A Bb"
-  Description: "An eight-note scale alternating whole and half steps, starting with a half step."
-  AlternateNames: ["Half-Whole Diminished"]
-
-DiminishedHalfTone:
-  IntervalClassVector: "<4 4 4 4 4>"
-  Notes: "C D Eb F Gb Ab A B"
-  Description: "An eight-note scale alternating whole and half steps, starting with a whole step."
-  AlternateNames: ["Whole-Half Diminished"]
-
 # Bebop Scales
-BebopDominant:
-  IntervalClassVector: "<2 6 4 3 6 2>"
-  Notes: "C D E F G A Bb B"
-  Description: "Mixolydian mode with an added major seventh, used in jazz."
-  AlternateNames: ["Mixolydian Bebop Scale"]
-
 BebopMajor:
   IntervalClassVector: "<2 6 4 3 6 2>"
   Notes: "C D E F G G# A B"
   Description: "Major scale with an added augmented fifth, used in jazz."
   AlternateNames: ["Major Bebop Scale"]
+
+BebopDominant:
+  IntervalClassVector: "<2 6 4 3 6 2>"
+  Notes: "C D E F G A Bb B"
+  Description: "Mixolydian scale with an added major seventh, commonly used in jazz."
+  AlternateNames: ["Dominant Bebop Scale"]
 
 BebopMinor:
   IntervalClassVector: "<2 6 4 3 6 2>"
@@ -199,163 +184,81 @@ BebopMinor:
   Description: "Dorian mode with an added major third, used in jazz."
   AlternateNames: ["Dorian Bebop Scale"]
 
-# Other Modes and Scales
+# Diminished Scales
+DiminishedWholeTone:
+  IntervalClassVector: "<3 3 6 3 3>"
+  Notes: "C Db Eb E F# G# A#"
+  Description: "A symmetric scale alternating between whole and half steps."
+  AlternateNames: ["Dominant Diminished", "Half-Whole Diminished"]
+
+DiminishedHalfTone:
+  IntervalClassVector: "<3 3 6 3 3>"
+  Notes: "C D Eb F Gb Ab A B"
+  Description: "A symmetric scale alternating between half and whole steps."
+  AlternateNames: ["Whole-Half Diminished", "Octatonic Scale"]
+
+# Chromatic Scale
 Chromatic:
   IntervalClassVector: "<12 12 12 12 12>"
   Notes: "C C# D D# E F F# G G# A A# B"
   Description: "A twelve-tone scale including all semitones."
   AlternateNames: ["Dodecatonic Scale"]
 
-# Hungarian Minor (Double Harmonic Minor) Modes
-HungarianMinor:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C D Eb F# G Ab B"
-  Description: "The first mode of the Hungarian Minor scale, with a distinctive Eastern European flavor."
-  AlternateNames: ["Double Harmonic Minor", "Gypsy Minor"]
-
-OrientalScale:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C Db E F G Ab B"
-  Description: "The second mode of the Hungarian Minor scale, commonly used in Middle Eastern music."
-  AlternateNames: ["Arabic Scale", "Double Harmonic Major"]
-
-IonianAugmented2:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C D E F# G A B"
-  Description: "The third mode of the Hungarian Minor scale, similar to Ionian but with a raised 4th."
-  AlternateNames: ["Lydian Sharp 2"]
-
-LocrianDoubleFlatSeventh:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C Db Eb F Gb Ab Bbb"
-  Description: "The fourth mode of the Hungarian Minor scale, a Locrian-like scale with a double-flatted 7th."
-  AlternateNames: ["Ultralocrian"]
-
-HarmonicMinorFlatFifth:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C D Eb F Gb Ab B"
-  Description: "The fifth mode of the Hungarian Minor scale, similar to Harmonic Minor but with a lowered 5th."
-  AlternateNames: ["Mixolydian Flat 2 Flat 5"]
-
-LydianSharp2Sharp6:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C D# E F# G A# B"
-  Description: "The sixth mode of the Hungarian Minor scale, a Lydian-like scale with raised 2nd and 6th degrees."
-  AlternateNames: ["Ultraphrygian"]
-
-LocrianDoubleFlatThirdDoubleFlatSeventh:
-  IntervalClassVector: "<2 3 6 3 5 3>"
-  Notes: "C Db Ebb Fb Gb Ab Bbb"
-  Description: "The seventh mode of the Hungarian Minor scale, an extremely altered Locrian-like scale."
-  AlternateNames: ["Enigmatic Minor"]
-
-# Enigmatic Scale Modes
+# Enigmatic Scales
 Enigmatic:
   IntervalClassVector: "<1 3 4 5 4 5>"
   Notes: "C Db E F# G# A# B"
-  Description: "The first mode of the Enigmatic scale, attributed to Giuseppe Verdi."
+  Description: "An unusual seven-note scale created by Giuseppe Verdi."
   AlternateNames: ["Verdi's Enigmatic Scale"]
 
-EnigmaticDorian:
+EnigmaticMinor:
   IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C D Eb F G A Bb"
-  Description: "The second mode of the Enigmatic scale, with a Dorian-like structure."
-  AlternateNames: ["Locrian Natural 2"]
+  Notes: "C Db E F G Ab Bb"
+  Description: "A minor variant of the Enigmatic scale."
+  AlternateNames: ["Minor Enigmatic Scale"]
 
-EnigmaticPhrygian:
-  IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C Db Eb F# G A B"
-  Description: "The third mode of the Enigmatic scale, with a Phrygian-like start."
-  AlternateNames: ["Ionian Augmented Sharp 2"]
+# Hungarian Scales
+HungarianMajor:
+  IntervalClassVector: "<2 4 4 4 4 4>"
+  Notes: "C D# E F# G A Bb"
+  Description: "A symmetric scale used in Hungarian folk music."
+  AlternateNames: ["Double Harmonic Major"]
 
-EnigmaticLydian:
-  IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C D E F# G# A B"
-  Description: "The fourth mode of the Enigmatic scale, resembling a Lydian scale."
-  AlternateNames: ["Lydian Augmented Sharp 2"]
+HungarianMinor:
+  IntervalClassVector: "<2 4 4 4 4 4>"
+  Notes: "C D Eb F# G Ab B"
+  Description: "A minor scale with two augmented seconds."
+  AlternateNames: ["Gypsy Minor"]
 
-EnigmaticMixolydian:
-  IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C D E F# G# A# B"
-  Description: "The fifth mode of the Enigmatic scale, with a Mixolydian-like structure."
-  AlternateNames: ["Mixolydian Augmented Sharp 4"]
+# Neapolitan Scales
+NeapolitanMajor:
+  IntervalClassVector: "<2 4 4 5 3 4>"
+  Notes: "C Db Eb F G A B"
+  Description: "A major scale with a lowered second degree."
+  AlternateNames: ["Neapolitan Scale"]
 
-EnigmaticAeolian:
-  IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C D E F G A Bb"
-  Description: "The sixth mode of the Enigmatic scale, resembling an Aeolian (Natural Minor) scale."
-  AlternateNames: ["Aeolian Sharp 3"]
+NeapolitanMinor:
+  IntervalClassVector: "<2 4 4 5 3 4>"
+  Notes: "C Db Eb F G Ab Bb"
+  Description: "A minor scale with a lowered second degree."
+  AlternateNames: ["Jewish Scale"]
 
-EnigmaticLocrian:
-  IntervalClassVector: "<1 3 4 5 4 5>"
-  Notes: "C Db Eb F Gb Ab Bb"
-  Description: "The seventh mode of the Enigmatic scale, with a Locrian-like structure."
-  AlternateNames: ["Locrian Flat 4"]
+# Persian Scale
+Persian:
+  IntervalClassVector: "<2 5 3 4 4 4>"
+  Notes: "C Db E F Gb Ab B"
+  Description: "A scale used in Persian traditional music."
+  AlternateNames: ["Persian Mystic"]
 
-# Prometheus Scale Modes
+# Prometheus Scales
 Prometheus:
   IntervalClassVector: "<3 2 4 2 4>"
   Notes: "C D E F# A Bb"
-  Description: "The first mode of the Prometheus scale, used by Scriabin and in some jazz contexts."
-  AlternateNames: ["Prometheus Scale", "Mystic Chord"]
+  Description: "A hexatonic scale used by Scriabin."
+  AlternateNames: ["Mystic Chord", "Prometheus Scale"]
 
 PrometheusNeapolitan:
   IntervalClassVector: "<3 2 4 2 4>"
   Notes: "C Db E F# A B"
-  Description: "The second mode of the Prometheus scale, with a Neapolitan-like flat second."
+  Description: "A variation of the Prometheus scale with a lowered second degree."
   AlternateNames: ["Prometheus Mode 2"]
-
-PrometheusLydian:
-  IntervalClassVector: "<3 2 4 2 4>"
-  Notes: "C D E F# G# Bb"
-  Description: "The third mode of the Prometheus scale, resembling a Lydian scale."
-  AlternateNames: ["Prometheus Mode 3", "Lydian Flat 7"]
-
-PrometheusMixolydian:
-  IntervalClassVector: "<3 2 4 2 4>"
-  Notes: "C D E F# A B"
-  Description: "The fourth mode of the Prometheus scale, with a Mixolydian-like structure."
-  AlternateNames: ["Prometheus Mode 4", "Mixolydian Sharp 4"]
-
-PrometheusLocrian:
-  IntervalClassVector: "<3 2 4 2 4>"
-  Notes: "C Db E F G Bb"
-  Description: "The fifth mode of the Prometheus scale, with some Locrian characteristics."
-  AlternateNames: ["Prometheus Mode 5", "Locrian Natural 6"]
-
-PrometheusMinor:
-  IntervalClassVector: "<3 2 4 2 4>"
-  Notes: "C D Eb F A Bb"
-  Description: "The sixth mode of the Prometheus scale, with a minor third."
-  AlternateNames: ["Prometheus Mode 6", "Minor Sharp 6"]
-
-# In Sen Scale Modes
-InSen:
-  IntervalClassVector: "<2 3 2 3>"
-  Notes: "C Db F G Bb"
-  Description: "The first mode of the In Sen scale, a Japanese pentatonic scale."
-  AlternateNames: ["Japanese In Sen Scale", "Insen Scale"]
-
-InSenMode2:
-  IntervalClassVector: "<2 3 2 3>"
-  Notes: "C Eb F Ab Bb"
-  Description: "The second mode of the In Sen scale."
-  AlternateNames: ["In Sen Rotation 2"]
-
-InSenMode3:
-  IntervalClassVector: "<2 3 2 3>"
-  Notes: "C Db E G Ab"
-  Description: "The third mode of the In Sen scale."
-  AlternateNames: ["In Sen Rotation 3"]
-
-InSenMode4:
-  IntervalClassVector: "<2 3 2 3>"
-  Notes: "C D F Gb A"
-  Description: "The fourth mode of the In Sen scale."
-  AlternateNames: ["In Sen Rotation 4"]
-
-InSenMode5:
-  IntervalClassVector: "<2 3 2 3>"
-  Notes: "C Eb E G A"
-  Description: "The fifth mode of the In Sen scale."
-  AlternateNames: ["In Sen Rotation 5"]

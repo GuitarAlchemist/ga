@@ -2,10 +2,28 @@
 EmbeddingService:
   # Available options: OpenAi | HuggingFace | AzureOpenAi | Cohere | OnnxLocal | Ollama
   ServiceType: Ollama
-  
+
   # Model name - ensure you have pulled this model first using:
   # ollama pull llama2
   ModelName: llama2
-  
+
   # Default Ollama endpoint - change if running on different port/host
   OllamaHost: http://localhost:11434
+
+# LM Studio Configuration
+LmStudio:
+  # The URL of the LM Studio API
+  ApiUrl: http://localhost:1234/v1
+
+  # The model to use for LM Studio
+  Model: NyxGleam/mistral-7b-instruct-v0.1.Q4_K_M
+
+  # The system prompt to use for LM Studio
+  SystemPrompt: |
+    You are a guitar expert assistant. Your knowledge includes detailed information about guitar fretboard positions, chords, scales, and music theory.
+    Always provide accurate and helpful information about guitar playing techniques, music theory, and fretboard navigation.
+
+  # Generation parameters
+  MaxTokens: 1024
+  Temperature: 0.7
+  TopP: 0.9

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard;
+﻿﻿namespace GA.Business.Core.Fretboard;
 
 using Positions;
 using Primitives;
@@ -40,7 +40,7 @@ public class Fretboard
                 // Muted
                 yield return new Muted(str);
 
-                // Played 
+                // Played
                 var frets = Fret.Range(Capo ?? 0, FretCount - 1);
                 var midiNote = Tuning[str].MidiNote;
                 foreach (var fret in frets)
@@ -85,16 +85,30 @@ public class Fretboard
     /// Gets the <see cref="ImmutableSortedSet{PositionLocation}"/> for a given fret range
     /// </summary>
     /// <param name="fretRange">The <see cref="FretRange"/></param>
-    public ImmutableSortedSet<PositionLocation> GetPositionLocationsSet(FretRange fretRange) 
+    public ImmutableSortedSet<PositionLocation> GetPositionLocationsSet(FretRange fretRange)
         => [.. PositionLocations.Where(fretRange.Contains)];
 
     /// <summary>
     /// Gets the <see cref="RelativeFretVectorCollection"/>
     /// </summary>
     public RelativeFretVectorCollection RelativePositions => _lazyRelativePositions.Value;
-    
+
+    /// <summary>
+    /// Tries to get a position from a location
+    /// </summary>
+    /// <param name="location">The position location</param>
+    /// <param name="position">The position, if found</param>
+    /// <returns>True if the position was found, false otherwise</returns>
     public bool TryGetPositionFromLocation(PositionLocation location, [MaybeNullWhen(false)] out Position position)
-        => _lazyPositionByLocation.Value.TryGetValue(location, out position);
+    {
+        if (_lazyPositionByLocation.Value.TryGetValue(location, out position))
+        {
+            return true;
+        }
+
+        position = null;
+        return false;
+    }
 
     public override string ToString() => $"{Tuning} - {FretCount} frets";
 

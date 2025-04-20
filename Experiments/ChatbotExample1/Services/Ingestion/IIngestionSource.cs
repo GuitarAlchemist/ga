@@ -1,14 +1,12 @@
-﻿using Microsoft.Extensions.AI;
-
-namespace ChatbotExample1.Services.Ingestion;
+﻿namespace ChatbotExample1.Services.Ingestion;
 
 public interface IIngestionSource
 {
     string SourceId { get; }
 
-    Task<IEnumerable<IngestedDocument>> GetNewOrModifiedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments);
+    Task<ImmutableList<IngestedDocument>> GetNewOrModifiedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments);
 
-    Task<IEnumerable<IngestedDocument>> GetDeletedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments);
+    Task<ImmutableList<IngestedDocument>> GetDeletedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments);
 
-    Task<IEnumerable<SemanticSearchRecord>> CreateRecordsForDocumentAsync(IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId);
+    Task<ImmutableList<SemanticSearchRecord>> CreateRecordsForDocumentAsync(IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId);
 }
