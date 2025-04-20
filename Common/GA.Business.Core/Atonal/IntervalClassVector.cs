@@ -20,18 +20,50 @@ using SystemCollectionExtensions = System.Collections.Generic.CollectionExtensio
 /// Major scale => 254361 | Dorian mode => 254361 | etc...
 /// </remarks>
 [PublicAPI]
-public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<IntervalClass, int>,
-                                                                    IReadOnlyCollection<int>,
-                                                                    IComparable<IntervalClassVector>, 
-                                                                    IEquatable<IntervalClassVector>
+public sealed class IntervalClassVector(IntervalClassVectorId id) :
+    IParsable<IntervalClassVector>,
+    IIndexer<IntervalClass, int>,
+    IReadOnlyCollection<int>,
+    IComparable<IntervalClassVector>,
+    IEquatable<IntervalClassVector>
 {
-    #region Operators
+    #region IParsable<IntervalClassVector> Members
 
-    public static implicit operator IntervalClassVectorId(IntervalClassVector vector) => vector.Id;
-    public static implicit operator IntervalClassVector(IntervalClassVectorId id) => new(id);
+    /// <inheritdoc />
+    public static IntervalClassVector Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        return result;
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out IntervalClassVector result)
+    {
+        result = null!;
+        if (string.IsNullOrWhiteSpace(s)) return false;
+
+        // Remove angle brackets and whitespace if present
+        var cleaned = s.Trim().Trim('<', '>', ' ');
+
+        // Split into individual numbers
+        var segments = cleaned.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length != 6) return false; // Must have exactly 6 interval class counts
+
+        var countByIntervalClass = new Dictionary<IntervalClass, int>();
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (!int.TryParse(segments[i], out var count)) return false;
+            countByIntervalClass[IntervalClass.FromValue(i + 1)] = count;
+        }
+
+        // Success
+        result = new(countByIntervalClass);
+        return true;
+    }
 
     #endregion
-    
+
     #region Indexer members
 
     /// <summary>
@@ -39,7 +71,8 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     /// </summary>
     /// <param name="intervalClass">The <see cref="IntervalClass"/></param>
     /// <returns>The occurrence count.</returns>
-    public int this[IntervalClass intervalClass] => SystemCollectionExtensions.GetValueOrDefault(Vector, intervalClass, 0);
+    public int this[IntervalClass intervalClass] =>
+        SystemCollectionExtensions.GetValueOrDefault(Vector, intervalClass, 0);
 
     #endregion
 
@@ -53,10 +86,17 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
 
     #region Relational Members
 
-    public static bool operator <(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
-    public static bool operator >(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) > 0;
-    public static bool operator <=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) <= 0;
-    public static bool operator >=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) >= 0;
+    public static bool operator <(IntervalClassVector? left, IntervalClassVector? right) =>
+        Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
+
+    public static bool operator >(IntervalClassVector? left, IntervalClassVector? right) =>
+        Comparer<IntervalClassVector>.Default.Compare(left, right) > 0;
+
+    public static bool operator <=(IntervalClassVector? left, IntervalClassVector? right) =>
+        Comparer<IntervalClassVector>.Default.Compare(left, right) <= 0;
+
+    public static bool operator >=(IntervalClassVector? left, IntervalClassVector? right) =>
+        Comparer<IntervalClassVector>.Default.Compare(left, right) >= 0;
 
     /// <inheritdoc />
     public int CompareTo(IntervalClassVector? other)
@@ -76,7 +116,8 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) : IIndexer<Int
     public bool Equals(IntervalClassVector? other) => Id.Equals(other?.Id);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is IntervalClassVector other && Equals(other);
+    public override bool Equals(object? obj) =>
+        ReferenceEquals(this, obj) || obj is IntervalClassVector other && Equals(other);
 
     /// <inheritdoc />
     public override int GetHashCode() => id.GetHashCode();

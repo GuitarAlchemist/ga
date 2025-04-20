@@ -50,12 +50,12 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     public override int GetHashCode() => PitchClass.GetHashCode();
 
     #endregion
-    
+
     #region IPitchClass Members
-    
+
     /// <inheritdoc cref="IPitchClass.PitchClass"/>
     public abstract PitchClass PitchClass { get; }
-    
+
     #endregion
 
     /// <summary>
@@ -114,15 +114,15 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         #region Static Helpers
 
         public static Chromatic Get(int value) => ByValueIndexer.GetChromaticNote(value);
-        
-        public static ImmutableList<Chromatic> Items => 
+
+        public static ImmutableList<Chromatic> Items =>
             Enumerable
                 .Range(0, 12)
                 .Select(i => new Chromatic(i))
                 .ToImmutableList();
 
         #endregion
-        
+
         #region Well-known chromatic notes
 
         public static Chromatic C => new(0);
@@ -137,14 +137,14 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Chromatic A => new(9);
         public static Chromatic ASharpOrBFlat => new(10);
         public static Chromatic B => new(11);
-        
+
         #endregion
-        
+
         #region Operators
 
         public static implicit operator Chromatic(int value) => Get(value);
         public static implicit operator Chromatic(PitchClass pitchClass) => new(pitchClass.Value);
-        
+
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2)
         {
             var normalizedPitchClass = note1.PitchClass - note2.PitchClass;
@@ -154,19 +154,19 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Pitch.Chromatic operator +(Chromatic note, Octave octave) => new (note, octave);
 
         #endregion
-        
+
         #region Inner Classes
 
         private class ByValueIndexer() : LazyIndexerBase<int, Chromatic>(GetDictionary())
         {
             public static Chromatic GetChromaticNote(int value) => _instance[value];
             private static ImmutableDictionary<int, Chromatic> GetDictionary() => Items.ToImmutableDictionary(note => note.Value);
-            
+
             private static readonly ByValueIndexer _instance = new();
         }
 
         #endregion
-       
+
         public override PitchClass PitchClass { get; } = Value;
         public override Accidented ToAccidented() => ToSharp().ToAccidented();
         public Sharp ToSharp() => PitchClass.ToSharpNote();
@@ -177,14 +177,14 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public override string ToString()
         {
             var sharp = ToSharp();
-            return !sharp.SharpAccidental.HasValue 
+            return !sharp.SharpAccidental.HasValue
                 ? $"{sharp}" // No accidental
                 : $"{sharp}/{ToFlat()}"; // With accidental
         }
     }
 
     /// <summary>
-    /// A note from a musical key (<see cref="Note.KeyNote.Sharp"/> | <see cref="Note.KeyNote.Flat"/>  | <see cref="Note.KeyNote.Accidented"/>) 
+    /// A note from a musical key (<see cref="Note.KeyNote.Sharp"/> | <see cref="Note.KeyNote.Flat"/>  | <see cref="Note.KeyNote.Accidented"/>)
     /// </summary>
     /// <param name="NaturalNote"></param>
     [PublicAPI]
@@ -206,32 +206,32 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static bool operator >=(KeyNote? left, KeyNote? right) => Comparer<KeyNote>.Default.Compare(left, right) >= 0;
 
         #endregion
-        
+
         #region Parsing
-        
-       
+
+
         public static bool TryParse(string? input, out IReadOnlyCollection<KeyNote> keyNotes)
         {
             var builder = ImmutableList.CreateBuilder<KeyNote>();
-            
+
             if (Sharp.TryParse(input, null, out var sharpKeyNote)) builder.Add(sharpKeyNote);
             if (Flat.TryParse(input, null, out var flatKeyNote)) builder.Add(flatKeyNote);
             keyNotes = builder.ToImmutable();
             return keyNotes.Count > 0;
         }
-        
+
         #endregion
-        
+
         /// <summary>
         /// Gets the <see cref="AccidentalKind"/>
         /// </summary>
         public abstract AccidentalKind AccidentalKind { get; }
-        
+
         /// <summary>
         /// Gets the <see cref="Accidental"/>
         /// </summary>
         public abstract Accidental? Accidental { get; }
-        
+
         /// <summary>
         /// Gets the chromatic note for the current key note
         /// </summary>
@@ -243,10 +243,10 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         /// </summary>
         /// <returns>The <see cref="PitchClass"/></returns>
         protected abstract PitchClass GetPitchClass();
-        
+
         /// <inheritdoc />
         public override PitchClass PitchClass => GetPitchClass();
-        
+
         /// <inheritdoc />
         public override Accidented ToAccidented() => new(NaturalNote, Accidental);
     }
@@ -264,7 +264,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         #endregion
 
         #region Well-known sharp notes
-        
+
         public static Sharp C => new(NaturalNote.C);
         public static Sharp CSharp => new(NaturalNote.C, Primitives.SharpAccidental.Sharp);
         public static Sharp D => new(NaturalNote.D);
@@ -277,7 +277,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Sharp A => new(NaturalNote.A);
         public static Sharp ASharp => new(NaturalNote.A, Primitives.SharpAccidental.Sharp);
         public static Sharp B => new(NaturalNote.B);
-        
+
         #endregion
 
         #region IParsable<Sharp> Members
@@ -288,13 +288,13 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;
         }
-        
+
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Sharp result)
         {
             result = null!;
             if (string.IsNullOrWhiteSpace(s)) return false;
-            
+
             var normalizedInput = s.Trim().ToUpperInvariant().Replace("♯", "#");
             var sharpNote = normalizedInput switch
             {
@@ -326,7 +326,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
         /// <inheritdoc />
         public override AccidentalKind AccidentalKind => AccidentalKind.Sharp;
-        
+
         /// <inheritdoc />
         public override Accidental? Accidental =>SharpAccidental;
 
@@ -359,7 +359,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static IReadOnlyCollection<Flat> Items => [C, DFlat, D, EFlat, E, F, GFlat, G, AFlat, A, BFlat, B];
 
         #endregion
-        
+
         #region IParsable<Sharp> Members
 
         /// <inheritdoc />
@@ -368,7 +368,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
             return result;
         }
-        
+
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Flat result)
         {
@@ -396,11 +396,11 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             };
 
             result = flatNote!;
-            return flatNote != null;        
+            return flatNote != null;
         }
-        
+
         #endregion
-        
+
         #region Well-known flat notes
 
         public static Flat CFlat => new(NaturalNote.C, Primitives.FlatAccidental.Flat);
@@ -417,19 +417,19 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Flat A => new(NaturalNote.A);
         public static Flat BFlat => new(NaturalNote.B, Primitives.FlatAccidental.Flat);
         public static Flat B => new(NaturalNote.B);
-        
+
         #endregion
-        
+
         public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
         public static implicit operator Chromatic(Flat flatNote) => new(flatNote.PitchClass);
 
         /// <inheritdoc />
         public override PitchClass PitchClass => GetPitchClass();
-        
+
         /// <inheritdoc />
         public override AccidentalKind AccidentalKind => AccidentalKind.Flat;
-        
+
         /// <inheritdoc />
         public override Accidental? Accidental => FlatAccidental;
 
@@ -458,7 +458,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     public sealed record Accidented(NaturalNote NaturalNote, Accidental? Accidental = null) : Note, IStaticReadonlyCollection<Accidented>, IParsable<Accidented>
     {
         #region IStaticReadonlyCollection<Accidented> Members
-       
+
         public static IReadOnlyCollection<Accidented> Items => AllNotes.Instance;
 
         #endregion
@@ -474,7 +474,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static bool TryParse(string? s, IFormatProvider? provider, out Accidented result)
         {
             result = null!;
-            
+
             // Ensure valid string
             if (string.IsNullOrWhiteSpace(s)) return false;
 
@@ -491,7 +491,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                 // Ensure natural part can be parsed
                 var notePart = s[..i];
                 if (!NaturalNote.TryParse(notePart, null, out var parsedNote)) continue;
-                
+
                 naturalNote = parsedNote;
                 var accidentalPart = s.Substring(i).Trim();
                 if (!string.IsNullOrEmpty(accidentalPart))
@@ -509,17 +509,17 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             result = new(naturalNote.Value, accidental);
             return true;
         }
-        
+
         #endregion
-        
+
         public static implicit operator Chromatic(Accidented accidented) => new(accidented.PitchClass);
         public static implicit operator Accidented(KeyNote keyNote) => new(keyNote.NaturalNote, keyNote.Accidental);
         public static Interval.Simple operator -(Accidented note1, Accidented note2) => note1.GetInterval(note2);
-        
+
         public static ImmutableArray<Sharp> Create(params Sharp[] notes) => [.. notes];
 
         #region Well-known accidented notes
-       
+
         public static Accidented C => new(NaturalNote.C);
         public static Accidented Cb => new(NaturalNote.C, FlatAccidental.Flat);
         public static Accidented CSharp => new(NaturalNote.C, SharpAccidental.Sharp);
@@ -541,7 +541,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Accidented B => new(NaturalNote.B);
         public static Accidented Bb => new(NaturalNote.B, FlatAccidental.Flat);
         public static Accidented BSharp => new(NaturalNote.B, SharpAccidental.Sharp);
-        
+
         #endregion
 
         public override PitchClass PitchClass => GetPitchClass();
@@ -600,7 +600,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             return result;
 
             static Semitones GetQualityIncrement(
-                Key key, 
+                Key key,
                 Accidented startNote,
                 Accidented endNote)
             {
@@ -635,32 +635,28 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             {
                 if (number.Consonance == IntervalConsonance.Perfect)
                 {
-                    var result = qualityIncrement.Value switch
-                    {
-                        -2 => IntervalQuality.DoublyDiminished,
-                        -1 => IntervalQuality.Diminished,
-                        0 => IntervalQuality.Perfect,
-                        1 => IntervalQuality.Augmented,
-                        2 => IntervalQuality.DoublyAugmented,
-                        _ => throw new NotSupportedException()
-                    };
+                    // Handle perfect intervals (unison, fourth, fifth, octave)
+                    if (qualityIncrement.Value <= -2) return IntervalQuality.DoublyDiminished;
+                    if (qualityIncrement.Value == -1) return IntervalQuality.Diminished;
+                    if (qualityIncrement.Value == 0) return IntervalQuality.Perfect;
+                    if (qualityIncrement.Value == 1) return IntervalQuality.Augmented;
+                    if (qualityIncrement.Value >= 2) return IntervalQuality.DoublyAugmented;
 
-                    return result;
+                    // Default fallback (should never reach here)
+                    return IntervalQuality.Perfect;
                 }
                 else
                 {
-                    var result = qualityIncrement.Value switch
-                    {
-                        -3 => IntervalQuality.DoublyDiminished,
-                        -2 => IntervalQuality.Diminished,
-                        -1 => IntervalQuality.Minor,
-                        0 => IntervalQuality.Major,
-                        1 => IntervalQuality.Augmented,
-                        2 => IntervalQuality.DoublyAugmented,
-                        _ => throw new NotSupportedException()
-                    };
+                    // Handle imperfect intervals (seconds, thirds, sixths, sevenths)
+                    if (qualityIncrement.Value <= -3) return IntervalQuality.DoublyDiminished;
+                    if (qualityIncrement.Value == -2) return IntervalQuality.Diminished;
+                    if (qualityIncrement.Value == -1) return IntervalQuality.Minor;
+                    if (qualityIncrement.Value == 0) return IntervalQuality.Major;
+                    if (qualityIncrement.Value == 1) return IntervalQuality.Augmented;
+                    if (qualityIncrement.Value >= 2) return IntervalQuality.DoublyAugmented;
 
-                    return result;
+                    // Default fallback (should never reach here)
+                    return IntervalQuality.Major;
                 }
             }
         }

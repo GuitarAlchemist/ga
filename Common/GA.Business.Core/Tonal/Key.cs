@@ -205,7 +205,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
             }
 
             // Failure
-            majorKey = default!;
+            majorKey = null!;
             return false;
         }
 
@@ -332,7 +332,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
             }
 
             // Failure
-            minorKey = default!;
+            minorKey = null!;
             return false;
         }
 
