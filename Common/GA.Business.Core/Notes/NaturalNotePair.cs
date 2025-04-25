@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Notes;
 
 using Primitives;
-using System;
 
 public readonly struct NaturalNotePair(NaturalNote note1, NaturalNote note2)
 {

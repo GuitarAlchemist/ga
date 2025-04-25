@@ -30,7 +30,7 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     #region IParsable<IntervalClassVector> Members
 
     /// <inheritdoc />
-    public static IntervalClassVector Parse(string s, IFormatProvider? provider)
+    public static IntervalClassVector Parse(string s, IFormatProvider? provider = null)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;
@@ -123,6 +123,8 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     public override int GetHashCode() => id.GetHashCode();
 
     #endregion
+    
+    public static readonly IntervalClassVector Major = new(new IntervalClassVectorId(254361));
 
     /// <summary>
     /// Constructs an Interval Class Vector from the number of occurrences for each Interval Class

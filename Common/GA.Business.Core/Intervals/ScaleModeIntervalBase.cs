@@ -20,7 +20,7 @@ public abstract class ScaleModeIntervalBase<TIntervalSize>(TIntervalSize size, I
     /// <summary>
     /// True if interval quality is different the reference quality
     /// </summary>
-    public bool IsColorTone => Quality != RefQuality;
+    public bool IsCharacteristic => Quality != RefQuality;
 
     /// <inheritdoc />
     public override string ToString() => Print();
@@ -30,9 +30,9 @@ public abstract class ScaleModeIntervalBase<TIntervalSize>(TIntervalSize size, I
         var sb = new StringBuilder();
         var isAccidentalPrinted = false;
         var accidental = Quality.ToAccidental(Consonance);
-        if (IsColorTone)
+        if (IsCharacteristic)
         {
-            sb.Append(">");
+            sb.Append('>');
             if (!accidental.HasValue)
             {
                 var refAccidental = RefQuality.ToAccidental(Consonance);

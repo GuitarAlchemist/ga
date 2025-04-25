@@ -15,24 +15,47 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out AccidentedNoteCollection result)
     {
-        result = [];
+        result = Empty;
         if (string.IsNullOrWhiteSpace(s)) return false;
 
-        var span = s.AsSpan();
-        result = Empty;
+        var rawNotes = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var builder = ImmutableList.CreateBuilder<Note.Accidented>();
-        while (span.Length > 0)
+
+        foreach (var rawNote in rawNotes)
         {
-            var spaceIndex = span.IndexOf(' ');
-            var segment = spaceIndex == -1 ? span : span[..spaceIndex];
+            // Handle enharmonic notation
+            if (rawNote.Contains('/'))
+            {
+                var parts = rawNote.Split('/');
 
-            if (!Note.Accidented.TryParse(segment.ToString(), provider, out var pitch)) return false; // Fail if one item fails parsing
+                // Prefer sharps first
+                var sharpOption = parts.FirstOrDefault(p => p.Contains("#"));
+                var flatOption = parts.FirstOrDefault(p => p.Contains("b"));
 
-            builder.Add(pitch);
-            span = spaceIndex == -1 ? [] : span[(spaceIndex + 1)..];
+                if (sharpOption != null && Note.Accidented.TryParse(sharpOption, provider, out var sharpNote))
+                {
+                    builder.Add(sharpNote);
+                    continue;
+                }
+                if (flatOption != null && Note.Accidented.TryParse(flatOption, provider, out var flatNote))
+                {
+                    builder.Add(flatNote);
+                    continue;
+                }
+
+                // If neither parses, fail
+                return false;
+            }
+            else
+            {
+                if (!Note.Accidented.TryParse(rawNote, provider, out var pitch))
+                    return false;
+
+                builder.Add(pitch);
+            }
         }
 
-        result = new(builder);
+        result = new AccidentedNoteCollection(builder);
         return true;
     }
 

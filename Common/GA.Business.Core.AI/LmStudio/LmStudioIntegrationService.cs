@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GA.Data.MongoDB.Services;
+﻿using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Services.Embeddings;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 
 namespace GA.Business.Core.AI.LmStudio;

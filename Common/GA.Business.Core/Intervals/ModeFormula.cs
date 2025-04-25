@@ -6,7 +6,7 @@ public class ModeFormula(ScaleMode mode) : IReadOnlyCollection<ScaleModeSimpleIn
 {
     public ScaleMode Mode { get; } = mode ?? throw new ArgumentNullException(nameof(mode));
     public PrintableReadOnlyCollection<ScaleModeSimpleInterval> Intervals { get; } = CreateModeIntervals(mode);
-    public PrintableReadOnlyCollection<ScaleModeSimpleInterval> ColorTones { get; } = CreateModeColorTones(CreateModeIntervals(mode));
+    public PrintableReadOnlyCollection<ScaleModeSimpleInterval> CharacteristicIntervals { get; } = CreateCharacteristicIntervals(CreateModeIntervals(mode));
 
     private static PrintableReadOnlyCollection<ScaleModeSimpleInterval> CreateModeIntervals(ScaleMode mode)
     {
@@ -27,9 +27,17 @@ public class ModeFormula(ScaleMode mode) : IReadOnlyCollection<ScaleModeSimpleIn
         }
     }
 
-    private static PrintableReadOnlyCollection<ScaleModeSimpleInterval> CreateModeColorTones(IEnumerable<ScaleModeSimpleInterval> modeIntervals) =>
+    /// Creates a collection of characteristic intervals from the provided mode intervals.
+    /// Characteristic intervals are intervals where the `IsColorTone` property is true.
+    /// <param name="modeIntervals">
+    /// An enumerable collection of `ScaleModeSimpleInterval` representing the mode intervals.
+    /// </param>
+    /// <returns>
+    /// A `PrintableReadOnlyCollection` of `ScaleModeSimpleInterval` containing intervals where the `IsColorTone` property is true.
+    /// </returns>
+    private static PrintableReadOnlyCollection<ScaleModeSimpleInterval> CreateCharacteristicIntervals(IEnumerable<ScaleModeSimpleInterval> modeIntervals) =>
         modeIntervals
-            .Where(interval => interval.IsColorTone)
+            .Where(interval => interval.IsCharacteristic)
             .ToImmutableList()
             .AsPrintable();
     

@@ -2,6 +2,7 @@
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Tonal.Modes;
+using GA.Business.Core.Tonal.Modes.Diatonic;
 using GA.Core.Combinatorics;
 
 var combinations = new Combinations<PitchClass>(PitchClass.Items);
@@ -28,7 +29,7 @@ foreach (var mode in modes)
 {
     Console.WriteLine($@"{mode.Name} mode");
     Console.WriteLine($@"Items notes   : {mode.Notes}");
-    Console.WriteLine($@"Color notes : {mode.ColorNotes}");
+    Console.WriteLine($@"Characteristic notes : {mode.CharacteristicNotes}");
     Console.WriteLine($@"Formula     : {mode.Formula}");
     Console.WriteLine("");       
 }

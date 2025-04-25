@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Intervals;
 
 using Atonal.Abstractions;
-using GA.Business.Core.Atonal;
+using Atonal;
 using Primitives;
 
 /// <summary>
