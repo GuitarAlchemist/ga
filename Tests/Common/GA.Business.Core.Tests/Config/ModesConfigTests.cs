@@ -1,4 +1,4 @@
-﻿﻿namespace GA.Business.Core.Tests.Config;
+﻿namespace GA.Business.Core.Tests.Config;
 
 using GA.Business.Core.Config;
 
@@ -6,7 +6,6 @@ using GA.Business.Core.Config;
 public class ModesConfigTests
 {
     [Test]
-    [Ignore("Requires modes.yaml configuration file")]
     public void GetAllModes_ReturnsNonEmptyCollection()
     {
         // This test is ignored because it requires the modes.yaml configuration file

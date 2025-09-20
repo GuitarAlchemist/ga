@@ -26,18 +26,16 @@ public static class CollectionExtensions
     }
 
     [PublicAPI]
-    public class RotatedCollection<T>(IReadOnlyCollection<T> items,
-        int shift = 0) : IReadOnlyList<T>
+    public class RotatedCollection<T>(IReadOnlyCollection<T> items, int shift = 0) : IReadOnlyList<T>
     {
-        private readonly IReadOnlyCollection<T> _items = items ?? throw new ArgumentNullException(nameof(items));
+        private readonly ImmutableList<T> _items = items.ToImmutableList();
 
         public IEnumerator<T> GetEnumerator()
         {
-            // ReSharper disable once LoopCanBeConvertedToQuery
             for (var i = 0; i < _items.Count; i++)
             {
                 var index = (i + shift) % Count;
-                yield return _items.ElementAt(index);
+                yield return _items[index];
             }
         }
 
@@ -49,7 +47,7 @@ public static class CollectionExtensions
             get
             {
                 var index = (aIndex + shift) % Count;
-                return _items.ElementAt(index);
+                return _items[index];
             }
         }
 

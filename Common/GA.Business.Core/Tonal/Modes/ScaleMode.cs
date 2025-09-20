@@ -1,8 +1,11 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
+using Diatonic;
 using GA.Business.Core.Intervals.Primitives;
 using Intervals;
 using Notes;
+using Primitives;
+using Primitives.Diatonic;
 using Scales;
 
 /// <summary>
@@ -14,25 +17,28 @@ using Scales;
 public abstract class ScaleMode
 {
     private readonly Lazy<ModeFormula> _lazyModeFormula;
-    private readonly Lazy<IReadOnlyCollection<Note>> _lazyColorNotes;
+    private readonly Lazy<PrintableReadOnlyCollection<Note>> _lazyCharacteristicNotes;
 
     protected ScaleMode(Scale parentScale)
     {
         ParentScale = parentScale ?? throw new ArgumentNullException(nameof(parentScale));
         _lazyModeFormula = new(() => new(this));
-        _lazyColorNotes = new(() => ModeColorNotes(Formula.ColorTones).AsPrintable());
-    } 
+        _lazyCharacteristicNotes = new(() => ModeCharacteristicNotes(Formula.CharacteristicIntervals).AsPrintable());
+    }
 
-    public Scale ParentScale { get; }
+    public Scale ParentScale { get; protected init; }
     public abstract string Name { get; }
     public abstract IReadOnlyCollection<Note> Notes { get; }
     public abstract IReadOnlyCollection<Interval.Simple> SimpleIntervals { get; }
     public bool IsMinorMode => SimpleIntervals.Contains(Interval.Simple.MinorThird);
     public ModeFormula Formula => _lazyModeFormula.Value;
-    public IReadOnlyCollection<Note> ColorNotes => _lazyColorNotes.Value;
-    public ScaleMode RefMode => IsMinorMode ? MajorScaleMode.Aeolian : MajorScaleMode.Ionian;
+    public PrintableReadOnlyCollection<Note> CharacteristicNotes => _lazyCharacteristicNotes.Value;
 
-    private ImmutableList<Note> ModeColorNotes(IEnumerable<ScaleModeSimpleInterval> colorTones)
+    public ScaleMode RefMode => IsMinorMode
+        ? MajorScaleMode.Get(MajorScaleDegree.Aeolian)
+        : MajorScaleMode.Get(MajorScaleDegree.Ionian);
+
+    private ImmutableList<Note> ModeCharacteristicNotes(IEnumerable<ScaleModeSimpleInterval> characteristicIntervals)
     {
         var rootNote = Notes.First();
         var tuples = new List<(Note Note, Semitones Semitones)>();
@@ -43,15 +49,18 @@ public abstract class ScaleMode
         }
         var noteBySemitones = tuples.ToImmutableDictionary(tuple => tuple.Semitones, tuple => tuple.Note);
 
-        return [..colorTones.Select(colorTone => noteBySemitones[colorTone.ToSemitones()])];
+        return [..characteristicIntervals.Select(colorTone => noteBySemitones[colorTone.ToSemitones()])];
     }
 }
 
-public abstract class ScaleMode<TScaleDegree>(Scale parentScale, TScaleDegree parentScaleDegree) : ScaleMode(parentScale) 
+public abstract class ScaleMode<TScaleDegree>(Scale parentScale, TScaleDegree parentScaleDegree) : ScaleMode(parentScale)
     where TScaleDegree : IValueObject
 {
+    /// <summary>
+    /// Gets the degree of this mode in the parent scale
+    /// </summary>
     public TScaleDegree ParentScaleDegree { get; } = parentScaleDegree;
-    
+
     /// <inheritdoc />
     public override IReadOnlyCollection<Note> Notes => new ModeNotesByScaleDegree(ParentScale)[ParentScaleDegree];
 
@@ -119,7 +128,7 @@ public abstract class ScaleMode<TScaleDegree>(Scale parentScale, TScaleDegree pa
                 var seedNotes = seedScaleNotes.ToImmutableList().AsPrintable();
                 var rotatedNotes = seedNotes.Rotate(rotateCount);
                 var startNote = rotatedNotes[0];
-                var result = 
+                var result =
                     rotatedNotes
                         .Select(endNote => startNote.GetInterval(endNote))
                         .ToImmutableList()
@@ -161,7 +170,7 @@ public abstract class ScaleMode<TScaleDegree>(Scale parentScale, TScaleDegree pa
                         // Add as compound interval
                         var compoundInterval = new Interval.Compound
                         {
-                            Quality = interval.Quality, 
+                            Quality = interval.Quality,
                             Size = interval.Size.ToCompound()
                         };
                         intervals.Add(compoundInterval);

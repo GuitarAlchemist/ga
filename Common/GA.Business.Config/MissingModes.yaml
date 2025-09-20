@@ -1,0 +1,186 @@
+﻿# Two-Note Scales
+TwoNote_P4:
+  IntervalClassVector: "<0 0 0 0 1 0>"
+  Notes: "C F"
+  Description: "A two-note scale with a perfect fourth interval."
+  AlternateNames: ["Perfect Fourth Scale"]
+
+TwoNote_M3:
+  IntervalClassVector: "<0 0 0 1 0 0>"
+  Notes: "C E"
+  Description: "A two-note scale with a major third interval."
+  AlternateNames: ["Major Third Scale"]
+
+TwoNote_m3:
+  IntervalClassVector: "<0 0 1 0 0 0>"
+  Notes: "C D#/Eb"
+  Description: "A two-note scale with a minor third interval."
+  AlternateNames: ["Minor Third Scale"]
+
+TwoNote_M2:
+  IntervalClassVector: "<0 1 0 0 0 0>"
+  Notes: "C D"
+  Description: "A two-note scale with a major second interval."
+  AlternateNames: ["Major Second Scale"]
+
+TwoNote_m2:
+  IntervalClassVector: "<1 0 0 0 0 0>"
+  Notes: "C C#/Db"
+  Description: "A two-note scale with a minor second interval."
+  AlternateNames: ["Minor Second Scale"]
+
+# Three-Note Scales (Triads)
+ThreeNote_Suspended:
+  IntervalClassVector: "<0 1 0 0 2 0>"
+  Notes: "C D G"
+  Description: "A three-note scale forming a suspended chord."
+  AlternateNames: ["Suspended Scale", "Sus4 Scale"]
+
+ThreeNote_Augmented:
+  IntervalClassVector: "<0 0 2 0 0 1>"
+  Notes: "C E G#"
+  Description: "A three-note scale forming an augmented chord."
+  AlternateNames: ["Augmented Triad Scale"]
+
+ThreeNote_Diminished:
+  IntervalClassVector: "<0 1 2 1 1 1>"
+  Notes: "C D# G"
+  Description: "A three-note scale forming a diminished chord."
+  AlternateNames: ["Diminished Triad Scale"]
+
+ThreeNote_Minor:
+  IntervalClassVector: "<0 1 1 0 1 0>"
+  Notes: "C D# G"
+  Description: "A three-note scale forming a minor chord."
+  AlternateNames: ["Minor Triad Scale"]
+
+ThreeNote_Major:
+  IntervalClassVector: "<0 2 0 1 0 0>"
+  Notes: "C E G"
+  Description: "A three-note scale forming a major chord."
+  AlternateNames: ["Major Triad Scale"]
+
+# Four-Note Scales (Seventh Chords)
+FourNote_Diminished7:
+  IntervalClassVector: "<0 2 0 2 0 2>"
+  Notes: "C D# F# A"
+  Description: "A four-note scale forming a diminished seventh chord."
+  AlternateNames: ["Diminished Seventh Scale"]
+
+FourNote_HalfDiminished:
+  IntervalClassVector: "<0 2 1 1 2 0>"
+  Notes: "C D# F A"
+  Description: "A four-note scale forming a half-diminished chord."
+  AlternateNames: ["Half-Diminished Scale", "Minor 7 Flat 5 Scale"]
+
+FourNote_Dominant7:
+  IntervalClassVector: "<0 2 1 0 3 0>"
+  Notes: "C E G Bb"
+  Description: "A four-note scale forming a dominant seventh chord."
+  AlternateNames: ["Dominant Seventh Scale"]
+
+FourNote_Major7:
+  IntervalClassVector: "<0 3 0 2 0 1>"
+  Notes: "C E G B"
+  Description: "A four-note scale forming a major seventh chord."
+  AlternateNames: ["Major Seventh Scale"]
+
+FourNote_Minor7:
+  IntervalClassVector: "<1 1 1 1 2 0>"
+  Notes: "C D# G Bb"
+  Description: "A four-note scale forming a minor seventh chord."
+  AlternateNames: ["Minor Seventh Scale"]
+
+# Five-Note Scales (Pentatonic)
+MajorPentatonic:
+  IntervalClassVector: "<0 3 2 2 2 1>"
+  Notes: "C D E G A"
+  Description: "A five-note scale commonly used in folk and popular music."
+  AlternateNames: ["Major Pentatonic Scale"]
+
+MinorPentatonic:
+  IntervalClassVector: "<0 4 0 4 0 2>"
+  Notes: "C D# F G A#"
+  Description: "A five-note scale commonly used in blues and rock music."
+  AlternateNames: ["Minor Pentatonic Scale"]
+
+Hirajoshi:
+  IntervalClassVector: "<1 2 2 1 3 1>"
+  Notes: "C D# E A A#"
+  Description: "A traditional Japanese five-note scale."
+  AlternateNames: ["Hirajoshi Scale", "Japanese Pentatonic"]
+
+InSen:
+  IntervalClassVector: "<1 2 2 2 3 0>"
+  Notes: "C D# F G# A#"
+  Description: "A traditional Japanese five-note scale."
+  AlternateNames: ["In Sen Scale", "Japanese Pentatonic"]
+
+Iwato:
+  IntervalClassVector: "<1 2 2 3 1 1>"
+  Notes: "C D# E G A#"
+  Description: "A traditional Japanese five-note scale."
+  AlternateNames: ["Iwato Scale", "Japanese Pentatonic"]
+
+# Six-Note Scales (Hexatonic)
+WholeTone:
+  IntervalClassVector: "<0 4 0 4 0 2>"
+  Notes: "C D E F# G# A#"
+  Description: "A six-note scale consisting of whole tones."
+  AlternateNames: ["Whole Tone Scale"]
+
+AugmentedScale:
+  IntervalClassVector: "<2 2 4 2 2 3>"
+  Notes: "C D# E G G# B"
+  Description: "A six-note scale based on the augmented triad."
+  AlternateNames: ["Augmented Scale"]
+
+BluesScale:
+  IntervalClassVector: "<1 4 3 2 5 0>"
+  Notes: "C D# F F# G A#"
+  Description: "A six-note scale commonly used in blues music."
+  AlternateNames: ["Blues Scale"]
+
+PrometheusScale:
+  IntervalClassVector: "<2 2 3 4 3 1>"
+  Notes: "C D E F# G A#"
+  Description: "A six-note scale used by Scriabin."
+  AlternateNames: ["Prometheus Scale"]
+
+# Seven-Note Scales (Heptatonic)
+AcousticScale:
+  IntervalClassVector: "<2 5 4 4 4 2>"
+  Notes: "C D E F# G A A#"
+  Description: "A seven-note scale with acoustic properties."
+  AlternateNames: ["Acoustic Scale", "Lydian Dominant Scale"]
+
+HarmonicMajor:
+  IntervalClassVector: "<2 6 2 6 2 3>"
+  Notes: "C D E F G G# B"
+  Description: "A major scale with a lowered sixth degree."
+  AlternateNames: ["Harmonic Major Scale"]
+
+DoubleHarmonic:
+  IntervalClassVector: "<3 3 6 3 3 3>"
+  Notes: "C C# E F G A B"
+  Description: "A scale with two augmented seconds."
+  AlternateNames: ["Double Harmonic Scale", "Byzantine Scale"]
+
+Enigmatic:
+  IntervalClassVector: "<3 4 4 4 5 1>"
+  Notes: "C C# D# E F# G# B"
+  Description: "A scale created by Giuseppe Verdi."
+  AlternateNames: ["Enigmatic Scale", "Verdi's Enigmatic Scale"]
+
+NeapolitanMajor:
+  IntervalClassVector: "<3 5 4 3 5 1>"
+  Notes: "C C# D# F G A B"
+  Description: "A major scale with a lowered second degree."
+  AlternateNames: ["Neapolitan Major Scale"]
+
+# Eight-Note Scales (Octatonic)
+DiminishedScale:
+  IntervalClassVector: "<4 6 4 6 4 4>"
+  Notes: "C D D# F F# G# A B"
+  Description: "An eight-note scale alternating whole and half steps."
+  AlternateNames: ["Diminished Scale", "Octatonic Scale"]

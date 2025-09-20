@@ -23,7 +23,7 @@
 		<Compile Include="InstrumentsConfig.fs" />
 		<Compile Include="ScalesConfig.fs" />
 		<Compile Include="ModesConfig.fs" />
-		<None Include="Modes.yaml" />	
+		<None Include="Modes.yaml" />
 		<None Include="Scales.yaml" />
 		<None Include="Tunings.toml" />
 		<None Include="Tunings.txt" />
@@ -42,4 +42,31 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="ImportantMissingModes.yaml" />
+	  <Content Include="MissingModes.yaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Modes.yaml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>		
+		<None Include="Scales.yaml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="Tunings.toml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="Tunings.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="Instruments.yaml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="ModalScalesConfig.yaml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
 </Project>

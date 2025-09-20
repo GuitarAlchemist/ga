@@ -94,23 +94,18 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     /// <returns>The base 12 value <see cref="int"/></returns>
     private static int ToValue(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass, int valueBase = 12)
     {
-        // Ensure all interval classes are present as keys
-        foreach (var intervalClass in IntervalClass.Items)
-        {
-            if (!countByIntervalClass.ContainsKey(intervalClass)) throw new ArgumentException($"Missing interval class '{intervalClass}' in {nameof(countByIntervalClass)}.");
-        }
+        // Normalize: ensure all interval classes [1..6] are present with default value 0
+        var normalized = IntervalClass.Items
+            .Where(ic => ic.Value is >= 1 and <= 6)
+            .OrderByDescending(ic => ic.Value)
+            .ToImmutableArray();
 
-        // Compute the value
-        var weight = 1; // Start by least significant weight
         var value = 0;
-        var keys =
-            countByIntervalClass.Keys
-                .Where(ic => ic.Value is >= 1 and <= 6)
-                .OrderByDescending(ic => ic.Value)
-                .ToImmutableArray();
-        foreach (var key in keys)
+        var weight = 1;
+
+        foreach (var ic in normalized)
         {
-            var count = countByIntervalClass[key];
+            var count = countByIntervalClass.GetValueOrDefault(ic, 0);
             value += count * weight;
             weight *= valueBase;
         }

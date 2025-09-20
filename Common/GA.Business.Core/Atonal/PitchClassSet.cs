@@ -6,7 +6,6 @@ using Notes;
 using Notes.Primitives;
 using Scales;
 using Tonal;
-using System.Linq;
 using GA.Core.Collections;
 
 /// <summary>
@@ -61,6 +60,15 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         result = new(pitchClasses);
         return true;
     }
+
+    #endregion
+
+    #region Modal pitch class sets
+
+    /// <summary>
+    /// All modal pitch class sets
+    /// </summary>
+    public static IEnumerable<PitchClassSet> ModalItems => Items.Where(set => set.IsModal);
 
     #endregion
 

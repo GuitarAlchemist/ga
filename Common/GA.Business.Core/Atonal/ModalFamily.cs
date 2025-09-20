@@ -44,7 +44,7 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     /// <param name="noteCount">The number of notes</param>
     /// <param name="intervalClassVector">The <see cref="IntervalClassVector"/> shared my the members of the modal family</param>
     /// <param name="modes"></param>
-    internal ModalFamily(
+    private ModalFamily(
         int noteCount,
         IntervalClassVector intervalClassVector, 
         ImmutableList<PitchClassSet> modes)
@@ -71,12 +71,17 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     /// </summary>
     public ImmutableList<PitchClassSet> Modes { get; }
 
+    /// <summary>
+    /// Gets modes <see cref="IReadOnlyCollection{PitchClassSetId}"/> for the modal family
+    /// </summary>
     public ImmutableList<PitchClassSetId> ModeIds { get; }
     
     /// <summary>
     /// Gets the prime mode <see cref="PitchClassSet"/> for the modal family
     /// </summary>
     public PitchClassSet PrimeMode { get; }
+
+    public static ModalFamily Major => Items.First(f => f.IntervalClassVector == IntervalClassVector.Parse("<2 5 4 3 6 1>"));
 
     /// <inheritdoc />
     public override string ToString() => $"{NoteCount} notes - {IntervalClassVector} ({Modes.Count} items)";

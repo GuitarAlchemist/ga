@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
 using System.Diagnostics;
-using static GA.Business.Core.Atonal.Primitives.PitchClassSetIdEquivalences.Relationship;
+using static PitchClassSetIdEquivalences.Relationship;
 
 public class PitchClassSetIdEquivalences
 {
