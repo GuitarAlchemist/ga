@@ -1,8 +1,4 @@
-﻿using GA.Data.MongoDB.Extensions;
-using GA.Data.MongoDB.Services.Embeddings;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace GA.Business.Core.AI.LmStudio;
+﻿namespace GA.Business.Core.AI.LmStudio;
 
 /// <summary>
 /// Extension methods for registering LM Studio integration services

@@ -2,7 +2,6 @@
 
 using Positions;
 using Primitives;
-using System;
 using static Primitives.Position;
 
 /// <summary>

@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-namespace GA.Business.Core.AI.LmStudio;
+﻿namespace GA.Business.Core.AI.LmStudio;
 
 /// <summary>
 /// Web API for LM Studio integration

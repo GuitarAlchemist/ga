@@ -93,7 +93,8 @@
 			<PrivateAssets>All</PrivateAssets>
 		</ProjectReference>
 	</ItemGroup>
+
 	<ItemGroup>
-		<Folder Include="Fretboard\Config\" />
+	  <Folder Include="Chords\" />
 	</ItemGroup>
 </Project>

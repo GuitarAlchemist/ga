@@ -29,11 +29,30 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     #endregion
 
+    // Diatonic scales
     public static Scale Major => new("C D E F G A B");
     public static Scale NaturalMinor => Minor.Natural;
     public static Scale HarmonicMinor => Minor.Harmonic;
     public static Scale MelodicMinor => Minor.Melodic;
     public static Scale MajorPentatonic => new("C D E G A");
+    
+    // Symmetric scales
+    public static Scale WholeTone => new("C D E F# G# A#");
+    public static Scale Augmented => new("C D# E G G# B");
+    public static Scale Diminished => new("C D Eb F Gb Ab A B");
+    
+    // Other scales
+    public static Scale Blues => new("C Eb F F# G Bb");
+    public static Scale BebopDominant => new("C D E F G A Bb B");
+    public static Scale Tritone => new("C Db E F# G A");
+    public static Scale DoubleHarmonic => new("C Db E F G Ab B");
+    public static Scale Enigmatic => new("C Db E F# G# A# B");
+    public static Scale Prometheus => new("C D E F# A Bb");
+    public static Scale HarmonicMajor => new("C D E F G Ab B");
+    public static Scale NeapolitanMinor => new("C Db Eb F G Ab Bb");
+    public static Scale NeapolitanMajor => new("C Db Eb F G A B");
+    public static Scale JapaneseHirajoshi => new("C D Eb G Ab");
+    public static Scale InSen => new("C Db F G Bb");
 
     public static Scale FromPitchClassSetId(PitchClassSetId id) => new(id.Notes);
     

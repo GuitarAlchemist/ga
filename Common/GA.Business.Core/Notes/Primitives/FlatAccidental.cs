@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
 using GA.Business.Core.Intervals.Primitives;
-using System;
 
 /// <summary>
 /// Flat accidental (bbb | bbb | bb)

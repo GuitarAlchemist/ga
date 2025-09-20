@@ -28,7 +28,7 @@ public abstract class FormulaIntervalBase(
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        return obj.GetType() == this.GetType() && Equals((FormulaIntervalBase)obj);
+        return obj.GetType() == GetType() && Equals((FormulaIntervalBase)obj);
     }
 
     public override int GetHashCode() => HashCode.Combine(Size, Quality);

@@ -139,7 +139,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         : Key(KeySignature)
     {
         /// <summary>
-        /// Gets the <see cref="PrintableReadOnlyCollection{Major}"/> keys (15 <see cref="Major"/> keys)
+        /// Gets the <see cref="PrintableReadOnlyCollection{Major}"/> keys (15 <see cref="DiatonicScale.Major"/> keys)
         /// </summary>
         public static PrintableReadOnlyCollection<Major> MajorItems => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList().AsPrintable();
         

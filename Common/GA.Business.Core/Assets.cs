@@ -10,6 +10,7 @@ using Notes.Primitives;
 using Scales;
 using Tonal;
 using Tonal.Primitives;
+using Tonal.Primitives.Diatonic;
 
 [PublicAPI]
 public static class Assets

@@ -47,7 +47,7 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        return obj.GetType() == this.GetType() && Equals((SetClass)obj);
+        return obj.GetType() == GetType() && Equals((SetClass)obj);
     }
 
     public override int GetHashCode() => PrimeForm.GetHashCode();

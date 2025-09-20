@@ -9,7 +9,7 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
     #region IParsable<DiatonicIntervalCollection>
 
     /// <inheritdoc />
-    public static DiatonicIntervalCollection Parse(string s, IFormatProvider? provider)
+    public static DiatonicIntervalCollection Parse(string s, IFormatProvider? provider = null)
     {
         if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
         return result;

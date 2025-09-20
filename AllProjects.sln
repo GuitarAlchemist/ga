@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{983FAA86
 	ProjectSection(SolutionItems) = preProject
 		docs\TuningChart.pdf = docs\TuningChart.pdf
 		docs\Tunings.txt = docs\Tunings.txt
+		docs\ChatGPT-Modal Scales Overview.md = docs\ChatGPT-Modal Scales Overview.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.WebBlazorApp", "GA.WebBlazorApp\GA.WebBlazorApp.csproj", "{150B48D2-FB05-42AB-B4BF-7028F92CA52B}"

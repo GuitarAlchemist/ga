@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+﻿﻿namespace GA.Business.Core.Tonal.Primitives;
 
 /// <summary>
 /// The function of a scale degree
@@ -6,12 +6,12 @@
 /// <remarks>
 /// See https://en.wikipedia.org/wiki/Degree_(music)
 /// https://music.utk.edu/theorycomp/courses/murphy/documents/Major+MinorScales.pdf
-/// 
+///
 ///                                 Tonic
 ///                        Subtonic       Supertonic
 ///             Submediant                           Mediant
 /// Subdominant                                              Dominant
-/// 
+///
 /// </remarks>
 public enum ScaleDegreeFunction
 {
@@ -77,6 +77,14 @@ public enum ScaleDegreeFunction
     /// <remarks>
     /// See https://en.wikipedia.org/wiki/Leading-tone
     /// </remarks>
-    LeadingTone
+    LeadingTone,
+
+    /// <summary>
+    /// Function that doesn't fit into the traditional diatonic functions
+    /// </summary>
+    /// <remarks>
+    /// Used for non-diatonic scales or modes where traditional functions don't apply
+    /// </remarks>
+    Other
 }
 
