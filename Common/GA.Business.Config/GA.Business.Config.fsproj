@@ -23,16 +23,6 @@
 		<Compile Include="InstrumentsConfig.fs" />
 		<Compile Include="ScalesConfig.fs" />
 		<Compile Include="ModesConfig.fs" />
-		<None Include="Modes.yaml" />
-		<None Include="Scales.yaml" />
-		<None Include="Tunings.toml" />
-		<None Include="Tunings.txt" />
-		<None Include="Instruments.yaml">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="ModalScalesConfig.yaml" >
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>		
 	</ItemGroup>
 
 	<ItemGroup>
@@ -44,14 +34,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="ImportantMissingModes.yaml" />
-	  <Content Include="MissingModes.yaml" />
+		<Content Include="ImportantMissingModes.yaml" />
+		<Content Include="MissingModes.yaml" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="Modes.yaml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>		
+		</None>
 		<None Include="Scales.yaml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
