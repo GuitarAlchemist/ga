@@ -162,3 +162,230 @@
         Notes: "C C# D D# E F F# G G# A A# B"
         Description: "Twelve-note scale containing all semitones"
         AlternateNames: ["Chromatic Scale"]
+
+  # Two-Note Scales
+  - Name: "Perfect Fourth Family"
+    IntervalClassVector: "<0 0 0 0 1 0>"
+    Modes:
+      - Name: "Perfect Fourth"
+        Notes: "C F"
+        Description: "A two-note scale with a perfect fourth interval"
+        AlternateNames: ["Perfect Fourth Scale"]
+      - Name: "Perfect Fifth"
+        Notes: "C G"
+        Description: "A two-note scale with a perfect fifth interval"
+        AlternateNames: ["Perfect Fifth Scale"]
+
+  - Name: "Major Third Family"
+    IntervalClassVector: "<0 0 0 1 0 0>"
+    Modes:
+      - Name: "Major Third"
+        Notes: "C E"
+        Description: "A two-note scale with a major third interval"
+        AlternateNames: ["Major Third Scale"]
+      - Name: "Minor Sixth"
+        Notes: "C Ab"
+        Description: "A two-note scale with a minor sixth interval"
+        AlternateNames: ["Minor Sixth Scale"]
+
+  - Name: "Minor Third Family"
+    IntervalClassVector: "<0 0 1 0 0 0>"
+    Modes:
+      - Name: "Minor Third"
+        Notes: "C Eb"
+        Description: "A two-note scale with a minor third interval"
+        AlternateNames: ["Minor Third Scale"]
+      - Name: "Major Sixth"
+        Notes: "C A"
+        Description: "A two-note scale with a major sixth interval"
+        AlternateNames: ["Major Sixth Scale"]
+
+  - Name: "Major Second Family"
+    IntervalClassVector: "<0 1 0 0 0 0>"
+    Modes:
+      - Name: "Major Second"
+        Notes: "C D"
+        Description: "A two-note scale with a major second interval"
+        AlternateNames: ["Major Second Scale"]
+      - Name: "Minor Seventh"
+        Notes: "C Bb"
+        Description: "A two-note scale with a minor seventh interval"
+        AlternateNames: ["Minor Seventh Scale"]
+
+  - Name: "Minor Second Family"
+    IntervalClassVector: "<1 0 0 0 0 0>"
+    Modes:
+      - Name: "Minor Second"
+        Notes: "C Db"
+        Description: "A two-note scale with a minor second interval"
+        AlternateNames: ["Minor Second Scale"]
+      - Name: "Major Seventh"
+        Notes: "C B"
+        Description: "A two-note scale with a major seventh interval"
+        AlternateNames: ["Major Seventh Scale"]
+
+  # Three-Note Scales (Triads)
+  - Name: "Major Triad Family"
+    IntervalClassVector: "<0 0 1 1 1 0>"
+    Modes:
+      - Name: "Major Triad"
+        Notes: "C E G"
+        Description: "Major triad chord tones"
+        AlternateNames: ["Major Chord"]
+      - Name: "Minor Triad First Inversion"
+        Notes: "C Eb Ab"
+        Description: "First inversion of minor triad"
+        AlternateNames: ["Minor 6/4"]
+      - Name: "Minor Triad Second Inversion"
+        Notes: "C F A"
+        Description: "Second inversion of minor triad"
+        AlternateNames: ["Minor 6/4"]
+      - Name: "Major Triad First Inversion"
+        Notes: "C F Ab"
+        Description: "First inversion of major triad"
+        AlternateNames: ["Major 6/4"]
+      - Name: "Major Triad Second Inversion"
+        Notes: "C E A"
+        Description: "Second inversion of major triad"
+        AlternateNames: ["Major 6/4"]
+      - Name: "Minor Triad"
+        Notes: "C Eb G"
+        Description: "Minor triad chord tones"
+        AlternateNames: ["Minor Chord"]
+
+  - Name: "Diminished Triad Family"
+    IntervalClassVector: "<0 0 2 0 0 1>"
+    Modes:
+      - Name: "Diminished Triad"
+        Notes: "C Eb Gb"
+        Description: "Diminished triad chord tones"
+        AlternateNames: ["Diminished Chord"]
+      - Name: "Diminished Triad First Inversion"
+        Notes: "C E A"
+        Description: "First inversion of diminished triad"
+        AlternateNames: ["Diminished 6/4"]
+      - Name: "Diminished Triad Second Inversion"
+        Notes: "C F# Bb"
+        Description: "Second inversion of diminished triad"
+        AlternateNames: ["Diminished 6/4"]
+
+  - Name: "Augmented Triad Family"
+    IntervalClassVector: "<0 1 0 0 2 0>"
+    Modes:
+      - Name: "Augmented Triad"
+        Notes: "C E G#"
+        Description: "Augmented triad chord tones"
+        AlternateNames: ["Augmented Chord"]
+      - Name: "Augmented Triad First Inversion"
+        Notes: "C F A"
+        Description: "First inversion of augmented triad"
+        AlternateNames: ["Augmented 6/4"]
+      - Name: "Augmented Triad Second Inversion"
+        Notes: "C Eb F#"
+        Description: "Second inversion of augmented triad"
+        AlternateNames: ["Augmented 6/4"]
+
+  # Four-Note Scales (Seventh Chords and Tetrachords)
+  - Name: "Major Seventh Chord Family"
+    IntervalClassVector: "<0 1 2 1 1 1>"
+    Modes:
+      - Name: "Major Seventh"
+        Notes: "C E G B"
+        Description: "Major seventh chord tones"
+        AlternateNames: ["Maj7"]
+      - Name: "Minor Seventh"
+        Notes: "C Eb G Bb"
+        Description: "Minor seventh chord tones"
+        AlternateNames: ["m7"]
+      - Name: "Dominant Seventh"
+        Notes: "C E G Bb"
+        Description: "Dominant seventh chord tones"
+        AlternateNames: ["7"]
+      - Name: "Half Diminished Seventh"
+        Notes: "C Eb Gb Bb"
+        Description: "Half diminished seventh chord tones"
+        AlternateNames: ["m7b5"]
+      - Name: "Minor Major Seventh"
+        Notes: "C Eb G B"
+        Description: "Minor major seventh chord tones"
+        AlternateNames: ["mMaj7"]
+      - Name: "Augmented Major Seventh"
+        Notes: "C E G# B"
+        Description: "Augmented major seventh chord tones"
+        AlternateNames: ["Maj7#5"]
+      - Name: "Augmented Seventh"
+        Notes: "C E G# Bb"
+        Description: "Augmented seventh chord tones"
+        AlternateNames: ["7#5"]
+      - Name: "Diminished Seventh"
+        Notes: "C Eb Gb A"
+        Description: "Diminished seventh chord tones"
+        AlternateNames: ["dim7"]
+
+  - Name: "All Interval Tetrachord Family"
+    IntervalClassVector: "<1 1 1 1 1 1>"
+    Modes:
+      - Name: "All Interval Tetrachord"
+        Notes: "C Db E F#"
+        Description: "Tetrachord containing all six interval classes"
+        AlternateNames: ["Berg Tetrachord"]
+      - Name: "All Interval Tetrachord Mode 2"
+        Notes: "C D# E G"
+        Description: "Second mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 2"]
+      - Name: "All Interval Tetrachord Mode 3"
+        Notes: "C Db F Gb"
+        Description: "Third mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 3"]
+      - Name: "All Interval Tetrachord Mode 4"
+        Notes: "C E F A"
+        Description: "Fourth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 4"]
+      - Name: "All Interval Tetrachord Mode 5"
+        Notes: "C D F# G"
+        Description: "Fifth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 5"]
+      - Name: "All Interval Tetrachord Mode 6"
+        Notes: "C F F# Bb"
+        Description: "Sixth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 6"]
+      - Name: "All Interval Tetrachord Mode 7"
+        Notes: "C Db F G"
+        Description: "Seventh mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 7"]
+      - Name: "All Interval Tetrachord Mode 8"
+        Notes: "C E F Bb"
+        Description: "Eighth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 8"]
+      - Name: "All Interval Tetrachord Mode 9"
+        Notes: "C D F G"
+        Description: "Ninth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 9"]
+      - Name: "All Interval Tetrachord Mode 10"
+        Notes: "C E F# A"
+        Description: "Tenth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 10"]
+      - Name: "All Interval Tetrachord Mode 11"
+        Notes: "C D# F G"
+        Description: "Eleventh mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 11"]
+      - Name: "All Interval Tetrachord Mode 12"
+        Notes: "C D F# Bb"
+        Description: "Twelfth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 12"]
+      - Name: "All Interval Tetrachord Mode 13"
+        Notes: "C E G A"
+        Description: "Thirteenth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 13"]
+      - Name: "All Interval Tetrachord Mode 14"
+        Notes: "C D# F# G"
+        Description: "Fourteenth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 14"]
+      - Name: "All Interval Tetrachord Mode 15"
+        Notes: "C D F A"
+        Description: "Fifteenth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 15"]
+      - Name: "All Interval Tetrachord Mode 16"
+        Notes: "C F G Bb"
+        Description: "Sixteenth mode of all interval tetrachord"
+        AlternateNames: ["Berg Mode 16"]
