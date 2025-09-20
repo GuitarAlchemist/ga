@@ -1,0 +1,164 @@
+﻿ModalFamilies:
+  # Major Scale Family (Diatonic)
+  - Name: "Major Scale Family"
+    IntervalClassVector: "<2 5 4 3 6 1>"
+    Modes:
+      - Name: "Ionian"
+        Notes: "C D E F G A B"
+        Description: "The major scale, foundation of Western harmony"
+        AlternateNames: ["Major Scale"]
+      - Name: "Dorian"
+        Notes: "C D Eb F G A Bb"
+        Description: "Natural minor with raised 6th degree"
+        AlternateNames: ["Dorian Mode"]
+      - Name: "Phrygian"
+        Notes: "C Db Eb F G Ab Bb"
+        Description: "Natural minor with lowered 2nd degree"
+        AlternateNames: ["Phrygian Mode"]
+      - Name: "Lydian"
+        Notes: "C D E F# G A B"
+        Description: "Major scale with raised 4th degree"
+        AlternateNames: ["Lydian Mode"]
+      - Name: "Mixolydian"
+        Notes: "C D E F G A Bb"
+        Description: "Major scale with lowered 7th degree"
+        AlternateNames: ["Mixolydian Mode", "Dominant Scale"]
+      - Name: "Aeolian"
+        Notes: "C D Eb F G Ab Bb"
+        Description: "Natural minor scale"
+        AlternateNames: ["Natural Minor", "Minor Scale"]
+      - Name: "Locrian"
+        Notes: "C Db Eb F Gb Ab Bb"
+        Description: "Natural minor with lowered 2nd and 5th degrees"
+        AlternateNames: ["Locrian Mode"]
+
+  # Harmonic Minor Family
+  - Name: "Harmonic Minor Family"
+    IntervalClassVector: "<2 4 3 5 4 3>"
+    Modes:
+      - Name: "Harmonic Minor"
+        Notes: "C D Eb F G Ab B"
+        Description: "Minor scale with raised 7th degree"
+        AlternateNames: ["Harmonic Minor Scale"]
+      - Name: "Locrian #6"
+        Notes: "C Db Eb F Gb A Bb"
+        Description: "Second mode of harmonic minor"
+        AlternateNames: ["Locrian Natural 6"]
+      - Name: "Ionian #5"
+        Notes: "C D E F G# A B"
+        Description: "Third mode of harmonic minor"
+        AlternateNames: ["Ionian Augmented", "Major #5"]
+      - Name: "Dorian #4"
+        Notes: "C D Eb F# G A Bb"
+        Description: "Fourth mode of harmonic minor"
+        AlternateNames: ["Romanian", "Ukrainian Dorian"]
+      - Name: "Phrygian Dominant"
+        Notes: "C Db E F G Ab Bb"
+        Description: "Fifth mode of harmonic minor"
+        AlternateNames: ["Spanish Phrygian", "Jewish Scale"]
+      - Name: "Lydian #2"
+        Notes: "C D# E F# G A B"
+        Description: "Sixth mode of harmonic minor"
+        AlternateNames: ["Lydian Augmented #2"]
+      - Name: "Ultralocrian"
+        Notes: "C Db Eb Fb Gb Ab Bb"
+        Description: "Seventh mode of harmonic minor"
+        AlternateNames: ["Superlocrian bb7", "Altered bb7"]
+
+  # Melodic Minor Family
+  - Name: "Melodic Minor Family"
+    IntervalClassVector: "<2 4 5 3 6 2>"
+    Modes:
+      - Name: "Melodic Minor"
+        Notes: "C D Eb F G A B"
+        Description: "Minor scale with raised 6th and 7th degrees"
+        AlternateNames: ["Jazz Minor", "Melodic Minor Scale"]
+      - Name: "Dorian b2"
+        Notes: "C Db Eb F G A Bb"
+        Description: "Second mode of melodic minor"
+        AlternateNames: ["Phrygian #6", "Assyrian"]
+      - Name: "Lydian Augmented"
+        Notes: "C D E F# G# A B"
+        Description: "Third mode of melodic minor"
+        AlternateNames: ["Lydian #5"]
+      - Name: "Lydian Dominant"
+        Notes: "C D E F# G A Bb"
+        Description: "Fourth mode of melodic minor"
+        AlternateNames: ["Overtone", "Acoustic Scale"]
+      - Name: "Mixolydian b6"
+        Notes: "C D E F G Ab Bb"
+        Description: "Fifth mode of melodic minor"
+        AlternateNames: ["Melodic Major", "Hindu Scale"]
+      - Name: "Locrian #2"
+        Notes: "C D Eb F Gb Ab Bb"
+        Description: "Sixth mode of melodic minor"
+        AlternateNames: ["Half Diminished", "Aeolian b5"]
+      - Name: "Altered"
+        Notes: "C Db Eb Fb Gb Ab Bb"
+        Description: "Seventh mode of melodic minor"
+        AlternateNames: ["Super Locrian", "Diminished Whole Tone"]
+
+  # Pentatonic Scales
+  - Name: "Major Pentatonic Family"
+    IntervalClassVector: "<0 3 2 2 2 1>"
+    Modes:
+      - Name: "Major Pentatonic"
+        Notes: "C D E G A"
+        Description: "Five-note scale commonly used in folk and popular music"
+        AlternateNames: ["Pentatonic Major"]
+      - Name: "Egyptian"
+        Notes: "C D F G Bb"
+        Description: "Second mode of major pentatonic"
+        AlternateNames: ["Suspended Pentatonic"]
+      - Name: "Blues Minor"
+        Notes: "C Eb F G Bb"
+        Description: "Third mode of major pentatonic"
+        AlternateNames: ["Minor Pentatonic"]
+      - Name: "Blues Major"
+        Notes: "C E F A Bb"
+        Description: "Fourth mode of major pentatonic"
+        AlternateNames: ["Ritusen"]
+      - Name: "Minor Pentatonic"
+        Notes: "C D F G A"
+        Description: "Fifth mode of major pentatonic"
+        AlternateNames: ["Man Gong"]
+
+  # Whole Tone Scale
+  - Name: "Whole Tone Family"
+    IntervalClassVector: "<0 6 0 0 6 0>"
+    Modes:
+      - Name: "Whole Tone"
+        Notes: "C D E F# G# Bb"
+        Description: "Six-note scale consisting entirely of whole tones"
+        AlternateNames: ["Whole Tone Scale"]
+
+  # Diminished Scale Family
+  - Name: "Diminished Family"
+    IntervalClassVector: "<4 6 4 6 4 4>"
+    Modes:
+      - Name: "Diminished (Half-Whole)"
+        Notes: "C Db Eb E F# G A Bb"
+        Description: "Eight-note scale alternating half and whole steps"
+        AlternateNames: ["Octatonic", "Half-Whole Diminished"]
+      - Name: "Diminished (Whole-Half)"
+        Notes: "C D Eb F Gb Ab A B"
+        Description: "Eight-note scale alternating whole and half steps"
+        AlternateNames: ["Whole-Half Diminished", "Dominant Diminished"]
+
+  # Blues Scale
+  - Name: "Blues Scale Family"
+    IntervalClassVector: "<1 4 3 2 5 0>"
+    Modes:
+      - Name: "Blues Scale"
+        Notes: "C Eb F F# G Bb"
+        Description: "Six-note scale commonly used in blues music"
+        AlternateNames: ["Blues Scale"]
+
+  # Chromatic Scale
+  - Name: "Chromatic Family"
+    IntervalClassVector: "<11 11 11 11 11 6>"
+    Modes:
+      - Name: "Chromatic"
+        Notes: "C C# D D# E F F# G G# A A# B"
+        Description: "Twelve-note scale containing all semitones"
+        AlternateNames: ["Chromatic Scale"]
