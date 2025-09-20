@@ -489,4 +489,99 @@ public class ModalFamilyScaleModeFactoryTests
             }
         }
     }
+
+    [Test]
+    public void ModesYaml_ShouldCoverAllTheoreticalModalFamilies()
+    {
+        // Arrange
+        var allTheoreticalFamilies = ModalFamily.Items.ToList();
+        var modesFromYaml = ModesConfig.GetAllModes();
+
+        // Get covered families by matching interval class vectors
+        var coveredFamilies = new List<ModalFamily>();
+        var uncoveredFamilies = new List<ModalFamily>();
+
+        foreach (var family in allTheoreticalFamilies)
+        {
+            var familyVector = family.IntervalClassVector.ToString();
+            var isCovered = modesFromYaml.Any(mode => mode.IntervalClassVector == familyVector);
+
+            if (isCovered)
+            {
+                coveredFamilies.Add(family);
+            }
+            else
+            {
+                uncoveredFamilies.Add(family);
+            }
+        }
+
+        // Calculate coverage metrics
+        var totalFamilies = allTheoreticalFamilies.Count;
+        var coveredCount = coveredFamilies.Count;
+        var coveragePercentage = (double)coveredCount / totalFamilies * 100.0;
+
+        // Musical families (3-7 notes) coverage
+        var musicalFamilies = allTheoreticalFamilies.Where(f => f.NoteCount >= 3 && f.NoteCount <= 7).ToList();
+        var coveredMusicalFamilies = coveredFamilies.Where(f => f.NoteCount >= 3 && f.NoteCount <= 7).ToList();
+        var musicalCoveragePercentage = musicalFamilies.Count > 0
+            ? (double)coveredMusicalFamilies.Count / musicalFamilies.Count * 100.0
+            : 0.0;
+
+        // Set class coverage
+        var allSetClasses = allTheoreticalFamilies.Select(f => f.IntervalClassVector.ToString()).Distinct().ToList();
+        var coveredSetClasses = modesFromYaml.Select(m => m.IntervalClassVector).Distinct().ToList();
+        var setClassCoveragePercentage = allSetClasses.Count > 0
+            ? (double)coveredSetClasses.Count / allSetClasses.Count * 100.0
+            : 0.0;
+
+        // Find the major scale family for validation
+        var majorFamily = allTheoreticalFamilies.FirstOrDefault(f => f.IntervalClassVector.ToString() == "<2 5 4 3 6 1>");
+
+        // Output detailed analysis
+        Console.WriteLine("=== THEORETICAL MODAL FAMILIES COVERAGE ANALYSIS ===\n");
+        Console.WriteLine($"Total theoretical modal families: {totalFamilies}");
+        Console.WriteLine($"Covered by modes.yaml: {coveredCount}");
+        Console.WriteLine($"Uncovered by modes.yaml: {uncoveredFamilies.Count}");
+        Console.WriteLine($"Coverage percentage: {coveragePercentage:F2}%\n");
+
+        // Group uncovered families by note count
+        if (uncoveredFamilies.Any())
+        {
+            Console.WriteLine("=== UNCOVERED MODAL FAMILIES BY NOTE COUNT ===\n");
+            var uncoveredByNoteCount = uncoveredFamilies.GroupBy(f => f.NoteCount).OrderBy(g => g.Key);
+
+            foreach (var group in uncoveredByNoteCount)
+            {
+                Console.WriteLine($"{group.Key}-note scales ({group.Count()} families):");
+                foreach (var family in group.OrderBy(f => f.IntervalClassVector.ToString()))
+                {
+                    Console.WriteLine($"  - {family.IntervalClassVector} ({family.Modes.Count} modes)");
+                }
+                Console.WriteLine();
+            }
+        }
+
+        Console.WriteLine("=== SET CLASS COVERAGE ANALYSIS ===\n");
+        Console.WriteLine($"Total modal set classes: {allSetClasses.Count}");
+        Console.WriteLine($"Covered set classes: {coveredSetClasses.Count}");
+        Console.WriteLine($"Uncovered set classes: {allSetClasses.Count - coveredSetClasses.Count}");
+        Console.WriteLine($"Set class coverage: {setClassCoveragePercentage:F2}%\n");
+
+        // Assert coverage thresholds
+        Assert.Multiple(() =>
+        {
+            Assert.That(coveragePercentage, Is.GreaterThan(80.0),
+                $"Expected at least 80% coverage of theoretical modal families, but got {coveragePercentage:F2}%");
+
+            Assert.That(musicalCoveragePercentage, Is.GreaterThan(90.0),
+                $"Expected at least 90% coverage of musical modal families (3-7 notes), but got {musicalCoveragePercentage:F2}%");
+
+            Assert.That(coveredFamilies, Contains.Item(majorFamily),
+                "The major scale modal family must be covered in modes.yaml");
+
+            Assert.That(setClassCoveragePercentage, Is.GreaterThan(75.0),
+                $"Expected at least 75% coverage of modal set classes, but got {setClassCoveragePercentage:F2}%");
+        });
+    }
 }
