@@ -93,8 +93,4 @@
 			<PrivateAssets>All</PrivateAssets>
 		</ProjectReference>
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Chords\" />
-	</ItemGroup>
 </Project>
