@@ -1,0 +1,16 @@
+﻿fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+python-multipart==0.0.6
+
+# Phase 2: Add MusicGen and audio processing
+# audiocraft==1.3.0        # Meta's MusicGen
+# torch==2.1.2             # PyTorch for model inference
+# torchaudio==2.1.2        # Audio processing
+# transformers==4.36.2     # Hugging Face transformers
+
+# Phase 2: Add storage backends
+# redis==5.0.1             # Job queue and caching
+# boto3==1.34.22           # AWS S3 / MinIO
+# motor==3.3.2             # Async MongoDB driver
+

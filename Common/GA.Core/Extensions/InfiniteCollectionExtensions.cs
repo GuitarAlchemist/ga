@@ -4,13 +4,16 @@
 public static class InfiniteCollectionExtensions
 {
     /// <summary>
-    /// Create an infinite collection.
+    ///     Create an infinite collection.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="items">The source items collection.</param>
     /// <param name="skip">Number of items to skip.</param>
-    /// <returns>The <see cref="InfiniteCollection{T}"/>.</returns>
-    public static InfiniteCollection<T> ToInfinite<T>(this IReadOnlyCollection<T> items, int? skip = null) => new(items, skip);
+    /// <returns>The <see cref="InfiniteCollection{T}" />.</returns>
+    public static InfiniteCollection<T> ToInfinite<T>(this IReadOnlyCollection<T> items, int? skip = null)
+    {
+        return new InfiniteCollection<T>(items, skip);
+    }
 
     [PublicAPI]
     public class InfiniteCollection<T> : IEnumerable<T>
@@ -23,7 +26,10 @@ public static class InfiniteCollectionExtensions
             int? skip = null)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
-            if (skip.HasValue) IncrementIndex(skip.Value);
+            if (skip.HasValue)
+            {
+                IncrementIndex(skip.Value);
+            }
         }
 
         public int CycleItemCount => _items.Count;
@@ -35,10 +41,19 @@ public static class InfiniteCollectionExtensions
             IncrementIndex();
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
-        public override string ToString() => $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}";
+        public override string ToString()
+        {
+            return $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}";
+        }
 
-        private void IncrementIndex(int count = 1) => _index = (_index.Value + count) % CycleItemCount;
+        private void IncrementIndex(int count = 1)
+        {
+            _index = (_index.Value + count) % CycleItemCount;
+        }
     }
 }

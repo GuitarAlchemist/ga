@@ -1,0 +1,695 @@
+# Chord Progressions Configuration
+# Defines fundamental chord progressions across musical genres
+
+ChordProgressions:
+  - Name: "ii-V-I"
+    Description: "The fundamental jazz progression - subdominant, dominant, tonic"
+    RomanNumerals: [ "ii7", "V7", "I" ]
+    Category: "Jazz"
+    Difficulty: "Intermediate"
+    Function: [ "Subdominant", "Dominant", "Tonic" ]
+    InKey: "C Major"
+    Chords: [ "Dm7", "G7", "Cmaj7" ]
+    VoiceLeading: "Smooth stepwise motion in upper voices"
+    Theory: "Creates strong harmonic motion through circle of fifths"
+    Variations:
+      - Name: "Minor ii-V-i"
+        RomanNumerals: [ "ii7b5", "V7", "i" ]
+        Chords: [ "Dm7b5", "G7", "Cm" ]
+        Context: "Minor key version"
+      - Name: "Extended ii-V-I"
+        RomanNumerals: [ "ii9", "V13", "Imaj9" ]
+        Chords: [ "Dm9", "G13", "Cmaj9" ]
+        Context: "Jazz extensions"
+      - Name: "Backcycling ii-Vs"
+        RomanNumerals: [ "iii7", "VI7", "ii7", "V7", "I" ]
+        Chords: [ "Em7", "A7", "Dm7", "G7", "Cmaj7" ]
+        Context: "Adds pre-dominant approach"
+    Examples:
+      - Song: "Autumn Leaves"
+        Artist: "Jazz Standard"
+        Usage: "Throughout the song"
+      - Song: "All The Things You Are"
+        Artist: "Jerome Kern"
+        Usage: "Multiple keys"
+    UsedBy: [ "Charlie Parker", "Bill Evans", "John Coltrane" ]
+
+  - Name: "I-vi-IV-V"
+    Description: "Classic doo-wop and pop progression"
+    RomanNumerals: [ "I", "vi", "IV", "V" ]
+    Category: "Pop"
+    Difficulty: "Beginner"
+    Function: [ "Tonic", "Relative minor", "Subdominant", "Dominant" ]
+    InKey: "C Major"
+    Chords: [ "C", "Am", "F", "G" ]
+    Theory: "Moves through all primary functions with smooth voice leading"
+    Variations:
+      - Name: "vi-IV-I-V"
+        RomanNumerals: [ "vi", "IV", "I", "V" ]
+        Chords: [ "Am", "F", "C", "G" ]
+        Context: "Pop ballad version"
+      - Name: "I-V-vi-IV"
+        RomanNumerals: [ "I", "V", "vi", "IV" ]
+        Chords: [ "C", "G", "Am", "F" ]
+        Context: "Alternative ordering"
+    Examples:
+      - Song: "Stand By Me"
+        Artist: "Ben E. King"
+        Usage: "Main progression"
+      - Song: "Don't Stop Believin'"
+        Artist: "Journey"
+        Usage: "Verse and chorus"
+    UsedBy: [ "Doo-wop groups", "Pop artists", "Rock bands" ]
+
+  - Name: "12-Bar Blues"
+    Description: "Foundation of blues music in AAB form"
+    RomanNumerals: [ "I", "I", "I", "I", "IV", "IV", "I", "I", "V", "IV", "I", "V" ]
+    Category: "Blues"
+    Difficulty: "Beginner"
+    Structure: "AAB lyrical form over 12 measures"
+    InKey: "E Major"
+    Chords: [ "E", "E", "E", "E", "A", "A", "E", "E", "B", "A", "E", "B" ]
+    Theory: "Uses primary triads with dominant function emphasis"
+    Variations:
+      - Name: "Jazz Blues"
+        RomanNumerals: [ "I7", "vi7", "ii7", "V7", "IV7", "IV7", "I7", "I7", "V7", "IV7", "I7", "V7" ]
+        Chords: [ "E7", "C#m7", "F#m7", "B7", "A7", "A7", "E7", "E7", "B7", "A7", "E7", "B7" ]
+        Context: "Jazz interpretation with extended harmony"
+      - Name: "Minor Blues"
+        RomanNumerals: [ "i", "i", "i", "i", "iv", "iv", "i", "i", "V", "iv", "i", "V" ]
+        Chords: [ "Em", "Em", "Em", "Em", "Am", "Am", "Em", "Em", "B", "Am", "Em", "B" ]
+        Context: "Minor key blues"
+    Examples:
+      - Song: "Sweet Home Chicago"
+        Artist: "Robert Johnson"
+        Usage: "Classic 12-bar structure"
+    UsedBy: [ "Robert Johnson", "B.B. King", "Muddy Waters" ]
+
+  - Name: "Circle of Fifths"
+    Description: "Progression moving through dominant relationships"
+    RomanNumerals: [ "I", "vi", "ii", "V", "I" ]
+    Category: "Jazz"
+    Difficulty: "Intermediate"
+    Function: "Each chord's root moves down a fifth (up a fourth)"
+    InKey: "C Major"
+    Chords: [ "C", "Am", "Dm", "G", "C" ]
+    Theory: "Strongest possible harmonic motion in tonal music"
+    Variations:
+      - Name: "Extended Circle"
+        RomanNumerals: [ "I", "vi", "ii", "V", "iii", "vi", "ii", "V", "I" ]
+        Chords: [ "C", "Am", "Dm", "G", "Em", "Am", "Dm", "G", "C" ]
+        Context: "Longer form with additional cycles"
+    Examples:
+      - Song: "Fly Me to the Moon"
+        Artist: "Frank Sinatra"
+        Usage: "Verse progression"
+    UsedBy: [ "Jazz standards", "Bossa nova", "Swing era" ]
+
+  - Name: "Andalusian Cadence"
+    Description: "Descending progression from Spanish/Moorish music"
+    RomanNumerals: [ "i", "bVII", "bVI", "V" ]
+    Category: "Modal"
+    Difficulty: "Intermediate"
+    Mode: "Phrygian dominant"
+    InKey: "A Minor"
+    Chords: [ "Am", "G", "F", "E" ]
+    Theory: "Descending bass line with Phrygian character"
+    Variations:
+      - Name: "Extended Andalusian"
+        RomanNumerals: [ "i", "bVII", "bVI", "bVII", "i" ]
+        Chords: [ "Am", "G", "F", "G", "Am" ]
+        Context: "With return to tonic"
+    Examples:
+      - Song: "Hit the Road Jack"
+        Artist: "Ray Charles"
+        Usage: "Main progression"
+      - Song: "Stairway to Heaven"
+        Artist: "Led Zeppelin"
+        Usage: "Intro section"
+    UsedBy: [ "Flamenco", "Classical Spanish", "Rock ballads" ]
+
+  - Name: "Rhythm Changes"
+    Description: "Jazz progression based on 'I Got Rhythm'"
+    Structure: "AABA form with specific harmonic rhythm"
+    Category: "Jazz"
+    Difficulty: "Advanced"
+    ASection:
+      RomanNumerals: [ "I", "vi", "ii", "V" ]
+      Chords: [ "Bb", "Gm", "Cm", "F" ]
+    BSection:
+      RomanNumerals: [ "III", "VI", "ii", "V" ]
+      Chords: [ "D", "G", "Cm", "F" ]
+    Theory: "Combines circle of fifths with chromatic harmony"
+    Examples:
+      - Song: "I Got Rhythm"
+        Artist: "George Gershwin"
+        Usage: "Original source"
+      - Song: "Anthropology"
+        Artist: "Charlie Parker"
+        Usage: "Bebop interpretation"
+    UsedBy: [ "Bebop musicians", "Jazz standards", "Jam sessions" ]
+
+  - Name: "Pachelbel Canon Progression"
+    Description: "Baroque ground bass adapted widely in pop"
+    RomanNumerals: [ "I", "V", "vi", "iii", "IV", "I", "IV", "V" ]
+    Category: "Classical/Pop"
+    Difficulty: "Beginner"
+    InKey: "D Major"
+    Chords: [ "D", "A", "Bm", "F#m", "G", "D", "G", "A" ]
+    Theory: "Descending-fifths motion with stepwise bass lines"
+    Examples:
+      - Song: "Let It Be"
+        Artist: "The Beatles"
+        Usage: "Variant"
+    UsedBy: [ "Classical", "Pop ballads", "Worship" ]
+
+  - Name: "I–bVII–IV (Mixolydian Rock)"
+    Description: "Modal rock staple with dominant-flat seven color"
+    RomanNumerals: [ "I", "bVII", "IV" ]
+    Category: "Rock/Modal"
+    Difficulty: "Beginner"
+    InKey: "G Mixolydian"
+    Chords: [ "G", "F", "C" ]
+    Theory: "Borrowed bVII from Mixolydian weakens dominant pull"
+    Examples:
+      - Song: "Sweet Home Alabama"
+        Artist: "Lynyrd Skynyrd"
+        Usage: "Core vamp"
+    UsedBy: [ "Classic rock", "Country rock" ]
+
+  - Name: "vi–IV–I–V (Pop Loop)"
+    Description: "Modern pop loop with rotating tonic perception"
+    RomanNumerals: [ "vi", "IV", "I", "V" ]
+    Category: "Pop"
+    Difficulty: "Beginner"
+    InKey: "C Major"
+    Chords: [ "Am", "F", "C", "G" ]
+    Theory: "Relative minor start softens cadential gravity"
+    Variations:
+      - Name: "vi–V–IV–V (EDM Half-time)"
+        RomanNumerals: [ "vi", "V", "IV", "V" ]
+        Chords: [ "Am", "G", "F", "G" ]
+        Context: "Dance/EDM builds"
+
+  - Name: "i–bVI–bVII (Aeolian Cadence)"
+    Description: "Minor-mode rock/film cadence (no dominant)"
+    RomanNumerals: [ "i", "bVI", "bVII" ]
+    Category: "Rock/Film"
+    Difficulty: "Beginner"
+    InKey: "A Minor"
+    Chords: [ "Am", "F", "G" ]
+    Theory: "Modal cadence; tonic affirmed without V"
+    Examples:
+      - Song: "All Along the Watchtower"
+        Artist: "Dylan/Hendrix"
+        Usage: "Verse loop"
+
+  - Name: "I–bVII–bVI–V (Backdoor-flavored Rock)"
+    Description: "Mixolydian descent to dominant"
+    RomanNumerals: [ "I", "bVII", "bVI", "V" ]
+    Category: "Rock"
+    Difficulty: "Intermediate"
+    InKey: "C"
+    Chords: [ "C", "Bb", "Ab", "G" ]
+    Theory: "Chromatic bass; V regains pull at the end"
+
+  - Name: "Backdoor Cadence"
+    Description: "Plagal-like dominant resolution via IVm"
+    RomanNumerals: [ "ivm7", "bVII7", "I" ]
+    Category: "Jazz"
+    Difficulty: "Intermediate"
+    InKey: "C Major"
+    Chords: [ "Fm7", "Bb7", "Cmaj7" ]
+    Theory: "Subdominant minor to bVII7 resolves to I (backdoor V)"
+    Variations:
+      - Name: "Backdoor ii–V"
+        RomanNumerals: [ "ivm7", "bVII7", "Imaj7" ]
+        Chords: [ "Fm7", "Bb7", "Cmaj7" ]
+        Context: "Functionally ii–V of I via subdominant minor"
+
+  - Name: "Tritone Sub ii–V"
+    Description: "ii–V with tritone substitution on V"
+    RomanNumerals: [ "ii7", "bII7", "I" ]
+    Category: "Jazz"
+    Difficulty: "Intermediate"
+    InKey: "C Major"
+    Chords: [ "Dm7", "Db7", "Cmaj7" ]
+    Theory: "V7 (G7) replaced by Db7 (shares tritone)"
+    Variations:
+      - Name: "Full Tritone Chain"
+        RomanNumerals: [ "ii7", "bII7", "Imaj7", "VI7", "ii7", "V7", "I" ]
+        Chords: [ "Dm7", "Db7", "Cmaj7", "A7", "Dm7", "G7", "Cmaj7" ]
+        Context: "Extended turnarounds with subs"
+
+  - Name: "Secondary Dominant Chain"
+    Description: "Sequential dominants resolving by fifth"
+    RomanNumerals: [ "V/ii", "V/V", "V", "I" ]
+    Category: "Tonal/Jazz"
+    Difficulty: "Intermediate"
+    InKey: "C Major"
+    Chords: [ "A7", "D7", "G7", "C" ]
+    Theory: "Temporary tonicizations sharpen motion"
+
+  - Name: "Deceptive Cadence"
+    Description: "Dominant resolves to vi instead of I"
+    RomanNumerals: [ "V", "vi" ]
+    Category: "Classical/Pop"
+    Difficulty: "Beginner"
+    InKey: "C Major"
+    Chords: [ "G", "Am" ]
+    Theory: "Cadential surprise, prolongs phrase"
+
+  - Name: "Plagal Cadence"
+    Description: "Subdominant resolves to tonic ('Amen')"
+    RomanNumerals: [ "IV", "I" ]
+    Category: "Classical/Gospel"
+    Difficulty: "Beginner"
+    InKey: "C Major"
+    Chords: [ "F", "C" ]
+    Theory: "Non-dominant cadence, warm closure"
+
+  - Name: "So What Vamp"
+    Description: "Modal planing between minor 7th chords"
+    RomanNumerals: [ "i7 (Dorian)", "bII7 (planed)" ]
+    Category: "Modal Jazz"
+    Difficulty: "Beginner"
+    InKey: "D Dorian"
+    Chords: [ "Dm7", "Ebm7" ]
+    Theory: "Parallel planing emphasizes color over function"
+    Examples:
+      - Song: "So What"
+        Artist: "Miles Davis"
+        Usage: "Signature vamp"
+
+  - Name: "I–II (Lydian Pop/Jazz)"
+    Description: "Bright Lydian color via raised fourth scale degree"
+    RomanNumerals: [ "I", "II" ]
+    Category: "Pop/Jazz"
+    Difficulty: "Beginner"
+    InKey: "C Lydian"
+    Chords: [ "C", "D" ]
+    Theory: "Avoids V; floating non-functional lift"
+
+  - Name: "Coltrane Changes (Giant Steps)"
+    Description: "Cycle of key centers separated by major thirds"
+    Structure: "Rapid tonicizations cycling through three distant keys"
+    Category: "Jazz (Advanced)"
+    Difficulty: "Expert"
+    InKey: "B Major (typical starting point)"
+    Chords: [ "Bmaj7", "D7", "Gmaj7", "Bb7", "Ebmaj7", "Am7", "D7", "Gmaj7", "Bb7", "Ebmaj7", "F#7", "Bmaj7" ]
+    Theory: "Symmetric division of octave; dominating ii–V links"
+    Variations:
+      - Name: "Countdown Changes"
+        Structure: "ii–V’s replacing long dominants"
+        Context: "Denser substitution network"
+    Examples:
+      - Song: "Giant Steps"
+        Artist: "John Coltrane"
+        Usage: "Full form"
+
+  - Name: "Cinematic Minor Ostinato"
+    Description: "Driving minor progression for underscore"
+    RomanNumerals: [ "i", "bVI", "bVII", "i" ]
+    Category: "Film/Trailer"
+    Difficulty: "Beginner"
+    InKey: "E Minor"
+    Chords: [ "Em", "C", "D", "Em" ]
+    Theory: "Aeolian cadence with rhythmic ostinato"
+
+  - Name: "EDM Four-Chord Loop"
+    Description: "Common dance loop with strong hooks"
+    RomanNumerals: [ "I", "V", "vi", "IV" ]
+    Category: "EDM/Pop"
+    Difficulty: "Beginner"
+    InKey: "G Major"
+    Chords: [ "G", "D", "Em", "C" ]
+    Theory: "Anthemic cycles; production-driven dynamics"
+
+  - Name: "Neo-Soul/Alt-R&B Color Loop"
+    Description: "Extensions, altered dominants, chromatic approach"
+    RomanNumerals: [ "Imaj7", "ivm7", "bVII7(#11)", "Imaj9" ]
+    Category: "Neo-Soul"
+    Difficulty: "Intermediate"
+    InKey: "C Major"
+    Chords: [ "Cmaj7", "Fm7", "Bb7(#11)", "Cmaj9" ]
+    Theory: "Backdoor colors + Lydian extensions for lushness"
+
+# Progression Analysis Framework
+ProgressionAnalysis:
+  HarmonicFunction:
+    - Tonic: "Stability, home, resolution"
+    - Subdominant: "Departure, preparation"
+    - Dominant: "Tension, leading back to tonic"
+    - Secondary: "Temporary tonicization of other keys"
+    - ModalTonic: "Static center without dominant pull"
+  VoiceLeading:
+    - Stepwise: "Smooth melodic motion"
+    - Leaps: "Dramatic intervallic motion"
+    - CommonTones: "Sustained notes between chords"
+    - Contrary: "Voices moving in opposite directions"
+    - GuideTones: "3rds and 7ths define function; move by semitone when possible"
+  RhythmicConsiderations:
+    - HarmonicRhythm: "Rate of chord change"
+    - Syncopation: "Off-beat chord changes"
+    - Anticipation: "Early chord arrivals"
+    - Suspension: "Delayed chord changes"
+    - TurnaroundPlacement: "Faster changes at phrase ends"
+
+# Turnarounds & Cadences
+TurnaroundsAndCadences:
+  Turnarounds:
+    - Name: "I–vi–ii–V"
+      InKey: "C"
+      Chords: [ "C", "Am", "Dm", "G" ]
+      Use: "Standard AABA endings"
+    - Name: "iii–vi–ii–V"
+      InKey: "C"
+      Chords: [ "Em7", "A7", "Dm7", "G7" ]
+      Use: "Jazzier color; sets up next chorus"
+    - Name: "I–VI7–ii–V"
+      InKey: "C"
+      Chords: [ "C", "A7", "Dm7", "G7" ]
+      Use: "Secondary dominant bite"
+  Cadences:
+    - Name: "Authentic Cadence"
+      RomanNumerals: [ "V", "I" ]
+      Variants: [ "V7–I", "V–I6/4–I" ]
+    - Name: "Half Cadence"
+      RomanNumerals: [ "?", "V" ]
+      Note: "Any chord to V; open ending"
+    - Name: "Plagal Cadence"
+      RomanNumerals: [ "IV", "I" ]
+    - Name: "Deceptive Cadence"
+      RomanNumerals: [ "V", "vi" ]
+    - Name: "Phrygian Cadence (minor)"
+      RomanNumerals: [ "iv6", "V" ]
+
+# Modulation Strategies
+ModulationStrategies:
+  - Name: "Pivot Chord Modulation"
+    Description: "Shared chord belongs to both keys"
+    Steps: [ "Identify common chord", "Reinterpret function", "Confirm new key with cadence" ]
+  - Name: "Direct/Chromatic Modulation"
+    Description: "Abrupt shift, often via common tone"
+    Steps: [ "Hold common tone", "Reframe harmony around new tonic" ]
+  - Name: "Sequential Fifths Modulation"
+    Description: "Use circle of fifths to reach target key"
+    Steps: [ "Apply secondary dominants", "Confirm in new key" ]
+  - Name: "Modal Shift"
+    Description: "Same tonic, different mode"
+    Steps: [ "Borrow mode", "Realign melody and bass" ]
+
+# Genre Characteristics
+GenreCharacteristics:
+  Jazz:
+    - Extensions: "7ths, 9ths, 11ths, 13ths"
+    - Substitutions: "Tritone subs, chromatic approach"
+    - Voicings: "Rootless, quartal harmony"
+    - Rhythm: "Swing, syncopation"
+  Blues:
+    - Harmony: "Dominant 7ths, blue notes"
+    - Form: "12-bar, 8-bar, 16-bar"
+    - Scales: "Blues scale, mixolydian"
+    - Techniques: "Bends, slides, call-response"
+  Pop:
+    - Simplicity: "Triads, basic 7ths"
+    - Repetition: "Loop-based progressions"
+    - Hooks: "Memorable melodic fragments"
+    - Production: "Arrangement-dependent"
+  Classical:
+    - Functionality: "Clear tonic-dominant relationships"
+    - VoiceLeading: "Smooth part-writing"
+    - Form: "Sonata, rondo, theme and variations"
+    - Modulation: "Systematic key changes"
+  Rock:
+    - PowerChords: "Root and fifth emphasis"
+    - Modal: "Mixolydian, dorian common"
+    - Rhythm: "Strong backbeat, driving"
+    - Dynamics: "Loud-soft contrasts"
+  Film/EDM:
+    - Ostinati: "Looped motifs under evolving textures"
+    - Hybrid: "Modal with cinematic rises"
+    - Texture: "Layered pads, sub-bass movement"
+
+# Historical Development
+HistoricalContext:
+  Baroque:
+    - Characteristics: "Figured bass, circle of fifths"
+    - Composers: [ "Bach", "Handel" ]
+    - Progressions: [ "ii-V-I", "Circle progressions" ]
+  Classical:
+    - Characteristics: "Clear phrase structure, functional harmony"
+    - Composers: [ "Mozart", "Haydn" ]
+    - Progressions: [ "I-V-I", "ii-V-I", "Cadential patterns" ]
+  Romantic:
+    - Characteristics: "Chromatic harmony, extended progressions"
+    - Composers: [ "Chopin", "Wagner" ]
+    - Progressions: [ "Chromatic mediants", "Augmented sixth chords" ]
+  Jazz:
+    - Characteristics: "Extended harmony, substitutions"
+    - Musicians: [ "Parker", "Coltrane", "Evans" ]
+    - Progressions: [ "ii-V-I", "Rhythm changes", "Giant steps" ]
+  Popular:
+    - Characteristics: "Simple, memorable, repetitive"
+    - Artists: [ "Beatles", "Motown", "Contemporary pop" ]
+    - Progressions: [ "I-vi-IV-V", "vi-IV-I-V", "I-V-vi-IV" ]
+  Contemporary:
+    - Characteristics: "Modal loops, cinematic ostinati, hybrid tonality"
+    - Artists: [ "Hans Zimmer", "Nils Frahm", "Lo-fi/EDM producers" ]
+    - Progressions: [ "i–bVI–bVII–i", "I–V–vi–IV", "Neo-soul color loops" ]
+
+# Guitar Comping Recipes (movable, standard tuning EADGBE)
+GuitarCompingRecipes:
+  # Conventions:
+  # - StringSet: which 4 strings the voicing uses (low→high)
+  # - DegreeOrder: chord-tone order low→high (e.g., 7-3-5-R = rootless drop-2)
+  # - ExampleInKey: one concrete fingering; adjust positions to transpose
+  # - GuideTones: which voices to prioritize (usually 3rd & 7th)
+  # - Rhythm: common comping feels you can plug in immediately
+
+  - Name: "ii–V–I (Major) — Rootless Drop-2 set"
+    Category: "Jazz"
+    StringSet: "6-4-3-2"
+    VoiceLeading: "Keep 3rd and 7th on same strings; resolve by semitone where possible"
+    GuideTones: [ "3rd", "7th" ]
+    Shapes:
+      - Chord: "Minor 7 (ii7)"
+        DegreeOrder: "7-3-5-9"
+        ExampleInKey:
+          Key: "C Major"
+          Fingering: "Dm9: x-5-5-5 (add 9 by melody or extension)"
+          Note: "Movable shell: x-5-5-5 for 7-3-5; add 9 on top if desired"
+      - Chord: "Dominant 7 (V7alt)"
+        DegreeOrder: "3-b7-#9-13"
+        ExampleInKey:
+          Key: "C Major"
+          Fingering: "G7(13,#9): x-5-4-6"
+          Note: "Alter by shifting top note for b9/#9/#11/13 colors"
+      - Chord: "Major 7 (Imaj7)"
+        DegreeOrder: "7-3-5-9"
+        ExampleInKey:
+          Key: "C Major"
+          Fingering: "Cmaj9: 8-x-9-9-10"
+          Note: "Drop to maj7 shell 7-3-5; add 9/13 for color"
+    Rhythm:
+      - "Swing quarters with ‘& of 4’ anticipations"
+      - "Charleston: beat 1 + ‘& of 2’"
+      - "Freddie Green 3-note shells"
+    Tips:
+      - "Keep top note melodic"
+      - "Resolve b9/#9 by semitone into I"
+
+  - Name: "iiø–V–i (Minor) — Rootless Drop-2 set"
+    Category: "Jazz"
+    StringSet: "5-4-3-2"
+    GuideTones: [ "b3", "b7" ]
+    Shapes:
+      - Chord: "Half-diminished (iiø7)"
+        DegreeOrder: "b7-b3-b5-11"
+        ExampleInKey:
+          Key: "C Minor"
+          Fingering: "Dm7b5(11): 5-6-5-6"
+      - Chord: "V7alt"
+        DegreeOrder: "3-b7-b9-#9"
+        ExampleInKey:
+          Key: "C Minor"
+          Fingering: "G7(b9,#9): 5-4-5-5"
+      - Chord: "Minor-major or plain minor (i)"
+        DegreeOrder: "7-3-5-9"
+        ExampleInKey:
+          Key: "C Minor"
+          Fingering: "Cm(maj9): 3-5-4-5"
+    Rhythm:
+      - "Bossa straight 8ths"
+      - "Ballad dotted-quarter + eighth"
+
+  - Name: "12-Bar Blues — Guide-tone shells"
+    Category: "Blues/Jazz"
+    StringSet: "6-4-3-2"
+    DegreeOrder: "3-7 core; add 6/9 or 13 on top"
+    ExampleInKey:
+      Key: "E"
+      I7: "E7: 7th on D string, 3rd on G string"
+      IV7: "A7: move shapes by interval"
+      V7: "B7: lead 3↔7 by semitone"
+    Rhythm:
+      - "Shuffle swing 8ths"
+      - "Riff hits on bars 4/8/12"
+
+  - Name: "Pop Loop I–V–vi–IV — Triad + 2/9 color"
+    Category: "Pop/EDM"
+    StringSet: "5-4-3-2"
+    VoicingStrategy: "Middle-string triads with 2/9 on top"
+    ExampleInKey:
+      Key: "G"
+      Grips:
+        - "G(add9): 10-12-12-10"
+        - "D(add9)/A: 12-11-11-12"
+        - "Em(add9): 7-9-9-7"
+        - "C(add9)/G: 10-10-9-10"
+    Rhythm:
+      - "Four-on-the-floor hits on 1, light ‘& of 2/4’"
+      - "16th-note arpeggio grid (accent 1 & 3)"
+
+  - Name: "Mixolydian Rock I–bVII–IV — Quartal/Power"
+    Category: "Rock"
+    StringSet: "6-5-4-3"
+    VoicingStrategy: "Power shells + sus2/4"
+    ExampleInKey:
+      Key: "A Mixolydian"
+      Grips:
+        - "A5(add2): 5-7-7-7"
+        - "Gsus2: 3-5-5-5"
+        - "Dsus2/F#: 2-5-7-7"
+    Rhythm:
+      - "Driving 8ths, backbeat accents"
+
+  - Name: "So What Vamp — Quartal planing"
+    Category: "Modal Jazz"
+    StringSet: "5-4-3-2"
+    DegreeOrder: "Stacked 4ths (no 3rd)"
+    ExampleInKey:
+      Key: "D Dorian"
+      Grips:
+        - "Dm11: 5-7-9-10"
+        - "Ebm11: 6-8-10-11"
+    Rhythm:
+      - "Sparse off-beats; leave space"
+
+# Transposition Tables (quick lookup)
+TransposeTables:
+  - Name: "ii–V–I (Major) — 12 keys"
+    Rows:
+      - Key: "C"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Dm7", "G7", "Cmaj7" ]
+      - Key: "Db"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Ebm7", "Ab7", "Dbmaj7" ]
+      - Key: "D"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Em7", "A7", "Dmaj7" ]
+      - Key: "Eb"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Fm7", "Bb7", "Ebmaj7" ]
+      - Key: "E"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "F#m7", "B7", "Emaj7" ]
+      - Key: "F"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Gm7", "C7", "Fmaj7" ]
+      - Key: "Gb"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Abm7", "Db7", "Gbmaj7" ]
+      - Key: "G"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Am7", "D7", "Gmaj7" ]
+      - Key: "Ab"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Bbm7", "Eb7", "Abmaj7" ]
+      - Key: "A"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Bm7", "E7", "Amaj7" ]
+      - Key: "Bb"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "Cm7", "F7", "Bbmaj7" ]
+      - Key: "B"
+        RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+        Chords: [ "C#m7", "F#7", "Bmaj7" ]
+
+  - Name: "iiø–V–i (Minor) — 12 keys"
+    Rows:
+      - Key: "C"
+        Chords: [ "Dm7b5", "G7", "Cm" ]
+      - Key: "Db"
+        Chords: [ "Ebm7b5", "Ab7", "Dbm" ]
+      - Key: "D"
+        Chords: [ "Em7b5", "A7", "Dm" ]
+      - Key: "Eb"
+        Chords: [ "Fm7b5", "Bb7", "Ebm" ]
+      - Key: "E"
+        Chords: [ "F#m7b5", "B7", "Em" ]
+      - Key: "F"
+        Chords: [ "Gm7b5", "C7", "Fm" ]
+      - Key: "Gb"
+        Chords: [ "Abm7b5", "Db7", "Gbm" ]
+      - Key: "G"
+        Chords: [ "Am7b5", "D7", "Gm" ]
+      - Key: "Ab"
+        Chords: [ "Bbm7b5", "Eb7", "Abm" ]
+      - Key: "A"
+        Chords: [ "Bm7b5", "E7", "Am" ]
+      - Key: "Bb"
+        Chords: [ "Cm7b5", "F7", "Bbm" ]
+      - Key: "B"
+        Chords: [ "C#m7b5", "F#7", "Bm" ]
+
+  - Name: "12-Bar Blues — common guitar keys"
+    Rows:
+      - Key: "E"
+        I: "E7"
+        IV: "A7"
+        V: "B7"
+      - Key: "A"
+        I: "A7"
+        IV: "D7"
+        V: "E7"
+      - Key: "G"
+        I: "G7"
+        IV: "C7"
+        V: "D7"
+      - Key: "C"
+        I: "C7"
+        IV: "F7"
+        V: "G7"
+      - Key: "D"
+        I: "D7"
+        IV: "G7"
+        V: "A7"
+
+  - Name: "Pop I–V–vi–IV — 12 keys (triads)"
+    Rows:
+      - Key: "C"
+        Chords: [ "C", "G", "Am", "F" ]
+      - Key: "Db"
+        Chords: [ "Db", "Ab", "Bbm", "Gb" ]
+      - Key: "D"
+        Chords: [ "D", "A", "Bm", "G" ]
+      - Key: "Eb"
+        Chords: [ "Eb", "Bb", "Cm", "Ab" ]
+      - Key: "E"
+        Chords: [ "E", "B", "C#m", "A" ]
+      - Key: "F"
+        Chords: [ "F", "C", "Dm", "Bb" ]
+      - Key: "Gb"
+        Chords: [ "Gb", "Db", "Ebm", "B" ]
+      - Key: "G"
+        Chords: [ "G", "D", "Em", "C" ]
+      - Key: "Ab"
+        Chords: [ "Ab", "Eb", "Fm", "Db" ]
+      - Key: "A"
+        Chords: [ "A", "E", "F#m", "D" ]
+      - Key: "Bb"
+        Chords: [ "Bb", "F", "Gm", "Eb" ]
+      - Key: "B"
+        Chords: [ "B", "F#", "G#m", "E" ]

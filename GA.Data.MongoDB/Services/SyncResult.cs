@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Services;
+namespace GA.Data.MongoDB.Services;
 
 public class SyncResult
 {

@@ -1,0 +1,585 @@
+KeyModulationTechniques:
+  - Name: Pivot Chord Modulation
+    Description: Uses a chord that functions in both the original and target keys
+    Type: Common Tone
+    Difficulty: Beginner
+    Category: Classical
+    Theory: The pivot chord serves as a harmonic bridge, reinterpreted in the new key
+    Examples:
+      - FromKey: C Major
+        ToKey: G Major
+        PivotChord: Am
+        OriginalFunction: vi in C Major
+        NewFunction: ii in G Major
+        Progression:
+          - C
+          - F
+          - Am
+          - D
+          - G
+        Analysis: Am reinterpreted from vi to ii enables smooth modulation
+      - FromKey: F Major
+        ToKey: Bb Major
+        PivotChord: Dm
+        OriginalFunction: vi in F Major
+        NewFunction: iii in Bb Major
+        Progression:
+          - F
+          - Bb
+          - Dm
+          - Eb
+          - Bb
+    UsedBy:
+      - Bach
+      - Mozart
+      - Beethoven
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+    PivotChordExamples:
+      - From: C major
+        To: G major
+        Chord: Am (vi in C, ii in G)
+      - From: A minor
+        To: C major
+        Chord: Em (v in A min (modal), iii in C)
+  - Name: Circle of Fifths Modulation
+    Description: Modulates through dominant relationships in sequence
+    Type: Sequential
+    Difficulty: Intermediate
+    Category: Jazz
+    Theory: Each chord acts as V7 of the next, creating forward harmonic motion
+    Examples:
+      - Progression:
+          - C
+          - G7
+          - C
+          - A7
+          - D
+          - B7
+          - E
+        Description: Modulates from C to E through dominant chains
+        Analysis: G7→C, A7→D, B7→E creates seamless key changes
+      - Progression:
+          - Am
+          - E7
+          - Am
+          - F#7
+          - Bm
+          - G#7
+          - C#m
+        Description: Minor key circle of fifths progression
+    UsedBy:
+      - Bill Evans
+      - John Coltrane
+      - Giant Steps
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+  - Name: Direct Modulation
+    Description: Abrupt key change without harmonic preparation
+    Type: Sudden
+    Difficulty: Beginner
+    Category: Popular
+    Theory: Creates dramatic effect through unexpected harmonic shift
+    Examples:
+      - FromKey: C Major
+        ToKey: Eb Major
+        Interval: Minor third up
+        Effect: Brightening, uplifting
+        Songs:
+          - My Girl - The Temptations
+          - I Want It That Way - Backstreet Boys
+      - FromKey: G Major
+        ToKey: Bb Major
+        Interval: Minor third up
+        Effect: Climactic, powerful
+    UsedBy:
+      - Pop music
+      - Musical theater
+      - Film scores
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+    SetupTips:
+      - End previous phrase on a cadential 6/4 or fermata
+      - Use a breath/rest to justify the hard cut
+    ImpactVariants:
+      - Up a semitone (pop key lift)
+      - Down a minor third (darker color)
+  - Name: Chromatic Mediant
+    Description: Modulation to keys a third apart with one note in common
+    Type: Common Tone
+    Difficulty: Advanced
+    Category: Romantic
+    Theory: Exploits the common tone between triads a third apart
+    Examples:
+      - FromKey: C Major
+        ToKey: E Major
+        CommonTone: E
+        Progression:
+          - C
+          - Em
+          - E
+          - A
+          - E
+        Analysis: E note connects C major triad to E major triad
+      - FromKey: A Minor
+        ToKey: F Major
+        CommonTone: A
+        Progression:
+          - Am
+          - F
+          - Bb
+          - F
+    UsedBy:
+      - Schubert
+      - Chopin
+      - Wagner
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+  - Name: Neapolitan Sixth Modulation
+    Description: Uses the Neapolitan chord as a pivot to distant keys
+    Type: Chromatic
+    Difficulty: Advanced
+    Category: Classical
+    Theory: N6 chord provides chromatic voice leading to remote keys
+    Examples:
+      - FromKey: C Minor
+        ToKey: Db Major
+        PivotChord: Db major (N6 in Cm)
+        Progression:
+          - Cm
+          - Db
+          - Ab
+          - Db
+        Analysis: Neapolitan becomes tonic of new key
+    UsedBy:
+      - Beethoven
+      - Schubert
+      - Chopin
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+  - Name: Enharmonic Modulation
+    Description: Uses enharmonic reinterpretation of chords
+    Type: Enharmonic
+    Difficulty: Advanced
+    Category: Romantic
+    Theory: Same pitches spelled differently to suggest new harmonic context
+    Examples:
+      - FromKey: C Major
+        ToKey: F# Major
+        PivotChord: German Augmented Sixth
+        EnharmonicAs: Dominant 7th
+        Progression:
+          - C
+          - A7
+          - D
+          - C#7
+          - F#
+        Analysis: Ger+6 in C = V7 in F#
+    UsedBy:
+      - Liszt
+      - Wagner
+      - Franck
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+  - Name: Modal Interchange
+    Description: Borrows chords from parallel modes
+    Type: Modal
+    Difficulty: Intermediate
+    Category: Contemporary
+    Theory: Uses chords from parallel major/minor or other modes
+    Examples:
+      - FromKey: C Major
+        ToKey: C Minor
+        BorrowedChords:
+          - Ab
+          - Bb
+          - Eb
+        Progression:
+          - C
+          - Ab
+          - Bb
+          - Cm
+        Analysis: bVI and bVII from C minor create modal shift
+      - FromKey: A Minor
+        ToKey: A Dorian
+        BorrowedChords:
+          - F#m
+          - D
+        Progression:
+          - Am
+          - F#m
+          - D
+          - Am
+    UsedBy:
+      - The Beatles
+      - Radiohead
+      - Jazz fusion
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+  - Name: Truck Driver's Modulation
+    Description: Direct modulation up a whole step or half step
+    Type: Direct
+    Difficulty: Beginner
+    Category: Popular
+    Theory: Simple key change for final chorus energy boost
+    Examples:
+      - FromKey: C Major
+        ToKey: D Major
+        Interval: Whole step up
+        Usage: Final chorus
+        Songs:
+          - I Want It That Way
+          - Livin' on a Prayer
+      - FromKey: Bb Major
+        ToKey: B Major
+        Interval: Half step up
+        Usage: Climactic moment
+    UsedBy:
+      - Country music
+      - Pop ballads
+      - Gospel
+    UseCases:
+      - Smooth transition in common-practice harmony
+      - Song section contrast (verse → chorus)
+      - Film/game cue key lift for energy
+    VoiceLeading:
+      Guideline: Minimize semitone movement; common tones stay where possible.
+      BassMotion: Prefer perfect 5th/4th or stepwise motion.
+      UpperVoices: Resolve tendency tones properly when borrowed from secondary dominants.
+    PivotChordCriteria:
+      - Exists diatonically in both source and target keys
+      - Prefer predominant (ii/IV) or submediant (vi) to conceal the pivot
+      - Avoid altered tones that imply target too early unless intentional
+    TargetKeyOptions:
+      ClosestByFifths:
+        - Relative major/minor
+        - Dominant/Subdominant keys
+      ChromaticMediants:
+        - ♭III/III, ♭VI/VI, ♭VII/VII (major/minor quality swap)
+      CommonTone: Target key shares at least one sustained pitch with source
+    CommonMistakes:
+      - Losing functional clarity (no decisive dominant into new tonic)
+      - Overusing secondary dominants causing tonicization loops
+      - Unprepared accidentals creating parallelisms or voice-leading clashes
+    PracticeDrills:
+      - Write a 4–8 bar progression that pivots via ii or vi to a closely related key
+      - Modulate up a whole step using a secondary dominant; record and analyze voice-leading
+      - Compose a chorus lift (+2 semitones) maintaining a common melodic tone
+    EarTraining:
+      - Identify V/V → V → I cadences in various keys
+      - Spot common-tone modulations by listening for sustained pitches
+      - Practice hearing relative vs. parallel key color shift
+    GuitarFretboardTips:
+      - Map common pivot chords as CAGED shapes; keep a fixed melody note on top string
+      - Use guide tones (3rd & 7th) on adjacent strings to hear functional shifts
+      - Leverage movable dominant 7 grips to set up target key cadences
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 1
+ModulationAnalysis:
+  Factors:
+    - HarmonicDistance: How far apart the keys are harmonically
+    - CommonTones: Shared pitches between keys
+    - VoiceLeading: Smoothness of melodic lines
+    - FunctionalRelationship: How chords relate functionally
+    - ContextualEffect: Emotional or dramatic impact
+  KeyRelationships:
+    - CloselyRelated:
+        - Perfect fifth
+        - Relative major/minor
+        - Parallel major/minor
+    - DistantlyRelated:
+        - Tritone
+        - Chromatic mediant
+        - Enharmonic equivalent
+  EffectivenessCriteria:
+    - Preparation: How well the modulation is set up
+    - Execution: Smoothness of the transition
+    - Resolution: How well established the new key becomes
+    - Purpose: Whether the modulation serves the musical narrative
+HistoricalDevelopment:
+  Baroque:
+    - Characteristics: Mostly closely related keys, circle of fifths
+    - Composers:
+        - Bach
+        - Handel
+        - Vivaldi
+    - Techniques:
+        - Sequence
+        - Circle of fifths
+        - Relative major/minor
+  Classical:
+    - Characteristics: Systematic use of pivot chords, clear formal structures
+    - Composers:
+        - Mozart
+        - Haydn
+        - Early Beethoven
+    - Techniques:
+        - Pivot chord
+        - Direct modulation
+        - Tonicization
+  Romantic:
+    - Characteristics: Chromatic harmony, distant key relationships
+    - Composers:
+        - Chopin
+        - Liszt
+        - Wagner
+        - Brahms
+    - Techniques:
+        - Chromatic mediant
+        - Enharmonic
+        - Modal mixture
+  Contemporary:
+    - Characteristics: Modal interchange, non-functional harmony
+    - Composers:
+        - Debussy
+        - Jazz musicians
+        - Popular music
+    - Techniques:
+        - Modal
+        - Chromatic
+        - Direct modulation

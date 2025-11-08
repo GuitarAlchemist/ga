@@ -1,6 +1,6 @@
-﻿using GA.Business.Core.Atonal;
+﻿namespace GA.Business.Core.Tests.Notes;
 
-namespace GA.Business.Core.Tests.Notes;
+using Core.Atonal;
 
 public class PitchClassTests
 {

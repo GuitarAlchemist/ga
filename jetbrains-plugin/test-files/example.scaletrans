@@ -1,0 +1,7 @@
+# Scale Transformation DSL Example
+# Try typing to see auto-completion!
+
+C major
+transpose 2
+mode dorian
+invert

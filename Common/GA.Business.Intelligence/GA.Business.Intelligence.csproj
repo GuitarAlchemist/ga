@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AssemblyName>GA.Business.Intelligence</AssemblyName>
+    <RootNamespace>GA.Business.Intelligence</RootNamespace>
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Exclude files with syntax errors or missing types -->
+    <Compile Remove="SemanticIndexing\GPUAcceleratedEmbeddingService.cs"/>
+    <Compile Remove="SemanticIndexing\LockFreeDataStructures.cs"/>
+    <Compile Remove="SemanticIndexing\OptimizedSemanticFretboardService.cs"/>
+    <!-- Exclude files with wrong namespace references -->
+    <Compile Remove="Analytics\AdvancedMusicalAnalyticsService.cs"/>
+    <Compile Remove="BSP\IntelligentBspGenerator.cs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\GA.Business.AI\GA.Business.AI.csproj"/>
+    <ProjectReference Include="..\GA.Business.Analysis\GA.Business.Analysis.csproj"/>
+    <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/>
+    <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/>
+    <ProjectReference Include="..\GA.BSP.Core\GA.BSP.Core.csproj"/>
+    <ProjectReference Include="..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ILGPU" Version="1.5.1"/>
+    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10"/>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
+    <PackageReference Include="System.Threading.Channels" Version="9.0.10"/>
+    <PackageReference Include="System.Buffers" Version="4.5.1"/>
+    <PackageReference Include="System.Memory" Version="4.5.5"/>
+    <PackageReference Include="Moq" Version="4.20.72"/>
+  </ItemGroup>
+
+</Project>

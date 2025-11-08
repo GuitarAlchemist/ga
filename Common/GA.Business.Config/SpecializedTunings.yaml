@@ -1,0 +1,500 @@
+# Specialized Tunings Configuration
+# Defines alternative tunings, extended range instruments, and specialized string configurations
+
+AlternativeStringConfigurations:
+  - Name: "Nashville Tuning"
+    Description: "High-strung guitar using octave strings for unique timbral effects"
+    Category: "Studio Technique"
+    Configuration:
+      String6: "E (octave higher than standard)"
+      String5: "A (octave higher than standard)"
+      String4: "D (octave higher than standard)"
+      String3: "G (standard pitch)"
+      String2: "B (standard pitch)"
+      String1: "E (standard pitch)"
+    PitchClasses: [ 4, 9, 2, 7, 11, 4 ]  # E4, A4, D5, G4, B4, E5
+    StringGauges: [ ".010", ".014", ".009", ".016", ".011", ".010" ]
+    TonalCharacteristics:
+      - "Bright, chimey sound"
+      - "12-string guitar-like effect"
+      - "Excellent for layering with standard tuning"
+      - "Mandolin-like quality in upper register"
+    Applications:
+      - "Studio doubling and layering"
+      - "Folk and country music"
+      - "Jangly pop and indie rock"
+      - "Acoustic arrangements"
+    Artists: [ "Joni Mitchell", "Led Zeppelin (Going to California)", "R.E.M." ]
+    RecordingTechniques:
+      - "Layer with standard tuning guitar"
+      - "Pan opposite to standard guitar"
+      - "Use for arpeggiated accompaniment"
+
+  - Name: "12-String Guitar Tuning"
+    Description: "Six courses of doubled strings for rich harmonic content"
+    Category: "Extended Configuration"
+    Configuration:
+      Course1: "E + E (unison)"
+      Course2: "B + B (unison)"
+      Course3: "G + G (unison)"
+      Course4: "D + D (unison)"
+      Course5: "A + A (octave)"
+      Course6: "E + E (octave)"
+    TuningPattern: "Standard tuning with octave doubling on lower four courses"
+    TonalCharacteristics:
+      - "Rich harmonic overtones"
+      - "Natural chorus effect"
+      - "Sustained, ringing quality"
+      - "Complex harmonic interactions"
+    Applications:
+      - "Folk and acoustic music"
+      - "Rhythm guitar in rock"
+      - "Fingerpicking arrangements"
+      - "Orchestral guitar parts"
+    Artists: [ "The Byrds", "Led Zeppelin", "The Beatles", "Roger McGuinn" ]
+    PlayingConsiderations:
+      - "Higher string tension"
+      - "Wider neck accommodation"
+      - "Careful intonation setup"
+      - "Specialized picking techniques"
+
+  - Name: "Tenor Guitar Tunings"
+    Description: "Four-string guitar configurations for specialized applications"
+    Category: "Reduced String Count"
+    CommonTunings:
+      - Name: "Chicago Tuning"
+        Configuration: [ "C", "G", "D", "A" ]
+        PitchClasses: [ 0, 7, 2, 9 ]
+        Intervals: "Perfect fifths (like mandolin/violin)"
+        Applications: [ "Jazz", "Irish traditional", "Mandolin-style playing" ]
+
+      - Name: "Irish Tenor"
+        Configuration: [ "G", "D", "A", "E" ]
+        PitchClasses: [ 7, 2, 9, 4 ]
+        Intervals: "Perfect fifths"
+        Applications: [ "Celtic music", "Folk", "Traditional Irish" ]
+
+      - Name: "Tenor Banjo Style"
+        Configuration: [ "C", "G", "D", "A" ]
+        PitchClasses: [ 0, 7, 2, 9 ]
+        Applications: [ "Dixieland jazz", "Traditional American" ]
+
+    Characteristics:
+      - "Easier chord fingerings"
+      - "Mandolin-like technique transfer"
+      - "Reduced string complexity"
+      - "Focused harmonic range"
+
+  - Name: "Baritone Guitar Tunings"
+    Description: "Extended range guitars tuned lower than standard"
+    Category: "Extended Range"
+    StandardBaritone:
+      Configuration: [ "B", "E", "A", "D", "F#", "B" ]
+      PitchClasses: [ 11, 4, 9, 2, 6, 11 ]
+      Interval: "Perfect fourth below standard tuning"
+      StringGauges: [ ".013-.062" or ".014-.068" ]
+    AlternativeBaritone:
+      - Name: "A Tuning"
+        Configuration: [ "A", "D", "G", "C", "E", "A" ]
+        PitchClasses: [ 9, 2, 7, 0, 4, 9 ]
+        Interval: "Perfect fifth below standard"
+
+      - Name: "Drop A"
+        Configuration: [ "A", "E", "A", "D", "F#", "B" ]
+        PitchClasses: [ 9, 4, 9, 2, 6, 11 ]
+        Characteristics: "Drop tuning in baritone range"
+
+    Applications:
+      - "Heavy metal and progressive rock"
+      - "Film scoring and ambient music"
+      - "Jazz and fusion extended range"
+      - "Contemporary classical music"
+    Artists: [ "Devin Townsend", "Animals as Leaders", "Pat Metheny" ]
+
+# Specialized Tuning Systems
+SpecializedTuningSystems:
+  - Name: "Microtonal Tunings"
+    Description: "Tuning systems using intervals smaller than semitones"
+    Category: "Experimental"
+    Systems:
+      - Name: "Quarter-Tone Tuning"
+        Description: "24-tone equal temperament"
+        Interval: "50 cents (half of semitone)"
+        Implementation: "Fret modifications or string bending"
+        Applications: [ "Contemporary classical", "Experimental music", "Middle Eastern music" ]
+        Composers: [ "Julián Carrillo", "Alois Hába", "Ivan Wyschnegradsky" ]
+
+      - Name: "Just Intonation"
+        Description: "Pure mathematical ratios for perfect consonance"
+        Ratios:
+          - "Perfect Fifth: 3:2"
+          - "Major Third: 5:4"
+          - "Minor Third: 6:5"
+          - "Perfect Fourth: 4:3"
+        Characteristics: "Beatless intervals, pure harmony"
+        Challenges: "Limited modulation, complex implementation"
+        Applications: [ "Early music", "Experimental composition", "Harmonic exploration" ]
+
+      - Name: "19-Tone Equal Temperament"
+        Description: "19 equal divisions of the octave"
+        Interval: "63.16 cents per step"
+        Benefits: "Better major thirds than 12-TET"
+        Applications: [ "Experimental music", "Theoretical exploration" ]
+
+    Implementation:
+      - "Fret modifications and additions"
+      - "String bending techniques"
+      - "Slide guitar approaches"
+      - "Electronic pitch shifting"
+      - "Prepared guitar techniques"
+
+  - Name: "Historical Temperaments"
+    Description: "Pre-equal temperament tuning systems"
+    Category: "Historical"
+    Systems:
+      - Name: "Well-Tempered"
+        Description: "Unequal temperament allowing all keys"
+        Characteristics: "Each key has unique character"
+        Period: "Baroque and Classical periods"
+        Example: "Bach's Well-Tempered Clavier"
+
+      - Name: "Meantone Temperament"
+        Description: "Pure major thirds with adjusted fifths"
+        Period: "Renaissance and early Baroque"
+        Characteristics: "Beautiful major thirds, some keys unusable"
+
+      - Name: "Pythagorean Tuning"
+        Description: "Based on perfect fifths (3:2 ratio)"
+        Characteristics: "Pure fifths, sharp major thirds"
+        Period: "Medieval music"
+
+    ModernApplications:
+      - "Period performance practice"
+      - "Historical music recreation"
+      - "Compositional exploration"
+      - "Timbral variety in recording"
+
+  - Name: "World Music Tuning Systems"
+    Description: "Non-Western tuning approaches"
+    Category: "Cultural"
+    Systems:
+      - Name: "Arabic Maqam Tunings"
+        Description: "Quarter-tone inflections in Arabic music"
+        Characteristics:
+          - "Quarter-tone intervals (50 cents)"
+          - "Neutral seconds and thirds"
+          - "Modal melodic patterns"
+        Implementation: "Fret modifications, string bending"
+        Maqamat: [ "Rast", "Bayati", "Hijaz", "Saba" ]
+
+      - Name: "Indian Raga Tunings"
+        Description: "Microtonal inflections in Indian classical music"
+        Characteristics:
+          - "22 shruti (microtonal divisions)"
+          - "Moveable tonic system"
+          - "Ornamental pitch bending"
+        Instruments: [ "Sitar sympathetic strings", "Fretless approaches" ]
+
+      - Name: "Gamelan Tunings"
+        Description: "Indonesian tuning systems"
+        Systems:
+          - "Slendro: 5-tone roughly equal"
+          - "Pelog: 7-tone unequal"
+        Characteristics: "Non-octave repeating scales"
+
+    Applications:
+      - "World music fusion"
+      - "Contemporary classical composition"
+      - "Film scoring for cultural authenticity"
+      - "Experimental music exploration"
+
+# Extended Range Instruments
+ExtendedRangeInstruments:
+  - Name: "7-String Guitar Tunings"
+    Description: "Standard 6-string plus additional low string"
+    Category: "Extended Range"
+    StandardTuning:
+      Configuration: [ "B", "E", "A", "D", "G", "B", "E" ]
+      PitchClasses: [ 11, 4, 9, 2, 7, 11, 4 ]
+      AddedString: "Low B (perfect fourth below low E)"
+    AlternativeTunings:
+      - Name: "Drop A"
+        Configuration: [ "A", "E", "A", "D", "G", "B", "E" ]
+        PitchClasses: [ 9, 4, 9, 2, 7, 11, 4 ]
+
+      - Name: "High A"
+        Configuration: [ "E", "A", "D", "G", "B", "E", "A" ]
+        PitchClasses: [ 4, 9, 2, 7, 11, 4, 9 ]
+        AddedString: "High A (perfect fourth above high E)"
+
+    Applications:
+      - "Progressive metal and djent"
+      - "Jazz fusion extended range"
+      - "Contemporary classical"
+      - "Experimental music"
+    Artists: [ "Steve Vai", "John Petrucci", "Tosin Abasi" ]
+
+  - Name: "8-String Guitar Tunings"
+    Description: "Extended range with additional low and/or high strings"
+    Category: "Extended Range"
+    StandardTuning:
+      Configuration: [ "F#", "B", "E", "A", "D", "G", "B", "E" ]
+      PitchClasses: [ 6, 11, 4, 9, 2, 7, 11, 4 ]
+      Range: "F#1 to E6 (standard concert pitch)"
+    AlternativeTunings:
+      - Name: "Drop E"
+        Configuration: [ "E", "B", "E", "A", "D", "G", "B", "E" ]
+        PitchClasses: [ 4, 11, 4, 9, 2, 7, 11, 4 ]
+
+      - Name: "All Fourths"
+        Configuration: [ "F#", "B", "E", "A", "D", "G", "C", "F" ]
+        PitchClasses: [ 6, 11, 4, 9, 2, 7, 0, 5 ]
+        Characteristics: "Consistent interval pattern"
+
+    Applications:
+      - "Progressive and extreme metal"
+      - "Contemporary classical composition"
+      - "Experimental and ambient music"
+      - "Extended range jazz"
+    Artists: [ "Meshuggah", "Animals as Leaders", "Periphery" ]
+
+  - Name: "Extended Range Bass Tunings"
+    Description: "5, 6, and 7+ string bass configurations"
+    Category: "Bass Guitar"
+    Configurations:
+      - Name: "5-String Bass"
+        Standard: [ "B", "E", "A", "D", "G" ]
+        PitchClasses: [ 11, 4, 9, 2, 7 ]
+        AddedString: "Low B (perfect fourth below low E)"
+
+      - Name: "6-String Bass"
+        Standard: [ "B", "E", "A", "D", "G", "C" ]
+        PitchClasses: [ 11, 4, 9, 2, 7, 0 ]
+        AddedStrings: "Low B and high C"
+
+      - Name: "7-String Bass"
+        Configuration: [ "F#", "B", "E", "A", "D", "G", "C" ]
+        PitchClasses: [ 6, 11, 4, 9, 2, 7, 0 ]
+
+    Applications:
+      - "Progressive rock and metal"
+      - "Jazz fusion"
+      - "Contemporary classical"
+      - "Studio session work"
+
+# Fanned Fret and Multiscale Considerations
+MultiscaleInstruments:
+  - Name: "Fanned Fret Systems"
+    Description: "Angled frets for optimized string tension and intonation"
+    Category: "Advanced Construction"
+    Concept: "Different scale lengths for each string"
+    Benefits:
+      - "Improved intonation across all strings"
+      - "Balanced string tension"
+      - "Enhanced ergonomics"
+      - "Better low-end clarity"
+    ScaleLengths:
+      - "Bass strings: Longer scale (27-28 inches)"
+      - "Treble strings: Shorter scale (24-25 inches)"
+      - "Gradual transition between extremes"
+    Applications:
+      - "Extended range guitars (7, 8, 9+ strings)"
+      - "Baritone and bass guitars"
+      - "Contemporary progressive music"
+    Manufacturers: [ "Strandberg", "Agile", "Ormsby", "Legator" ]
+
+  - Name: "Multiscale Tuning Considerations"
+    Description: "Tuning adjustments for fanned fret instruments"
+    Factors:
+      - "Scale length affects string tension"
+      - "Longer scales may require lighter gauges"
+      - "Intonation setup more complex"
+      - "Nut and bridge compensation critical"
+    TuningStability: "Generally improved due to balanced tension"
+
+# Recording and Production Tunings
+RecordingTunings:
+  - Name: "Studio Layering Techniques"
+    Description: "Specialized tunings for recording applications"
+    Category: "Production"
+    Techniques:
+      - Name: "Nashville + Standard Layering"
+        Description: "Combining Nashville tuning with standard tuning"
+        Effect: "12-string guitar simulation"
+        Panning: "Nashville tuning panned opposite to standard"
+        Applications: [ "Folk", "Country", "Indie rock" ]
+
+      - Name: "Octave Doubling"
+        Description: "Same part played in different octaves"
+        Methods: [ "Capo at 12th fret", "Octave pedal", "Pitch shifting" ]
+        Effect: "Thicker, more complex texture"
+
+      - Name: "Detuned Layering"
+        Description: "Slightly detuned guitars for chorus effect"
+        Amount: "5-15 cents sharp or flat"
+        Effect: "Natural chorus and thickening"
+        Applications: [ "Rock", "Pop", "Ambient" ]
+
+  - Name: "Genre-Specific Detuned Configurations"
+    Description: "Tunings associated with specific musical styles"
+    Category: "Stylistic"
+    Configurations:
+      - Name: "Drop D Family"
+        Variations:
+          - "Drop D: D-A-D-G-B-E"
+          - "Drop C: C-G-C-F-A-D"
+          - "Drop B: B-F#-B-E-G#-C#"
+          - "Drop A: A-E-A-D-F#-B"
+        Applications: [ "Metal", "Hard rock", "Alternative rock" ]
+        Benefits: [ "Power chord ease", "Low-end emphasis", "Aggressive sound" ]
+
+      - Name: "Open Tunings for Slide"
+        Variations:
+          - "Open E: E-B-E-G#-B-E"
+          - "Open D: D-A-D-F#-A-D"
+          - "Open G: D-G-D-G-B-D"
+        Applications: [ "Blues", "Country", "Hawaiian", "Bottleneck" ]
+
+      - Name: "Modal Tunings"
+        Examples:
+          - "DADGAD: D-A-D-G-A-D (Dsus4)"
+          - "DADF#AD: D-A-D-F#-A-D (D major)"
+          - "CGDGBD: C-G-D-G-B-D (Gsus2)"
+        Applications: [ "Celtic", "Folk", "Fingerstyle", "World music" ]
+
+  - Name: "Capo and Partial Capo Combinations"
+    Description: "Creating unique tuning effects with capos"
+    Category: "Mechanical Modification"
+    Techniques:
+      - Name: "Partial Capo Applications"
+        Description: "Capo on selected strings only"
+        Effects:
+          - "Open string drones with fretted melody"
+          - "Altered chord voicings"
+          - "Simulated alternate tunings"
+        Positions:
+          - "2nd fret on strings 2-5 (leaves 1st and 6th open)"
+          - "3rd fret on strings 1-3 (leaves 4-6 open)"
+          - "Custom combinations for specific effects"
+
+      - Name: "Multiple Capo Techniques"
+        Description: "Using multiple capos simultaneously"
+        Applications: [ "Experimental music", "Prepared guitar", "Extended techniques" ]
+        Effects: [ "Complex harmonic relationships", "Unusual chord voicings" ]
+
+      - Name: "Capo + Alternate Tuning"
+        Description: "Combining capo with non-standard tuning"
+        Examples:
+          - "DADGAD with capo at 2nd fret"
+          - "Open G with partial capo"
+          - "Drop D with capo combinations"
+        Benefits: [ "Access to multiple keys", "Unique chord voicings", "Drone effects" ]
+
+# Experimental and Contemporary Tunings
+ExperimentalTunings:
+  - Name: "Prepared Guitar Tunings"
+    Description: "Altered tunings through physical preparation"
+    Category: "Extended Technique"
+    Methods:
+      - "Objects between strings altering pitch"
+      - "Clips and clamps changing string tension"
+      - "Scordatura with preparations"
+      - "Electronic processing of alternate tunings"
+    Applications:
+      - "Contemporary classical music"
+      - "Experimental and avant-garde"
+      - "Sound art and installations"
+      - "Film and media scoring"
+    Composers: [ "John Cage", "Helmut Lachenmann", "Hans Werner Henze" ]
+
+  - Name: "Algorithmic and Mathematical Tunings"
+    Description: "Tunings based on mathematical relationships"
+    Category: "Theoretical"
+    Approaches:
+      - "Golden ratio-based intervals"
+      - "Fibonacci sequence tunings"
+      - "Prime number relationships"
+      - "Fractal and chaos theory applications"
+    Applications:
+      - "Computer music composition"
+      - "Experimental music research"
+      - "Academic composition"
+
+  - Name: "Adaptive and Real-Time Tunings"
+    Description: "Tunings that change during performance"
+    Category: "Electronic"
+    Methods:
+      - "Motorized tuning pegs"
+      - "Electronic pitch shifting"
+      - "Real-time retuning systems"
+      - "MIDI-controlled tuning changes"
+    Applications:
+      - "Contemporary classical performance"
+      - "Electronic music integration"
+      - "Interactive installations"
+
+# Tuning Analysis and Theory
+TuningAnalysis:
+  - Name: "Harmonic Analysis of Tunings"
+    Description: "Understanding the harmonic implications of different tunings"
+    Factors:
+      - "Available open chord voicings"
+      - "Natural harmonic series relationships"
+      - "Modal implications"
+      - "Voice leading possibilities"
+    Tools:
+      - "Interval analysis"
+      - "Chord possibility mapping"
+      - "Harmonic series comparison"
+
+  - Name: "Ergonomic Considerations"
+    Description: "Physical aspects of different tuning systems"
+    Factors:
+      - "String tension balance"
+      - "Fingering difficulty"
+      - "Neck stress and stability"
+      - "Intonation requirements"
+    Optimization:
+      - "String gauge selection"
+      - "Scale length considerations"
+      - "Nut and bridge setup"
+
+  - Name: "Cultural and Historical Context"
+    Description: "Understanding tunings in their cultural context"
+    Aspects:
+      - "Regional musical traditions"
+      - "Historical development"
+      - "Instrument evolution"
+      - "Cross-cultural influences"
+    Applications:
+      - "Authentic performance practice"
+      - "World music fusion"
+      - "Historical recreation"
+      - "Cultural sensitivity in composition"
+
+# Practical Implementation
+PracticalImplementation:
+  SetupConsiderations:
+    - "String gauge optimization for tuning"
+    - "Nut slot adjustment for different tensions"
+    - "Bridge and saddle compensation"
+    - "Truss rod adjustment for neck relief"
+    - "Intonation setup for alternate tunings"
+
+  MaintenanceFactors:
+    - "Tuning stability in alternate configurations"
+    - "String life in different tensions"
+    - "Neck adjustment frequency"
+    - "Hardware wear considerations"
+
+  PerformancePreparation:
+    - "Quick tuning change strategies"
+    - "Multiple instrument setups"
+    - "Electronic tuning aids"
+    - "Backup instrument considerations"
+
+  RecordingTechniques:
+    - "Microphone placement for different tunings"
+    - "EQ considerations for extended range"
+    - "Layering strategies"
+    - "Post-production pitch correction"

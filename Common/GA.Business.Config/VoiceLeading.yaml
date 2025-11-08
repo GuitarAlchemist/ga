@@ -1,0 +1,1199 @@
+VoiceLeadingPrinciples:
+  - Name: Smooth Voice Leading
+    Description: Minimize motion in individual voices between chords
+    Category: Fundamental
+    Principle: Move each voice the smallest possible distance
+    Theory: Creates coherent melodic lines and harmonic flow
+    Rules:
+      - Prefer stepwise motion over leaps
+      - Use common tones when possible
+      - Avoid large leaps in inner voices
+      - Resolve tendency tones properly
+    Examples:
+      - Progression: C major to F major
+        VoiceMovement:
+          Soprano: G to A (step up)
+          Alto: E to F (step up)
+          Tenor: C to C (common tone)
+          Bass: C to F (fourth up)
+        Analysis: Two common tones, minimal motion
+      - Progression: Am to F major
+        VoiceMovement:
+          Soprano: E to F (step up)
+          Alto: C to C (common tone)
+          Tenor: A to A (common tone)
+          Bass: A to F (third down)
+    GuitarApplications:
+      - Chord melody arrangements
+      - Fingerstyle accompaniment patterns
+      - Jazz chord progressions
+    Id: smooth-voice-leading
+    Difficulty: Intermediate
+    Tags:
+      - Fundamental
+      - Leading
+      - Minimize
+      - Smooth
+      - Voice
+      - between
+      - chords
+      - in
+      - individual
+      - motion
+      - voices
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Smooth Voice Leading for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Contrary Motion
+    Description: Voices moving in opposite directions
+    Category: Fundamental
+    Principle: When one voice ascends, another descends
+    Theory: Creates independence between voices and avoids parallel motion
+    Benefits:
+      - Prevents parallel fifths and octaves
+      - Creates melodic interest
+      - Maintains harmonic balance
+    Examples:
+      - Progression: C major to G major
+        ContraryMotion: Bass moves C to G (up), soprano moves G to B (up), but alto moves
+          E to D (down)
+      - Progression: V7 to I resolution
+        ContraryMotion: Leading tone rises, seventh falls
+    GuitarTechniques:
+      - Bass line moving opposite to melody
+      - Inner voice counterpoint
+      - Two-part inventions on guitar
+    Id: contrary-motion
+    Difficulty: Intermediate
+    Tags:
+      - Contrary
+      - Fundamental
+      - Motion
+      - Voices
+      - directions
+      - in
+      - moving
+      - opposite
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Contrary Motion for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Oblique Motion
+    Description: One voice moves while another remains stationary
+    Category: Fundamental
+    Principle: Combine static and moving voices
+    Theory: Creates stability while allowing harmonic progression
+    Applications:
+      - Pedal tones with moving harmony above
+      - Common tone connections
+      - Drone effects
+    Examples:
+      - Progression: C major to Am
+        ObliqueMotion: C and E remain static, G moves to A
+      - Progression: Pedal point progressions
+        ObliqueMotion: Bass note sustained while upper voices change
+    GuitarApplications:
+      - Open string drones
+      - Pedal tone bass lines
+      - Sustained notes with chord changes above
+    Id: oblique-motion
+    Difficulty: Intermediate
+    Tags:
+      - Fundamental
+      - Motion
+      - Oblique
+      - One
+      - another
+      - moves
+      - remains
+      - stationary
+      - voice
+      - while
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Oblique Motion for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+CounterpointRules:
+  - Name: Species Counterpoint
+    Description: Systematic approach to two-part writing
+    Category: Classical
+    Species:
+      - Name: First Species
+        Description: Note against note
+        Rules:
+          - Begin and end on perfect consonances
+          - Use imperfect consonances in between
+          - Avoid parallel fifths and octaves
+          - Prefer contrary and oblique motion
+        Intervals:
+          Perfect:
+            - Unison
+            - Octave
+            - Fifth
+          Imperfect:
+            - Third
+            - Sixth
+          Dissonant:
+            - Second
+            - Seventh
+            - Fourth
+      - Name: Second Species
+        Description: Two notes against one
+        Rules:
+          - First note can be dissonant if approached and left by step
+          - Second note must be consonant
+          - Avoid consecutive perfect consonances
+        Applications:
+          - Passing tones
+          - Neighbor tones
+          - Simple embellishments
+      - Name: Third Species
+        Description: Four notes against one
+        Rules:
+          - First and third beats should be consonant
+          - Second and fourth beats can be dissonant
+          - Use stepwise motion for dissonances
+        Applications:
+          - Scalar passages
+          - Arpeggiated figures
+          - Ornamental counterpoint
+    Id: species-counterpoint
+    Difficulty: Advanced
+    Tags:
+      - Classical
+      - Counterpoint
+      - Species
+      - Systematic
+      - approach
+      - to
+      - two-part
+      - writing
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Species Counterpoint for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Dissonance Treatment
+    Description: Rules for handling dissonant intervals
+    Category: Classical
+    Types:
+      - Name: Passing Tone
+        Description: Dissonance approached and left by step in same direction
+        Rules:
+          - Must be on weak beat
+          - Approached and left by step
+          - Creates melodic line
+        Examples:
+          - C-D-E over C major chord (D is passing tone)
+      - Name: Neighbor Tone
+        Description: Dissonance that returns to original note
+        Rules:
+          - Approached and left by step in opposite directions
+          - Returns to starting pitch
+          - Usually on weak beat
+        Examples:
+          - C-D-C over C major chord (D is neighbor)
+      - Name: Suspension
+        Description: Dissonance prepared as consonance, then resolved down
+        Rules:
+          - 'Preparation: consonant note held over'
+          - 'Suspension: becomes dissonant against new harmony'
+          - 'Resolution: moves down by step to consonance'
+        Types:
+          - 4-3 suspension
+          - 7-6 suspension
+          - 9-8 suspension
+    Id: dissonance-treatment
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Dissonance
+      - Rules
+      - Treatment
+      - dissonant
+      - for
+      - handling
+      - intervals
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Dissonance Treatment for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+GuitarVoiceLeading:
+  - Name: Chord Melody Technique
+    Description: Combining melody and harmony in single guitar arrangement
+    Category: Jazz Guitar
+    Principles:
+      - Melody in highest voice
+      - Harmony in lower voices
+      - Smooth voice leading between chord changes
+      - Bass line movement
+    Techniques:
+      - Name: Drop 2 Voicings
+        Description: Second voice from top moved down an octave
+        Benefits: Easier fingering, clear melody on top
+        Example: 'Cmaj7: C-G-B-E becomes C-B-G-E'
+      - Name: Drop 3 Voicings
+        Description: Third voice from top moved down an octave
+        Benefits: Bass note freedom, inner voice clarity
+        Example: 'Cmaj7: C-G-B-E becomes G-C-B-E'
+    Id: chord-melody-technique
+    Difficulty: Intermediate
+    Tags:
+      - Chord
+      - Combining
+      - Guitar
+      - Jazz
+      - Melody
+      - Technique
+      - and
+      - arrangement
+      - guitar
+      - harmony
+      - in
+      - melody
+      - single
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Chord Melody Technique for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Fingerstyle Voice Independence
+    Description: Creating independent melodic lines with fingerpicking
+    Category: Classical/Fingerstyle
+    Techniques:
+      - Thumb plays bass line
+      - Fingers play melody and inner voices
+      - Maintain rhythmic independence
+      - Use open strings for pedal tones
+    Examples:
+      - Bach inventions arranged for guitar
+      - Renaissance lute music adaptations
+      - Contemporary fingerstyle compositions
+    Id: fingerstyle-voice-independence
+    Difficulty: Intermediate
+    Tags:
+      - Classical/Fingerstyle
+      - Creating
+      - Fingerstyle
+      - Independence
+      - Voice
+      - fingerpicking
+      - independent
+      - lines
+      - melodic
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Fingerstyle Voice Independence for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Open String Voice Leading
+    Description: Using open strings as common tones and pedal points
+    Category: Guitar-Specific
+    Applications:
+      - Open string drones in modal music
+      - Common tones in chord progressions
+      - Campanella technique (bell-like effect)
+    Examples:
+      - Open E string as common tone in Em-C-G-D progression
+      - Open A string as pedal in A-based progressions
+    Id: open-string-voice-leading
+    Difficulty: Intermediate
+    Tags:
+      - Guitar-Specific
+      - Leading
+      - Open
+      - String
+      - Using
+      - Voice
+      - and
+      - as
+      - common
+      - open
+      - pedal
+      - points
+      - strings
+      - tones
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Open String Voice Leading for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+AdvancedConcepts:
+  - Name: Chromatic Voice Leading
+    Description: Using chromatic motion to connect chords smoothly
+    Category: Advanced
+    Techniques:
+      - Chromatic passing chords
+      - Chromatic approach chords
+      - Chromatic neighbor chords
+    Examples:
+      - C-C#dim-Dm progression (chromatic bass line)
+      - Am-Ab-G progression (chromatic descent)
+    Applications:
+      - Jazz harmony
+      - Romantic period classical music
+      - Contemporary popular music
+    Id: chromatic-voice-leading
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Chromatic
+      - Leading
+      - Using
+      - Voice
+      - chords
+      - chromatic
+      - connect
+      - motion
+      - smoothly
+      - to
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Chromatic Voice Leading for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Linear Intervallic Patterns
+    Description: Systematic voice leading using consistent intervals
+    Category: Contemporary
+    Types:
+      - Parallel fourths
+      - Parallel fifths (in contemporary context)
+      - Parallel triads
+    Examples:
+      - Quartal harmony progressions
+      - Planing in impressionist music
+      - Rock power chord progressions
+    Id: linear-intervallic-patterns
+    Difficulty: Intermediate
+    Tags:
+      - Contemporary
+      - Intervallic
+      - Linear
+      - Patterns
+      - Systematic
+      - consistent
+      - intervals
+      - leading
+      - using
+      - voice
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Linear Intervallic Patterns for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Voice Exchange
+    Description: Two voices swap pitches between chords
+    Category: Classical
+    Theory: Creates smooth connection while maintaining harmonic function
+    Examples:
+      - 'C major (C-E-G) to C6 (C-G-A-E): E and G exchange positions'
+      - 'Am (A-C-E) to F (F-A-C): A and C exchange with F'
+    Applications:
+      - Classical part-writing
+      - Jazz chord progressions
+      - Contemporary arrangements
+    Id: voice-exchange
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Exchange
+      - Two
+      - Voice
+      - between
+      - chords
+      - pitches
+      - swap
+      - voices
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Voice Exchange for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+PartWritingGuidelines:
+  ForbiddenMotions:
+    - Name: Parallel Fifths
+      Description: Two voices moving in parallel perfect fifths
+      Reason: Destroys voice independence
+      Exceptions: Contemporary styles may allow
+      Id: parallel-fifths
+      Difficulty: Intermediate
+      Tags:
+        - Fifths
+        - Parallel
+        - Two
+        - fifths
+        - in
+        - moving
+        - parallel
+        - perfect
+        - voices
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Parallel Fifths for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Name: Parallel Octaves
+      Description: Two voices moving in parallel octaves
+      Reason: Creates doubling that weakens texture
+      Exceptions: Intentional doubling for effect
+      Id: parallel-octaves
+      Difficulty: Intermediate
+      Tags:
+        - Octaves
+        - Parallel
+        - Two
+        - in
+        - moving
+        - octaves
+        - parallel
+        - voices
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Parallel Octaves for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Name: Hidden Fifths/Octaves
+      Description: Similar motion to perfect consonance
+      Reason: Implies parallel motion
+      Avoidance: Use contrary or oblique motion
+      Id: hidden-fifthsoctaves
+      Difficulty: Intermediate
+      Tags:
+        - Fifths/Octaves
+        - Hidden
+        - Similar
+        - consonance
+        - motion
+        - perfect
+        - to
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Hidden Fifths/Octaves for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  PreferredMotions:
+    - Stepwise motion in all voices
+    - Contrary motion between outer voices
+    - Common tones when possible
+    - Proper resolution of tendency tones
+  TendencyTones:
+    - Name: Leading Tone
+      Resolution: Up to tonic
+      Context: In dominant chords
+      Id: leading-tone
+      Difficulty: Intermediate
+      Tags:
+        - In
+        - Leading
+        - Tone
+        - chords
+        - dominant
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Leading Tone for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Name: Seventh of Dominant
+      Resolution: Down to third of tonic
+      Context: V7 to I progressions
+      Id: seventh-of-dominant
+      Difficulty: Intermediate
+      Tags:
+        - Dominant
+        - I
+        - Seventh
+        - V7
+        - of
+        - progressions
+        - to
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Seventh of Dominant for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Name: Augmented Fourth
+      Resolution: Outward to sixth
+      Context: Tritone resolution
+      Id: augmented-fourth
+      Difficulty: Intermediate
+      Tags:
+        - Augmented
+        - Fourth
+        - Tritone
+        - resolution
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of Augmented Fourth for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+PracticalApplications:
+  CompositionTechniques:
+    - Four-part chorale writing
+    - Two-part inventions
+    - String quartet writing
+    - Guitar ensemble arrangements
+  ArrangementTechniques:
+    - Reharmonization with smooth voice leading
+    - Chord substitutions maintaining voice leading
+    - Orchestration principles
+    - Guitar chord melody arrangements
+  AnalysisTechniques:
+    - Roman numeral analysis with voice leading
+    - Linear analysis of melodic lines
+    - Identification of voice leading patterns
+    - Comparison of different arrangements
+HistoricalDevelopment:
+  Renaissance:
+    - Characteristics: Modal counterpoint, species counterpoint
+      Difficulty: Advanced
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Palestrina
+        - Josquin
+        - Lassus
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Principles: Smooth melodic lines, perfect consonance emphasis
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Baroque:
+    - Characteristics: Figured bass, contrapuntal textures
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Bach
+        - Handel
+        - Vivaldi
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Principles: Linear thinking, harmonic rhythm
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Classical:
+    - Characteristics: Homophonic textures, clear voice leading
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Mozart
+        - Haydn
+        - Beethoven
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Principles: Functional harmony with smooth voice leading
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Romantic:
+    - Characteristics: Chromatic voice leading, extended harmony
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Chopin
+        - Wagner
+        - Brahms
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Principles: Expressive voice leading, chromatic harmony
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Contemporary:
+    - Characteristics: Extended techniques, non-functional harmony
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Debussy
+        - Schoenberg
+        - Jazz musicians
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Principles: Color over function, parallel motion acceptance
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalDevelopment for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+Metadata:
+  Source: embedded
+  LastUpdated: '2025-11-01'
+  Version: '1.1'

@@ -1,4 +1,4 @@
-﻿namespace GA.Core.Collections;
+namespace GA.Core.Collections;
 
 using Extensions;
 
@@ -6,48 +6,46 @@ using Extensions;
 public static class ValueObjectUtils<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
+    public static IReadOnlyCollection<TSelf> Items => ValueObjectCollection<TSelf>.Create();
+
+    public static ImmutableArray<int> Values => ValueObjectCache<TSelf>.AllValues;
+
     /// <summary>
-    /// Ensure the value is in range
+    ///     Ensure the value is in range.
     /// </summary>
-    /// <param name="value">The <see cref="int"/> value</param>
-    /// <param name="minValue">The min <see cref="int"/> value</param>
-    /// <param name="maxValue">The max <see cref="int"/> value</param>
-    /// <param name="normalize">A <see cref="bool"/> flag indicating whether the value should be normalized</param>
-    /// <param name="valueExpression">a <see cref="Nullable{String}"/></param>
-    /// <param name="minValueExpression">a <see cref="Nullable{String}"/></param>
-    /// <param name="maxValueExpression">a <see cref="Nullable{String}"/></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
     public static int EnsureValueRange(
-        int value, 
+        int value,
         int minValue,
         int maxValue,
         bool normalize = false,
-        [CallerArgumentExpression(nameof(value))] string? valueExpression = null,
-        [CallerArgumentExpression(nameof(minValue))] string? minValueExpression = null,
-        [CallerArgumentExpression(nameof(maxValue))] string? maxValueExpression = null)
+        [CallerArgumentExpression(nameof(value))]
+        string? valueExpression = null,
+        [CallerArgumentExpression(nameof(minValue))]
+        string? minValueExpression = null,
+        [CallerArgumentExpression(nameof(maxValue))]
+        string? maxValueExpression = null)
     {
-        if (value >= minValue && value <= maxValue) return value;
+        if (value >= minValue && value <= maxValue)
+        {
+            return value;
+        }
 
-        // Attempt to normalize the value
         var count = maxValue - minValue;
 
-        if (normalize) value = minValue + (value - minValue).Mod(count) + 1;
+        if (normalize)
+        {
+            value = minValue + (value - minValue).Mod(count) + 1;
+        }
 
         if (value < minValue)
         {
-            Debugger.Break();
-
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{typeof(TSelf)} {valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
         }
 
-        // ReSharper disable once InvertIf
         if (value > maxValue)
         {
-            Debugger.Break();
-
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{typeof(TSelf)} {valueExpression} ({value}) cannot be greater than {maxValueExpression} ({maxValue}).");
@@ -57,32 +55,40 @@ public static class ValueObjectUtils<TSelf>
     }
 
     /// <summary>
-    /// Ensure the value is in range
+    ///     Checks if the value is in range.
     /// </summary>
-    /// <param name="value">The <see cref="int"/> value</param>
-    /// <param name="minValue">The min <see cref="int"/> value</param>
-    /// <param name="maxValue">The max <see cref="int"/> value</param>
-    /// <param name="normalize">A <see cref="bool"/> flag indicating whether the value should be normalized</param>
-    /// <returns>True if the value is range, false otherwise</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is out of range</exception>
     public static bool IsValueInRange(
-        int value, 
+        int value,
         int minValue,
         int maxValue,
         bool normalize = false)
     {
-        if (value >= minValue && value <= maxValue) return false;
+        if (value >= minValue && value <= maxValue)
+        {
+            return true;
+        }
 
-        // Attempt to normalize the value
         var count = maxValue - minValue;
-        if (normalize) value = minValue + (value - minValue).Mod(count) + 1;
-        if (value < minValue) return false;
+        if (normalize)
+        {
+            value = minValue + (value - minValue).Mod(count) + 1;
+        }
+
+        if (value < minValue)
+        {
+            return false;
+        }
+
         return value <= maxValue;
     }
 
-    public static IReadOnlyCollection<TSelf> Items => ValueObjectCollection<TSelf>.Create();
-    // ReSharper disable once InconsistentNaming
-    public static IReadOnlyCollection<TSelf> GetItems(int start, int count) => ValueObjectCollection<TSelf>.Create(start, count);
-    public static IReadOnlyCollection<TSelf> GetItemsWithHead(TSelf head, int start, int count) => ValueObjectCollection<TSelf>.CreateWithHead(head, start, count);
-    public static ImmutableList<int> Values => Items.Select(value => value.Value).ToImmutableList();
+    public static IReadOnlyCollection<TSelf> GetItems(int start, int count)
+    {
+        return ValueObjectCollection<TSelf>.Create(start, count);
+    }
+
+    public static IReadOnlyCollection<TSelf> GetItemsWithHead(TSelf head, int start, int count)
+    {
+        return ValueObjectCollection<TSelf>.CreateWithHead(head, start, count);
+    }
 }

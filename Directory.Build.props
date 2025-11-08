@@ -1,0 +1,11 @@
+﻿<Project>
+  <PropertyGroup>
+    <!-- Enforce using directives inside namespace -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Treat specific code style violations as warnings -->
+    <!-- IDE0065: Using directive placement -->
+    <WarningsAsErrors>$(WarningsAsErrors);IDE0065</WarningsAsErrors>
+  </PropertyGroup>
+</Project>
+

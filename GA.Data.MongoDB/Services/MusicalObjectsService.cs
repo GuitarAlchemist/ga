@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Logging;
-
 namespace GA.Data.MongoDB.Services;
+
+using Microsoft.Extensions.Logging;
 
 public class MusicalObjectsService(
     ILogger<MusicalObjectsService> logger,
@@ -12,12 +12,12 @@ public class MusicalObjectsService(
         try
         {
             logger.LogDebug("Found {Count} sync services", syncServices.Count());
-            
+
             foreach (var syncService in syncServices)
             {
                 var serviceType = syncService.GetType();
                 logger.LogDebug("Processing sync service: {ServiceType}", serviceType.Name);
-                
+
                 if (await syncService.SyncAsync())
                 {
                     var count = await syncService.GetCountAsync();
@@ -29,7 +29,7 @@ public class MusicalObjectsService(
                     logger.LogWarning("Sync failed for {ServiceType}", serviceType.Name);
                 }
             }
-            
+
             logger.LogDebug("Final counts dictionary has {Count} entries", result.Counts.Count);
         }
         catch (Exception ex)
@@ -37,6 +37,7 @@ public class MusicalObjectsService(
             logger.LogError(ex, "Error syncing musical objects");
             result.Errors.Add(ex.Message);
         }
+
         return result;
     }
 

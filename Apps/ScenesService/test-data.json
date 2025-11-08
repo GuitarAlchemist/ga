@@ -1,0 +1,41 @@
+{
+  "sceneId": "test01",
+  "cells": [
+    {
+      "cellId": "hall",
+      "meshes": [
+        {
+          "meshId": "auto"
+        }
+      ]
+    },
+    {
+      "cellId": "kitchen",
+      "meshes": [
+        {
+          "meshId": "auto"
+        }
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "from": "hall",
+      "to": "kitchen",
+      "quad": [
+        2.0,
+        0.2,
+        -0.6,
+        2.0,
+        2.2,
+        -0.6,
+        2.0,
+        2.2,
+        0.6,
+        2.0,
+        0.2,
+        0.6
+      ]
+    }
+  ]
+}

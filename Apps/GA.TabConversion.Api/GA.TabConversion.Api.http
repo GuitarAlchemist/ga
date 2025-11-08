@@ -1,0 +1,6 @@
+@GA.TabConversion.Api_HostAddress = http://localhost:5259
+
+GET {{GA.TabConversion.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

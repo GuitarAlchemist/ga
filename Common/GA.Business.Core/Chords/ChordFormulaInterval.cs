@@ -3,46 +3,21 @@
 using Intervals;
 
 /// <summary>
-/// Represents an interval within a chord formula with additional chord-specific properties
+///     Represents an interval within a chord formula with additional chord-specific properties
 /// </summary>
-public class ChordFormulaInterval : FormulaInterval
+public class ChordFormulaInterval
 {
     /// <summary>
-    /// Gets whether this interval is essential to the chord's identity
-    /// </summary>
-    public bool IsEssential { get; }
-    
-    /// <summary>
-    /// Gets whether this interval can be omitted in certain voicings
-    /// </summary>
-    public bool IsOptional => !IsEssential;
-    
-    /// <summary>
-    /// Gets the chord function of this interval (root, third, fifth, etc.)
-    /// </summary>
-    public ChordFunction Function { get; }
-    
-    /// <summary>
-    /// Gets whether this interval is typically doubled in voicings
-    /// </summary>
-    public bool IsTypicallyDoubled { get; }
-    
-    /// <summary>
-    /// Gets the voice leading tendency of this interval
-    /// </summary>
-    public VoiceLeadingTendency VoiceLeadingTendency { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the ChordFormulaInterval class
+    ///     Initializes a new instance of the ChordFormulaInterval class
     /// </summary>
     public ChordFormulaInterval(
-        Interval interval, 
+        Interval interval,
         ChordFunction function,
         bool isEssential = true,
         bool isTypicallyDoubled = false,
         VoiceLeadingTendency voiceLeadingTendency = VoiceLeadingTendency.Stable)
-        : base(interval)
     {
+        Interval = interval;
         Function = function;
         IsEssential = isEssential;
         IsTypicallyDoubled = isTypicallyDoubled;
@@ -50,7 +25,37 @@ public class ChordFormulaInterval : FormulaInterval
     }
 
     /// <summary>
-    /// Gets the chord degree number (1, 3, 5, 7, 9, 11, 13)
+    ///     Gets whether this interval is essential to the chord's identity
+    /// </summary>
+    public bool IsEssential { get; }
+
+    /// <summary>
+    ///     Gets whether this interval can be omitted in certain voicings
+    /// </summary>
+    public bool IsOptional => !IsEssential;
+
+    /// <summary>
+    ///     Gets the chord function of this interval (root, third, fifth, etc.)
+    /// </summary>
+    public ChordFunction Function { get; }
+
+    /// <summary>
+    ///     Gets whether this interval is typically doubled in voicings
+    /// </summary>
+    public bool IsTypicallyDoubled { get; }
+
+    /// <summary>
+    ///     Gets the voice leading tendency of this interval
+    /// </summary>
+    public VoiceLeadingTendency VoiceLeadingTendency { get; }
+
+    /// <summary>
+    ///     Gets the interval
+    /// </summary>
+    public Interval Interval { get; }
+
+    /// <summary>
+    ///     Gets the chord degree number (1, 3, 5, 7, 9, 11, 13)
     /// </summary>
     public int ChordDegree => Function switch
     {
@@ -65,7 +70,7 @@ public class ChordFormulaInterval : FormulaInterval
     };
 
     /// <summary>
-    /// Returns a string representation of the chord formula interval
+    ///     Returns a string representation of the chord formula interval
     /// </summary>
     public override string ToString()
     {
@@ -76,7 +81,7 @@ public class ChordFormulaInterval : FormulaInterval
 }
 
 /// <summary>
-/// Represents the harmonic function of an interval within a chord
+///     Represents the harmonic function of an interval within a chord
 /// </summary>
 public enum ChordFunction
 {
@@ -90,27 +95,27 @@ public enum ChordFunction
 }
 
 /// <summary>
-/// Represents the voice leading tendency of a chord tone
+///     Represents the voice leading tendency of a chord tone
 /// </summary>
 public enum VoiceLeadingTendency
 {
     /// <summary>
-    /// Stable tone that tends to remain stationary
+    ///     Stable tone that tends to remain stationary
     /// </summary>
     Stable,
-    
+
     /// <summary>
-    /// Active tone that tends to resolve upward
+    ///     Active tone that tends to resolve upward
     /// </summary>
     ResolvesUp,
-    
+
     /// <summary>
-    /// Active tone that tends to resolve downward
+    ///     Active tone that tends to resolve downward
     /// </summary>
     ResolvesDown,
-    
+
     /// <summary>
-    /// Flexible tone that can move in either direction
+    ///     Flexible tone that can move in either direction
     /// </summary>
     Flexible
 }

@@ -1,18 +1,18 @@
-﻿namespace GA.Data.MongoDB.Services.DocumentServices;
+namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using Business.Core;
 using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongoDb) 
+public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongoDb)
     : ISyncService<KeyDocument>
 {
     public async Task<bool> SyncAsync()
     {
         try
         {
-            var documents = Assets.Keys.Select(key => new KeyDocument
+            var documents = AssetCatalog.Keys.Select(key => new KeyDocument
             {
                 Name = key.ToString(),
                 Root = key.Root.ToString(),
@@ -34,6 +34,8 @@ public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongo
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Keys.CountDocumentsAsync(Builders<KeyDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Keys.CountDocumentsAsync(Builders<KeyDocument>.Filter.Empty);
+    }
 }

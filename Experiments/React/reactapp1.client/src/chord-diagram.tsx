@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useRef } from 'react';
-import { ChordBox as ChordBoxClass, ChordBoxParams, ChordData } from 'vexchords'; // Assuming the type is exported
+﻿import React, {useEffect, useRef} from 'react';
+import {ChordBox as ChordBoxClass, ChordBoxParams, ChordData} from 'vexchords'; // Assuming the type is exported
 import './chord-diagram.scss';
 
 // Interface for the props of the ChordDiagram component
@@ -8,7 +8,7 @@ interface ChordDiagramProps {
     notes: Array<[number, number, string?]>;
 }
 
-const ChordDiagram: React.FC<ChordDiagramProps> = ({ label, notes }) => {
+const ChordDiagram: React.FC<ChordDiagramProps> = ({label, notes}) => {
     const chordRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

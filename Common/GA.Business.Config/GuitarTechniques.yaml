@@ -1,0 +1,228 @@
+# Guitar Techniques Configuration
+# Defines guitar-specific playing techniques and theoretical concepts
+
+GuitarTechniques:
+  - Name: "Pitch Axis Theory"
+    Description: "Joe Satriani's approach using a central pitch with changing harmony around it"
+    Category: "Lead Guitar"
+    Inventor: "Joe Satriani"
+    Difficulty: "Advanced"
+    Concept: "Maintain a central note while changing the harmonic context around it"
+    Theory: "Creates tension and resolution through static melody over moving harmony"
+    Examples:
+      - CentralPitch: "E"
+        Chords: [ "Em", "E", "Esus4", "Esus2", "E7", "Emaj7" ]
+        Scale: "E Mixolydian"
+        Description: "E note sustained over various E-based chords"
+        Fretboard: "12th fret high E string"
+      - CentralPitch: "G"
+        Chords: [ "G", "Gm", "G7", "Gsus4", "Gadd9" ]
+        Scale: "G Major/Dorian"
+        Description: "G note over different G chord qualities"
+        Fretboard: "15th fret high E string"
+    Applications:
+      - "Melodic development over static harmony"
+      - "Creating tension without changing the melody"
+      - "Exploring chord qualities and extensions"
+    Songs: [ "Surfing with the Alien", "Always with Me, Always with You" ]
+
+  - Name: "Sweep Picking"
+    Description: "Fluid arpeggiated technique across multiple strings"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Technique: "Single pick stroke across multiple strings with fretting hand coordination"
+    Theory: "Allows rapid arpeggiated passages impossible with alternate picking"
+    Patterns:
+      - Shape: "Minor Triad"
+        Strings: [ 1, 2, 3 ]
+        Frets: [ 12, 13, 14 ]
+        Direction: "Down sweep"
+        Notes: [ "E", "C", "G" ]
+      - Shape: "Major 7th Arpeggio"
+        Strings: [ 1, 2, 3, 4 ]
+        Frets: [ 12, 12, 13, 14 ]
+        Direction: "Down-up sweep"
+        Notes: [ "E", "B", "G", "D" ]
+    Practice:
+      - "Start slowly with clean tone"
+      - "Focus on muting unused strings"
+      - "Coordinate pick and fretting hand"
+      - "Build speed gradually"
+    Artists: [ "Yngwie Malmsteen", "Jason Becker", "Frank Gambale" ]
+
+  - Name: "Legato Playing"
+    Description: "Smooth, connected playing using hammer-ons and pull-offs"
+    Category: "Lead Guitar"
+    Difficulty: "Intermediate"
+    Technique: "Minimal picking with emphasis on fretting hand articulation"
+    Theory: "Creates flowing melodic lines with sustained character"
+    Applications:
+      - HammerOns: "Ascending notes without picking"
+      - PullOffs: "Descending notes without picking"
+      - Slides: "Smooth pitch transitions"
+      - Trills: "Rapid alternation between two notes"
+    Examples:
+      - Pattern: "Hammer-on sequence"
+        Frets: [ 5, 7, 8 ]
+        String: 1
+        Technique: "Pick first note, hammer remaining"
+      - Pattern: "Pull-off sequence"
+        Frets: [ 8, 7, 5 ]
+        String: 1
+        Technique: "Pick first note, pull-off remaining"
+    Artists: [ "Allan Holdsworth", "Joe Satriani", "Steve Vai" ]
+
+  - Name: "Tapping"
+    Description: "Using both hands to fret notes on the fretboard"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Technique: "Right hand taps frets while left hand maintains chord shapes"
+    Theory: "Extends range and allows complex polyphonic passages"
+    Variations:
+      - TwoHandTapping: "Both hands tapping independently"
+      - OneHandTapping: "Right hand tapping with left hand chords"
+      - PolyphonicTapping: "Multiple independent voices"
+    Examples:
+      - BasicPattern: "E-A-B tapping pattern"
+        LeftHand: [ 5, 7 ]
+        RightHand: [ 12 ]
+        String: 1
+        Notes: [ "A", "B", "E" ]
+    Artists: [ "Eddie Van Halen", "Stanley Jordan", "Jennifer Batten" ]
+
+  - Name: "Hybrid Picking"
+    Description: "Combining pick and fingers for complex textures"
+    Category: "Rhythm/Lead"
+    Difficulty: "Intermediate"
+    Technique: "Pick for bass notes, fingers for treble strings"
+    Theory: "Allows simultaneous bass and melody lines"
+    Applications:
+      - CountryLicks: "Banjo-style rolls on guitar"
+      - JazzComping: "Bass note with chord on top"
+      - FingerstyleFusion: "Classical technique in electric context"
+    Examples:
+      - Pattern: "Alternating bass with melody"
+        Bass: "Pick on 6th string"
+        Melody: "Fingers on 1st-3rd strings"
+        Style: "Country/Bluegrass"
+    Artists: [ "Danny Gatton", "Albert Lee", "Brent Mason" ]
+
+  - Name: "String Skipping"
+    Description: "Melodic patterns that skip over strings"
+    Category: "Lead Guitar"
+    Difficulty: "Intermediate"
+    Technique: "Intentionally avoiding adjacent strings for wider intervals"
+    Theory: "Creates angular, modern melodic lines"
+    Benefits:
+      - "Wider intervallic leaps"
+      - "Unique melodic contours"
+      - "Avoids predictable scalar patterns"
+    Examples:
+      - Pattern: "1st to 3rd string skipping"
+        Strings: [ 1, 3, 1, 3 ]
+        Frets: [ 12, 14, 15, 17 ]
+        Interval: "Major 6th leaps"
+    Artists: [ "Paul Gilbert", "John Petrucci", "Greg Howe" ]
+
+  - Name: "Economy Picking"
+    Description: "Efficient picking technique minimizing hand motion"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Technique: "Directional picking following the most efficient path"
+    Theory: "Combines alternate picking with sweep picking principles"
+    Rules:
+      - "Follow the natural motion of the pick"
+      - "Use sweep motion when changing strings in same direction"
+      - "Use alternate picking on same string"
+    Examples:
+      - AscendingPattern: "Up-down-sweep down-up"
+        Strings: [ 3, 3, 2, 1 ]
+        Direction: [ "Up", "Down", "Down", "Up" ]
+    Artists: [ "Frank Gambale", "Brett Garsed", "Rusty Cooley" ]
+
+# Technical Categories
+TechnicalCategories:
+  RhythmTechniques:
+    - Name: "Palm Muting"
+      Description: "Muffling strings with picking hand palm"
+      Effect: "Percussive, tight sound"
+
+    - Name: "Chicken Picking"
+      Description: "Aggressive hybrid picking with muted notes"
+      Genre: "Country, Funk"
+
+    - Name: "Reggae Skank"
+      Description: "Upstroke emphasis on off-beats"
+      Rhythm: "Emphasis on beats 2 and 4"
+
+  LeadTechniques:
+    - Name: "Vibrato"
+      Description: "Pitch modulation for expression"
+      Types: [ "Finger vibrato", "Whammy bar vibrato" ]
+
+    - Name: "Bending"
+      Description: "Pitch alteration by stretching strings"
+      Types: [ "Half-step", "Whole-step", "Pre-bend", "Release" ]
+
+    - Name: "Harmonics"
+      Description: "Bell-like tones from partial string vibration"
+      Types: [ "Natural", "Artificial", "Pinch", "Tap" ]
+
+# Fretboard Concepts
+FretboardConcepts:
+  - Name: "CAGED System"
+    Description: "Five basic chord shapes that cover the entire fretboard"
+    Shapes: [ "C", "A", "G", "E", "D" ]
+    Application: "Chord voicings and scale patterns across neck"
+
+  - Name: "Three Notes Per String"
+    Description: "Scale patterns using three notes on each string"
+    Benefit: "Consistent fingering patterns for all scales"
+    Application: "Modern lead guitar technique"
+
+  - Name: "Pentatonic Boxes"
+    Description: "Five interconnected pentatonic scale patterns"
+    Coverage: "Entire fretboard with overlapping patterns"
+    Application: "Blues and rock lead guitar foundation"
+
+# Practice Methodology
+PracticeApproaches:
+  TechnicalDevelopment:
+    - "Start slowly with metronome"
+    - "Focus on clean execution before speed"
+    - "Practice with different rhythmic subdivisions"
+    - "Record and analyze your playing"
+
+  MusicalApplication:
+    - "Apply techniques in musical contexts"
+    - "Learn songs that feature specific techniques"
+    - "Improvise using new techniques"
+    - "Combine multiple techniques creatively"
+
+  PhysicalConsiderations:
+    - "Maintain relaxed posture"
+    - "Take breaks to avoid injury"
+    - "Warm up before intense practice"
+    - "Focus on efficient motion"
+
+# Historical Development
+HistoricalContext:
+  ClassicalInfluence:
+    - Techniques: [ "Fingerstyle", "Classical position", "Rest stroke" ]
+    - Adaptation: "Electric guitar adaptation of classical techniques"
+
+  BluesFoundation:
+    - Techniques: [ "Bending", "Vibrato", "Call and response" ]
+    - Evolution: "Foundation for rock and modern techniques"
+
+  JazzInnovation:
+    - Techniques: [ "Chord melody", "Walking bass lines", "Comping" ]
+    - Complexity: "Harmonic sophistication and improvisation"
+
+  RockEvolution:
+    - Techniques: [ "Power chords", "Distortion", "Feedback" ]
+    - Amplification: "Electric guitar-specific techniques"
+
+  ModernFusion:
+    - Techniques: [ "Tapping", "Sweep picking", "Extended range" ]
+    - Technology: "Effects and amplification integration"

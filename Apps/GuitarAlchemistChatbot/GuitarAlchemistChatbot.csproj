@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>bbfed317-511e-4731-b9ae-d361f45a28b9</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Configuration" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25161.3"/>
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.3.0-preview.1.25161.3"/>
+    <PackageReference Include="MongoDB.Driver" Version="3.2.1"/>
+    <PackageReference Include="OpenAI" Version="2.2.0-beta.1"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Business.AI\GA.Business.AI.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Business.Web\GA.Business.Web.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Business.Microservices\GA.Business.Microservices.csproj"/>
+  </ItemGroup>
+
+</Project>

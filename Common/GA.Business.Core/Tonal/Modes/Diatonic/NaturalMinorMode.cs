@@ -1,20 +1,22 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
-using Scales;
-using Primitives;
 using Primitives.Diatonic;
+using Scales;
 
 /// <summary>
-/// A natural minor scale mode
+///     A natural minor scale mode
 /// </summary>
 /// <remarks>
-/// The natural minor scale is also known as the Aeolian mode.
+///     The natural minor scale is also known as the Aeolian mode.
 /// </remarks>
 [PublicAPI]
 public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScaleMode<NaturalMinorScaleDegree>(
         Scale.NaturalMinor, degree),
     IStaticEnumerable<NaturalMinorMode>
 {
+    private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree =
+        new(() => new(Items.ToImmutableList()));
+
     public static NaturalMinorMode Aeolian => new(1);
     public static NaturalMinorMode Locrian => new(2);
     public static NaturalMinorMode Ionian => new(3);
@@ -22,12 +24,6 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
     public static NaturalMinorMode Phrygian => new(5);
     public static NaturalMinorMode Lydian => new(6);
     public static NaturalMinorMode Mixolydian => new(7);
-
-
-    public static IEnumerable<NaturalMinorMode> Items => NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
-    public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
-    public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
 
     public override string Name => ParentScaleDegree.Value switch
     {
@@ -41,5 +37,22 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    public override string ToString() => $"{Name} - {Formula}";
+
+    public static IEnumerable<NaturalMinorMode> Items =>
+        NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
+
+    public static NaturalMinorMode Get(NaturalMinorScaleDegree degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
+
+    public static NaturalMinorMode Get(int degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} - {Formula}";
+    }
 }

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AssemblyName>GA.Business.Assets</AssemblyName>
+    <RootNamespace>GA.Business.Assets</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
+  </ItemGroup>
+
+</Project>
+

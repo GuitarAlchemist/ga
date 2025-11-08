@@ -1,0 +1,92 @@
+═══════════════════════════════════════════════════════════════
+  AUGMENT MCP SERVER CONFIGURATION - COPY & PASTE
+═══════════════════════════════════════════════════════════════
+
+Add these THREE servers to Augment Settings in WebStorm:
+Settings → Tools → Augment Code → Model Context Protocol
+
+───────────────────────────────────────────────────────────────
+  SERVER 1: MongoDB
+───────────────────────────────────────────────────────────────
+
+Name:
+mongodb
+
+Command:
+npx
+
+Args (copy exactly):
+["-y", "@modelcontextprotocol/server-mongodb", "mongodb://localhost:27017"]
+
+Environment Variables:
+(leave empty)
+
+───────────────────────────────────────────────────────────────
+  SERVER 2: Redis
+───────────────────────────────────────────────────────────────
+
+Name:
+redis
+
+Command:
+npx
+
+Args (copy exactly):
+["-y", "redis-mcp-server", "--url", "redis://127.0.0.1:6379"]
+
+Environment Variables:
+(leave empty)
+
+───────────────────────────────────────────────────────────────
+  SERVER 3: Blender (FIXED - NO COLLISION)
+───────────────────────────────────────────────────────────────
+
+Name:
+blender
+
+Command:
+uvx
+
+Args (copy exactly):
+["blender-mcp"]
+
+Environment Variables:
+(leave empty)
+
+═══════════════════════════════════════════════════════════════
+  BEFORE TESTING - IN BLENDER:
+═══════════════════════════════════════════════════════════════
+
+1. Open Blender
+2. Press 'N' key in 3D viewport
+3. Click "BlenderMCP" tab
+4. Click "Connect to MCP server"
+5. Should show: "Running on port 9876"
+
+═══════════════════════════════════════════════════════════════
+  AFTER ADDING TO AUGMENT:
+═══════════════════════════════════════════════════════════════
+
+1. Click "Save" or "Apply" in Augment settings
+2. Restart Augment or reload MCP servers
+3. Test with me!
+
+═══════════════════════════════════════════════════════════════
+  TEST COMMANDS:
+═══════════════════════════════════════════════════════════════
+
+MongoDB: "List all databases in MongoDB"
+Redis:   "Show Redis info"
+Blender: "Create a blue sphere in Blender"
+
+═══════════════════════════════════════════════════════════════
+  FILES CREATED:
+═══════════════════════════════════════════════════════════════
+
+✓ Blender addon: C:\Users\spare\AppData\Roaming\Blender Foundation\Blender\4.5\scripts\addons\blender_mcp.py
+✓ Config guide:  C:\Users\spare\source\repos\ga\AUGMENT_MCP_CONFIG.md
+✓ This file:     C:\Users\spare\source\repos\ga\COPY_PASTE_CONFIG.txt
+
+═══════════════════════════════════════════════════════════════
+  READY! NO MORE COLLISIONS!
+═══════════════════════════════════════════════════════════════

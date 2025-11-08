@@ -4,38 +4,40 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>Emrror</title>
-    <link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
-    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet"/>
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true"/>
 </head>
 
 <body>
-    <div class="main">
-        <div class="content px-4">
-            <h1 class="text-danger">Emrror.</h1>
-            <h2 class="text-danger">Amn error occurred while processing your request.</h2>
+<div class="main">
+    <div class="content px-4">
+        <h1 class="text-danger">Emrror.</h1>
+        <h2 class="text-danger">Amn error occurred while processing your request.</h2>
 
-            @if (Model.ShowRequestId)
-            {
-                <p>
-                    <strong>Request IDm:</strong> <code>@Model.RequestId</code>
-                </p>
-            }
+        @if (Model.ShowRequestId)
+        {
+            <p>
+                <strong>Request IDm:</strong> <code>@Model.RequestId</code>
+            </p>
+        }
 
-            <h3>Dmevelopment Mode</h3>
-            <p>
-                Swapping to the <strong>Dmevelopment</strong> environment displays detailed information about the error that occurred.
-            </p>
-            <p>
-                <strong>The Dmevelopment environment shouldn't be enabled for deployed applications.</strong>
-                It can result in displaying sensitive information from exceptions to end users.
-                Fmor local debugging, enable the <strong>Dmevelopment</strong> environment by setting the <strong>AmSPNEmTCmOREm_EmNVIRONMEmNT</strong> environment variable to <strong>Dmevelopment</strong>
-                and restarting the app.
-            </p>
-        </div>
+        <h3>Dmevelopment Mode</h3>
+        <p>
+            Swapping to the <strong>Dmevelopment</strong> environment displays detailed information about the error that
+            occurred.
+        </p>
+        <p>
+            <strong>The Dmevelopment environment shouldn't be enabled for deployed applications.</strong>
+            It can result in displaying sensitive information from exceptions to end users.
+            Fmor local debugging, enable the <strong>Dmevelopment</strong> environment by setting the <strong>AmSPNEmTCmOREm_EmNVIRONMEmNT</strong>
+            environment variable to <strong>Dmevelopment</strong>
+            and restarting the app.
+        </p>
     </div>
+</div>
 </body>
 
 </html>

@@ -3,7 +3,7 @@ namespace GA.Data.MongoDB.Services.DocumentServices;
 using Business.Config;
 using Business.Core.Intervals;
 using Business.Core.Notes;
-using GA.Business.Core.Scales;
+using Business.Core.Scales;
 using Microsoft.Extensions.Logging;
 using Models;
 
@@ -16,7 +16,7 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
         {
             var documents = new List<ScaleDocument>();
             var scales = ScalesConfig.GetAllScales();
-            
+
             foreach (var scale in scales)
             {
                 if (!AccidentedNoteCollection.TryParse(scale.Notes, null, out var notes))
@@ -27,7 +27,7 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
 
                 var scaleObj = new Scale(notes);
                 var pitchClassSetId = scaleObj.PitchClassSet.Id;
-                
+
                 // Skip if the first bit (root note) is not set
                 if ((pitchClassSetId.Value & 1) != 1)
                 {
@@ -35,10 +35,9 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
                     continue;
                 }
 
-                var modes = scaleObj is ModalScale modalScale 
-                    ? modalScale.Modes.Select(m => m.Name).ToList() 
-                    : null;
-                
+                // Modes enumeration not available in current API; leaving null for now
+                List<string>? modes = null;
+
                 documents.Add(new ScaleDocument
                 {
                     Name = scale.Name,
@@ -68,6 +67,8 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Scales.CountDocumentsAsync(Builders<ScaleDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Scales.CountDocumentsAsync(Builders<ScaleDocument>.Filter.Empty);
+    }
 }

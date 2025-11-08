@@ -1,34 +1,33 @@
 ﻿namespace GA.Business.Core.Chords;
 
 using Atonal;
-using System.Collections.Concurrent;
 
 /// <summary>
-/// Intelligent chord template registry with forward analysis and likelihood-based lookup.
-/// Provides the most musically probable chord interpretations for any given pitch class set.
+///     Intelligent chord template registry with forward analysis and likelihood-based lookup.
+///     Provides the most musically probable chord interpretations for any given pitch class set.
 /// </summary>
 public static class ChordTemplateRegistry
 {
-    private static readonly Lazy<ConcurrentDictionary<PitchClassSet, ChordInterpretation[]>> _registry = 
+    private static readonly Lazy<ConcurrentDictionary<PitchClassSet, ChordInterpretation[]>> _registry =
         new(BuildRegistry);
-    
+
     private static readonly Lazy<ChordTemplate[]> _allTemplates =
         new(BuildAllTemplates);
 
     /// <summary>
-    /// Gets the most likely chord interpretation for a given pitch class set
+    ///     Gets the most likely chord interpretation for a given pitch class set
     /// </summary>
     /// <param name="pitchClassSet">The pitch class set to interpret</param>
     /// <returns>The most probable chord interpretation, or null if none found</returns>
     public static ChordInterpretation? GetMostLikelyChord(PitchClassSet pitchClassSet)
     {
-        return _registry.Value.TryGetValue(pitchClassSet, out var interpretations) 
-            ? interpretations.FirstOrDefault() 
+        return _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
+            ? interpretations.FirstOrDefault()
             : null;
     }
 
     /// <summary>
-    /// Gets all possible chord interpretations for a pitch class set, ordered by likelihood
+    ///     Gets all possible chord interpretations for a pitch class set, ordered by likelihood
     /// </summary>
     /// <param name="pitchClassSet">The pitch class set to interpret</param>
     /// <returns>Array of interpretations ordered by musical probability</returns>
@@ -36,18 +35,21 @@ public static class ChordTemplateRegistry
     {
         return _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
             ? interpretations
-            : Array.Empty<ChordInterpretation>();
+            : [];
     }
 
     /// <summary>
-    /// Gets advanced chord interpretations including drop voicings, slash chords, and complex harmonies
+    ///     Gets advanced chord interpretations including drop voicings, slash chords, and complex harmonies
     /// </summary>
     /// <param name="voicing">The chord voicing to analyze</param>
     /// <returns>Advanced chord interpretation with harmonic analysis</returns>
     public static AdvancedChordInterpretation? GetAdvancedInterpretation(ChordVoicing voicing)
     {
         var basicInterpretation = GetMostLikelyChord(voicing.ChordTemplate.PitchClassSet);
-        if (basicInterpretation == null) return null;
+        if (basicInterpretation == null)
+        {
+            return null;
+        }
 
         var advancedAnalysis = AnalyzeVoicing(voicing);
         var enhancedName = GenerateAdvancedChordName(basicInterpretation.Value.Name, advancedAnalysis);
@@ -61,7 +63,7 @@ public static class ChordTemplateRegistry
     }
 
     /// <summary>
-    /// Gets a cached enhanced chord template for the most likely interpretation
+    ///     Gets a cached enhanced chord template for the most likely interpretation
     /// </summary>
     /// <param name="pitchClassSet">The pitch class set</param>
     /// <returns>Cached enhanced chord template</returns>
@@ -72,7 +74,7 @@ public static class ChordTemplateRegistry
     }
 
     /// <summary>
-    /// Gets all cached chord templates (for compatibility with existing code)
+    ///     Gets all cached chord templates (for compatibility with existing code)
     /// </summary>
     /// <returns>All available chord templates</returns>
     public static IEnumerable<ChordTemplate> GetAllTemplates()
@@ -81,7 +83,7 @@ public static class ChordTemplateRegistry
     }
 
     /// <summary>
-    /// Gets common chord templates (triads and seventh chords)
+    ///     Gets common chord templates (triads and seventh chords)
     /// </summary>
     /// <returns>Common chord templates ordered by musical frequency</returns>
     public static IEnumerable<ChordTemplate> GetCommonTemplates()
@@ -90,12 +92,15 @@ public static class ChordTemplateRegistry
     }
 
     /// <summary>
-    /// Registers a custom chord template
+    ///     Registers a custom chord template
     /// </summary>
     public static void RegisterTemplate(ChordTemplate template)
     {
-        if (template == null) throw new ArgumentNullException(nameof(template));
-        
+        if (template == null)
+        {
+            throw new ArgumentNullException(nameof(template));
+        }
+
         var interpretations = AnalyzeAllInterpretations(template.PitchClassSet);
         if (interpretations.Length > 0)
         {
@@ -106,11 +111,11 @@ public static class ChordTemplateRegistry
     private static ConcurrentDictionary<PitchClassSet, ChordInterpretation[]> BuildRegistry()
     {
         var registry = new ConcurrentDictionary<PitchClassSet, ChordInterpretation[]>();
-        
-        // Get all standard chord templates
-        var standardChords = ChordTemplateFactory.StandardChords.Values;
-        
-        foreach (var template in standardChords)
+
+        // Get all systematically generated chord templates (NO HARD-CODED CHORDS)
+        var allChords = ChordTemplateFactory.GenerateAllPossibleChords();
+
+        foreach (var template in allChords)
         {
             var interpretations = AnalyzeAllInterpretations(template.PitchClassSet);
             if (interpretations.Length > 0)
@@ -124,7 +129,7 @@ public static class ChordTemplateRegistry
 
     private static ChordTemplate[] BuildAllTemplates()
     {
-        return ChordTemplateFactory.StandardChords.Values.ToArray();
+        return ChordTemplateFactory.GenerateAllPossibleChords().ToArray();
     }
 
     private static ChordInterpretation[] AnalyzeAllInterpretations(PitchClassSet pitchClassSet)
@@ -143,7 +148,7 @@ public static class ChordTemplateRegistry
                 {
                     var inversion = CalculateInversion(pitchClassSet, root);
                     var name = GenerateChordName(template, root);
-                    
+
                     interpretations.Add(new ChordInterpretation(
                         template, root, likelihood, inversion, name));
                 }
@@ -158,24 +163,34 @@ public static class ChordTemplateRegistry
     {
         var pitchClasses = pitchClassSet.ToList();
         var rootIndex = pitchClasses.IndexOf(root);
-        
+
         // Higher likelihood for bass note (first in set)
-        if (rootIndex == 0) return 1.0;
-        
+        if (rootIndex == 0)
+        {
+            return 1.0;
+        }
+
         // Check for perfect fifth above root
         var fifthPitchClass = PitchClass.FromSemitones((root.Value + 7) % 12);
         var hasFifth = pitchClasses.Contains(fifthPitchClass);
-        
+
         // Check for third above root
         var majorThirdPitchClass = PitchClass.FromSemitones((root.Value + 4) % 12);
         var minorThirdPitchClass = PitchClass.FromSemitones((root.Value + 3) % 12);
         var hasThird = pitchClasses.Contains(majorThirdPitchClass) || pitchClasses.Contains(minorThirdPitchClass);
-        
+
         // Calculate likelihood based on chord tones present
         var likelihood = 0.5; // Base likelihood
-        if (hasFifth) likelihood += 0.3;
-        if (hasThird) likelihood += 0.2;
-        
+        if (hasFifth)
+        {
+            likelihood += 0.3;
+        }
+
+        if (hasThird)
+        {
+            likelihood += 0.2;
+        }
+
         return Math.Min(likelihood, 1.0);
     }
 
@@ -184,7 +199,7 @@ public static class ChordTemplateRegistry
         // For now, create a template from the pitch class set
         // In a full implementation, this would match against known templates
         var name = $"Chord_{root}";
-        return new ChordTemplate(pitchClassSet, name);
+        return ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, name);
     }
 
     private static int CalculateInversion(PitchClassSet pitchClassSet, PitchClass root)
@@ -204,35 +219,35 @@ public static class ChordTemplateRegistry
             voicing.IsInverted,
             voicing.GetInversion(),
             false, // isDropVoicing - would need more analysis
-            false  // isSlashChord - would need more analysis
+            false // isSlashChord - would need more analysis
         );
     }
 
     private static string GenerateAdvancedChordName(string baseName, VoicingAnalysis analysis)
     {
         var name = baseName;
-        
+
         if (analysis.IsInverted)
         {
             name += $" (inv {analysis.Inversion})";
         }
-        
+
         if (analysis.IsDropVoicing)
         {
             name += " (drop)";
         }
-        
+
         if (analysis.IsSlashChord)
         {
             name += " (slash)";
         }
-        
+
         return name;
     }
 }
 
 /// <summary>
-/// Represents a specific interpretation of a pitch class set as a chord
+///     Represents a specific interpretation of a pitch class set as a chord
 /// </summary>
 /// <param name="Template">The core chord template</param>
 /// <param name="Root">The interpreted root note</param>
@@ -247,7 +262,7 @@ public readonly record struct ChordInterpretation(
     string Name);
 
 /// <summary>
-/// Represents an advanced chord interpretation with detailed harmonic analysis
+///     Represents an advanced chord interpretation with detailed harmonic analysis
 /// </summary>
 /// <param name="Template">The core chord template</param>
 /// <param name="Name">The enhanced chord name</param>
@@ -260,7 +275,7 @@ public readonly record struct AdvancedChordInterpretation(
     VoicingAnalysis Analysis);
 
 /// <summary>
-/// Represents detailed analysis of a chord voicing
+///     Represents detailed analysis of a chord voicing
 /// </summary>
 /// <param name="IsInverted">Whether the chord is inverted</param>
 /// <param name="Inversion">The inversion number</param>

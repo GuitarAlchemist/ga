@@ -1,0 +1,358 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="net7.0" />
+    <BuildType Name="Release" />
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Backend/" />
+  <Folder Name="/Backend/Applications/">
+    <Project Path="Apps/FloorManager/FloorManager.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/ga-server/GaApi/GaApi.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/GuitarAlchemistChatbot/GuitarAlchemistChatbot.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/InteractiveTutorial/InteractiveTutorial.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/ScenesService/ScenesService.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Backend/Applications/ga-server/" />
+  <Folder Name="/Backend/Applications/ga-server/CUDA/">
+    <Project Path="Apps/ga-server/GaApi/CUDA/VectorOperations.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Backend/CLI &amp; Tools/">
+    <Project Path="Apps/EmbeddingGenerator/EmbeddingGenerator.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/FretboardChordTest/FretboardChordTest.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/GA.TabConversion.Api/GA.TabConversion.Api.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/GaDataCLI/GaDataCLI.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/GpuBenchmark/GpuBenchmark.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/LocalEmbedding/LocalEmbedding.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/MongoImporter/MongoImporter.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/MongoVerify/MongoVerify.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/VectorSearchBenchmark/VectorSearchBenchmark.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="GaCLI/GaCLI.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Infrastructure/">
+    <Project Path="AllProjects.AppHost/AllProjects.AppHost.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="GaMcpServer/GaMcpServer.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Backend/Utilities/">
+    <Project Path="ChordSystemTest/ChordSystemTest.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Core Libraries/">
+    <Project Path="Common/GA.BSP.Core/GA.BSP.Core.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.AI/GA.Business.AI.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Analysis/GA.Business.Analysis.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Analytics/GA.Business.Analytics.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Assets/GA.Business.Assets.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
+    <Project Path="Common/GA.Business.Fretboard/GA.Business.Fretboard.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Harmony/GA.Business.Harmony.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Mapping/GA.Business.Mapping.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Microservices/GA.Business.Microservices.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Orchestration/GA.Business.Orchestration.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.Querying/GA.Business.Querying.fsproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Business.UI/GA.Business.UI.csproj" />
+    <Project Path="Common/GA.Business.Web/GA.Business.Web.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Config/GA.Config.fsproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Common/GA.Core.UI/GA.Core.UI.csproj" />
+    <Project Path="Common/GA.Core/GA.Core.csproj" />
+    <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj" />
+    <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
+    <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
+    <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Data &amp; Integration/">
+    <Project Path="Common/GA.Data.EntityFramework/GA.Data.EntityFramework.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Demos/" />
+  <Folder Name="/Demos/Advanced Features/">
+    <Project Path="Apps/AIIntegrationDemo/AIIntegrationDemo.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/BSPDemo/BSPDemo.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Demos/Music Theory/">
+    <Project Path="Apps/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/ChordNamingDemo/ChordNamingDemo.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Apps/ComprehensiveMusicTheoryDemo/ComprehensiveMusicTheoryDemo.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/MusicalAnalysisApp/MusicalAnalysisApp.csproj">
+      <BuildType Project="?" />
+      <Platform Project="?" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Apps/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj">
+      <BuildType Project="?" />
+      <Platform Project="?" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Apps/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Demos/Performance &amp; Benchmarks/">
+    <Project Path="Apps/HighPerformanceDemo/HighPerformanceDemo.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Apps/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj">
+      <BuildType Project="?" />
+      <Platform Project="?" />
+      <Build Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/BUILD_FIX_GUIDE.md" />
+    <File Path="docs/BUILD_STATUS_2025.md" />
+    <File Path="docs/ChatGPT-Modal Scales Overview.md" />
+    <File Path="docs/TuningChart.pdf" />
+    <File Path="docs/Tunings.txt" />
+  </Folder>
+  <Folder Name="/Experiments/">
+    <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj">
+      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+    </Project>
+    <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj" />
+  </Folder>
+  <Folder Name="/Frontend/">
+    <Project Path="GA.WebBlazorApp/GA.WebBlazorApp.csproj" />
+  </Folder>
+  <Folder Name="/Frontend/ga-client/">
+    <File Path="Apps/ga-client/package.json" />
+    <File Path="Apps/ga-client/README.md" />
+    <File Path="Apps/ga-client/tsconfig.json" />
+    <File Path="Apps/ga-client/vite.config.ts" />
+  </Folder>
+  <Folder Name="/Frontend/ga-fretboard-app/">
+    <File Path="ga-fretboard-app/package.json" />
+    <File Path="ga-fretboard-app/README.md" />
+    <File Path="ga-fretboard-app/tsconfig.json" />
+    <File Path="ga-fretboard-app/vite.config.ts" />
+  </Folder>
+  <Folder Name="/Frontend/ga-react-components/">
+    <File Path="ReactComponents/ga-react-components/package.json" />
+    <File Path="ReactComponents/ga-react-components/README.md" />
+    <File Path="ReactComponents/ga-react-components/tsconfig.json" />
+    <File Path="ReactComponents/ga-react-components/vite.config.ts" />
+  </Folder>
+  <Folder Name="/Html Examples/">
+    <File Path="docs/Html Examples/ag-grid - Example - RequireJS.html" />
+    <File Path="docs/Html Examples/ag-grid - Example 1.html" />
+    <File Path="docs/Html Examples/d3js Example - RequireJs.html" />
+    <File Path="docs/Html Examples/Force-graph 3d.html" />
+    <File Path="docs/Html Examples/Force-graph.html" />
+    <File Path="docs/Html Examples/Mermaid Example 1.html" />
+    <File Path="docs/Html Examples/Mermaid Example 2.html" />
+    <File Path="docs/Html Examples/Plotly Example.html" />
+    <File Path="docs/Html Examples/RequireJS Template.html" />
+    <File Path="docs/Html Examples/response.html" />
+    <File Path="docs/Html Examples/Twojs Example - RequireJs.html" />
+    <File Path="docs/Html Examples/Twojs Example.html" />
+    <File Path="docs/Html Examples/Verivio Example.html" />
+    <File Path="docs/Html Examples/VexFlow Example.html" />
+    <File Path="docs/Html Examples/VexTab - Key Signature.html" />
+    <File Path="docs/Html Examples/VexTab Example 1.html" />
+    <File Path="docs/Html Examples/VexTab Example 2.html" />
+  </Folder>
+  <Folder Name="/MusicTheory/">
+    <File Path="Notebooks/MusicTheory/Assets.ipynb" />
+    <File Path="Notebooks/MusicTheory/Guitar Tunings.ipynb" />
+    <File Path="Notebooks/MusicTheory/Instruments.ipynb" />
+    <File Path="Notebooks/MusicTheory/Keys.ipynb" />
+    <File Path="Notebooks/MusicTheory/Notes.ipynb" />
+    <File Path="Notebooks/MusicTheory/Scale Modes - harmonic minor scale.ipynb" />
+    <File Path="Notebooks/MusicTheory/Scale Modes - major scale.ipynb" />
+    <File Path="Notebooks/MusicTheory/Scale Modes - melodic minor scale.ipynb" />
+    <File Path="Notebooks/MusicTheory/Ukulele Tunings.ipynb" />
+  </Folder>
+  <Folder Name="/Notebooks/" />
+  <Folder Name="/Notebooks/Samples/">
+    <File Path="Notebooks/Samples/ExtensionLab-EF.ipynb" />
+  </Folder>
+  <Folder Name="/Scripts/">
+    <File Path="Scripts/auto-fix-cs1998.ps1" />
+    <File Path="Scripts/BinObj.fsx" />
+    <File Path="Scripts/check-mcp-status.ps1" />
+    <File Path="Scripts/Consume GA NuGet packages.fsx" />
+    <File Path="Scripts/create-vector-index.js" />
+    <File Path="Scripts/fix-cs1998-errors.ps1" />
+    <File Path="Scripts/fix-cs1998-smart.ps1" />
+    <File Path="Scripts/fix-mcp-servers.ps1" />
+    <File Path="Scripts/fix-tars-mcp.ps1" />
+    <File Path="Scripts/fix-test-errors.ps1" />
+    <File Path="Scripts/health-check.ps1" />
+    <File Path="Scripts/import-to-mongodb.ps1" />
+    <File Path="Scripts/install-git-hooks.ps1" />
+    <File Path="Scripts/monitor-services.ps1" />
+    <File Path="Scripts/reorganize-demos.ps1" />
+    <File Path="Scripts/reorganize-solution-final.ps1" />
+    <File Path="Scripts/reorganize-solution-structure.py" />
+    <File Path="Scripts/reorganize-solution.py" />
+    <File Path="Scripts/run-all-tests.ps1" />
+    <File Path="Scripts/setup-dev-environment.ps1" />
+    <File Path="Scripts/start-all-dev.ps1" />
+    <File Path="Scripts/start-all.ps1" />
+    <File Path="Scripts/start-backend.ps1" />
+    <File Path="Scripts/start-frontend.ps1" />
+    <File Path="Scripts/start-redis.ps1" />
+    <File Path="Scripts/STARTUP_GUIDE.md" />
+    <File Path="Scripts/START_SERVICES_README.md" />
+    <File Path="Scripts/test-chatbot.ps1" />
+    <File Path="Scripts/test-chord-api.ps1" />
+    <File Path="Scripts/test-mcp-servers.ps1" />
+    <File Path="Scripts/test-music-generation.ps1" />
+    <File Path="Scripts/test-vector-search.ps1" />
+    <File Path="Scripts/TEST_SUITE_README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="DevNotes.txt" />
+    <File Path="README.md" />
+    <File Path="RemoveBinObj.ps1" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Common/GA.Business.Graphiti/GA.Business.Graphiti.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Apps/GuitarAlchemistChatbot.Tests/GuitarAlchemistChatbot.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/BSPIntegrationTests/BSPIntegrationTests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Common/GA.Business.Core.Graphiti.Tests/GA.Business.Core.Graphiti.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
+    <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
+    <Project Path="Tests/Common/GA.MusicTheory.DSL.Tests/GA.MusicTheory.DSL.Tests.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/FloorManager.Tests.Playwright/FloorManager.Tests.Playwright.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+    <Project Path="Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj">
+      <BuildType Solution="net7.0|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/_Local Ga.Interactive NuGet/">
+    <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />
+  </Folder>
+  <Project Path="Apps/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj">
+    <BuildType Project="?" />
+    <Platform Project="?" />
+    <Build Project="false" />
+  </Project>
+  <Project Path="Apps/InternetContentDemo/InternetContentDemo.csproj">
+    <BuildType Project="?" />
+    <Platform Project="?" />
+    <Build Project="false" />
+  </Project>
+</Solution>

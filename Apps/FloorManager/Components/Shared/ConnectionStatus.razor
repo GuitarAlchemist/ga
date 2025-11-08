@@ -1,0 +1,190 @@
+﻿@inject IHttpClientFactory HttpClientFactory
+@inject IConfiguration Configuration
+@implements IDisposable
+
+<div class="connection-status @(_isConnected ? "connected" : "disconnected")">
+    <div class="status-indicator">
+        <span class="status-dot @(_isConnected ? "online" : "offline")"></span>
+        <span class="status-text">@_statusText</span>
+    </div>
+    <div class="api-status">
+        <span class="api-label">GaApi:</span>
+        <span class="api-value @(_gaApiStatus)">@_gaApiStatus</span>
+    </div>
+    <div class="api-status">
+        <span class="api-label">MongoDB:</span>
+        <span class="api-value @(_mongoStatus)">@_mongoStatus</span>
+    </div>
+    <div class="last-check">
+        Last check: @_lastCheckTime.ToString("HH:mm:ss")
+    </div>
+</div>
+
+<style>
+    .connection-status {
+        position: fixed;
+        top: 60px;
+        right: 16px;
+        background: #1a1a2e;
+        border: 2px solid #2a2a4a;
+        border-radius: 8px;
+        padding: 12px 16px;
+        z-index: 1000;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s;
+    }
+
+    .connection-status.connected {
+        border-color: #2ecc71;
+    }
+
+    .connection-status.disconnected {
+        border-color: #ff4444;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .status-dot.online {
+        background: #2ecc71;
+        box-shadow: 0 0 8px #2ecc71;
+    }
+
+    .status-dot.offline {
+        background: #ff4444;
+        box-shadow: 0 0 8px #ff4444;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .status-text {
+        color: #e0e0e0;
+        font-size: 0.95rem;
+    }
+
+    .api-status {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+    }
+
+    .api-label {
+        color: #a0a0c0;
+    }
+
+    .api-value {
+        font-weight: bold;
+    }
+
+    .api-value.online {
+        color: #2ecc71;
+    }
+
+    .api-value.offline {
+        color: #ff4444;
+    }
+
+    .api-value.checking {
+        color: #ffa500;
+    }
+
+    .last-check {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #2a2a4a;
+        font-size: 0.75rem;
+        color: #606080;
+        text-align: center;
+    }
+</style>
+
+@code {
+    private bool _isConnected;
+    private string _statusText = "Checking...";
+    private string _gaApiStatus = "checking";
+    private string _mongoStatus = "checking";
+    private DateTime _lastCheckTime = DateTime.Now;
+    private Timer? _checkTimer;
+
+    protected override void OnInitialized()
+    {
+        // Check immediately
+        _ = CheckConnectionsAsync();
+
+        // Check every 10 seconds
+        _checkTimer = new Timer(async _ => await CheckConnectionsAsync(), null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+    }
+
+    private async Task CheckConnectionsAsync()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("gaapi");
+
+            // Check GaApi health
+            try
+            {
+                var response = await httpClient.GetAsync("/health");
+                _gaApiStatus = response.IsSuccessStatusCode ? "online" : "offline";
+            }
+            catch
+            {
+                _gaApiStatus = "offline";
+            }
+
+            // Check MongoDB (via GaApi)
+            try
+            {
+                var response = await httpClient.GetAsync("/api/Floors");
+                _mongoStatus = response.IsSuccessStatusCode ? "online" : "offline";
+            }
+            catch
+            {
+                _mongoStatus = "offline";
+            }
+
+            _isConnected = _gaApiStatus == "online" && _mongoStatus == "online";
+            _statusText = _isConnected ? "Connected" : "Disconnected";
+            _lastCheckTime = DateTime.Now;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Connection check error: {ex.Message}");
+            _isConnected = false;
+            _statusText = "Error";
+            _gaApiStatus = "offline";
+            _mongoStatus = "offline";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _checkTimer?.Dispose();
+    }
+
+}
+

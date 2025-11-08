@@ -1,0 +1,322 @@
+(* ============================================================================
+   VexTab Grammar - EBNF Specification
+   
+   VexTab is a text-based language for music notation that compiles to VexFlow.
+   This grammar defines the complete VexTab syntax for parsing and generation.
+   
+   Reference: https://vexflow.com/vextab/
+   ============================================================================ *)
+
+(* ============================================================================
+   TOP-LEVEL STRUCTURE
+   ============================================================================ *)
+
+vextab = { line } ;
+
+line = options_line
+     | tabstave_line
+     | notes_line
+     | text_line
+     | blank_line ;
+
+blank_line = whitespace ;
+
+(* ============================================================================
+   OPTIONS
+   ============================================================================ *)
+
+options_line = "options", { option } ;
+
+option = option_name, "=", option_value ;
+
+option_name = "width"
+            | "scale"
+            | "space"
+            | "stave-distance"
+            | "font-face"
+            | "font-style"
+            | "font-size"
+            | "tab-stems"
+            | "tab-stem-direction" ;
+
+option_value = number | identifier | boolean ;
+
+(* ============================================================================
+   TABSTAVE (Stave Configuration)
+   ============================================================================ *)
+
+tabstave_line = "tabstave", { tabstave_option } ;
+
+tabstave_option = "notation=", boolean
+                | "tablature=", boolean
+                | "clef=", clef_type
+                | "key=", key_signature
+                | "time=", time_signature
+                | "tuning=", tuning ;
+
+clef_type = "treble" | "alto" | "tenor" | "bass" | "percussion" ;
+
+key_signature = note_letter, [accidental], [mode] ;
+
+mode = "major" | "minor" ;
+
+time_signature = number, "/", number
+               | "C"
+               | "C|" ;
+
+tuning = "standard"
+       | "dropd"
+       | "eb"
+       | custom_tuning ;
+
+custom_tuning = note_letter, [accidental], "/", octave,
+                { ",", note_letter, [accidental], "/", octave } ;
+
+(* ============================================================================
+   NOTES
+   ============================================================================ *)
+
+notes_line = "notes", { duration }, note_sequence ;
+
+duration = ":", duration_code, [dot], [slash_notation] ;
+
+duration_code = "w"     (* whole *)
+              | "h"     (* half *)
+              | "q"     (* quarter *)
+              | "8"     (* eighth *)
+              | "16"    (* sixteenth *)
+              | "32" ;  (* thirty-second *)
+
+dot = "d" ;  (* dotted note *)
+
+slash_notation = "S" ;  (* slash notation for rhythm *)
+
+note_sequence = note_item, { separator, note_item } ;
+
+separator = "-" | whitespace ;
+
+note_item = note
+          | chord
+          | rest
+          | bar_line
+          | tuplet
+          | annotation ;
+
+(* ============================================================================
+   STANDARD NOTATION NOTES
+   ============================================================================ *)
+
+note = note_name, [accidental], "/", octave, [technique_chain], [articulation] ;
+
+note_name = "A" | "B" | "C" | "D" | "E" | "F" | "G" ;
+
+accidental = "#"    (* sharp *)
+           | "##"   (* double sharp *)
+           | "b"    (* flat *)
+           | "bb"   (* double flat *)
+           | "n"    (* natural *)
+           | "x"    (* double sharp alternative *)
+           | "♯"    (* unicode sharp *)
+           | "♭"    (* unicode flat *)
+           | "♮" ;  (* unicode natural *)
+
+octave = digit ;
+
+(* ============================================================================
+   TABLATURE NOTES
+   ============================================================================ *)
+
+tab_note = fret, "/", string, [technique_chain], [articulation] ;
+
+fret = number | "X" ;  (* X for muted note *)
+
+string = digit ;  (* 1-6 for standard guitar *)
+
+(* ============================================================================
+   CHORDS
+   ============================================================================ *)
+
+chord = "(", chord_note, { ".", chord_note }, ")", [technique_chain] ;
+
+chord_note = note | tab_note ;
+
+(* ============================================================================
+   TECHNIQUES (Guitar-specific)
+   ============================================================================ *)
+
+technique_chain = technique, { technique } ;
+
+technique = hammer_on
+          | pull_off
+          | slide
+          | bend
+          | vibrato
+          | tap
+          | stroke ;
+
+hammer_on = "h", fret ;
+
+pull_off = "p", fret ;
+
+slide = "s", fret ;
+
+bend = "b", fret, ["b", fret] ;  (* bend and optional release *)
+
+vibrato = "v"   (* normal vibrato *)
+        | "V" ; (* harsh vibrato *)
+
+tap = "t" ;
+
+stroke = "u"    (* upstroke *)
+       | "d" ;  (* downstroke *)
+
+(* ============================================================================
+   ARTICULATIONS
+   ============================================================================ *)
+
+articulation = "$", articulation_code, "/", position, ".$" ;
+
+articulation_code = "a."     (* staccato *)
+                  | "av"     (* staccatissimo *)
+                  | "a>"     (* accent *)
+                  | "a-"     (* tenuto *)
+                  | "a^"     (* marcato *)
+                  | "a+"     (* left hand pizzicato *)
+                  | "ao"     (* snap pizzicato *)
+                  | "ah"     (* open note *)
+                  | "a@a"    (* up fermata *)
+                  | "a@u"    (* down fermata *)
+                  | "a|"     (* bow up *)
+                  | "am" ;   (* bow down *)
+
+position = "top" | "bottom" ;
+
+(* ============================================================================
+   RESTS
+   ============================================================================ *)
+
+rest = "#", [rest_position], "#" ;
+
+rest_position = digit ;  (* 0-9, bottom to top *)
+
+(* ============================================================================
+   BAR LINES
+   ============================================================================ *)
+
+bar_line = "|"      (* single bar *)
+         | "=||"    (* double bar *)
+         | "=|:"    (* repeat begin *)
+         | "=:|"    (* repeat end *)
+         | "=::"    (* double repeat *)
+         | "=|=" ;  (* end bar *)
+
+(* ============================================================================
+   TUPLETS
+   ============================================================================ *)
+
+tuplet = "^", number, "^" ;  (* e.g., ^3^ for triplet *)
+
+(* ============================================================================
+   ANNOTATIONS (Text on notes)
+   ============================================================================ *)
+
+annotation = "$", [style], text_content, "$" ;
+
+style = ".", style_name, "."
+      | ".", font_face, "-", font_size, "-", font_style, "." ;
+
+style_name = "big" | "medium" | "italic" ;
+
+font_face = identifier ;
+
+font_size = number ;
+
+font_style = "normal" | "bold" | "italic" | "bold-italic" ;
+
+text_content = { any_char - "$" } ;
+
+(* ============================================================================
+   TEXT LINES (Lyrics, chords, etc.)
+   ============================================================================ *)
+
+text_line = "text", { text_duration }, text_sequence ;
+
+text_duration = duration ;
+
+text_sequence = text_item, { ",", text_item } ;
+
+text_item = text_string
+          | bar_line
+          | symbol
+          | position_modifier
+          | font_modifier
+          | new_line ;
+
+text_string = { any_char - "," - "|" - "#" - "+" } ;
+
+symbol = "#", symbol_name ;
+
+symbol_name = "coda"
+            | "segno"
+            | "tr"      (* trill *)
+            | "f"       (* forte *)
+            | "p"       (* piano *)
+            | "mf"      (* mezzo-forte *)
+            | "mp"      (* mezzo-piano *)
+            | "ff"      (* fortissimo *)
+            | "pp" ;    (* pianissimo *)
+
+position_modifier = ".", number ;  (* vertical position *)
+
+font_modifier = ".font=", font_spec ;
+
+font_spec = font_face, "-", font_size, "-", font_style ;
+
+new_line = "++" ;  (* start new text line *)
+
+(* ============================================================================
+   PRIMITIVES
+   ============================================================================ *)
+
+boolean = "true" | "false" ;
+
+number = digit, { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+identifier = letter, { letter | digit | "-" | "_" } ;
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+       | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+       | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+       | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+
+whitespace = { " " | "\t" | "\n" | "\r" } ;
+
+any_char = ? any character ? ;
+
+(* ============================================================================
+   EXAMPLES
+   ============================================================================ *)
+
+(* Example 1: Simple chord progression with standard notation
+   tabstave notation=true key=C time=4/4
+   notes :q (C/4.E/4.G/4) (D/4.F/4.A/4) (E/4.G/4.B/4) (F/4.A/4.C/5)
+*)
+
+(* Example 2: Guitar tablature with techniques
+   tabstave
+   notes 5h6-7/5 ^3^ :8 7/4 6/3 5/2 3v/1
+*)
+
+(* Example 3: Chord progression with lyrics
+   tabstave notation=true key=G
+   notes :q (G/4.B/4.D/5) (C/4.E/4.G/4) (D/4.F#/4.A/4) (G/4.B/4.D/5)
+   text :q, G, C, D, G
+*)
+
+(* Example 4: Complex tablature with bends and slides
+   tabstave
+   notes :8 5/3 7b9b7/3 :q 10s12/2 :8 12v/1
+*)
+

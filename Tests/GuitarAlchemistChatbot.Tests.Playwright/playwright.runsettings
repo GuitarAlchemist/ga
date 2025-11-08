@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <MaxCpuCount>0</MaxCpuCount>
+    <ResultsDirectory>./TestResults</ResultsDirectory>
+  </RunConfiguration>
+  
+  <Playwright>
+    <BrowserName>chromium</BrowserName>
+    <LaunchOptions>
+      <Headless>false</Headless>
+      <SlowMo>100</SlowMo>
+    </LaunchOptions>
+    <ExpectTimeout>5000</ExpectTimeout>
+    <Timeout>30000</Timeout>
+  </Playwright>
+  
+  <NUnit>
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+  </NUnit>
+</RunSettings>
+

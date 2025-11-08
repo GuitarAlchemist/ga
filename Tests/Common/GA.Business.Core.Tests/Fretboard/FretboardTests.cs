@@ -1,9 +1,8 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿namespace GA.Business.Core.Tests.Fretboard;
+namespace GA.Business.Core.Tests.Fretboard;
 
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Notes;
+using Core.Fretboard.Positions;
+using Core.Fretboard.Primitives;
+using Core.Notes;
 
 [TestFixture]
 public class FretboardTests
@@ -99,7 +98,7 @@ public class FretboardTests
         // Assert
         Assert.That(success, Is.True);
         Assert.That(position, Is.Not.Null);
-        Assert.That(position.Location, Is.EqualTo(location));
+        Assert.That(position!.Location, Is.EqualTo(location));
     }
 
     [Test]

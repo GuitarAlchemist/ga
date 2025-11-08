@@ -1,30 +1,83 @@
 ﻿namespace GA.Business.Core.Notes.Primitives;
 
-using GA.Business.Core.Intervals.Primitives;
+using Intervals.Primitives;
 
 /// <summary>
-/// Sharp accidental (# | x)
+///     Sharp accidental (# | x)
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IRangeValueObject{SharpAccidental}"/>
+///     Implements <see cref="IRangeValueObject{SharpAccidental}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidental>, IParsable<SharpAccidental>
 {
+    private const int _minValue = 1;
+    private const int _maxValue = 2;
+    private readonly int _value;
+
+    public static SharpAccidental Sharp => FromValue(1);
+    public static SharpAccidental DoubleSharp => FromValue(2);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value)
+    {
+        return new SharpAccidental { Value = value };
+    }
+
+    public static implicit operator Semitones(SharpAccidental value)
+    {
+        return value.ToSemitones();
+    }
+
+    public Semitones ToSemitones()
+    {
+        return new Semitones { Value = _value };
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return _value switch
+        {
+            1 => "#",
+            2 => "x",
+            _ => string.Empty
+        };
+    }
+
     #region IRangeValueObject Members
 
     public static SharpAccidental Min => new() { Value = _minValue };
     public static SharpAccidental Max => new() { Value = _maxValue };
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
-    public static implicit operator SharpAccidental(int value) => new() { Value = value };
-    public static implicit operator int(SharpAccidental item) => item._value;
+    public int Value
+    {
+        get => _value;
+        init => _value = CheckRange(value);
+    }
 
-    public static int CheckRange(int value) => ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, minValue, maxValue);
+    public static implicit operator SharpAccidental(int value)
+    {
+        return new SharpAccidental { Value = value };
+    }
+
+    public static implicit operator int(SharpAccidental item)
+    {
+        return item._value;
+    }
+
+    public static int CheckRange(int value)
+    {
+        return ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, _minValue, _maxValue);
+    }
+
+    public static int CheckRange(int value, int minValue, int maxValue)
+    {
+        return ValueObjectUtils<SharpAccidental>.EnsureValueRange(value, minValue, maxValue);
+    }
 
     #endregion
-    
+
     #region IParsable Members
 
     //language=regexp
@@ -34,7 +87,11 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     /// <inheritdoc />
     public static SharpAccidental Parse(string s, IFormatProvider? provider = null)
     {
-        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        }
+
         return result;
     }
 
@@ -42,9 +99,16 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     public static bool TryParse(string? s, IFormatProvider? provider, out SharpAccidental result)
     {
         result = default;
-        if (string.IsNullOrWhiteSpace(s)) return false; // Failure (Empty string)
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            return false; // Failure (Empty string)
+        }
+
         var match = _regex.Match(s);
-        if (!match.Success) return false; // Failure (No match)
+        if (!match.Success)
+        {
+            return false; // Failure (No match)
+        }
 
         var group = match.Groups[1];
         SharpAccidental? accidental = group.Value.ToUpperInvariant() switch
@@ -54,33 +118,15 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
             _ => null
         };
 
-        if (!accidental.HasValue) return false; // Failure
+        if (!accidental.HasValue)
+        {
+            return false; // Failure
+        }
 
         // Success
         result = accidental.Value;
         return true;
-    }    
-    
+    }
+
     #endregion
-
-    public static SharpAccidental Sharp => FromValue(1);
-    public static SharpAccidental DoubleSharp => FromValue(2);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    private const int _minValue = 1;
-    private const int _maxValue = 2;
-    private readonly int _value;
-
-    public static implicit operator Semitones(SharpAccidental value) => value.ToSemitones();
-    public Semitones ToSemitones() => new() {Value = _value};
-
-    /// <inheritdoc />
-    public override string ToString() => _value switch
-    {
-        1 => "#",
-        2 => "x",
-        _ => string.Empty
-    };
 }

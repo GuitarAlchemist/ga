@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='windows-1252' ?>
+<tocdata>
+<book name="Introduction to Guitar Alchemist" >
+  <item name="Why Guitar Alchemist ?" url="introduction_to_guitar_alchemist/why_guitar_alchemist_.htm" />
+  <item name="System Requirements" url="introduction_to_guitar_alchemist/system_requirements.htm" />
+  <item name="How to buy Guitar Alchemist" url="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm" />
+</book>
+<book name="The user interface" >
+  <item name="The main window" url="the_user_interface/the_main_window.htm" />
+  <item name="The fingerboard" url="the_user_interface/the_fingerboard.htm" />
+  <item name="The menu bar" url="the_user_interface/the_menu.htm" />
+  <item name="The status bar" url="the_user_interface/the_status_bar.htm" />
+  <item name="The view selector" url="the_user_interface/view_selector.htm" />
+  <book name="The views" >
+    <book name="The scales view" >
+      <item name="The scales view" url="the_user_interface/the_views/the_scales_view/the_scales_view.htm" />
+      <item name="The scale selector panel" url="the_user_interface/the_views/the_scales_view/the_scale_selector_panel.htm" />
+      <item name="The scale pattern panel" url="the_user_interface/the_views/the_scales_view/the_scale_pattern_panel.htm" />
+      <item name="The matching chords panel" url="the_user_interface/the_views/the_scales_view/the_matching_chords_panel.htm" />
+    </book>
+    <book name="The chords view" >
+      <item name="The chords view" url="the_user_interface/the_views/the_chords_view/the_chords_view.htm" />
+      <item name="The chord selector panel" url="the_user_interface/the_views/the_chords_view/the_chord_selector_panel.htm" />
+      <item name="The chord dictionnary panel" url="the_user_interface/the_views/the_chords_view/the_chord_dictionnary_panel.htm" />
+      <item name="The matching scales panel" url="the_user_interface/the_views/the_chords_view/the_matching_scale_panel.htm" />
+    </book>
+  </book>
+  <book name="The options dialog" >
+    <item name="The options dialog" url="the_user_interface/the_options_dialog/the_options_dialog.htm" />
+    <item name="The fingerboard options page" url="the_user_interface/the_options_dialog/the_fingerboard_options_page.htm" />
+    <item name="The theme options page" url="the_user_interface/the_options_dialog/the_theme_options_page.htm" />
+    <item name="The MIDI options page" url="the_user_interface/the_options_dialog/the_midi_options_page.htm" />
+  </book>
+</book>
+<book name="Music theory elements" >
+  <item name="The intervals" url="music_theory_elements/the_intervals.htm" />
+  <item name="The keys" url="music_theory_elements/the_keys.htm" />
+  <item name="The major scale modes" url="music_theory_elements/the_major_scale_modes.htm" />
+  <item name="The melodic minor modes" url="music_theory_elements/the_melodic_minor_modes.htm" />
+  <item name="The harmonic minor modes" url="music_theory_elements/the_harmonic_minor_modes.htm" />
+  <item name="The harmonic major modes" url="music_theory_elements/the_harmonic_major_modes.htm" />
+  <item name="The character tones" url="music_theory_elements/the_character_tones.htm" />
+</book>
+
+</tocdata>

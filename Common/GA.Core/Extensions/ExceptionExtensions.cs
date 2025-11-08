@@ -3,12 +3,12 @@
 public static class ExceptionExtensions
 {
     /// <summary>
-    /// Gets a string that contains the exception message, a new line, then the stack trace.
+    ///     Gets a string that contains the exception message, a new line, then the stack trace.
     /// </summary>
-    /// <param name="ex">The <see cref="Exception"/>.</param>
+    /// <param name="ex">The <see cref="Exception" />.</param>
     /// <param name="header">The header.</param>
     /// <param name="details">When set to true, messages from inner exceptions are included.</param>
-    /// <returns>A <see cref="string"/>.</returns>
+    /// <returns>A <see cref="string" />.</returns>
     public static string GetMessageAndStackTrace(
         this Exception ex,
         string header,
@@ -25,9 +25,11 @@ public static class ExceptionExtensions
                 {
                     sb.AppendLine("====================================================");
                 }
+
                 sb.AppendLine(innerException.Message);
                 sb.AppendLine(innerException.StackTrace);
             }
+
             result = sb.ToString();
         }
         else
@@ -40,7 +42,11 @@ public static class ExceptionExtensions
                 while (true)
                 {
                     currentLevel = currentLevel.InnerException;
-                    if (currentLevel == null) break;
+                    if (currentLevel == null)
+                    {
+                        break;
+                    }
+
                     sb.AppendLine($"[Inner exception level {level++}] {currentLevel.Message}");
                 }
             }

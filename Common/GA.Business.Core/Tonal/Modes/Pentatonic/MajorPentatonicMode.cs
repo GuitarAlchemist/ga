@@ -1,21 +1,24 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Pentatonic;
 
-using Scales;
-using Primitives;
 using Primitives.Pentatonic;
+using Scales;
 
 /// <summary>
-/// A major pentatonic scale mode
+///     A major pentatonic scale mode
 /// </summary>
 /// <remarks>
-/// Pentatonic scales are five-note scales widely used in various musical traditions.
+///     Pentatonic scales are five-note scales widely used in various musical traditions.
 /// </remarks>
 [PublicAPI]
 public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : TonalScaleMode<MajorPentatonicScaleDegree>(
-    Scale.MajorPentatonic, degree),
+        Scale.MajorPentatonic, degree),
     IStaticEnumerable<MajorPentatonicMode>
 {
-    public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
+    private static readonly Lazy<ScaleModeCollection<MajorPentatonicScaleDegree, MajorPentatonicMode>>
+        _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+
+    public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.Items
+        .Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
 
     public override string Name => ParentScaleDegree.Value switch
     {
@@ -27,10 +30,21 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    public override string ToString() => $"{Name} - {Formula}";
+    public static IEnumerable<MajorPentatonicMode> Items =>
+        MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree));
 
-    public static IEnumerable<MajorPentatonicMode> Items => MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree));
-    public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree) => _lazyModeByDegree.Value[degree];
-    public static MajorPentatonicMode Get(int degree) => _lazyModeByDegree.Value[degree];
-    private static readonly Lazy<ScaleModeCollection<MajorPentatonicScaleDegree, MajorPentatonicMode>> _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+    public override string ToString()
+    {
+        return $"{Name} - {Formula}";
+    }
+
+    public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
+
+    public static MajorPentatonicMode Get(int degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
 }

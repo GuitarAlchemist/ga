@@ -1,0 +1,173 @@
+# Iconic Chord Configurations
+# This file defines famous chord voicings with their cultural and historical significance
+
+IconicChords:
+  - Name: "Hendrix Chord"
+    TheoreticalName: "E7#9"
+    Description: "The signature chord from Purple Haze - a dominant 7th with a sharp 9th"
+    Artist: "Jimi Hendrix"
+    Song: "Purple Haze"
+    Era: "1960s"
+    Genre: "Rock/Blues"
+    PitchClasses: [ 4, 8, 11, 2, 7 ]  # E, G#, B, D, G
+    GuitarVoicing: [ 0, 7, 6, 7, 8, 0 ]  # Standard Hendrix chord voicing
+    AlternateNames: [ "Purple Haze Chord", "E7#9" ]
+
+  - Name: "James Bond Chord"
+    TheoreticalName: "Em(maj7)"
+    Description: "The mysterious spy movie chord - minor triad with major 7th"
+    Artist: "John Barry"
+    Song: "James Bond Theme"
+    Era: "1960s"
+    Genre: "Film Score"
+    PitchClasses: [ 4, 7, 11, 3 ]  # E, G, B, D#
+    GuitarVoicing: [ 0, 2, 1, 0, 0, 0 ]  # Em(maj7) open voicing
+    AlternateNames: [ "Spy Chord", "Em(maj7)", "Minor-Major 7th" ]
+
+  - Name: "Tristan Chord"
+    TheoreticalName: "F7#11"
+    Description: "Wagner's famous unresolved dissonance from Tristan und Isolde"
+    Artist: "Richard Wagner"
+    Song: "Tristan und Isolde"
+    Era: "1860s"
+    Genre: "Classical/Opera"
+    PitchClasses: [ 5, 11, 3, 8 ]  # F, B, D#, G#
+    AlternateNames: [ "Wagner Chord", "Tristan Dissonance" ]
+
+  - Name: "Mystic Chord"
+    TheoreticalName: "C6#11"
+    Description: "Scriabin's synthetic chord built from fourths"
+    Artist: "Alexander Scriabin"
+    Song: "Prometheus"
+    Era: "1910s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 0, 6, 10, 4, 9, 2 ]  # C, F#, Bb, E, A, D
+    AlternateNames: [ "Prometheus Chord", "Scriabin Chord" ]
+
+  - Name: "So What Chord"
+    TheoreticalName: "Em11"
+    Description: "Bill Evans' famous quartal voicing from Kind of Blue"
+    Artist: "Bill Evans"
+    Song: "So What"
+    Era: "1950s"
+    Genre: "Jazz"
+    PitchClasses: [ 4, 9, 2, 7, 11 ]  # E, A, D, G, B
+    AlternateNames: [ "Evans Chord", "Em11", "Quartal Voicing" ]
+
+  - Name: "Mu Major Chord"
+    TheoreticalName: "Cadd9(no3)"
+    Description: "Steely Dan's signature chord - major with 9th but no 3rd"
+    Artist: "Steely Dan"
+    Song: "Various"
+    Era: "1970s"
+    Genre: "Jazz Rock"
+    PitchClasses: [ 0, 7, 2 ]  # C, G, D
+    GuitarVoicing: [ 0, 3, 0, 0, 3, 0 ]  # Cadd9(no3) voicing
+    AlternateNames: [ "Mu Chord", "Add9(no3)", "Steely Dan Chord" ]
+
+  - Name: "Elektra Chord"
+    TheoreticalName: "E7b9#11"
+    Description: "Strauss's dissonant chord from Elektra"
+    Artist: "Richard Strauss"
+    Song: "Elektra"
+    Era: "1900s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 4, 8, 11, 2, 5, 10 ]  # E, G#, B, D, F, Bb
+    AlternateNames: [ "Strauss Chord" ]
+
+  - Name: "Petrushka Chord"
+    TheoreticalName: "C/F# Polychord"
+    Description: "Stravinsky's bitonal chord - C major over F# major"
+    Artist: "Igor Stravinsky"
+    Song: "Petrushka"
+    Era: "1910s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 0, 4, 7, 6, 10, 1 ]  # C, E, G, F#, A#, C#
+    AlternateNames: [ "Stravinsky Chord", "Bitonal Chord" ]
+
+  - Name: "Cowboy Chord"
+    TheoreticalName: "G"
+    Description: "The classic open G major chord - staple of country and folk"
+    Artist: "Traditional"
+    Song: "Various"
+    Era: "Traditional"
+    Genre: "Country/Folk"
+    PitchClasses: [ 7, 11, 2 ]  # G, B, D
+    GuitarVoicing: [ 3, 2, 0, 0, 3, 3 ]  # Open G major
+    AlternateNames: [ "Open G", "G Major" ]
+
+  - Name: "Power Chord"
+    TheoreticalName: "G5"
+    Description: "The quintessential rock chord - root and fifth only"
+    Artist: "Various Rock Artists"
+    Song: "Various"
+    Era: "1950s-Present"
+    Genre: "Rock/Metal"
+    PitchClasses: [ 7, 2 ]  # G, D
+    GuitarVoicing: [ 3, 5, 5, -1, -1, -1 ]  # G5 power chord
+    AlternateNames: [ "Fifth Chord", "G5" ]
+
+  - Name: "Joni Mitchell Chord"
+    TheoreticalName: "Dmaj7add6"
+    Description: "Complex open tuning chord popularized by Joni Mitchell"
+    Artist: "Joni Mitchell"
+    Song: "Both Sides Now"
+    Era: "1960s-70s"
+    Genre: "Folk/Jazz"
+    PitchClasses: [ 2, 6, 9, 1, 4 ]  # D, F#, A, C#, E
+    AlternateNames: [ "Mitchell Voicing", "Open Tuning Chord" ]
+
+  - Name: "Blackbird Chord"
+    TheoreticalName: "G/B"
+    Description: "The distinctive fingerpicked chord from The Beatles' Blackbird"
+    Artist: "The Beatles"
+    Song: "Blackbird"
+    Era: "1960s"
+    Genre: "Rock/Pop"
+    PitchClasses: [ 7, 11, 2 ]  # G, B, D
+    GuitarVoicing: [ 0, 0, 0, 0, 2, 0 ]  # Blackbird fingerpicking pattern
+    AlternateNames: [ "Beatles Chord", "G/B" ]
+
+# Guitar-Specific Voicing Categories
+VoicingCategories:
+  - Name: "Open Chords"
+    Description: "Chords using open strings in standard tuning"
+    Examples: [ "Cowboy Chord", "James Bond Chord", "Blackbird Chord" ]
+
+  - Name: "Barre Chords"
+    Description: "Chords requiring a barre across multiple strings"
+    Examples: [ "Hendrix Chord" ]
+
+  - Name: "Fingerpicking Chords"
+    Description: "Chords designed for fingerstyle playing"
+    Examples: [ "Blackbird Chord", "Joni Mitchell Chord" ]
+
+  - Name: "Power Chords"
+    Description: "Simple two-note chords popular in rock music"
+    Examples: [ "Power Chord" ]
+
+# Historical Periods
+HistoricalPeriods:
+  - Period: "Classical Era"
+    Years: "1750-1820"
+    Characteristics: "Traditional tonal harmony"
+
+  - Period: "Romantic Era"
+    Years: "1820-1900"
+    Characteristics: "Expanded harmony, chromaticism"
+    Examples: [ "Tristan Chord" ]
+
+  - Period: "Modern Era"
+    Years: "1900-1950"
+    Characteristics: "Atonality, new harmonic structures"
+    Examples: [ "Mystic Chord", "Elektra Chord", "Petrushka Chord" ]
+
+  - Period: "Jazz Era"
+    Years: "1920-1960"
+    Characteristics: "Extended harmony, complex voicings"
+    Examples: [ "So What Chord" ]
+
+  - Period: "Rock Era"
+    Years: "1950-Present"
+    Characteristics: "Power chords, distortion, new voicings"
+    Examples: [ "Hendrix Chord", "Power Chord" ]

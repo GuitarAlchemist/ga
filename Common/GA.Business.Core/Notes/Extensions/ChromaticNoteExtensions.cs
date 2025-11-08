@@ -2,5 +2,8 @@
 
 public static class ChromaticNoteExtensions
 {
-    public static ChromaticNoteSet ToChromaticNoteSet(this IEnumerable<Note.Chromatic> notes) => new(notes);
+    public static ChromaticNoteSet ToChromaticNoteSet(this IEnumerable<Note.Chromatic> notes)
+    {
+        return new ChromaticNoteSet(notes);
+    }
 }

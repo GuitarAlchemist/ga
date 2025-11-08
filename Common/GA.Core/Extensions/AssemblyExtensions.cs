@@ -1,6 +1,6 @@
-﻿using System.Reflection;
+﻿namespace GA.Core.Extensions;
 
-namespace GA.Core.Extensions;
+using System.Reflection;
 
 public static class AssemblyExtensions
 {
@@ -8,23 +8,38 @@ public static class AssemblyExtensions
     {
         var list = new List<Type>();
         var types =
-                assembly.GetTypes().Where(type => !type.IsAbstract && !type.ContainsGenericParameters).ToImmutableList();
+            assembly.GetTypes().Where(type => !type.IsAbstract && !type.ContainsGenericParameters).ToImmutableList();
         foreach (var type in types)
         {
             var attr = type.GetCustomAttribute<CompilerGeneratedAttribute>();
-            if (attr != null) continue;
+            if (attr != null)
+            {
+                continue;
+            }
 
             var toStringMethods = type.GetMethods()
-                .Where(info => string.Equals(info.Name, methodName, StringComparison.OrdinalIgnoreCase)).ToImmutableList();
-            if (!toStringMethods.Any()) continue;
+                .Where(info => string.Equals(info.Name, methodName, StringComparison.OrdinalIgnoreCase))
+                .ToImmutableList();
+            if (!toStringMethods.Any())
+            {
+                continue;
+            }
+
             var toStringMethod = toStringMethods.FirstOrDefault();
-            if (toStringMethod == null || !IsOverride(toStringMethod)) continue; ;
+            if (toStringMethod == null || !IsOverride(toStringMethod))
+            {
+                continue;
+            }
+
+            ;
             list.Add(type);
         }
 
         return [.. list];
 
-        static bool IsOverride(MethodInfo method) => method.GetBaseDefinition().DeclaringType != method.DeclaringType;
+        static bool IsOverride(MethodInfo method)
+        {
+            return method.GetBaseDefinition().DeclaringType != method.DeclaringType;
+        }
     }
 }
-

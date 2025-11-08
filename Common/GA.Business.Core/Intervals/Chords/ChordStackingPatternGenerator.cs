@@ -1,16 +1,19 @@
 ﻿namespace GA.Business.Core.Intervals.Chords;
 
+using Core.Chords;
+
 /// <summary>
-/// Service responsible for generating interval stacking patterns for chord construction.
-/// Supports tertian (thirds), quartal (fourths), and quintal (fifths) stacking approaches.
+///     Service responsible for generating interval stacking patterns for chord construction.
+///     Supports tertian (thirds), quartal (fourths), and quintal (fifths) stacking approaches.
 /// </summary>
 public static class ChordStackingPatternGenerator
 {
     /// <summary>
-    /// Generates stacking positions for chord construction using different interval stacking approaches.
-    /// This programmatically calculates the scale degree offsets needed for each chord tone.
+    ///     Generates stacking positions for chord construction using different interval stacking approaches.
+    ///     This programmatically calculates the scale degree offsets needed for each chord tone.
     /// </summary>
-    public static int[] GenerateStackingPositions(ChordExtension extension, int scaleLength, ChordStackingType stackingType)
+    public static int[] GenerateStackingPositions(ChordExtension extension, int scaleLength,
+        ChordStackingType stackingType)
     {
         return stackingType switch
         {
@@ -24,7 +27,7 @@ public static class ChordStackingPatternGenerator
     #region Tertian (Third-based) Stacking
 
     /// <summary>
-    /// Generates stacking positions for traditional tertian (third-based) chord construction
+    ///     Generates stacking positions for traditional tertian (third-based) chord construction
     /// </summary>
     private static int[] GenerateTertianStackingPositions(ChordExtension extension, int scaleLength)
     {
@@ -44,15 +47,16 @@ public static class ChordStackingPatternGenerator
     #region Quartal (Fourth-based) Stacking
 
     /// <summary>
-    /// Generates stacking positions for quartal (fourth-based) chord construction.
-    /// Quartal harmony is common in modern jazz and contemporary classical music.
+    ///     Generates stacking positions for quartal (fourth-based) chord construction.
+    ///     Quartal harmony is common in modern jazz and contemporary classical music.
     /// </summary>
     private static int[] GenerateQuartalStackingPositions(ChordExtension extension, int scaleLength)
     {
         return extension switch
         {
             ChordExtension.Triad => GenerateIntervalStackingPattern(3, 2), // Root + 2 more fourths (4th, 7th)
-            ChordExtension.Seventh => GenerateIntervalStackingPattern(3, 3), // Root + 3 more fourths (4th, 7th, 3rd+octave)
+            ChordExtension.Seventh => GenerateIntervalStackingPattern(3,
+                3), // Root + 3 more fourths (4th, 7th, 3rd+octave)
             ChordExtension.Ninth => GenerateExtendedStackingPattern(3, 4, scaleLength), // Add more fourths
             ChordExtension.Eleventh => GenerateExtendedStackingPattern(3, 5, scaleLength),
             ChordExtension.Thirteenth => GenerateExtendedStackingPattern(3, 6, scaleLength),
@@ -65,15 +69,16 @@ public static class ChordStackingPatternGenerator
     #region Quintal (Fifth-based) Stacking
 
     /// <summary>
-    /// Generates stacking positions for quintal (fifth-based) chord construction.
-    /// Quintal harmony creates open, spacious sounds often used in contemporary music.
+    ///     Generates stacking positions for quintal (fifth-based) chord construction.
+    ///     Quintal harmony creates open, spacious sounds often used in contemporary music.
     /// </summary>
     private static int[] GenerateQuintalStackingPositions(ChordExtension extension, int scaleLength)
     {
         return extension switch
         {
             ChordExtension.Triad => GenerateIntervalStackingPattern(4, 2), // Root + 2 more fifths (5th, 2nd+octave)
-            ChordExtension.Seventh => GenerateIntervalStackingPattern(4, 3), // Root + 3 more fifths (5th, 2nd+octave, 6th+octave)
+            ChordExtension.Seventh => GenerateIntervalStackingPattern(4,
+                3), // Root + 3 more fifths (5th, 2nd+octave, 6th+octave)
             ChordExtension.Ninth => GenerateExtendedStackingPattern(4, 4, scaleLength), // Add more fifths
             ChordExtension.Eleventh => GenerateExtendedStackingPattern(4, 5, scaleLength),
             ChordExtension.Thirteenth => GenerateExtendedStackingPattern(4, 6, scaleLength),
@@ -86,7 +91,7 @@ public static class ChordStackingPatternGenerator
     #region Helper Methods
 
     /// <summary>
-    /// Generates positions by stacking a specific interval within one octave
+    ///     Generates positions by stacking a specific interval within one octave
     /// </summary>
     /// <param name="intervalStep">Scale degree step size (2=thirds, 3=fourths, 4=fifths)</param>
     /// <param name="numberOfIntervals">Number of intervals to stack</param>
@@ -98,8 +103,8 @@ public static class ChordStackingPatternGenerator
     }
 
     /// <summary>
-    /// Generates positions for extended chords that go beyond the basic structure.
-    /// Extended intervals wrap around the scale and are represented as their simple equivalents.
+    ///     Generates positions for extended chords that go beyond the basic structure.
+    ///     Extended intervals wrap around the scale and are represented as their simple equivalents.
     /// </summary>
     /// <param name="intervalStep">Scale degree step size (2=thirds, 3=fourths, 4=fifths)</param>
     /// <param name="totalIntervals">Total number of intervals including extensions</param>
@@ -107,22 +112,25 @@ public static class ChordStackingPatternGenerator
     private static int[] GenerateExtendedStackingPattern(int intervalStep, int totalIntervals, int scaleLength)
     {
         var positions = new List<int>();
-        
+
         // First, add the basic chord structure (within octave)
         var basicCount = Math.Min(3, totalIntervals); // Basic 3-note structure or less
         var basicPositions = GenerateIntervalStackingPattern(intervalStep, basicCount);
         positions.AddRange(basicPositions);
-        
+
         // Then add extensions (beyond octave, represented as simple intervals)
         for (var i = basicCount + 1; i <= totalIntervals; i++)
         {
             // Calculate the scale degree for this extension
-            var extensionDegree = ((i - 1) * intervalStep) % scaleLength;
-            if (extensionDegree == 0) extensionDegree = scaleLength; // Handle wrap-around
-            
+            var extensionDegree = (i - 1) * intervalStep % scaleLength;
+            if (extensionDegree == 0)
+            {
+                extensionDegree = scaleLength; // Handle wrap-around
+            }
+
             positions.Add(extensionDegree);
         }
-        
+
         return positions.ToArray();
     }
 
@@ -131,26 +139,32 @@ public static class ChordStackingPatternGenerator
     #region Public Utility Methods
 
     /// <summary>
-    /// Gets the interval step size for a given stacking type
+    ///     Gets the interval step size for a given stacking type
     /// </summary>
-    public static int GetIntervalStepSize(ChordStackingType stackingType) => stackingType switch
+    public static int GetIntervalStepSize(ChordStackingType stackingType)
     {
-        ChordStackingType.Tertian => 2,  // Thirds
-        ChordStackingType.Quartal => 3,  // Fourths  
-        ChordStackingType.Quintal => 4,  // Fifths
-        _ => 2 // Default to thirds
-    };
+        return stackingType switch
+        {
+            ChordStackingType.Tertian => 2, // Thirds
+            ChordStackingType.Quartal => 3, // Fourths  
+            ChordStackingType.Quintal => 4, // Fifths
+            _ => 2 // Default to thirds
+        };
+    }
 
     /// <summary>
-    /// Gets a human-readable description of the stacking type
+    ///     Gets a human-readable description of the stacking type
     /// </summary>
-    public static string GetStackingDescription(ChordStackingType stackingType) => stackingType switch
+    public static string GetStackingDescription(ChordStackingType stackingType)
     {
-        ChordStackingType.Tertian => "Stacked thirds (traditional harmony)",
-        ChordStackingType.Quartal => "Stacked fourths (modern jazz harmony)",
-        ChordStackingType.Quintal => "Stacked fifths (contemporary harmony)",
-        _ => "Unknown stacking type"
-    };
+        return stackingType switch
+        {
+            ChordStackingType.Tertian => "Stacked thirds (traditional harmony)",
+            ChordStackingType.Quartal => "Stacked fourths (modern jazz harmony)",
+            ChordStackingType.Quintal => "Stacked fifths (contemporary harmony)",
+            _ => "Unknown stacking type"
+        };
+    }
 
     #endregion
 }

@@ -26,6 +26,7 @@ public static class ChordUtils
                 {
                     consecutiveBarredStrings = 1;
                 }
+
                 previousFret = fret;
             }
             else

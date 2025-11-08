@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.VectorData;
+﻿namespace ChatbotExample1.Services;
 
-namespace ChatbotExample1.Services;
+using Microsoft.Extensions.VectorData;
 
 public class SemanticSearch(
     IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
     IVectorStore vectorStore)
 {
-    public async Task<IReadOnlyList<SemanticSearchRecord>> SearchAsync(string text, string? filenameFilter, int maxResults)
+    public async Task<IReadOnlyList<SemanticSearchRecord>> SearchAsync(string text, string? filenameFilter,
+        int maxResults)
     {
         var queryEmbedding = await embeddingGenerator.GenerateEmbeddingVectorAsync(text);
         var vectorCollection = vectorStore.GetCollection<string, SemanticSearchRecord>("data-chatbotexample1-ingested");
@@ -17,7 +18,7 @@ public class SemanticSearch(
         var nearest = await vectorCollection.VectorizedSearchAsync(queryEmbedding, new VectorSearchOptions
         {
             Top = maxResults,
-            Filter = filter,
+            Filter = filter
         });
         var results = new List<SemanticSearchRecord>();
         await foreach (var item in nearest.Results)

@@ -5,19 +5,24 @@ using Collections;
 [PublicAPI]
 public static class CollectionExtensions
 {
-    public static Lazy<ImmutableList<T>> ToLazyImmutableList<T>(this IEnumerable<T> items) => new(items.ToImmutableList);
+    public static Lazy<ImmutableList<T>> ToLazyImmutableList<T>(this IEnumerable<T> items)
+    {
+        return new Lazy<ImmutableList<T>>(items.ToImmutableList);
+    }
 
-    public static LazyCollection<T> ToLazyCollection<T>(this IEnumerable<T> items) 
-        where T : class 
-            => new(items);
+    public static LazyCollection<T> ToLazyCollection<T>(this IEnumerable<T> items)
+        where T : class
+    {
+        return new LazyCollection<T>(items);
+    }
 
     /// <summary>
-    /// Rotate the items of a collection
+    ///     Rotate the items of a collection
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="items">The source items collection.</param>
     /// <param name="shift">The shift.</param>
-    /// <returns>The rotated <see cref="IReadOnlyList{T}"/>.</returns>
+    /// <returns>The rotated <see cref="IReadOnlyList{T}" />.</returns>
     public static IReadOnlyList<T> Rotate<T>(
         this IReadOnlyCollection<T> items,
         int shift = 0)
@@ -39,7 +44,11 @@ public static class CollectionExtensions
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public int Count => _items.Count;
 
         public T this[int aIndex]
@@ -51,6 +60,9 @@ public static class CollectionExtensions
             }
         }
 
-        public override string ToString() => string.Join(" ", this);
+        public override string ToString()
+        {
+            return string.Join(" ", this);
+        }
     }
 }

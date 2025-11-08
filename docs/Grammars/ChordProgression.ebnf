@@ -1,0 +1,243 @@
+(* 
+  Guitar Alchemist - Chord Progression Grammar
+  EBNF (Extended Backus-Naur Form) Specification
+  
+  This grammar defines the syntax for chord progression notation in Guitar Alchemist.
+  It supports both Roman numeral analysis and absolute chord notation.
+  
+  Examples:
+    - "I-IV-V-I in C major"
+    - "ii-V-I in Dm"
+    - "Cmaj7 -> Dm7 -> G7 -> Cmaj7"
+    - "[I, IV, V, I] key=C mode=major"
+*)
+
+(* ========== Top-Level Rules ========== *)
+
+progression = roman_progression | chord_progression | bracketed_progression ;
+
+(* ========== Roman Numeral Progression ========== *)
+
+roman_progression = roman_chord_sequence, "in", key_signature ;
+
+roman_chord_sequence = roman_chord, { separator, roman_chord } ;
+
+roman_chord = [ accidental ], roman_numeral, [ quality ], [ extensions ], [ alterations ] ;
+
+roman_numeral = "I" | "II" | "III" | "IV" | "V" | "VI" | "VII" 
+              | "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii" ;
+
+(* ========== Absolute Chord Progression ========== *)
+
+chord_progression = chord, { separator, chord } ;
+
+chord = note, [ accidental ], quality, [ extensions ], [ alterations ], [ bass_note ] ;
+
+(* ========== Key Signature ========== *)
+
+key_signature = key_note, mode ;
+
+key_note = note, [ accidental ] ;
+
+mode = "major" | "minor" 
+     | "ionian" | "dorian" | "phrygian" | "lydian" | "mixolydian" | "aeolian" | "locrian"
+     | "harmonic minor" | "melodic minor" 
+     | "major pentatonic" | "minor pentatonic"
+     | "blues" | "whole tone" | "diminished" ;
+
+(* ========== Bracketed Progression (with metadata) ========== *)
+
+bracketed_progression = "[", roman_chord_sequence | chord_sequence, "]", metadata ;
+
+chord_sequence = chord, { ",", chord } ;
+
+metadata = metadata_pair, { metadata_pair } ;
+
+metadata_pair = metadata_key, "=", metadata_value ;
+
+metadata_key = "key" | "mode" | "tempo" | "time_signature" | "style" ;
+
+metadata_value = note | mode | number | string_literal ;
+
+(* ========== Notes and Accidentals ========== *)
+
+note = "C" | "D" | "E" | "F" | "G" | "A" | "B" ;
+
+accidental = sharp | flat | natural ;
+
+sharp = "#" | "♯" ;
+
+flat = "b" | "♭" ;
+
+natural = "♮" ;
+
+(* ========== Chord Quality ========== *)
+
+quality = major_quality | minor_quality | dominant_quality | diminished_quality | augmented_quality | suspended_quality ;
+
+major_quality = "maj" | "M" | "Δ" | "" ;  (* Empty string for implied major *)
+
+minor_quality = "m" | "min" | "-" ;
+
+dominant_quality = "dom" | "7" ;
+
+diminished_quality = "dim" | "°" | "o" ;
+
+augmented_quality = "aug" | "+" ;
+
+suspended_quality = "sus" | "sus2" | "sus4" ;
+
+(* ========== Extensions ========== *)
+
+extensions = extension, { extension } ;
+
+extension = "7" | "9" | "11" | "13" 
+          | "maj7" | "M7" | "Δ7"
+          | "m7" | "min7" | "-7"
+          | "dim7" | "°7"
+          | "m7b5" | "ø" | "ø7"  (* Half-diminished *)
+          | "add9" | "add11" | "add13"
+          | "6" | "6/9" ;
+
+(* ========== Alterations ========== *)
+
+alterations = alteration, { alteration } ;
+
+alteration = sharp_alteration | flat_alteration ;
+
+sharp_alteration = "#", alteration_degree ;
+
+flat_alteration = "b", alteration_degree ;
+
+alteration_degree = "5" | "9" | "11" | "13" ;
+
+(* ========== Bass Note (Slash Chords) ========== *)
+
+bass_note = "/", note, [ accidental ] ;
+
+(* ========== Separators ========== *)
+
+separator = dash_separator | arrow_separator | space_separator | comma_separator ;
+
+dash_separator = "-" ;
+
+arrow_separator = "->" | "→" ;
+
+space_separator = whitespace ;
+
+comma_separator = "," ;
+
+(* ========== Literals and Primitives ========== *)
+
+string_literal = '"', { character - '"' }, '"' ;
+
+number = digit, { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+whitespace = " " | "\t" | "\n" | "\r" ;
+
+character = letter | digit | symbol ;
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" 
+       | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+       | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+       | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+
+symbol = "!" | "@" | "#" | "$" | "%" | "^" | "&" | "*" | "(" | ")" | "_" | "+" | "=" 
+       | "{" | "}" | "[" | "]" | "|" | "\" | ":" | ";" | "'" | "<" | ">" | "?" | "/" | "." | "," | "-" ;
+
+(* ========== Examples ========== *)
+
+(*
+  Valid Examples:
+  
+  1. Roman Numeral Progressions:
+     - "I-IV-V-I in C major"
+     - "ii-V-I in Dm"
+     - "I-vi-IV-V in G major"
+     - "i-iv-v in Am"
+     - "I-IVmaj7-V7-I in C major"
+     - "ii°-V7-i in Dm"
+  
+  2. Absolute Chord Progressions:
+     - "Cmaj7 -> Dm7 -> G7 -> Cmaj7"
+     - "Am-F-C-G"
+     - "C-Am-F-G"
+     - "Dm7-G7-Cmaj7"
+     - "Cmaj7-Fmaj7-Dm7-G7"
+     - "C#m7b5-F#7-Bm"
+  
+  3. Bracketed Progressions with Metadata:
+     - "[I, IV, V, I] key=C mode=major"
+     - "[Cmaj7, Dm7, G7, Cmaj7] tempo=120 style=jazz"
+     - "[ii, V, I] key=D mode=minor time_signature=4/4"
+  
+  4. Complex Chords:
+     - "Cmaj7#11"
+     - "Dm7b5"
+     - "G7#9"
+     - "Fmaj7/A"  (slash chord with bass note)
+     - "C6/9"
+     - "Bø7"  (half-diminished)
+  
+  5. Modal Progressions:
+     - "I-bVII-IV in C mixolydian"
+     - "i-bVI-bVII in A aeolian"
+     - "I-II-IV in C lydian"
+  
+  6. Jazz Progressions:
+     - "IIm7-V7-Imaj7 in C major"
+     - "Dm7-G7-Cmaj7"
+     - "ii-V-I in Bb major"
+     - "Cm7-F7-Bbmaj7"
+  
+  7. Blues Progressions:
+     - "I7-IV7-I7-V7-IV7-I7 in E blues"
+     - "E7-A7-E7-B7-A7-E7"
+  
+  8. Borrowed Chords:
+     - "I-bVI-bVII-I in C major"  (borrowed from C minor)
+     - "C-Ab-Bb-C"
+  
+  9. Secondary Dominants:
+     - "I-V7/ii-ii-V7-I in C major"
+     - "C-A7-Dm-G7-C"
+  
+  10. Modulations:
+      - "I-IV-V in C major -> I-IV-V in G major"
+      - "C-F-G -> G-C-D"
+*)
+
+(* ========== Grammar Metadata ========== *)
+
+(*
+  Grammar Name: ChordProgression
+  Version: v1.0
+  Language: EBNF
+  Created: 2025-11-01
+  Description: Formal grammar for chord progression notation in Guitar Alchemist
+  Tags: ["music-theory", "chords", "progressions", "harmony"]
+  
+  Supported Features:
+  - Roman numeral analysis (I, ii, iii, IV, V, vi, vii°)
+  - Absolute chord notation (C, Dm, G7, etc.)
+  - Chord qualities (major, minor, dominant, diminished, augmented, suspended)
+  - Chord extensions (7, 9, 11, 13, maj7, m7, etc.)
+  - Chord alterations (#5, b9, #11, etc.)
+  - Slash chords (bass notes)
+  - Key signatures with modes
+  - Multiple separator styles (-, ->, space, comma)
+  - Bracketed progressions with metadata
+  - Unicode symbols (♯, ♭, ♮, °, ø, Δ, →)
+  
+  Future Extensions:
+  - Rhythm notation (whole notes, half notes, etc.)
+  - Dynamics (forte, piano, crescendo, etc.)
+  - Articulation (staccato, legato, etc.)
+  - Tempo markings (allegro, andante, etc.)
+  - Repeat signs and codas
+  - Figured bass notation
+  - Nashville number system
+*)
+

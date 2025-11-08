@@ -1,21 +1,33 @@
 ﻿namespace GA.Core.UI.Components.Grids;
 
+using Core.Extensions;
 using DesignPatterns;
-using GA.Core.Extensions;
 using Dtos;
 
 /// <summary>
-/// Loads data to an ag-grid instance through the gridOptions Javascript object.
+///     Loads data to an ag-grid instance through the gridOptions Javascript object.
 /// </summary>
 /// <inheritdoc />
 [method: UsedImplicitly]
-public class AgGridTabularDataLoader(ILogger<AgGridTabularDataLoader> logger) : IAsyncInitializable<AgGridTabularDataLoader.Inits>
+public class AgGridTabularDataLoader(ILogger<AgGridTabularDataLoader> logger)
+    : IAsyncInitializable<AgGridTabularDataLoader.Inits>
 {
-    private readonly ILogger<AgGridTabularDataLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<AgGridTabularDataLoader> _logger =
+        logger ?? throw new ArgumentNullException(nameof(logger));
+
     private Inits? _inits;
 
+    public async Task InitializeAsync(
+        Inits inits,
+        CancellationToken cancellationToken = default)
+    {
+        _inits = inits ?? throw new ArgumentNullException(nameof(inits));
+
+        await Task.CompletedTask;
+    }
+
     /// <summary>
-    /// Loads grid data on the ag-grid (Client-side)
+    ///     Loads grid data on the ag-grid (Client-side)
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public async Task LoadAsync(IEnumerable<TabularDataRow> rows)
@@ -46,13 +58,4 @@ public class AgGridTabularDataLoader(ILogger<AgGridTabularDataLoader> logger) : 
     }
 
     public record Inits(IJSObjectReference GridOptions);
-
-    public async Task InitializeAsync(
-        Inits inits,
-        CancellationToken cancellationToken = default)
-    {
-        _inits = inits ?? throw new ArgumentNullException(nameof(inits));
-
-        await Task.CompletedTask;
-    }
 }

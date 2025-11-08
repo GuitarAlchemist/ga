@@ -1,6 +1,6 @@
-﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
+namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
-using Business.Core.Scales;
+using Business.Core.Chords;
 using Embeddings;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
@@ -12,14 +12,14 @@ public sealed class ChordRagSyncService(
     IEmbeddingService embeddingService)
     : ChordSyncService(logger, mongoDb), IRagSyncService<ChordRagEmbedding>
 {
-    private readonly MongoDbService _mongoDb = mongoDb;
     private readonly IEmbeddingService _embeddingService = embeddingService;
+    private readonly MongoDbService _mongoDb = mongoDb;
 
     public override async Task<bool> SyncAsync()
     {
         try
         {
-            var documents = ChordTemplateFactory.CreateAllChordTemplates()
+            var documents = ChordTemplateFactory.GenerateAllPossibleChords()
                 .Select(template => new ChordRagEmbedding
                 {
                     Name = template.PitchClassSet.Name,
@@ -57,6 +57,8 @@ public sealed class ChordRagSyncService(
         }
     }
 
-    public override async Task<long> GetCountAsync() =>
-        await _mongoDb.ChordsRag.CountDocumentsAsync(Builders<ChordRagEmbedding>.Filter.Empty);
+    public override async Task<long> GetCountAsync()
+    {
+        return await _mongoDb.ChordsRag.CountDocumentsAsync(Builders<ChordRagEmbedding>.Filter.Empty);
+    }
 }

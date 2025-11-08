@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Guitar Alchemist Chatbot Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .status {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .message-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+            padding: 0 10px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 18px;
+            max-width: 70px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background: #999;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .clear-button {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        🎸 Guitar Alchemist Chatbot
+    </div>
+    <div class="status" id="status">Connecting...</div>
+    <div class="chat-messages" id="messages">
+        <div class="message assistant">
+            <div class="message-label">Assistant</div>
+            <div class="message-content">
+                Welcome to Guitar Alchemist! I'm here to help you learn guitar chords, scales, techniques, and music
+                theory. Ask me anything!
+            </div>
+        </div>
+    </div>
+    <div class="chat-input-container">
+        <input class="chat-input" id="messageInput" placeholder="Ask me about chords, scales, or techniques..."
+               type="text"/>
+        <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+        <button class="clear-button" onclick="clearHistory()">Clear</button>
+    </div>
+</div>
+
+<script>
+    let connection;
+    let currentMessage = '';
+    let isReceiving = false;
+
+    // Initialize SignalR connection
+    async function initializeConnection() {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7001/hubs/chatbot")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("Connected", (message) => {
+            console.log("Connected:", message);
+            updateStatus("Connected", true);
+        });
+
+        connection.on("ReceiveMessageChunk", (chunk) => {
+            if (!isReceiving) {
+                isReceiving = true;
+                currentMessage = '';
+                addTypingIndicator();
+            }
+            currentMessage += chunk;
+            updateLastMessage(currentMessage);
+        });
+
+        connection.on("MessageComplete", (fullMessage) => {
+            isReceiving = false;
+            removeTypingIndicator();
+            updateLastMessage(fullMessage);
+            enableInput();
+        });
+
+        connection.on("Error", (error) => {
+            console.error("Error:", error);
+            addMessage("assistant", `Error: ${error}`);
+            enableInput();
+        });
+
+        connection.onreconnecting(() => {
+            updateStatus("Reconnecting...", false);
+        });
+
+        connection.onreconnected(() => {
+            updateStatus("Connected", true);
+        });
+
+        connection.onclose(() => {
+            updateStatus("Disconnected", false);
+        });
+
+        try {
+            await connection.start();
+            console.log("SignalR Connected");
+        } catch (err) {
+            console.error("Connection failed:", err);
+            updateStatus("Connection failed. Please ensure the API is running.", false);
+        }
+    }
+
+    function updateStatus(message, isConnected) {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = 'status ' + (isConnected ? 'connected' : 'disconnected');
+    }
+
+    function addMessage(role, content) {
+        const messagesDiv = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+        messageDiv.innerHTML = `
+                <div class="message-label">${role === 'user' ? 'You' : 'Assistant'}</div>
+                <div class="message-content">${content}</div>
+            `;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const messagesDiv = document.getElementById('messages');
+        const indicator = document.createElement('div');
+        indicator.className = 'message assistant';
+        indicator.id = 'typing-indicator';
+        indicator.innerHTML = `
+                <div class="message-label">Assistant</div>
+                <div class="typing-indicator active">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+        messagesDiv.appendChild(indicator);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    function updateLastMessage(content) {
+        const messagesDiv = document.getElementById('messages');
+        const lastMessage = messagesDiv.querySelector('.message.assistant:last-child');
+        if (lastMessage && lastMessage.id !== 'typing-indicator') {
+            lastMessage.querySelector('.message-content').textContent = content;
+        } else {
+            removeTypingIndicator();
+            addMessage('assistant', content);
+        }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+
+        if (!message || !connection) return;
+
+        addMessage('user', message);
+        input.value = '';
+        disableInput();
+
+        try {
+            await connection.invoke("SendMessage", message, true);
+        } catch (err) {
+            console.error("Send failed:", err);
+            addMessage('assistant', `Failed to send message: ${err.message}`);
+            enableInput();
+        }
+    }
+
+    async function clearHistory() {
+        if (!connection) return;
+
+        try {
+            await connection.invoke("ClearHistory");
+            document.getElementById('messages').innerHTML = '';
+            addMessage('assistant', 'Conversation history cleared. How can I help you?');
+        } catch (err) {
+            console.error("Clear failed:", err);
+        }
+    }
+
+    function disableInput() {
+        document.getElementById('messageInput').disabled = true;
+        document.getElementById('sendButton').disabled = true;
+    }
+
+    function enableInput() {
+        document.getElementById('messageInput').disabled = false;
+        document.getElementById('sendButton').disabled = false;
+        document.getElementById('messageInput').focus();
+    }
+
+    // Handle Enter key
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Initialize on load
+    initializeConnection();
+</script>
+</body>
+</html>
+

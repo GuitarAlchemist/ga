@@ -1,6 +1,7 @@
 ﻿namespace GA.Core.Collections;
 
-public abstract class PrintableBase<T>(IEnumerable<T> items,
+public abstract class PrintableBase<T>(
+    IEnumerable<T> items,
     string? itemFormat = null,
     IFormatProvider? itemFormatProvider = null,
     string? itemSeparator = " ")
@@ -14,6 +15,10 @@ public abstract class PrintableBase<T>(IEnumerable<T> items,
     {
         return string.Join(itemSeparator ?? " ", _items.Select(PrintItem()));
 
-        Func<T, string> PrintItem() => arg => arg is IFormattable f ? f.ToString(itemFormat, itemFormatProvider) : arg?.ToString() ?? string.Empty;
+        Func<T, string> PrintItem()
+        {
+            return arg =>
+                arg is IFormattable f ? f.ToString(itemFormat, itemFormatProvider) : arg?.ToString() ?? string.Empty;
+        }
     }
 }

@@ -1,0 +1,204 @@
+﻿version: '3.8'
+
+services:
+  # ============================================
+  # MONGODB
+  # ============================================
+  mongodb:
+    image: mongo:latest
+    container_name: ga-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: guitar-alchemist
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - ga-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # MONGO EXPRESS (Database UI)
+  # ============================================
+  mongo-express:
+    image: mongo-express:latest
+    container_name: ga-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ga-network
+
+  # ============================================
+  # GAAPI (Main API Server)
+  # ============================================
+  gaapi:
+    build:
+      context: .
+      dockerfile: Apps/ga-server/GaApi/Dockerfile
+    container_name: ga-api
+    restart: unless-stopped
+    ports:
+      - "7001:8080"
+      - "7000:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;http://+:8081
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=guitar-alchemist
+      - Graphiti__BaseUrl=http://graphiti-service:8000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      graphiti-service:
+        condition: service_healthy
+    networks:
+      - ga-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # CHATBOT (Blazor Application)
+  # ============================================
+  chatbot:
+    build:
+      context: .
+      dockerfile: Apps/GuitarAlchemistChatbot/Dockerfile
+    container_name: ga-chatbot
+    restart: unless-stopped
+    ports:
+      - "7002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=guitar-alchemist
+      - GaApi__BaseUrl=http://gaapi:8080
+      - Graphiti__BaseUrl=http://graphiti-service:8000
+    depends_on:
+      gaapi:
+        condition: service_healthy
+      graphiti-service:
+        condition: service_healthy
+    networks:
+      - ga-network
+
+  # ============================================
+  # REACT FRONTEND
+  # ============================================
+  ga-client:
+    build:
+      context: ./Apps/ga-client
+      dockerfile: Dockerfile
+    container_name: ga-client
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:7001
+    depends_on:
+      - gaapi
+    networks:
+      - ga-network
+
+  # ============================================
+  # FALKORDB (Graph Database for Graphiti)
+  # ============================================
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: ga-falkordb
+    restart: unless-stopped
+    ports:
+      - "6379:6379"    # FalkorDB
+      - "3000:3000"    # FalkorDB Browser UI
+    volumes:
+      - falkordb-data:/data
+    networks:
+      - ga-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # GRAPHITI SERVICE (Knowledge Graph)
+  # ============================================
+  graphiti-service:
+    build:
+      context: ./Apps/ga-graphiti-service
+      dockerfile: Dockerfile
+    container_name: ga-graphiti-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GRAPH_DB_TYPE=falkordb
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - FALKORDB_DATABASE=graphiti
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+      - OLLAMA_CHAT_MODEL=qwen2.5-coder:1.5b-base
+      - OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+      - MONGODB_DATABASE_NAME=guitar-alchemist
+      - GRAPHITI_TELEMETRY_ENABLED=false
+      - SEMAPHORE_LIMIT=10
+    depends_on:
+      falkordb:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - ga-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # JAEGER (Distributed Tracing - Optional)
+  # ============================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ga-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - ga-network
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  mongodb-data:
+    driver: local
+  falkordb-data:
+    driver: local
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  ga-network:
+    driver: bridge
+

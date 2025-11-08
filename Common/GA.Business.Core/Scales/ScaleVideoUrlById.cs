@@ -4,14 +4,19 @@ using Atonal.Primitives;
 
 public class ScaleVideoUrlById() : LazyIndexerBase<PitchClassSetId, Uri>(GetVideoUrlByNumber())
 {
-    public static bool IsValidScaleNumber(PitchClassSetId pitchClassSetIdentity) => Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
+    internal static readonly ScaleVideoUrlById Instance = new();
     public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+
+    public static bool IsValidScaleNumber(PitchClassSetId pitchClassSetIdentity)
+    {
+        return Instance.Dictionary.ContainsKey(pitchClassSetIdentity);
+    }
+
     public static Uri? Get(PitchClassSetId pitchClassSetId)
     {
         return IsValidScaleNumber(pitchClassSetId) ? Instance[pitchClassSetId] : null;
     }
 
-    internal static readonly ScaleVideoUrlById Instance = new();
     private static IReadOnlyDictionary<PitchClassSetId, Uri> GetVideoUrlByNumber()
     {
         // ReSharper disable StringLiteralTypo

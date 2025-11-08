@@ -1,40 +1,27 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// TxT variations (With custom pair type).
+///     TxT variations (With custom pair type).
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 /// <typeparam name="TPair">The item pair type.</typeparam>
 [PublicAPI]
 public abstract class CartesianProduct<T, TPair>(
-        IEnumerable<T> items,
-        Func<OrderedPair<T>, TPair>? selector = null,
-        Func<T, bool>? predicate = null)
+    IEnumerable<T> items,
+    Func<OrderedPair<T>, TPair>? selector = null,
+    Func<T, bool>? predicate = null)
     : IEnumerable<TPair>
-    // where T : IItemCollection<T>
+// where T : IItemCollection<T>
     where T : notnull
     where TPair : OrderedPair<T>
 {
-    #region IEnumerable<TPair> Members
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public IEnumerator<TPair> GetEnumerator()
-    {
-        var pairs = Variations.GetPairs();
-        return selector == null ? 
-            pairs.Cast<TPair>().GetEnumerator() : 
-            pairs.Select(selector).GetEnumerator();
-    }
-
-    #endregion
-
     /// <summary>
-    /// Gets the <see cref="VariationsWithRepetitions{T}"/>
+    ///     Gets the <see cref="VariationsWithRepetitions{T}" />
     /// </summary>
     public VariationsWithRepetitions<T> Variations { get; } = new(items, 2, predicate);
 
     /// <summary>
-    /// Gets the <see cref="BigInteger"/> pair count.
+    ///     Gets the <see cref="BigInteger" /> pair count.
     /// </summary>
     public BigInteger Count => Variations.Count;
 
@@ -46,25 +33,40 @@ public abstract class CartesianProduct<T, TPair>(
         sb.Append($" => {t} x {t}: {Count} variations");
         return sb.ToString();
     }
+
+    #region IEnumerable<TPair> Members
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IEnumerator<TPair> GetEnumerator()
+    {
+        var pairs = Variations.GetPairs();
+        return selector == null ? pairs.Cast<TPair>().GetEnumerator() : pairs.Select(selector).GetEnumerator();
+    }
+
+    #endregion
 }
 
 /// <summary>
-/// TxT variations.
+///     TxT variations.
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 [PublicAPI]
 public class CartesianProduct<T> : CartesianProduct<T, OrderedPair<T>>
-    where T: notnull
+    where T : notnull
 {
     public CartesianProduct(IEnumerable<T> items)
-        : base(items, null)
+        : base(items)
     {
     }
 
     public CartesianProduct(
         IEnumerable<T> items,
         Func<T, bool>? predicate)
-            : base(items, null, predicate)
+        : base(items, null, predicate)
     {
         ArgumentNullException.ThrowIfNull(predicate);
     }

@@ -1,0 +1,279 @@
+openapi: 3.1.0
+info:
+  title: Scenes Service API
+  version: 1.0.0
+  description: >
+    Backend de génération et diffusion de scènes GLB avec métadonnées cells/portals,
+    persistance MongoDB/GridFS, et scheduler de builds.
+
+servers:
+  - url: http://localhost:5190
+    description: Local Dev
+  - url: https://api.example.com
+    description: Prod
+
+tags:
+  - name: Scenes
+  - name: Jobs
+
+security:
+  - ApiKeyAuth: [ ]
+  - BearerAuth: [ ]
+
+paths:
+  /scenes/build:
+    post:
+      tags: [ Scenes ]
+      summary: Construit et persiste une scène GLB
+      description: >
+        Construit une scène à partir de la requête et la stocke (Mongo GridFS). Retourne l'ETag et la taille.
+      security:
+        - ApiKeyAuth: [ ]
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SceneBuildRequestDto'
+      responses:
+        '200':
+          description: Scène construite
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SceneBuildResponseDto'
+        '400': { description: Requête invalide }
+        '401': { description: Non authentifié }
+        '403': { description: Non autorisé }
+        '500': { description: Erreur serveur }
+
+  /scenes/{id}.glb:
+    get:
+      tags: [ Scenes ]
+      summary: Télécharge la scène GLB (ETag + Range)
+      description: >
+        Sert le binaire GLB avec support ETag (304) et Range (streaming partiel).
+        Content-Type: model/gltf-binary.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: If-None-Match
+          in: header
+          schema: { type: string }
+        - name: Range
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          description: Fichier GLB
+          headers:
+            ETag: { schema: { type: string } }
+            Accept-Ranges: { schema: { type: string, enum: [ bytes ] } }
+            Content-Length: { schema: { type: integer } }
+          content:
+            model/gltf-binary: { schema: { type: string, format: binary } }
+        '206': { description: Contenu partiel (Range) }
+        '304': { description: Non modifié (ETag match) }
+        '404': { description: Scène introuvable }
+
+  /scenes/{id}/meta:
+    get:
+      tags: [ Scenes ]
+      summary: Métadonnées de la scène
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Métadonnées JSON
+          content:
+            application/json: { schema: { type: object } }
+        '404': { description: Scène introuvable }
+
+  /jobs/enqueue:
+    post:
+      tags: [ Jobs ]
+      summary: Enqueue un build de scène
+      security:
+        - ApiKeyAuth: [ ]
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnqueueBuildRequestDto'
+      responses:
+        '200':
+          description: Job créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId: { type: string }
+
+  /jobs/{id}:
+    get:
+      tags: [ Jobs ]
+      summary: Statut d'un job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Détails du job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildJobDto'
+        '404': { description: Job introuvable }
+
+  /jobs/{id}/cancel:
+    post:
+      tags: [ Jobs ]
+      summary: Annule un job
+      security:
+        - ApiKeyAuth: [ ]
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '202': { description: Annulation demandée }
+        '404': { description: Job introuvable }
+
+  /jobs:
+    get:
+      tags: [ Jobs ]
+      summary: Liste des jobs récents
+      parameters:
+        - name: take
+          in: query
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        '200':
+          description: Liste des jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BuildJobDto'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PortalDto:
+      type: object
+      required: [ From, To, Quad ]
+      properties:
+        From: { type: string }
+        To: { type: string }
+        Quad:
+          type: array
+          items: { type: number }
+          minItems: 12
+          maxItems: 12
+          description: "12 floats [x0,y0,z0, x1,y1,z1, x2,y2,z2, x3,y3,z3]"
+
+    CellMeshDto:
+      type: object
+      required: [ MeshId ]
+      properties:
+        MeshId: { type: string }
+        MaterialId: { type: string, nullable: true }
+
+    CellDto:
+      type: object
+      required: [ CellId, Meshes ]
+      properties:
+        CellId: { type: string }
+        Meshes:
+          type: array
+          items: { $ref: '#/components/schemas/CellMeshDto' }
+
+    SceneBuildRequestDto:
+      type: object
+      required: [ SceneId, Cells, Portals ]
+      properties:
+        SceneId: { type: string }
+        Cells:
+          type: array
+          items: { $ref: '#/components/schemas/CellDto' }
+        Portals:
+          type: array
+          items: { $ref: '#/components/schemas/PortalDto' }
+        Materials:
+          type: object
+          additionalProperties: { type: string }
+          nullable: true
+        Props:
+          type: object
+          additionalProperties: { type: string }
+          nullable: true
+
+    SceneBuildResponseDto:
+      type: object
+      required: [ SceneId, GlbPath, ETag, Bytes ]
+      properties:
+        SceneId: { type: string }
+        GlbPath: { type: string }
+        ETag: { type: string }
+        Bytes: { type: integer, format: int64 }
+
+    EnqueueBuildRequestDto:
+      type: object
+      required: [ SceneId, Cells, Portals ]
+      properties:
+        SceneId: { type: string }
+        Cells:
+          type: array
+          items: { $ref: '#/components/schemas/CellDto' }
+        Portals:
+          type: array
+          items: { $ref: '#/components/schemas/PortalDto' }
+        Materials:
+          type: object
+          additionalProperties: { type: string }
+          nullable: true
+        Props:
+          type: object
+          additionalProperties: { type: string }
+          nullable: true
+
+    BuildStatus:
+      type: string
+      enum: [ Queued, Running, Succeeded, Failed, Canceled ]
+
+    BuildJobDto:
+      type: object
+      required: [ JobId, SceneId, Status, CreatedUtc, Attempt, MaxAttempts ]
+      properties:
+        JobId: { type: string }
+        SceneId: { type: string }
+        Status: { $ref: '#/components/schemas/BuildStatus' }
+        CreatedUtc: { type: string, format: date-time }
+        StartedUtc: { type: string, format: date-time, nullable: true }
+        CompletedUtc: { type: string, format: date-time, nullable: true }
+        Error: { type: string, nullable: true }
+        Attempt: { type: integer }
+        MaxAttempts: { type: integer }

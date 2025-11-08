@@ -1,0 +1,99 @@
+﻿@page "/"
+
+<PageTitle>Fretboard Explorer - Home</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Welcome to Fretboard Explorer</MudText>
+<MudText Class="mb-8">Explore guitar fretboard datasets, chord positions, and musical metadata through an interactive
+    interface.
+</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2" Class="pa-4">
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.GridOn" Size="Size.Large" Color="Color.Primary" Class="mb-2"/>
+                <MudText Typo="Typo.h6">Fret Span Explorer</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    Analyze chord positions within 5-fret spans across the entire fretboard.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/fret-span-explorer">Explore</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2" Class="pa-4">
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Large" Color="Color.Secondary"
+                         Class="mb-2"/>
+                <MudText Typo="Typo.h6">Chord Positions</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    Decompose and analyze all possible chord positions with detailed metadata.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="/chord-positions">Browse</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2" Class="pa-4">
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Large" Color="Color.Tertiary"
+                         Class="mb-2"/>
+                <MudText Typo="Typo.h6">Metadata Browser</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    Browse comprehensive metadata including CAGED analysis, difficulty ratings, and more.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Tertiary" Href="/metadata-browser">View</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2" Class="pa-4">
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.Api" Size="Size.Large" Color="Color.Info" Class="mb-2"/>
+                <MudText Typo="Typo.h6">API Playground</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">
+                    Test GraphQL queries and explore the API interactively.
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Info" Href="/api-playground">Try It</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDivider Class="my-8"/>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Features</MudText>
+<MudList>
+    <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+        <MudText><strong>5-Fret Span Analysis:</strong> Decompose chord positions within practical hand spans</MudText>
+    </MudListItem>
+    <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+        <MudText><strong>Equivalence Groups:</strong> Group chords by pattern equivalence using
+            VariationEquivalenceCollection
+        </MudText>
+    </MudListItem>
+    <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+        <MudText><strong>Rich Metadata:</strong> Access chord names, CAGED analysis, difficulty ratings, and
+            biomechanical data
+        </MudText>
+    </MudListItem>
+    <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+        <MudText><strong>GraphQL API:</strong> Flexible querying with powerful filtering and pagination</MudText>
+    </MudListItem>
+    <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+        <MudText><strong>Interactive Visualization:</strong> Explore data through tables, charts, and fretboard diagrams
+        </MudText>
+    </MudListItem>
+</MudList>
+

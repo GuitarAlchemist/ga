@@ -1,17 +1,51 @@
 ﻿namespace GA.Business.Core.Intervals;
 
 using Atonal;
+using GA.Core.Extensions;
 using DiatonicInterval = Interval.Diatonic;
 
-public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals) : IParsable<DiatonicIntervalCollection>, 
-                                                                                   IReadOnlyCollection<DiatonicInterval>
+public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
+    : IParsable<DiatonicIntervalCollection>,
+        IReadOnlyCollection<DiatonicInterval>
 {
+    /// <summary>
+    ///     Gets the <see cref="PrintableReadOnlyCollection{DiatonicInterval}" />
+    /// </summary>
+    public PrintableReadOnlyCollection<DiatonicInterval> Intervals { get; } = intervals.ToImmutableList().AsPrintable();
+
+    /// <summary>
+    ///     Gets the <see cref="PitchClassSet" />
+    /// </summary>
+    public PitchClassSet PitchClassSet => GetPitchClassSet(Intervals);
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return Intervals.PrintOut;
+    }
+
+    private static PitchClassSet GetPitchClassSet(IEnumerable<DiatonicInterval> intervals)
+    {
+        var builder = ImmutableList.CreateBuilder<PitchClass>();
+        foreach (var interval in intervals)
+        {
+            var pitchClass = PitchClass.FromSemitones(interval.Semitones);
+            builder.Add(pitchClass);
+        }
+
+        return new(builder);
+    }
+
     #region IParsable<DiatonicIntervalCollection>
 
     /// <inheritdoc />
     public static DiatonicIntervalCollection Parse(string s, IFormatProvider? provider = null)
     {
-        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        }
+
         return result;
     }
 
@@ -23,8 +57,8 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
             result = null!;
             return false;
         }
-        
-        var builder = ImmutableList.CreateBuilder<Interval.Diatonic>();
+
+        var builder = ImmutableList.CreateBuilder<DiatonicInterval>();
         var segments = s.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length == 0)
         {
@@ -35,46 +69,34 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
 
         foreach (var segment in segments)
         {
-            if (!Interval.Diatonic.TryParse(segment, null, out var interval)) continue; // Skip
+            if (!DiatonicInterval.TryParse(segment, null, out var interval))
+            {
+                continue; // Skip
+            }
+
             builder.Add(interval);
         }
 
         // Success
         result = new(builder.ToImmutable());
         return true;
-    }    
+    }
 
     #endregion
 
     #region IReadonlyCollection<Interval.Diatonic> Members
 
-    public IEnumerator<Interval.Diatonic> GetEnumerator() => Intervals.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Intervals).GetEnumerator();
+    public IEnumerator<DiatonicInterval> GetEnumerator()
+    {
+        return Intervals.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable)Intervals).GetEnumerator();
+    }
+
     public int Count => Intervals.Count;
 
     #endregion
-
-    /// <summary>
-    /// Gets the <see cref="PrintableReadOnlyCollection{DiatonicInterval}"/>
-    /// </summary>
-    public PrintableReadOnlyCollection<DiatonicInterval> Intervals { get; } = intervals.ToImmutableList().AsPrintable();
-
-    /// <summary>
-    /// Gets the <see cref="PitchClassSet"/>
-    /// </summary>
-    public PitchClassSet PitchClassSet =>  GetPitchClassSet(Intervals);
-
-    /// <inheritdoc />
-    public override string ToString() => Intervals.PrintOut;
-
-    private static PitchClassSet GetPitchClassSet(IEnumerable<DiatonicInterval> intervals)
-    {
-        var builder = ImmutableList.CreateBuilder<PitchClass>();
-        foreach (var interval in intervals)
-        {
-            var pitchClass = PitchClass.FromSemitones(interval.Semitones);
-            builder.Add(pitchClass);
-        }
-        return new(builder);
-    }
 }

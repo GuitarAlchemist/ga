@@ -18,10 +18,13 @@ public class MajorKeyTests
     [TestCase("B", new[] { "B", "C#", "D#", "E", "F#", "G#", "A#" })]
     [TestCase("F#", new[] { "F#", "G#", "A#", "B", "C#", "D#", "E#" })]
     [TestCase("C#", new[] { "C#", "D#", "E#", "F#", "G#", "A#", "B#" })]
-        
     public void MajorKey_GetNotes_ReturnsCorrectSequenceOfNotes(string sMajorKeyRoot, string[] expected)
     {
-        if (!Key.Major.TryParse(sMajorKeyRoot, out var majorKey)) throw new InvalidOperationException();
+        if (!Key.Major.TryParse(sMajorKeyRoot, out var majorKey))
+        {
+            throw new InvalidOperationException();
+        }
+
         var actual = majorKey.Notes.Select(note => note.ToString()).ToArray();
 
         Assert.That(actual, Is.EqualTo(expected));

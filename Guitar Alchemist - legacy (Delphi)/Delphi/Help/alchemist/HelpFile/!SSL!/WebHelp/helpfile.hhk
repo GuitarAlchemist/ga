@@ -1,0 +1,159 @@
+<html>
+<!-- Sitemap 1.0 -->
+<object type="text/site properties">
+  <param name="FrameName" value="bsscright">
+  <param name="SiteType" value="index">
+</object>
+<ul>
+  <li><object type="text/sitemap">
+    <param name="Name" value="How to buy Guitar Alchemist">
+    <param name="Name" value="How to buy Guitar Alchemist">
+    <param name="Local" value="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="Order Now button">
+    <param name="Name" value="How to buy Guitar Alchemist">
+    <param name="Local" value="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="Register">
+    <param name="Name" value="How to buy Guitar Alchemist">
+    <param name="Local" value="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="Serial Number">
+    <param name="Name" value="How to buy Guitar Alchemist">
+    <param name="Local" value="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="System Requirements">
+    <param name="Name" value="System Requirements">
+    <param name="Local" value="introduction_to_guitar_alchemist/system_requirements.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The character tones">
+    <param name="Name" value="The character tones">
+    <param name="Local" value="music_theory_elements/the_character_tones.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The chord dictionnary panel">
+    <param name="Name" value="The chord dictionnary panel">
+    <param name="Local" value="the_user_interface/the_views/the_chords_view/the_chord_dictionnary_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The chord selector panel">
+    <param name="Name" value="The chord selector panel">
+    <param name="Local" value="the_user_interface/the_views/the_chords_view/the_chord_selector_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The chords view">
+    <param name="Name" value="The chords view">
+    <param name="Local" value="the_user_interface/the_views/the_chords_view/the_chords_view.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The fingerboard">
+    <param name="Name" value="The fingerboard">
+    <param name="Local" value="the_user_interface/the_fingerboard.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The fingerboard options page">
+    <param name="Name" value="The fingerboard options page">
+    <param name="Local" value="the_user_interface/the_options_dialog/the_fingerboard_options_page.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The harmonic major modes">
+    <param name="Name" value="The harmonic major modes">
+    <param name="Local" value="music_theory_elements/the_harmonic_major_modes.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The harmonic minor modes">
+    <param name="Name" value="The harmonic minor modes">
+    <param name="Local" value="music_theory_elements/the_harmonic_minor_modes.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The intervals">
+    <param name="Name" value="The intervals">
+    <param name="Local" value="music_theory_elements/the_intervals.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The keys">
+    <param name="Name" value="The keys">
+    <param name="Local" value="music_theory_elements/the_keys.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The main window">
+    <param name="Name" value="The main window">
+    <param name="Local" value="the_user_interface/the_main_window.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The major scale modes">
+    <param name="Name" value="The major scale modes">
+    <param name="Local" value="music_theory_elements/the_major_scale_modes.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The matching chords panel">
+    <param name="Name" value="The matching chords panel">
+    <param name="Local" value="the_user_interface/the_views/the_scales_view/the_matching_chords_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The matching scale panel">
+    <param name="Name" value="The matching scale panel">
+    <param name="Local" value="the_user_interface/the_views/the_chords_view/the_matching_scale_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The melodic minor modes">
+    <param name="Name" value="The melodic minor modes">
+    <param name="Local" value="music_theory_elements/the_melodic_minor_modes.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The menu">
+    <param name="Name" value="The menu">
+    <param name="Local" value="the_user_interface/the_menu.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The MIDI options page">
+    <param name="Name" value="The MIDI options page">
+    <param name="Local" value="the_user_interface/the_options_dialog/the_midi_options_page.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The options dialog">
+    <param name="Name" value="The options dialog">
+    <param name="Local" value="the_user_interface/the_options_dialog/the_options_dialog.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The scale pattern panel">
+    <param name="Name" value="The scale pattern panel">
+    <param name="Local" value="the_user_interface/the_views/the_scales_view/the_scale_pattern_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The scale selector panel">
+    <param name="Name" value="The scale selector panel">
+    <param name="Local" value="the_user_interface/the_views/the_scales_view/the_scale_selector_panel.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The scales view">
+    <param name="Name" value="The scales view">
+    <param name="Local" value="the_user_interface/the_views/the_scales_view/the_scales_view.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The status bar">
+    <param name="Name" value="The status bar">
+    <param name="Local" value="the_user_interface/the_status_bar.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="The theme options page">
+    <param name="Name" value="The theme options page">
+    <param name="Local" value="the_user_interface/the_options_dialog/the_theme_options_page.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="View selector">
+    <param name="Name" value="View selector">
+    <param name="Local" value="the_user_interface/view_selector.htm">
+  </object>
+  <li><object type="text/sitemap">
+    <param name="Name" value="Why Guitar Alchemist ?">
+    <param name="Name" value="Why Guitar Alchemist ?">
+    <param name="Local" value="introduction_to_guitar_alchemist/why_guitar_alchemist_.htm">
+  </object>
+</ul>
+</html>

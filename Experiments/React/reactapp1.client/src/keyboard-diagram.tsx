@@ -5,7 +5,7 @@ interface KeyboardDiagramProps {
     width?: number;
 }
 
-const KeyboardDiagram: React.FC<KeyboardDiagramProps> = ({ scale, width = 350 }) => {
+const KeyboardDiagram: React.FC<KeyboardDiagramProps> = ({scale, width = 350}) => {
     const height = width * 0.4;
     const whiteKeyWidth = width / 10;
     const whiteKeyHeight = height;
@@ -27,16 +27,16 @@ const KeyboardDiagram: React.FC<KeyboardDiagramProps> = ({ scale, width = 350 })
         return whiteKeyIndex * whiteKeyWidth + whiteKeyWidth * 0.7;
     };
 
-    const Indicator = ({ x, y, size, color }: { x: number; y: number; size: number; color: string }) => (
+    const Indicator = ({x, y, size, color}: { x: number; y: number; size: number; color: string }) => (
         <g>
-            <circle cx={x} cy={y} r={size} fill="green" />
-            <rect x={x - size} y={y - size * 3} width={size * 2} height={size * 2} fill={color} />
+            <circle cx={x} cy={y} r={size} fill="green"/>
+            <rect x={x - size} y={y - size * 3} width={size * 2} height={size * 2} fill={color}/>
         </g>
     );
 
     return (
         <svg width={width} height={height}>
-            <rect x={0} y={0} width={width} height={height} fill="#ebebeb" />
+            <rect x={0} y={0} width={width} height={height} fill="#ebebeb"/>
 
             {/* White keys */}
             {whiteKeys.map((index, i) => (

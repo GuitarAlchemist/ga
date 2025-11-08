@@ -19,11 +19,28 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
         });
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _lazy.Value.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_lazy.Value).GetEnumerator();
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    {
+        return _lazy.Value.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable)_lazy.Value).GetEnumerator();
+    }
+
     public int Count => _lazy.Value.Count;
-    public bool ContainsKey(TKey key) => _lazy.Value.ContainsKey(key);
-    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => _lazy.Value.TryGetValue(key, out value);
+
+    public bool ContainsKey(TKey key)
+    {
+        return _lazy.Value.ContainsKey(key);
+    }
+
+    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        return _lazy.Value.TryGetValue(key, out value);
+    }
+
     public TValue this[TKey key]
     {
         get
@@ -31,7 +48,10 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
             try
             {
                 var dict = _lazy.Value;
-                if (dict.TryGetValue(key, out var value)) return value;
+                if (dict.TryGetValue(key, out var value))
+                {
+                    return value;
+                }
             }
 #pragma warning disable CS0168 // Variable is declared but never used
             catch (Exception ex)
@@ -52,5 +72,3 @@ public class LazyReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TV
     public IEnumerable<TKey> Keys => _lazy.Value.Keys;
     public IEnumerable<TValue> Values => _lazy.Value.Values;
 }
-
-

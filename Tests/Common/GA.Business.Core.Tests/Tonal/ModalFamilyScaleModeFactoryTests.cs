@@ -1,15 +1,10 @@
 ﻿namespace GA.Business.Core.Tests.Tonal;
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Linq;
-using System.Collections.Immutable;
-using NUnit.Framework;
-using GA.Business.Config;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Tonal.Modes;
+using Business.Config;
+using Core.Atonal;
+using Microsoft.FSharp.Core;
 
 [TestFixture]
 public class ModalFamilyScaleModeFactoryTests
@@ -41,7 +36,7 @@ public class ModalFamilyScaleModeFactoryTests
                 var name = m.Name.Replace(",", ""); // no embedded commas
                 var degree = m.Degree; // 1..N
                 var isMinor = m.IsMinorMode; // True/False
-                var notesCsv = $"\"{string.Join("|", m.Notes)}\""; // "C|D|E|…"
+                var notesCsv = $"\"{string.Join("|", m.Notes)}\""; // "C|D|E|�"
                 var formulaCsv = m.Formula.ToString();
                 var modeConfig = m.ModeConfig;
                 var modeName = modeConfig?.Mode.Name;
@@ -59,7 +54,7 @@ public class ModalFamilyScaleModeFactoryTests
             string.Join(Environment.NewLine, allLines),
             Encoding.UTF8
         );
-        
+
         // Assert
         Assert.That(modes, Is.Not.Empty, "At least some modal families should produce valid modes");
 
@@ -135,9 +130,8 @@ public class ModalFamilyScaleModeFactoryTests
     [Test]
     public void CreateModesFromAllFamilies_ShouldReturnAllMajorScaleModes()
     {
-
         var majorScaleModalFamily = ModalFamilyScaleModeFactory.CreateModesFromFamily(ModalFamily.Major);
-        
+
         // Act
         var modes = ModalFamilyScaleModeFactory.CreateModesFromAllFamilies();
 
@@ -250,7 +244,7 @@ public class ModalFamilyScaleModeFactoryTests
                     $"Expected {family.Modes.Count} modes for family with interval vector {family.IntervalClassVector}, but got {modes.Count}");
 
                 // Verify that each mode has the correct degree
-                for (int i = 1; i <= family.Modes.Count; i++)
+                for (var i = 1; i <= family.Modes.Count; i++)
                 {
                     Assert.That(modes.Any(m => m.Degree == i),
                         $"Missing mode with degree {i} for family with interval vector {family.IntervalClassVector}");
@@ -319,7 +313,7 @@ public class ModalFamilyScaleModeFactoryTests
         {
             // For major scale modes, we directly use the expected name based on the degree
             // This is because all major scale modes share the same interval vector
-            string modeName = "Unknown";
+            var modeName = "Unknown";
             if (expectedModeNames.TryGetValue(mode.Degree, out var name))
             {
                 modeName = name;
@@ -400,7 +394,10 @@ public class ModalFamilyScaleModeFactoryTests
             foreach (var family in group.OrderBy(f => f.IntervalClassVector.ToString()))
             {
                 var modes = modesByFamily[family];
-                if (modes.Count == 0) continue;
+                if (modes.Count == 0)
+                {
+                    continue;
+                }
 
                 var firstMode = modes.FirstOrDefault(m => m.Degree == 1) ?? modes.First();
                 var parentScale = firstMode.ParentScale.ToString();
@@ -408,7 +405,7 @@ public class ModalFamilyScaleModeFactoryTests
                 var notes = string.Join(", ", firstMode.Notes.Select(n => n.ToString()));
 
                 // Try to get the mode name
-                string modeName = "Unknown";
+                var modeName = "Unknown";
 
                 // Special handling for major scale modes
                 if (family.IntervalClassVector.ToString() == "<2 5 4 3 6 1>")
@@ -437,7 +434,7 @@ public class ModalFamilyScaleModeFactoryTests
                     {
                         var modeInfo =
                             ModesConfig.TryGetModeByIntervalClassVector(family.IntervalClassVector.ToString());
-                        if (Microsoft.FSharp.Core.FSharpOption<ModesConfig.ModeInfo>.get_IsSome(modeInfo))
+                        if (FSharpOption<ModesConfig.ModeInfo>.get_IsSome(modeInfo))
                         {
                             modeName = modeInfo.Value.Name;
                         }
@@ -536,7 +533,8 @@ public class ModalFamilyScaleModeFactoryTests
             : 0.0;
 
         // Find the major scale family for validation
-        var majorFamily = allTheoreticalFamilies.FirstOrDefault(f => f.IntervalClassVector.ToString() == "<2 5 4 3 6 1>");
+        var majorFamily =
+            allTheoreticalFamilies.FirstOrDefault(f => f.IntervalClassVector.ToString() == "<2 5 4 3 6 1>");
 
         // Output detailed analysis
         Console.WriteLine("=== THEORETICAL MODAL FAMILIES COVERAGE ANALYSIS ===\n");
@@ -558,6 +556,7 @@ public class ModalFamilyScaleModeFactoryTests
                 {
                     Console.WriteLine($"  - {family.IntervalClassVector} ({family.Modes.Count} modes)");
                 }
+
                 Console.WriteLine();
             }
         }

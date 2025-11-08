@@ -4,27 +4,8 @@ using Positions;
 
 [PublicAPI]
 public class FretVector : IReadOnlyCollection<Fret>,
-                          IIndexer<Str, Fret>
+    IIndexer<Str, Fret>
 {
-    #region IIndexer<Str, RelativeFret> Members
-
-    public Fret this[Str key] => _fretByStr[key];
-
-    #endregion
-
-    #region IReadOnlyCollection<Fret> Members
-
-    public IEnumerator<Fret> GetEnumerator() => _fretByStr.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count => _fretByStr.Count;
-
-    #endregion
-
-    /// <summary>
-    /// Gets the <see cref="ImmutableHashSet{PositionLocation}"/>.
-    /// </summary>
-    public ImmutableHashSet<PositionLocation> PositionLocations => _lazyPositionLocationsSet.Value;
-
     private readonly ImmutableSortedDictionary<Str, Fret> _fretByStr;
     private readonly Lazy<ImmutableHashSet<PositionLocation>> _lazyPositionLocationsSet;
 
@@ -45,9 +26,40 @@ public class FretVector : IReadOnlyCollection<Fret>,
         _lazyPositionLocationsSet = new(GetPositionLocations);
     }
 
-    public override string ToString() => "fret: " + string.Join(" ", _fretByStr.Values);
+    /// <summary>
+    ///     Gets the <see cref="ImmutableHashSet{PositionLocation}" />.
+    /// </summary>
+    public ImmutableHashSet<PositionLocation> PositionLocations => _lazyPositionLocationsSet.Value;
+
+    #region IIndexer<Str, RelativeFret> Members
+
+    public Fret this[Str key] => _fretByStr[key];
+
+    #endregion
+
+    public override string ToString()
+    {
+        return "fret: " + string.Join(" ", _fretByStr.Values);
+    }
 
     private ImmutableHashSet<PositionLocation> GetPositionLocations()
-        => _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value)).ToImmutableHashSet();
+    {
+        return _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value)).ToImmutableHashSet();
+    }
 
+    #region IReadOnlyCollection<Fret> Members
+
+    public IEnumerator<Fret> GetEnumerator()
+    {
+        return _fretByStr.Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public int Count => _fretByStr.Count;
+
+    #endregion
 }

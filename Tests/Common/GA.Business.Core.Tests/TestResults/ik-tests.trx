@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="1513eda7-8507-4b0f-a1a3-11bc8a00b7ac" name="spareilleux@XPS-STEF 2025-11-04 00:35:55" runUser="XPS-STEF\spareilleux" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-11-04T00:35:55.5013396-05:00" queuing="2025-11-04T00:35:55.5013399-05:00" start="2025-11-04T00:35:54.9573213-05:00" finish="2025-11-04T00:35:55.5849534-05:00" />
+  <TestSettings name="default" id="a9bba34a-97e8-46dc-b613-0f1dafb7d95e">
+    <Deployment runDeploymentRoot="spareilleux_XPS-STEF_2025-11-04_00_35_55" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="cc68a404-64f5-4461-97a8-36dd14a4d771" testId="20dbeae0-2ce8-e81f-eb07-472a061135e2" testName="EvaluateFitness_ExtremeFlexion_ShouldHaveLowComfort" computerName="XPS-STEF" duration="00:00:00.0020660" startTime="2025-11-04T00:35:55.4356323-05:00" endTime="2025-11-04T00:35:55.4376982-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc68a404-64f5-4461-97a8-36dd14a4d771" />
+    <UnitTestResult executionId="a6aa31e4-33a4-4e88-a4a3-6f10a3bf140e" testId="1f9256a5-93ad-f3ef-6b32-e608635c3d24" testName="Solve_WithElitism_ShouldPreserveBestIndividuals" computerName="XPS-STEF" duration="00:00:00.0133840" startTime="2025-11-04T00:35:55.5158064-05:00" endTime="2025-11-04T00:35:55.5291899-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a6aa31e4-33a4-4e88-a4a3-6f10a3bf140e" />
+    <UnitTestResult executionId="3ead7de7-75ee-4a89-9f59-431cb938449e" testId="ba18a5b4-a881-3d68-a049-d99ed8a962d9" testName="EvaluateFitness_ShouldPopulateReachErrors" computerName="XPS-STEF" duration="00:00:00.0013699" startTime="2025-11-04T00:35:55.4433255-05:00" endTime="2025-11-04T00:35:55.4446947-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3ead7de7-75ee-4a89-9f59-431cb938449e" />
+    <UnitTestResult executionId="b872a0c1-d01e-4c67-9b44-4f6f800fe46f" testId="f3c5dd43-a93e-9482-418e-ebf197574509" testName="IsAcceptable_HighReachability_ShouldReturnTrue" computerName="XPS-STEF" duration="00:00:00.0001860" startTime="2025-11-04T00:35:55.4590237-05:00" endTime="2025-11-04T00:35:55.4592094-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b872a0c1-d01e-4c67-9b44-4f6f800fe46f" />
+    <UnitTestResult executionId="ea2f1f10-881e-48df-90f4-20c29aa69b42" testId="ea9f39d8-e67f-d659-98a0-2cbc479c3faa" testName="EvaluateFitness_PerfectReach_ShouldHaveHighReachability" computerName="XPS-STEF" duration="00:00:00.0007450" startTime="2025-11-04T00:35:55.4404887-05:00" endTime="2025-11-04T00:35:55.4412338-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ea2f1f10-881e-48df-90f4-20c29aa69b42" />
+    <UnitTestResult executionId="09305e71-2690-45e4-9511-7a6fcdd88c09" testId="c778c62c-7e3c-90cd-91ad-e35d46f6e183" testName="Clamp_ShouldEnforceJointLimits" computerName="XPS-STEF" duration="00:00:00.0007360" startTime="2025-11-04T00:35:55.4554845-05:00" endTime="2025-11-04T00:35:55.4562207-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="09305e71-2690-45e4-9511-7a6fcdd88c09" />
+    <UnitTestResult executionId="8dd2507f-356d-4053-9cb8-f69594726181" testId="b1c2df03-1d5d-3546-cb1c-3c455911d1ca" testName="ToHandPose_ShouldConvertCorrectly" computerName="XPS-STEF" duration="00:00:00.0001140" startTime="2025-11-04T00:35:55.4581751-05:00" endTime="2025-11-04T00:35:55.4582895-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8dd2507f-356d-4053-9cb8-f69594726181" />
+    <UnitTestResult executionId="ff73d188-0047-46b5-9b05-01ef598f6db0" testId="1f27ddff-0ca9-221e-3bcd-fb8cae63963b" testName="Solve_RestPoseTarget_ShouldConverge" computerName="XPS-STEF" duration="00:00:00.0200569" startTime="2025-11-04T00:35:55.4594299-05:00" endTime="2025-11-04T00:35:55.4794862-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff73d188-0047-46b5-9b05-01ef598f6db0" />
+    <UnitTestResult executionId="6e52be26-d9b6-4b4e-8095-a0a6f4b3d3db" testId="1577025e-f282-075f-8e09-7359af2ee838" testName="FromHandPose_ShouldConvertCorrectly" computerName="XPS-STEF" duration="00:00:00.0003740" startTime="2025-11-04T00:35:55.4574620-05:00" endTime="2025-11-04T00:35:55.4578359-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6e52be26-d9b6-4b4e-8095-a0a6f4b3d3db" />
+    <UnitTestResult executionId="ce165a34-c608-4ba2-afdd-9499d1866605" testId="94f91c09-1bc2-f5c5-7ca0-bf07cc105247" testName="Solve_ShouldRespectJointLimits" computerName="XPS-STEF" duration="00:00:00.0086240" startTime="2025-11-04T00:35:55.5071635-05:00" endTime="2025-11-04T00:35:55.5157870-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce165a34-c608-4ba2-afdd-9499d1866605" />
+    <UnitTestResult executionId="c869cf36-955d-4de2-b4aa-43fc14745172" testId="34fa4c94-13f4-a8dc-f37b-768f5837bc5c" testName="GetConvergenceRate_ShouldCalculateCorrectly" computerName="XPS-STEF" duration="00:00:00.0006310" startTime="2025-11-04T00:35:55.4583846-05:00" endTime="2025-11-04T00:35:55.4590154-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c869cf36-955d-4de2-b4aa-43fc14745172" />
+    <UnitTestResult executionId="02f5c318-d411-4460-9146-85cf343a411d" testId="8ccbd749-f4e8-febc-bc7c-cbaef20fba83" testName="Solve_ShouldPopulateSolutionMetadata" computerName="XPS-STEF" duration="00:00:00.0087810" startTime="2025-11-04T00:35:55.4983619-05:00" endTime="2025-11-04T00:35:55.5071423-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="02f5c318-d411-4460-9146-85cf343a411d" />
+    <UnitTestResult executionId="3cc4a099-3ae7-4664-9223-c3f55a126406" testId="9f3545e9-56fd-c21a-a761-4b2dab47f239" testName="IKSolverConfig_DefaultValues_ShouldBeReasonable" computerName="XPS-STEF" duration="00:00:00.0003230" startTime="2025-11-04T00:35:55.4578436-05:00" endTime="2025-11-04T00:35:55.4581664-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3cc4a099-3ae7-4664-9223-c3f55a126406" />
+    <UnitTestResult executionId="ac853f90-6686-4619-9812-2a449659e214" testId="f03ba66d-3ef9-5454-595a-6f4d2562d495" testName="FitnessWeights_DefaultValues_ShouldPrioritizeReachability" computerName="XPS-STEF" duration="00:00:00.0001360" startTime="2025-11-04T00:35:55.4573215-05:00" endTime="2025-11-04T00:35:55.4574570-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ac853f90-6686-4619-9812-2a449659e214" />
+    <UnitTestResult executionId="46a48d51-94bb-42b8-ae50-40ea412ac18f" testId="86999425-28fd-d333-1b84-a71fe7251cc7" testName="Solve_ShouldImproveOverGenerations" computerName="XPS-STEF" duration="00:00:00.0188300" startTime="2025-11-04T00:35:55.4795051-05:00" endTime="2025-11-04T00:35:55.4983346-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="46a48d51-94bb-42b8-ae50-40ea412ac18f" />
+    <UnitTestResult executionId="db43c386-59b9-403a-80a2-1daf0abcfac3" testId="8def6314-7ade-7a61-3f90-3d6ad71034fb" testName="CreateRandom_ShouldGenerateValidAngles" computerName="XPS-STEF" duration="00:00:00.0005570" startTime="2025-11-04T00:35:55.4562364-05:00" endTime="2025-11-04T00:35:55.4567930-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db43c386-59b9-403a-80a2-1daf0abcfac3" />
+    <UnitTestResult executionId="86fe5693-6a6c-4a0c-9955-a5a2dd228cf0" testId="cca7231d-de08-e08c-0157-bddb3ef4f566" testName="FitnessBreakdown_ShouldStoreAllComponents" computerName="XPS-STEF" duration="00:00:00.0005109" startTime="2025-11-04T00:35:55.4568015-05:00" endTime="2025-11-04T00:35:55.4573122-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="86fe5693-6a6c-4a0c-9955-a5a2dd228cf0" />
+    <UnitTestResult executionId="77dbbeb9-992d-4cf4-84b0-3c3c073029ca" testId="85031fca-7bc7-5028-2e5a-596b61cfee38" testName="IsAcceptable_LowReachability_ShouldReturnFalse" computerName="XPS-STEF" duration="00:00:00.0002060" startTime="2025-11-04T00:35:55.4592158-05:00" endTime="2025-11-04T00:35:55.4594214-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="77dbbeb9-992d-4cf4-84b0-3c3c073029ca" />
+    <UnitTestResult executionId="2d884838-d2e2-49fc-96d4-bdece6636f1d" testId="b4ee6ac2-6a33-eeb1-45a7-a93298b3f088" testName="Solve_WithLocalSearch_ShouldNotDecreaseReachability" computerName="XPS-STEF" duration="00:00:00.0108840" startTime="2025-11-04T00:35:55.5292065-05:00" endTime="2025-11-04T00:35:55.5400898-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2d884838-d2e2-49fc-96d4-bdece6636f1d" />
+    <UnitTestResult executionId="958b5c88-0109-4051-9ce6-66caa36cd2c9" testId="ee800180-06e1-5477-222a-4f57adde2b4b" testName="ChordTarget_FromFretPositions_ShouldCreateTarget" computerName="XPS-STEF" duration="00:00:00.0095670" startTime="2025-11-04T00:35:55.4458892-05:00" endTime="2025-11-04T00:35:55.4554559-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="958b5c88-0109-4051-9ce6-66caa36cd2c9" />
+    <UnitTestResult executionId="7dc76ba5-85c6-4594-b8e1-8198f77bb070" testId="078d6b66-8c49-a7b6-ebc5-8ee29189b436" testName="EvaluateFitness_CustomWeights_ShouldAffectTotalFitness" computerName="XPS-STEF" duration="00:00:00.0297210" startTime="2025-11-04T00:35:55.4053064-05:00" endTime="2025-11-04T00:35:55.4349965-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7dc76ba5-85c6-4594-b8e1-8198f77bb070" />
+    <UnitTestResult executionId="56ada6a8-9f67-446f-b684-806668832058" testId="8f62be3a-0241-b05b-13ec-9366224db6f3" testName="EvaluateFitness_ShouldCalculateAllComponents" computerName="XPS-STEF" duration="00:00:00.0009980" startTime="2025-11-04T00:35:55.4423182-05:00" endTime="2025-11-04T00:35:55.4433164-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="56ada6a8-9f67-446f-b684-806668832058" />
+    <UnitTestResult executionId="fa05439a-6d98-4eae-82d0-f3866b5b2e37" testId="5a44b832-a9fe-0de4-3adc-f0645d489254" testName="EvaluateFitness_ImpossibleTarget_ShouldHaveLowReachability" computerName="XPS-STEF" duration="00:00:00.0027529" startTime="2025-11-04T00:35:55.4377189-05:00" endTime="2025-11-04T00:35:55.4404716-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa05439a-6d98-4eae-82d0-f3866b5b2e37" />
+    <UnitTestResult executionId="6d01cd88-c6ed-4fe2-b721-b24c63dfd3d0" testId="bba8f788-4ed0-d55d-b0cd-462aa43a52ef" testName="EvaluateFitness_RestPose_ShouldHaveHighComfort" computerName="XPS-STEF" duration="00:00:00.0010640" startTime="2025-11-04T00:35:55.4412444-05:00" endTime="2025-11-04T00:35:55.4423084-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6d01cd88-c6ed-4fe2-b721-b24c63dfd3d0" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IsAcceptable_LowReachability_ShouldReturnFalse" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="85031fca-7bc7-5028-2e5a-596b61cfee38">
+      <Execution id="77dbbeb9-992d-4cf4-84b0-3c3c073029ca" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="IsAcceptable_LowReachability_ShouldReturnFalse" />
+    </UnitTest>
+    <UnitTest name="Clamp_ShouldEnforceJointLimits" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="c778c62c-7e3c-90cd-91ad-e35d46f6e183">
+      <Execution id="09305e71-2690-45e4-9511-7a6fcdd88c09" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="Clamp_ShouldEnforceJointLimits" />
+    </UnitTest>
+    <UnitTest name="Solve_WithElitism_ShouldPreserveBestIndividuals" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="1f9256a5-93ad-f3ef-6b32-e608635c3d24">
+      <Execution id="a6aa31e4-33a4-4e88-a4a3-6f10a3bf140e" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_WithElitism_ShouldPreserveBestIndividuals" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_ShouldPopulateReachErrors" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="ba18a5b4-a881-3d68-a049-d99ed8a962d9">
+      <Execution id="3ead7de7-75ee-4a89-9f59-431cb938449e" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_ShouldPopulateReachErrors" />
+    </UnitTest>
+    <UnitTest name="Solve_ShouldPopulateSolutionMetadata" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="8ccbd749-f4e8-febc-bc7c-cbaef20fba83">
+      <Execution id="02f5c318-d411-4460-9146-85cf343a411d" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_ShouldPopulateSolutionMetadata" />
+    </UnitTest>
+    <UnitTest name="Solve_WithLocalSearch_ShouldNotDecreaseReachability" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="b4ee6ac2-6a33-eeb1-45a7-a93298b3f088">
+      <Execution id="2d884838-d2e2-49fc-96d4-bdece6636f1d" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_WithLocalSearch_ShouldNotDecreaseReachability" />
+    </UnitTest>
+    <UnitTest name="Solve_ShouldImproveOverGenerations" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="86999425-28fd-d333-1b84-a71fe7251cc7">
+      <Execution id="46a48d51-94bb-42b8-ae50-40ea412ac18f" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_ShouldImproveOverGenerations" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_ExtremeFlexion_ShouldHaveLowComfort" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="20dbeae0-2ce8-e81f-eb07-472a061135e2">
+      <Execution id="cc68a404-64f5-4461-97a8-36dd14a4d771" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_ExtremeFlexion_ShouldHaveLowComfort" />
+    </UnitTest>
+    <UnitTest name="GetConvergenceRate_ShouldCalculateCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="34fa4c94-13f4-a8dc-f37b-768f5837bc5c">
+      <Execution id="c869cf36-955d-4de2-b4aa-43fc14745172" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="GetConvergenceRate_ShouldCalculateCorrectly" />
+    </UnitTest>
+    <UnitTest name="Solve_ShouldRespectJointLimits" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="94f91c09-1bc2-f5c5-7ca0-bf07cc105247">
+      <Execution id="ce165a34-c608-4ba2-afdd-9499d1866605" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_ShouldRespectJointLimits" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_CustomWeights_ShouldAffectTotalFitness" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="078d6b66-8c49-a7b6-ebc5-8ee29189b436">
+      <Execution id="7dc76ba5-85c6-4594-b8e1-8198f77bb070" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_CustomWeights_ShouldAffectTotalFitness" />
+    </UnitTest>
+    <UnitTest name="IsAcceptable_HighReachability_ShouldReturnTrue" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="f3c5dd43-a93e-9482-418e-ebf197574509">
+      <Execution id="b872a0c1-d01e-4c67-9b44-4f6f800fe46f" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="IsAcceptable_HighReachability_ShouldReturnTrue" />
+    </UnitTest>
+    <UnitTest name="CreateRandom_ShouldGenerateValidAngles" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="8def6314-7ade-7a61-3f90-3d6ad71034fb">
+      <Execution id="db43c386-59b9-403a-80a2-1daf0abcfac3" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="CreateRandom_ShouldGenerateValidAngles" />
+    </UnitTest>
+    <UnitTest name="FitnessWeights_DefaultValues_ShouldPrioritizeReachability" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="f03ba66d-3ef9-5454-595a-6f4d2562d495">
+      <Execution id="ac853f90-6686-4619-9812-2a449659e214" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="FitnessWeights_DefaultValues_ShouldPrioritizeReachability" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_PerfectReach_ShouldHaveHighReachability" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="ea9f39d8-e67f-d659-98a0-2cbc479c3faa">
+      <Execution id="ea2f1f10-881e-48df-90f4-20c29aa69b42" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_PerfectReach_ShouldHaveHighReachability" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_RestPose_ShouldHaveHighComfort" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="bba8f788-4ed0-d55d-b0cd-462aa43a52ef">
+      <Execution id="6d01cd88-c6ed-4fe2-b721-b24c63dfd3d0" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_RestPose_ShouldHaveHighComfort" />
+    </UnitTest>
+    <UnitTest name="FromHandPose_ShouldConvertCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="1577025e-f282-075f-8e09-7359af2ee838">
+      <Execution id="6e52be26-d9b6-4b4e-8095-a0a6f4b3d3db" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="FromHandPose_ShouldConvertCorrectly" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_ImpossibleTarget_ShouldHaveLowReachability" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="5a44b832-a9fe-0de4-3adc-f0645d489254">
+      <Execution id="fa05439a-6d98-4eae-82d0-f3866b5b2e37" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_ImpossibleTarget_ShouldHaveLowReachability" />
+    </UnitTest>
+    <UnitTest name="Solve_RestPoseTarget_ShouldConverge" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="1f27ddff-0ca9-221e-3bcd-fb8cae63963b">
+      <Execution id="ff73d188-0047-46b5-9b05-01ef598f6db0" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.InverseKinematicsSolverTests" name="Solve_RestPoseTarget_ShouldConverge" />
+    </UnitTest>
+    <UnitTest name="IKSolverConfig_DefaultValues_ShouldBeReasonable" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="9f3545e9-56fd-c21a-a761-4b2dab47f239">
+      <Execution id="3cc4a099-3ae7-4664-9223-c3f55a126406" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="IKSolverConfig_DefaultValues_ShouldBeReasonable" />
+    </UnitTest>
+    <UnitTest name="ToHandPose_ShouldConvertCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="b1c2df03-1d5d-3546-cb1c-3c455911d1ca">
+      <Execution id="8dd2507f-356d-4053-9cb8-f69594726181" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="ToHandPose_ShouldConvertCorrectly" />
+    </UnitTest>
+    <UnitTest name="EvaluateFitness_ShouldCalculateAllComponents" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="8f62be3a-0241-b05b-13ec-9366224db6f3">
+      <Execution id="56ada6a8-9f67-446f-b684-806668832058" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.FitnessEvaluatorTests" name="EvaluateFitness_ShouldCalculateAllComponents" />
+    </UnitTest>
+    <UnitTest name="ChordTarget_FromFretPositions_ShouldCreateTarget" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="ee800180-06e1-5477-222a-4f57adde2b4b">
+      <Execution id="958b5c88-0109-4051-9ce6-66caa36cd2c9" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="ChordTarget_FromFretPositions_ShouldCreateTarget" />
+    </UnitTest>
+    <UnitTest name="FitnessBreakdown_ShouldStoreAllComponents" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net9.0\ga.business.core.tests.dll" id="cca7231d-de08-e08c-0157-bddb3ef4f566">
+      <Execution id="86fe5693-6a6c-4a0c-9955-a5a2dd228cf0" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Biomechanics.IK.HandPoseChromosomeTests" name="FitnessBreakdown_ShouldStoreAllComponents" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="20dbeae0-2ce8-e81f-eb07-472a061135e2" executionId="cc68a404-64f5-4461-97a8-36dd14a4d771" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1f9256a5-93ad-f3ef-6b32-e608635c3d24" executionId="a6aa31e4-33a4-4e88-a4a3-6f10a3bf140e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ba18a5b4-a881-3d68-a049-d99ed8a962d9" executionId="3ead7de7-75ee-4a89-9f59-431cb938449e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f3c5dd43-a93e-9482-418e-ebf197574509" executionId="b872a0c1-d01e-4c67-9b44-4f6f800fe46f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ea9f39d8-e67f-d659-98a0-2cbc479c3faa" executionId="ea2f1f10-881e-48df-90f4-20c29aa69b42" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c778c62c-7e3c-90cd-91ad-e35d46f6e183" executionId="09305e71-2690-45e4-9511-7a6fcdd88c09" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b1c2df03-1d5d-3546-cb1c-3c455911d1ca" executionId="8dd2507f-356d-4053-9cb8-f69594726181" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1f27ddff-0ca9-221e-3bcd-fb8cae63963b" executionId="ff73d188-0047-46b5-9b05-01ef598f6db0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1577025e-f282-075f-8e09-7359af2ee838" executionId="6e52be26-d9b6-4b4e-8095-a0a6f4b3d3db" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94f91c09-1bc2-f5c5-7ca0-bf07cc105247" executionId="ce165a34-c608-4ba2-afdd-9499d1866605" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="34fa4c94-13f4-a8dc-f37b-768f5837bc5c" executionId="c869cf36-955d-4de2-b4aa-43fc14745172" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8ccbd749-f4e8-febc-bc7c-cbaef20fba83" executionId="02f5c318-d411-4460-9146-85cf343a411d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9f3545e9-56fd-c21a-a761-4b2dab47f239" executionId="3cc4a099-3ae7-4664-9223-c3f55a126406" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f03ba66d-3ef9-5454-595a-6f4d2562d495" executionId="ac853f90-6686-4619-9812-2a449659e214" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86999425-28fd-d333-1b84-a71fe7251cc7" executionId="46a48d51-94bb-42b8-ae50-40ea412ac18f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8def6314-7ade-7a61-3f90-3d6ad71034fb" executionId="db43c386-59b9-403a-80a2-1daf0abcfac3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cca7231d-de08-e08c-0157-bddb3ef4f566" executionId="86fe5693-6a6c-4a0c-9955-a5a2dd228cf0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="85031fca-7bc7-5028-2e5a-596b61cfee38" executionId="77dbbeb9-992d-4cf4-84b0-3c3c073029ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4ee6ac2-6a33-eeb1-45a7-a93298b3f088" executionId="2d884838-d2e2-49fc-96d4-bdece6636f1d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee800180-06e1-5477-222a-4f57adde2b4b" executionId="958b5c88-0109-4051-9ce6-66caa36cd2c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="078d6b66-8c49-a7b6-ebc5-8ee29189b436" executionId="7dc76ba5-85c6-4594-b8e1-8198f77bb070" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8f62be3a-0241-b05b-13ec-9366224db6f3" executionId="56ada6a8-9f67-446f-b684-806668832058" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5a44b832-a9fe-0de4-3adc-f0645d489254" executionId="fa05439a-6d98-4eae-82d0-f3866b5b2e37" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bba8f788-4ed0-d55d-b0cd-462aa43a52ef" executionId="6d01cd88-c6ed-4fe2-b721-b24c63dfd3d0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="24" executed="24" passed="24" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>NUnit Adapter 4.6.0.0: Test execution started&#xD;
+Running selected tests in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net9.0\GA.Business.Core.Tests.dll&#xD;
+   NUnit3TestExecutor discovered 24 of 24 NUnit test cases using Current Discovery mode, Non-Explicit run&#xD;
+NUnit Adapter 4.6.0.0: Test execution complete&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

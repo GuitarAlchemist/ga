@@ -1,0 +1,14 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: ImprovisationConcepts
+ImprovisationConcepts:
+  - Name: Motivic Development
+    Concept: Repeat and vary small melodic ideas
+  - Name: Tension and Release
+    Concept: Alternate dissonance and resolution
+  - Name: Rhythmic Displacement
+    Concept: Shift motifs across beats
+  - Name: Space Usage
+    Concept: Use silence as phrasing element

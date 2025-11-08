@@ -1,0 +1,35 @@
+[MAS SUPPORT]
+SupportMas_Prj=1
+[Target:WebHelp]
+SupportMas_Prj=1
+ResultFileName=!SSL!\WebHelp\NewProject.htm
+SSLayoutType=2
+CreateProjectTime=
+CreateProjectUser=
+SupportMas_MPJ=1
+[Target:WebHelp Pro]
+SupportMas_Prj=1
+ResultFileName=!SSL!\WebHelp_Pro\NewProject.htm
+SSLayoutType=32
+ServerProjectName=NewProject
+CreateProjectTime=
+CreateProjectUser=
+SupportMas_MPJ=1
+[Target:Microsoft HTML Help]
+ResultFileName=!SSL!\Microsoft_HTML_Help\NewProject.chm
+SSLayoutType=1
+CreateProjectTime=
+CreateProjectUser=
+SupportMas_MPJ=1
+[Target:FlashHelp]
+ResultFileName=!SSL!\FlashHelp\NewProject.htm
+SSLayoutType=2
+CreateProjectTime=
+CreateProjectUser=
+SupportMas_MPJ=1
+[Target:Printed Documentation]
+ResultFileName=!SSL!\Printed_Documentation\NewProject.doc
+SSLayoutType=7
+[Target:XML Output]
+ResultFileName=!SSL!\XML_Output\NewProject.xml
+SSLayoutType=8192

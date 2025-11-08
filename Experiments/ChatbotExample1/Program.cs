@@ -1,9 +1,9 @@
-using Microsoft.Extensions.VectorData;
+using System.ClientModel;
 using ChatbotExample1.Components;
 using ChatbotExample1.Services;
 using ChatbotExample1.Services.Ingestion;
+using Microsoft.Extensions.VectorData;
 using OpenAI;
-using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
@@ -12,8 +12,10 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 // You can do this using Visual Studio's "Manage User Secrets" UI, or on the command line:
 //   cd this-project-directory
 //   dotnet user-secrets set GitHubModels:Token YOUR-GITHUB-TOKEN
-var credential = new ApiKeyCredential(builder.Configuration["GitHubModels:Token"] ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Token. See the README for details."));
-var openAIOptions = new OpenAIClientOptions()
+var credential = new ApiKeyCredential(builder.Configuration["GitHubModels:Token"] ??
+                                      throw new InvalidOperationException(
+                                          "Missing configuration: GitHubModels:Token. See the README for details."));
+var openAIOptions = new OpenAIClientOptions
 {
     Endpoint = new Uri("https://models.inference.ai.azure.com")
 };
@@ -39,7 +41,7 @@ IngestionCacheDbContext.Initialize(app.Services);
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler("/Error", true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }

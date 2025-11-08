@@ -1,6 +1,6 @@
-﻿namespace GA.Data.MongoDB.Services;
+namespace GA.Data.MongoDB.Services;
 
-using GA.Business.Core.Data.Instruments;
+using EntityFramework.Data.Instruments;
 using Models;
 
 public class InstrumentService : IInstrumentService
@@ -13,19 +13,11 @@ public class InstrumentService : IInstrumentService
         CreateIndexes();
     }
 
-    private void CreateIndexes()
-    {
-        var indexKeysDefinition = Builders<InstrumentDocument>.IndexKeys.Ascending(i => i.Name);
-        var indexOptions = new CreateIndexOptions { Unique = true };
-        var indexModel = new CreateIndexModel<InstrumentDocument>(indexKeysDefinition, indexOptions);
-        _instruments.Indexes.CreateOne(indexModel);
-    }
-
     public async Task<InstrumentDocument> CreateInstrumentAsync(InstrumentsRepository.InstrumentInfo instrumentInfo)
     {
         var timestamp = DateTime.UtcNow;
         var stringCount = GetStringCount(instrumentInfo);
-        
+
         var document = new InstrumentDocument
         {
             Name = instrumentInfo.Name,
@@ -45,7 +37,7 @@ public class InstrumentService : IInstrumentService
             Metadata = new Dictionary<string, string>
             {
                 ["stringCount"] = stringCount.ToString(),
-                ["hasStandardTuning"] = instrumentInfo.Tunings.Any(t => 
+                ["hasStandardTuning"] = instrumentInfo.Tunings.Any(t =>
                     t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase)).ToString()
             },
             CreatedAt = timestamp,
@@ -100,7 +92,7 @@ public class InstrumentService : IInstrumentService
     {
         var filter = Builders<InstrumentDocument>.Filter.Regex(
             i => i.Name,
-            new global::MongoDB.Bson.BsonRegularExpression(searchTerm, "i"));
+            new BsonRegularExpression(searchTerm, "i"));
 
         return await _instruments
             .Find(filter)
@@ -112,6 +104,14 @@ public class InstrumentService : IInstrumentService
         return await _instruments
             .Find(i => i.Name == name)
             .AnyAsync();
+    }
+
+    private void CreateIndexes()
+    {
+        var indexKeysDefinition = Builders<InstrumentDocument>.IndexKeys.Ascending(i => i.Name);
+        var indexOptions = new CreateIndexOptions { Unique = true };
+        var indexModel = new CreateIndexModel<InstrumentDocument>(indexKeysDefinition, indexOptions);
+        _instruments.Indexes.CreateOne(indexModel);
     }
 
     public async Task<List<InstrumentDocument>> GetInstrumentsWithTuningAsync(string tuningName)
@@ -166,11 +166,12 @@ public class InstrumentService : IInstrumentService
     {
         return instrumentName.ToLowerInvariant() switch
         {
-            var name when name.Contains("guitar") || name.Contains("bass") || name.Contains("ukulele") || name.Contains("banjo") 
+            var name when name.Contains("guitar") || name.Contains("bass") || name.Contains("ukulele") ||
+                          name.Contains("banjo")
                 => "String",
-            var name when name.Contains("saxophone") || name.Contains("flute") || name.Contains("clarinet") 
+            var name when name.Contains("saxophone") || name.Contains("flute") || name.Contains("clarinet")
                 => "Wind",
-            var name when name.Contains("drum") || name.Contains("percussion") 
+            var name when name.Contains("drum") || name.Contains("percussion")
                 => "Percussion",
             _ => "Other"
         };
@@ -180,12 +181,12 @@ public class InstrumentService : IInstrumentService
     {
         var standardTuning = instrument.Tunings.Values
             .FirstOrDefault(t => t.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase));
-        
+
         if (standardTuning != null)
         {
             return standardTuning.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
         }
-        
+
         return instrument.Tunings.Values
             .FirstOrDefault()?.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
     }

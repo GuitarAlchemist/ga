@@ -1,0 +1,16 @@
+string1 BITMAP string1.bmp
+string2 BITMAP string2.bmp
+string3 BITMAP string3.bmp 
+string4 BITMAP string4.bmp 
+string5 BITMAP string5.bmp 
+string6 BITMAP string6.bmp 
+stringnylon1 BITMAP string1_nylon.bmp
+stringnylon2 BITMAP string2_nylon.bmp
+stringnylon3 BITMAP string3_nylon.bmp
+stringnylon4 BITMAP string4_nylon.bmp
+stringnylon5 BITMAP string5_nylon.bmp
+stringnylon6 BITMAP string6_nylon.bmp
+nut BITMAP nut.bmp
+nutbottom BITMAP nutbottom.bmp
+fret BITMAP fret.bmp
+fretbottom BITMAP fretbottom.bmp

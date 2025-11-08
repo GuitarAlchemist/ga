@@ -1,0 +1,6 @@
+# Grothendieck Operations DSL Example
+# Try typing to see auto-completion!
+
+tensor(Cmaj7, Gmaj7)
+direct_sum(C_major_scale, G_major_scale)
+functor(transpose_by_fifth)

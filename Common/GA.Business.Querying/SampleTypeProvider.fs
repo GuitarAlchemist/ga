@@ -2,7 +2,7 @@
 
 open Microsoft.FSharp.Core.CompilerServices
 open System.Text.RegularExpressions
-open ProviderImplementation.ProvidedTypes
+// open ProviderImplementation.ProvidedTypes // Commented out - old type provider no longer used
 open System.IO
 
 (*

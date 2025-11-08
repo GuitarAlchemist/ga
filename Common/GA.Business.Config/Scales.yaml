@@ -1,280 +1,280 @@
 Major:
   Notes: "C D E F G A B"
-  AlternateNames: ["Ionian"]
+  AlternateNames: [ "Ionian" ]
   Common: true
   Category: "Western"
   Usage: "Fundamental to Western harmony, used in most popular and classical music"
-  RelatedScales: ["NaturalMinor", "HarmonicMinor", "MelodicMinor"]
+  RelatedScales: [ "NaturalMinor", "HarmonicMinor", "MelodicMinor" ]
 
 NaturalMinor:
   Notes: "A B C D E F G"
-  AlternateNames: ["Aeolian"]
+  AlternateNames: [ "Aeolian" ]
   Common: true
   Category: "Western"
   Usage: "Used in minor key compositions, folk music, and rock"
-  RelatedScales: ["Major", "HarmonicMinor", "MelodicMinor"]
+  RelatedScales: [ "Major", "HarmonicMinor", "MelodicMinor" ]
 
 HarmonicMinor:
   Notes: "A B C D E F G#"
   Common: true
   Category: "Western"
   Usage: "Creates strong dominant-tonic relationship in minor keys, used in classical and jazz"
-  RelatedScales: ["NaturalMinor", "MelodicMinor"]
+  RelatedScales: [ "NaturalMinor", "MelodicMinor" ]
 
 MelodicMinor:
   Notes: "A B C D E F# G#"
   Common: true
   Category: "Western"
   Usage: "Used in jazz harmony and for melodic lines in classical music"
-  RelatedScales: ["Major", "HarmonicMinor", "NaturalMinor"]
+  RelatedScales: [ "Major", "HarmonicMinor", "NaturalMinor" ]
 
 MajorPentatonic:
   Notes: "C D E G A"
   Common: true
   Category: "World"
   Usage: "Used in folk music worldwide, and for simple, consonant melodies in various genres"
-  RelatedScales: ["MinorPentatonic", "Major"]
+  RelatedScales: [ "MinorPentatonic", "Major" ]
 
 MinorPentatonic:
   Notes: "C Eb F G Bb"
   Common: true
   Category: "World"
   Usage: "Fundamental to blues and rock music, also used in various world music traditions"
-  RelatedScales: ["MajorPentatonic", "Blues"]
+  RelatedScales: [ "MajorPentatonic", "Blues" ]
 
 WholeTone:
   Notes: "C D E F# G# A#"
-  AlternateNames: ["Augmented"]
+  AlternateNames: [ "Augmented" ]
   Common: true
   Category: "Theoretical"
   Usage: "Used for creating tension and ambiguity, common in impressionist music and jazz"
-  RelatedScales: ["Augmented"]
+  RelatedScales: [ "Augmented" ]
 
 Diminished:
   Notes: "C D Eb F Gb Ab A B"
-  AlternateNames: ["Octatonic"]
+  AlternateNames: [ "Octatonic" ]
   Common: true
   Category: "Theoretical"
   Usage: "Used for creating tension and ambiguity, common in jazz and 20th-century classical music"
-  RelatedScales: ["WholeTone", "HalfWholeDiminished", "WholeHalfDiminished"]
+  RelatedScales: [ "WholeTone", "HalfWholeDiminished", "WholeHalfDiminished" ]
 
 BebopMajor:
   Notes: "C D E F G G# A B"
   Common: true
   Category: "Jazz"
   Usage: "Used in jazz improvisation over major chords"
-  RelatedScales: ["Major", "BebopDominant"]
+  RelatedScales: [ "Major", "BebopDominant" ]
 
 BebopDominant:
   Notes: "C D E F G A Bb B"
   Common: true
   Category: "Jazz"
   Usage: "Used in jazz improvisation over dominant chords"
-  RelatedScales: ["Major", "MixolydianMode"]
+  RelatedScales: [ "Major", "MixolydianMode" ]
 
 HarmonicMajor:
   Notes: "C D E F G Ab B"
   Common: true
   Category: "Western"
   Usage: "Used in classical music and jazz for its unique sound"
-  RelatedScales: ["Major", "HarmonicMinor"]
+  RelatedScales: [ "Major", "HarmonicMinor" ]
 
 DoubleHarmonic:
   Notes: "C Db E F G Ab B"
-  AlternateNames: ["Byzantine"]
+  AlternateNames: [ "Byzantine" ]
   Common: true
   Category: "World"
   Usage: "Used in Middle Eastern music and some metal genres"
-  RelatedScales: ["HarmonicMajor", "HarmonicMinor"]
+  RelatedScales: [ "HarmonicMajor", "HarmonicMinor" ]
 
 NeapolitanMajor:
   Notes: "C Db Eb F G A B"
   Common: true
   Category: "Western"
   Usage: "Used in classical music, particularly in the Baroque period"
-  RelatedScales: ["NeapolitanMinor", "Major"]
+  RelatedScales: [ "NeapolitanMinor", "Major" ]
 
 NeapolitanMinor:
   Notes: "C Db Eb F G Ab B"
   Common: true
   Category: "Western"
   Usage: "Used in classical music and film scores for its dramatic quality"
-  RelatedScales: ["NeapolitanMajor", "HarmonicMinor"]
+  RelatedScales: [ "NeapolitanMajor", "HarmonicMinor" ]
 
 HungarianMinor:
   Notes: "C D Eb F# G Ab B"
-  AlternateNames: ["Gypsy Minor"]
+  AlternateNames: [ "Gypsy Minor" ]
   Common: true
   Category: "World"
   Usage: "Used in Eastern European folk music, Klezmer, and some jazz contexts"
-  RelatedScales: ["DoubleHarmonic", "HarmonicMinor"]
+  RelatedScales: [ "DoubleHarmonic", "HarmonicMinor" ]
 
 SuperLocrian:
   Notes: "C Db Eb Fb Gb Ab Bb"
-  AlternateNames: ["Altered Scale"]
+  AlternateNames: [ "Altered Scale" ]
   Common: true
   Category: "Jazz"
   Usage: "Used in jazz improvisation over altered dominant chords"
-  RelatedScales: ["Diminished", "WholeTone"]
+  RelatedScales: [ "Diminished", "WholeTone" ]
 
 ChromaticSharp:
   Notes: "C C# D D# E F F# G G# A A# B"
   Category: "Theoretical"
   Usage: "Contains all 12 pitches, used for atonal music and as a reference"
-  RelatedScales: ["ChromaticFlat"]
+  RelatedScales: [ "ChromaticFlat" ]
 
 ChromaticFlat:
   Notes: "C Db D Eb E F Gb G Ab A Bb B"
   Category: "Theoretical"
   Usage: "Contains all 12 pitches, used for atonal music and as a reference"
-  RelatedScales: ["ChromaticSharp"]
+  RelatedScales: [ "ChromaticSharp" ]
 
 Blues:
   Notes: "C Eb F F# G Bb"
-  AlternateNames: ["Blues Scale"]
+  AlternateNames: [ "Blues Scale" ]
   Category: "Blues/Jazz"
   Usage: "Fundamental to blues and rock music, used for improvisation"
-  RelatedScales: ["MinorPentatonic", "MajorPentatonic"]
+  RelatedScales: [ "MinorPentatonic", "MajorPentatonic" ]
 
 Enigmatic:
   Notes: "C Db E F# G# A# B"
   Category: "Theoretical"
   Usage: "Used in some contemporary classical music for its unique sound"
-  RelatedScales: ["WholeTone"]
+  RelatedScales: [ "WholeTone" ]
 
 Persian:
   Notes: "C Db E F Gb Ab B"
   Category: "World"
   Usage: "Used in Middle Eastern music, particularly Persian classical music"
-  RelatedScales: ["DoubleHarmonic"]
+  RelatedScales: [ "DoubleHarmonic" ]
 
 Prometheus:
   Notes: "C D E F# A Bb"
   Category: "Theoretical"
   Usage: "Used in some 20th-century classical music and jazz"
-  RelatedScales: ["WholeTone"]
+  RelatedScales: [ "WholeTone" ]
 
 Augmented:
   Notes: "C D# E G Ab B"
   Category: "Theoretical"
   Usage: "Used in jazz and contemporary classical music for its symmetrical structure"
-  RelatedScales: ["WholeTone"]
+  RelatedScales: [ "WholeTone" ]
 
 HalfWholeDiminished:
   Notes: "C Db Eb E F# G A Bb"
-  AlternateNames: ["Octatonic"]
+  AlternateNames: [ "Octatonic" ]
   Category: "Jazz/Theoretical"
   Usage: "Used in jazz and 20th-century classical music"
-  RelatedScales: ["WholeHalfDiminished", "Diminished"]
+  RelatedScales: [ "WholeHalfDiminished", "Diminished" ]
 
 WholeHalfDiminished:
   Notes: "C D Eb F Gb Ab A B"
-  AlternateNames: ["Octatonic"]
+  AlternateNames: [ "Octatonic" ]
   Category: "Jazz/Theoretical"
   Usage: "Used in jazz and 20th-century classical music"
-  RelatedScales: ["HalfWholeDiminished", "Diminished"]
+  RelatedScales: [ "HalfWholeDiminished", "Diminished" ]
 
 JapaneseHirajoshi:
   Notes: "C Db F G Ab"
-  AlternateNames: ["Hirajoshi"]
+  AlternateNames: [ "Hirajoshi" ]
   Category: "World"
   Usage: "Traditional Japanese scale, used in folk and contemporary music"
-  RelatedScales: ["InSen", "Iwato"]
+  RelatedScales: [ "InSen", "Iwato" ]
 
 IndianBhairav:
   Notes: "C Db E F G Ab B"
-  AlternateNames: ["Bhairav"]
+  AlternateNames: [ "Bhairav" ]
   Category: "World"
   Usage: "Used in Hindustani classical music, associated with early morning ragas"
-  RelatedScales: ["DoubleHarmonic"]
+  RelatedScales: [ "DoubleHarmonic" ]
 
 ArabicHijaz:
   Notes: "C Db E F G Ab B"
-  AlternateNames: ["Hijaz"]
+  AlternateNames: [ "Hijaz" ]
   Category: "World"
   Usage: "Common in Arabic, Turkish, and other Middle Eastern music"
-  RelatedScales: ["DoubleHarmonic", "PhrygianDominant"]
+  RelatedScales: [ "DoubleHarmonic", "PhrygianDominant" ]
 
 JewishAhavaRaba:
   Notes: "C Db E F G Ab Bb"
-  AlternateNames: ["Ahava Raba", "Freygish"]
+  AlternateNames: [ "Ahava Raba", "Freygish" ]
   Category: "World"
   Usage: "Used in Jewish liturgical and Klezmer music"
-  RelatedScales: ["PhrygianDominant"]
+  RelatedScales: [ "PhrygianDominant" ]
 
 InSen:
   Notes: "C Db F G Bb"
-  AlternateNames: ["Japanese In Sen"]
+  AlternateNames: [ "Japanese In Sen" ]
   Category: "World"
   Usage: "Traditional Japanese scale, used in folk and contemporary music"
-  RelatedScales: ["JapaneseHirajoshi", "Iwato"]
+  RelatedScales: [ "JapaneseHirajoshi", "Iwato" ]
 
 Iwato:
   Notes: "C Db F Gb Bb"
-  AlternateNames: ["Japanese Iwato"]
+  AlternateNames: [ "Japanese Iwato" ]
   Category: "World"
   Usage: "Traditional Japanese scale, used in folk and contemporary music"
-  RelatedScales: ["JapaneseHirajoshi", "InSen"]
+  RelatedScales: [ "JapaneseHirajoshi", "InSen" ]
 
 Kumoi:
   Notes: "C D Eb G A"
-  AlternateNames: ["Japanese Kumoi"]
+  AlternateNames: [ "Japanese Kumoi" ]
   Category: "World"
   Usage: "Traditional Japanese scale, used in folk and contemporary music"
-  RelatedScales: ["JapaneseHirajoshi"]
+  RelatedScales: [ "JapaneseHirajoshi" ]
 
 Algerian:
   Notes: "C D Eb E F Gb Ab B"
   Category: "World"
   Usage: "Scale based on Algerian folk music, used in some world fusion"
-  RelatedScales: ["DoubleHarmonic"]
+  RelatedScales: [ "DoubleHarmonic" ]
 
 EightToneSpanish:
   Notes: "C Db Eb E F Gb Ab Bb"
   Category: "World"
   Usage: "Used in some Spanish and Flamenco music"
-  RelatedScales: ["PhrygianDominant"]
+  RelatedScales: [ "PhrygianDominant" ]
 
 Tritone:
   Notes: "C Db E F# G A"
-  AlternateNames: ["Petrushka Scale"]
+  AlternateNames: [ "Petrushka Scale" ]
   Category: "Theoretical"
   Usage: "Used in some 20th-century classical music, notably by Stravinsky"
-  RelatedScales: ["WholeTone"]
+  RelatedScales: [ "WholeTone" ]
 
 LeadingWholeTone:
   Notes: "C D E F# G# A# B"
   Category: "Theoretical"
   Usage: "Used in some contemporary classical and jazz contexts"
-  RelatedScales: ["WholeTone"]
+  RelatedScales: [ "WholeTone" ]
 
 ArabicRast:
   Notes: "C D Eb F G A Bb"
-  AlternateNames: ["Rast"]
+  AlternateNames: [ "Rast" ]
   Category: "World"
   Usage: "Common in Arabic music, similar to the Western Mixolydian mode"
-  RelatedScales: ["Mixolydian"]
+  RelatedScales: [ "Mixolydian" ]
 
 Ukranian:
   Notes: "C D E F G Ab B"
-  AlternateNames: ["Ukranian Dorian"]
+  AlternateNames: [ "Ukranian Dorian" ]
   Category: "World"
   Usage: "Used in Ukrainian folk music and some Eastern European music"
-  RelatedScales: ["HarmonicMinor"]
+  RelatedScales: [ "HarmonicMinor" ]
 
 YoScale:
   Notes: "C D F G A"
-  AlternateNames: ["Japanese Yo"]
+  AlternateNames: [ "Japanese Yo" ]
   Category: "World"
   Usage: "Traditional Japanese pentatonic scale"
-  RelatedScales: ["MajorPentatonic"]
+  RelatedScales: [ "MajorPentatonic" ]
 
 Pelog:
   Notes: "C Db Eb G Ab"
-  AlternateNames: ["Balinese Pelog"]
+  AlternateNames: [ "Balinese Pelog" ]
   Category: "World"
   Usage: "Traditional scale used in Balinese and Javanese gamelan music"
-  RelatedScales: ["Slendro"]
+  RelatedScales: [ "Slendro" ]
 
 # Add these new scales to your existing Scales.yaml file
 
@@ -549,7 +549,7 @@ TritoneInterval:
   Category: "Interval"
   Usage: "Creates tension, used in jazz and modern classical music"
   Description: "Also known as an augmented fourth or diminished fifth, creates strong dissonance"
-  RelatedScales: ["Whole Tone", "Diminished"]
+  RelatedScales: [ "Whole Tone", "Diminished" ]
 
 PerfectFifthInterval:
   Notes: "C G"

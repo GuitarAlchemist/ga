@@ -1,96 +1,128 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<IsPackable>true</IsPackable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<NoWarn>$(NoWarn);NU5128</NoWarn>
-		<Title>Guitar Alchemist - Core business types</Title>
-		<Authors>Stephane Pareilleux</Authors>
-		<RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Copyright> Copyright (c) Stephane Pareilleux 2024</Copyright>
-		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
-		<PackageTags>Music;Guitar</PackageTags>
-		<PackageReleaseNotes>
-2024-03-31 - Added Assets and InstrumentFinder classes
-2024-03-29 - Migrated to .NET 8 / Code improvements
-2022-12-16 - Fixed bug in IntervalClassVector calculation
-2022-12-10 - Added Fretboard.RelativePositions (All possible relative fret vectors and translation equivalences); Added PitchClassCombinations
-2022-11-24 - Added GA.Core.Combinatorics.VariationsWithRepetitions class
-2022-10-28 - Fixed Instrument types generation from YAML config, fixed fretboard text rendering issues
-2022-10-21 - Successful attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
-2022-10-21 - Attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
-2022-10-21 - Added instruments/tunings config
-2022-10-15 - Initial version
-		</PackageReleaseNotes>
-		<PackageDescription>
-			Provides classes and interfaces for music and fretted instruments:
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <!-- Treat async method without await as error -->
+    <WarningsAsErrors>CS1998</WarningsAsErrors>
+    <Title>Guitar Alchemist - Core business types</Title>
+    <Authors>Stephane Pareilleux</Authors>
+    <RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Copyright>Copyright (c) Stephane Pareilleux 2024</Copyright>
+    <PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
+    <PackageTags>Music;Guitar</PackageTags>
+    <PackageReleaseNotes>
+      2024-03-31 - Added Assets and InstrumentFinder classes
+      2024-03-29 - Migrated to .NET 8 / Code improvements
+      2022-12-16 - Fixed bug in IntervalClassVector calculation
+      2022-12-10 - Added Fretboard.RelativePositions (All possible relative fret vectors and translation equivalences); Added PitchClassCombinations
+      2022-11-24 - Added GA.Core.Combinatorics.VariationsWithRepetitions class
+      2022-10-28 - Fixed Instrument types generation from YAML config, fixed fretboard text rendering issues
+      2022-10-21 - Successful attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
+      2022-10-21 - Attempt to remove the need for '#r "nuget:FSharp.Configuration,2.0.0"' in notebooks
+      2022-10-21 - Added instruments/tunings config
+      2022-10-15 - Initial version
+    </PackageReleaseNotes>
+    <PackageDescription>
+      Provides classes and interfaces for music and fretted instruments:
 
-			- Notes and Pitches
-			- Intervals
-			- Scales and Modes
-			- Atonal: Pitch class, pitch class set, interval class vector
-			- Fretboard
-		</PackageDescription>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.17</PackageVersion>
-		<AssemblyVersion>1.0.17.0</AssemblyVersion>
-		<FileVersion>1.0.17.0</FileVersion>
-		<DebugType>embedded</DebugType>
-		<PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
-	</PropertyGroup>
+      - Notes and Pitches
+      - Intervals
+      - Scales and Modes
+      - Atonal: Pitch class, pitch class set, interval class vector
+      - Fretboard
+    </PackageDescription>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.17</PackageVersion>
+    <AssemblyVersion>1.0.17.0</AssemblyVersion>
+    <FileVersion>1.0.17.0</FileVersion>
+    <DebugType>embedded</DebugType>
+    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Remove="bin\**" />
-		<Compile Remove="DotnetInteractive\**" />
-		<EmbeddedResource Remove="bin\**" />
-		<EmbeddedResource Remove="DotnetInteractive\**" />
-		<None Remove="bin\**" />
-		<None Remove="DotnetInteractive\**" />
-	</ItemGroup>
+  <ItemGroup>
+    <Compile Remove="bin\**"/>
+    <Compile Remove="DotnetInteractive\**"/>
+    <Compile Remove="**\*.Optimized.cs"/>
+    <Compile Remove="Fretboard\Biomechanics\IK\GpuVectorOps.cs"/>
+    <!-- Exclude stub files that duplicate real implementations -->
+    <Compile Remove="Stubs\**"/>
+    <EmbeddedResource Remove="bin\**"/>
+    <EmbeddedResource Remove="DotnetInteractive\**"/>
+    <None Remove="bin\**"/>
+    <None Remove="DotnetInteractive\**"/>
+  </ItemGroup>
 
-	<!-- See https://bartwullems.blogspot.com/2022/01/nugetadd-readme-to-your-nuget-package.html -->
-	<PropertyGroup>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	</PropertyGroup>
-	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="\" />
-		<None Include="bin\$(Configuration)\net8.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net8.0\" />
-		<None Include="bin\$(Configuration)\net8.0\GA.Core.dll" Pack="true" PackagePath="lib\net8.0\" />
-	</ItemGroup>
+  <!-- See https://bartwullems.blogspot.com/2022/01/nugetadd-readme-to-your-nuget-package.html -->
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+    <None Include="bin\$(Configuration)\net9.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net9.0\"/>
+    <None Include="bin\$(Configuration)\net9.0\GA.Core.dll" Pack="true" PackagePath="lib\net9.0\"/>
+  </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="FSharp.Configuration" Version="2.0.0">
-			<ExcludeAssets>all</ExcludeAssets>
-		</PackageReference>
-		<PackageReference Include="FSharp.Core" Version="9.0.201" />
-		<PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="PCRE.NET" Version="1.1.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Configuration" Version="2.0.0">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+    <PackageReference Include="ILGPU" Version="1.5.1"/>
+    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0"/>
 
-	<ItemGroup>
-		<ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj">
-			<PrivateAssets>All</PrivateAssets>
-		</ProjectReference>
-		<ProjectReference Include="..\GA.Core\GA.Core.csproj">
-			<PrivateAssets>All</PrivateAssets>
-		</ProjectReference>
-	</ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PCRE.NET" Version="1.1.0"/>
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10"/>
+    <PackageReference Include="System.Reactive" Version="6.1.0"/>
+    <PackageReference Include="YamlDotNet" Version="16.3.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj">
+      <PrivateAssets>All</PrivateAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\GA.Core\GA.Core.csproj">
+      <PrivateAssets>All</PrivateAssets>
+    </ProjectReference>
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GA.Business.Config\Configuration\**\*.cs" Link="Configuration\%(RecursiveDir)%(Filename)%(Extension)"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Fretboard\Biomechanics\IK\Data\lerobot-wrist-priors.json"/>
+  </ItemGroup>
 </Project>

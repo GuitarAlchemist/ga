@@ -2,4 +2,5 @@
 
 using System.Reflection;
 
-public record PropertyTabularDataColumn(PropertyInfo Property) : TabularDataColumn(Property.Name, Property.PropertyType.Name);
+public record PropertyTabularDataColumn(PropertyInfo Property)
+    : TabularDataColumn(Property.Name, Property.PropertyType.Name);

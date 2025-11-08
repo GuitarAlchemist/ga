@@ -1,0 +1,205 @@
+@page "/models3d"
+@inject IJSRuntime JsRuntime
+
+<PageTitle>3D Models Gallery - Guitar Alchemist</PageTitle>
+
+<div class="models-container">
+    <div class="header">
+        <h1>🎸 3D Models Gallery</h1>
+        <p>Blender models rendered with Three.js WebGL</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="resetCamera()">🎥 Reset Camera</button>
+        <button class="btn" onclick="toggleRotation()">🔄 Toggle Rotation</button>
+        <button class="btn" onclick="toggleWireframe()">🔲 Toggle Wireframe</button>
+        <button class="btn" onclick="cycleModel()">➡️ Next Model</button>
+    </div>
+
+    <div class="info-panel">
+        <div id="modelInfo">
+            <h3>Current Model: <span id="currentModelName">Loading...</span></h3>
+            <p>Vertices: <span id="vertexCount">-</span></p>
+            <p>Triangles: <span id="triangleCount">-</span></p>
+            <p>Size: <span id="fileSize">-</span></p>
+        </div>
+        <div id="rendererInfo">
+            <h3>Renderer</h3>
+            <p>Backend: <span id="rendererBackend">-</span></p>
+            <p>FPS: <span id="fps">-</span></p>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="webgpu-canvas"></canvas>
+    </div>
+
+    <div class="model-list">
+        <h3>Available Models</h3>
+        <div class="model-buttons">
+            <button class="model-btn" onclick="loadModel('ankh')">☥ Ankh</button>
+            <button class="model-btn" onclick="loadModel('guitar')">🎸 Guitar 1</button>
+            <button class="model-btn" onclick="loadModel('guitar2')">🎸 Guitar 2</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .models-container {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .header {
+        padding: 20px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 2px solid #0f3460;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        background: linear-gradient(45deg, #f0c040, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header p {
+        margin: 10px 0 0 0;
+        color: #aaa;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #0f3460, #16213e);
+        border: 2px solid #f0c040;
+        color: #f0c040;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        background: linear-gradient(135deg, #16213e, #0f3460);
+        box-shadow: 0 0 20px rgba(240, 192, 64, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .info-panel {
+        display: flex;
+        gap: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        justify-content: center;
+    }
+
+    .info-panel > div {
+        background: rgba(15, 52, 96, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #0f3460;
+        min-width: 200px;
+    }
+
+    .info-panel h3 {
+        margin: 0 0 10px 0;
+        color: #f0c040;
+        font-size: 1.2em;
+    }
+
+    .info-panel p {
+        margin: 5px 0;
+        color: #ccc;
+    }
+
+    .info-panel span {
+        color: #fff;
+        font-weight: bold;
+    }
+
+    #canvas-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        background: #000;
+    }
+
+    #webgpu-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .model-list {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 2px solid #0f3460;
+    }
+
+    .model-list h3 {
+        margin: 0 0 10px 0;
+        text-align: center;
+        color: #f0c040;
+    }
+
+    .model-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .model-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #16213e, #0f3460);
+        border: 2px solid #4ecca3;
+        color: #4ecca3;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .model-btn:hover {
+        background: linear-gradient(135deg, #0f3460, #16213e);
+        box-shadow: 0 0 20px rgba(78, 204, 163, 0.5);
+        transform: scale(1.05);
+    }
+
+    .model-btn:active {
+        transform: scale(0.95);
+    }
+</style>
+
+@code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize Three.js scene via JavaScript
+            await JsRuntime.InvokeVoidAsync("initModels3DScene");
+        }
+    }
+
+}
+

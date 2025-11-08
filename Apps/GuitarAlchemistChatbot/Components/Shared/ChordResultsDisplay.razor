@@ -1,0 +1,52 @@
+@if (Chords?.Any() == true)
+{
+    <div class="chord-results">
+        <h6 class="results-header">
+            <i class="fas fa-music me-2"></i>
+            Found @Chords.Count chord@(Chords.Count == 1 ? "" : "s"):
+        </h6>
+
+        <div class="chord-grid">
+            @foreach (var chord in Chords)
+            {
+                <ChordCard Chord="chord"
+                           OnFindSimilar="OnFindSimilar"
+                           OnGetDetails="OnGetDetails"/>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<ChordSearchResult>? Chords { get; set; }
+    [Parameter] public EventCallback<int> OnFindSimilar { get; set; }
+    [Parameter] public EventCallback<int> OnGetDetails { get; set; }
+}
+
+<style>
+    .chord-results {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #2c5aa0;
+    }
+
+    .results-header {
+        color: #2c5aa0;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .chord-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .chord-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

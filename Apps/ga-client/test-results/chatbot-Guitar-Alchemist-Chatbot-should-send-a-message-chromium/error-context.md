@@ -1,0 +1,86 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - tablist [ref=e7]:
+    - tab "Harmonic Studio" [selected] [ref=e8] [cursor=pointer]: Harmonic Studio
+    - tab "AI Copilot" [ref=e9] [cursor=pointer]: AI Copilot
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Guitar Alchemist Studio" [level=3] [ref=e14]
+        - heading "Context-first fretboard explorer powered by GaApi analytics" [level=6] [ref=e15]
+      - button "Jump to AI Copilot" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: Jump to AI Copilot
+    - generic [ref=e18]:
+      - heading "Select Musical Key" [level=6] [ref=e19]
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: Root Note
+          - combobox [ref=e23]:
+            - option "C" [selected]
+            - option "C#"
+            - option "D"
+            - option "D#"
+            - option "E"
+            - option "F"
+            - option "F#"
+            - option "G"
+            - option "G#"
+            - option "A"
+            - option "A#"
+            - option "B"
+        - group "key mode" [ref=e24]:
+          - button "major" [pressed] [ref=e25] [cursor=pointer]: Major
+          - button "minor" [ref=e26] [cursor=pointer]: Minor
+        - generic [ref=e27]:
+          - paragraph [ref=e28]: "Selected Key:"
+          - heading "C Major" [level=5] [ref=e29]
+    - generic [ref=e30]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Key Context" [level=2] [ref=e34]
+          - paragraph [ref=e35]: Data pulled from GaApi music-theory module · ground truth for scales & functions
+        - button "Ask AI how to use this key" [ref=e37] [cursor=pointer]:
+          - generic [ref=e38]: Ask AI how to use this key
+        - generic [ref=e39]: Failed to fetch
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - heading "Fretboard Workbench" [level=2] [ref=e43]
+          - paragraph [ref=e44]: Visualize the key or selected chord directly on the fretboard.
+        - generic [ref=e45]: Select a key or chord to render fretboard positions.
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Chord Palette" [level=2] [ref=e49]
+          - paragraph [ref=e50]: Curated from contextual-chords service · tuned to real harmonic usage
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - checkbox "Diatonic only" [ref=e53]
+            - generic [ref=e54]: Diatonic only
+          - generic [ref=e55]:
+            - checkbox "Borrowed" [checked] [ref=e56]
+            - generic [ref=e57]: Borrowed
+          - generic [ref=e58]:
+            - checkbox "Secondary dominants" [checked] [ref=e59]
+            - generic [ref=e60]: Secondary dominants
+          - generic [ref=e61]:
+            - checkbox "Secondary ii–V" [checked] [ref=e62]
+            - generic [ref=e63]: Secondary ii–V
+        - generic [ref=e64]:
+          - generic [ref=e65]: "Minimum commonality: 35%"
+          - slider [ref=e66]: "0.35"
+          - generic [ref=e67]:
+            - button "12 chords" [ref=e68] [cursor=pointer]:
+              - generic [ref=e69]: 12 chords
+            - button "24 chords" [ref=e70] [cursor=pointer]:
+              - generic [ref=e71]: 24 chords
+            - button "48 chords" [ref=e72] [cursor=pointer]:
+              - generic [ref=e73]: 48 chords
+            - button "Reset" [ref=e74] [cursor=pointer]
+        - generic [ref=e76]: Failed to fetch
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - heading "Progression Explorer" [level=2] [ref=e80]
+          - paragraph [ref=e81]: Pulling curated progressions from GaApi → ideal for arranging and comping drills
+        - generic [ref=e82]: Failed to fetch
+```

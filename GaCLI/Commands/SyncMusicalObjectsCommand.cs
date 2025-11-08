@@ -1,15 +1,15 @@
-﻿using GA.Data.MongoDB.Services;
+﻿namespace GaCLI.Commands;
 
-namespace GaCLI.Commands;
+using GA.Data.MongoDB.Services;
 
 public class Runner(MusicalObjectsService syncService)
 {
     public async Task<int> ExecuteAsync()
     {
         Console.WriteLine("Starting MongoDB sync...");
-        
+
         var result = await syncService.SyncAllAsync();
-        
+
         Console.WriteLine("Sync results:");
         foreach (var (type, count) in result.Counts)
         {
@@ -23,6 +23,7 @@ public class Runner(MusicalObjectsService syncService)
             {
                 Console.WriteLine($"- {error}");
             }
+
             return 1;
         }
 

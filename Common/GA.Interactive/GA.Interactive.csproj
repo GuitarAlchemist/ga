@@ -1,74 +1,74 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
-		<IncludeBuildOutput>true</IncludeBuildOutput>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<IsPackable>true</IsPackable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<PackageDescription>GA dotnet-interactive extensions.</PackageDescription>
-		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Authors>Stephane Pareilleux</Authors>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
-		<PackageReleaseNotes>
-			2024-04-29 - Added latest GA.Business.Core changes (Migrated to .NET 8)
-			2022-11-24 - Added latest GA.Business.Core changes (VariationsWithRepetitions class)
-			2022-10-29 - Initial version
-		</PackageReleaseNotes>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<IsPackable>true</IsPackable>
-		<PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
-		<PackageVersion>1.0.1-beta5</PackageVersion>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<AssemblyVersion>1.0.1.5</AssemblyVersion>
-		<FileVersion>1.0.1.5</FileVersion>
-		<DebugType>embedded</DebugType>
-		<NoWarn>NU5100,NU5128,NU5104</NoWarn>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
-	</PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageDescription>GA dotnet-interactive extensions.</PackageDescription>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Authors>Stephane Pareilleux</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/GuitarAlchemist/ga</RepositoryUrl>
+    <PackageReleaseNotes>
+      2024-04-29 - Added latest GA.Business.Core changes (Migrated to .NET 8)
+      2022-11-24 - Added latest GA.Business.Core changes (VariationsWithRepetitions class)
+      2022-10-29 - Initial version
+    </PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IsPackable>true</IsPackable>
+    <PackageId>GuitarAlchemist.$(AssemblyName)</PackageId>
+    <PackageVersion>1.0.1-beta5</PackageVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <AssemblyVersion>1.0.1.5</AssemblyVersion>
+    <FileVersion>1.0.1.5</FileVersion>
+    <DebugType>embedded</DebugType>
+    <NoWarn>NU5100,NU5128,NU5104</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Remove="bin\**" />
-		<EmbeddedResource Remove="bin\**" />
-		<None Remove="bin\**" />
-	</ItemGroup>
+  <ItemGroup>
+    <Compile Remove="bin\**"/>
+    <EmbeddedResource Remove="bin\**"/>
+    <None Remove="bin\**"/>
+  </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Figgle" Version="0.5.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="PCRE.NET" Version="1.1.0" />
-		<!-- Needed when running on the docker jupyter/base-notebook image -->
-		<PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Figgle" Version="0.5.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1"/>
+    <PackageReference Include="PCRE.NET" Version="1.1.0"/>
+    <!-- Needed when running on the docker jupyter/base-notebook image -->
+    <PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0"/>
+  </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
-		  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-	  </ProjectReference>
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
 
-	<!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->
-	<ItemGroup>
-		<None Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
-		<None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
-		
-		<!-- See https://devblogs.microsoft.com/nuget/add-a-readme-to-your-nuget-package/#add-a-readme-to-your-package -->
-		<None Include="README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
+  <!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->
+  <ItemGroup>
+    <None Include="../GA.Business.Core/bin/$(Configuration)/$(TargetFramework)/*.dll" Pack="true" PackagePath="lib/$(TargetFramework)"/>
+    <None Include="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/*.dll" Exclude="../GA.InteractiveExtension/bin/$(Configuration)/$(TargetFramework)/Library.dll" Pack="true" PackagePath="interactive-extensions/dotnet"/>
+
+    <!-- See https://devblogs.microsoft.com/nuget/add-a-readme-to-your-nuget-package/#add-a-readme-to-your-package -->
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
 </Project>

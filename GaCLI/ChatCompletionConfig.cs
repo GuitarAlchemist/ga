@@ -1,25 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿namespace GaCLI;
 
-namespace GaCLI;
+using Microsoft.Extensions.Configuration;
 
 public class ChatCompletionConfig
 {
-    public static ChatCompletionConfig FromSection(IConfigurationSection section)
-    {
-        return new ChatCompletionConfig(
-            section["ModelId"]!,
-            section["ApiKey"]!);
-    }
-    
-    public void Deconstruct(out string modelId, out string apiKey)
-    {
-        modelId = ModelId;
-        apiKey = ApiKey;
-    }
-
-    public string ModelId { get; } = null!;
-    public string ApiKey { get; } = null!;
-
     public ChatCompletionConfig()
     {
     }
@@ -28,5 +12,21 @@ public class ChatCompletionConfig
     {
         ModelId = modelId;
         ApiKey = apiKey;
+    }
+
+    public string ModelId { get; } = null!;
+    public string ApiKey { get; } = null!;
+
+    public static ChatCompletionConfig FromSection(IConfigurationSection section)
+    {
+        return new ChatCompletionConfig(
+            section["ModelId"]!,
+            section["ApiKey"]!);
+    }
+
+    public void Deconstruct(out string modelId, out string apiKey)
+    {
+        modelId = ModelId;
+        apiKey = ApiKey;
     }
 }

@@ -82,8 +82,24 @@ const VexTabViewer: React.FC<VexTabDisplayProps> = ({ notation, showStandardNota
 
 // Helper function to convert tab position to pitch (simplified)
 function getPitchFromTabPosition(string: number, fret: number): string {
+    // Standard guitar tuning (low E to high E)
+    // String numbering: 1 = high E, 6 = low E (standard guitar notation)
     const openStrings = ['E/3', 'A/3', 'D/4', 'G/4', 'B/4', 'E/5'];
-    const [note, octave] = openStrings[6 - string].split('/');
+
+    // Validate string number (1-6)
+    const stringIndex = 6 - string;
+    if (stringIndex < 0 || stringIndex >= openStrings.length) {
+        console.warn(`Invalid string number: ${string}. Expected 1-6.`);
+        return 'E/3'; // Default to low E
+    }
+
+    const openString = openStrings[stringIndex];
+    if (!openString) {
+        console.warn(`No open string found at index ${stringIndex}`);
+        return 'E/3'; // Default to low E
+    }
+
+    const [note, octave] = openString.split('/');
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const noteIndex = notes.indexOf(note);
     const newNoteIndex = (noteIndex + fret) % 12;

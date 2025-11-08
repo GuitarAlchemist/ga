@@ -1,0 +1,312 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>BSP Room Viewer - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100px;
+        }
+
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+
+        .error {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #ffe7e7;
+            border-left: 4px solid #dc3545;
+            border-radius: 4px;
+            color: #721c24;
+        }
+
+        .canvas-container {
+            margin: 20px 0;
+            border: 2px solid #333;
+            display: inline-block;
+            background-color: #1a1a1a;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏰 BSP Dungeon Room Generator</h1>
+
+    <div class="controls">
+        <button id="generateBtn" onclick="generateNewDungeon()">Generate New Dungeon</button>
+        <label>Seed:</label>
+        <input id="seedInput" type="number" value="42">
+        <button onclick="generateWithSeed()">Use Seed</button>
+    </div>
+
+    <div class="error" id="error" style="display: none;"></div>
+    <div class="info" id="info" style="display: none;"></div>
+
+    <div class="stats" id="stats" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-label">Dungeon Size</div>
+            <div class="stat-value" id="dungeonSize">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Rooms</div>
+            <div class="stat-value" id="roomCount">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Corridors</div>
+            <div class="stat-value" id="corridorCount">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Seed</div>
+            <div class="stat-value" id="seedValue">-</div>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer" style="display: none;">
+        <canvas id="dungeonCanvas"></canvas>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:5232';
+    let currentDungeon = null;
+
+    async function fetchDungeon(seed) {
+        const generateBtn = document.getElementById('generateBtn');
+        const errorDiv = document.getElementById('error');
+        const infoDiv = document.getElementById('info');
+
+        try {
+            generateBtn.disabled = true;
+            errorDiv.style.display = 'none';
+            infoDiv.style.display = 'block';
+            infoDiv.textContent = 'Generating dungeon...';
+
+            const url = seed !== undefined
+                ? `${API_BASE}/api/bsp-rooms/generate?seed=${seed}`
+                : `${API_BASE}/api/bsp-rooms/generate`;
+
+            console.log('Fetching from:', url);
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Response:', result);
+
+            if (result.success && result.data) {
+                currentDungeon = result.data;
+                displayDungeon(result.data);
+                infoDiv.style.display = 'none';
+            } else {
+                throw new Error(result.error || 'Failed to fetch dungeon');
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = `Error: ${err.message}`;
+            infoDiv.style.display = 'none';
+        } finally {
+            generateBtn.disabled = false;
+        }
+    }
+
+    function generateNewDungeon() {
+        const newSeed = Math.floor(Math.random() * 10000);
+        document.getElementById('seedInput').value = newSeed;
+        fetchDungeon(newSeed);
+    }
+
+    function generateWithSeed() {
+        const seed = parseInt(document.getElementById('seedInput').value);
+        fetchDungeon(seed);
+    }
+
+    function displayDungeon(dungeon) {
+        // Update stats
+        document.getElementById('dungeonSize').textContent = `${dungeon.width}×${dungeon.height}`;
+        document.getElementById('roomCount').textContent = dungeon.rooms.length;
+        document.getElementById('corridorCount').textContent = dungeon.corridors.length;
+        document.getElementById('seedValue').textContent = dungeon.seed || 'Random';
+        document.getElementById('stats').style.display = 'grid';
+
+        // Draw dungeon
+        drawDungeon(dungeon);
+        document.getElementById('canvasContainer').style.display = 'inline-block';
+    }
+
+    function drawDungeon(dungeon) {
+        const canvas = document.getElementById('dungeonCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scale = 8;
+        canvas.width = dungeon.width * scale;
+        canvas.height = dungeon.height * scale;
+
+        // Clear canvas
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw corridors
+        dungeon.corridors.forEach(corridor => {
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = corridor.width * scale;
+            ctx.lineCap = 'square';
+
+            ctx.beginPath();
+            corridor.points.forEach((point, index) => {
+                if (index === 0) {
+                    ctx.moveTo(point.x * scale, point.y * scale);
+                } else {
+                    ctx.lineTo(point.x * scale, point.y * scale);
+                }
+            });
+            ctx.stroke();
+
+            // Draw corridor as filled rectangles
+            ctx.fillStyle = '#3a3a3a';
+            for (let i = 0; i < corridor.points.length - 1; i++) {
+                const p1 = corridor.points[i];
+                const p2 = corridor.points[i + 1];
+
+                const minX = Math.min(p1.x, p2.x) * scale;
+                const minY = Math.min(p1.y, p2.y) * scale;
+                const width = Math.abs(p2.x - p1.x) * scale || corridor.width * scale;
+                const height = Math.abs(p2.y - p1.y) * scale || corridor.width * scale;
+
+                ctx.fillRect(minX, minY, width || 4, height || 4);
+            }
+        });
+
+        // Draw rooms
+        dungeon.rooms.forEach((room, index) => {
+            // Room fill
+            ctx.fillStyle = '#2d5a8a';
+            ctx.fillRect(
+                room.x * scale,
+                room.y * scale,
+                room.width * scale,
+                room.height * scale
+            );
+
+            // Room border
+            ctx.strokeStyle = '#4a90e2';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                room.x * scale,
+                room.y * scale,
+                room.width * scale,
+                room.height * scale
+            );
+
+            // Room number
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                `${index + 1}`,
+                room.centerX * scale,
+                room.centerY * scale
+            );
+        });
+    }
+
+    // Load initial dungeon on page load
+    window.addEventListener('load', () => {
+        fetchDungeon(42);
+    });
+</script>
+</body>
+</html>
+

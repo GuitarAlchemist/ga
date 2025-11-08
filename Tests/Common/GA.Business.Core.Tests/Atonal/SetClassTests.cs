@@ -1,7 +1,7 @@
-﻿﻿﻿﻿namespace GA.Business.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Notes;
+using Core.Atonal;
+using Core.Notes;
 using Extensions;
 
 [TestFixture]

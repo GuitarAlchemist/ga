@@ -1,0 +1,7 @@
+# Fretboard Navigation DSL Example
+# Try typing to see auto-completion!
+
+position 5 3
+CAGED
+move up 2
+slide string 1 fret 5 to 7

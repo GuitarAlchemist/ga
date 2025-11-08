@@ -1,19 +1,18 @@
 ﻿namespace GA.Business.Core.Atonal.Primitives;
 
-using Extensions;
 using Notes;
 using Notes.Extensions;
 
 /// <summary>
-/// A pitch class set ID
+///     A pitch class set ID
 /// </summary>
 /// <remarks>
-///  12 tones of the chromatic scale arranged as sets<br/>
-///  Each note is included or excluded in a set (0 = omitted, 1 = included)
-///  2^12 => 4096 combinations
-///
-/// IStaticReadonlyCollectionFromValues level - derives from <see cref="IStaticReadonlyCollection{TSelf}"/> | <see cref="IRangeValueObject{TSelf}"/>
-/// IValueObject level - derives from <see cref="IComparable{TSelf}"/> | <see cref="IEquatable{TSelf}"/>
+///     12 tones of the chromatic scale arranged as sets<br />
+///     Each note is included or excluded in a set (0 = omitted, 1 = included)
+///     2^12 => 4096 combinations
+///     IStaticReadonlyCollectionFromValues level - derives from <see cref="IStaticReadonlyCollection{TSelf}" /> |
+///     <see cref="IRangeValueObject{TSelf}" />
+///     IValueObject level - derives from <see cref="IComparable{TSelf}" /> | <see cref="IEquatable{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromValues<PitchClassSetId>
@@ -26,55 +25,62 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         _lazyByValue = new(() => Items.ToImmutableDictionary(id => id.Value));
     }
 
-    #region Equality Comparers
-
     /// <summary>
-    /// Gets the default <see cref="IEqualityComparer{PitchClassSetId}"/>
+    ///     Creates a <see cref="PitchClassSetId" /> instance
     /// </summary>
-    public static IEqualityComparer<PitchClassSetId> DefaultComparer { get; } = new ValueEqualityComparer();
+    /// <param name="value">The <see cref="Int32" /> value</param>
+    public PitchClassSetId(int value)
+    {
+        Value = ValueObjectUtils<PitchClassSetId>.EnsureValueRange(value, _minValue, _maxValue);
+        IsClusterFree = GetIsClusterFree(value);
+    }
 
     /// <summary>
-    /// Gets the <see cref="IEqualityComparer{PitchClassSetId}"/> for <see cref="Complement"/> property
-    /// </summary>
-    public static IEqualityComparer<PitchClassSetId> ComplementComparer { get; } = new ComplementEqualityComparer();
-
-    /// <summary>
-    /// Equality comparer where complementary Pitch Class Set IDs are considered equal
+    ///     True if this pitch class set represents a scale, false otherwise
     /// </summary>
     /// <remarks>
-    /// e.g. 000010010001 binary value (145 integer value) vs 111101101110 binary value (3950 integer value)
+    ///     A pitch class set must have a root note to represent a scale
     /// </remarks>
-    private sealed class ComplementEqualityComparer : IEqualityComparer<PitchClassSetId>
-    {
-        /// <inheritdoc />
-        public bool Equals(PitchClassSetId x, PitchClassSetId y) => x.Value == y.Value || x.Value == (y.Complement.Value);
+    public bool IsScale =>
+        (Value & 1) ==
+        1; // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be a valid scale
 
-        /// <inheritdoc />
-        public int GetHashCode(PitchClassSetId obj)
-        {
-            // Calculate hash code based on the canonical smaller value between a set and its complement
-            var complementValue = obj.Complement.Value;
-            var canonicalValue = Math.Min(obj.Value, complementValue);
-            return canonicalValue.GetHashCode();
-        }
-    }
+    /// <summary>
+    ///     Gets chromatic notes
+    /// </summary>
+    /// <returns>The <see cref="ChromaticNoteSet" /></returns>
+    public ChromaticNoteSet Notes => GetNotesInternal(Value).ToChromaticNoteSet();
 
-    private sealed class ValueEqualityComparer : IEqualityComparer<PitchClassSetId>
-    {
-        public bool Equals(PitchClassSetId x, PitchClassSetId y) => x.Value == y.Value;
-        public int GetHashCode(PitchClassSetId obj) => obj.Value;
-    }
+    /// <summary>
+    ///     Gets the binary representation of the Pitch Class ID value <see cref="string" />
+    /// </summary>
+    public string BinaryValue => Convert.ToString(Value, 2).PadLeft(12, '0');
 
-    #endregion
+    /// <summary>
+    ///     Get the complement Pitch Class ID
+    /// </summary>
+    /// <remarks>
+    ///     A complement operation "Flips" each note (i.e. An note included in the source set is excluded in the resulting set,
+    ///     and vice versa)
+    /// </remarks>
+    public PitchClassSetId Complement => new(Value ^ 0b111111111111);
+
+    /// <summary>
+    ///     Gets the inversion Pitch Class ID
+    /// </summary>
+    /// <remarks>
+    ///     An inverse operation mirrors the notes arranged on a circle (i.e. Vertical axis symmetry for each included note)
+    /// </remarks>
+    public PitchClassSetId Inverse => new(MirrorValue(Value));
 
     #region Static Helpers
 
     /// <summary>
-    /// Creates a Pitch Class Set ID from pitch classes
+    ///     Creates a Pitch Class Set ID from pitch classes
     /// </summary>
-    /// <param name="pitchClasses">The <see cref="IEnumerable{PitchClass}"/></param>
-    /// <returns>The <see cref="PitchClassSetIdentity"/></returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pitchClasses"/> is null</exception>
+    /// <param name="pitchClasses">The <see cref="IEnumerable{PitchClass}" /></param>
+    /// <returns>The <see cref="PitchClassSetIdentity" /></returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pitchClasses" /> is null</exception>
     public static PitchClassSetId FromPitchClasses(IEnumerable<PitchClass> pitchClasses)
     {
         ArgumentNullException.ThrowIfNull(pitchClasses);
@@ -96,7 +102,10 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             foreach (var pitchClass in PitchClass.Items)
             {
                 var weight = 1 << index++;
-                if (pitchClassesSet.Contains(pitchClass)) value += weight;
+                if (pitchClassesSet.Contains(pitchClass))
+                {
+                    value += weight;
+                }
             }
 
             return value;
@@ -105,124 +114,37 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     #endregion
 
-    #region IStaticReadonlyCollectionFromValues<PitchClassSetId> Members
-
-    public static implicit operator PitchClassSetId(int value) => _lazyByValue.Value[value];
-    public static implicit operator int(PitchClassSetId pitchClassSetId) => pitchClassSetId.Value;
-
     /// <summary>
-    /// Gets all possible 4096 <see cref="PitchClassSetId"/> items
+    ///     Gets rotated Pitch Class ID
     /// </summary>
-    public static IReadOnlyCollection<PitchClassSetId> Items { get; }
-
-    /// <inheritdoc />
-    public static PitchClassSetId Min => new(_minValue);
-
-    /// <inheritdoc />
-    public static PitchClassSetId Max => new(_maxValue);
-
-    /// <inheritdoc />
-    public static PitchClassSetId FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
-
-    /// <inheritdoc />
-    public int Value { get; }
-
-    public bool IsClusterFree { get; }
-
-    private const int _minValue = 0;
-    private const int _maxValue = 4095;
-
-    #endregion
-
-    #region Equality Members
-
-    /// <inheritdoc />
-    public bool Equals(PitchClassSetId other) => Value == other.Value;
-
-    /// <inheritdoc />
-    public override int GetHashCode() => Value;
-
-    #endregion
-
-    #region Relational Members
-
-    public static bool operator <(PitchClassSetId left, PitchClassSetId right) => left.CompareTo(right) < 0;
-    public static bool operator >(PitchClassSetId left, PitchClassSetId right) => left.CompareTo(right) > 0;
-    public static bool operator <=(PitchClassSetId left, PitchClassSetId right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(PitchClassSetId left, PitchClassSetId right) => left.CompareTo(right) >= 0;
-
-    /// <inheritdoc />
-    public int CompareTo(PitchClassSetId other) => Value.CompareTo(other.Value);
-
-    #endregion
-
-    /// <summary>
-    /// Creates a <see cref="PitchClassSetId"/> instance
-    /// </summary>
-    /// <param name="value">The <see cref="Int32"/> value</param>
-    public PitchClassSetId(int value)
+    /// <param name="count">The rotation <see cref="Int32" /> amount</param>
+    /// <returns>The <see cref="PitchClassSetId" /></returns>
+    public PitchClassSetId Rotate(int count)
     {
-        Value = ValueObjectUtils<PitchClassSetId>.EnsureValueRange(value, _minValue, _maxValue);
-        IsClusterFree = GetIsClusterFree(value);
+        return new PitchClassSetId(RotateValue(Value, count));
     }
 
     /// <summary>
-    /// True if this pitch class set represents a scale, false otherwise
+    ///     Get the complement of an existing Pitch Class ID
     /// </summary>
-    /// <remarks>
-    /// A pitch class set must have a root note to represent a scale
-    /// </remarks>
-    public bool IsScale => (Value & 1) == 1;  // least significant bit represents the root, which must be present for the Pitch Class Set Identity to be a valid scale
+    /// <param name="id">The <see cref="PitchClassSetId" /></param>
+    /// <returns>The complement <see cref="PitchClassSetId" /></returns>
+    public static PitchClassSetId operator !(PitchClassSetId id)
+    {
+        return id.Complement;
+    }
 
     /// <summary>
-    /// Gets chromatic notes
+    ///     Get the Pitch Class Set object
     /// </summary>
-    /// <returns>The <see cref="ChromaticNoteSet"/></returns>
-    public ChromaticNoteSet Notes => GetNotesInternal(Value).ToChromaticNoteSet();
+    /// <returns>The <see cref="PitchClassSet" /></returns>
+    public PitchClassSet ToPitchClassSet()
+    {
+        return Notes.ToPitchClassSet();
+    }
 
     /// <summary>
-    /// Gets the binary representation of the Pitch Class ID value <see cref="string"/>
-    /// </summary>
-    public string BinaryValue => Convert.ToString(Value, 2).PadLeft(12, '0');
-
-    /// <summary>
-    /// Get the complement Pitch Class ID
-    /// </summary>
-    /// <remarks>
-    /// A complement operation "Flips" each note (i.e. An note included in the source set is excluded in the resulting set, and vice versa)
-    /// </remarks>
-    public PitchClassSetId Complement => new(Value ^ 0b111111111111);
-
-    /// <summary>
-    /// Gets the inversion Pitch Class ID
-    /// </summary>
-    /// <remarks>
-    /// An inverse operation mirrors the notes arranged on a circle (i.e. Vertical axis symmetry for each included note)
-    /// </remarks>
-    public PitchClassSetId Inverse => new(MirrorValue(Value));
-
-    /// <summary>
-    /// Gets rotated Pitch Class ID
-    /// </summary>
-    /// <param name="count">The rotation <see cref="Int32"/> amount</param>
-    /// <returns>The <see cref="PitchClassSetId"/></returns>
-    public PitchClassSetId Rotate(int count) => new(RotateValue(Value, count));
-
-    /// <summary>
-    /// Get the complement of an existing Pitch Class ID
-    /// </summary>
-    /// <param name="id">The <see cref="PitchClassSetId"/></param>
-    /// <returns>The complement <see cref="PitchClassSetId"/></returns>
-    public static PitchClassSetId operator !(PitchClassSetId id) => id.Complement;
-
-    /// <summary>
-    /// Get the Pitch Class Set object
-    /// </summary>
-    /// <returns>The <see cref="PitchClassSet"/></returns>
-    public PitchClassSet ToPitchClassSet() => Notes.ToPitchClassSet();
-
-    /// <summary>
-    /// Geta all rotations, including the current Pitch Class Set ID
+    ///     Geta all rotations, including the current Pitch Class Set ID
     /// </summary>
     /// <returns></returns>
     public IEnumerable<PitchClassSetId> GetRotations()
@@ -234,7 +156,10 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     }
 
     /// <inheritdoc />
-    public override string ToString() => $"{Value.ToString(),-5} ({BinaryValue}; {Notes})";
+    public override string ToString()
+    {
+        return $"{Value.ToString(),-5} ({BinaryValue}; {Notes})";
+    }
 
     private static int RotateValue(int value, int count)
     {
@@ -255,7 +180,10 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             var bitPosition = (12 - i) % 12;
 
             // Set the bit at the new position if it's set in the original
-            if ((value & (1 << i)) != 0) result |= (1 << bitPosition);
+            if ((value & (1 << i)) != 0)
+            {
+                result |= 1 << bitPosition;
+            }
         }
 
         return result;
@@ -280,12 +208,13 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             runningValue >>= 1;
             noteValue++;
         }
+
         return builder.ToImmutable();
     }
 
     /// <summary>
-    /// Checks if the pitch class set is cluster-free.
-    /// A cluster-free set does not contain any consecutive clusters of 3 notes or more.
+    ///     Checks if the pitch class set is cluster-free.
+    ///     A cluster-free set does not contain any consecutive clusters of 3 notes or more.
     /// </summary>
     /// <returns>True if the set is cluster-free, otherwise false.</returns>
     public static bool GetIsClusterFree(int value)
@@ -297,9 +226,148 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             var bit2 = (value >> ((i + 1) % 12)) & 1;
             var bit3 = (value >> ((i + 2) % 12)) & 1;
 
-            if (bit1 == 1 && bit2 == 1 && bit3 == 1) return false;
+            if (bit1 == 1 && bit2 == 1 && bit3 == 1)
+            {
+                return false;
+            }
         }
 
         return true;
     }
+
+    #region Equality Comparers
+
+    /// <summary>
+    ///     Gets the default <see cref="IEqualityComparer{PitchClassSetId}" />
+    /// </summary>
+    public static IEqualityComparer<PitchClassSetId> DefaultComparer { get; } = new ValueEqualityComparer();
+
+    /// <summary>
+    ///     Gets the <see cref="IEqualityComparer{PitchClassSetId}" /> for <see cref="Complement" /> property
+    /// </summary>
+    public static IEqualityComparer<PitchClassSetId> ComplementComparer { get; } = new ComplementEqualityComparer();
+
+    /// <summary>
+    ///     Equality comparer where complementary Pitch Class Set IDs are considered equal
+    /// </summary>
+    /// <remarks>
+    ///     e.g. 000010010001 binary value (145 integer value) vs 111101101110 binary value (3950 integer value)
+    /// </remarks>
+    private sealed class ComplementEqualityComparer : IEqualityComparer<PitchClassSetId>
+    {
+        /// <inheritdoc />
+        public bool Equals(PitchClassSetId x, PitchClassSetId y)
+        {
+            return x.Value == y.Value || x.Value == y.Complement.Value;
+        }
+
+        /// <inheritdoc />
+        public int GetHashCode(PitchClassSetId obj)
+        {
+            // Calculate hash code based on the canonical smaller value between a set and its complement
+            var complementValue = obj.Complement.Value;
+            var canonicalValue = Math.Min(obj.Value, complementValue);
+            return canonicalValue.GetHashCode();
+        }
+    }
+
+    private sealed class ValueEqualityComparer : IEqualityComparer<PitchClassSetId>
+    {
+        public bool Equals(PitchClassSetId x, PitchClassSetId y)
+        {
+            return x.Value == y.Value;
+        }
+
+        public int GetHashCode(PitchClassSetId obj)
+        {
+            return obj.Value;
+        }
+    }
+
+    #endregion
+
+    #region IStaticReadonlyCollectionFromValues<PitchClassSetId> Members
+
+    public static implicit operator PitchClassSetId(int value)
+    {
+        return _lazyByValue.Value[value];
+    }
+
+    public static implicit operator int(PitchClassSetId pitchClassSetId)
+    {
+        return pitchClassSetId.Value;
+    }
+
+    /// <summary>
+    ///     Gets all possible 4096 <see cref="PitchClassSetId" /> items
+    /// </summary>
+    public static IReadOnlyCollection<PitchClassSetId> Items { get; }
+
+    /// <inheritdoc />
+    public static PitchClassSetId Min => new(_minValue);
+
+    /// <inheritdoc />
+    public static PitchClassSetId Max => new(_maxValue);
+
+    /// <inheritdoc />
+    public static PitchClassSetId FromValue([ValueRange(_minValue, _maxValue)] int value)
+    {
+        return new PitchClassSetId(value);
+    }
+
+    /// <inheritdoc />
+    public int Value { get; }
+
+    public bool IsClusterFree { get; }
+
+    private const int _minValue = 0;
+    private const int _maxValue = 4095;
+
+    #endregion
+
+    #region Equality Members
+
+    /// <inheritdoc />
+    public bool Equals(PitchClassSetId other)
+    {
+        return Value == other.Value;
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return Value;
+    }
+
+    #endregion
+
+    #region Relational Members
+
+    public static bool operator <(PitchClassSetId left, PitchClassSetId right)
+    {
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator >(PitchClassSetId left, PitchClassSetId right)
+    {
+        return left.CompareTo(right) > 0;
+    }
+
+    public static bool operator <=(PitchClassSetId left, PitchClassSetId right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >=(PitchClassSetId left, PitchClassSetId right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
+
+    /// <inheritdoc />
+    public int CompareTo(PitchClassSetId other)
+    {
+        return Value.CompareTo(other.Value);
+    }
+
+    #endregion
 }

@@ -1,6 +1,5 @@
 ﻿@using GA.Core.Extensions
 @using GA.Core.UI.Dtos
-
 <div @ref="_gridElement"
      id="@Id"
      class="@AgTheme"
@@ -16,11 +15,9 @@
     private IJSObjectReference? _jsModule;
     private IJSObjectReference? _jsGridOptions;
 
-    [Parameter]
-    public string Id { get; set; } = $"tabular-data-grid-{Guid.NewGuid():N}";
+    [Parameter] public string Id { get; set; } = $"tabular-data-grid-{Guid.NewGuid():N}";
 
-    [Parameter]
-    public string AgTheme { get; set; } = "ag-theme-balham-dark";
+    [Parameter] public string AgTheme { get; set; } = "ag-theme-balham-dark";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -35,7 +32,7 @@
     }
 
     /// <summary>
-    /// Load grid data.
+    ///     Load grid data.
     /// </summary>
     public async Task LoadAsync(TabularData data)
     {
@@ -83,10 +80,19 @@
         }
     }
 
-    public ValueTask<bool> GoToTopNodeAsync() => 
-        _jsGridOptions?.InvokeAsync<bool>("goToTopNode") ?? ValueTask.FromResult(false);
-    public ValueTask<bool> GoToBottomNodeAsync() => 
-        _jsGridOptions?.InvokeAsync<bool>("goToBottomNode") ?? ValueTask.FromResult(false);
-    public ValueTask AutoSizeAllAsync() =>
-        _jsGridOptions?.InvokeVoidAsync("autoSizeAll") ?? ValueTask.CompletedTask;
+    public ValueTask<bool> GoToTopNodeAsync()
+    {
+        return _jsGridOptions?.InvokeAsync<bool>("goToTopNode") ?? ValueTask.FromResult(false);
+    }
+
+    public ValueTask<bool> GoToBottomNodeAsync()
+    {
+        return _jsGridOptions?.InvokeAsync<bool>("goToBottomNode") ?? ValueTask.FromResult(false);
+    }
+
+    public ValueTask AutoSizeAllAsync()
+    {
+        return _jsGridOptions?.InvokeVoidAsync("autoSizeAll") ?? ValueTask.CompletedTask;
+    }
+
 }

@@ -8,7 +8,11 @@
     "target": "Es2017",
     "moduleResolution": "Node"
   },
-  "include": [ "./**/*.ts" ],
-  "exclude": [ "node_modules" ],
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "compileOnSave": true
 }

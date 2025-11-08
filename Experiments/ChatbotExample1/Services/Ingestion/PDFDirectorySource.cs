@@ -7,11 +7,10 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.WordExtractor;
 
 public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
 {
-    private static string SourceFileId(string path) => Path.GetFileName(path);
-
     public string SourceId => $"{nameof(PDFDirectorySource)}:{sourceDirectory}";
 
-    public async Task<ImmutableList<IngestedDocument>> GetNewOrModifiedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
+    public async Task<ImmutableList<IngestedDocument>> GetNewOrModifiedDocumentsAsync(
+        IQueryable<IngestedDocument> existingDocuments)
     {
         var results = new List<IngestedDocument>();
         var sourceFiles = Directory.GetFiles(sourceDirectory, "*.pdf");
@@ -21,7 +20,8 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             var sourceFileId = SourceFileId(sourceFile);
             var sourceFileVersion = File.GetLastWriteTimeUtc(sourceFile).ToString("o");
 
-            var existingDocument = await existingDocuments.Where(d => d.SourceId == SourceId && d.Id == sourceFileId).FirstOrDefaultAsync();
+            var existingDocument = await existingDocuments.Where(d => d.SourceId == SourceId && d.Id == sourceFileId)
+                .FirstOrDefaultAsync();
             if (existingDocument is null)
             {
                 results.Add(new() { Id = sourceFileId, Version = sourceFileVersion, SourceId = SourceId });
@@ -36,22 +36,24 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
         return results.ToImmutableList();
     }
 
-    public async Task<ImmutableList<IngestedDocument>> GetDeletedDocumentsAsync(IQueryable<IngestedDocument> existingDocuments)
+    public async Task<ImmutableList<IngestedDocument>> GetDeletedDocumentsAsync(
+        IQueryable<IngestedDocument> existingDocuments)
     {
         var sourceFiles = Directory.GetFiles(sourceDirectory, "*.pdf");
         var sourceFileIds = sourceFiles.Select(SourceFileId).ToList();
         var result = await existingDocuments
             .Where(d => !sourceFileIds.Contains(d.Id))
             .ToListAsync();
-        
+
         return result.ToImmutableList();
     }
 
-    public async Task<ImmutableList<SemanticSearchRecord>> CreateRecordsForDocumentAsync(IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId)
+    public async Task<ImmutableList<SemanticSearchRecord>> CreateRecordsForDocumentAsync(
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator, string documentId)
     {
         using var pdf = PdfDocument.Open(Path.Combine(sourceDirectory, documentId));
         var paragraphs = pdf.GetPages().SelectMany(GetPageParagraphs).ToList();
-        
+
         var embeddings = await embeddingGenerator.GenerateAsync(paragraphs.Select(c => c.Text));
 
         var results = paragraphs.Zip(embeddings).Select((pair, index) => new SemanticSearchRecord
@@ -60,13 +62,16 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             FileName = documentId,
             PageNumber = pair.First.PageNumber,
             Text = pair.First.Text,
-            Vector = pair.Second.Vector,
+            Vector = pair.Second.Vector
         });
 
         return results.ToImmutableList();
     }
 
-    private record PageParagraph(int PageNumber, int IndexOnPage, string Text);
+    private static string SourceFileId(string path)
+    {
+        return Path.GetFileName(path);
+    }
 
     private static ImmutableList<PageParagraph> GetPageParagraphs(Page pdfPage)
     {
@@ -80,7 +85,9 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
         var results = TextChunker.SplitPlainTextParagraphs([pageText], 200)
             .Select((text, index) => new PageParagraph(pdfPage.Number, index, text));
 #pragma warning restore SKEXP0050 // Type is for evaluation purposes only
-        
+
         return results.ToImmutableList();
     }
+
+    private record PageParagraph(int PageNumber, int IndexOnPage, string Text);
 }

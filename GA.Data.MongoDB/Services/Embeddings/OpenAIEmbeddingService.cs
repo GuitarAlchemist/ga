@@ -1,7 +1,7 @@
+namespace GA.Data.MongoDB.Services.Embeddings;
+
 using Microsoft.Extensions.Options;
 using OpenAI;
-
-namespace GA.Data.MongoDB.Services.Embeddings;
 
 public class OpenAiEmbeddingService(IOptions<OpenAiSettings> settings) : IEmbeddingService
 {

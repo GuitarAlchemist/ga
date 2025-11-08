@@ -1,9 +1,7 @@
-﻿﻿﻿namespace GA.Business.Core.Tests.Notes;
+﻿namespace GA.Business.Core.Tests.Notes;
 
-using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Intervals;
-using System.Collections.Generic;
+using Core.Notes;
+using Core.Notes.Primitives;
 
 [TestFixture]
 public class NoteTests
@@ -22,10 +20,12 @@ public class NoteTests
         }
     }
 
-    [Test, TestCaseSource(nameof(GetIntervalTestCases))]
-    public void Test_Chromatic_GetInterval(Note.Chromatic startingNote, Note.Chromatic endingNote, Interval.Simple expectedInterval)
+    [Test]
+    [TestCaseSource(nameof(GetIntervalTestCases))]
+    public void Test_Chromatic_GetInterval(Note.Chromatic startingNote, Note.Chromatic endingNote,
+        Interval.Simple expectedInterval)
     {
-        var actualInterval  = startingNote.GetInterval(endingNote);
+        var actualInterval = startingNote.GetInterval(endingNote);
 
         Assert.That(actualInterval, Is.EqualTo(expectedInterval));
     }

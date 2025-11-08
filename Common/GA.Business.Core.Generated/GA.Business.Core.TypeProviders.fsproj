@@ -1,34 +1,34 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <NoWarn>NU1608</NoWarn>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <NoWarn>NU1608</NoWarn>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="StaticCollectionGenerator.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="StaticCollectionGenerator.fs"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <!-- Force the newer version of FSharp.Core -->
-    <PackageReference Include="FSharp.Core" Version="9.0.201" />
-    <!-- Add Type Provider SDK -->
-    <PackageReference Include="FSharp.TypeProviders.SDK" Version="8.1.0" />
-    <!-- Use an older version of FSharp.Compiler.Service that's compatible with newer FSharp.Core -->
-    <PackageReference Include="FSharp.Compiler.Service" Version="41.0.7" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Force the newer version of FSharp.Core to match GA.Business.Core -->
+        <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+        <!-- Add Type Provider SDK -->
+        <PackageReference Include="FSharp.TypeProviders.SDK" Version="8.1.0"/>
+        <!-- Use an older version of FSharp.Compiler.Service that's compatible with newer FSharp.Core -->
+        <PackageReference Include="FSharp.Compiler.Service" Version="41.0.7"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
-    <ProjectReference Include="..\GA.Core\GA.Core.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\GA.Core\GA.Core.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
+    </ItemGroup>
 
-  <PropertyGroup>
-    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
-  </PropertyGroup>
+    <PropertyGroup>
+        <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+    </PropertyGroup>
 
 </Project>

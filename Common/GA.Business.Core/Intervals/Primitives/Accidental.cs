@@ -1,13 +1,131 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
-using GA.Business.Core.Notes.Primitives;
+using Notes.Primitives;
 
 /// <summary>
-/// Accidental record struct (𝄫♭ | 𝄫 | ♭ | ♮ | ♯ | 𝄪 | ♯𝄪)
+///     Accidental record struct (𝄫♭ | 𝄫 | ♭ | ♮ | ♯ | 𝄪 | ♯𝄪)
 /// </summary>
 /// <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
 public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsable<Accidental>
 {
+    private const int _minValue = -3;
+    private const int _maxValue = 3;
+
+    /// <summary>
+    ///     Gets the "𝄫♭" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental TripleFlat => FromValue(-3);
+
+    /// <summary>
+    ///     Gets the "𝄫" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental DoubleFlat => FromValue(-2);
+
+    /// <summary>
+    ///     Gets the "♭" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental Flat => FromValue(-1);
+
+    /// <summary>
+    ///     Gets the "♮" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental Natural => FromValue(0);
+
+    /// <summary>
+    ///     Gets the "♯" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental Sharp => FromValue(1);
+
+    /// <summary>
+    ///     Gets the "𝄪" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental DoubleSharp => FromValue(2);
+
+    /// <summary>
+    ///     Gets the "♯𝄪" <see cref="Accidental" />
+    /// </summary>
+    public static Accidental TripleSharp => FromValue(3);
+
+    public static Accidental FromValue([ValueRange(_minValue, _maxValue)] int value)
+    {
+        return new Accidental { Value = value };
+    }
+
+    public static implicit operator Accidental(int value)
+    {
+        return FromValue(value);
+    }
+
+    public static implicit operator int(Accidental fret)
+    {
+        return fret.Value;
+    }
+
+    public static Accidental operator !(Accidental accidental)
+    {
+        return FromValue(-accidental.Value);
+    }
+
+    public static Accidental operator -(Accidental accidental)
+    {
+        return FromValue(-accidental.Value);
+    }
+
+    public static Accidental operator ++(Accidental accidental)
+    {
+        return FromValue(accidental.Value + 1);
+    }
+
+    public static Accidental operator --(Accidental accidental)
+    {
+        return FromValue(accidental.Value - 1);
+    }
+
+    public static Accidental operator +(Accidental a, Accidental b)
+    {
+        return FromValue(a.Value + b.Value);
+    }
+
+    public static Accidental operator -(Accidental a, Accidental b)
+    {
+        return FromValue(a.Value - b.Value);
+    }
+
+    public static implicit operator Accidental?(SharpAccidental? sharpAccidental)
+    {
+        return sharpAccidental == null ? null : FromValue(sharpAccidental.Value.Value);
+    }
+
+    public static implicit operator Accidental?(FlatAccidental? flatAccidental)
+    {
+        return flatAccidental == null ? null : FromValue(flatAccidental.Value.Value);
+    }
+
+    public static implicit operator Semitones(Accidental value)
+    {
+        return value.ToSemitones();
+    }
+
+    public override string ToString()
+    {
+        return _value switch
+        {
+            -3 => "bbb",
+            -2 => "bb",
+            -1 => "b",
+            0 => "♮",
+            1 => "♯",
+            2 => "x",
+            3 => "♯##",
+            _ => string.Empty
+        };
+    }
+
+    public Semitones ToSemitones()
+    {
+        return new Semitones { Value = _value };
+    }
+
     #region IRangeValueObject
 
     public static Accidental Min => FromValue(_minValue);
@@ -22,12 +140,16 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
     private readonly int _value;
 
     #endregion
-    
+
     #region IParsable<Accidental> Members
-    
+
     public static Accidental Parse(string s, IFormatProvider? provider)
     {
-        if (!TryParse(s, provider, out var result)) throw new FormatException($"Invalid accidental string format: '{s}'.");
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new FormatException($"Invalid accidental string format: '{s}'.");
+        }
+
         return result;
     }
 
@@ -69,77 +191,7 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
                 result = default;
                 return false;
         }
-    }    
-    
+    }
+
     #endregion
-
-    private const int _minValue = -3;
-    private const int _maxValue = 3;
-
-    /// <summary>
-    /// Gets the "𝄫♭" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental TripleFlat => FromValue(-3);
-
-    /// <summary>
-    /// Gets the "𝄫" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental DoubleFlat => FromValue(-2);
-
-    /// <summary>
-    /// Gets the "♭" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental Flat => FromValue(-1);
-
-    /// <summary>
-    /// Gets the "♮" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental Natural => FromValue(0);
-
-    /// <summary>
-    /// Gets the "♯" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental Sharp => FromValue(1);
-
-    /// <summary>
-    /// Gets the "𝄪" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental DoubleSharp => FromValue(2);
-
-    /// <summary>
-    /// Gets the "♯𝄪" <see cref="Accidental"/>
-    /// </summary>
-    public static Accidental TripleSharp => FromValue(3);
-
-    public static Accidental FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    public static Accidental operator !(Accidental accidental) => FromValue(-accidental.Value);
-    public static Accidental operator -(Accidental accidental) => FromValue(-accidental.Value);
-    public static Accidental operator ++(Accidental accidental) => FromValue(accidental.Value + 1);
-    public static Accidental operator --(Accidental accidental) => FromValue(accidental.Value - 1);
-    public static Accidental operator +(Accidental a, Accidental b) => FromValue(a.Value + b.Value);
-    public static Accidental operator -(Accidental a, Accidental b) => FromValue(a.Value - b.Value);
-
-    public static implicit operator Accidental(int value) => FromValue(value);
-    public static implicit operator int(Accidental fret) => fret.Value;
-
-    public static implicit operator Accidental?(SharpAccidental? sharpAccidental) => sharpAccidental == null ? null : FromValue(sharpAccidental.Value.Value);
-    public static implicit operator Accidental?(FlatAccidental? flatAccidental) => flatAccidental == null ? null : FromValue(flatAccidental.Value.Value);
-    public static implicit operator Semitones(Accidental value) => value.ToSemitones();
-
-    public override string ToString() => _value switch
-    {
-        -3 => "bbb",
-        -2 => "bb",
-        -1 => "b",
-        0 => "♮",
-        1 => "♯",
-        2 => "x",
-        3 => "♯##",
-        _ => string.Empty
-    };
-
-    public Semitones ToSemitones() => new() { Value = _value };
 }
-
-

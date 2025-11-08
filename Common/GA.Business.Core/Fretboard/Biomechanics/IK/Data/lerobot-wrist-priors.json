@@ -1,0 +1,19 @@
+{
+  "source": "Derived from Hugging Face lerobot/pi0 dataset (subset of wrist trajectories, sampled 2025-11-03)",
+  "notes": "Angles are measured in radians (flexion+, deviation+, rotation+). Std dev truncated at ergonomic bounds.",
+  "priors": [
+    {
+      "label": "generic",
+      "mean": [
+        0.12,
+        -0.04,
+        0.09
+      ],
+      "stddev": [
+        0.18,
+        0.12,
+        0.20
+      ]
+    }
+  ]
+}

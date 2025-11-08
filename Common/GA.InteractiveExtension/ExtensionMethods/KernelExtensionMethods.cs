@@ -1,8 +1,7 @@
-﻿using GA.InteractiveExtension.Ga;
+﻿namespace GA.InteractiveExtension.ExtensionMethods;
 
-namespace GA.InteractiveExtension.ExtensionMethods;
-
-using GA.Business.Core.Notes;
+using Business.Core.Notes;
+using Ga;
 using static PocketViewTags;
 
 public static class KernelExtensionMethods
@@ -35,4 +34,3 @@ public static class KernelExtensionMethods
             HtmlFormatter.MimeType);
     }
 }
-

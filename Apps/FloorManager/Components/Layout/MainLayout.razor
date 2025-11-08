@@ -1,0 +1,39 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar @(_navCollapsed ? "collapsed" : "")">
+        <button class="nav-toggle" @onclick="ToggleNav">
+            @if (_navCollapsed)
+            {
+                <text>☰</text>
+            }
+            else
+            {
+                <text>✕</text>
+            }
+        </button>
+        <NavMenu/>
+    </div>
+
+    <main class="@(_navCollapsed ? "nav-collapsed" : "")">
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool _navCollapsed = true; // Collapsed by default
+
+    private void ToggleNav()
+    {
+        _navCollapsed = !_navCollapsed;
+    }
+
+}
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

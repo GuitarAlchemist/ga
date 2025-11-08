@@ -1,0 +1,151 @@
+﻿@page "/fret-span-explorer"
+@using GA.Business.Core.Fretboard.Analysis
+@using GA.Business.Core.Fretboard.Primitives
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Fret Span Explorer</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Fret Span Explorer</MudText>
+<MudText Class="mb-4">Analyze all possible chord positions within 5-fret spans</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudNumericField @bind-Value="_startFret" Label="Start Fret" Min="0" Max="19"/>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudNumericField @bind-Value="_maxChords" Label="Max Chords to Display" Min="10" Max="1000"/>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AnalyzeFretSpan" FullWidth="true"
+                       Class="mt-3">
+                Analyze
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
+}
+
+@if (_chordAnalyses != null && _chordAnalyses.Any())
+{
+    <MudText Typo="Typo.h5" Class="mb-3">
+        Found @_chordAnalyses.Count chords in frets @_startFret - @(_startFret + 5)
+    </MudText>
+
+    <MudTable Items="_chordAnalyses" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true"
+              Filter="new Func<FretboardChordAnalysis, bool>(FilterFunc)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Chord Positions</MudText>
+            <MudSpacer/>
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"
+                          Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Chord Name</MudTh>
+            <MudTh>Fret Span</MudTh>
+            <MudTh>Difficulty</MudTh>
+            <MudTh>Notes</MudTh>
+            <MudTh>CAGED</MudTh>
+            <MudTh>Voicing</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Chord Name">
+                <MudText Typo="Typo.body2"><strong>@context.ChordName</strong></MudText>
+                @if (!string.IsNullOrEmpty(context.IconicName))
+                {
+                    <MudChip Size="Size.Small" Color="Color.Warning">@context.IconicName</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Fret Span">@context.LowestFret - @context.HighestFret (@context.FretSpan)</MudTd>
+            <MudTd DataLabel="Difficulty">
+                <MudChip Size="Size.Small" Color="@GetDifficultyColor(context.Difficulty)">
+                    @context.Difficulty
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Notes">@string.Join(", ", context.Notes.Select(n => n.ToString()))</MudTd>
+            <MudTd DataLabel="CAGED">@(context.CagedAnalysis?.ClosestShape?.ToString() ?? "N/A")</MudTd>
+            <MudTd DataLabel="Voicing">@context.VoicingDescription</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+}
+else if (!_isLoading && _hasAnalyzed)
+{
+    <MudAlert Severity="Severity.Info">No chords found for the selected fret span.</MudAlert>
+}
+
+@code {
+    private int _startFret;
+    private int _maxChords = 100;
+    private bool _isLoading;
+    private bool _hasAnalyzed;
+    private string _searchString = "";
+    private List<FretboardChordAnalysis>? _chordAnalyses;
+
+    private async Task AnalyzeFretSpan()
+    {
+        _isLoading = true;
+        _hasAnalyzed = true;
+        _chordAnalyses = null;
+        StateHasChanged();
+
+        try
+        {
+            // Create fretboard with standard tuning
+            var fretboard = Fretboard.StandardGuitar;
+
+            // Generate chord analyses for the 5-fret span
+            var allChords = FretboardChordAnalyzer.GenerateAllFiveFretSpanChords(fretboard, _startFret + 5)
+                .Where(c => c.LowestFret >= _startFret && c.HighestFret <= _startFret + 5)
+                .Take(_maxChords)
+                .ToList();
+
+            _chordAnalyses = allChords;
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error analyzing fret span: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool FilterFunc(FretboardChordAnalysis chord)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (chord.ChordName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (chord.IconicName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+
+        return false;
+    }
+
+    private Color GetDifficultyColor(ChordDifficulty difficulty)
+    {
+        return difficulty switch
+        {
+            ChordDifficulty.Beginner => Color.Success,
+            ChordDifficulty.Intermediate => Color.Info,
+            ChordDifficulty.Advanced => Color.Warning,
+            ChordDifficulty.Expert => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+}
+

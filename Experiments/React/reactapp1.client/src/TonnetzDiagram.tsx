@@ -5,7 +5,7 @@ interface TonnetzDiagramProps {
     size?: number;
 }
 
-const TonnetzDiagram: React.FC<TonnetzDiagramProps> = ({ scale, size = 300 }) => {
+const TonnetzDiagram: React.FC<TonnetzDiagramProps> = ({scale, size = 300}) => {
     const notes: string[] = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
     const scaleNotes: string[] = scale.toString(2).padStart(12, '0').split('').reverse();
 

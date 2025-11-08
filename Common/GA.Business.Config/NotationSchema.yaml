@@ -1,0 +1,40 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: NotationSchema
+NotationSchema:
+  ChordSymbols:
+    Extensions:
+      - '7'
+      - '9'
+      - '11'
+      - '13'
+    Alterations:
+      - b9
+      - '#9'
+      - b5
+      - '#5'
+    Qualities:
+      - maj
+      - min
+      - dim
+      - aug
+  ScaleFormula:
+    Ionian:
+      - '1'
+      - '2'
+      - '3'
+      - '4'
+      - '5'
+      - '6'
+      - '7'
+    Dorian:
+      - '1'
+      - '2'
+      - b3
+      - '4'
+      - '5'
+      - '6'
+      - b7
+  FretboardMapping: String/Fret/Note schema for cross-reference

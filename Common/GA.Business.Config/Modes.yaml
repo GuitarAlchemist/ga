@@ -1,391 +1,611 @@
 ﻿ModalFamilies:
-  # Major Scale Family (Diatonic)
-  - Name: "Major Scale Family"
-    IntervalClassVector: "<2 5 4 3 6 1>"
+  - Name: Major Scale Family
+    IntervalClassVector: <2 5 4 3 6 1>
     Modes:
-      - Name: "Ionian"
-        Notes: "C D E F G A B"
-        Description: "The major scale, foundation of Western harmony"
-        AlternateNames: ["Major Scale"]
-      - Name: "Dorian"
-        Notes: "C D Eb F G A Bb"
-        Description: "Natural minor with raised 6th degree"
-        AlternateNames: ["Dorian Mode"]
-      - Name: "Phrygian"
-        Notes: "C Db Eb F G Ab Bb"
-        Description: "Natural minor with lowered 2nd degree"
-        AlternateNames: ["Phrygian Mode"]
-      - Name: "Lydian"
-        Notes: "C D E F# G A B"
-        Description: "Major scale with raised 4th degree"
-        AlternateNames: ["Lydian Mode"]
-      - Name: "Mixolydian"
-        Notes: "C D E F G A Bb"
-        Description: "Major scale with lowered 7th degree"
-        AlternateNames: ["Mixolydian Mode", "Dominant Scale"]
-      - Name: "Aeolian"
-        Notes: "C D Eb F G Ab Bb"
-        Description: "Natural minor scale"
-        AlternateNames: ["Natural Minor", "Minor Scale"]
-      - Name: "Locrian"
-        Notes: "C Db Eb F Gb Ab Bb"
-        Description: "Natural minor with lowered 2nd and 5th degrees"
-        AlternateNames: ["Locrian Mode"]
-
-  # Harmonic Minor Family
-  - Name: "Harmonic Minor Family"
-    IntervalClassVector: "<2 4 3 5 4 3>"
+      - Name: Ionian
+        Notes: C D E F G A B
+        Description: The major scale, foundation of Western harmony
+        AlternateNames:
+          - Major Scale
+        CharacteristicIntervals:
+          - '2'
+          - '3'
+          - '6'
+          - '7'
+        AvoidNotes:
+          - '4 (treat as sus or #11 context)'
+        CharacteristicChords:
+          - Imaj7
+          - V7
+          - ii7
+        GuitarFretboardTips:
+          - Target maj3 and maj7 on cadences.
+          - Use 3NPS pattern from 6th‑string root.
+        CommonCadences:
+          - ii–V–I
+          - IV–V–I
+        Applications:
+          - Pop, classical, functional harmony
+        EarTraining:
+          - do–mi–sol–ti–do
+        CompositionTips:
+          - Emphasize 6 and 7 for brightness.
+      - Name: Dorian
+        Notes: C D Eb F G A Bb
+        Description: Natural minor with raised 6th degree
+        AlternateNames:
+          - Dorian Mode
+        CharacteristicIntervals:
+          - '2'
+          - 'b3'
+          - '6'
+          - 'b7'
+        AvoidNotes:
+          - None essential; 6 vs chord color—voice carefully
+        CharacteristicChords:
+          - i7
+          - IVmaj7
+        GuitarFretboardTips:
+          - Minor pentatonic + natural 6.
+          - Land on 6 against i7 to reveal color.
+        CommonCadences:
+          - i–IV vamp
+          - iiø–V–i (minor contexts)
+        Applications:
+          - Funk, modal jazz, minor grooves
+        EarTraining:
+          - '1–b3–4–5–6–b7–1'
+        CompositionTips:
+          - Use IVmaj7 for signature Dorian hue.
+      - Name: Phrygian
+        Notes: C Db Eb F G Ab Bb
+        Description: Natural minor with lowered 2nd degree
+        AlternateNames:
+          - Phrygian Mode
+        CharacteristicIntervals:
+          - 'b2'
+          - 'b3'
+          - 'b6'
+          - 'b7'
+        AvoidNotes:
+          - '3 against i chord; treat as alteration'
+        CharacteristicChords:
+          - i7
+          - bII
+        GuitarFretboardTips:
+          - Milk b2 against tonic for Spanish bite.
+          - Pedal tonic with upper neighbor b2.
+        CommonCadences:
+          - bII–I
+          - i–bII
+        Applications:
+          - Flamenco, metal, dark vamps
+        EarTraining:
+          - Alternate 1 ↔ b2 for the color.
+        CompositionTips:
+          - Use Phrygian dominant by raising 3 over V.
+      - Name: Lydian
+        Notes: C D E F# G A B
+        Description: Major scale with raised 4th degree
+        AlternateNames:
+          - Lydian Mode
+        CharacteristicIntervals:
+          - '#4'
+          - '2'
+          - '3'
+          - '6'
+          - '7'
+        AvoidNotes:
+          - 'None; #4 removes Ionian avoid 4'
+        CharacteristicChords:
+          - Imaj7(#11)
+          - IImaj7
+        GuitarFretboardTips:
+          - 'Sustain #11 over Imaj7.'
+          - Planing Imaj7(#11)–IImaj7.
+        CommonCadences:
+          - II–I
+          - V/II–II–I
+        Applications:
+          - Film scoring, fusion, ambient pop
+        EarTraining:
+          - 'Hear #4 (fi) over I.'
+        CompositionTips:
+          - 'Quartal voicings spotlight #11.'
+      - Name: Mixolydian
+        Notes: C D E F G A Bb
+        Description: Major scale with lowered 7th degree
+        AlternateNames:
+          - Mixolydian Mode
+          - Dominant Scale
+        CharacteristicIntervals:
+          - 'b7'
+          - '2'
+          - '3'
+          - '6'
+        AvoidNotes:
+          - maj7; emphasize b7 instead
+        CharacteristicChords:
+          - I7
+          - bVII
+          - IV
+        GuitarFretboardTips:
+          - Major pentatonic + b7.
+          - Classic rock cadence I–bVII–IV.
+        CommonCadences:
+          - bVII–I
+          - IV–I (plagal)
+        Applications:
+          - Rock, country, dominant vamps
+        EarTraining:
+          - Feel the flat 7 resolving to 6 or 1.
+        CompositionTips:
+          - Borrow bVII freely for rock feel.
+      - Name: Aeolian
+        Notes: C D Eb F G Ab Bb
+        Description: Natural minor scale
+        AlternateNames:
+          - Natural Minor
+          - Minor Scale
+        CharacteristicIntervals:
+          - 'b3'
+          - 'b6'
+          - 'b7'
+        AvoidNotes:
+          - '2 can blur minor function—use as passing color'
+        CharacteristicChords:
+          - i
+          - bVII
+          - bVI
+        GuitarFretboardTips:
+          - Minor pentatonic + add 2 and b6.
+          - Voice‑lead b6→5, b7→1.
+        CommonCadences:
+          - bVI–bVII–i
+          - iv–bVII–i
+        Applications:
+          - Rock minor, cinematic
+        EarTraining:
+          - Contrast Dorian by focusing on b6.
+        CompositionTips:
+          - Underpin with bVI and bVII for momentum.
+      - Name: Locrian
+        Notes: C Db Eb F Gb Ab Bb
+        Description: Natural minor with lowered 2nd and 5th degrees
+        AlternateNames:
+          - Locrian Mode
+        CharacteristicIntervals:
+          - 'b2'
+          - 'b3'
+          - 'b5'
+          - 'b6'
+          - 'b7'
+        AvoidNotes:
+          - Natural 5; tonic triad diminished—treat carefully
+        CharacteristicChords:
+          - iø
+          - bV
+        GuitarFretboardTips:
+          - Target b5 carefully over m7b5 chords.
+          - Use symmetrical fragments.
+        CommonCadences:
+          - iiø–V–i (minor ii chord usage)
+        Applications:
+          - Modern/jazz color over m7b5
+        EarTraining:
+          - Memorize 1–b2 relationship and b5 color.
+        CompositionTips:
+          - Best as passing/modal color rather than tonic home.
+  - Name: Harmonic Minor Family
+    IntervalClassVector: <2 4 3 5 4 3>
     Modes:
-      - Name: "Harmonic Minor"
-        Notes: "C D Eb F G Ab B"
-        Description: "Minor scale with raised 7th degree"
-        AlternateNames: ["Harmonic Minor Scale"]
-      - Name: "Locrian #6"
-        Notes: "C Db Eb F Gb A Bb"
-        Description: "Second mode of harmonic minor"
-        AlternateNames: ["Locrian Natural 6"]
-      - Name: "Ionian #5"
-        Notes: "C D E F G# A B"
-        Description: "Third mode of harmonic minor"
-        AlternateNames: ["Ionian Augmented", "Major #5"]
-      - Name: "Dorian #4"
-        Notes: "C D Eb F# G A Bb"
-        Description: "Fourth mode of harmonic minor"
-        AlternateNames: ["Romanian", "Ukrainian Dorian"]
-      - Name: "Phrygian Dominant"
-        Notes: "C Db E F G Ab Bb"
-        Description: "Fifth mode of harmonic minor"
-        AlternateNames: ["Spanish Phrygian", "Jewish Scale"]
-      - Name: "Lydian #2"
-        Notes: "C D# E F# G A B"
-        Description: "Sixth mode of harmonic minor"
-        AlternateNames: ["Lydian Augmented #2"]
-      - Name: "Ultralocrian"
-        Notes: "C Db Eb Fb Gb Ab Bb"
-        Description: "Seventh mode of harmonic minor"
-        AlternateNames: ["Superlocrian bb7", "Altered bb7"]
-
-  # Melodic Minor Family
-  - Name: "Melodic Minor Family"
-    IntervalClassVector: "<2 4 5 3 6 2>"
+      - Name: Harmonic Minor
+        Notes: C D Eb F G Ab B
+        Description: Minor scale with raised 7th degree
+        AlternateNames:
+          - Harmonic Minor Scale
+      - Name: 'Locrian #6'
+        Notes: C Db Eb F Gb A Bb
+        Description: Second mode of harmonic minor
+        AlternateNames:
+          - Locrian Natural 6
+      - Name: 'Ionian #5'
+        Notes: C D E F G# A B
+        Description: Third mode of harmonic minor
+        AlternateNames:
+          - Ionian Augmented
+          - 'Major #5'
+      - Name: 'Dorian #4'
+        Notes: C D Eb F# G A Bb
+        Description: Fourth mode of harmonic minor
+        AlternateNames:
+          - Romanian
+          - Ukrainian Dorian
+      - Name: Phrygian Dominant
+        Notes: C Db E F G Ab Bb
+        Description: Fifth mode of harmonic minor
+        AlternateNames:
+          - Spanish Phrygian
+          - Jewish Scale
+      - Name: 'Lydian #2'
+        Notes: C D# E F# G A B
+        Description: Sixth mode of harmonic minor
+        AlternateNames:
+          - 'Lydian Augmented #2'
+      - Name: Ultralocrian
+        Notes: C Db Eb Fb Gb Ab Bb
+        Description: Seventh mode of harmonic minor
+        AlternateNames:
+          - Superlocrian bb7
+          - Altered bb7
+  - Name: Melodic Minor Family
+    IntervalClassVector: <2 4 5 3 6 2>
     Modes:
-      - Name: "Melodic Minor"
-        Notes: "C D Eb F G A B"
-        Description: "Minor scale with raised 6th and 7th degrees"
-        AlternateNames: ["Jazz Minor", "Melodic Minor Scale"]
-      - Name: "Dorian b2"
-        Notes: "C Db Eb F G A Bb"
-        Description: "Second mode of melodic minor"
-        AlternateNames: ["Phrygian #6", "Assyrian"]
-      - Name: "Lydian Augmented"
-        Notes: "C D E F# G# A B"
-        Description: "Third mode of melodic minor"
-        AlternateNames: ["Lydian #5"]
-      - Name: "Lydian Dominant"
-        Notes: "C D E F# G A Bb"
-        Description: "Fourth mode of melodic minor"
-        AlternateNames: ["Overtone", "Acoustic Scale"]
-      - Name: "Mixolydian b6"
-        Notes: "C D E F G Ab Bb"
-        Description: "Fifth mode of melodic minor"
-        AlternateNames: ["Melodic Major", "Hindu Scale"]
-      - Name: "Locrian #2"
-        Notes: "C D Eb F Gb Ab Bb"
-        Description: "Sixth mode of melodic minor"
-        AlternateNames: ["Half Diminished", "Aeolian b5"]
-      - Name: "Altered"
-        Notes: "C Db Eb Fb Gb Ab Bb"
-        Description: "Seventh mode of melodic minor"
-        AlternateNames: ["Super Locrian", "Diminished Whole Tone"]
-
-  # Pentatonic Scales
-  - Name: "Major Pentatonic Family"
-    IntervalClassVector: "<0 3 2 2 2 1>"
+      - Name: Melodic Minor
+        Notes: C D Eb F G A B
+        Description: Minor scale with raised 6th and 7th degrees
+        AlternateNames:
+          - Jazz Minor
+          - Melodic Minor Scale
+      - Name: Dorian b2
+        Notes: C Db Eb F G A Bb
+        Description: Second mode of melodic minor
+        AlternateNames:
+          - 'Phrygian #6'
+          - Assyrian
+      - Name: Lydian Augmented
+        Notes: C D E F# G# A B
+        Description: Third mode of melodic minor
+        AlternateNames:
+          - 'Lydian #5'
+      - Name: Lydian Dominant
+        Notes: C D E F# G A Bb
+        Description: Fourth mode of melodic minor
+        AlternateNames:
+          - Overtone
+          - Acoustic Scale
+      - Name: Mixolydian b6
+        Notes: C D E F G Ab Bb
+        Description: Fifth mode of melodic minor
+        AlternateNames:
+          - Melodic Major
+          - Hindu Scale
+      - Name: 'Locrian #2'
+        Notes: C D Eb F Gb Ab Bb
+        Description: Sixth mode of melodic minor
+        AlternateNames:
+          - Half Diminished
+          - Aeolian b5
+      - Name: Altered
+        Notes: C Db Eb Fb Gb Ab Bb
+        Description: Seventh mode of melodic minor
+        AlternateNames:
+          - Super Locrian
+          - Diminished Whole Tone
+  - Name: Major Pentatonic Family
+    IntervalClassVector: <0 3 2 2 2 1>
     Modes:
-      - Name: "Major Pentatonic"
-        Notes: "C D E G A"
-        Description: "Five-note scale commonly used in folk and popular music"
-        AlternateNames: ["Pentatonic Major"]
-      - Name: "Egyptian"
-        Notes: "C D F G Bb"
-        Description: "Second mode of major pentatonic"
-        AlternateNames: ["Suspended Pentatonic"]
-      - Name: "Blues Minor"
-        Notes: "C Eb F G Bb"
-        Description: "Third mode of major pentatonic"
-        AlternateNames: ["Minor Pentatonic"]
-      - Name: "Blues Major"
-        Notes: "C E F A Bb"
-        Description: "Fourth mode of major pentatonic"
-        AlternateNames: ["Ritusen"]
-      - Name: "Minor Pentatonic"
-        Notes: "C D F G A"
-        Description: "Fifth mode of major pentatonic"
-        AlternateNames: ["Man Gong"]
-
-  # Whole Tone Scale
-  - Name: "Whole Tone Family"
-    IntervalClassVector: "<0 6 0 0 6 0>"
+      - Name: Major Pentatonic
+        Notes: C D E G A
+        Description: Five-note scale commonly used in folk and popular music
+        AlternateNames:
+          - Pentatonic Major
+      - Name: Egyptian
+        Notes: C D F G Bb
+        Description: Second mode of major pentatonic
+        AlternateNames:
+          - Suspended Pentatonic
+      - Name: Blues Minor
+        Notes: C Eb F G Bb
+        Description: Third mode of major pentatonic
+        AlternateNames:
+          - Minor Pentatonic
+      - Name: Blues Major
+        Notes: C E F A Bb
+        Description: Fourth mode of major pentatonic
+        AlternateNames:
+          - Ritusen
+      - Name: Minor Pentatonic
+        Notes: C D F G A
+        Description: Fifth mode of major pentatonic
+        AlternateNames:
+          - Man Gong
+  - Name: Whole Tone Family
+    IntervalClassVector: <0 6 0 0 6 0>
     Modes:
-      - Name: "Whole Tone"
-        Notes: "C D E F# G# Bb"
-        Description: "Six-note scale consisting entirely of whole tones"
-        AlternateNames: ["Whole Tone Scale"]
-
-  # Diminished Scale Family
-  - Name: "Diminished Family"
-    IntervalClassVector: "<4 6 4 6 4 4>"
+      - Name: Whole Tone
+        Notes: C D E F# G# Bb
+        Description: Six-note scale consisting entirely of whole tones
+        AlternateNames:
+          - Whole Tone Scale
+  - Name: Diminished Family
+    IntervalClassVector: <4 6 4 6 4 4>
     Modes:
-      - Name: "Diminished (Half-Whole)"
-        Notes: "C Db Eb E F# G A Bb"
-        Description: "Eight-note scale alternating half and whole steps"
-        AlternateNames: ["Octatonic", "Half-Whole Diminished"]
-      - Name: "Diminished (Whole-Half)"
-        Notes: "C D Eb F Gb Ab A B"
-        Description: "Eight-note scale alternating whole and half steps"
-        AlternateNames: ["Whole-Half Diminished", "Dominant Diminished"]
-
-  # Blues Scale
-  - Name: "Blues Scale Family"
-    IntervalClassVector: "<1 4 3 2 5 0>"
+      - Name: Diminished (Half-Whole)
+        Notes: C Db Eb E F# G A Bb
+        Description: Eight-note scale alternating half and whole steps
+        AlternateNames:
+          - Octatonic
+          - Half-Whole Diminished
+      - Name: Diminished (Whole-Half)
+        Notes: C D Eb F Gb Ab A B
+        Description: Eight-note scale alternating whole and half steps
+        AlternateNames:
+          - Whole-Half Diminished
+          - Dominant Diminished
+  - Name: Blues Scale Family
+    IntervalClassVector: <1 4 3 2 5 0>
     Modes:
-      - Name: "Blues Scale"
-        Notes: "C Eb F F# G Bb"
-        Description: "Six-note scale commonly used in blues music"
-        AlternateNames: ["Blues Scale"]
-
-  # Chromatic Scale
-  - Name: "Chromatic Family"
-    IntervalClassVector: "<11 11 11 11 11 6>"
+      - Name: Blues Scale
+        Notes: C Eb F F# G Bb
+        Description: Six-note scale commonly used in blues music
+        AlternateNames:
+          - Blues Scale
+  - Name: Chromatic Family
+    IntervalClassVector: <11 11 11 11 11 6>
     Modes:
-      - Name: "Chromatic"
-        Notes: "C C# D D# E F F# G G# A A# B"
-        Description: "Twelve-note scale containing all semitones"
-        AlternateNames: ["Chromatic Scale"]
-
-  # Two-Note Scales
-  - Name: "Perfect Fourth Family"
-    IntervalClassVector: "<0 0 0 0 1 0>"
+      - Name: Chromatic
+        Notes: C C# D D# E F F# G G# A A# B
+        Description: Twelve-note scale containing all semitones
+        AlternateNames:
+          - Chromatic Scale
+  - Name: Perfect Fourth Family
+    IntervalClassVector: <0 0 0 0 1 0>
     Modes:
-      - Name: "Perfect Fourth"
-        Notes: "C F"
-        Description: "A two-note scale with a perfect fourth interval"
-        AlternateNames: ["Perfect Fourth Scale"]
-      - Name: "Perfect Fifth"
-        Notes: "C G"
-        Description: "A two-note scale with a perfect fifth interval"
-        AlternateNames: ["Perfect Fifth Scale"]
-
-  - Name: "Major Third Family"
-    IntervalClassVector: "<0 0 0 1 0 0>"
+      - Name: Perfect Fourth
+        Notes: C F
+        Description: A two-note scale with a perfect fourth interval
+        AlternateNames:
+          - Perfect Fourth Scale
+      - Name: Perfect Fifth
+        Notes: C G
+        Description: A two-note scale with a perfect fifth interval
+        AlternateNames:
+          - Perfect Fifth Scale
+  - Name: Major Third Family
+    IntervalClassVector: <0 0 0 1 0 0>
     Modes:
-      - Name: "Major Third"
-        Notes: "C E"
-        Description: "A two-note scale with a major third interval"
-        AlternateNames: ["Major Third Scale"]
-      - Name: "Minor Sixth"
-        Notes: "C Ab"
-        Description: "A two-note scale with a minor sixth interval"
-        AlternateNames: ["Minor Sixth Scale"]
-
-  - Name: "Minor Third Family"
-    IntervalClassVector: "<0 0 1 0 0 0>"
+      - Name: Major Third
+        Notes: C E
+        Description: A two-note scale with a major third interval
+        AlternateNames:
+          - Major Third Scale
+      - Name: Minor Sixth
+        Notes: C Ab
+        Description: A two-note scale with a minor sixth interval
+        AlternateNames:
+          - Minor Sixth Scale
+  - Name: Minor Third Family
+    IntervalClassVector: <0 0 1 0 0 0>
     Modes:
-      - Name: "Minor Third"
-        Notes: "C Eb"
-        Description: "A two-note scale with a minor third interval"
-        AlternateNames: ["Minor Third Scale"]
-      - Name: "Major Sixth"
-        Notes: "C A"
-        Description: "A two-note scale with a major sixth interval"
-        AlternateNames: ["Major Sixth Scale"]
-
-  - Name: "Major Second Family"
-    IntervalClassVector: "<0 1 0 0 0 0>"
+      - Name: Minor Third
+        Notes: C Eb
+        Description: A two-note scale with a minor third interval
+        AlternateNames:
+          - Minor Third Scale
+      - Name: Major Sixth
+        Notes: C A
+        Description: A two-note scale with a major sixth interval
+        AlternateNames:
+          - Major Sixth Scale
+  - Name: Major Second Family
+    IntervalClassVector: <0 1 0 0 0 0>
     Modes:
-      - Name: "Major Second"
-        Notes: "C D"
-        Description: "A two-note scale with a major second interval"
-        AlternateNames: ["Major Second Scale"]
-      - Name: "Minor Seventh"
-        Notes: "C Bb"
-        Description: "A two-note scale with a minor seventh interval"
-        AlternateNames: ["Minor Seventh Scale"]
-
-  - Name: "Minor Second Family"
-    IntervalClassVector: "<1 0 0 0 0 0>"
+      - Name: Major Second
+        Notes: C D
+        Description: A two-note scale with a major second interval
+        AlternateNames:
+          - Major Second Scale
+      - Name: Minor Seventh
+        Notes: C Bb
+        Description: A two-note scale with a minor seventh interval
+        AlternateNames:
+          - Minor Seventh Scale
+  - Name: Minor Second Family
+    IntervalClassVector: <1 0 0 0 0 0>
     Modes:
-      - Name: "Minor Second"
-        Notes: "C Db"
-        Description: "A two-note scale with a minor second interval"
-        AlternateNames: ["Minor Second Scale"]
-      - Name: "Major Seventh"
-        Notes: "C B"
-        Description: "A two-note scale with a major seventh interval"
-        AlternateNames: ["Major Seventh Scale"]
-
-  # Three-Note Scales (Triads)
-  - Name: "Major Triad Family"
-    IntervalClassVector: "<0 0 1 1 1 0>"
+      - Name: Minor Second
+        Notes: C Db
+        Description: A two-note scale with a minor second interval
+        AlternateNames:
+          - Minor Second Scale
+      - Name: Major Seventh
+        Notes: C B
+        Description: A two-note scale with a major seventh interval
+        AlternateNames:
+          - Major Seventh Scale
+  - Name: Major Triad Family
+    IntervalClassVector: <0 0 1 1 1 0>
     Modes:
-      - Name: "Major Triad"
-        Notes: "C E G"
-        Description: "Major triad chord tones"
-        AlternateNames: ["Major Chord"]
-      - Name: "Minor Triad First Inversion"
-        Notes: "C Eb Ab"
-        Description: "First inversion of minor triad"
-        AlternateNames: ["Minor 6/4"]
-      - Name: "Minor Triad Second Inversion"
-        Notes: "C F A"
-        Description: "Second inversion of minor triad"
-        AlternateNames: ["Minor 6/4"]
-      - Name: "Major Triad First Inversion"
-        Notes: "C F Ab"
-        Description: "First inversion of major triad"
-        AlternateNames: ["Major 6/4"]
-      - Name: "Major Triad Second Inversion"
-        Notes: "C E A"
-        Description: "Second inversion of major triad"
-        AlternateNames: ["Major 6/4"]
-      - Name: "Minor Triad"
-        Notes: "C Eb G"
-        Description: "Minor triad chord tones"
-        AlternateNames: ["Minor Chord"]
-
-  - Name: "Diminished Triad Family"
-    IntervalClassVector: "<0 0 2 0 0 1>"
+      - Name: Major Triad
+        Notes: C E G
+        Description: Major triad chord tones
+        AlternateNames:
+          - Major Chord
+      - Name: Minor Triad First Inversion
+        Notes: C Eb Ab
+        Description: First inversion of minor triad
+        AlternateNames:
+          - Minor 6/4
+      - Name: Minor Triad Second Inversion
+        Notes: C F A
+        Description: Second inversion of minor triad
+        AlternateNames:
+          - Minor 6/4
+      - Name: Major Triad First Inversion
+        Notes: C F Ab
+        Description: First inversion of major triad
+        AlternateNames:
+          - Major 6/4
+      - Name: Major Triad Second Inversion
+        Notes: C E A
+        Description: Second inversion of major triad
+        AlternateNames:
+          - Major 6/4
+      - Name: Minor Triad
+        Notes: C Eb G
+        Description: Minor triad chord tones
+        AlternateNames:
+          - Minor Chord
+  - Name: Diminished Triad Family
+    IntervalClassVector: <0 0 2 0 0 1>
     Modes:
-      - Name: "Diminished Triad"
-        Notes: "C Eb Gb"
-        Description: "Diminished triad chord tones"
-        AlternateNames: ["Diminished Chord"]
-      - Name: "Diminished Triad First Inversion"
-        Notes: "C E A"
-        Description: "First inversion of diminished triad"
-        AlternateNames: ["Diminished 6/4"]
-      - Name: "Diminished Triad Second Inversion"
-        Notes: "C F# Bb"
-        Description: "Second inversion of diminished triad"
-        AlternateNames: ["Diminished 6/4"]
-
-  - Name: "Augmented Triad Family"
-    IntervalClassVector: "<0 1 0 0 2 0>"
+      - Name: Diminished Triad
+        Notes: C Eb Gb
+        Description: Diminished triad chord tones
+        AlternateNames:
+          - Diminished Chord
+      - Name: Diminished Triad First Inversion
+        Notes: C E A
+        Description: First inversion of diminished triad
+        AlternateNames:
+          - Diminished 6/4
+      - Name: Diminished Triad Second Inversion
+        Notes: C F# Bb
+        Description: Second inversion of diminished triad
+        AlternateNames:
+          - Diminished 6/4
+  - Name: Augmented Triad Family
+    IntervalClassVector: <0 1 0 0 2 0>
     Modes:
-      - Name: "Augmented Triad"
-        Notes: "C E G#"
-        Description: "Augmented triad chord tones"
-        AlternateNames: ["Augmented Chord"]
-      - Name: "Augmented Triad First Inversion"
-        Notes: "C F A"
-        Description: "First inversion of augmented triad"
-        AlternateNames: ["Augmented 6/4"]
-      - Name: "Augmented Triad Second Inversion"
-        Notes: "C Eb F#"
-        Description: "Second inversion of augmented triad"
-        AlternateNames: ["Augmented 6/4"]
-
-  # Four-Note Scales (Seventh Chords and Tetrachords)
-  - Name: "Major Seventh Chord Family"
-    IntervalClassVector: "<0 1 2 1 1 1>"
+      - Name: Augmented Triad
+        Notes: C E G#
+        Description: Augmented triad chord tones
+        AlternateNames:
+          - Augmented Chord
+      - Name: Augmented Triad First Inversion
+        Notes: C F A
+        Description: First inversion of augmented triad
+        AlternateNames:
+          - Augmented 6/4
+      - Name: Augmented Triad Second Inversion
+        Notes: C Eb F#
+        Description: Second inversion of augmented triad
+        AlternateNames:
+          - Augmented 6/4
+  - Name: Major Seventh Chord Family
+    IntervalClassVector: <0 1 2 1 1 1>
     Modes:
-      - Name: "Major Seventh"
-        Notes: "C E G B"
-        Description: "Major seventh chord tones"
-        AlternateNames: ["Maj7"]
-      - Name: "Minor Seventh"
-        Notes: "C Eb G Bb"
-        Description: "Minor seventh chord tones"
-        AlternateNames: ["m7"]
-      - Name: "Dominant Seventh"
-        Notes: "C E G Bb"
-        Description: "Dominant seventh chord tones"
-        AlternateNames: ["7"]
-      - Name: "Half Diminished Seventh"
-        Notes: "C Eb Gb Bb"
-        Description: "Half diminished seventh chord tones"
-        AlternateNames: ["m7b5"]
-      - Name: "Minor Major Seventh"
-        Notes: "C Eb G B"
-        Description: "Minor major seventh chord tones"
-        AlternateNames: ["mMaj7"]
-      - Name: "Augmented Major Seventh"
-        Notes: "C E G# B"
-        Description: "Augmented major seventh chord tones"
-        AlternateNames: ["Maj7#5"]
-      - Name: "Augmented Seventh"
-        Notes: "C E G# Bb"
-        Description: "Augmented seventh chord tones"
-        AlternateNames: ["7#5"]
-      - Name: "Diminished Seventh"
-        Notes: "C Eb Gb A"
-        Description: "Diminished seventh chord tones"
-        AlternateNames: ["dim7"]
-
-  - Name: "All Interval Tetrachord Family"
-    IntervalClassVector: "<1 1 1 1 1 1>"
+      - Name: Major Seventh
+        Notes: C E G B
+        Description: Major seventh chord tones
+        AlternateNames:
+          - Maj7
+      - Name: Minor Seventh
+        Notes: C Eb G Bb
+        Description: Minor seventh chord tones
+        AlternateNames:
+          - m7
+      - Name: Dominant Seventh
+        Notes: C E G Bb
+        Description: Dominant seventh chord tones
+        AlternateNames:
+          - '7'
+      - Name: Half Diminished Seventh
+        Notes: C Eb Gb Bb
+        Description: Half diminished seventh chord tones
+        AlternateNames:
+          - m7b5
+      - Name: Minor Major Seventh
+        Notes: C Eb G B
+        Description: Minor major seventh chord tones
+        AlternateNames:
+          - mMaj7
+      - Name: Augmented Major Seventh
+        Notes: C E G# B
+        Description: Augmented major seventh chord tones
+        AlternateNames:
+          - Maj7#5
+      - Name: Augmented Seventh
+        Notes: C E G# Bb
+        Description: Augmented seventh chord tones
+        AlternateNames:
+          - '7#5'
+      - Name: Diminished Seventh
+        Notes: C Eb Gb A
+        Description: Diminished seventh chord tones
+        AlternateNames:
+          - dim7
+  - Name: All Interval Tetrachord Family
+    IntervalClassVector: <1 1 1 1 1 1>
     Modes:
-      - Name: "All Interval Tetrachord"
-        Notes: "C Db E F#"
-        Description: "Tetrachord containing all six interval classes"
-        AlternateNames: ["Berg Tetrachord"]
-      - Name: "All Interval Tetrachord Mode 2"
-        Notes: "C D# E G"
-        Description: "Second mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 2"]
-      - Name: "All Interval Tetrachord Mode 3"
-        Notes: "C Db F Gb"
-        Description: "Third mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 3"]
-      - Name: "All Interval Tetrachord Mode 4"
-        Notes: "C E F A"
-        Description: "Fourth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 4"]
-      - Name: "All Interval Tetrachord Mode 5"
-        Notes: "C D F# G"
-        Description: "Fifth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 5"]
-      - Name: "All Interval Tetrachord Mode 6"
-        Notes: "C F F# Bb"
-        Description: "Sixth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 6"]
-      - Name: "All Interval Tetrachord Mode 7"
-        Notes: "C Db F G"
-        Description: "Seventh mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 7"]
-      - Name: "All Interval Tetrachord Mode 8"
-        Notes: "C E F Bb"
-        Description: "Eighth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 8"]
-      - Name: "All Interval Tetrachord Mode 9"
-        Notes: "C D F G"
-        Description: "Ninth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 9"]
-      - Name: "All Interval Tetrachord Mode 10"
-        Notes: "C E F# A"
-        Description: "Tenth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 10"]
-      - Name: "All Interval Tetrachord Mode 11"
-        Notes: "C D# F G"
-        Description: "Eleventh mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 11"]
-      - Name: "All Interval Tetrachord Mode 12"
-        Notes: "C D F# Bb"
-        Description: "Twelfth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 12"]
-      - Name: "All Interval Tetrachord Mode 13"
-        Notes: "C E G A"
-        Description: "Thirteenth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 13"]
-      - Name: "All Interval Tetrachord Mode 14"
-        Notes: "C D# F# G"
-        Description: "Fourteenth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 14"]
-      - Name: "All Interval Tetrachord Mode 15"
-        Notes: "C D F A"
-        Description: "Fifteenth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 15"]
-      - Name: "All Interval Tetrachord Mode 16"
-        Notes: "C F G Bb"
-        Description: "Sixteenth mode of all interval tetrachord"
-        AlternateNames: ["Berg Mode 16"]
+      - Name: All Interval Tetrachord
+        Notes: C Db E F#
+        Description: Tetrachord containing all six interval classes
+        AlternateNames:
+          - Berg Tetrachord
+      - Name: All Interval Tetrachord Mode 2
+        Notes: C D# E G
+        Description: Second mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 2
+      - Name: All Interval Tetrachord Mode 3
+        Notes: C Db F Gb
+        Description: Third mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 3
+      - Name: All Interval Tetrachord Mode 4
+        Notes: C E F A
+        Description: Fourth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 4
+      - Name: All Interval Tetrachord Mode 5
+        Notes: C D F# G
+        Description: Fifth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 5
+      - Name: All Interval Tetrachord Mode 6
+        Notes: C F F# Bb
+        Description: Sixth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 6
+      - Name: All Interval Tetrachord Mode 7
+        Notes: C Db F G
+        Description: Seventh mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 7
+      - Name: All Interval Tetrachord Mode 8
+        Notes: C E F Bb
+        Description: Eighth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 8
+      - Name: All Interval Tetrachord Mode 9
+        Notes: C D F G
+        Description: Ninth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 9
+      - Name: All Interval Tetrachord Mode 10
+        Notes: C E F# A
+        Description: Tenth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 10
+      - Name: All Interval Tetrachord Mode 11
+        Notes: C D# F G
+        Description: Eleventh mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 11
+      - Name: All Interval Tetrachord Mode 12
+        Notes: C D F# Bb
+        Description: Twelfth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 12
+      - Name: All Interval Tetrachord Mode 13
+        Notes: C E G A
+        Description: Thirteenth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 13
+      - Name: All Interval Tetrachord Mode 14
+        Notes: C D# F# G
+        Description: Fourteenth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 14
+      - Name: All Interval Tetrachord Mode 15
+        Notes: C D F A
+        Description: Fifteenth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 15
+      - Name: All Interval Tetrachord Mode 16
+        Notes: C F G Bb
+        Description: Sixteenth mode of all interval tetrachord
+        AlternateNames:
+          - Berg Mode 16

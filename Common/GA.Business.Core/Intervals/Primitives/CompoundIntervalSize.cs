@@ -1,47 +1,62 @@
 ﻿namespace GA.Business.Core.Intervals.Primitives;
 
 /// <summary>
-/// A compound interval size (Between 9 and 16 semitones)
+///     A compound interval size (Between 9 and 16 semitones)
 /// </summary>
 /// <remarks>
-/// https://en.wikipedia.org/wiki/Interval_(Objects)#Compound_intervals
-/// Implements <see cref="IIntervalSize{CompoundIntervalSize}"/>
+///     https://en.wikipedia.org/wiki/Interval_(Objects)#Compound_intervals
+///     Implements <see cref="IIntervalSize{CompoundIntervalSize}" />
 /// </remarks>
 [PublicAPI]
-public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalSize>, IIntervalSize<CompoundIntervalSize>
+public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalSize>,
+    IIntervalSize<CompoundIntervalSize>
 {
-    #region IStaticValueObjectList<CompoundIntervalSize> Members
+    private const int _minValue = 9;
+    private const int _maxValue = 16;
 
-    public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
-    public static IReadOnlyList<int> Values => Items.Select(number => number.Value).ToImmutableList();
-
-    #endregion
-
-    #region IParsable Members
-
-    /// <inheritdoc />
-    public static CompoundIntervalSize Parse(string s, IFormatProvider? provider)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CompoundIntervalSize FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
-        return result;
+        return new CompoundIntervalSize { Value = value };
+    }
+
+    public static CompoundIntervalSize Min => FromValue(_minValue);
+    public static CompoundIntervalSize Max => FromValue(_maxValue);
+
+    public static implicit operator CompoundIntervalSize(int value)
+    {
+        return new CompoundIntervalSize { Value = value };
+    }
+
+    public static implicit operator int(CompoundIntervalSize size)
+    {
+        return size._value;
+    }
+
+    public static int CheckRange(int value)
+    {
+        return ValueObjectUtils<CompoundIntervalSize>.EnsureValueRange(value, _minValue, _maxValue);
+    }
+
+    public static int CheckRange(int value, int minValue, int maxValue)
+    {
+        return ValueObjectUtils<CompoundIntervalSize>.EnsureValueRange(value, minValue, maxValue);
+    }
+
+    /// <summary>
+    ///     Gets the simple interval for the current compound interval
+    /// </summary>
+    /// <returns>The <see cref="SimpleIntervalSize" /></returns>
+    public SimpleIntervalSize ToSimple()
+    {
+        return new SimpleIntervalSize { Value = _value - 8 };
     }
 
     /// <inheritdoc />
-    public static bool TryParse(string? s, IFormatProvider? provider, out CompoundIntervalSize result)
+    public override string ToString()
     {
-        if (!int.TryParse(s, out var i)) throw new ArgumentException("Invalid format");
-        result = FromValue(i);
-        return true;
+        return Value.ToString();
     }
-
-    #endregion
-
-    #region IValueObject<CompoundIntervalSize>
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
-
-    #endregion
 
     #region Inner Classes
 
@@ -55,6 +70,52 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
         public const int FourteenthValue = 14;
         public const int FifteenthValue = 15;
         public const int SixteenthValue = 16;
+    }
+
+    #endregion
+
+    #region IStaticValueObjectList<CompoundIntervalSize> Members
+
+    public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
+    public static IReadOnlyList<int> Values => Items.Select(number => number.Value).ToImmutableList();
+
+    #endregion
+
+    #region IParsable Members
+
+    /// <inheritdoc />
+    public static CompoundIntervalSize Parse(string s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(string? s, IFormatProvider? provider, out CompoundIntervalSize result)
+    {
+        if (!int.TryParse(s, out var i))
+        {
+            throw new ArgumentException("Invalid format");
+        }
+
+        result = FromValue(i);
+        return true;
+    }
+
+    #endregion
+
+    #region IValueObject<CompoundIntervalSize>
+
+    private readonly int _value;
+
+    public int Value
+    {
+        get => _value;
+        init => _value = CheckRange(value);
     }
 
     #endregion
@@ -73,9 +134,9 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     };
 
     /// <summary>
-    /// Get the semitones distance for the interval.
+    ///     Get the semitones distance for the interval.
     /// </summary>
-    /// <returns>The <see cref="Primitives.Semitones"/></returns>
+    /// <returns>The <see cref="Primitives.Semitones" /></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public Semitones Semitones => Value switch
     {
@@ -96,15 +157,38 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
 
     public int CompareTo(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return 1;
-        if (obj is IIntervalSize intervalSize) return _value.CompareTo(intervalSize.Value);
+        if (ReferenceEquals(null, obj))
+        {
+            return 1;
+        }
+
+        if (obj is IIntervalSize intervalSize)
+        {
+            return _value.CompareTo(intervalSize.Value);
+        }
+
         return 1;
     }
 
-    public static bool operator <(CompoundIntervalSize left, CompoundIntervalSize right) => left.CompareTo(right) < 0;
-    public static bool operator >(CompoundIntervalSize left, CompoundIntervalSize right) => left.CompareTo(right) > 0;
-    public static bool operator <=(CompoundIntervalSize left, CompoundIntervalSize right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(CompoundIntervalSize left, CompoundIntervalSize right) => left.CompareTo(right) >= 0;
+    public static bool operator <(CompoundIntervalSize left, CompoundIntervalSize right)
+    {
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator >(CompoundIntervalSize left, CompoundIntervalSize right)
+    {
+        return left.CompareTo(right) > 0;
+    }
+
+    public static bool operator <=(CompoundIntervalSize left, CompoundIntervalSize right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >=(CompoundIntervalSize left, CompoundIntervalSize right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
 
     #endregion
 
@@ -120,27 +204,4 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     public static CompoundIntervalSize DoubleOctave => FromValue(CompoundIntervalSizeValues.SixteenthValue);
 
     #endregion
-
-    private const int _minValue = 9;
-    private const int _maxValue = 16;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CompoundIntervalSize FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
-
-    public static CompoundIntervalSize Min => FromValue(_minValue);
-    public static CompoundIntervalSize Max => FromValue(_maxValue);
-    public static int CheckRange(int value) => ValueObjectUtils<CompoundIntervalSize>.EnsureValueRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => ValueObjectUtils<CompoundIntervalSize>.EnsureValueRange(value, minValue, maxValue);
-
-    public static implicit operator CompoundIntervalSize(int value) => new() { Value = value };
-    public static implicit operator int(CompoundIntervalSize size) => size._value;
-
-    /// <summary>
-    /// Gets the simple interval for the current compound interval
-    /// </summary>
-    /// <returns>The <see cref="SimpleIntervalSize"/></returns>
-    public SimpleIntervalSize ToSimple() => new() { Value = _value - 8 };
-
-    /// <inheritdoc />
-    public override string ToString() => Value.ToString();
 }
-

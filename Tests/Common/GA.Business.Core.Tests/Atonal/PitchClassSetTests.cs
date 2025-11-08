@@ -1,8 +1,8 @@
-﻿﻿﻿﻿﻿namespace GA.Business.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
+using Core.Atonal;
+using Core.Notes;
 using Extensions;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Notes;
 
 public class PitchClassSetTests
 {
@@ -97,7 +97,8 @@ public class PitchClassSetTests
         var sOrderedTranspositionsAndInversionValues = string.Join(", ", orderedTranspositionsAndInversionValues);
 
         // Assert
-        var expected = "137, 145, 265, 274, 289, 290, 529, 530, 545, 548, 578, 580, 1058, 1060, 1090, 1096, 1156, 1160, 2116, 2120, 2180, 2192, 2312, 2320";
+        var expected =
+            "137, 145, 265, 274, 289, 290, 529, 530, 545, 548, 578, 580, 1058, 1060, 1090, 1096, 1156, 1160, 2116, 2120, 2180, 2192, 2312, 2320";
         Assert.That(sOrderedTranspositionsAndInversionValues, Is.EqualTo(expected));
     }
 
@@ -123,7 +124,7 @@ public class PitchClassSetTests
         var cMinorTriadNotes = AccidentedNoteCollection.Parse(sCMinorTriadInput);
 
         // Act
-        var pitchClassSet = cMinorTriadNotes .ToPitchClassSet();
+        var pitchClassSet = cMinorTriadNotes.ToPitchClassSet();
 
         // Assert
         Assert.That(pitchClassSet.IsPrimeForm, Is.EqualTo(true)); // 137 => this is the prime form

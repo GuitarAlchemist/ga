@@ -1,4 +1,4 @@
-﻿import { Container } from '@svgdotjs/svg.js';
+﻿import {Container} from '@svgdotjs/svg.js';
 
 // @ts-ignore
 /**

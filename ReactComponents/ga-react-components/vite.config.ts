@@ -5,6 +5,17 @@ import * as path from 'path'
 
 export default defineConfig({
   plugins: [react(), dts()],
+  server: {
+    port: 5176,
+  },
+  optimizeDeps: {
+    include: ['prop-types'],
+  },
+  resolve: {
+    alias: {
+      'prop-types': 'prop-types/prop-types.js',
+    },
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),

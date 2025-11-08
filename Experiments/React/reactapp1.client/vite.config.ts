@@ -1,11 +1,11 @@
-import { fileURLToPath, URL } from 'node:url';
+import {fileURLToPath, URL} from 'node:url';
 
-import { defineConfig } from 'vite';
+import {defineConfig} from 'vite';
 import plugin from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import child_process from 'child_process';
-import { env } from 'process';
+import {env} from 'process';
 
 const baseFolder =
     env.APPDATA !== undefined && env.APPDATA !== ''
@@ -25,7 +25,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
         '--format',
         'Pem',
         '--no-password',
-    ], { stdio: 'inherit', }).status) {
+    ], {stdio: 'inherit',}).status) {
         throw new Error("Could not create certificate.");
     }
 }
@@ -46,6 +46,11 @@ export default defineConfig({
             '^/weatherforecast': {
                 target,
                 secure: false
+            },
+            '^/api': {
+                target: 'http://localhost:5232',
+                secure: false,
+                changeOrigin: true
             }
         },
         port: 5173,

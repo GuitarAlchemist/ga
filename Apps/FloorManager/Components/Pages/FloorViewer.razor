@@ -1,0 +1,789 @@
+﻿@page "/floors"
+@using FloorManager.Components.Layout
+@using FloorManager.Components.Shared
+@using FloorManager.Models
+@using FloorManager.Services
+@inject FloorService FloorService
+@inject IJSRuntime JsRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Floor Manager</PageTitle>
+
+<ConnectionStatus/>
+
+<Breadcrumb Items="@_breadcrumbs"/>
+
+<div class="floor-viewer-dark">
+    <!-- Compact Top Bar -->
+    <div class="top-bar-compact">
+        <div class="floor-selector-compact">
+            @for (var i = 0; i < 6; i++)
+            {
+                var floorNum = i;
+                var isActive = _currentFloor == floorNum;
+                var hasData = _floors.ContainsKey(floorNum);
+                <button class="floor-btn @(isActive ? "active" : "") @(hasData ? "loaded" : "")"
+                        @onclick="() => SelectFloor(floorNum)"
+                        title="@GetFloorName(floorNum)">
+                    <span class="floor-num">@floorNum</span>
+                    @if (hasData)
+                    {
+                        <span class="loaded-dot">●</span>
+                    }
+                </button>
+            }
+        </div>
+
+        <div class="controls-compact">
+            <input type="number" @bind="_baseFloorSize" min="40" max="100" step="10" placeholder="Base Size"
+                   title="Base Floor Size"/>
+            <input type="number" @bind="_seed" placeholder="Seed" title="Random Seed"/>
+            <button class="btn-generate" @onclick="LoadCurrentFloor" disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <text>⏳</text>
+                }
+                else
+                {
+                    <text>🎲 Generate</text>
+                }
+            </button>
+            <button class="btn-all" @onclick="LoadAllFloors" disabled="@_isLoading" title="Generate All Floors">
+                🏗️ All
+            </button>
+        </div>
+    </div>
+
+    @if (_errorMessage != null)
+    {
+        <div class="error-bar">⚠️ @_errorMessage</div>
+    }
+
+    <!-- Main Content: Side-by-Side 2D and 3D -->
+
+    @if (CurrentFloorData != null)
+    {
+        <div class="info-bar">
+            <span class="info-item">Floor @CurrentFloorData.Floor: @CurrentFloorData.FloorName</span>
+            <span class="info-item">📐 @CurrentFloorData.Width×@CurrentFloorData.Height</span>
+            <span class="info-item">🚪 @CurrentFloorData.Rooms.Count rooms</span>
+            <span class="info-item">🎵 @CurrentFloorData.Rooms.Sum(r => r.Items.Count) items</span>
+            <span class="info-item">🎲 Seed: @CurrentFloorData.Seed</span>
+        </div>
+
+        <div class="dual-view-container">
+            <!-- 2D View -->
+            <div class="view-panel">
+                <div class="view-header">📐 2D View</div>
+                <canvas id="floorCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <!-- 3D View -->
+            <div class="view-panel">
+                <div class="view-header">🎮 3D View</div>
+                <canvas id="floor3DCanvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+
+        <!-- Room List Below -->
+        <div class="room-list-compact">
+            <div class="room-list-header">
+                🏠 Rooms with Items (@CurrentFloorData.Rooms.Count(r => r.Items.Count > 0))
+            </div>
+            <div class="room-grid-compact">
+                @foreach (var room in CurrentFloorData.Rooms.Where(r => r.Items.Count > 0).OrderBy(r => r.Id))
+                {
+                    <div class="room-card-compact @(_selectedRoom?.Id == room.Id ? "selected" : "")"
+                         @onclick="() => SelectRoom(room)">
+                        <div class="room-id">#@room.Id</div>
+                        <div class="room-category">@room.Category</div>
+                        <div class="room-count">@room.Items.Count</div>
+                    </div>
+                }
+            </div>
+
+            @if (_selectedRoom != null)
+            {
+                <div class="room-details-compact">
+                    <div class="details-header">
+                        <span>🏠 Room #@_selectedRoom.Id - @_selectedRoom.Category</span>
+                        <button class="btn-close-compact" @onclick="ClearSelection">✕</button>
+                    </div>
+                    <div class="details-content">
+                        <span>📍 (@_selectedRoom.X, @_selectedRoom.Y)</span>
+                        <span>📐 @_selectedRoom.Width×@_selectedRoom.Height</span>
+                        <span>🎵 @_selectedRoom.Items.Count items</span>
+                    </div>
+                    <div class="items-list-compact">
+                        @foreach (var item in _selectedRoom.Items.Take(20))
+                        {
+                            <span class="item-tag">@item</span>
+                        }
+                        @if (_selectedRoom.Items.Count > 20)
+                        {
+                            <span class="item-tag more">+@(_selectedRoom.Items.Count - 20) more</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state-dark">
+            <div class="empty-icon">🏰</div>
+            <h2>No Floor Loaded</h2>
+            <p>Click a floor number above or click "Generate" to create a floor</p>
+        </div>
+    }
+</div>
+
+@code {
+    private int _currentFloor;
+    private int _baseFloorSize = 60; // Base size for Floor 0
+    private int? _seed;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    private readonly Dictionary<int, FloorData> _floors = new();
+    private FloorData? CurrentFloorData => _floors.ContainsKey(_currentFloor) ? _floors[_currentFloor] : null;
+    private Room? _selectedRoom;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs =
+    [
+        new() { Text = "Home", Url = "/", Icon = "🏠" },
+        new() { Text = "Floor Viewer", Url = "/floors", Icon = "🏰" }
+    ];
+
+    // Calculate pyramid floor size: each floor gets larger as you go up
+    private int GetFloorSize(int floor)
+    {
+        // Floor 0 (bottom) = baseFloorSize
+        // Floor 5 (top) = baseFloorSize + (5 * 10) = baseFloorSize + 50
+        return _baseFloorSize + floor * 10;
+    }
+
+    private string GetFloorName(int floor)
+    {
+        return floor switch
+        {
+            0 => "Set Classes",
+            1 => "Forte Codes",
+            2 => "Prime Forms",
+            3 => "Chords",
+            4 => "Chord Inversions",
+            5 => "Chord Voicings",
+            _ => "Unknown"
+        };
+    }
+
+    private async Task LoadCurrentFloor()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _selectedRoom = null;
+        StateHasChanged();
+
+        try
+        {
+            var floorSize = GetFloorSize(_currentFloor); // Use pyramid sizing
+            var floor = await FloorService.GetFloorAsync(_currentFloor, floorSize, _seed);
+            if (floor != null)
+            {
+                _floors[_currentFloor] = floor;
+                await RenderFloor();
+            }
+            else
+            {
+                _errorMessage = $"Failed to load floor {_currentFloor}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadAllFloors()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _selectedRoom = null;
+        StateHasChanged();
+
+        try
+        {
+            _floors.Clear();
+            // Load each floor with pyramid sizing
+            for (var i = 0; i < 6; i++)
+            {
+                var floorSize = GetFloorSize(i);
+                var floor = await FloorService.GetFloorAsync(i, floorSize, _seed);
+                if (floor != null)
+                {
+                    _floors[i] = floor;
+                }
+            }
+
+            if (CurrentFloorData != null)
+            {
+                await RenderFloor();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectFloor(int floorNum)
+    {
+        _currentFloor = floorNum;
+        _selectedRoom = null;
+
+        // If floor data doesn't exist, load it
+        if (!_floors.ContainsKey(floorNum))
+        {
+            await LoadCurrentFloor();
+        }
+        else
+        {
+            // Floor already loaded, just render it
+            await RenderFloor();
+        }
+
+        StateHasChanged();
+    }
+
+    private void SelectRoom(Room room)
+    {
+        _selectedRoom = room;
+        StateHasChanged();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedRoom = null;
+        StateHasChanged();
+    }
+
+    private async Task RenderFloor()
+    {
+        if (CurrentFloorData == null) return;
+
+        // Render both 2D and 3D views
+        await JsRuntime.InvokeVoidAsync("renderFloor2D", "floorCanvas", CurrentFloorData);
+        await JsRuntime.InvokeVoidAsync("renderFloor3D", "floor3DCanvas", CurrentFloorData);
+    }
+
+}
+
+<style>
+    /* Horizontal Layout */
+    .floor-manager-horizontal {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+
+    /* Left Sidebar */
+    .floor-sidebar {
+        width: 280px;
+        background: #2c3e50;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        border-right: 2px solid #34495e;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        background: #34495e;
+        border-bottom: 2px solid #1a252f;
+    }
+
+    .sidebar-header h2 {
+        margin: 0 0 10px 0;
+        font-size: 1.5rem;
+    }
+
+    .controls-compact {
+        margin-top: 10px;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    /* Floor List Vertical */
+    .floor-list-vertical {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .floor-item {
+        background: #34495e;
+        border: 2px solid #2c3e50;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .floor-item:hover {
+        background: #3d566e;
+        border-color: #4a6fa5;
+        transform: translateX(5px);
+    }
+
+    .floor-item.active {
+        background: #4a6fa5;
+        border-color: #5dade2;
+        box-shadow: 0 0 10px rgba(93, 173, 226, 0.5);
+    }
+
+    .floor-item.loaded {
+        border-left: 4px solid #27ae60;
+    }
+
+    .floor-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .floor-number {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .loaded-indicator {
+        color: #27ae60;
+        font-size: 1.2rem;
+    }
+
+    .floor-name {
+        font-size: 0.9rem;
+        color: #bdc3c7;
+        margin-bottom: 5px;
+    }
+
+    .floor-stats-compact {
+        font-size: 0.85rem;
+        color: #95a5a6;
+        margin-top: 5px;
+    }
+
+    .view-3d-link-compact {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 4px 8px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        transition: background 0.3s;
+    }
+
+    .view-3d-link-compact:hover {
+        background: #2980b9;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+        padding: 15px;
+        background: #1a252f;
+        border-top: 2px solid #34495e;
+    }
+
+    .control-group-compact {
+        margin-bottom: 10px;
+    }
+
+    .control-group-compact label {
+        display: block;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        color: #bdc3c7;
+    }
+
+    .control-group-compact input {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid #34495e;
+        border-radius: 4px;
+        background: #2c3e50;
+        color: white;
+    }
+
+    /* Right Panel */
+    .floor-details-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: white;
+    }
+
+    .floor-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 30px;
+        border-bottom: 3px solid #5568d3;
+    }
+
+    .floor-title-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .floor-title-section h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .generation-status {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .floor-stats-bar {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 15px;
+        border-radius: 8px;
+    }
+
+    .stat-icon {
+        font-size: 1.2rem;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Floor Content Area */
+    .floor-content-area {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+    }
+
+    .canvas-section {
+        flex: 1;
+        padding: 20px;
+        background: #ecf0f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+    }
+
+    .canvas-section canvas {
+        max-width: 100%;
+        max-height: 100%;
+        border: 2px solid #bdc3c7;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .rooms-section {
+        width: 400px;
+        background: #f8f9fa;
+        border-left: 2px solid #dee2e6;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .rooms-header {
+        padding: 15px 20px;
+        background: #e9ecef;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .rooms-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #495057;
+    }
+
+    .rooms-grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .room-card {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .room-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        transform: translateX(-3px);
+    }
+
+    .room-card.selected {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #5568d3;
+    }
+
+    .room-header {
+        margin-bottom: 8px;
+    }
+
+    .room-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .room-card.selected .room-category,
+    .room-card.selected .room-item-count {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .room-category {
+        color: #6c757d;
+    }
+
+    .room-item-count {
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .room-details-panel {
+        background: white;
+        border-top: 2px solid #dee2e6;
+        padding: 20px;
+        max-height: 40%;
+        overflow-y: auto;
+    }
+
+    .room-details-panel.empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+        font-style: italic;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .panel-header h3 {
+        margin: 0;
+        color: #495057;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s;
+    }
+
+    .btn-close:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .detail-section p {
+        margin: 8px 0;
+        color: #495057;
+    }
+
+    .music-items-section {
+        margin-top: 15px;
+    }
+
+    .music-items-section h4 {
+        margin: 0 0 10px 0;
+        color: #495057;
+    }
+
+    .items-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .item-entry {
+        display: flex;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .item-bullet {
+        color: #667eea;
+        font-weight: bold;
+    }
+
+    .item-name {
+        color: #495057;
+        font-size: 0.95rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #adb5bd;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h2 {
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #adb5bd;
+        margin: 5px 0;
+    }
+
+    .empty-state .hint {
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+
+    /* Alert */
+    .alert {
+        padding: 12px;
+        margin: 10px;
+        border-radius: 6px;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #5568d3;
+    }
+
+    .btn-success {
+        background: #27ae60;
+        color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+        background: #229954;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Scrollbar Styling */
+    .floor-list-vertical::-webkit-scrollbar,
+    .rooms-grid::-webkit-scrollbar,
+    .items-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .floor-list-vertical::-webkit-scrollbar-track,
+    .rooms-grid::-webkit-scrollbar-track,
+    .items-list::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .floor-list-vertical::-webkit-scrollbar-thumb,
+    .rooms-grid::-webkit-scrollbar-thumb,
+    .items-list::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
+
+    .floor-list-vertical::-webkit-scrollbar-thumb:hover,
+    .rooms-grid::-webkit-scrollbar-thumb:hover,
+    .items-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+</style>

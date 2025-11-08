@@ -1,0 +1,18 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: FormAndComposition
+FormAndComposition:
+  CommonForms:
+    - Name: ABA
+      Usage: Classical and jazz themes
+    - Name: Verse-Chorus
+      Usage: Pop and rock songs
+    - Name: Rondo
+      Usage: Classical recurring theme form
+  DevelopmentTechniques:
+    - Sequence transposition
+    - Motivic fragmentation
+    - Dynamic contrast
+    - Rhythmic augmentation/diminution

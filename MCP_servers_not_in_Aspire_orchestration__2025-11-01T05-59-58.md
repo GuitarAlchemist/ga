@@ -1,0 +1,57 @@
+[x] NAME:Current Task List DESCRIPTION:Root task for conversation __NEW_AGENT__
+-[x] NAME:Phase 1: 3D Asset Integration Foundation DESCRIPTION:Set up the infrastructure for managing 3D assets in the BSP DOOM Explorer
+--[x] NAME:Create Asset Management Service (Backend) DESCRIPTION:Implement AssetLibraryService in GA.Business.Core for managing 3D models
+--[x] NAME:Add Asset MongoDB Schema DESCRIPTION:Create AssetDocument and AssetMetadata types with MongoDB collections
+--[x] NAME:Create Asset Import CLI Command DESCRIPTION:Add 'asset import' command to GaCLI for importing GLB files
+--[ ] NAME:Download Priority 3D Assets DESCRIPTION:Download 15-20 core assets (ankh, gems, jars, torches) from Sketchfab/CGTrader
+--[x] NAME:Implement MongoDB Integration for AssetLibraryService DESCRIPTION:Update AssetLibraryService to use MongoDB GridFS for storing GLB files and MongoDB collections for metadata
+--[x] NAME:Create Asset API Endpoints in GaApi DESCRIPTION:Add AssetController with endpoints for listing, retrieving, and serving GLB assets
+-[x] NAME:Phase 2: Grothendieck Monoid Core Implementation DESCRIPTION:Implement the mathematical foundation for fretboard shape discovery and navigation
+--[x] NAME:Create Grothendieck F# Module DESCRIPTION:Implement ICV computation, delta operations, and L1 norm in F#
+--[x] NAME:Create Shape Graph Builder DESCRIPTION:Generate fretboard shapes and build adjacency graph with costs
+--[x] NAME:Implement Markov Walker DESCRIPTION:Create probabilistic navigation with softmax and temperature control
+--[x] NAME:Add Grothendieck API Endpoints DESCRIPTION:Create GrothendieckController with ICV, delta, shapes, and heat map endpoints
+-[x] NAME:Phase 3: Frontend Integration DESCRIPTION:Build React components and services for both features
+--[x] NAME:Create AssetLoader TypeScript Service DESCRIPTION:Build frontend service for loading GLB assets from API
+--[x] NAME:Create GrothendieckService TypeScript DESCRIPTION:Build frontend wrapper for Grothendieck API calls
+--[x] NAME:Build FretboardHeatMap Component DESCRIPTION:Create React component for visualizing probability heat maps
+--[x] NAME:Integrate Assets with BSP Explorer DESCRIPTION:Add asset placement and rendering to BSP DOOM Explorer
+-[x] NAME:Create comprehensive test coverage DESCRIPTION:Add unit tests for Grothendieck, Shape Graph, Markov Walker, and Redis AI integration
+-[x] NAME:Unit tests for Grothendieck Service DESCRIPTION:Test ICV computation, delta calculation, harmonic cost, nearby sets, shortest path
+-[x] NAME:Unit tests for Shape Graph Builder DESCRIPTION:Test shape generation, diagness/ergonomics computation, graph construction, transitions
+-[x] NAME:Unit tests for Markov Walker DESCRIPTION:Test walk generation, heat map, practice path, softmax, filtering
+-[x] NAME:Integration tests for Redis Vector Service DESCRIPTION:Test vector indexing, similarity search, caching, session management
+-[x] NAME:Update DEVELOPER_GUIDE.md with testing best practices DESCRIPTION:Add section on test coverage requirements and running tests
+-[x] NAME:Phase 1: Critical Streaming Endpoints DESCRIPTION:Implement streaming for high-traffic, large-dataset endpoints
+-[x] NAME:Implement ChordsController streaming endpoints DESCRIPTION:Add 6 streaming variants: quality, extension, stacking, pitch-class-set, note-count, scale
+-[x] NAME:Implement BSPController tree traversal streaming DESCRIPTION:Add streaming endpoint for BSP tree structure to handle 400K+ nodes
+-[x] NAME:Implement MusicRoomController room generation streaming DESCRIPTION:Stream rooms as they're generated for better UX
+-[x] NAME:Phase 2: Memory Optimization DESCRIPTION:Apply Span<T>, ArrayPool<T>, ValueTask<T> optimizations
+-[x] NAME:Convert array parameters to ReadOnlySpan<T> DESCRIPTION:Update GrothendieckService, IntervalClassVector, ShapeGraphBuilder
+-[x] NAME:Add ArrayPool<T> for temporary buffers DESCRIPTION:Update GrothendieckController.ConvertHeatMapToArray and MarkovWalker
+-[x] NAME:Convert hot paths to ValueTask<T> DESCRIPTION:Update cached methods in services to use ValueTask<T>
+-[-] NAME:Phase 3: .NET 10 Features DESCRIPTION:Leverage Tensor Primitives and SearchValues<T>
+-[-] NAME:Add Tensor Primitives for vector operations DESCRIPTION:Update VectorSearchController, GrothendieckService, SemanticSearchService
+-[-] NAME:Add SearchValues<T> for string validation DESCRIPTION:Optimize quality/extension/stacking validation in controllers
+-[x] NAME:Phase 2: Additional Streaming Endpoints DESCRIPTION:Implement streaming for BSPController, MusicRoomController, and other high-value endpoints
+-[x] NAME:BSPController tree traversal streaming DESCRIPTION:Add streaming endpoint for BSP tree traversal with depth-first iteration
+-[x] NAME:MusicRoomController room generation streaming DESCRIPTION:Add streaming endpoint for progressive room generation
+-[x] NAME:SemanticSearchController streaming DESCRIPTION:Add streaming endpoint for semantic search results
+-[x] NAME:MusicDataController streaming DESCRIPTION:Add streaming endpoints for scales, progressions, and other music data
+-[x] NAME:Phase 3: Memory Optimization DESCRIPTION:Optimize memory usage with Span<T>, ArrayPool<T>, and ValueTask<T>
+-[x] NAME:Convert to ReadOnlySpan<T> DESCRIPTION:Convert array parameters to ReadOnlySpan<T> in hot paths
+-[x] NAME:Add ArrayPool<T> for buffers DESCRIPTION:Use ArrayPool<T> for temporary buffers to reduce allocations
+-[x] NAME:Convert to ValueTask<T> DESCRIPTION:Convert hot paths to ValueTask<T> for allocation-free async
+-[-] NAME:Phase 4: .NET 10 Features DESCRIPTION:Deferred until .NET 10 GA release - packages not available yet
+-[-] NAME:Add Tensor Primitives DESCRIPTION:Deferred until .NET 10 GA release - packages not available yet
+-[-] NAME:Add SearchValues<T> DESCRIPTION:Deferred until .NET 10 GA release - packages not available yet
+-[x] NAME:GPU Acceleration - Complete All Remaining Tasks DESCRIPTION:Implement all GPU acceleration features for maximum performance
+--[x] NAME:Enable CUDA Vector Search DESCRIPTION:Activate existing CudaVectorSearchStrategy for 50-100x speedup
+--[x] NAME:Implement GPU Shape Graph Builder DESCRIPTION:Create ILGPU-based shape graph builder for 60-300x speedup
+--[x] NAME:Implement GPU Grothendieck Service DESCRIPTION:Create ILGPU-based batch ICV computation for 50-100x speedup
+--[x] NAME:Optimize WebGPU Rendering DESCRIPTION:Add LOD system and performance monitoring to BSP DOOM Explorer
+---[x] NAME:Optimize WebGPU Rendering with LOD System DESCRIPTION:Add Level of Detail (LOD) system to BSP DOOM Explorer for handling 400K+ objects efficiently
+---[x] NAME:Add Performance Monitoring to BSP Explorer DESCRIPTION:Add FPS counter, draw call counter, and memory usage monitoring to BSP DOOM Explorer
+--[x] NAME:Run Performance Benchmarks DESCRIPTION:Measure and document performance improvements
+--[x] NAME:Fix Remaining Test Errors DESCRIPTION:Fix 140 errors in GrothendieckServiceTests, MarkovWalkerTests, ShapeGraphBuilderTests
+-[ ] NAME:Download Priority 3D Assets DESCRIPTION:Download 15-20 core assets (ankh, gems, jars, torches) from Sketchfab/CGTrader for BSP Explorer

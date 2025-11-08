@@ -1,0 +1,129 @@
+<idea-plugin>
+    <id>com.guitaralchemist.musictheorydsl</id>
+    <name>Music Theory DSL</name>
+    <vendor email="spareilleux@hotmail.com" url="https://github.com/GuitarAlchemist/ga">Guitar Alchemist</vendor>
+
+    <description><![CDATA[
+    <h1>Music Theory DSL Plugin</h1>
+    <p>Provides comprehensive language support for Music Theory Domain-Specific Languages (DSLs).</p>
+    
+    <h2>Supported DSLs:</h2>
+    <ul>
+        <li><b>Chord Progression DSL</b> - Define chord progressions using Roman numerals and chord symbols</li>
+        <li><b>Fretboard Navigation DSL</b> - Navigate guitar fretboard positions and CAGED shapes</li>
+        <li><b>Scale Transformation DSL</b> - Transform scales with modes, transpositions, and inversions</li>
+        <li><b>Grothendieck Operations DSL</b> - Apply category theory operations to musical structures</li>
+    </ul>
+    
+    <h2>Features:</h2>
+    <ul>
+        <li>Syntax highlighting for all DSL constructs</li>
+        <li>Auto-completion for chords, scales, and operations</li>
+        <li>Real-time syntax validation</li>
+        <li>Error highlighting with helpful messages</li>
+        <li>Code folding for complex structures</li>
+        <li>Brace matching</li>
+    </ul>
+    
+    <h2>File Extensions:</h2>
+    <ul>
+        <li>.chordprog - Chord Progression files</li>
+        <li></.fretboard - Fretboard Navigation files</li>
+        <li>.scaletrans - Scale Transformation files</li>
+        <li>.groth - Grothendieck Operations files</li>
+    </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+    <h2>Version 1.0.0</h2>
+    <ul>
+        <li>Initial release</li>
+        <li>Support for all four Music Theory DSLs</li>
+        <li>Syntax highlighting</li>
+        <li>Auto-completion</li>
+        <li>Syntax validation</li>
+    </ul>
+    ]]></change-notes>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Chord Progression DSL -->
+        <fileType name="Chord Progression"
+                  implementationClass="com.guitaralchemist.musictheorydsl.ChordProgressionFileType"
+                  fieldName="INSTANCE"
+                  language="ChordProgression"
+                  extensions="chordprog"/>
+        
+        <lang.parserDefinition language="ChordProgression"
+                              implementationClass="com.guitaralchemist.musictheorydsl.ChordProgressionParserDefinition"/>
+        
+        <lang.syntaxHighlighterFactory language="ChordProgression"
+                                      implementationClass="com.guitaralchemist.musictheorydsl.ChordProgressionSyntaxHighlighterFactory"/>
+        
+        <completion.contributor language="ChordProgression"
+                               implementationClass="com.guitaralchemist.musictheorydsl.ChordProgressionCompletionContributor"/>
+        
+        <annotator language="ChordProgression"
+                  implementationClass="com.guitaralchemist.musictheorydsl.ChordProgressionAnnotator"/>
+
+        <!-- Fretboard Navigation DSL -->
+        <fileType name="Fretboard Navigation"
+                  implementationClass="com.guitaralchemist.musictheorydsl.FretboardNavigationFileType"
+                  fieldName="INSTANCE"
+                  language="FretboardNavigation"
+                  extensions="fretboard"/>
+        
+        <lang.parserDefinition language="FretboardNavigation"
+                              implementationClass="com.guitaralchemist.musictheorydsl.FretboardNavigationParserDefinition"/>
+        
+        <lang.syntaxHighlighterFactory language="FretboardNavigation"
+                                      implementationClass="com.guitaralchemist.musictheorydsl.FretboardNavigationSyntaxHighlighterFactory"/>
+        
+        <completion.contributor language="FretboardNavigation"
+                               implementationClass="com.guitaralchemist.musictheorydsl.FretboardNavigationCompletionContributor"/>
+        
+        <annotator language="FretboardNavigation"
+                  implementationClass="com.guitaralchemist.musictheorydsl.FretboardNavigationAnnotator"/>
+
+        <!-- Scale Transformation DSL -->
+        <fileType name="Scale Transformation"
+                  implementationClass="com.guitaralchemist.musictheorydsl.ScaleTransformationFileType"
+                  fieldName="INSTANCE"
+                  language="ScaleTransformation"
+                  extensions="scaletrans"/>
+        
+        <lang.parserDefinition language="ScaleTransformation"
+                              implementationClass="com.guitaralchemist.musictheorydsl.ScaleTransformationParserDefinition"/>
+        
+        <lang.syntaxHighlighterFactory language="ScaleTransformation"
+                                      implementationClass="com.guitaralchemist.musictheorydsl.ScaleTransformationSyntaxHighlighterFactory"/>
+        
+        <completion.contributor language="ScaleTransformation"
+                               implementationClass="com.guitaralchemist.musictheorydsl.ScaleTransformationCompletionContributor"/>
+        
+        <annotator language="ScaleTransformation"
+                  implementationClass="com.guitaralchemist.musictheorydsl.ScaleTransformationAnnotator"/>
+
+        <!-- Grothendieck Operations DSL -->
+        <fileType name="Grothendieck Operations"
+                  implementationClass="com.guitaralchemist.musictheorydsl.GrothendieckOperationsFileType"
+                  fieldName="INSTANCE"
+                  language="GrothendieckOperations"
+                  extensions="groth"/>
+        
+        <lang.parserDefinition language="GrothendieckOperations"
+                              implementationClass="com.guitaralchemist.musictheorydsl.GrothendieckOperationsParserDefinition"/>
+        
+        <lang.syntaxHighlighterFactory language="GrothendieckOperations"
+                                      implementationClass="com.guitaralchemist.musictheorydsl.GrothendieckOperationsSyntaxHighlighterFactory"/>
+        
+        <completion.contributor language="GrothendieckOperations"
+                               implementationClass="com.guitaralchemist.musictheorydsl.GrothendieckOperationsCompletionContributor"/>
+        
+        <annotator language="GrothendieckOperations"
+                  implementationClass="com.guitaralchemist.musictheorydsl.GrothendieckOperationsAnnotator"/>
+    </extensions>
+</idea-plugin>
+

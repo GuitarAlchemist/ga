@@ -1,18 +1,19 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
+using Business.Core.Chords;
 using Business.Core.Notes;
-using Business.Core.Scales;
 using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public class ArpeggioSyncService(ILogger<ArpeggioSyncService> logger, MongoDbService mongoDb) : ISyncService<ArpeggioDocument>
+public class ArpeggioSyncService(ILogger<ArpeggioSyncService> logger, MongoDbService mongoDb)
+    : ISyncService<ArpeggioDocument>
 {
     public async Task<bool> SyncAsync()
     {
         try
         {
-            var documents = ChordTemplateFactory.CreateAllChordTemplates().Select(template => new ArpeggioDocument
+            var documents = ChordTemplateFactory.GenerateAllPossibleChords().Select(template => new ArpeggioDocument
             {
                 Name = template.PitchClassSet.Name,
                 Root = template.PitchClassSet.Notes.First().ToString(),
@@ -36,6 +37,8 @@ public class ArpeggioSyncService(ILogger<ArpeggioSyncService> logger, MongoDbSer
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Arpeggios.CountDocumentsAsync(Builders<ArpeggioDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Arpeggios.CountDocumentsAsync(Builders<ArpeggioDocument>.Filter.Empty);
+    }
 }

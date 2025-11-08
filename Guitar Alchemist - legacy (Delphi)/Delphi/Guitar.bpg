@@ -1,0 +1,29 @@
+#------------------------------------------------------------------------------
+VERSION = BWS.01
+#------------------------------------------------------------------------------
+!ifndef ROOT
+ROOT = $(MAKEDIR)\..
+!endif
+#------------------------------------------------------------------------------
+MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
+DCC = $(ROOT)\bin\dcc32.exe $**
+BRCC = $(ROOT)\bin\brcc32.exe $**
+#------------------------------------------------------------------------------
+PROJECTS = alchemist.exe Guitar.bpl test.exe vergen.exe
+#------------------------------------------------------------------------------
+default: $(PROJECTS)
+#------------------------------------------------------------------------------
+
+Guitar.bpl: Components\Guitar.dpk
+  $(DCC)
+
+alchemist.exe: Alchemist\alchemist.dpr
+  $(DCC)
+
+test.exe: Test\test.dpr
+  $(DCC)
+
+vergen.exe: Alchemist\vergen.dpr
+  $(DCC)
+
+

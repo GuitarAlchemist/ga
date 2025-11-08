@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Services.Embeddings;
+namespace GA.Data.MongoDB.Services.Embeddings;
 
 public enum EmbeddingServiceType
 {

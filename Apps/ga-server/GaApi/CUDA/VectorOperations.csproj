@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ILGPU for cross-platform GPU acceleration (consistent with GA.Business.Intelligence) -->
+    <PackageReference Include="ILGPU" Version="1.5.1"/>
+    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
+
+    <!-- System.Numerics.Tensors for tensor operations -->
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10"/>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
+  </ItemGroup>
+
+  <!-- ILGPU GPU acceleration support -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);ILGPU_AVAILABLE</DefineConstants>
+  </PropertyGroup>
+
+</Project>

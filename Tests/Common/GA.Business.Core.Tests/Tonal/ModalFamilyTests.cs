@@ -1,16 +1,9 @@
 ﻿namespace GA.Business.Core.Tests.Tonal;
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Core.Config;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Intervals;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Scales;
-using GA.Business.Core.Tonal.Modes;
-using NUnit.Framework;
+using Core.Atonal;
+using Core.Notes;
+using Scales;
 
 [TestFixture]
 public class ModalFamilyTests
@@ -25,7 +18,11 @@ public class ModalFamilyTests
     [Test]
     public void MajorScaleModalFamily_BaseTest()
     {
-        if (!ModalFamily.TryGetValue(IntervalClassVector.Parse("<2 5 4 3 6 1>"), out var modalFamily)) throw new Exception("Modal family not found");
+        if (!ModalFamily.TryGetValue(IntervalClassVector.Parse("<2 5 4 3 6 1>"), out var modalFamily))
+        {
+            throw new Exception("Modal family not found");
+        }
+
         foreach (var pitchClassSet in modalFamily.Modes)
         {
             ModesConfigCache.Instance.TryGetModeByPitchClassSetId(pitchClassSet.Id.Value, out var mode);
@@ -55,19 +52,19 @@ public class ModalFamilyTests
 
         // Assert that we found the major scale modal family
         Assert.That(majorScaleModalFamily, Is.Not.Null, "Major scale modal family should exist");
-        LogToFile($"Found modal family with {majorScaleModalFamily.Modes.Count} modes");
+        LogToFile($"Found modal family with {majorScaleModalFamily!.Modes.Count} modes");
         LogToFile($"Modal family interval class vector: {majorScaleModalFamily.IntervalClassVector}");
 
         // Define the expected pitch class sets for all major scale modes
         var expectedModes = new Dictionary<string, string>
         {
-            { "Ionian (Major)", "C D E F G A B" },     // 1st mode - C Ionian (C Major)
-            { "Dorian", "D E F G A B C" },             // 2nd mode - D Dorian
-            { "Phrygian", "E F G A B C D" },           // 3rd mode - E Phrygian
-            { "Lydian", "F G A B C D E" },             // 4th mode - F Lydian
-            { "Mixolydian", "G A B C D E F" },         // 5th mode - G Mixolydian
+            { "Ionian (Major)", "C D E F G A B" }, // 1st mode - C Ionian (C Major)
+            { "Dorian", "D E F G A B C" }, // 2nd mode - D Dorian
+            { "Phrygian", "E F G A B C D" }, // 3rd mode - E Phrygian
+            { "Lydian", "F G A B C D E" }, // 4th mode - F Lydian
+            { "Mixolydian", "G A B C D E F" }, // 5th mode - G Mixolydian
             { "Aeolian (Natural Minor)", "A B C D E F G" }, // 6th mode - A Aeolian (A Minor)
-            { "Locrian", "B C D E F G A" }             // 7th mode - B Locrian
+            { "Locrian", "B C D E F G A" } // 7th mode - B Locrian
         };
 
         LogToFile("\nExpected modes of the major scale:");
@@ -94,7 +91,7 @@ public class ModalFamilyTests
             "Major scale modal family should have 7 modes");
 
         LogToFile("\nActual modes in the modal family:");
-        int modeIndex = 1;
+        var modeIndex = 1;
         foreach (var mode in majorScaleModalFamily.Modes)
         {
             LogToFile($"- Mode {modeIndex++}: {mode}");
@@ -116,7 +113,7 @@ public class ModalFamilyTests
 
         // Create all modes of the major scale
         var modes = new List<ModalFamilyScaleMode>();
-        for (int degree = 1; degree <= 7; degree++)
+        for (var degree = 1; degree <= 7; degree++)
         {
             var mode = ModalFamilyScaleMode.FromScale(majorScale, degree);
             Assert.That(mode, Is.Not.Null, $"Failed to create mode with degree {degree}");
@@ -134,7 +131,8 @@ public class ModalFamilyTests
             var expectedPitchClassSet = expectedPitchClassSets.Values.ElementAt(mode.Degree - 1);
             var modeName = expectedModes.Keys.ElementAt(mode.Degree - 1);
             var matches = mode.PitchClassSet.Equals(expectedPitchClassSet);
-            LogToFile($"- Mode {mode.Degree} ({modeName}): {(matches ? "Matches" : "Does not match")} expected pitch class set");
+            LogToFile(
+                $"- Mode {mode.Degree} ({modeName}): {(matches ? "Matches" : "Does not match")} expected pitch class set");
             Assert.That(mode.PitchClassSet, Is.EqualTo(expectedPitchClassSet),
                 $"Mode with degree {mode.Degree} should have the expected pitch class set");
 
@@ -152,8 +150,8 @@ public class ModalFamilyTests
     public void LydianMode_HasCorrectProperties()
     {
         // Arrange
-        var majorScale = Scale.Major;  // C major scale by default
-        var lydianDegree = 4;  // Lydian is the 4th mode
+        var majorScale = Scale.Major; // C major scale by default
+        var lydianDegree = 4; // Lydian is the 4th mode
         var lydianMode = ModalFamilyScaleMode.FromScale(majorScale, lydianDegree);
 
         // Assert
@@ -182,7 +180,8 @@ public class ModalFamilyTests
             Assert.That(lydianMode.ModalFamily.NoteCount, Is.EqualTo(7));
 
             // Check reference mode (Ionian for major modes)
-            Assert.That(lydianMode.RefMode.Notes, Is.EqualTo(AccidentedNoteCollection.Parse("C D E F G A B"))); // C Ionian
+            Assert.That(lydianMode.RefMode.Notes,
+                Is.EqualTo(AccidentedNoteCollection.Parse("C D E F G A B"))); // C Ionian
         });
     }
 }

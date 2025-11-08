@@ -1,7 +1,7 @@
-﻿import { useRef, useEffect } from 'react';
+﻿import {useEffect, useRef} from 'react';
 import Vex from 'vexflow';
 
-const VexTabDisplay = ({ notation }) => {
+const VexTabDisplay = ({notation}) => {
     const divRef = useRef(null);
 
     useEffect(() => {
@@ -20,13 +20,13 @@ const VexTabDisplay = ({ notation }) => {
 
             // Create some tablature notes.
             const notes = [
-                new VF.TabNote({ positions: [{ str: 3, fret: 7 }], duration: "q" }),
-                new VF.TabNote({ positions: [{ str: 2, fret: 8 }], duration: "q" }),
-                new VF.TabNote({ positions: [{ str: 3, fret: 9 }], duration: "q" })
+                new VF.TabNote({positions: [{str: 3, fret: 7}], duration: "q"}),
+                new VF.TabNote({positions: [{str: 2, fret: 8}], duration: "q"}),
+                new VF.TabNote({positions: [{str: 3, fret: 9}], duration: "q"})
             ];
 
             // Create a voice in 4/4 and add the notes from above
-            const voice = new VF.Voice({ num_beats: 3,  beat_value: 4 });
+            const voice = new VF.Voice({num_beats: 3, beat_value: 4});
             voice.addTickables(notes);
 
             // Format and justify the notes to 400 pixels.

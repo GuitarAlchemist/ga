@@ -1,0 +1,363 @@
+﻿@page "/pyramid"
+@inject FloorService FloorService
+@inject IJSRuntime Js
+@using System.Text.Json
+@using FloorManager.Components.Layout
+@using FloorManager.Models
+@using FloorManager.Services
+@implements IDisposable
+
+<PageTitle>Floor Pyramid - Floor Manager</PageTitle>
+
+<Breadcrumb Items="@_breadcrumbs"/>
+
+<div class="pyramid-container">
+    <!-- Compact Selector Bar -->
+    <div class="compact-selector">
+        <div class="selector-group">
+            <label>Floor:</label>
+            <select @bind="_selectedFloor" @bind:after="OnFloorChanged" class="compact-select">
+                @for (var i = 0; i <= 5; i++)
+                {
+                    var floorNum = i;
+                    <option value="@floorNum">Floor @floorNum - @GetFloorName(floorNum)</option>
+                }
+            </select>
+        </div>
+
+        <div class="selector-group">
+            <label>Room:</label>
+            <select @bind="_selectedRoomIndex" @bind:after="OnRoomChanged" class="compact-select"
+                    disabled="@(SelectedFloorData == null)">
+                @if (SelectedFloorData != null)
+                {
+                    @for (var i = 0; i < SelectedFloorData.Rooms.Count; i++)
+                    {
+                        var roomIndex = i;
+                        <option value="@roomIndex">
+                            Room @roomIndex (@SelectedFloorData.Rooms[roomIndex].Items.Count items)
+                        </option>
+                    }
+                }
+                else
+                {
+                    <option value="-1">No rooms</option>
+                }
+            </select>
+        </div>
+
+        <div class="selector-group">
+            <button @onclick="LoadAllFloors" class="compact-btn" disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <span>⏳ Loading...</span>
+                }
+                else
+                {
+                    <span>🔄 Load All</span>
+                }
+            </button>
+        </div>
+
+        <div class="selector-group stats">
+            <span class="stat-badge">@_allFloors.Count/6 floors</span>
+            @if (SelectedFloorData != null)
+            {
+                <span class="stat-badge">@SelectedFloorData.Rooms.Count rooms</span>
+            }
+        </div>
+    </div>
+
+    <!-- 3D Pyramid Viewer -->
+    <div class="pyramid-viewer">
+        <canvas id="pyramidCanvas" @ref="_canvasRef"></canvas>
+    </div>
+
+    <!-- Room Details Panel (Compact) -->
+    @if (SelectedRoom != null)
+    {
+        <div class="details-panel-compact">
+            <div class="details-header">
+                <h4>Room @_selectedRoomIndex - @SelectedRoom.Category</h4>
+                <button @onclick="CloseDetails" class="close-btn">×</button>
+            </div>
+            <div class="details-content">
+                <div class="detail-row">
+                    <span class="label">Position:</span>
+                    <span class="value">(@SelectedRoom.X, @SelectedRoom.Y) Floor @_selectedFloor</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Size:</span>
+                    <span class="value">@SelectedRoom.Width × @SelectedRoom.Height</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Items:</span>
+                    <span class="value">@SelectedRoom.Items.Count</span>
+                </div>
+                @if (SelectedRoom.Items.Count > 0)
+                {
+                    <div class="items-compact">
+                        @foreach (var item in SelectedRoom.Items.Take(10))
+                        {
+                            <span class="item-tag">@item</span>
+                        }
+                        @if (SelectedRoom.Items.Count > 10)
+                        {
+                            <span class="item-tag more">+@(SelectedRoom.Items.Count - 10) more</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private ElementReference _canvasRef;
+    private readonly Dictionary<int, FloorData> _allFloors = new();
+    private int _selectedFloor;
+    private int _selectedRoomIndex = -1;
+    private FloorData? SelectedFloorData => _allFloors.ContainsKey(_selectedFloor) ? _allFloors[_selectedFloor] : null;
+
+    private Room? SelectedRoom => SelectedFloorData != null && _selectedRoomIndex >= 0 && _selectedRoomIndex < SelectedFloorData.Rooms.Count
+        ? SelectedFloorData.Rooms[_selectedRoomIndex]
+        : null;
+
+    private bool _isLoading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await InitializePyramidViewer();
+            await LoadAllFloors();
+        }
+    }
+
+    private async Task InitializePyramidViewer()
+    {
+        await Js.InvokeVoidAsync("eval", @"
+            window.pyramidScene = {
+                scene: null,
+                camera: null,
+                renderer: null,
+                floors: [],
+
+                init: function() {
+                    const canvas = document.getElementById('pyramidCanvas');
+                    if (!canvas) return;
+
+                    // Scene
+                    this.scene = new THREE.Scene();
+                    this.scene.background = new THREE.Color(0x1a1a2e);
+
+                    // Camera
+                    this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 2000);
+                    this.camera.position.set(0, 300, 500);
+                    this.camera.lookAt(0, 0, 0);
+
+                    // Renderer
+                    this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+                    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                    this.renderer.setPixelRatio(window.devicePixelRatio);
+
+                    // Lights
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    this.scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    directionalLight.position.set(100, 200, 100);
+                    this.scene.add(directionalLight);
+
+                    // Grid
+                    const gridHelper = new THREE.GridHelper(600, 20, 0x444444, 0x222222);
+                    gridHelper.position.y = -10;
+                    this.scene.add(gridHelper);
+
+                    // Controls
+                    const controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                    controls.target.set(0, 100, 0);
+
+                    // Animation loop
+                    const animate = () => {
+                        requestAnimationFrame(animate);
+                        controls.update();
+                        this.renderer.render(this.scene, this.camera);
+                    };
+                    animate();
+
+                    // Handle resize
+                    window.addEventListener('resize', () => {
+                        const canvas = document.getElementById('pyramidCanvas');
+                        if (!canvas) return;
+                        this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                        this.camera.updateProjectionMatrix();
+                        this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                    });
+                },
+
+                clearFloors: function() {
+                    this.floors.forEach(floor => this.scene.remove(floor));
+                    this.floors = [];
+                },
+
+                addFloor: function(floorData, floorNumber) {
+                    const floorGroup = new THREE.Group();
+                    const yOffset = floorNumber * 60; // Stack floors vertically
+                    const scale = 1 - (floorNumber * 0.1); // Pyramid effect
+
+                    floorGroup.position.y = yOffset;
+                    floorGroup.scale.set(scale, 1, scale);
+
+                    // Floor colors
+                    const colors = [0x9b59b6, 0x3498db, 0x2ecc71, 0xf39c12, 0xe74c3c, 0x1abc9c];
+                    const floorColor = colors[floorNumber % colors.length];
+
+                    // Add rooms
+                    floorData.rooms.forEach((room, index) => {
+                        const geometry = new THREE.BoxGeometry(room.width, 10, room.height);
+                        const material = new THREE.MeshPhongMaterial({
+                            color: floorColor,
+                            transparent: true,
+                            opacity: 0.7
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(room.centerX - 40, 5, room.centerY - 40);
+
+                        // Add wireframe
+                        const edges = new THREE.EdgesGeometry(geometry);
+                        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+                        mesh.add(line);
+
+                        floorGroup.add(mesh);
+                    });
+
+                    // Floor label
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 256;
+                    canvas.height = 64;
+                    context.fillStyle = '#ffffff';
+                    context.font = 'bold 32px Arial';
+                    context.textAlign = 'center';
+                    context.fillText('Floor ' + floorNumber, 128, 40);
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+                    const sprite = new THREE.Sprite(spriteMaterial);
+                    sprite.position.set(0, 20, 0);
+                    sprite.scale.set(50, 12.5, 1);
+                    floorGroup.add(sprite);
+
+                    this.floors.push(floorGroup);
+                    this.scene.add(floorGroup);
+                }
+            };
+
+            window.pyramidScene.init();
+        ");
+    }
+
+    private async Task LoadAllFloors()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            for (var i = 0; i <= 5; i++)
+            {
+                var floorData = await FloorService.GetFloorAsync(i, 80);
+                if (floorData != null)
+                {
+                    _allFloors[i] = floorData;
+                }
+            }
+
+            await RenderPyramid();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading floors: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RenderPyramid()
+    {
+        await Js.InvokeVoidAsync("eval", "window.pyramidScene.clearFloors();");
+
+        foreach (var kvp in _allFloors.OrderBy(f => f.Key))
+        {
+            var floorData = new
+            {
+                rooms = kvp.Value.Rooms.Select(r => new
+                {
+                    x = r.X,
+                    y = r.Y,
+                    width = r.Width,
+                    height = r.Height,
+                    centerX = r.CenterX,
+                    centerY = r.CenterY
+                }).ToList()
+            };
+
+            await Js.InvokeVoidAsync("eval", $"window.pyramidScene.addFloor({JsonSerializer.Serialize(floorData)}, {kvp.Key});");
+        }
+    }
+
+    private async Task OnFloorChanged()
+    {
+        _selectedRoomIndex = -1;
+        StateHasChanged();
+    }
+
+    private async Task OnRoomChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void CloseDetails()
+    {
+        _selectedRoomIndex = -1;
+        StateHasChanged();
+    }
+
+    private readonly List<BreadcrumbItem> _breadcrumbs =
+    [
+        new() { Text = "Home", Url = "/", Icon = "🏠" },
+        new() { Text = "Pyramid View", Url = "/floors", Icon = "🏔️" }
+    ];
+
+    private string GetFloorName(int floor)
+    {
+        return floor switch
+        {
+            0 => "Set Classes",
+            1 => "Forte Codes",
+            2 => "Prime Forms",
+            3 => "Chords",
+            4 => "Inversions",
+            5 => "Voicings",
+            _ => "Unknown"
+        };
+    }
+
+    public void Dispose()
+    {
+        // Cleanup Three.js scene
+        Js.InvokeVoidAsync("eval", @"
+            if (window.pyramidScene && window.pyramidScene.renderer) {
+                window.pyramidScene.renderer.dispose();
+            }
+        ");
+    }
+
+}
+

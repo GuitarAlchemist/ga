@@ -1,0 +1,364 @@
+# Guitar Techniques Configuration
+# Defines guitar-specific playing techniques and theoretical concepts
+# Conventions:
+# - Use concise, copyable drills with BPM ladders.
+# - Fret numbers are from the nut; string numbers are 6 (low E) → 1 (high E).
+# - "Mechanics" is split by hand and muting details for fast troubleshooting.
+
+GuitarTechniques:
+  - Name: "Pitch Axis Theory"
+    Description: "Keep a central pitch while the harmony around it changes"
+    Category: "Lead Guitar"
+    Inventor: "Joe Satriani"
+    Difficulty: "Advanced"
+    Concept: "Sustain a central note (axis) through modal or functional shifts"
+    Theory: "Static melody over moving harmony creates tension/release without altering the axis"
+    Mechanics:
+      PickingHand: "Sustain/ornament axis note; ghost-pick for time feel"
+      FrettingHand: "Hold/return to axis, outline chord/harmony tones around it"
+      Muting: "RH palm lightly touching adjacent strings; LH finger flats for sympathetic control"
+    Examples:
+      - CentralPitch: "E"
+        ContextHarmony: [ "Em7", "E", "Esus4", "E7", "Emaj7", "Cmaj7/E", "D/E", "F/E" ]
+        SuggestedScales: [ "E Dorian", "E Mixolydian", "E Lydian", "E Altered over E7alt" ]
+        AxisRegister: "12th fret, 1st string (E) or 9th fret, 3rd string (E)"
+      - CentralPitch: "G"
+        ContextHarmony: [ "G", "Gm", "G7", "Gsus4", "Gadd9", "Eb/G", "F/G" ]
+        SuggestedScales: [ "G Ionian", "G Dorian", "G Mixolydian", "G Lydian" ]
+        AxisRegister: "15th fret, 1st string (G) or 12th fret, 3rd string (G)"
+    Applications:
+      - "Lead lines that ignore functional shifts while implying them"
+      - "Layered loop parts (axis on top, harmony below)"
+      - "Film/game ostinati with evolving modes"
+    Songs: [ "Surfing with the Alien", "Always with Me, Always with You" ]
+    Drills:
+      - Name: "Axis ornaments"
+        Steps: [ "Hold axis E (12th fret, 1st string)", "Add neighbor F/F#", "Resolve to E on strong beats" ]
+        BPMLadder: [ 60, 72, 84, 96 ]
+
+  - Name: "Sweep Picking"
+    Description: "Single, continuous pick motion across strings for arpeggios"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Theory: "Economizes string-crossings; each note is a separate fretted event under one directional stroke"
+    Mechanics:
+      PickingHand: "Rest-stroke glide; tiny forearm rotation; no string hopping"
+      FrettingHand: "One finger per note; release pressure immediately (no ringing)"
+      Muting: "RH palm trails; LH release + index-flat to kill previous string"
+    CorePatterns:
+      - Shape: "Minor Triad (Am)"
+        Strings: [ 5, 4, 3, 2, 1 ]
+        Frets: [ 12, 10, 9, 10, 12 ]
+        Direction: "Down sweep"
+        NotesFromA: [ "A", "E", "A", "C", "E" ]
+      - Shape: "Major 7th (Cmaj7)"
+        Strings: [ 5, 4, 3, 2, 1 ]
+        Frets: [ 15, 14, 12, 13, 12 ]
+        Direction: "Down-up"
+        NotesFromC: [ "C", "G", "C", "E", "B" ]
+    Drills:
+      - Name: "3-string mini-sweep (minor)"
+        Strings: [ 3, 2, 1 ]
+        Frets: [ 9, 10, 12 ]
+        BPMLadder: [ 50, 60, 70, 80 ]
+      - Name: "5-string up/down"
+        Strings: [ 5, 4, 3, 2, 1, 2, 3, 4 ]
+        Frets: [ 12,10, 9,10,12,10, 9,10 ]
+        BPMLadder: [ 40, 52, 64, 76 ]
+    Artists: [ "Frank Gambale", "Jason Becker", "Yngwie Malmsteen" ]
+    Pitfalls: [ "Letting notes ring together", "Over-picking instead of gliding" ]
+
+  - Name: "Legato Playing"
+    Description: "Hammers, pulls, slides, and trills to connect notes with minimal picking"
+    Category: "Lead Guitar"
+    Difficulty: "Intermediate"
+    Theory: "Shifts articulation to the fretting hand; enables smooth phrasing and speed bursts"
+    Mechanics:
+      PickingHand: "Light accents on phrase onsets"
+      FrettingHand: "Snap-like pull-offs; decisive hammers; relaxed thumb"
+      Muting: "RH palm + LH finger flats to control sympathetic ring"
+    Applications:
+      - "Scalar lines with articulation variety"
+      - "Intervallic runs with slides"
+      - "Sustain-efficient phrasing over clean tones"
+    Examples:
+      - Pattern: "3-note-per-string ascending legato (A minor)"
+        Strings: [ 6, 6, 6 ]
+        Frets: [ 5, 7, 8 ]
+        Technique: "Pick 5 only; hammer 7→8"
+      - Pattern: "Descending pull-off ladder"
+        Strings: [ 1 ]
+        Frets: [ 8, 7, 5 ]
+        Technique: "Pick 8 only; pull 7→5"
+    Drills:
+      - Name: "Legato grid"
+        Path: "3NPS A minor across neck"
+        Rule: "Pick only string changes"
+        BPMLadder: [ 60, 72, 84, 96 ]
+    Artists: [ "Allan Holdsworth", "Joe Satriani", "Steve Vai" ]
+    Pitfalls: [ "Weak pull-offs (volume mismatch)", "Left-hand tension" ]
+
+  - Name: "Tapping"
+    Description: "Use picking-hand fingers to fret notes"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Theory: "Extends reach, enables wide intervals and polyphony"
+    Mechanics:
+      PickingHand: "Tap with fingertip; quick ‘down–up’ to avoid string noise"
+      FrettingHand: "Anchor shapes; pull-offs toward floor for clarity"
+      Muting: "RH thumb edge + LH flats for multi-string control"
+    Variations:
+      - "Two-Hand Tapping"
+      - "Single-Finger Tapping with LH chords"
+      - "Polyphonic Tapping (independent voices)"
+    Examples:
+      - Name: "A–C–E arpeggio tap"
+        Strings: [ 1 ]
+        FretsLH: [ 5, 8 ]
+        FretsRH: [ 12 ]
+        Notes: [ "A", "C", "E" ]
+    Drills:
+      - Name: "Tap triplets"
+        Pattern: "LH(5)→RH(12)→LH(8) repeating"
+        BPMLadder: [ 60, 72, 84, 96 ]
+    Artists: [ "Eddie Van Halen", "Stanley Jordan", "Jennifer Batten" ]
+    Pitfalls: [ "Noisy releases", "Over-sustained tapped notes" ]
+
+  - Name: "Hybrid Picking"
+    Description: "Pick + fingers for layered textures and speed on skips"
+    Category: "Rhythm/Lead"
+    Difficulty: "Intermediate"
+    Theory: "Flatpick handles bass; middle/ring pick treble for independence"
+    Mechanics:
+      PickingHand: "Plectrum + m (middle) + a (ring); plant lightly"
+      FrettingHand: "Chord grips stay compact; anticipate next string set"
+      Muting: "RH palm on bass; LH release for treble damping"
+    Applications:
+      - "Country banjo rolls"
+      - "Jazz shell + melody"
+      - "Rock/fusion double-stops"
+    Examples:
+      - Name: "Alternating bass + melody (C)"
+        Bass: "5th→4th strings on beats"
+        Top: "m/a on 2 and 4 (strings 2–1)"
+    Drills:
+      - Name: "m–a alternation"
+        Pattern: "Pick (6) + m(2) + a(1)"
+        BPMLadder: [ 70, 82, 96, 112 ]
+    Artists: [ "Danny Gatton", "Albert Lee", "Brent Mason" ]
+
+  - Name: "String Skipping"
+    Description: "Skip adjacent strings for wide intervals and angular lines"
+    Category: "Lead Guitar"
+    Difficulty: "Intermediate"
+    Theory: "Breaks scalar monotony; emphasizes leaps and contour"
+    Mechanics:
+      PickingHand: "Economy crossing with small motions"
+      FrettingHand: "Compact hand frame; visualize intervals"
+      Muting: "RH palm + LH touch on skipped middle strings"
+    Examples:
+      - Name: "1↔3 skip (G major fragment)"
+        Strings: [ 1, 3, 1, 3 ]
+        Frets: [ 12, 14, 15, 17 ]
+        Intervals: [ "M6", "P4" ]
+    Drills:
+      - Name: "Skip sextuplets"
+        Count: "1–2–3–4–5–6 across 1↔3↔2↔4"
+        BPMLadder: [ 60, 72, 84, 96 ]
+    Artists: [ "Paul Gilbert", "John Petrucci", "Greg Howe" ]
+
+  - Name: "Economy Picking"
+    Description: "Use sweep motion whenever you change strings in the same direction"
+    Category: "Lead Guitar"
+    Difficulty: "Advanced"
+    Theory: "Blend alternate + sweep to reduce reversals"
+    Mechanics:
+      PickingHand: "Down–down across lower→higher strings; up–up across higher→lower"
+      FrettingHand: "Synchronize string-change moments; small shifts"
+      Muting: "As for sweep: trailing palm + LH release"
+    Rules:
+      - "Alternate on single string"
+      - "Sweep when crossing in the pick’s current direction"
+    Examples:
+      - Name: "3NPS ascent"
+        Strings: [ 3, 3, 2, 1 ]
+        PickDir: [ "Down", "Up", "Down", "Down" ]
+    Drills:
+      - Name: "3NPS across 6→1"
+        Rule: "Down start; sweep entries"
+        BPMLadder: [ 60, 72, 84, 96 ]
+    Artists: [ "Frank Gambale", "Brett Garsed", "Troy Grady (analysis)" ]
+
+  - Name: "Alternate Picking"
+    Description: "Strict down–up alternation for timing and articulation"
+    Category: "Lead/Rhythm"
+    Difficulty: "AllLevels"
+    Theory: "Consistent motor pattern yields stable time feel and tone"
+    Mechanics:
+      PickingHand: "Small motions from wrist; minimal pick exposure"
+      FrettingHand: "Prepare next note early; keep fingers close"
+      Muting: "RH palm for low strings; LH release on high strings"
+    Drills:
+      - Name: "Accent grid"
+        Pattern: "8th notes, accents rotate (1→&→2→& ...)"
+        BPMLadder: [ 80, 96, 112, 128 ]
+      - Name: "Outside/Inside crossings"
+        Strings: [ "2–3 outside", "2–3 inside" ]
+        BPMLadder: [ 70, 84, 98, 112 ]
+    Pitfalls: [ "Elbow motion only", "Pick too deep into string" ]
+
+  - Name: "Crosspicking"
+    Description: "Arpeggio picking with a shallow curved escape on both directions"
+    Category: "Rhythm/Lead"
+    Difficulty: "Advanced"
+    Theory: "Bluegrass to fusion: even triplets with ergonomic escapes"
+    Mechanics:
+      PickingHand: "Small arc; both-string escapes; metronomic"
+      FrettingHand: "Chord stability; minimal lift"
+      Muting: "Light LH release on non-target strings"
+    Drills:
+      - Name: "G-Em-C-D roll (triplets)"
+        Strings: [ "4-3-2, 4-3-2 ..." ]
+        BPMLadder: [ 60, 72, 84, 96 ]
+
+  - Name: "Harmonics (Natural/Artificial/Pinch/Tap)"
+    Description: "Excite partials at nodal points for bell-like tones"
+    Category: "Lead/Texture"
+    Difficulty: "Intermediate"
+    Theory: "Node positions approximate 12th, 7th, 5th, 4th frets, etc."
+    Mechanics:
+      PickingHand: "For pinch: edge of thumb shortly after pick; for tap: firm, fast tap at node"
+      FrettingHand: "Light touch over fretwire (natural); for AH, fret base note and touch/tap node"
+      Muting: "Non-target strings damped by both hands"
+    NodeMap:
+      - Ratio: "1/2"
+        FretApprox: 12
+      - Ratio: "1/3"
+        FretApprox: 7
+      - Ratio: "1/4"
+        FretApprox: 5
+      - Ratio: "1/5"
+        FretApprox: 4
+    Drills:
+      - Name: "Natural harmonic ladder (open strings)"
+        Steps: [ "12th", "7th", "5th", "4th" ]
+        BPMLadder: [ 40, 52, 64 ]
+    Artists: [ "Lenny Breau", "Chet Atkins", "Jeff Beck" ]
+
+  - Name: "Raking"
+    Description: "Muted directional sweep into a target note for aggressive attack"
+    Category: "Lead/Blues/Rock"
+    Difficulty: "Beginner"
+    Mechanics:
+      PickingHand: "Down rake through muted higher strings; land on target"
+      FrettingHand: "Lightly mute raked strings; fret target cleanly"
+      Muting: "LH muting does most of the work"
+    Drills:
+      - Name: "Blues rake to target"
+        Target: "1st string, 8th fret"
+        Setup: "Mute strings 4–2 and rake down"
+        Reps: 10
+
+  - Name: "Slides & Portamento"
+    Description: "Continuous pitch movement between frets"
+    Category: "Lead/Expression"
+    Difficulty: "AllLevels"
+    Mechanics:
+      PickingHand: "Pick origin, let slide carry sound"
+      FrettingHand: "Consistent finger pressure; relaxed thumb"
+      Muting: "RH palm to stop after arrival"
+    Drills:
+      - Name: "Targeted slides"
+        Steps: [ "Pick 5→7", "7→9", "Add vibrato at target" ]
+        BPMLadder: [ 40, 52, 64 ]
+
+TechnicalCategories:
+  RhythmTechniques:
+    - Name: "Palm Muting"
+      Description: "Rest side of palm near bridge for tight articulation"
+      Effect: "Percussive, gated sustain"
+      Tips: [ "Adjust distance to vary brightness", "Pair with downstroke bias for metal" ]
+    - Name: "Chicken Picking"
+      Description: "Hybrid picking + LH/RH muting for staccato pops"
+      Genre: [ "Country", "Funk" ]
+      Tips: [ "Snap with m/a fingers", "Accent syncopations" ]
+    - Name: "Reggae Skank"
+      Description: "Upstroke off-beats with left-hand releases"
+      Rhythm: "Emphasis on 2 and 4"
+      Tips: [ "Immediate LH lift after attack", "Thin tone helps clarity" ]
+    - Name: "Tremolo Picking"
+      Description: "Fast repeated picking on one note/string"
+      Use: [ "Surf", "Black metal", "Ornamented melody holds" ]
+      Tips: [ "Small wrist motion", "Even subdivisions at slow tempo first" ]
+
+  LeadTechniques:
+    - Name: "Vibrato"
+      Description: "Controlled pitch oscillation around the target"
+      Types: [ "Classical (parallel)", "Rock (across string)", "Bar vibrato" ]
+      Tips: [ "Match width to context", "Start narrow, then widen" ]
+    - Name: "Bending"
+      Description: "Raise pitch by stretching string; add release for expression"
+      Types: [ "Half-step", "Whole-step", "Step-and-a-half", "Pre-bend", "Release" ]
+      Tips: [ "Intonate against reference", "Support with adjacent fingers" ]
+    - Name: "Harmonics"
+      Description: "Bell-like tones"
+      Types: [ "Natural", "Artificial", "Pinch", "Tapped" ]
+      Tips: [ "Pick closer to bridge for clarity", "Experiment with node vs pick point" ]
+
+FretboardConcepts:
+  - Name: "CAGED System"
+    Description: "Five basic chord shapes spanning the neck"
+    Shapes: [ "C", "A", "G", "E", "D" ]
+    Application: [ "Chord voicings", "Scale overlays", "Chord-melody anchors" ]
+  - Name: "Three Notes Per String (3NPS)"
+    Description: "Uniform scale patterns for speed and position shifts"
+    Benefit: "Predictable picking logic; legato friendly"
+    Application: [ "Scalar runs", "Economy picking" ]
+  - Name: "Pentatonic Boxes"
+    Description: "Five connected minor/major pentatonic shapes"
+    Coverage: "Entire fretboard"
+    Application: [ "Blues/rock lead", "Box-to-diagonal connections" ]
+  - Name: "Interval Grid"
+    Description: "Map intervals from any root across strings"
+    Application: [ "Quick voicing design", "Improvisation targets" ]
+  - Name: "Diagonal Pathways"
+    Description: "Combine position + lateral shifts to keep phrases lyrical"
+    Application: [ "Melodic continuity", "Slide/legato integration" ]
+
+PracticeApproaches:
+  TechnicalDevelopment:
+    - "Slow first with a click; raise by 8–12 BPM only when clean"
+    - "Chunk difficult bars; loop micro-sections"
+    - "Practice outside/inside string crossings"
+    - "Record short takes; compare tone and timing"
+  MusicalApplication:
+    - "Apply each technique over a simple I–VI–II–V backing"
+    - "Compose a 4-bar lick per technique; vary rhythm"
+    - "Integrate axis note ideas over modal vamps"
+    - "Alternate legato and picked articulations in one phrase"
+  PhysicalConsiderations:
+    - "Neutral wrist; shoulders relaxed"
+    - "Warm up 5–10 minutes; rest if tension appears"
+    - "Use minimum necessary pressure"
+    - "Vary posture (sitting/standing) to avoid overuse"
+  TimeFeel:
+    - "Practice behind/center/ahead of click (record to evaluate)"
+    - "Ghost notes for subdivision awareness"
+    - "Accent rotation exercises on 8ths/16ths"
+
+HistoricalContext:
+  ClassicalInfluence:
+    - Techniques: [ "Fingerstyle", "Classical posture", "Rest stroke" ]
+    - Adaptation: "Arpeggio patterns and voice-leading inform modern playing"
+  BluesFoundation:
+    - Techniques: [ "Bending", "Vibrato", "Call–response" ]
+    - Evolution: "Laid groundwork for rock phrasing and articulation"
+  JazzInnovation:
+    - Techniques: [ "Chord-melody", "Walking bass + chords", "Comping shells" ]
+    - Complexity: "Advanced harmony and time displacement"
+  RockEvolution:
+    - Techniques: [ "Power chords", "Distortion", "Feedback", "Palm muting" ]
+    - Amplification: "Sound-shaping as part of technique"
+  ModernFusion:
+    - Techniques: [ "Tapping", "Sweep/economy picking", "Extended-range guitar" ]
+    - Technology: "FX chains, amp modeling, IRs as part of the instrument"

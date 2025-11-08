@@ -2,34 +2,34 @@
   IntervalClassVector: "<0 3 2 2 2 1>"
   Notes: "C D E F# A"
   Description: "A five-note scale commonly used in folk and popular music."
-  AlternateNames: ["Major Pentatonic Scale"]
+  AlternateNames: [ "Major Pentatonic Scale" ]
 
 MinorPentatonic:
   IntervalClassVector: "<0 4 0 4 0 2>"
   Notes: "C D E F# G#"
   Description: "A five-note scale commonly used in blues and rock music."
-  AlternateNames: ["Minor Pentatonic Scale"]
+  AlternateNames: [ "Minor Pentatonic Scale" ]
 
 WholeTone:
   IntervalClassVector: "<0 4 0 4 0 2>"
   Notes: "C D E F# G# A#"
   Description: "A six-note scale consisting of whole tones."
-  AlternateNames: ["Whole Tone Scale"]
+  AlternateNames: [ "Whole Tone Scale" ]
 
 Blues:
   IntervalClassVector: "<1 4 3 2 5 0>"
   Notes: "C D E F G A"
   Description: "A six-note scale commonly used in blues music."
-  AlternateNames: ["Blues Scale"]
+  AlternateNames: [ "Blues Scale" ]
 
 AcousticScale:
   IntervalClassVector: "<2 5 4 4 4 2>"
   Notes: "C D E F# G A Bb"
   Description: "A seven-note scale with acoustic properties."
-  AlternateNames: ["Acoustic Scale", "Lydian Dominant Scale"]
+  AlternateNames: [ "Acoustic Scale", "Lydian Dominant Scale" ]
 
 Diminished:
   IntervalClassVector: "<4 6 4 6 4 4>"
   Notes: "C D Eb F Gb Ab A B"
   Description: "An eight-note scale alternating whole and half steps."
-  AlternateNames: ["Diminished Scale", "Octatonic Scale"]
+  AlternateNames: [ "Diminished Scale", "Octatonic Scale" ]

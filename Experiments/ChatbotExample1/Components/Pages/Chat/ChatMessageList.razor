@@ -4,13 +4,13 @@
     <chat-messages class="page-width message-list" in-progress="@(InProgressMessage is not null)">
         @foreach (var message in Messages)
         {
-            <ChatMessageItem @key="@message" Message="@message" />
+            <ChatMessageItem @key="@message" Message="@message"/>
         }
 
         @if (InProgressMessage is not null)
         {
-            <ChatMessageItem Message="@InProgressMessage" InProgress="true" />
-            <LoadingSpinner />
+            <ChatMessageItem Message="@InProgressMessage" InProgress="true"/>
+            <LoadingSpinner/>
         }
         else if (IsEmpty)
         {
@@ -20,14 +20,11 @@
 </div>
 
 @code {
-    [Parameter]
-    public required IEnumerable<ChatMessage> Messages { get; set; }
+    [Parameter] public required IEnumerable<ChatMessage> Messages { get; set; }
 
-    [Parameter]
-    public ChatMessage? InProgressMessage { get; set; }
+    [Parameter] public ChatMessage? InProgressMessage { get; set; }
 
-    [Parameter]
-    public RenderFragment? NoMessagesContent { get; set; }
+    [Parameter] public RenderFragment? NoMessagesContent { get; set; }
 
     private bool IsEmpty => !Messages.Any(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) && !string.IsNullOrEmpty(m.Text));
 
@@ -39,4 +36,5 @@
             await JS.InvokeVoidAsync("import", "./Components/Pages/Chat/ChatMessageList.razor.js");
         }
     }
+
 }

@@ -1,10 +1,11 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Models;
 using Microsoft.Extensions.Logging;
+using Models;
 
 [UsedImplicitly]
-public class ProgressionSyncService(ILogger<ProgressionSyncService> logger, MongoDbService mongoDb) : ISyncService<ProgressionDocument>
+public class ProgressionSyncService(ILogger<ProgressionSyncService> logger, MongoDbService mongoDb)
+    : ISyncService<ProgressionDocument>
 {
     public async Task<bool> SyncAsync()
     {
@@ -557,6 +558,8 @@ public class ProgressionSyncService(ILogger<ProgressionSyncService> logger, Mong
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Progressions.CountDocumentsAsync(Builders<ProgressionDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Progressions.CountDocumentsAsync(Builders<ProgressionDocument>.Filter.Empty);
+    }
 }

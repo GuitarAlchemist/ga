@@ -1,11 +1,15 @@
-﻿Baglama:
+Baglama:
   DisplayName: "Baglama"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="3" width="3" height="13" fill="currentColor"/><line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="0.5"/></svg>
   Greek:
     DisplayName: "Greek"
     Tuning: D4 D5 A4 A4 D5 D5
 
 Bajo:
   DisplayName: "Bajo"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 2L7 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="7" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.8"/><line x1="7" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.8"/></svg>
   Quinto:
     DisplayName: "Quinto"
     Tuning: A2 A1 D3 D2 G2 G2 C3 C3 F3 F3
@@ -15,6 +19,8 @@ Bajo:
 
 Balalaika:
   DisplayName: "Balalaika"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22L6 14L18 14z" fill="currentColor"/><rect x="10.5" y="2" width="3" height="12" fill="currentColor"/><line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Alto:
     DisplayName: "Alto"
     Tuning: E3 E3 A3
@@ -36,6 +42,8 @@ Balalaika:
 
 Bandola:
   DisplayName: "Bandola"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Central:
     DisplayName: "Central"
     Tuning: E3 E4 A3 A3 D3 D4 G3 G4
@@ -55,18 +63,24 @@ Bandola:
 
 Bandolim:
   DisplayName: "Bandolim"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G3 D4 D4 A4 A4 E5 E5
 
 Bandora:
   DisplayName: "Bandora"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G4 C2 D2 G2 C3 E3 A3
 
 Bandurria:
   DisplayName: "Bandurria"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v11l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G#3 G#3 C#4 C#4 F#4 F#4 B4 B4 E5 E5 A5 A5
@@ -79,6 +93,8 @@ Bandurria:
 
 Banjo:
   DisplayName: "Banjo"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="2" width="3" height="14" fill="currentColor"/><line x1="8" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="0.5"/></svg>
   Cello:
     DisplayName: "Cello"
     Tuning: C2 G2 D3 A3
@@ -104,18 +120,24 @@ Banjo:
 
 Banjolin:
   DisplayName: "Banjolin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="2" width="3" height="14" fill="currentColor"/><line x1="8" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 D4 A5 E5
 
 Banjourine:
   DisplayName: "Banjourine"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="2" width="3" height="14" fill="currentColor"/><line x1="8" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C5 G3 C4 E3 G4
 
 BaritoneGuitar:
   DisplayName: "Baritone Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard1:
     DisplayName: "Standard 1"
     Tuning: B1 E2 A2 D3 F#3 B3
@@ -128,6 +150,8 @@ BaritoneGuitar:
 
 BassGuitar:
   DisplayName: "Bass Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E1 A1 D2 G2
@@ -142,12 +166,16 @@ BassGuitar:
 
 Bordonua:
   DisplayName: "Bordonua"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A2 A3 D4 D3 F#3 F#4 B3 B3 E4 E4
 
 Bouzouki:
   DisplayName: "Bouzouki"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="3" width="3" height="13" fill="currentColor"/><line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="0.5"/></svg>
   GreekTetrachordo:
     DisplayName: "Greek Tetrachordo"
     FullName: Greek Tetrachordo
@@ -183,12 +211,16 @@ Bouzouki:
 
 Braguinha:
   DisplayName: "Braguinha"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D4 G4 B4 D5
 
 Cavaquinho:
   DisplayName: "Cavaquinho"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 4L10 7v10l3 3 3-3V7z" fill="currentColor"/><line x1="10" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D4 G4 B4 D5
@@ -211,12 +243,16 @@ Cavaquinho:
 
 Chanzy:
   DisplayName: "Chanzy"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F2 C3 F3
 
 Charango:
   DisplayName: "Charango"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 5L10 8v9l3 3 3-3V8z" fill="currentColor"/><line x1="10" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="15" x2="16" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G4 G4 C4 C4 E5 E4 A4 A4 E5 E5
@@ -226,6 +262,8 @@ Charango:
 
 Charangon:
   DisplayName: "Charangon"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 5L10 8v9l3 3 3-3V8z" fill="currentColor"/><line x1="10" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="15" x2="16" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Tuning1:
     DisplayName: "Tuning 1"
     Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
@@ -235,12 +273,16 @@ Charangon:
 
 ChitarraBattente:
   DisplayName: "Chitarra Battente"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A3 D4 G3 B3 E4
 
 Chonguri:
   DisplayName: "Chonguri"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   DMinor:
     DisplayName: "D Minor"
     Tuning: D2 F2 D3 A2
@@ -250,12 +292,16 @@ Chonguri:
 
 Cistre:
   DisplayName: "Cistre"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="5.5" ry="6.5" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8.5" y1="8" x2="15.5" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E2 A2 D3 D3 E3 E3 A3 A3 C#4 C#4 E4 E4
 
 Cittern:
   DisplayName: "Cittern"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="5.5" ry="6.5" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8.5" y1="8" x2="15.5" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Bell:
     DisplayName: "Bell"
     Tuning: B3 B3 D4 D4 F4 F4 A4 A4 D5 D5
@@ -316,6 +362,8 @@ Cittern:
 
 Cuatro:
   DisplayName: "Cuatro"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 4L10 7v10l3 3 3-3V7z" fill="currentColor"/><line x1="10" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   PuertoRican:
     DisplayName: "Puerto Rican"
     Tuning: B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
@@ -325,18 +373,24 @@ Cuatro:
 
 Cumbus:
   DisplayName: "Cumbus"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   DanTyba:
     DisplayName: "Dan Tyba"
     Tuning: G3 C4 D4 G4
 
 DobroorResophonic:
   DisplayName: "Dobro Or Resophonic"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G2 B2 D3 G3 B3 D4
 
 Domra:
   DisplayName: "Domra"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Alto:
     DisplayName: "Alto"
     Tuning: E3 A3 D4
@@ -368,6 +422,8 @@ Domra:
 
 Dulcimer:
   DisplayName: "Dulcimer"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="12" height="10" rx="1" fill="currentColor"/><line x1="6" y1="11" x2="18" y2="11" stroke="white" stroke-width="0.5"/><line x1="6" y1="14" x2="18" y2="14" stroke="white" stroke-width="0.5"/></svg>
   AeolianModeDMinor:
     DisplayName: "Aeolian Mode D Minor"
     FullName: Aeolian Mode D Minor
@@ -419,36 +475,48 @@ Dulcimer:
 
 EnglishGuittar:
   DisplayName: "English Guittar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 E3 G3 G3 C4 C4 E4 E4 G4 G4
 
 Gekkin:
   DisplayName: "Gekkin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A3 D4 D4 D5
 
 Ghita:
   DisplayName: "Ghita"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 F3 C4 G4 C5
 
 Gittern:
   DisplayName: "Gittern"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D4 G4 D5 G5
 
 Grajappi:
   DisplayName: "Grajappi"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F2 F2 B2 B2
 
 Guitar:
   DisplayName: "Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E2 A2 D3 G3 B3 E4
@@ -508,48 +576,64 @@ Guitar:
 
 GuitarBanjo:
   DisplayName: "Guitar Banjo"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E2 A2 D3 G3 B3 E4
 
 GuitarDecacorde:
   DisplayName: "Guitar Decacorde"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C2 D2 E2 F2 G2 A2 D3 G3 B3 E4
 
 GuitarradeGolpe:
   DisplayName: "Guitarra De Golpe"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D3 G3 C4 E3 A3
 
 GuitarroorGuitarrico:
   DisplayName: "Guitarro Or Guitarrico"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: B4 F#4 D5 A5 E5
 
 Guitarrón:
   DisplayName: "Guitarrón"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A1 D2 G2 C3 E3 A2
 
 Halszither:
   DisplayName: "Halszither"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Krienser:
     DisplayName: "Krienser"
     Tuning: G2 G2 D3 D3 G3 G3 B3 B3 D4 D4
 
 Harzzither:
   DisplayName: "Harzzither"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G3 C4 C4 E4 E4 G4 G4
 
 HawaiianGuitar:
   DisplayName: "Hawaiian Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Tuning1:
     DisplayName: "Tuning 1"
     Tuning: E2 A2 E3 A3 C#4 E4
@@ -559,12 +643,16 @@ HawaiianGuitar:
 
 Huapanguera:
   DisplayName: "Huapanguera"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: Huapanguera
 
 Jarana:
   DisplayName: "Jarana"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Huasteca:
     DisplayName: "Huasteca"
     Tuning: G3 B3 D4 F#4 A4
@@ -574,24 +662,32 @@ Jarana:
 
 Laud:
   DisplayName: "Laud"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G#2 G#2 C#3 C#3 F#3 F#3 B3 B3 E4 E4 A4 A4
 
 Lavta:
   DisplayName: "Lavta"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C2 C2 G2 G2 D3 D3 A3 A3
 
 Liuqin:
   DisplayName: "Liuqin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 D4 G4 D5
 
 Lute:
   DisplayName: "Lute"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   BaroqueDMinor:
     DisplayName: "Baroque D Minor"
     FullName: Baroque D Minor
@@ -606,24 +702,32 @@ Lute:
 
 Mandobass:
   DisplayName: "Mandobass"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 2L7 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="7" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.8"/><line x1="7" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.8"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E1 A1 D2 G2
 
 Mandocello:
   DisplayName: "Mandocello"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C2 C2 G2 G2 D3 D3 A3 A3
 
 Mandola:
   DisplayName: "Mandola"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Tenor:
     DisplayName: "Tenor"
     Tuning: C3 C3 G3 G3 D4 D4 A4 A4
 
 Mandolin:
   DisplayName: "Mandolin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G3 D4 D4 A4 A4 E5 E5
@@ -653,6 +757,8 @@ Mandolin:
 
 Mandolino:
   DisplayName: "Mandolino"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="4" width="3" height="12" fill="currentColor"/><line x1="9" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G3 B3 B3 E4 E4 A4 A4 D5 D5 G5 G5
@@ -662,6 +768,8 @@ Mandolino:
 
 Mandore:
   DisplayName: "Mandore"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   ModalC:
     DisplayName: "Modal C"
     FullName: Modal C
@@ -676,6 +784,8 @@ Mandore:
 
 MandriolaOrTricordia:
   DisplayName: "Mandriola Or Tricordia"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G2 G3 G3 D3 D4 D4 A3 A4 A4 E4 E5 E5
@@ -685,24 +795,32 @@ MandriolaOrTricordia:
 
 Mejorana:
   DisplayName: "Mejorana"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D4 A4 A3 B3 E4
 
 Mondol:
   DisplayName: "Mondol"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E2 E2 A2 A2 D3 D3 G3 G3 B3 B3
 
 OctaveGuitar:
   DisplayName: "Octave Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E3 A3 D4 G4 B5 E5
 
 Panduri:
   DisplayName: "Panduri"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   E:
     DisplayName: "E"
     Tuning: E3 B3 A4
@@ -712,6 +830,8 @@ Panduri:
 
 PedalSteelGuitar:
   DisplayName: "Pedal Steel Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   T1:
     DisplayName: "T 1"
     Tuning: C6 C2 F2 2 C3 E3 G3 A3 C4 E4 G4
@@ -725,18 +845,24 @@ PedalSteelGuitar:
 
 Phin:
   DisplayName: "Phin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G4 D4 A4
 
 Pipa:
   DisplayName: "Pipa"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A2 D2 G3 A3
 
 PortugueseGuitarra:
   DisplayName: "Portuguese Guitarra"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Coimbra:
     DisplayName: "Coimbra"
     Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3 A3 A3
@@ -746,18 +872,24 @@ PortugueseGuitarra:
 
 Rajão:
   DisplayName: "Rajão"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D4 G4 C4 E4 A4 A4
 
 Ramkie:
   DisplayName: "Ramkie"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 F3 A3 C4
 
 Requinto:
   DisplayName: "Requinto"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A2 D3 G3 C4 E4 A4
@@ -776,12 +908,16 @@ Requinto:
 
 Ronroco:
   DisplayName: "Ronroco"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G3 C3 C3 E4 E3 A3 A3 E4 E4
 
 Ruan:
   DisplayName: "Ruan"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Soprano:
     DisplayName: "Soprano"
     Tuning: G2 D3 A3 E4
@@ -794,12 +930,16 @@ Ruan:
 
 RussianGuitar:
   DisplayName: "Russian Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D2 G2 B2 D3 G3 B3 D4
 
 Saz:
   DisplayName: "Saz"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="3" width="3" height="13" fill="currentColor"/><line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="0.5"/></svg>
   AzeriOrQopuz:
     DisplayName: "Azeri Or Qopuz"
     FullName: Azeri/Qopuz
@@ -815,6 +955,8 @@ Saz:
 
 Seis:
   DisplayName: "Seis"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   PuertoRican:
     DisplayName: "Puerto Rican"
     FullName: Puerto Rican
@@ -826,42 +968,56 @@ Seis:
 
 Setar:
   DisplayName: "Setar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 C4 G3 C4
 
 Sitar:
   DisplayName: "Sitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="17" rx="4" ry="5" fill="currentColor"/><rect x="10.5" y="2" width="3" height="15" fill="currentColor"/><circle cx="12" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C5 C4 G3 C2 G2 C3 F3
 
 SopranoGuitar:
   DisplayName: "Soprano Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E3 A4 D4 G4 B4 E5
 
 Sovacon:
   DisplayName: "Sovacon"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G2 D3 A3 B2
 
 Strumstick:
   DisplayName: "Strumstick"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 D4 G4
 
 Tambur:
   DisplayName: "Tambur"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Yali:
     DisplayName: "Yali"
     Tuning: D2 D2 A2 A2 D3 D3
 
 Tamburitza:
   DisplayName: "Tamburitza"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Brac:
     DisplayName: "Brac"
     Tuning: E2 A2 D3 G3
@@ -871,6 +1027,8 @@ Tamburitza:
 
 Tar:
   DisplayName: "Tar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 C4 G3 G3 C4 C4
@@ -881,12 +1039,16 @@ Tar:
 
 TaroPatch:
   DisplayName: "Taro Patch"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 G4 C4 C3 C4 E4 E4 A4 A4
 
 TenorGuitar:
   DisplayName: "Tenor Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: C3 G3 D4 A4
@@ -896,12 +1058,16 @@ TenorGuitar:
 
 Timple:
   DisplayName: "Timple"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 4L10 7v10l3 3 3-3V7z" fill="currentColor"/><line x1="10" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G4 C5 E4 A4 D5
 
 Tiple:
   DisplayName: "Tiple"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Chilean:
     DisplayName: "Chilean"
     Tuning: D4 D3 D4 G4 G3 G4 B3 B3 B3 E4 E4 E4
@@ -920,6 +1086,8 @@ Tiple:
 
 TresCubano:
   DisplayName: "Tres Cubano"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   CMajor:
     DisplayName: "C Major"
     Tuning: G4 G3 C4 C4 E4 E3
@@ -929,12 +1097,16 @@ TresCubano:
 
 Tzouras:
   DisplayName: "Tzouras"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/><rect x="10.5" y="3" width="3" height="13" fill="currentColor"/><line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D3 D4 A3 A3 D4 D4
 
 Ukulele:
   DisplayName: "Ukulele"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 4L10 7v10l3 3 3-3V7z" fill="currentColor"/><line x1="10" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="10" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   SopranoConcertAndTenorC:
     DisplayName: "Soprano Concert And Tenor C"
     FullName: Soprano C, Concert & Tenor C
@@ -960,12 +1132,16 @@ Ukulele:
 
 Vihuela:
   DisplayName: "Vihuela"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v11l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A3 D4 G4 B3 E4
 
 Viola:
   DisplayName: "Viola"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Amarantina:
     DisplayName: "Amarantina"
     FullName: Viola Amarantina
@@ -1017,12 +1193,16 @@ Viola:
 
 ViolãoDeSeteCordas:
   DisplayName: "Violão De Sete Cordas"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: B1 E2 A2 D3 G3 B3 E4
 
 Walaycho:
   DisplayName: "Walaycho"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   StandardF:
     DisplayName: "Standard F"
     Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
@@ -1032,6 +1212,8 @@ Walaycho:
 
 Waldzither:
   DisplayName: "Waldzither"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Hamburger:
     DisplayName: "Hamburger"
     Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
@@ -1041,84 +1223,367 @@ Waldzither:
 
 YuehChinOrYuehQin:
   DisplayName: "Yueh Chin Or Yueh Qin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: G3 D4 G4 D5
 
 Zister:
   DisplayName: "Zister"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Thüringer:
     DisplayName: "Thüringer"
     Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
 
 Angelique(Theorbo):
   DisplayName: "Angelique ( Theorbo)"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: D2 E2 F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 B3 C4 D4 E4
 
 Archlute:
   DisplayName: "Archlute"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   14Course:
     DisplayName: "14 Course"
     Tuning: F2 G2 A2 Bb2 C3 D3 E3 F3 G3 C4 F4 A4 D5 G5
 
 Bandolin:
   DisplayName: "Bandolin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Ecuadorean:
     DisplayName: "Ecuadorean"
     Tuning: E5 E4 E5 A5 A4 A5 D5 D4 D5 F5 F5 F5 B5 B5 B5
 
 BaroqueLute:
   DisplayName: "Baroque Lute"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A2 B2 C3 D3 E3 F3 G3 A3 D4 F4 A4 D5 F5
 
 GuitarrónChileno:
   DisplayName: "Guitarrón Chileno"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F#5 A4 D4 D4 D3 D3 D2 G4 G4 G4 G3 G3 C4 C4 C3 C2 E4 E4 E4 A4 A4 A4 G4 B4
 
 LaudPhillipines:
   DisplayName: "Laud Phillipines"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
 
 LiutoAttiorbatoTheorbo:
   DisplayName: "Liuto Attiorbato Theorbo"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F1 F2 G1 G2 A1 A2 B1 B2 C2 C3 D2 D3 E2 E3 F2 F2 G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4
 
 Octavina:
   DisplayName: "Octavina"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
 
 SächsischeTheorbenzister:
   DisplayName: "Sächsische Theorbenzister"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: B2 C2 D3 E3 F3 G3 A3 B3 C4 C4 F4 F4 A4 A4 C4 C4
 
 SwedishLute:
   DisplayName: "Swedish Lute"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: A2 B2 C#3 D3 E3 F#3 G3 A3 B3 C#4 D4 E4 A4 C#5 E5
 
 TheorboFifteenCourse:
   DisplayName: "Theorbo Fifteen Course"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="15" rx="6" ry="7" fill="currentColor"/><rect x="10.5" y="2" width="3" height="13" fill="currentColor"/><line x1="8" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 D4 G4 B4 E4 A4
 
 ViolaDaTerceiraFifteenStrings:
   DisplayName: "Viola Da Terceira Fifteen Strings"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L9 6v12l3 3 3-3V6z" fill="currentColor"/><line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" stroke-width="0.5"/><line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="0.5"/></svg>
   Standard:
     DisplayName: "Standard"
     Tuning: E3 E3 E2 A3 A3 A2 D3 D3 D2 G3 G2 B3 B3 E3 E3
+
+
+# ------------------------------------------------------------
+# Added instruments/tunings (embedded SVG icons) — non-destructive
+# ------------------------------------------------------------
+
+ElectricGuitar7:
+  DisplayName: "Electric Guitar 7-String"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="0.5"/>
+      <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/>
+      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="0.5"/>
+    </svg>
+  StandardB:
+    DisplayName: "Standard (B Standard)"
+    Tuning: B1 E2 A2 D3 G3 B3 E4
+  DropA:
+    DisplayName: "Drop A"
+    Tuning: A1 E2 A2 D3 G3 B3 E4
+  AllFourths:
+    DisplayName: "All Fourths"
+    Tuning: B1 E2 A2 D3 G3 C4 F4
+  OpenG:
+    DisplayName: "Open G (low B)"
+    Tuning: B1 G2 D3 G3 B3 D4 G4
+
+ElectricGuitar8:
+  DisplayName: "Electric Guitar 8-String"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <circle cx="12" cy="9" r="1.2" fill="currentColor"/>
+      <circle cx="12" cy="13" r="1.2" fill="currentColor"/>
+    </svg>
+  StandardF#:
+    DisplayName: "Standard (F# Standard)"
+    Tuning: F#1 B1 E2 A2 D3 G3 B3 E4
+  DropE:
+    DisplayName: "Drop E"
+    Tuning: E1 B1 E2 A2 D3 G3 B3 E4
+  LowEStandard:
+    DisplayName: "Low E Standard (E Standard 8)"
+    Tuning: E1 A1 D2 G2 C3 F3 A3 D4
+
+GuitarExtendedTunings:
+  DisplayName: "Guitar (Extended Tunings)"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/>
+      <line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/>
+    </svg>
+  Nashville:
+    DisplayName: "Nashville (High-String)"
+    Tuning: E3 A3 D4 G4 B3 E4
+  CStandard:
+    DisplayName: "C Standard"
+    Tuning: C2 F2 Bb2 Eb3 G3 C4
+  OpenC6:
+    DisplayName: "Open C6"
+    Tuning: C2 G2 C3 G3 A3 E4
+  AllFourths:
+    DisplayName: "All Fourths (E-A-d-g-c-f)"
+    Tuning: E2 A2 D3 G3 C4 F4
+
+BassGuitarExtended:
+  DisplayName: "Bass Guitar (Extended Tunings)"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/>
+    </svg>
+  DropD:
+    DisplayName: "Drop D (4-string)"
+    Tuning: D1 A1 D2 G2
+  BEAD:
+    DisplayName: "BEAD (4-string)"
+    Tuning: B0 E1 A1 D2
+  Tenor:
+    DisplayName: "Tenor Bass"
+    Tuning: A1 D2 G2 C3
+  Piccolo:
+    DisplayName: "Piccolo Bass"
+    Tuning: E2 A2 D3 G3
+  FretlessStandard:
+    DisplayName: "Fretless (EADG)"
+    Tuning: E1 A1 D2 G2
+
+BaritoneUkulele:
+  DisplayName: "Baritone Ukulele"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <rect x="7" y="6" width="10" height="10" rx="5" fill="currentColor"/>
+      <rect x="11" y="2" width="2" height="7" fill="currentColor"/>
+    </svg>
+  Standard:
+    DisplayName: "Standard (DGBE)"
+    Tuning: D4 G3 B3 E4
+  LowGReentrant:
+    DisplayName: "Re-entrant (dGBE)"
+    Tuning: D4 G4 B3 E4
+
+SopraninoUkulele:
+  DisplayName: "Sopranino Ukulele"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="7" width="8" height="8" rx="4" fill="currentColor"/>
+      <rect x="11" y="3" width="2" height="6" fill="currentColor"/>
+    </svg>
+  Standard:
+    DisplayName: "Standard (D tuning)"
+    Tuning: D5 G4 B4 E5
+
+OctaveMandolin:
+  DisplayName: "Octave Mandolin"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="12" cy="16" rx="5" ry="6" fill="currentColor"/>
+      <rect x="10.5" y="3.5" width="3" height="12" fill="currentColor"/>
+    </svg>
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G2 G2 D3 D3 A3 A3 E4 E4
+  GDAD:
+    DisplayName: "GDAD (Celtic)"
+    Tuning: G2 G2 D3 D3 A3 A3 D4 D4
+
+IrishTenorBanjo:
+  DisplayName: "Tenor Banjo (Irish)"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <rect x="10.5" y="2" width="3" height="14" fill="currentColor"/>
+    </svg>
+  GDAE:
+    DisplayName: "G D A E (Irish)"
+    Tuning: G2 D3 A3 E4
+
+Oud:
+  DisplayName: "Oud"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="12" cy="16" rx="6" ry="7" fill="currentColor"/>
+      <rect x="10.5" y="3" width="3" height="10" fill="currentColor"/>
+      <line x1="8" y1="9" x2="16" y2="9" stroke="currentColor" stroke-width="0.5"/>
+    </svg>
+  Arabic:
+    DisplayName: "Arabic"
+    Tuning: C2 F2 A2 D3 G3 C4
+  Turkish:
+    DisplayName: "Turkish"
+    Tuning: C#2 F#2 B2 E3 A3 D4
+
+Shamisen:
+  DisplayName: "Shamisen"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <rect x="7" y="11" width="10" height="8" rx="1" fill="currentColor"/>
+      <rect x="11" y="3" width="2" height="8" fill="currentColor"/>
+    </svg>
+  Honchoshi:
+    DisplayName: "Honchoshi"
+    Tuning: C4 G4 C5
+  Niagari:
+    DisplayName: "Niagari"
+    Tuning: C4 G4 D5
+  Sansagari:
+    DisplayName: "Sansagari"
+    Tuning: C4 F4 C5
+
+Ngoni:
+  DisplayName: "Ngoni"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="12" cy="16" rx="5" ry="5.5" fill="currentColor"/>
+      <rect x="11" y="3" width="2" height="9" fill="currentColor"/>
+    </svg>
+  Pentatonic:
+    DisplayName: "Pentatonic"
+    Tuning: D3 A3 D4 E4 A4
+
+Kora:
+  DisplayName: "Kora"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="15" r="6.5" fill="currentColor"/>
+      <rect x="11" y="3" width="2" height="7" fill="currentColor"/>
+    </svg>
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G2 A2 C3 D3 E3 G3 A3 C4 D4 E4 F4 G4 A4 C5 D5
+
+Sarod:
+  DisplayName: "Sarod"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="12" cy="16" rx="5.5" ry="6" fill="currentColor"/>
+      <rect x="11" y="3" width="2" height="10" fill="currentColor"/>
+    </svg>
+  Standard:
+    DisplayName: "Standard (C# base)"
+    Tuning: C#2 G#2 C#3 F#3 B3 E4
+
+Gayageum:
+  DisplayName: "Gayageum"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="8" width="12" height="8" rx="1" fill="currentColor"/>
+      <line x1="6.5" y1="9" x2="17.5" y2="9" stroke="white" stroke-width="0.4"/>
+      <line x1="6.5" y1="11" x2="17.5" y2="11" stroke="white" stroke-width="0.4"/>
+      <line x1="6.5" y1="13" x2="17.5" y2="13" stroke="white" stroke-width="0.4"/>
+    </svg>
+  HeptatonicG:
+    DisplayName: "Heptatonic (G)"
+    Tuning: G2 A2 B2 D3 E3 G3 A3
+
+Santoor:
+  DisplayName: "Santoor"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="5,18 19,18 12,6" fill="currentColor"/>
+      <line x1="7" y1="17" x2="17" y2="17" stroke="white" stroke-width="0.4"/>
+      <line x1="8" y1="15" x2="16" y2="15" stroke="white" stroke-width="0.4"/>
+    </svg>
+  Kashmir:
+    DisplayName: "Kashmir"
+    Tuning: C3 C3 D3 D3 E3 E3 F3 F3 G3 G3 A3 A3 Bb3 Bb3 C4 C4
+
+HarpGuitar:
+  DisplayName: "Harp Guitar"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <circle cx="16.5" cy="6.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1"/>
+    </svg>
+  Standard6PlusSubs:
+    DisplayName: "6-string + sub-basses"
+    Tuning: E2 A2 D3 G3 B3 E4 | A1 G1 F1
+  DADGADPlusSubs:
+    DisplayName: "DADGAD + sub-basses"
+    Tuning: D2 A2 D3 G3 A3 D4 | A1 G1 F1
+
+AllFourthsguitar:
+  DisplayName: "Guitar (All Fourths Variant)"
+  Icon: |
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L8 6v12l4 4 4-4V6z" fill="currentColor"/>
+      <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="0.5"/>
+      <line x1="8" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="0.5"/>
+    </svg>
+  EADGCF:
+    DisplayName: "E A D G C F"
+    Tuning: E2 A2 D3 G3 C4 F4

@@ -1,4 +1,4 @@
-// Global using directives
+﻿// Global using directives
 
 global using System;
 global using System.Collections;
@@ -18,6 +18,8 @@ global using GA.Core;
 global using GA.Core.Abstractions;
 global using GA.Core.Collections;
 global using GA.Core.Collections.Abstractions;
-global using GA.Core.Extensions;
+global using GA.Business.Core.Extensions;
+global using GA.Core.Functional;
 global using JetBrains.Annotations;
+global using Microsoft.Extensions.Logging;
 global using PCRE;

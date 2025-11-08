@@ -1,12 +1,11 @@
 #pragma warning disable CA2252
 namespace GA.InteractiveExtension.Tests;
 
-using Markdown;
-using Microsoft.DotNet.Interactive.Formatting;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using HtmlAgilityPack;
-using Xunit;
+using Markdown;
+using Microsoft.DotNet.Interactive.Formatting;
 
 public class GaKernelTests
 {

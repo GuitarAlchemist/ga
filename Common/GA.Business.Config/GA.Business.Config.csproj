@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../GA.Core/GA.Core.csproj"/>
+    <ProjectReference Include="../GA.Business.Core/GA.Business.Core.csproj"/>
+    <ProjectReference Include="GA.Business.Config.fsproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Configuration\**\*.cs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.2.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0"/>
+  </ItemGroup>
+
+</Project>

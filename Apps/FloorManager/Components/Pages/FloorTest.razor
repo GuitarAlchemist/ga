@@ -1,0 +1,1008 @@
+﻿@page "/floor-test"
+@inject FloorService FloorService
+@inject IJSRuntime JsRuntime
+@rendermode InteractiveServer
+@using FloorManager.Components.Layout
+@using FloorManager.Models
+@using FloorManager.Services
+@implements IDisposable
+
+<PageTitle>Floor Test - Compact View</PageTitle>
+
+<Breadcrumb Items="@_breadcrumbs"/>
+
+<!-- Always-Visible Status Bar -->
+<div class="status-bar-always status-@_statusType">
+    <div class="status-left">
+        <span class="status-icon-always">
+            @if (_isLoading || _isGenerating)
+            {
+                <span class="spinner-small">⏳</span>
+            }
+            else if (_statusType == "success")
+            {
+                <text>✅</text>
+            }
+            else if (_statusType == "warning")
+            {
+                <text>⚠️</text>
+            }
+            else if (_statusType == "error")
+            {
+                <text>❌</text>
+            }
+            else
+            {
+                <text>ℹ️</text>
+            }
+        </span>
+        <span class="status-message-always">@_statusMessage</span>
+    </div>
+
+    <div class="status-right">
+        @if (_showProgress)
+        {
+            <span class="status-progress-always">
+                <span class="progress-text">@_progressCurrent/@_progressTotal</span>
+                <div class="progress-mini">
+                    <div class="progress-mini-fill"
+                         style="width: @(_progressTotal > 0 ? _progressCurrent * 100.0 / _progressTotal : 0)%"></div>
+                </div>
+            </span>
+        }
+
+        <span class="status-stats">
+            @if (_floors.Count > 0)
+            {
+                <text>@_floors.Count floors loaded</text>
+            }
+            else
+            {
+                <text>No floors loaded</text>
+            }
+        </span>
+    </div>
+</div>
+
+<div class="compact-container">
+    <!-- Section 1: Floor Selector (Horizontal) -->
+    <div class="section floor-selector-section">
+        <div class="section-header">
+            <h3>🏰 Floors</h3>
+            <button class="btn-generate-all-compact" @onclick="GenerateAllFloors" disabled="@_isGenerating">
+                @if (_isGenerating)
+                {
+                    <span>⏳ Generating...</span>
+                }
+                else
+                {
+                    <span>⚡ Generate All</span>
+                }
+            </button>
+        </div>
+
+        <div class="floor-cards-horizontal">
+            @for (var i = 0; i <= 5; i++)
+            {
+                var floorNum = i;
+                var isSelected = _currentFloor == floorNum;
+                var isLoaded = _floors.ContainsKey(floorNum);
+
+                <div class="floor-card @(isSelected ? "selected" : "")"
+                     @onclick="() => SelectFloor(floorNum)">
+                    <div class="floor-card-number">@floorNum</div>
+                    @if (isLoaded)
+                    {
+                        var data = _floors[floorNum];
+                        <div class="floor-card-info">
+                            <div class="floor-card-rooms">@data.Rooms.Count</div>
+                            <div class="floor-card-label">rooms</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="floor-card-info">
+                            <div class="floor-card-status">—</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Section 2: Room Selector (Compact Grid) -->
+    @if (CurrentFloorData != null)
+    {
+        <div class="section room-selector-section">
+            <div class="section-header">
+                <h3>🚪 Rooms (@FilteredRooms.Count())</h3>
+                <div class="room-controls-compact">
+                    <input type="text"
+                           placeholder="🔍 Search..."
+                           @bind="_searchQuery"
+                           @bind:event="oninput"
+                           class="search-compact"/>
+
+                    <select @bind="_selectedCategory" class="filter-compact">
+                        <option value="">All</option>
+                        @foreach (var category in GetCategories())
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </select>
+
+                    <select @bind="_sortOption" class="sort-compact">
+                        <option value="id">ID</option>
+                        <option value="category">Category</option>
+                        <option value="size">Size</option>
+                        <option value="items">Items</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="room-grid-compact">
+                @foreach (var room in FilteredRooms.Take(50))
+                {
+                    var isRoomSelected = _selectedRoom?.Id == room.Id;
+                    <div class="room-card-compact @(isRoomSelected ? "selected" : "")"
+                         @onclick="() => SelectRoom(room)"
+                         style="border-left: 3px solid @room.Color;">
+                        <div class="room-card-id">@room.Id.Replace($"floor{_currentFloor}_room", "R")</div>
+                        <div class="room-card-category">@room.Category</div>
+                        <div class="room-card-count">@room.Items.Count</div>
+                    </div>
+                }
+            </div>
+
+            @if (!FilteredRooms.Any())
+            {
+                <div class="no-results-compact">
+                    <span>🔍 No rooms found</span>
+                    <button class="btn-reset-compact" @onclick="ResetFilters">Reset</button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Section 3: Viewer (Canvas + Selected Room Details) -->
+    @if (CurrentFloorData != null)
+    {
+        <div class="section viewer-section">
+            <div class="viewer-layout">
+                <!-- Canvas -->
+                <div class="canvas-panel">
+                    <div class="section-header">
+                        <h3>📐 Floor Layout</h3>
+                        <div class="stats-compact">
+                            <span>@CurrentFloorData.Width×@CurrentFloorData.Height</span>
+                            <span>•</span>
+                            <span>@CurrentFloorData.Rooms.Count rooms</span>
+                            <span>•</span>
+                            <span>@CurrentFloorData.Rooms.Sum(r => r.Items.Count) items</span>
+                        </div>
+                    </div>
+                    <div class="canvas-container-compact">
+                        <canvas id="floorCanvas" width="600" height="450"></canvas>
+                    </div>
+                </div>
+
+                <!-- Selected Room Details -->
+                @if (_selectedRoom != null)
+                {
+                    <div class="room-details-panel-compact">
+                        <div class="section-header">
+                            <h3>🎵 @_selectedRoom.Id</h3>
+                            <button class="btn-close-compact" @onclick="() => _selectedRoom = null">×</button>
+                        </div>
+
+                        <div class="room-details-content">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">Category</span>
+                                    <span class="detail-value">@_selectedRoom.Category</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Position</span>
+                                    <span class="detail-value">@_selectedRoom.X, @_selectedRoom.Y</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Size</span>
+                                    <span class="detail-value">@_selectedRoom.Width × @_selectedRoom.Height</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Items</span>
+                                    <span class="detail-value">@_selectedRoom.Items.Count</span>
+                                </div>
+                            </div>
+
+                            @if (_selectedRoom.Items.Count > 0)
+                            {
+                                <div class="items-list-compact">
+                                    <h4>Music Items</h4>
+                                    <div class="items-scroll">
+                                        @foreach (var item in _selectedRoom.Items)
+                                        {
+                                            <div class="item-chip">♪ @item</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="room-details-panel-compact empty">
+                        <div class="empty-state-compact">
+                            <div class="empty-icon">🎯</div>
+                            <p>Select a room to view details</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (_currentFloor == null)
+    {
+        <div class="section viewer-section">
+            <div class="empty-state-large">
+                <div class="empty-icon">🏰</div>
+                <h2>No Floor Selected</h2>
+                <p>Select a floor above to get started</p>
+            </div>
+        </div>
+    }
+    else if (_isLoading)
+    {
+        <div class="section viewer-section">
+            <div class="loading-state-large">
+                <div class="spinner"></div>
+                <p>Loading Floor @_currentFloor...</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private int? _currentFloor;
+    private readonly Dictionary<int, FloorData> _floors = new();
+
+    private FloorData? CurrentFloorData => _currentFloor.HasValue && _floors.ContainsKey(_currentFloor.Value)
+        ? _floors[_currentFloor.Value]
+        : null;
+
+    private Room? _selectedRoom;
+    private bool _isLoading;
+    private bool _isGenerating;
+
+    // Search and filter state
+    private string _searchQuery = "";
+    private string _selectedCategory = "";
+    private string _sortOption = "id";
+
+    // Status/Progress tracking
+    private string _statusMessage = "Ready";
+    private string _statusType = "info"; // info, success, warning, error
+    private int _progressCurrent;
+    private int _progressTotal;
+    private bool _showProgress;
+    private Timer? _statusTimer;
+
+    private readonly List<BreadcrumbItem> _breadcrumbs =
+    [
+        new() { Text = "Home", Url = "/", Icon = "🏠" },
+        new() { Text = "Floor Test", Url = "/floor-test", Icon = "🧪" }
+    ];
+
+    // Filtered rooms based on search and filters
+    private IEnumerable<Room> FilteredRooms
+    {
+        get
+        {
+            if (CurrentFloorData == null) return [];
+
+            var rooms = CurrentFloorData.Rooms.AsEnumerable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                var query = _searchQuery.ToLower();
+                rooms = rooms.Where(r =>
+                    r.Id.ToLower().Contains(query) ||
+                    r.Category.ToLower().Contains(query) ||
+                    r.Items.Any(item => item.ToLower().Contains(query))
+                );
+            }
+
+            // Apply category filter
+            if (!string.IsNullOrWhiteSpace(_selectedCategory))
+            {
+                rooms = rooms.Where(r => r.Category == _selectedCategory);
+            }
+
+            // Apply sorting
+            rooms = _sortOption switch
+            {
+                "category" => rooms.OrderBy(r => r.Category).ThenBy(r => r.Id),
+                "size" => rooms.OrderByDescending(r => r.Width * r.Height),
+                "items" => rooms.OrderByDescending(r => r.Items.Count),
+                _ => rooms.OrderBy(r => r.Id)
+            };
+
+            return rooms;
+        }
+    }
+
+    private IEnumerable<string> GetCategories()
+    {
+        if (CurrentFloorData == null) return [];
+        return CurrentFloorData.Rooms.Select(r => r.Category).Distinct().OrderBy(c => c);
+    }
+
+    private void ClearSearch()
+    {
+        _searchQuery = "";
+    }
+
+    private void ResetFilters()
+    {
+        _searchQuery = "";
+        _selectedCategory = "";
+        _sortOption = "id";
+    }
+
+    private async Task SelectFloor(int floorNum)
+    {
+        _currentFloor = floorNum;
+        _selectedRoom = null;
+
+        // If floor data doesn't exist, load it
+        if (!_floors.ContainsKey(floorNum))
+        {
+            await LoadFloor(floorNum);
+        }
+        else
+        {
+            // Floor already loaded, just render it
+            await RenderFloor();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadFloor(int floorNum)
+    {
+        _isLoading = true;
+        ShowStatus($"Loading floor {floorNum}...", "info");
+        StateHasChanged();
+
+        try
+        {
+            var floorData = await FloorService.GetFloorAsync(floorNum);
+            if (floorData != null)
+            {
+                _floors[floorNum] = floorData;
+                await RenderFloor();
+
+                var roomCount = floorData.Rooms.Count;
+                var itemCount = floorData.Rooms.Sum(r => r.Items.Count);
+                ShowStatus($"Floor {floorNum} loaded: {roomCount} rooms, {itemCount} items", "success");
+                AutoHideStatus(3000);
+            }
+            else
+            {
+                ShowStatus($"Floor {floorNum} returned no data", "warning");
+                AutoHideStatus(3000);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading floor {floorNum}: {ex.Message}");
+            ShowStatus($"Error loading floor {floorNum}: {ex.Message}", "error");
+            AutoHideStatus(5000);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RenderFloor()
+    {
+        if (CurrentFloorData == null) return;
+
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("renderFloor", CurrentFloorData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering floor: {ex.Message}");
+        }
+    }
+
+    private void SelectRoom(Room room)
+    {
+        _selectedRoom = room;
+        StateHasChanged();
+    }
+
+    private async Task GenerateAllFloors()
+    {
+        _isGenerating = true;
+        ShowStatus("Generating all floors...", "info", true);
+        _progressTotal = 6;
+        _progressCurrent = 0;
+        StateHasChanged();
+
+        try
+        {
+            for (var i = 0; i <= 5; i++)
+            {
+                _progressCurrent = i;
+                ShowStatus($"Generating floor {i}...", "info", true);
+                StateHasChanged();
+
+                if (!_floors.ContainsKey(i))
+                {
+                    await LoadFloor(i);
+                }
+            }
+
+            _progressCurrent = 6;
+            ShowStatus("All floors generated successfully!", "success");
+            AutoHideStatus(3000);
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"Error generating floors: {ex.Message}", "error");
+            AutoHideStatus(5000);
+        }
+        finally
+        {
+            _isGenerating = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowStatus(string message, string type, bool withProgress = false)
+    {
+        _statusMessage = message;
+        _statusType = type;
+        _showProgress = withProgress;
+        StateHasChanged();
+    }
+
+    private void AutoHideStatus(int delayMs)
+    {
+        _statusTimer?.Dispose();
+        _statusTimer = new Timer(_ =>
+        {
+            _showProgress = false;
+            InvokeAsync(StateHasChanged);
+        }, null, delayMs, Timeout.Infinite);
+    }
+
+    public void Dispose()
+    {
+        _statusTimer?.Dispose();
+    }
+
+}
+
+<style>
+    /* Status Bar */
+    .status-bar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .status-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .status-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+    .status-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .status-error {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+
+    .status-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .status-icon {
+        font-size: 18px;
+    }
+
+    .status-message {
+        flex: 1;
+    }
+
+    .status-progress {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-left: 8px;
+    }
+
+    .status-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 24px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .status-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Progress Bar */
+    .progress-bar-container {
+        position: fixed;
+        top: 108px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 999;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease-out;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+
+    /* Compact Container - Vertical Stack Layout */
+    .compact-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 60px);
+        gap: 12px;
+        padding: 12px;
+        padding-top: 72px; /* Space for status bar */
+        background: #f5f7fa;
+        overflow-y: auto;
+    }
+
+    /* Section Base Styles */
+    .section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    /* Section 1: Floor Selector */
+    .floor-selector-section {
+        flex-shrink: 0;
+    }
+
+    .floor-cards-horizontal {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .floor-card {
+        flex-shrink: 0;
+        width: 80px;
+        padding: 12px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .floor-card:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+    }
+
+    .floor-card.selected {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .floor-card-number {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .floor-card-info {
+        font-size: 11px;
+    }
+
+    .floor-card-rooms {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .floor-card-label {
+        opacity: 0.8;
+    }
+
+    .floor-card-status {
+        opacity: 0.5;
+    }
+
+    .btn-generate-all-compact {
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-generate-all-compact:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-generate-all-compact:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Section 2: Room Selector */
+    .room-selector-section {
+        flex-shrink: 0;
+        max-height: 250px;
+    }
+
+    .room-controls-compact {
+        display: flex;
+        gap: 8px;
+    }
+
+    .search-compact, .filter-compact, .sort-compact {
+        padding: 6px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 12px;
+    }
+
+    .search-compact::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-compact {
+        flex: 1;
+    }
+
+    .filter-compact, .sort-compact {
+        flex-shrink: 0;
+    }
+
+    .room-grid-compact {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+        padding: 12px;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .room-card-compact {
+        padding: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .room-card-compact:hover {
+        background: #f1f5f9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .room-card-compact.selected {
+        background: #ede9fe;
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    }
+
+    .room-card-id {
+        font-size: 11px;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 2px;
+    }
+
+    .room-card-category {
+        font-size: 10px;
+        color: #64748b;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .room-card-count {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .no-results-compact {
+        padding: 20px;
+        text-align: center;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .btn-reset-compact {
+        padding: 4px 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+    }
+
+    /* Section 3: Viewer */
+    .viewer-section {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .viewer-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 12px;
+        padding: 12px;
+        height: 100%;
+    }
+
+    .canvas-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stats-compact {
+        display: flex;
+        gap: 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .canvas-container-compact {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 0;
+    }
+
+    #floorCanvas {
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: white;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .room-details-panel-compact {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .room-details-panel-compact.empty {
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn-close-compact {
+        padding: 4px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-close-compact:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .room-details-content {
+        padding: 16px;
+        overflow-y: auto;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 10px;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .items-list-compact h4 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .items-scroll {
+        max-height: 300px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .item-chip {
+        padding: 6px 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #334155;
+    }
+
+    .empty-state-compact {
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    .empty-state-compact .empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+
+    .empty-state-compact p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .empty-state-large, .loading-state-large {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #64748b;
+    }
+
+    .empty-state-large .empty-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-state-large h2 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        color: #334155;
+    }
+
+    .empty-state-large p {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+

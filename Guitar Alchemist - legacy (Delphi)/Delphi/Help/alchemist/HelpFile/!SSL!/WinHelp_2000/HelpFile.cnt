@@ -1,0 +1,36 @@
+:Base HelpFile.hlp
+:Title Guitar Alchemist
+1 Introduction to Guitar Alchemist
+2 Why Guitar Alchemist ?=Why_Guitar_Alchemist_
+2 System Requirements=System_Requirements
+2 How to buy Guitar Alchemist=How_to_buy_Guitar_Alchemist
+1 The user interface
+2 The main window=The_main_window
+2 The fingerboard=The_fingerboard
+2 The menu bar=The_menu
+2 The status bar=The_status_bar
+2 The view selector=View_selector
+2 The views
+3 The scales view
+4 The scales view=The_scales_view
+4 The scale selector panel=The_scale_selector_panel
+4 The scale pattern panel=The_scale_pattern_panel
+4 The matching chords panel=The_matching_chords_panel
+3 The chords view
+4 The chords view=The_chords_view
+4 The chord selector panel=The_chord_selector_panel
+4 The chord dictionnary panel=The_chord_dictionnary_panel
+4 The matching scales panel=The_matching_scale_panel
+2 The options dialog
+3 The options dialog=The_options_dialog
+3 The fingerboard options page=The_fingerboard_options_page
+3 The theme options page=The_theme_options_page
+3 The MIDI options page=The_MIDI_options_page
+1 Music theory elements
+2 The intervals=The_intervals
+2 The keys=The_keys
+2 The major scale modes=The_major_scale_modes
+2 The melodic minor modes=The_melodic_minor_modes
+2 The harmonic minor modes=The_harmonic_minor_modes
+2 The harmonic major modes=The_harmonic_major_modes
+2 The character tones=The_character_tones

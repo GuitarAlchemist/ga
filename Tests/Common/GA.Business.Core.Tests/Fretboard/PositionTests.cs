@@ -1,8 +1,8 @@
-﻿﻿﻿﻿namespace GA.Business.Core.Tests.Fretboard;
+namespace GA.Business.Core.Tests.Fretboard;
 
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Positions;
-using static GA.Business.Core.Fretboard.Primitives.Position;
+using Core.Fretboard.Positions;
+using Core.Fretboard.Primitives;
+using static Core.Fretboard.Primitives.Position;
 
 [TestFixture]
 public class PositionTests

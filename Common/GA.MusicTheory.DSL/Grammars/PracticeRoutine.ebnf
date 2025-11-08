@@ -1,0 +1,464 @@
+(* ============================================================================
+   Practice Routine DSL - EBNF Grammar
+   ============================================================================
+   
+   Purpose: Define syntax for structured practice sessions with exercises,
+            timing, skill progression, and performance tracking.
+   
+   Features:
+   - Session structure with duration and skill level
+   - Exercise types (warmup, technique, scales, chords, songs, cooldown)
+   - Timing specifications with BPM and duration
+   - Skill progression and difficulty levels
+   - Performance goals and assessment criteria
+   - Adaptive practice recommendations
+   
+   Examples:
+     session "daily_practice" 30 minutes beginner {
+       warmup 5: "chromatic exercises" at 60 bpm
+       scales 10: "C major scale" at 80 bpm
+       chords 10: "open chords C-Am-F-G" 
+       cooldown 5: "gentle stretching"
+     }
+   ============================================================================ *)
+
+(* ============================================================================
+   TOP-LEVEL STRUCTURE
+   ============================================================================ *)
+
+practice_routine = session_definition ;
+
+session_definition = "session" session_name duration skill_level "{" exercise_list "}" ;
+
+session_name = quoted_string | identifier ;
+
+duration = integer ( "minutes" | "min" | "hours" | "hr" ) ;
+
+skill_level = "beginner" | "intermediate" | "advanced" | "expert" ;
+
+exercise_list = exercise { exercise } ;
+
+(* ============================================================================
+   EXERCISE DEFINITIONS
+   ============================================================================ *)
+
+exercise = exercise_type exercise_duration ":" exercise_description [ timing_spec ] [ difficulty_spec ] [ goals_spec ] ;
+
+exercise_type = 
+    "warmup" | "warm_up" | "warm-up"
+    | "technique" | "tech" 
+    | "scales" | "scale_practice"
+    | "chords" | "chord_practice"
+    | "arpeggios" | "arp"
+    | "songs" | "repertoire" | "pieces"
+    | "improvisation" | "improv" | "jam"
+    | "ear_training" | "ear" 
+    | "rhythm" | "timing"
+    | "reading" | "sight_reading"
+    | "theory" | "music_theory"
+    | "cooldown" | "cool_down" | "cool-down"
+    | "stretching" | "flexibility" ;
+
+exercise_duration = integer ( "minutes" | "min" | "seconds" | "sec" | "%" ) ;
+
+exercise_description = quoted_string ;
+
+(* ============================================================================
+   TIMING AND TEMPO SPECIFICATIONS
+   ============================================================================ *)
+
+timing_spec = "at" tempo_spec [ time_signature ] [ feel_spec ] ;
+
+tempo_spec = 
+    bpm_spec 
+    | tempo_range 
+    | tempo_progression ;
+
+bpm_spec = integer "bpm" ;
+
+tempo_range = integer "-" integer "bpm" ;
+
+tempo_progression = "start" integer "increase_to" integer "bpm" ;
+
+time_signature = "in" integer "/" integer ;
+
+feel_spec = "with" feel_type ;
+
+feel_type = "straight" | "swing" | "shuffle" | "latin" | "rock" | "jazz" ;
+
+(* ============================================================================
+   DIFFICULTY AND PROGRESSION
+   ============================================================================ *)
+
+difficulty_spec = "difficulty" difficulty_level ;
+
+difficulty_level = 
+    "very_easy" | "easy" | "medium" | "hard" | "very_hard"
+    | integer "%" ;  (* percentage difficulty *)
+
+goals_spec = "goals" "{" goal_list "}" ;
+
+goal_list = goal { "," goal } ;
+
+goal = 
+    accuracy_goal 
+    | tempo_goal 
+    | consistency_goal 
+    | technique_goal ;
+
+accuracy_goal = "accuracy" integer "%" ;
+
+tempo_goal = "tempo" integer "bpm" ;
+
+consistency_goal = "consistency" integer "reps" ;
+
+technique_goal = "clean" technique_name ;
+
+technique_name = identifier ;
+
+(* ============================================================================
+   MUSICAL CONTENT SPECIFICATIONS
+   ============================================================================ *)
+
+musical_content = 
+    chord_progression 
+    | scale_pattern 
+    | technique_exercise 
+    | song_reference ;
+
+chord_progression = chord { "-" chord } [ "in" key ] ;
+
+chord = chord_root [ chord_quality ] [ chord_extension ] ;
+
+chord_root = note_name [ accidental ] ;
+
+chord_quality = "maj" | "min" | "dim" | "aug" | "sus2" | "sus4" | "" ;
+
+chord_extension = "7" | "9" | "11" | "13" | "maj7" | "m7" | "dim7" ;
+
+scale_pattern = scale_name [ "in" key ] [ position_spec ] ;
+
+scale_name = 
+    "major" | "minor" | "pentatonic" | "blues" 
+    | "dorian" | "phrygian" | "lydian" | "mixolydian" | "aeolian" | "locrian" ;
+
+position_spec = "position" integer | "across_neck" | "one_octave" | "two_octaves" ;
+
+technique_exercise = technique_name [ "on" string_spec ] [ "at" fret_spec ] ;
+
+string_spec = "string" integer | "strings" integer "-" integer | "all_strings" ;
+
+fret_spec = "fret" integer | "frets" integer "-" integer | "open_position" | "5th_position" ;
+
+song_reference = "song" quoted_string [ "by" quoted_string ] [ content_source ] ;
+
+(* ============================================================================
+   INTERNET CONTENT LOADING
+   ============================================================================ *)
+
+content_source =
+    url_source
+    | repository_source
+    | search_source ;
+
+url_source = "from" url_spec ;
+
+repository_source = "from" repository_name [ search_criteria ] ;
+
+search_source = "search" search_criteria [ "in" repository_name ] ;
+
+url_spec =
+    "url" quoted_string
+    | "tab" quoted_string      (* direct tablature URL *)
+    | "midi" quoted_string     (* direct MIDI URL *)
+    | "gp" quoted_string       (* Guitar Pro file URL *)
+    | "musicxml" quoted_string (* MusicXML file URL *) ;
+
+repository_name =
+    "ultimate_guitar" | "ug"
+    | "songsterr"
+    | "musescore"
+    | "imslp"
+    | "freemidi"
+    | "github"
+    | "archive_org"
+    | "public_domain" ;
+
+search_criteria = "{" search_param_list "}" ;
+
+search_param_list = search_param { "," search_param } ;
+
+search_param =
+    "artist" ":" quoted_string
+    | "title" ":" quoted_string
+    | "genre" ":" quoted_string
+    | "difficulty" ":" difficulty_level
+    | "tuning" ":" tuning_spec
+    | "capo" ":" integer
+    | "tempo" ":" integer "bpm"
+    | "key" ":" key
+    | "tags" ":" "[" tag_list "]"
+    | "license" ":" license_type ;
+
+tuning_spec =
+    "standard" | "drop_d" | "dadgad" | "open_g" | "open_d"
+    | "custom" "(" note_list ")" ;
+
+note_list = note_name [ accidental ] { "," note_name [ accidental ] } ;
+
+license_type =
+    "public_domain" | "creative_commons" | "free" | "educational_use" ;
+
+(* ============================================================================
+   ENHANCED EXERCISE CONTENT
+   ============================================================================ *)
+
+enhanced_exercise = exercise_type exercise_duration ":" exercise_description
+                   [ timing_spec ] [ difficulty_spec ] [ goals_spec ]
+                   [ content_spec ] [ practice_options ] ;
+
+content_spec = "content" content_definition ;
+
+content_definition =
+    local_content
+    | remote_content
+    | generated_content ;
+
+local_content = "file" quoted_string ;
+
+remote_content =
+    url_source
+    | repository_source
+    | search_source ;
+
+generated_content = "generate" generation_spec ;
+
+generation_spec = "{" generation_param_list "}" ;
+
+generation_param_list = generation_param { "," generation_param } ;
+
+generation_param =
+    "style" ":" quoted_string
+    | "progression" ":" chord_progression
+    | "scale" ":" scale_pattern
+    | "length" ":" integer "bars"
+    | "complexity" ":" difficulty_level
+    | "ai_model" ":" quoted_string ;
+
+practice_options = "options" "{" practice_option_list "}" ;
+
+practice_option_list = practice_option { "," practice_option } ;
+
+practice_option =
+    "loop" ":" integer "times"
+    | "slow_down" ":" integer "%"
+    | "transpose" ":" integer "semitones"
+    | "metronome" ":" boolean
+    | "backing_track" ":" boolean
+    | "visual_feedback" ":" boolean
+    | "record_performance" ":" boolean ;
+
+boolean = "true" | "false" | "yes" | "no" | "on" | "off" ;
+
+key = note_name [ accidental ] [ mode ] ;
+
+mode = "major" | "minor" | "ionian" | "dorian" | "phrygian" | "lydian" | "mixolydian" | "aeolian" | "locrian" ;
+
+(* ============================================================================
+   BASIC ELEMENTS
+   ============================================================================ *)
+
+note_name = "C" | "D" | "E" | "F" | "G" | "A" | "B" ;
+
+accidental = "#" | "♯" | "b" | "♭" | "♮" ;
+
+integer = digit { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+identifier = letter { letter | digit | "_" } ;
+
+letter = "a".."z" | "A".."Z" ;
+
+quoted_string = '"' { character } '"' ;
+
+character = letter | digit | " " | "'" | "-" | "_" | "." | "," | "!" | "?" ;
+
+whitespace = " " | "\t" | "\n" | "\r" ;
+
+(* ============================================================================
+   COMMENTS AND METADATA
+   ============================================================================ *)
+
+comment = "//" { character } "\n" | "/*" { character } "*/" ;
+
+metadata = "metadata" "{" metadata_list "}" ;
+
+metadata_list = metadata_item { "," metadata_item } ;
+
+metadata_item = 
+    "author" ":" quoted_string
+    | "created" ":" quoted_string  
+    | "version" ":" quoted_string
+    | "tags" ":" "[" tag_list "]"
+    | "description" ":" quoted_string ;
+
+tag_list = quoted_string { "," quoted_string } ;
+
+(* ============================================================================
+   ADVANCED FEATURES
+   ============================================================================ *)
+
+(* Conditional exercises based on progress *)
+conditional_exercise = "if" condition "then" exercise [ "else" exercise ] ;
+
+condition =
+    skill_condition
+    | progress_condition
+    | time_condition ;
+
+skill_condition = "skill_level" comparison_op skill_level ;
+
+progress_condition = "progress" comparison_op integer "%" ;
+
+time_condition = "session_time" comparison_op integer "minutes" ;
+
+comparison_op = ">" | "<" | ">=" | "<=" | "==" | "!=" ;
+
+(* Adaptive difficulty *)
+adaptive_exercise = "adaptive" exercise_type exercise_duration ":" exercise_description
+                   "start_at" difficulty_level
+                   "adjust_by" adjustment_spec ;
+
+adjustment_spec =
+    "tempo" "±" integer "bpm"
+    | "difficulty" "±" integer "%"
+    | "duration" "±" integer "minutes" ;
+
+(* Practice loops and repetitions *)
+practice_loop = "repeat" integer "times" "{" exercise_list "}" ;
+
+practice_cycle = "cycle" cycle_duration "{" exercise_list "}" ;
+
+cycle_duration = integer ( "days" | "weeks" | "months" ) ;
+
+(* Performance tracking *)
+tracking_spec = "track" "{" tracking_list "}" ;
+
+tracking_list = tracking_item { "," tracking_item } ;
+
+tracking_item =
+    "accuracy"
+    | "tempo"
+    | "consistency"
+    | "mistakes"
+    | "improvement_rate"
+    | "session_completion" ;
+
+(* ============================================================================
+   EXAMPLE USAGE PATTERNS
+   ============================================================================ *)
+
+(*
+Example 1: Basic Practice Session
+session "beginner_daily" 30 minutes beginner {
+  warmup 5: "finger exercises" at 60 bpm
+  scales 10: "C major scale" at 80 bpm in 4/4 with straight
+  chords 10: "C-Am-F-G progression" at 70 bpm goals { accuracy 90%, tempo 80 bpm }
+  cooldown 5: "stretching and relaxation"
+}
+
+Example 2: Advanced Session with Conditionals
+session "adaptive_practice" 45 minutes intermediate {
+  warmup 5: "chromatic exercises" at start 60 increase_to 80 bpm
+
+  if skill_level >= intermediate then
+    technique 15: "alternate picking" at 120 bpm difficulty medium
+  else
+    technique 10: "basic picking" at 80 bpm difficulty easy
+
+  adaptive scales 15: "pentatonic patterns"
+    start_at easy
+    adjust_by tempo ±10 bpm
+
+  songs 10: "song practice" goals { accuracy 95%, consistency 5 reps }
+}
+
+Example 3: Long-term Practice Cycle
+cycle 4 weeks {
+  session "week1_focus" 30 minutes beginner {
+    scales 15: "major scales" at 60-80 bpm
+    chords 15: "open chords"
+  }
+
+  session "week2_focus" 35 minutes beginner {
+    scales 15: "minor scales" at 70-90 bpm
+    chords 15: "barre chords" difficulty medium
+  }
+
+  repeat 2 times {
+    technique 10: "hammer-ons and pull-offs"
+    improvisation 10: "pentatonic jamming"
+  }
+}
+
+Example 4: Performance Tracking
+session "tracked_practice" 40 minutes intermediate
+track { accuracy, tempo, consistency, improvement_rate } {
+  warmup 5: "finger independence" at 80 bpm
+  technique 20: "sweep picking" at 100-120 bpm
+    goals { accuracy 85%, clean sweep_picking }
+  songs 15: "complex piece practice"
+    goals { consistency 3 reps, tempo 110 bpm }
+}
+
+Example 5: Internet Content Integration
+session "internet_practice" 60 minutes intermediate {
+  warmup 5: "finger exercises"
+
+  (* Load tablature from Ultimate Guitar *)
+  songs 20: "Wonderwall" by "Oasis"
+    from ultimate_guitar { difficulty: easy, tuning: standard }
+    options { slow_down: 75%, metronome: on }
+
+  (* Load MIDI backing track *)
+  improvisation 15: "blues jam"
+    content midi "https://freemidi.org/blues-backing-12bar.mid"
+    at 120 bpm
+
+  (* Search for specific content *)
+  technique 15: "fingerpicking patterns"
+    search { style: "fingerpicking", difficulty: intermediate } in songsterr
+
+  (* Generate AI content *)
+  scales 10: "pentatonic practice"
+    content generate {
+      style: "rock",
+      scale: "A minor pentatonic",
+      length: 8 bars,
+      complexity: medium
+    }
+}
+
+Example 6: Advanced Content Discovery
+session "discovery_session" 45 minutes advanced {
+  (* Multiple content sources *)
+  songs 30: "classical piece"
+    search {
+      genre: "classical",
+      difficulty: advanced,
+      license: public_domain
+    } in imslp
+    options {
+      transpose: -2 semitones,
+      visual_feedback: true,
+      record_performance: true
+    }
+
+  (* Direct URL loading with validation *)
+  technique 15: "sweep picking"
+    from url "https://github.com/guitar-tabs/sweep-picking-exercises.gp5"
+    at start 80 increase_to 120 bpm
+    goals { accuracy: 90%, consistency: 3 reps }
+}
+*)

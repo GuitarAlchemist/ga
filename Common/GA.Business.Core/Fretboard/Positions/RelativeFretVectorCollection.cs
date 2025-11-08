@@ -1,54 +1,63 @@
 ﻿namespace GA.Business.Core.Fretboard.Positions;
 
 using GA.Core.Combinatorics;
+using GA.Core.Extensions;
 using Primitives;
 using static Primitives.RelativeFretVector;
 
 /// <summary>
-/// Collection of all possible <see cref="RelativeFretVector"/> variations and their equivalences by translation.
+///     Collection of all possible <see cref="RelativeFretVector" /> variations and their equivalences by translation.
 /// </summary>
 [PublicAPI]
 public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVector>
 {
-    #region IReadOnlyCollection{RelativeFretVector} Members
-
-    public IEnumerator<RelativeFretVector> GetEnumerator() => _factory.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count { get; }
-
-    #endregion
-
     private readonly VariationsRelativeFretVectorFactory _factory;
 
     /// <summary>
-    /// Creates a <see cref="RelativeFretVectorCollection"/> instance.
+    ///     Creates a <see cref="RelativeFretVectorCollection" /> instance.
     /// </summary>
     /// <param name="strCount">The number of strings.</param>
     /// <param name="fretExtent">The maximum fret extent.</param>
     public RelativeFretVectorCollection(
-        int strCount, 
+        int strCount,
         int fretExtent = 5)
     {
         var items = RelativeFret.Range(0, fretExtent);
         var variations = new VariationsWithRepetitions<RelativeFret>(items, strCount);
-        Count = (int) variations.Count;
+        Count = (int)variations.Count;
         _factory = new(variations);
         PrimeForms = this.OfType<PrimeForm>().ToLazyCollection();
         Translations = this.OfType<Translation>().ToLazyCollection();
     }
 
     /// <summary>
-    /// Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}"/>
+    ///     Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}" />
     /// </summary>
     public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences => _factory.Equivalences;
 
     /// <summary>
-    /// Gets the <see cref="IReadOnlyCollection{PrimeForm}"/>
+    ///     Gets the <see cref="IReadOnlyCollection{PrimeForm}" />
     /// </summary>
     public IReadOnlyCollection<PrimeForm> PrimeForms { get; }
 
     /// <summary>
-    /// Gets the <see cref="IReadOnlyCollection{Translation}"/>
+    ///     Gets the <see cref="IReadOnlyCollection{Translation}" />
     /// </summary>
     public IReadOnlyCollection<Translation> Translations { get; }
+
+    #region IReadOnlyCollection{RelativeFretVector} Members
+
+    public IEnumerator<RelativeFretVector> GetEnumerator()
+    {
+        return _factory.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public int Count { get; }
+
+    #endregion
 }
