@@ -42,6 +42,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{983FAA86-8
 		docs\COMMON_FOLDER_REORGANIZATION_ANALYSIS.md = docs\COMMON_FOLDER_REORGANIZATION_ANALYSIS.md
 		docs\COMMON_FOLDER_REORGANIZATION_PLAN.md = docs\COMMON_FOLDER_REORGANIZATION_PLAN.md
 		docs\COMMON_FOLDER_REORGANIZATION_EXECUTION.md = docs\COMMON_FOLDER_REORGANIZATION_EXECUTION.md
+		docs\INDEX.md = docs\INDEX.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA.WebBlazorApp", "GA.WebBlazorApp\GA.WebBlazorApp.csproj", "{150B48D2-FB05-42AB-B4BF-7028F92CA52B}"
@@ -116,6 +117,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{D83C
 		Scripts\start-all-dev.ps1 = Scripts\start-all-dev.ps1
 		Scripts\STARTUP_GUIDE.md = Scripts\STARTUP_GUIDE.md
 		Scripts\reorganize-solution-final.ps1 = Scripts\reorganize-solution-final.ps1
+		Scripts\organize-docs.ps1 = Scripts\organize-docs.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Html Examples", "Html Examples", "{9325B676-17E0-4A55-A204-4187BDC6FF14}"
