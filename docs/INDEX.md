@@ -76,7 +76,10 @@ Testing strategies, coverage, and test documentation.
 
 ### [Roadmap](./Roadmap/)
 Future plans, roadmaps, and upcoming features.
-- **AI_FUTURE_ROADMAP.md** - AI roadmap
+- **GUITAR_ALCHEMIST_ROADMAP_EPICS_AND_STORIES.md** - ⭐ **NEW** - Comprehensive roadmap with 29 stories across 4 phases
+- **QUARTERLY_ROADMAP_2026.md** - ⭐ **NEW** - Detailed quarterly breakdown for 2026
+- **ROADMAP_IMPLEMENTATION_GUIDE.md** - ⭐ **NEW** - Implementation strategy and technical guidance
+- **AI_FUTURE_ROADMAP.md** - AI roadmap and vision
 - **OPTIONAL_ENHANCEMENTS_PROGRESS.md** - Enhancement tracking
 - **NEXT_STEPS_COMPLETE.md** - Next steps
 
