@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Services.Embeddings;
+namespace GA.Data.MongoDB.Services.Embeddings;
 
 using Microsoft.Extensions.Logging;
 
@@ -9,11 +9,11 @@ public class SimpleEmbeddingService(ILogger<SimpleEmbeddingService> logger) : IE
         // Simple implementation - creates a basic embedding based on text length and character values
         // This should be replaced with a proper embedding service in production
         var embedding = new List<float>();
-        
+
         // Create a simple 128-dimension embedding
-        for (int i = 0; i < 128; i++)
+        for (var i = 0; i < 128; i++)
         {
-            float value = (i < text.Length) ? (float)text[i] / 255.0f : 0.0f;
+            var value = i < text.Length ? text[i] / 255.0f : 0.0f;
             embedding.Add(value);
         }
 

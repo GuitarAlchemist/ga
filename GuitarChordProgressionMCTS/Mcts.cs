@@ -9,14 +9,15 @@ public class Mcts(State initialState, int maxIterations)
     // Run the MCTS algorithm
     public State Run()
     {
-        for (int i = 0; i < MaxIterations; i++)
+        for (var i = 0; i < MaxIterations; i++)
         {
-            Node? selectedNode = Selection(Root); // Select the node to expand
+            var selectedNode = Selection(Root); // Select the node to expand
             if (!selectedNode.State.IsTerminal())
             {
                 selectedNode = Expansion(selectedNode); // Expand the node if it's not terminal
             }
-            double reward = Simulation(selectedNode); // Simulate (rollout) the rest of the sequence
+
+            var reward = Simulation(selectedNode); // Simulate (rollout) the rest of the sequence
             Backpropagation(selectedNode, reward); // Backpropagate the result
         }
 
@@ -32,6 +33,7 @@ public class Mcts(State initialState, int maxIterations)
         {
             node = GetBestChild(node, 2.0); // Increased exploration parameter
         }
+
         return node;
     }
 
@@ -39,13 +41,13 @@ public class Mcts(State initialState, int maxIterations)
     private Node? Expansion(Node? node)
     {
         var possibleStates = node.State.GetPossibleNextStates();
-    
+
         foreach (var state in possibleStates)
         {
             // If the child node is not already present, add it to the tree
             if (!node.Children.Exists(n => n.State.Sequence.SequenceEqual(state.Sequence)))
             {
-                Node? childNode = new Node(state, node);
+                var childNode = new Node(state, node);
                 node.Children.Add(childNode);
                 Console.WriteLine("Expanding Node, New Sequence Length: " + childNode.State.Sequence.Count);
                 return childNode;
@@ -69,15 +71,16 @@ public class Mcts(State initialState, int maxIterations)
             {
                 break;
             }
+
             tempState = possibleStates[_random.Next(possibleStates.Count)]; // Ensure _random is defined globally
         }
 
         // Optimize voicings using GA
         var ga = new GeneticAlgorithm(
             tempState.Sequence,
-            populationSize: 50,
-            generations: 100,
-            mutationRate: 0.2
+            50,
+            100,
+            0.2
         );
         var bestIndividual = ga.Run();
 
@@ -85,7 +88,7 @@ public class Mcts(State initialState, int maxIterations)
         for (var i = 0; i < tempState.Sequence.Count; i++)
         {
             // Corrected the assignment with proper List initialization
-            tempState.Sequence[i].Voicings = new List<int[]> { bestIndividual.Voicings[i] };
+            tempState.Sequence[i].Voicings = [bestIndividual.Voicings[i]];
         }
 
         return tempState.Evaluate();
@@ -106,17 +109,17 @@ public class Mcts(State initialState, int maxIterations)
     private Node? GetBestChild(Node? node, double explorationParam)
     {
         Node? bestChild = null;
-        double bestValue = double.MinValue;
+        var bestValue = double.MinValue;
 
         foreach (var child in node.Children)
         {
             // Calculate the UCT value
-            double exploitation = child.TotalScore / child.Visits;
-            double exploration = explorationParam * Math.Sqrt(Math.Log(node.Visits) / child.Visits);
-            double uctValue = exploitation + exploration;
+            var exploitation = child.TotalScore / child.Visits;
+            var exploration = explorationParam * Math.Sqrt(Math.Log(node.Visits) / child.Visits);
+            var uctValue = exploitation + exploration;
 
             // Prioritize longer sequences and higher UCT values
-            double value = uctValue + child.State.Sequence.Count * 0.5; // Bonus for longer sequences
+            var value = uctValue + child.State.Sequence.Count * 0.5; // Bonus for longer sequences
 
             if (value > bestValue)
             {

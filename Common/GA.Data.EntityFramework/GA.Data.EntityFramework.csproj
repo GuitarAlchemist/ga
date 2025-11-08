@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10"/>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../GA.Core/GA.Core.csproj"/>
+    <ProjectReference Include="../GA.Business.Config/GA.Business.Config.fsproj"/>
+  </ItemGroup>
+
+</Project>

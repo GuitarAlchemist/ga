@@ -1,11 +1,8 @@
-﻿using GA.Business.Core.Notes;
-using GA.Business.Core.Scales;
-using GA.Business.Core.Tonal.Modes;
-using GA.Business.Core.Intervals;
-
-namespace GA.Business.Core.Tests.Tonal;
+﻿namespace GA.Business.Core.Tests.Tonal;
 
 using Core.Atonal;
+using Core.Notes;
+using Scales;
 
 [TestFixture]
 public class ModalFamilyScaleModeTests
@@ -17,13 +14,13 @@ public class ModalFamilyScaleModeTests
         var majorModalFamily = ModalFamily.Major;
         var modes = ModalFamilyScaleModeFactory.CreateModesFromFamily(majorModalFamily).ToList();
     }
-    
+
     [Test]
     public void LydianMode_HasCorrectProperties()
     {
         // Arrange
-        var majorScale = Scale.Major;  // C major scale by default
-        var lydianDegree = 4;  // Lydian is the 4th mode
+        var majorScale = Scale.Major; // C major scale by default
+        var lydianDegree = 4; // Lydian is the 4th mode
         var lydianMode = ModalFamilyScaleMode.FromScale(majorScale, lydianDegree);
 
         // Assert
@@ -46,13 +43,14 @@ public class ModalFamilyScaleModeTests
             // Check characteristic intervals (what makes Lydian unique)
             var expectedCharacteristicNotes = AccidentedNoteCollection.Parse("B");
             Assert.That(lydianMode.CharacteristicNotes, Is.EqualTo(expectedCharacteristicNotes));
-            
+
             // Check modal family properties
             Assert.That(lydianMode.ModalFamily.IntervalClassVector.ToString(), Is.EqualTo("<2 5 4 3 6 1>"));
             Assert.That(lydianMode.ModalFamily.NoteCount, Is.EqualTo(7));
-            
+
             // Check reference mode (Ionian for major modes)
-            Assert.That(lydianMode.RefMode.Notes, Is.EqualTo(AccidentedNoteCollection.Parse("C D E F G A B"))); // C Ionian
+            Assert.That(lydianMode.RefMode.Notes,
+                Is.EqualTo(AccidentedNoteCollection.Parse("C D E F G A B"))); // C Ionian
         });
     }
 }

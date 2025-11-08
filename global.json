@@ -1,4 +1,8 @@
 {
+  "sdk": {
+    "version": "9.0.203",
+    "rollForward": "latestFeature"
+  },
   "msbuild-sdks": {
     "Microsoft.NET.Sdk": "9.0.100",
     "FSharp.NET.Sdk": "9.0.100"

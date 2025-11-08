@@ -2,11 +2,6 @@
 
 public class State
 {
-    public List<MusicalElement> Sequence { get; set; }
-    public int MaxLength { get; set; }
-    public string Key { get; set; } // The key of the progression
-    public List<int> MelodyNotes { get; set; } // MIDI note numbers of the melody
-
     // Constructor
     public State(IEnumerable<MusicalElement> sequence, int maxLength, string key, List<int> melodyNotes)
     {
@@ -15,6 +10,11 @@ public class State
         Key = key;
         MelodyNotes = melodyNotes;
     }
+
+    public List<MusicalElement> Sequence { get; set; }
+    public int MaxLength { get; set; }
+    public string Key { get; set; } // The key of the progression
+    public List<int> MelodyNotes { get; set; } // MIDI note numbers of the melody
 
     // Check if the sequence has reached its maximum length (the length of the melody)
     public bool IsTerminal()
@@ -25,14 +25,14 @@ public class State
     // Generate possible next states (children) based on the melody note and harmonization
     public List<State> GetPossibleNextStates()
     {
-        List<State> nextStates = new List<State>();
-        List<MusicalElement> possibleElements = GetPossibleElements();
+        List<State> nextStates = [];
+        var possibleElements = GetPossibleElements();
 
         foreach (var element in possibleElements)
         {
             // Create a new sequence by adding a new chord to the current sequence
-            List<MusicalElement> newSequence = new List<MusicalElement>(Sequence) { element };
-        
+            List<MusicalElement> newSequence = [..Sequence, element];
+
             // Add a new state with the updated sequence
             nextStates.Add(new State(newSequence, MaxLength, Key, MelodyNotes));
         }
@@ -44,10 +44,10 @@ public class State
     private List<MusicalElement> GetPossibleElements()
     {
         var chordsInKey = ChordLibrary.GetChordsInKey(Key).Values.ToList();
-    
+
         // Filter chords that harmonize with the current melody note
-        int currentIndex = Sequence.Count;
-        int melodyNote = MelodyNotes[currentIndex];
+        var currentIndex = Sequence.Count;
+        var melodyNote = MelodyNotes[currentIndex];
 
         // Ensure it returns all compatible chords for the current melody note
         var compatibleChords = chordsInKey.Where(chord => chord.ChordTones.Contains(melodyNote)).ToList();
@@ -148,7 +148,7 @@ public class State
             { "IV", ["I", "V", "ii"] },
             { "V", ["I", "vi"] },
             { "vi", ["ii", "IV"] },
-            { "vii°", ["I", "iii"] },
+            { "vii°", ["I", "iii"] }
         };
 
         // If the transition is not common, it's considered uncommon
@@ -249,7 +249,7 @@ public class State
             { "E7", "V7/V" }, // Secondary dominant
             { "F Minor", "iv" },
             { "C Major 7", "Imaj7" },
-            { "A Minor 9", "vim9" },
+            { "A Minor 9", "vim9" }
             // ... Add more mappings as necessary
         };
 

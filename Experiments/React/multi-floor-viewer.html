@@ -1,0 +1,462 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Multi-Floor BSP Dungeon Explorer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .floor-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .floor-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .floor-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .floor-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .floor-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .floor-info h2 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+        }
+
+        .floor-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            width: 150px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        canvas {
+            border: 2px solid #667eea;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #1a1a2e;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        .music-rooms {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .music-room {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .music-room-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .music-room-category {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏰 Multi-Floor BSP Dungeon Explorer</h1>
+    <p class="subtitle">Navigate through 6 floors of procedurally generated music theory dungeons</p>
+
+    <div class="floor-selector" id="floorSelector"></div>
+
+    <div class="floor-info" id="floorInfo">
+        <h2 id="floorName">Loading...</h2>
+        <p id="floorDescription"></p>
+    </div>
+
+    <div class="controls">
+        <input id="seedInput" min="0" placeholder="Enter seed (optional)" type="number">
+        <button onclick="generateWithSeed()">Use Seed</button>
+        <button onclick="generateRandom()">Generate Random</button>
+        <button id="generateAllBtn" onclick="generateAllFloors()">Generate All Floors</button>
+    </div>
+
+    <div class="loading" id="loading" style="display: none;">
+        Generating dungeon...
+    </div>
+
+    <div class="error" id="error" style="display: none;"></div>
+
+    <canvas height="600" id="dungeonCanvas" width="800"></canvas>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-label">Current Floor</div>
+            <div class="stat-value" id="currentFloor">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Dungeon Size</div>
+            <div class="stat-value" id="dungeonSize">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Rooms</div>
+            <div class="stat-value" id="roomCount">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Music Items</div>
+            <div class="stat-value" id="musicItemCount">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Seed</div>
+            <div class="stat-value" id="seedValue">-</div>
+        </div>
+    </div>
+
+    <div class="music-rooms" id="musicRooms" style="display: none;">
+        <h3>Music Theory Items in Rooms</h3>
+        <div id="musicRoomList"></div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:5232/api';
+    let currentFloor = 0;
+    let currentSeed = null;
+    let allFloorsData = {};
+
+    const floorNames = [
+        {name: 'Set Classes', description: 'Chromatic, Diatonic, Pentatonic, and more'},
+        {name: 'Forte Codes', description: 'Triads, Tetrads, Pentachords, and beyond'},
+        {name: 'Prime Forms', description: 'Major, Minor, Diminished, Augmented'},
+        {name: 'Chords', description: 'Major, Minor, Dominant 7th, and more'},
+        {name: 'Chord Inversions', description: 'Root, 1st, 2nd, 3rd, Drop 2, Drop 3'},
+        {name: 'Chord Voicings', description: 'Jazz, Classical, Rock, CAGED System'}
+    ];
+
+    // Initialize floor selector
+    function initFloorSelector() {
+        const selector = document.getElementById('floorSelector');
+        for (let i = 0; i < 6; i++) {
+            const button = document.createElement('button');
+            button.className = 'floor-button' + (i === 0 ? ' active' : '');
+            button.textContent = `Floor ${i}`;
+            button.onclick = () => selectFloor(i);
+            selector.appendChild(button);
+        }
+    }
+
+    function selectFloor(floor) {
+        currentFloor = floor;
+
+        // Update button states
+        document.querySelectorAll('.floor-button').forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === floor);
+        });
+
+        // Update floor info
+        updateFloorInfo();
+
+        // Load floor if already generated
+        if (allFloorsData[floor]) {
+            renderDungeon(allFloorsData[floor]);
+        } else {
+            generateFloor(floor);
+        }
+    }
+
+    function updateFloorInfo() {
+        const info = floorNames[currentFloor];
+        document.getElementById('floorName').textContent = `Floor ${currentFloor}: ${info.name}`;
+        document.getElementById('floorDescription').textContent = info.description;
+        document.getElementById('currentFloor').textContent = currentFloor;
+    }
+
+    async function generateFloor(floor, seed = null) {
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+
+        loading.style.display = 'block';
+        error.style.display = 'none';
+
+        try {
+            const url = `${API_BASE}/music-rooms/floor/${floor}?floorSize=80${seed !== null ? '&seed=' + seed : ''}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            const data = result.data;
+
+            allFloorsData[floor] = data;
+            currentSeed = data.seed;
+
+            if (floor === currentFloor) {
+                renderDungeon(data);
+            }
+
+            loading.style.display = 'none';
+        } catch (err) {
+            loading.style.display = 'none';
+            error.style.display = 'block';
+            error.textContent = `Error loading floor ${floor}: ${err.message}`;
+            console.error('Error:', err);
+        }
+    }
+
+    function renderDungeon(data) {
+        const canvas = document.getElementById('dungeonCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Clear canvas
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const scale = Math.min(canvas.width / data.width, canvas.height / data.height);
+
+        // Draw corridors
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 2;
+        data.corridors.forEach(corridor => {
+            ctx.beginPath();
+            corridor.points.forEach((point, idx) => {
+                const x = point.x * scale;
+                const y = point.y * scale;
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        });
+
+        // Draw rooms
+        data.rooms.forEach((room, idx) => {
+            const x = room.x * scale;
+            const y = room.y * scale;
+            const w = room.width * scale;
+            const h = room.height * scale;
+
+            // Room fill
+            ctx.fillStyle = room.musicItem ? '#667eea' : '#4a5568';
+            ctx.fillRect(x, y, w, h);
+
+            // Room border
+            ctx.strokeStyle = room.musicItem ? '#764ba2' : '#718096';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+
+            // Room number
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(idx + 1, x + w / 2, y + h / 2);
+        });
+
+        // Update stats
+        document.getElementById('dungeonSize').textContent = `${data.width}×${data.height}`;
+        document.getElementById('roomCount').textContent = data.rooms.length;
+        document.getElementById('musicItemCount').textContent = data.rooms.filter(r => r.musicItem).length;
+        document.getElementById('seedValue').textContent = data.seed || 'Random';
+
+        // Show music rooms
+        displayMusicRooms(data.rooms);
+    }
+
+    function displayMusicRooms(rooms) {
+        const container = document.getElementById('musicRooms');
+        const list = document.getElementById('musicRoomList');
+
+        const musicRooms = rooms.filter(r => r.musicItem);
+
+        if (musicRooms.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        list.innerHTML = musicRooms.map((room, idx) => `
+                <div class="music-room">
+                    <div class="music-room-name">Room ${rooms.indexOf(room) + 1}: ${room.musicItem.name}</div>
+                    <div class="music-room-category">${room.musicItem.category}</div>
+                </div>
+            `).join('');
+    }
+
+    function generateWithSeed() {
+        const seed = parseInt(document.getElementById('seedInput').value);
+        if (isNaN(seed)) {
+            alert('Please enter a valid seed number');
+            return;
+        }
+        generateFloor(currentFloor, seed);
+    }
+
+    function generateRandom() {
+        generateFloor(currentFloor, null);
+    }
+
+    async function generateAllFloors() {
+        const btn = document.getElementById('generateAllBtn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        const seed = document.getElementById('seedInput').value;
+        const useSeed = seed ? parseInt(seed) : null;
+
+        for (let i = 0; i < 6; i++) {
+            await generateFloor(i, useSeed);
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Generate All Floors';
+        alert('All 6 floors generated successfully!');
+    }
+
+    // Initialize
+    initFloorSelector();
+    updateFloorInfo();
+    generateFloor(0);
+</script>
+</body>
+</html>
+

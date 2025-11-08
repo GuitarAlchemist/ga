@@ -9,6 +9,7 @@ It is the sequel of the Guitar Alchemist project, started many years ago
 [Guitar Alchemist](http://www.guitaralchemist.com/)
 
 Classes currently implemented:
+
 - Instrument/Tuning (Guitar, Bass, Banjo, Ukulele, and many more...)
 - Note (Chromatic, diatonic, etc...)
 - Keys (Major, Minor)
@@ -18,7 +19,7 @@ Classes currently implemented:
 
 [GuitarAlchemist.GA.Business.Core NuGet package](https://www.nuget.org/packages/GuitarAlchemist.GA.Business.Core)
 
-## .NET Interactive extensions 
+## .NET Interactive extensions
 
 - A [.NET Interactive](https://github.com/dotnet/interactive) extension is also being developed (Preview)
 

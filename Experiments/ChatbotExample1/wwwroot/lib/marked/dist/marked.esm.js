@@ -26,12 +26,15 @@ function _getDefaults() {
         walkTokens: null,
     };
 }
+
 let _defaults = _getDefaults();
+
 function changeDefaults(newDefaults) {
     _defaults = newDefaults;
 }
 
-const noopTest = { exec: () => null };
+const noopTest = {exec: () => null};
+
 function edit(regex, opt = '') {
     let source = typeof regex === 'string' ? regex : regex.source;
     const obj = {
@@ -47,6 +50,7 @@ function edit(regex, opt = '') {
     };
     return obj;
 }
+
 const other = {
     codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm,
     outputLinkReplace: /\\([\[\]])/g,
@@ -225,9 +229,9 @@ const blockPedantic = {
         + '|<tag(?:"[^"]*"|\'[^\']*\'|\\s[^\'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))')
         .replace('comment', _comment)
         .replace(/tag/g, '(?!(?:'
-        + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub'
-        + '|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)'
-        + '\\b)\\w+(?!:|[^\\w\\s@]*@)\\b')
+            + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub'
+            + '|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)'
+            + '\\b)\\w+(?!:|[^\\w\\s@]*@)\\b')
         .getRegex(),
     def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
     heading: /^(#{1,6})(.*)(?:\n+|$)/,
@@ -422,28 +426,29 @@ const escapeReplacements = {
     "'": '&#39;',
 };
 const getEscapeReplacement = (ch) => escapeReplacements[ch];
+
 function escape(html, encode) {
     if (encode) {
         if (other.escapeTest.test(html)) {
             return html.replace(other.escapeReplace, getEscapeReplacement);
         }
-    }
-    else {
+    } else {
         if (other.escapeTestNoEncode.test(html)) {
             return html.replace(other.escapeReplaceNoEncode, getEscapeReplacement);
         }
     }
     return html;
 }
+
 function cleanUrl(href) {
     try {
         href = encodeURI(href).replace(other.percentDecode, '%');
-    }
-    catch {
+    } catch {
         return null;
     }
     return href;
 }
+
 function splitCells(tableRow, count) {
     // ensure that every cell-delimiting pipe has a space
     // before it to distinguish it from an escaped pipe
@@ -456,8 +461,7 @@ function splitCells(tableRow, count) {
             // odd number of slashes means | is escaped
             // so we leave it alone
             return '|';
-        }
-        else {
+        } else {
             // add space before unescaped |
             return ' |';
         }
@@ -473,8 +477,7 @@ function splitCells(tableRow, count) {
     if (count) {
         if (cells.length > count) {
             cells.splice(count);
-        }
-        else {
+        } else {
             while (cells.length < count)
                 cells.push('');
         }
@@ -485,6 +488,7 @@ function splitCells(tableRow, count) {
     }
     return cells;
 }
+
 /**
  * Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
  * /c*$/ is vulnerable to REDOS.
@@ -505,13 +509,13 @@ function rtrim(str, c, invert) {
         const currChar = str.charAt(l - suffLen - 1);
         if (currChar === c && true) {
             suffLen++;
-        }
-        else {
+        } else {
             break;
         }
     }
     return str.slice(0, l - suffLen);
 }
+
 function findClosingBracket(str, b) {
     if (str.indexOf(b[1]) === -1) {
         return -1;
@@ -520,11 +524,9 @@ function findClosingBracket(str, b) {
     for (let i = 0; i < str.length; i++) {
         if (str[i] === '\\') {
             i++;
-        }
-        else if (str[i] === b[0]) {
+        } else if (str[i] === b[0]) {
             level++;
-        }
-        else if (str[i] === b[1]) {
+        } else if (str[i] === b[1]) {
             level--;
             if (level < 0) {
                 return i;
@@ -559,6 +561,7 @@ function outputLink(cap, link, raw, lexer, rules) {
         text,
     };
 }
+
 function indentCodeCompensation(raw, text, rules) {
     const matchIndentToCode = raw.match(rules.other.indentCodeCompensation);
     if (matchIndentToCode === null) {
@@ -568,18 +571,19 @@ function indentCodeCompensation(raw, text, rules) {
     return text
         .split('\n')
         .map(node => {
-        const matchIndentInNode = node.match(rules.other.beginningSpace);
-        if (matchIndentInNode === null) {
+            const matchIndentInNode = node.match(rules.other.beginningSpace);
+            if (matchIndentInNode === null) {
+                return node;
+            }
+            const [indentInNode] = matchIndentInNode;
+            if (indentInNode.length >= indentToCode.length) {
+                return node.slice(indentToCode.length);
+            }
             return node;
-        }
-        const [indentInNode] = matchIndentInNode;
-        if (indentInNode.length >= indentToCode.length) {
-            return node.slice(indentToCode.length);
-        }
-        return node;
-    })
+        })
         .join('\n');
 }
+
 /**
  * Tokenizer
  */
@@ -590,6 +594,7 @@ class _Tokenizer {
     constructor(options) {
         this.options = options || _defaults;
     }
+
     space(src) {
         const cap = this.rules.block.newline.exec(src);
         if (cap && cap[0].length > 0) {
@@ -599,6 +604,7 @@ class _Tokenizer {
             };
         }
     }
+
     code(src) {
         const cap = this.rules.block.code.exec(src);
         if (cap) {
@@ -613,6 +619,7 @@ class _Tokenizer {
             };
         }
     }
+
     fences(src) {
         const cap = this.rules.block.fences.exec(src);
         if (cap) {
@@ -626,6 +633,7 @@ class _Tokenizer {
             };
         }
     }
+
     heading(src) {
         const cap = this.rules.block.heading.exec(src);
         if (cap) {
@@ -635,8 +643,7 @@ class _Tokenizer {
                 const trimmed = rtrim(text, '#');
                 if (this.options.pedantic) {
                     text = trimmed.trim();
-                }
-                else if (!trimmed || this.rules.other.endingSpaceChar.test(trimmed)) {
+                } else if (!trimmed || this.rules.other.endingSpaceChar.test(trimmed)) {
                     // CommonMark requires space before trailing #s
                     text = trimmed.trim();
                 }
@@ -650,6 +657,7 @@ class _Tokenizer {
             };
         }
     }
+
     hr(src) {
         const cap = this.rules.block.hr.exec(src);
         if (cap) {
@@ -659,6 +667,7 @@ class _Tokenizer {
             };
         }
     }
+
     blockquote(src) {
         const cap = this.rules.block.blockquote.exec(src);
         if (cap) {
@@ -675,11 +684,9 @@ class _Tokenizer {
                     if (this.rules.other.blockquoteStart.test(lines[i])) {
                         currentLines.push(lines[i]);
                         inBlockquote = true;
-                    }
-                    else if (!inBlockquote) {
+                    } else if (!inBlockquote) {
                         currentLines.push(lines[i]);
-                    }
-                    else {
+                    } else {
                         break;
                     }
                 }
@@ -705,8 +712,7 @@ class _Tokenizer {
                 if (lastToken?.type === 'code') {
                     // blockquote continuation cannot be preceded by a code block
                     break;
-                }
-                else if (lastToken?.type === 'blockquote') {
+                } else if (lastToken?.type === 'blockquote') {
                     // include continuation in nested blockquote
                     const oldToken = lastToken;
                     const newText = oldToken.raw + '\n' + lines.join('\n');
@@ -715,8 +721,7 @@ class _Tokenizer {
                     raw = raw.substring(0, raw.length - oldToken.raw.length) + newToken.raw;
                     text = text.substring(0, text.length - oldToken.text.length) + newToken.text;
                     break;
-                }
-                else if (lastToken?.type === 'list') {
+                } else if (lastToken?.type === 'list') {
                     // include continuation in nested list
                     const oldToken = lastToken;
                     const newText = oldToken.raw + '\n' + lines.join('\n');
@@ -725,7 +730,7 @@ class _Tokenizer {
                     raw = raw.substring(0, raw.length - lastToken.raw.length) + newToken.raw;
                     text = text.substring(0, text.length - oldToken.raw.length) + newToken.raw;
                     lines = newText.substring(tokens.at(-1).raw.length).split('\n');
-                    continue;
+
                 }
             }
             return {
@@ -736,6 +741,7 @@ class _Tokenizer {
             };
         }
     }
+
     list(src) {
         let cap = this.rules.block.list.exec(src);
         if (cap) {
@@ -776,11 +782,9 @@ class _Tokenizer {
                 if (this.options.pedantic) {
                     indent = 2;
                     itemContents = line.trimStart();
-                }
-                else if (blankLine) {
+                } else if (blankLine) {
                     indent = cap[1].length + 1;
-                }
-                else {
+                } else {
                     indent = cap[2].search(this.rules.other.nonSpaceChar); // Find first non-space char
                     indent = indent > 4 ? 1 : indent; // Treat indented code blocks (> 4 spaces) as having only 1 indent
                     itemContents = line.slice(indent);
@@ -806,8 +810,7 @@ class _Tokenizer {
                         if (this.options.pedantic) {
                             nextLine = nextLine.replace(this.rules.other.listReplaceNesting, '  ');
                             nextLineWithoutTabs = nextLine;
-                        }
-                        else {
+                        } else {
                             nextLineWithoutTabs = nextLine.replace(this.rules.other.tabCharGlobal, '    ');
                         }
                         // End list item if found code fences
@@ -832,8 +835,7 @@ class _Tokenizer {
                         }
                         if (nextLineWithoutTabs.search(this.rules.other.nonSpaceChar) >= indent || !nextLine.trim()) { // Dedent if possible
                             itemContents += '\n' + nextLineWithoutTabs.slice(indent);
-                        }
-                        else {
+                        } else {
                             // not enough indentation
                             if (blankLine) {
                                 break;
@@ -865,8 +867,7 @@ class _Tokenizer {
                     // If the previous item ended with a blank line, the list is loose
                     if (endsWithBlankLine) {
                         list.loose = true;
-                    }
-                    else if (this.rules.other.doubleBlankLine.test(raw)) {
+                    } else if (this.rules.other.doubleBlankLine.test(raw)) {
                         endsWithBlankLine = true;
                     }
                 }
@@ -896,8 +897,7 @@ class _Tokenizer {
             if (lastItem) {
                 lastItem.raw = lastItem.raw.trimEnd();
                 lastItem.text = lastItem.text.trimEnd();
-            }
-            else {
+            } else {
                 // not a list since there were no items
                 return;
             }
@@ -922,6 +922,7 @@ class _Tokenizer {
             return list;
         }
     }
+
     html(src) {
         const cap = this.rules.block.html.exec(src);
         if (cap) {
@@ -935,6 +936,7 @@ class _Tokenizer {
             return token;
         }
     }
+
     def(src) {
         const cap = this.rules.block.def.exec(src);
         if (cap) {
@@ -950,6 +952,7 @@ class _Tokenizer {
             };
         }
     }
+
     table(src) {
         const cap = this.rules.block.table.exec(src);
         if (!cap) {
@@ -976,14 +979,11 @@ class _Tokenizer {
         for (const align of aligns) {
             if (this.rules.other.tableAlignRight.test(align)) {
                 item.align.push('right');
-            }
-            else if (this.rules.other.tableAlignCenter.test(align)) {
+            } else if (this.rules.other.tableAlignCenter.test(align)) {
                 item.align.push('center');
-            }
-            else if (this.rules.other.tableAlignLeft.test(align)) {
+            } else if (this.rules.other.tableAlignLeft.test(align)) {
                 item.align.push('left');
-            }
-            else {
+            } else {
                 item.align.push(null);
             }
         }
@@ -1007,6 +1007,7 @@ class _Tokenizer {
         }
         return item;
     }
+
     lheading(src) {
         const cap = this.rules.block.lheading.exec(src);
         if (cap) {
@@ -1019,6 +1020,7 @@ class _Tokenizer {
             };
         }
     }
+
     paragraph(src) {
         const cap = this.rules.block.paragraph.exec(src);
         if (cap) {
@@ -1033,6 +1035,7 @@ class _Tokenizer {
             };
         }
     }
+
     text(src) {
         const cap = this.rules.block.text.exec(src);
         if (cap) {
@@ -1044,6 +1047,7 @@ class _Tokenizer {
             };
         }
     }
+
     escape(src) {
         const cap = this.rules.inline.escape.exec(src);
         if (cap) {
@@ -1054,19 +1058,18 @@ class _Tokenizer {
             };
         }
     }
+
     tag(src) {
         const cap = this.rules.inline.tag.exec(src);
         if (cap) {
             if (!this.lexer.state.inLink && this.rules.other.startATag.test(cap[0])) {
                 this.lexer.state.inLink = true;
-            }
-            else if (this.lexer.state.inLink && this.rules.other.endATag.test(cap[0])) {
+            } else if (this.lexer.state.inLink && this.rules.other.endATag.test(cap[0])) {
                 this.lexer.state.inLink = false;
             }
             if (!this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(cap[0])) {
                 this.lexer.state.inRawBlock = true;
-            }
-            else if (this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(cap[0])) {
+            } else if (this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(cap[0])) {
                 this.lexer.state.inRawBlock = false;
             }
             return {
@@ -1079,6 +1082,7 @@ class _Tokenizer {
             };
         }
     }
+
     link(src) {
         const cap = this.rules.inline.link.exec(src);
         if (cap) {
@@ -1093,8 +1097,7 @@ class _Tokenizer {
                 if ((trimmedUrl.length - rtrimSlash.length) % 2 === 0) {
                     return;
                 }
-            }
-            else {
+            } else {
                 // find closing parenthesis
                 const lastParenIndex = findClosingBracket(cap[2], '()');
                 if (lastParenIndex > -1) {
@@ -1114,8 +1117,7 @@ class _Tokenizer {
                     href = link[1];
                     title = link[3];
                 }
-            }
-            else {
+            } else {
                 title = cap[3] ? cap[3].slice(1, -1) : '';
             }
             href = href.trim();
@@ -1123,8 +1125,7 @@ class _Tokenizer {
                 if (this.options.pedantic && !(this.rules.other.endAngleBracket.test(trimmedUrl))) {
                     // pedantic allows starting angle bracket without ending angle bracket
                     href = href.slice(1);
-                }
-                else {
+                } else {
                     href = href.slice(1, -1);
                 }
             }
@@ -1134,6 +1135,7 @@ class _Tokenizer {
             }, cap[0], this.lexer, this.rules);
         }
     }
+
     reflink(src, links) {
         let cap;
         if ((cap = this.rules.inline.reflink.exec(src))
@@ -1151,6 +1153,7 @@ class _Tokenizer {
             return outputLink(cap, link, cap[0], this.lexer, this.rules);
         }
     }
+
     emStrong(src, maskedSrc, prevChar = '') {
         let match = this.rules.inline.emStrongLDelim.exec(src);
         if (!match)
@@ -1175,8 +1178,7 @@ class _Tokenizer {
                 if (match[3] || match[4]) { // found another Left Delim
                     delimTotal += rLength;
                     continue;
-                }
-                else if (match[5] || match[6]) { // either Left or Right Delim
+                } else if (match[5] || match[6]) { // either Left or Right Delim
                     if (lLength % 3 && !((lLength + rLength) % 3)) {
                         midDelimTotal += rLength;
                         continue; // CommonMark Emphasis Rules 9-10
@@ -1211,6 +1213,7 @@ class _Tokenizer {
             }
         }
     }
+
     codespan(src) {
         const cap = this.rules.inline.code.exec(src);
         if (cap) {
@@ -1227,6 +1230,7 @@ class _Tokenizer {
             };
         }
     }
+
     br(src) {
         const cap = this.rules.inline.br.exec(src);
         if (cap) {
@@ -1236,6 +1240,7 @@ class _Tokenizer {
             };
         }
     }
+
     del(src) {
         const cap = this.rules.inline.del.exec(src);
         if (cap) {
@@ -1247,6 +1252,7 @@ class _Tokenizer {
             };
         }
     }
+
     autolink(src) {
         const cap = this.rules.inline.autolink.exec(src);
         if (cap) {
@@ -1254,8 +1260,7 @@ class _Tokenizer {
             if (cap[2] === '@') {
                 text = cap[1];
                 href = 'mailto:' + text;
-            }
-            else {
+            } else {
                 text = cap[1];
                 href = text;
             }
@@ -1274,6 +1279,7 @@ class _Tokenizer {
             };
         }
     }
+
     url(src) {
         let cap;
         if (cap = this.rules.inline.url.exec(src)) {
@@ -1281,8 +1287,7 @@ class _Tokenizer {
             if (cap[2] === '@') {
                 text = cap[0];
                 href = 'mailto:' + text;
-            }
-            else {
+            } else {
                 // do extended autolink path validation
                 let prevCapZero;
                 do {
@@ -1292,8 +1297,7 @@ class _Tokenizer {
                 text = cap[0];
                 if (cap[1] === 'www.') {
                     href = 'http://' + cap[0];
-                }
-                else {
+                } else {
                     href = cap[0];
                 }
             }
@@ -1312,6 +1316,7 @@ class _Tokenizer {
             };
         }
     }
+
     inlineText(src) {
         const cap = this.rules.inline.text.exec(src);
         if (cap) {
@@ -1335,6 +1340,7 @@ class _Lexer {
     state;
     tokenizer;
     inlineQueue;
+
     constructor(options) {
         // TokenList cannot be created in one go
         this.tokens = [];
@@ -1358,18 +1364,17 @@ class _Lexer {
         if (this.options.pedantic) {
             rules.block = block.pedantic;
             rules.inline = inline.pedantic;
-        }
-        else if (this.options.gfm) {
+        } else if (this.options.gfm) {
             rules.block = block.gfm;
             if (this.options.breaks) {
                 rules.inline = inline.breaks;
-            }
-            else {
+            } else {
                 rules.inline = inline.gfm;
             }
         }
         this.tokenizer.rules = rules;
     }
+
     /**
      * Expose Rules
      */
@@ -1379,6 +1384,7 @@ class _Lexer {
             inline,
         };
     }
+
     /**
      * Static Lex Method
      */
@@ -1386,6 +1392,7 @@ class _Lexer {
         const lexer = new _Lexer(options);
         return lexer.lex(src);
     }
+
     /**
      * Static Lex Inline Method
      */
@@ -1393,6 +1400,7 @@ class _Lexer {
         const lexer = new _Lexer(options);
         return lexer.inlineTokens(src);
     }
+
     /**
      * Preprocessing
      */
@@ -1406,6 +1414,7 @@ class _Lexer {
         this.inlineQueue = [];
         return this.tokens;
     }
+
     blockTokens(src, tokens = [], lastParagraphClipped = false) {
         if (this.options.pedantic) {
             src = src.replace(other.tabCharGlobal, '    ').replace(other.spaceLine, '');
@@ -1413,7 +1422,7 @@ class _Lexer {
         while (src) {
             let token;
             if (this.options.extensions?.block?.some((extTokenizer) => {
-                if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+                if (token = extTokenizer.call({lexer: this}, src, tokens)) {
                     src = src.substring(token.raw.length);
                     tokens.push(token);
                     return true;
@@ -1430,8 +1439,7 @@ class _Lexer {
                     // if there's a single \n as a spacer, it's terminating the last line,
                     // so move it there so that we don't get unnecessary paragraph tags
                     lastToken.raw += '\n';
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 continue;
@@ -1445,8 +1453,7 @@ class _Lexer {
                     lastToken.raw += '\n' + token.raw;
                     lastToken.text += '\n' + token.text;
                     this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 continue;
@@ -1495,8 +1502,7 @@ class _Lexer {
                     lastToken.raw += '\n' + token.raw;
                     lastToken.text += '\n' + token.raw;
                     this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else if (!this.tokens.links[token.tag]) {
+                } else if (!this.tokens.links[token.tag]) {
                     this.tokens.links[token.tag] = {
                         href: token.href,
                         title: token.title,
@@ -1524,7 +1530,7 @@ class _Lexer {
                 const tempSrc = src.slice(1);
                 let tempStart;
                 this.options.extensions.startBlock.forEach((getStartIndex) => {
-                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+                    tempStart = getStartIndex.call({lexer: this}, tempSrc);
                     if (typeof tempStart === 'number' && tempStart >= 0) {
                         startIndex = Math.min(startIndex, tempStart);
                     }
@@ -1540,8 +1546,7 @@ class _Lexer {
                     lastToken.text += '\n' + token.text;
                     this.inlineQueue.pop();
                     this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 lastParagraphClipped = cutSrc.length !== src.length;
@@ -1557,8 +1562,7 @@ class _Lexer {
                     lastToken.text += '\n' + token.text;
                     this.inlineQueue.pop();
                     this.inlineQueue.at(-1).src = lastToken.text;
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 continue;
@@ -1568,8 +1572,7 @@ class _Lexer {
                 if (this.options.silent) {
                     console.error(errMsg);
                     break;
-                }
-                else {
+                } else {
                     throw new Error(errMsg);
                 }
             }
@@ -1577,10 +1580,12 @@ class _Lexer {
         this.state.top = true;
         return tokens;
     }
+
     inline(src, tokens = []) {
-        this.inlineQueue.push({ src, tokens });
+        this.inlineQueue.push({src, tokens});
         return tokens;
     }
+
     /**
      * Lexing/Compiling
      */
@@ -1619,7 +1624,7 @@ class _Lexer {
             let token;
             // extensions
             if (this.options.extensions?.inline?.some((extTokenizer) => {
-                if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+                if (token = extTokenizer.call({lexer: this}, src, tokens)) {
                     src = src.substring(token.raw.length);
                     tokens.push(token);
                     return true;
@@ -1653,8 +1658,7 @@ class _Lexer {
                 if (token.type === 'text' && lastToken?.type === 'text') {
                     lastToken.raw += token.raw;
                     lastToken.text += token.text;
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 continue;
@@ -1703,7 +1707,7 @@ class _Lexer {
                 const tempSrc = src.slice(1);
                 let tempStart;
                 this.options.extensions.startInline.forEach((getStartIndex) => {
-                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+                    tempStart = getStartIndex.call({lexer: this}, tempSrc);
                     if (typeof tempStart === 'number' && tempStart >= 0) {
                         startIndex = Math.min(startIndex, tempStart);
                     }
@@ -1722,8 +1726,7 @@ class _Lexer {
                 if (lastToken?.type === 'text') {
                     lastToken.raw += token.raw;
                     lastToken.text += token.text;
-                }
-                else {
+                } else {
                     tokens.push(token);
                 }
                 continue;
@@ -1733,8 +1736,7 @@ class _Lexer {
                 if (this.options.silent) {
                     console.error(errMsg);
                     break;
-                }
-                else {
+                } else {
                     throw new Error(errMsg);
                 }
             }
@@ -1752,10 +1754,12 @@ class _Renderer {
     constructor(options) {
         this.options = options || _defaults;
     }
+
     space(token) {
         return '';
     }
-    code({ text, lang, escaped }) {
+
+    code({text, lang, escaped}) {
         const langString = (lang || '').match(other.notSpaceStart)?.[0];
         const code = text.replace(other.endingNewline, '') + '\n';
         if (!langString) {
@@ -1769,19 +1773,24 @@ class _Renderer {
             + (escaped ? code : escape(code, true))
             + '</code></pre>\n';
     }
-    blockquote({ tokens }) {
+
+    blockquote({tokens}) {
         const body = this.parser.parse(tokens);
         return `<blockquote>\n${body}</blockquote>\n`;
     }
-    html({ text }) {
+
+    html({text}) {
         return text;
     }
-    heading({ tokens, depth }) {
+
+    heading({tokens, depth}) {
         return `<h${depth}>${this.parser.parseInline(tokens)}</h${depth}>\n`;
     }
+
     hr(token) {
         return '<hr>\n';
     }
+
     list(token) {
         const ordered = token.ordered;
         const start = token.start;
@@ -1794,10 +1803,11 @@ class _Renderer {
         const startAttr = (ordered && start !== 1) ? (' start="' + start + '"') : '';
         return '<' + type + startAttr + '>\n' + body + '</' + type + '>\n';
     }
+
     listitem(item) {
         let itemBody = '';
         if (item.task) {
-            const checkbox = this.checkbox({ checked: !!item.checked });
+            const checkbox = this.checkbox({checked: !!item.checked});
             if (item.loose) {
                 if (item.tokens[0]?.type === 'paragraph') {
                     item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;
@@ -1805,8 +1815,7 @@ class _Renderer {
                         item.tokens[0].tokens[0].text = checkbox + ' ' + escape(item.tokens[0].tokens[0].text);
                         item.tokens[0].tokens[0].escaped = true;
                     }
-                }
-                else {
+                } else {
                     item.tokens.unshift({
                         type: 'text',
                         raw: checkbox + ' ',
@@ -1814,22 +1823,24 @@ class _Renderer {
                         escaped: true,
                     });
                 }
-            }
-            else {
+            } else {
                 itemBody += checkbox + ' ';
             }
         }
         itemBody += this.parser.parse(item.tokens, !!item.loose);
         return `<li>${itemBody}</li>\n`;
     }
-    checkbox({ checked }) {
+
+    checkbox({checked}) {
         return '<input '
             + (checked ? 'checked="" ' : '')
             + 'disabled="" type="checkbox">';
     }
-    paragraph({ tokens }) {
+
+    paragraph({tokens}) {
         return `<p>${this.parser.parseInline(tokens)}</p>\n`;
     }
+
     table(token) {
         let header = '';
         // header
@@ -1837,7 +1848,7 @@ class _Renderer {
         for (let j = 0; j < token.header.length; j++) {
             cell += this.tablecell(token.header[j]);
         }
-        header += this.tablerow({ text: cell });
+        header += this.tablerow({text: cell});
         let body = '';
         for (let j = 0; j < token.rows.length; j++) {
             const row = token.rows[j];
@@ -1845,7 +1856,7 @@ class _Renderer {
             for (let k = 0; k < row.length; k++) {
                 cell += this.tablecell(row[k]);
             }
-            body += this.tablerow({ text: cell });
+            body += this.tablerow({text: cell});
         }
         if (body)
             body = `<tbody>${body}</tbody>`;
@@ -1856,9 +1867,11 @@ class _Renderer {
             + body
             + '</table>\n';
     }
-    tablerow({ text }) {
+
+    tablerow({text}) {
         return `<tr>\n${text}</tr>\n`;
     }
+
     tablecell(token) {
         const content = this.parser.parseInline(token.tokens);
         const type = token.header ? 'th' : 'td';
@@ -1867,25 +1880,31 @@ class _Renderer {
             : `<${type}>`;
         return tag + content + `</${type}>\n`;
     }
+
     /**
      * span level renderer
      */
-    strong({ tokens }) {
+    strong({tokens}) {
         return `<strong>${this.parser.parseInline(tokens)}</strong>`;
     }
-    em({ tokens }) {
+
+    em({tokens}) {
         return `<em>${this.parser.parseInline(tokens)}</em>`;
     }
-    codespan({ text }) {
+
+    codespan({text}) {
         return `<code>${escape(text, true)}</code>`;
     }
+
     br(token) {
         return '<br>';
     }
-    del({ tokens }) {
+
+    del({tokens}) {
         return `<del>${this.parser.parseInline(tokens)}</del>`;
     }
-    link({ href, title, tokens }) {
+
+    link({href, title, tokens}) {
         const text = this.parser.parseInline(tokens);
         const cleanHref = cleanUrl(href);
         if (cleanHref === null) {
@@ -1899,7 +1918,8 @@ class _Renderer {
         out += '>' + text + '</a>';
         return out;
     }
-    image({ href, title, text }) {
+
+    image({href, title, text}) {
         const cleanHref = cleanUrl(href);
         if (cleanHref === null) {
             return escape(text);
@@ -1912,6 +1932,7 @@ class _Renderer {
         out += '>';
         return out;
     }
+
     text(token) {
         return 'tokens' in token && token.tokens
             ? this.parser.parseInline(token.tokens)
@@ -1925,30 +1946,38 @@ class _Renderer {
  */
 class _TextRenderer {
     // no need for block level renderers
-    strong({ text }) {
+    strong({text}) {
         return text;
     }
-    em({ text }) {
+
+    em({text}) {
         return text;
     }
-    codespan({ text }) {
+
+    codespan({text}) {
         return text;
     }
-    del({ text }) {
+
+    del({text}) {
         return text;
     }
-    html({ text }) {
+
+    html({text}) {
         return text;
     }
-    text({ text }) {
+
+    text({text}) {
         return text;
     }
-    link({ text }) {
+
+    link({text}) {
         return '' + text;
     }
-    image({ text }) {
+
+    image({text}) {
         return '' + text;
     }
+
     br() {
         return '';
     }
@@ -1961,6 +1990,7 @@ class _Parser {
     options;
     renderer;
     textRenderer;
+
     constructor(options) {
         this.options = options || _defaults;
         this.options.renderer = this.options.renderer || new _Renderer();
@@ -1969,6 +1999,7 @@ class _Parser {
         this.renderer.parser = this;
         this.textRenderer = new _TextRenderer();
     }
+
     /**
      * Static Parse Method
      */
@@ -1976,6 +2007,7 @@ class _Parser {
         const parser = new _Parser(options);
         return parser.parse(tokens);
     }
+
     /**
      * Static Parse Inline Method
      */
@@ -1983,6 +2015,7 @@ class _Parser {
         const parser = new _Parser(options);
         return parser.parseInline(tokens);
     }
+
     /**
      * Parse Loop
      */
@@ -1993,7 +2026,7 @@ class _Parser {
             // Run any renderer extensions
             if (this.options.extensions?.renderers?.[anyToken.type]) {
                 const genericToken = anyToken;
-                const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);
+                const ret = this.options.extensions.renderers[genericToken.type].call({parser: this}, genericToken);
                 if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'html', 'paragraph', 'text'].includes(genericToken.type)) {
                     out += ret || '';
                     continue;
@@ -2003,39 +2036,39 @@ class _Parser {
             switch (token.type) {
                 case 'space': {
                     out += this.renderer.space(token);
-                    continue;
+
                 }
                 case 'hr': {
                     out += this.renderer.hr(token);
-                    continue;
+
                 }
                 case 'heading': {
                     out += this.renderer.heading(token);
-                    continue;
+
                 }
                 case 'code': {
                     out += this.renderer.code(token);
-                    continue;
+
                 }
                 case 'table': {
                     out += this.renderer.table(token);
-                    continue;
+
                 }
                 case 'blockquote': {
                     out += this.renderer.blockquote(token);
-                    continue;
+
                 }
                 case 'list': {
                     out += this.renderer.list(token);
-                    continue;
+
                 }
                 case 'html': {
                     out += this.renderer.html(token);
-                    continue;
+
                 }
                 case 'paragraph': {
                     out += this.renderer.paragraph(token);
-                    continue;
+
                 }
                 case 'text': {
                     let textToken = token;
@@ -2049,21 +2082,19 @@ class _Parser {
                             type: 'paragraph',
                             raw: body,
                             text: body,
-                            tokens: [{ type: 'text', raw: body, text: body, escaped: true }],
+                            tokens: [{type: 'text', raw: body, text: body, escaped: true}],
                         });
-                    }
-                    else {
+                    } else {
                         out += body;
                     }
-                    continue;
+
                 }
                 default: {
                     const errMsg = 'Token with "' + token.type + '" type was not found.';
                     if (this.options.silent) {
                         console.error(errMsg);
                         return '';
-                    }
-                    else {
+                    } else {
                         throw new Error(errMsg);
                     }
                 }
@@ -2071,6 +2102,7 @@ class _Parser {
         }
         return out;
     }
+
     /**
      * Parse Inline Tokens
      */
@@ -2080,7 +2112,7 @@ class _Parser {
             const anyToken = tokens[i];
             // Run any renderer extensions
             if (this.options.extensions?.renderers?.[anyToken.type]) {
-                const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);
+                const ret = this.options.extensions.renderers[anyToken.type].call({parser: this}, anyToken);
                 if (ret !== false || !['escape', 'html', 'link', 'image', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(anyToken.type)) {
                     out += ret || '';
                     continue;
@@ -2133,8 +2165,7 @@ class _Parser {
                     if (this.options.silent) {
                         console.error(errMsg);
                         return '';
-                    }
-                    else {
+                    } else {
                         throw new Error(errMsg);
                     }
                 }
@@ -2147,38 +2178,45 @@ class _Parser {
 class _Hooks {
     options;
     block;
+
     constructor(options) {
         this.options = options || _defaults;
     }
+
     static passThroughHooks = new Set([
         'preprocess',
         'postprocess',
         'processAllTokens',
     ]);
+
     /**
      * Process markdown before marked
      */
     preprocess(markdown) {
         return markdown;
     }
+
     /**
      * Process HTML after marked is finished
      */
     postprocess(html) {
         return html;
     }
+
     /**
      * Process all tokens before walk tokens
      */
     processAllTokens(tokens) {
         return tokens;
     }
+
     /**
      * Provide function to tokenize markdown
      */
     provideLexer() {
         return this.block ? _Lexer.lex : _Lexer.lexInline;
     }
+
     /**
      * Provide function to parse tokens
      */
@@ -2198,9 +2236,11 @@ class Marked {
     Lexer = _Lexer;
     Tokenizer = _Tokenizer;
     Hooks = _Hooks;
+
     constructor(...args) {
         this.use(...args);
     }
+
     /**
      * Run callback for every token
      */
@@ -2233,8 +2273,7 @@ class Marked {
                             const tokens = genericToken[childTokens].flat(Infinity);
                             values = values.concat(this.walkTokens(tokens, callback));
                         });
-                    }
-                    else if (genericToken.tokens) {
+                    } else if (genericToken.tokens) {
                         values = values.concat(this.walkTokens(genericToken.tokens, callback));
                     }
                 }
@@ -2242,11 +2281,12 @@ class Marked {
         }
         return values;
     }
+
     use(...args) {
-        const extensions = this.defaults.extensions || { renderers: {}, childTokens: {} };
+        const extensions = this.defaults.extensions || {renderers: {}, childTokens: {}};
         args.forEach((pack) => {
             // copy options to new object
-            const opts = { ...pack };
+            const opts = {...pack};
             // set async to true if it was set to true before
             opts.async = this.defaults.async || opts.async || false;
             // ==-- Parse "addon" extensions --== //
@@ -2266,8 +2306,7 @@ class Marked {
                                 }
                                 return ret;
                             };
-                        }
-                        else {
+                        } else {
                             extensions.renderers[ext.name] = ext.renderer;
                         }
                     }
@@ -2278,24 +2317,20 @@ class Marked {
                         const extLevel = extensions[ext.level];
                         if (extLevel) {
                             extLevel.unshift(ext.tokenizer);
-                        }
-                        else {
+                        } else {
                             extensions[ext.level] = [ext.tokenizer];
                         }
                         if (ext.start) { // Function to check for start of token
                             if (ext.level === 'block') {
                                 if (extensions.startBlock) {
                                     extensions.startBlock.push(ext.start);
-                                }
-                                else {
+                                } else {
                                     extensions.startBlock = [ext.start];
                                 }
-                            }
-                            else if (ext.level === 'inline') {
+                            } else if (ext.level === 'inline') {
                                 if (extensions.startInline) {
                                     extensions.startInline.push(ext.start);
-                                }
-                                else {
+                                } else {
                                     extensions.startInline = [ext.start];
                                 }
                             }
@@ -2382,8 +2417,7 @@ class Marked {
                             const ret = hooksFunc.call(hooks, arg);
                             return prevHook.call(hooks, ret);
                         };
-                    }
-                    else {
+                    } else {
                         // @ts-expect-error cannot type hook function dynamically
                         hooks[hooksProp] = (...args) => {
                             let ret = hooksFunc.apply(hooks, args);
@@ -2409,25 +2443,29 @@ class Marked {
                     return values;
                 };
             }
-            this.defaults = { ...this.defaults, ...opts };
+            this.defaults = {...this.defaults, ...opts};
         });
         return this;
     }
+
     setOptions(opt) {
-        this.defaults = { ...this.defaults, ...opt };
+        this.defaults = {...this.defaults, ...opt};
         return this;
     }
+
     lexer(src, options) {
         return _Lexer.lex(src, options ?? this.defaults);
     }
+
     parser(tokens, options) {
         return _Parser.parse(tokens, options ?? this.defaults);
     }
+
     parseMarkdown(blockType) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const parse = (src, options) => {
-            const origOpt = { ...options };
-            const opt = { ...this.defaults, ...origOpt };
+            const origOpt = {...options};
+            const opt = {...this.defaults, ...origOpt};
             const throwError = this.onError(!!opt.silent, !!opt.async);
             // throw error if an extension set async to true but parse was called with async: false
             if (this.defaults.async === true && origOpt.async === false) {
@@ -2472,13 +2510,13 @@ class Marked {
                     html = opt.hooks.postprocess(html);
                 }
                 return html;
-            }
-            catch (e) {
+            } catch (e) {
                 return throwError(e);
             }
         };
         return parse;
     }
+
     onError(silent, async) {
         return (e) => {
             e.message += '\nPlease report this to https://github.com/markedjs/marked.';
@@ -2500,9 +2538,11 @@ class Marked {
 }
 
 const markedInstance = new Marked();
+
 function marked(src, opt) {
     return markedInstance.parse(src, opt);
 }
+
 /**
  * Sets the default options.
  *
@@ -2564,7 +2604,26 @@ const parse = marked;
 const parser = _Parser.parse;
 const lexer = _Lexer.lex;
 
-export { _Hooks as Hooks, _Lexer as Lexer, Marked, _Parser as Parser, _Renderer as Renderer, _TextRenderer as TextRenderer, _Tokenizer as Tokenizer, _defaults as defaults, _getDefaults as getDefaults, lexer, marked, options, parse, parseInline, parser, setOptions, use, walkTokens };
+export {
+    _Hooks as Hooks,
+    _Lexer as Lexer,
+    Marked,
+    _Parser as Parser,
+    _Renderer as Renderer,
+    _TextRenderer as TextRenderer,
+    _Tokenizer as Tokenizer,
+    _defaults as defaults,
+    _getDefaults as getDefaults,
+    lexer,
+    marked,
+    options,
+    parse,
+    parseInline,
+    parser,
+    setOptions,
+    use,
+    walkTokens
+};
 //# sourceMappingURL=marked.esm.js.map
 
 // SIG // Begin signature block

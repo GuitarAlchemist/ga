@@ -9,8 +9,8 @@
     elem.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            elem.dispatchEvent(new CustomEvent('change', { bubbles: true }));
-            elem.closest('form').dispatchEvent(new CustomEvent('submit', { bubbles: true }));
+            elem.dispatchEvent(new CustomEvent('change', {bubbles: true}));
+            elem.closest('form').dispatchEvent(new CustomEvent('submit', {bubbles: true}));
         }
     });
 }

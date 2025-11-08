@@ -1,0 +1,26 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: ArticulationTechniques
+ArticulationTechniques:
+  - Name: Legato
+    Effect: Smooth connected tone
+    Applications:
+      - Soloing
+      - Melodic phrasing
+  - Name: Staccato
+    Effect: Short detached notes
+    Applications:
+      - Funk
+      - Percussive rhythm
+  - Name: Accents
+    Effect: Dynamic emphasis
+    Applications:
+      - Groove definition
+      - Syncopation
+  - Name: Slides
+    Effect: Pitch transition
+    Applications:
+      - Blues
+      - Expressive lead

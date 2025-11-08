@@ -1,0 +1,45 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: RhythmicConcepts
+RhythmicConcepts:
+  Meters:
+    Simple:
+      - 2/4
+      - 3/4
+      - 4/4
+    Compound:
+      - 6/8
+      - 9/8
+      - 12/8
+    Odd:
+      - 5/4
+      - 7/8
+      - 11/8
+  TimeFeels:
+    - Name: Straight
+      Subdivision: Even 8ths
+      Applications:
+        - Rock
+        - Pop
+        - Metal
+    - Name: Swing
+      Subdivision: Triplet feel
+      Applications:
+        - Jazz
+        - Blues
+    - Name: Shuffle
+      Subdivision: Triplet with backbeat
+      Applications:
+        - Texas blues
+        - Boogie
+  Polyrhythms:
+    - Ratio: '3:2'
+      Use: Afro-Cuban, Fusion
+      Practice:
+        - Tap 3 over 2 metronome exercises
+    - Ratio: '5:4'
+      Use: Progressive Rock
+      Practice:
+        - Count 5 evenly over 4 beats

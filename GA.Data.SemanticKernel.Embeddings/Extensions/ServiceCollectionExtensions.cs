@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
             // Build and configure the kernel
             var builder = Kernel.CreateBuilder();
             builder.Services.AddKeyedSingleton<ITextEmbeddingGenerationService>("embeddings", embeddingService);
-            
+
             return builder.Build();
         });
 

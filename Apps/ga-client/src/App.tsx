@@ -1,82 +1,163 @@
-import { ThemeProvider, createTheme } from '@mui/material';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import {
-    AppBar,
-    Box,
-    Button,
-    Container,
-    CssBaseline,
-    Grid,
-    Typography
+  CircularProgress,
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  Typography,
+  createTheme,
 } from '@mui/material';
-import FretboardPositionsGrid from "ga-react-components/src/components/FretboardGrid.tsx";
-import VexChordDiagram from "ga-react-components/src/components/Chords/VexChordDiagram.tsx";
-import {ChordData} from "ga-react-components/src/components/Chords/ChordData.tsx";
-import ScaleSelector from "ga-react-components/src/components/ScaleSelector.tsx";
-import {useState} from "react";
+import { Provider as JotaiProvider } from 'jotai';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import DemosIndex from './pages/DemosIndex';
+import AllDemosTable from './pages/AllDemosTable';
+import HarmonicStudio from './pages/HarmonicStudio';
+import MusicGenerationDemo from './components/dashboard/MusicGenerationDemo';
+import HandPoseDemo from './pages/demos/HandPoseDemo';
+
+const ChatInterface = lazy(() => import('./components/Chat/ChatInterface'));
 
 const defaultTheme = createTheme({
-    palette: {
-        mode: 'light'
-    }
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#ff7a45',
+    },
+    secondary: {
+      main: '#6bc1ff',
+    },
+    background: {
+      default: '#0e1014',
+      paper: '#161a20',
+    },
+  },
+  typography: {
+    fontFamily: 'Inter, Roboto, sans-serif',
+  },
 });
 
-function App() {
-    const [count, setCount] = useState(0);
-    const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+const LoadingFallback = () => (
+  <div style={{ display: 'grid', placeItems: 'center', height: '100vh', padding: '64px 0' }}>
+    <CircularProgress />
+    <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+      Loading...
+    </Typography>
+  </div>
+);
 
-    const handleNotesChange = (notes: string[]) => {
-        setSelectedNotes(notes);
-    };
-
-    const eMajorChord: ChordData = {
-        chordNotes: [
-            [1, 0], // Open high E string
-            [2, 0], // Open B string
-            [3, 1], // G string at fret 1
-            [4, 2], // D string at fret 2
-            [5, 2], // A string at fret 2
-            [6, 0]  // Open low E string
-        ],
-        position: 1,  // This chord starts at the first fret
-    };
-
-    return (
-        <ThemeProvider theme={defaultTheme}>
-            <div>Hello</div>
-            <CssBaseline />
-            <Box sx={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '100vh',
-                bgcolor: 'background.default',
-                color: 'text.primary'
-            }}>
-                <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12}>
-                            <Typography variant="h3" component="h1" gutterBottom>
-                                Guitar Alchemist
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <Box sx={{ mb: 2 }}>
-                                <Button variant="contained" color="primary" onClick={() => setCount((count) => count + 1)}>
-                                    Count is {count}
-                                </Button>
-                            </Box>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <ScaleSelector onNotesChange={handleNotesChange} />
-                            <VexChordDiagram chord={eMajorChord} />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <FretboardPositionsGrid notes={selectedNotes.join(' ')} showDetails={false} debug={true} />
-                        </Grid>
-                    </Grid>
-                </Container>
-            </Box>
-        </ThemeProvider>
-    );
-}
+const App = () => {
+  return (
+    <JotaiProvider>
+      <ThemeProvider theme={defaultTheme}>
+        <CssBaseline />
+        <BrowserRouter>
+          <Layout>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/harmonic-studio" element={<HarmonicStudio />} />
+                <Route path="/ai-copilot" element={<ChatInterface />} />
+                <Route path="/music-generation" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <MusicGenerationDemo />
+                  </Container>
+                } />
+                <Route path="/demos" element={<DemosIndex />} />
+                <Route path="/demos/all" element={<AllDemosTable />} />
+                <Route path="/demos/hand-pose" element={<HandPoseDemo />} />
+                <Route path="/demos/bsp" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">BSP Explorer</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/chord-naming" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Chord Naming Demo</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/fretboard-explorer" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Fretboard Explorer</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/musical-analysis" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Musical Analysis</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/advanced-math" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Advanced Mathematics</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/performance" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Performance Optimization</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/psychoacoustic" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Psychoacoustic Voicing</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/practice-routine" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Practice Routine DSL</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/internet-content" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Internet Content</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/sound-bank" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Sound Bank</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/embedding" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Embedding Generator</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/vector-search" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Vector Search</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/floor-manager" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Floor Manager</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/graphiti" element={
+                  <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Typography variant="h4">Graphiti Knowledge Graph</Typography>
+                    <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+              </Routes>
+            </Suspense>
+          </Layout>
+        </BrowserRouter>
+      </ThemeProvider>
+    </JotaiProvider>
+  );
+};
 
 export default App;

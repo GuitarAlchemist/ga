@@ -1,9 +1,7 @@
-﻿﻿﻿﻿namespace GA.Business.Core.Tests.Fretboard;
+namespace GA.Business.Core.Tests.Fretboard;
 
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes;
-using System.Collections.Generic;
+using Core.Fretboard.Primitives;
+using Core.Notes;
 
 [TestFixture]
 public class TuningTests
@@ -97,7 +95,8 @@ public class TuningTests
 
             // Assert
             Assert.That(tuning, Is.Not.Null, $"Failed to create {tuningName} tuning");
-            Assert.That(tuning.ToString(), Is.EqualTo(pitchString), $"Incorrect string representation for {tuningName} tuning");
+            Assert.That(tuning.ToString(), Is.EqualTo(pitchString),
+                $"Incorrect string representation for {tuningName} tuning");
         }
     }
 }

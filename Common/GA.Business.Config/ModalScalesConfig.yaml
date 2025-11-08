@@ -1,186 +1,2442 @@
 ﻿- PitchClassSetId: 2741
-  Name: "Major"
+  Name: Major
   Modes:
-    - Name: "Ionian"
+    - Name: Ionian
       Degree: 1
-      AlternateNames: ["Major"]
-    - Name: "Dorian"
+      AlternateNames:
+        - Major
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Dorian
       Degree: 2
-    - Name: "Phrygian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Phrygian
       Degree: 3
-    - Name: "Lydian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Lydian
       Degree: 4
-    - Name: "Mixolydian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Mixolydian
       Degree: 5
-      AlternateNames: ["Dominant"]
-    - Name: "Aeolian"
+      AlternateNames:
+        - Dominant
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Aeolian
       Degree: 6
-      AlternateNames: ["Natural Minor", "Pure Minor"]
-    - Name: "Locrian"
+      AlternateNames:
+        - Natural Minor
+        - Pure Minor
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Locrian
       Degree: 7
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2773
-  Name: "Melodic Minor"
+  Name: Melodic Minor
   Modes:
-    - Name: "Melodic Minor"
+    - Name: Melodic Minor
       Degree: 1
-      AlternateNames: ["Jazz Minor"]
-    - Name: "Dorian b2"
+      AlternateNames:
+        - Jazz Minor
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Dorian b2
       Degree: 2
-      AlternateNames: ["Phrygian ♯6", "Assyrian"]
-    - Name: "Lydian Augmented"
+      AlternateNames:
+        - Phrygian ♯6
+        - Assyrian
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Lydian Augmented
       Degree: 3
-    - Name: "Lydian Dominant"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Lydian Dominant
       Degree: 4
-      AlternateNames: ["Overtone", "Acoustic"]
-    - Name: "Mixolydian b6"
+      AlternateNames:
+        - Overtone
+        - Acoustic
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Mixolydian b6
       Degree: 5
-      AlternateNames: ["Melodic Major", "Hindu"]
-    - Name: "Locrian #2"
+      AlternateNames:
+        - Melodic Major
+        - Hindu
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Locrian #2'
       Degree: 6
-      AlternateNames: ["Half Diminished"]
-    - Name: "Altered"
+      AlternateNames:
+        - Half Diminished
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Altered
       Degree: 7
-      AlternateNames: ["Super Locrian", "Diminished Whole Tone"]
-
+      AlternateNames:
+        - Super Locrian
+        - Diminished Whole Tone
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2742
-  Name: "Harmonic Minor"
+  Name: Harmonic Minor
   Modes:
-    - Name: "Harmonic Minor"
+    - Name: Harmonic Minor
       Degree: 1
-    - Name: "Locrian #6"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Locrian #6'
       Degree: 2
-    - Name: "Ionian #5"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Ionian #5'
       Degree: 3
-      AlternateNames: ["Augmented Major"]
-    - Name: "Dorian #4"
+      AlternateNames:
+        - Augmented Major
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Dorian #4'
       Degree: 4
-      AlternateNames: ["Ukrainian Dorian"]
-    - Name: "Phrygian Dominant"
+      AlternateNames:
+        - Ukrainian Dorian
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Phrygian Dominant
       Degree: 5
-      AlternateNames: ["Spanish Phrygian", "Freygish"]
-    - Name: "Lydian #2"
+      AlternateNames:
+        - Spanish Phrygian
+        - Freygish
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Lydian #2'
       Degree: 6
-    - Name: "Ultralocrian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Ultralocrian
       Degree: 7
-      AlternateNames: ["Altered Diminished"]
-
+      AlternateNames:
+        - Altered Diminished
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2906
-  Name: "Harmonic Major"
+  Name: Harmonic Major
   Modes:
-    - Name: "Harmonic Major"
+    - Name: Harmonic Major
       Degree: 1
-    - Name: "Dorian b5"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Dorian b5
       Degree: 2
-    - Name: "Phrygian b4"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Phrygian b4
       Degree: 3
-    - Name: "Lydian b3"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Lydian b3
       Degree: 4
-    - Name: "Mixolydian b2"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Mixolydian b2
       Degree: 5
-    - Name: "Lydian Augmented #2"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Lydian Augmented #2'
       Degree: 6
-    - Name: "Locrian bb7"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Locrian bb7
       Degree: 7
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2905
-  Name: "Double Harmonic Major"
+  Name: Double Harmonic Major
   Modes:
-    - Name: "Double Harmonic Major"
+    - Name: Double Harmonic Major
       Degree: 1
-      AlternateNames: ["Byzantine", "Arabic"]
-    - Name: "Lydian #2 #6"
+      AlternateNames:
+        - Byzantine
+        - Arabic
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Lydian #2 #6'
       Degree: 2
-    - Name: "Ultraphrygian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Ultraphrygian
       Degree: 3
-    - Name: "Hungarian Minor"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Hungarian Minor
       Degree: 4
-      AlternateNames: ["Double Harmonic Minor"]
-    - Name: "Oriental"
+      AlternateNames:
+        - Double Harmonic Minor
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Oriental
       Degree: 5
-    - Name: "Ionian Augmented #2"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: 'Ionian Augmented #2'
       Degree: 6
-    - Name: "Locrian bb3 bb7"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Locrian bb3 bb7
       Degree: 7
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2485
-  Name: "Whole Tone"
+  Name: Whole Tone
   Modes:
-    - Name: "Whole Tone"
+    - Name: Whole Tone
       Degree: 1
-      AlternateNames: ["Augmented"]
-
+      AlternateNames:
+        - Augmented
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2733
-  Name: "Diminished"
+  Name: Diminished
   Modes:
-    - Name: "Diminished"
+    - Name: Diminished
       Degree: 1
-      AlternateNames: ["Whole-Half Diminished", "Octatonic"]
-    - Name: "Diminished Dominant"
+      AlternateNames:
+        - Whole-Half Diminished
+        - Octatonic
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Diminished Dominant
       Degree: 2
-      AlternateNames: ["Half-Whole Diminished"]
-
+      AlternateNames:
+        - Half-Whole Diminished
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2477
-  Name: "Augmented"
+  Name: Augmented
   Modes:
-    - Name: "Augmented"
+    - Name: Augmented
       Degree: 1
-    - Name: "Augmented Dominant"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Augmented Dominant
       Degree: 2
-    - Name: "Augmented Minor"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Augmented Minor
       Degree: 3
-
-# ... (previous scales remain the same)
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 1707
-  Name: "Major Pentatonic"
+  Name: Major Pentatonic
   Modes:
-    - Name: "Major Pentatonic"
+    - Name: Major Pentatonic
       Degree: 1
-    - Name: "Egyptian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Egyptian
       Degree: 2
-    - Name: "Blues Minor"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Blues Minor
       Degree: 3
-      AlternateNames: ["Man Gong"]
-    - Name: "Blues Major"
+      AlternateNames:
+        - Man Gong
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Blues Major
       Degree: 4
-      AlternateNames: ["Ritsusen"]
-    - Name: "Minor Pentatonic"
+      AlternateNames:
+        - Ritsusen
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Minor Pentatonic
       Degree: 5
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 1709
-  Name: "Minor Pentatonic"
+  Name: Minor Pentatonic
   Modes:
-    - Name: "Minor Pentatonic"
+    - Name: Minor Pentatonic
       Degree: 1
-    - Name: "Major Pentatonic"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Major Pentatonic
       Degree: 2
-    - Name: "Egyptian"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Egyptian
       Degree: 3
-    - Name: "Blues Minor"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Blues Minor
       Degree: 4
-    - Name: "Blues Major"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Blues Major
       Degree: 5
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 1451
-  Name: "In Sen"
+  Name: In Sen
   Modes:
-    - Name: "In Sen"
+    - Name: In Sen
       Degree: 1
-    - Name: "Kokin-Joshi"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Kokin-Joshi
       Degree: 2
-    - Name: "Akebono"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Akebono
       Degree: 3
-    - Name: "Iwato"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Iwato
       Degree: 4
-    - Name: "Hirajoshi"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Hirajoshi
       Degree: 5
-
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate
 - PitchClassSetId: 2485
-  Name: "Prometheus"
+  Name: Prometheus
   Modes:
-    - Name: "Prometheus"
+    - Name: Prometheus
       Degree: 1
-    - Name: "Mystic"
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+    - Name: Mystic
       Degree: 2
-      AlternateNames: ["Scriabin"]
+      AlternateNames:
+        - Scriabin
+      Applications:
+        - Improvisation over modal chord progressions
+        - Composition with color shifts without modulation
+        - Film/game scoring for atmospheric tension
+      CharacteristicChords:
+        - Imaj7 for Ionian/Lydian
+        - i7 for Dorian/Aeolian
+        - bVII or bII for Phrygian/Lydian
+      CharacteristicIntervals:
+        Lydian: '#4'
+        Mixolydian: b7
+        Dorian: b3 + natural 6
+        Phrygian: b2
+        Aeolian: b6 + b7
+        Locrian: b2 + b5
+      CommonProgressions:
+        - I – II – I (Lydian color)
+        - i – IV – i (Dorian motion)
+        - i – bVII – bVI – V (Aeolian cadence)
+      GuitarFretboardTips:
+        - Anchor modal centers using pentatonic skeletons
+        - Use drone strings for modal resonance (Dorian, Mixolydian)
+        - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+      EarTraining:
+        - 'Contrast Ionian vs. Lydian by the #4'
+        - Recognize Dorian’s natural 6th in minor context
+        - Hear Phrygian’s dark ♭2 motion to tonic
+      ModalMixtureTips:
+        - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+        - Shift tonic emphasis without altering bass to create ambiguity
+      CircleOfFifthsDistance: 0
+      ComplexityRating: Intermediate
+  Applications:
+    - Improvisation over modal chord progressions
+    - Composition with color shifts without modulation
+    - Film/game scoring for atmospheric tension
+  CharacteristicChords:
+    - Imaj7 for Ionian/Lydian
+    - i7 for Dorian/Aeolian
+    - bVII or bII for Phrygian/Lydian
+  CharacteristicIntervals:
+    Lydian: '#4'
+    Mixolydian: b7
+    Dorian: b3 + natural 6
+    Phrygian: b2
+    Aeolian: b6 + b7
+    Locrian: b2 + b5
+  CommonProgressions:
+    - I – II – I (Lydian color)
+    - i – IV – i (Dorian motion)
+    - i – bVII – bVI – V (Aeolian cadence)
+  GuitarFretboardTips:
+    - Anchor modal centers using pentatonic skeletons
+    - Use drone strings for modal resonance (Dorian, Mixolydian)
+    - Target characteristic tones (♭2, ♯4, ♭6) in phrasing
+  EarTraining:
+    - 'Contrast Ionian vs. Lydian by the #4'
+    - Recognize Dorian’s natural 6th in minor context
+    - Hear Phrygian’s dark ♭2 motion to tonic
+  ModalMixtureTips:
+    - Borrow ♭VII from Mixolydian or ♭VI from Aeolian in major contexts
+    - Shift tonic emphasis without altering bass to create ambiguity
+  CircleOfFifthsDistance: 0
+  ComplexityRating: Intermediate

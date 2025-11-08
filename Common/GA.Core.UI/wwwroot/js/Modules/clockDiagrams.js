@@ -1,6 +1,4 @@
-﻿import * as two from 'https://cdn.skypack.dev/two.js';
-
-export function init(element) {
+﻿export function init(element) {
     if (!element) {
         console.log('No element provided');
         return false;

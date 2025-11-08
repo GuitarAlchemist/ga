@@ -12,6 +12,4 @@ public sealed record ChordDocument : DocumentBase
     public required List<string> Notes { get; init; }
     public List<ScaleReference> RelatedScales { get; init; } = [];
     public List<ProgressionReference> CommonProgressions { get; init; } = [];
-
-    public ChordDocument() {}
 }

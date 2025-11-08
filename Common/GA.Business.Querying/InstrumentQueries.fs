@@ -5,12 +5,18 @@ open GA.Business.Core.Fretboard
 open GA.Business.Config
 
 (* http://dungpa.github.io/fsharp-cheatsheet/ *)
-          
+
 [<AutoOpen>]
 module InstrumentQueries =
-    let guitarTuning() = 
-        InstrumentsConfig.Instruments.Guitar.Standard.Tuning 
-        |> parse<PitchCollection>
+    let guitarTuning() =
+        // Get guitar instrument from the new API
+        match InstrumentsConfig.tryGetInstrument "Guitar" with
+        | Some guitar ->
+            // Find standard tuning
+            match guitar.Tunings |> List.tryFind (fun t -> t.Name.Contains("Standard")) with
+            | Some tuning -> tuning.Tuning |> parse<PitchCollection>
+            | None -> None
+        | None -> None
 
     let parseTuning(sTuning : string): Tuning option =
         match sTuning |> parse<PitchCollection> with
@@ -22,13 +28,22 @@ module InstrumentQueries =
         | Other of name: string
 
     let tuning(inst: Instrument): Tuning option =
-        let sTuning = 
+        let sTuning =
             match inst with
-            | Guitar -> InstrumentsConfig.Instruments.Guitar.Standard.Tuning
+            | Guitar ->
+                match InstrumentsConfig.tryGetInstrument "Guitar" with
+                | Some guitar ->
+                    match guitar.Tunings |> List.tryFind (fun t -> t.Name.Contains("Standard")) with
+                    | Some tuning -> tuning.Tuning
+                    | None -> null
+                | None -> null
             | Other name ->
-                // You might want to implement a lookup for other instruments here
-                // For now, we'll return null for simplicity
-                null
+                match InstrumentsConfig.tryGetInstrument name with
+                | Some instrument ->
+                    match instrument.Tunings |> List.tryHead with
+                    | Some tuning -> tuning.Tuning
+                    | None -> null
+                | None -> null
         sTuning |> parseTuning
 
-    let fretboard() = Fretboard.Default
+    let fretboard() = Tuning.Default // Return default tuning instead of fretboard

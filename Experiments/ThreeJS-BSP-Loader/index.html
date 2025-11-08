@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js BSP Loader Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>Three.js BSP Loader Demo</h3>
+        <div>Portal Culling: <span id="culling-status">Active</span></div>
+        <div>Visible Cells: <span id="visible-cells">0</span></div>
+        <div>Current Cell: <span id="current-cell">None</span></div>
+        <div>FPS: <span id="fps">0</span></div>
+    </div>
+    
+    <div id="controls">
+        <strong>Controls:</strong><br>
+        WASD / Arrow Keys: Move<br>
+        Mouse: Look around<br>
+        Space: Jump<br>
+        C: Toggle cell debug view<br>
+        P: Toggle portal debug view
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

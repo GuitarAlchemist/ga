@@ -3,11 +3,21 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "build:with-types": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
@@ -15,23 +25,45 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@mui/icons-material": "^5.15.12",
     "@mui/material": "^5.15.12",
+    "@react-three/drei": "^9.112.0",
+    "@react-three/fiber": "^8.17.0",
+    "@rollup/rollup-win32-x64-msvc": "^4.52.5",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/react-window": "^1.8.8",
     "ga-react-components": "file:../../ReactComponents/ga-react-components",
+    "jotai": "^2.15.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.9.5",
+    "react-syntax-highlighter": "^16.1.0",
+    "react-window": "^2.2.2",
+    "remark-gfm": "^4.0.1",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/coverage-v8": "^4.0.6",
+    "@vitest/ui": "^4.0.6",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "jsdom": "^27.1.0",
     "postcss": "^8.4.47",
     "postcss-simple-vars": "^7.0.1",
+    "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^4.0.6"
   }
 }

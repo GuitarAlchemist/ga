@@ -1,21 +1,22 @@
 ﻿namespace GA.Business.Core.Chords;
 
-using Notes;
 using Intervals;
+using Intervals.Primitives;
+using Notes;
 using Tonal.Modes;
 
 /// <summary>
-/// Builder class for creating chords with fluent API
+///     Builder class for creating chords with fluent API
 /// </summary>
 public class ChordBuilder
 {
-    private Note? _root;
-    private readonly List<ChordFormulaInterval> _intervals = new();
-    private ChordStackingType _stackingType = ChordStackingType.Tertian;
+    private readonly List<ChordFormulaInterval> _intervals = [];
     private string? _name;
+    private Note? _root;
+    private ChordStackingType _stackingType = ChordStackingType.Tertian;
 
     /// <summary>
-    /// Sets the root note of the chord
+    ///     Sets the root note of the chord
     /// </summary>
     public ChordBuilder WithRoot(Note root)
     {
@@ -24,16 +25,16 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Sets the root note of the chord from a string
+    ///     Sets the root note of the chord from a string
     /// </summary>
     public ChordBuilder WithRoot(string rootName)
     {
-        _root = Note.Parse(rootName);
+        _root = Note.Accidented.Parse(rootName, null);
         return this;
     }
 
     /// <summary>
-    /// Adds an interval to the chord
+    ///     Adds an interval to the chord
     /// </summary>
     public ChordBuilder WithInterval(Interval interval, ChordFunction function, bool isEssential = true)
     {
@@ -42,15 +43,17 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds an interval to the chord by semitones
+    ///     Adds an interval to the chord by semitones
     /// </summary>
     public ChordBuilder WithInterval(int semitones, ChordFunction function, bool isEssential = true)
     {
-        return WithInterval(Interval.FromSemitones(semitones), function, isEssential);
+        var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
+        _intervals.Add(new ChordFormulaInterval(interval, function, isEssential));
+        return this;
     }
 
     /// <summary>
-    /// Adds a major third to the chord
+    ///     Adds a major third to the chord
     /// </summary>
     public ChordBuilder WithMajorThird()
     {
@@ -58,7 +61,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a minor third to the chord
+    ///     Adds a minor third to the chord
     /// </summary>
     public ChordBuilder WithMinorThird()
     {
@@ -66,7 +69,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a perfect fifth to the chord
+    ///     Adds a perfect fifth to the chord
     /// </summary>
     public ChordBuilder WithPerfectFifth()
     {
@@ -74,7 +77,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a diminished fifth to the chord
+    ///     Adds a diminished fifth to the chord
     /// </summary>
     public ChordBuilder WithDiminishedFifth()
     {
@@ -82,7 +85,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds an augmented fifth to the chord
+    ///     Adds an augmented fifth to the chord
     /// </summary>
     public ChordBuilder WithAugmentedFifth()
     {
@@ -90,7 +93,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a major seventh to the chord
+    ///     Adds a major seventh to the chord
     /// </summary>
     public ChordBuilder WithMajorSeventh()
     {
@@ -98,7 +101,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a minor seventh to the chord
+    ///     Adds a minor seventh to the chord
     /// </summary>
     public ChordBuilder WithMinorSeventh()
     {
@@ -106,7 +109,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a diminished seventh to the chord
+    ///     Adds a diminished seventh to the chord
     /// </summary>
     public ChordBuilder WithDiminishedSeventh()
     {
@@ -114,7 +117,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a ninth to the chord
+    ///     Adds a ninth to the chord
     /// </summary>
     public ChordBuilder WithNinth()
     {
@@ -122,7 +125,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a flat ninth to the chord
+    ///     Adds a flat ninth to the chord
     /// </summary>
     public ChordBuilder WithFlatNinth()
     {
@@ -130,7 +133,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a sharp ninth to the chord
+    ///     Adds a sharp ninth to the chord
     /// </summary>
     public ChordBuilder WithSharpNinth()
     {
@@ -138,7 +141,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds an eleventh to the chord
+    ///     Adds an eleventh to the chord
     /// </summary>
     public ChordBuilder WithEleventh()
     {
@@ -146,7 +149,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a sharp eleventh to the chord
+    ///     Adds a sharp eleventh to the chord
     /// </summary>
     public ChordBuilder WithSharpEleventh()
     {
@@ -154,7 +157,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a thirteenth to the chord
+    ///     Adds a thirteenth to the chord
     /// </summary>
     public ChordBuilder WithThirteenth()
     {
@@ -162,7 +165,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Adds a flat thirteenth to the chord
+    ///     Adds a flat thirteenth to the chord
     /// </summary>
     public ChordBuilder WithFlatThirteenth()
     {
@@ -170,7 +173,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Sets the stacking type of the chord
+    ///     Sets the stacking type of the chord
     /// </summary>
     public ChordBuilder WithStackingType(ChordStackingType stackingType)
     {
@@ -179,7 +182,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Sets the name of the chord
+    ///     Sets the name of the chord
     /// </summary>
     public ChordBuilder WithName(string name)
     {
@@ -188,7 +191,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a major triad
+    ///     Creates a major triad
     /// </summary>
     public ChordBuilder AsMajorTriad()
     {
@@ -197,7 +200,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a minor triad
+    ///     Creates a minor triad
     /// </summary>
     public ChordBuilder AsMinorTriad()
     {
@@ -206,7 +209,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a diminished triad
+    ///     Creates a diminished triad
     /// </summary>
     public ChordBuilder AsDiminishedTriad()
     {
@@ -215,7 +218,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates an augmented triad
+    ///     Creates an augmented triad
     /// </summary>
     public ChordBuilder AsAugmentedTriad()
     {
@@ -224,7 +227,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a dominant seventh chord
+    ///     Creates a dominant seventh chord
     /// </summary>
     public ChordBuilder AsDominantSeventh()
     {
@@ -232,7 +235,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a major seventh chord
+    ///     Creates a major seventh chord
     /// </summary>
     public ChordBuilder AsMajorSeventh()
     {
@@ -240,7 +243,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a minor seventh chord
+    ///     Creates a minor seventh chord
     /// </summary>
     public ChordBuilder AsMinorSeventh()
     {
@@ -248,7 +251,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a half-diminished seventh chord
+    ///     Creates a half-diminished seventh chord
     /// </summary>
     public ChordBuilder AsHalfDiminishedSeventh()
     {
@@ -256,7 +259,7 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a fully diminished seventh chord
+    ///     Creates a fully diminished seventh chord
     /// </summary>
     public ChordBuilder AsFullyDiminishedSeventh()
     {
@@ -264,14 +267,16 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Creates a chord from a scale mode and degree
+    ///     Creates a chord from a scale mode and degree
     /// </summary>
     public ChordBuilder FromScaleMode(ScaleMode mode, int degree, ChordExtension extension = ChordExtension.Triad)
     {
         if (degree < 1 || degree > mode.Notes.Count)
+        {
             throw new ArgumentOutOfRangeException(nameof(degree));
+        }
 
-        var rootNote = mode.Notes[degree - 1];
+        var rootNote = mode.Notes.ElementAt(degree - 1);
         WithRoot(rootNote);
 
         // Build chord based on scale degrees
@@ -280,20 +285,23 @@ public class ChordBuilder
 
         // Add third
         var thirdIndex = (rootIndex + 2) % scaleNotes.Count;
-        var thirdInterval = Interval.FromSemitones((scaleNotes[thirdIndex].MidiNote - rootNote.MidiNote) % 12);
-        WithInterval(thirdInterval, ChordFunction.Third);
+        var thirdSemitones = (scaleNotes[thirdIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
+        var thirdInterval = new Interval.Chromatic(Semitones.FromValue(thirdSemitones));
+        _intervals.Add(new ChordFormulaInterval(thirdInterval, ChordFunction.Third));
 
         // Add fifth
         var fifthIndex = (rootIndex + 4) % scaleNotes.Count;
-        var fifthInterval = Interval.FromSemitones((scaleNotes[fifthIndex].MidiNote - rootNote.MidiNote) % 12);
-        WithInterval(fifthInterval, ChordFunction.Fifth);
+        var fifthSemitones = (scaleNotes[fifthIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
+        var fifthInterval = new Interval.Chromatic(Semitones.FromValue(fifthSemitones));
+        _intervals.Add(new ChordFormulaInterval(fifthInterval, ChordFunction.Fifth));
 
         // Add extensions if requested
         if (extension >= ChordExtension.Seventh)
         {
             var seventhIndex = (rootIndex + 6) % scaleNotes.Count;
-            var seventhInterval = Interval.FromSemitones((scaleNotes[seventhIndex].MidiNote - rootNote.MidiNote) % 12);
-            WithInterval(seventhInterval, ChordFunction.Seventh);
+            var seventhSemitones = (scaleNotes[seventhIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
+            var seventhInterval = new Interval.Chromatic(Semitones.FromValue(seventhSemitones));
+            _intervals.Add(new ChordFormulaInterval(seventhInterval, ChordFunction.Seventh));
         }
 
         WithName($"{mode.Name} {degree} {extension}");
@@ -301,29 +309,40 @@ public class ChordBuilder
     }
 
     /// <summary>
-    /// Builds the chord
+    ///     Builds the chord
     /// </summary>
     public Chord Build()
     {
         if (_root == null)
+        {
             throw new InvalidOperationException("Root note must be specified");
+        }
 
         var formula = new ChordFormula(_name ?? "Custom", _intervals, _stackingType);
         return new Chord(_root, formula);
     }
 
     /// <summary>
-    /// Creates a new chord builder
+    ///     Creates a new chord builder
     /// </summary>
-    public static ChordBuilder Create() => new();
+    public static ChordBuilder Create()
+    {
+        return new ChordBuilder();
+    }
 
     /// <summary>
-    /// Creates a chord builder with the specified root
+    ///     Creates a chord builder with the specified root
     /// </summary>
-    public static ChordBuilder Create(Note root) => new ChordBuilder().WithRoot(root);
+    public static ChordBuilder Create(Note root)
+    {
+        return new ChordBuilder().WithRoot(root);
+    }
 
     /// <summary>
-    /// Creates a chord builder with the specified root
+    ///     Creates a chord builder with the specified root
     /// </summary>
-    public static ChordBuilder Create(string rootName) => new ChordBuilder().WithRoot(rootName);
+    public static ChordBuilder Create(string rootName)
+    {
+        return new ChordBuilder().WithRoot(rootName);
+    }
 }

@@ -1,28 +1,26 @@
-﻿
-
-const GuitarFretboard = () => {
+﻿const GuitarFretboard = () => {
     // Constants for fretboard dimensions
     const FRET_COUNT = 24;
     const STRING_COUNT = 6;
     const WIDTH = 1200;
     const HEIGHT = 200;
     const MARGIN = 30;
-    
+
     // Playable area dimensions (excluding margins)
     const playableWidth = WIDTH - (2 * MARGIN);
     const playableHeight = HEIGHT - (2 * MARGIN);
-    
+
     // Calculate fret positions using the 18th root of 2 (real guitar proportions)
     const getFretPosition = (fretNumber: number) => {
         return MARGIN + (playableWidth * (1 - Math.pow(2, -fretNumber / 12)));
     };
-    
+
     // Calculate string positions
     const getStringPosition = (stringNumber: number) => {
         const stringSpacing = playableHeight / (STRING_COUNT - 1);
         return MARGIN + (stringNumber * stringSpacing);
     };
-    
+
     // Standard fret markers
     const singleDotFrets = [3, 5, 7, 9, 15, 17, 19, 21];
     const doubleDotFrets = [12, 24];
@@ -30,17 +28,17 @@ const GuitarFretboard = () => {
     return (
         <svg width={WIDTH} height={HEIGHT}>
             {/* Fretboard background */}
-            <rect 
-                x={MARGIN} 
-                y={MARGIN} 
-                width={playableWidth} 
-                height={playableHeight} 
-                fill="#2b1810" 
+            <rect
+                x={MARGIN}
+                y={MARGIN}
+                width={playableWidth}
+                height={playableHeight}
+                fill="#2b1810"
                 stroke="black"
             />
-            
+
             {/* Frets */}
-            {Array.from({ length: FRET_COUNT + 1 }).map((_, i) => (
+            {Array.from({length: FRET_COUNT + 1}).map((_, i) => (
                 <line
                     key={`fret-${i}`}
                     x1={getFretPosition(i)}
@@ -51,9 +49,9 @@ const GuitarFretboard = () => {
                     strokeWidth={i === 0 ? 8 : 2}
                 />
             ))}
-            
+
             {/* Strings */}
-            {Array.from({ length: STRING_COUNT }).map((_, i) => (
+            {Array.from({length: STRING_COUNT}).map((_, i) => (
                 <line
                     key={`string-${i}`}
                     x1={MARGIN}
@@ -64,7 +62,7 @@ const GuitarFretboard = () => {
                     strokeWidth={3 - (i * 0.4)}
                 />
             ))}
-            
+
             {/* Fret markers (dots) */}
             {singleDotFrets.map(fret => (
                 <circle
@@ -75,7 +73,7 @@ const GuitarFretboard = () => {
                     fill="#DDD"
                 />
             ))}
-            
+
             {/* Double dots at 12th and 24th frets */}
             {doubleDotFrets.map(fret => (
                 <g key={`double-dot-${fret}`}>

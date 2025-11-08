@@ -1,0 +1,78 @@
+﻿@* Theme toggle component for switching between light and dark modes *@
+@inject IJSRuntime Js
+
+<div class="theme-toggle-container">
+    <button class="theme-toggle-btn" @onclick="ToggleTheme"
+            title="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
+        @if (_isDarkMode)
+        {
+            <i class="fas fa-sun"></i>
+            <span class="theme-label">Light</span>
+        }
+        else
+        {
+            <i class="fas fa-moon"></i>
+            <span class="theme-label">Dark</span>
+        }
+    </button>
+</div>
+
+@code {
+    private bool _isDarkMode;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load saved theme preference
+            try
+            {
+                var savedTheme = await Js.InvokeAsync<string>("localStorage.getItem", "theme");
+                _isDarkMode = savedTheme == "dark";
+                await ApplyTheme();
+                StateHasChanged();
+            }
+            catch
+            {
+                // If localStorage fails, use default (light mode)
+            }
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        await ApplyTheme();
+
+        // Save preference to localStorage
+        try
+        {
+            await Js.InvokeVoidAsync("localStorage.setItem", "theme", _isDarkMode ? "dark" : "light");
+        }
+        catch
+        {
+            // Ignore localStorage errors
+        }
+    }
+
+    private async Task ApplyTheme()
+    {
+        try
+        {
+            if (_isDarkMode)
+            {
+                await Js.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", "dark");
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("document.documentElement.removeAttribute", "data-theme");
+            }
+        }
+        catch
+        {
+            // Ignore JS interop errors
+        }
+    }
+
+}
+

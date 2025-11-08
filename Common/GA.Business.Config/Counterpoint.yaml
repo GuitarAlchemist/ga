@@ -1,0 +1,22 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: Counterpoint
+Counterpoint:
+  Species:
+    - Type: First
+      Description: Note-against-note
+    - Type: Second
+      Description: Two notes against one
+    - Type: Third
+      Description: Four notes against one
+    - Type: Fourth
+      Description: Syncopated suspension style
+    - Type: Fifth
+      Description: Free counterpoint
+  Principles:
+    - Consonance on strong beats
+    - Contrary motion preferred
+    - Avoid parallel fifths and octaves
+    - Keep voices independent

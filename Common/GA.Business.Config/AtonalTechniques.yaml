@@ -1,0 +1,169 @@
+# Atonal Techniques Configuration
+# Expanded with additional 20th–21st century compositional and analytical techniques
+
+AtonalTechniques:
+  - Name: "Twelve-Tone Technique"
+    Description: "Compositional method using all 12 chromatic pitches equally"
+    Category: "Serialism"
+    Inventor: "Arnold Schoenberg"
+    Period: "1920s"
+    Theory: "Avoids tonal hierarchy by treating all 12 pitches as equal"
+    Principles:
+      - "Use all 12 chromatic pitches before repeating any"
+      - "No pitch should be emphasized over others"
+      - "Avoid traditional tonal relationships"
+      - "Create unity through systematic organization"
+    ToneRowOperations:
+      - Name: "Prime (P)"
+        Description: "Original row form"
+        Example: "[0, 1, 3, 2, 4, 5, 7, 6, 8, 9, 11, 10]"
+      - Name: "Inversion (I)"
+        Description: "Row with all intervals inverted"
+        Calculation: "12 - each pitch class number"
+      - Name: "Retrograde (R)"
+        Description: "Row played backwards"
+        Calculation: "Reverse order of prime row"
+      - Name: "Retrograde Inversion (RI)"
+        Description: "Inversion played backwards"
+        Calculation: "Reverse order of inversion"
+    GuitarApplications:
+      - "Twelve-tone melodies across all strings"
+      - "Harmonic structures using row segments"
+      - "Contrapuntal textures with multiple row forms"
+    Examples:
+      - Composer: "Arnold Schoenberg"
+        Work: "Suite for Piano Op. 25"
+        Row: "[E, F, G, Db, Gb, Eb, Ab, D, B, C, A, Bb]"
+      - Composer: "Anton Webern"
+        Work: "Variations for Piano Op. 27"
+        Characteristics: "Sparse texture, pointillistic style"
+
+  - Name: "Integral Serialism"
+    Description: "Expansion of serial control to rhythm, dynamics, and timbre"
+    Category: "Post-Serialism"
+    Period: "1940s–1950s"
+    Principles:
+      - "Organize multiple parameters using serial methods"
+      - "Extend order relationships to time and sound color"
+      - "Avoid intuitive decisions through total control"
+    KeyFigures: [ "Pierre Boulez", "Karlheinz Stockhausen", "Milton Babbitt" ]
+    Applications:
+      - "Mapping rhythmic durations to row intervals"
+      - "Serializing dynamic levels"
+      - "Algorithmic distribution of articulations"
+    GuitarApplications:
+      - "Serialized picking articulations"
+      - "Mapping tone rows to rhythmic permutations"
+      - "Structuring extended techniques serially"
+
+  - Name: "Pitch Class Set Theory"
+    Description: "Analytical system for atonal music using mathematical relationships"
+    Category: "Analysis"
+    Developer: "Allen Forte"
+    Theory: "Groups pitches into sets and analyzes their intervallic relationships"
+    Concepts:
+      - Name: "Pitch Class"
+        Description: "Pitches reduced to 12 chromatic categories (0-11)"
+        Example: "C=0, C#=1, D=2, etc."
+      - Name: "Normal Form"
+        Description: "Most compact arrangement of pitch class set"
+        Process: "Arrange in ascending order with smallest span"
+      - Name: "Prime Form"
+        Description: "Most compact transposition/inversion of set"
+        Process: "Compare normal form with its inversion"
+      - Name: "Forte Number"
+        Description: "Classification system for pitch class sets"
+        Format: "X-Y where X=cardinality, Y=ordinal number"
+        Example: "3-11 represents major/minor triad"
+    CommonSets:
+      - Name: "Chromatic Trichord"
+        ForteNumber: "3-1"
+        PitchClasses: "[0, 1, 2]"
+        Characteristics: "Maximum dissonance"
+      - Name: "Octatonic Tetrachord"
+        ForteNumber: "4-25"
+        PitchClasses: "[0, 1, 3, 4]"
+        Characteristics: "Symmetrical, used by Stravinsky"
+      - Name: "Whole Tone Hexachord"
+        ForteNumber: "6-35"
+        PitchClasses: "[0, 2, 4, 6, 8, 10]"
+        Characteristics: "Symmetrical, impressionistic"
+    GuitarApplications:
+      - "Analyzing atonal guitar compositions"
+      - "Creating systematic harmonic structures"
+      - "Understanding intervallic relationships on fretboard"
+
+  - Name: "Free Atonality"
+    Description: "Atonal music without systematic organization"
+    Category: "Compositional Approach"
+    Period: "1908–1920"
+    Characteristics:
+      - "Avoids tonal centers"
+      - "No systematic pitch organization"
+      - "Emphasizes expression over system"
+      - "Often highly chromatic"
+    Techniques:
+      - "Chromatic saturation"
+      - "Avoidance of octaves and perfect fifths"
+      - "Non-repetitive melodic lines"
+      - "Complex rhythmic structures"
+    Composers: [ "Arnold Schoenberg (early)", "Alban Berg", "Anton Webern" ]
+    GuitarApplications:
+      - "Free improvisation"
+      - "Extended techniques and preparations"
+      - "Microtonal bending and sliding"
+      - "Noise and texture exploration"
+
+  - Name: "Spectralism"
+    Description: "Organization of harmony and timbre based on overtone spectra"
+    Category: "Timbre-Based"
+    Period: "1970s onward"
+    Composers: [ "Gérard Grisey", "Tristan Murail", "Kaija Saariaho" ]
+    Principles:
+      - "Derive harmony from the natural overtone series"
+      - "Use frequency-domain transformations"
+      - "Perceive form as continuous spectral evolution"
+    GuitarApplications:
+      - "Harmonics-based sonorities"
+      - "Spectral scordatura tuning"
+      - "Gradual morphing textures"
+
+  - Name: "Stochastic Composition"
+    Description: "Use of probability and random processes to determine parameters"
+    Category: "Algorithmic"
+    Period: "1950s onward"
+    Composers: [ "Iannis Xenakis" ]
+    Techniques:
+      - "Markov chains"
+      - "Gaussian distribution of notes"
+      - "Dynamic stochastic synthesis"
+    GuitarApplications:
+      - "Probabilistic picking patterns"
+      - "Randomized pitch clusters"
+      - "Computer-assisted score generation"
+
+  - Name: "Micropolyphony"
+    Description: "Dense canonic textures with gradual transformations"
+    Category: "Textural"
+    Composers: [ "György Ligeti" ]
+    Principles:
+      - "Multiple voices moving at different speeds"
+      - "Resulting harmonic clouds"
+      - "Continuous textural change"
+    GuitarApplications:
+      - "Overlapping arpeggios with rhythmic offset"
+      - "Live-looped layers of micro-rhythmic patterns"
+
+  - Name: "Post-Minimal Atonality"
+    Description: "Repetition-based structures without tonal centricity"
+    Category: "Rhythmic Atonality"
+    Period: "1980s–present"
+    Composers: [ "Louis Andriessen", "Steve Reich (later works)", "Nico Muhly" ]
+    Techniques:
+      - "Phasing without tonal anchors"
+      - "Additive rhythmic structures"
+      - "Metric dissonance"
+    GuitarApplications:
+      - "Polymetric tremolo loops"
+      - "Repetitive atonal motives"
+      - "Cross-string pattern repetition"

@@ -3,27 +3,27 @@
 using Extensions;
 
 /// <summary>
-/// Interface for a value object with <see cref="TSelf"/> min/max static values
+///     Interface for a value object with <see cref="TSelf" /> min/max static values
 /// </summary>
 /// <typeparam name="TSelf">This object type</typeparam>
 /// <remarks>
-/// Derives from <see cref="IValueObject{TSelf}"/>
+///     Derives from <see cref="IValueObject{TSelf}" />
 /// </remarks>
 public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
     where TSelf : IRangeValueObject<TSelf>
 {
     /// <summary>
-    /// Gets the <typeparamref name="TSelf"/> min value
+    ///     Gets the <typeparamref name="TSelf" /> min value
     /// </summary>
     static abstract TSelf Min { get; }
 
     /// <summary>
-    /// Gets the <typeparamref name="TSelf"/> max value
+    ///     Gets the <typeparamref name="TSelf" /> max value
     /// </summary>
     static abstract TSelf Max { get; }
 
     /// <summary>
-    /// Ensures value in range
+    ///     Ensures value in range
     /// </summary>
     /// <param name="value">The value that represents the object.</param>
     /// <param name="minValue">The minimum valid value</param>
@@ -39,11 +39,17 @@ public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
         int minValue,
         int maxValue,
         bool normalize = false,
-        [CallerArgumentExpression(nameof(value))] string? valueExpression = null,
-        [CallerArgumentExpression(nameof(minValue))] string? minValueExpression = null,
-        [CallerArgumentExpression(nameof(maxValue))] string? maxValueExpression = null)
+        [CallerArgumentExpression(nameof(value))]
+        string? valueExpression = null,
+        [CallerArgumentExpression(nameof(minValue))]
+        string? minValueExpression = null,
+        [CallerArgumentExpression(nameof(maxValue))]
+        string? maxValueExpression = null)
     {
-        if (value >= minValue && value <= maxValue) return value;
+        if (value >= minValue && value <= maxValue)
+        {
+            return value;
+        }
 
         // Attempt to normalize the value
         var count = maxValue - minValue;
@@ -58,8 +64,6 @@ public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
 
         if (value < minValue)
         {
-            Debugger.Break();
-
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{typeof(TSelf)} {valueExpression} ({value}) cannot be less than {minValueExpression} ({minValue}).");
@@ -68,8 +72,6 @@ public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
         // ReSharper disable once InvertIf
         if (value > maxValue)
         {
-            Debugger.Break();
-
             throw new ArgumentOutOfRangeException(
                 valueExpression,
                 $"{typeof(TSelf)} {valueExpression} ({value}) cannot be greater than {maxValueExpression} ({maxValue}).");

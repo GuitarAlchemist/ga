@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.VectorData;
+﻿namespace ChatbotExample1.Services.Ingestion;
 
-namespace ChatbotExample1.Services.Ingestion;
+using Microsoft.Extensions.VectorData;
 
 public class DataIngestor(
     ILogger<DataIngestor> logger,
@@ -31,6 +31,7 @@ public class DataIngestor(
             await vectorCollection.DeleteBatchAsync(deletedFile.Records.Select(r => r.Id));
             ingestionCacheDb.Documents.Remove(deletedFile);
         }
+
         await ingestionCacheDb.SaveChangesAsync();
 
         var modifiedDocs = await source.GetNewOrModifiedDocumentsAsync(documentsForSource);
@@ -42,12 +43,15 @@ public class DataIngestor(
             {
                 await vectorCollection.DeleteBatchAsync(modifiedDoc.Records.Select(r => r.Id));
             }
-            
+
             var newRecords = await source.CreateRecordsForDocumentAsync(embeddingGenerator, modifiedDoc.Id);
-            await foreach (var id in vectorCollection.UpsertBatchAsync(newRecords)) { }
+            await foreach (var id in vectorCollection.UpsertBatchAsync(newRecords))
+            {
+            }
 
             modifiedDoc.Records.Clear();
-            modifiedDoc.Records.AddRange(newRecords.Select(r => new IngestedRecord { Id = r.Key, DocumentId = modifiedDoc.Id }));
+            modifiedDoc.Records.AddRange(newRecords.Select(r => new IngestedRecord
+                { Id = r.Key, DocumentId = modifiedDoc.Id }));
 
             if (ingestionCacheDb.Entry(modifiedDoc).State == EntityState.Detached)
             {

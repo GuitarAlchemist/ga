@@ -1,11 +1,11 @@
-﻿namespace GA.Data.MongoDB.Services.DocumentServices;
+namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using GA.Business.Core.Atonal;
+using Business.Core.Atonal;
 using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public class SetClassSyncService(ILogger<SetClassSyncService> logger, MongoDbService mongoDb) 
+public class SetClassSyncService(ILogger<SetClassSyncService> logger, MongoDbService mongoDb)
     : ISyncService<SetClassDocument>
 {
     public async Task<bool> SyncAsync()
@@ -34,6 +34,8 @@ public class SetClassSyncService(ILogger<SetClassSyncService> logger, MongoDbSer
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.SetClasses.CountDocumentsAsync(Builders<SetClassDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.SetClasses.CountDocumentsAsync(Builders<SetClassDocument>.Filter.Empty);
+    }
 }

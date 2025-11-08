@@ -1,0 +1,436 @@
+﻿@page "/floor/{FloorNumber:int}"
+@using FloorManager.Components.Layout
+@using FloorManager.Models
+@using FloorManager.Services
+@inject FloorService FloorService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Floor Manager</PageTitle>
+
+<Breadcrumb Items="@Breadcrumbs"/>
+
+<div class="floor-3d-viewer">
+    <div class="viewer-header">
+        <div class="header-left">
+            <a href="/floors" class="btn-back">← Back to All Floors</a>
+            <h1>🏰 Floor @FloorNumber: @(_floorData?.FloorName ?? "Loading...")</h1>
+        </div>
+        <div class="header-right">
+            <div class="view-mode-toggle">
+                <button class="mode-btn @(_viewMode == "2d" ? "active" : "")" @onclick='() => SwitchViewMode("2d")'>
+                    📐 2D View
+                </button>
+                <button class="mode-btn @(_viewMode == "3d" ? "active" : "")" @onclick='() => SwitchViewMode("3d")'>
+                    🎮 3D View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (_errorMessage != null)
+    {
+        <div class="alert alert-danger">⚠️ @_errorMessage</div>
+    }
+
+    @if (_isLoading)
+    {
+        <div class="loading-overlay">
+            <div class="spinner"></div>
+            <div class="loading-progress">
+                <h3>@_loadingMessage</h3>
+                @if (_generationStartTime.HasValue)
+                {
+                    <p class="elapsed-time">⏱️ Elapsed: @GetElapsedTime()</p>
+                }
+                @if (!string.IsNullOrEmpty(_progressDetails))
+                {
+                    <p class="progress-details">@_progressDetails</p>
+                }
+            </div>
+        </div>
+    }
+    else if (_floorData != null)
+    {
+        <div class="viewer-controls">
+            <div class="control-group">
+                <label>Floor Size:</label>
+                <input type="number" @bind="_floorSize" min="40" max="120" step="10"/>
+            </div>
+
+            <div class="control-group">
+                <label>Seed:</label>
+                <input type="number" @bind="_seed" placeholder="Random"/>
+            </div>
+
+            <button class="btn btn-primary" @onclick="ReloadFloor">
+                🔄 Regenerate
+            </button>
+
+            @if (_viewMode == "3d")
+            {
+                <div class="control-group">
+                    <label>Camera:</label>
+                    <button class="btn-small" @onclick="ResetCamera">Reset View</button>
+                </div>
+            }
+        </div>
+
+        @if (_generationSummary != null)
+        {
+            <div class="generation-summary">
+                <div class="summary-header">
+                    <h3>✅ Generation Complete</h3>
+                    <button class="btn-close-summary" @onclick="ClearSummary">✕</button>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-stat">
+                        <span class="label">⏱️ Generation Time:</span>
+                        <span class="value">@_generationSummary.GenerationTime</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="label">🏰 Rooms Created:</span>
+                        <span class="value">@_generationSummary.TotalRooms</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="label">🎵 Music Items:</span>
+                        <span class="value">@_generationSummary.MusicItemCount</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="label">📊 Coverage:</span>
+                        <span class="value">@_generationSummary.CoveragePercent%</span>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="viewer-stats">
+            <div class="stat-card">
+                <div class="stat-label">Dimensions</div>
+                <div class="stat-value">@_floorData.Width × @_floorData.Height</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Rooms</div>
+                <div class="stat-value">@_floorData.Rooms.Count</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Music Items</div>
+                <div class="stat-value">@_floorData.Rooms.Sum(r => r.Items.Count)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Corridors</div>
+                <div class="stat-value">@_floorData.Corridors.Count</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Seed</div>
+                <div class="stat-value">@_floorData.Seed</div>
+            </div>
+        </div>
+
+        <div class="viewer-container">
+            @if (_viewMode == "2d")
+            {
+                <div class="canvas-2d-container">
+                    <canvas id="floor2DCanvas" width="1200" height="800"></canvas>
+                </div>
+            }
+            else
+            {
+                <div class="canvas-3d-container">
+                    <div id="floor3DCanvas"></div>
+                    <div class="controls-hint">
+                        <p>🖱️ <strong>Left Click + Drag:</strong> Rotate camera</p>
+                        <p>🖱️ <strong>Right Click + Drag:</strong> Pan camera</p>
+                        <p>🖱️ <strong>Scroll:</strong> Zoom in/out</p>
+                        <p>🖱️ <strong>Click Room:</strong> View details</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (_selectedRoom != null)
+        {
+            <div class="room-details-panel room-detail-panel">
+                <div class="panel-header">
+                    <h3>Room #@_selectedRoom.Id Details</h3>
+                    <button class="btn-close" @onclick="ClearSelection">✕</button>
+                </div>
+                <div class="panel-content">
+                    <div class="detail-row">
+                        <span class="label">Position:</span>
+                        <span class="value">(@_selectedRoom.X, @_selectedRoom.Y)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Size:</span>
+                        <span class="value">@_selectedRoom.Width × @_selectedRoom.Height</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Category:</span>
+                        <span class="value">@_selectedRoom.Category</span>
+                    </div>
+
+                    @if (_selectedRoom.Items.Count > 0)
+                    {
+                        <div class="music-item-details">
+                            <h4>🎵 Music Items (@_selectedRoom.Items.Count)</h4>
+                            <div class="items-list">
+                                @foreach (var item in _selectedRoom.Items)
+                                {
+                                    <div class="item-entry">
+                                        <span class="item-bullet">•</span>
+                                        <span class="item-name">@item</span>
+                                    </div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(_selectedRoom.Description))
+                            {
+                                <div class="description">
+                                    @_selectedRoom.Description
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="empty-room">This room is empty (no music items)</p>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="room-list-panel">
+            <h3>Rooms with Music Items (@_floorData.Rooms.Count(r => r.Items.Count > 0))</h3>
+            <div class="room-grid">
+                @foreach (var room in _floorData.Rooms.Where(r => r.Items.Count > 0).OrderBy(r => r.Id))
+                {
+                    <div class="room-card @(_selectedRoom?.Id == room.Id ? "selected" : "")"
+                         @onclick="() => SelectRoom(room)">
+                        <div class="room-header">
+                            <strong>Room #@room.Id</strong>
+                        </div>
+                        <div class="room-content">
+                            <div class="room-category">@room.Category</div>
+                            <div class="room-item-count">@room.Items.Count item(s)</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int FloorNumber { get; set; }
+
+    private FloorData? _floorData;
+    private Room? _selectedRoom;
+    private string _viewMode = "2d"; // "2d" or "3d"
+    private int _floorSize = 80;
+    private int? _seed;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    // Progress tracking
+    private string _loadingMessage = "Loading floor data...";
+    private string _progressDetails = "";
+    private DateTime? _generationStartTime;
+    private GenerationSummary? _generationSummary;
+
+    private List<BreadcrumbItem> Breadcrumbs =>
+    [
+        new() { Text = "Home", Url = "/", Icon = "🏠" },
+        new() { Text = "Pyramid View", Url = "/floors", Icon = "🏔️" },
+        new() { Text = $"Floor {FloorNumber}", Url = $"/floor/{FloorNumber}", Icon = "🎮" }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFloor();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_floorData == null || _floorData.Floor != FloorNumber)
+        {
+            await LoadFloor();
+        }
+    }
+
+    private async Task LoadFloor()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _generationSummary = null;
+        _generationStartTime = DateTime.Now;
+        _loadingMessage = "🔄 Generating floor layout...";
+        _progressDetails = "Initializing BSP dungeon generator";
+        StateHasChanged();
+
+        try
+        {
+            // Step 1: Request floor generation
+            await Task.Delay(100); // Small delay to show initial message
+            _progressDetails = $"Generating Floor {FloorNumber} ({_floorSize}×{_floorSize})";
+            StateHasChanged();
+
+            // Step 2: Fetch floor data
+            _loadingMessage = "📡 Fetching floor data from API...";
+            StateHasChanged();
+
+            _floorData = await FloorService.GetFloorAsync(FloorNumber, _floorSize, _seed);
+
+            if (_floorData != null)
+            {
+                // Step 3: Process music items
+                _loadingMessage = "🎵 Assigning music items to rooms...";
+                _progressDetails = $"Processing {_floorData.Rooms.Count} rooms";
+                StateHasChanged();
+                await Task.Delay(100);
+
+                // Step 4: Render visualization
+                _loadingMessage = "🎨 Rendering visualization...";
+                _progressDetails = _viewMode == "3d" ? "Initializing 3D scene" : "Drawing 2D canvas";
+                StateHasChanged();
+
+                await RenderFloor();
+
+                // Create generation summary
+                var endTime = DateTime.Now;
+                var duration = endTime - _generationStartTime.Value;
+                var musicItemCount = _floorData.Rooms.Sum(r => r.Items.Count);
+                var roomsWithItems = _floorData.Rooms.Count(r => r.Items.Count > 0);
+
+                _generationSummary = new GenerationSummary
+                {
+                    GenerationTime = $"{duration.TotalSeconds:F2}s",
+                    TotalRooms = _floorData.Rooms.Count,
+                    MusicItemCount = musicItemCount,
+                    CoveragePercent = _floorData.Rooms.Count > 0
+                        ? (int)(roomsWithItems / (double)_floorData.Rooms.Count * 100)
+                        : 0
+                };
+            }
+            else
+            {
+                _errorMessage = $"Failed to load floor {FloorNumber}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            _generationStartTime = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ReloadFloor()
+    {
+        await LoadFloor();
+    }
+
+    private async Task SwitchViewMode(string mode)
+    {
+        _viewMode = mode;
+        StateHasChanged();
+
+        // Wait for DOM to update
+        await Task.Delay(100);
+
+        if (_floorData != null)
+        {
+            await RenderFloor();
+        }
+    }
+
+    private async Task RenderFloor()
+    {
+        if (_floorData == null) return;
+
+        try
+        {
+            if (_viewMode == "2d")
+            {
+                await JsRuntime.InvokeVoidAsync("renderFloor2D", "floor2DCanvas", _floorData);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("renderFloor3D", "floor3DCanvas", _floorData, DotNetObjectReference.Create(this));
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Rendering error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetCamera()
+    {
+        await JsRuntime.InvokeVoidAsync("resetCamera3D");
+    }
+
+    [JSInvokable]
+    public void OnRoomClicked(string roomId)
+    {
+        var room = _floorData?.Rooms.FirstOrDefault(r => r.Id == roomId);
+        if (room != null)
+        {
+            SelectRoom(room);
+        }
+    }
+
+    private void SelectRoom(Room room)
+    {
+        _selectedRoom = room;
+        StateHasChanged();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedRoom = null;
+        StateHasChanged();
+    }
+
+    private async Task PlayMusicItem()
+    {
+        if (_selectedRoom?.MusicItem != null)
+        {
+            await JsRuntime.InvokeVoidAsync("playPitchClasses", _selectedRoom.MusicItem.PitchClasses);
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/floors");
+    }
+
+    private string GetElapsedTime()
+    {
+        if (!_generationStartTime.HasValue)
+            return "0.0s";
+
+        var elapsed = DateTime.Now - _generationStartTime.Value;
+        return $"{elapsed.TotalSeconds:F1}s";
+    }
+
+    private void ClearSummary()
+    {
+        _generationSummary = null;
+        StateHasChanged();
+    }
+
+    private class GenerationSummary
+    {
+        public string GenerationTime { get; set; } = "";
+        public int TotalRooms { get; set; }
+        public int MusicItemCount { get; set; }
+        public int CoveragePercent { get; set; }
+    }
+
+}
+

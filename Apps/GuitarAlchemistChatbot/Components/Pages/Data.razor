@@ -1,0 +1,669 @@
+﻿@page "/data"
+@inject NavigationManager Nav
+@inject IJSRuntime JsRuntime
+
+@* Use alias to resolve ambiguity *@
+@using GA.Business.Core
+@using GA.Business.Core.Atonal
+@using GA.Business.Core.Chords
+@using GA.Business.Core.Intervals
+@using ChordTemplate = GA.Business.Core.Chords.ChordTemplate
+
+
+
+<PageTitle>Music Data Browser - Guitar Alchemist</PageTitle>
+
+<div class="data-container">
+    <div class="data-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-database me-2"></i>Music Data Browser</h1>
+                <p class="text-muted mb-0">Browse @GetCurrentDataDescription()</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/models3d" class="btn btn-outline-primary">
+                    <i class="fas fa-cube me-1"></i>3D Models
+                </a>
+                <select class="form-select" @bind="_selectedAssetType" @bind:after="OnAssetTypeChanged"
+                        style="width: 200px;">
+                    <option value="">Select Data Type...</option>
+                    @foreach (var assetType in _availableAssetTypes)
+                    {
+                        <option value="@assetType.Key">@assetType.Value</option>
+                    }
+                </select>
+                <input type="text" class="form-control" placeholder="@GetSearchPlaceholder()" @bind="_searchQuery"
+                       @bind:event="oninput" style="width: 300px;"/>
+                <button class="btn btn-outline-secondary" @onclick="LoadCurrentData">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Filters based on selected asset type -->
+        @if (_selectedAssetType == "ChordTemplates")
+        {
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label small">Filter by Quality</label>
+                    <select class="form-select form-select-sm" @bind="_filterQuality" @bind:after="ApplyFilters">
+                        <option value="">All Qualities</option>
+                        <option value="Major">Major</option>
+                        <option value="Minor">Minor</option>
+                        <option value="Diminished">Diminished</option>
+                        <option value="Augmented">Augmented</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Filter by Extension</label>
+                    <select class="form-select form-select-sm" @bind="_filterExtension" @bind:after="ApplyFilters">
+                        <option value="">All Extensions</option>
+                        <option value="Triad">Triad</option>
+                        <option value="Seventh">Seventh</option>
+                        <option value="Ninth">Ninth</option>
+                        <option value="Eleventh">Eleventh</option>
+                        <option value="Thirteenth">Thirteenth</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Filter by Stacking</label>
+                    <select class="form-select form-select-sm" @bind="_filterStacking" @bind:after="ApplyFilters">
+                        <option value="">All Stacking Types</option>
+                        <option value="Tertian">Tertian (3rds)</option>
+                        <option value="Quartal">Quartal (4ths)</option>
+                        <option value="Quintal">Quintal (5ths)</option>
+                        <option value="Secundal">Secundal (2nds)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Initial batch size</label>
+                    <select class="form-select form-select-sm" @bind="_batchSize">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(_selectedAssetType))
+        {
+            <div class="row mb-3">
+                <div class="col-md-9">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Showing all available @_availableAssetTypes.GetValueOrDefault(_selectedAssetType, "items"). Use
+                        the search box above to filter results.
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Initial batch size</label>
+                    <select class="form-select form-select-sm" @bind="_batchSize">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading @GetCurrentDataType() data...</p>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(_selectedAssetType))
+    {
+        <div class="text-center py-5">
+            <div class="text-muted">
+                <i class="fas fa-arrow-up fa-2x mb-3"></i>
+                <h4>Select a Data Type</h4>
+                <p>Choose a data type from the dropdown above to browse the available items.</p>
+            </div>
+        </div>
+    }
+    else if (_currentData.Any())
+    {
+        <div class="data-stats mb-3">
+            <small class="text-muted">
+                @if (_selectedAssetType == "ChordTemplates")
+                {
+                    <text>Showing @Math.Min(_displayedCount, _chordGroupsData.Count) of @_chordGroupsData.Count unique
+                        pitch class sets</text>
+                    @if (_totalChordContexts > 0)
+                    {
+                        <text> (@_totalChordContexts total chord contexts)</text>
+                    }
+
+                    @if (HasActiveFilters())
+                    {
+                        <text> (filtered from @_totalItems total)</text>
+                    }
+                }
+                else
+                {
+                    <text>
+                        Showing @Math.Min(_displayedCount, _currentData.Count) of @_currentData.Count @GetCurrentDataType().ToLower()</text>
+                    @if (HasActiveFilters())
+                    {
+                        <text>(filtered from @_totalItems total)</text>
+                    }
+                }
+            </small>
+        </div>
+
+        <div class="table-responsive" @ref="_tableContainer" @onscroll="OnScroll">
+            @if (_selectedAssetType == "ChordTemplates")
+            {
+                @RenderChordTable()
+            }
+            else
+            {
+                @RenderGenericTable()
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No @GetCurrentDataType().ToLower() found matching your criteria.
+        </div>
+    }
+</div>
+
+@code {
+
+    // Asset type management
+    private readonly Dictionary<string, string> _availableAssetTypes = new()
+    {
+        ["ChordTemplates"] = "Chord Templates",
+        ["Scales"] = "Scales",
+        ["Keys"] = "Keys",
+        ["KeySignatures"] = "Key Signatures",
+        ["NaturalNotes"] = "Natural Notes",
+        ["FlatNotes"] = "Flat Notes",
+        ["SharpNotes"] = "Sharp Notes",
+        ["PitchClasses"] = "Pitch Classes",
+        ["IntervalClasses"] = "Interval Classes",
+        ["MajorScaleDegrees"] = "Major Scale Degrees",
+        ["NaturalMinorScaleDegrees"] = "Natural Minor Scale Degrees",
+        ["HarmonicMinorScaleDegrees"] = "Harmonic Minor Scale Degrees",
+        ["MelodicMinorScaleDegrees"] = "Melodic Minor Scale Degrees",
+        ["ModalFamilies"] = "Modal Families",
+        ["Fingers"] = "Fingers",
+        ["Frets"] = "Frets"
+    };
+
+    // Data storage
+    private List<ChordTemplate> _allChords = [];
+    private List<ChordGroup> _chordGroupsData = [];
+    private List<object> _currentData = [];
+    private string _selectedAssetType = "";
+    private bool _isLoading = false;
+    private int _totalItems = 0;
+    private int _totalChordContexts = 0;
+    private int _displayedCount = 100;
+    private int _batchSize = 100;
+
+    // Filtering and search
+    private string _searchQuery = "";
+    private string _filterQuality = "";
+    private string _filterExtension = "";
+    private string _filterStacking = "";
+
+    // Sorting
+    private string _sortColumn = "Name";
+    private bool _sortAscending = true;
+
+    // UI references
+    private ElementReference _tableContainer;
+    private bool _isLoadingMore = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Don't load any data initially - wait for user to select asset type
+    }
+
+    private async Task OnAssetTypeChanged()
+    {
+        if (!string.IsNullOrEmpty(_selectedAssetType))
+        {
+            await LoadCurrentData();
+        }
+        else
+        {
+            _currentData.Clear();
+            _totalItems = 0;
+            _displayedCount = _batchSize;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCurrentData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        await Task.Run(() =>
+        {
+            if (_selectedAssetType == "ChordTemplates")
+            {
+                LoadChordTemplates();
+            }
+            else
+            {
+                LoadGenericAssets();
+            }
+        });
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private class ChordGroup
+    {
+        public PitchClassSet PitchClassSet { get; set; } = null!;
+        public List<ChordTemplate> Templates { get; set; } = [];
+        public ChordTemplate Representative => Templates.First();
+        public int ContextCount => Templates.Count;
+        public bool IsExpanded { get; set; } = false;
+    }
+
+    private void LoadChordTemplates()
+    {
+        // Generate all chord templates
+        var allTemplates = ChordTemplateFactory.GenerateAllPossibleChords().ToList();
+
+        // Group by pitch class set (keep all templates in each group)
+        var chordGroups = allTemplates
+            .GroupBy(ct => ct.PitchClassSet.ToString())
+            .Select(g => new ChordGroup
+            {
+                PitchClassSet = g.First().PitchClassSet,
+                Templates = g.OrderBy(t => t.Name).ToList()
+            })
+            .OrderBy(g => g.Representative.Name)
+            .ToList();
+
+        _allChords = chordGroups.Select(g => g.Representative).ToList();
+        _chordGroupsData = chordGroups;
+        _currentData = _allChords.Cast<object>().ToList();
+        _totalItems = chordGroups.Count;
+        _totalChordContexts = allTemplates.Count;
+        ApplyFilters();
+    }
+
+    private void LoadGenericAssets()
+    {
+        try
+        {
+            var asset = AssetCatalog.Get(_selectedAssetType);
+            _currentData = asset.Items.ToList();
+            _totalItems = _currentData.Count;
+            ApplyGenericFilters();
+        }
+        catch (Exception)
+        {
+            _currentData.Clear();
+            _totalItems = 0;
+        }
+    }
+
+    // Helper methods
+    private string GetCurrentDataDescription()
+    {
+        if (string.IsNullOrEmpty(_selectedAssetType))
+            return "available music data types";
+
+        var typeName = _availableAssetTypes.GetValueOrDefault(_selectedAssetType, "items");
+        return $"{_totalItems:N0} {typeName.ToLower()}";
+    }
+
+    private string GetCurrentDataType()
+    {
+        return _availableAssetTypes.GetValueOrDefault(_selectedAssetType, "Items");
+    }
+
+    private string GetSearchPlaceholder()
+    {
+        return _selectedAssetType switch
+        {
+            "ChordTemplates" => "Search chords...",
+            "Scales" => "Search scales...",
+            "Keys" => "Search keys...",
+            "NaturalNotes" => "Search notes...",
+            _ => "Search..."
+        };
+    }
+
+    private bool HasActiveFilters()
+    {
+        return !string.IsNullOrWhiteSpace(_searchQuery) ||
+               !string.IsNullOrWhiteSpace(_filterQuality) ||
+               !string.IsNullOrWhiteSpace(_filterExtension) ||
+               !string.IsNullOrWhiteSpace(_filterStacking);
+    }
+
+    private void ApplyGenericFilters()
+    {
+        var filtered = _currentData.AsEnumerable();
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            filtered = filtered.Where(item =>
+                item.ToString()?.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        _currentData = filtered.ToList();
+        _displayedCount = Math.Min(_batchSize, _currentData.Count);
+    }
+
+    private RenderFragment RenderChordTable() => __builder =>
+    {
+        <table class="table table-striped table-hover table-sm">
+            <thead class="table-dark sticky-top">
+            <tr>
+                <th style="width: 30px;"></th>
+                <th @onclick='() => SortBy("Name")' style="cursor: pointer;">
+                    Name @GetSortIcon("Name")
+                </th>
+                <th @onclick='() => SortBy("Quality")' style="cursor: pointer;">
+                    Quality @GetSortIcon("Quality")
+                </th>
+                <th @onclick='() => SortBy("Extension")' style="cursor: pointer;">
+                    Extension @GetSortIcon("Extension")
+                </th>
+                <th @onclick='() => SortBy("StackingType")' style="cursor: pointer;">
+                    Stacking @GetSortIcon("StackingType")
+                </th>
+                <th @onclick='() => SortBy("NoteCount")' style="cursor: pointer;" class="text-center">
+                    Notes @GetSortIcon("NoteCount")
+                </th>
+                <th>Pitch Class Set</th>
+                <th class="text-center">Contexts</th>
+            </tr>
+            </thead>
+            <tbody>
+            @{
+                var displayedGroups = _chordGroupsData.Take(_displayedCount).ToList();
+            }
+            @foreach (var group in displayedGroups)
+            {
+                var chord = group.Representative;
+                <tr style="cursor: pointer;" @onclick="() => ToggleGroup(group)">
+                    <td class="text-center">
+                        @if (group.ContextCount > 1)
+                        {
+                            <i class="fas fa-@(group.IsExpanded ? "chevron-down" : "chevron-right")"></i>
+                        }
+                    </td>
+                    <td><strong>@chord.Name</strong></td>
+                    <td><span class="badge bg-@GetQualityColor(chord.Quality)">@chord.Quality</span></td>
+                    <td><span class="badge bg-secondary">@chord.Extension</span></td>
+                    <td><span class="badge bg-info">@chord.StackingType</span></td>
+                    <td class="text-center">@chord.NoteCount</td>
+                    <td><code class="small">@chord.PitchClassSet</code></td>
+                    <td class="text-center">
+                        @if (group.ContextCount > 1)
+                        {
+                            <span class="badge bg-primary">@group.ContextCount contexts</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">1</span>
+                        }
+                    </td>
+                </tr>
+                @if (group.IsExpanded && group.ContextCount > 1)
+                {
+                    <tr>
+                        <td colspan="8" class="bg-light">
+                            <div class="p-3">
+                                <h6 class="mb-3"><i class="fas fa-sitemap me-2"></i>All Musical Contexts
+                                    for @chord.PitchClassSet</h6>
+                                <div class="row">
+                                    @foreach (var template in group.Templates)
+                                    {
+                                        <div class="col-md-6 mb-2">
+                                            <div class="card card-body py-2 px-3">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong>@template.Name</strong>
+                                                        @if (template is ChordTemplate.TonalModal tonal)
+                                                        {
+                                                            <div class="small text-muted mt-1">
+                                                                <i class="fas fa-music me-1"></i>@tonal.HarmonicFunction (degree @tonal.ScaleDegree)
+                                                                in @tonal.ParentScale.Name
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span
+                                                            class="badge bg-@GetQualityColor(template.Quality) me-1">@template.Quality</span>
+                                                        <span class="badge bg-secondary">@template.Extension</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            @if (_displayedCount < _chordGroupsData.Count)
+            {
+                <tr>
+                    <td colspan="8" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading more...</span>
+                        </div>
+                        <small class="ms-2 text-muted">Loading more chords...</small>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    };
+
+    private RenderFragment RenderGenericTable() => __builder =>
+    {
+        <table class="table table-striped table-hover table-sm">
+            <thead class="table-dark sticky-top">
+            <tr>
+                <th style="cursor: pointer;">
+                    @GetCurrentDataType()
+                </th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in _currentData.Take(_displayedCount))
+            {
+                <tr>
+                    <td><strong>@item.ToString()</strong></td>
+                    <td><span class="badge bg-primary">@item.GetType().Name</span></td>
+                    <td>
+                        @if (item.GetType().GetProperties().Any())
+                        {
+                            <div class="small text-muted">
+                                @foreach (var prop in item.GetType().GetProperties().Take(3))
+                                {
+                                    var value = prop.GetValue(item);
+                                    if (value != null && !prop.Name.Equals("Items", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="me-2">@prop.Name: @value</span>
+                                    }
+                                }
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (_displayedCount < _currentData.Count)
+            {
+                <tr>
+                    <td colspan="3" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading more...</span>
+                        </div>
+                        <small class="ms-2 text-muted">Loading more items...</small>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    };
+
+    private void ApplyFilters()
+    {
+        if (_selectedAssetType == "ChordTemplates")
+        {
+            var filtered = _allChords.Where(chord =>
+            {
+                // Search filter
+                if (!string.IsNullOrWhiteSpace(_searchQuery) &&
+                    !chord.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                // Quality filter
+                if (!string.IsNullOrWhiteSpace(_filterQuality) &&
+                    chord.Quality.ToString() != _filterQuality)
+                    return false;
+
+                // Extension filter
+                if (!string.IsNullOrWhiteSpace(_filterExtension) &&
+                    chord.Extension.ToString() != _filterExtension)
+                    return false;
+
+                // Stacking filter
+                if (!string.IsNullOrWhiteSpace(_filterStacking) &&
+                    chord.StackingType.ToString() != _filterStacking)
+                    return false;
+
+                return true;
+            });
+
+            // Apply sorting
+            var sortedChords = _sortColumn switch
+            {
+                "Name" => _sortAscending ? filtered.OrderBy(c => c.Name) : filtered.OrderByDescending(c => c.Name),
+                "Quality" => _sortAscending ? filtered.OrderBy(c => c.Quality) : filtered.OrderByDescending(c => c.Quality),
+                "Extension" => _sortAscending ? filtered.OrderBy(c => c.Extension) : filtered.OrderByDescending(c => c.Extension),
+                "StackingType" => _sortAscending ? filtered.OrderBy(c => c.StackingType) : filtered.OrderByDescending(c => c.StackingType),
+                "NoteCount" => _sortAscending ? filtered.OrderBy(c => c.NoteCount) : filtered.OrderByDescending(c => c.NoteCount),
+                _ => filtered.OrderBy(c => c.Name)
+            };
+
+            // Update chord groups with filtered results
+            var filteredPitchClassSets = sortedChords.Select(c => c.PitchClassSet.ToString()).ToHashSet();
+            _chordGroupsData = _chordGroupsData
+                .Where(g => filteredPitchClassSets.Contains(g.PitchClassSet.ToString()))
+                .ToList();
+
+            _currentData = sortedChords.Cast<object>().ToList();
+        }
+        else
+        {
+            ApplyGenericFilters();
+        }
+
+        // Reset displayed count when filters change
+        _displayedCount = Math.Min(_batchSize, _currentData.Count);
+    }
+
+    private void ToggleGroup(ChordGroup group)
+    {
+        group.IsExpanded = !group.IsExpanded;
+        StateHasChanged();
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+
+        ApplyFilters();
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (_sortColumn != column)
+            return "↕";
+        return _sortAscending ? "↑" : "↓";
+    }
+
+    private async Task OnScroll()
+    {
+        if (_isLoadingMore || _displayedCount >= _currentData.Count)
+            return;
+
+        // Check if user scrolled near the bottom (within 200px)
+        var scrollInfo = await JsRuntime.InvokeAsync<ScrollInfo>("getScrollInfo", _tableContainer);
+
+        if (scrollInfo.ScrollTop + scrollInfo.ClientHeight >= scrollInfo.ScrollHeight - 200)
+        {
+            _isLoadingMore = true;
+            StateHasChanged();
+
+            // Simulate a small delay to show loading indicator
+            await Task.Delay(100);
+
+            // Load more items
+            _displayedCount = Math.Min(_displayedCount + _batchSize, _currentData.Count);
+
+            _isLoadingMore = false;
+            StateHasChanged();
+        }
+    }
+
+    private class ScrollInfo
+    {
+        public double ScrollTop { get; set; }
+        public double ScrollHeight { get; set; }
+        public double ClientHeight { get; set; }
+    }
+
+    private string GetQualityColor(ChordQuality quality)
+    {
+        return quality switch
+        {
+            ChordQuality.Major => "success",
+            ChordQuality.Minor => "info",
+            ChordQuality.Diminished => "danger",
+            ChordQuality.Augmented => "primary",
+            ChordQuality.Suspended => "warning",
+            _ => "secondary"
+        };
+    }
+
+    private string GetIntervalName(ChordFormulaInterval chordInterval)
+    {
+        if (chordInterval.Interval is Interval.Diatonic diatonic)
+            return diatonic.Name;
+        if (chordInterval.Interval is Interval.Chromatic chromatic)
+            return $"{chromatic.Semitones.Value}st";
+        return chordInterval.Interval.ToString() ?? "?";
+    }
+
+}
+

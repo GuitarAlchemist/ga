@@ -5,7 +5,7 @@ interface IBraceletNotationProps {
     size?: number;
 }
 
-const braceletNotation: React.FC<IBraceletNotationProps> = ({ scale, size = 200 }) => {
+const braceletNotation: React.FC<IBraceletNotationProps> = ({scale, size = 200}) => {
     const margin = size * 0.2;
     const effectiveSize = size - 2 * margin;
     const radius = effectiveSize * 0.5;
@@ -21,7 +21,7 @@ const braceletNotation: React.FC<IBraceletNotationProps> = ({ scale, size = 200 
         const angle = (index * 30 - 90) * (Math.PI / 180); // Adjust to start at top
         const x = center + r * Math.cos(angle);
         const y = center + r * Math.sin(angle);
-        return { x, y };
+        return {x, y};
     };
 
     const findSymmetryAxes = (): number[] => {
@@ -44,58 +44,58 @@ const braceletNotation: React.FC<IBraceletNotationProps> = ({ scale, size = 200 
     return (
         <div>
             Hello
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            <circle
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke="#333"
-                strokeWidth={lineWidth}
-            />
-            {symmetryAxes.map((axis) => {
-                const start = getNotePosition(axis);
-                const end = getNotePosition((axis + 6) % 12);
-                return (
-                    <line
-                        key={`symmetry-${axis}`}
-                        x1={start.x}
-                        y1={start.y}
-                        x2={end.x}
-                        y2={end.y}
-                        stroke="#333"
-                        strokeWidth={lineWidth}
-                        strokeDasharray={`${noteRadius * 0.5},${noteRadius * 0.5}`}
-                    />
-                );
-            })}
-            {scaleArray.map((note, index) => {
-                const { x, y } = getNotePosition(index);
-                const labelPos = getNotePosition(index, labelRadius);
-                return (
-                    <g key={index}>
-                        <circle
-                            cx={x}
-                            cy={y}
-                            r={noteRadius}
-                            fill={note ? '#333' : 'white'}
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                <circle
+                    cx={center}
+                    cy={center}
+                    r={radius}
+                    fill="none"
+                    stroke="#333"
+                    strokeWidth={lineWidth}
+                />
+                {symmetryAxes.map((axis) => {
+                    const start = getNotePosition(axis);
+                    const end = getNotePosition((axis + 6) % 12);
+                    return (
+                        <line
+                            key={`symmetry-${axis}`}
+                            x1={start.x}
+                            y1={start.y}
+                            x2={end.x}
+                            y2={end.y}
                             stroke="#333"
                             strokeWidth={lineWidth}
+                            strokeDasharray={`${noteRadius * 0.5},${noteRadius * 0.5}`}
                         />
-                        <text
-                            x={labelPos.x}
-                            y={labelPos.y}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            fontSize={noteRadius}
-                            fill="#333"
-                        >
-                            {pitchClasses[index]}
-                        </text>
-                    </g>
-                );
-            })}
-        </svg>
+                    );
+                })}
+                {scaleArray.map((note, index) => {
+                    const {x, y} = getNotePosition(index);
+                    const labelPos = getNotePosition(index, labelRadius);
+                    return (
+                        <g key={index}>
+                            <circle
+                                cx={x}
+                                cy={y}
+                                r={noteRadius}
+                                fill={note ? '#333' : 'white'}
+                                stroke="#333"
+                                strokeWidth={lineWidth}
+                            />
+                            <text
+                                x={labelPos.x}
+                                y={labelPos.y}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                fontSize={noteRadius}
+                                fill="#333"
+                            >
+                                {pitchClasses[index]}
+                            </text>
+                        </g>
+                    );
+                })}
+            </svg>
         </div>
     );
 };

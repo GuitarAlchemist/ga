@@ -9,6 +9,4 @@ public sealed record ArpeggioDocument : DocumentBase
     public required List<string> Notes { get; init; }
     public string? Category { get; init; }
     public string? Description { get; init; }
-
-    public ArpeggioDocument() {}
 }

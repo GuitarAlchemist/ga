@@ -1,5 +1,3 @@
-using GA.Business.Core.Intervals.Primitives;
-
 #pragma warning disable CA1861 // Avoid constant arrays as arguments
 
 namespace GA.Business.Core.Tests.Tonal;
@@ -33,7 +31,7 @@ public class KeySignatureTests
         // Assert
         Assert.That(actual, Is.EqualTo(expected));
     }
-    
+
     [TestCase(-7, "Bb Eb Ab Db Gb Cb Fb")]
     [TestCase(-6, "Bb Eb Ab Db Gb Cb")]
     [TestCase(-5, "Bb Eb Ab Db Gb")]
@@ -104,7 +102,7 @@ public class KeySignatureTests
     [TestCase(6, true)]
     [TestCase(7, true)]
     public void KeySignature_IsSharpKey(int value, bool expected)
-    {        
+    {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
 
@@ -114,7 +112,7 @@ public class KeySignatureTests
         // Assert
         Assert.That(actual, Is.EqualTo(expected));
     }
-    
+
     [TestCase(-7, true)]
     [TestCase(-6, true)]
     [TestCase(-5, true)]
@@ -131,7 +129,7 @@ public class KeySignatureTests
     [TestCase(6, false)]
     [TestCase(7, false)]
     public void KeySignature_IsFlatKey(int value, bool expected)
-    {        
+    {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
 
@@ -140,5 +138,5 @@ public class KeySignatureTests
 
         // Assert
         Assert.That(actual, Is.EqualTo(expected));
-    }    
+    }
 }

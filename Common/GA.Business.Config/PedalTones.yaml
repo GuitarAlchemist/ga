@@ -1,0 +1,1268 @@
+PedalToneTechniques:
+  - Name: Tonic Pedal
+    Description: Sustained tonic note while harmony changes above
+    Category: Classical
+    Function: Establishes and reinforces tonal center
+    Theory: Creates stability while allowing harmonic exploration above
+    HarmonicEffect: Consonant and dissonant intervals created against pedal
+    Examples:
+      - Key: C Major
+        PedalNote: C
+        HarmonyAbove:
+          - C
+          - F
+          - G
+          - Am
+          - Dm
+          - C
+        Analysis: Tonic pedal with various chord functions above
+        Dissonances: F major creates 4th against pedal, Dm creates 2nd
+      - Key: A Minor
+        PedalNote: A
+        HarmonyAbove:
+          - Am
+          - F
+          - C
+          - G
+          - Am
+        Analysis: Minor tonic pedal with modal interchange
+    GuitarApplications:
+      - Open low E string as tonic pedal in E major/minor
+      - Open A string as tonic pedal in A major/minor
+      - Capo techniques for other keys
+      - Bass note sustain with chord changes above
+    ClassicalExamples:
+      - 'Bach: Prelude in C Major (WTC I) - opening tonic pedal'
+      - 'Chopin: Prelude Op. 28 No. 15 ''Raindrop'' - Ab pedal'
+    Id: tonic-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Pedal
+      - Sustained
+      - Tonic
+      - above
+      - changes
+      - harmony
+      - note
+      - tonic
+      - while
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Tonic Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Dominant Pedal
+    Description: Sustained dominant note creating tension and expectation
+    Category: Classical
+    Function: Builds tension toward resolution to tonic
+    Theory: Creates anticipation and forward motion
+    HarmonicEffect: Strong pull toward tonic resolution
+    Examples:
+      - Key: C Major
+        PedalNote: G
+        HarmonyAbove:
+          - G
+          - Am
+          - F
+          - Dm
+          - G7
+          - C
+        Analysis: Dominant pedal building to tonic resolution
+        Tension: Increases through progression, resolves to C
+      - Key: F Major
+        PedalNote: C
+        HarmonyAbove:
+          - C7
+          - F
+          - Bb
+          - Gm
+          - C7
+          - F
+        Analysis: Dominant pedal with subdominant excursions
+    GuitarApplications:
+      - Open G string as dominant pedal in C major
+      - Open B string as dominant pedal in E major
+      - Sustained bass notes in fingerpicking patterns
+    ClassicalExamples:
+      - 'Mozart: Piano Sonata K. 331 - dominant pedal in development'
+      - 'Beethoven: Symphony No. 9 - famous dominant pedal passage'
+    Id: dominant-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Dominant
+      - Pedal
+      - Sustained
+      - and
+      - creating
+      - dominant
+      - expectation
+      - note
+      - tension
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Dominant Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Subdominant Pedal
+    Description: Sustained subdominant note for departure from tonic
+    Category: Classical
+    Function: Creates sense of departure and exploration
+    Theory: Provides harmonic color and modal inflection
+    Examples:
+      - Key: C Major
+        PedalNote: F
+        HarmonyAbove:
+          - F
+          - Dm
+          - Bb
+          - Gm
+          - C
+        Analysis: Subdominant pedal with modal mixture
+      - Key: G Major
+        PedalNote: C
+        HarmonyAbove:
+          - C
+          - Am
+          - F
+          - Dm
+          - G
+        Analysis: Subdominant pedal creating plagal motion
+    GuitarApplications:
+      - Open F note (1st fret, 6th string) in C major contexts
+      - Capo positions for subdominant pedals
+    Id: subdominant-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Pedal
+      - Subdominant
+      - Sustained
+      - departure
+      - for
+      - from
+      - note
+      - subdominant
+      - tonic
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Subdominant Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Inverted Pedal
+    Description: Sustained note in upper voice while bass moves
+    Category: Advanced
+    Function: Creates melodic continuity over changing bass
+    Theory: Reverses traditional pedal concept
+    Examples:
+      - Key: C Major
+        SustainedNote: G (soprano)
+        BassMovement:
+          - C
+          - F
+          - A
+          - D
+          - G
+        Analysis: High G sustained over circle of fifths bass
+      - Key: A Minor
+        SustainedNote: E (soprano)
+        BassMovement:
+          - A
+          - F
+          - C
+          - G
+          - A
+        Analysis: Dominant note sustained in melody
+    GuitarApplications:
+      - High string sustained with bass line movement
+      - Melody note held while chord changes underneath
+    Id: inverted-pedal
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Inverted
+      - Pedal
+      - Sustained
+      - bass
+      - in
+      - moves
+      - note
+      - upper
+      - voice
+      - while
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Inverted Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Internal Pedal
+    Description: Sustained note in middle voice
+    Category: Advanced
+    Function: Creates inner voice continuity
+    Theory: Maintains harmonic thread in inner voices
+    Examples:
+      - Key: C Major
+        InternalPedal: E (alto voice)
+        OuterVoices: Soprano and bass move independently
+        Analysis: Mediant sustained while outer voices change
+    GuitarApplications:
+      - Middle string sustained in fingerpicking
+      - Inner voice pedals in chord melody arrangements
+    Id: internal-pedal
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Internal
+      - Pedal
+      - Sustained
+      - in
+      - middle
+      - note
+      - voice
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Internal Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+DroneTechniques:
+  - Name: Single Note Drone
+    Description: Continuous single pitch throughout piece or section
+    Category: Folk/Modal
+    Origins: Bagpipes, hurdy-gurdy, Indian classical music
+    Theory: Establishes modal center and harmonic reference
+    Examples:
+      - Instrument: Bagpipes
+        DroneNote: A
+        Mode: Mixolydian
+        Effect: Modal harmonic center
+      - Instrument: Sitar
+        DroneNote: Sa (tonic)
+        Function: Tonal reference point
+    GuitarApplications:
+      - Open string drones in DADGAD tuning
+      - Sympathetic string effects
+      - Slide guitar with open string drones
+      - Celtic and folk guitar techniques
+    Id: single-note-drone
+    Difficulty: Intermediate
+    Tags:
+      - Continuous
+      - Drone
+      - Folk/Modal
+      - Note
+      - Single
+      - or
+      - piece
+      - pitch
+      - section
+      - single
+      - throughout
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Single Note Drone for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Interval Drone
+    Description: Two or more sustained pitches creating harmonic interval
+    Category: Folk/Contemporary
+    CommonIntervals:
+      - Perfect Fifth
+      - Perfect Fourth
+      - Octave
+      - Major Second (cluster)
+    Examples:
+      - Interval: Perfect Fifth (C-G)
+        Mode: C Mixolydian
+        Effect: Stable harmonic foundation
+      - Interval: Perfect Fourth (D-G)
+        Mode: D Dorian
+        Effect: Quartal harmonic color
+    GuitarApplications:
+      - Two open strings as drone interval
+      - Partial capo for drone effects
+      - Alternate tunings for specific drone intervals
+    Id: interval-drone
+    Difficulty: Intermediate
+    Tags:
+      - Drone
+      - Folk/Contemporary
+      - Interval
+      - Two
+      - creating
+      - harmonic
+      - interval
+      - more
+      - or
+      - pitches
+      - sustained
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Interval Drone for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Chord Drone
+    Description: Sustained chord or triad as harmonic foundation
+    Category: Contemporary
+    Applications:
+      - Ambient music
+      - Post-rock
+      - Minimalist compositions
+    Examples:
+      - Chord: C major triad
+        Technique: Sustained with melody over top
+        Effect: Tonal stability with melodic freedom
+    GuitarApplications:
+      - Open chord sustained with lead lines
+      - E-bow for sustained chord drones
+      - Feedback techniques for chord sustain
+    Id: chord-drone
+    Difficulty: Intermediate
+    Tags:
+      - Chord
+      - Contemporary
+      - Drone
+      - Sustained
+      - as
+      - chord
+      - foundation
+      - harmonic
+      - or
+      - triad
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Chord Drone for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+GuitarPedalTechniques:
+  - Name: Open String Pedals
+    Description: Using open strings as natural pedal tones
+    Category: Guitar-Specific
+    Advantages:
+      - Natural sustain
+      - Hands free for other techniques
+      - Resonant quality
+    StandardTuningPedals:
+      - String: 6th (E)
+        Applications:
+          - E major/minor pedals
+          - Dominant pedal in A
+      - String: 5th (A)
+        Applications:
+          - A major/minor pedals
+          - Dominant pedal in D
+      - String: 4th (D)
+        Applications:
+          - D major/minor pedals
+          - Subdominant in A
+      - String: 3rd (G)
+        Applications:
+          - G major/minor pedals
+          - Dominant pedal in C
+      - String: 2nd (B)
+        Applications:
+          - B pedals
+          - Leading tone effects
+      - String: 1st (E)
+        Applications:
+          - High E pedals
+          - Melodic drones
+    Id: open-string-pedals
+    Difficulty: Intermediate
+    Tags:
+      - Guitar-Specific
+      - Open
+      - Pedals
+      - String
+      - Using
+      - as
+      - natural
+      - open
+      - pedal
+      - strings
+      - tones
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Open String Pedals for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Alternate Tuning Pedals
+    Description: Tunings designed for specific pedal effects
+    Category: Guitar-Specific
+    CommonTunings:
+      - Name: DADGAD
+        Tuning:
+          - D
+          - A
+          - D
+          - G
+          - A
+          - D
+        PedalEffects: D and A pedal tones, quartal harmony
+        Applications: Celtic music, fingerstyle, world music
+      - Name: Open D
+        Tuning:
+          - D
+          - A
+          - D
+          - F#
+          - A
+          - D
+        PedalEffects: D major chord drone
+        Applications: Slide guitar, blues, folk
+      - Name: Drop D
+        Tuning:
+          - D
+          - A
+          - D
+          - G
+          - B
+          - E
+        PedalEffects: Low D pedal tone
+        Applications: Rock, metal, fingerstyle
+    Id: alternate-tuning-pedals
+    Difficulty: Intermediate
+    Tags:
+      - Alternate
+      - Guitar-Specific
+      - Pedals
+      - Tuning
+      - Tunings
+      - designed
+      - effects
+      - for
+      - pedal
+      - specific
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Alternate Tuning Pedals for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Capo Pedal Techniques
+    Description: Using capo to create pedal tone effects
+    Category: Guitar-Specific
+    Techniques:
+      - Partial capo leaving some strings open
+      - Multiple capos for complex drone effects
+      - Capo positioning for specific pedal notes
+    Applications:
+      - Folk guitar accompaniment
+      - Celtic guitar techniques
+      - Contemporary fingerstyle
+    Id: capo-pedal-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Capo
+      - Guitar-Specific
+      - Pedal
+      - Techniques
+      - Using
+      - capo
+      - create
+      - effects
+      - pedal
+      - to
+      - tone
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Capo Pedal Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+AdvancedPedalConcepts:
+  - Name: Migrating Pedal
+    Description: Pedal tone that moves to different pitches
+    Category: Contemporary
+    Technique: Pedal shifts to new pitch level while maintaining function
+    Examples:
+      - C pedal moves to D pedal in modulation
+      - Stepwise pedal migration
+    Id: migrating-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Contemporary
+      - Migrating
+      - Pedal
+      - different
+      - function
+      - level
+      - maintaining
+      - moves
+      - new
+      - pitch
+      - pitches
+      - shifts
+      - that
+      - to
+      - tone
+      - while
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Migrating Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Chromatic Pedal
+    Description: Pedal tone that moves chromatically
+    Category: Contemporary
+    Effect: Creates linear motion in pedal voice
+    Applications:
+      - Film scoring
+      - Contemporary classical
+      - Progressive rock
+    Id: chromatic-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Chromatic
+      - Contemporary
+      - Pedal
+      - chromatically
+      - moves
+      - that
+      - tone
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Chromatic Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Rhythmic Pedal
+    Description: Pedal tone with rhythmic articulation
+    Category: Contemporary
+    Technique: Pedal note repeated in rhythmic patterns
+    Applications:
+      - Minimalist music
+      - Rock and pop
+      - Ostinato patterns
+    Id: rhythmic-pedal
+    Difficulty: Intermediate
+    Tags:
+      - Contemporary
+      - Pedal
+      - Rhythmic
+      - articulation
+      - in
+      - note
+      - patterns
+      - repeated
+      - rhythmic
+      - tone
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Rhythmic Pedal for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+HarmonicAnalysis:
+  ConsonantIntervals:
+    - Unison (1)
+    - Perfect Fifth (5)
+    - Perfect Octave (8)
+    - Major Third (3)
+    - Minor Third (b3)
+    - Major Sixth (6)
+    - Minor Sixth (b6)
+  DissonantIntervals:
+    - Minor Second (b2)
+    - Major Second (2)
+    - Perfect Fourth (4)
+    - Tritone (b5/#4)
+    - Minor Seventh (b7)
+    - Major Seventh (7)
+  ResolutionTendencies:
+    - Dissonances typically resolve to consonances
+    - Strong dissonances create forward motion
+    - Consonances provide stability and rest
+  FunctionalImplications:
+    - Tonic pedals establish key center
+    - Dominant pedals create tension
+    - Subdominant pedals suggest departure
+    - Other pedals create modal implications
+HistoricalContext:
+  Medieval:
+    - Characteristics: Organum with sustained notes
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Harmonic foundation for melody
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Renaissance:
+    - Characteristics: Cantus firmus techniques
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Structural foundation for polyphony
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Baroque:
+    - Characteristics: Systematic use of pedal points
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Bach
+        - Handel
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Formal structural device
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Classical:
+    - Characteristics: Pedals in development sections
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Mozart
+        - Haydn
+        - Beethoven
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Tension building and resolution
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Romantic:
+    - Characteristics: Extended pedal passages
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Composers:
+        - Chopin
+        - Liszt
+        - Wagner
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Atmospheric and coloristic effects
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Folk_Traditions:
+    - Characteristics: Drone instruments and techniques
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Instruments:
+        - Bagpipes
+        - Hurdy-gurdy
+        - Didgeridoo
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Modal harmonic foundation
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+  Contemporary:
+    - Characteristics: Extended techniques and electronics
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Applications:
+        - Ambient music
+        - Minimalism
+        - Post-rock
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+    - Function: Textural and atmospheric effects
+      Difficulty: Intermediate
+      Tags: [ ]
+      Practice:
+        - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+        - Isolate the core mechanic of HistoricalContext for 2–5 minute loops.
+        - Record once per day; review articulation, timing, and noise control.
+        - Apply over a ii–V–I in two keys and in one real song this week.
+      Examples:
+        - Key: C
+          TempoBPM: 90
+          Meter: 4/4
+          Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+        - Key: E
+          TempoBPM: 100
+          Meter: 4/4
+          Notes: Apply concept over E minor vamp or E Mixolydian groove.
+      QualityChecks:
+        - Timing within ±10 ms (tap-to-click test).
+        - Noise control on adjacent strings (mute plan).
+        - Consistent tone across positions/patterns.
+        - Playable fingerings at two positions on the neck/keyboard.
+      Metrics:
+        TargetBPM: 120
+        CleanReps: 10
+        DailyMinutes: 12
+Metadata:
+  Source: embedded
+  LastUpdated: '2025-11-01'
+  Version: '1.1'

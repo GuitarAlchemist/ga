@@ -1,53 +1,88 @@
 ﻿namespace GA.Business.Core.Tests;
 
-using GA.Business.Core.Chords;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Primitives.Diatonic;
+using Core.Chords;
+using Core.Tonal.Modes.Diatonic;
+using Core.Tonal.Primitives.Diatonic;
 
 [TestFixture]
 public class ChordTemplateFactoryTests
 {
     [Test]
-    public void StandardChords_ShouldContainBasicTriads()
+    public void GetChordsByCharacteristics_ShouldReturnCorrectChords()
     {
-        // Arrange & Act
-        var standardChords = ChordTemplateFactory.StandardChords;
+        // Test finding chords by their musical characteristics, not names
+        var majorTriads = ChordTemplateFactory.GetChordsByCharacteristics(
+            ChordQuality.Major,
+            ChordExtension.Triad).Take(10).ToList();
 
-        // Assert
-        Assert.That(standardChords.ContainsKey("Major"), Is.True);
-        Assert.That(standardChords.ContainsKey("Minor"), Is.True);
-        Assert.That(standardChords.ContainsKey("Diminished"), Is.True);
-        Assert.That(standardChords.ContainsKey("Augmented"), Is.True);
+        var minorTriads = ChordTemplateFactory.GetChordsByCharacteristics(
+            ChordQuality.Minor,
+            ChordExtension.Triad).Take(10).ToList();
+
+        var diminishedChords = ChordTemplateFactory.GetChordsByCharacteristics(
+            ChordQuality.Diminished).Take(10).ToList();
+
+        // Assert - All should be found from systematic scale generation
+        Assert.That(majorTriads.Count, Is.GreaterThan(0), "Should find major triads from scale generation");
+        Assert.That(minorTriads.Count, Is.GreaterThan(0), "Should find minor triads from scale generation");
+        Assert.That(diminishedChords.Count, Is.GreaterThan(0), "Should find diminished chords from scale generation");
+
+        // Verify all have correct characteristics
+        Assert.That(majorTriads.All(c => c.Quality == ChordQuality.Major && c.Extension == ChordExtension.Triad),
+            Is.True);
+        Assert.That(minorTriads.All(c => c.Quality == ChordQuality.Minor && c.Extension == ChordExtension.Triad),
+            Is.True);
+        Assert.That(diminishedChords.All(c => c.Quality == ChordQuality.Diminished), Is.True);
     }
 
     [Test]
-    public void StandardChords_ShouldContainSeventhChords()
+    public void GetChordsByIntervalPattern_ShouldReturnMatchingChords()
     {
-        // Arrange & Act
-        var standardChords = ChordTemplateFactory.StandardChords;
+        // Test finding chords by their actual interval structure
+        var majorTriadPattern = new[] { 4, 7 }; // Major third + perfect fifth
+        var minorTriadPattern = new[] { 3, 7 }; // Minor third + perfect fifth
 
-        // Assert
-        Assert.That(standardChords.ContainsKey("Major7"), Is.True);
-        Assert.That(standardChords.ContainsKey("Minor7"), Is.True);
-        Assert.That(standardChords.ContainsKey("Dominant7"), Is.True);
-        Assert.That(standardChords.ContainsKey("Diminished7"), Is.True);
-        Assert.That(standardChords.ContainsKey("HalfDiminished7"), Is.True);
+        var majorTriads = ChordTemplateFactory.GetChordsByIntervalPattern(majorTriadPattern).Take(5).ToList();
+        var minorTriads = ChordTemplateFactory.GetChordsByIntervalPattern(minorTriadPattern).Take(5).ToList();
+
+        // Assert - Should find chords with exact interval patterns
+        Assert.That(majorTriads.Count, Is.GreaterThan(0), "Should find chords with major triad intervals");
+        Assert.That(minorTriads.Count, Is.GreaterThan(0), "Should find chords with minor triad intervals");
+
+        // Verify interval patterns match
+        foreach (var chord in majorTriads)
+        {
+            var intervals = chord.Intervals.Select(i => i.Interval.Semitones.Value).OrderBy(s => s).ToArray();
+            Assert.That(intervals, Is.EqualTo(majorTriadPattern),
+                $"Chord {chord.Name} should have major triad intervals");
+        }
     }
 
     [Test]
-    public void FromSemitones_ShouldCreateValidChordTemplate()
+    public void GenerateAllPossibleChords_ShouldReturnSystematicGeneration()
     {
-        // Arrange
-        var name = "TestChord";
-        var semitones = new[] { 4, 7 }; // Major triad
+        // Test the core systematic generation method
+        var allChords = ChordTemplateFactory.GenerateAllPossibleChords().ToList(); // Limit for performance
 
-        // Act
-        var template = ChordTemplateFactory.FromSemitones(name, semitones);
+        // Assert - Should generate many chords from scale relationships
+        Assert.That(allChords.Count, Is.GreaterThan(100), "Should generate many chords from all scales and modes");
 
-        // Assert
-        Assert.That(template.Name, Is.EqualTo(name));
-        Assert.That(template.NoteCount, Is.EqualTo(3)); // Root + 2 intervals
-        Assert.That(template.Quality, Is.EqualTo(ChordQuality.Major));
+        // Verify we have different stacking types
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Tertian), Is.True,
+            "Should have tertian chords");
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Quartal), Is.True,
+            "Should have quartal chords");
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Quintal), Is.True,
+            "Should have quintal chords");
+
+        // Verify we have different extensions
+        Assert.That(allChords.Any(c => c.Extension == ChordExtension.Triad), Is.True, "Should have triads");
+        Assert.That(allChords.Any(c => c.Extension == ChordExtension.Seventh), Is.True, "Should have seventh chords");
+        Assert.That(allChords.Any(c => c.Extension == ChordExtension.Ninth), Is.True, "Should have ninth chords");
+
+        // All chords should be derived from scale relationships
+        Assert.That(allChords.All(c => c is ChordTemplate.TonalModal or ChordTemplate.Analytical), Is.True,
+            "All chords should be generated from scale modes or analytical methods");
     }
 
     [Test]
@@ -57,7 +92,7 @@ public class ChordTemplateFactoryTests
         var ionianMode = MajorScaleMode.Get(MajorScaleDegree.Ionian);
 
         // Act
-        var modalChords = ChordTemplateFactory.CreateModalChords(ionianMode, ChordExtension.Triad).ToList();
+        var modalChords = ChordTemplateFactory.CreateModalChords(ionianMode).ToList();
 
         // Assert
         Assert.That(modalChords.Count, Is.EqualTo(7)); // 7 degrees in major scale
@@ -95,66 +130,69 @@ public class ChordTemplateFactoryTests
     }
 
     [Test]
-    public void CreateQuartalChords_ShouldUseQuartalStacking()
+    public void GenerateFromScaleMode_ShouldCreateAllStackingTypes()
     {
-        // Arrange
+        // Test that the systematic generation creates all stacking types for a mode
         var ionianMode = MajorScaleMode.Get(MajorScaleDegree.Ionian);
 
         // Act
-        var quartalChords = ChordTemplateFactory.CreateQuartalChords(ionianMode).ToList();
+        var allChords = ChordTemplateFactory.GenerateFromScaleMode(ionianMode).ToList();
 
-        // Assert
-        Assert.That(quartalChords.Count, Is.EqualTo(7));
-        Assert.That(quartalChords.All(c => c.StackingType == ChordStackingType.Quartal), Is.True);
-        Assert.That(quartalChords.All(c => c.Name.Contains("(4ths)")), Is.True);
+        // Assert - Should generate chords with all stacking types
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Tertian), Is.True,
+            "Should have tertian chords");
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Quartal), Is.True,
+            "Should have quartal chords");
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Quintal), Is.True,
+            "Should have quintal chords");
+        Assert.That(allChords.Any(c => c.StackingType == ChordStackingType.Secundal), Is.True,
+            "Should have secundal chords");
+
+        // Should have different extensions
+        Assert.That(allChords.Any(c => c.Extension == ChordExtension.Triad), Is.True, "Should have triads");
+        Assert.That(allChords.Any(c => c.Extension == ChordExtension.Seventh), Is.True, "Should have seventh chords");
+
+        // All should be TonalModal chords from the scale
+        Assert.That(allChords.All(c => c is ChordTemplate.TonalModal), Is.True, "All should be tonal modal chords");
     }
 
     [Test]
-    public void CreateQuintalChords_ShouldUseQuintalStacking()
+    public void GenerateFromAllModalFamilies_ShouldCoverAllScales()
     {
-        // Arrange
-        var ionianMode = MajorScaleMode.Get(MajorScaleDegree.Ionian);
+        // Test that we generate from all modal families systematically
+        var modalFamilyChords =
+            ChordTemplateFactory.GenerateFromAllModalFamilies().Take(500).ToList(); // Limit for performance
 
-        // Act
-        var quintalChords = ChordTemplateFactory.CreateQuintalChords(ionianMode).ToList();
+        // Assert - Should generate from many different modal families
+        Assert.That(modalFamilyChords.Count, Is.GreaterThan(50), "Should generate chords from many modal families");
 
-        // Assert
-        Assert.That(quintalChords.Count, Is.EqualTo(7));
-        Assert.That(quintalChords.All(c => c.StackingType == ChordStackingType.Quintal), Is.True);
-        Assert.That(quintalChords.All(c => c.Name.Contains("(5ths)")), Is.True);
+        // Should have variety in chord types from different modal families
+        var qualities = modalFamilyChords.Select(c => c.Quality).Distinct().ToList();
+        Assert.That(qualities.Count, Is.GreaterThan(1),
+            "Should have chords with different qualities from different modal families");
+
+        // All should be from modal families
+        Assert.That(modalFamilyChords.All(c => c is ChordTemplate.TonalModal), Is.True,
+            "All should be tonal modal chords");
     }
 
     [Test]
-    public void GetStandardChord_ShouldReturnCorrectChord()
+    public void CreateTraditionalChordLibrary_ShouldReturnManyChords()
     {
-        // Act
-        var majorChord = ChordTemplateFactory.GetStandardChord("Major");
-        var minorChord = ChordTemplateFactory.GetStandardChord("Minor");
+        // Act - Test the traditional chord library generation
+        var chords = ChordTemplateFactory.CreateTraditionalChordLibrary().Take(200).ToList(); // Limit for performance
 
-        // Assert
-        Assert.That(majorChord, Is.Not.Null);
-        Assert.That(majorChord!.Quality, Is.EqualTo(ChordQuality.Major));
-        Assert.That(minorChord, Is.Not.Null);
-        Assert.That(minorChord!.Quality, Is.EqualTo(ChordQuality.Minor));
-    }
+        // Assert - Should generate many chords from traditional scales
+        Assert.That(chords.Count, Is.GreaterThan(50),
+            "Should generate many chords from traditional scale relationships");
 
-    [Test]
-    public void GetStandardChord_WithInvalidName_ShouldReturnNull()
-    {
-        // Act
-        var result = ChordTemplateFactory.GetStandardChord("NonExistentChord");
+        // All should be from scale modes, not hard-coded
+        Assert.That(chords.All(c => c is ChordTemplate.TonalModal), Is.True,
+            "All should be generated from scale modes");
 
-        // Assert
-        Assert.That(result, Is.Null);
-    }
-
-    [Test]
-    public void StandardChordCount_ShouldReturnCorrectCount()
-    {
-        // Act
-        var count = ChordTemplateFactory.StandardChordCount;
-
-        // Assert
-        Assert.That(count, Is.GreaterThan(30)); // Should have many standard chords
+        // Should have variety in qualities and extensions
+        Assert.That(chords.Any(c => c.Quality == ChordQuality.Major), Is.True, "Should have major chords");
+        Assert.That(chords.Any(c => c.Quality == ChordQuality.Minor), Is.True, "Should have minor chords");
+        Assert.That(chords.Any(c => c.Extension == ChordExtension.Seventh), Is.True, "Should have seventh chords");
     }
 }

@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='windows-1252' ?>
+<ftstdata>
+<topic name="Why Guitar Alchemist ?" url="introduction_to_guitar_alchemist/why_guitar_alchemist_.htm" />
+<topic name="System Requirements" url="introduction_to_guitar_alchemist/system_requirements.htm" />
+<topic name="How to buy Guitar Alchemist" url="introduction_to_guitar_alchemist/how_to_buy_guitar_alchemist.htm" />
+<topic name="The main window" url="the_user_interface/the_main_window.htm" />
+<topic name="The options dialog" url="the_user_interface/the_options_dialog/the_options_dialog.htm" />
+<topic name="The fingerboard options page" url="the_user_interface/the_options_dialog/the_fingerboard_options_page.htm" />
+<topic name="The theme options page" url="the_user_interface/the_options_dialog/the_theme_options_page.htm" />
+<topic name="The MIDI options page" url="the_user_interface/the_options_dialog/the_midi_options_page.htm" />
+<topic name="View selector" url="the_user_interface/view_selector.htm" />
+<topic name="The menu" url="the_user_interface/the_menu.htm" />
+<topic name="The fingerboard" url="the_user_interface/the_fingerboard.htm" />
+<topic name="The status bar" url="the_user_interface/the_status_bar.htm" />
+<topic name="The scale selector panel" url="the_user_interface/the_views/the_scales_view/the_scale_selector_panel.htm" />
+<topic name="The scale pattern panel" url="the_user_interface/the_views/the_scales_view/the_scale_pattern_panel.htm" />
+<topic name="The matching chords panel" url="the_user_interface/the_views/the_scales_view/the_matching_chords_panel.htm" />
+<topic name="The chord selector panel" url="the_user_interface/the_views/the_chords_view/the_chord_selector_panel.htm" />
+<topic name="The chord dictionnary panel" url="the_user_interface/the_views/the_chords_view/the_chord_dictionnary_panel.htm" />
+<topic name="The matching scale panel" url="the_user_interface/the_views/the_chords_view/the_matching_scale_panel.htm" />
+<topic name="The scales view" url="the_user_interface/the_views/the_scales_view/the_scales_view.htm" />
+<topic name="The chords view" url="the_user_interface/the_views/the_chords_view/the_chords_view.htm" />
+<topic name="The intervals" url="music_theory_elements/the_intervals.htm" />
+<topic name="The keys" url="music_theory_elements/the_keys.htm" />
+<topic name="The major scale modes" url="music_theory_elements/the_major_scale_modes.htm" />
+<topic name="The melodic minor modes" url="music_theory_elements/the_melodic_minor_modes.htm" />
+<topic name="The harmonic minor modes" url="music_theory_elements/the_harmonic_minor_modes.htm" />
+<topic name="The harmonic major modes" url="music_theory_elements/the_harmonic_major_modes.htm" />
+<topic name="The character tones" url="music_theory_elements/the_character_tones.htm" />
+
+</ftstdata>  

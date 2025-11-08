@@ -2,5 +2,8 @@
 
 public record TabularDataColumn(string Name, string? DataType = null)
 {
-    public override string ToString() => DataType != null ? $"{Name} ({DataType})" : Name;
+    public override string ToString()
+    {
+        return DataType != null ? $"{Name} ({DataType})" : Name;
+    }
 }

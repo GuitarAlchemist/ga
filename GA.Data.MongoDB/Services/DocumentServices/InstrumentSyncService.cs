@@ -1,13 +1,12 @@
-﻿namespace GA.Data.MongoDB.Services.DocumentServices;
+namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Business.Core.Data.Instruments;
 using Business.Core.Notes;
-using JetBrains.Annotations;
+using EntityFramework.Data.Instruments;
 using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoDbService mongoDb) 
+public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoDbService mongoDb)
     : ISyncService<InstrumentDocument>
 {
     public async Task<bool> SyncAsync()
@@ -19,14 +18,14 @@ public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger,
                 {
                     var defaultTuning = instrument.Tunings.First().Value.Tuning;
                     _ = AccidentedNoteCollection.TryParse(defaultTuning, null, out var countNotes);
-                    
+
                     return new InstrumentDocument
                     {
                         Name = instrument.Name,
                         Category = "String",
                         StringCount = countNotes?.Count ?? 0,
                         Tunings = instrument.Tunings
-                            .Select(t => new TuningDocument 
+                            .Select(t => new TuningDocument
                             {
                                 Name = t.Key,
                                 Notes = AccidentedNoteCollection.TryParse(t.Value.Tuning, null, out var notes)
@@ -56,6 +55,8 @@ public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger,
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Instruments.CountDocumentsAsync(Builders<InstrumentDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Instruments.CountDocumentsAsync(Builders<InstrumentDocument>.Filter.Empty);
+    }
 }

@@ -1,0 +1,326 @@
+(* ============================================================================
+   Grothendieck Operations DSL - EBNF Grammar
+   ============================================================================
+   
+   Purpose: Define syntax for category-theoretic operations on musical objects
+            using Grothendieck's framework: functors, natural transformations,
+            limits, colimits, and topos operations.
+   
+   Version: 1.0.0
+   Date: 2025-11-01
+   Author: Guitar Alchemist Team
+   
+   Based on: Category Theory for Music Theory (Mazzola, Guerino)
+   
+   Examples:
+   - "C major ⊗ G major"  (tensor product)
+   - "functor transpose: Chords -> Chords"
+   - "limit of {C, Em, Am, F}"
+   - "colimit of progression I-IV-V-I"
+   - "pullback (Cmaj7, transpose +5)"
+   
+   ============================================================================ *)
+
+(* ============================================================================
+   TOP-LEVEL GROTHENDIECK COMMAND
+   ============================================================================ *)
+
+grothendieck_command = category_operation
+                     | functor_operation
+                     | natural_transformation
+                     | limit_operation
+                     | colimit_operation
+                     | topos_operation
+                     | sheaf_operation
+                     ;
+
+(* ============================================================================
+   MUSICAL OBJECTS (Objects in Categories)
+   ============================================================================ *)
+
+musical_object = note_object
+               | chord_object
+               | scale_object
+               | progression_object
+               | voicing_object
+               | set_class_object
+               ;
+
+note_object = note_name ;
+
+note_name = letter, [ accidental ] ;
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" ;
+
+accidental = "#" | "b" | "♯" | "♭" | "##" | "bb" | "x" ;
+
+chord_object = note_name, [ chord_quality ] ;
+
+chord_quality = "maj" | "min" | "dim" | "aug" | "sus2" | "sus4"
+              | "maj7" | "min7" | "dom7" | "dim7" | "aug7"
+              | "maj9" | "min9" | "dom9" | "add9" | "6/9"
+              ;
+
+scale_object = note_name, scale_type ;
+
+scale_type = "major" | "minor" | "dorian" | "phrygian" | "lydian"
+           | "mixolydian" | "aeolian" | "locrian"
+           | "harmonic minor" | "melodic minor"
+           | "pentatonic" | "blues" | "whole tone" | "diminished"
+           ;
+
+progression_object = "{", chord_list, "}"
+                   | roman_numeral_list
+                   ;
+
+chord_list = chord_object, { ",", chord_object } ;
+
+roman_numeral_list = roman_numeral, { "-", roman_numeral } ;
+
+roman_numeral = [ "b" | "#" ], ( "I" | "II" | "III" | "IV" | "V" | "VI" | "VII" 
+                               | "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii" )
+              , [ "°" | "ø" | "+" | "7" | "maj7" | "min7" ]
+              ;
+
+voicing_object = "{", position_list, "}" ;
+
+position_list = position, { ",", position } ;
+
+position = string_number, ":", fret_number ;
+
+string_number = integer ;
+
+fret_number = integer ;
+
+set_class_object = "PC", "{", pitch_class_list, "}"
+                 | "Forte", forte_number
+                 ;
+
+pitch_class_list = pitch_class, { ",", pitch_class } ;
+
+pitch_class = integer ;  (* 0-11 *)
+
+forte_number = integer, "-", integer ;  (* e.g., "3-11" *)
+
+(* ============================================================================
+   CATEGORY OPERATIONS
+   ============================================================================ *)
+
+category_operation = tensor_product
+                   | direct_sum
+                   | product_op
+                   | coproduct_op
+                   | exponential_op
+                   ;
+
+tensor_product = musical_object, "⊗", musical_object
+               | musical_object, "tensor", musical_object
+               | "tensor", "(", musical_object, ",", musical_object, ")"
+               ;
+
+direct_sum = musical_object, "⊕", musical_object
+           | musical_object, "direct_sum", musical_object
+           | "direct_sum", "(", musical_object, ",", musical_object, ")"
+           ;
+
+product_op = musical_object, "×", musical_object
+           | musical_object, "product", musical_object
+           | "product", "(", object_list, ")"
+           ;
+
+coproduct_op = musical_object, "+", musical_object
+             | musical_object, "coproduct", musical_object
+             | "coproduct", "(", object_list, ")"
+             ;
+
+exponential_op = musical_object, "^", musical_object
+               | "exp", "(", musical_object, ",", musical_object, ")"
+               ;
+
+object_list = musical_object, { ",", musical_object } ;
+
+(* ============================================================================
+   FUNCTOR OPERATIONS
+   ============================================================================ *)
+
+functor_operation = functor_definition
+                  | functor_application
+                  | functor_composition
+                  ;
+
+functor_definition = "functor", functor_name, ":", category_name, "->", category_name
+                   | "define", "functor", functor_name, "{", morphism_mapping, "}"
+                   ;
+
+functor_name = identifier ;
+
+category_name = "Notes" | "Chords" | "Scales" | "Progressions" | "Voicings"
+              | "PitchClasses" | "SetClasses" | "Intervals"
+              | identifier
+              ;
+
+morphism_mapping = morphism_rule, { ";", morphism_rule } ;
+
+morphism_rule = morphism_name, "->", morphism_expression ;
+
+morphism_name = identifier ;
+
+morphism_expression = "transpose", integer
+                    | "invert"
+                    | "rotate", integer
+                    | "reflect"
+                    | identifier
+                    ;
+
+functor_application = functor_name, "(", musical_object, ")"
+                    | "apply", functor_name, "to", musical_object
+                    ;
+
+functor_composition = functor_name, "∘", functor_name
+                    | functor_name, "compose", functor_name
+                    | "compose", "(", functor_list, ")"
+                    ;
+
+functor_list = functor_name, { ",", functor_name } ;
+
+(* ============================================================================
+   NATURAL TRANSFORMATIONS
+   ============================================================================ *)
+
+natural_transformation = "natural", "transformation", nat_trans_name, ":", functor_name, "=>", functor_name
+                       | "define", "nat_trans", nat_trans_name, "{", component_mapping, "}"
+                       | nat_trans_name, "(", musical_object, ")"
+                       ;
+
+nat_trans_name = identifier ;
+
+component_mapping = component_rule, { ";", component_rule } ;
+
+component_rule = musical_object, "->", morphism_expression ;
+
+(* ============================================================================
+   LIMIT OPERATIONS
+   ============================================================================ *)
+
+limit_operation = limit_of_diagram
+                | pullback_op
+                | equalizer_op
+                ;
+
+limit_of_diagram = "limit", "of", diagram_spec
+                 | "lim", diagram_spec
+                 ;
+
+diagram_spec = "{", object_list, "}"
+             | diagram_name
+             ;
+
+diagram_name = identifier ;
+
+pullback_op = "pullback", "(", musical_object, ",", morphism_expression, ",", musical_object, ")"
+            | musical_object, "pullback", morphism_expression
+            ;
+
+equalizer_op = "equalizer", "(", morphism_expression, ",", morphism_expression, ")"
+             | "eq", "(", morphism_expression, ",", morphism_expression, ")"
+             ;
+
+(* ============================================================================
+   COLIMIT OPERATIONS
+   ============================================================================ *)
+
+colimit_operation = colimit_of_diagram
+                  | pushout_op
+                  | coequalizer_op
+                  ;
+
+colimit_of_diagram = "colimit", "of", diagram_spec
+                   | "colim", diagram_spec
+                   ;
+
+pushout_op = "pushout", "(", musical_object, ",", morphism_expression, ",", musical_object, ")"
+           | musical_object, "pushout", morphism_expression
+           ;
+
+coequalizer_op = "coequalizer", "(", morphism_expression, ",", morphism_expression, ")"
+               | "coeq", "(", morphism_expression, ",", morphism_expression, ")"
+               ;
+
+(* ============================================================================
+   TOPOS OPERATIONS
+   ============================================================================ *)
+
+topos_operation = subobject_classifier
+                | power_object
+                | internal_hom
+                ;
+
+subobject_classifier = "Ω", [ "(", musical_object, ")" ]
+                     | "truth_value", "of", musical_object
+                     ;
+
+power_object = "P", "(", musical_object, ")"
+             | "power", "(", musical_object, ")"
+             | "subobjects", "of", musical_object
+             ;
+
+internal_hom = "Hom", "(", musical_object, ",", musical_object, ")"
+             | musical_object, "=>", musical_object
+             ;
+
+(* ============================================================================
+   SHEAF OPERATIONS
+   ============================================================================ *)
+
+sheaf_operation = sheaf_definition
+                | sheaf_restriction
+                | sheaf_gluing
+                ;
+
+sheaf_definition = "sheaf", sheaf_name, "on", space_spec
+                 | "define", "sheaf", sheaf_name, "{", section_mapping, "}"
+                 ;
+
+sheaf_name = identifier ;
+
+space_spec = "fretboard"
+           | "circle_of_fifths"
+           | "tonnetz"
+           | "pitch_class_space"
+           | identifier
+           ;
+
+section_mapping = section_rule, { ";", section_rule } ;
+
+section_rule = open_set, "->", musical_object ;
+
+open_set = identifier ;
+
+sheaf_restriction = sheaf_name, "|", open_set
+                  | "restrict", sheaf_name, "to", open_set
+                  ;
+
+sheaf_gluing = "glue", "{", section_list, "}"
+             | "glue", section_list, "along", gluing_data
+             ;
+
+section_list = musical_object, { ",", musical_object } ;
+
+gluing_data = "{", gluing_rule, { ";", gluing_rule }, "}" ;
+
+gluing_rule = open_set, "∩", open_set, "->", morphism_expression ;
+
+(* ============================================================================
+   BASIC TYPES
+   ============================================================================ *)
+
+identifier = letter, { letter | digit | "_" } ;
+
+integer = [ "-" ], digit, { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* ============================================================================
+   END OF GRAMMAR
+   ============================================================================ *)
+

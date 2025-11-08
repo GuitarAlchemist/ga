@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Models.Rag;
+namespace GA.Data.MongoDB.Models.Rag;
 
 public abstract record RagDocumentBase : DocumentBase
 {

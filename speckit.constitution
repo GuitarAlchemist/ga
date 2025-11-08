@@ -1,0 +1,173 @@
+# Guitar Alchemist - Project Constitution
+
+## 🎸 Mission Statement
+
+Guitar Alchemist is a comprehensive platform for exploring, understanding, and mastering the guitar fretboard through the lens of music theory, artificial intelligence, and modern software engineering. We transform complex musical concepts into accessible, interactive experiences that empower musicians of all levels.
+
+## 🎯 Core Values
+
+### 1. Musical Excellence
+- **Theory-Driven**: Every feature is grounded in solid music theory principles
+- **Accuracy First**: Musical data and calculations must be mathematically precise
+- **Comprehensive Coverage**: Support for all aspects of guitar playing - chords, scales, modes, arpeggios, and progressions
+
+### 2. Technical Excellence
+- **Clean Architecture**: Maintain clear separation between business logic, data access, and presentation layers
+- **Type Safety**: Leverage strong typing in C# and TypeScript to prevent runtime errors
+- **Performance**: Optimize for speed and responsiveness, especially in interactive components
+- **Advanced Mathematics**: Implement cutting-edge mathematical concepts (spectral graph theory, information theory, category theory)
+- **High-Performance Computing**: Utilize modern concurrency patterns (Channels, TPL Dataflow, Reactive Extensions)
+- **Scalability**: Design systems that can handle growth in data, users, and features
+
+### 3. Developer Experience
+- **Simplicity**: One-command setup and deployment
+- **Automation**: Comprehensive CI/CD pipelines and automated testing
+- **Documentation**: Clear, comprehensive, and up-to-date documentation
+- **Consistency**: Unified coding standards and architectural patterns
+
+### 4. User Experience
+- **Intuitive Design**: Complex music theory made accessible through thoughtful UX
+- **Interactive Learning**: Hands-on exploration of musical concepts
+- **AI-Powered Assistance**: Intelligent guidance and discovery through natural language
+- **Multi-Modal**: Support for visual, auditory, and tactile learning styles
+
+## 🏗️ Architectural Principles
+
+### 1. Modular Design
+- **Shared Libraries**: Common functionality in reusable packages (`Common/GA.*`)
+- **Domain Separation**: Clear boundaries between music theory, data access, and UI concerns
+- **Service-Oriented**: Independent services that can be developed, tested, and deployed separately
+
+### 2. Technology Stack Alignment
+- **.NET 9**: Modern C# with latest language features and performance improvements
+- **React + TypeScript**: Type-safe, component-based frontend development
+- **MongoDB**: Document-based storage with vector search capabilities for AI features
+- **Aspire**: Orchestration and observability for distributed applications
+
+### 3. Data-Driven Intelligence
+- **Vector Embeddings**: Semantic search over musical concepts and chord progressions
+- **AI Integration**: Natural language interfaces for music theory exploration
+- **Comprehensive Datasets**: 427,000+ chords with detailed theoretical analysis
+
+### 4. Quality Assurance
+- **Test-Driven Development**: Unit, integration, and end-to-end testing
+- **Automated Quality Gates**: Pre-commit hooks, CI/CD validation, and code formatting
+- **Performance Monitoring**: Real-time observability and health checks
+
+## 📋 Development Standards
+
+### 1. Code Quality
+- **Formatting**: Automated via `dotnet format` and ESLint
+- **Naming Conventions**:
+  - C#: PascalCase for types/methods, camelCase for parameters/locals
+  - TypeScript: PascalCase for components, camelCase for functions
+- **File Organization**: Mirror business domains in folder structure
+- **Documentation**: XML docs for public APIs, README files for modules
+- **Pre-commit Hooks**: Automatic code formatting verification before commits
+- **Quick Setup**: One-command environment setup via `Scripts/setup-dev-environment.ps1`
+
+### 2. Testing Requirements
+- **Coverage**: Minimum 80% code coverage for business logic
+- **Test Types**: Unit (NUnit), Integration (xUnit), E2E (Playwright)
+- **Naming**: Descriptive test names that explain behavior
+- **Automation**: All tests must run in CI/CD pipeline
+- **E2E Testing**: Comprehensive Playwright test suites (46+ tests) covering all major features
+- **Pre-commit Hooks**: Automatic code formatting and build verification before commits
+- **Test Scripts**: Automated test execution via `Scripts/run-all-tests.ps1`
+
+### 3. Security & Configuration
+- **Secrets Management**: Use `dotnet user-secrets` and environment variables
+- **No Hardcoded Values**: All configuration externalized
+- **Dependency Scanning**: Automated vulnerability detection
+- **Principle of Least Privilege**: Minimal required permissions
+
+### 4. Performance Standards
+- **API Response Times**: < 200ms for standard queries, < 2s for complex searches
+- **Frontend Loading**: < 3s initial load, < 1s navigation
+- **Database Queries**: Optimized indexes, efficient aggregation pipelines
+- **Memory Usage**: Bounded resource consumption, proper disposal patterns
+
+## 🔄 Development Workflow
+
+### 1. Feature Development
+1. **Planning**: Create detailed specifications and task breakdowns
+2. **Branch Strategy**: Feature branches from `main`, descriptive naming
+3. **Implementation**: TDD approach with comprehensive testing
+4. **Review**: Peer review with focus on architecture and maintainability
+5. **Integration**: Automated CI/CD validation before merge
+
+### 2. Quality Gates
+- **Pre-commit**: Code formatting, basic validation
+- **CI Pipeline**: Build, test, security scan, performance check
+- **Deployment**: Automated deployment with rollback capabilities
+- **Monitoring**: Real-time health checks and performance metrics
+
+### 3. Release Management
+- **Semantic Versioning**: Clear version numbering for all packages
+- **Release Notes**: Comprehensive documentation of changes
+- **Backward Compatibility**: Maintain API stability where possible
+- **Migration Guides**: Clear upgrade paths for breaking changes
+
+## 🎵 Musical Domain Rules
+
+### 1. Music Theory Accuracy
+- **Mathematical Precision**: All interval calculations must be exact
+- **Standard Notation**: Follow established music theory conventions
+- **Comprehensive Coverage**: Support for all common (and uncommon) musical concepts
+- **Cultural Sensitivity**: Acknowledge different musical traditions and naming conventions
+
+### 2. Guitar-Specific Features
+- **Multiple Tunings**: Support for standard, alternate, and custom tunings
+- **Fretboard Visualization**: Accurate representation of guitar neck geometry
+- **Chord Voicings**: Multiple fingering options with difficulty ratings
+- **Ergonomic Considerations**: Practical playability assessments
+
+### 3. AI and Search
+- **Semantic Understanding**: Natural language queries for musical concepts
+- **Context Awareness**: Recommendations based on musical context and user skill level
+- **Learning Adaptation**: System learns from user interactions and preferences
+- **Explanation Capability**: AI can explain its recommendations and reasoning
+
+## 🚀 Innovation Commitments
+
+### 1. Continuous Learning
+- **Technology Evolution**: Stay current with .NET, React, and AI developments
+- **Music Theory Research**: Incorporate latest academic research and pedagogical approaches
+- **User Feedback**: Regular collection and integration of user insights
+- **Performance Optimization**: Ongoing measurement and improvement
+
+### 2. Open Source Spirit
+- **Community Contribution**: Share reusable components and insights
+- **Documentation Excellence**: Comprehensive guides for contributors
+- **Accessibility**: Ensure features work for users with different abilities
+- **Educational Value**: Prioritize learning and understanding over mere functionality
+
+### 3. Future-Proofing
+- **Extensible Architecture**: Design for unknown future requirements
+- **API-First**: All functionality accessible via well-designed APIs
+- **Cross-Platform**: Support for different devices and operating systems
+- **Integration-Ready**: Easy connection with other music software and hardware
+
+## 📊 Success Metrics
+
+### 1. Technical Metrics
+- **Build Success Rate**: > 95% successful builds
+- **Test Coverage**: > 80% for business logic
+- **Performance**: Meet defined response time targets
+- **Uptime**: > 99.9% availability for production services
+
+### 2. Quality Metrics
+- **Bug Density**: < 1 critical bug per 1000 lines of code
+- **Security Vulnerabilities**: Zero high-severity vulnerabilities in production
+- **Code Review Coverage**: 100% of changes reviewed
+- **Documentation Coverage**: All public APIs documented
+
+### 3. User Experience Metrics
+- **Learning Effectiveness**: Measurable improvement in user music theory knowledge
+- **Engagement**: Regular usage patterns and feature adoption
+- **Satisfaction**: Positive feedback and community growth
+- **Accessibility**: Usable by musicians with diverse needs and skill levels
+
+---
+
+*This constitution serves as the foundational document for all Guitar Alchemist development decisions. It should be reviewed and updated as the project evolves, but its core principles should remain stable to ensure consistency and quality.*

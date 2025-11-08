@@ -1,0 +1,4 @@
+Play common scales/modes directly on the staff or the fingerboard, and find matching chords.
+Play chords in the voicing you want (Inversions, difficulty, and many other features) and find the scales you can play over it.
+Play the notes directly on the fingerboard (lefties too!) or on the staff.
+More than a chord dictionnay, Guitar Alchemist really makes the link between chords, scales, and notes.

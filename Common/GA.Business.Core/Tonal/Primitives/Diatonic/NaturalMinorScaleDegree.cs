@@ -1,28 +1,18 @@
 ﻿namespace GA.Business.Core.Tonal.Primitives.Diatonic;
 
 /// <summary>
-/// A natural minor scale degree
+///     A natural minor scale degree
 /// </summary>
 /// <remarks>
-/// <see href="https://en.wikipedia.org/wiki/Minor_scale"/>
+///     <see href="https://en.wikipedia.org/wiki/Minor_scale" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct NaturalMinorScaleDegree : IRangeValueObject<NaturalMinorScaleDegree>, IScaleDegreeNaming
 {
-    #region Relational members
-
-    public int CompareTo(NaturalMinorScaleDegree other) => _value.CompareTo(other._value);
-    public static bool operator <(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right) => left.CompareTo(right) < 0;
-    public static bool operator >(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right) => left.CompareTo(right) > 0;
-    public static bool operator <=(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right) => left.CompareTo(right) >= 0;
-
-    #endregion
-
     private const int _minValue = 1;
     private const int _maxValue = 7;
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NaturalMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+
+    private readonly int _value;
 
     // Constructor
     public NaturalMinorScaleDegree(int value)
@@ -30,21 +20,9 @@ public readonly record struct NaturalMinorScaleDegree : IRangeValueObject<Natura
         _value = CheckRange(value);
     }
 
-    public static NaturalMinorScaleDegree Min => FromValue(_minValue);
-    public static NaturalMinorScaleDegree Max => FromValue(_maxValue);
-
-    public static int CheckRange(int value) => IRangeValueObject<NaturalMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<NaturalMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-
-    public static implicit operator NaturalMinorScaleDegree(int value) => FromValue(value);
-    public static implicit operator int(NaturalMinorScaleDegree degree) => degree.Value;
-
     public static IReadOnlyCollection<NaturalMinorScaleDegree> All => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
     public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
     public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
-
-    private readonly int _value;
-    public int Value { get => _value; init => _value = CheckRange(value); }
 
     // Static instances for convenience
     public static NaturalMinorScaleDegree Aeolian => new(1);
@@ -55,29 +33,102 @@ public readonly record struct NaturalMinorScaleDegree : IRangeValueObject<Natura
     public static NaturalMinorScaleDegree Lydian => new(6);
     public static NaturalMinorScaleDegree Mixolydian => new(7);
 
-    public override string ToString() => Value.ToString();
-
-    public string ToName() => Value switch
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NaturalMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        1 => "Aeolian",
-        2 => "Locrian",
-        3 => "Ionian",
-        4 => "Dorian",
-        5 => "Phrygian",
-        6 => "Lydian",
-        7 => "Mixolydian",
-        _ => throw new ArgumentOutOfRangeException(nameof(Value))
-    };
+        return new NaturalMinorScaleDegree { Value = value };
+    }
 
-    public string ToShortName() => Value switch
+    public static NaturalMinorScaleDegree Min => FromValue(_minValue);
+    public static NaturalMinorScaleDegree Max => FromValue(_maxValue);
+
+    public static implicit operator NaturalMinorScaleDegree(int value)
     {
-        1 => "i",
-        2 => "ii°",
-        3 => "III",
-        4 => "iv",
-        5 => "v",
-        6 => "VI",
-        7 => "VII",
-        _ => throw new ArgumentOutOfRangeException(nameof(Value))
-    };
+        return FromValue(value);
+    }
+
+    public static implicit operator int(NaturalMinorScaleDegree degree)
+    {
+        return degree.Value;
+    }
+
+    public int Value
+    {
+        get => _value;
+        init => _value = CheckRange(value);
+    }
+
+    public string ToName()
+    {
+        return Value switch
+        {
+            1 => "Aeolian",
+            2 => "Locrian",
+            3 => "Ionian",
+            4 => "Dorian",
+            5 => "Phrygian",
+            6 => "Lydian",
+            7 => "Mixolydian",
+            _ => throw new ArgumentOutOfRangeException(nameof(Value))
+        };
+    }
+
+    public string ToShortName()
+    {
+        return Value switch
+        {
+            1 => "i",
+            2 => "ii°",
+            3 => "III",
+            4 => "iv",
+            5 => "v",
+            6 => "VI",
+            7 => "VII",
+            _ => throw new ArgumentOutOfRangeException(nameof(Value))
+        };
+    }
+
+    public static int CheckRange(int value)
+    {
+        return IRangeValueObject<NaturalMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
+    }
+
+    public static int CheckRange(int value, int minValue, int maxValue)
+    {
+        return IRangeValueObject<NaturalMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
+    }
+
+    public override string ToString()
+    {
+        return Value.ToString();
+    }
+
+    #region Relational members
+
+    public int CompareTo(NaturalMinorScaleDegree other)
+    {
+        return _value.CompareTo(other._value);
+    }
+
+    public static bool operator <(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right)
+    {
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator >(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right)
+    {
+        return left.CompareTo(right) > 0;
+    }
+
+    public static bool operator <=(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >=(NaturalMinorScaleDegree left, NaturalMinorScaleDegree right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
+
+    #endregion
 }

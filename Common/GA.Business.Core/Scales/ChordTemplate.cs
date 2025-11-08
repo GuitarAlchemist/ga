@@ -5,7 +5,7 @@ using Atonal;
 public class ChordTemplate(PitchClassSet pitchClassSet)
 {
     public PitchClassSet PitchClassSet { get; } = pitchClassSet;
-    public ImmutableHashSet<Scale> AssociatedScales { get; private set; } = ImmutableHashSet<Scale>.Empty;
+    public ImmutableHashSet<Scale> AssociatedScales { get; private set; } = [];
 
     public void AddAssociatedScale(Scale scale)
     {

@@ -1,0 +1,309 @@
+(* ============================================================================
+   ASCII Tab Grammar (EBNF)
+   
+   Plain text guitar tablature notation - the most universal tab format.
+   Used across the internet for sharing guitar tabs.
+   
+   Example:
+   E|---0---3---5---|
+   B|---1---0---5---|
+   G|---0---0---6---|
+   D|---2---0---7---|
+   A|---3---2---7---|
+   E|-------3---5---|
+   
+   ============================================================================ *)
+
+(* ============================================================================
+   BASIC ELEMENTS
+   ============================================================================ *)
+
+(* String names *)
+string_name = "E" | "e" | "B" | "b" | "G" | "g" | "D" | "d" | "A" | "a" ;
+
+(* Fret number (0-24, or 'x' for muted) *)
+fret = digit, [digit] | "x" | "X" ;
+
+(* Spacing characters *)
+spacing = "-" | " " | "." ;
+
+(* Bar line *)
+bar_line = "|" | "||" | "|:" | ":|" | ":||:" ;
+
+(* ============================================================================
+   TECHNIQUES
+   ============================================================================ *)
+
+(* Hammer-on *)
+hammer_on = fret, "h", fret ;
+
+(* Pull-off *)
+pull_off = fret, "p", fret ;
+
+(* Slide up *)
+slide_up = fret, "/" | "s", fret ;
+
+(* Slide down *)
+slide_down = fret, "\\" | "s", fret ;
+
+(* Bend *)
+bend = fret, "b" | "^", [fret] ;
+
+(* Bend and release *)
+bend_release = fret, "b", fret, "r", fret ;
+
+(* Vibrato *)
+vibrato = fret, "~" | "v" ;
+
+(* Harmonic *)
+harmonic = "<", fret, ">" | "(", fret, ")" ;
+
+(* Artificial harmonic *)
+artificial_harmonic = "[", fret, "]" ;
+
+(* Pinch harmonic *)
+pinch_harmonic = "PH" | "ph" ;
+
+(* Tapping *)
+tap = "t", fret | "T", fret ;
+
+(* Palm mute *)
+palm_mute = "PM", "-", "-", "-", "-" ;
+
+(* Let ring *)
+let_ring = "LR" | "lr" ;
+
+(* Tremolo picking *)
+tremolo = "tr" | "TR" ;
+
+(* Trill *)
+trill = fret, "tr", fret ;
+
+(* Pre-bend *)
+pre_bend = "(", fret, "b", ")" ;
+
+(* Ghost note *)
+ghost_note = "(", fret, ")" ;
+
+(* Dead note *)
+dead_note = "x" | "X" ;
+
+(* Strum direction *)
+strum_down = "v" | "V" ;
+strum_up = "^" ;
+
+(* ============================================================================
+   NOTE ELEMENTS
+   ============================================================================ *)
+
+(* Single note (fret or technique) *)
+note_element = 
+    hammer_on
+    | pull_off
+    | slide_up
+    | slide_down
+    | bend_release
+    | bend
+    | vibrato
+    | harmonic
+    | artificial_harmonic
+    | tap
+    | trill
+    | pre_bend
+    | ghost_note
+    | dead_note
+    | fret
+    ;
+
+(* Note with optional spacing *)
+spaced_note = spacing*, note_element, spacing* ;
+
+(* ============================================================================
+   STRING LINE
+   ============================================================================ *)
+
+(* String line content (notes, spacing, bar lines) *)
+string_content = (spaced_note | bar_line | spacing)+ ;
+
+(* Complete string line *)
+string_line = string_name, "|", string_content, ["|"], [newline] ;
+
+(* ============================================================================
+   ANNOTATIONS
+   ============================================================================ *)
+
+(* Chord name *)
+chord_name = letter, ["#" | "b"], ["m" | "maj" | "min" | "dim" | "aug" | "sus"], [digit] ;
+
+(* Tempo marking *)
+tempo = "Tempo:", spacing*, digit+ ;
+
+(* Time signature *)
+time_signature = digit, "/", digit ;
+
+(* Capo *)
+capo = "Capo:", spacing*, digit ;
+
+(* Tuning *)
+tuning = "Tuning:", spacing*, string_name, spacing*, string_name, spacing*, string_name, spacing*, string_name, spacing*, string_name, spacing*, string_name ;
+
+(* Section marker *)
+section = "[", (letter | digit | spacing)+, "]" ;
+
+(* Repeat marker *)
+repeat = "x", digit+ ;
+
+(* Annotation line *)
+annotation = 
+    chord_name
+    | tempo
+    | time_signature
+    | capo
+    | tuning
+    | section
+    | repeat
+    | palm_mute
+    | let_ring
+    | tremolo
+    | pinch_harmonic
+    | strum_down
+    | strum_up
+    ;
+
+(* ============================================================================
+   TABLATURE STRUCTURE
+   ============================================================================ *)
+
+(* Staff (6 string lines for standard tuning) *)
+standard_staff = 
+    string_line,  (* E string *)
+    string_line,  (* B string *)
+    string_line,  (* G string *)
+    string_line,  (* D string *)
+    string_line,  (* A string *)
+    string_line   (* E string *)
+    ;
+
+(* Staff with 7 strings *)
+seven_string_staff = 
+    string_line,  (* E string *)
+    string_line,  (* B string *)
+    string_line,  (* G string *)
+    string_line,  (* D string *)
+    string_line,  (* A string *)
+    string_line,  (* E string *)
+    string_line   (* B string *)
+    ;
+
+(* Staff with 8 strings *)
+eight_string_staff = 
+    string_line,  (* E string *)
+    string_line,  (* B string *)
+    string_line,  (* G string *)
+    string_line,  (* D string *)
+    string_line,  (* A string *)
+    string_line,  (* E string *)
+    string_line,  (* B string *)
+    string_line   (* F# string *)
+    ;
+
+(* Any staff *)
+staff = standard_staff | seven_string_staff | eight_string_staff ;
+
+(* Measure (staff with optional annotations) *)
+measure = [annotation, newline], staff, [newline] ;
+
+(* ============================================================================
+   DOCUMENT STRUCTURE
+   ============================================================================ *)
+
+(* Header (title, artist, etc.) *)
+header_line = (letter | digit | spacing | punctuation)+, newline ;
+header = header_line+ ;
+
+(* Tab body *)
+tab_body = measure+ ;
+
+(* Complete ASCII tab document *)
+ascii_tab_document = [header], tab_body ;
+
+(* ============================================================================
+   HELPER RULES
+   ============================================================================ *)
+
+(* Basic character classes *)
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" 
+       | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+       | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+       | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+punctuation = "." | "," | "!" | "?" | ":" | ";" | "'" | '"' | "-" | "_" | "(" | ")" ;
+newline = "\n" | "\r\n" ;
+
+(* ============================================================================
+   EXTENDED TECHNIQUES (Advanced)
+   ============================================================================ *)
+
+(* Rake *)
+rake = "R" | "r" ;
+
+(* Slap *)
+slap = "S" | "s" ;
+
+(* Pop *)
+pop = "P" | "p" ;
+
+(* Natural harmonic positions *)
+natural_harmonic_position = "<", digit+, ">" ;
+
+(* Dive bomb *)
+dive_bomb = fret, "db" ;
+
+(* Whammy bar *)
+whammy = fret, "w" ;
+
+(* Pick scrape *)
+pick_scrape = "PS" | "ps" ;
+
+(* Feedback *)
+feedback = "FB" | "fb" ;
+
+(* ============================================================================
+   RHYTHM NOTATION (Optional)
+   ============================================================================ *)
+
+(* Duration markers *)
+whole_note = "w" ;
+half_note = "h" ;
+quarter_note = "q" ;
+eighth_note = "e" ;
+sixteenth_note = "s" ;
+
+(* Triplet *)
+triplet = "3" ;
+
+(* Dotted note *)
+dotted = "." ;
+
+(* Rest *)
+rest = "r" ;
+
+(* ============================================================================
+   CHORD DIAGRAMS (Optional)
+   ============================================================================ *)
+
+(* Chord diagram *)
+chord_diagram = 
+    chord_name, newline,
+    "e|", fret, newline,
+    "B|", fret, newline,
+    "G|", fret, newline,
+    "D|", fret, newline,
+    "A|", fret, newline,
+    "E|", fret, newline
+    ;
+
+(* ============================================================================
+   END OF GRAMMAR
+   ============================================================================ *)
+

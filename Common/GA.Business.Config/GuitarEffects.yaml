@@ -1,0 +1,30 @@
+Metadata:
+  Version: '1.0'
+  LastUpdated: '2025-11-01'
+  Source: embedded
+  Module: GuitarEffects
+GuitarEffects:
+  - Category: Gain
+    Effects:
+      - Overdrive
+      - Distortion
+      - Fuzz
+    Usage: Tone saturation
+  - Category: Modulation
+    Effects:
+      - Chorus
+      - Flanger
+      - Phaser
+    Usage: Motion and depth
+  - Category: Delay/Reverb
+    Effects:
+      - Delay
+      - Echo
+      - Reverb
+    Usage: Spatial ambience
+  - Category: Filter
+    Effects:
+      - Wah
+      - Auto-wah
+      - Envelope filter
+    Usage: Frequency emphasis

@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB;
+namespace GA.Data.MongoDB;
 
 public class MongoDbConfig
 {

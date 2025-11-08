@@ -1,0 +1,396 @@
+VERSION 5.00
+Begin VB.Form GeckoSoft 
+   BackColor       =   &H00FFFFFF&
+   Caption         =   "GeckoSoft"
+   ClientHeight    =   3210
+   ClientLeft      =   60
+   ClientTop       =   630
+   ClientWidth     =   8985
+   Icon            =   "geckosoft.frx":0000
+   LinkTopic       =   "Form1"
+   ScaleHeight     =   3210
+   ScaleWidth      =   8985
+   StartUpPosition =   2  'CenterScreen
+   Begin VB.Label txtSerialNumber 
+      Alignment       =   2  'Center
+      BackColor       =   &H00FFFFFF&
+      Caption         =   "(unregistered)"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   255
+      Left            =   2205
+      TabIndex        =   1
+      Top             =   2880
+      Width           =   4575
+   End
+   Begin VB.Label txtVersion 
+      Alignment       =   2  'Center
+      BackColor       =   &H00FFFFFF&
+      Caption         =   "TRIAL VERSION"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   255
+      Left            =   105
+      TabIndex        =   0
+      Top             =   2520
+      Width           =   8895
+   End
+   Begin VB.Image Image1 
+      Height          =   2400
+      Left            =   0
+      Picture         =   "geckosoft.frx":030A
+      Top             =   0
+      Width           =   9000
+   End
+   Begin VB.Menu mnuFile 
+      Caption         =   "&File"
+      Begin VB.Menu mnuBuy 
+         Caption         =   "Buy GeckSoft ..."
+         Shortcut        =   ^B
+      End
+      Begin VB.Menu mnuUpdate 
+         Caption         =   "Look for Update ..."
+         Shortcut        =   ^U
+         Visible         =   0   'False
+      End
+      Begin VB.Menu mnuActivate 
+         Caption         =   "Activate Manually"
+         Shortcut        =   ^A
+      End
+      Begin VB.Menu mnuSep 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuExit 
+         Caption         =   "Exit"
+      End
+   End
+   Begin VB.Menu mnuHelp 
+      Caption         =   "&Help"
+      Begin VB.Menu mnuGecko 
+         Caption         =   "About GeckoSoft ..."
+      End
+   End
+End
+Attribute VB_Name = "GeckoSoft"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+'*************************************************
+
+'  GeckoSoft Sample Application
+
+'This sample application demonstrates the use of
+'eSellerate SDK capabilities to:
+
+'*1* PURCHASE
+'*2* CHECK FOR UPDATE
+'*3* LAUNCH UPDATE
+'*4* VALIDATE SERIAL NUMBER
+'*5* VALIDATE ACTIVATION
+'*6* ACTIVATE SERIAL NUMBER
+
+'  Copyright (C) 2000 eSellerate Corporation
+'       All rights reserved worldwide
+
+'*************************************************
+
+
+Private Declare Function GetModuleFileName Lib "kernel32" Alias _
+      "GetModuleFileNameA" (ByVal hModule As Long, _
+      ByVal lpFileName As String, ByVal nSize As Long) As Long
+Private Sub Form_Load()
+    Dim serialnumber
+    Dim esellerate
+    Dim result
+    Dim prefix
+    Dim activationresult As Integer
+    
+    Set esellerate = CreateObject("eSellerateControl.350") 'Create the eSellerate control
+    
+    'This function fetches the registry key that contains the serial number for GeckoSoft
+    serialnumber = GetSetting("GeckoSoft", vbNull, "SerialNumber", "nonreg")
+        
+    '* 4* VALIDATE SERIAL NUMBER example *
+    If serialnumber = "nonreg" Then
+        result = 0
+    Else
+        result = esellerate.ValidateSerialNumber(serialnumber, "", "", "67538") 'This function will validate the serial number found in the registry
+        ' serialnumber is the serial number string
+        ' the second parameter is left empty since the serial number is not a name based serial number
+        ' the third parameter is left empty since no Extra-Data Key needed
+        ' 67538 is the Publisher Key string, optional but used for tighter validation
+
+
+        'Here, to confirm that the validated serial number was generated for this product,
+        'the first seven characters of the serial number is checked against the Prefix defined
+        'for the Serial Number Set.
+        
+        prefix = "GECKWIN"
+        
+        If result > 0 Then
+            If prefix <> Left$(serialnumber, 7) Then 'If the prefix defined for the GeckoSoft serial number does not match the serial
+                result = 0                            'number stored in the registry, set result = 0
+            End If
+        Else
+            result = 0  ' Serial Number is invalid
+        End If
+    
+    End If
+     '*5*  VALIDATE ACTIVATION example  *
+     If result > 0 Then  ' The serial number is valid, so check whether the local activation works correctly
+     
+        activationresult = esellerate.ValidateActivation("PUB775527079", "ACT979610220", serialnumber)
+        ' PUB775527079 -- Publisher ID
+        ' ACT979610220 -- activation ID used at activation
+        ' serialnumber --  serial number that was activated
+        
+        
+        
+        '*6* ACTIVATE SERIAL NUMBER example *
+        If activationresult <> 0 Then 'If the local activation fails, call ActivateSerialNumber to activate the serial number with the
+            activationresult = esellerate.ActivateSerialNumber("PUB775527079", "ACT979610220", serialnumber, 0)
+            ' PUB775527079 -- Publisher ID
+            ' ACT979610220 -- activation ID used at activation
+            ' serialnumber --  serial number that was activated
+            ' 0 -- Ask to connect if no internet connection
+        End If
+        
+        Select Case activationresult
+           Case -25000 ' unknown activationID
+              result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25000)", vbOKOnly + vbExclamation, "Error")
+           Case -25001 ' unknown serialnumber
+              result = MsgBox("Product activation for GeckoSoft failed. Our server may not have finished processing your order yet. Please recheck your serial number and try again in a few minutes.\n\n(Error = -25001", vbOKOnly + vbExclamation, "Error")
+           Case -25002 ' publisherid/serialnumber mismatch
+              result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25002)", vbOKOnly + vbExclamation, "Error")
+           Case -25003 ' blacklisted serialnumber
+              result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25003)", vbOKOnly + vbExclamation, "Error")
+           Case -25004 ' invalid order
+              result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25004)", vbOKOnly + vbExclamation, "Error")
+           Case -25005 ' activation limit met
+              result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25005", vbOKOnly + vbExclamation, "Error")
+           Case -25009 ' non-unique serial number
+              result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25009", vbOKOnly + vbExclamation, "Error")
+           Case 0 ' Activation was a success, so set GeckoSoft to registered
+              txtVersion.Caption = "VERSION 1.0"
+              txtSerialNumber.Caption = serialnumber
+              txtSerialNumber.Alignment = 2
+              mnuBuy.Visible = False
+              mnuUpdate.Visible = True
+        End Select
+    End If
+
+   Set esellerate = Nothing 'Remember to release memory allocated
+   
+End Sub
+
+Private Sub mnuActivate_Click()
+
+    Dim result
+    Dim esellerate As eSeller
+    Dim serialnumber
+    
+    Set esellerate = CreateObject("eSellerateControl.350") 'Create the eSellerate control
+    serialnumber = GetSetting("GeckoSoft", vbNull, "SerialNumber", "nonreg")
+    result = MsgBox("In this sample application, product activation occurs at purchase and update. So manual activation isn't required. It 's included here simply to illustrate the feature.", vbOKOnly, "Note")
+
+    '*6*  MANUAL ACTIVATION example  */
+    result = esellerate.ManualActivateSerialNumber("PUB775527079", "ACT979610220", serialnumber, "GeckoSoft", "")
+    ' PUB775527079                       -- Publisher ID
+    ' ES963341026                        -- Activation Set ID used at activation
+    ' serialnumber                       -- serial number that was activated
+    ' GeckoSoft                          -- title preface
+    ' ""                                 -- other options, not needed here
+
+   Select Case result
+    Case -3 'The user canceled the manual activation process
+
+    Case -2 'The eSellerate engine was not found
+        MsgBox "The eSellerate Purchase engine was not found!!"
+         
+    Case -1 'The activation of GeckoSoft did not complete successfully.
+         'Do nothing
+         
+    Case -25000 ' unknown activationID
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25000)", vbOKOnly + vbExclamation, "Error")
+    Case -25001 ' unknown serialnumber
+        result = MsgBox("Product activation for GeckoSoft failed. Our server may not have finished processing your order yet. Please recheck your serial number and try again in a few minutes.\n\n(Error = -25001", vbOKOnly + vbExclamation, "Error")
+    Case -25002 ' publisherid/serialnumber mismatch
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25002)", vbOKOnly + vbExclamation, "Error")
+    Case -25003 ' blacklisted serialnumber
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25003)", vbOKOnly + vbExclamation, "Error")
+    Case -25004 ' invalid order
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25004)", vbOKOnly + vbExclamation, "Error")
+    Case -25005 ' activation limit met
+        result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25005", vbOKOnly + vbExclamation, "Error")
+    Case -25009 ' non-unique serial number
+        result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25009", vbOKOnly + vbExclamation, "Error")
+
+    
+    Case 0 'The activation took place successfully
+        txtSerialNumber.Caption = serialnumber                      ' Display the serial number in the GeckoSoft form
+        SaveSetting "GeckoSoft", vbNull, "SerialNumber", serialnumber
+        txtVersion.Caption = "VERSION 1.0"
+        mnuBuy.Visible = False
+        mnuUpdate.Visible = True
+                  
+   End Select
+   
+    
+    Set esellerate = Nothing 'Remember to release memory allocated by Purchase().
+
+
+End Sub
+
+Private Sub mnuBuy_Click()
+
+   Dim esellerate As eSeller
+   Dim result
+   Dim serialcount
+   Dim serialnumber As String
+
+'* 1* PURCHASE example *
+'* Command the Software Delivery Wizard to perform the purchase specified.
+
+   Set esellerate = CreateObject("eSellerateControl.350") 'Create the eSellerate control
+   
+   result = esellerate.Purchase("PUB775527079", "ES963341026", "PC963341026-3870", "http://geckosoft.mindvision.com", "", "", 0, "", "", "", "ACT979610220", "")
+   ' PUB775527079                       -- Publisher ID
+   ' ES963341026                        -- Integrated eSeller RefNum
+   ' PC681431018-4256                   -- Preview Certificate
+   ' http://geckosoft.mindvision.com    -- URL to contact in case of error
+   ' ""                                 -- custom first page title, not needed here
+   ' ""                                 -- custom first page text, not needed here
+   ' 0                                  -- display download folder, not needed
+   ' ""                                 -- Tracking ID, not needed here
+   ' ""                                 -- Affiliate ID, not needed here
+   ' ""                                 -- Coupon ID, not needed here
+   ' ACT979610220                       -- Activation Set ID, to activate serial number
+   ' ""                                 -- extra data, not needed here
+   
+   
+   Select Case result
+    Case -3 'The user canceled the purchase process
+
+    Case -2 'The purchase engine was not found
+        MsgBox "The eSellerate Purchase engine was not found!!"
+         
+    Case -1 'The purchase of GeckoSoft did not complete successfully.
+         'Do nothing
+         
+    Case -25000 ' unknown activationID
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25000)", vbOKOnly + vbExclamation, "Error")
+    Case -25001 ' unknown serialnumber
+        result = MsgBox("Product activation for GeckoSoft failed. Our server may not have finished processing your order yet. Please recheck your serial number and try again in a few minutes.\n\n(Error = -25001", vbOKOnly + vbExclamation, "Error")
+    Case -25002 ' publisherid/serialnumber mismatch
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25002)", vbOKOnly + vbExclamation, "Error")
+    Case -25003 ' blacklisted serialnumber
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25003)", vbOKOnly + vbExclamation, "Error")
+    Case -25004 ' invalid order
+        result = MsgBox("Product activation for GeckoSoft failed. Please contact the makers of Geckosoft for further information.\n\n(Error = -25004)", vbOKOnly + vbExclamation, "Error")
+    Case -25005 ' activation limit met
+        result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25005", vbOKOnly + vbExclamation, "Error")
+    Case -25009 ' non-unique serial number
+        result = MsgBox("Product activation for GeckoSoft failed. GeckoSoft has already been registered on another computer. Please contact the makers of Geckosoft for further information.\n\n(Error = -25009", vbOKOnly + vbExclamation, "Error")
+
+    
+    Case 0 'The purchase took place successfully
+        serialcount = esellerate.GetSerialNumberCount               ' Let serialcount note if serial numbers are retrieved.
+        serialnumber = esellerate.GetSerialNumber(serialcount)      ' Let serialnumber refer to the serial number retrieved
+        txtSerialNumber.Caption = serialnumber                      ' Display the serial number in the GeckoSoft form
+        SaveSetting "GeckoSoft", vbNull, "SerialNumber", serialnumber
+        txtVersion.Caption = "VERSION 1.0"
+        mnuBuy.Visible = False
+        mnuUpdate.Visible = True
+                  
+   End Select
+   
+    
+    Set esellerate = Nothing 'Remember to release memory allocated by Purchase().
+   
+End Sub
+
+Private Sub mnuExit_Click()
+    Unload GeckoSoft
+    'To exit GeckoSoft, we unload the GeckoSoft form so all memory allocated is released
+End Sub
+
+
+Private Sub mnuGecko_Click()
+    Dim message
+    If txtVersion.Caption = "TRIAL VERSION" Then
+       message = MsgBox("GeckoSoft (Trial Version)", vbOKOnly, "About GeckoSoft")
+             
+    Else
+        message = MsgBox("GeckoSoft (Version 1.0)", vbOKOnly, "About GeckoSoft")
+    End If
+End Sub
+
+Private Sub mnuUpdate_Click()
+   Dim esellerate As eSeller
+   Dim result
+   Dim filecount
+   Dim filelocation
+   Dim update
+   Dim myapplication As String
+   Dim sFilePath As String * 255
+
+   '* 2* CHECK FOR UPDATE example *
+   '* Command the Software Delivery Wizard to check the update specified.
+
+   Set esellerate = CreateObject("eSellerateControl.350") 'Create the eSellerate control
+   
+   result = esellerate.CheckForUpdate("PUB775527079", "ES3815278349", "PC303430878-2849", "http://geckosoft.mindvision.com", "", "", 0, "", "", "", "", "")
+   ' PUB775527079                       -- Publisher ID
+   ' ES3815278349                       -- Integrated eSeller RefNum
+   ' PC363524419-3183                   -- Preview Certificate
+   ' http://geckosoft.mindvision.com    -- URL to contact in case of error
+   ' ""                                 -- custom first page title, not needed here
+   ' ""                                 -- custom first page text, not needed here
+   ' 0                                  -- display download folder, not needed
+   ' ""                                 -- Tracking ID, not needed here
+   ' ""                                 -- Affiliate ID, not needed here
+   ' ""                                 -- Coupon ID, not needed here
+   ' ""                                 -- Activation ID, not needed here
+   ' ""                                 -- extra data, not needed here
+   
+ 
+      Select Case result
+      Case -3 'The user canceled the purchase process
+
+      
+      Case -2 'The purchase engine was not found
+         MsgBox "The eSellerate Purchase engine was not found!!"
+         
+      Case -1 'The update of GeckoSoft did not complete successfully.
+         'Do nothing
+    
+      Case 0 'The update took place successfully
+        filecount = esellerate.GetFileLocationCount ' Let filecount note if file locations are retrieved.
+        filelocation = esellerate.GetFileLocation(filecount) 'Let filelocation then refer to those file locations.
+        
+        GetModuleFileName App.hInstance, sFilePath, Len(sFilePath) ' This function will determine the path of the current app
+
+        '* 3* LAUNCH UPDATE example *
+        Unload GeckoSoft 'Since this file being run will now very soon be replaced by its update, execution must be promptly terminated. So any cleaning up that needs doing should be done before LaunchUpdate().
+        update = esellerate.LaunchUpdate(filelocation, sFilePath) 'Here filelocation is the location of the updater file to launch. And sFilePath is the location of this file being run, which the updater will replace.
+        Set esellerate = Nothing 'Remember to release memory allocated
+    End Select
+           
+   Set esellerate = Nothing 'Remember to release memory allocated
+   
+End Sub

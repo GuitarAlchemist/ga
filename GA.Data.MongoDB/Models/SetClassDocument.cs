@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Models;
+namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
 public sealed record SetClassDocument : DocumentBase
@@ -8,6 +8,4 @@ public sealed record SetClassDocument : DocumentBase
     public required int PrimeFormId { get; init; }
     public required bool IsModal { get; init; }
     public string? ModalFamily { get; init; }
-
-    public SetClassDocument() {}
 }

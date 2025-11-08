@@ -6,7 +6,7 @@ window.customElements.define('chat-messages', class ChatMessages extends HTMLEle
 
     connectedCallback() {
         this._observer = new MutationObserver(mutations => this._scheduleAutoScroll(mutations));
-        this._observer.observe(this, { childList: true, attributes: true });
+        this._observer.observe(this, {childList: true, attributes: true});
     }
 
     disconnectedCallback() {
@@ -20,7 +20,7 @@ window.customElements.define('chat-messages', class ChatMessages extends HTMLEle
             const addedUserMessage = mutations.some(m => Array.from(m.addedNodes).some(n => n.parentElement === this && n.classList?.contains('user-message')));
             const elem = this.lastElementChild;
             if (ChatMessages._isFirstAutoScroll || addedUserMessage || this._elemIsNearScrollBoundary(elem, 300)) {
-                elem.scrollIntoView({ behavior: ChatMessages._isFirstAutoScroll ? 'instant' : 'smooth' });
+                elem.scrollIntoView({behavior: ChatMessages._isFirstAutoScroll ? 'instant' : 'smooth'});
                 ChatMessages._isFirstAutoScroll = false;
             }
         });

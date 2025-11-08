@@ -3,14 +3,6 @@
 [PublicAPI]
 public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
 {
-    #region IReadOnlyCollection Members
-    
-    public IEnumerator<T> GetEnumerator() => Value.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count => Value.Count;
-    
-    #endregion
-    
     private readonly Lazy<IReadOnlyCollection<T>> _lazy;
     private readonly string _separator;
 
@@ -19,16 +11,35 @@ public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
         string separator = " ")
     {
         ArgumentNullException.ThrowIfNull(items);
-        
+
         _lazy = new([..items]);
         _separator = separator;
     }
 
     /// <summary>
-    /// Gets the <see cref="IReadOnlyCollection{T}"/>
+    ///     Gets the <see cref="IReadOnlyCollection{T}" />
     /// </summary>
     public IReadOnlyCollection<T> Value => _lazy.Value;
 
 
-    public override string ToString() => string.Join(_separator, Value.Select(item => item?.ToString()));
+    public override string ToString()
+    {
+        return string.Join(_separator, Value.Select(item => item?.ToString()));
+    }
+
+    #region IReadOnlyCollection Members
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        return Value.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public int Count => Value.Count;
+
+    #endregion
 }

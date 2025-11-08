@@ -1,0 +1,1802 @@
+StringInstrumentTechniques:
+  - Name: Bowing Techniques
+    Description: Various methods of bow articulation and expression
+    Category: Bowed Strings
+    ApplicableInstruments:
+      - Violin
+      - Viola
+      - Cello
+      - Double Bass
+      - Violin Family
+    Techniques:
+      - Name: Legato
+        Description: Smooth, connected bow strokes
+        Notation: Slur markings
+        Effect: Flowing, lyrical character
+        Application: Melodic passages, expressive playing
+      - Name: Staccato
+        Description: Short, detached bow strokes
+        Notation: Dots above/below notes
+        Effect: Crisp, articulated character
+        Variations:
+          - Spiccato
+          - Sautillé
+          - Martelé
+      - Name: Tremolo
+        Description: Rapid alternation of bow direction
+        Notation: Multiple beams or 'trem.' marking
+        Effect: Sustained, shimmering sound
+        Applications:
+          - Orchestral effects
+          - Dramatic tension
+      - Name: Sul Ponticello
+        Description: Bowing near the bridge
+        Notation: sul pont.
+        Effect: Glassy, metallic timbre
+        Applications:
+          - Contemporary music
+          - Special effects
+      - Name: Sul Tasto
+        Description: Bowing over the fingerboard
+        Notation: sul tasto
+        Effect: Soft, flute-like timbre
+        Applications:
+          - Impressionistic effects
+          - Gentle passages
+    GuitarEquivalents:
+      - 'Legato: Hammer-ons and pull-offs'
+      - 'Staccato: Palm muting and short notes'
+      - 'Tremolo: Rapid picking or tremolo picking'
+      - 'Sul Ponticello: Playing near the bridge'
+      - 'Sul Tasto: Playing over the sound hole'
+    Id: bowing-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Bowed
+      - Bowing
+      - Strings
+      - Techniques
+      - Various
+      - and
+      - articulation
+      - bow
+      - expression
+      - methods
+      - of
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Bowing Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Left Hand Techniques
+    Description: Fingering and fretting techniques for pitch and expression
+    Category: Universal
+    ApplicableInstruments:
+      - All Stringed Instruments
+    Techniques:
+      - Name: Vibrato
+        Description: Oscillation of pitch for expression
+        Methods:
+          Violin: Finger oscillation on string
+          Guitar: String bending and release
+          Cello: Finger rolling motion
+        Effect: Warmth, expression, pitch animation
+        Variations:
+          - Fast vibrato
+          - Slow vibrato
+          - Wide vibrato
+          - Narrow vibrato
+      - Name: Glissando
+        Description: Sliding between pitches
+        Notation: Wavy line between notes
+        Methods:
+          Violin: Finger sliding on string
+          Guitar: Slide guitar technique, finger sliding
+          Cello: Thumb position sliding
+        Applications:
+          - Expressive passages
+          - Jazz effects
+          - Contemporary music
+      - Name: Harmonics
+        Description: Overtone production techniques
+        Types:
+          - Name: Natural Harmonics
+            Description: Lightly touching string at nodal points
+            CommonNodes:
+              - 12th fret (octave)
+              - 7th fret (fifth)
+              - 5th fret (fourth)
+            Effect: Bell-like, ethereal sound
+          - Name: Artificial Harmonics
+            Description: Stopped note with harmonic touch
+            Technique: Fret with one finger, touch harmonic with another
+            Effect: Higher pitched harmonics
+        Applications:
+          - Classical repertoire
+          - Contemporary effects
+          - Jazz guitar
+      - Name: Double Stops
+        Description: Playing two notes simultaneously
+        Category: Polyphonic
+        Intervals:
+          - Thirds
+          - Sixths
+          - Fourths
+          - Fifths
+          - Octaves
+        Applications:
+          Violin: Classical and folk music
+          Guitar: Chord playing, harmony lines
+          Cello: Baroque and romantic repertoire
+        Challenges:
+          - Intonation
+          - Bow distribution
+          - Finger independence
+    Id: left-hand-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Fingering
+      - Hand
+      - Left
+      - Techniques
+      - Universal
+      - and
+      - expression
+      - for
+      - fretting
+      - pitch
+      - techniques
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Left Hand Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Pizzicato Techniques
+    Description: Plucking string techniques
+    Category: Plucked
+    ApplicableInstruments:
+      - All Stringed Instruments
+    Variations:
+      - Name: Standard Pizzicato
+        Description: Normal finger plucking
+        Notation: pizz.
+        Technique: Index finger plucking
+      - Name: Left Hand Pizzicato
+        Description: Plucking with fretting hand
+        Notation: l.h. pizz. or +
+        Applications:
+          - Rapid alternation with bowed notes
+          - Special effects
+      - Name: Snap Pizzicato
+        Description: Aggressive plucking causing string to snap back
+        Notation: Snap pizz. or circle with line
+        Effect: Percussive, aggressive sound
+        Applications:
+          - Contemporary music
+          - Jazz effects
+      - Name: Fingernail Pizzicato
+        Description: Plucking with fingernail
+        Effect: Brighter, more metallic sound
+        Applications:
+          - Guitar techniques
+          - Special timbral effects
+    GuitarRelations:
+      - Standard pizzicato = normal guitar playing
+      - Left hand pizzicato = hammer-ons and pull-offs
+      - Snap pizzicato = aggressive fingerstyle techniques
+    Id: pizzicato-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Pizzicato
+      - Plucked
+      - Plucking
+      - Techniques
+      - string
+      - techniques
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Pizzicato Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+ExtendedTechniques:
+  - Name: Prepared Strings
+    Description: Altering string timbre with foreign objects
+    Category: Contemporary
+    ApplicableInstruments:
+      - All Stringed Instruments
+    Methods:
+      - Paper or cloth between strings
+      - Clips and clothespins on strings
+      - Rubber or plastic objects
+      - Metal objects for metallic sounds
+    Effects:
+      - Percussive sounds
+      - Altered pitch and timbre
+      - Noise elements
+      - Unique timbral colors
+    Applications:
+      - Contemporary classical music
+      - Experimental music
+      - Sound art and installations
+    Id: prepared-strings
+    Difficulty: Intermediate
+    Tags:
+      - Altering
+      - Contemporary
+      - Prepared
+      - Strings
+      - foreign
+      - objects
+      - string
+      - timbre
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Prepared Strings for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Multiphonics
+    Description: Producing multiple pitches simultaneously
+    Category: Advanced
+    Methods:
+      Violin: Double stops with harmonics
+      Guitar: Artificial harmonics with open strings
+      Cello: Bow pressure variations
+    Applications:
+      - Spectral music
+      - Contemporary classical
+      - Experimental techniques
+    Id: multiphonics
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Multiphonics
+      - Producing
+      - multiple
+      - pitches
+      - simultaneously
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Multiphonics for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Microtonal Techniques
+    Description: Intervals smaller than semitones
+    Category: Contemporary
+    Methods:
+      Violin: Finger placement between standard positions
+      Guitar: String bending, fret modifications
+      Cello: Finger sliding and pressure variations
+    Applications:
+      - Non-Western music
+      - Contemporary classical
+      - Just intonation
+      - Spectral composition
+    Id: microtonal-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Contemporary
+      - Intervals
+      - Microtonal
+      - Techniques
+      - semitones
+      - smaller
+      - than
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Microtonal Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+ViolinSpecific:
+  - Name: Position Playing
+    Description: Different hand positions on fingerboard
+    Positions:
+      - First
+      - Second
+      - Third
+      - Fourth
+      - Fifth
+      - Sixth
+      - Seventh
+    HigherPositions: Thumb position for very high notes
+    Applications: Extended range, different timbres
+    Id: position-playing
+    Difficulty: Intermediate
+    Tags:
+      - Different
+      - Playing
+      - Position
+      - fingerboard
+      - hand
+      - 'on'
+      - positions
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Position Playing for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: String Crossings
+    Description: Bow movement between strings
+    Challenges: Maintaining smooth legato across strings
+    Techniques: Arm and wrist coordination
+    Id: string-crossings
+    Difficulty: Intermediate
+    Tags:
+      - Bow
+      - Crossings
+      - String
+      - between
+      - movement
+      - strings
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of String Crossings for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+CelloSpecific:
+  - Name: Thumb Position
+    Description: Using thumb as moveable nut for high register
+    Range: Above fourth position
+    Technique: Thumb placement behind neck
+    Applications: High register playing, harmonics
+    Id: thumb-position
+    Difficulty: Intermediate
+    Tags:
+      - Position
+      - Thumb
+      - Using
+      - as
+      - behind
+      - for
+      - high
+      - moveable
+      - neck
+      - nut
+      - placement
+      - register
+      - thumb
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Thumb Position for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Wolf Tone Management
+    Description: Dealing with natural resonance conflicts
+    Causes: Body resonance interfering with string vibration
+    Solutions:
+      - Wolf tone eliminators
+      - Technique adjustments
+    Id: wolf-tone-management
+    Difficulty: Intermediate
+    Tags:
+      - Dealing
+      - Management
+      - Tone
+      - Wolf
+      - conflicts
+      - natural
+      - resonance
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Wolf Tone Management for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+GuitarSpecific:
+  - Name: Fingerpicking Techniques
+    Description: Plucking individual strings with fingers for melodic and harmonic content
+    Category: Classical/Fingerstyle
+    BasicTechnique:
+      - Thumb: Bass notes on 6th, 5th, 4th strings
+      - Index: 3rd string primarily
+      - Middle: 2nd string primarily
+      - Ring: 1st string primarily
+      - Pinky: Rarely used, support finger
+    Patterns:
+      - Name: Travis Picking
+        Description: Alternating bass with melody, syncopated rhythm
+        Pattern: Thumb alternates bass notes while fingers play melody
+        Notation: T-i-T-m-T-i-T-m (Thumb-index-Thumb-middle)
+        Applications:
+          - Country
+          - Folk
+          - Blues
+          - Fingerstyle arrangements
+        Examples:
+          - Dust in the Wind - Kansas
+          - Blackbird - Beatles
+        Variations:
+          - 'Forward roll: T-i-m-a'
+          - 'Backward roll: T-a-m-i'
+          - 'Pinch pattern: T+i together, then m-a'
+      - Name: Classical Fingerstyle
+        Description: Formal classical guitar technique with precise finger assignment
+        Characteristics:
+          - Rest stroke (apoyando) for melody
+          - Free stroke (tirando) for arpeggios
+          - Strict finger assignment to strings
+          - Nail technique for tone production
+        Techniques:
+          - 'Arpeggio patterns: p-i-m-a sequences'
+          - Scale passages with i-m alternation
+          - 'Tremolo: p-a-m-i rapid repetition'
+          - 'Rasgueado: flamenco-style strumming with fingers'
+        Applications:
+          - Classical repertoire
+          - Bossa nova
+          - Jazz arrangements
+      - Name: Flamenco Techniques
+        Description: Spanish guitar techniques emphasizing rhythm and percussion
+        Techniques:
+          - Name: Picado
+            Description: Fast single-note runs using i-m alternation
+            Application: Melodic passages, scales, arpeggios
+            Characteristics: Rest stroke technique, strong attack
+          - Name: Rasgueado
+            Description: Rhythmic strumming with individual fingers
+            Patterns:
+              - 'Four-finger rasgueado: a-m-i-p'
+              - 'Three-finger rasgueado: a-m-i'
+              - 'Continuous rasgueado: rolling finger motion'
+            Effect: Percussive, rhythmic emphasis
+          - Name: Alzapúa
+            Description: Thumb technique combining downstrokes and upstrokes
+            Pattern: Thumb down on bass, thumb up on treble strings
+            Application: Rhythmic accompaniment, solo passages
+      - Name: Fingerpicking Arpeggios
+        Description: Broken chord patterns using fingerpicking
+        CommonPatterns:
+          - p-i-m-a-m-i (6-note arpeggio)
+          - p-i-m-i (4-note arpeggio)
+          - p-m-i-m (alternating pattern)
+        Applications:
+          - Ballads
+          - Classical pieces
+          - Contemporary fingerstyle
+        Techniques:
+          - Smooth legato connection
+          - Dynamic control
+          - Tempo variation
+    Id: fingerpicking-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Classical/Fingerstyle
+      - Fingerpicking
+      - Plucking
+      - Techniques
+      - and
+      - content
+      - fingers
+      - for
+      - harmonic
+      - individual
+      - melodic
+      - strings
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Fingerpicking Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Strumming Techniques
+    Description: Rhythmic chord playing using pick or fingers
+    Category: Rhythm Guitar
+    BasicStrumming:
+      - 'Downstroke: Pick moves down across strings'
+      - 'Upstroke: Pick moves up across strings'
+      - 'Combination: Down-up patterns for rhythm'
+    Patterns:
+      - Name: Basic Strumming Patterns
+        Description: Fundamental down-up combinations
+        CommonPatterns:
+          - D-D-U-U-D-U (Folk strum)
+          - D-D-U-D-U (Country strum)
+          - D-U-X-U-D-U (X = muted strum)
+        Notation: D=Down, U=Up, X=Muted
+        Applications:
+          - Pop
+          - Rock
+          - Folk
+          - Country
+      - Name: Muted Strumming
+        Description: Percussive effects using muted strings
+        Techniques:
+          - 'Palm muting: Right hand palm touches strings'
+          - 'Left hand muting: Fretting hand dampens strings'
+          - 'Combination muting: Both hands create percussion'
+        Effects:
+          - Percussive attack
+          - Rhythmic emphasis
+          - Dynamic contrast
+        Applications:
+          - Funk
+          - Reggae
+          - Rock
+          - Pop
+      - Name: Percussive Strumming
+        Description: Using guitar body and strings as percussion
+        Techniques:
+          - 'Body tapping: Hitting guitar body with fingers'
+          - 'String slapping: Slapping strings against fretboard'
+          - 'Thumb percussion: Using thumb for bass drum effect'
+        Applications:
+          - Contemporary fingerstyle
+          - Percussive guitar
+          - Solo arrangements
+        Artists:
+          - Andy McKee
+          - Tommy Emmanuel
+          - Preston Reed
+      - Name: Flamenco Strumming
+        Description: Spanish rhythmic techniques
+        Techniques:
+          - 'Golpe: Tapping guitar body with fingers'
+          - 'Rasgueado strumming: Individual finger strokes'
+          - 'Compás: Complex rhythmic patterns'
+        Rhythms:
+          - Bulerías
+          - Soleá
+          - Alegrías
+          - Tangos
+    Id: strumming-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Guitar
+      - Rhythm
+      - Rhythmic
+      - Strumming
+      - Techniques
+      - chord
+      - fingers
+      - or
+      - pick
+      - playing
+      - using
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Strumming Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Advanced Picking Techniques
+    Description: Sophisticated picking methods for complex passages
+    Category: Lead Guitar
+    Techniques:
+      - Name: Two-Handed Tapping
+        Description: Using both hands to fret notes on the fretboard
+        Pioneers:
+          - Eddie Van Halen
+          - Stanley Jordan
+        Methods:
+          - Right hand tapping with left hand fretting
+          - Both hands tapping independently
+          - 'Polyphonic tapping: Multiple voices'
+        Applications:
+          - Rock solos
+          - Jazz fusion
+          - Contemporary classical
+        Examples:
+          - Eruption - Van Halen
+          - Eleanor Rigby - Stanley Jordan
+      - Name: Hybrid Picking
+        Description: Combining pick and fingers simultaneously
+        Technique: Pick for bass notes, fingers for treble strings
+        Benefits:
+          - Simultaneous bass and melody
+          - Banjo-style rolls
+          - Complex textures
+        Applications:
+          - Country music
+          - Jazz
+          - Fingerstyle fusion
+        Artists:
+          - Danny Gatton
+          - Albert Lee
+          - Brent Mason
+        Patterns:
+          - Pick bass note + finger melody
+          - Alternating pick and finger strokes
+          - 'Chicken picking: Aggressive hybrid technique'
+      - Name: Sweep Picking
+        Description: Single pick motion across multiple strings
+        Theory: Efficient motion for rapid arpeggiated passages
+        Technique: Coordinate pick direction with fretting hand
+        Patterns:
+          - 'Three-string sweeps: Major and minor triads'
+          - 'Five-string sweeps: Extended arpeggios'
+          - 'Six-string sweeps: Full fretboard coverage'
+        Applications:
+          - Neoclassical metal
+          - Jazz fusion
+          - Progressive rock
+        Artists:
+          - Yngwie Malmsteen
+          - Jason Becker
+          - Frank Gambale
+      - Name: Economy Picking
+        Description: Efficient picking following natural hand motion
+        Theory: Minimize pick motion by following directional flow
+        Rules:
+          - 'Same string: Alternate picking'
+          - 'String change in same direction: Continue direction'
+          - 'String change in opposite direction: Change direction'
+        Benefits:
+          - Increased speed
+          - Reduced tension
+          - Smoother passages
+        Applications:
+          - Fast scalar passages
+          - Complex arpeggios
+          - Modern fusion
+    Id: advanced-picking-techniques
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Guitar
+      - Lead
+      - Picking
+      - Sophisticated
+      - Techniques
+      - complex
+      - for
+      - methods
+      - passages
+      - picking
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Advanced Picking Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Specialized Guitar Techniques
+    Description: Unique approaches and extended techniques
+    Category: Extended Techniques
+    Techniques:
+      - Name: Slide Guitar
+        Description: Using slide or bottleneck for pitch bending
+        Equipment:
+          - Glass slide
+          - Metal slide
+          - Ceramic slide
+        Tunings:
+          - Open D
+          - Open G
+          - Open E
+          - Vestapol
+        Techniques:
+          - 'Vibrato: Slide movement for expression'
+          - 'Intonation: Precise slide placement'
+          - 'Muting: Controlling unwanted string noise'
+          - 'Harmonics: Slide harmonics at fret positions'
+        Applications:
+          - Blues
+          - Country
+          - Hawaiian
+          - Rock
+        Artists:
+          - Robert Johnson
+          - Duane Allman
+          - Bonnie Raitt
+      - Name: Bottleneck Playing
+        Description: Traditional slide technique using glass bottleneck
+        History: Originated in Delta blues tradition
+        Characteristics:
+          - Open tunings for chord access
+          - Slide worn on pinky or ring finger
+          - Emphasis on vocal-like expression
+        Techniques:
+          - Slide vibrato
+          - Harmonic overtones
+          - String bending behind slide
+      - Name: Prepared Guitar
+        Description: Altering guitar timbre with foreign objects
+        Methods:
+          - 'Objects between strings: Paper, rubber, metal'
+          - 'Clips and clamps: Altering string tension'
+          - 'Extended techniques: Bowing, percussion'
+        Effects:
+          - Percussive sounds
+          - Altered pitch
+          - Timbral variations
+        Applications:
+          - Contemporary classical
+          - Experimental music
+          - Sound art
+        Composers:
+          - John Cage
+          - Helmut Lachenmann
+          - Hans Werner Henze
+    Id: specialized-guitar-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Extended
+      - Guitar
+      - Specialized
+      - Techniques
+      - Unique
+      - and
+      - approaches
+      - extended
+      - techniques
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Specialized Guitar Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Alternate Tunings
+    Description: Non-standard string tunings
+    CommonTunings:
+      - 'Drop D: D-A-D-G-B-E'
+      - 'Open G: D-G-D-G-B-D'
+      - 'DADGAD: D-A-D-G-A-D'
+    Applications:
+      - Folk music
+      - Fingerstyle
+      - Slide guitar
+    Id: alternate-tunings
+    Difficulty: Intermediate
+    Tags:
+      - Alternate
+      - Non-standard
+      - Tunings
+      - string
+      - tunings
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Alternate Tunings for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Capo Techniques
+    Description: Moveable nut for transposition
+    Types:
+      - Full capo
+      - Partial capo
+      - Multiple capos
+    Applications:
+      - Key changes
+      - Open string effects
+      - Drone techniques
+    Id: capo-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Capo
+      - Moveable
+      - Techniques
+      - for
+      - nut
+      - transposition
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Capo Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+GuitarPickingMechanics:
+  - Name: Pick Selection and Technique
+    Description: Choosing and using picks for different styles
+    Category: Fundamental
+    PickTypes:
+      - Name: Thin Picks (0.46-0.60mm)
+        Applications:
+          - Strumming
+          - Rhythm guitar
+          - Light fingerpicking
+        Characteristics: Flexible, bright tone, easy strumming
+      - Name: Medium Picks (0.60-0.80mm)
+        Applications:
+          - General playing
+          - Moderate lead work
+          - Versatile use
+        Characteristics: Balanced flexibility and control
+      - Name: Heavy Picks (0.80mm+)
+        Applications:
+          - Lead guitar
+          - Precise picking
+          - Jazz
+          - Metal
+        Characteristics: Rigid control, defined attack, less string noise
+    PickingMotion:
+      - 'Wrist motion: Primary movement for most techniques'
+      - 'Forearm motion: For powerful strumming and sweeps'
+      - 'Finger motion: Fine control for tremolo and speed'
+      - 'Combination motion: Coordinated movement for complex passages'
+    Id: pick-selection-and-technique
+    Difficulty: Intermediate
+    Tags:
+      - Choosing
+      - Fundamental
+      - Pick
+      - Selection
+      - Technique
+      - and
+      - different
+      - for
+      - picks
+      - styles
+      - using
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Pick Selection and Technique for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Alternate Picking Fundamentals
+    Description: Systematic down-up picking for scales and melodies
+    Category: Essential Technique
+    Theory: Consistent down-up motion regardless of string changes
+    Benefits:
+      - Rhythmic precision
+      - Speed development
+      - Clean articulation
+    Practice:
+      - Start slowly with metronome
+      - Maintain consistent pick depth
+      - Focus on smooth string transitions
+      - Build speed gradually
+    Applications:
+      - Scalar passages
+      - Melodic lines
+      - Rhythmic patterns
+    Challenges:
+      - String skipping
+      - Fast tempos
+      - Complex rhythms
+    Id: alternate-picking-fundamentals
+    Difficulty: Intermediate
+    Tags:
+      - Alternate
+      - Essential
+      - Fundamentals
+      - Picking
+      - Systematic
+      - Technique
+      - and
+      - down-up
+      - for
+      - melodies
+      - picking
+      - scales
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Directional Picking Strategies
+    Description: Strategic pick direction for musical phrases
+    Category: Advanced
+    Concepts:
+      - 'Downbeat emphasis: Strong beats on downstrokes'
+      - 'Phrase shaping: Pick direction supports musical line'
+      - 'Accent placement: Downstrokes for accented notes'
+    Applications:
+      - Musical phrasing
+      - Dynamic control
+      - Stylistic playing
+    Id: directional-picking-strategies
+    Difficulty: Advanced
+    Tags:
+      - Advanced
+      - Directional
+      - Picking
+      - Strategic
+      - Strategies
+      - direction
+      - for
+      - musical
+      - phrases
+      - pick
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Directional Picking Strategies for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: String Muting Techniques
+    Description: Controlling unwanted string noise
+    Category: Essential
+    Methods:
+      - 'Right hand palm muting: Controlling bass strings'
+      - 'Left hand muting: Unused strings dampened by fretting hand'
+      - 'Pick-hand finger muting: Fingers control adjacent strings'
+    Applications:
+      - Clean lead playing
+      - Rhythm guitar
+      - Recording techniques
+    Id: string-muting-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Controlling
+      - Essential
+      - Muting
+      - String
+      - Techniques
+      - noise
+      - string
+      - unwanted
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of String Muting Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+UniversalTechniques:
+  - Name: Drone Techniques
+    Description: Sustained notes as harmonic foundation
+    Methods:
+      Violin: Open string drones with melody on other strings
+      Guitar: Open string drones with fretted notes
+      Cello: Low string drones with upper register melody
+    Applications:
+      - Folk music
+      - Modal music
+      - Contemporary effects
+    Id: drone-techniques
+    Difficulty: Intermediate
+    Tags:
+      - Drone
+      - Sustained
+      - Techniques
+      - as
+      - foundation
+      - harmonic
+      - notes
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Drone Techniques for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Sympathetic Resonance
+    Description: Using unstruck strings for resonance
+    Technique: Open strings resonate with played notes
+    Applications:
+      - Richer harmonic content
+      - Sustained effects
+    Instruments:
+      - Sitar
+      - Hardanger fiddle
+      - Guitar with open strings
+    Id: sympathetic-resonance
+    Difficulty: Intermediate
+    Tags:
+      - Open
+      - Resonance
+      - Sympathetic
+      - Using
+      - for
+      - notes
+      - played
+      - resonance
+      - resonate
+      - strings
+      - unstruck
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Sympathetic Resonance for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Scordatura
+    Description: Non-standard tuning of strings
+    Purposes:
+      - Extended range
+      - Easier fingerings
+      - Special effects
+    Examples:
+      Violin: Bach's Fifth Partita (G string tuned up)
+      Guitar: Various alternate tunings
+      Cello: Kodály Solo Sonata (C string tuned down)
+    Id: scordatura
+    Difficulty: Intermediate
+    Tags:
+      - Non-standard
+      - Scordatura
+      - of
+      - strings
+      - tuning
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Scordatura for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+PerformanceTechniques:
+  - Name: Ensemble Playing
+    Description: Techniques for playing with others
+    Skills:
+      - Listening and blending
+      - Rhythmic precision
+      - Intonation matching
+      - Dynamic balance
+    Applications:
+      - Chamber music
+      - Orchestra
+      - Guitar ensembles
+    Id: ensemble-playing
+    Difficulty: Intermediate
+    Tags:
+      - Ensemble
+      - Playing
+      - Techniques
+      - for
+      - others
+      - playing
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Ensemble Playing for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Solo Performance
+    Description: Techniques for unaccompanied playing
+    Challenges:
+      - Maintaining interest without accompaniment
+      - Creating harmonic implications
+      - Dynamic and timbral variety
+    Repertoire:
+      - Bach unaccompanied works
+      - Solo guitar literature
+    Id: solo-performance
+    Difficulty: Intermediate
+    Tags:
+      - Performance
+      - Solo
+      - Techniques
+      - for
+      - playing
+      - unaccompanied
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Solo Performance for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Improvisation
+    Description: Spontaneous musical creation
+    Styles:
+      - Jazz
+      - Folk
+      - Classical cadenzas
+      - Contemporary
+    Skills:
+      - Scale and chord knowledge
+      - Motivic development
+      - Rhythmic variety
+      - Stylistic awareness
+    Id: improvisation
+    Difficulty: Intermediate
+    Tags:
+      - Improvisation
+      - Spontaneous
+      - creation
+      - musical
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Improvisation for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+TechnicalDevelopment:
+  - Name: Scale Practice
+    Description: Systematic scale study for technique
+    Types:
+      - Major
+      - Minor
+      - Chromatic
+      - Modal
+      - Exotic
+    Benefits:
+      - Finger independence
+      - Intonation
+      - Bow technique
+    Id: scale-practice
+    Difficulty: Intermediate
+    Tags:
+      - Practice
+      - Scale
+      - Systematic
+      - for
+      - scale
+      - study
+      - technique
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Scale Practice for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Etude Study
+    Description: Technical studies for specific skills
+    Categories:
+      - Bowing
+      - Left hand
+      - Intonation
+      - Rhythm
+    Composers:
+      - Kreutzer
+      - Rode
+      - Dont
+      - Sor
+      - Villa-Lobos
+    Id: etude-study
+    Difficulty: Intermediate
+    Tags:
+      - Etude
+      - Study
+      - Technical
+      - for
+      - skills
+      - specific
+      - studies
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Etude Study for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Repertoire Integration
+    Description: Applying techniques in musical context
+    Approach: Learning techniques through repertoire
+    Benefits:
+      - Musical application
+      - Contextual understanding
+    Id: repertoire-integration
+    Difficulty: Intermediate
+    Tags:
+      - Applying
+      - Integration
+      - Repertoire
+      - context
+      - in
+      - musical
+      - techniques
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Repertoire Integration for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+HistoricalDevelopment:
+  Baroque:
+    Characteristics: Ornamentation, figured bass, dance forms
+    Techniques:
+      - Basic bowing
+      - Simple positions
+      - Continuo playing
+  Classical:
+    Characteristics: Clarity, balance, formal structures
+    Techniques:
+      - Refined bowing
+      - Extended positions
+      - Classical forms
+  Romantic:
+    Characteristics: Expression, virtuosity, programmatic music
+    Techniques:
+      - Advanced bowing
+      - High positions
+      - Expressive techniques
+  Contemporary:
+    Characteristics: Extended techniques, new notation, experimental sounds
+    Techniques:
+      - Prepared instruments
+      - Multiphonics
+      - Electronic integration
+TeachingMethods:
+  - Name: Traditional Method
+    Description: Classical approach with systematic progression
+    Sequence:
+      - Basic technique
+      - Simple pieces
+      - Progressive difficulty
+    Id: traditional-method
+    Difficulty: Intermediate
+    Tags:
+      - Classical
+      - Method
+      - Traditional
+      - approach
+      - progression
+      - systematic
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Traditional Method for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Suzuki Method
+    Description: Learning by ear with parental involvement
+    Principles:
+      - Mother tongue approach
+      - Repetition
+      - Group learning
+    Id: suzuki-method
+    Difficulty: Intermediate
+    Tags:
+      - Learning
+      - Method
+      - Suzuki
+      - by
+      - ear
+      - involvement
+      - parental
+      - with
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Suzuki Method for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+  - Name: Contemporary Approach
+    Description: Integration of traditional and modern techniques
+    Features:
+      - Extended techniques
+      - Improvisation
+      - Technology integration
+    Id: contemporary-approach
+    Difficulty: Intermediate
+    Tags:
+      - Approach
+      - Contemporary
+      - Integration
+      - and
+      - modern
+      - of
+      - techniques
+      - traditional
+    Practice:
+      - Start slow with a metronome (♩=60), then increase by +5 BPM increments.
+      - Isolate the core mechanic of Contemporary Approach for 2–5 minute loops.
+      - Record once per day; review articulation, timing, and noise control.
+      - Apply over a ii–V–I in two keys and in one real song this week.
+    Examples:
+      - Key: C
+        TempoBPM: 90
+        Meter: 4/4
+        Notes: Apply concept over Cmaj7 | Dm7 G7 | Cmaj7.
+      - Key: E
+        TempoBPM: 100
+        Meter: 4/4
+        Notes: Apply concept over E minor vamp or E Mixolydian groove.
+    QualityChecks:
+      - Timing within ±10 ms (tap-to-click test).
+      - Noise control on adjacent strings (mute plan).
+      - Consistent tone across positions/patterns.
+      - Playable fingerings at two positions on the neck/keyboard.
+    Metrics:
+      TargetBPM: 120
+      CleanReps: 10
+      DailyMinutes: 12
+Metadata:
+  Source: embedded
+  LastUpdated: '2025-11-01'
+  Version: '1.1'

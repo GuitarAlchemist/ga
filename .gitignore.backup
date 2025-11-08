@@ -1,0 +1,20 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.suo
+*.user
+_ReSharper.*
+.vs
+bin
+obj
+packages
+/nuget
+/.idea
+/.vscode
+/Experiments/Vite/node_modules
+/Experiments/Vite/package-lock.json
+
+.fake
+/Experiments/React/.idea
+/Experiments/React/node_modules

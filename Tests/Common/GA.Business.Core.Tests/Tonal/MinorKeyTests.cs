@@ -18,10 +18,13 @@ public class MinorKeyTests
     [TestCase("G#", new[] { "G#", "A#", "B", "C#", "D#", "E", "F#" })]
     [TestCase("D#", new[] { "D#", "E#", "F#", "G#", "A#", "B", "C#" })]
     [TestCase("A#", new[] { "A#", "B#", "C#", "D#", "E#", "F#", "G#" })]
-    
     public void MinorKey_GetNotes_ReturnsCorrectSequenceOfNotes(string minorKeyRoot, string[] expectedKeyNotes)
     {
-        if (!Key.Minor.TryParse(minorKeyRoot, out var minorKey)) throw new InvalidOperationException();
+        if (!Key.Minor.TryParse(minorKeyRoot, out var minorKey))
+        {
+            throw new InvalidOperationException();
+        }
+
         var actualNotes = minorKey.Notes.Select(note => note.ToString()).ToArray();
 
         Assert.That(expectedKeyNotes, Is.EqualTo(actualNotes));

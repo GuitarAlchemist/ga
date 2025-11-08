@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BSP Terrain Demo - Guitar Alchemist</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a0f0a 0%, #2a1510 100%);
+      color: #fff;
+      overflow: hidden;
+    }
+    
+    #root {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid #ff9900;
+    }
+    
+    .header h1 {
+      font-size: 2em;
+      color: #ff9900;
+      text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+    }
+    
+    .header p {
+      margin-top: 10px;
+      color: #ccc;
+      font-size: 1.1em;
+    }
+    
+    .demo-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .info-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #ff9900;
+      max-width: 400px;
+      z-index: 100;
+    }
+    
+    .info-overlay h2 {
+      color: #ff9900;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+    }
+    
+    .info-overlay ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .info-overlay li {
+      margin: 10px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .info-overlay li:before {
+      content: "🏔️";
+      position: absolute;
+      left: 0;
+    }
+    
+    .terrain-features {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ff9900;
+    }
+    
+    .terrain-features h3 {
+      color: #ff9900;
+      margin-bottom: 10px;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 0.95em;
+    }
+    
+    .feature-icon {
+      margin-right: 10px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="header">
+      <h1>🏔️ BSP DOOM Explorer - Terrain Visualization</h1>
+      <p>Harmonic Landscape: Musical Complexity as Terrain Height</p>
+    </div>
+    
+    <div class="demo-container">
+      <div class="info-overlay">
+        <h2>Terrain Features</h2>
+        <ul>
+          <li><strong>Hills:</strong> Complex/dissonant chords</li>
+          <li><strong>Valleys:</strong> Simple/consonant chords</li>
+          <li><strong>Plains:</strong> Neutral harmonic areas</li>
+          <li><strong>Variation:</strong> Natural Perlin-like noise</li>
+        </ul>
+        
+        <div class="terrain-features">
+          <h3>Material Progression</h3>
+          <div class="feature-item">
+            <span class="feature-icon">⬛</span>
+            <span>Floor 0-1: Dark Obsidian Stone</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🟫</span>
+            <span>Floor 2-3: Anodized Bronze/Copper</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🟨</span>
+            <span>Floor 4-5: Polished Gold/Brass</span>
+          </div>
+        </div>
+        
+        <div class="terrain-features">
+          <h3>Controls</h3>
+          <div class="feature-item">
+            <span class="feature-icon">🖱️</span>
+            <span>Mouse Wheel: Change Floors</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">⌨️</span>
+            <span>WASD: Navigate Terrain</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">👁️</span>
+            <span>Mouse: Look Around</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- BSP DOOM Explorer will be mounted here -->
+      <div id="bsp-explorer"></div>
+    </div>
+  </div>
+  
+  <script type="module">
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { BSPDoomExplorer } from '../src/components/BSP/BSPDoomExplorer';
+    
+    const root = ReactDOM.createRoot(document.getElementById('bsp-explorer'));
+    root.render(
+      React.createElement(BSPDoomExplorer, {
+        width: window.innerWidth,
+        height: window.innerHeight - 100,
+        showHUD: true,
+        showMinimap: true,
+        moveSpeed: 5.0,
+        lookSpeed: 0.002
+      })
+    );
+  </script>
+</body>
+</html>
+

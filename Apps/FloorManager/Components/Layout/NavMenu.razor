@@ -1,0 +1,76 @@
+﻿<div class="nav-header">
+    <div class="nav-brand">
+        <span class="brand-icon">🏰</span>
+        <span class="brand-text">Floor Manager</span>
+    </div>
+</div>
+
+<div class="nav-menu-dark">
+    <NavLink class="nav-link-dark" href="" Match="NavLinkMatch.All">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">Home</span>
+    </NavLink>
+
+    <NavLink class="nav-link-dark" href="floors">
+        <span class="nav-icon">🏰</span>
+        <span class="nav-text">Floor Viewer</span>
+    </NavLink>
+</div>
+
+<style>
+    .nav-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 16px;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .brand-icon {
+        font-size: 1.5rem;
+    }
+
+    .nav-menu-dark {
+        padding: 16px 8px;
+    }
+
+    .nav-link-dark {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        color: #a0a0c0;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 1rem;
+    }
+
+    .nav-link-dark:hover {
+        background: #2a2a4a;
+        color: white;
+        transform: translateX(4px);
+    }
+
+    .nav-link-dark.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .nav-icon {
+        font-size: 1.3rem;
+    }
+
+    .nav-text {
+        font-weight: 500;
+    }
+</style>

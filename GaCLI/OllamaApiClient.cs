@@ -19,7 +19,7 @@ public class OllamaApiClient(HttpClient httpClient)
             if (response == null)
             {
                 Console.WriteLine("API response was null.");
-                return ImmutableList<string>.Empty;
+                return [];
             }
 
             return response.Models.Select(m => m.Name).ToImmutableList();

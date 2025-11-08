@@ -1,13 +1,13 @@
-﻿using GA.Data.MongoDB.Services;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace GA.Data.MongoDB.Extensions;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Services;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddMongoDb(this IServiceCollection services, Action<MongoDbConfig> configureOptions)
+    public static IServiceCollection AddMongoDb(this IServiceCollection services,
+        Action<MongoDbConfig> configureOptions)
     {
         services.Configure(configureOptions);
 
@@ -33,12 +33,13 @@ public static class ServiceCollectionExtensions
     {
         // Get all types from the assembly containing ISyncService
         var assembly = typeof(ISyncService).Assembly;
-        
+
         // Find all non-abstract classes that implement ISyncService
         var syncServiceTypes = assembly.GetTypes()
-            .Where(t => t.IsClass 
-                && !t.IsAbstract 
-                && t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISyncService<>)));
+            .Where(t => t.IsClass
+                        && !t.IsAbstract
+                        && t.GetInterfaces().Any(i =>
+                            i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISyncService<>)));
 
         // Register each implementation
         foreach (var serviceType in syncServiceTypes)

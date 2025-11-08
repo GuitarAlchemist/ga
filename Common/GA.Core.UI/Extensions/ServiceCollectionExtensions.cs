@@ -1,7 +1,7 @@
-﻿using GA.Core.UI.Components.Grids;
-using Microsoft.Extensions.DependencyInjection;
+﻿namespace GA.Core.UI.Extensions;
 
-namespace GA.Core.UI.Extensions;
+using Components.Grids;
+using Microsoft.Extensions.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
@@ -10,4 +10,3 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AgGridTabularDataLoader>();
     }
 }
-

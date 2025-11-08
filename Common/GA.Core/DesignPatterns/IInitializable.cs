@@ -1,7 +1,7 @@
 ﻿namespace GA.Core.DesignPatterns;
 
 /// <summary>
-/// Initializable object abstraction (With inits).
+///     Initializable object abstraction (With inits).
 /// </summary>
 public interface IInitializable<in TInits>
 {
@@ -9,7 +9,7 @@ public interface IInitializable<in TInits>
 }
 
 /// <summary>
-/// Initializable object abstraction (No inits).
+///     Initializable object abstraction (No inits).
 /// </summary>
 public interface IInitializable
 {

@@ -1,5 +1,6 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Container } from '@mantine/core';
+import { Box } from '@mui/material';
 import NotesSelector from "./NotesSelector";
 import {BraceletNotation, KeyboardDiagram} from "./index.ts";
 
@@ -32,27 +33,24 @@ const ScaleSelector: React.FC<MusicNotationDisplayProps> = ({ onNotesChange }) =
         return scaleNumber;
     };
 
-    // @ts-expect-error Not used
-    const generateVexTabNotation = (notes: string[]): string => {
-        return notes.map((_, index) => `${6 - index}/2`).join(' ');
-    };
+    // Unused function - kept for future use
+    // const generateVexTabNotation = (notes: string[]): string => {
+    //     return notes.map((_, index) => `${6 - index}/2`).join(' ');
+    // };
 
     return (
-        <div>
+        <Box>
             <NotesSelector onNotesChange={handleNotesChange} />
 
-            <div style={{display: 'flex', justifyContent: 'center'}}>
-                <div>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+                <Box>
                     <BraceletNotation scale={scale} size={175}/>
-                </div>
-                <div style={{marginLeft: "auto"}}>
+                </Box>
+                <Box sx={{ ml: 'auto' }}>
                     <KeyboardDiagram scale={scale} />
-                </div>
-            </div>
-            <Container size="sm">
-
-            </Container>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 };
 

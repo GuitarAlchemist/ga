@@ -4,11 +4,20 @@ using Atonal.Primitives;
 
 public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScaleNameById())
 {
-    public static bool IsValidScaleNumber(PitchClassSetId id) => Instance.Dictionary.ContainsKey(id);
+    public static bool IsValidScaleNumber(PitchClassSetId id)
+    {
+        return Instance.Dictionary.ContainsKey(id);
+    }
+
     public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+
     public static string Get(PitchClassSetId id)
     {
-        if (!IsValidScaleNumber(id)) return string.Empty;
+        if (!IsValidScaleNumber(id))
+        {
+            return string.Empty;
+        }
+
         return Instance[id];
     }
 
@@ -27,7 +36,7 @@ public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScale
             [1709] = "Dorian",
             [1717] = "Mixolydian",
             [2741] = "Major",
-            [2773] = "Lydian",
+            [2773] = "Lydian"
         };
         // ReSharper restore StringLiteralTypo
 

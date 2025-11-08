@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Models;
+namespace GA.Data.MongoDB.Models;
 
 using Rag;
 
@@ -19,8 +19,6 @@ public sealed record ScaleDocument : RagDocumentBase
     public string? Description { get; init; }
     public string? Usage { get; init; }
     public List<string> Tags { get; init; } = [];
-
-    public ScaleDocument() {}
 
     public override void GenerateSearchText()
     {

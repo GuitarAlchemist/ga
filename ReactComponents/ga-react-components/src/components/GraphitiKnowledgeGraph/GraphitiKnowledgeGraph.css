@@ -1,0 +1,231 @@
+.graphiti-knowledge-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.graph-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.graph-controls button {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.graph-controls button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.graph-controls button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.selected-node-info {
+  padding: 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+.selected-node-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.selected-node-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.knowledge-graph-svg {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+}
+
+.knowledge-graph-svg:active {
+  cursor: grabbing;
+}
+
+/* Node Styles */
+.node {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.node:hover {
+  transform: scale(1.1);
+}
+
+.node-user {
+  fill: #007bff;
+  stroke: #0056b3;
+  stroke-width: 3px;
+}
+
+.node-chord {
+  fill: #28a745;
+  stroke: #1e7e34;
+  stroke-width: 2px;
+}
+
+.node-scale {
+  fill: #ffc107;
+  stroke: #e0a800;
+  stroke-width: 2px;
+}
+
+.node-session {
+  fill: #6f42c1;
+  stroke: #5a32a3;
+  stroke-width: 2px;
+}
+
+.node-progression {
+  fill: #fd7e14;
+  stroke: #e8590c;
+  stroke-width: 2px;
+}
+
+.node-label {
+  fill: #333;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Link Styles */
+.links line {
+  stroke-opacity: 0.6;
+  cursor: pointer;
+  transition: stroke-opacity 0.2s;
+}
+
+.links line:hover {
+  stroke-opacity: 1;
+}
+
+.link-learned {
+  stroke: #28a745;
+}
+
+.link-practiced {
+  stroke: #007bff;
+}
+
+.link-progression {
+  stroke: #fd7e14;
+}
+
+.link-related {
+  stroke: #6c757d;
+  stroke-dasharray: 5,5;
+}
+
+/* Legend */
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+
+.legend-color.node-user {
+  background: #007bff;
+  border-color: #0056b3;
+}
+
+.legend-color.node-chord {
+  background: #28a745;
+  border-color: #1e7e34;
+}
+
+.legend-color.node-scale {
+  background: #ffc107;
+  border-color: #e0a800;
+}
+
+.legend-color.node-session {
+  background: #6f42c1;
+  border-color: #5a32a3;
+}
+
+.legend-color.node-progression {
+  background: #fd7e14;
+  border-color: #e8590c;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .graphiti-knowledge-graph {
+    padding: 0.5rem;
+  }
+  
+  .graph-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .selected-node-info {
+    order: -1;
+  }
+  
+  .graph-legend {
+    justify-content: center;
+  }
+  
+  .legend-item {
+    font-size: 0.8rem;
+  }
+}
+
+/* Animation for loading state */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.graph-controls button:disabled {
+  animation: pulse 1.5s infinite;
+}

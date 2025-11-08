@@ -1,0 +1,60 @@
+﻿#!/usr/bin/env pwsh
+<#
+.SYNOPSIS
+    Pre-commit hook for Guitar Alchemist
+    
+.DESCRIPTION
+    Runs before each commit to ensure code quality:
+    - Checks code formatting (dotnet format)
+    - Runs quick build
+    - Optionally runs quick tests
+#>
+
+Write-Host "`n🎸 Guitar Alchemist - Pre-commit Hook" -ForegroundColor Cyan
+Write-Host "========================================`n" -ForegroundColor Cyan
+
+$ErrorActionPreference = "Continue"
+$script:HasErrors = $false
+
+# ============================================
+# CHECK CODE FORMATTING
+# ============================================
+Write-Host "▶ Checking code formatting..." -ForegroundColor Blue
+
+$formatCheck = dotnet format AllProjects.sln --verify-no-changes --verbosity quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "✗ Code formatting issues found!" -ForegroundColor Red
+    Write-Host "  Run: dotnet format AllProjects.sln" -ForegroundColor Yellow
+    $script:HasErrors = $true
+} else {
+    Write-Host "✓ Code formatting is correct" -ForegroundColor Green
+}
+
+# ============================================
+# BUILD CHECK
+# ============================================
+Write-Host "`n▶ Running quick build..." -ForegroundColor Blue
+
+$buildOutput = dotnet build AllProjects.sln --no-restore --nologo -v quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "✗ Build failed!" -ForegroundColor Red
+    Write-Host $buildOutput
+    $script:HasErrors = $true
+} else {
+    Write-Host "✓ Build succeeded" -ForegroundColor Green
+}
+
+# ============================================
+# RESULT
+# ============================================
+Write-Host "`n========================================" -ForegroundColor Cyan
+
+if ($script:HasErrors) {
+    Write-Host "✗ Pre-commit checks failed!" -ForegroundColor Red
+    Write-Host "  Fix the issues above before committing.`n" -ForegroundColor Yellow
+    exit 1
+} else {
+    Write-Host "✓ All pre-commit checks passed!`n" -ForegroundColor Green
+    exit 0
+}
+

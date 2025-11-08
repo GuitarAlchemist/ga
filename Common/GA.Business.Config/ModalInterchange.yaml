@@ -1,0 +1,1549 @@
+ModalInterchange:
+  - Name: Borrowed Chords from Parallel Minor
+    Description: Using chords from the parallel minor key in a major key context
+    SourceMode: Natural Minor
+    TargetMode: Major
+    Theory: Creates darker, more complex harmonic colors in major keys
+    CommonBorrowedChords:
+      - Chord: bVI
+        RomanNumeral: bVI
+        InKeyOfC: Ab major
+        Function: Subdominant substitute
+        VoiceLeading: Smooth voice leading from vi
+        Examples:
+          - Something - Beatles
+          - Creep - Radiohead
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: bVII
+        RomanNumeral: bVII
+        InKeyOfC: Bb major
+        Function: Subtonic, modal dominant substitute
+        VoiceLeading: Strong resolution to I
+        Examples:
+          - Hey Jude - Beatles
+          - Don't Stop Believin' - Journey
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: iv
+        RomanNumeral: iv
+        InKeyOfC: F minor
+        Function: Minor subdominant
+        VoiceLeading: Plagal cadence to I
+        Examples:
+          - Yesterday - Beatles
+          - The Sound of Silence - Simon & Garfunkel
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: ii°
+        RomanNumeral: ii°
+        InKeyOfC: D diminished
+        Function: Predominant with stronger pull to V
+        VoiceLeading: Leading tone motion
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    GuitarApplications:
+      - Technique: Power chord progressions with borrowed chords
+        Example: I - bVII - IV - I (C - Bb - F - C)
+        Fretboard: Open position and barre chords
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Technique: Fingerpicking patterns with modal mixture
+        Example: Alternating between major and minor iv
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Borrowed Chords from Parallel Major
+    Description: Using chords from the parallel major key in a minor key context
+    SourceMode: Major
+    TargetMode: Natural Minor
+    Theory: Brightens minor keys with major chord qualities
+    CommonBorrowedChords:
+      - Chord: VI
+        RomanNumeral: VI
+        InKeyOfAm: F major
+        Function: Major submediant
+        Effect: Brightening, uplifting
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: VII
+        RomanNumeral: VII
+        InKeyOfAm: G major
+        Function: Major subtonic
+        Effect: Strong leading tone to i
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: III
+        RomanNumeral: III
+        InKeyOfAm: C major
+        Function: Major mediant
+        Effect: Relative major brightness
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Dorian Interchange
+    Description: Borrowing the natural 6th degree from Dorian mode
+    SourceMode: Dorian
+    TargetMode: Natural Minor
+    Theory: The raised 6th creates a brighter minor sound
+    CharacteristicChords:
+      - Chord: IV
+        RomanNumeral: IV
+        InKeyOfAm: D major
+        Function: Major subdominant in minor
+        Effect: Dorian brightness
+        Examples:
+          - Scarborough Fair
+          - Eleanor Rigby - Beatles
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: ii
+        RomanNumeral: ii
+        InKeyOfAm: B minor
+        Function: Minor supertonic
+        Effect: Natural minor ii instead of diminished
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    GuitarTechniques:
+      - Open string drones with Dorian melodies
+      - Celtic fingerpicking patterns
+      - Modal rock progressions
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Phrygian Interchange
+    Description: Borrowing the flat 2nd degree from Phrygian mode
+    SourceMode: Phrygian
+    TargetMode: Natural Minor
+    Theory: The flat 2nd creates exotic, Spanish/Middle Eastern colors
+    CharacteristicChords:
+      - Chord: bII
+        RomanNumeral: bII
+        InKeyOfAm: Bb major
+        Function: Neapolitan substitute
+        Effect: Exotic, dark
+        Examples:
+          - Flamenco progressions
+          - Metal progressions
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: bii°
+        RomanNumeral: bii°
+        InKeyOfAm: Bb diminished
+        Function: Chromatic predominant
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    Applications:
+      - Flamenco guitar techniques
+      - Metal and progressive rock
+      - Film scoring for exotic locations
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Mixolydian Interchange
+    Description: Borrowing the flat 7th degree from Mixolydian mode
+    SourceMode: Mixolydian
+    TargetMode: Major
+    Theory: The flat 7th creates a bluesy, rock-oriented sound
+    CharacteristicChords:
+      - Chord: bVII
+        RomanNumeral: bVII
+        InKeyOfC: Bb major
+        Function: Subtonic, modal dominant
+        Effect: Rock, blues feeling
+        Examples:
+          - Born to Be Wild - Steppenwolf
+          - Gloria - Them
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Chord: v
+        RomanNumeral: v
+        InKeyOfC: G minor
+        Function: Minor dominant
+        Effect: Unresolved tension
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    GuitarApplications:
+      - Blues rock progressions
+      - Open tuning drone effects
+      - Power chord sequences
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+AdvancedModalConcepts:
+  - Name: Chromatic Modal Interchange
+    Description: Borrowing from modes with multiple altered degrees
+    Examples:
+      - Mode: Harmonic Minor
+        BorrowedChords:
+          - V7
+          - vii°7
+          - bVI+
+        Effect: Classical minor harmony in major context
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+      - Mode: Melodic Minor
+        BorrowedChords:
+          - iv+
+          - V7
+          - vii°7
+        Effect: Jazz minor colors
+        UseCases:
+          - Color change without tonic modulation
+          - Borrowed iv, bVII, bVI in major for cinematic lift
+          - Minor tonic coloration in major (bIII, bVI from parallel minor)
+        VoiceLeading:
+          Approach: Preserve common tones; move altered degrees in semitone steps where
+            possible
+          Tips:
+            - Resolve b6→5 or ♭7→1 smoothly in the melody
+            - Avoid parallel fifths when moving between borrowed and diatonic chords
+        CharacteristicChords: [ ]
+        BorrowedFromModes: [ ]
+        ProgressionRecipes:
+          - I → bVII → IV → I
+          - I → iv → I
+          - I → bVI → bVII → I
+          - i → bVII → bVI → V (Aeolian color to V cadence)
+        BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+          works well for quick colors
+        MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+          when the harmony supports them
+        GuitarFretboardTips:
+          - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+          - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+        CommonMistakes:
+          - Overusing borrowed chords without functional anchor
+          - Clashing melody (major 3 over iv chord)
+          - Holding altered tones across return to diatonic harmony
+        PracticeDrills:
+          - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+          - Improvise over I→bVII→IV using pentatonic overlays and target notes
+        EarTraining:
+          - Contrast IV vs iv in major (listen for b3 coloration)
+          - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+        ComplexityRating: Intermediate
+        CircleOfFifthsDistance: 0 (parallel key relation)
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Parallel Modal Regions
+    Description: Temporary tonicization of parallel modes
+    Technique: Establishing new modal centers briefly
+    Examples:
+      - C major to C Dorian section
+      - A minor to A Phrygian passage
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Name: Modal Pivot Chords
+    Description: Chords that exist in multiple modes for smooth transitions
+    Applications:
+      - Smooth modulation between parallel modes
+      - Sectional contrasts in compositions
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+VoiceLeadingPrinciples:
+  - Principle: Smooth Voice Leading
+    Description: Minimize motion in individual voices
+    Examples:
+      - 'C major to F minor: C-E-G to F-Ab-C (common tone C)'
+      - 'Am to F major: A-C-E to F-A-C (common tone A and C)'
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Principle: Chromatic Voice Leading
+    Description: Use chromatic motion for smooth transitions
+    Examples:
+      - 'I to bVI: E moves to Eb chromatically'
+      - 'vi to IV: A moves to Ab chromatically'
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+  - Principle: Bass Line Considerations
+    Description: Strong bass motion supports modal interchange
+    Examples:
+      - Descending bass lines with borrowed chords
+      - Circle of fifths with modal substitutions
+    UseCases:
+      - Color change without tonic modulation
+      - Borrowed iv, bVII, bVI in major for cinematic lift
+      - Minor tonic coloration in major (bIII, bVI from parallel minor)
+    VoiceLeading:
+      Approach: Preserve common tones; move altered degrees in semitone steps where
+        possible
+      Tips:
+        - Resolve b6→5 or ♭7→1 smoothly in the melody
+        - Avoid parallel fifths when moving between borrowed and diatonic chords
+    CharacteristicChords: [ ]
+    BorrowedFromModes: [ ]
+    ProgressionRecipes:
+      - I → bVII → IV → I
+      - I → iv → I
+      - I → bVI → bVII → I
+      - i → bVII → bVI → V (Aeolian color to V cadence)
+    BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+      works well for quick colors
+    MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+      when the harmony supports them
+    GuitarFretboardTips:
+      - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+      - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+    CommonMistakes:
+      - Overusing borrowed chords without functional anchor
+      - Clashing melody (major 3 over iv chord)
+      - Holding altered tones across return to diatonic harmony
+    PracticeDrills:
+      - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+      - Improvise over I→bVII→IV using pentatonic overlays and target notes
+    EarTraining:
+      - Contrast IV vs iv in major (listen for b3 coloration)
+      - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+    ComplexityRating: Intermediate
+    CircleOfFifthsDistance: 0 (parallel key relation)
+GuitarApplications:
+  FretboardPatterns:
+    - Name: Open Position Modal Chords
+      Description: Using open strings for modal colors
+      Examples:
+        - Em to E major for Dorian/Major interchange
+        - Am to A major for natural minor/major interchange
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Name: Barre Chord Modal Substitutions
+      Description: Moving barre chord shapes for modal effects
+      Examples:
+        - F major barre to F minor barre
+        - Bb major to Bb minor for bVII to bvii
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Name: Capo and Modal Interchange
+      Description: Using capo positions to access modal chords
+      Applications:
+        - Capo 3rd fret for easier access to certain borrowed chords
+        - Open string drones with modal harmony
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+  TechnicalApproaches:
+    - Name: Fingerpicking Modal Patterns
+      Description: Arpeggiated patterns highlighting modal interchange
+      Techniques:
+        - Travis picking with borrowed chords
+        - Classical guitar arpeggios with modal harmony
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Name: Strumming Patterns with Modal Changes
+      Description: Rhythmic emphasis on modal chord changes
+      Applications:
+        - Accent borrowed chords for dramatic effect
+        - Smooth strumming through modal progressions
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+HistoricalDevelopment:
+  Classical:
+    - Period: Baroque to Romantic
+    - Usage: Occasional modal mixture for color
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Composers:
+        - Bach
+        - Mozart
+        - Schubert
+        - Brahms
+  Jazz:
+    - Period: 1940s onward
+    - Usage: Systematic use of modal interchange
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Musicians:
+        - Bill Evans
+        - Miles Davis
+        - John Coltrane
+  Popular:
+    - Period: 1960s onward
+    - Usage: Beatles popularized modal mixture in pop
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Artists:
+        - Beatles
+        - Radiohead
+        - Pink Floyd
+  Rock:
+    - Period: 1970s onward
+    - Usage: Power chord progressions with borrowed chords
+      UseCases:
+        - Color change without tonic modulation
+        - Borrowed iv, bVII, bVI in major for cinematic lift
+        - Minor tonic coloration in major (bIII, bVI from parallel minor)
+      VoiceLeading:
+        Approach: Preserve common tones; move altered degrees in semitone steps where
+          possible
+        Tips:
+          - Resolve b6→5 or ♭7→1 smoothly in the melody
+          - Avoid parallel fifths when moving between borrowed and diatonic chords
+      CharacteristicChords: [ ]
+      BorrowedFromModes: [ ]
+      ProgressionRecipes:
+        - I → bVII → IV → I
+        - I → iv → I
+        - I → bVI → bVII → I
+        - i → bVII → bVI → V (Aeolian color to V cadence)
+      BassNoteHandling: Prefer stepwise bass into/away from altered chords; pedal tonic
+        works well for quick colors
+      MelodicConsiderations: Emphasize altered scale degrees (b3, b6, b7 in major) only
+        when the harmony supports them
+      GuitarFretboardTips:
+        - 'Borrowed iv: treat as minor subdominant — use minor CAGED for quick voicings'
+        - 'bVII and bVI: consider drop-2 shapes on middle strings for smooth voice-leading'
+      CommonMistakes:
+        - Overusing borrowed chords without functional anchor
+        - Clashing melody (major 3 over iv chord)
+        - Holding altered tones across return to diatonic harmony
+      PracticeDrills:
+        - Cycle I→iv→I in all 12 keys with guide-tone lines on strings 3–2
+        - Improvise over I→bVII→IV using pentatonic overlays and target notes
+      EarTraining:
+        - Contrast IV vs iv in major (listen for b3 coloration)
+        - Differentiate bVII (Mixolydian color) from V of IV (secondary dominant)
+      ComplexityRating: Intermediate
+      CircleOfFifthsDistance: 0 (parallel key relation)
+    - Artists:
+        - Led Zeppelin
+        - Black Sabbath
+        - Progressive rock bands
+AnalysisApproach:
+  IdentificationSteps: 1. "Identify the primary key/mode" 2. "Locate chords that don't
+    belong to that key" 3. "Determine the source mode of borrowed chords" 4. "Analyze
+    the voice leading and harmonic function" 5. "Assess the emotional/dramatic effect"
+  NotationConventions:
+    - Use Roman numerals with accidentals (bVI, bVII)
+    - Indicate source mode in analysis
+    - Show voice leading with arrows or lines
+  CommonMistakes:
+    - Confusing modal interchange with modulation
+    - Ignoring voice leading principles
+    - Overusing borrowed chords without musical purpose

@@ -2,7 +2,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
-using JetBrains.Annotations;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
 
@@ -28,7 +27,7 @@ public class OllamaTextEmbeddingGeneration(HttpClient httpClient, string modelNa
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(
-                cancellationToken: cancellationToken);
+                cancellationToken);
 
             if (result?.Embedding != null)
             {
@@ -40,10 +39,4 @@ public class OllamaTextEmbeddingGeneration(HttpClient httpClient, string modelNa
     }
 
     public IReadOnlyDictionary<string, object?> Attributes { get; } = new Dictionary<string, object?>();
-}
-
-[PublicAPI]
-internal class OllamaEmbeddingResponse
-{
-    public float[]? Embedding { get; set; }
 }

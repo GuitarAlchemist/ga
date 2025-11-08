@@ -1,12 +1,20 @@
 namespace GaCLI.Commands;
 
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Intelligence.SemanticIndexing;
 
-public class EmbeddingCommand(IEmbeddingService embeddingService)
+public class EmbeddingCommand
 {
+    private readonly SemanticSearchService _searchService;
+
+    public EmbeddingCommand(SemanticSearchService searchService)
+    {
+        _searchService = searchService;
+    }
+
     public async Task ExecuteAsync(string text)
     {
-        var embeddings = await embeddingService.GenerateEmbeddingAsync(text);
-        // Process embeddings...
+        // Stub implementation for embedding command
+        var results = await _searchService.SearchAsync(text, 10);
+        // Process results...
     }
 }

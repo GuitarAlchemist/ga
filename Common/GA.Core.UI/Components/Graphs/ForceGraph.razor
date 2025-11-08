@@ -1,19 +1,17 @@
 ﻿@using GA.Core.Extensions
-
 <div @ref="_forceGraphElement"
      id="@Id"
      style="height: 100%; width: 100%">
 </div>
 
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 @inject ILogger<ForceGraph> Logger
 
 @code {
     private ElementReference? _forceGraphElement;
     private IJSObjectReference? _jsModule;
 
-    [Parameter]
-    public string Id { get; set; } = $"force-graph-{Guid.NewGuid():N}";
+    [Parameter] public string Id { get; set; } = $"force-graph-{Guid.NewGuid():N}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -22,7 +20,7 @@
         if (firstRender)
         {
             // Import JavaScript module
-            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/forceGraph.js");
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/GA.Core.UI/js/modules/forceGraph.js");
             if (_jsModule == null) throw new InvalidOperationException();
 
             await GridInitAsync();
@@ -46,4 +44,5 @@
             throw;
         }
     }
+
 }

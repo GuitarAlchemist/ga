@@ -1,0 +1,8 @@
+result = esellerate.ValidateSerialNumber(serialnumber, "", "", "67538") 
+    'This function will validate the serial number found in the registry
+    ' serialnumber is the serial number string
+    ' the second parameter is left empty since the serial number is not a name based serial number
+    ' the third parameter is left empty since no Extra-Data Key needed
+    ' 67538 is the Publisher Key string, optional but used for tighter validation
+
+

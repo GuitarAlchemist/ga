@@ -10,7 +10,7 @@ customElements.define('assistant-message', class extends HTMLElement {
         if (name === 'markdown') {
             newValue = newValue.replace(/<citation.*?<\/citation>/gs, '');
             const elements = marked.parse(newValue.replace(/</g, '&lt;'));
-            this.innerHTML = purify.sanitize(elements, { KEEP_CONTENT: false });
+            this.innerHTML = purify.sanitize(elements, {KEEP_CONTENT: false});
         }
     }
 });

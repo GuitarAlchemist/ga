@@ -1,4 +1,4 @@
-﻿namespace GA.Data.MongoDB.Models;
+namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]
 public sealed record InstrumentDocument : DocumentBase
@@ -10,6 +10,4 @@ public sealed record InstrumentDocument : DocumentBase
     public string? Description { get; init; }
     public string? Family { get; init; }
     public string? Range { get; init; }
-
-    public InstrumentDocument() {}
 }

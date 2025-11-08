@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="29baffd7-44de-45b3-a047-9390c397aeeb" name="spareilleux@XPS-STEF 2025-11-06 20:50:24" runUser="XPS-STEF\spareilleux" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-11-06T20:50:24.6218494-05:00" queuing="2025-11-06T20:50:24.6218500-05:00" start="2025-11-06T20:50:23.8880704-05:00" finish="2025-11-06T20:50:24.6339961-05:00" />
+  <TestSettings name="default" id="10184218-1f50-44be-b762-2133512be5fd">
+    <Deployment runDeploymentRoot="spareilleux_XPS-STEF_2025-11-06_20_50_24" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="a2bd2034-8f01-40a3-a865-a1640e6055c6" testId="50cc418c-06d6-ad22-3c96-20b6a6e3c0f3" testName="GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_VexTabMarkdown" computerName="XPS-STEF" duration="00:00:00.0333623" startTime="2025-11-06T20:50:24.4549823-05:00" endTime="2025-11-06T20:50:24.4549951-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a2bd2034-8f01-40a3-a865-a1640e6055c6">
+      <Output>
+        <ErrorInfo>
+          <Message>System.ArgumentException : The value cannot be an empty string. (Parameter 'oldValue')</Message>
+          <StackTrace>   at System.ArgumentException.ThrowNullOrEmptyException(String argument, String paramName)&#xD;
+   at System.String.Replace(String oldValue, String newValue)&#xD;
+   at GA.InteractiveExtension.Tests.StringExtensions.FixedCacheBuster(String source) in C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\StringExtensions.cs:line 24&#xD;
+   at GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_VexTabMarkdown() in C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\GaKernelTests.cs:line 49&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="551b4bf2-6212-431d-8d18-eacffa40f40f" testId="b8165ccd-a24d-5c74-8035-9162215e0a3c" testName="GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown" computerName="XPS-STEF" duration="00:00:00.0659955" startTime="2025-11-06T20:50:24.5175004-05:00" endTime="2025-11-06T20:50:24.5175008-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="551b4bf2-6212-431d-8d18-eacffa40f40f">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected scriptNode not to be &lt;null&gt;.&#xD;
+</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+   at FluentAssertions.Execution.CollectingAssertionStrategy.ThrowIfAny(IDictionary`2 context)&#xD;
+   at FluentAssertions.Execution.AssertionScope.Dispose()&#xD;
+   at GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown() in C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\GaKernelTests.cs:line 36&#xD;
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_VexTabMarkdown" storage="c:\users\spare\source\repos\ga\tests\common\ga.interactiveextension\bin\debug\net9.0\ga.interactiveextension.tests.dll" id="50cc418c-06d6-ad22-3c96-20b6a6e3c0f3">
+      <Execution id="a2bd2034-8f01-40a3-a865-a1640e6055c6" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\bin\Debug\net9.0\GA.InteractiveExtension.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GA.InteractiveExtension.Tests.GaKernelTests" name="registers_html_formatter_for_VexTabMarkdown" />
+    </UnitTest>
+    <UnitTest name="GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown" storage="c:\users\spare\source\repos\ga\tests\common\ga.interactiveextension\bin\debug\net9.0\ga.interactiveextension.tests.dll" id="b8165ccd-a24d-5c74-8035-9162215e0a3c">
+      <Execution id="551b4bf2-6212-431d-8d18-eacffa40f40f" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\bin\Debug\net9.0\GA.InteractiveExtension.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GA.InteractiveExtension.Tests.GaKernelTests" name="registers_html_formatter_for_MermaidMarkdown" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="50cc418c-06d6-ad22-3c96-20b6a6e3c0f3" executionId="a2bd2034-8f01-40a3-a865-a1640e6055c6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b8165ccd-a24d-5c74-8035-9162215e0a3c" executionId="551b4bf2-6212-431d-8d18-eacffa40f40f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="2" executed="2" passed="0" failed="2" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.10)&#xD;
+[xUnit.net 00:00:00.07]   Discovering: GA.InteractiveExtension.Tests&#xD;
+[xUnit.net 00:00:00.10]   Discovered:  GA.InteractiveExtension.Tests&#xD;
+[xUnit.net 00:00:00.10]   Starting:    GA.InteractiveExtension.Tests&#xD;
+[xUnit.net 00:00:00.17]       System.ArgumentException : The value cannot be an empty string. (Parameter 'oldValue')&#xD;
+[xUnit.net 00:00:00.17]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.17]            at System.ArgumentException.ThrowNullOrEmptyException(String argument, String paramName)&#xD;
+[xUnit.net 00:00:00.17]            at System.String.Replace(String oldValue, String newValue)&#xD;
+[xUnit.net 00:00:00.17]         C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\StringExtensions.cs(24,0): at GA.InteractiveExtension.Tests.StringExtensions.FixedCacheBuster(String source)&#xD;
+[xUnit.net 00:00:00.17]         C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\GaKernelTests.cs(49,0): at GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_VexTabMarkdown()&#xD;
+[xUnit.net 00:00:00.17]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:00.17]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.24]       Expected scriptNode not to be &lt;null&gt;.&#xD;
+[xUnit.net 00:00:00.24]       &#xD;
+[xUnit.net 00:00:00.24]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.24]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:00.24]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+[xUnit.net 00:00:00.24]            at FluentAssertions.Execution.CollectingAssertionStrategy.ThrowIfAny(IDictionary`2 context)&#xD;
+[xUnit.net 00:00:00.24]            at FluentAssertions.Execution.AssertionScope.Dispose()&#xD;
+[xUnit.net 00:00:00.24]         C:\Users\spare\source\repos\ga\Tests\Common\GA.InteractiveExtension\GaKernelTests.cs(36,0): at GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown()&#xD;
+[xUnit.net 00:00:00.24]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)&#xD;
+[xUnit.net 00:00:00.24]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+[xUnit.net 00:00:00.24]   Finished:    GA.InteractiveExtension.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="XPS-STEF" outcome="Error" timestamp="2025-11-06T20:50:24.4529832-05:00">
+        <Text>[xUnit.net 00:00:00.17]     GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_VexTabMarkdown [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="XPS-STEF" outcome="Error" timestamp="2025-11-06T20:50:24.5174077-05:00">
+        <Text>[xUnit.net 00:00:00.24]     GA.InteractiveExtension.Tests.GaKernelTests.registers_html_formatter_for_MermaidMarkdown [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

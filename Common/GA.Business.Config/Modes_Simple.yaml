@@ -1,0 +1,13 @@
+ModalFamilies:
+  - Name: "Diatonic"
+    IntervalClassVector: "<2 5 4 3 6 1>"
+    Modes:
+      - Name: "Ionian"
+        Notes: "C D E F G A B"
+        IntervalClassVector: "<2 5 4 3 6 1>"
+        Description: "Major scale, bright and happy"
+
+      - Name: "Dorian"
+        Notes: "D E F G A B C"
+        IntervalClassVector: "<2 5 4 3 6 1>"
+        Description: "Minor with raised 6th, jazzy and sophisticated"

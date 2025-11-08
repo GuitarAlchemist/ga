@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes;
 
-public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>, IIndexer<TScaleModeDegree, TScaleMode>
+public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>,
+    IIndexer<TScaleModeDegree, TScaleMode>
     where TScaleModeDegree : struct, IRangeValueObject<TScaleModeDegree>
     where TScaleMode : ScaleMode<TScaleModeDegree>
 {
@@ -15,9 +16,18 @@ public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollec
         _modeByDegreeValue = modes.ToImmutableDictionary(mode => mode.ParentScaleDegree.Value);
     }
 
-    public IEnumerator<TScaleMode> GetEnumerator() => _modeByDegree.Values.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    public int Count => _modeByDegree.Count;
-    public TScaleMode this[TScaleModeDegree degree] => _modeByDegree[degree];
     public TScaleMode this[int degree] => _modeByDegreeValue[degree];
+    public TScaleMode this[TScaleModeDegree degree] => _modeByDegree[degree];
+
+    public IEnumerator<TScaleMode> GetEnumerator()
+    {
+        return _modeByDegree.Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public int Count => _modeByDegree.Count;
 }

@@ -1,14 +1,16 @@
 ﻿namespace GA.Business.Core.Intervals;
 
-using Primitives;
 using Atonal;
+using Primitives;
 
 public static class IntervalExtensions
 {
     public static Indexer<SimpleIntervalSize, IntervalQuality>
-        ToQualityByNumber(this IEnumerable<Interval.Simple> intervals) =>
-        new(intervals.DistinctBy(i => i.Size)
+        ToQualityByNumber(this IEnumerable<Interval.Simple> intervals)
+    {
+        return new Indexer<SimpleIntervalSize, IntervalQuality>(intervals.DistinctBy(i => i.Size)
             .ToImmutableDictionary(i => i.Size, i => i.Quality));
+    }
 
     public static PitchClassSet ToPitchClassSet(this IEnumerable<Interval.Simple> intervals)
     {

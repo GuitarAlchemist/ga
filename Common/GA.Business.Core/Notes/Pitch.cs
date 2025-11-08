@@ -2,59 +2,58 @@
 
 using Atonal;
 using Atonal.Abstractions;
-using Primitives;
 using Intervals;
+using Primitives;
 
 /// <summary>
-/// Pitch discriminated union
+///     Pitch discriminated union
 /// </summary>
 /// <remarks>
-/// <see cref="Chromatic"/> | <see cref="Sharp"/> | <see cref="Flat"/>
+///     <see cref="Chromatic" /> | <see cref="Sharp" /> | <see cref="Flat" />
 /// </remarks>
 /// <param name="Octave"></param>
 [PublicAPI]
-public abstract record Pitch(Octave Octave) : IComparable<Pitch>, 
-                                              IPitchClass
+public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
+    IPitchClass
 {
-    #region IComparable<Pitch> Members
-
-    public int CompareTo(Pitch? other) => other is null ? 1 : MidiNote.CompareTo(other.MidiNote);
-    public static bool operator <(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) < 0;
-    public static bool operator >(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) > 0;
-    public static bool operator <=(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) <= 0;
-    public static bool operator >=(Pitch? left, Pitch? right) => Comparer<Pitch>.Default.Compare(left, right) >= 0;
-
-    #endregion
+    /// <summary>
+    ///     Gets the <see cref="MidiNote" />
+    /// </summary>
+    public MidiNote MidiNote => GetMidiNote();
 
     #region IPitchClass Members
-    
-    /// <inheritdoc cref="IPitchClass.PitchClass"/>
+
+    /// <inheritdoc cref="IPitchClass.PitchClass" />
     public abstract PitchClass PitchClass { get; }
-    
+
     #endregion
 
     #region Operators
 
-    public static implicit operator MidiNote(Pitch pitch) => pitch.GetMidiNote();
+    public static implicit operator MidiNote(Pitch pitch)
+    {
+        return pitch.GetMidiNote();
+    }
 
     #endregion
-    
-    /// <summary>
-    /// Gets the <see cref="MidiNote"/>
-    /// </summary>
-    public MidiNote MidiNote => GetMidiNote();
 
-    private MidiNote GetMidiNote() => MidiNote.Create(Octave, PitchClass);
+    private MidiNote GetMidiNote()
+    {
+        return MidiNote.Create(Octave, PitchClass);
+    }
 
     #region Chromatic Pitch
 
     [PublicAPI]
     public sealed record Chromatic(Note.Chromatic Note, Octave Octave) : Pitch(Octave)
     {
-        public static Chromatic FromPitch(Pitch pitch) => pitch.PitchClass.ToChromaticPitch(pitch.Octave);
-
         /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
+
+        public static Chromatic FromPitch(Pitch pitch)
+        {
+            return pitch.PitchClass.ToChromaticPitch(pitch.Octave);
+        }
 
         /// <inheritdoc />
         public override string ToString()
@@ -70,13 +69,32 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
     #region Sharp Pitch
 
-    /// <inheritdoc cref="Pitch"/>
+    /// <inheritdoc cref="Pitch" />
     /// <summary>
-    /// A sharp pitch.
+    ///     A sharp pitch.
     /// </summary>
     [PublicAPI]
     public sealed record Sharp(Note.Sharp Note, Octave Octave) : Pitch(Octave), IParsable<Sharp>
     {
+        /// <inheritdoc />
+        public override PitchClass PitchClass => Note.PitchClass;
+
+        /// <summary>
+        ///     Gets a sharp pitch from a pitch (e.g. C#/Db => C#)
+        /// </summary>
+        /// <param name="pitch">The <see cref="Pitch" /></param>
+        /// <returns>The <see cref="Pitch.Sharp" /></returns>
+        public static Sharp FromPitch(Pitch pitch)
+        {
+            return pitch.PitchClass.ToSharpPitch(pitch.Octave);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Note}{Octave.Value}";
+        }
+
         #region IParsable Members
 
         //language=regexp
@@ -86,7 +104,11 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         /// <inheritdoc />
         public static Sharp Parse(string s, IFormatProvider? provider = null)
         {
-            if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            if (!TryParse(s, provider, out var result))
+            {
+                throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            }
+
             return result;
         }
 
@@ -94,31 +116,55 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static bool TryParse(string? s, IFormatProvider? provider, out Sharp result)
         {
             result = default!;
-            if (string.IsNullOrWhiteSpace(s)) return false;
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return false;
+            }
 
             result = C0;
             var match = _regex.Match(s);
-            if (!match.Success) return false; // Failed
+            if (!match.Success)
+            {
+                return false; // Failed
+            }
 
             var noteGroup = match.Groups[1];
             var accidentalGroup = match.Groups[2];
             var octaveGroup = match.Groups[3];
-            if (!noteGroup.IsDefined) return false; // Missing note
-            if (!octaveGroup.IsDefined) return false; // Missing octave
+            if (!noteGroup.IsDefined)
+            {
+                return false; // Missing note
+            }
+
+            if (!octaveGroup.IsDefined)
+            {
+                return false; // Missing octave
+            }
 
             // Parse natural note
-            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote)) return false;
+            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote))
+            {
+                return false;
+            }
 
             // Parse sharp accidental
             SharpAccidental? accidental = null;
-            if (accidentalGroup.IsDefined && SharpAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental)) accidental = parsedAccidental;
+            if (accidentalGroup.IsDefined &&
+                SharpAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
+            {
+                accidental = parsedAccidental;
+            }
 
             // Parse octave
-            if (!int.TryParse(octaveGroup, out var parsedOctaveValue)) return false;
-            var octave = new Octave() { Value = parsedOctaveValue };
+            if (!int.TryParse(octaveGroup, out var parsedOctaveValue))
+            {
+                return false;
+            }
+
+            var octave = new Octave { Value = parsedOctaveValue };
 
             var note = new Note.Sharp(naturalNote, accidental);
-            
+
             // Result
             result = new(note, octave);
             return true;
@@ -130,18 +176,65 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Sharp Default => C0;
 
-        public static Sharp C(Octave octave) => new(Notes.Note.Sharp.C, octave);
-        public static Sharp CSharp(Octave octave) => new(Notes.Note.Sharp.CSharp, octave);
-        public static Sharp D(Octave octave) => new(Notes.Note.Sharp.D, octave);
-        public static Sharp DSharp(Octave octave) => new(Notes.Note.Sharp.D, octave);
-        public static Sharp E(Octave octave) => new(Notes.Note.Sharp.E, octave);
-        public static Sharp F(Octave octave) => new(Notes.Note.Sharp.F, octave);
-        public static Sharp FSharp(Octave octave) => new(Notes.Note.Sharp.G, octave);
-        public static Sharp G(Octave octave) => new(Notes.Note.Sharp.G, octave);
-        public static Sharp GSharp(Octave octave) => new(Notes.Note.Sharp.A, octave);
-        public static Sharp A(Octave octave) => new(Notes.Note.Sharp.A, octave);
-        public static Sharp ASharp(Octave octave) => new(Notes.Note.Sharp.ASharp, octave);
-        public static Sharp B(Octave octave) => new(Notes.Note.Sharp.B, octave);
+        public static Sharp C(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.C, octave);
+        }
+
+        public static Sharp CSharp(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.CSharp, octave);
+        }
+
+        public static Sharp D(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.D, octave);
+        }
+
+        public static Sharp DSharp(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.D, octave);
+        }
+
+        public static Sharp E(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.E, octave);
+        }
+
+        public static Sharp F(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.F, octave);
+        }
+
+        public static Sharp FSharp(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.G, octave);
+        }
+
+        public static Sharp G(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.G, octave);
+        }
+
+        public static Sharp GSharp(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.A, octave);
+        }
+
+        public static Sharp A(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.A, octave);
+        }
+
+        public static Sharp ASharp(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.ASharp, octave);
+        }
+
+        public static Sharp B(Octave octave)
+        {
+            return new Sharp(Notes.Note.Sharp.B, octave);
+        }
 
         public static Sharp C0 => Sharp0(Notes.Note.Sharp.C);
         public static Sharp CSharp0 => Sharp0(Notes.Note.Sharp.CSharp);
@@ -221,40 +314,69 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Sharp ASharp5 => Sharp5(Notes.Note.Sharp.ASharp);
         public static Sharp B5 => Sharp5(Notes.Note.Sharp.B);
 
-        private static Sharp Sharp0(Note.Sharp note) => new(note, 0);
-        private static Sharp Sharp1(Note.Sharp note) => new(note, 1);
-        private static Sharp Sharp2(Note.Sharp note) => new(note, 2);
-        private static Sharp Sharp3(Note.Sharp note) => new(note, 3);
-        private static Sharp Sharp4(Note.Sharp note) => new(note, 4);
-        private static Sharp Sharp5(Note.Sharp note) => new(note, 5);
+        private static Sharp Sharp0(Note.Sharp note)
+        {
+            return new Sharp(note, 0);
+        }
+
+        private static Sharp Sharp1(Note.Sharp note)
+        {
+            return new Sharp(note, 1);
+        }
+
+        private static Sharp Sharp2(Note.Sharp note)
+        {
+            return new Sharp(note, 2);
+        }
+
+        private static Sharp Sharp3(Note.Sharp note)
+        {
+            return new Sharp(note, 3);
+        }
+
+        private static Sharp Sharp4(Note.Sharp note)
+        {
+            return new Sharp(note, 4);
+        }
+
+        private static Sharp Sharp5(Note.Sharp note)
+        {
+            return new Sharp(note, 5);
+        }
 
         #endregion
-
-        /// <summary>
-        /// Gets a sharp pitch from a pitch (e.g. C#/Db => C#)
-        /// </summary>
-        /// <param name="pitch">The <see cref="Pitch"/></param>
-        /// <returns>The <see cref="Pitch.Sharp"/></returns>
-        public static Sharp FromPitch(Pitch pitch) => pitch.PitchClass.ToSharpPitch(pitch.Octave);
-
-        /// <inheritdoc />
-        public override PitchClass PitchClass => Note.PitchClass;
-        
-        /// <inheritdoc />
-        public override string ToString() => $"{Note}{Octave.Value}";
     }
 
     #endregion
 
     #region Flat Pitch
 
-    /// <inheritdoc cref="Pitch"/>
+    /// <inheritdoc cref="Pitch" />
     /// <summary>
-    /// Am flat pitch.
+    ///     Am flat pitch.
     /// </summary>
     [PublicAPI]
     public sealed record Flat(Note.Flat Note, Octave Octave) : Pitch(Octave), IParsable<Flat>
     {
+        /// <inheritdoc />
+        public override PitchClass PitchClass => Note.PitchClass;
+
+        /// <summary>
+        ///     Gets a flat pitch from a pitch (e.g. C#/Db => Db)
+        /// </summary>
+        /// <param name="pitch">The <see cref="Pitch" /></param>
+        /// <returns>The <see cref="Pitch.Sharp" /></returns>
+        public static Flat FromPitch(Pitch pitch)
+        {
+            return pitch.PitchClass.ToFlatPitch(pitch.Octave);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Note}{Octave.Value}";
+        }
+
         #region IParsable Members
 
         //language=regexp
@@ -264,7 +386,11 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         /// <inheritdoc />
         public static Flat Parse(string s, IFormatProvider? provider = null)
         {
-            if (!TryParse(s, provider, out var result)) throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            if (!TryParse(s, provider, out var result))
+            {
+                throw new ArgumentException($"Failed parsing '{s}'", nameof(s));
+            }
+
             return result;
         }
 
@@ -272,20 +398,36 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static bool TryParse(string? s, IFormatProvider? provider, out Flat result)
         {
             result = default!;
-            if (string.IsNullOrWhiteSpace(s)) return false;
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return false;
+            }
 
             result = C0;
             var match = _regex.Match(s);
-            if (!match.Success) return false; // Failed
+            if (!match.Success)
+            {
+                return false; // Failed
+            }
 
             var noteGroup = match.Groups[1];
             var accidentalGroup = match.Groups[2];
             var octaveGroup = match.Groups[3];
-            if (!noteGroup.IsDefined) return false; // Missing note
-            if (!octaveGroup.IsDefined) return false; // Missing octave
+            if (!noteGroup.IsDefined)
+            {
+                return false; // Missing note
+            }
+
+            if (!octaveGroup.IsDefined)
+            {
+                return false; // Missing octave
+            }
 
             // Parse natural note
-            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote)) return false;
+            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote))
+            {
+                return false;
+            }
 
             // Parse flat accidental
             FlatAccidental? accidental = null;
@@ -293,38 +435,89 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
                 &&
                 FlatAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
             {
-                accidental = parsedAccidental; 
+                accidental = parsedAccidental;
             }
 
             // Parse octave
-            if (!int.TryParse(octaveGroup, out var parsedOctaveValue)) return false;
-            var octave = new Octave() { Value = parsedOctaveValue };
+            if (!int.TryParse(octaveGroup, out var parsedOctaveValue))
+            {
+                return false;
+            }
+
+            var octave = new Octave { Value = parsedOctaveValue };
 
             var note = new Note.Flat(naturalNote, accidental);
-            
+
             // Result
             result = new(note, octave);
             return true;
         }
 
-        #endregion        
-        
+        #endregion
+
         #region Well-known Flat pitches
 
         public static Flat Default => C0;
 
-        public static Flat C(Octave octave) => new(Notes.Note.Flat.C, octave);
-        public static Flat CFlat(Octave octave) => new(Notes.Note.Flat.CFlat, octave);
-        public static Flat D(Octave octave) => new(Notes.Note.Flat.D, octave);
-        public static Flat DFlat(Octave octave) => new(Notes.Note.Flat.D, octave);
-        public static Flat E(Octave octave) => new(Notes.Note.Flat.E, octave);
-        public static Flat F(Octave octave) => new(Notes.Note.Flat.F, octave);
-        public static Flat FFlat(Octave octave) => new(Notes.Note.Flat.G, octave);
-        public static Flat G(Octave octave) => new(Notes.Note.Flat.G, octave);
-        public static Flat GFlat(Octave octave) => new(Notes.Note.Flat.A, octave);
-        public static Flat A(Octave octave) => new(Notes.Note.Flat.A, octave);
-        public static Flat AFlat(Octave octave) => new(Notes.Note.Flat.AFlat, octave);
-        public static Flat B(Octave octave) => new(Notes.Note.Flat.B, octave);
+        public static Flat C(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.C, octave);
+        }
+
+        public static Flat CFlat(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.CFlat, octave);
+        }
+
+        public static Flat D(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.D, octave);
+        }
+
+        public static Flat DFlat(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.D, octave);
+        }
+
+        public static Flat E(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.E, octave);
+        }
+
+        public static Flat F(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.F, octave);
+        }
+
+        public static Flat FFlat(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.G, octave);
+        }
+
+        public static Flat G(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.G, octave);
+        }
+
+        public static Flat GFlat(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.A, octave);
+        }
+
+        public static Flat A(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.A, octave);
+        }
+
+        public static Flat AFlat(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.AFlat, octave);
+        }
+
+        public static Flat B(Octave octave)
+        {
+            return new Flat(Notes.Note.Flat.B, octave);
+        }
 
         public static Flat C0 => Flat0(Notes.Note.Flat.C);
         public static Flat CFlat0 => Flat0(Notes.Note.Flat.CFlat);
@@ -404,27 +597,66 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat AFlat5 => Flat5(Notes.Note.Flat.AFlat);
         public static Flat B5 => Flat5(Notes.Note.Flat.B);
 
-        private static Flat Flat0(Note.Flat note) => new(note, 0);
-        private static Flat Flat1(Note.Flat note) => new(note, 1);
-        private static Flat Flat2(Note.Flat note) => new(note, 2);
-        private static Flat Flat3(Note.Flat note) => new(note, 3);
-        private static Flat Flat4(Note.Flat note) => new(note, 4);
-        private static Flat Flat5(Note.Flat note) => new(note, 5);
+        private static Flat Flat0(Note.Flat note)
+        {
+            return new Flat(note, 0);
+        }
+
+        private static Flat Flat1(Note.Flat note)
+        {
+            return new Flat(note, 1);
+        }
+
+        private static Flat Flat2(Note.Flat note)
+        {
+            return new Flat(note, 2);
+        }
+
+        private static Flat Flat3(Note.Flat note)
+        {
+            return new Flat(note, 3);
+        }
+
+        private static Flat Flat4(Note.Flat note)
+        {
+            return new Flat(note, 4);
+        }
+
+        private static Flat Flat5(Note.Flat note)
+        {
+            return new Flat(note, 5);
+        }
 
         #endregion
+    }
 
-        /// <summary>
-        /// Gets a flat pitch from a pitch (e.g. C#/Db => Db)
-        /// </summary>
-        /// <param name="pitch">The <see cref="Pitch"/></param>
-        /// <returns>The <see cref="Pitch.Sharp"/></returns>
-        public static Flat FromPitch(Pitch pitch) => pitch.PitchClass.ToFlatPitch(pitch.Octave);
+    #endregion
 
-        /// <inheritdoc />
-        public override PitchClass PitchClass => Note.PitchClass;
-        
-        /// <inheritdoc />
-        public override string ToString() => $"{Note}{Octave.Value}";
+    #region IComparable<Pitch> Members
+
+    public int CompareTo(Pitch? other)
+    {
+        return other is null ? 1 : MidiNote.CompareTo(other.MidiNote);
+    }
+
+    public static bool operator <(Pitch? left, Pitch? right)
+    {
+        return Comparer<Pitch>.Default.Compare(left, right) < 0;
+    }
+
+    public static bool operator >(Pitch? left, Pitch? right)
+    {
+        return Comparer<Pitch>.Default.Compare(left, right) > 0;
+    }
+
+    public static bool operator <=(Pitch? left, Pitch? right)
+    {
+        return Comparer<Pitch>.Default.Compare(left, right) <= 0;
+    }
+
+    public static bool operator >=(Pitch? left, Pitch? right)
+    {
+        return Comparer<Pitch>.Default.Compare(left, right) >= 0;
     }
 
     #endregion

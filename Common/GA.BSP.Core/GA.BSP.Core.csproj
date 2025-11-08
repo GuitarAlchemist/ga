@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../GA.Core/GA.Core.csproj"/>
+    <ProjectReference Include="../GA.Business.Core/GA.Business.Core.csproj"/>
+  </ItemGroup>
+
+  <!-- Exclude IntelligentBSPGenerator files until missing types are implemented -->
+  <ItemGroup>
+    <Compile Remove="BSP\IntelligentBSPGenerator.cs"/>
+    <Compile Remove="BSP\IntelligentBSPGenerator.Optimized.cs"/>
+  </ItemGroup>
+
+</Project>

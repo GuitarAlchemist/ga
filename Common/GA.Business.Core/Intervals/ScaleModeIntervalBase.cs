@@ -3,27 +3,33 @@
 using Primitives;
 
 /// <summary>
-/// Scale mode interval base class
+///     Scale mode interval base class
 /// </summary>
-/// <typeparam name="TIntervalSize">The interval size type (Must derive from <see cref="IIntervalSize"/>)</typeparam>
-/// <param name="size">The <paramtyperef name="TIntervalSize"/></param>
-/// <param name="quality">The interval <see cref="IntervalQuality"/></param>
-/// <param name="refQuality">The reference interval <see cref="IntervalQuality"/></param>
-public abstract class ScaleModeIntervalBase<TIntervalSize>(TIntervalSize size, IntervalQuality quality, IntervalQuality refQuality) 
+/// <typeparam name="TIntervalSize">The interval size type (Must derive from <see cref="IIntervalSize" />)</typeparam>
+/// <param name="size">The <paramtyperef name="TIntervalSize" /></param>
+/// <param name="quality">The interval <see cref="IntervalQuality" /></param>
+/// <param name="refQuality">The reference interval <see cref="IntervalQuality" /></param>
+public abstract class ScaleModeIntervalBase<TIntervalSize>(
+    TIntervalSize size,
+    IntervalQuality quality,
+    IntervalQuality refQuality)
     : FormulaInterval<TIntervalSize>(size, quality) where TIntervalSize : IIntervalSize
 {
     /// <summary>
-    /// Gets the reference <see cref="IntervalQuality"/>
+    ///     Gets the reference <see cref="IntervalQuality" />
     /// </summary>
     public IntervalQuality RefQuality { get; } = refQuality;
 
     /// <summary>
-    /// True if interval quality is different the reference quality
+    ///     True if interval quality is different the reference quality
     /// </summary>
     public bool IsCharacteristic => Quality != RefQuality;
 
     /// <inheritdoc />
-    public override string ToString() => Print();
+    public override string ToString()
+    {
+        return Print();
+    }
 
     private string Print()
     {
@@ -48,6 +54,7 @@ public abstract class ScaleModeIntervalBase<TIntervalSize>(TIntervalSize size, I
         {
             sb.Append(accidental.Value.ToString());
         }
+
         sb.Append(Size);
         var result = sb.ToString().PadLeft(3);
 

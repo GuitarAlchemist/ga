@@ -1,4 +1,4 @@
-import React, {Suspense, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {AgGridReact} from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, required
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -6,12 +6,12 @@ import 'ag-grid-community/styles/ag-theme-material.css';
 import {IForecast} from "./IForecast.tsx";
 import VexTabDisplay from "./vextab.tsx";
 import ChordDiagram from "./chord-diagram.tsx";
-import RiggedHand from "./RiggedHand.tsx";
 import BraceletNotation from "./BraceletNotation.tsx";
 import KeyboardDiagram from "./keyboard-diagram.tsx";
 import TonnetzDiagram from './TonnetzDiagram.tsx';
 import ColoredClockDiagram from "./coloredClockDiagram.tsx";
 import GuitarFretboard from "./guitarFretboard.tsx";
+import BSPRoomViewer from "./BSPRoomViewer.tsx";
 
 function App() {
     const [forecasts, setForecasts] = useState<IForecast[] | null>(null);
@@ -40,10 +40,14 @@ function App() {
 
     // Define the columns for AG-Grid
     const columns = [
-        { headerName: "Date", field: "date", valueFormatter: (params: { value: string | number | Date; }) => new Date(params.value).toLocaleDateString() },
-        { headerName: "Temp. (C)", field: "temperatureC" },
-        { headerName: "Temp. (F)", field: "temperatureF" },
-        { headerName: "Summary", field: "summary" }
+        {
+            headerName: "Date",
+            field: "date",
+            valueFormatter: (params: { value: string | number | Date; }) => new Date(params.value).toLocaleDateString()
+        },
+        {headerName: "Temp. (C)", field: "temperatureC"},
+        {headerName: "Temp. (F)", field: "temperatureF"},
+        {headerName: "Summary", field: "summary"}
     ];
 
     const notes = [
@@ -56,6 +60,10 @@ function App() {
     return (
         <div style={{backgroundColor: 'white', height: '100vh', width: '100vw'}}>
             <div>
+                <h1>BSP Dungeon Room Generator</h1>
+                <BSPRoomViewer/>
+            </div>
+            <div>
                 <h1>Bracelet Notation Example</h1>
                 <div style={{display: 'flex'}}>
                     <ColoredClockDiagram scale={2741} size={300}/>
@@ -67,7 +75,7 @@ function App() {
             <div>
                 <h1>Guitar Fretboard example</h1>
                 <div style={{display: 'flex'}}>
-                    <GuitarFretboard frets={[-1, 3, 2, 3, -1, 3]} />
+                    <GuitarFretboard frets={[-1, 3, 2, 3, -1, 3]}/>
                 </div>
             </div>
             <div>

@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="GuitarAlchemist.GA.Business.Core" Version="1.0.14" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="GuitarAlchemist.GA.Business.Core" Version="1.0.14"/>
+  </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
-	  <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
-	  <ProjectReference Include="..\..\Common\GA.Core\GA.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
+    <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Core\GA.Core.csproj"/>
+  </ItemGroup>
 
 </Project>

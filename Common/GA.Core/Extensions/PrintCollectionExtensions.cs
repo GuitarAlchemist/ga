@@ -6,11 +6,15 @@ public static class PrintCollectionExtensions
 {
     [PublicAPI]
     public static PrintableEnumerable<T> AsPrintable<T>(
-        this IEnumerable<T> items, 
+        this IEnumerable<T> items,
         string? itemSeparator = " ")
         where T : notnull
     {
-        if (items is PrintableEnumerable<T> printable) return printable;
+        if (items is PrintableEnumerable<T> printable)
+        {
+            return printable;
+        }
+
         return new(items, itemSeparator);
     }
 
@@ -20,20 +24,27 @@ public static class PrintCollectionExtensions
         string? itemFormat = null,
         IFormatProvider? itemFormatProvider = null,
         string? itemSeparator = " ")
-           where T : notnull
+        where T : notnull
     {
-        if (items is PrintableReadOnlyCollection<T> printable) return printable;
+        if (items is PrintableReadOnlyCollection<T> printable)
+        {
+            return printable;
+        }
+
         return new(items, itemFormat, itemFormatProvider, itemSeparator);
     }
 
     [PublicAPI]
     public static PrintableReadOnlySet<T> AsPrintable<T>(
-        this IImmutableSet<T> items, 
+        this IImmutableSet<T> items,
         string? itemSeparator = " ")
-            where T : notnull
+        where T : notnull
     {
-        if (items is PrintableReadOnlySet<T> printable) return printable;
+        if (items is PrintableReadOnlySet<T> printable)
+        {
+            return printable;
+        }
+
         return new(items, itemSeparator);
     }
-
 }

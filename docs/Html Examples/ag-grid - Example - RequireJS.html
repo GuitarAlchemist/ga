@@ -1,18 +1,18 @@
-﻿<div id="myGrid" style="height: 200px; width:500px;" class="ag-theme-alpine"></div>
+﻿<div class="ag-theme-alpine" id="myGrid" style="height: 200px; width:500px;"></div>
 
 <script type="text/javascript">
     const libRender = (agGrid) => {
         var columnDefs = [
-            { headerName: "Make", field: "make" },
-            { headerName: "Model", field: "model" },
-            { headerName: "Price", field: "price" }
+            {headerName: "Make", field: "make"},
+            {headerName: "Model", field: "model"},
+            {headerName: "Price", field: "price"}
         ];
 
         // specify the data
         var rowData = [
-            { make: "Toyota", model: "Celica", price: 35000 },
-            { make: "Ford", model: "Mondeo", price: 32000 },
-            { make: "Porsche", model: "Boxter", price: 72000 }
+            {make: "Toyota", model: "Celica", price: 35000},
+            {make: "Ford", model: "Mondeo", price: 32000},
+            {make: "Porsche", model: "Boxter", price: 72000}
         ];
 
         // let the grid know which columns and what data to use
@@ -40,7 +40,7 @@
         }
 
         return result;
-    };
+    }
 
     function loadAndRender() {
         () => {
@@ -52,11 +52,13 @@
 
             (window.require.config(requireJsConfig) || window.require)(
                 ['lib'],
-                (lib) => { libRender(lib) },
+                (lib) => {
+                    libRender(lib)
+                },
                 (error) => console.log(error)
             );
         };
-    };
+    }
 
     if (!installRequireScript(loadAndRender)) loadAndRender();
 </script>

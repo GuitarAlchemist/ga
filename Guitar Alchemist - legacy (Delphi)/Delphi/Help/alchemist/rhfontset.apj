@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<rhpml majorversion="1" minorversion="0">
+	<fontsets>
+		<fontset>
+			<name>Marlett</name>
+			<fontlist>Marlett</fontlist>
+		</fontset>
+		<fontset>
+			<name>Lucida Console</name>
+			<fontlist>Lucida Console</fontlist>
+		</fontset>
+		<fontset>
+			<name>Lucida Sans Unicode</name>
+			<fontlist>Lucida Sans Unicode</fontlist>
+		</fontset>
+		<fontset>
+			<name>Symbol</name>
+			<fontlist>Symbol</fontlist>
+		</fontset>
+		<fontset>
+			<name>Comic Sans MS</name>
+			<fontlist>Comic Sans MS</fontlist>
+		</fontset>
+		<fontset>
+			<name>Impact</name>
+			<fontlist>Impact</fontlist>
+		</fontset>
+		<fontset>
+			<name>Georgia</name>
+			<fontlist>Georgia</fontlist>
+		</fontset>
+		<fontset>
+			<name>Palatino Linotype</name>
+			<fontlist>Palatino Linotype</fontlist>
+		</fontset>
+		<fontset>
+			<name>Tahoma</name>
+			<fontlist>Tahoma</fontlist>
+		</fontset>
+		<fontset>
+			<name>Trebuchet MS</name>
+			<fontlist>Trebuchet MS</fontlist>
+		</fontset>
+		<fontset>
+			<name>Webdings</name>
+			<fontlist>Webdings</fontlist>
+		</fontset>
+		<fontset>
+			<name>Haettenschweiler</name>
+			<fontlist>Haettenschweiler</fontlist>
+		</fontset>
+		<fontset>
+			<name>Monotype Corsiva</name>
+			<fontlist>Monotype Corsiva</fontlist>
+		</fontset>
+		<fontset>
+			<name>Verdana Ref</name>
+			<fontlist>Verdana Ref</fontlist>
+		</fontset>
+		<fontset>
+			<name>Georgia Ref</name>
+			<fontlist>Georgia Ref</fontlist>
+		</fontset>
+		<fontset>
+			<name>RefSpecialty</name>
+			<fontlist>RefSpecialty</fontlist>
+		</fontset>
+		<fontset>
+			<name>Tera Special</name>
+			<fontlist>Tera Special</fontlist>
+		</fontset>
+		<fontset>
+			<name>Balthazar</name>
+			<fontlist>Balthazar</fontlist>
+		</fontset>
+		<fontset>
+			<name>Coolsville</name>
+			<fontlist>Coolsville</fontlist>
+		</fontset>
+		<fontset>
+			<name>Geotype TT</name>
+			<fontlist>Geotype TT</fontlist>
+		</fontset>
+		<fontset>
+			<name>Roland</name>
+			<fontlist>Roland</fontlist>
+		</fontset>
+		<fontset>
+			<name>Vivian</name>
+			<fontlist>Vivian</fontlist>
+		</fontset>
+		<fontset>
+			<name>Tef260</name>
+			<fontlist>Tef260</fontlist>
+		</fontset>
+		<fontset>
+			<name>MusicalSymbols</name>
+			<fontlist>MusicalSymbols</fontlist>
+		</fontset>
+		<fontset>
+			<name>Power Tab</name>
+			<fontlist>Power Tab</fontlist>
+		</fontset>
+		<fontset>
+			<name>Inkpen2</name>
+			<fontlist>Inkpen2</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus</name>
+			<fontlist>Opus</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus Percussion</name>
+			<fontlist>Opus Percussion</fontlist>
+		</fontset>
+		<fontset>
+			<name>Greek Diner Inline TT</name>
+			<fontlist>Greek Diner Inline TT</fontlist>
+		</fontset>
+		<fontset>
+			<name>Amethyst</name>
+			<fontlist>Amethyst</fontlist>
+		</fontset>
+		<fontset>
+			<name>Microsoft Sans Serif</name>
+			<fontlist>Microsoft Sans Serif</fontlist>
+		</fontset>
+		<fontset>
+			<name>SToccata</name>
+			<fontlist>SToccata</fontlist>
+		</fontset>
+		<fontset>
+			<name>African</name>
+			<fontlist>African</fontlist>
+		</fontset>
+		<fontset>
+			<name>Alien League</name>
+			<fontlist>Alien League</fontlist>
+		</fontset>
+		<fontset>
+			<name>Beware</name>
+			<fontlist>Beware</fontlist>
+		</fontset>
+		<fontset>
+			<name>BlockUp</name>
+			<fontlist>BlockUp</fontlist>
+		</fontset>
+		<fontset>
+			<name>Chintzy CPU (BRK)</name>
+			<fontlist>Chintzy CPU (BRK)</fontlist>
+		</fontset>
+		<fontset>
+			<name>Chintzy CPU Shadow (BRK)</name>
+			<fontlist>Chintzy CPU Shadow (BRK)</fontlist>
+		</fontset>
+		<fontset>
+			<name>CLAW 1 BRK</name>
+			<fontlist>CLAW 1 BRK</fontlist>
+		</fontset>
+		<fontset>
+			<name>CLAW 2 BRK</name>
+			<fontlist>CLAW 2 BRK</fontlist>
+		</fontset>
+		<fontset>
+			<name>CNN</name>
+			<fontlist>CNN</fontlist>
+		</fontset>
+		<fontset>
+			<name>Dark Crystal</name>
+			<fontlist>Dark Crystal</fontlist>
+		</fontset>
+		<fontset>
+			<name>FretsA</name>
+			<fontlist>FretsA</fontlist>
+		</fontset>
+		<fontset>
+			<name>FretsB</name>
+			<fontlist>FretsB</fontlist>
+		</fontset>
+		<fontset>
+			<name>FretsC</name>
+			<fontlist>FretsC</fontlist>
+		</fontset>
+		<fontset>
+			<name>Friends</name>
+			<fontlist>Friends</fontlist>
+		</fontset>
+		<fontset>
+			<name>Hellraiser SC</name>
+			<fontlist>Hellraiser SC</fontlist>
+		</fontset>
+		<fontset>
+			<name>Hooked on Booze</name>
+			<fontlist>Hooked on Booze</fontlist>
+		</fontset>
+		<fontset>
+			<name>Jedi</name>
+			<fontlist>Jedi</fontlist>
+		</fontset>
+		<fontset>
+			<name>Kinderfeld</name>
+			<fontlist>Kinderfeld</fontlist>
+		</fontset>
+		<fontset>
+			<name>Nasalization</name>
+			<fontlist>Nasalization</fontlist>
+		</fontset>
+		<fontset>
+			<name>QUAKE</name>
+			<fontlist>QUAKE</fontlist>
+		</fontset>
+		<fontset>
+			<name>Space Age</name>
+			<fontlist>Space Age</fontlist>
+		</fontset>
+		<fontset>
+			<name>TRON</name>
+			<fontlist>TRON</fontlist>
+		</fontset>
+		<fontset>
+			<name>UnitedStates</name>
+			<fontlist>UnitedStates</fontlist>
+		</fontset>
+		<fontset>
+			<name>X-Files</name>
+			<fontlist>X-Files</fontlist>
+		</fontset>
+		<fontset>
+			<name>Zirkon</name>
+			<fontlist>Zirkon</fontlist>
+		</fontset>
+		<fontset>
+			<name>NWCV15</name>
+			<fontlist>NWCV15</fontlist>
+		</fontset>
+		<fontset>
+			<name>FretQwik</name>
+			<fontlist>FretQwik</fontlist>
+		</fontset>
+		<fontset>
+			<name>Dayton</name>
+			<fontlist>Dayton</fontlist>
+		</fontset>
+		<fontset>
+			<name>Margaret</name>
+			<fontlist>Margaret</fontlist>
+		</fontset>
+		<fontset>
+			<name>Palent</name>
+			<fontlist>Palent</fontlist>
+		</fontset>
+		<fontset>
+			<name>Rondalo</name>
+			<fontlist>Rondalo</fontlist>
+		</fontset>
+		<fontset>
+			<name>Whimsy TT</name>
+			<fontlist>Whimsy TT</fontlist>
+		</fontset>
+		<fontset>
+			<name>Addled</name>
+			<fontlist>Addled</fontlist>
+		</fontset>
+		<fontset>
+			<name>Calligraphic</name>
+			<fontlist>Calligraphic</fontlist>
+		</fontset>
+		<fontset>
+			<name>Commons</name>
+			<fontlist>Commons</fontlist>
+		</fontset>
+		<fontset>
+			<name>DicotMedium</name>
+			<fontlist>DicotMedium</fontlist>
+		</fontset>
+		<fontset>
+			<name>Harvest</name>
+			<fontlist>Harvest</fontlist>
+		</fontset>
+		<fontset>
+			<name>Niamey</name>
+			<fontlist>Niamey</fontlist>
+		</fontset>
+		<fontset>
+			<name>Abbess</name>
+			<fontlist>Abbess</fontlist>
+		</fontset>
+		<fontset>
+			<name>Unpact</name>
+			<fontlist>Unpact</fontlist>
+		</fontset>
+		<fontset>
+			<name>Andorra</name>
+			<fontlist>Andorra</fontlist>
+		</fontset>
+		<fontset>
+			<name>Brussels</name>
+			<fontlist>Brussels</fontlist>
+		</fontset>
+		<fontset>
+			<name>Crandall</name>
+			<fontlist>Crandall</fontlist>
+		</fontset>
+		<fontset>
+			<name>KlingBold</name>
+			<fontlist>KlingBold</fontlist>
+		</fontset>
+		<fontset>
+			<name>Lissen</name>
+			<fontlist>Lissen</fontlist>
+		</fontset>
+		<fontset>
+			<name>Mingle</name>
+			<fontlist>Mingle</fontlist>
+		</fontset>
+		<fontset>
+			<name>Corporate</name>
+			<fontlist>Corporate</fontlist>
+		</fontset>
+		<fontset>
+			<name>BolsterBold</name>
+			<fontlist>BolsterBold</fontlist>
+		</fontset>
+		<fontset>
+			<name>Ballet</name>
+			<fontlist>Ballet</fontlist>
+		</fontset>
+		<fontset>
+			<name>Bering</name>
+			<fontlist>Bering</fontlist>
+		</fontset>
+		<fontset>
+			<name>Calvin</name>
+			<fontlist>Calvin</fontlist>
+		</fontset>
+		<fontset>
+			<name>Manorly</name>
+			<fontlist>Manorly</fontlist>
+		</fontset>
+		<fontset>
+			<name>Splash</name>
+			<fontlist>Splash</fontlist>
+		</fontset>
+		<fontset>
+			<name>Russel Write TT</name>
+			<fontlist>Russel Write TT</fontlist>
+		</fontset>
+		<fontset>
+			<name>Tarzan</name>
+			<fontlist>Tarzan</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial</name>
+			<fontlist>Arial</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial CE</name>
+			<fontlist>Arial CE</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial CYR</name>
+			<fontlist>Arial CYR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial Greek</name>
+			<fontlist>Arial Greek</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial TUR</name>
+			<fontlist>Arial TUR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial Black</name>
+			<fontlist>Arial Black</fontlist>
+		</fontset>
+		<fontset>
+			<name>Arial Narrow</name>
+			<fontlist>Arial Narrow</fontlist>
+		</fontset>
+		<fontset>
+			<name>Book Antiqua</name>
+			<fontlist>Book Antiqua</fontlist>
+		</fontset>
+		<fontset>
+			<name>Bookman Old Style</name>
+			<fontlist>Bookman Old Style</fontlist>
+		</fontset>
+		<fontset>
+			<name>Century Gothic</name>
+			<fontlist>Century Gothic</fontlist>
+		</fontset>
+		<fontset>
+			<name>Courier New</name>
+			<fontlist>Courier New</fontlist>
+		</fontset>
+		<fontset>
+			<name>Courier New CE</name>
+			<fontlist>Courier New CE</fontlist>
+		</fontset>
+		<fontset>
+			<name>Courier New CYR</name>
+			<fontlist>Courier New CYR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Courier New Greek</name>
+			<fontlist>Courier New Greek</fontlist>
+		</fontset>
+		<fontset>
+			<name>Courier New TUR</name>
+			<fontlist>Courier New TUR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Garamond</name>
+			<fontlist>Garamond</fontlist>
+		</fontset>
+		<fontset>
+			<name>MS Outlook</name>
+			<fontlist>MS Outlook</fontlist>
+		</fontset>
+		<fontset>
+			<name>Times New Roman</name>
+			<fontlist>Times New Roman</fontlist>
+		</fontset>
+		<fontset>
+			<name>Times New Roman CE</name>
+			<fontlist>Times New Roman CE</fontlist>
+		</fontset>
+		<fontset>
+			<name>Times New Roman CYR</name>
+			<fontlist>Times New Roman CYR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Times New Roman Greek</name>
+			<fontlist>Times New Roman Greek</fontlist>
+		</fontset>
+		<fontset>
+			<name>Times New Roman TUR</name>
+			<fontlist>Times New Roman TUR</fontlist>
+		</fontset>
+		<fontset>
+			<name>Verdana</name>
+			<fontlist>Verdana</fontlist>
+		</fontset>
+		<fontset>
+			<name>Wingdings</name>
+			<fontlist>Wingdings</fontlist>
+		</fontset>
+		<fontset>
+			<name>Wingdings 2</name>
+			<fontlist>Wingdings 2</fontlist>
+		</fontset>
+		<fontset>
+			<name>Wingdings 3</name>
+			<fontlist>Wingdings 3</fontlist>
+		</fontset>
+		<fontset>
+			<name>Alchemy</name>
+			<fontlist>Alchemy</fontlist>
+		</fontset>
+		<fontset>
+			<name>Hermetic</name>
+			<fontlist>Hermetic</fontlist>
+		</fontset>
+		<fontset>
+			<name>Alchemist</name>
+			<fontlist>Alchemist</fontlist>
+		</fontset>
+		<fontset>
+			<name>Guitar Pro</name>
+			<fontlist>Guitar Pro</fontlist>
+		</fontset>
+		<fontset>
+			<name>NimbusSanTCon</name>
+			<fontlist>NimbusSanTCon</fontlist>
+		</fontset>
+		<fontset>
+			<name>AnzeigenGroT</name>
+			<fontlist>AnzeigenGroT</fontlist>
+		</fontset>
+		<fontset>
+			<name>Symphony</name>
+			<fontlist>Symphony</fontlist>
+		</fontset>
+		<fontset>
+			<name>Symphony Black</name>
+			<fontlist>Symphony Black</fontlist>
+		</fontset>
+		<fontset>
+			<name>Collage</name>
+			<fontlist>Collage</fontlist>
+		</fontset>
+		<fontset>
+			<name>Aeolus</name>
+			<fontlist>Aeolus</fontlist>
+		</fontset>
+		<fontset>
+			<name>CongressT</name>
+			<fontlist>CongressT</fontlist>
+		</fontset>
+		<fontset>
+			<name>EnglischeSchT</name>
+			<fontlist>EnglischeSchT</fontlist>
+		</fontset>
+		<fontset>
+			<name>DonnysHand</name>
+			<fontlist>DonnysHand</fontlist>
+		</fontset>
+		<fontset>
+			<name>Collins Extended</name>
+			<fontlist>Collins Extended</fontlist>
+		</fontset>
+		<fontset>
+			<name>Lucida Sans</name>
+			<fontlist>Lucida Sans</fontlist>
+		</fontset>
+		<fontset>
+			<name>Hardmedia Reference Chars Two</name>
+			<fontlist>Hardmedia Reference Chars Two</fontlist>
+		</fontset>
+		<fontset>
+			<name>Hardmedia Reference Characters</name>
+			<fontlist>Hardmedia Reference Characters</fontlist>
+		</fontset>
+		<fontset>
+			<name>MerriamExt</name>
+			<fontlist>MerriamExt</fontlist>
+		</fontset>
+		<fontset>
+			<name>MerriamIPA</name>
+			<fontlist>MerriamIPA</fontlist>
+		</fontset>
+		<fontset>
+			<name>MerriamRegular</name>
+			<fontlist>MerriamRegular</fontlist>
+		</fontset>
+		<fontset>
+			<name>Merriam WebsterSpecial</name>
+			<fontlist>Merriam WebsterSpecial</fontlist>
+		</fontset>
+		<fontset>
+			<name>TtsNote</name>
+			<fontlist>TtsNote</fontlist>
+		</fontset>
+		<fontset>
+			<name>Inkpen2 Chords</name>
+			<fontlist>Inkpen2 Chords</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Inkpen2 Chords</name>
+			<fontlist>@Inkpen2 Chords</fontlist>
+		</fontset>
+		<fontset>
+			<name>Inkpen2 Text</name>
+			<fontlist>Inkpen2 Text</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Inkpen2 Text</name>
+			<fontlist>@Inkpen2 Text</fontlist>
+		</fontset>
+		<fontset>
+			<name>Inkpen2 Special</name>
+			<fontlist>Inkpen2 Special</fontlist>
+		</fontset>
+		<fontset>
+			<name>Inkpen2 Script</name>
+			<fontlist>Inkpen2 Script</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Inkpen2 Script</name>
+			<fontlist>@Inkpen2 Script</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus Text</name>
+			<fontlist>Opus Text</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Opus Text</name>
+			<fontlist>@Opus Text</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus Chords</name>
+			<fontlist>Opus Chords</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Opus Chords</name>
+			<fontlist>@Opus Chords</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus Special</name>
+			<fontlist>Opus Special</fontlist>
+		</fontset>
+		<fontset>
+			<name>Opus PlainChords</name>
+			<fontlist>Opus PlainChords</fontlist>
+		</fontset>
+		<fontset>
+			<name>@Opus PlainChords</name>
+			<fontlist>@Opus PlainChords</fontlist>
+		</fontset>
+		<fontset>
+			<name>kroeger 0853</name>
+			<fontlist>kroeger 0853</fontlist>
+		</fontset>
+		<fontset>
+			<name>guitalc2</name>
+			<fontlist>guitalc2</fontlist>
+		</fontset>
+		<fontset>
+			<name>guitalc1</name>
+			<fontlist>guitalc1</fontlist>
+		</fontset>
+	</fontsets>
+</rhpml>

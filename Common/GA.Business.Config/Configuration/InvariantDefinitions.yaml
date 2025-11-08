@@ -1,0 +1,298 @@
+# Musical Knowledge Invariant Definitions
+# This file defines all invariants for musical concepts in a declarative way
+
+invariant_groups:
+  iconic_chords:
+    target_type: "IconicChordDefinition"
+    description: "Invariants for iconic chord validation"
+    invariants:
+      - name: "NameNotEmpty"
+        description: "Chord name must not be empty or whitespace"
+        category: "Required Fields"
+        severity: "Error"
+        rule_type: "NotEmpty"
+        target_property: "Name"
+        error_message: "Chord name cannot be empty or whitespace"
+
+      - name: "TheoreticalNameValid"
+        description: "Theoretical name must follow proper chord notation"
+        category: "Music Theory"
+        severity: "Error"
+        rule_type: "Regex"
+        target_property: "TheoreticalName"
+        pattern: "^[A-G][#b]?(maj|min|dim|aug|sus[24]|[0-9]+)*$"
+        error_message: "Theoretical name must follow proper chord notation (e.g., Cmaj7, F#min, Bb7)"
+
+      - name: "PitchClassesValid"
+        description: "Pitch classes must be valid integers between 0-11"
+        category: "Music Theory"
+        severity: "Error"
+        rule_type: "Collection"
+        target_property: "PitchClasses"
+        collection_rules:
+          - type: "NotEmpty"
+            error_message: "Pitch classes cannot be null or empty"
+          - type: "MinCount"
+            value: 2
+            error_message: "A chord must contain at least 2 different pitch classes"
+          - type: "Range"
+            min: 0
+            max: 11
+            error_message: "Pitch classes must be between 0-11"
+          - type: "Unique"
+            error_message: "Duplicate pitch classes are not allowed"
+
+      - name: "GuitarVoicingValid"
+        description: "Guitar voicing must be valid fret numbers"
+        category: "Guitar Specific"
+        severity: "Warning"
+        rule_type: "Collection"
+        target_property: "GuitarVoicing"
+        optional: true
+        collection_rules:
+          - type: "ExactCount"
+            value: 6
+            error_message: "Guitar voicing must have exactly 6 fret values (one per string)"
+          - type: "Range"
+            min: -1
+            max: 24
+            error_message: "Fret numbers must be -1 (muted) or 0-24"
+          - type: "Custom"
+            rule: "AtLeastPlayedStrings"
+            parameters:
+              min_played: 2
+            error_message: "At least 2 strings must be played (not muted)"
+
+      - name: "ArtistNotEmpty"
+        description: "Artist name must not be empty"
+        category: "Required Fields"
+        severity: "Error"
+        rule_type: "NotEmpty"
+        target_property: "Artist"
+        error_message: "Artist name cannot be empty or whitespace"
+
+      - name: "GenreValid"
+        description: "Genre must be from a recognized list"
+        category: "Music Classification"
+        severity: "Warning"
+        rule_type: "Enum"
+        target_property: "Genre"
+        allowed_values:
+          - "Rock"
+          - "Blues"
+          - "Jazz"
+          - "Classical"
+          - "Folk"
+          - "Country"
+          - "Pop"
+          - "Metal"
+          - "Punk"
+          - "Reggae"
+          - "R&B"
+          - "Soul"
+          - "Funk"
+          - "Electronic"
+          - "Hip-Hop"
+          - "Alternative"
+          - "Progressive"
+          - "Fusion"
+          - "Latin"
+          - "World"
+          - "Experimental"
+          - "Ambient"
+          - "Indie"
+          - "Grunge"
+          - "Hard Rock"
+          - "Soft Rock"
+        error_message: "Genre must be from the recognized list of musical genres"
+
+  chord_progressions:
+    target_type: "ChordProgressionDefinition"
+    description: "Invariants for chord progression validation"
+    invariants:
+      - name: "ProgressionNameNotEmpty"
+        description: "Progression name must not be empty"
+        category: "Required Fields"
+        severity: "Error"
+        rule_type: "NotEmpty"
+        target_property: "Name"
+        error_message: "Chord progression name cannot be empty or whitespace"
+
+      - name: "RomanNumeralsValid"
+        description: "Roman numerals must be valid chord function notation"
+        category: "Music Theory"
+        severity: "Error"
+        rule_type: "Collection"
+        target_property: "RomanNumerals"
+        collection_rules:
+          - type: "NotEmpty"
+            error_message: "Roman numerals cannot be null or empty"
+          - type: "Enum"
+            allowed_values:
+              - "I"
+              - "i"
+              - "II"
+              - "ii"
+              - "III"
+              - "iii"
+              - "IV"
+              - "iv"
+              - "V"
+              - "v"
+              - "VI"
+              - "vi"
+              - "VII"
+              - "vii"
+              - "I7"
+              - "i7"
+              - "II7"
+              - "ii7"
+              - "Imaj7"
+              - "imaj7"
+              - "I°"
+              - "i°"
+              - "I+"
+              - "i+"
+              - "Isus2"
+              - "Isus4"
+            error_message: "Invalid Roman numeral chord notation"
+
+      - name: "ProgressionLengthReasonable"
+        description: "Progression should have reasonable length"
+        category: "Music Structure"
+        severity: "Warning"
+        rule_type: "Collection"
+        target_property: "RomanNumerals"
+        collection_rules:
+          - type: "MinCount"
+            value: 2
+            error_message: "A chord progression should have at least 2 chords"
+          - type: "MaxCount"
+            value: 32
+            error_message: "Chord progression may be too long for practical use"
+
+  guitar_techniques:
+    target_type: "GuitarTechniqueDefinition"
+    description: "Invariants for guitar technique validation"
+    invariants:
+      - name: "TechniqueNameNotEmpty"
+        description: "Technique name must not be empty"
+        category: "Required Fields"
+        severity: "Error"
+        rule_type: "NotEmpty"
+        target_property: "Name"
+        error_message: "Guitar technique name cannot be empty or whitespace"
+
+      - name: "TechniqueCategoryValid"
+        description: "Category must be recognized"
+        category: "Guitar Classification"
+        severity: "Warning"
+        rule_type: "Enum"
+        target_property: "Category"
+        allowed_values:
+          - "Picking"
+          - "Strumming"
+          - "Fingerpicking"
+          - "Fretting"
+          - "Bending"
+          - "Vibrato"
+          - "Slides"
+          - "Hammer-ons"
+          - "Pull-offs"
+          - "Tapping"
+          - "Harmonics"
+          - "Tremolo"
+          - "Arpeggios"
+          - "Advanced"
+          - "Classical"
+          - "Flamenco"
+          - "Jazz"
+          - "Blues"
+          - "Rock"
+          - "Metal"
+        error_message: "Technique category must be from the recognized list"
+
+      - name: "TechniqueDescriptionMeaningful"
+        description: "Description should be meaningful and informative"
+        category: "Content Quality"
+        severity: "Warning"
+        rule_type: "String"
+        target_property: "Description"
+        string_rules:
+          - type: "MinLength"
+            value: 20
+            error_message: "Description should be at least 20 characters for meaningful content"
+          - type: "NotContains"
+            values: [ "TODO", "TBD", "placeholder", "description here" ]
+            error_message: "Description contains placeholder text and should be completed"
+
+  specialized_tunings:
+    target_type: "SpecializedTuningDefinition"
+    description: "Invariants for specialized tuning validation"
+    invariants:
+      - name: "TuningNameNotEmpty"
+        description: "Tuning name must not be empty"
+        category: "Required Fields"
+        severity: "Error"
+        rule_type: "NotEmpty"
+        target_property: "Name"
+        error_message: "Specialized tuning name cannot be empty or whitespace"
+
+      - name: "TuningPitchClassesValid"
+        description: "Pitch classes must be valid for tuning"
+        category: "Music Theory"
+        severity: "Error"
+        rule_type: "Collection"
+        target_property: "PitchClasses"
+        collection_rules:
+          - type: "NotEmpty"
+            error_message: "Tuning pitch classes cannot be null or empty"
+          - type: "MinCount"
+            value: 3
+            error_message: "Tuning should have at least 3 strings"
+          - type: "MaxCount"
+            value: 12
+            error_message: "Tuning with more than 12 strings is unusually high"
+          - type: "Range"
+            min: 0
+            max: 11
+            error_message: "Pitch classes must be between 0-11"
+
+      - name: "TuningPatternValid"
+        description: "Pattern should contain valid note names"
+        category: "Music Theory"
+        severity: "Error"
+        rule_type: "Regex"
+        target_property: "TuningPattern"
+        pattern: ".*[A-G][#b]?.*"
+        error_message: "Tuning pattern should contain valid note names (C, D, E, F, G, A, B with sharps/flats)"
+
+# Global settings
+settings:
+  cache_enabled: true
+  cache_duration_minutes: 15
+  performance_monitoring: true
+  async_validation: true
+  max_concurrent_validations: 8
+  validation_timeout_seconds: 30
+
+# Environment-specific overrides
+environments:
+  development:
+    cache_enabled: false
+    performance_monitoring: true
+    async_validation: false
+    validation_timeout_seconds: 300
+
+  production:
+    cache_enabled: true
+    cache_duration_minutes: 60
+    performance_monitoring: true
+    async_validation: true
+    max_concurrent_validations: 16
+
+  testing:
+    cache_enabled: false
+    performance_monitoring: false
+    async_validation: false
+    severity_filter: [ "Error", "Critical" ]

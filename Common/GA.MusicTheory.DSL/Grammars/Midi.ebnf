@@ -1,0 +1,273 @@
+(* ============================================================================
+   MIDI File Format Grammar (EBNF)
+   ============================================================================
+   
+   MIDI (Musical Instrument Digital Interface) is a binary format for
+   representing musical performance data. This grammar describes the
+   structure of Standard MIDI Files (SMF).
+   
+   References:
+   - MIDI 1.0 Specification
+   - Standard MIDI Files 1.0 Specification
+   - https://www.midi.org/specifications
+   
+   ============================================================================ *)
+
+(* ============================================================================
+   BASIC TYPES
+   ============================================================================ *)
+
+(* Byte values *)
+byte = ? 8-bit unsigned integer (0-255) ? ;
+
+(* Multi-byte integers (big-endian) *)
+int16 = byte, byte ;
+int32 = byte, byte, byte, byte ;
+
+(* Variable-length quantity (VLQ) *)
+vlq = { byte - last_byte }, last_byte ;
+last_byte = ? byte with bit 7 = 0 ? ;
+
+(* ============================================================================
+   MIDI FILE STRUCTURE
+   ============================================================================ *)
+
+(* Complete MIDI file *)
+midi_file = header_chunk, { track_chunk } ;
+
+(* ============================================================================
+   HEADER CHUNK
+   ============================================================================ *)
+
+(* Header chunk *)
+header_chunk = "MThd", chunk_length, format, track_count, time_division ;
+
+(* Chunk length (always 6 for header) *)
+chunk_length = int32 ;
+
+(* MIDI file format *)
+format = format_0 | format_1 | format_2 ;
+format_0 = ? int16 value 0 (single track) ? ;
+format_1 = ? int16 value 1 (multiple tracks, synchronous) ? ;
+format_2 = ? int16 value 2 (multiple tracks, asynchronous) ? ;
+
+(* Number of tracks *)
+track_count = int16 ;
+
+(* Time division *)
+time_division = ticks_per_quarter | smpte_time ;
+ticks_per_quarter = ? int16 with bit 15 = 0 (ticks per quarter note) ? ;
+smpte_time = ? int16 with bit 15 = 1 (SMPTE format) ? ;
+
+(* ============================================================================
+   TRACK CHUNK
+   ============================================================================ *)
+
+(* Track chunk *)
+track_chunk = "MTrk", chunk_length, { midi_event } ;
+
+(* MIDI event with delta time *)
+midi_event = delta_time, event ;
+
+(* Delta time (VLQ) *)
+delta_time = vlq ;
+
+(* Event types *)
+event = channel_event | meta_event | sysex_event ;
+
+(* ============================================================================
+   CHANNEL EVENTS
+   ============================================================================ *)
+
+(* Channel events (with running status) *)
+channel_event = note_off | note_on | poly_pressure | control_change |
+                program_change | channel_pressure | pitch_bend ;
+
+(* Note Off (0x80-0x8F) *)
+note_off = ? 0x80 + channel ?, note_number, velocity ;
+
+(* Note On (0x90-0x9F) *)
+note_on = ? 0x90 + channel ?, note_number, velocity ;
+
+(* Polyphonic Key Pressure (0xA0-0xAF) *)
+poly_pressure = ? 0xA0 + channel ?, note_number, pressure ;
+
+(* Control Change (0xB0-0xBF) *)
+control_change = ? 0xB0 + channel ?, controller, value ;
+
+(* Program Change (0xC0-0xCF) *)
+program_change = ? 0xC0 + channel ?, program ;
+
+(* Channel Pressure (0xD0-0xDF) *)
+channel_pressure = ? 0xD0 + channel ?, pressure ;
+
+(* Pitch Bend (0xE0-0xEF) *)
+pitch_bend = ? 0xE0 + channel ?, lsb, msb ;
+
+(* Channel (0-15) *)
+channel = ? 4-bit value (0-15) ? ;
+
+(* Note number (0-127) *)
+note_number = ? 7-bit value (0-127) ? ;
+
+(* Velocity (0-127) *)
+velocity = ? 7-bit value (0-127) ? ;
+
+(* Pressure (0-127) *)
+pressure = ? 7-bit value (0-127) ? ;
+
+(* Controller number (0-127) *)
+controller = ? 7-bit value (0-127) ? ;
+
+(* Controller value (0-127) *)
+value = ? 7-bit value (0-127) ? ;
+
+(* Program number (0-127) *)
+program = ? 7-bit value (0-127) ? ;
+
+(* Pitch bend value (0-16383) *)
+lsb = ? 7-bit value (0-127) ? ;
+msb = ? 7-bit value (0-127) ? ;
+
+(* ============================================================================
+   META EVENTS
+   ============================================================================ *)
+
+(* Meta event (0xFF) *)
+meta_event = ? 0xFF ?, meta_type, length, data ;
+
+(* Meta event types *)
+meta_type = sequence_number | text_event | copyright | track_name |
+            instrument_name | lyric | marker | cue_point | channel_prefix |
+            end_of_track | tempo | smpte_offset | time_signature |
+            key_signature | sequencer_specific ;
+
+(* Sequence Number (0x00) *)
+sequence_number = ? 0x00 ?, ? length 2 ?, int16 ;
+
+(* Text Event (0x01) *)
+text_event = ? 0x01 ?, length, text ;
+
+(* Copyright Notice (0x02) *)
+copyright = ? 0x02 ?, length, text ;
+
+(* Track Name (0x03) *)
+track_name = ? 0x03 ?, length, text ;
+
+(* Instrument Name (0x04) *)
+instrument_name = ? 0x04 ?, length, text ;
+
+(* Lyric (0x05) *)
+lyric = ? 0x05 ?, length, text ;
+
+(* Marker (0x06) *)
+marker = ? 0x06 ?, length, text ;
+
+(* Cue Point (0x07) *)
+cue_point = ? 0x07 ?, length, text ;
+
+(* MIDI Channel Prefix (0x20) *)
+channel_prefix = ? 0x20 ?, ? length 1 ?, channel ;
+
+(* End of Track (0x2F) *)
+end_of_track = ? 0x2F ?, ? length 0 ? ;
+
+(* Set Tempo (0x51) *)
+tempo = ? 0x51 ?, ? length 3 ?, microseconds_per_quarter ;
+microseconds_per_quarter = byte, byte, byte ;
+
+(* SMPTE Offset (0x54) *)
+smpte_offset = ? 0x54 ?, ? length 5 ?, hour, minute, second, frame, fractional_frame ;
+hour = byte ;
+minute = byte ;
+second = byte ;
+frame = byte ;
+fractional_frame = byte ;
+
+(* Time Signature (0x58) *)
+time_signature = ? 0x58 ?, ? length 4 ?, numerator, denominator, clocks, thirty_seconds ;
+numerator = byte ;
+denominator = ? byte (power of 2: 2^n) ? ;
+clocks = byte ;
+thirty_seconds = byte ;
+
+(* Key Signature (0x59) *)
+key_signature = ? 0x59 ?, ? length 2 ?, sharps_flats, major_minor ;
+sharps_flats = ? signed byte (-7 to +7) ? ;
+major_minor = ? byte (0 = major, 1 = minor) ? ;
+
+(* Sequencer Specific (0x7F) *)
+sequencer_specific = ? 0x7F ?, length, data ;
+
+(* Length (VLQ) *)
+length = vlq ;
+
+(* Text data *)
+text = { byte } ;
+
+(* Binary data *)
+data = { byte } ;
+
+(* ============================================================================
+   SYSTEM EXCLUSIVE EVENTS
+   ============================================================================ *)
+
+(* System Exclusive (0xF0 or 0xF7) *)
+sysex_event = sysex_start | sysex_continue ;
+sysex_start = ? 0xF0 ?, length, sysex_data, ? 0xF7 ? ;
+sysex_continue = ? 0xF7 ?, length, sysex_data ;
+sysex_data = { byte } ;
+
+(* ============================================================================
+   GUITAR-SPECIFIC EXTENSIONS (Non-standard)
+   ============================================================================ *)
+
+(* Guitar tablature can be represented using MIDI notes with:
+   - Channel 0-5 for strings 1-6
+   - Note number = open string MIDI note + fret number
+   - Velocity for dynamics
+   - Control changes for techniques:
+     - CC 64: Sustain (hammer-on/pull-off)
+     - CC 65: Portamento (slide)
+     - CC 66: Sostenuto (bend)
+     - CC 67: Soft pedal (vibrato)
+     - CC 68: Legato (palm mute)
+*)
+
+(* Standard guitar tuning (MIDI note numbers):
+   String 1 (E4): 64
+   String 2 (B3): 59
+   String 3 (G3): 55
+   String 4 (D3): 50
+   String 5 (A2): 45
+   String 6 (E2): 40
+*)
+
+(* ============================================================================
+   EXAMPLES
+   ============================================================================ *)
+
+(* Example 1: Simple C major scale on guitar
+   
+   Track 1:
+   - Delta: 0, Event: Note On (channel 0, note 64, velocity 100)  ; E4 (string 1, fret 0)
+   - Delta: 96, Event: Note Off (channel 0, note 64, velocity 0)
+   - Delta: 0, Event: Note On (channel 0, note 66, velocity 100)  ; F#4 (string 1, fret 2)
+   - Delta: 96, Event: Note Off (channel 0, note 66, velocity 0)
+   ...
+*)
+
+(* Example 2: Chord (C major)
+   
+   Track 1:
+   - Delta: 0, Event: Note On (channel 2, note 60, velocity 100)  ; C4 (string 3, fret 5)
+   - Delta: 0, Event: Note On (channel 3, note 55, velocity 100)  ; G3 (string 4, fret 5)
+   - Delta: 0, Event: Note On (channel 4, note 48, velocity 100)  ; C3 (string 5, fret 3)
+   - Delta: 0, Event: Note On (channel 5, note 40, velocity 100)  ; E2 (string 6, fret 0)
+   - Delta: 480, Event: Note Off (all notes)
+*)
+
+(* ============================================================================
+   END OF GRAMMAR
+   ============================================================================ *)
+

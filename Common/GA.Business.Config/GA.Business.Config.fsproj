@@ -1,62 +1,84 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<TargetFramework>net9.0</TargetFramework>
-		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild> <!-- See https://github.com/fsbolero/Bolero/issues/279 -->
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<DebugType>embedded</DebugType>
+    <PropertyGroup>
+        <Configurations>Debug;Release</Configurations>
+        <TargetFramework>net9.0</TargetFramework>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild> <!-- See https://github.com/fsbolero/Bolero/issues/279 -->
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <DebugType>embedded</DebugType>
 
-		<!-- NuGet package properties -->
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageId>GA.Business.Config</PackageId>
-		<Version>1.0.0</Version>
-		<Authors>Your Name</Authors>
-		<Company>Your Company</Company>
-		<Description>Guitar Alchemist Business Configuration</Description>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
-	</PropertyGroup>
+        <!-- NuGet package properties -->
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>GA.Business.Config</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Your Name</Authors>
+        <Company>Your Company</Company>
+        <Description>Guitar Alchemist Business Configuration</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>http://www.guitaralchemist.com/</PackageProjectUrl>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="InstrumentsConfig.fs" />
-		<Compile Include="ScalesConfig.fs" />
-		<Compile Include="ModesConfig.fs" />
-	</ItemGroup>
+    <ItemGroup>
+        <Compile Include="InstrumentsConfig.fs"/>
+        <Compile Include="ScalesConfig.fs"/>
+        <Compile Include="ModesConfig.fs"/>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="FSharp.Configuration" Version="2.0.0" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+        <PackageReference Include="YamlDotNet" Version="16.2.1"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Include="ImportantMissingModes.yaml" />
-		<Content Include="MissingModes.yaml" />
-	</ItemGroup>
+    <ItemGroup>
+        <Content Include="ImportantMissingModes.yaml"/>
+        <Content Include="MissingModes.yaml"/>
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Include="Modes.yaml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="Scales.yaml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="Tunings.toml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="Tunings.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="Instruments.yaml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="ModalScalesConfig.yaml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-	
+    <ItemGroup>
+        <None Include="Modes.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="Scales.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="Tunings.toml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="Tunings.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="Instruments.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="ModalScalesConfig.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="IconicChords.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Content Include="AdvancedHarmony.yaml"/>
+        <Content Include="ArticulationTechniques.yaml"/>
+        <Content Include="AtonalTechniques.yaml"/>
+        <Content Include="ChordProgressions.yaml"/>
+        <Content Include="Counterpoint.yaml"/>
+        <Content Include="ExtendedChords.yaml"/>
+        <Content Include="FormAndComposition.yaml"/>
+        <Content Include="GuitarEffects.yaml"/>
+        <Content Include="GuitarTechniques.yaml"/>
+        <Content Include="ImprovisationConcepts.yaml"/>
+        <Content Include="KeyModulationTechniques.yaml"/>
+        <Content Include="ModalInterchange.yaml"/>
+        <Content Include="NotationSchema.yaml"/>
+        <Content Include="PedalTones.yaml"/>
+        <Content Include="RhythmicConcepts.yaml"/>
+        <Content Include="SpecializedTunings.yaml"/>
+        <Content Include="StringInstrumentTechniques.yaml"/>
+        <Content Include="VoiceLeading.yaml"/>
+    </ItemGroup>
+
 </Project>

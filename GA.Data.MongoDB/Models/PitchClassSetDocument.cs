@@ -1,5 +1,3 @@
-using MongoDB.Bson;
-
 namespace GA.Data.MongoDB.Models;
 
 [PublicAPI]

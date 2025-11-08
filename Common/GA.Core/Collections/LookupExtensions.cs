@@ -3,7 +3,7 @@
 [PublicAPI]
 public static class LookupExtensions
 {
-    public static ImmutableSortedDictionary<TKey, int> GetCounts<TKey, TElement>(this ILookup<TKey, TElement> lookup) 
+    public static ImmutableSortedDictionary<TKey, int> GetCounts<TKey, TElement>(this ILookup<TKey, TElement> lookup)
         where TKey : notnull
     {
         ArgumentNullException.ThrowIfNull(lookup);
@@ -14,6 +14,7 @@ public static class LookupExtensions
             var norm = grouping.Key;
             dictBuilder.Add(norm, grouping.Count());
         }
+
         return dictBuilder.ToImmutable();
     }
 }

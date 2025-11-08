@@ -1,7 +1,7 @@
+namespace GA.Data.MongoDB.Services.Embeddings;
+
 using System.Text;
 using System.Text.Json;
-
-namespace GA.Data.MongoDB.Services.Embeddings;
 
 public class OllamaEmbeddingService(
     HttpClient client,

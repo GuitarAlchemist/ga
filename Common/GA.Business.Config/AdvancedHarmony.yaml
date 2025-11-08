@@ -1,0 +1,187 @@
+AdvancedHarmonyTechniques:
+  - Name: "Extended Chords"
+    Description: "Chords with added tensions beyond the seventh"
+    Category: "Jazz/Contemporary"
+    Theory: "Extensions of tertian harmony using 9ths, 11ths, and 13ths"
+    ChordTypes:
+      - Name: "Ninth Chords"
+        Symbol: "9"
+        Structure: "Root, 3rd, 5th, 7th, 9th"
+        Examples:
+          - Chord: "Cmaj9"
+            Notes: [ "C", "E", "G", "B", "D" ]
+            Function: "Tonic with added color"
+          - Chord: "G13"
+            Notes: [ "G", "B", "D", "F", "A", "C", "E" ]
+            Function: "Dominant with maximum extensions"
+        GuitarVoicings:
+          - "Drop 2 and 4 voicings for playability"
+          - "Rootless voicings for cleaner sound"
+          - "Shell voicings with extensions"
+
+      - Name: "Eleventh Chords"
+        Symbol: "11"
+        Structure: "Root, 3rd, 5th, 7th, 9th, 11th"
+        Considerations: "11th often conflicts with 3rd"
+        CommonUsage: "Sus4 chords, modal harmony"
+        Examples:
+          - Chord: "Dm11"
+            Notes: [ "D", "F", "A", "C", "E", "G" ]
+            Context: "Minor ii chord in jazz"
+
+      - Name: "Thirteenth Chords"
+        Symbol: "13"
+        Structure: "All chord tones through 13th"
+        Practice: "Often omit 11th to avoid dissonance"
+        Examples:
+          - Chord: "G13"
+            Notes: [ "G", "B", "F", "A", "E" ]
+            Usage: "Dominant function with color"
+    Applications:
+      - "Jazz harmony and improvisation"
+      - "Contemporary classical music"
+      - "Pop and R&B progressions"
+      - "Film and television scoring"
+
+  - Name: "Added Note Chords"
+    Description: "Tonal chords with non-functional added tones"
+    Category: "Extended Tonality"
+    Theory: "Adds color tones (2, 4, 6) without altering harmonic function"
+    Examples:
+      - Chord: "Cadd9"
+        Notes: [ "C", "E", "G", "D" ]
+        Effect: "Gentle tension and openness"
+      - Chord: "Am(add11)"
+        Notes: [ "A", "C", "E", "D" ]
+        Effect: "Modal ambiguity"
+    GuitarApplications:
+      - "Open string resonance for natural extensions"
+      - "Fingerstyle color chords"
+      - "Pop and cinematic textures"
+
+  - Name: "Synthetic Scales Harmony"
+    Description: "Harmony derived from artificial or symmetrical scales"
+    Category: "Modern Tonality"
+    Theory: "Use of non-diatonic, non-functional scales for harmonic generation"
+    Scales:
+      - Name: "Whole-Half Diminished Scale"
+        Example: "C, D, Eb, F, Gb, Ab, A, B"
+        Use: "Dominant chords with tension"
+      - Name: "Augmented Scale"
+        Example: "C, Eb, E, G, Ab, B"
+        Use: "Symmetrical tension, dreamlike color"
+      - Name: "Messiaen’s Mode 2 (Octatonic)"
+        Example: "C, Db, Eb, E, F#, G, A, Bb"
+        Use: "Mystical and static harmony"
+    Composers: [ "Olivier Messiaen", "Alexander Scriabin" ]
+    Applications:
+      - "Mystic chord harmony"
+      - "Color-based progressions"
+      - "Film and impressionist music"
+
+  - Name: "Polymodality"
+    Description: "Simultaneous use of multiple modes or modal centers"
+    Category: "Contemporary Tonality"
+    Theory: "Superimposing modal frameworks from different roots"
+    Examples:
+      - "C Mixolydian against F Lydian"
+      - "D Dorian against A Aeolian"
+    Effect: "Modal fusion and extended color"
+    Applications:
+      - "Jazz modal interplay"
+      - "Modern film scoring"
+      - "World music influences"
+
+  - Name: "Polychords"
+    Description: "Two or more chords sounded simultaneously"
+    Category: "Contemporary"
+    Theory: "Superimposition of different harmonic structures"
+    Notation: "Upper chord over lower chord (C/F#)"
+    Types:
+      - Name: "Triad over Triad"
+        Example: "C major over F# major"
+        Effect: "Bitonal harmony, complex color"
+        Analysis: "Creates all 12 chromatic pitches"
+      - Name: "Seventh Chord over Bass"
+        Example: "Cmaj7 over E bass"
+        Effect: "Extended harmony implications"
+        Function: "Substitute for complex extended chords"
+      - Name: "Split Chord Voicing"
+        Example: "C major in right hand, Ab major in left"
+        Effect: "Polytonal tension, cinematic resonance"
+    GuitarTechniques:
+      - "Two-hand tapping for polychords"
+      - "Open string drones with fretted chords"
+      - "Capo techniques for polychordal effects"
+    Applications:
+      - "Impressionist music (Debussy, Ravel)"
+      - "Jazz reharmonization"
+      - "Contemporary classical"
+      - "Progressive rock and fusion"
+
+  - Name: "Cluster Chords"
+    Description: "Chords built from adjacent semitones or tones"
+    Category: "Contemporary"
+    Theory: "Maximum dissonance through close intervals"
+    Types:
+      - Name: "Semitone Clusters"
+        Example: "C-C#-D-D#"
+        Effect: "Maximum dissonance"
+        Usage: "Avant-garde, sound effects"
+      - Name: "Tone Clusters"
+        Example: "C-D-E-F#"
+        Effect: "Less harsh than semitone clusters"
+        Usage: "Impressionist effects"
+    GuitarApplications:
+      - "Adjacent fret fingerings"
+      - "Slide guitar cluster effects"
+      - "Prepared guitar techniques"
+    Composers:
+      - "Henry Cowell"
+      - "György Ligeti"
+      - "John Cage"
+
+  - Name: "Microtonal Harmony"
+    Description: "Harmonic systems using intervals smaller than semitones"
+    Category: "Experimental"
+    Theory: "Divides octave into micro-intervals such as quarter-tones or sixth-tones"
+    Methods:
+      - "Quarter-tone scales"
+      - "Just intonation"
+      - "Equal temperament divisions (19, 24, 31 TET)"
+    Composers: [ "Julian Carrillo", "Ben Johnston", "James Tenney" ]
+    GuitarApplications:
+      - "Fretless guitar or modified fretboards"
+      - "Slide and micro-bending"
+      - "Digital pitch modulation"
+    Aesthetic: "Expands harmony beyond 12-tone limits"
+
+  - Name: "Spectral Harmony"
+    Description: "Harmony derived from overtone spectra"
+    Category: "Post-Tonal"
+    Theory: "Chord structures based on natural frequency ratios"
+    Construction:
+      - Name: "Overtone-Derived Chords"
+        Example: "C fundamental: [C, G, Bb, D, E, G, B]"
+        Effect: "Organic resonance, timbral unity"
+      - Name: "Subharmonic Harmony"
+        Example: "C, F#, D, A#"
+        Effect: "Dark inversion of spectral hierarchy"
+    Composers: [ "Gérard Grisey", "Tristan Murail", "Kaija Saariaho" ]
+    Applications:
+      - "Spectral orchestration"
+      - "Timbre-led chordal transformation"
+      - "Guitar harmonics-based voicings"
+
+  - Name: "Neo-Functional Reharmonization"
+    Description: "Reinterpreting tonal harmony with modern extensions"
+    Category: "Jazz/Neo-Classical Fusion"
+    Techniques:
+      - "Secondary dominant chains"
+      - "Modal mixture reharmonization"
+      - "Extended cycle-of-fifths substitutions"
+    Artists: [ "Jacob Collier", "Esperanza Spalding" ]
+    GuitarApplications:
+      - "Reharmonized standards"
+      - "Complex cadential cycles"
+      - "Extended diatonic color"

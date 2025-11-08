@@ -33,7 +33,7 @@ export default {
                 'semi': ['error', 'always'],
                 'react-refresh/only-export-components': [
                     'warn',
-                    { allowConstantExport: true },
+                    {allowConstantExport: true},
                 ],
             },
             settings: {

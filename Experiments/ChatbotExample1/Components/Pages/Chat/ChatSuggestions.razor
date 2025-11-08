@@ -13,7 +13,8 @@
 }
 
 @code {
-    private static string Prompt = @"
+
+    private static readonly string Prompt = @"
         Suggest up to 3 follow-up questions that I could ask you to help me complete my task.
         Each suggestion must be a complete sentence, maximum 6 words.
         Each suggestion must be phrased as something that I (the user) would ask you (the assistant) in response to your previous message,
@@ -24,8 +25,7 @@
     private string[]? suggestions;
     private CancellationTokenSource? cancellation;
 
-    [Parameter]
-    public EventCallback<ChatMessage> OnSelected { get; set; }
+    [Parameter] public EventCallback<ChatMessage> OnSelected { get; set; }
 
     public void Clear()
     {
@@ -75,4 +75,5 @@
         var otherMessages = messages.Where((m, index) => m.Role == ChatRole.User || m.Role == ChatRole.Assistant).Where(m => !string.IsNullOrEmpty(m.Text)).TakeLast(5);
         return systemMessages.Concat(otherMessages);
     }
+
 }

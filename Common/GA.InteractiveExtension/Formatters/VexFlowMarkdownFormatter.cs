@@ -2,5 +2,8 @@
 
 internal class VexFlowMarkdownFormatter : ITypeFormatterSource
 {
-    public IEnumerable<ITypeFormatter> CreateTypeFormatters() => this.CreateVexFlowTypeFormatters();
+    public IEnumerable<ITypeFormatter> CreateTypeFormatters()
+    {
+        return this.CreateVexFlowTypeFormatters();
+    }
 }

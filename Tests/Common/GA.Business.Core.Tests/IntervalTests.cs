@@ -1,12 +1,8 @@
 namespace GA.Business.Core.Tests;
 
-using GA.Business.Core.Intervals;
-
 [TestFixture]
 public class IntervalTests
 {
-    #region IParsable<Simple>
-
     [Test]
     public void Interval_TryParse_dd1()
     {
@@ -174,6 +170,4 @@ public class IntervalTests
 
         Assert.That(interval, Is.EqualTo(Interval.Compound.M10));
     }
-
-    #endregion
 }

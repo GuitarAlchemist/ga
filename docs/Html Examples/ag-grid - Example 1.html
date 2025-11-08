@@ -1,29 +1,29 @@
-﻿<div id="myGrid" style="height: 200px; width:500px;" class="ag-theme-balham"></div>
+﻿<div class="ag-theme-balham" id="myGrid" style="height: 200px; width:500px;"></div>
 
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
-   var columnDefs = [
-     {headerName: "Make", field: "make"},
-     {headerName: "Model", field: "model"},
-     {headerName: "Price", field: "price"}
-   ];
+    var columnDefs = [
+        {headerName: "Make", field: "make"},
+        {headerName: "Model", field: "model"},
+        {headerName: "Price", field: "price"}
+    ];
 
-   // specify the data
-   var rowData = [
-     {make: "Toyota", model: "Celica", price: 35000},
-     {make: "Ford", model: "Mondeo", price: 32000},
-     {make: "Porsche", model: "Boxter", price: 72000}
-   ];
+    // specify the data
+    var rowData = [
+        {make: "Toyota", model: "Celica", price: 35000},
+        {make: "Ford", model: "Mondeo", price: 32000},
+        {make: "Porsche", model: "Boxter", price: 72000}
+    ];
 
-   // let the grid know which columns and what data to use
-   var gridOptions = {
-     columnDefs: columnDefs,
-     rowData: rowData
-   };
+    // let the grid know which columns and what data to use
+    var gridOptions = {
+        columnDefs: columnDefs,
+        rowData: rowData
+    };
 
-   // setup the grid after the page has finished loading
-   document.addEventListener('DOMContentLoaded', function() {
-       var gridDiv = document.querySelector('#myGrid');
-       new agGrid.Grid(gridDiv, gridOptions);
-   });
+    // setup the grid after the page has finished loading
+    document.addEventListener('DOMContentLoaded', function () {
+        var gridDiv = document.querySelector('#myGrid');
+        new agGrid.Grid(gridDiv, gridOptions);
+    });
 </script>

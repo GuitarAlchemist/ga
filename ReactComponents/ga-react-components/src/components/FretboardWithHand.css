@@ -1,0 +1,53 @@
+.fretboard-hand {
+  padding: 16px 0;
+}
+
+.fretboard-hand__header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+}
+
+.fretboard-hand__header p {
+  margin: 0 0 12px;
+  color: #616161;
+  font-size: 0.9rem;
+}
+
+.fretboard-hand__alert {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.fretboard-hand__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fretboard-hand__spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #1976d2;
+  animation: fretboard-hand-spin 1s linear infinite;
+}
+
+@keyframes fretboard-hand-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fretboard-hand__canvas {
+  border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+}

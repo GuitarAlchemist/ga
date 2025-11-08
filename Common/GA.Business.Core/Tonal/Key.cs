@@ -1,83 +1,90 @@
-﻿using GA.Business.Core.Notes;
+﻿namespace GA.Business.Core.Tonal;
 
-namespace GA.Business.Core.Tonal;
-
-using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Intervals.Primitives;
-using Intervals;
 using Atonal;
-using static Note;
+using GA.Core.Extensions;
+using Intervals;
+using Intervals.Primitives;
+using Notes.Primitives;
+using static Notes.Note;
 
 /// <summary>
-/// A musical key (<see cref="Major"/> | <see cref="Minor"/>)
+///     A musical key (<see cref="Major" /> | <see cref="Minor" />)
 /// </summary>
 /// <param name="KeySignature"></param>
 [PublicAPI]
 public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonlyCollection<Key>
 {
+    /// <summary>
+    ///     Gets the <see cref="KeyMode" /> (Major | Minor)
+    /// </summary>
+    public abstract KeyMode KeyMode { get; }
+
+    /// <summary>
+    ///     Gets the <see cref="AccidentalKind" />
+    /// </summary>
+    public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
+
+    /// <summary>
+    ///     Gets the <see cref="KeyNote" /> key root
+    /// </summary>
+    public abstract KeyNote Root { get; }
+
+    /// <summary>
+    ///     Gets the 7 notes in the key
+    /// </summary>
+    /// <returns>The <see cref="KeyNote" /> collection.</returns>
+    public PrintableReadOnlyCollection<KeyNote> Notes => GetNotes().AsPrintable();
+
+    /// <summary>
+    ///     Gets the <see cref="PitchClassSet" />
+    /// </summary>
+    public PitchClassSet PitchClassSet => new(GetNotes().Select(n => n.PitchClass));
+
     #region IStaticPrintableReadonlyCollection<Key>
 
     /// <summary>
-    /// Gets the <see cref="PrintableReadOnlyCollection{Key}"/> keys (15 <see cref="Major"/> keys and 15 <see cref="Minor"/> keys)
+    ///     Gets the <see cref="PrintableReadOnlyCollection{Key}" /> keys (15 <see cref="Major" /> keys and 15
+    ///     <see cref="Minor" /> keys)
     /// </summary>
-    public static PrintableReadOnlyCollection<Key> Items => Major.MajorItems.Cast<Key>().Concat(Minor.MinorItems).ToImmutableList().AsPrintable();
+    public static PrintableReadOnlyCollection<Key> Items =>
+        Major.MajorItems.Cast<Key>().Concat(Minor.MinorItems).ToImmutableList().AsPrintable();
 
     #endregion
 
     #region Static Helpers
 
     /// <summary>
-    /// Gets the collection of keys for the key mode (Major | Minor)
+    ///     Gets the collection of keys for the key mode (Major | Minor)
     /// </summary>
-    /// <param name="keyMode">The <see cref="KeyMode"/></param>
-    /// <returns>The <see cref="IReadOnlyCollection{Key}"/></returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="KeyMode"/> is not supported</exception>
-    public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode) => keyMode switch
+    /// <param name="keyMode">The <see cref="KeyMode" /></param>
+    /// <returns>The <see cref="IReadOnlyCollection{Key}" /></returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="KeyMode" /> is not supported</exception>
+    public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode)
     {
-        KeyMode.Major => Major.MajorItems,
-        KeyMode.Minor => Minor.MinorItems,
-        _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
-    };
+        return keyMode switch
+        {
+            KeyMode.Major => Major.MajorItems,
+            KeyMode.Minor => Minor.MinorItems,
+            _ => throw new ArgumentOutOfRangeException(nameof(keyMode), keyMode, null)
+        };
+    }
 
     #endregion
-    
-    /// <summary>
-    /// Gets the <see cref="KeyMode"/> (Major | Minor)
-    /// </summary>
-    public abstract KeyMode KeyMode { get; }
 
     /// <summary>
-    /// Gets the <see cref="AccidentalKind"/>
+    ///     Gets the simple interval between the key root note and the specified note
     /// </summary>
-    public AccidentalKind AccidentalKind => KeySignature.AccidentalKind;
+    /// <param name="note">The <see cref="Accidented" /></param>
+    /// <returns>The <see cref="Interval.Simple" /></returns>
+    public Interval.Simple GetInterval(Accidented note)
+    {
+        return note.GetInterval(Root);
+    }
 
     /// <summary>
-    /// Gets the <see cref="KeyNote"/> key root
+    ///     Gets the 7 notes in the key
     /// </summary>
-    public abstract KeyNote Root { get; }
-
-    /// <summary>
-    /// Gets the 7 notes in the key
-    /// </summary>
-    /// <returns>The <see cref="KeyNote"/> collection.</returns>
-    public PrintableReadOnlyCollection<KeyNote> Notes => GetNotes().AsPrintable();
-
-    /// <summary>
-    /// Gets the <see cref="PitchClassSet"/>
-    /// </summary>
-    public PitchClassSet PitchClassSet => new(GetNotes().Select(n => n.PitchClass));
-
-    /// <summary>
-    /// Gets the simple interval between the key root note and the specified note
-    /// </summary>
-    /// <param name="note">The <see cref="Accidented"/></param>
-    /// <returns>The <see cref="Interval.Simple"/></returns>
-    public Interval.Simple GetInterval(Accidented note) => note.GetInterval(Root);
-
-    /// <summary>
-    /// Gets the 7 notes in the key
-    /// </summary>
-    /// <returns>The <see cref="KeyNote"/> collection.</returns>
+    /// <returns>The <see cref="KeyNote" /> collection.</returns>
     private ReadOnlyItems<KeyNote> GetNotes()
     {
         var accidentedNotes =
@@ -129,9 +136,9 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
 
 
     #region Major Key
-  
+
     /// <summary>
-    /// A major key
+    ///     A major key
     /// </summary>
     /// <param name="KeySignature"></param>
     [PublicAPI]
@@ -139,17 +146,120 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         : Key(KeySignature)
     {
         /// <summary>
-        /// Gets the <see cref="PrintableReadOnlyCollection{Major}"/> keys (15 <see cref="DiatonicScale.Major"/> keys)
+        ///     Gets the <see cref="PrintableReadOnlyCollection{Major}" /> keys (15 <see cref="DiatonicScale.Major" /> keys)
         /// </summary>
-        public static PrintableReadOnlyCollection<Major> MajorItems => Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList().AsPrintable();
-        
+        public static PrintableReadOnlyCollection<Major> MajorItems =>
+            Enumerable.Range(-7, 15).Select(i => new Major(i)).ToImmutableList().AsPrintable();
+
+        public override KeyMode KeyMode => KeyMode.Major;
+        public override KeyNote Root => GetRoot(KeySignature);
+
+        public static Key FromKeyRoot(KeyNote keyRoot)
+        {
+            return MajorKeyByRoot.Get(keyRoot);
+        }
+
+        public static bool TryParse(string input, out Major majorKey)
+        {
+            if (!KeyNote.TryParse(input, out var keyRootNotes))
+            {
+                throw new InvalidOperationException("Failed parsing key root");
+            }
+
+            var sharpKeyNote = keyRootNotes.FirstOrDefault(note => note is Sharp);
+            var flatKeyNote = keyRootNotes.FirstOrDefault(note => note is Flat);
+            var majorKeyIndexer = MajorKeyByRoot.Instance;
+            if (sharpKeyNote != null)
+            {
+                if (majorKeyIndexer.Dictionary.TryGetValue(sharpKeyNote, out var aMajorKey))
+                {
+                    // Success
+                    majorKey = aMajorKey;
+                    return true;
+                }
+            }
+
+            if (flatKeyNote != null)
+            {
+                if (majorKeyIndexer.Dictionary.TryGetValue(flatKeyNote, out var aMajorKey))
+                {
+                    // Success
+                    majorKey = aMajorKey;
+                    return true;
+                }
+            }
+
+            // Failure
+            majorKey = null!;
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return GetKeyName(KeySignature);
+        }
+
+        public static string GetKeyName(KeySignature keySignature)
+        {
+            return keySignature.Value switch
+            {
+                -7 => "Key of Cb",
+                -6 => "Key of Gb",
+                -5 => "Key of Db",
+                -4 => "Key of Ab",
+                -3 => "Key of Eb",
+                -2 => "Key of Bb",
+                -1 => "Key of F",
+                0 => "Key of C",
+                1 => "Key of G",
+                2 => "Key of D",
+                3 => "Key of A",
+                4 => "Key of E",
+                5 => "Key of B",
+                6 => "Key of F#",
+                7 => "Key of C#",
+                _ => string.Empty
+            };
+        }
+
+        private static KeyNote GetRoot(KeySignature keySignature)
+        {
+            return keySignature.Value switch
+            {
+                -7 => Flat.CFlat,
+                -6 => Flat.GFlat,
+                -5 => Flat.DFlat,
+                -4 => Flat.AFlat,
+                -3 => Flat.EFlat,
+                -2 => Flat.BFlat,
+                -1 => Flat.F,
+                0 => Sharp.C,
+                1 => Sharp.G,
+                2 => Sharp.D,
+                3 => Sharp.A,
+                4 => Sharp.E,
+                5 => Sharp.B,
+                6 => Sharp.FSharp,
+                7 => Sharp.CSharp,
+                _ => throw new InvalidOperationException()
+            };
+        }
+
         #region Inner Classes
 
         public class MajorKeyByRoot() : LazyIndexerBase<KeyNote, Major>(GetMajorKeyByRoot())
         {
             public static readonly MajorKeyByRoot Instance = new();
-            public static Key Get(KeyNote keyRoot) => keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
-            private static ImmutableDictionary<KeyNote, Major> GetMajorKeyByRoot() => MajorItems.ToImmutableDictionary(key => key.Root);
+
+            public static Key Get(KeyNote keyRoot)
+            {
+                return keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
+            }
+
+            private static ImmutableDictionary<KeyNote, Major> GetMajorKeyByRoot()
+            {
+                return MajorItems.ToImmutableDictionary(key => key.Root);
+            }
         }
 
         #endregion
@@ -173,139 +283,35 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         public static Major CSharp => new(7);
 
         #endregion
-
-        public static Key FromKeyRoot(KeyNote keyRoot) => MajorKeyByRoot.Get(keyRoot);
-
-        public static bool TryParse(string input, out Major majorKey)
-        {
-            if (!KeyNote.TryParse(input, out var keyRootNotes)) throw new InvalidOperationException("Failed parsing key root");
-
-            var sharpKeyNote = keyRootNotes.FirstOrDefault(note => note is Sharp);
-            var flatKeyNote = keyRootNotes.FirstOrDefault(note => note is Flat);
-            var majorKeyIndexer = MajorKeyByRoot.Instance;
-            if (sharpKeyNote != null)
-            {
-                if (majorKeyIndexer.Dictionary.TryGetValue(sharpKeyNote, out var aMajorKey))
-                {
-                    // Success
-                    majorKey = aMajorKey;
-                    return true;
-                }
-            }
-
-            if (flatKeyNote != null)
-            {
-                if (majorKeyIndexer.Dictionary.TryGetValue(flatKeyNote, out var aMajorKey))
-                {
-                    // Success
-                    majorKey = aMajorKey;
-                    return true;
-                }
-
-            }
-
-            // Failure
-            majorKey = null!;
-            return false;
-        }
-
-        public override KeyMode KeyMode => KeyMode.Major;
-        public override KeyNote Root => GetRoot(KeySignature);
-
-        public override string ToString() => GetKeyName(KeySignature);
-
-        public static string GetKeyName(KeySignature keySignature) => keySignature.Value switch
-        {
-            -7 => "Key of Cb",
-            -6 => "Key of Gb",
-            -5 => "Key of Db",
-            -4 => "Key of Ab",
-            -3 => "Key of Eb",
-            -2 => "Key of Bb",
-            -1 => "Key of F",
-            0 => "Key of C",
-            1 => "Key of G",
-            2 => "Key of D",
-            3 => "Key of A",
-            4 => "Key of E",
-            5 => "Key of B",
-            6 => "Key of F#",
-            7 => "Key of C#",
-            _ => string.Empty
-        };
-
-        private static KeyNote GetRoot(KeySignature keySignature) => keySignature.Value switch
-        {
-            -7 => Flat.CFlat,
-            -6 => Flat.GFlat,
-            -5 => Flat.DFlat,
-            -4 => Flat.AFlat,
-            -3 => Flat.EFlat,
-            -2 => Flat.BFlat,
-            -1 => Flat.F,
-            0 => Sharp.C,
-            1 => Sharp.G,
-            2 => Sharp.D,
-            3 => Sharp.A,
-            4 => Sharp.E,
-            5 => Sharp.B,
-            6 => Sharp.FSharp,
-            7 => Sharp.CSharp,
-            _ => throw new InvalidOperationException()
-        };
     }
 
     #endregion
-    
+
     #region Minor Key
-   
+
     /// <summary>
-    /// A minor key
+    ///     A minor key
     /// </summary>
     /// <param name="KeySignature"></param>
     [PublicAPI]
     public sealed record Minor(KeySignature KeySignature)
         : Key(KeySignature)
     {
-        #region Inner Classes
-
-        public class MinorKeyByRoot() : LazyIndexerBase<KeyNote, Minor>(GetMinorKeyByRoot())
-        {
-            public static readonly MinorKeyByRoot Instance = new();
-            public static Key Get(KeyNote keyRoot) => keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
-            private static ImmutableDictionary<KeyNote, Minor> GetMinorKeyByRoot() => MinorItems.ToImmutableDictionary(key => key.Root);
-        }
-
-        #endregion
-
-        #region Well-known minor keys
-        
-        public static Minor Abm => new(-7);
-        public static Minor Ebm => new(-6);
-        public static Minor Bbm => new(-5);
-        public static Minor Fm => new(-4);
-        public static Minor Cm => new(-3);
-        public static Minor Gm => new(-2);
-        public static Minor Dm => new(-1);
-        public static Minor Am => new(0);
-        public static Minor Em => new(1);
-        public static Minor Bm => new(2);
-        public static Minor FSharpm => new(3);
-        public static Minor CSharpm => new(4);
-        public static Minor GSharpm => new(5);
-        public static Minor DSharpm => new(6);
-        public static Minor ASharpm => new(7);
-        
-        #endregion
-        
         /// <summary>
-        /// Gets the <see cref="PrintableReadOnlyCollection{Minor}"/> keys (15 <see cref="Minor"/> keys)
+        ///     Gets the <see cref="PrintableReadOnlyCollection{Minor}" /> keys (15 <see cref="Minor" /> keys)
         /// </summary>
-        public static PrintableReadOnlyCollection<Minor> MinorItems => Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList().AsPrintable();
-        
+        public static PrintableReadOnlyCollection<Minor> MinorItems =>
+            Enumerable.Range(-7, 15).Select(i => new Minor(i)).ToImmutableList().AsPrintable();
+
+        public override KeyMode KeyMode => KeyMode.Minor;
+        public override KeyNote Root => GetRoot(KeySignature);
+
         public static bool TryParse(string input, out Minor minorKey)
         {
-            if (!KeyNote.TryParse(input, out var keyRootNotes)) throw new InvalidOperationException("Failed parsing key root");
+            if (!KeyNote.TryParse(input, out var keyRootNotes))
+            {
+                throw new InvalidOperationException("Failed parsing key root");
+            }
 
             var sharpKeyNote = keyRootNotes.FirstOrDefault(note => note is Sharp);
             var flatKeyNote = keyRootNotes.FirstOrDefault(note => note is Flat);
@@ -328,7 +334,6 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
                     minorKey = aMinorKey;
                     return true;
                 }
-
             }
 
             // Failure
@@ -336,49 +341,91 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
             return false;
         }
 
-        public override KeyMode KeyMode => KeyMode.Minor;
-        public override KeyNote Root => GetRoot(KeySignature);
-
-        public override string ToString() => KeySignature.Value switch
+        public override string ToString()
         {
-            -7 => "Key of Abm",
-            -6 => "Key of Ebm",
-            -5 => "Key of Bbm",
-            -4 => "Key of Fm",
-            -3 => "Key of Cm",
-            -2 => "Key of Gm",
-            -1 => "Key of Dm",
-            0 => "Key of Am",
-            1 => "Key of Em",
-            2 => "Key of Bm",
-            3 => "Key of F#m",
-            4 => "Key of C#m",
-            5 => "Key of G#m",
-            6 => "Key of D#m",
-            7 => "Key of A#m",
-            _ => string.Empty
-        };
+            return KeySignature.Value switch
+            {
+                -7 => "Key of Abm",
+                -6 => "Key of Ebm",
+                -5 => "Key of Bbm",
+                -4 => "Key of Fm",
+                -3 => "Key of Cm",
+                -2 => "Key of Gm",
+                -1 => "Key of Dm",
+                0 => "Key of Am",
+                1 => "Key of Em",
+                2 => "Key of Bm",
+                3 => "Key of F#m",
+                4 => "Key of C#m",
+                5 => "Key of G#m",
+                6 => "Key of D#m",
+                7 => "Key of A#m",
+                _ => string.Empty
+            };
+        }
 
-        private static KeyNote GetRoot(KeySignature keySignature) => keySignature.Value switch
+        private static KeyNote GetRoot(KeySignature keySignature)
         {
-            -7 => Flat.AFlat,
-            -6 => Flat.EFlat,
-            -5 => Flat.BFlat,
-            -4 => Flat.F,
-            -3 => Flat.C,
-            -2 => Flat.G,
-            -1 => Flat.D,
-            0 => Sharp.A,
-            1 => Sharp.E,
-            2 => Sharp.B,
-            3 => Sharp.FSharp,
-            4 => Sharp.CSharp,
-            5 => Sharp.GSharp,
-            6 => Sharp.DSharp,
-            7 => Sharp.ASharp,
-            _ => throw new InvalidOperationException()
-        };
+            return keySignature.Value switch
+            {
+                -7 => Flat.AFlat,
+                -6 => Flat.EFlat,
+                -5 => Flat.BFlat,
+                -4 => Flat.F,
+                -3 => Flat.C,
+                -2 => Flat.G,
+                -1 => Flat.D,
+                0 => Sharp.A,
+                1 => Sharp.E,
+                2 => Sharp.B,
+                3 => Sharp.FSharp,
+                4 => Sharp.CSharp,
+                5 => Sharp.GSharp,
+                6 => Sharp.DSharp,
+                7 => Sharp.ASharp,
+                _ => throw new InvalidOperationException()
+            };
+        }
+
+        #region Inner Classes
+
+        public class MinorKeyByRoot() : LazyIndexerBase<KeyNote, Minor>(GetMinorKeyByRoot())
+        {
+            public static readonly MinorKeyByRoot Instance = new();
+
+            public static Key Get(KeyNote keyRoot)
+            {
+                return keyRoot == null ? throw new ArgumentNullException(nameof(keyRoot)) : (Key)Instance[keyRoot];
+            }
+
+            private static ImmutableDictionary<KeyNote, Minor> GetMinorKeyByRoot()
+            {
+                return MinorItems.ToImmutableDictionary(key => key.Root);
+            }
+        }
+
+        #endregion
+
+        #region Well-known minor keys
+
+        public static Minor Abm => new(-7);
+        public static Minor Ebm => new(-6);
+        public static Minor Bbm => new(-5);
+        public static Minor Fm => new(-4);
+        public static Minor Cm => new(-3);
+        public static Minor Gm => new(-2);
+        public static Minor Dm => new(-1);
+        public static Minor Am => new(0);
+        public static Minor Em => new(1);
+        public static Minor Bm => new(2);
+        public static Minor FSharpm => new(3);
+        public static Minor CSharpm => new(4);
+        public static Minor GSharpm => new(5);
+        public static Minor DSharpm => new(6);
+        public static Minor ASharpm => new(7);
+
+        #endregion
     }
-    
+
     #endregion
 }

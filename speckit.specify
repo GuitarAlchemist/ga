@@ -1,0 +1,355 @@
+# Guitar Alchemist - Technical Specifications
+
+## 🎯 System Overview
+
+Guitar Alchemist is a comprehensive music theory and guitar learning platform consisting of multiple interconnected services orchestrated through .NET Aspire, providing AI-powered chord search, interactive learning, and advanced music visualization.
+
+## 🏗️ Architecture Specifications
+
+### Core Services Architecture
+
+```
+┌─────────────────────────────────────────┐
+│         Aspire AppHost                  │
+│  (Service Orchestration & Monitoring)   │
+└─────────────────────────────────────────┘
+                    │
+        ┌───────────┼───────────┬─────────┬─────────┐
+        ↓           ↓           ↓         ↓         ↓
+    MongoDB      GaApi      Chatbot   ga-client  MCP Server
+   (Vector DB)   (.NET 9)   (Blazor)  (React)   (Chatbot)
+```
+
+### Service Specifications
+
+#### 1. **GaApi** - Main REST API Service
+- **Technology**: .NET 9, ASP.NET Core Web API
+- **Port**: 7001 (HTTPS), 7000 (HTTP) in Docker; 7001 (HTTPS), 5001 (HTTP) in Aspire
+- **Database**: MongoDB with vector search capabilities
+- **Features**:
+  - 427,000+ chord database with semantic search
+  - RESTful endpoints for chords, scales, instruments
+  - Vector similarity search using MongoDB Atlas Search
+  - Health checks and metrics endpoints
+  - Swagger/OpenAPI documentation
+  - Rate limiting and CORS support
+  - OpenTelemetry integration with Jaeger tracing
+
+**Key Endpoints**:
+```
+GET /api/chords                    # List chords with filtering
+GET /api/chords/{id}              # Get specific chord details
+GET /api/chords/search            # Semantic chord search
+GET /api/chords/similar/{id}      # Find similar chords
+GET /api/instruments              # List supported instruments
+GET /api/fretboard/positions      # Get fretboard positions
+GET /health                       # Health check endpoint
+GET /api/metrics/system          # Performance metrics
+```
+
+#### 2. **GuitarAlchemistChatbot** - AI-Powered Chat Interface
+- **Technology**: Blazor Server, SignalR, Microsoft.Extensions.AI
+- **Port**: 7002 (HTTPS) in Docker; 7002 (HTTPS), 5002 (HTTP) in Aspire
+- **AI Model**: OpenAI GPT-4o-mini with function calling
+- **Features**:
+  - Natural language chord search ("dark jazz chords")
+  - Music theory explanations and guidance
+  - Interactive chord visualization with VexTab
+  - Conversation context persistence with short-term memory
+  - Web integration (Wikipedia, RSS feeds, music theory sites)
+  - Real-time chat interface with typing indicators
+  - Dark mode toggle
+  - Enhanced function calling with visual indicators
+  - Chord diagram visualization (SVG-based)
+  - Chord progression templates by genre and mood
+
+**AI Functions**:
+- **Chord Functions**:
+  - `SearchChords`: Natural language chord search
+  - `FindSimilarChords`: Chord similarity recommendations
+  - `GetChordDetails`: Detailed chord information
+  - `GetChordDiagram`: Visual chord diagrams (SVG)
+  - `ListAvailableChordDiagrams`: List all available chord diagrams
+- **Music Theory Functions**:
+  - `ExplainMusicTheory`: Structured theory explanations
+- **Progression Functions**:
+  - `GetProgressionTemplates`: Chord progression patterns by genre
+  - `SearchProgressionTemplates`: Search progressions by mood/emotion
+  - `GetProgressionGenres`: List available progression genres
+- **Web Integration Functions**:
+  - `SearchWikipedia`: Search Wikipedia for music theory
+  - `GetWikipediaSummary`: Get detailed Wikipedia summaries
+  - `SearchMusicTheorySite`: Search whitelisted music theory websites
+  - `GetLatestMusicLessons`: Fetch latest lessons from RSS feeds
+  - `FetchMusicTheoryArticle`: Extract content from music theory articles
+
+#### 3. **ga-client** - React Frontend
+- **Technology**: React 18, TypeScript, Vite, Material-UI
+- **Port**: 5173 (Development)
+- **Features**:
+  - Interactive fretboard visualization
+  - Chord browser and search interface
+  - Responsive design with mobile support
+  - Component library for reusable UI elements
+  - State management with Jotai
+
+#### 4. **MongoDB** - Vector Database
+- **Technology**: MongoDB 7.0+ with Atlas Search
+- **Port**: 27017
+- **Collections**:
+  - `chords`: 427,000+ chord documents with embeddings
+  - `scales`: Scale definitions and relationships
+  - `instruments`: Instrument and tuning configurations
+  - `progressions`: Chord progression templates
+- **Indexes**: Vector search indexes for semantic similarity
+
+#### 5. **GaMcpServer** - MCP Integration
+- **Technology**: .NET 9, Model Context Protocol
+- **Features**:
+  - Chatbot integration with external AI systems
+  - Tool definitions for music theory functions
+  - Web scraping and content integration
+
+**MCP Tools**:
+- `EchoTool`: Echo and reverse echo for testing
+- `ModeTool`: Get available modes and mode information
+- `AtonalTool`: Get set classes and modal set classes
+- `InstrumentTool`: Get tuning information for instruments
+
+#### 6. **GA.Business.Core** - Advanced Mathematics Engine
+- **Technology**: .NET 9, MathNet.Numerics, System.Threading.Channels
+- **Features**:
+  - Spectral graph analysis with eigenvalue decomposition
+  - Information theory calculations (entropy, mutual information)
+  - Category theory for musical transformations
+  - Persistent homology for topological analysis
+  - High-performance processing with Channels, TPL Dataflow, Reactive Extensions
+
+**Mathematical Services**:
+- `SpectralGraphAnalyzer`: Graph eigenvalue analysis and clustering
+- `InformationTheoryCalculator`: Entropy and complexity metrics
+- `CategoryTheoryTransformer`: Musical morphisms and functors
+- `PersistentHomologyAnalyzer`: Topological data analysis
+- `HighPerformanceAnalyticsService`: Integrated optimization platform
+
+## 📊 Data Models
+
+### Core Music Theory Models
+
+#### ChordDocument
+```csharp
+public sealed record ChordDocument : DocumentBase
+{
+    public required string Name { get; init; }           // "Cmaj7"
+    public required string Root { get; init; }           // "C"
+    public required string Quality { get; init; }        // "Major7"
+    public required List<string> Intervals { get; init; } // ["1", "3", "5", "7"]
+    public required List<string> Notes { get; init; }     // ["C", "E", "G", "B"]
+    public List<ScaleReference> RelatedScales { get; init; } = [];
+    public List<ProgressionReference> CommonProgressions { get; init; } = [];
+    public float[]? Embedding { get; init; }             // Vector embedding for search
+}
+```
+
+#### FretboardPosition
+```csharp
+public record FretboardPosition
+{
+    public int String { get; init; }      // Guitar string (1-6)
+    public int Fret { get; init; }        // Fret number (0-24)
+    public string Note { get; init; }     // Note name
+    public string Interval { get; init; } // Interval from root
+    public int Finger { get; init; }      // Suggested finger (1-4)
+}
+```
+
+### Database Schema
+
+#### Vector Search Configuration
+```javascript
+// MongoDB Atlas Search Index
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "embedding": {
+        "type": "knnVector",
+        "dimensions": 1536,
+        "similarity": "cosine"
+      },
+      "name": { "type": "string" },
+      "quality": { "type": "string" },
+      "root": { "type": "string" }
+    }
+  }
+}
+```
+
+## 🔧 Technical Requirements
+
+### Development Environment
+- **.NET SDK**: 9.0+
+- **Node.js**: 18+
+- **Docker**: For MongoDB and containerized deployment
+- **PowerShell**: 7+ for automation scripts
+- **Git**: Version control with conventional commits
+
+### Performance Requirements
+- **API Response Time**: < 200ms for standard queries, < 2s for vector search
+- **Frontend Load Time**: < 3s initial load, < 1s navigation
+- **Database Queries**: Optimized with proper indexing
+- **Memory Usage**: < 512MB per service in production
+- **Concurrent Users**: Support 100+ simultaneous chat sessions
+- **Mathematical Processing**: 4,497+ items/second throughput with Channels
+- **Parallel Computing**: 15.2x speedup with SIMD optimization
+- **Real-time Analysis**: < 50ms response time for spectral calculations
+
+### Security Requirements
+- **API Keys**: Stored in user secrets and environment variables
+- **CORS**: Configured for allowed origins only
+- **Rate Limiting**: Prevent API abuse
+- **Input Validation**: Sanitize all user inputs
+- **HTTPS**: Required for all production endpoints
+
+## 🧪 Testing Specifications
+
+### Test Coverage Requirements
+- **Unit Tests**: > 80% coverage for business logic (NUnit)
+- **Integration Tests**: API endpoints and database operations (xUnit)
+- **End-to-End Tests**: User workflows and UI interactions (Playwright)
+- **Performance Tests**: Load testing for critical endpoints
+
+### Test Categories
+```csharp
+[TestCategory("Unit")]           // Fast, isolated tests
+[TestCategory("Integration")]    // Database and API tests
+[TestCategory("E2E")]           // Full user workflow tests
+[TestCategory("Performance")]    // Load and stress tests
+```
+
+### Playwright Test Suites
+Located in `Tests/GuitarAlchemistChatbot.Tests.Playwright/`:
+- **TabViewerTests**: VexTab rendering and guitar tablature display
+- **ContextPersistenceTests**: Conversation context and memory
+- **FunctionCallingTests**: AI function invocation and indicators
+- **McpIntegrationTests**: Web search and RSS feed integration
+- **ChordDiagramTests**: SVG chord diagram rendering (16 tests)
+- **ChordProgressionTests**: Progression templates and search (15 tests)
+- **DarkModeTests**: Dark mode toggle and persistence (15 tests)
+
+**Total E2E Tests**: 46+ comprehensive Playwright tests
+
+### Test Automation Scripts
+- `Scripts/run-all-tests.ps1`: Run all backend and Playwright tests
+- `Scripts/health-check.ps1`: Verify all services are healthy
+- Pre-commit hooks: Automatic code formatting and build verification
+
+## 🚀 Deployment Specifications
+
+### Development Deployment
+- **Aspire AppHost**: Local orchestration with hot reload
+- **Services**: All services run locally with live reload
+- **Database**: Local MongoDB container with sample data
+- **Monitoring**: Aspire dashboard (https://localhost:15001) for logs, metrics, and traces
+- **Quick Start**: `.\Scripts\setup-dev-environment.ps1` for one-command setup
+- **Service Startup**: `.\Scripts\start-all.ps1 -Dashboard` to start all services
+
+### Production Deployment
+- **Container Platform**: Docker Compose or Kubernetes
+- **Database**: MongoDB Atlas with vector search
+- **Load Balancer**: Nginx or cloud load balancer
+- **Monitoring**: Application Insights, Jaeger tracing (port 16686)
+- **CI/CD**: GitHub Actions with automated testing
+
+### Docker Compose Services
+```yaml
+services:
+  - mongodb (port 27017)
+  - mongo-express (port 8081) - Database UI
+  - gaapi (port 7001:8080, 7000:8081)
+  - chatbot (port 7002:8080)
+  - ga-client (port 5173:80)
+  - jaeger (port 16686) - Distributed tracing UI
+```
+
+### Environment Configuration
+```yaml
+# Production Environment Variables
+MONGODB_CONNECTION_STRING: "mongodb+srv://..."
+OPENAI_API_KEY: "sk-..."
+ASPNETCORE_ENVIRONMENT: "Production"
+CORS_ALLOWED_ORIGINS: "https://guitaralchemist.com"
+OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
+```
+
+### DevOps Automation
+- **Setup Script**: `Scripts/setup-dev-environment.ps1` - One-command environment setup
+- **Start Script**: `Scripts/start-all.ps1` - Start all services with Aspire
+- **Test Script**: `Scripts/run-all-tests.ps1` - Run all backend and Playwright tests
+- **Health Check**: `Scripts/health-check.ps1` - Verify service health
+- **Git Hooks**: `Scripts/install-git-hooks.ps1` - Install pre-commit hooks for code quality
+
+## 📈 Monitoring & Observability
+
+### Health Checks
+- **Endpoint**: `/health` for each service
+- **Dependencies**: MongoDB connectivity, OpenAI API availability
+- **Metrics**: Response time, error rate, active connections
+- **Automation**: `Scripts/health-check.ps1` for automated health verification
+
+### Aspire Dashboard
+- **URL**: https://localhost:15001 (development)
+- **Features**:
+  - Service status and health monitoring
+  - Real-time logs aggregation
+  - Distributed tracing with OpenTelemetry
+  - Performance metrics and charts
+  - Resource usage monitoring
+
+### Logging
+- **Structured Logging**: JSON format with correlation IDs
+- **Log Levels**: Debug, Information, Warning, Error, Critical
+- **Centralized**: Application Insights or ELK stack
+- **Development**: Aspire dashboard aggregates all service logs
+
+### Metrics
+- **Request Metrics**: Count, duration, status codes
+- **Business Metrics**: Chord searches, chat sessions, user engagement
+- **System Metrics**: CPU, memory, disk usage
+- **Custom Metrics**: Vector search performance, AI response quality
+- **API Metrics Endpoint**: `/api/Metrics/system` for performance data
+
+### Distributed Tracing
+- **Technology**: OpenTelemetry with Jaeger
+- **Jaeger UI**: http://localhost:16686 (Docker deployment)
+- **OTLP Endpoints**: gRPC (4317), HTTP (4318)
+- **Trace Correlation**: Automatic correlation across all services
+
+## 🔌 Integration Specifications
+
+### External APIs
+- **OpenAI**: GPT-4o-mini for chat, text-embedding-3-small for vectors
+- **Wikipedia**: Music theory content integration
+- **RSS Feeds**: Latest music lesson content
+- **Web Scraping**: Whitelisted music education sites
+
+### Data Exchange Formats
+- **REST APIs**: JSON with OpenAPI specifications
+- **Real-time**: SignalR for chat communication
+- **Export Formats**: JSON, MIDI, MusicXML, Guitar Pro
+- **Import Formats**: MIDI, chord charts, tablature
+
+## 🎵 Music Theory Specifications
+
+### Supported Concepts
+- **Chords**: All qualities (major, minor, diminished, augmented, extended)
+- **Scales**: Major, minor, modes, exotic scales
+- **Intervals**: All interval types with enharmonic equivalents
+- **Keys**: All major and minor keys with circle of fifths
+- **Progressions**: Common patterns (ii-V-I, vi-IV-I-V, etc.)
+
+### Calculation Precision
+- **Semitone Accuracy**: All interval calculations precise to semitone
+- **Enharmonic Handling**: Proper context-aware note naming
+- **Temperament**: Equal temperament (12-TET) standard
+- **Frequency Calculations**: A440 tuning standard

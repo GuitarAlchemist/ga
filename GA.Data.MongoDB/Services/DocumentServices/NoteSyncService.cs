@@ -2,21 +2,21 @@ namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using Business.Core;
 using Business.Core.Intervals;
-using GA.Business.Core.Notes.Primitives;
+using Business.Core.Notes.Primitives;
 using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
 public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mongoDb) : ISyncService<NoteDocument>
 {
-        public async Task<bool> SyncAsync()
+    public async Task<bool> SyncAsync()
     {
         try
         {
             var documents = new List<NoteDocument>();
-            
+
             // Add Natural notes
-            documents.AddRange(Assets.NaturalNotes.Select(n => new NoteDocument
+            documents.AddRange(AssetCatalog.NaturalNotes.Select(n => new NoteDocument
             {
                 Name = n.ToString(),
                 MidiNumber = MidiNote.Create(Octave.Small, n.PitchClass).Value,
@@ -27,7 +27,7 @@ public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mon
             }));
 
             // Add Sharp notes
-            documents.AddRange(Assets.SharpNotes.Select(n => new NoteDocument
+            documents.AddRange(AssetCatalog.SharpNotes.Select(n => new NoteDocument
             {
                 Name = n.ToString(),
                 MidiNumber = MidiNote.Create(Octave.Small, n.PitchClass).Value,
@@ -38,7 +38,7 @@ public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mon
             }));
 
             // Add Flat notes
-            documents.AddRange(Assets.FlatNotes.Select(n => new NoteDocument
+            documents.AddRange(AssetCatalog.FlatNotes.Select(n => new NoteDocument
             {
                 Name = n.ToString(),
                 MidiNumber = MidiNote.Create(Octave.Small, n.PitchClass).Value,
@@ -49,7 +49,7 @@ public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mon
             }));
 
             // Add Accidented notes
-            documents.AddRange(Assets.AccidentedNotes.Select(n => new NoteDocument
+            documents.AddRange(AssetCatalog.AccidentedNotes.Select(n => new NoteDocument
             {
                 Name = n.ToString(),
                 MidiNumber = MidiNote.Create(Octave.Small, n.PitchClass).Value,
@@ -70,6 +70,8 @@ public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mon
         }
     }
 
-    public async Task<long> GetCountAsync() =>
-        await mongoDb.Notes.CountDocumentsAsync(Builders<NoteDocument>.Filter.Empty);
+    public async Task<long> GetCountAsync()
+    {
+        return await mongoDb.Notes.CountDocumentsAsync(Builders<NoteDocument>.Filter.Empty);
+    }
 }

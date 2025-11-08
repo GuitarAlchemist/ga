@@ -2,8 +2,9 @@
 
 <script type="module">
     import Two from 'https://cdn.skypack.dev/two.js@latest';
+
     var elem = document.getElementById('draw-shapes');
-    var two = new Two({ fitted: true }).appendTo(elem);
+    var two = new Two({fitted: true}).appendTo(elem);
 
     var circle = two.makeCircle(50, 50, 50);
     circle.fill = 'red';

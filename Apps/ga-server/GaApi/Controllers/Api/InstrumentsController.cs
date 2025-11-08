@@ -1,6 +1,6 @@
 namespace GaApi.Controllers.Api;
 
-using GA.Business.Core.Data.Instruments;
+using GA.Data.EntityFramework.Data.Instruments;
 
 [ApiController]
 [Route("[controller]")]
@@ -12,6 +12,7 @@ public class InstrumentsController : ControllerBase
         var instruments = InstrumentsRepository.Instance.Instruments.Select(instrument => new
         {
             name = instrument.Name,
+            icon = instrument.Icon,
             tunings = instrument.Tunings.Select(tuning => new
             {
                 name = tuning.Value.Name,

@@ -1,6 +1,6 @@
-﻿namespace GA.Data.MongoDB.Services;
+namespace GA.Data.MongoDB.Services;
 
-using Business.Core.Data.Instruments;
+using EntityFramework.Data.Instruments;
 using Models;
 
 public interface IInstrumentService

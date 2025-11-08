@@ -1,0 +1,43 @@
+{
+  "indexingAllowDirs": [
+    "c:\\Windows\\System32",
+    "c:\\Users\\spare\\source\\repos\\ga",
+    "c:\\Users\\spare\\source\\repos\\tars"
+  ],
+  "mcpServers": {
+    "mongodb": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-mongodb", "mongodb://localhost:27017"],
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    },
+    "redis": {
+      "command": "npx",
+      "args": ["-y", "redis-mcp-server", "--url", "redis://127.0.0.1:6379"],
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    },
+    "blender": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    },
+    "meshy-ai": {
+      "command": "python",
+      "args": [
+        "C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/src/server.py"
+      ],
+      "env": {
+        "MESHY_API_KEY": "msy_ntI4R9Qk4x4c9v7BDvH6wJ7cwcyUUvMAMr0S"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    }
+  }
+}
+

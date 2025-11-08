@@ -1,22 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="SampleTypeProvider.fs" />
-    <Compile Include="Expressions.fs" />
-    <Compile Include="Common.fs" />
-    <Compile Include="Fib.fs" />
-    <Compile Include="InstrumentQueries.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Match FSharp.Core version with GA.Business.AI -->
+        <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj" />
-    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
-    <ProjectReference Include="..\GA.Core\GA.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="SampleTypeProvider.fs"/>
+        <Compile Include="Expressions.fs"/>
+        <Compile Include="Common.fs"/>
+        <Compile Include="Fib.fs"/>
+        <Compile Include="InstrumentQueries.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj"/>
+        <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj"/>
+        <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
+    </ItemGroup>
 
 </Project>

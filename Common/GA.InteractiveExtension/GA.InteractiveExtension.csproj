@@ -1,22 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<TargetFramework>net9.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Figgle" Version="0.5.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1" />
-		<PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Figgle" Version="0.5.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24164.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24164.1"/>
+    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.24164.1"/>
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
-		<ProjectReference Include="..\GA.Core\GA.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
+  </ItemGroup>
 
 </Project>

@@ -36,7 +36,7 @@ export function gridInit(dotNetObjectRef, gridElement, existingGridOptions, grid
         }
 
         try {
-            await gridOptions.api.applyTransactionAsync({ add: nodes });
+            await gridOptions.api.applyTransactionAsync({add: nodes});
         } catch (e) {
             console.error(e);
         }
@@ -75,7 +75,9 @@ export function gridInit(dotNetObjectRef, gridElement, existingGridOptions, grid
     gridOptions.goToBottomNode = function () {
         let node = null;
         gridOptions.api.forEachNodeAfterFilterAndSort(aNode => {
-            if (aNode.displayed === true) { node = aNode; }
+            if (aNode.displayed === true) {
+                node = aNode;
+            }
         });
 
         if (node != null) {
@@ -99,66 +101,66 @@ export function gridInit(dotNetObjectRef, gridElement, existingGridOptions, grid
 function getGridOptions(gridColumns) {
 
     const gridOptions =
-    {
-        rowDrag: true,
-        columnTypes: getColumnTypes(),
-        columnDefs: getColumnDefs(),
-        defaultColDef: {
-            sortable: true,
-            resizable: true,
-            editable: false,
-            floatingFilter: true,
-            icons: {
-                sortAscending: '<i class="fa fa-sort-up"/>',
-                sortDescending: '<i class="fa fa-sort-down"/>'
-            }
-        },
-        rowSelection: 'single',
-        rowStyle: { 'font-family': 'monospace' },
-        animateRows: false,
-        suppressCellSelection: true,
-        overlayLoadingTemplate: '<i class="fa-4x fas fa-circle-notch fa-spin"></i>',
-        sideBar: {
-            toolPanels: [
-                {
-                    id: 'filters',
-                    labelDefault: 'Filters',
-                    labelKey: 'filters',
-                    iconKey: 'filter',
-                    toolPanel: 'agFiltersToolPanel',
-                    toolPanelParams: {
-                        suppressExpandAll: false,
-                        suppressFilterSearch: false,
+        {
+            rowDrag: true,
+            columnTypes: getColumnTypes(),
+            columnDefs: getColumnDefs(),
+            defaultColDef: {
+                sortable: true,
+                resizable: true,
+                editable: false,
+                floatingFilter: true,
+                icons: {
+                    sortAscending: '<i class="fa fa-sort-up"/>',
+                    sortDescending: '<i class="fa fa-sort-down"/>'
+                }
+            },
+            rowSelection: 'single',
+            rowStyle: {'font-family': 'monospace'},
+            animateRows: false,
+            suppressCellSelection: true,
+            overlayLoadingTemplate: '<i class="fa-4x fas fa-circle-notch fa-spin"></i>',
+            sideBar: {
+                toolPanels: [
+                    {
+                        id: 'filters',
+                        labelDefault: 'Filters',
+                        labelKey: 'filters',
+                        iconKey: 'filter',
+                        toolPanel: 'agFiltersToolPanel',
+                        toolPanelParams: {
+                            suppressExpandAll: false,
+                            suppressFilterSearch: false,
+                        },
                     },
-                },
-                {
-                    id: 'columns',
-                    labelDefault: 'Columns',
-                    labelKey: 'columns',
-                    iconKey: 'columns',
-                    toolPanel: 'agColumnsToolPanel',
-                    minWidth: 225,
-                    maxWidth: 225,
-                    width: 225
-                }
-            ],
-            defaultToolPanel: '',
-        },
-        statusBar: {
-            statusPanels: [
-                {
-                    statusPanel: 'agTotalAndFilteredRowCountComponent',
-                    align: 'left'
-                }
-            ]
-        },
-        components: {
-            booleanCellRenderer: booleanCellRenderer,
-            booleanFilterCellRenderer: booleanFilterCellRenderer,
-            booleanFilter: getBooleanFilter()
-        },
-        onSortChanged: e => e.api.refreshCells()
-    };
+                    {
+                        id: 'columns',
+                        labelDefault: 'Columns',
+                        labelKey: 'columns',
+                        iconKey: 'columns',
+                        toolPanel: 'agColumnsToolPanel',
+                        minWidth: 225,
+                        maxWidth: 225,
+                        width: 225
+                    }
+                ],
+                defaultToolPanel: '',
+            },
+            statusBar: {
+                statusPanels: [
+                    {
+                        statusPanel: 'agTotalAndFilteredRowCountComponent',
+                        align: 'left'
+                    }
+                ]
+            },
+            components: {
+                booleanCellRenderer: booleanCellRenderer,
+                booleanFilterCellRenderer: booleanFilterCellRenderer,
+                booleanFilter: getBooleanFilter()
+            },
+            onSortChanged: e => e.api.refreshCells()
+        };
 
     return gridOptions;
 
@@ -206,7 +208,7 @@ function getGridOptions(gridColumns) {
                 }
             },
             booleanColumn: {
-                cellStyle: { "text-align": 'center' },
+                cellStyle: {"text-align": 'center'},
                 cellRenderer: 'booleanCellRenderer',
                 filter: 'booleanFilter',
                 floatingFilter: false,
@@ -292,7 +294,7 @@ function getGridOptions(gridColumns) {
             }
         }
     }
-};
+}
 
 function booleanCellRenderer(params) {
     const valueCleaned = booleanCleaner(params.value);
@@ -331,7 +333,8 @@ function booleanFilterCellRenderer(params) {
 
 function getBooleanFilter() {
 
-    function BooleanFilter() { }
+    function BooleanFilter() {
+    }
 
     BooleanFilter.prototype.init = function (params) {
         const uniqueId = Math.random();
@@ -371,11 +374,19 @@ function getBooleanFilter() {
 
         try {
 
-            if (this.cbNoFilter.checked) { return true; }
+            if (this.cbNoFilter.checked) {
+                return true;
+            }
 
-            if (this.cbPositive.checked) { return getBooleanValue() === true; }
-            if (this.cbNegative.checked) { return getBooleanValue() === false; }
-            if (this.cbUndefined.checked) { return getBooleanValue() === null; }
+            if (this.cbPositive.checked) {
+                return getBooleanValue() === true;
+            }
+            if (this.cbNegative.checked) {
+                return getBooleanValue() === false;
+            }
+            if (this.cbUndefined.checked) {
+                return getBooleanValue() === null;
+            }
 
             console.error('invalid checkbox selection');
 
@@ -395,10 +406,18 @@ function getBooleanFilter() {
     };
 
     BooleanFilter.prototype.getModel = function () {
-        if (this.cbNoFilter.checked) { return ''; }
-        if (this.cbPositive.checked) { return 'True'; }
-        if (this.cbNegative.checked) { return 'False'; }
-        if (this.cbUndefined.checked) { return '(Blank)'; }
+        if (this.cbNoFilter.checked) {
+            return '';
+        }
+        if (this.cbPositive.checked) {
+            return 'True';
+        }
+        if (this.cbNegative.checked) {
+            return 'False';
+        }
+        if (this.cbUndefined.checked) {
+            return '(Blank)';
+        }
 
         console.error('invalid checkbox selection');
     };

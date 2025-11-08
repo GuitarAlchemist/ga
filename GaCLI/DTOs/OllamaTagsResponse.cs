@@ -2,6 +2,5 @@
 
 public class OllamaTagsResponse
 {
-    [JsonPropertyName("models")]
-    public List<OllamaModel> Models { get; set; } = [];
+    [JsonPropertyName("models")] public List<OllamaModel> Models { get; set; } = [];
 }

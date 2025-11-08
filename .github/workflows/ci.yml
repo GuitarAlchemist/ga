@@ -1,0 +1,264 @@
+﻿name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20.x'
+
+jobs:
+  # ============================================
+  # BUILD JOB
+  # ============================================
+  build:
+    name: Build Solution
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore AllProjects.sln
+      
+    - name: Build solution
+      run: dotnet build AllProjects.sln --configuration Release --no-restore
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          **/bin/Release/**
+          !**/bin/Release/**/ref/**
+        retention-days: 1
+
+  # ============================================
+  # BACKEND TESTS JOB
+  # ============================================
+  test-backend:
+    name: Backend Tests
+    runs-on: windows-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore AllProjects.sln
+      
+    - name: Run backend tests
+      run: |
+        dotnet test AllProjects.sln `
+          --configuration Release `
+          --no-build `
+          --logger "trx;LogFileName=test-results.trx" `
+          --logger "console;verbosity=normal" `
+          --collect:"XPlat Code Coverage" `
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: '**/TestResults/**'
+        retention-days: 7
+        
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      if: always()
+      with:
+        files: '**/TestResults/**/*.trx'
+        check_name: Backend Test Results
+
+  # ============================================
+  # PLAYWRIGHT TESTS JOB
+  # ============================================
+  test-playwright:
+    name: Playwright Tests
+    runs-on: windows-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore AllProjects.sln
+      
+    - name: Build Playwright tests
+      run: dotnet build Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj --configuration Release
+      
+    - name: Install Playwright browsers
+      run: |
+        cd Tests/GuitarAlchemistChatbot.Tests.Playwright
+        pwsh bin/Release/net9.0/playwright.ps1 install --with-deps
+      
+    - name: Run Playwright tests
+      run: |
+        dotnet test Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj `
+          --configuration Release `
+          --no-build `
+          --logger "trx;LogFileName=playwright-results.trx" `
+          --logger "console;verbosity=normal"
+      
+    - name: Upload Playwright test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-results
+        path: '**/TestResults/**'
+        retention-days: 7
+        
+    - name: Upload Playwright screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-screenshots
+        path: '**/screenshots/**'
+        retention-days: 7
+
+  # ============================================
+  # CODE QUALITY JOB
+  # ============================================
+  code-quality:
+    name: Code Quality
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore AllProjects.sln
+      
+    - name: Run code analysis
+      run: dotnet build AllProjects.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=false
+      
+    - name: Check formatting
+      run: dotnet format AllProjects.sln --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+
+  # ============================================
+  # FRONTEND BUILD JOB
+  # ============================================
+  build-frontend:
+    name: Build Frontend
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: Apps/ga-client/package.json
+        
+    - name: Install dependencies
+      run: |
+        cd Apps/ga-client
+        npm ci
+        
+    - name: Lint frontend
+      run: |
+        cd Apps/ga-client
+        npm run lint
+      continue-on-error: true
+        
+    - name: Build frontend
+      run: |
+        cd Apps/ga-client
+        npm run build
+        
+    - name: Upload frontend artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: Apps/ga-client/dist
+        retention-days: 7
+
+  # ============================================
+  # SECURITY SCAN JOB
+  # ============================================
+  security-scan:
+    name: Security Scan
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore AllProjects.sln
+      
+    - name: Run security scan
+      run: |
+        dotnet list AllProjects.sln package --vulnerable --include-transitive
+      continue-on-error: true
+
+  # ============================================
+  # SUMMARY JOB
+  # ============================================
+  summary:
+    name: CI Summary
+    runs-on: windows-latest
+    needs: [build, test-backend, test-playwright, code-quality, build-frontend, security-scan]
+    if: always()
+    
+    steps:
+    - name: Check job results
+      run: |
+        echo "Build: ${{ needs.build.result }}"
+        echo "Backend Tests: ${{ needs.test-backend.result }}"
+        echo "Playwright Tests: ${{ needs.test-playwright.result }}"
+        echo "Code Quality: ${{ needs.code-quality.result }}"
+        echo "Frontend Build: ${{ needs.build-frontend.result }}"
+        echo "Security Scan: ${{ needs.security-scan.result }}"
+        
+    - name: Fail if any job failed
+      if: |
+        needs.build.result == 'failure' ||
+        needs.test-backend.result == 'failure' ||
+        needs.test-playwright.result == 'failure'
+      run: exit 1
+

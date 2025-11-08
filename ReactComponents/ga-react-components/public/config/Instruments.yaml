@@ -1,0 +1,1124 @@
+﻿Baglama:
+  DisplayName: "Baglama"
+  Greek:
+    DisplayName: "Greek"
+    Tuning: D4 D5 A4 A4 D5 D5
+
+Bajo:
+  DisplayName: "Bajo"
+  Quinto:
+    DisplayName: "Quinto"
+    Tuning: A2 A1 D3 D2 G2 G2 C3 C3 F3 F3
+  Sexto:
+    DisplayName: "Sexto"
+    Tuning: E2 E1 A2 A1 D3 D2 G2 G2 C3 C3 F3 F3
+
+Balalaika:
+  DisplayName: "Balalaika"
+  Alto:
+    DisplayName: "Alto"
+    Tuning: E3 E3 A3
+  Bass:
+    DisplayName: "Bass"
+    Tuning: E2 A2 D3
+  Contrabass:
+    DisplayName: "Contrabass"
+    Tuning: E1 A1 D2
+  Piccolo:
+    DisplayName: "Piccolo"
+    Tuning: B4 E5 A5
+  Prima:
+    DisplayName: "Prima"
+    Tuning: E4 E4 A4
+  Sekunda:
+    DisplayName: "Sekunda"
+    Tuning: A3 A3 D4
+
+Bandola:
+  DisplayName: "Bandola"
+  Central:
+    DisplayName: "Central"
+    Tuning: E3 E4 A3 A3 D3 D4 G3 G4
+  AndinaColombiana:
+    DisplayName: "Andina Colombiana"
+    FullName: Andina Colombiana
+    Tuning: F#3 F#3 B3 B3 E4 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+  Guayanesa:
+    DisplayName: "Guayanesa"
+    Tuning: G3 G4 D3 D4 A4 A4 E5 E5
+  Llanera:
+    DisplayName: "Llanera"
+    Tuning: A3 D4 F#4 B4
+  Oriental:
+    DisplayName: "Oriental"
+    Tuning: G3 G3 D4 D4 A4 A4 E5 E5
+
+Bandolim:
+  DisplayName: "Bandolim"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G3 D4 D4 A4 A4 E5 E5
+
+Bandora:
+  DisplayName: "Bandora"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G4 C2 D2 G2 C3 E3 A3
+
+Bandurria:
+  DisplayName: "Bandurria"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G#3 G#3 C#4 C#4 F#4 F#4 B4 B4 E5 E5 A5 A5
+  Peruvian:
+    DisplayName: "Peruvian"
+    Tuning: D5 D4 D5 D5 G4 G3 G4 G4 B4 B4 B4 B4 E5 E5 E5 E5
+  Phillipines:
+    DisplayName: "Phillipines"
+    Tuning: F#3 B3 B3 E4 E4 A4 A4 A4 D5 D5 D5 G5 G5 G5
+
+Banjo:
+  DisplayName: "Banjo"
+  Cello:
+    DisplayName: "Cello"
+    Tuning: C2 G2 D3 A3
+  TenorJazz:
+    DisplayName: "Tenor Jazz"
+    FullName: Tenor (Jazz)
+    Tuning: C3 G3 D4 A4
+  TenorIrish:
+    DisplayName: "Tenor Irish"
+    FullName: Tenor (Irish)
+    Tuning: G2 D3 A3 E3
+  Plectrum:
+    DisplayName: "Plectrum"
+    Tuning: C3 G3 B3 D4
+  Bluegrass5Strings:
+    DisplayName: "Bluegrass 5 Strings"
+    FullName: 5 strings Bluegrass
+    Tuning: G4 D3 G3 B3 D4
+  CTuning5Strings:
+    DisplayName: "C Tuning 5 Strings"
+    FullName: 5 strings C Tuning
+    Tuning: G4 C3 G3 B3 D4
+
+Banjolin:
+  DisplayName: "Banjolin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 D4 A5 E5
+
+Banjourine:
+  DisplayName: "Banjourine"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C5 G3 C4 E3 G4
+
+BaritoneGuitar:
+  DisplayName: "Baritone Guitar"
+  Standard1:
+    DisplayName: "Standard 1"
+    Tuning: B1 E2 A2 D3 F#3 B3
+  Standard2:
+    DisplayName: "Standard 2"
+    Tuning: A1 D2 G2 C3 E3 A3
+  OctaveLower:
+    DisplayName: "Octave Lower"
+    Tuning: E1 A1 D2 G2 B2 E3
+
+BassGuitar:
+  DisplayName: "Bass Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E1 A1 D2 G2
+  FiveStrings:
+    DisplayName: "Five Strings"
+    FullName: 5 strings
+    Tuning: B0 E1 A1 D2 G2
+  SixStrings:
+    DisplayName: "Six Strings"
+    FullName: 6 strings
+    Tuning: B0 E1 A1 D2 G2 C3
+
+Bordonua:
+  DisplayName: "Bordonua"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A2 A3 D4 D3 F#3 F#4 B3 B3 E4 E4
+
+Bouzouki:
+  DisplayName: "Bouzouki"
+  GreekTetrachordo:
+    DisplayName: "Greek Tetrachordo"
+    FullName: Greek Tetrachordo
+    Tuning: C3 C4 F3 F4 A3 A3 D4 D4
+  GreekTrichordo:
+    DisplayName: "Greek Trichordo"
+    FullName: Greek Trichordo
+    Tuning: D3 D4 A3 A3 D4 D4
+  IrishGDADOctave:
+    DisplayName: "Irish G D A D Octave"
+    FullName: Irish GDAD (Oct.)
+    Tuning: G3 G2 D4 D3 A3 A3 D4 D4
+  IrishGDADPairs:
+    DisplayName: "Irish G D A D Pairs"
+    FullName: Irish GDAD (Pairs)
+    Tuning: G2 G2 D3 D3 A3 A3 D4 D4
+  IrishFifthsOctave:
+    DisplayName: "Irish Fifths Octave"
+    FullName: Irish 5ths (Oct.)
+    Tuning: G3 G2 D4 D3 A3 A3 E4 E4
+  IrishFifthsPairs:
+    DisplayName: "Irish Fifths Pairs"
+    FullName: Irish 5ths (Pairs)
+    Tuning: G2 G2 D3 D3 A3 A3 E4 E4
+  IrishModalDOctaves:
+    DisplayName: "Irish Modal D Octaves"
+    FullName: Irish Modal D (Octaves)
+    Tuning: A3 A2 D4 D3 A3 A3 D4 D4
+  IrishModalD(UnisonPairs:
+    DisplayName: "Irish Modal D( Unison Pairs"
+    FullName: Irish Modal D (Unison Pairs)
+    Tuning: A2 A2 D3 D3 A3 A3 D4 D4
+
+Braguinha:
+  DisplayName: "Braguinha"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D4 G4 B4 D5
+
+Cavaquinho:
+  DisplayName: "Cavaquinho"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D4 G4 B4 D5
+  AMajor:
+    DisplayName: "A Major"
+    FullName: A Major
+    Tuning: A4 A4 C#5 E5
+  AMajorV2:
+    DisplayName: "A Major V 2"
+    FullName: A Major (version 2)
+    Tuning: E4 A4 C#5 E5
+  CMajor:
+    DisplayName: "C Major"
+    FullName: C Major
+    Tuning: G4 C5 E5 G5
+  GMajor:
+    DisplayName: "G Major"
+    FullName: G Major
+    Tuning: G4 G4 B4 D5
+
+Chanzy:
+  DisplayName: "Chanzy"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F2 C3 F3
+
+Charango:
+  DisplayName: "Charango"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G4 G4 C4 C4 E5 E4 A4 A4 E5 E5
+  Ranka:
+    DisplayName: "Ranka"
+    Tuning: D4 D4 A4 A4 G4 G4 C5 C5 G5 G6
+
+Charangon:
+  DisplayName: "Charangon"
+  Tuning1:
+    DisplayName: "Tuning 1"
+    Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
+  Tuning2:
+    DisplayName: "Tuning 2"
+    Tuning: G6 D4 D4 G4 G4 B5 B4 E5 E5 B5 B5
+
+ChitarraBattente:
+  DisplayName: "Chitarra Battente"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A3 D4 G3 B3 E4
+
+Chonguri:
+  DisplayName: "Chonguri"
+  DMinor:
+    DisplayName: "D Minor"
+    Tuning: D2 F2 D3 A2
+  FMajor:
+    DisplayName: "F Major"
+    Tuning: F3 A3 F4 C4
+
+Cistre:
+  DisplayName: "Cistre"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E2 A2 D3 D3 E3 E3 A3 A3 C#4 C#4 E4 E4
+
+Cittern:
+  DisplayName: "Cittern"
+  Bell:
+    DisplayName: "Bell"
+    Tuning: B3 B3 D4 D4 F4 F4 A4 A4 D5 D5
+  Celtic5thsLongscale:
+    DisplayName: "Celtic 5Ths Longscale"
+    Tuning: C2 C2 G2 G2 D3 D3 A3 A3 E4 E4
+  CelticLongscale1:
+    DisplayName: "Celtic Longscale 1"
+    Tuning: C2 C2 G2 G2 D3 D3 G3 G3 D4 D4
+  CelticLongscale2:
+    DisplayName: "Celtic Longscale 2"
+    Tuning: D2 D2 A2 A2 E3 E3 A3 A3 E4 E4
+  CelticShortscale:
+    DisplayName: "Celtic Shortscale"
+    Tuning: G2 G2 D3 D3 A3 A3 D4 D4 A4 A4
+  Celtic5thsShortscale:
+    DisplayName: "Celtic 5Ths Shortscale"
+    Tuning: G2 G2 D3 D3 A3 A3 E4 E4 B4 B4
+  CelticIrish:
+    DisplayName: "Celtic Irish"
+    Tuning: D2 D2 G2 G2 D3 D3 A3 A3 D4 D4
+  CelticMandocelloLongscale:
+    DisplayName: "Celtic Mandocello Longscale"
+    Tuning: C2 C2 G2 G2 D3 D3 A3 A3 D4 D4
+  CelticMandocelloShortscale:
+    DisplayName: "Celtic Mandocello Shortscale"
+    Tuning: G2 G2 D3 D3 A3 A3 E4 E4 A4 A4
+  CelticModalCLongscale:
+    DisplayName: "Celtic Modal C Longscale"
+    Tuning: C2 C2 G2 G2 C3 C3 G3 G3 C4 C4
+  CelticModalCShortscale:
+    DisplayName: "Celtic Modal C Shortscale"
+    Tuning: G2 G2 C3 C3 G3 G3 C4 C4 G4 G4
+  CelticModalDLongscale:
+    DisplayName: "Celtic Modal D Longscale"
+    Tuning: D2 D2 A2 A2 D3 D3 A3 A3 D4 D4
+  CelticModalDShortscale:
+    DisplayName: "Celtic Modal D Shortscale"
+    Tuning: A2 A2 D3 D3 A3 A3 D4 D4 A4 A4
+  CelticModalFShortscale:
+    DisplayName: "Celtic Modal F Shortscale"
+    Tuning: F2 F2 C3 C3 F3 F3 C4 C4 F4 F4
+  CelticModalGLongscale:
+    DisplayName: "Celtic Modal G Longscale"
+    Tuning: D2 D2 G2 G2 D3 D3 G3 G3 D4 D4
+  CelticModalGShortscale:
+    DisplayName: "Celtic Modal G Shortscale"
+    Tuning: G2 G2 D3 D3 G3 G3 D4 D4 G4 G4
+  CelticModalALongscale:
+    DisplayName: "Celtic Modal A Longscale"
+    Tuning: E2 E2 A2 A2 E3 E3 A3 A3 E4 E4
+  16th/17thCentury:
+    DisplayName: "16Th/ 17Th Century"
+    Tuning: B3 B3 G4 G4 G3 D4 D4 E4 E4
+  FrenchTuning:
+    DisplayName: "French Tuning"
+    Tuning: A4 A4 G4 G4 G3 D4 D4 E4 E4
+
+Cuatro:
+  DisplayName: "Cuatro"
+  PuertoRican:
+    DisplayName: "Puerto Rican"
+    Tuning: B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
+  Venezuelan:
+    DisplayName: "Venezuelan"
+    Tuning: A3 D4 F#4 B3
+
+Cumbus:
+  DisplayName: "Cumbus"
+  DanTyba:
+    DisplayName: "Dan Tyba"
+    Tuning: G3 C4 D4 G4
+
+DobroorResophonic:
+  DisplayName: "Dobro Or Resophonic"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G2 B2 D3 G3 B3 D4
+
+Domra:
+  DisplayName: "Domra"
+  Alto:
+    DisplayName: "Alto"
+    Tuning: E3 A3 D4
+  Bass:
+    DisplayName: "Bass"
+    Tuning: E2 A2 D3
+  ContrabassMajor:
+    DisplayName: "Contrabass Major"
+    Tuning: A1 D2 G2
+  ContrabassMinor:
+    DisplayName: "Contrabass Minor"
+    Tuning: E1 A1 D2
+  Mezzosoprano:
+    DisplayName: "Mezzosoprano"
+    Tuning: B3 E4 A4
+  Piccolo:
+    DisplayName: "Piccolo"
+    Tuning: B4 E5 A5
+  Prima:
+    DisplayName: "Prima"
+    Tuning: E4 A4 D5
+  Tenor:
+    DisplayName: "Tenor"
+    Tuning: B2 E3 A3
+  UkrainianPrima:
+    DisplayName: "Ukrainian Prima"
+    FullName: Ukrainian Prima
+    Tuning: G3 D4 A4 E5
+
+Dulcimer:
+  DisplayName: "Dulcimer"
+  AeolianModeDMinor:
+    DisplayName: "Aeolian Mode D Minor"
+    FullName: Aeolian Mode D Minor
+    Tuning: C4 C4 A3 D3
+  AeolianModeCMinor:
+    DisplayName: "Aeolian Mode C Minor"
+    FullName: Aeolian Mode C Minor
+    Tuning: Bb3 Bb3 G3 C3
+  DorianModeDMinor:
+    DisplayName: "Dorian Mode D Minor"
+    FullName: Dorian Mode D Minor
+    Tuning: G3 G3 A3 D3
+  DorianModeEMinor:
+    DisplayName: "Dorian Mode E Minor"
+    FullName: Dorian Mode E Minor
+    Tuning: A3 A3 B3 E3
+  IonianKeyOfD:
+    DisplayName: "Ionian Key Of D"
+    FullName: Ionian Key of D
+    Tuning: A3 A3 A3 D3
+  IonianKeyOfC:
+    DisplayName: "Ionian Key Of C"
+    FullName: Ionian Key of C
+    Tuning: G3 G3 G3 C3
+  LocrianModeOfCSharpMinor:
+    DisplayName: "Locrian Mode Of C Sharp Minor"
+    FullName: Locrian Mode C# Minor
+    Tuning: A3 A3 G#3 C#3
+  LocrianModeDMinor:
+    DisplayName: "Locrian Mode D Minor"
+    FullName: Locrian Mode D Minor
+    Tuning: Bb3 Bb3 A3 D3
+  LydianModeCAndMore:
+    DisplayName: "Lydian Mode C And More"
+    FullName: Lydian Mode C and More
+    Tuning: D4 D4 G3 C3
+  LydianMode:
+    DisplayName: "Lydian Mode"
+    FullName: Lydian Mode
+    Tuning: Bb C4 C4 F3 Bb2
+  MixolydianMode:
+    DisplayName: "Mixolydian Mode"
+    FullName: Mixolydian Mode
+    Tuning: D4 D4 A3 D3
+  PhrygianMode:
+    DisplayName: "Phrygian Mode"
+    FullName: Phrygian Mode
+    Tuning: Eb4 Eb4 G3 C3
+
+EnglishGuittar:
+  DisplayName: "English Guittar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 E3 G3 G3 C4 C4 E4 E4 G4 G4
+
+Gekkin:
+  DisplayName: "Gekkin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A3 D4 D4 D5
+
+Ghita:
+  DisplayName: "Ghita"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 F3 C4 G4 C5
+
+Gittern:
+  DisplayName: "Gittern"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D4 G4 D5 G5
+
+Grajappi:
+  DisplayName: "Grajappi"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F2 F2 B2 B2
+
+Guitar:
+  DisplayName: "Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E2 A2 D3 G3 B3 E4
+  DADGAD:
+    DisplayName: "D A D G A D"
+    Tuning: D2 A2 D3 G3 A3 D4
+  DoubleDropD:
+    DisplayName: "Double Drop D"
+    Tuning: D2 A2 D3 G3 B3 D4
+  DropD:
+    DisplayName: "Drop D"
+    FullName: Drop D
+    Tuning: D2 A2 D3 G3 B3 E4
+  OpenCMajor:
+    DisplayName: "Open C Major"
+    FullName: Open C Major
+    Tuning: C2 G2 C3 G3 C3 E4
+  OpenDMajor:
+    DisplayName: "Open D Major"
+    FullName: Open D Major
+    Tuning: D2 A2 D3 F#3 A3 D4
+  OpenEMajorV1:
+    DisplayName: "Open E Major V 1"
+    FullName: Open E - 1 Major
+    Tuning: E2 B2 E3 G#3 B3 E4
+  OpenEMajorV2:
+    DisplayName: "Open E Major V 2"
+    FullName: Open E - 2 Minor
+    Tuning: E2 B2 E3 G3 B3 E4
+  OpenGMajorV1:
+    DisplayName: "Open G Major V 1"
+    FullName: Open G - 1 Major
+    Tuning: D2 G2 D3 G3 B3 D4
+  OpenGMinorV2:
+    DisplayName: "Open G Minor V 2"
+    FullName: Open G - 2 Minor
+    Tuning: D2 G2 D3 G3 Bb3 D4
+  OpenAMajor:
+    DisplayName: "Open A Major"
+    FullName: Open A Major
+    Tuning: E2 A2 E3 A3 C#3 E4
+  Renaissance:
+    DisplayName: "Renaissance"
+    Tuning: G3 G4 C4 C4 E4 E4 A4
+  Baroque1:
+    DisplayName: "Baroque 1"
+    FullName: Baroque 1
+    Tuning: A3 A3 D4 D4 G3 G3 B3 B3 E4 E4
+  Baroque2:
+    DisplayName: "Baroque 2"
+    FullName: Baroque 2
+    Tuning: A3 A3 D4 D3 G3 G3 B3 B3 E4 E4
+  TwelveStrings:
+    DisplayName: "Twelve Strings"
+    FullName: 12-String
+    Tuning: E2 E3 A2 A3 D3 D4 G3 G4 B3 B3 E4 E4
+
+GuitarBanjo:
+  DisplayName: "Guitar Banjo"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E2 A2 D3 G3 B3 E4
+
+GuitarDecacorde:
+  DisplayName: "Guitar Decacorde"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C2 D2 E2 F2 G2 A2 D3 G3 B3 E4
+
+GuitarradeGolpe:
+  DisplayName: "Guitarra De Golpe"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D3 G3 C4 E3 A3
+
+GuitarroorGuitarrico:
+  DisplayName: "Guitarro Or Guitarrico"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: B4 F#4 D5 A5 E5
+
+Guitarrón:
+  DisplayName: "Guitarrón"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A1 D2 G2 C3 E3 A2
+
+Halszither:
+  DisplayName: "Halszither"
+  Krienser:
+    DisplayName: "Krienser"
+    Tuning: G2 G2 D3 D3 G3 G3 B3 B3 D4 D4
+
+Harzzither:
+  DisplayName: "Harzzither"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G3 C4 C4 E4 E4 G4 G4
+
+HawaiianGuitar:
+  DisplayName: "Hawaiian Guitar"
+  Tuning1:
+    DisplayName: "Tuning 1"
+    Tuning: E2 A2 E3 A3 C#4 E4
+  Tuning2:
+    DisplayName: "Tuning 2"
+    Tuning: G2 B2 D3 G3 B3 D4
+
+Huapanguera:
+  DisplayName: "Huapanguera"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: Huapanguera
+
+Jarana:
+  DisplayName: "Jarana"
+  Huasteca:
+    DisplayName: "Huasteca"
+    Tuning: G3 B3 D4 F#4 A4
+  Jarocha:
+    DisplayName: "Jarocha"
+    Tuning: A3 D4 D4 G3 G4 B3 B3 E4
+
+Laud:
+  DisplayName: "Laud"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G#2 G#2 C#3 C#3 F#3 F#3 B3 B3 E4 E4 A4 A4
+
+Lavta:
+  DisplayName: "Lavta"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C2 C2 G2 G2 D3 D3 A3 A3
+
+Liuqin:
+  DisplayName: "Liuqin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 D4 G4 D5
+
+Lute:
+  DisplayName: "Lute"
+  BaroqueDMinor:
+    DisplayName: "Baroque D Minor"
+    FullName: Baroque D Minor
+    Tuning: A2 D3 F3 A3 D4 F4
+  Medieval:
+    DisplayName: "Medieval"
+    Tuning: G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4 G4
+  RenaissanceTenor:
+    DisplayName: "Renaissance Tenor"
+    FullName: Renaissance Tenor
+    Tuning: D2 F2 G2 C3 F3 A3 D4 G4
+
+Mandobass:
+  DisplayName: "Mandobass"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E1 A1 D2 G2
+
+Mandocello:
+  DisplayName: "Mandocello"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C2 C2 G2 G2 D3 D3 A3 A3
+
+Mandola:
+  DisplayName: "Mandola"
+  Tenor:
+    DisplayName: "Tenor"
+    Tuning: C3 C3 G3 G3 D4 D4 A4 A4
+
+Mandolin:
+  DisplayName: "Mandolin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G3 D4 D4 A4 A4 E5 E5
+  FiveCourse:
+    DisplayName: "Five Course"
+    FullName: 5 Course
+    Tuning: C3 C3 G3 G3 D4 D4 A4 A4 E5 E5
+  ElectricFiveStrigs:
+    DisplayName: "Electric Five Strigs"
+    FullName: Electric 5-String
+    Tuning: C3 G3 D4 A4 E5
+  Cremona:
+    DisplayName: "Cremona"
+    Tuning: G3 D4 A4 E5
+  Genuese:
+    DisplayName: "Genuese"
+    Tuning: E3 E3 A3 A3 D3 D4 G4 G4 B4 B4 E5 E5
+  Neopolitan:
+    DisplayName: "Neopolitan"
+    Tuning: G3 G4 D4 D4 A4 A4 E5 E5
+  Piccolo:
+    DisplayName: "Piccolo"
+    Tuning: C4 C4 G4 G4 D5 D5 A5 A5
+  Banjo:
+    DisplayName: "Banjo"
+    Tuning: G3 G3 D4 D4 A5 A5 E5 E5
+
+Mandolino:
+  DisplayName: "Mandolino"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G3 B3 B3 E4 E4 A4 A4 D5 D5 G5 G5
+  Lombardo:
+    DisplayName: "Lombardo"
+    Tuning: G3 B3 E4 A4 D5 G5
+
+Mandore:
+  DisplayName: "Mandore"
+  ModalC:
+    DisplayName: "Modal C"
+    FullName: Modal C
+    Tuning: C4 G4 C5 G5
+  ModalG:
+    DisplayName: "Modal G"
+    FullName: Modal G
+    Tuning: G3 D4 G4 D5
+  French:
+    DisplayName: "French"
+    Tuning: E2 A2 D3 G3 B3 E4
+
+MandriolaOrTricordia:
+  DisplayName: "Mandriola Or Tricordia"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G2 G3 G3 D3 D4 D4 A3 A4 A4 E4 E5 E5
+  Unisonpairs:
+    DisplayName: "Unison Pairs"
+    Tuning: G3 G3 G3 D4 D4 D4 A4 A4 A4 E5 E5 E5
+
+Mejorana:
+  DisplayName: "Mejorana"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D4 A4 A3 B3 E4
+
+Mondol:
+  DisplayName: "Mondol"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E2 E2 A2 A2 D3 D3 G3 G3 B3 B3
+
+OctaveGuitar:
+  DisplayName: "Octave Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E3 A3 D4 G4 B5 E5
+
+Panduri:
+  DisplayName: "Panduri"
+  E:
+    DisplayName: "E"
+    Tuning: E3 B3 A4
+  G:
+    DisplayName: "G"
+    Tuning: G3 A3 C4
+
+PedalSteelGuitar:
+  DisplayName: "Pedal Steel Guitar"
+  T1:
+    DisplayName: "T 1"
+    Tuning: C6 C2 F2 2 C3 E3 G3 A3 C4 E4 G4
+  T2:
+    DisplayName: "T 2"
+    Tuning: E9 B2 D3 3 F#3 G#3 B3 E4 G#4 Eb4 F#4
+  UniversalTwelveStrings:
+    DisplayName: "Universal Twelve Strings"
+    FullName: Universal 12 Strings
+    Tuning: Bb2 Eb2 G2 Bb2 D3 F3 G3 Bb3 D4 F4 G4 E4
+
+Phin:
+  DisplayName: "Phin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G4 D4 A4
+
+Pipa:
+  DisplayName: "Pipa"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A2 D2 G3 A3
+
+PortugueseGuitarra:
+  DisplayName: "Portuguese Guitarra"
+  Coimbra:
+    DisplayName: "Coimbra"
+    Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3 A3 A3
+  Lisboa:
+    DisplayName: "Lisboa"
+    Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3 B3 B3
+
+Rajão:
+  DisplayName: "Rajão"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D4 G4 C4 E4 A4 A4
+
+Ramkie:
+  DisplayName: "Ramkie"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 F3 A3 C4
+
+Requinto:
+  DisplayName: "Requinto"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A2 D3 G3 C4 E4 A4
+  FourStringsV1:
+    DisplayName: "Four Strings V 1"
+    FullName: 4 strings - 1
+    Tuning: G2 A2 D3 G3
+  FourStringsV2:
+    DisplayName: "Four Strings V 2"
+    FullName: 4 strings - 2
+    Tuning: C2 D2 G2 C3
+  FiveStrings:
+    DisplayName: "Five Strings"
+    FullName: 5 Strings
+    Tuning: E2 A2 D3 G3 C3
+
+Ronroco:
+  DisplayName: "Ronroco"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G3 C3 C3 E4 E3 A3 A3 E4 E4
+
+Ruan:
+  DisplayName: "Ruan"
+  Soprano:
+    DisplayName: "Soprano"
+    Tuning: G2 D3 A3 E4
+  Tenor:
+    DisplayName: "Tenor"
+    Tuning: C2 G2 D3 A3
+  Zhong:
+    DisplayName: "Zhong"
+    Tuning: G2 D2 G3 D3
+
+RussianGuitar:
+  DisplayName: "Russian Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D2 G2 B2 D3 G3 B3 D4
+
+Saz:
+  DisplayName: "Saz"
+  AzeriOrQopuz:
+    DisplayName: "Azeri Or Qopuz"
+    FullName: Azeri/Qopuz
+    Tuning: D4 D4 D4 G3 G3 C4 C4 C4
+  BaglamaBozukDuzenSixStrings:
+    DisplayName: "Baglama Bozuk Duzen Six Strings"
+    FullName: Baglama Bozuk Duzen 6 String
+    Tuning: G2 G3 D2 D3 A2 A3
+  BaglamaBozukDuzenSevenStrings:
+    DisplayName: "Baglama Bozuk Duzen Seven Strings"
+    FullName: Baglama Bozuk Duzen 7 String
+    Tuning: Tuning G2 G3 D2 D3 A2 A3 A3
+
+Seis:
+  DisplayName: "Seis"
+  PuertoRican:
+    DisplayName: "Puerto Rican"
+    FullName: Puerto Rican
+    Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 D4 D4 G4 G4
+  PuertoRicanGuitarTuning:
+    DisplayName: "Puerto Rican Guitar Tuning"
+    FullName: Puerto Rican Guitar Tuning
+    Tuning: F#3 F#2 B3 B2 E4 E3 A3 A3 C#4 C#4 F#4 F#4
+
+Setar:
+  DisplayName: "Setar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 C4 G3 C4
+
+Sitar:
+  DisplayName: "Sitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C5 C4 G3 C2 G2 C3 F3
+
+SopranoGuitar:
+  DisplayName: "Soprano Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E3 A4 D4 G4 B4 E5
+
+Sovacon:
+  DisplayName: "Sovacon"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G2 D3 A3 B2
+
+Strumstick:
+  DisplayName: "Strumstick"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 D4 G4
+
+Tambur:
+  DisplayName: "Tambur"
+  Yali:
+    DisplayName: "Yali"
+    Tuning: D2 D2 A2 A2 D3 D3
+
+Tamburitza:
+  DisplayName: "Tamburitza"
+  Brac:
+    DisplayName: "Brac"
+    Tuning: E2 A2 D3 G3
+  Bugarija:
+    DisplayName: "Bugarija"
+    Tuning: G2 B2 D3 G3 G3
+
+Tar:
+  DisplayName: "Tar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 C4 G3 G3 C4 C4
+  TarAzeriOrCaucasus:
+    DisplayName: "Tar Azeri Or Caucasus"
+    FullName: Tar - Azeri/Caucasus
+    Tuning: C4 C4 C5 C5 G2 C3 C4 G3 G3 C4 C4
+
+TaroPatch:
+  DisplayName: "Taro Patch"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 G4 C4 C3 C4 E4 E4 A4 A4
+
+TenorGuitar:
+  DisplayName: "Tenor Guitar"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: C3 G3 D4 A4
+  Irish:
+    DisplayName: "Irish"
+    Tuning: G2 D3 A3 E3
+
+Timple:
+  DisplayName: "Timple"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G4 C5 E4 A4 D5
+
+Tiple:
+  DisplayName: "Tiple"
+  Chilean:
+    DisplayName: "Chilean"
+    Tuning: D4 D3 D4 G4 G3 G4 B3 B3 B3 E4 E4 E4
+  Columbian:
+    DisplayName: "Columbian"
+    Tuning: D4 D3 D4 G4 G3 G4 B3 B3 B3 E4 E4 E4
+  Doliente:
+    DisplayName: "Doliente"
+    Tuning: E3 A3 D4 G4 C5
+  MartinStyle:
+    DisplayName: "Martin Style"
+    Tuning: A3 A4 D4 D3 D4 F#4 F#3 F#4 B4 B4
+  Requinto:
+    DisplayName: "Requinto"
+    Tuning: D4 D4 G4 G4 G4 B4 B4 B4 E4 E4
+
+TresCubano:
+  DisplayName: "Tres Cubano"
+  CMajor:
+    DisplayName: "C Major"
+    Tuning: G4 G3 C4 C4 E4 E3
+  DMajor:
+    DisplayName: "D Major"
+    Tuning: A4 A3 D4 D4 F#4 F#4
+
+Tzouras:
+  DisplayName: "Tzouras"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D3 D4 A3 A3 D4 D4
+
+Ukulele:
+  DisplayName: "Ukulele"
+  SopranoConcertAndTenorC:
+    DisplayName: "Soprano Concert And Tenor C"
+    FullName: Soprano C, Concert & Tenor C
+    Tuning: C6 G4 C4 E4 A4
+  SopranoConcertAndTenorD:
+    DisplayName: "Soprano Concert And Tenor D"
+    FullName: Soprano, Concert & Tenor D
+    Tuning: D6 A4 D4 F#4 B4
+  Baritone:
+    DisplayName: "Baritone"
+    Tuning: D4 G3 B4 E4
+  Tahitian:
+    DisplayName: "Tahitian"
+    Tuning: G4 G4 C5 C5 E5 E5 A4 A4
+  BanjoOrBanjoleteC:
+    DisplayName: "Banjo Or Banjolete C"
+    FullName: Ukulele Banjo or Banjolele C
+    Tuning: C6 G4 C4 E4 A4
+  BanjoOrBanjoleteD:
+    DisplayName: "Banjo Or Banjolete D"
+    FullName: Ukulele Banjo or Banjolele D
+    Tuning: D6 A4 D4 F#4 B4
+
+Vihuela:
+  DisplayName: "Vihuela"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A3 D4 G4 B3 E4
+
+Viola:
+  DisplayName: "Viola"
+  Amarantina:
+    DisplayName: "Amarantina"
+    FullName: Viola Amarantina
+    Tuning: D3 D2 A3 A2 B3 B2 E3 E3 A3 A3
+  Beiroa:
+    DisplayName: "Beiroa"
+    FullName: Viola Beiroa
+    Tuning: D3 D3 A3 A2 D3 D2 G3 G2 B3 B3 D3 D3
+  Braguesa:
+    DisplayName: "Braguesa"
+    FullName: Viola Braguesa
+    Tuning: C3 C2 G3 G2 A3 A2 D3 D3 G3 G3
+  Caipira:
+    DisplayName: "Caipira"
+    FullName: Viola Caipira
+    Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
+  Campaniça:
+    DisplayName: "Campaniça"
+    FullName: Viola Campaniça
+    Tuning: C3 C2 F3 F2 C3 C3 E3 E3 G3 G3
+  DaTerra:
+    DisplayName: "Da Terra"
+    FullName: Viola da Terra
+    Tuning: A4 A4 A4 D4 D4 D3 G3 G3 B3 B3 D4 D4
+  DeArame:
+    DisplayName: "De Arame"
+    FullName: Viola de Arame
+    Tuning: G3 G2 D3 D2 G3 G3 B3 D3 D3
+  DeCocho1:
+    DisplayName: "De Cocho 1"
+    FullName: Viola de Cocho 1
+    Tuning: G3 D3 E3 A3 D4
+  DeCocho2:
+    DisplayName: "De Cocho 2"
+    FullName: Viola de Cocho 2
+    Tuning: G3 C3 E3 A3 D4
+  DeDizCordas:
+    DisplayName: "De Diz Cordas"
+    FullName: Viola de Diz Cordas
+    Tuning: A3 A3 D3 D4 G3 G3 B3 B3 E4 E4
+  Sertaneja:
+    DisplayName: "Sertaneja"
+    FullName: Viola Sertaneja
+    Tuning: A3 A2 D4 D2 F#4 F#3 A3 A3 D4 D4
+  Toeira:
+    DisplayName: "Toeira"
+    FullName: Viola Toeira
+    Tuning: A3 A3 A3 D3 D3 D2 G3 G2 B3 B3 E3 E3
+
+ViolãoDeSeteCordas:
+  DisplayName: "Violão De Sete Cordas"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: B1 E2 A2 D3 G3 B3 E4
+
+Walaycho:
+  DisplayName: "Walaycho"
+  StandardF:
+    DisplayName: "Standard F"
+    Tuning: F6 C4 C4 F4 F4 A5 A4 D5 D5 A5 A5
+  StandardG:
+    DisplayName: "Standard G"
+    Tuning: G6 D4 D4 G4 G4 B5 B4 E5 E5 B5 B5
+
+Waldzither:
+  DisplayName: "Waldzither"
+  Hamburger:
+    DisplayName: "Hamburger"
+    Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+  Thüringer:
+    DisplayName: "Thüringer"
+    Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+
+YuehChinOrYuehQin:
+  DisplayName: "Yueh Chin Or Yueh Qin"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: G3 D4 G4 D5
+
+Zister:
+  DisplayName: "Zister"
+  Thüringer:
+    DisplayName: "Thüringer"
+    Tuning: C3 G3 G3 C4 C4 E4 E4 G4 G4
+
+Angelique(Theorbo):
+  DisplayName: "Angelique ( Theorbo)"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: D2 E2 F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 B3 C4 D4 E4
+
+Archlute:
+  DisplayName: "Archlute"
+  14Course:
+    DisplayName: "14 Course"
+    Tuning: F2 G2 A2 Bb2 C3 D3 E3 F3 G3 C4 F4 A4 D5 G5
+
+Bandolin:
+  DisplayName: "Bandolin"
+  Ecuadorean:
+    DisplayName: "Ecuadorean"
+    Tuning: E5 E4 E5 A5 A4 A5 D5 D4 D5 F5 F5 F5 B5 B5 B5
+
+BaroqueLute:
+  DisplayName: "Baroque Lute"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A2 B2 C3 D3 E3 F3 G3 A3 D4 F4 A4 D5 F5
+
+GuitarrónChileno:
+  DisplayName: "Guitarrón Chileno"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F#5 A4 D4 D4 D3 D3 D2 G4 G4 G4 G3 G3 C4 C4 C3 C2 E4 E4 E4 A4 A4 A4 G4 B4
+
+LaudPhillipines:
+  DisplayName: "Laud Phillipines"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+
+LiutoAttiorbatoTheorbo:
+  DisplayName: "Liuto Attiorbato Theorbo"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F1 F2 G1 G2 A1 A2 B1 B2 C2 C3 D2 D3 E2 E3 F2 F2 G2 G2 C3 C3 F3 F3 A3 A3 D4 D4 G4
+
+Octavina:
+  DisplayName: "Octavina"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F#2 B2 B2 E3 E3 A3 A3 A3 D4 D4 D4 G4 G4 G4
+
+SächsischeTheorbenzister:
+  DisplayName: "Sächsische Theorbenzister"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: B2 C2 D3 E3 F3 G3 A3 B3 C4 C4 F4 F4 A4 A4 C4 C4
+
+SwedishLute:
+  DisplayName: "Swedish Lute"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: A2 B2 C#3 D3 E3 F#3 G3 A3 B3 C#4 D4 E4 A4 C#5 E5
+
+TheorboFifteenCourse:
+  DisplayName: "Theorbo Fifteen Course"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 D4 G4 B4 E4 A4
+
+ViolaDaTerceiraFifteenStrings:
+  DisplayName: "Viola Da Terceira Fifteen Strings"
+  Standard:
+    DisplayName: "Standard"
+    Tuning: E3 E3 E2 A3 A3 A2 D3 D3 D2 G3 G2 B3 B3 E3 E3

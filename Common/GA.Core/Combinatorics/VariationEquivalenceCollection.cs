@@ -1,23 +1,23 @@
 ﻿namespace GA.Core.Combinatorics;
 
 /// <summary>
-/// Abstract collection of variation equivalences.
+///     Abstract collection of variation equivalences.
 /// </summary>
 public abstract class VariationEquivalenceCollection
 {
     /// <summary>
-    /// Concrete collection of variation translation equivalences.
+    ///     Concrete collection of variation translation equivalences.
     /// </summary>
     public class Translation<T> : VariationEquivalenceCollection
         where T : struct, IRangeValueObject<T>
     {
         private readonly Lazy<ImmutableList<VariationEquivalence.Translation>> _lazyEquivalences;
-        private readonly Lazy<ImmutableDictionary<BigInteger, VariationEquivalence.Translation>> _lazyToEquivalences;
         private readonly Lazy<ILookup<BigInteger, VariationEquivalence.Translation>> _lazyFromEquivalences;
+        private readonly Lazy<ImmutableDictionary<BigInteger, VariationEquivalence.Translation>> _lazyToEquivalences;
 
         public Translation(VariationsWithRepetitions<T> variationsWithRepetitions)
             : this(variationsWithRepetitions.GetIndex,
-                   variationsWithRepetitions)
+                variationsWithRepetitions)
         {
         }
 
@@ -37,7 +37,10 @@ public abstract class VariationEquivalenceCollection
         public ImmutableDictionary<BigInteger, VariationEquivalence.Translation> To => _lazyToEquivalences.Value;
         public ILookup<BigInteger, VariationEquivalence.Translation> From => _lazyFromEquivalences.Value;
 
-        public override string ToString() => $"{Equivalences.Count}";
+        public override string ToString()
+        {
+            return $"{Equivalences.Count}";
+        }
 
         private static ImmutableList<VariationEquivalence.Translation> GetTranslationEquivalences(
             Func<IEnumerable<T>, BigInteger> indexProvider,
@@ -49,8 +52,12 @@ public abstract class VariationEquivalenceCollection
             var mapItemsBuilder = ImmutableList.CreateBuilder<VariationEquivalence.Translation>();
             foreach (var variation in variations)
             {
-                if (TryGetEquivalence(variation, indexProvider, out var mapItem)) mapItemsBuilder.Add(mapItem);
+                if (TryGetEquivalence(variation, indexProvider, out var mapItem))
+                {
+                    mapItemsBuilder.Add(mapItem);
+                }
             }
+
             return mapItemsBuilder.ToImmutable();
 
             static bool TryGetEquivalence(
@@ -72,11 +79,14 @@ public abstract class VariationEquivalenceCollection
                     variation.Min().Value);
                 return true;
 
-                static IEnumerable<T> ToPrimeForm(IEnumerable<T> items) 
+                static IEnumerable<T> ToPrimeForm(IEnumerable<T> items)
                 {
                     ArgumentNullException.ThrowIfNull(items);
-                    
-                    if (items is not IReadOnlyCollection<T> collection) collection = items.ToImmutableArray();
+
+                    if (items is not IReadOnlyCollection<T> collection)
+                    {
+                        collection = [..items];
+                    }
 
                     var minItem = collection.Min();
                     return collection.Select(item => T.FromValue(item.Value - minItem.Value));
@@ -85,4 +95,3 @@ public abstract class VariationEquivalenceCollection
         }
     }
 }
-

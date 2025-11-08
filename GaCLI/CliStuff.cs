@@ -1,16 +1,14 @@
-﻿
-namespace GaCLI;
-
-using GA.Business.Config;
-using GA.Business.Core.Notes;
+﻿namespace GaCLI;
 
 public class SomeStuff
 {
-    static void RenderGuitarFretboard()
+    private static void RenderGuitarFretboard()
     {
         Console.WriteLine(Fretboard.Default);
     }
 
+    // TODO: Fix to use new YamlDotNet-based API instead of old type provider
+    /*
     static void RenderUkuleleFretboard()
     {
         if (!PitchCollection.TryParse(InstrumentsConfig.Instruments.Ukulele.Baritone.Tuning, null, out var result)) throw new PitchCollectionParseException();
@@ -18,4 +16,5 @@ public class SomeStuff
         var fretBoard = new Fretboard(tuning, 15);
         Console.WriteLine(fretBoard.ToString());
     }
+    */
 }

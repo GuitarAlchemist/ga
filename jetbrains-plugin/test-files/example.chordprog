@@ -1,0 +1,6 @@
+# Chord Progression DSL Example
+# Try typing to see auto-completion!
+
+I - IV - V - I
+Cmaj7 - Fmaj7 - G7 - Cmaj7 - maj
+ii - V - I

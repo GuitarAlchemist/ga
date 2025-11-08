@@ -4,17 +4,17 @@ using Primitives;
 using Tonal;
 
 /// <summary>
-/// Collection of <see cref="KeyPosition"/> items.
+///     Collection of <see cref="KeyPosition" /> items.
 /// </summary>
 public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
 {
     private readonly IReadOnlyCollection<KeyPosition> _keyPositions;
 
     /// <summary>
-    /// Create a <see cref="KeyPositionCollection"/> instance.
+    ///     Create a <see cref="KeyPositionCollection" /> instance.
     /// </summary>
-    /// <param name="key">The <see cref="Key"/>.</param>
-    /// <param name="positions">The <see cref="Position.Played"/> collection</param>
+    /// <param name="key">The <see cref="Key" />.</param>
+    /// <param name="positions">The <see cref="Position.Played" /> collection</param>
     /// <exception cref="ArgumentNullException">Thrown when a parameter is null.</exception>
     public KeyPositionCollection(
         Key key,
@@ -27,12 +27,20 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
     }
 
     /// <summary>
-    /// Gets the <see cref="Key"/>
+    ///     Gets the <see cref="Key" />
     /// </summary>
     public Key Key { get; }
 
-    public IEnumerator<KeyPosition> GetEnumerator() => _keyPositions.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _keyPositions).GetEnumerator();
+    public IEnumerator<KeyPosition> GetEnumerator()
+    {
+        return _keyPositions.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable)_keyPositions).GetEnumerator();
+    }
+
     public int Count => _keyPositions.Count;
 
     public override string ToString()
@@ -40,7 +48,11 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         var sb = new StringBuilder();
         foreach (var (position, keyNote) in _keyPositions)
         {
-            if (sb.Length > 0) sb.Append(", ");
+            if (sb.Length > 0)
+            {
+                sb.Append(", ");
+            }
+
             var s = $"str {position.Location.Str} ({keyNote})";
             sb.Append(s);
         }
@@ -55,9 +67,9 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(positions);
 
-        var noteByPitchClass = 
+        var noteByPitchClass =
             key.Notes.ToImmutableDictionary(
-                note => note.PitchClass, 
+                note => note.PitchClass,
                 note => note);
 
         var list = new List<KeyPosition>();

@@ -5,10 +5,12 @@ using ModelContextProtocol.Server;
 [McpServerToolType]
 public sealed class WeatherTools
 {
-    [McpServerTool, Description("Get weather alerts for a US state.")]
+    [McpServerTool]
+    [Description("Get weather alerts for a US state.")]
     public static async Task<string> GetAlerts(
         HttpClient client,
-        [Description("The US state to get alerts for.")] string state)
+        [Description("The US state to get alerts for.")]
+        string state)
     {
         using var jsonDocument = await client.ReadJsonDocumentAsync($"/alerts/active/area/{state}");
         var jsonElement = jsonDocument.RootElement;
@@ -21,7 +23,7 @@ public sealed class WeatherTools
 
         return string.Join("\n--\n", alerts.Select(alert =>
         {
-            JsonElement properties = alert.GetProperty("properties");
+            var properties = alert.GetProperty("properties");
             return $"""
                     Event: {properties.GetProperty("event").GetString()}
                     Area: {properties.GetProperty("areaDesc").GetString()}
@@ -32,25 +34,29 @@ public sealed class WeatherTools
         }));
     }
 
-    [McpServerTool, Description("Get weather forecast for a location.")]
+    [McpServerTool]
+    [Description("Get weather forecast for a location.")]
     public static async Task<string> GetForecast(
         HttpClient client,
-        [Description("Latitude of the location.")] double latitude,
-        [Description("Longitude of the location.")] double longitude)
+        [Description("Latitude of the location.")]
+        double latitude,
+        [Description("Longitude of the location.")]
+        double longitude)
     {
         var pointUrl = string.Create(CultureInfo.InvariantCulture, $"/points/{latitude},{longitude}");
         using var jsonDocument = await client.ReadJsonDocumentAsync(pointUrl);
         var forecastUrl = jsonDocument.RootElement.GetProperty("properties").GetProperty("forecast").GetString()
-            ?? throw new Exception($"No forecast URL provided by {client.BaseAddress}points/{latitude},{longitude}");
+                          ?? throw new Exception(
+                              $"No forecast URL provided by {client.BaseAddress}points/{latitude},{longitude}");
 
         using var forecastDocument = await client.ReadJsonDocumentAsync(forecastUrl);
         var periods = forecastDocument.RootElement.GetProperty("properties").GetProperty("periods").EnumerateArray();
 
         return string.Join("\n---\n", periods.Select(period => $"""
-                {period.GetProperty("name").GetString()}
-                Temperature: {period.GetProperty("temperature").GetInt32()}°F
-                Wind: {period.GetProperty("windSpeed").GetString()} {period.GetProperty("windDirection").GetString()}
-                Forecast: {period.GetProperty("detailedForecast").GetString()}
-                """));
+                                                                {period.GetProperty("name").GetString()}
+                                                                Temperature: {period.GetProperty("temperature").GetInt32()}°F
+                                                                Wind: {period.GetProperty("windSpeed").GetString()} {period.GetProperty("windDirection").GetString()}
+                                                                Forecast: {period.GetProperty("detailedForecast").GetString()}
+                                                                """));
     }
 }

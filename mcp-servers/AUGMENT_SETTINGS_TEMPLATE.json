@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "meshy-ai": {
+      "command": "python",
+      "args": [
+        "C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/src/server.py"
+      ],
+      "env": {
+        "MESHY_API_KEY": "YOUR_API_KEY_HERE"
+      },
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    }
+  }
+}
+

@@ -3,15 +3,15 @@
 [PublicAPI]
 public static class ValueObjectExtensions
 {
-    public static ImmutableArray<int> ToValueArray<T>(this IEnumerable<T> items) 
+    public static ImmutableArray<int> ToValueArray<T>(this IEnumerable<T> items)
         where T : IRangeValueObject<T>, new()
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        return items.Select(item => item.Value).ToImmutableArray();
+        return [..items.Select(item => item.Value)];
     }
 
-    public static ImmutableList<int> ToValueList<T>(this IEnumerable<T> items) 
+    public static ImmutableList<int> ToValueList<T>(this IEnumerable<T> items)
         where T : IRangeValueObject<T>, new()
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -19,4 +19,3 @@ public static class ValueObjectExtensions
         return items.Select(item => item.Value).ToImmutableList();
     }
 }
-

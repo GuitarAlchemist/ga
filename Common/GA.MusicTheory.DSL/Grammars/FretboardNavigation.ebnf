@@ -1,0 +1,268 @@
+(* ============================================================================
+   Fretboard Navigation DSL - EBNF Grammar
+   ============================================================================
+   
+   Purpose: Define syntax for navigating guitar fretboards, specifying positions,
+            shapes, patterns, and movements across strings and frets.
+   
+   Version: 1.0.0
+   Date: 2025-11-01
+   Author: Guitar Alchemist Team
+   
+   Examples:
+   - "position 5 on string 3"
+   - "CAGED shape C at fret 3"
+   - "move up 2 frets"
+   - "shift to string 2"
+   - "pattern: 1-3-5-7 on strings 1-2"
+   - "navigate from E-shape to A-shape"
+   
+   ============================================================================ *)
+
+(* ============================================================================
+   TOP-LEVEL NAVIGATION COMMAND
+   ============================================================================ *)
+
+navigation_command = position_spec
+                   | shape_spec
+                   | movement_spec
+                   | pattern_spec
+                   | navigation_sequence
+                   | navigation_query
+                   ;
+
+navigation_sequence = navigation_command, { ",", navigation_command } ;
+
+(* ============================================================================
+   POSITION SPECIFICATIONS
+   ============================================================================ *)
+
+position_spec = absolute_position
+              | relative_position
+              | named_position
+              ;
+
+absolute_position = "position", fret_number, "on", string_spec
+                  | "fret", fret_number, "string", string_number
+                  | string_number, ":", fret_number
+                  ;
+
+relative_position = "current", [ offset_spec ]
+                  | "next", [ position_type ]
+                  | "previous", [ position_type ]
+                  ;
+
+named_position = "nut"
+               | "open", string_spec
+               | "12th", "fret"
+               | "octave"
+               ;
+
+offset_spec = ( "+" | "-" ), integer, ( "frets" | "strings" ) ;
+
+position_type = "note" | "chord" | "position" | "shape" ;
+
+(* ============================================================================
+   STRING SPECIFICATIONS
+   ============================================================================ *)
+
+string_spec = single_string
+            | string_range
+            | string_set
+            ;
+
+single_string = "string", string_number
+              | string_name
+              ;
+
+string_range = "strings", string_number, "-", string_number
+             | "strings", string_number, "to", string_number
+             ;
+
+string_set = "strings", string_number, { ",", string_number } ;
+
+string_number = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12" ;
+
+string_name = "E" | "A" | "D" | "G" | "B" | "e" | "high-E" | "low-E" ;
+
+(* ============================================================================
+   SHAPE SPECIFICATIONS (CAGED, 3NPS, etc.)
+   ============================================================================ *)
+
+shape_spec = caged_shape
+           | three_nps_shape
+           | arpeggio_shape
+           | custom_shape
+           ;
+
+caged_shape = "CAGED", "shape", caged_letter, [ "at", "fret", fret_number ]
+            | caged_letter, "-shape", [ "at", "fret", fret_number ]
+            ;
+
+caged_letter = "C" | "A" | "G" | "E" | "D" ;
+
+three_nps_shape = "3NPS", "pattern", pattern_number, [ "at", "fret", fret_number ]
+                | "three-notes-per-string", "pattern", pattern_number
+                ;
+
+pattern_number = "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
+
+arpeggio_shape = "arpeggio", chord_quality, [ "at", "fret", fret_number ]
+               | chord_quality, "arpeggio", [ "at", "fret", fret_number ]
+               ;
+
+chord_quality = "major" | "minor" | "dominant" | "diminished" | "augmented" 
+              | "maj7" | "min7" | "dom7" | "dim7" | "aug7"
+              ;
+
+custom_shape = "shape", "{", position_list, "}" ;
+
+position_list = position_spec, { ",", position_spec } ;
+
+(* ============================================================================
+   MOVEMENT SPECIFICATIONS
+   ============================================================================ *)
+
+movement_spec = directional_move
+              | shift_move
+              | slide_move
+              | jump_move
+              ;
+
+directional_move = "move", direction, [ distance ]
+                 | direction, [ distance ]
+                 ;
+
+direction = "up" | "down" | "left" | "right" 
+          | "higher" | "lower" | "forward" | "backward"
+          ;
+
+distance = integer, ( "frets" | "strings" | "positions" | "steps" ) ;
+
+shift_move = "shift", "to", ( string_spec | fret_spec )
+           | "shift", direction, [ distance ]
+           ;
+
+slide_move = "slide", "from", position_spec, "to", position_spec
+           | "slide", direction, [ distance ]
+           ;
+
+jump_move = "jump", "to", position_spec
+          | "jump", direction, [ distance ]
+          ;
+
+fret_spec = "fret", fret_number
+          | fret_number, "th", "fret"
+          ;
+
+fret_number = integer ;
+
+(* ============================================================================
+   PATTERN SPECIFICATIONS
+   ============================================================================ *)
+
+pattern_spec = interval_pattern
+             | finger_pattern
+             | sequence_pattern
+             ;
+
+interval_pattern = "pattern:", interval_list, [ "on", string_spec ]
+                 | "intervals:", interval_list
+                 ;
+
+interval_list = interval, { "-", interval } ;
+
+interval = integer | "R" | "root" | "1" | "2" | "3" | "4" | "5" | "6" | "7" 
+         | "b2" | "b3" | "b5" | "b6" | "b7" | "#4" | "#5" | "#9" | "b9"
+         ;
+
+finger_pattern = "fingering:", finger_list, [ "on", string_spec ]
+               | "fingers:", finger_list
+               ;
+
+finger_list = finger, { "-", finger } ;
+
+finger = "1" | "2" | "3" | "4" | "T" | "thumb" | "index" | "middle" | "ring" | "pinky" ;
+
+sequence_pattern = "sequence:", fret_sequence, [ "on", string_spec ]
+                 | "frets:", fret_sequence
+                 ;
+
+fret_sequence = fret_number, { "-", fret_number } ;
+
+(* ============================================================================
+   NAVIGATION QUERIES
+   ============================================================================ *)
+
+navigation_query = find_query
+                 | nearest_query
+                 | path_query
+                 ;
+
+find_query = "find", search_target, [ search_constraints ]
+           | "locate", search_target, [ search_constraints ]
+           ;
+
+search_target = note_target
+              | chord_target
+              | interval_target
+              | shape_target
+              ;
+
+note_target = "note", note_name
+            | note_name, "notes"
+            ;
+
+chord_target = "chord", chord_name
+             | chord_name, "chord"
+             ;
+
+interval_target = "interval", interval
+                | interval, "intervals"
+                ;
+
+shape_target = "shape", shape_name
+             | shape_name, "shapes"
+             ;
+
+note_name = letter, [ accidental ] ;
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" ;
+
+accidental = "#" | "b" | "♯" | "♭" | "##" | "bb" ;
+
+chord_name = note_name, [ chord_quality ] ;
+
+shape_name = caged_letter | "pentatonic" | "blues" | "scale" | "arpeggio" ;
+
+search_constraints = "in", region_spec
+                   | "near", position_spec
+                   | "within", distance
+                   ;
+
+region_spec = "region", "{", position_spec, "to", position_spec, "}"
+            | "frets", fret_number, "-", fret_number
+            | "strings", string_number, "-", string_number
+            ;
+
+nearest_query = "nearest", search_target, [ "to", position_spec ]
+              | "closest", search_target, [ "to", position_spec ]
+              ;
+
+path_query = "path", "from", position_spec, "to", position_spec
+           | "route", "from", position_spec, "to", position_spec
+           | "navigate", "from", shape_spec, "to", shape_spec
+           ;
+
+(* ============================================================================
+   BASIC TYPES
+   ============================================================================ *)
+
+integer = digit, { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* ============================================================================
+   END OF GRAMMAR
+   ============================================================================ *)
+

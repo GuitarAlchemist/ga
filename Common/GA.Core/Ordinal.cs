@@ -2,13 +2,23 @@
 
 public record Ordinal(int Value)
 {
-    public static implicit operator Ordinal(int value) => new(value);
-    public static implicit operator int(Ordinal ordinal) => ordinal.Value;
-
-    public override string ToString() => Value switch
+    public static implicit operator Ordinal(int value)
     {
-        1 => "1st",
-        2 => "2nd",
-        _ => $"{Value}th",
-    };
+        return new Ordinal(value);
+    }
+
+    public static implicit operator int(Ordinal ordinal)
+    {
+        return ordinal.Value;
+    }
+
+    public override string ToString()
+    {
+        return Value switch
+        {
+            1 => "1st",
+            2 => "2nd",
+            _ => $"{Value}th"
+        };
+    }
 }

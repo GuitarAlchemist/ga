@@ -1,28 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<Configurations>Debug;Release</Configurations>
-		<TargetFramework>net9.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<DebugType>embedded</DebugType>
-		<UseSharedCompilation>false</UseSharedCompilation>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
+    <UseSharedCompilation>false</UseSharedCompilation>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-		<PackageReference Include="log4net" Version="3.0.2" />
-		<PackageReference Include="Microsoft.JSInterop" Version="8.0.10" />
-		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+    <PackageReference Include="log4net" Version="3.0.2"/>
+    <PackageReference Include="Microsoft.JSInterop" Version="8.0.10"/>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

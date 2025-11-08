@@ -14,14 +14,14 @@ body {
     min-height: 100vh;
 }
 
-    html::after {
-        content: '';
-        background-image: linear-gradient(to right, #3a4ed5, #3acfd5 15%, #d53abf 85%, red);
-        width: 100%;
-        height: 2px;
-        position: fixed;
-        top: 0;
-    }
+html::after {
+    content: '';
+    background-image: linear-gradient(to right, #3a4ed5, #3acfd5 15%, #d53abf 85%, red);
+    width: 100%;
+    height: 2px;
+    position: fixed;
+    top: 0;
+}
 
 h1 {
     font-size: 2.25rem;
@@ -51,9 +51,9 @@ h1:focus {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
 
 .btn-default {
     display: flex;
@@ -68,9 +68,9 @@ h1:focus {
     background-color: #D1D5DB;
 }
 
-    .btn-default:hover {
-        background-color: #E5E7EB;
-    }
+.btn-default:hover {
+    background-color: #E5E7EB;
+}
 
 .btn-subtle {
     display: flex;
@@ -83,10 +83,10 @@ h1:focus {
     line-height: 1.25rem;
 }
 
-    .btn-subtle:hover {
-        border-color: #93C5FD;
-        background-color: #DBEAFE;
-    }
+.btn-subtle:hover {
+    border-color: #93C5FD;
+    background-color: #DBEAFE;
+}
 
 .page-width {
     max-width: 1024px;

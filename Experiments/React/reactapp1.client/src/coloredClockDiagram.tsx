@@ -5,7 +5,7 @@ interface ColoredClockDiagramProps {
     size?: number;
 }
 
-const ColoredClockDiagram: React.FC<ColoredClockDiagramProps> = ({ scale, size = 200 }) => {
+const ColoredClockDiagram: React.FC<ColoredClockDiagramProps> = ({scale, size = 200}) => {
     const scaleArray = scale.toString(2).padStart(12, '0').split('').reverse().map(Number);
     const center = size / 2;
     const radius = size * 0.4;
@@ -31,17 +31,17 @@ const ColoredClockDiagram: React.FC<ColoredClockDiagramProps> = ({ scale, size =
         const angle = (index * 30 - 90) * (Math.PI / 180);
         const x = center + radius * Math.cos(angle);
         const y = center + radius * Math.sin(angle);
-        return { x, y };
+        return {x, y};
     };
 
     return (
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
             {/* Clock circle */}
-            <circle cx={center} cy={center} r={radius} fill="none" stroke="#333" strokeWidth={2} />
+            <circle cx={center} cy={center} r={radius} fill="none" stroke="#333" strokeWidth={2}/>
 
             {/* Hour marks and note names */}
             {notes.map((note, i) => {
-                const { x, y } = getDotPosition(i);
+                const {x, y} = getDotPosition(i);
                 const textAngle = i * 30 - 90;
                 const textRadius = radius + dotRadius * 2;
                 const tx = center + textRadius * Math.cos(textAngle * Math.PI / 180);

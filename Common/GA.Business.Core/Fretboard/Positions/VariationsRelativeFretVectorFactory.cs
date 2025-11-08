@@ -5,30 +5,25 @@ using Primitives;
 using static Primitives.RelativeFretVector;
 
 /// <summary>
-/// Factory for <see cref="RelativeFretVector"/> variations.
+///     Factory for <see cref="RelativeFretVector" /> variations.
 /// </summary>
 [PublicAPI]
-public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<RelativeFret> variations) : IEnumerable<RelativeFretVector>
+public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<RelativeFret> variations)
+    : IEnumerable<RelativeFretVector>
 {
-    #region IEnumerable<RelativeFretVector> Members
-
-    public IEnumerator<RelativeFretVector> GetEnumerator() => _variations.Select(Create).GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    #endregion
-
-    private readonly VariationsWithRepetitions<RelativeFret> _variations = variations ?? throw new ArgumentNullException(nameof(variations));
+    private readonly VariationsWithRepetitions<RelativeFret> _variations =
+        variations ?? throw new ArgumentNullException(nameof(variations));
 
     /// <summary>
-    /// Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}"/>.
+    ///     Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}" />.
     /// </summary>
     public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; } = new(variations);
 
     /// <summary>
-    /// Create a vector from a variation.
+    ///     Create a vector from a variation.
     /// </summary>
-    /// <param name="variation">The <see cref="Variation{RelativeFret}"/></param>
-    /// <returns>The <see cref="RelativeFretVector"/>.</returns>
+    /// <param name="variation">The <see cref="Variation{RelativeFret}" /></param>
+    /// <returns>The <see cref="RelativeFretVector" />.</returns>
     private RelativeFretVector Create(Variation<RelativeFret> variation)
     {
         var isPrimeForm = variation.Min().Value == 0;
@@ -46,8 +41,23 @@ public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<Relat
 
         // The variation represents vector is its translated form
         var equivalence = Equivalences.To[variation.Index];
-        return new Translation(variation, () => (PrimeForm) Create(_variations[equivalence.FromIndex]));
+        return new Translation(variation, () => (PrimeForm)Create(_variations[equivalence.FromIndex]));
     }
 
-    private class OrderedTranslationCollection(IEnumerable<Translation> items) : LazyCollectionBase<Translation>(items.OrderBy(translation => translation.Increment), "; ");
+    private class OrderedTranslationCollection(IEnumerable<Translation> items)
+        : LazyCollectionBase<Translation>(items.OrderBy(translation => translation.Increment), "; ");
+
+    #region IEnumerable<RelativeFretVector> Members
+
+    public IEnumerator<RelativeFretVector> GetEnumerator()
+    {
+        return _variations.Select(Create).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    #endregion
 }

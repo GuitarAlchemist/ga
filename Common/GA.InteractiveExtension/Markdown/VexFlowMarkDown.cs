@@ -1,6 +1,6 @@
-﻿using GA.InteractiveExtension.Formatters;
+﻿namespace GA.InteractiveExtension.Markdown;
 
-namespace GA.InteractiveExtension.Markdown;
+using Formatters;
 
 [TypeFormatterSource(typeof(VexFlowMarkdownFormatter))]
 public class VexFlowMarkDown(string value)
@@ -10,5 +10,8 @@ public class VexFlowMarkDown(string value)
     internal string Width { get; set; } = string.Empty;
     internal string Height { get; set; } = string.Empty;
 
-    public override string ToString() => _value;
+    public override string ToString()
+    {
+        return _value;
+    }
 }

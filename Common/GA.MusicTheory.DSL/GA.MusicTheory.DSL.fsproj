@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Types/GrammarTypes.fs"/>
+        <Compile Include="Types/VexTabTypes.fs"/>
+        <Compile Include="Types/AsciiTabTypes.fs"/>
+        <Compile Include="Types/MidiTypes.fs"/>
+        <Compile Include="Types/MusicXmlTypes.fs"/>
+        <Compile Include="Types/GuitarProTypes.fs"/>
+        <Compile Include="Types/PracticeRoutineTypes.fs"/>
+        <Compile Include="Types/DslCommand.fs"/>
+        <Compile Include="Parsers/ChordProgressionParser.fs"/>
+        <Compile Include="Parsers/FretboardNavigationParser.fs"/>
+        <Compile Include="Parsers/ScaleTransformationParser.fs"/>
+        <Compile Include="Parsers/GrothendieckOperationsParser.fs"/>
+        <Compile Include="Parsers/PracticeRoutineParser.fs"/>
+        <Compile Include="Parsers/VexTabParser.fs"/>
+        <Compile Include="Parsers/AsciiTabParser.fs"/>
+        <Compile Include="Parsers/MidiParser.fs"/>
+        <Compile Include="Parsers/MusicXmlParser.fs"/>
+        <Compile Include="Parsers/GuitarProParser.fs"/>
+        <Compile Include="Generators/VexTabGenerator.fs"/>
+        <Compile Include="Generators/ChordProgressionGenerator.fs"/>
+        <Compile Include="Generators/FretboardNavigationGenerator.fs"/>
+        <Compile Include="Services/ContentValidator.fs"/>
+        <Compile Include="Services/WebContentLoader.fs"/>
+        <Compile Include="Services/ContentDiscovery.fs"/>
+        <Compile Include="Generators/GrothendieckGenerator.fs"/>
+        <Compile Include="Adapters/TarsGrammarAdapter.fs"/>
+        <Compile Include="LSP/LspTypes.fs"/>
+        <Compile Include="LSP/CompletionProvider.fs"/>
+        <Compile Include="LSP/DiagnosticsProvider.fs"/>
+        <Compile Include="LSP/LanguageServer.fs"/>
+        <Compile Include="Library.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FParsec" Version="1.1.1"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+    </ItemGroup>
+
+    <!-- Temporarily removed to avoid GA.Business.Config build errors -->
+    <!--
+    <ItemGroup>
+      <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
+      <ProjectReference Include="..\GA.Core\GA.Core.csproj" />
+    </ItemGroup>
+    -->
+
+    <ItemGroup>
+        <None Include="Grammars/*.ebnf">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>

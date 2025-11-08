@@ -1,0 +1,285 @@
+(* ============================================================================
+   Scale Transformation DSL - EBNF Grammar
+   ============================================================================
+   
+   Purpose: Define syntax for transforming scales using modal interchange,
+            harmonic operations, and algebraic transformations.
+   
+   Version: 1.0.0
+   Date: 2025-11-01
+   Author: Guitar Alchemist Team
+   
+   Examples:
+   - "C major -> parallel minor"
+   - "D dorian -> relative major"
+   - "E phrygian + b2 -> phrygian dominant"
+   - "G mixolydian rotate 2"
+   - "A minor melodic -> harmonic"
+   - "transpose C major up 5 semitones"
+   
+   ============================================================================ *)
+
+(* ============================================================================
+   TOP-LEVEL TRANSFORMATION COMMAND
+   ============================================================================ *)
+
+transformation_command = scale_transform
+                       | mode_transform
+                       | harmonic_transform
+                       | algebraic_transform
+                       | transformation_chain
+                       ;
+
+transformation_chain = transformation_command, { ( "->", "|>", "then" ), transformation_command } ;
+
+(* ============================================================================
+   SCALE SPECIFICATIONS
+   ============================================================================ *)
+
+scale_spec = named_scale
+           | constructed_scale
+           | mode_spec
+           ;
+
+named_scale = root_note, scale_type ;
+
+root_note = note_name ;
+
+note_name = letter, [ accidental ] ;
+
+letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" ;
+
+accidental = "#" | "b" | "♯" | "♭" | "##" | "bb" | "x" ;
+
+scale_type = major_scale
+           | minor_scale
+           | pentatonic_scale
+           | blues_scale
+           | exotic_scale
+           ;
+
+major_scale = "major" | "ionian" | "M" ;
+
+minor_scale = "minor" | "natural minor" | "aeolian" | "m"
+            | "harmonic minor" | "melodic minor"
+            | "dorian minor" | "phrygian minor"
+            ;
+
+pentatonic_scale = "major pentatonic" | "minor pentatonic" | "pentatonic" ;
+
+blues_scale = "blues" | "blues scale" ;
+
+exotic_scale = "whole tone" | "diminished" | "augmented"
+             | "chromatic" | "bebop" | "altered"
+             | "lydian dominant" | "phrygian dominant"
+             | "hungarian minor" | "neapolitan"
+             ;
+
+constructed_scale = "{", interval_list, "}" ;
+
+interval_list = interval, { ",", interval } ;
+
+interval = integer | interval_name ;
+
+interval_name = "R" | "root" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
+              | "b2" | "b3" | "b5" | "b6" | "b7"
+              | "#2" | "#4" | "#5" | "#6"
+              | "b9" | "#9" | "#11" | "b13"
+              ;
+
+(* ============================================================================
+   MODE SPECIFICATIONS
+   ============================================================================ *)
+
+mode_spec = root_note, mode_name
+          | scale_spec, "mode", mode_number
+          ;
+
+mode_name = "ionian" | "dorian" | "phrygian" | "lydian" 
+          | "mixolydian" | "aeolian" | "locrian"
+          | "melodic minor" | "dorian b2" | "lydian augmented"
+          | "lydian dominant" | "mixolydian b6" | "locrian #2" | "altered"
+          | "harmonic minor" | "locrian #6" | "ionian #5"
+          | "dorian #4" | "phrygian dominant" | "lydian #2" | "super locrian bb7"
+          ;
+
+mode_number = "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
+
+(* ============================================================================
+   SCALE TRANSFORMATIONS
+   ============================================================================ *)
+
+scale_transform = modal_interchange
+                | relative_transform
+                | parallel_transform
+                | brightness_transform
+                ;
+
+modal_interchange = scale_spec, "->", mode_name
+                  | "borrow", "from", scale_spec
+                  | "modal", "interchange", "with", scale_spec
+                  ;
+
+relative_transform = scale_spec, "->", "relative", ( "major" | "minor" )
+                   | "relative", ( "major" | "minor" ), "of", scale_spec
+                   ;
+
+parallel_transform = scale_spec, "->", "parallel", ( "major" | "minor" )
+                   | "parallel", ( "major" | "minor" ), "of", scale_spec
+                   ;
+
+brightness_transform = scale_spec, "->", ( "brighter" | "darker" ), [ integer ]
+                     | ( "brighten" | "darken" ), scale_spec, [ "by", integer ]
+                     ;
+
+(* ============================================================================
+   MODE TRANSFORMATIONS
+   ============================================================================ *)
+
+mode_transform = mode_rotation
+               | mode_shift
+               | mode_inversion
+               ;
+
+mode_rotation = scale_spec, "rotate", integer
+              | "rotate", scale_spec, "by", integer, [ "steps" ]
+              | scale_spec, "->", "mode", mode_number
+              ;
+
+mode_shift = scale_spec, "shift", direction, [ integer ]
+           | direction, "shift", scale_spec, [ "by", integer ]
+           ;
+
+direction = "up" | "down" | "forward" | "backward" ;
+
+mode_inversion = scale_spec, "invert"
+               | "invert", scale_spec
+               | scale_spec, "->", "inverted"
+               ;
+
+(* ============================================================================
+   HARMONIC TRANSFORMATIONS
+   ============================================================================ *)
+
+harmonic_transform = degree_alteration
+                   | interval_addition
+                   | interval_removal
+                   | harmonic_series
+                   ;
+
+degree_alteration = scale_spec, alter_op, degree_spec
+                  | alter_op, degree_spec, "in", scale_spec
+                  ;
+
+alter_op = "raise" | "lower" | "sharpen" | "flatten" | "+" | "-" ;
+
+degree_spec = degree_number, [ accidental ]
+            | interval_name
+            ;
+
+degree_number = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "9" | "11" | "13" ;
+
+interval_addition = scale_spec, "+", interval_spec
+                  | "add", interval_spec, "to", scale_spec
+                  ;
+
+interval_spec = interval_name
+              | "{", interval_list, "}"
+              ;
+
+interval_removal = scale_spec, "-", interval_spec
+                 | "remove", interval_spec, "from", scale_spec
+                 ;
+
+harmonic_series = "harmonic", "series", "from", note_name, [ "up", "to", integer ]
+                | note_name, "harmonic", "series", [ integer, "partials" ]
+                ;
+
+(* ============================================================================
+   ALGEBRAIC TRANSFORMATIONS
+   ============================================================================ *)
+
+algebraic_transform = transpose_op
+                    | reflect_op
+                    | complement_op
+                    | union_op
+                    | intersection_op
+                    ;
+
+transpose_op = "transpose", scale_spec, direction, integer, [ "semitones" | "steps" ]
+             | scale_spec, "transpose", direction, integer
+             | "T", integer, "(", scale_spec, ")"
+             ;
+
+reflect_op = "reflect", scale_spec, [ "around", note_name ]
+           | scale_spec, "reflect", [ "around", note_name ]
+           | "R", [ note_name ], "(", scale_spec, ")"
+           ;
+
+complement_op = "complement", "of", scale_spec
+              | scale_spec, "complement"
+              | "~", scale_spec
+              ;
+
+union_op = scale_spec, "union", scale_spec
+         | scale_spec, "∪", scale_spec
+         | scale_spec, "+", scale_spec
+         ;
+
+intersection_op = scale_spec, "intersection", scale_spec
+                | scale_spec, "∩", scale_spec
+                | scale_spec, "&", scale_spec
+                ;
+
+(* ============================================================================
+   GROTHENDIECK OPERATIONS (Advanced)
+   ============================================================================ *)
+
+grothendieck_op = tensor_product
+                | direct_sum
+                | pullback_op
+                | pushforward_op
+                ;
+
+tensor_product = scale_spec, "⊗", scale_spec
+               | scale_spec, "tensor", scale_spec
+               ;
+
+direct_sum = scale_spec, "⊕", scale_spec
+           | scale_spec, "direct_sum", scale_spec
+           ;
+
+pullback_op = "pullback", "(", scale_spec, ",", morphism, ")"
+            | scale_spec, "pullback", morphism
+            ;
+
+pushforward_op = "pushforward", "(", scale_spec, ",", morphism, ")"
+               | scale_spec, "pushforward", morphism
+               ;
+
+morphism = "transpose" | "invert" | "rotate" | "reflect" | identifier ;
+
+identifier = letter, { letter | digit | "_" } ;
+
+(* ============================================================================
+   TRANSFORMATION QUERIES
+   ============================================================================ *)
+
+transformation_query = "what", "is", scale_spec, "->", transformation_command
+                     | "show", transformation_command, "of", scale_spec
+                     | "apply", transformation_command, "to", scale_spec
+                     | "transform", scale_spec, "using", transformation_command
+                     ;
+
+(* ============================================================================
+   BASIC TYPES
+   ============================================================================ *)
+
+integer = [ "-" ], digit, { digit } ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* ============================================================================
+   END OF GRAMMAR
+   ============================================================================ *)
+

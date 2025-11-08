@@ -1,4 +1,4 @@
-﻿<svg id="renderTarget" width="300" height="300"></svg>
+﻿<svg height="300" id="renderTarget" width="300"></svg>
 
 <script type="text/javascript">
     const libUrl = 'https://cdn.jsdelivr.net/npm/two.js@0.8.10/build/two.min.js';
@@ -6,7 +6,7 @@
     const libRender = (d3) => {
         var elem = document.getElementById('renderTarget');
 
-        var two = new Two({ fitted: true }).appendTo(elem);
+        var two = new Two({fitted: true}).appendTo(elem);
         var circle = two.makeCircle(400, 250, 75);
         circle.fill = 'navy';
         circle.noStroke();
@@ -31,7 +31,7 @@
         }
 
         return result;
-    };
+    }
 
     const loadAndRender = () => {
         const requireJsConfig = {
