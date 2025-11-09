@@ -85,10 +85,14 @@
   </Folder>
   <Folder Name="/Documentation/">
     <File Path="docs/AGENTS.md" />
+    <File Path="docs/API_DOCUMENTATION.md" />
     <File Path="docs/ARCHITECTURE.md" />
     <File Path="docs/BUILD_STATUS_2025.md" />
+    <File Path="docs/DEPLOYMENT_GUIDE.md" />
     <File Path="docs/MODULAR_RESTRUCTURING_PLAN.md" />
     <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md" />
+    <File Path="docs/QUICK_START.md" />
+    <File Path="docs/TESTING_GUIDE.md" />
   </Folder>
   <Folder Name="/Experiments/">
     <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj" />
