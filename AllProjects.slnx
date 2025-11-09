@@ -1,7 +1,6 @@
 <Solution>
   <Configurations>
     <BuildType Name="Debug" />
-    <BuildType Name="net7.0" />
     <BuildType Name="Release" />
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
@@ -10,114 +9,114 @@
   <Folder Name="/Backend/" />
   <Folder Name="/Backend/Applications/">
     <Project Path="Apps/FloorManager/FloorManager.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/ga-server/GaApi/GaApi.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/GuitarAlchemistChatbot/GuitarAlchemistChatbot.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/InteractiveTutorial/InteractiveTutorial.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/ScenesService/ScenesService.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Backend/Applications/ga-server/" />
   <Folder Name="/Backend/Applications/ga-server/CUDA/">
     <Project Path="Apps/ga-server/GaApi/CUDA/VectorOperations.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Backend/CLI &amp; Tools/">
     <Project Path="Apps/EmbeddingGenerator/EmbeddingGenerator.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/FretboardChordTest/FretboardChordTest.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/GA.TabConversion.Api/GA.TabConversion.Api.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/GaDataCLI/GaDataCLI.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/GpuBenchmark/GpuBenchmark.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/LocalEmbedding/LocalEmbedding.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/MongoImporter/MongoImporter.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/MongoVerify/MongoVerify.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/VectorSearchBenchmark/VectorSearchBenchmark.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="GaCLI/GaCLI.csproj" />
   </Folder>
   <Folder Name="/Backend/Infrastructure/">
     <Project Path="AllProjects.AppHost/AllProjects.AppHost.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="GaMcpServer/GaMcpServer.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Backend/Utilities/">
     <Project Path="ChordSystemTest/ChordSystemTest.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Core Libraries/">
     <Project Path="Common/GA.BSP.Core/GA.BSP.Core.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.AI/GA.Business.AI.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Analytics/GA.Business.Analytics.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Assets/GA.Business.Assets.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
     <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Mapping/GA.Business.Mapping.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Microservices/GA.Business.Microservices.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Querying/GA.Business.Querying.fsproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.UI/GA.Business.UI.csproj" />
     <Project Path="Common/GA.Business.Web/GA.Business.Web.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Config/GA.Config.fsproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Core.UI/GA.Core.UI.csproj" />
     <Project Path="Common/GA.Core/GA.Core.csproj" />
@@ -125,38 +124,38 @@
     <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
     <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Data &amp; Integration/">
     <Project Path="Common/GA.Data.EntityFramework/GA.Data.EntityFramework.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Demos/" />
   <Folder Name="/Demos/Advanced Features/">
     <Project Path="Apps/AIIntegrationDemo/AIIntegrationDemo.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/BSPDemo/BSPDemo.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Demos/Music Theory/">
     <Project Path="Apps/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/ChordNamingDemo/ChordNamingDemo.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Apps/ComprehensiveMusicTheoryDemo/ComprehensiveMusicTheoryDemo.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/MusicalAnalysisApp/MusicalAnalysisApp.csproj">
       <BuildType Project="?" />
@@ -169,12 +168,12 @@
       <Build Project="false" />
     </Project>
     <Project Path="Apps/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Demos/Performance &amp; Benchmarks/">
     <Project Path="Apps/HighPerformanceDemo/HighPerformanceDemo.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Apps/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj">
       <BuildType Project="?" />
@@ -182,22 +181,16 @@
       <Build Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/docs/">
-    <File Path="docs/BUILD_FIX_GUIDE.md" />
-    <File Path="docs/BUILD_STATUS_2025.md" />
-    <File Path="docs/ChatGPT-Modal Scales Overview.md" />
-    <File Path="docs/TuningChart.pdf" />
-    <File Path="docs/Tunings.txt" />
-  </Folder>
+
   <Folder Name="/Experiments/">
     <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj">
-      <BuildType Solution="net7.0|Any CPU" Project="Debug" />
+      <BuildType Solution="Debug|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj" />
   </Folder>
@@ -298,36 +291,36 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Common/GA.Business.Graphiti/GA.Business.Graphiti.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Apps/GuitarAlchemistChatbot.Tests/GuitarAlchemistChatbot.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/BSPIntegrationTests/BSPIntegrationTests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Common/GA.Business.Core.Graphiti.Tests/GA.Business.Core.Graphiti.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
     <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
     <Project Path="Tests/Common/GA.MusicTheory.DSL.Tests/GA.MusicTheory.DSL.Tests.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/FloorManager.Tests.Playwright/FloorManager.Tests.Playwright.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
     <Project Path="Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
+      <BuildType Solution="Debug|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/_Local Ga.Interactive NuGet/">

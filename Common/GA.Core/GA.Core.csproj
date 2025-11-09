@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Configurations>Debug;Release</Configurations>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -26,3 +26,4 @@
   </ItemGroup>
 
 </Project>
+
