@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- Match FSharp.Core version with GA.Business.AI -->
-        <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+        <PackageReference Include="FSharp.Core" Version="10.0.100-rc.2.25502.107"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -25,3 +25,4 @@
     </ItemGroup>
 
 </Project>
+

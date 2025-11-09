@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Configurations>Debug;Release</Configurations>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>ffdbf728-ed3e-4a60-a631-d05ac7c087b4</UserSecretsId>
@@ -20,3 +20,4 @@
   </ItemGroup>
 
 </Project>
+

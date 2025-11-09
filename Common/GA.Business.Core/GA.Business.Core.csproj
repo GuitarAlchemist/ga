@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configurations>Debug;Release</Configurations>
     <OutputType>Library</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
@@ -70,15 +70,15 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\"/>
-    <None Include="bin\$(Configuration)\net9.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net9.0\"/>
-    <None Include="bin\$(Configuration)\net9.0\GA.Core.dll" Pack="true" PackagePath="lib\net9.0\"/>
+    <None Include="bin\$(Configuration)\net10.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net10.0\"/>
+    <None Include="bin\$(Configuration)\net10.0\GA.Core.dll" Pack="true" PackagePath="lib\net10.0\"/>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.Configuration" Version="2.0.0">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+    <PackageReference Include="FSharp.Core" Version="10.0.100-rc.2.25502.107"/>
     <PackageReference Include="ILGPU" Version="1.5.1"/>
     <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
@@ -126,3 +126,4 @@
     <EmbeddedResource Include="Fretboard\Biomechanics\IK\Data\lerobot-wrist-priors.json"/>
   </ItemGroup>
 </Project>
+

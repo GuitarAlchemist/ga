@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>0c749f53-3fda-4099-a8d4-ee77ffdd1913</UserSecretsId>
@@ -91,3 +91,4 @@
     <ProjectReference Include="..\..\..\Common\GA.Data.EntityFramework\GA.Data.EntityFramework.csproj"/>
   </ItemGroup>
 </Project>
+

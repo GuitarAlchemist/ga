@@ -23,9 +23,12 @@ public class JsonVectorStore(string basePath) : IVectorStore
             vectorStoreRecordDefinition);
     }
 
-    public IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken cancellationToken = default)
     {
-        return Directory.EnumerateFiles(basePath, "*.json").ToAsyncEnumerable();
+        foreach (var file in Directory.EnumerateFiles(basePath, "*.json"))
+        {
+            yield return file;
+        }
     }
 
     private class JsonVectorStoreRecordCollection<TKey, TRecord> : IVectorStoreRecordCollection<TKey, TRecord>
@@ -101,10 +104,13 @@ public class JsonVectorStore(string basePath) : IVectorStore
             return Task.FromResult(_records!.GetValueOrDefault(key));
         }
 
-        public IAsyncEnumerable<TRecord> GetBatchAsync(IEnumerable<TKey> keys, GetRecordOptions? options = null,
+        public async IAsyncEnumerable<TRecord> GetBatchAsync(IEnumerable<TKey> keys, GetRecordOptions? options = null,
             CancellationToken cancellationToken = default)
         {
-            return keys.Select(key => _records!.GetValueOrDefault(key)!).Where(r => r is not null).ToAsyncEnumerable();
+            foreach (var record in keys.Select(key => _records!.GetValueOrDefault(key)!).Where(r => r is not null))
+            {
+                yield return record;
+            }
         }
 
         public async Task<TKey> UpsertAsync(TRecord record, UpsertRecordOptions? options = null,
@@ -168,8 +174,16 @@ public class JsonVectorStore(string basePath) : IVectorStore
                 select (Record: record, Similarity: similarity);
 
             var results = ranked.Skip(options?.Skip ?? 0).Take(options?.Top ?? int.MaxValue);
-            return Task.FromResult(new VectorSearchResults<TRecord>(
-                results.Select(r => new VectorSearchResult<TRecord>(r.Record, r.Similarity)).ToAsyncEnumerable()));
+
+            async IAsyncEnumerable<VectorSearchResult<TRecord>> GetResultsAsync()
+            {
+                foreach (var r in results)
+                {
+                    yield return new VectorSearchResult<TRecord>(r.Record, r.Similarity);
+                }
+            }
+
+            return Task.FromResult(new VectorSearchResults<TRecord>(GetResultsAsync()));
         }
 
         private static Func<TRecord, TKey> CreateKeyReader()

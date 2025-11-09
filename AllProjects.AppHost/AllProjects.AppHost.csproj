@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>d825969a-91ea-4571-b399-776880b21225</UserSecretsId>
@@ -24,3 +24,4 @@
   </ItemGroup>
 
 </Project>
+

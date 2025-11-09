@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configurations>Debug;Release</Configurations>
     <OutputType>Library</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -72,3 +72,4 @@
   </ItemGroup>
 
 </Project>
+

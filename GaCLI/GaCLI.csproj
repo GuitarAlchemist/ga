@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configurations>Debug;Release</Configurations>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>184fd7b8-9deb-426e-8493-4d585a01c48f</UserSecretsId>
@@ -44,3 +44,4 @@
   </ItemGroup>
 
 </Project>
+
