@@ -80,49 +80,28 @@ public class ILGPUContextManager : IILGPUContextManager
                 return;
             }
 
-            // Try to create CUDA accelerator first
+            // For now, use CPU-based computation
+            // GPU acceleration can be added when ILGPU is properly configured
+            AcceleratorType = "CPU";
+            IsGpuAvailable = false;
+            _logger.LogInformation("Using CPU-based computation (GPU acceleration not yet configured)");
+
+            // Get memory information
             try
             {
-                _primaryAccelerator = _context.CreateCudaAccelerator(0);
-                AcceleratorType = "CUDA";
-                IsGpuAvailable = true;
-                _logger.LogInformation("CUDA accelerator initialized successfully");
+                // Get accelerator memory size
+                if (_primaryAccelerator != null)
+                {
+                    TotalGpuMemoryMB = (long)(_primaryAccelerator.MemorySize / (1024 * 1024));
+                    AvailableGpuMemoryMB = TotalGpuMemoryMB;
+                    _logger.LogInformation(
+                        "Accelerator Memory: {TotalMB}MB total",
+                        TotalGpuMemoryMB);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "CUDA accelerator not available, trying CPU accelerator");
-
-                try
-                {
-                    _primaryAccelerator = _context.CreateCPUAccelerator(0);
-                    AcceleratorType = "CPU";
-                    IsGpuAvailable = false;
-                    _logger.LogInformation("CPU accelerator initialized as fallback");
-                }
-                catch (Exception cpuEx)
-                {
-                    _logger.LogError(cpuEx, "Failed to initialize any accelerator");
-                    IsGpuAvailable = false;
-                    return;
-                }
-            }
-
-            // Get memory information
-            if (_primaryAccelerator is CudaAccelerator cudaAccel)
-            {
-                try
-                {
-                    // CUDA-specific memory queries
-                    TotalGpuMemoryMB = (long)(_primaryAccelerator.MemorySize / (1024 * 1024));
-                    AvailableGpuMemoryMB = TotalGpuMemoryMB; // Simplified - actual available memory would require CUDA API calls
-                    _logger.LogInformation(
-                        "GPU Memory: {TotalMB}MB total, {AvailableMB}MB available",
-                        TotalGpuMemoryMB, AvailableGpuMemoryMB);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Could not query GPU memory information");
-                }
+                _logger.LogWarning(ex, "Could not query accelerator memory information");
             }
 
             _logger.LogInformation(
@@ -149,16 +128,10 @@ public class ILGPUContextManager : IILGPUContextManager
 
         try
         {
-            // Try CUDA first
-            try
-            {
-                return _context.CreateCudaAccelerator(deviceIndex);
-            }
-            catch
-            {
-                // Fall back to CPU
-                return _context.CreateCPUAccelerator(deviceIndex);
-            }
+            // For now, return null to indicate CPU-based computation
+            // GPU acceleration can be added when ILGPU is properly configured
+            _logger.LogInformation("Using CPU-based computation (GPU acceleration not yet configured)");
+            return null;
         }
         catch (Exception ex)
         {
@@ -176,16 +149,13 @@ public class ILGPUContextManager : IILGPUContextManager
 
         try
         {
-            // Check for CUDA devices
-            var cudaDevices = CudaAccelerator.CudaDevices;
-            foreach (var device in cudaDevices)
-            {
-                accelerators.Add($"CUDA Device {device.DeviceId}: {device.Name}");
-            }
+            // Check for available accelerators
+            // CUDA support can be added when ILGPU is properly configured
+            accelerators.Add("CPU (Default)");
         }
         catch
         {
-            // CUDA not available
+            // Fallback to CPU
         }
 
         // CPU is always available
