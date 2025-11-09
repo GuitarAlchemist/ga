@@ -68,6 +68,10 @@ builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<LocalEmbeddingService>();
 builder.Services.AddSingleton<VectorSearchService>();
 
+// Register ILGPU GPU acceleration services
+builder.Services.AddSingleton<IILGPUContextManager, ILGPUContextManager>();
+builder.Services.AddScoped<IVectorSearchStrategy, ILGPUVectorSearchStrategy>();
+
 // TODO: Add vector search services when available
 // builder.Services.AddVectorSearchServices();
 
