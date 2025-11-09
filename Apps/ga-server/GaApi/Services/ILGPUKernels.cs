@@ -49,7 +49,7 @@ public static class ILGPUKernels
         }
 
         // Calculate cosine similarity
-        var magnitude = XMath.Sqrt(queryNorm) * XMath.Sqrt(chordNorm);
+        var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(chordNorm);
         similarities[index] = magnitude > 0 ? dotProduct / magnitude : 0.0;
     }
 
@@ -88,7 +88,7 @@ public static class ILGPUKernels
         }
 
         // Calculate cosine similarity
-        var magnitude = XMath.Sqrt(queryNorm) * XMath.Sqrt(chordNorm);
+        var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(chordNorm);
         similarities[index] = magnitude > 0 ? dotProduct / magnitude : 0.0;
     }
 
@@ -130,7 +130,7 @@ public static class ILGPUKernels
         }
 
         // Calculate cosine similarity
-        var magnitude = XMath.Sqrt(queryNorm) * XMath.Sqrt(chordNorm);
+        var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(chordNorm);
         var resultIdx = queryIdx * numChords + chordIdx;
         similarities[resultIdx] = magnitude > 0 ? dotProduct / magnitude : 0.0;
     }
@@ -158,7 +158,7 @@ public static class ILGPUKernels
             sumSquaredDiff += diff * diff;
         }
 
-        distances[index] = XMath.Sqrt(sumSquaredDiff);
+        distances[index] = Math.Sqrt(sumSquaredDiff);
     }
 }
 
