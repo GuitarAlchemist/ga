@@ -22,6 +22,13 @@ internal static partial class StringExtensions
             RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
         var id1 = reg.Match(source).Groups["cacheBuster"].Value;
         var id = id1;
+
+        // Only replace if we found a match
+        if (string.IsNullOrEmpty(id))
+        {
+            return source;
+        }
+
         return source.Replace(id, "00000000000000000000000000000000");
     }
 

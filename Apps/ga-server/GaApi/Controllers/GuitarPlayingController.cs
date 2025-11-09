@@ -10,22 +10,12 @@ using GA.Business.AI.AI.SoundBank;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class GuitarPlayingController : ControllerBase
+public class GuitarPlayingController(
+    HandPoseClient handPoseClient,
+    SoundBankClient soundBankClient,
+    ILogger<GuitarPlayingController> logger)
+    : ControllerBase
 {
-    private readonly HandPoseClient _handPoseClient;
-    private readonly ILogger<GuitarPlayingController> _logger;
-    private readonly SoundBankClient _soundBankClient;
-
-    public GuitarPlayingController(
-        HandPoseClient handPoseClient,
-        SoundBankClient soundBankClient,
-        ILogger<GuitarPlayingController> logger)
-    {
-        _handPoseClient = handPoseClient;
-        _soundBankClient = soundBankClient;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Detect hand pose from uploaded image
     /// </summary>
@@ -42,17 +32,17 @@ public class GuitarPlayingController : ControllerBase
                 return BadRequest("No image provided");
             }
 
-            _logger.LogInformation("Detecting hands in uploaded image: {FileName} ({Size} bytes)",
+            logger.LogInformation("Detecting hands in uploaded image: {FileName} ({Size} bytes)",
                 image.FileName, image.Length);
 
-            using var stream = image.OpenReadStream();
-            var result = await _handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
+            await using var stream = image.OpenReadStream();
+            var result = await handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error detecting hands");
+            logger.LogError(ex, "Error detecting hands");
             return StatusCode(500, new { error = "Failed to detect hands", details = ex.Message });
         }
     }
@@ -70,9 +60,9 @@ public class GuitarPlayingController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Mapping hand pose to guitar positions");
+            logger.LogInformation("Mapping hand pose to guitar positions");
 
-            var result = await _handPoseClient.MapToGuitarAsync(
+            var result = await handPoseClient.MapToGuitarAsync(
                 request.HandPose,
                 request.NeckConfig,
                 request.HandToMap,
@@ -82,7 +72,7 @@ public class GuitarPlayingController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error mapping to guitar");
+            logger.LogError(ex, "Error mapping to guitar");
             return StatusCode(500, new { error = "Failed to map to guitar", details = ex.Message });
         }
     }
@@ -106,14 +96,14 @@ public class GuitarPlayingController : ControllerBase
                 return BadRequest("No image provided");
             }
 
-            _logger.LogInformation("Detecting hands and mapping to guitar: {FileName}", image.FileName);
+            logger.LogInformation("Detecting hands and mapping to guitar: {FileName}", image.FileName);
 
             // Step 1: Detect hands
-            using var stream = image.OpenReadStream();
-            var handPose = await _handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
+            await using var stream = image.OpenReadStream();
+            var handPose = await handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
 
             // Step 2: Map to guitar
-            var guitarMapping = await _handPoseClient.MapToGuitarAsync(
+            var guitarMapping = await handPoseClient.MapToGuitarAsync(
                 handPose,
                 new NeckConfig(),
                 handToMap,
@@ -127,7 +117,7 @@ public class GuitarPlayingController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in detect-and-map");
+            logger.LogError(ex, "Error in detect-and-map");
             return StatusCode(500, new { error = "Failed to detect and map", details = ex.Message });
         }
     }
@@ -145,16 +135,16 @@ public class GuitarPlayingController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating sound: {Instrument} string={String} fret={Fret}",
+            logger.LogInformation("Generating sound: {Instrument} string={String} fret={Fret}",
                 request.Instrument, request.String, request.Fret);
 
-            var result = await _soundBankClient.GenerateSoundAsync(request, cancellationToken);
+            var result = await soundBankClient.GenerateSoundAsync(request, cancellationToken);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating sound");
+            logger.LogError(ex, "Error generating sound");
             return StatusCode(500, new { error = "Failed to generate sound", details = ex.Message });
         }
     }
@@ -170,12 +160,12 @@ public class GuitarPlayingController : ControllerBase
     {
         try
         {
-            var result = await _soundBankClient.GetJobStatusAsync(jobId, cancellationToken);
+            var result = await soundBankClient.GetJobStatusAsync(jobId, cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting job status for {JobId}", jobId);
+            logger.LogError(ex, "Error getting job status for {JobId}", jobId);
             return StatusCode(500, new { error = "Failed to get job status", details = ex.Message });
         }
     }
@@ -191,12 +181,12 @@ public class GuitarPlayingController : ControllerBase
     {
         try
         {
-            var audioData = await _soundBankClient.DownloadSampleAsync(sampleId, cancellationToken);
+            var audioData = await soundBankClient.DownloadSampleAsync(sampleId, cancellationToken);
             return File(audioData, "audio/wav", $"{sampleId}.wav");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error downloading sample {SampleId}", sampleId);
+            logger.LogError(ex, "Error downloading sample {SampleId}", sampleId);
             return StatusCode(500, new { error = "Failed to download sample", details = ex.Message });
         }
     }
@@ -221,14 +211,14 @@ public class GuitarPlayingController : ControllerBase
                 return BadRequest("No image provided");
             }
 
-            _logger.LogInformation("Full pipeline: play from image {FileName}", image.FileName);
+            logger.LogInformation("Full pipeline: play from image {FileName}", image.FileName);
 
             // Step 1: Detect hands
-            using var stream = image.OpenReadStream();
-            var handPose = await _handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
+            await using var stream = image.OpenReadStream();
+            var handPose = await handPoseClient.InferAsync(stream, image.FileName, cancellationToken);
 
             // Step 2: Map to guitar
-            var guitarMapping = await _handPoseClient.MapToGuitarAsync(
+            var guitarMapping = await handPoseClient.MapToGuitarAsync(
                 handPose,
                 new NeckConfig(),
                 handToMap,
@@ -248,7 +238,7 @@ public class GuitarPlayingController : ControllerBase
                     1.0
                 );
 
-                var job = await _soundBankClient.GenerateSoundAsync(soundRequest, cancellationToken);
+                var job = await soundBankClient.GenerateSoundAsync(soundRequest, cancellationToken);
                 soundJobs.Add(job);
             }
 
@@ -259,7 +249,7 @@ public class GuitarPlayingController : ControllerBase
                 completedSamples = new List<SoundSample>();
                 foreach (var job in soundJobs)
                 {
-                    var completed = await _soundBankClient.WaitForJobCompletionAsync(
+                    var completed = await soundBankClient.WaitForJobCompletionAsync(
                         job.JobId,
                         TimeSpan.FromSeconds(30),
                         cancellationToken);
@@ -281,7 +271,7 @@ public class GuitarPlayingController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in play-from-image pipeline");
+            logger.LogError(ex, "Error in play-from-image pipeline");
             return StatusCode(500, new { error = "Failed to process image", details = ex.Message });
         }
     }
@@ -298,12 +288,12 @@ public class GuitarPlayingController : ControllerBase
     {
         try
         {
-            var result = await _soundBankClient.SearchSamplesAsync(request, cancellationToken);
+            var result = await soundBankClient.SearchSamplesAsync(request, cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching sounds");
+            logger.LogError(ex, "Error searching sounds");
             return StatusCode(500, new { error = "Failed to search sounds", details = ex.Message });
         }
     }
@@ -315,8 +305,8 @@ public class GuitarPlayingController : ControllerBase
     [ProducesResponseType(typeof(object), 200)]
     public async Task<IActionResult> HealthCheck(CancellationToken cancellationToken)
     {
-        var handPoseHealthy = await _handPoseClient.HealthCheckAsync(cancellationToken);
-        var soundBankHealthy = await _soundBankClient.HealthCheckAsync(cancellationToken);
+        var handPoseHealthy = await handPoseClient.HealthCheckAsync(cancellationToken);
+        var soundBankHealthy = await soundBankClient.HealthCheckAsync(cancellationToken);
 
         return Ok(new
         {

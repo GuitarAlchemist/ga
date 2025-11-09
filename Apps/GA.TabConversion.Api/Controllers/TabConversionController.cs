@@ -48,6 +48,16 @@ public class TabConversionController : ControllerBase
                 });
             }
 
+            // Validate request content
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                return BadRequest(new ConversionResponse
+                {
+                    Success = false,
+                    Errors = ["Content cannot be empty"]
+                });
+            }
+
             _logger.LogInformation("Conversion request: {Source} -> {Target}",
                 request.SourceFormat, request.TargetFormat);
 
@@ -59,6 +69,15 @@ public class TabConversionController : ControllerBase
             }
 
             return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid argument in conversion request");
+            return BadRequest(new ConversionResponse
+            {
+                Success = false,
+                Errors = [ex.Message]
+            });
         }
         catch (Exception ex)
         {

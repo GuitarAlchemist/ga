@@ -8,22 +8,12 @@ using GA.Business.AI.AI.HuggingFace;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class MusicGenerationController : ControllerBase
+public class MusicGenerationController(
+    MusicGenService musicGenService,
+    HuggingFaceClient huggingFaceClient,
+    ILogger<MusicGenerationController> logger)
+    : ControllerBase
 {
-    private readonly HuggingFaceClient _huggingFaceClient;
-    private readonly ILogger<MusicGenerationController> _logger;
-    private readonly MusicGenService _musicGenService;
-
-    public MusicGenerationController(
-        MusicGenService musicGenService,
-        HuggingFaceClient huggingFaceClient,
-        ILogger<MusicGenerationController> logger)
-    {
-        _musicGenService = musicGenService;
-        _huggingFaceClient = huggingFaceClient;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Generate music from a text description
     /// </summary>
@@ -40,9 +30,9 @@ public class MusicGenerationController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating music: {Description}", request.Description);
+            logger.LogInformation("Generating music: {Description}", request.Description);
 
-            var response = await _musicGenService.GenerateMusicAsync(request, cancellationToken);
+            var response = await musicGenService.GenerateMusicAsync(request, cancellationToken);
 
             return File(
                 response.AudioData,
@@ -52,7 +42,7 @@ public class MusicGenerationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating music");
+            logger.LogError(ex, "Error generating music");
             return StatusCode(500, new { error = ex.Message });
         }
     }
@@ -77,9 +67,9 @@ public class MusicGenerationController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating backing track: {Key} {Style}", key, style);
+            logger.LogInformation("Generating backing track: {Key} {Style}", key, style);
 
-            var response = await _musicGenService.GenerateBackingTrackAsync(
+            var response = await musicGenService.GenerateBackingTrackAsync(
                 key, style, duration, tempo, cancellationToken);
 
             return File(
@@ -90,7 +80,7 @@ public class MusicGenerationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating backing track");
+            logger.LogError(ex, "Error generating backing track");
             return StatusCode(500, new { error = ex.Message });
         }
     }
@@ -115,9 +105,9 @@ public class MusicGenerationController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating chord progression: {Progression} in {Key}", progression, key);
+            logger.LogInformation("Generating chord progression: {Progression} in {Key}", progression, key);
 
-            var response = await _musicGenService.GenerateChordProgressionAsync(
+            var response = await musicGenService.GenerateChordProgressionAsync(
                 progression, key, style, duration, cancellationToken);
 
             return File(
@@ -128,7 +118,7 @@ public class MusicGenerationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating chord progression");
+            logger.LogError(ex, "Error generating chord progression");
             return StatusCode(500, new { error = ex.Message });
         }
     }
@@ -147,9 +137,9 @@ public class MusicGenerationController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating guitar audio: {Style}", request.Style);
+            logger.LogInformation("Generating guitar audio: {Style}", request.Style);
 
-            var response = await _musicGenService.GenerateGuitarAudioAsync(request, cancellationToken);
+            var response = await musicGenService.GenerateGuitarAudioAsync(request, cancellationToken);
 
             return File(
                 response.AudioData,
@@ -159,7 +149,7 @@ public class MusicGenerationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating guitar audio");
+            logger.LogError(ex, "Error generating guitar audio");
             return StatusCode(500, new { error = ex.Message });
         }
     }
@@ -175,7 +165,7 @@ public class MusicGenerationController : ControllerBase
     {
         try
         {
-            var isHealthy = await _huggingFaceClient.HealthCheckAsync(cancellationToken);
+            var isHealthy = await huggingFaceClient.HealthCheckAsync(cancellationToken);
 
             return Ok(new
             {
@@ -186,7 +176,7 @@ public class MusicGenerationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Health check failed");
+            logger.LogError(ex, "Health check failed");
             return StatusCode(500, new { status = "unhealthy", error = ex.Message });
         }
     }

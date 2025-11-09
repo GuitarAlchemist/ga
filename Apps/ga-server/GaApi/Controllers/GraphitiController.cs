@@ -11,19 +11,11 @@ using Microsoft.AspNetCore.RateLimiting;
 [ApiController]
 [Route("api/graphiti")]
 [EnableRateLimiting("fixed")]
-public class GraphitiController : ControllerBase
+public class GraphitiController(
+    IGraphitiService graphitiService,
+    ILogger<GraphitiController> logger)
+    : ControllerBase
 {
-    private readonly IGraphitiService _graphitiService;
-    private readonly ILogger<GraphitiController> _logger;
-
-    public GraphitiController(
-        IGraphitiService graphitiService,
-        ILogger<GraphitiController> logger)
-    {
-        _graphitiService = graphitiService;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Add a learning episode to the knowledge graph
     /// </summary>
@@ -40,9 +32,9 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Adding episode for user {UserId}", request.UserId);
+            logger.LogInformation("Adding episode for user {UserId}", request.UserId);
 
-            var result = await _graphitiService.AddEpisodeAsync(request, cancellationToken);
+            var result = await graphitiService.AddEpisodeAsync(request, cancellationToken);
 
             if (result.Status == "error")
             {
@@ -53,7 +45,7 @@ public class GraphitiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding episode for user {UserId}", request.UserId);
+            logger.LogError(ex, "Error adding episode for user {UserId}", request.UserId);
             return StatusCode(500, new GraphitiResponse<object>
             {
                 Status = "error",
@@ -78,15 +70,15 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Searching knowledge graph: {Query}", request.Query);
+            logger.LogInformation("Searching knowledge graph: {Query}", request.Query);
 
-            var result = await _graphitiService.SearchAsync(request, cancellationToken);
+            var result = await graphitiService.SearchAsync(request, cancellationToken);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching knowledge graph: {Query}", request.Query);
+            logger.LogError(ex, "Error searching knowledge graph: {Query}", request.Query);
             return StatusCode(500, new { error = "An error occurred during search", query = request.Query });
         }
     }
@@ -107,9 +99,9 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Getting recommendations for user {UserId}", request.UserId);
+            logger.LogInformation("Getting recommendations for user {UserId}", request.UserId);
 
-            var result = await _graphitiService.GetRecommendationsAsync(request, cancellationToken);
+            var result = await graphitiService.GetRecommendationsAsync(request, cancellationToken);
 
             if (result.Status == "error")
             {
@@ -120,7 +112,7 @@ public class GraphitiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting recommendations for user {UserId}", request.UserId);
+            logger.LogError(ex, "Error getting recommendations for user {UserId}", request.UserId);
             return StatusCode(500, new RecommendationResponse
             {
                 Status = "error",
@@ -146,9 +138,9 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Getting progress for user {UserId}", userId);
+            logger.LogInformation("Getting progress for user {UserId}", userId);
 
-            var result = await _graphitiService.GetUserProgressAsync(userId, cancellationToken);
+            var result = await graphitiService.GetUserProgressAsync(userId, cancellationToken);
 
             if (result.Status == "error")
             {
@@ -159,7 +151,7 @@ public class GraphitiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting progress for user {UserId}", userId);
+            logger.LogError(ex, "Error getting progress for user {UserId}", userId);
             return StatusCode(500, new UserProgressResponse
             {
                 Status = "error",
@@ -181,15 +173,15 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Getting graph statistics");
+            logger.LogInformation("Getting graph statistics");
 
-            var result = await _graphitiService.GetGraphStatsAsync(cancellationToken);
+            var result = await graphitiService.GetGraphStatsAsync(cancellationToken);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting graph statistics");
+            logger.LogError(ex, "Error getting graph statistics");
             return StatusCode(500, new GraphStatsResponse
             {
                 Status = "error"
@@ -210,15 +202,15 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Starting MongoDB sync");
+            logger.LogInformation("Starting MongoDB sync");
 
-            var result = await _graphitiService.SyncFromMongoDbAsync(cancellationToken);
+            var result = await graphitiService.SyncFromMongoDbAsync(cancellationToken);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error syncing from MongoDB");
+            logger.LogError(ex, "Error syncing from MongoDB");
             return StatusCode(500, new GraphitiResponse<object>
             {
                 Status = "error",
@@ -239,7 +231,7 @@ public class GraphitiController : ControllerBase
     {
         try
         {
-            var isHealthy = await _graphitiService.IsHealthyAsync(cancellationToken);
+            var isHealthy = await graphitiService.IsHealthyAsync(cancellationToken);
 
             if (isHealthy)
             {
@@ -250,7 +242,7 @@ public class GraphitiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking Graphiti health");
+            logger.LogError(ex, "Error checking Graphiti health");
             return StatusCode(503, new { status = "error", service = "graphiti" });
         }
     }
