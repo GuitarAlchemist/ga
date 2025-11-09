@@ -67,15 +67,9 @@ public class OperationMetrics
     public double TotalDurationMs { get; set; }
 }
 
-public class CacheMetricsService : ICacheMetricsService
+public class CacheMetricsService(ILogger<CacheMetricsService> logger) : ICacheMetricsService
 {
-    private readonly ILogger<CacheMetricsService> _logger;
     private readonly ConcurrentDictionary<string, CacheTypeMetricsInternal> _metrics = new();
-
-    public CacheMetricsService(ILogger<CacheMetricsService> logger)
-    {
-        _logger = logger;
-    }
 
     public void RecordHit(string cacheType, string key)
     {
@@ -83,7 +77,7 @@ public class CacheMetricsService : ICacheMetricsService
         Interlocked.Increment(ref metrics.Hits);
         metrics.LastRequestTime = DateTime.UtcNow;
 
-        _logger.LogDebug("Cache HIT: {CacheType} - {Key}", cacheType, key);
+        logger.LogDebug("Cache HIT: {CacheType} - {Key}", cacheType, key);
     }
 
     public void RecordMiss(string cacheType, string key)
@@ -92,7 +86,7 @@ public class CacheMetricsService : ICacheMetricsService
         Interlocked.Increment(ref metrics.Misses);
         metrics.LastRequestTime = DateTime.UtcNow;
 
-        _logger.LogDebug("Cache MISS: {CacheType} - {Key}", cacheType, key);
+        logger.LogDebug("Cache MISS: {CacheType} - {Key}", cacheType, key);
     }
 
     public void RecordOperationDuration(string cacheType, string operation, TimeSpan duration)
@@ -129,7 +123,7 @@ public class CacheMetricsService : ICacheMetricsService
                 return existing;
             });
 
-        _logger.LogDebug("Cache operation: {CacheType}.{Operation} took {DurationMs}ms",
+        logger.LogDebug("Cache operation: {CacheType}.{Operation} took {DurationMs}ms",
             cacheType, operation, durationMs);
     }
 
@@ -173,7 +167,7 @@ public class CacheMetricsService : ICacheMetricsService
     public void Reset()
     {
         _metrics.Clear();
-        _logger.LogInformation("Cache metrics reset");
+        logger.LogInformation("Cache metrics reset");
     }
 
     private CacheTypeMetricsInternal GetOrCreateMetrics(string cacheType)

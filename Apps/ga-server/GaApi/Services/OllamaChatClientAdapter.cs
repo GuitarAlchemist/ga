@@ -7,23 +7,14 @@ using Microsoft.Extensions.AI;
 ///     Adapter that exposes <see cref="IOllamaChatService" /> as an <see cref="IChatClient" /> for components
 ///     (e.g. Microsoft Agent Framework) that rely on the new Extensions.AI abstractions.
 /// </summary>
-public sealed class OllamaChatClientAdapter : IChatClient
+public sealed class OllamaChatClientAdapter(
+    IOllamaChatService chatService,
+    IConfiguration configuration,
+    ILogger<OllamaChatClientAdapter> logger)
+    : IChatClient
 {
-    private readonly Uri _baseUri;
-    private readonly IOllamaChatService _chatService;
-    private readonly ILogger<OllamaChatClientAdapter> _logger;
-    private readonly string _model;
-
-    public OllamaChatClientAdapter(
-        IOllamaChatService chatService,
-        IConfiguration configuration,
-        ILogger<OllamaChatClientAdapter> logger)
-    {
-        _chatService = chatService;
-        _logger = logger;
-        _baseUri = new Uri(configuration["Ollama:BaseUrl"] ?? "http://localhost:11434");
-        _model = configuration["Ollama:ChatModel"] ?? "llama3.2:3b";
-    }
+    private readonly Uri _baseUri = new(configuration["Ollama:BaseUrl"] ?? "http://localhost:11434");
+    private readonly string _model = configuration["Ollama:ChatModel"] ?? "llama3.2:3b";
 
     public ChatClientMetadata Metadata => new("Ollama Chat", _baseUri, _model);
 
@@ -36,11 +27,11 @@ public sealed class OllamaChatClientAdapter : IChatClient
 
         if (string.IsNullOrWhiteSpace(userMessage))
         {
-            _logger.LogWarning("Chat invocation is missing a user message. Returning empty response.");
+            logger.LogWarning("Chat invocation is missing a user message. Returning empty response.");
             return new ChatResponse(new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, string.Empty));
         }
 
-        var responseText = await _chatService.ChatAsync(
+        var responseText = await chatService.ChatAsync(
             userMessage,
             history,
             systemPrompt,
@@ -61,7 +52,7 @@ public sealed class OllamaChatClientAdapter : IChatClient
             yield break;
         }
 
-        await foreach (var chunk in _chatService.ChatStreamAsync(
+        await foreach (var chunk in chatService.ChatStreamAsync(
                            userMessage,
                            history,
                            systemPrompt,
