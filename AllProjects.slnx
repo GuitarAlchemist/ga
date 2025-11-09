@@ -215,6 +215,17 @@
     <File Path="ReactComponents/ga-react-components/tsconfig.json" />
     <File Path="ReactComponents/ga-react-components/vite.config.ts" />
   </Folder>
+  <Folder Name="/Documentation/">
+    <File Path="docs/AGENTS.md" />
+    <File Path="docs/ARCHITECTURE.md" />
+    <File Path="docs/BUILD_FIX_GUIDE.md" />
+    <File Path="docs/BUILD_STATUS_2025.md" />
+    <File Path="docs/ChatGPT-Modal Scales Overview.md" />
+    <File Path="docs/MODULAR_RESTRUCTURING_PLAN.md" />
+    <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md" />
+    <File Path="docs/TuningChart.pdf" />
+    <File Path="docs/Tunings.txt" />
+  </Folder>
   <Folder Name="/Html Examples/">
     <File Path="docs/Html Examples/ag-grid - Example - RequireJS.html" />
     <File Path="docs/Html Examples/ag-grid - Example 1.html" />
