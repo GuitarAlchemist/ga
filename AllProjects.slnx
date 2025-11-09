@@ -90,9 +90,6 @@
     <Project Path="Common/GA.Business.AI/GA.Business.AI.csproj">
       <BuildType Solution="net7.0|Any CPU" Project="Debug" />
     </Project>
-    <Project Path="Common/GA.Business.Analysis/GA.Business.Analysis.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
-    </Project>
     <Project Path="Common/GA.Business.Analytics/GA.Business.Analytics.csproj">
       <BuildType Solution="net7.0|*" Project="Debug" />
     </Project>
@@ -103,12 +100,6 @@
       <BuildType Solution="net7.0|Any CPU" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
-    <Project Path="Common/GA.Business.Fretboard/GA.Business.Fretboard.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
-    </Project>
-    <Project Path="Common/GA.Business.Harmony/GA.Business.Harmony.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
-    </Project>
     <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj">
       <BuildType Solution="net7.0|*" Project="Debug" />
     </Project>
@@ -116,9 +107,6 @@
       <BuildType Solution="net7.0|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Microservices/GA.Business.Microservices.csproj">
-      <BuildType Solution="net7.0|*" Project="Debug" />
-    </Project>
-    <Project Path="Common/GA.Business.Orchestration/GA.Business.Orchestration.csproj">
       <BuildType Solution="net7.0|*" Project="Debug" />
     </Project>
     <Project Path="Common/GA.Business.Querying/GA.Business.Querying.fsproj">
