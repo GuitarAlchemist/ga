@@ -83,7 +83,13 @@
     <Project Path="Apps/HighPerformanceDemo/HighPerformanceDemo.csproj" />
     <Project Path="Apps/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj" />
   </Folder>
-
+  <Folder Name="/Documentation/">
+    <File Path="docs/AGENTS.md" />
+    <File Path="docs/ARCHITECTURE.md" />
+    <File Path="docs/BUILD_STATUS_2025.md" />
+    <File Path="docs/MODULAR_RESTRUCTURING_PLAN.md" />
+    <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md" />
+  </Folder>
   <Folder Name="/Experiments/">
     <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj" />
     <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj" />
