@@ -16,7 +16,6 @@
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.49.1"/>
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0"/>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
   </ItemGroup>
 
 </Project>

@@ -15,7 +15,6 @@
 
     <!-- System.Numerics.Tensors for tensor operations -->
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.10"/>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
   </ItemGroup>
 
   <!-- ILGPU GPU acceleration support -->

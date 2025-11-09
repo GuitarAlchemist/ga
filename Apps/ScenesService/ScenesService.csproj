@@ -13,8 +13,6 @@
     <PackageReference Include="MongoDB.Driver" Version="2.30.0"/>
     <PackageReference Include="MongoDB.Driver.GridFS" Version="2.30.0"/>
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0031"/>
-    <PackageReference Include="System.Text.Json" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10"/>
   </ItemGroup>
 
 </Project>
