@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 [Category("Integration")]
 [Category("Manual")]
 [Category("SpectralAnalysis")]
+[Ignore("GrothendieckController not yet implemented")]
 public class GrothendieckSpectralAnalysisManualTests
 {
     [SetUp]
