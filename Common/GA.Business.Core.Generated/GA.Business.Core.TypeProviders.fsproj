@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <!-- Force the newer version of FSharp.Core to match GA.Business.Core -->
-        <PackageReference Include="FSharp.Core" Version="10.0.100-rc.2.25502.107"/>
+        <PackageReference Include="FSharp.Core" Version="10.0.100-rc2.25502.107"/>
         <!-- Add Type Provider SDK -->
         <PackageReference Include="FSharp.TypeProviders.SDK" Version="8.1.0"/>
         <!-- Use an older version of FSharp.Compiler.Service that's compatible with newer FSharp.Core -->

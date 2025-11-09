@@ -7,7 +7,7 @@
 
     <ItemGroup>
         <!-- Match FSharp.Core version with GA.Business.AI -->
-        <PackageReference Include="FSharp.Core" Version="10.0.100-rc.2.25502.107"/>
+        <PackageReference Include="FSharp.Core" Version="10.0.100-rc2.25502.107"/>
     </ItemGroup>
 
     <ItemGroup>
