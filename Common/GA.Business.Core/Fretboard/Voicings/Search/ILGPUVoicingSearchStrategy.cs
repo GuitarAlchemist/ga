@@ -365,11 +365,38 @@ public class IlgpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     private double CalculateCosineSimilarity(double[] queryEmbedding, int voicingIndex)
     {
+        // Validate inputs
+        if (queryEmbedding == null)
+            throw new ArgumentNullException(nameof(queryEmbedding));
+
+        if (queryEmbedding.Length != _embeddingDimensions)
+            throw new ArgumentException(
+                $"Query embedding dimension mismatch. Expected {_embeddingDimensions}, got {queryEmbedding.Length}",
+                nameof(queryEmbedding));
+
+        if (_hostEmbeddings == null)
+            throw new InvalidOperationException("Host embeddings not initialized");
+
+        if (_voicingIds == null)
+            throw new InvalidOperationException("Voicing IDs not initialized");
+
+        if (voicingIndex < 0 || voicingIndex >= _voicingIds.Length)
+            throw new ArgumentOutOfRangeException(
+                nameof(voicingIndex),
+                $"Voicing index {voicingIndex} is out of range [0, {_voicingIds.Length})");
+
+        var embeddingStartIdx = voicingIndex * _embeddingDimensions;
+        var embeddingEndIdx = embeddingStartIdx + _embeddingDimensions;
+
+        if (embeddingEndIdx > _hostEmbeddings.Length)
+            throw new InvalidOperationException(
+                $"Embedding array access out of bounds. Index range [{embeddingStartIdx}, {embeddingEndIdx}) exceeds array length {_hostEmbeddings.Length}");
+
         double dotProduct = 0.0, queryNorm = 0.0, voicingNorm = 0.0;
         for (var j = 0; j < _embeddingDimensions; j++)
         {
             var q = queryEmbedding[j];
-            var v = _hostEmbeddings![voicingIndex * _embeddingDimensions + j];
+            var v = _hostEmbeddings[embeddingStartIdx + j];
             dotProduct += q * v;
             queryNorm += q * q;
             voicingNorm += v * v;
