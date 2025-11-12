@@ -2,6 +2,8 @@ namespace GA.MusicTheory.DSL.Adapters
 
 open System
 open System.IO
+open System.Text.Json
+open System.Text.Json.Nodes
 open GA.MusicTheory.DSL.Types.GrammarTypes
 
 /// <summary>
@@ -203,7 +205,9 @@ module TarsGrammarAdapter =
     /// Save grammar index to JSON file
     let saveIndex (indexPath: string) (index: GrammarIndexEntry list) : Result<unit, string> =
         try
-            let json = Newtonsoft.Json.JsonConvert.SerializeObject(index, Newtonsoft.Json.Formatting.Indented)
+            let options = JsonSerializerOptions()
+            options.WriteIndented <- true
+            let json = JsonSerializer.Serialize(index, options)
             File.WriteAllText(indexPath, json)
             Ok ()
         with ex ->
@@ -216,7 +220,7 @@ module TarsGrammarAdapter =
                 Ok []
             else
                 let json = File.ReadAllText(indexPath)
-                let index = Newtonsoft.Json.JsonConvert.DeserializeObject<GrammarIndexEntry list>(json)
+                let index = System.Text.Json.JsonSerializer.Deserialize<GrammarIndexEntry list>(json)
                 Ok index
         with ex ->
             Error $"Failed to load index: %s{ex.Message}"
@@ -228,12 +232,12 @@ module TarsGrammarAdapter =
     /// Validate EBNF grammar syntax (basic validation)
     let validateEbnf (content: string) : Result<unit, string list> =
         let errors = ResizeArray<string>()
-        
+
         // Check for balanced parentheses
         let mutable parenCount = 0
         let mutable braceCount = 0
         let mutable bracketCount = 0
-        
+
         for c in content do
             match c with
             | '(' -> parenCount <- parenCount + 1
@@ -243,11 +247,11 @@ module TarsGrammarAdapter =
             | '[' -> bracketCount <- bracketCount + 1
             | ']' -> bracketCount <- bracketCount - 1
             | _ -> ()
-        
+
         if parenCount <> 0 then errors.Add("Unbalanced parentheses")
         if braceCount <> 0 then errors.Add("Unbalanced braces")
         if bracketCount <> 0 then errors.Add("Unbalanced brackets")
-        
+
         if errors.Count = 0 then
             Ok ()
         else

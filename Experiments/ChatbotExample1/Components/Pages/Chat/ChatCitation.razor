@@ -1,7 +1,7 @@
 @using System.Web
-@if (!string.IsNullOrWhiteSpace(viewerUrl))
+@if (!string.IsNullOrWhiteSpace(_viewerUrl))
 {
-    <a href="@viewerUrl" target="_blank" class="citation">
+    <a href="@_viewerUrl" target="_blank" class="citation">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
              stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -21,17 +21,17 @@
 
     [Parameter] public required string Quote { get; set; }
 
-    private string? viewerUrl;
+    private string? _viewerUrl;
 
     protected override void OnParametersSet()
     {
-        viewerUrl = null;
+        _viewerUrl = null;
 
         // If you ingest other types of content besides PDF files, construct a URL to an appropriate viewer here
         if (File.EndsWith(".pdf"))
         {
             var search = Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
-            viewerUrl = $"lib/pdf_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}#page={PageNumber}&search={HttpUtility.UrlEncode(search)}&phrase=true";
+            _viewerUrl = $"lib/pdf_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}#page={PageNumber}&search={HttpUtility.UrlEncode(search)}&phrase=true";
         }
     }
 

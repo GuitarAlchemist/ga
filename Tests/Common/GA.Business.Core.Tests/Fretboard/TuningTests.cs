@@ -58,7 +58,7 @@ public class TuningTests
         var invalidString = Str.Min + 10; // Out of range
 
         // Act & Assert
-        Assert.Throws<KeyNotFoundException>(() => _ = tuning[invalidString]);
+        Assert.Throws<ArgumentOutOfRangeException>(() => _ = tuning[invalidString]);
     }
 
     [Test]

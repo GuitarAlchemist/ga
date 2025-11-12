@@ -1,4 +1,4 @@
-namespace GA.Business.AI.AI.HuggingFace;
+namespace GA.Business.AI.HuggingFace;
 
 using System.Net;
 using System.Text.Json;

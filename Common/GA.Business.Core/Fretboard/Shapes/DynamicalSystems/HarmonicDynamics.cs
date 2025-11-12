@@ -5,21 +5,14 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Analyzes harmonic dynamics using dynamical systems theory
 /// </summary>
-public class HarmonicDynamics
+public class HarmonicDynamics(ILogger<HarmonicDynamics> logger)
 {
-    private readonly ILogger<HarmonicDynamics> _logger;
-
-    public HarmonicDynamics(ILogger<HarmonicDynamics> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Analyze the dynamical system properties of a shape graph
     /// </summary>
     public DynamicalSystemInfo Analyze(ShapeGraph graph)
     {
-        _logger.LogDebug("Analyzing dynamical system for graph with {ShapeCount} shapes", graph.ShapeCount);
+        logger.LogDebug("Analyzing dynamical system for graph with {ShapeCount} shapes", graph.ShapeCount);
 
         var attractors = FindAttractors(graph);
         var fixedPoints = FindFixedPoints(graph);

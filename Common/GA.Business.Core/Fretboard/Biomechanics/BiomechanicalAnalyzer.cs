@@ -5,14 +5,9 @@ using Primitives;
 /// <summary>
 ///     Analyzer for biomechanical playability of chord fingerings
 /// </summary>
-public class BiomechanicalAnalyzer
+public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
 {
-    private readonly HandSize _handSize;
-
-    public BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
-    {
-        _handSize = handSize;
-    }
+    private readonly HandSize _handSize = handSize;
 
     /// <summary>
     ///     Analyze the biomechanical playability of a chord fingering

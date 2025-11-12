@@ -177,7 +177,14 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
 
     #region IStaticValueObjectList<Fret> Members
 
+    /// <summary>
+    /// Gets all Fret instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<Fret> Items => ValueObjectUtils<Fret>.Items;
+
+    /// <summary>
+    /// Gets all Fret values (automatically memoized).
+    /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<Fret>.Values;
 
     #endregion

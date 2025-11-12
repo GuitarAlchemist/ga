@@ -1,4 +1,4 @@
-﻿namespace GA.Business.AI.AI.SoundBank;
+﻿namespace GA.Business.AI.SoundBank;
 
 /// <summary>
 ///     Job status enum

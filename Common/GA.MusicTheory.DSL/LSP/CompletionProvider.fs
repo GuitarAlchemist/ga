@@ -114,16 +114,21 @@ module CompletionProvider =
             let words = beforeCursor.Split([| ' '; '-'; '>'; '\n'; '\r' |], StringSplitOptions.RemoveEmptyEntries)
             if words.Length > 0 then words.[words.Length - 1] else ""
 
+        // Check if we're in a specific context that should return all items from that category
+        let isInGrothendieckContext = beforeCursor.Contains("⊗") || beforeCursor.Contains("⊕") || beforeCursor.Contains("tensor") || beforeCursor.Contains("direct_sum")
+        let isInNavigationContext = beforeCursor.Contains("position") || beforeCursor.Contains("CAGED") || beforeCursor.Contains("move")
+        let isInRomanNumeralContext = System.Text.RegularExpressions.Regex.IsMatch(lastWord, @"^(I|II|III|IV|V|VI|VII|i|ii|iii|iv|v|vi|vii)°?$")
+
         // Determine context and provide appropriate completions
         let completions =
             if beforeCursor.Contains("->") || beforeCursor.Contains("|>") then
                 // After transformation operator, suggest transformations
                 transformationCompletions
-            else if beforeCursor.Contains("⊗") || beforeCursor.Contains("⊕") || beforeCursor.Contains("tensor") || beforeCursor.Contains("direct_sum") then
-                // In Grothendieck context, suggest operations
+            else if isInGrothendieckContext then
+                // In Grothendieck context, suggest all Grothendieck operations (don't filter)
                 grothendieckCompletions
-            else if beforeCursor.Contains("position") || beforeCursor.Contains("CAGED") || beforeCursor.Contains("move") then
-                // In fretboard navigation context
+            else if isInNavigationContext then
+                // In fretboard navigation context, suggest all navigation completions (don't filter)
                 navigationCompletions
             else if beforeCursor.Contains("major") || beforeCursor.Contains("minor") || beforeCursor.Contains("dorian") then
                 // In scale context, suggest scale types and transformations
@@ -131,9 +136,9 @@ module CompletionProvider =
             else if System.Text.RegularExpressions.Regex.IsMatch(lastWord, @"^[A-G][#b]?$") then
                 // After a complete note name, suggest chord qualities and scale types
                 chordQualityCompletions @ scaleTypeCompletions
-            else if System.Text.RegularExpressions.Regex.IsMatch(lastWord, @"^(I|II|III|IV|V|VI|VII|i|ii|iii|iv|v|vi|vii)°?$") then
-                // After a roman numeral, suggest chord qualities
-                chordQualityCompletions
+            else if isInRomanNumeralContext then
+                // After a roman numeral, suggest roman numerals and chord qualities (don't filter)
+                romanNumeralCompletions @ chordQualityCompletions
             else if System.Text.RegularExpressions.Regex.IsMatch(lastWord, @"^[A-G]$") && lastWord.Length = 1 then
                 // Single letter - could be completing a note name or starting a chord
                 noteCompletions @ chordQualityCompletions
@@ -141,8 +146,11 @@ module CompletionProvider =
                 // Default: show all completions (notes, roman numerals, chords, etc.)
                 noteCompletions @ romanNumeralCompletions @ chordQualityCompletions @ scaleTypeCompletions @ transformationCompletions @ grothendieckCompletions @ navigationCompletions
 
-        // Filter by last word (case-insensitive prefix match)
+        // Filter by last word (case-insensitive prefix match) only if not in special contexts
         if String.IsNullOrWhiteSpace(lastWord) then
+            completions
+        else if isInGrothendieckContext || isInNavigationContext || isInRomanNumeralContext then
+            // Don't filter in these contexts - return all items
             completions
         else
             let filtered = completions |> List.filter (fun item -> item.Label.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))

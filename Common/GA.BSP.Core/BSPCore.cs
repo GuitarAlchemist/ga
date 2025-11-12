@@ -94,39 +94,39 @@ public class TonalRegion
 /// <summary>
 ///     BSP node for tonal space partitioning
 /// </summary>
-public class TonalBSPNode
+public class TonalBspNode
 {
-    public TonalBSPNode()
+    public TonalBspNode()
     {
     }
 
-    public TonalBSPNode(TonalRegion region)
+    public TonalBspNode(TonalRegion region)
     {
         Region = region;
     }
 
     public TonalRegion Region { get; init; } = new();
-    public TonalBSPNode? Left { get; set; }
-    public TonalBSPNode? Right { get; set; }
+    public TonalBspNode? Left { get; set; }
+    public TonalBspNode? Right { get; set; }
     public bool IsLeaf => Left == null && Right == null;
 }
 
 /// <summary>
 ///     Simple BSP tree for tonal space
 /// </summary>
-public class TonalBSPTree
+public class TonalBspTree
 {
-    public TonalBSPTree()
+    public TonalBspTree()
     {
         // Create a default root region (chromatic space)
         var chromaticSpace = new PitchClassSet(Enum.GetValues<PitchClass>());
-        Root = new TonalBSPNode(new TonalRegion("Chromatic Space", TonalityType.Chromatic, chromaticSpace, 0));
+        Root = new TonalBspNode(new TonalRegion("Chromatic Space", TonalityType.Chromatic, chromaticSpace, 0));
 
         // Add some basic partitions
         InitializeBasicPartitions();
     }
 
-    public TonalBSPNode Root { get; }
+    public TonalBspNode Root { get; }
 
     private void InitializeBasicPartitions()
     {
@@ -149,8 +149,8 @@ public class TonalBSPTree
             (int)PitchClass.A
         );
 
-        Root.Left = new TonalBSPNode(majorRegion);
-        Root.Right = new TonalBSPNode(minorRegion);
+        Root.Left = new TonalBspNode(majorRegion);
+        Root.Right = new TonalBspNode(minorRegion);
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public class TonalBSPTree
         return FindTonalRegionRecursive(Root, pitchClassSet);
     }
 
-    private TonalRegion FindTonalRegionRecursive(TonalBSPNode node, PitchClassSet pitchClassSet)
+    private TonalRegion FindTonalRegionRecursive(TonalBspNode node, PitchClassSet pitchClassSet)
     {
         if (node.IsLeaf)
         {
@@ -253,13 +253,13 @@ public class TonalScale : ITonalElement
 /// <summary>
 ///     BSP query result
 /// </summary>
-public class TonalBSPQueryResult
+public class TonalBspQueryResult
 {
-    public TonalBSPQueryResult()
+    public TonalBspQueryResult()
     {
     }
 
-    public TonalBSPQueryResult(TonalRegion region, List<ITonalElement> elements, double confidence, TimeSpan queryTime)
+    public TonalBspQueryResult(TonalRegion region, List<ITonalElement> elements, double confidence, TimeSpan queryTime)
     {
         Region = region;
         Elements = elements;
@@ -276,19 +276,19 @@ public class TonalBSPQueryResult
 /// <summary>
 ///     Simple BSP service for tonal analysis
 /// </summary>
-public class TonalBSPService
+public class TonalBspService
 {
-    private readonly TonalBSPTree _tree;
+    private readonly TonalBspTree _tree;
 
-    public TonalBSPService()
+    public TonalBspService()
     {
-        _tree = new TonalBSPTree();
+        _tree = new TonalBspTree();
     }
 
     /// <summary>
     ///     Perform spatial query for similar elements
     /// </summary>
-    public TonalBSPQueryResult SpatialQuery(PitchClassSet center, double radius, TonalPartitionStrategy strategy)
+    public TonalBspQueryResult SpatialQuery(PitchClassSet center, double radius, TonalPartitionStrategy strategy)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -301,13 +301,13 @@ public class TonalBSPService
 
         stopwatch.Stop();
 
-        return new TonalBSPQueryResult(region, elements, confidence, stopwatch.Elapsed);
+        return new TonalBspQueryResult(region, elements, confidence, stopwatch.Elapsed);
     }
 
     /// <summary>
     ///     Find tonal context for a chord
     /// </summary>
-    public TonalBSPQueryResult FindTonalContextForChord(PitchClassSet pitchClassSet)
+    public TonalBspQueryResult FindTonalContextForChord(PitchClassSet pitchClassSet)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -320,6 +320,6 @@ public class TonalBSPService
 
         stopwatch.Stop();
 
-        return new TonalBSPQueryResult(region, elements, confidence, stopwatch.Elapsed);
+        return new TonalBspQueryResult(region, elements, confidence, stopwatch.Elapsed);
     }
 }

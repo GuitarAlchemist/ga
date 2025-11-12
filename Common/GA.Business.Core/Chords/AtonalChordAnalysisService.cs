@@ -187,10 +187,11 @@ public static class AtonalChordAnalysisService
     /// </summary>
     private static string GenerateTheoreticalDescription(SetClass setClass, PitchClassSet pitchClassSet)
     {
-        var descriptions = new List<string>();
-
-        descriptions.Add($"Cardinality: {setClass.Cardinality.Value}");
-        descriptions.Add($"Interval Class Vector: {setClass.IntervalClassVector}");
+        var descriptions = new List<string>
+        {
+            $"Cardinality: {setClass.Cardinality.Value}",
+            $"Interval Class Vector: {setClass.IntervalClassVector}"
+        };
 
         if (setClass.IsModal)
         {

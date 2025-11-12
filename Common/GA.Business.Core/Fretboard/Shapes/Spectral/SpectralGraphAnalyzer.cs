@@ -6,21 +6,14 @@ using MathNet.Numerics.LinearAlgebra;
 /// <summary>
 /// Analyzes shape graphs using spectral graph theory
 /// </summary>
-public class SpectralGraphAnalyzer
+public class SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
 {
-    private readonly ILogger<SpectralGraphAnalyzer> _logger;
-
-    public SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Analyze spectral properties of the shape graph
     /// </summary>
     public SpectralMetrics Analyze(ShapeGraph graph)
     {
-        _logger.LogDebug("Analyzing spectral properties for graph with {ShapeCount} shapes", graph.ShapeCount);
+        logger.LogDebug("Analyzing spectral properties for graph with {ShapeCount} shapes", graph.ShapeCount);
 
         // Build Laplacian matrix
         var n = graph.ShapeCount;
@@ -46,7 +39,7 @@ public class SpectralGraphAnalyzer
     /// </summary>
     public List<ChordFamily> Cluster(ShapeGraph graph, int k)
     {
-        _logger.LogDebug("Clustering {ShapeCount} shapes into {K} families", graph.ShapeCount, k);
+        logger.LogDebug("Clustering {ShapeCount} shapes into {K} families", graph.ShapeCount, k);
 
         // Simple clustering based on pitch-class set similarity
         var families = new List<ChordFamily>();
@@ -99,14 +92,14 @@ public class SpectralGraphAnalyzer
 
         foreach (var startId in graph.Shapes.Keys.Take(10)) // Sample for performance
         {
-            var depth = BFSMaxDepth(graph, startId);
+            var depth = BfsMaxDepth(graph, startId);
             maxDepth = Math.Max(maxDepth, depth);
         }
 
         return maxDepth;
     }
 
-    private int BFSMaxDepth(ShapeGraph graph, string startId)
+    private int BfsMaxDepth(ShapeGraph graph, string startId)
     {
         var visited = new HashSet<string>();
         var queue = new Queue<(string id, int depth)>();

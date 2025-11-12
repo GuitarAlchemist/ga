@@ -9,6 +9,7 @@ using System.Text.Json;
 ///     Integration tests for the chatbot API with detailed request/response logging
 /// </summary>
 [TestFixture]
+[Ignore("Chatbot service integration tests require running chatbot service on port 7001")]
 public class ChatbotIntegrationTests
 {
     [OneTimeSetUp]

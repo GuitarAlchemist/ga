@@ -1,8 +1,8 @@
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <EditForm Model="@(this)" OnValidSubmit="@SendMessageAsync">
     <label class="input-box page-width">
-        <textarea @ref="@textArea" @bind="@messageText" placeholder="Type your message..." rows="1"></textarea>
+        <textarea @ref="@_textArea" @bind="@_messageText" placeholder="Type your message..." rows="1"></textarea>
 
         <div class="tools">
             <button type="submit" title="Send" class="send-button">
@@ -17,21 +17,21 @@
 </EditForm>
 
 @code {
-    private ElementReference textArea;
-    private string? messageText;
+    private ElementReference _textArea;
+    private string? _messageText;
 
     [Parameter] public EventCallback<ChatMessage> OnSend { get; set; }
 
     public ValueTask FocusAsync()
     {
-        return textArea.FocusAsync();
+        return _textArea.FocusAsync();
     }
 
     private async Task SendMessageAsync()
     {
-        if (messageText is { Length: > 0 } text)
+        if (_messageText is { Length: > 0 } text)
         {
-            messageText = null;
+            _messageText = null;
             await OnSend.InvokeAsync(new ChatMessage(ChatRole.User, text));
         }
     }
@@ -42,8 +42,8 @@
         {
             try
             {
-                var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Chat/ChatInput.razor.js");
-                await module.InvokeVoidAsync("init", textArea);
+                var module = await Js.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Chat/ChatInput.razor.js");
+                await module.InvokeVoidAsync("init", _textArea);
                 await module.DisposeAsync();
             }
             catch (JSDisconnectedException)

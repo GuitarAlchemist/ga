@@ -5,7 +5,7 @@ using Services;
 /// <summary>
 ///     Semantic Kernel plugin for BSP dungeon generation
 /// </summary>
-public class BSPDungeonPlugin(GaApiClient gaApiClient, ILogger<BSPDungeonPlugin> logger)
+public class BspDungeonPlugin(GaApiClient gaApiClient, ILogger<BspDungeonPlugin> logger)
 {
     /// <summary>
     ///     Generate a musical dungeon using Binary Space Partitioning

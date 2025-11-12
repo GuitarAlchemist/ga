@@ -4,23 +4,23 @@ using GA.BSP.Core;
 using NUnit.Framework;
 
 [TestFixture]
-public class BSPCoreIntegrationTests
+public class BspCoreIntegrationTests
 {
     [SetUp]
     public void Setup()
     {
-        _bspTree = new TonalBSPTree();
-        _bspService = new TonalBSPService();
+        _bspTree = new TonalBspTree();
+        _bspService = new TonalBspService();
     }
 
-    private TonalBSPService? _bspService;
-    private TonalBSPTree? _bspTree;
+    private TonalBspService? _bspService;
+    private TonalBspTree? _bspTree;
 
     [Test]
     public void TonalBSPTree_Creation_ShouldSucceed()
     {
         // Arrange & Act
-        var tree = new TonalBSPTree();
+        var tree = new TonalBspTree();
 
         // Assert
         Assert.That(tree, Is.Not.Null);
@@ -169,7 +169,7 @@ public class BSPCoreIntegrationTests
         };
 
         // Act - Analyze each chord and the progression
-        var chordContexts = new List<TonalBSPQueryResult>();
+        var chordContexts = new List<TonalBspQueryResult>();
 
         foreach (var (name, pitchClassSet) in progression)
         {

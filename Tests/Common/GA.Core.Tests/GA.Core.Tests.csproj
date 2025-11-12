@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
   </ItemGroup>
 
 </Project>

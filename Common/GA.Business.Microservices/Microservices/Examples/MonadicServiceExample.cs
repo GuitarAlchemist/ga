@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices.Examples;
+﻿namespace GA.Business.Core.Microservices.Microservices.Examples;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;

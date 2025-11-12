@@ -9,9 +9,9 @@ using Services;
 ///     Actor that manages a single AI agent task (spice-up, reharmonize, create)
 ///     Provides isolation, cancellation, and progress tracking for long-running AI operations
 /// </summary>
-public class AIAgentTaskActor : IActor
+public class AiAgentTaskActor : IActor
 {
-    private readonly ILogger<AIAgentTaskActor> _logger;
+    private readonly ILogger<AiAgentTaskActor> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly string _taskId;
     private CancellationTokenSource? _cancellationTokenSource;
@@ -24,10 +24,10 @@ public class AIAgentTaskActor : IActor
     private TaskState _state = TaskState.Pending;
     private string? _statusMessage;
 
-    public AIAgentTaskActor(
+    public AiAgentTaskActor(
         string taskId,
         IServiceProvider serviceProvider,
-        ILogger<AIAgentTaskActor> logger)
+        ILogger<AiAgentTaskActor> logger)
     {
         _taskId = taskId;
         _serviceProvider = serviceProvider;

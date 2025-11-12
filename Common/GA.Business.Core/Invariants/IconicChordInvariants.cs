@@ -36,7 +36,7 @@ public static class IconicChordInvariants
 
     private sealed class TheoreticalNameValidInvariant : InvariantBase<IconicChordDefinition>
     {
-        private static readonly Regex Pattern = new("^[A-G](?:#|b)?[0-9A-Za-z+#\\-]*$", RegexOptions.Compiled);
+        private static readonly Regex _pattern = new("^[A-G](?:#|b)?[0-9A-Za-z+#\\-]*$", RegexOptions.Compiled);
 
         public override string InvariantName => "TheoreticalNameValid";
         public override string Description => "Theoretical name must start with a valid pitch class.";
@@ -49,7 +49,7 @@ public static class IconicChordInvariants
                     chord.TheoreticalName ?? string.Empty);
             }
 
-            return Pattern.IsMatch(chord.TheoreticalName)
+            return _pattern.IsMatch(chord.TheoreticalName)
                 ? Success()
                 : Failure("Theoretical name must start with a valid root note (A-G with optional #/b).",
                     nameof(IconicChordDefinition.TheoreticalName),
@@ -111,7 +111,7 @@ public static class IconicChordInvariants
 
     private sealed class GenreValidInvariant : InvariantBase<IconicChordDefinition>
     {
-        private static readonly HashSet<string> KnownGenres =
+        private static readonly HashSet<string> _knownGenres =
         [
             "rock", "jazz", "blues", "metal", "folk", "country", "pop", "fusion", "classical", "latin"
         ];
@@ -127,7 +127,7 @@ public static class IconicChordInvariants
                 return Success(); // allow unspecified genre
             }
 
-            return KnownGenres.Contains(chord.Genre.Trim().ToLowerInvariant())
+            return _knownGenres.Contains(chord.Genre.Trim().ToLowerInvariant())
                 ? Success()
                 : Failure($"Genre '{chord.Genre}' is not in the recognized list.",
                     nameof(IconicChordDefinition.Genre),

@@ -9,7 +9,7 @@
 
 <ChatHeader OnNewChat="@ResetConversationAsync"/>
 
-<ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
+<ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
     <NoMessagesContent>
         <div>To get started, try asking about these example documents. You can replace these with your own data and
             replace this message.
@@ -20,14 +20,14 @@
 </ChatMessageList>
 
 <div class="chat-container">
-    <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions"/>
-    <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput"/>
+    <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions"/>
+    <ChatInput OnSend="@AddUserMessageAsync" @ref="@_chatInput"/>
     <SurveyPrompt/> @* Remove this line to eliminate the template survey message *@
 </div>
 
 @code {
 
-    private const string SystemPrompt = @"
+    private const string _systemPrompt = @"
         You are an assistant who answers questions about information you retrieve.
         Do not answer questions about anything else.
         Use only simple markdown to format your responses.
@@ -43,17 +43,17 @@
         Don't refer to the presence of citations; just emit these tags right at the end, with no surrounding text.
         ";
 
-    private readonly ChatOptions chatOptions = new();
-    private readonly List<ChatMessage> messages = new();
-    private CancellationTokenSource? currentResponseCancellation;
-    private ChatMessage? currentResponseMessage;
-    private ChatInput? chatInput;
-    private ChatSuggestions? chatSuggestions;
+    private readonly ChatOptions _chatOptions = new();
+    private readonly List<ChatMessage> _messages = new();
+    private CancellationTokenSource? _currentResponseCancellation;
+    private ChatMessage? _currentResponseMessage;
+    private ChatInput? _chatInput;
+    private ChatSuggestions? _chatSuggestions;
 
     protected override void OnInitialized()
     {
-        messages.Add(new(ChatRole.System, SystemPrompt));
-        chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
+        _messages.Add(new(ChatRole.System, _systemPrompt));
+        _chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)
@@ -61,50 +61,50 @@
         CancelAnyCurrentResponse();
 
         // Add the user message to the conversation
-        messages.Add(userMessage);
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Add(userMessage);
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
 
         // Stream and display a new response from the IChatClient
         var responseText = new TextContent("");
-        currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
-        currentResponseCancellation = new();
+        _currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
+        _currentResponseCancellation = new();
 
         // Pass a copy of the messages then add messages to the list while handling the streaming responses
-        var requestMessages = messages.ToArray();
+        var requestMessages = _messages.ToArray();
 
-        await foreach (var update in ChatClient.GetStreamingResponseAsync(requestMessages, chatOptions, currentResponseCancellation.Token))
+        await foreach (var update in ChatClient.GetStreamingResponseAsync(requestMessages, _chatOptions, _currentResponseCancellation.Token))
         {
-            AddMessages(messages, update, c => c is not TextContent);
+            AddMessages(_messages, update, c => c is not TextContent);
             responseText.Text += update.Text;
-            ChatMessageItem.NotifyChanged(currentResponseMessage);
+            ChatMessageItem.NotifyChanged(_currentResponseMessage);
         }
 
         // Store the final response in the conversation, and begin getting suggestions
-        messages.Add(currentResponseMessage!);
-        currentResponseMessage = null;
-        chatSuggestions?.Update(messages);
+        _messages.Add(_currentResponseMessage!);
+        _currentResponseMessage = null;
+        _chatSuggestions?.Update(_messages);
     }
 
     private void CancelAnyCurrentResponse()
     {
         // If a response was cancelled while streaming, include it in the conversation so it's not lost
-        if (currentResponseMessage is not null)
+        if (_currentResponseMessage is not null)
         {
-            messages.Add(currentResponseMessage);
+            _messages.Add(_currentResponseMessage);
         }
 
-        currentResponseCancellation?.Cancel();
-        currentResponseMessage = null;
+        _currentResponseCancellation?.Cancel();
+        _currentResponseMessage = null;
     }
 
     private async Task ResetConversationAsync()
     {
         CancelAnyCurrentResponse();
-        messages.Clear();
-        messages.Add(new(ChatRole.System, SystemPrompt));
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Clear();
+        _messages.Add(new(ChatRole.System, _systemPrompt));
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
     }
 
     // TODO: Needed until https://github.com/dotnet/extensions/issues/6114 is resolved, which will introduce
@@ -138,7 +138,7 @@
 
     public void Dispose()
     {
-        currentResponseCancellation?.Cancel();
+        _currentResponseCancellation?.Cancel();
     }
 
 }

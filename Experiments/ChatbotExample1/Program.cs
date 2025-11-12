@@ -15,12 +15,12 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var credential = new ApiKeyCredential(builder.Configuration["GitHubModels:Token"] ??
                                       throw new InvalidOperationException(
                                           "Missing configuration: GitHubModels:Token. See the README for details."));
-var openAIOptions = new OpenAIClientOptions
+var openAiOptions = new OpenAIClientOptions
 {
     Endpoint = new Uri("https://models.inference.ai.azure.com")
 };
 
-var ghModelsClient = new OpenAIClient(credential, openAIOptions);
+var ghModelsClient = new OpenAIClient(credential, openAiOptions);
 var chatClient = ghModelsClient.AsChatClient("gpt-4o-mini");
 var embeddingGenerator = ghModelsClient.AsEmbeddingGenerator("text-embedding-3-small");
 
@@ -59,6 +59,6 @@ app.MapRazorComponents<App>()
 // to users or could be a source of prompt injection risk.
 await DataIngestor.IngestDataAsync(
     app.Services,
-    new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
+    new PdfDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
 app.Run();

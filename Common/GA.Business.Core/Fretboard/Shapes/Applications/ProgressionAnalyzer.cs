@@ -5,21 +5,14 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Analyzes chord progressions using information theory
 /// </summary>
-public class ProgressionAnalyzer
+public class ProgressionAnalyzer(ILogger<ProgressionAnalyzer> logger)
 {
-    private readonly ILogger<ProgressionAnalyzer> _logger;
-
-    public ProgressionAnalyzer(ILogger<ProgressionAnalyzer> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Analyze a progression using information theory
     /// </summary>
     public ProgressionInfo AnalyzeProgression(ShapeGraph graph, List<FretboardShape> progression)
     {
-        _logger.LogDebug("Analyzing progression with {Count} shapes", progression.Count);
+        logger.LogDebug("Analyzing progression with {Count} shapes", progression.Count);
 
         var entropy = ComputeEntropy(progression);
         var perplexity = Math.Pow(2, entropy);
@@ -88,7 +81,7 @@ public class ProgressionAnalyzer
         if (progression.Count < 2) return 0.0;
 
         // Complexity based on transition costs
-        var Score = 0.0;
+        var score = 0.0;
         for (var i = 0; i < progression.Count - 1; i++)
         {
             var fromId = progression[i].Id;
@@ -99,12 +92,12 @@ public class ProgressionAnalyzer
                 var transition = transitions.FirstOrDefault(t => t.ToId == toId);
                 if (transition != null)
                 {
-                    Score += transition.Score;
+                    score += transition.Score;
                 }
             }
         }
 
-        return Score / (progression.Count - 1);
+        return score / (progression.Count - 1);
     }
 }
 

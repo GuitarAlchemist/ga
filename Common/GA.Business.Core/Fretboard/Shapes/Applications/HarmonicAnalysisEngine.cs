@@ -7,20 +7,11 @@ using Spectral;
 /// <summary>
 /// Comprehensive harmonic analysis engine combining all techniques
 /// </summary>
-public class HarmonicAnalysisEngine
+public class HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
 {
-    private readonly ILoggerFactory _loggerFactory;
-    private readonly SpectralGraphAnalyzer _spectralAnalyzer;
-    private readonly HarmonicDynamics _dynamicsAnalyzer;
-    private readonly ProgressionAnalyzer _progressionAnalyzer;
-
-    public HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
-    {
-        _loggerFactory = loggerFactory;
-        _spectralAnalyzer = new SpectralGraphAnalyzer(loggerFactory.CreateLogger<SpectralGraphAnalyzer>());
-        _dynamicsAnalyzer = new HarmonicDynamics(loggerFactory.CreateLogger<HarmonicDynamics>());
-        _progressionAnalyzer = new ProgressionAnalyzer(loggerFactory.CreateLogger<ProgressionAnalyzer>());
-    }
+    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new(loggerFactory.CreateLogger<SpectralGraphAnalyzer>());
+    private readonly HarmonicDynamics _dynamicsAnalyzer = new(loggerFactory.CreateLogger<HarmonicDynamics>());
+    private readonly ProgressionAnalyzer _progressionAnalyzer = new(loggerFactory.CreateLogger<ProgressionAnalyzer>());
 
     /// <summary>
     /// Perform comprehensive analysis of a shape graph
@@ -31,7 +22,7 @@ public class HarmonicAnalysisEngine
     {
         options ??= new HarmonicAnalysisOptions();
 
-        var logger = _loggerFactory.CreateLogger<HarmonicAnalysisEngine>();
+        var logger = loggerFactory.CreateLogger<HarmonicAnalysisEngine>();
         logger.LogInformation("Starting comprehensive harmonic analysis");
 
         // Run analyses in parallel
@@ -95,7 +86,7 @@ public class HarmonicAnalysisEngine
         int pathLength,
         PracticeGoal goal)
     {
-        var optimizer = new ProgressionOptimizer(_loggerFactory.CreateLogger<ProgressionOptimizer>());
+        var optimizer = new ProgressionOptimizer(loggerFactory.CreateLogger<ProgressionOptimizer>());
 
         var strategy = goal switch
         {

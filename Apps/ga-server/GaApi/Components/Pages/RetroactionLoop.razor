@@ -1,0 +1,280 @@
+﻿@page "/retroaction"
+@using GaApi.Services.AutonomousCuration
+@using GaApi.Models.AutonomousCuration
+@inject KnowledgeGapAnalyzer GapAnalyzer
+@inject ISnackbar Snackbar
+
+<PageTitle>Retroaction Loop - Guitar Alchemist</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="retroaction-loop-page pb-6">
+    <MudStack Spacing="3">
+        <!-- Control Panel -->
+        <MudPaper Elevation="1" Class="pa-3 d-flex flex-wrap gap-2 align-center justify-space-between">
+            <MudStack Spacing="1" Class="flex-wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="StartCuration" Disabled="_isRunning" Size="Size.Medium">
+                    Start
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Stop"
+                           OnClick="StopCuration" Disabled="!_isRunning" Size="Size.Medium">
+                    Stop
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="RefreshData" Disabled="_loading" Size="Size.Medium">
+                    Refresh
+                </MudButton>
+            </MudStack>
+            <MudStack Spacing="2" Class="align-center">
+                <MudChip T="string" Color="@(_isRunning ? Color.Success : Color.Default)" Variant="Variant.Outlined" Size="Size.Medium">
+                    @(_isRunning ? "Pipeline Running" : "Pipeline Idle")
+                </MudChip>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Last update: @LastUpdatedDisplay</MudText>
+            </MudStack>
+        </MudPaper>
+
+        <!-- Context + How-To -->
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudGrid Gutter="Size.Medium">
+                <MudItem xs="12" md="7">
+                    <MudText Typo="Typo.h6" GutterBottom="true">What is the Retroaction Loop?</MudText>
+                    <MudText Typo="Typo.body2">
+                        This dashboard tracks the autonomous curation pipeline that hunts for new instructional material,
+                        evaluates it, and updates the knowledge base. Use it to understand <b>where the AI is focusing</b>, which
+                        topics still have gaps, and when manual intervention is necessary.
+                    </MudText>
+                    <ul class="mud-typography-body2 pl-4 mt-2">
+                        <li>Run the pipeline (Start/Stop) whenever new YouTube/PDF sources should be ingested.</li>
+                        <li>Review the Knowledge Gaps tab to see which categories and priorities need attention.</li>
+                        <li>Use the Interventions tab when the system flags conflicting or low-confidence topics.</li>
+                    </ul>
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                        <MudText Typo="Typo.subtitle2">Objective</MudText>
+                        <MudText Typo="Typo.body2">
+                            Keep priority gaps below <b>5</b> high/critical items while maintaining an average quality score above <b>4.0</b>.
+                        </MudText>
+                        <MudDivider Class="my-2"/>
+                        <MudText Typo="Typo.subtitle2">Quick Steps</MudText>
+                        <ul class="mud-typography-body2 pl-4">
+                            <li>Start curation ➜ monitor documents processed.</li>
+                            <li>Investigate gaps that remain high priority.</li>
+                            <li>Approve/reject flagged items or add your own sources.</li>
+                        </ul>
+                    </MudAlert>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Summary Metrics -->
+        <MudGrid Gutter="Size.Small">
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="1" Class="pa-3">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Open Gaps</MudText>
+                    <MudText Typo="Typo.h5">@_knowledgeGaps.Count</MudText>
+                    <MudText Typo="Typo.caption">@HighPriorityGapCount high / @CriticalGapCount critical</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="1" Class="pa-3">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Documents Processed</MudText>
+                    <MudText Typo="Typo.h5">@TotalDocumentsProcessed</MudText>
+                    <MudText Typo="Typo.caption">@_iterations.Count iterations tracked</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="1" Class="pa-3">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Recent Decisions</MudText>
+                    <MudText Typo="Typo.h5">@_recentDecisions.Count</MudText>
+                    <MudText Typo="Typo.caption">Accepted @AcceptedDecisionCount • Rejected @RejectedDecisionCount</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="1" Class="pa-3">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Intervention Queue</MudText>
+                    <MudText Typo="Typo.h5">@PendingInterventions</MudText>
+                    <MudText Typo="Typo.caption">Manual review points waiting</MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudTabs Rounded="true" Elevation="1" Color="Color.Primary">
+            <MudTabPanel Text="Knowledge Gaps">
+                @if (_loading)
+                {
+                    <div class="d-flex justify-center pa-4">
+                        <MudProgressCircular Indeterminate="true"/>
+                    </div>
+                }
+                else if (_knowledgeGaps?.Any() == true)
+                {
+                    <MudTable Items="_knowledgeGaps" Dense="true" Hover="true" Bordered="false">
+                        <HeaderContent>
+                            <MudTh>Priority</MudTh>
+                            <MudTh>Topic</MudTh>
+                            <MudTh>Category</MudTh>
+                            <MudTh>Estimate</MudTh>
+                            <MudTh>Suggested Query</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Priority">
+                                <MudChip T="string" Color="GetPriorityColor(context.Priority)" Size="Size.Small" Variant="Variant.Outlined">
+                                    @context.Priority
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Topic">
+                                <MudTooltip Text="@context.Description">
+                                    <MudText Typo="Typo.body2">@context.Topic</MudText>
+                                </MudTooltip>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.PriorityReason</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Category">
+                                <MudText Typo="Typo.body2">@context.Category</MudText>
+                                @if (context.DependentTopics?.Any() == true)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Depends on: @string.Join(", ", context.DependentTopics)
+                                    </MudText>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Estimate">
+                                <MudText Typo="Typo.body2">@((context.EstimatedLearningTimeMinutes == 0 ? "—" : $"{context.EstimatedLearningTimeMinutes} min"))</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Suggested Query" Class="text-truncate" Style="max-width: 220px;">
+                                <MudText Typo="Typo.caption">@context.SuggestedSearchQuery</MudText>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No knowledge gaps identified yet.</MudAlert>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Iterations">
+                @if (_iterations?.Any() == true)
+                {
+                    <MudGrid>
+                        <MudItem xs="12" md="5">
+                            <MudTimeline TimelineOrientation="TimelineOrientation.Vertical">
+                                @foreach (var iteration in _iterations.Take(6))
+                                {
+                                    <MudTimelineItem Color="Color.Success" Icon="@Icons.Material.Filled.Task">
+                                        <ItemContent>
+                                            <MudText Typo="Typo.body2">Iteration #@iteration.IterationNumber</MudText>
+                                            <MudText Typo="Typo.caption">@iteration.Timestamp.ToLocalTime().ToString("g")</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @iteration.DocumentsProcessed documents • Avg quality @iteration.AverageQuality.ToString("F2")
+                                            </MudText>
+                                        </ItemContent>
+                                    </MudTimelineItem>
+                                }
+                            </MudTimeline>
+                        </MudItem>
+                        <MudItem xs="12" md="7">
+                            <MudPaper Elevation="0" Class="pa-2">
+                                <MudText Typo="Typo.subtitle2">Quality Trend</MudText>
+                                <MudProgressLinear Color="Color.Success" Value="@_averageQuality" Max="5" Class="my-2"/>
+                                <MudText Typo="Typo.caption">@_averageQuality.ToString("F2") / 5.0 average quality</MudText>
+                                <MudDivider Class="my-2"/>
+                                <MudText Typo="Typo.subtitle2">Coverage</MudText>
+                                <MudProgressLinear Color="Color.Info" Value="@_knowledgeCoverage" Max="100" Class="my-2"/>
+                                <MudText Typo="Typo.caption">@_knowledgeCoverage.ToString("F0")% of target coverage</MudText>
+                                <MudDivider Class="my-2"/>
+                                <MudText Typo="Typo.subtitle2">Insight Quality</MudText>
+                                <MudProgressLinear Color="Color.Warning" Value="@_insightQuality" Max="100" Class="my-2"/>
+                                <MudText Typo="Typo.caption">@_insightQuality.ToString("F0")% expert approval</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No iterations recorded yet.</MudAlert>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Decisions">
+                @if (_recentDecisions?.Any() == true)
+                {
+                    <MudTable Items="_recentDecisions" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>Time</MudTh>
+                            <MudTh>Decision</MudTh>
+                            <MudTh>Source</MudTh>
+                            <MudTh>Confidence</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Time">@context.Timestamp.ToLocalTime().ToString("g")</MudTd>
+                            <MudTd DataLabel="Decision">
+                                <MudText Typo="Typo.body2">@context.Decision</MudText>
+                                @if (!string.IsNullOrWhiteSpace(context.Details))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Details</MudText>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Source">
+                                @if (!string.IsNullOrWhiteSpace(context.SourceUrl))
+                                {
+                                    <MudLink Href="@context.SourceUrl" Target="_blank" Icon="@Icons.Material.Filled.OpenInNew">
+                                        @context.Source
+                                    </MudLink>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2">@context.Source</MudText>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Confidence">
+                                <MudProgressLinear Value="@(context.Confidence * 100)" Max="100" Color="Color.Primary" Class="my-1"/>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No curation decisions recorded yet.</MudAlert>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Interventions">
+                @if (_interventionPoints?.Any() == true)
+                {
+                    <MudExpansionPanels Elevation="0">
+                        @foreach (var point in _interventionPoints)
+                        {
+                            <MudExpansionPanel Text="@point.Description" Icon="@Icons.Material.Filled.Flag">
+                                <MudText Typo="Typo.body2">@point.Reason</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Severity: @point.Severity</MudText>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-2"
+                                           OnClick="@(() => HandleIntervention(point))">
+                                    Review Intervention
+                                </MudButton>
+                            </MudExpansionPanel>
+                        }
+                    </MudExpansionPanels>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Success">No manual intervention required at this time.</MudAlert>
+                }
+            </MudTabPanel>
+        </MudTabs>
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Knowledge Convergence</MudText>
+            @if (!string.IsNullOrEmpty(_convergenceChartHtml))
+            {
+                <div class="plotly-chart">
+                    @((MarkupString)_convergenceChartHtml)
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Not enough iteration data to render convergence trend.
+                </MudText>
+            }
+        </MudPaper>
+    </MudStack>
+</MudContainer>

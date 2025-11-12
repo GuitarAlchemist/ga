@@ -1,4 +1,4 @@
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <div class="message-list-container">
     <chat-messages class="page-width message-list" in-progress="@(InProgressMessage is not null)">
@@ -33,7 +33,7 @@
         if (firstRender)
         {
             // Activates the auto-scrolling behavior
-            await JS.InvokeVoidAsync("import", "./Components/Pages/Chat/ChatMessageList.razor.js");
+            await Js.InvokeVoidAsync("import", "./Components/Pages/Chat/ChatMessageList.razor.js");
         }
     }
 

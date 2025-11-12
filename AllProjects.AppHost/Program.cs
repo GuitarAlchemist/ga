@@ -21,6 +21,12 @@ var redis = builder.AddRedis("redis")
     .WithRedisCommander()
     .WithDataVolume("ga-redis-data");
 
+// Add FalkorDB (Redis-compatible graph database for Graphiti)
+// Changed port from 6379 to 6380 to avoid conflict with Docker/WSL
+var falkordb = builder.AddContainer("falkordb", "falkordb/falkordb", "edge")
+    .WithHttpEndpoint(6380, 6379, "tcp")
+    .WithBindMount("ga-falkordb-data", "/data");
+
 // Add MongoDB with MongoExpress UI
 var mongodb = builder.AddMongoDB("mongodb")
     .WithMongoExpress()
@@ -37,7 +43,9 @@ builder.AddContainer("graphiti-service", "ga-graphiti-service")
     .WithEnvironment("API_PORT", "8000")
     .WithEnvironment("DEBUG", "false")
     .WithEnvironment("MONGODB_URI", mongoDatabase)
-    .WithEnvironment("REDIS_URL", redis)
+    .WithEnvironment("FALKORDB_HOST", "falkordb")
+    .WithEnvironment("FALKORDB_PORT", "6380")
+    .WithEnvironment("FALKORDB_DATABASE", "graphiti")
     .WithExternalHttpEndpoints();
 
 // Add HandPoseService (Python-based hand pose detection using MediaPipe)
@@ -59,10 +67,70 @@ builder.AddContainer("sound-bank-service", "sound-bank-service")
     .WithBindMount("ga-sound-samples", "/app/samples")
     .WithExternalHttpEndpoints();
 
-// Add GaApi (main API server)
+// ============================================================================
+// Microservices
+// ============================================================================
+
+// Add GA.MusicTheory.Service (Port 7001)
+var musicTheoryService = builder.AddProject("music-theory-service", @"..\Apps\ga-server\GA.MusicTheory.Service\GA.MusicTheory.Service.csproj")
+    .WithReference(mongoDatabase)
+    .WithReference(redis)
+    .WithExternalHttpEndpoints();
+
+// Add GA.BSP.Service (Port 7002)
+// TODO: Uncomment when service implementation is complete
+// var bspService = builder.AddProject("bsp-service", @"..\Apps\ga-server\GA.BSP.Service\GA.BSP.Service.csproj")
+//     .WithReference(mongoDatabase)
+//     .WithReference(redis)
+//     .WithExternalHttpEndpoints();
+
+// Add GA.AI.Service (Port 7003)
+// TODO: Uncomment when service implementation is complete
+// var aiService = builder.AddProject("ai-service", @"..\Apps\ga-server\GA.AI.Service\GA.AI.Service.csproj")
+//     .WithReference(mongoDatabase)
+//     .WithReference(redis)
+//     .WithExternalHttpEndpoints();
+
+// Add GA.Knowledge.Service (Port 7004)
+// TODO: Uncomment when service implementation is complete
+// var knowledgeService = builder.AddProject("knowledge-service", @"..\Apps\ga-server\GA.Knowledge.Service\GA.Knowledge.Service.csproj")
+//     .WithReference(mongoDatabase)
+//     .WithReference(redis)
+//     .WithExternalHttpEndpoints();
+
+// Add GA.Fretboard.Service (Port 7005)
+// TODO: Uncomment when service implementation is complete
+// var fretboardService = builder.AddProject("fretboard-service", @"..\Apps\ga-server\GA.Fretboard.Service\GA.Fretboard.Service.csproj")
+//     .WithReference(mongoDatabase)
+//     .WithReference(redis)
+//     .WithExternalHttpEndpoints();
+
+// Add GA.Analytics.Service (Port 7006)
+// TODO: Uncomment when service implementation is complete
+// var analyticsService = builder.AddProject("analytics-service", @"..\Apps\ga-server\GA.Analytics.Service\GA.Analytics.Service.csproj")
+//     .WithReference(mongoDatabase)
+//     .WithReference(redis)
+//     .WithExternalHttpEndpoints();
+
+// ============================================================================
+// API Gateway
+// ============================================================================
+
+// Add GaApi (API Gateway with YARP reverse proxy)
 builder.AddProject("gaapi", @"..\Apps\ga-server\GaApi\GaApi.csproj")
     .WithReference(mongoDatabase)
     .WithReference(redis)
+    .WithReference(musicTheoryService)
+    // TODO: Uncomment when service implementation is complete
+    // .WithReference(bspService)
+    // TODO: Uncomment when service implementation is complete
+    // .WithReference(aiService)
+    // TODO: Uncomment when service implementation is complete
+    // .WithReference(knowledgeService)
+    // TODO: Uncomment when service implementation is complete
+    // .WithReference(fretboardService)
+    // TODO: Uncomment when service implementation is complete
+    // .WithReference(analyticsService)
     .WithExternalHttpEndpoints();
 
 // Add GuitarAlchemistChatbot (Blazor chatbot)

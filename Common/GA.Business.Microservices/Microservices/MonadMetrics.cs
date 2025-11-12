@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices;
+﻿namespace GA.Business.Core.Microservices.Microservices;
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
@@ -9,58 +9,58 @@ using System.Diagnostics.Metrics;
 /// </summary>
 public class MonadMetrics
 {
-    private static readonly Meter Meter = new("GA.Monads", "1.0.0");
+    private static readonly Meter _meter = new("GA.Monads", "1.0.0");
 
     // Counters for monad operations
-    private static readonly Counter<long> TrySuccessCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _trySuccessCounter = _meter.CreateCounter<long>(
         "monad.try.success",
         description: "Number of successful Try monad operations");
 
-    private static readonly Counter<long> TryFailureCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _tryFailureCounter = _meter.CreateCounter<long>(
         "monad.try.failure",
         description: "Number of failed Try monad operations");
 
-    private static readonly Counter<long> OptionSomeCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _optionSomeCounter = _meter.CreateCounter<long>(
         "monad.option.some",
         description: "Number of Option.Some values");
 
-    private static readonly Counter<long> OptionNoneCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _optionNoneCounter = _meter.CreateCounter<long>(
         "monad.option.none",
         description: "Number of Option.None values");
 
-    private static readonly Counter<long> ResultSuccessCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _resultSuccessCounter = _meter.CreateCounter<long>(
         "monad.result.success",
         description: "Number of successful Result monad operations");
 
-    private static readonly Counter<long> ResultFailureCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _resultFailureCounter = _meter.CreateCounter<long>(
         "monad.result.failure",
         description: "Number of failed Result monad operations");
 
-    private static readonly Counter<long> ValidationSuccessCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _validationSuccessCounter = _meter.CreateCounter<long>(
         "monad.validation.success",
         description: "Number of successful Validation monad operations");
 
-    private static readonly Counter<long> ValidationFailureCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _validationFailureCounter = _meter.CreateCounter<long>(
         "monad.validation.failure",
         description: "Number of failed Validation monad operations");
 
     // Histograms for execution times
-    private static readonly Histogram<double> TryExecutionTime = Meter.CreateHistogram<double>(
+    private static readonly Histogram<double> _tryExecutionTime = _meter.CreateHistogram<double>(
         "monad.try.execution_time",
         "ms",
         "Execution time of Try monad operations");
 
-    private static readonly Histogram<double> ResultExecutionTime = Meter.CreateHistogram<double>(
+    private static readonly Histogram<double> _resultExecutionTime = _meter.CreateHistogram<double>(
         "monad.result.execution_time",
         "ms",
         "Execution time of Result monad operations");
 
     // Cache metrics
-    private static readonly Counter<long> CacheHitCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _cacheHitCounter = _meter.CreateCounter<long>(
         "monad.cache.hit",
         description: "Number of cache hits");
 
-    private static readonly Counter<long> CacheMissCounter = Meter.CreateCounter<long>(
+    private static readonly Counter<long> _cacheMissCounter = _meter.CreateCounter<long>(
         "monad.cache.miss",
         description: "Number of cache misses");
 
@@ -69,8 +69,8 @@ public class MonadMetrics
     /// </summary>
     public static void RecordTrySuccess(string operation, double executionTimeMs)
     {
-        TrySuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
-        TryExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
+        _trySuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
+        _tryExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -78,10 +78,10 @@ public class MonadMetrics
     /// </summary>
     public static void RecordTryFailure(string operation, string errorType, double executionTimeMs)
     {
-        TryFailureCounter.Add(1,
+        _tryFailureCounter.Add(1,
             new KeyValuePair<string, object?>("operation", operation),
             new KeyValuePair<string, object?>("error_type", errorType));
-        TryExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
+        _tryExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordOptionSome(string operation)
     {
-        OptionSomeCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
+        _optionSomeCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordOptionNone(string operation)
     {
-        OptionNoneCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
+        _optionNoneCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -105,8 +105,8 @@ public class MonadMetrics
     /// </summary>
     public static void RecordResultSuccess(string operation, double executionTimeMs)
     {
-        ResultSuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
-        ResultExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
+        _resultSuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
+        _resultExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -114,10 +114,10 @@ public class MonadMetrics
     /// </summary>
     public static void RecordResultFailure(string operation, string errorType, double executionTimeMs)
     {
-        ResultFailureCounter.Add(1,
+        _resultFailureCounter.Add(1,
             new KeyValuePair<string, object?>("operation", operation),
             new KeyValuePair<string, object?>("error_type", errorType));
-        ResultExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
+        _resultExecutionTime.Record(executionTimeMs, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordValidationSuccess(string operation)
     {
-        ValidationSuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
+        _validationSuccessCounter.Add(1, new KeyValuePair<string, object?>("operation", operation));
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordValidationFailure(string operation, int errorCount)
     {
-        ValidationFailureCounter.Add(1,
+        _validationFailureCounter.Add(1,
             new KeyValuePair<string, object?>("operation", operation),
             new KeyValuePair<string, object?>("error_count", errorCount));
     }
@@ -143,7 +143,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordCacheHit(string cacheKey)
     {
-        CacheHitCounter.Add(1, new KeyValuePair<string, object?>("cache_key", cacheKey));
+        _cacheHitCounter.Add(1, new KeyValuePair<string, object?>("cache_key", cacheKey));
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public class MonadMetrics
     /// </summary>
     public static void RecordCacheMiss(string cacheKey)
     {
-        CacheMissCounter.Add(1, new KeyValuePair<string, object?>("cache_key", cacheKey));
+        _cacheMissCounter.Add(1, new KeyValuePair<string, object?>("cache_key", cacheKey));
     }
 
     /// <summary>

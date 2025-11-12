@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices;
+﻿namespace GA.Business.Core.Microservices.Microservices;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

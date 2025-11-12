@@ -80,7 +80,14 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
 
     #region IStaticValueObjectList<Finger> Members
 
+    /// <summary>
+    /// Gets all Finger instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<Finger> Items => ValueObjectUtils<Finger>.Items;
+
+    /// <summary>
+    /// Gets all Finger values (automatically memoized).
+    /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<Finger>.Values;
 
     #endregion

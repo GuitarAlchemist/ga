@@ -1,11 +1,11 @@
 namespace GaApi.Controllers;
 
-using GA.Business.AI.AI.HandPose;
-using GA.Business.AI.AI.SoundBank;
+using GA.Business.AI.HandPose;
+using GA.Business.AI.SoundBank;
 
 /// <summary>
-///     Controller for guitar playing simulation using hand pose detection and AI sound generation
-///     Orchestrates HandPoseService and SoundBankService
+///     Controller for guitar playing simulation using hand pose detection, AI sound generation,
+///     and advanced fretboard analysis (ergonomics, spectral analysis, progression optimization)
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -315,4 +315,5 @@ public class GuitarPlayingController(
             overall = handPoseHealthy && soundBankHealthy ? "healthy" : "degraded"
         });
     }
+
 }

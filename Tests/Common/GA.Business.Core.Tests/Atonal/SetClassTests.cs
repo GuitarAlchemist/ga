@@ -91,4 +91,37 @@ public class SetClassTests
         // Assert
         Assert.That(setClass1, Is.Not.EqualTo(setClass2)); // Major and diminished triads are different set classes
     }
+
+    [Test(TestOf = typeof(SetClass))]
+    public void GetMagnitudeSpectrum_IsInvariantUnderTransposition()
+    {
+        // Arrange
+        var cMajorTriad = new SetClass(AccidentedNoteCollection.Parse("C E G").ToPitchClassSet());
+        var dMajorTriad = new SetClass(AccidentedNoteCollection.Parse("D F# A").ToPitchClassSet());
+
+        // Act
+        var cSpectrum = cMajorTriad.GetMagnitudeSpectrum();
+        var dSpectrum = dMajorTriad.GetMagnitudeSpectrum();
+
+        // Assert
+        Assert.That(cSpectrum.Length, Is.EqualTo(dSpectrum.Length));
+        for (var i = 0; i < cSpectrum.Length; i++)
+        {
+            Assert.That(cSpectrum[i], Is.EqualTo(dSpectrum[i]).Within(1e-9),
+                $"Magnitude mismatch at bin {i}");
+        }
+    }
+
+    [Test(TestOf = typeof(SetClass))]
+    public void GetSpectralCentroid_ReturnsExpectedValueForSingletonSet()
+    {
+        // Arrange
+        var singleton = new SetClass(AccidentedNoteCollection.Parse("C").ToPitchClassSet());
+        var spectrum = singleton.GetMagnitudeSpectrum();
+        // Act
+        var centroid = singleton.GetSpectralCentroid();
+
+        // Assert
+        Assert.That(centroid, Is.EqualTo(5.5).Within(1e-6));
+    }
 }

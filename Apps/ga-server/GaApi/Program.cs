@@ -1,18 +1,18 @@
 using System.Net;
 using System.Reflection;
+using AllProjects.ServiceDefaults;
+using GA.Business.Core.Microservices.Microservices;
 using GA.Data.EntityFramework;
 using GaApi.Configuration;
-using GaApi.Controllers;
 using GaApi.Extensions;
-// TODO: Add GraphQL.Queries when available
-// using GaApi.GraphQL.Queries;
+using GaApi.GraphQL.Mutations;
+using GaApi.GraphQL.Queries;
 using GaApi.Hubs;
 using GaApi.Models;
 using GaApi.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using MudBlazor.Services;
 using Polly;
 using Polly.Extensions.Http;
 using Path = System.IO.Path;
@@ -69,33 +69,38 @@ builder.Services.AddSingleton<LocalEmbeddingService>();
 builder.Services.AddSingleton<VectorSearchService>();
 
 // Register ILGPU GPU acceleration services
-builder.Services.AddSingleton<IILGPUContextManager, ILGPUContextManager>();
-builder.Services.AddScoped<IVectorSearchStrategy, ILGPUVectorSearchStrategy>();
+builder.Services.AddSingleton<IIlgpuContextManager, IlgpuContextManager>();
+builder.Services.AddSingleton(sp =>
+{
+    var contextManager = sp.GetRequiredService<IIlgpuContextManager>();
+    return contextManager.PrimaryAccelerator;
+});
+builder.Services.AddSingleton<IVectorSearchStrategy, IlgpuVectorSearchStrategy>();
 
-// TODO: Add vector search services when available
-// builder.Services.AddVectorSearchServices();
+// Register vector search services
+builder.Services.AddVectorSearchServices();
 
 // TODO: Add chord services when available
 // builder.Services.AddChordServices();
 
-// TODO: Register Graphiti services when available
-// builder.Services.Configure<GA.Business.Core.Graphiti.Services.GraphitiOptions>(
-//     builder.Configuration.GetSection("Graphiti"));
+// Register Graphiti services
+builder.Services.Configure<GA.Business.Graphiti.Services.GraphitiOptions>(
+    builder.Configuration.GetSection("Graphiti"));
 
-// TODO: Add Graphiti service when GA.Business.Core.Graphiti is available
-// builder.Services
-//     .AddHttpClient<GA.Business.Core.Graphiti.Services.IGraphitiService,
-//         GA.Business.Core.Graphiti.Services.GraphitiService>(client =>
-//     {
-//         // When running in Aspire, the service URL will be injected via environment variables
-//         // When running standalone, it will use the appsettings.json BaseUrl
-//         var graphitiUrl = builder.Configuration["services:graphiti-service:http:0"]
-//                           ?? builder.Configuration["Graphiti:BaseUrl"]
-//                           ?? "http://localhost:8000";
-//
-//         client.BaseAddress = new Uri(graphitiUrl);
-//         client.Timeout = TimeSpan.FromSeconds(30);
-//     });
+// Add Graphiti service
+builder.Services
+    .AddHttpClient<GA.Business.Graphiti.Services.IGraphitiService,
+        GA.Business.Graphiti.Services.GraphitiService>(client =>
+    {
+        // When running in Aspire, the service URL will be injected via environment variables
+        // When running standalone, it will use the appsettings.json BaseUrl
+        var graphitiUrl = builder.Configuration["services:graphiti-service:http:0"]
+                          ?? builder.Configuration["Graphiti:BaseUrl"]
+                          ?? "http://localhost:8000";
+
+        client.BaseAddress = new Uri(graphitiUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
 
 // Register HttpClient for service-to-service communication
 builder.Services.AddHttpClient();
@@ -108,6 +113,12 @@ builder.Services.AddHostedService<RoomGenerationBackgroundService>();
 
 // Register chord query planner
 builder.Services.AddChordQueryServices();
+
+// Register AI and ML services (includes autonomous curation and document processing)
+builder.Services.AddAiServices(builder.Configuration);
+
+// Register voicing search services (GPU-accelerated semantic search for guitar voicings)
+builder.Services.AddVoicingSearchServices(builder.Configuration);
 
 // TODO: Add fretboard analysis services when available
 // builder.Services.AddFretboardAnalysisServices();
@@ -124,15 +135,11 @@ builder.Services.AddCachingServices();
 // Add HTTP client for external services
 builder.Services.AddHttpClient();
 
-// TODO: Add Ollama services when available
-// builder.Services.AddOllamaServices(builder.Configuration);
+// Ollama services are now registered via AddAIServices()
 
-// TODO: Add Grothendieck services when available
-// builder.Services.AddGrothendieckServices();
-
-// Register AI and machine learning services
-// TODO: Add AI services when available
-// builder.Services.AddAIServices();
+// Register Grothendieck service for atonal analysis
+builder.Services.AddScoped<GA.Business.Core.Atonal.Grothendieck.IGrothendieckService,
+    GA.Business.Core.Atonal.Grothendieck.GrothendieckService>();
 
 // TODO: Add Proto.Actor system when available
 // builder.Services.AddSingleton<ActorSystemManager>();
@@ -207,10 +214,25 @@ builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
 
+// Add Blazor Server and MudBlazor
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomRight;
+});
+
+// Add YARP Reverse Proxy for API Gateway
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 // Add GraphQL services
 builder.Services
     .AddGraphQLServer()
     .AddQueryType(d => d.Name("Query"))
+    .AddMutationType(d => d.Name("Mutation"))
+    .AddTypeExtension<DocumentQuery>()
+    .AddTypeExtension<DocumentMutation>()
     // TODO: Add FretboardQuery when available
     // .AddTypeExtension<FretboardQuery>()
     // TODO: Add MusicHierarchyQuery when available
@@ -280,7 +302,7 @@ New microservices for interactive guitar playing:
     }
 
     // Add example schemas for monad patterns
-    c.MapType<GA.Business.Core.Microservices.Option<object>>(() => new OpenApiSchema
+    c.MapType<Option<object>>(() => new OpenApiSchema
     {
         Type = "object",
         Description = "Option monad - represents an optional value (Some/None)",
@@ -417,8 +439,14 @@ app.UseCors("AllowAll");
 // TODO: Fix rate limiting for .NET 9 - API changed
 // app.UseRateLimiter();
 
+// Enable static files for Blazor
+app.UseStaticFiles();
+app.UseAntiforgery();
 
 app.MapControllers();
+
+// Map YARP Reverse Proxy routes (API Gateway)
+app.MapReverseProxy();
 
 // Map GraphQL endpoint
 app.MapGraphQL();
@@ -428,11 +456,15 @@ app.MapHub<ChatbotHub>("/hubs/chatbot");
 // TODO: Add ConfigurationUpdateHub when available
 // app.MapHub<ConfigurationUpdateHub>("/hubs/configuration");
 
+// Map Blazor components
+app.MapRazorComponents<GaApi.Components.App>()
+    .AddInteractiveServerRenderMode();
+
 // Map Aspire default endpoints (health checks, liveness)
 app.MapDefaultEndpoints();
 
-// Add health check endpoints
-app.MapGet("/", () => new
+// Add API info endpoint
+app.MapGet("/api", () => new
 {
     message = "Guitar Alchemist API",
     version = "1.0.0",
@@ -458,6 +490,9 @@ static IAsyncPolicy<HttpResponseMessage> CreateCircuitBreakerPolicy()
 }
 
 // Make the implicit Program class public for integration testing
-public partial class Program
+namespace GaApi
 {
+    public partial class Program
+    {
+    }
 }

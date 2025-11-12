@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Analytics;
+﻿namespace GA.Business.Analytics.Analytics;
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;

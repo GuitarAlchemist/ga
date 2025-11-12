@@ -47,7 +47,7 @@ public static class GuitarTechniqueInvariants
 
     private sealed class CategoryInvariant : InvariantBase<GuitarTechniqueDefinition>
     {
-        private static readonly HashSet<string> Allowed =
+        private static readonly HashSet<string> _allowed =
         [
             "legato", "picking", "rhythm", "harmony", "improvisation", "theory"
         ];
@@ -63,7 +63,7 @@ public static class GuitarTechniqueInvariants
                 return Success();
             }
 
-            return Allowed.Contains(technique.Category.Trim().ToLowerInvariant())
+            return _allowed.Contains(technique.Category.Trim().ToLowerInvariant())
                 ? Success()
                 : Failure($"Technique category '{technique.Category}' is not recognized.",
                     nameof(GuitarTechniqueDefinition.Category),

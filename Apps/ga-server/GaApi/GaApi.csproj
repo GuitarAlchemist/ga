@@ -21,6 +21,7 @@
     <PackageReference Include="ILGPU" Version="1.5.1"/>
     <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
     <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251028.1"/>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.10"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10"/>
     <PackageReference Include="Microsoft.DeepDev.TokenizerLib" Version="1.3.3"/>
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.10"/>
@@ -28,11 +29,14 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.0"/>
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="1.0.2"/>
     <PackageReference Include="MongoDB.Driver" Version="3.5.0"/>
+    <PackageReference Include="MudBlazor" Version="8.14.0"/>
     <PackageReference Include="OllamaSharp" Version="5.4.8"/>
+    <PackageReference Include="Plotly.NET" Version="4.1.0"/>
     <PackageReference Include="Proto.Actor" Version="1.8.0"/>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0"/>
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.9.0"/>
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1"/>
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.2.0"/>
   </ItemGroup>
   <ItemGroup>
     <!-- Exclude CUDA folder from build -->
@@ -82,11 +86,13 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Analytics\GA.Business.Analytics.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/>
+    <!-- TODO: Create this project when needed -->
+    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Business.Graphiti\GA.Business.Graphiti.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Microservices\GA.Business.Microservices.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj"/>
+    <!-- TODO: Create this project when needed -->
+    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.MusicTheory.DSL\GA.MusicTheory.DSL.fsproj"/>

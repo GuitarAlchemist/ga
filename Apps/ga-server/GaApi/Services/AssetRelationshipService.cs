@@ -14,7 +14,7 @@ public class AssetRelationshipService : IAssetRelationshipService
     public AssetRelationshipService()
     {
         _assetDisplayNames = InitializeAssetDisplayNames();
-        _assetUiMetadata = InitializeAssetUIMetadata();
+        _assetUiMetadata = InitializeAssetUiMetadata();
         _relationships = InitializeRelationships();
     }
 
@@ -162,7 +162,7 @@ public class AssetRelationshipService : IAssetRelationshipService
         };
     }
 
-    private Dictionary<string, AssetNodeUiMetadata> InitializeAssetUIMetadata()
+    private Dictionary<string, AssetNodeUiMetadata> InitializeAssetUiMetadata()
     {
         return new Dictionary<string, AssetNodeUiMetadata>
         {

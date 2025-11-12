@@ -50,11 +50,11 @@ internal class Program
 
         var chordVoicings = new[]
         {
-            ("C Major (Open)", CreatePositions(new[] { (3, 2), (2, 1), (1, 0) })),
-            ("G Major (Open)", CreatePositions(new[] { (6, 3), (1, 3), (5, 2) })),
-            ("F Major (Barre)", CreatePositions(new[] { (6, 1), (5, 1), (4, 3), (3, 3), (2, 2), (1, 1) })),
-            ("Cmaj7 (Jazz)", CreatePositions(new[] { (4, 3), (3, 5), (2, 5), (1, 4) })),
-            ("Em7b5 (Jazz)", CreatePositions(new[] { (4, 2), (3, 2), (2, 3), (1, 3) }))
+            ("C Major (Open)", CreatePositions([(3, 2), (2, 1), (1, 0)])),
+            ("G Major (Open)", CreatePositions([(6, 3), (1, 3), (5, 2)])),
+            ("F Major (Barre)", CreatePositions([(6, 1), (5, 1), (4, 3), (3, 3), (2, 2), (1, 1)])),
+            ("Cmaj7 (Jazz)", CreatePositions([(4, 3), (3, 5), (2, 5), (1, 4)])),
+            ("Em7b5 (Jazz)", CreatePositions([(4, 2), (3, 2), (2, 3), (1, 3)]))
         };
 
         var table = new Table();
@@ -88,7 +88,7 @@ internal class Program
         AnsiConsole.MarkupLine("[bold blue]🦴 Biomechanical Analysis[/]\n");
 
         var handModel = HandModel.CreateStandardAdult();
-        var testPositions = CreatePositions(new[] { (6, 1), (5, 1), (4, 3), (3, 3), (2, 2), (1, 1) }); // F major barre
+        var testPositions = CreatePositions([(6, 1), (5, 1), (4, 3), (3, 3), (2, 2), (1, 1)]); // F major barre
 
         AnsiConsole.MarkupLine("[yellow]Analyzing F Major Barre Chord...[/]\n");
 
@@ -132,10 +132,10 @@ internal class Program
 
         var voicings = new[]
         {
-            ("Open Position", CreatePositions(new[] { (4, 2), (3, 0), (2, 1), (1, 0) })),
-            ("8th Fret Barre", CreatePositions(new[] { (4, 10), (3, 9), (2, 9), (1, 8) })),
-            ("Jazz Voicing", CreatePositions(new[] { (4, 3), (3, 5), (2, 5), (1, 4) })),
-            ("Rootless Voicing", CreatePositions(new[] { (4, 3), (3, 5), (2, 4), (1, 3) }))
+            ("Open Position", CreatePositions([(4, 2), (3, 0), (2, 1), (1, 0)])),
+            ("8th Fret Barre", CreatePositions([(4, 10), (3, 9), (2, 9), (1, 8)])),
+            ("Jazz Voicing", CreatePositions([(4, 3), (3, 5), (2, 5), (1, 4)])),
+            ("Rootless Voicing", CreatePositions([(4, 3), (3, 5), (2, 4), (1, 3)]))
         };
 
         var table = new Table();
@@ -169,11 +169,11 @@ internal class Program
         var scalePatterns = new[]
         {
             ("G Major - Pattern 1",
-                CreateScalePositions(new[] { (6, 3), (5, 0), (5, 2), (4, 0), (4, 2), (3, 0), (3, 2) })),
+                CreateScalePositions([(6, 3), (5, 0), (5, 2), (4, 0), (4, 2), (3, 0), (3, 2)])),
             ("G Major - Pattern 2",
-                CreateScalePositions(new[] { (5, 2), (5, 5), (4, 2), (4, 4), (3, 2), (3, 4), (2, 2) })),
-            ("G Pentatonic", CreateScalePositions(new[] { (6, 3), (5, 0), (4, 0), (3, 0), (2, 3), (1, 3) })),
-            ("G Blues Scale", CreateScalePositions(new[] { (6, 3), (5, 0), (4, 1), (4, 2), (3, 0), (2, 3) }))
+                CreateScalePositions([(5, 2), (5, 5), (4, 2), (4, 4), (3, 2), (3, 4), (2, 2)])),
+            ("G Pentatonic", CreateScalePositions([(6, 3), (5, 0), (4, 0), (3, 0), (2, 3), (1, 3)])),
+            ("G Blues Scale", CreateScalePositions([(6, 3), (5, 0), (4, 1), (4, 2), (3, 0), (2, 3)]))
         };
 
         var table = new Table();
@@ -239,10 +239,12 @@ internal class Program
     // Helper methods
     private static ImmutableArray<Position> CreatePositions(IEnumerable<(int String, int Fret)> positions)
     {
-        return positions.Select(p => new Position.Played(
-            new PositionLocation(new Str(p.String), new Fret(p.Fret)),
-            new MidiNote(60 + p.Fret) // Simplified MIDI note calculation
-        )).ToImmutableArray<Position>();
+        return [
+            ..positions.Select(p => new Position.Played(
+                new PositionLocation(new Str(p.String), new Fret(p.Fret)),
+                new MidiNote(60 + p.Fret) // Simplified MIDI note calculation
+            ))
+        ];
     }
 
     private static ImmutableArray<Position> CreateScalePositions(IEnumerable<(int String, int Fret)> positions)

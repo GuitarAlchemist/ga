@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Analytics;
+namespace GA.Business.Analytics.Analytics;
 
 /// <summary>
 ///     Analytics data for a specific invariant

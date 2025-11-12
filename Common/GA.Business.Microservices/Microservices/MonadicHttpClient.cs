@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices;
+﻿namespace GA.Business.Core.Microservices.Microservices;
 
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;

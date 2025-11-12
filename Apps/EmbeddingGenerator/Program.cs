@@ -25,7 +25,7 @@ internal class Program
         var embeddingModel = config["OpenAI:Model"]!;
         var batchSize = int.Parse(config["EmbeddingOptions:BatchSize"]!);
         var maxConcurrency = int.Parse(config["EmbeddingOptions:MaxConcurrency"]!);
-        var useOpenAI = bool.Parse(config["EmbeddingOptions:UseOpenAI"]!);
+        var useOpenAi = bool.Parse(config["EmbeddingOptions:UseOpenAI"]!);
 
         AnsiConsole.Write(
             new FigletText("Embedding Generator")
@@ -67,7 +67,7 @@ internal class Program
 
         // Initialize OpenAI client if needed
         Azure.AI.OpenAI.AzureOpenAIClient? openAiClient = null;
-        if (useOpenAI)
+        if (useOpenAi)
         {
             if (string.IsNullOrEmpty(openAiApiKey))
             {

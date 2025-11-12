@@ -5,7 +5,7 @@ using Models;
 /// <summary>
 ///     Base message for AI agent task actor
 /// </summary>
-public abstract record AIAgentMessage;
+public abstract record AiAgentMessage;
 
 /// <summary>
 ///     Start a new AI agent task
@@ -15,12 +15,12 @@ public sealed record StartAgentTask(
     string AgentType, // "spice-up", "reharmonize", "create"
     object Request,
     CancellationToken CancellationToken
-) : AIAgentMessage;
+) : AiAgentMessage;
 
 /// <summary>
 ///     Get task status
 /// </summary>
-public sealed record GetTaskStatus(string TaskId) : AIAgentMessage;
+public sealed record GetTaskStatus(string TaskId) : AiAgentMessage;
 
 /// <summary>
 ///     Task status response
@@ -49,7 +49,7 @@ public enum TaskState
 /// <summary>
 ///     Cancel a running task
 /// </summary>
-public sealed record CancelTask(string TaskId) : AIAgentMessage;
+public sealed record CancelTask(string TaskId) : AiAgentMessage;
 
 /// <summary>
 ///     Task completed successfully
@@ -57,7 +57,7 @@ public sealed record CancelTask(string TaskId) : AIAgentMessage;
 public sealed record TaskCompleted(
     string TaskId,
     GuitarAgentResponse Result
-) : AIAgentMessage;
+) : AiAgentMessage;
 
 /// <summary>
 ///     Task failed
@@ -66,7 +66,7 @@ public sealed record TaskFailed(
     string TaskId,
     string ErrorMessage,
     Exception? Exception = null
-) : AIAgentMessage;
+) : AiAgentMessage;
 
 /// <summary>
 ///     Update task progress
@@ -75,12 +75,12 @@ public sealed record UpdateProgress(
     string TaskId,
     double Progress,
     string StatusMessage
-) : AIAgentMessage;
+) : AiAgentMessage;
 
 /// <summary>
 ///     Get all active tasks
 /// </summary>
-public sealed record GetActiveTasks : AIAgentMessage;
+public sealed record GetActiveTasks : AiAgentMessage;
 
 /// <summary>
 ///     Response containing all active tasks

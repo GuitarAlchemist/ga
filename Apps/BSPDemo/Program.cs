@@ -37,9 +37,9 @@ public class PitchClassSet : HashSet<PitchClass>
 /// <summary>
 ///     Simple BSP node for demonstration
 /// </summary>
-public class BSPNode
+public class BspNode
 {
-    public BSPNode(string name, PitchClassSet region)
+    public BspNode(string name, PitchClassSet region)
     {
         Name = name;
         Region = region;
@@ -47,8 +47,8 @@ public class BSPNode
 
     public string Name { get; set; }
     public PitchClassSet Region { get; set; }
-    public BSPNode? Left { get; set; }
-    public BSPNode? Right { get; set; }
+    public BspNode? Left { get; set; }
+    public BspNode? Right { get; set; }
 }
 
 /// <summary>
@@ -63,7 +63,7 @@ internal class Program
 
         try
         {
-            await RunBasicBSPDemo();
+            await RunBasicBspDemo();
             Console.WriteLine("\n✅ BSP Demo completed successfully!");
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ internal class Program
         Console.WriteLine("\nDemo completed!");
     }
 
-    private static async Task RunBasicBSPDemo()
+    private static async Task RunBasicBspDemo()
     {
         Console.WriteLine("\n=== 🎵 Basic Musical Analysis Demo ===");
 
@@ -128,14 +128,14 @@ internal class Program
             PitchClass.C, PitchClass.D, PitchClass.E, PitchClass.F,
             PitchClass.G, PitchClass.A, PitchClass.B
         ]); // C Major scale
-        var root = new BSPNode("C Major Region", rootRegion);
+        var root = new BspNode("C Major Region", rootRegion);
 
         // Add child regions
         var majorTriadRegion = new PitchClassSet([PitchClass.C, PitchClass.E, PitchClass.G]);
         var minorTriadRegion = new PitchClassSet([PitchClass.A, PitchClass.C, PitchClass.E]);
 
-        root.Left = new BSPNode("Major Triads", majorTriadRegion);
-        root.Right = new BSPNode("Minor Triads", minorTriadRegion);
+        root.Left = new BspNode("Major Triads", majorTriadRegion);
+        root.Right = new BspNode("Minor Triads", minorTriadRegion);
 
         Console.WriteLine("✓ Created BSP tree:");
         Console.WriteLine($"  Root: {root.Name} - {root.Region}");

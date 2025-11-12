@@ -8,7 +8,7 @@ using ILGPU.Runtime;
 /// Provides singleton access to GPU resources across the application
 /// Following ILGPU best practices: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
 /// </summary>
-public interface IILGPUContextManager : IDisposable
+public interface IIlgpuContextManager : IDisposable
 {
     /// <summary>
     /// Gets the ILGPU context
@@ -33,20 +33,20 @@ public interface IILGPUContextManager : IDisposable
     /// <summary>
     /// Gets available GPU memory in MB
     /// </summary>
-    long AvailableGpuMemoryMB { get; }
+    long AvailableGpuMemoryMb { get; }
 
     /// <summary>
     /// Gets total GPU memory in MB
     /// </summary>
-    long TotalGpuMemoryMB { get; }
+    long TotalGpuMemoryMb { get; }
 }
 
 /// <summary>
 /// Default implementation of ILGPU context manager
 /// </summary>
-public class ILGPUContextManager : IILGPUContextManager
+public class IlgpuContextManager : IIlgpuContextManager
 {
-    private readonly ILogger<ILGPUContextManager> _logger;
+    private readonly ILogger<IlgpuContextManager> _logger;
     private Context? _context;
     private Accelerator? _primaryAccelerator;
     private bool _isDisposed;
@@ -55,10 +55,10 @@ public class ILGPUContextManager : IILGPUContextManager
     public Accelerator? PrimaryAccelerator => _primaryAccelerator;
     public string AcceleratorType { get; private set; } = "None";
     public bool IsGpuAvailable { get; private set; }
-    public long AvailableGpuMemoryMB { get; private set; }
-    public long TotalGpuMemoryMB { get; private set; }
+    public long AvailableGpuMemoryMb { get; private set; }
+    public long TotalGpuMemoryMb { get; private set; }
 
-    public ILGPUContextManager(ILogger<ILGPUContextManager> logger)
+    public IlgpuContextManager(ILogger<IlgpuContextManager> logger)
     {
         _logger = logger;
         InitializeContext();
@@ -92,11 +92,11 @@ public class ILGPUContextManager : IILGPUContextManager
                 // Get accelerator memory size
                 if (_primaryAccelerator != null)
                 {
-                    TotalGpuMemoryMB = (long)(_primaryAccelerator.MemorySize / (1024 * 1024));
-                    AvailableGpuMemoryMB = TotalGpuMemoryMB;
+                    TotalGpuMemoryMb = (long)(_primaryAccelerator.MemorySize / (1024 * 1024));
+                    AvailableGpuMemoryMb = TotalGpuMemoryMb;
                     _logger.LogInformation(
                         "Accelerator Memory: {TotalMB}MB total",
-                        TotalGpuMemoryMB);
+                        TotalGpuMemoryMb);
                 }
             }
             catch (Exception ex)

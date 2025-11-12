@@ -1,9 +1,9 @@
 @inject IChatClient ChatClient
 
-@if (suggestions is not null)
+@if (_suggestions is not null)
 {
     <div class="page-width suggestions">
-        @foreach (var suggestion in suggestions)
+        @foreach (var suggestion in _suggestions)
         {
             <button class="btn-subtle" @onclick="@(() => AddSuggestionAsync(suggestion))">
                 @suggestion
@@ -14,7 +14,7 @@
 
 @code {
 
-    private static readonly string Prompt = @"
+    private static readonly string _prompt = @"
         Suggest up to 3 follow-up questions that I could ask you to help me complete my task.
         Each suggestion must be a complete sentence, maximum 6 words.
         Each suggestion must be phrased as something that I (the user) would ask you (the assistant) in response to your previous message,
@@ -22,15 +22,15 @@
         If there are no suggestions, reply with an empty list.
     ";
 
-    private string[]? suggestions;
-    private CancellationTokenSource? cancellation;
+    private string[]? _suggestions;
+    private CancellationTokenSource? _cancellation;
 
     [Parameter] public EventCallback<ChatMessage> OnSelected { get; set; }
 
     public void Clear()
     {
-        suggestions = null;
-        cancellation?.Cancel();
+        _suggestions = null;
+        _cancellation?.Cancel();
     }
 
     public void Update(IReadOnlyList<ChatMessage> messages)
@@ -41,17 +41,17 @@
 
     private async Task UpdateSuggestionsAsync(IReadOnlyList<ChatMessage> messages)
     {
-        cancellation?.Cancel();
-        cancellation = new CancellationTokenSource();
+        _cancellation?.Cancel();
+        _cancellation = new CancellationTokenSource();
 
         try
         {
             var response = await ChatClient.GetResponseAsync<string[]>(
-                [.. ReduceMessages(messages), new(ChatRole.User, Prompt)],
-                useNativeJsonSchema: true, cancellationToken: cancellation.Token);
-            if (!response.TryGetResult(out suggestions))
+                [.. ReduceMessages(messages), new(ChatRole.User, _prompt)],
+                useNativeJsonSchema: true, cancellationToken: _cancellation.Token);
+            if (!response.TryGetResult(out _suggestions))
             {
-                suggestions = null;
+                _suggestions = null;
             }
 
             StateHasChanged();

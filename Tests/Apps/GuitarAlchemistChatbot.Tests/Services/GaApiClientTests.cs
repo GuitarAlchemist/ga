@@ -27,7 +27,7 @@ public class GaApiClientTests
         };
         _httpClient = new HttpClient(handler)
         {
-            BaseAddress = new Uri(GaApiBaseUrl)
+            BaseAddress = new Uri(_gaApiBaseUrl)
         };
     }
 
@@ -53,7 +53,7 @@ public class GaApiClientTests
         _httpClient?.Dispose();
     }
 
-    private const string GaApiBaseUrl = "https://localhost:7001";
+    private const string _gaApiBaseUrl = "https://localhost:7001";
     private HttpClient? _httpClient;
     private GaApiClient? _gaApiClient;
     private Mock<ILogger<GaApiClient>>? _loggerMock;

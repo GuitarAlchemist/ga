@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Analytics.Spectral;
+namespace GA.Business.Analytics.Analytics.Spectral;
 
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;

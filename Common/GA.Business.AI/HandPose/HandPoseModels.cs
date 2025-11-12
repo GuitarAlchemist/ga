@@ -1,4 +1,4 @@
-﻿namespace GA.Business.AI.AI.HandPose;
+﻿namespace GA.Business.AI.HandPose;
 
 /// <summary>
 ///     3D keypoint with name and coordinates

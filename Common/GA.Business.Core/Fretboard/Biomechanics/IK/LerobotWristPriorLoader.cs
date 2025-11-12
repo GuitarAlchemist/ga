@@ -4,7 +4,7 @@ using System.Text.Json;
 
 internal static class LerobotWristPriorLoader
 {
-    private const string ResourceName = "GA.Business.Core.Fretboard.Biomechanics.IK.Data.lerobot-wrist-priors.json";
+    private const string _resourceName = "GA.Business.Core.Fretboard.Biomechanics.IK.Data.lerobot-wrist-priors.json";
     private static WristPrior? _cached;
     private static bool _attempted;
 
@@ -38,7 +38,7 @@ internal static class LerobotWristPriorLoader
 
         try
         {
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName);
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_resourceName);
             if (stream is null)
             {
                 return false;

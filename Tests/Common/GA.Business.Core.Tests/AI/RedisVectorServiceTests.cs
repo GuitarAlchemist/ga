@@ -1,6 +1,6 @@
 namespace GA.Business.Core.Tests.AI;
 
-using Business.AI.AI;
+using Business.AI;
 using Core.Atonal;
 using Core.Fretboard.Positions;
 using Core.Fretboard.Primitives;

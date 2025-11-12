@@ -76,7 +76,14 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
 
     #region IStaticValueObjectList<RelativeFret> Members
 
+    /// <summary>
+    /// Gets all RelativeFret instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<RelativeFret> Items => ValueObjectUtils<RelativeFret>.Items;
+
+    /// <summary>
+    /// Gets all RelativeFret values (automatically memoized).
+    /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.Values;
 
     #endregion

@@ -6,15 +6,9 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Markov walker for navigating shape graphs
 /// </summary>
-public class MarkovWalker
+public class MarkovWalker(ILogger<MarkovWalker> logger)
 {
-    private readonly ILogger<MarkovWalker> _logger;
     private readonly Random _random = new();
-
-    public MarkovWalker(ILogger<MarkovWalker> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// Generate a random walk through the shape graph
@@ -24,7 +18,7 @@ public class MarkovWalker
         FretboardShape startShape,
         WalkOptions options)
     {
-        _logger.LogDebug("Generating walk from {ShapeId} with {Steps} steps", startShape.Id, options.Steps);
+        logger.LogDebug("Generating walk from {ShapeId} with {Steps} steps", startShape.Id, options.Steps);
 
         var path = new List<FretboardShape> { startShape };
         var currentShape = startShape;
@@ -38,7 +32,7 @@ public class MarkovWalker
             currentShape = nextShape;
         }
 
-        _logger.LogDebug("Generated path with {Count} shapes", path.Count);
+        logger.LogDebug("Generated path with {Count} shapes", path.Count);
         return path;
     }
 
