@@ -1,6 +1,5 @@
 ﻿namespace GaApi.Controllers;
 
-using GA.Business.Core.Fretboard.Voicings;
 using GA.Business.Core.Fretboard.Voicings.Search;
 using GA.Data.MongoDB.Services.Embeddings;
 using Microsoft.AspNetCore.Mvc;
@@ -262,7 +261,8 @@ public class VoicingSearchController(
         await Task.Delay(1); // Simulate async operation
 
         var random = new Random(text.GetHashCode());
-        var embedding = new double[384]; // Standard embedding dimension
+        // Use 768 dimensions to match the cached embeddings (mxbai-embed-large model)
+        var embedding = new double[768];
 
         for (var i = 0; i < embedding.Length; i++)
         {
