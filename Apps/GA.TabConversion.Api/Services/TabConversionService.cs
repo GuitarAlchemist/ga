@@ -11,14 +11,14 @@ using MusicTheory.DSL.Types;
 public class TabConversionService : ITabConversionService
 {
     // Format detection patterns
-    private const string VexTabPattern1 = "tabstave";
-    private const string VexTabPattern2 = "notes :";
-    private const string AsciiTabPattern1 = "|";
-    private const string AsciiTabPattern2 = "E|";
-    private const string AsciiTabPattern3 = "e|";
+    private const string _vexTabPattern1 = "tabstave";
+    private const string _vexTabPattern2 = "notes :";
+    private const string _asciiTabPattern1 = "|";
+    private const string _asciiTabPattern2 = "E|";
+    private const string _asciiTabPattern3 = "e|";
 
     // Supported formats list (cached, immutable)
-    private static readonly IReadOnlyList<FormatInfo> SupportedFormats = new List<FormatInfo>
+    private static readonly IReadOnlyList<FormatInfo> _supportedFormats = new List<FormatInfo>
     {
         new()
         {
@@ -199,7 +199,7 @@ public class TabConversionService : ITabConversionService
     {
         return Task.FromResult(new FormatsResponse
         {
-            Formats = SupportedFormats.ToList() // Return a copy to prevent external modification
+            Formats = _supportedFormats.ToList() // Return a copy to prevent external modification
         });
     }
 
@@ -208,15 +208,15 @@ public class TabConversionService : ITabConversionService
         ArgumentException.ThrowIfNullOrWhiteSpace(content);
 
         // Simple heuristics for format detection (case-insensitive)
-        if (content.Contains(VexTabPattern1, StringComparison.OrdinalIgnoreCase) ||
-            content.Contains(VexTabPattern2, StringComparison.OrdinalIgnoreCase))
+        if (content.Contains(_vexTabPattern1, StringComparison.OrdinalIgnoreCase) ||
+            content.Contains(_vexTabPattern2, StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult<string?>("VexTab");
         }
 
-        if (content.Contains(AsciiTabPattern1, StringComparison.Ordinal) &&
-            (content.Contains(AsciiTabPattern2, StringComparison.Ordinal) ||
-             content.Contains(AsciiTabPattern3, StringComparison.Ordinal)))
+        if (content.Contains(_asciiTabPattern1, StringComparison.Ordinal) &&
+            (content.Contains(_asciiTabPattern2, StringComparison.Ordinal) ||
+             content.Contains(_asciiTabPattern3, StringComparison.Ordinal)))
         {
             return Task.FromResult<string?>("AsciiTab");
         }
@@ -509,7 +509,7 @@ public class TabConversionService : ITabConversionService
     private bool IsFormatSupported(string format)
     {
         var normalizedFormat = NormalizeFormat(format);
-        return SupportedFormats.Any(f => f.Id.Equals(normalizedFormat, StringComparison.OrdinalIgnoreCase));
+        return _supportedFormats.Any(f => f.Id.Equals(normalizedFormat, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>

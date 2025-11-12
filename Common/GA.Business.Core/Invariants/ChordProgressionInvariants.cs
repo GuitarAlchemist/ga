@@ -31,7 +31,7 @@ public static class ChordProgressionInvariants
 
     private sealed class RomanNumeralStructureInvariant : InvariantBase<ChordProgressionDefinition>
     {
-        private static readonly Regex Pattern = new("^[ivxlcdmIVXLCDM]+(?:sus|maj|add|dim|aug|m)?[0-9]*$",
+        private static readonly Regex _pattern = new("^[ivxlcdmIVXLCDM]+(?:sus|maj|add|dim|aug|m)?[0-9]*$",
             RegexOptions.Compiled);
 
         public override string InvariantName => "RomanNumeralStructure";
@@ -47,7 +47,7 @@ public static class ChordProgressionInvariants
 
             foreach (var numeral in definition.RomanNumerals)
             {
-                if (string.IsNullOrWhiteSpace(numeral) || !Pattern.IsMatch(numeral))
+                if (string.IsNullOrWhiteSpace(numeral) || !_pattern.IsMatch(numeral))
                 {
                     return Failure($"Invalid roman numeral '{numeral}'.",
                         nameof(ChordProgressionDefinition.RomanNumerals),
@@ -88,7 +88,7 @@ public static class ChordProgressionInvariants
 
     private sealed class DifficultyInvariant : InvariantBase<ChordProgressionDefinition>
     {
-        private static readonly HashSet<string> Allowed =
+        private static readonly HashSet<string> _allowed =
         [
             "beginner", "intermediate", "advanced", "expert"
         ];
@@ -104,7 +104,7 @@ public static class ChordProgressionInvariants
                 return Success();
             }
 
-            return Allowed.Contains(definition.Difficulty.Trim().ToLowerInvariant())
+            return _allowed.Contains(definition.Difficulty.Trim().ToLowerInvariant())
                 ? Success()
                 : Failure($"Difficulty '{definition.Difficulty}' is not recognized.",
                     nameof(ChordProgressionDefinition.Difficulty),

@@ -1,6 +1,6 @@
 namespace GA.Business.Core.Tests.Analytics;
 
-using Core.Analytics;
+using Business.Analytics.Analytics;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;

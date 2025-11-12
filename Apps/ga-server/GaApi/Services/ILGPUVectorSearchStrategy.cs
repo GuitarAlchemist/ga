@@ -9,14 +9,14 @@ using System.Diagnostics;
 /// Provides cross-platform GPU acceleration (NVIDIA, AMD, Intel)
 /// Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
 /// </summary>
-public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
+public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
 {
     private readonly Dictionary<int, ChordEmbedding> _chords = new();
-    private readonly object _initLock = new();
-    private readonly ILogger<ILGPUVectorSearchStrategy> _logger;
+    private readonly Lock _initLock = new();
+    private readonly ILogger<IlgpuVectorSearchStrategy> _logger;
 
     private Context? _context;
-    private Accelerator? _accelerator;
+    private readonly Accelerator? _accelerator;
 
     private double[]? _hostEmbeddings;
 
@@ -26,10 +26,11 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     private long _totalSearches;
     private TimeSpan _totalSearchTime = TimeSpan.Zero;
 
-    public ILGPUVectorSearchStrategy(ILogger<ILGPUVectorSearchStrategy> logger)
+    public IlgpuVectorSearchStrategy(ILogger<IlgpuVectorSearchStrategy> logger, Accelerator? accelerator)
     {
         _logger = logger;
-        InitializeILGPU();
+        _accelerator = accelerator;
+        InitializeIlgpu();
     }
 
     public string Name => "ILGPU";
@@ -85,7 +86,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
 
             try
             {
-                var similarities = CalculateSimilaritiesILGPU(queryEmbedding);
+                var similarities = CalculateSimilaritiesIlgpu(queryEmbedding);
 
                 var topResults = similarities
                     .OrderByDescending(x => x.Score)
@@ -129,7 +130,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
 
             try
             {
-                var similarities = CalculateSimilaritiesILGPU(queryChord.Embedding)
+                var similarities = CalculateSimilaritiesIlgpu(queryChord.Embedding)
                     .Where(x => x.ChordId != chordId);
 
                 var topResults = similarities
@@ -183,7 +184,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                     filteredChords = filteredChords.Where(c => c.NoteCount == filters.NoteCount.Value);
 
                 var filteredIds = filteredChords.Select(c => c.Id).ToList();
-                var similarities = CalculateFilteredSimilaritiesILGPU(queryEmbedding, filteredIds);
+                var similarities = CalculateFilteredSimilaritiesIlgpu(queryEmbedding, filteredIds);
 
                 var topResults = similarities
                     .OrderByDescending(x => x.Score)
@@ -220,7 +221,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
             _totalSearches);
     }
 
-    private void InitializeILGPU()
+    private void InitializeIlgpu()
     {
         try
         {
@@ -257,7 +258,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
         _logger.LogInformation("Prepared {Count} embeddings for GPU acceleration", chords.Count);
     }
 
-    private IEnumerable<(int ChordId, double Score)> CalculateSimilaritiesILGPU(double[] queryEmbedding)
+    private IEnumerable<(int ChordId, double Score)> CalculateSimilaritiesIlgpu(double[] queryEmbedding)
     {
         if (_accelerator == null || _hostEmbeddings == null)
             throw new InvalidOperationException("ILGPU not properly initialized");
@@ -297,7 +298,7 @@ public class ILGPUVectorSearchStrategy : IVectorSearchStrategy, IDisposable
         }
     }
 
-    private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilaritiesILGPU(double[] queryEmbedding, List<int> allowedIds)
+    private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilaritiesIlgpu(double[] queryEmbedding, List<int> allowedIds)
     {
         if (_accelerator == null || _hostEmbeddings == null)
             throw new InvalidOperationException("ILGPU not properly initialized");

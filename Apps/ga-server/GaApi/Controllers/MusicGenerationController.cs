@@ -1,6 +1,6 @@
 namespace GaApi.Controllers;
 
-using GA.Business.AI.AI.HuggingFace;
+using GA.Business.AI.HuggingFace;
 
 /// <summary>
 ///     Controller for AI-powered music and audio generation using Hugging Face models

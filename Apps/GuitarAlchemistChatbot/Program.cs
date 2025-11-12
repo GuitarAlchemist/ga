@@ -1,5 +1,6 @@
 using System.ClientModel;
-using GA.Business.AI.AI.HuggingFace;
+using AllProjects.ServiceDefaults;
+using GA.Business.AI.HuggingFace;
 using GA.Business.Web;
 using GuitarAlchemistChatbot.Components;
 using GuitarAlchemistChatbot.Plugins;
@@ -150,7 +151,7 @@ builder.Services.AddScoped<ChordProgressionPlugin>();
 builder.Services.AddScoped<PracticePathPlugin>();
 builder.Services.AddScoped<ShapeGraphPlugin>();
 builder.Services.AddScoped<GraphitiPlugin>();
-builder.Services.AddScoped<BSPDungeonPlugin>();
+builder.Services.AddScoped<BspDungeonPlugin>();
 
 builder.Services.AddChatClient(chatClient).UseFunctionInvocation().UseLogging();
 builder.Services.AddEmbeddingGenerator(embeddingGenerator);

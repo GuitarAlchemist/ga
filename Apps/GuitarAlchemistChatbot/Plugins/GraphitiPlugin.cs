@@ -7,7 +7,7 @@ using Services;
 /// </summary>
 public class GraphitiPlugin(GraphitiClient graphitiClient, ILogger<GraphitiPlugin> logger)
 {
-    private const string DefaultUserId = "chatbot-user"; // TODO: Get from authentication
+    private const string _defaultUserId = "chatbot-user"; // TODO: Get from authentication
 
     /// <summary>
     ///     Search the knowledge graph for relevant musical information
@@ -25,7 +25,7 @@ public class GraphitiPlugin(GraphitiClient graphitiClient, ILogger<GraphitiPlugi
     {
         logger.LogInformation("Searching knowledge graph: {Query}", query);
 
-        var result = await graphitiClient.SearchAsync(query, DefaultUserId, limit);
+        var result = await graphitiClient.SearchAsync(query, _defaultUserId, limit);
 
         if (result == null || result.Results.Count == 0)
         {
@@ -59,7 +59,7 @@ public class GraphitiPlugin(GraphitiClient graphitiClient, ILogger<GraphitiPlugi
         logger.LogInformation("Getting recommendations: {Type}", recommendationType);
 
         var result = await graphitiClient.GetRecommendationsAsync(
-            DefaultUserId,
+            _defaultUserId,
             recommendationType);
 
         if (result == null || result.Recommendations.Count == 0)
@@ -85,9 +85,9 @@ public class GraphitiPlugin(GraphitiClient graphitiClient, ILogger<GraphitiPlugi
     [Description("Get the user's learning progress, skill level, sessions completed, and improvement trends")]
     public async Task<string> GetLearningProgressAsync()
     {
-        logger.LogInformation("Getting learning progress for user {UserId}", DefaultUserId);
+        logger.LogInformation("Getting learning progress for user {UserId}", _defaultUserId);
 
-        var result = await graphitiClient.GetUserProgressAsync(DefaultUserId);
+        var result = await graphitiClient.GetUserProgressAsync(_defaultUserId);
 
         if (result == null || result.Progress == null)
         {
@@ -136,7 +136,7 @@ public class GraphitiPlugin(GraphitiClient graphitiClient, ILogger<GraphitiPlugi
         };
 
         var result = await graphitiClient.AddEpisodeAsync(
-            DefaultUserId,
+            _defaultUserId,
             episodeType,
             content);
 

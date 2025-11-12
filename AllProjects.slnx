@@ -9,6 +9,7 @@
   <Folder Name="/Backend/" />
   <Folder Name="/Backend/Applications/">
     <Project Path="Apps/FloorManager/FloorManager.csproj" />
+    <Project Path="Apps/ga-server/GA.MusicTheory.Service/GA.MusicTheory.Service.csproj" />
     <Project Path="Apps/ga-server/GaApi/GaApi.csproj" />
     <Project Path="Apps/GuitarAlchemistChatbot/GuitarAlchemistChatbot.csproj" />
     <Project Path="Apps/InteractiveTutorial/InteractiveTutorial.csproj" />
@@ -48,7 +49,6 @@
     <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj" />
     <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
     <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj" />
-    <Project Path="Common/GA.Business.Mapping/GA.Business.Mapping.csproj" />
     <Project Path="Common/GA.Business.Microservices/GA.Business.Microservices.csproj" />
     <Project Path="Common/GA.Business.Querying/GA.Business.Querying.fsproj" />
     <Project Path="Common/GA.Business.UI/GA.Business.UI.csproj" />
@@ -60,6 +60,12 @@
     <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
     <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj" />
+    <Project Path="Common\GA.Business.Config\GA.Business.Config.fsproj" Type="Classic F#">
+      <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
+      <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
+      <Configuration Solution="Release|x64" Project="Release|Any CPU" />
+      <Configuration Solution="Release|x86" Project="Release|Any CPU" />
+    </Project>
   </Folder>
   <Folder Name="/Data &amp; Integration/">
     <Project Path="Common/GA.Data.EntityFramework/GA.Data.EntityFramework.csproj" />
@@ -74,7 +80,7 @@
   <Folder Name="/Demos/Music Theory/">
     <Project Path="Apps/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj" />
     <Project Path="Apps/ChordNamingDemo/ChordNamingDemo.csproj" />
-    <Project Path="Apps/ComprehensiveMusicTheoryDemo/ComprehensiveMusicTheoryDemo.csproj" />
+    <Project Path="Apps/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj" />
     <Project Path="Apps/MusicalAnalysisApp/MusicalAnalysisApp.csproj" />
     <Project Path="Apps/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj" />
     <Project Path="Apps/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj" />
@@ -189,6 +195,24 @@
     <File Path="Scripts/test-music-generation.ps1" />
     <File Path="Scripts/test-vector-search.ps1" />
     <File Path="Scripts/TEST_SUITE_README.md" />
+    <File Path="Scripts\create-microservices.ps1" />
+    <File Path="Scripts\fix-microservices-rate-limiter.ps1" />
+    <File Path="Scripts\update-controller-namespaces.ps1" />
+    <File Path="Scripts\migrate-all-controllers.ps1" />
+    <File Path="Scripts\setup-music-theory-service.ps1" />
+    <File Path="Scripts\fix-controller-usings.ps1" />
+    <File Path="Scripts\complete-microservices-migration.ps1" />
+    <File Path="Scripts\test-mcp-server.ps1" />
+    <File Path="Scripts\complete-all-microservices.ps1" />
+    <File Path="Scripts\add-microservice-references.ps1" />
+    <File Path="Scripts\copy-missing-models.ps1" />
+    <File Path="Scripts\test-autonomous-curation.ps1" />
+    <File Path="Scripts\test-autonomous-curation-full.ps1" />
+    <File Path="Scripts\test-graphql-and-curation.ps1" />
+    <File Path="Scripts\quick-graphql-test.ps1" />
+    <File Path="Scripts\replace-newtonsoft-with-systemtextjson.ps1" />
+    <File Path="Scripts\fix-blazor-build-errors.ps1" />
+    <File Path="Scripts\test-voicing-search-api.ps1" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="DevNotes.txt" />

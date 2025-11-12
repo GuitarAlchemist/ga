@@ -19,7 +19,7 @@ internal class Program
         DemonstrateVectorization();
         DemonstrateParallelProcessing();
         DemonstrateMemoryOptimization();
-        DemonstrateSIMDOperations();
+        DemonstrateSimdOperations();
         DemonstrateRealTimeBenchmarks();
 
         AnsiConsole.MarkupLine("\n[green]Performance demo completed![/]");
@@ -147,32 +147,32 @@ internal class Program
         table.AddColumn("Performance Impact");
 
         // Array pooling
-        var (poolMemory, poolAllocs, poolGC) = BenchmarkArrayPooling();
+        var (poolMemory, poolAllocs, poolGc) = BenchmarkArrayPooling();
         table.AddRow(
             "Array Pooling",
             FormatMemory(poolMemory),
             FormatAllocations(poolAllocs),
-            FormatGCPressure(poolGC),
+            FormatGcPressure(poolGc),
             "[green]Excellent[/]"
         );
 
         // Span<T> usage
-        var (spanMemory, spanAllocs, spanGC) = BenchmarkSpanUsage();
+        var (spanMemory, spanAllocs, spanGc) = BenchmarkSpanUsage();
         table.AddRow(
             "Span<T> Operations",
             FormatMemory(spanMemory),
             FormatAllocations(spanAllocs),
-            FormatGCPressure(spanGC),
+            FormatGcPressure(spanGc),
             "[green]Excellent[/]"
         );
 
         // Memory mapping
-        var (mmapMemory, mmapAllocs, mmapGC) = BenchmarkMemoryMapping();
+        var (mmapMemory, mmapAllocs, mmapGc) = BenchmarkMemoryMapping();
         table.AddRow(
             "Memory Mapping",
             FormatMemory(mmapMemory),
             FormatAllocations(mmapAllocs),
-            FormatGCPressure(mmapGC),
+            FormatGcPressure(mmapGc),
             "[yellow]Good[/]"
         );
 
@@ -180,7 +180,7 @@ internal class Program
         AnsiConsole.WriteLine();
     }
 
-    private static void DemonstrateSIMDOperations()
+    private static void DemonstrateSimdOperations()
     {
         AnsiConsole.MarkupLine("[bold blue]🚀 Advanced SIMD Operations[/]\n");
 
@@ -470,7 +470,7 @@ internal class Program
         return $"{allocs:N0}/sec";
     }
 
-    private static string FormatGCPressure(double pressure)
+    private static string FormatGcPressure(double pressure)
     {
         return pressure switch
         {

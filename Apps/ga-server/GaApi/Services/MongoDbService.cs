@@ -39,6 +39,10 @@ public class MongoDbService
     public IMongoCollection<RoomGenerationJob> RoomGenerationJobs =>
         Database.GetCollection<RoomGenerationJob>("roomGenerationJobs");
 
+    // Document processing collections
+    public IMongoCollection<BsonDocument> ProcessedDocuments =>
+        Database.GetCollection<BsonDocument>("processedDocuments");
+
     // Chord query methods
     public async Task<List<Chord>> GetChordsByQualityAsync(string quality, int limit = 100)
     {

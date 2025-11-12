@@ -1,7 +1,7 @@
 namespace GaApi.Controllers;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Business.Core.Analytics.Spectral;
+using GA.Business.Analytics.Analytics.Spectral;
 
 /// <summary>
 ///     Provides spectral analysis for external autonomous systems (e.g., TARS Tier2 governance).

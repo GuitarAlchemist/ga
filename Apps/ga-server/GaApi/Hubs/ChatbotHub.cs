@@ -14,7 +14,7 @@ public sealed class ChatbotHub(
     ISemanticKnowledgeSource semanticKnowledge)
     : Hub
 {
-    private static readonly ConcurrentDictionary<string, List<ChatMessage>> Conversations = new();
+    private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
 
     private readonly ILogger<ChatbotHub> _logger = logger;
     private readonly ISemanticKnowledgeSource _semanticKnowledge = semanticKnowledge;
@@ -31,7 +31,7 @@ public sealed class ChatbotHub(
             return;
         }
 
-        var history = Conversations.GetOrAdd(connectionId, _ => []);
+        var history = _conversations.GetOrAdd(connectionId, _ => []);
         var request = new ChatSessionRequest(trimmedMessage, history, useSemanticSearch);
         var responseBuilder = new StringBuilder();
         var cancellationToken = Context.ConnectionAborted;
@@ -53,7 +53,7 @@ public sealed class ChatbotHub(
                     new ChatMessage { Role = "assistant", Content = fullResponse }
                 }));
 
-            Conversations[connectionId] = updatedHistory;
+            _conversations[connectionId] = updatedHistory;
 
             await Clients.Caller.SendAsync("MessageComplete", fullResponse);
         }
@@ -71,7 +71,7 @@ public sealed class ChatbotHub(
     public Task ClearHistory()
     {
         var connectionId = Context.ConnectionId;
-        Conversations.TryRemove(connectionId, out _);
+        _conversations.TryRemove(connectionId, out _);
         _logger.LogInformation("Cleared conversation history for {ConnectionId}", connectionId);
         return Task.CompletedTask;
     }
@@ -79,7 +79,7 @@ public sealed class ChatbotHub(
     public Task<List<ChatMessage>> GetHistory()
     {
         var connectionId = Context.ConnectionId;
-        if (Conversations.TryGetValue(connectionId, out var history))
+        if (_conversations.TryGetValue(connectionId, out var history))
         {
             return Task.FromResult(history.ToList());
         }
@@ -125,7 +125,7 @@ public sealed class ChatbotHub(
     {
         var connectionId = Context.ConnectionId;
         _logger.LogInformation("Client {ConnectionId} disconnected from chatbot hub", connectionId);
-        Conversations.TryRemove(connectionId, out _);
+        _conversations.TryRemove(connectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
 }

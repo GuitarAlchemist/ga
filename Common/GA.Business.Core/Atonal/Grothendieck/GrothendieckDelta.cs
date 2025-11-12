@@ -108,7 +108,7 @@ public sealed record GrothendieckDelta
     /// <summary>
     ///     Compute delta from two ICVs: target - source
     /// </summary>
-    public static GrothendieckDelta FromICVs(IntervalClassVector source, IntervalClassVector target)
+    public static GrothendieckDelta FromIcVs(IntervalClassVector source, IntervalClassVector target)
     {
         return new GrothendieckDelta
         {

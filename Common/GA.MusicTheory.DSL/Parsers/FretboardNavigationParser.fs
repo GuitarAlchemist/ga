@@ -56,15 +56,19 @@ module FretboardNavigationParser =
     let fretboardPosition : Parser<FretboardPosition, unit> =
         choice [
             // Format: "string 3 fret 5"
-            pipe3 (str "string" >>. stringNumber) (str "fret" >>. fretNumber) (opt finger)
-                (fun s f fing -> { String = s; Fret = f; Finger = fing })
+            attempt (pipe3 (str "string" >>. stringNumber) (str "fret" >>. fretNumber) (opt finger)
+                (fun s f fing -> { String = s; Fret = f; Finger = fing }))
 
             // Format: "3:5" (string:fret)
-            pipe3 stringNumber (ch ':') fretNumber
-                (fun s _ f -> { String = s; Fret = f; Finger = None })
+            attempt (pipe3 stringNumber (ch ':') fretNumber
+                (fun s _ f -> { String = s; Fret = f; Finger = None }))
 
             // Format: "position 5 on string 3"
-            pipe2 (str "position" >>. fretNumber) (str "on" >>. str "string" >>. stringNumber)
+            attempt (pipe2 (str "position" >>. fretNumber) (str "on" >>. str "string" >>. stringNumber)
+                (fun f s -> { String = s; Fret = f; Finger = None }))
+
+            // Format: "position 5 3" (position fret string)
+            pipe2 (str "position" >>. fretNumber) stringNumber
                 (fun f s -> { String = s; Fret = f; Finger = None })
         ]
 

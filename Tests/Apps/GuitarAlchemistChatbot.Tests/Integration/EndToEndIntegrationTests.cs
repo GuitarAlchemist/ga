@@ -28,7 +28,7 @@ public class EndToEndIntegrationTests
         };
         _httpClient = new HttpClient(handler)
         {
-            BaseAddress = new Uri(GaApiBaseUrl)
+            BaseAddress = new Uri(_gaApiBaseUrl)
         };
     }
 
@@ -55,9 +55,9 @@ public class EndToEndIntegrationTests
             _gaApiClient,
             loggerFactory.CreateLogger<ShapeGraphPlugin>());
 
-        _bspDungeonPlugin = new BSPDungeonPlugin(
+        _bspDungeonPlugin = new BspDungeonPlugin(
             _gaApiClient,
-            loggerFactory.CreateLogger<BSPDungeonPlugin>());
+            loggerFactory.CreateLogger<BspDungeonPlugin>());
     }
 
     [TearDown]
@@ -72,13 +72,13 @@ public class EndToEndIntegrationTests
         _httpClient?.Dispose();
     }
 
-    private const string GaApiBaseUrl = "https://localhost:7001";
+    private const string _gaApiBaseUrl = "https://localhost:7001";
     private HttpClient? _httpClient;
     private GaApiClient? _gaApiClient;
     private ChordProgressionPlugin? _chordProgressionPlugin;
     private PracticePathPlugin? _practicePathPlugin;
     private ShapeGraphPlugin? _shapeGraphPlugin;
-    private BSPDungeonPlugin? _bspDungeonPlugin;
+    private BspDungeonPlugin? _bspDungeonPlugin;
 
     [Test]
     public async Task CompleteWorkflow_AnalyzeProgressionThenGeneratePracticePath_Success()

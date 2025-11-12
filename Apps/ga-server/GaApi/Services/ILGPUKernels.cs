@@ -8,7 +8,7 @@ using System.Numerics;
 /// ILGPU kernels for GPU-accelerated vector operations
 /// Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
 /// </summary>
-public static class ILGPUKernels
+public static class IlgpuKernels
 {
     /// <summary>
     /// GPU kernel for calculating cosine similarity between a query vector and multiple chord embeddings

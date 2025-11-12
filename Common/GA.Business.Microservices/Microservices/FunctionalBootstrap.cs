@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices;
+﻿namespace GA.Business.Core.Microservices.Microservices;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -904,24 +904,24 @@ public static class Writer
 ///     IO monad - represents side-effectful computations
 ///     Similar to Spring Boot's @Transactional and transaction management
 /// </summary>
-public record IO<T>(Func<T> UnsafeRun)
+public record Io<T>(Func<T> UnsafeRun)
 {
     // Functor: Map
-    public IO<TResult> Map<TResult>(Func<T, TResult> mapper)
+    public Io<TResult> Map<TResult>(Func<T, TResult> mapper)
     {
-        return new IO<TResult>(() => mapper(UnsafeRun()));
+        return new Io<TResult>(() => mapper(UnsafeRun()));
     }
 
     // Monad: Bind
-    public IO<TResult> Bind<TResult>(Func<T, IO<TResult>> binder)
+    public Io<TResult> Bind<TResult>(Func<T, Io<TResult>> binder)
     {
-        return new IO<TResult>(() => binder(UnsafeRun()).UnsafeRun());
+        return new Io<TResult>(() => binder(UnsafeRun()).UnsafeRun());
     }
 
     // Delay execution
-    public IO<T> Delay(TimeSpan delay)
+    public Io<T> Delay(TimeSpan delay)
     {
-        return new IO<T>(() =>
+        return new Io<T>(() =>
         {
             Thread.Sleep(delay);
             return UnsafeRun();
@@ -929,9 +929,9 @@ public record IO<T>(Func<T> UnsafeRun)
     }
 
     // Retry on failure
-    public IO<T> Retry(int maxAttempts, TimeSpan delay)
+    public Io<T> Retry(int maxAttempts, TimeSpan delay)
     {
-        return new IO<T>(() =>
+        return new Io<T>(() =>
         {
             Exception? lastException = null;
             for (var i = 0; i < maxAttempts; i++)
@@ -955,18 +955,18 @@ public record IO<T>(Func<T> UnsafeRun)
     }
 
     // LINQ support
-    public IO<TResult> Select<TResult>(Func<T, TResult> selector)
+    public Io<TResult> Select<TResult>(Func<T, TResult> selector)
     {
         return Map(selector);
     }
 
-    public IO<TResult> SelectMany<TResult>(Func<T, IO<TResult>> selector)
+    public Io<TResult> SelectMany<TResult>(Func<T, Io<TResult>> selector)
     {
         return Bind(selector);
     }
 
-    public IO<TResult> SelectMany<TIntermediate, TResult>(
-        Func<T, IO<TIntermediate>> selector,
+    public Io<TResult> SelectMany<TIntermediate, TResult>(
+        Func<T, Io<TIntermediate>> selector,
         Func<T, TIntermediate, TResult> resultSelector)
     {
         return Bind(outer => selector(outer).Map(inner => resultSelector(outer, inner)));
@@ -976,21 +976,21 @@ public record IO<T>(Func<T> UnsafeRun)
 /// <summary>
 ///     IO monad helpers
 /// </summary>
-public static class IO
+public static class Io
 {
-    public static IO<T> Return<T>(T value)
+    public static Io<T> Return<T>(T value)
     {
-        return new IO<T>(() => value);
+        return new Io<T>(() => value);
     }
 
-    public static IO<T> Of<T>(Func<T> func)
+    public static Io<T> Of<T>(Func<T> func)
     {
-        return new IO<T>(func);
+        return new Io<T>(func);
     }
 
-    public static IO<Unit> Run(Action action)
+    public static Io<Unit> Run(Action action)
     {
-        return new IO<Unit>(() =>
+        return new Io<Unit>(() =>
         {
             action();
             return Unit.Value;

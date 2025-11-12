@@ -253,14 +253,14 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
         // Use SIMD operations when available
         if (Vector.IsHardwareAccelerated && a.Length >= Vector<double>.Count)
         {
-            return CalculateCosineSimilaritySIMD(a, b);
+            return CalculateCosineSimilaritySimd(a, b);
         }
 
         // Fallback to standard calculation
         return CalculateCosineSimilarityStandard(a, b);
     }
 
-    private static double CalculateCosineSimilaritySIMD(double[] a, double[] b)
+    private static double CalculateCosineSimilaritySimd(double[] a, double[] b)
     {
         var dotProduct = 0.0;
         var normA = 0.0;

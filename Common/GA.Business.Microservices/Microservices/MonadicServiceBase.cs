@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices;
+﻿namespace GA.Business.Core.Microservices.Microservices;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -241,13 +241,13 @@ public abstract class MonadicServiceBase<TService>(
     /// <summary>
     ///     Execute operation with retry using IO monad
     /// </summary>
-    protected IO<T> ExecuteWithRetry<T>(
+    protected Io<T> ExecuteWithRetry<T>(
         Func<T> operation,
         int maxAttempts = 3,
         TimeSpan? delay = null)
     {
         var retryDelay = delay ?? TimeSpan.FromSeconds(1);
-        return IO.Of(operation).Retry(maxAttempts, retryDelay);
+        return Io.Of(operation).Retry(maxAttempts, retryDelay);
     }
 
     /// <summary>

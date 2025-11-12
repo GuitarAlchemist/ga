@@ -1,13 +1,13 @@
-namespace GA.Business.Graphiti.Tests.Services;
+namespace GA.Business.Core.Graphiti.Tests.Services;
 
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
-using Graphiti.Services;
+using GA.Business.Graphiti.Models;
+using GA.Business.Graphiti.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Models;
 using Moq;
 using Moq.Protected;
 using NUnit.Framework;

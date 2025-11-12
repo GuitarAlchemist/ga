@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "GA.Knowledge.Service": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7004;http://localhost:6004",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

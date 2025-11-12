@@ -30,22 +30,22 @@ public sealed class GuitarAgentOrchestrator(
     IServiceProvider serviceProvider,
     ILogger<GuitarAgentOrchestrator> logger) : IGuitarAgentOrchestrator
 {
-    private const string SpiceUpAgentId = "guitar-progression-colourist";
-    private const string ReharmAgentId = "guitar-reharmonizer";
-    private const string ComposerAgentId = "guitar-progression-composer";
-    private const string QualityAgentId = "guitar-progression-quality-pass";
+    private const string _spiceUpAgentId = "guitar-progression-colourist";
+    private const string _reharmAgentId = "guitar-reharmonizer";
+    private const string _composerAgentId = "guitar-progression-composer";
+    private const string _qualityAgentId = "guitar-progression-quality-pass";
 
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip
     };
 
-    private static readonly string[] SharpNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    private static readonly string[] FlatNotes = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+    private static readonly string[] _sharpNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    private static readonly string[] _flatNotes = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
-    private static readonly Dictionary<string, int> NoteToIndex = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, int> _noteToIndex = new(StringComparer.OrdinalIgnoreCase)
     {
         ["C"] = 0,
         ["B#"] = 0,
@@ -80,7 +80,7 @@ public sealed class GuitarAgentOrchestrator(
         CancellationToken cancellationToken)
     {
         return ExecuteProgressionTaskAsync(
-            SpiceUpAgentId,
+            _spiceUpAgentId,
             AgentInstructions.SpiceUp,
             BuildSpiceUpPrompt(request),
             request,
@@ -92,7 +92,7 @@ public sealed class GuitarAgentOrchestrator(
         CancellationToken cancellationToken)
     {
         return ExecuteProgressionTaskAsync(
-            ReharmAgentId,
+            _reharmAgentId,
             AgentInstructions.Reharmonize,
             BuildReharmonizePrompt(request),
             request,
@@ -104,7 +104,7 @@ public sealed class GuitarAgentOrchestrator(
         CancellationToken cancellationToken)
     {
         return ExecuteProgressionTaskAsync(
-            ComposerAgentId,
+            _composerAgentId,
             AgentInstructions.Compose,
             BuildComposerPrompt(request),
             request,
@@ -149,11 +149,11 @@ public sealed class GuitarAgentOrchestrator(
             response = await agent.RunAsync<AgentPlanDto>(
                 userPrompt,
                 null,
-                SerializerOptions,
+                _serializerOptions,
                 runOptions,
                 false,
                 cancellationToken);
-            structured = response.TryDeserialize(SerializerOptions, out plan);
+            structured = response.TryDeserialize(_serializerOptions, out plan);
             if (!structured)
             {
                 _logger.LogWarning(
@@ -192,8 +192,8 @@ public sealed class GuitarAgentOrchestrator(
     {
         var agent = new ChatClientAgent(
             _chatClient,
-            QualityAgentId,
-            QualityAgentId,
+            _qualityAgentId,
+            _qualityAgentId,
             AgentInstructions.QualityReview,
             null,
             _loggerFactory,
@@ -206,7 +206,7 @@ public sealed class GuitarAgentOrchestrator(
             ResponseFormat = ChatResponseFormat.Json
         });
 
-        var payload = JsonSerializer.Serialize(plan, SerializerOptions);
+        var payload = JsonSerializer.Serialize(plan, _serializerOptions);
 
         ChatClientAgentRunResponse<QualityReviewDto> response;
         try
@@ -214,7 +214,7 @@ public sealed class GuitarAgentOrchestrator(
             response = await agent.RunAsync<QualityReviewDto>(
                 payload,
                 null,
-                SerializerOptions,
+                _serializerOptions,
                 runOptions,
                 false,
                 cancellationToken);
@@ -226,7 +226,7 @@ public sealed class GuitarAgentOrchestrator(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        return response.TryDeserialize(SerializerOptions, out QualityReviewDto? review) && review is not null
+        return response.TryDeserialize(_serializerOptions, out QualityReviewDto? review) && review is not null
             ? warnings.Concat(NormalizeList(review.AdditionalWarnings))
                 .Distinct()
                 .ToArray()
@@ -864,7 +864,7 @@ public sealed class GuitarAgentOrchestrator(
     private static string TransposeRoot(string root, int semitoneChange, bool preferFlats)
     {
         var normalized = NormalizeRoot(root);
-        if (!NoteToIndex.TryGetValue(normalized, out var index))
+        if (!_noteToIndex.TryGetValue(normalized, out var index))
         {
             index = 0;
         }
@@ -875,7 +875,7 @@ public sealed class GuitarAgentOrchestrator(
             transposedIndex += 12;
         }
 
-        var noteSet = preferFlats ? FlatNotes : SharpNotes;
+        var noteSet = preferFlats ? _flatNotes : _sharpNotes;
         return noteSet[transposedIndex];
     }
 
@@ -906,20 +906,20 @@ public sealed class GuitarAgentOrchestrator(
         }
 
         var trimmed = root.Trim();
-        if (NoteToIndex.ContainsKey(trimmed))
+        if (_noteToIndex.ContainsKey(trimmed))
         {
             return trimmed;
         }
 
         var capitalised = char.ToUpperInvariant(trimmed[0]) +
                           (trimmed.Length > 1 ? trimmed[1..].ToLowerInvariant() : string.Empty);
-        if (NoteToIndex.ContainsKey(capitalised))
+        if (_noteToIndex.ContainsKey(capitalised))
         {
             return capitalised;
         }
 
         var upper = trimmed.ToUpperInvariant();
-        if (NoteToIndex.ContainsKey(upper))
+        if (_noteToIndex.ContainsKey(upper))
         {
             return upper;
         }
@@ -927,7 +927,7 @@ public sealed class GuitarAgentOrchestrator(
         if (trimmed.Length >= 2 && (trimmed[1] == '#' || trimmed[1] == 'b'))
         {
             var candidate = $"{char.ToUpperInvariant(trimmed[0])}{trimmed[1]}";
-            if (NoteToIndex.ContainsKey(candidate))
+            if (_noteToIndex.ContainsKey(candidate))
             {
                 return candidate;
             }

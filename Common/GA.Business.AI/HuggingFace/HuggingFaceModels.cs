@@ -1,4 +1,4 @@
-namespace GA.Business.AI.AI.HuggingFace;
+namespace GA.Business.AI.HuggingFace;
 
 /// <summary>
 ///     Request to generate audio from text using Hugging Face models
@@ -120,7 +120,7 @@ public static class HuggingFaceModels
     /// <summary>
     ///     ChatTTS - Text to speech
     /// </summary>
-    public const string ChatTTS = "2Noise/ChatTTS";
+    public const string ChatTts = "2Noise/ChatTTS";
 }
 
 /// <summary>

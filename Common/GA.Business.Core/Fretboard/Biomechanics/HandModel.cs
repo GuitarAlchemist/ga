@@ -560,7 +560,7 @@ public static class PersonalizedHandModel
     /// <summary>
     ///     Get typical hand span in millimeters for a hand size
     /// </summary>
-    public static float GetTypicalHandSpanMM(HandSize size)
+    public static float GetTypicalHandSpanMm(HandSize size)
     {
         return size switch
         {

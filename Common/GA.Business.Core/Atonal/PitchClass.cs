@@ -157,8 +157,15 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region IStaticValueObjectList<PitchClass> Members
 
+    /// <summary>
+    /// Gets all PitchClass instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
-    public static IReadOnlyList<int> Values => Items.ToValueList();
+
+    /// <summary>
+    /// Gets all PitchClass values (automatically memoized).
+    /// </summary>
+    public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClass>.Values;
 
     /// <inheritdoc />
     public static PitchClass Min => FromValue(_minValue);

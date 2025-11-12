@@ -76,7 +76,7 @@ public static class PhysicalFretboardCalculator
     /// <param name="bridgeWidthMm">Bridge width in millimeters (default: 52mm for electric)</param>
     /// <param name="scaleLengthMm">Scale length in millimeters</param>
     /// <returns>String spacing in millimeters</returns>
-    public static double CalculateStringSpacingMM(
+    public static double CalculateStringSpacingMm(
         int fretNumber,
         double nutWidthMm = 43.0,
         double bridgeWidthMm = 52.0,
@@ -155,7 +155,7 @@ public static class PhysicalFretboardCalculator
 
         // Use average fret position for string spacing calculation
         var avgFret = (int)Math.Round(frets.Average());
-        var stringSpacing = CalculateStringSpacingMM(avgFret, nutWidthMm, bridgeWidthMm, scaleLengthMm);
+        var stringSpacing = CalculateStringSpacingMm(avgFret, nutWidthMm, bridgeWidthMm, scaleLengthMm);
         var verticalSpanMm = stringSpan * stringSpacing;
 
         // Calculate diagonal stretch (worst case: max fret span + max string span)

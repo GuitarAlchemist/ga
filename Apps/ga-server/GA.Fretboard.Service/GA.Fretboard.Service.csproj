@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ga.fretboard.service-secrets</UserSecretsId>
+    <WarningsAsErrors>CS1998</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.10" />
+    <PackageReference Include="MongoDB.Driver" Version="3.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.9.0" />
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj" />
+    <!-- TODO: Create this project when needed -->
+    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj" /> -->
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Fretboard\GA.Business.Core.Fretboard.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+  </ItemGroup>
+</Project>

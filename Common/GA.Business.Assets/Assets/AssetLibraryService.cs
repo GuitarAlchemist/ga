@@ -125,7 +125,7 @@ public class AssetLibraryService : IAssetLibraryService
     }
 
     /// <inheritdoc />
-    public Task<AssetMetadata> OptimizeForWebGPUAsync(string glbPath, CancellationToken cancellationToken = default)
+    public Task<AssetMetadata> OptimizeForWebGpuAsync(string glbPath, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Optimizing GLB for WebGPU: {Path}", glbPath);
 

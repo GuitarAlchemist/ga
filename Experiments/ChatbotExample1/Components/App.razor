@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="@Assets["app.css"]"/>
     <link rel="stylesheet" href="@Assets["ChatbotExample1.styles.css"]"/>
     <ImportMap/>
-    <HeadOutlet @rendermode="@renderMode"/>
+    <HeadOutlet @rendermode="@_renderMode"/>
 </head>
 
 <body>
-<Routes @rendermode="@renderMode"/>
+<Routes @rendermode="@_renderMode"/>
 <script src="@Assets["app.js"]" type="module"></script>
 <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
@@ -20,5 +20,5 @@
 </html>
 
 @code {
-    private readonly IComponentRenderMode renderMode = new InteractiveServerRenderMode(false);
+    private readonly IComponentRenderMode _renderMode = new InteractiveServerRenderMode(false);
 }

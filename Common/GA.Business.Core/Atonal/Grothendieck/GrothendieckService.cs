@@ -9,7 +9,7 @@ using System.Buffers;
 public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothendieckService
 {
     /// <inheritdoc />
-    public IntervalClassVector ComputeICV(IEnumerable<int> pitchClasses)
+    public IntervalClassVector ComputeIcv(IEnumerable<int> pitchClasses)
     {
         var pcs = pitchClasses.Select(pc => PitchClass.FromValue(pc % 12)).ToList();
         var pitchClassSet = new PitchClassSet(pcs);
@@ -19,7 +19,7 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
     /// <inheritdoc />
     public GrothendieckDelta ComputeDelta(IntervalClassVector source, IntervalClassVector target)
     {
-        return GrothendieckDelta.FromICVs(source, target);
+        return GrothendieckDelta.FromIcVs(source, target);
     }
 
     /// <inheritdoc />
@@ -118,7 +118,7 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
     /// </summary>
     /// <param name="pitchClasses">Pitch classes (0-11) as span</param>
     /// <returns>Interval-class vector</returns>
-    public IntervalClassVector ComputeICV(ReadOnlySpan<int> pitchClasses)
+    public IntervalClassVector ComputeIcv(ReadOnlySpan<int> pitchClasses)
     {
         // Use ArrayPool for temporary storage to avoid allocation
         var pool = ArrayPool<PitchClass>.Shared;

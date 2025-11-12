@@ -1,8 +1,8 @@
-﻿namespace GA.Business.AI.AI;
+﻿namespace GA.Business.AI;
 
 using System.Net.Http.Headers;
 using System.Text.Json;
-using Core.Analytics;
+using Analytics.Analytics;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -30,9 +30,9 @@ public class InvariantAiService(
             var insights = analyticsService.GetPerformanceInsights();
 
             var prompt = CreateAnalysisPrompt(analytics, violations, insights);
-            var aiResponse = await CallAIServiceAsync(prompt);
+            var aiResponse = await CallAiServiceAsync(prompt);
 
-            var recommendations = ParseAIRecommendations(aiResponse);
+            var recommendations = ParseAiRecommendations(aiResponse);
 
             logger.LogInformation("Generated {Count} AI recommendations", recommendations.Count);
             return recommendations;
@@ -59,7 +59,7 @@ public class InvariantAiService(
                 .ToList();
 
             var prompt = CreateDataQualityPrompt(conceptType, analytics, violations);
-            var aiResponse = await CallAIServiceAsync(prompt);
+            var aiResponse = await CallAiServiceAsync(prompt);
 
             var analysis = ParseDataQualityAnalysis(aiResponse, conceptType);
 
@@ -91,7 +91,7 @@ public class InvariantAiService(
             var patterns = AnalyzeViolationPatterns(violations);
 
             var prompt = CreateInvariantSuggestionPrompt(conceptType, analytics, patterns);
-            var aiResponse = await CallAIServiceAsync(prompt);
+            var aiResponse = await CallAiServiceAsync(prompt);
 
             var suggestions = ParseInvariantSuggestions(aiResponse, conceptType);
 
@@ -270,7 +270,7 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
 ";
     }
 
-    private async Task<string> CallAIServiceAsync(string prompt)
+    private async Task<string> CallAiServiceAsync(string prompt)
     {
         if (!_config.EnableAi || string.IsNullOrEmpty(_config.ApiEndpoint))
         {
@@ -307,7 +307,7 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
         }
     }
 
-    private static List<AiRecommendation> ParseAIRecommendations(string aiResponse)
+    private static List<AiRecommendation> ParseAiRecommendations(string aiResponse)
     {
         // Simple parsing - in production, use more sophisticated NLP
         var recommendations = new List<AiRecommendation>();

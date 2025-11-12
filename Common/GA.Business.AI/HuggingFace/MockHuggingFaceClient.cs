@@ -1,4 +1,4 @@
-namespace GA.Business.AI.AI.HuggingFace;
+namespace GA.Business.AI.HuggingFace;
 
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;

@@ -1,6 +1,6 @@
 namespace GA.Business.Core.Tests.Analytics.Spectral;
 
-using Core.Analytics.Spectral;
+using Business.Analytics.Analytics.Spectral;
 using Microsoft.Extensions.Logging.Abstractions;
 
 [TestFixture]

@@ -11,26 +11,18 @@ using Primitives;
 /// <summary>
 /// Builds fretboard shape graphs with transitions
 /// </summary>
-public class ShapeGraphBuilder : IShapeGraphBuilder
+public class ShapeGraphBuilder(
+    IGrothendieckService grothendieckService,
+    ILogger<ShapeGraphBuilder> logger)
+    : IShapeGraphBuilder
 {
-    private readonly IGrothendieckService _grothendieckService;
-    private readonly ILogger<ShapeGraphBuilder> _logger;
-
-    public ShapeGraphBuilder(
-        IGrothendieckService grothendieckService,
-        ILogger<ShapeGraphBuilder> logger)
-    {
-        _grothendieckService = grothendieckService;
-        _logger = logger;
-    }
-
     /// <inheritdoc />
     public IEnumerable<FretboardShape> GenerateShapes(
         Tuning tuning,
         PitchClassSet pitchClassSet,
         ShapeGraphBuildOptions options)
     {
-        _logger.LogDebug("Generating shapes for {PitchClassSet} on {Tuning}", pitchClassSet.Id, tuning.ToString());
+        logger.LogDebug("Generating shapes for {PitchClassSet} on {Tuning}", pitchClassSet.Id, tuning.ToString());
 
         var shapes = new List<FretboardShape>();
         var fretboard = new Fretboard(tuning, options.MaxFret);
@@ -82,7 +74,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
         IEnumerable<PitchClassSet> pitchClassSets,
         ShapeGraphBuildOptions options)
     {
-        _logger.LogInformation("Building shape graph for {Count} pitch-class sets", pitchClassSets.Count());
+        logger.LogInformation("Building shape graph for {Count} pitch-class sets", pitchClassSets.Count());
 
         // Generate all shapes
         var allShapes = new List<FretboardShape>();
@@ -92,7 +84,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
             allShapes.AddRange(shapes);
         }
 
-        _logger.LogDebug("Generated {Count} total shapes", allShapes.Count);
+        logger.LogDebug("Generated {Count} total shapes", allShapes.Count);
 
         // Build shape dictionary
         var shapesDict = allShapes.ToImmutableDictionary(s => s.Id);
@@ -117,7 +109,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
             adjacency[fromShape.Id] = transitions.ToImmutableList();
         }
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Built graph with {ShapeCount} shapes and {TransitionCount} transitions",
             shapesDict.Count,
             adjacency.Values.Sum(list => list.Count));
@@ -167,7 +159,8 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
         var tuningId = tuning.ToString();
         var positionsList = positions.ToImmutableList();
 
-        var minFret = positions.Any() ? positions.Where(p => !p.IsOpen).Min(p => p.Fret.Value) : 0;
+        var frettedPositions = positions.Where(p => !p.IsOpen).ToList();
+        var minFret = frettedPositions.Any() ? frettedPositions.Min(p => p.Fret.Value) : 0;
         var maxFret = positions.Any() ? positions.Max(p => p.Fret.Value) : 0;
 
         var diagness = FretboardShape.ComputeDiagness(positions);
@@ -215,11 +208,11 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
         ShapeGraphBuildOptions options)
     {
         // Compute harmonic cost using Grothendieck service
-        var delta = _grothendieckService.ComputeDelta(
+        var delta = grothendieckService.ComputeDelta(
             fromShape.PitchClassSet.IntervalClassVector,
             toShape.PitchClassSet.IntervalClassVector);
 
-        var harmonicCost = _grothendieckService.ComputeHarmonicCost(delta);
+        var harmonicCost = grothendieckService.ComputeHarmonicCost(delta);
 
         if (harmonicCost > options.MaxHarmonicDistance)
         {

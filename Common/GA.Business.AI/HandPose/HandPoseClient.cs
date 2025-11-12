@@ -1,4 +1,4 @@
-﻿namespace GA.Business.AI.AI.HandPose;
+﻿namespace GA.Business.AI.HandPose;
 
 using System.Net.Http.Headers;
 using System.Text.Json;

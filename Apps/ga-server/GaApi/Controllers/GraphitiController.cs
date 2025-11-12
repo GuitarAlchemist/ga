@@ -197,7 +197,7 @@ public class GraphitiController(
     [HttpPost("sync")]
     [ProducesResponseType(typeof(GraphitiResponse<object>), 200)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<GraphitiResponse<object>>> SyncFromMongoDB(
+    public async Task<ActionResult<GraphitiResponse<object>>> SyncFromMongoDb(
         CancellationToken cancellationToken = default)
     {
         try

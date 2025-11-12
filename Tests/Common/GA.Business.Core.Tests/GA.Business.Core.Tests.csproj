@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Analysis.Gpu\GA.Business.Core.Analysis.Gpu.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Analytics\GA.Business.Analytics.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>

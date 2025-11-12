@@ -74,7 +74,14 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
 
     #region IStaticValueObjectList<FingerCount> Members
 
+    /// <summary>
+    /// Gets all FingerCount instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<FingerCount> Items => ValueObjectUtils<FingerCount>.Items;
+
+    /// <summary>
+    /// Gets all FingerCount values (automatically memoized).
+    /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<FingerCount>.Values;
 
     #endregion

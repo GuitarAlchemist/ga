@@ -1,6 +1,7 @@
 ﻿namespace GuitarAlchemistChatbot.Services;
 
 using GA.Business.Core.Microservices;
+using GA.Business.Core.Microservices.Microservices;
 using Microsoft.Extensions.Caching.Memory;
 
 /// <summary>

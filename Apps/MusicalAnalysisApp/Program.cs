@@ -244,7 +244,7 @@ internal class Program
             ("Sequential Processing", () => BenchmarkSequential(1000)),
             ("Parallel Processing", () => BenchmarkParallel(1000)),
             ("Channel-based Processing", () => BenchmarkChannels(1000)),
-            ("SIMD Optimized Operations", () => BenchmarkSIMD(1000))
+            ("SIMD Optimized Operations", () => BenchmarkSimd(1000))
         };
 
         var benchmarkTable = new Table()
@@ -552,7 +552,7 @@ internal class Program
         await Task.WhenAll(tasks);
     }
 
-    private static async Task BenchmarkSIMD(int itemCount)
+    private static async Task BenchmarkSimd(int itemCount)
     {
         // Simulate SIMD optimized processing (much faster)
         await Task.Delay(itemCount / 100); // Simulate 100x speedup

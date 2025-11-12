@@ -14,7 +14,7 @@ using NUnit.Framework;
 [Category("Integration")]
 [Category("Plugins")]
 [Category("BSPDungeon")]
-public class BSPDungeonPluginTests
+public class BspDungeonPluginTests
 {
     [SetUp]
     public void Setup()
@@ -23,13 +23,13 @@ public class BSPDungeonPluginTests
             Mock.Of<HttpClient>(),
             Mock.Of<ILogger<GaApiClient>>());
 
-        _loggerMock = new Mock<ILogger<BSPDungeonPlugin>>();
-        _plugin = new BSPDungeonPlugin(_gaApiClientMock.Object, _loggerMock.Object);
+        _loggerMock = new Mock<ILogger<BspDungeonPlugin>>();
+        _plugin = new BspDungeonPlugin(_gaApiClientMock.Object, _loggerMock.Object);
     }
 
     private Mock<GaApiClient>? _gaApiClientMock;
-    private Mock<ILogger<BSPDungeonPlugin>>? _loggerMock;
-    private BSPDungeonPlugin? _plugin;
+    private Mock<ILogger<BspDungeonPlugin>>? _loggerMock;
+    private BspDungeonPlugin? _plugin;
 
     [Test]
     public async Task GenerateDungeonAsync_WithValidParameters_ReturnsFormattedDungeon()

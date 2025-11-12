@@ -11,7 +11,7 @@ public interface IGrothendieckService
     /// </summary>
     /// <param name="pitchClasses">Pitch classes (0-11)</param>
     /// <returns>Interval-class vector</returns>
-    IntervalClassVector ComputeICV(IEnumerable<int> pitchClasses);
+    IntervalClassVector ComputeIcv(IEnumerable<int> pitchClasses);
 
     /// <summary>
     ///     Compute the Grothendieck delta between two ICVs

@@ -5,15 +5,8 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Optimizes chord progressions for practice
 /// </summary>
-public class ProgressionOptimizer
+public class ProgressionOptimizer(ILogger<ProgressionOptimizer> logger)
 {
-    private readonly ILogger<ProgressionOptimizer> _logger;
-
-    public ProgressionOptimizer(ILogger<ProgressionOptimizer> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Generate an optimal practice progression
     /// </summary>
@@ -21,7 +14,7 @@ public class ProgressionOptimizer
         ShapeGraph graph,
         ProgressionConstraints constraints)
     {
-        _logger.LogDebug("Generating practice progression with length {Length}", constraints.TargetLength);
+        logger.LogDebug("Generating practice progression with length {Length}", constraints.TargetLength);
 
         // Start from a random high-ergonomics shape
         var startShape = graph.Shapes.Values
@@ -40,7 +33,7 @@ public class ProgressionOptimizer
 
         var progression = new List<FretboardShape> { startShape };
         var currentShape = startShape;
-        var Score = 0.0;
+        var score = 0.0;
 
         for (var i = 1; i < constraints.TargetLength; i++)
         {
@@ -53,7 +46,7 @@ public class ProgressionOptimizer
                 var transition = transitions.FirstOrDefault(t => t.ToId == nextShape.Id);
                 if (transition != null)
                 {
-                    Score += transition.Score;
+                    score += transition.Score;
                 }
             }
 
@@ -61,12 +54,12 @@ public class ProgressionOptimizer
             currentShape = nextShape;
         }
 
-        var quality = ComputeQuality(progression, Score);
+        var quality = ComputeQuality(progression, score);
 
         return new OptimizedProgression
         {
             Shapes = progression,
-            Score = Score,
+            Score = score,
             Quality = quality
         };
     }
@@ -110,13 +103,13 @@ public class ProgressionOptimizer
         };
     }
 
-    private double ComputeQuality(List<FretboardShape> progression, double Score)
+    private double ComputeQuality(List<FretboardShape> progression, double score)
     {
         if (!progression.Any()) return 0.0;
 
         var avgErgonomics = progression.Average(s => s.Ergonomics);
         var variety = progression.Select(s => s.Id).Distinct().Count() / (double)progression.Count;
-        var costPenalty = Math.Min(1.0, Score / (progression.Count * 10.0));
+        var costPenalty = Math.Min(1.0, score / (progression.Count * 10.0));
 
         return (avgErgonomics * 0.4 + variety * 0.4 + (1.0 - costPenalty) * 0.2);
     }

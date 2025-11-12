@@ -76,8 +76,15 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
 
     #region IStaticValueObjectList<CompoundIntervalSize> Members
 
+    /// <summary>
+    /// Gets all CompoundIntervalSize instances (automatically memoized).
+    /// </summary>
     public static IReadOnlyCollection<CompoundIntervalSize> Items => ValueObjectUtils<CompoundIntervalSize>.Items;
-    public static IReadOnlyList<int> Values => Items.Select(number => number.Value).ToImmutableList();
+
+    /// <summary>
+    /// Gets all CompoundIntervalSize values (automatically memoized).
+    /// </summary>
+    public static IReadOnlyList<int> Values => ValueObjectUtils<CompoundIntervalSize>.Values;
 
     #endregion
 

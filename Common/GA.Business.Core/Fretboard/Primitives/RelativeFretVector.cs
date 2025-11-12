@@ -6,18 +6,12 @@ using GA.Core.Combinatorics;
 ///     List of <see cref="RelativeFret" /> items, indexed by string.
 /// </summary>
 [PublicAPI]
-public abstract class RelativeFretVector : IEnumerable
+public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IEnumerable
 {
-    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr;
-    private readonly Variation<RelativeFret> _variation;
-
-    protected RelativeFretVector(Variation<RelativeFret> variation)
-    {
-        _variation = variation;
-        _relativeFretByStr = variation
+    private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr = variation
             .Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
             .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
-    }
+    private readonly Variation<RelativeFret> _variation = variation;
 
     #region IIndexer<Str, RelativeFret> Members
 

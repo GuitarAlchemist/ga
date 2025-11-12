@@ -32,7 +32,7 @@ public interface IAssetLibraryService
     /// <param name="glbPath">Path to the GLB file</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Metadata for the optimized asset</returns>
-    Task<AssetMetadata> OptimizeForWebGPUAsync(string glbPath, CancellationToken cancellationToken = default);
+    Task<AssetMetadata> OptimizeForWebGpuAsync(string glbPath, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Get all assets by category

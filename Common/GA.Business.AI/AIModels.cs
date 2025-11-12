@@ -1,4 +1,4 @@
-namespace GA.Business.AI.AI;
+namespace GA.Business.AI;
 
 /// <summary>
 ///     AI-generated recommendation

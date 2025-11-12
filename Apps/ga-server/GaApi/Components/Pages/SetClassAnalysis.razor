@@ -1,0 +1,499 @@
+﻿@page "/analysis"
+@using GA.Business.Core.Atonal
+@using GA.Business.Core.Atonal.Grothendieck
+
+<PageTitle>SetClass Analysis - Guitar Alchemist</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="mr-2"/>
+    SetClass Spectral & Grothendieck Analysis
+</MudText>
+<MudText Typo="Typo.body1" Class="mb-4">
+    Advanced music theory analysis using spectral graph theory and Grothendieck group operations.
+</MudText>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <!-- Tab 1: Spectral Analysis -->
+    <MudTabPanel Text="Spectral Analysis" Icon="@Icons.Material.Filled.GraphicEq">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Input Pitch Class Set</MudText>
+                    <MudTextField @bind-Value="_spectralInput" Label="Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Enter pitch classes (0-11) separated by commas or spaces. Example: 0,4,7 for C major triad"
+                                  Immediate="true"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="AnalyzeSpectrum" Class="mt-4" FullWidth="true"
+                               Disabled="_analyzingSpectrum">
+                        @if (_analyzingSpectrum)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                            <text>Analyzing...</text>
+                        }
+                        else
+                        {
+                            <text>Analyze Spectrum</text>
+                        }
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @if (_spectralResult != null)
+            {
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Set Class Information</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Prime Form:</strong></td>
+                                    <td>@_spectralResult.PrimeForm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forte Number:</strong></td>
+                                    <td>@_spectralResult.ForteNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cardinality:</strong></td>
+                                    <td>@_spectralResult.Cardinality</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ICV:</strong></td>
+                                    <td>@_spectralResult.IntervalClassVector</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modal Family:</strong></td>
+                                    <td>@(_spectralResult.ModalFamily ?? "None")</td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(_spectralResult.ScaleName))
+                                {
+                                    <tr>
+                                        <td><strong>Known Scale:</strong></td>
+                                        <td><MudChip T="string" Color="Color.Success" Size="Size.Small">@_spectralResult.ScaleName</MudChip></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><strong>Ian Ring Database:</strong></td>
+                                    <td>
+                                        <MudLink Href="@_spectralResult.IanRingUrl" Target="_blank" Color="Color.Primary">
+                                            View Scale #@_spectralResult.PitchClassSetId?.Value
+                                            <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Class="ml-1"/>
+                                        </MudLink>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Spectral Centroid:</strong></td>
+                                    <td>@_spectralResult.SpectralCentroid.ToString("F4")</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Magnitude Spectrum (Chart)</MudText>
+                        @((MarkupString)_magnitudeSpectrumChartHtml)
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Interval Class Vector (Radar)</MudText>
+                        @((MarkupString)_intervalVectorChartHtml)
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Magnitude Spectrum (Table)</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <thead>
+                                <tr>
+                                    @for (int i = 0; i < _spectralResult.MagnitudeSpectrum.Length; i++)
+                                    {
+                                        <th>k=@i</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    @foreach (var magnitude in _spectralResult.MagnitudeSpectrum)
+                                    {
+                                        <td>@magnitude.ToString("F3")</td>
+                                    }
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Nearest Set Classes by Spectral Similarity (Chart)</MudText>
+                        @((MarkupString)_nearestSetsChartHtml)
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Nearest Set Classes by Spectral Similarity (Table)</MudText>
+                        <MudTable Items="_spectralResult.NearestSetClasses" Dense="true" Hover="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Prime Form</MudTh>
+                                <MudTh>ICV</MudTh>
+                                <MudTh>Distance</MudTh>
+                                <MudTh>Modal Family</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Prime Form">@context.PrimeForm</MudTd>
+                                <MudTd DataLabel="ICV">@context.IntervalClassVector</MudTd>
+                                <MudTd DataLabel="Distance">@context.Distance.ToString("F4")</MudTd>
+                                <MudTd DataLabel="Modal Family">@(context.ModalFamily ?? "None")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudTabPanel>
+
+    <!-- Tab 2: Grothendieck Analysis -->
+    <MudTabPanel Text="Grothendieck Analysis" Icon="@Icons.Material.Filled.Transform">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Source Pitch Class Set</MudText>
+                    <MudTextField @bind-Value="_grothendieckSourceInput" Label="Source Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Example: 0,2,4,5,7,9,11 for C major scale"
+                                  Immediate="true"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Target Pitch Class Set</MudText>
+                    <MudTextField @bind-Value="_grothendieckTargetInput" Label="Target Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Example: 0,2,3,5,7,8,10 for C natural minor scale"
+                                  Immediate="true"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="AnalyzeGrothendieck" FullWidth="true"
+                           Disabled="_analyzingGrothendieck">
+                    @if (_analyzingGrothendieck)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        <text>Analyzing...</text>
+                    }
+                    else
+                    {
+                        <text>Analyze Transformation</text>
+                    }
+                </MudButton>
+            </MudItem>
+
+            @if (_grothendieckResult != null)
+            {
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Transformation Metrics</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Source ICV:</strong></td>
+                                    <td>@_grothendieckResult.SourceIcv</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Target ICV:</strong></td>
+                                    <td>@_grothendieckResult.TargetIcv</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Delta:</strong></td>
+                                    <td>@_grothendieckResult.Delta</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>L1 Norm:</strong></td>
+                                    <td>@_grothendieckResult.L1Norm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Harmonic Cost:</strong></td>
+                                    <td>@_grothendieckResult.HarmonicCost.ToString("F2")</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Interpretation</MudText>
+                        <MudAlert Severity="@GetSeverityForDistance(_grothendieckResult.L1Norm)" Dense="true">
+                            <strong>Distance Category:</strong> @GetDistanceCategory(_grothendieckResult.L1Norm)
+                        </MudAlert>
+                        <MudText Typo="Typo.body2" Class="mt-2">
+                            @_grothendieckResult.Explanation
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudTabPanel>
+
+    <!-- Tab 3: Find Nearby Sets -->
+    <MudTabPanel Text="Find Nearby Sets" Icon="@Icons.Material.Filled.Search">
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Search Parameters</MudText>
+                    <MudTextField @bind-Value="_nearbyInput" Label="Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Example: 0,4,7 for C major triad"
+                                  Immediate="true"/>
+                    <MudSlider @bind-Value="_maxDistance" Min="1" Max="10" Step="1"
+                               Color="Color.Primary" Class="mt-4">
+                        Max Distance: @_maxDistance
+                    </MudSlider>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="FindNearby" FullWidth="true"
+                               Disabled="_findingNearby">
+                        @if (_findingNearby)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                            <text>Searching...</text>
+                        }
+                        else
+                        {
+                            <text>Find Nearby Sets</text>
+                        }
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @if (_nearbyResults != null && _nearbyResults.Any())
+            {
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            Found @_nearbyResults.Count Nearby Set Classes
+                        </MudText>
+                        <MudTable Items="_nearbyResults" Dense="true" Hover="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Prime Form</MudTh>
+                                <MudTh>ICV</MudTh>
+                                <MudTh>Delta</MudTh>
+                                <MudTh>L1 Norm</MudTh>
+                                <MudTh>Cost</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Prime Form">@context.PrimeForm</MudTd>
+                                <MudTd DataLabel="ICV">@context.IntervalClassVector</MudTd>
+                                <MudTd DataLabel="Delta">@context.Delta</MudTd>
+                                <MudTd DataLabel="L1 Norm">@context.L1Norm</MudTd>
+                                <MudTd DataLabel="Cost">@context.Cost.ToString("F2")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudTabPanel>
+
+    <!-- Tab 4: Set Class DFT -->
+    <MudTabPanel Text="Set Class DFT" Icon="@Icons.Material.Filled.WavingHand">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Input Pitch Class Set</MudText>
+                    <MudTextField @bind-Value="_dftInput" Label="Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Enter pitch classes (0-11) separated by commas or spaces. Example: 0,4,7 for C major triad"
+                                  Immediate="true"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="AnalyzeDft" Class="mt-4" FullWidth="true"
+                               Disabled="_analyzingDft">
+                        @if (_analyzingDft)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                            <text>Analyzing...</text>
+                        }
+                        else
+                        {
+                            <text>Analyze DFT</text>
+                        }
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @if (_dftResult != null)
+            {
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">DFT Information</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Prime Form:</strong></td>
+                                    <td>@_dftResult.PrimeForm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forte Number:</strong></td>
+                                    <td>@_dftResult.ForteNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cardinality:</strong></td>
+                                    <td>@_dftResult.Cardinality</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ICV:</strong></td>
+                                    <td>@_dftResult.IntervalClassVector</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">DFT Coefficients (Real & Imaginary)</MudText>
+                        @((MarkupString)_dftCoefficientsChartHtml)
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Phase Spectrum</MudText>
+                        @((MarkupString)_phaseSpectrumChartHtml)
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">DFT Coefficients (Table)</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <thead>
+                                <tr>
+                                    <th>k</th>
+                                    <th>Real</th>
+                                    <th>Imaginary</th>
+                                    <th>Magnitude</th>
+                                    <th>Phase (rad)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < _dftResult.FourierCoefficients.Length; i++)
+                                {
+                                    var coeff = _dftResult.FourierCoefficients[i];
+                                    <tr>
+                                        <td>@i</td>
+                                        <td>@coeff.Real.ToString("F4")</td>
+                                        <td>@coeff.Imaginary.ToString("F4")</td>
+                                        <td>@coeff.Magnitude.ToString("F4")</td>
+                                        <td>@coeff.Phase.ToString("F4")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudTabPanel>
+
+    <!-- Tab 5: Shortest Path -->
+    <MudTabPanel Text="Shortest Path" Icon="@Icons.Material.Filled.Route">
+        <MudGrid>
+            <MudItem xs="12" md="5">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Source Set</MudText>
+                    <MudTextField @bind-Value="_pathSourceInput" Label="Source Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Example: 0,2,4,5,7,9,11 for C major"
+                                  Immediate="true"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="5">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Target Set</MudText>
+                    <MudTextField @bind-Value="_pathTargetInput" Label="Target Pitch Classes"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Example: 0,2,3,5,7,9,10 for C Dorian"
+                                  Immediate="true"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="2">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudNumericField @bind-Value="_maxSteps" Label="Max Steps"
+                                     Variant="Variant.Outlined" Min="1" Max="10"/>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="FindShortestPath" FullWidth="true"
+                           Disabled="_findingPath">
+                    @if (_findingPath)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        <text>Computing Path...</text>
+                    }
+                    else
+                    {
+                        <text>Find Shortest Path</text>
+                    }
+                </MudButton>
+            </MudItem>
+
+            @if (_pathResults != null && _pathResults.Any())
+            {
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            Harmonic Path (@_pathResults.Count steps)
+                        </MudText>
+                        <MudTimeline TimelineOrientation="TimelineOrientation.Vertical">
+                            @for (int i = 0; i < _pathResults.Count; i++)
+                            {
+                                var step = _pathResults[i];
+                                var isLast = i == _pathResults.Count - 1;
+                                <MudTimelineItem Color="@(isLast ? Color.Success : Color.Primary)" Size="Size.Small">
+                                    <ItemContent>
+                                        <MudText Typo="Typo.body1"><strong>Step @(i + 1):</strong> @step.PrimeForm</MudText>
+                                        <MudText Typo="Typo.body2">ICV: @step.IntervalClassVector</MudText>
+                                        @if (!isLast)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                → Distance to next: @step.DistanceToNext
+                                            </MudText>
+                                        }
+                                    </ItemContent>
+                                </MudTimelineItem>
+                            }
+                        </MudTimeline>
+                    </MudPaper>
+                </MudItem>
+            }
+            else if (_pathResults != null && !_pathResults.Any())
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Warning">
+                        No path found within @_maxSteps steps. Try increasing the maximum steps.
+                    </MudAlert>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudTabPanel>
+</MudTabs>
+

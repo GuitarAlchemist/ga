@@ -5,9 +5,9 @@ using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.WordExtractor;
 
-public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
+public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
 {
-    public string SourceId => $"{nameof(PDFDirectorySource)}:{sourceDirectory}";
+    public string SourceId => $"{nameof(PdfDirectorySource)}:{sourceDirectory}";
 
     public async Task<ImmutableList<IngestedDocument>> GetNewOrModifiedDocumentsAsync(
         IQueryable<IngestedDocument> existingDocuments)

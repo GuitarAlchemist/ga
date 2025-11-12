@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Microservices.Examples;
+﻿namespace GA.Business.Core.Microservices.Microservices.Examples;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -277,22 +277,22 @@ public static class WriterMonadExamples
 
 #region Example 5: IO Monad - Side Effects (Spring @Transactional)
 
-public static class IOMonadExamples
+public static class IoMonadExamples
 {
     // Pure description of side effects
-    public static IO<string> ReadFile(string path)
+    public static Io<string> ReadFile(string path)
     {
-        return IO.Of(() => File.ReadAllText(path));
+        return Io.Of(() => File.ReadAllText(path));
     }
 
-    public static IO<Unit> WriteFile(string path, string content)
+    public static Io<Unit> WriteFile(string path, string content)
     {
-        return IO.Run(() => File.WriteAllText(path, content));
+        return Io.Run(() => File.WriteAllText(path, content));
     }
 
-    public static IO<Unit> LogMessage(string message)
+    public static Io<Unit> LogMessage(string message)
     {
-        return IO.Run(() => Console.WriteLine($"[LOG] {message}"));
+        return Io.Run(() => Console.WriteLine($"[LOG] {message}"));
     }
 
     // Example: Compose side effects
@@ -312,7 +312,7 @@ public static class IOMonadExamples
     // Example: Retry on failure
     public static void Example2()
     {
-        var unreliableOperation = IO.Of(() =>
+        var unreliableOperation = Io.Of(() =>
         {
             if (Random.Shared.Next(10) < 7)
             {

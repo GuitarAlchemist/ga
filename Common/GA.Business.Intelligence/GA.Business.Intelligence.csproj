@@ -25,9 +25,10 @@
   <ItemGroup>
     <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj"/>
     <ProjectReference Include="..\GA.Business.AI\GA.Business.AI.csproj"/>
-    <ProjectReference Include="..\GA.Business.Analysis\GA.Business.Analysis.csproj"/>
-    <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/>
-    <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/>
+    <!-- TODO: Create these projects when needed -->
+    <!-- <ProjectReference Include="..\GA.Business.Analysis\GA.Business.Analysis.csproj"/> -->
+    <!-- <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
+    <!-- <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/> -->
     <ProjectReference Include="..\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <ProjectReference Include="..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
   </ItemGroup>
