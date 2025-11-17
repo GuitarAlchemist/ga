@@ -7,13 +7,13 @@ public static class ChordProgressionInvariants
 {
     public static IReadOnlyCollection<IInvariant<ChordProgressionDefinition>> GetAll()
     {
-        return new IInvariant<ChordProgressionDefinition>[]
-        {
+        return
+        [
             new ProgressionNameInvariant(),
             new RomanNumeralStructureInvariant(),
             new ChordCountMatchesRomanNumeralsInvariant(),
             new DifficultyInvariant()
-        }.ToImmutableArray();
+        ];
     }
 
     private sealed class ProgressionNameInvariant : InvariantBase<ChordProgressionDefinition>

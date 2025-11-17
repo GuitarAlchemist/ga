@@ -1,10 +1,7 @@
-﻿using GaApi.Models.AutonomousCuration;
-using Microsoft.AspNetCore.Components;
-using MudBlazor;
-using Plotly.NET;
-using Plotly.NET.LayoutObjects;
+﻿namespace GaApi.Components.Pages;
 
-namespace GaApi.Components.Pages;
+using GaApi.Models.AutonomousCuration;
+using MudBlazor;
 
 public partial class RetroactionLoop
 {
@@ -76,14 +73,14 @@ public partial class RetroactionLoop
         await Task.Delay(100);
     }
 
-    private static MudBlazor.Color GetPriorityColor(string priority)
+    private static Color GetPriorityColor(string priority)
     {
         return priority switch
         {
-            "High" => MudBlazor.Color.Error,
-            "Medium" => MudBlazor.Color.Warning,
-            "Low" => MudBlazor.Color.Info,
-            _ => MudBlazor.Color.Default
+            "High" => Color.Error,
+            "Medium" => Color.Warning,
+            "Low" => Color.Info,
+            _ => Color.Default
         };
     }
 

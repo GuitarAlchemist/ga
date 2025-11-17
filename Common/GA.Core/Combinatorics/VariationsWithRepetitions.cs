@@ -49,13 +49,14 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
 
         if (predicate != null)
         {
-            elements = elements.Where(predicate).ToImmutableList();
+            elements = [.. elements.Where(predicate)];
         }
 
-        Elements = elements.ToImmutableList();
+        Elements = [.. elements];
         Base = new(Elements.Count);
         Count = BigInteger.Pow(Base, length);
-        IndexFormat = $"D{(int)Math.Floor(BigInteger.Log10(Count) + 1)}";
+        // Handle Count == 0 (e.g., empty alphabet with positive length) where Log10 is undefined
+        IndexFormat = Count > 0 ? $"D{(int)Math.Floor(BigInteger.Log10(Count) + 1)}" : "D1";
         Length = length;
 
         _indexByElement =
@@ -112,7 +113,24 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     /// <returns>The <see cref="BigInteger" /> index.</returns>
     public BigInteger GetIndex(IEnumerable<T> variation)
     {
-        var variationArray = variation.Take(Length).ToImmutableArray();
+        var variationArray = variation.ToImmutableArray();
+        if (variationArray.Length != Length)
+        {
+            throw new ArgumentException(
+                $"Invalid {nameof(variation)} length: expected {Length}, got {variationArray.Length}");
+        }
+
+        if (Length == 0)
+        {
+            return BigInteger.Zero;
+        }
+
+        if (Base == 0)
+        {
+            throw new InvalidOperationException(
+                "Cannot compute index when the alphabet is empty and length > 0 (no variations exist).");
+        }
+
         if (!_lazyElementsSet.Value.IsSupersetOf(variationArray))
         {
             var invalidItems = variationArray.Except(_lazyElementsSet.Value).ToImmutableArray();
@@ -126,15 +144,17 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
                 $"Invalid {nameof(variation)} - {invalidItems.Length} items are not in initial collection: {sInvalidItems}");
         }
 
-        // Decompose the variation index is a series of items
-        // index = indexof(item0) + indexof(item1) * _base ^ 1 + indexof(item2) * _base ^ 2 + etc...
-        var result = new BigInteger(0);
-        var weight = new BigInteger(1);
-        var values = variationArray.Select(item => _indexByElement[item]);
-        foreach (var value in values)
+        // Compose the variation index with most-significant digit at position 0
+        // index = idx(item0) * Base^(Length-1) + idx(item1) * Base^(Length-2) + ... + idx(item{L-1}) * Base^0
+        var result = BigInteger.Zero;
+        var weight = BigInteger.One;
+        for (int i = 1; i < Length; i++) weight *= Base; // weight = Base^(Length-1)
+
+        for (var pos = 0; pos < Length; pos++)
         {
+            var value = _indexByElement[variationArray[pos]];
             result += new BigInteger(value) * weight;
-            weight *= Base;
+            if (pos < Length - 1) weight /= Base;
         }
 
         return result;
@@ -154,15 +174,34 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     ///     Create a variation from an index.
     /// </summary>
     /// <param name="index">The variation index.</param>
-    /// in lexicographical order (See https://en.wikipedia.org/wiki/Lexicographic_order)
+    /// <remarks>
+    ///     Variations are produced in lexicographical order, with position 0 as the most significant digit
+    ///     of the base-<see cref="Base"/> number system. That is, for alphabet [a,b,c] and length 2, indices map to:
+    ///     0 → [a,a], 1 → [a,b], 2 → [a,c], 3 → [b,a], etc.
+    /// </remarks>
     private Variation<T> CreateVariation(BigInteger index)
     {
+        if (Length == 0)
+        {
+            return new(index, ImmutableArray<T>.Empty);
+        }
+
+        if (Base == 0)
+        {
+            throw new InvalidOperationException(
+                "Cannot create a variation when the alphabet is empty and length > 0 (no variations exist).");
+        }
+
         var arrayBuilder = ImmutableArray.CreateBuilder<T>(Length);
+        // Pre-fill to correct size
+        for (var i = 0; i < Length; i++) arrayBuilder.Add(default!);
+
         var dividend = index;
-        for (var i = 0; i < Length; i++)
+        // Fill from least significant digit into the last position, so index 0 is most significant position
+        for (var pos = Length - 1; pos >= 0; pos--)
         {
             var elementIndex = (int)BigInteger.Remainder(dividend, Base);
-            arrayBuilder.Add(_elementByIndex[elementIndex]);
+            arrayBuilder[pos] = _elementByIndex[elementIndex];
             dividend = BigInteger.Divide(dividend, Base);
         }
 

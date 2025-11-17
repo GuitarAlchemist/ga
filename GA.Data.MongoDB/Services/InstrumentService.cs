@@ -24,15 +24,15 @@ public class InstrumentService : IInstrumentService
             Category = DetermineInstrumentCategory(instrumentInfo.Name),
             StringCount = stringCount,
             Family = DetermineInstrumentFamily(instrumentInfo.Name),
-            Tunings = instrumentInfo.Tunings
+            Tunings = [.. instrumentInfo.Tunings
                 .Where(t => !string.IsNullOrWhiteSpace(t.Value.Tuning))
                 .Select(t => new TuningDocument
                 {
                     Name = t.Value.Name,
-                    Notes = t.Value.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                    Notes = [.. t.Value.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries)],
                     IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
                     Description = GetTuningDescription(t.Value)
-                }).ToList(),
+                })],
             Description = $"Standard {instrumentInfo.Name} with {instrumentInfo.Tunings.Count} available tunings",
             Metadata = new Dictionary<string, string>
             {
@@ -66,13 +66,13 @@ public class InstrumentService : IInstrumentService
     {
         var update = Builders<InstrumentDocument>.Update
             .Set(i => i.Name, instrumentInfo.Name)
-            .Set(i => i.Tunings, instrumentInfo.Tunings.Select(t => new TuningDocument
+            .Set(i => i.Tunings, [.. instrumentInfo.Tunings.Select(t => new TuningDocument
             {
                 Name = t.Value.Name,
-                Notes = t.Value.Tuning.Split(' ').ToList(),
+                Notes = [.. t.Value.Tuning.Split(' ')],
                 IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
                 Description = null
-            }).ToList())
+            })])
             .Set(i => i.UpdatedAt, DateTime.UtcNow);
 
         var result = await _instruments.UpdateOneAsync(

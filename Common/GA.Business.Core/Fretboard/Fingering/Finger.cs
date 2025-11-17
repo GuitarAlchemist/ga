@@ -90,6 +90,16 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<Finger>.Values;
 
+    /// <summary>
+    /// Gets the cached span representing the full finger range.
+    /// </summary>
+    public static ReadOnlySpan<Finger> ItemsSpan => ValueObjectUtils<Finger>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each finger.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<Finger>.ValuesSpan;
+
     #endregion
 
     #region IValueObject<Finger>

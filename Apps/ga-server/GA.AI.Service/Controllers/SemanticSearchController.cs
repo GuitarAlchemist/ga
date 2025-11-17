@@ -1,9 +1,11 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
 using System.Runtime.CompilerServices;
-using GA.Business.Core.Fretboard.Biomechanics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using GA.Business.Core.Fretboard.Biomechanics;
+using GA.AI.Service.Models;
+using GA.AI.Service.Services;
 
 /// <summary>
 ///     API controller for semantic search across guitar datasets

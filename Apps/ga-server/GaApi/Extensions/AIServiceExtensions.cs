@@ -1,8 +1,7 @@
 ﻿namespace GaApi.Extensions;
 
 using MongoDbService = GA.Data.MongoDB.Services.MongoDbService;
-using IEmbeddingService = GA.Data.MongoDB.Services.Embeddings.IEmbeddingService;
-using OllamaEmbeddingService = GA.Data.MongoDB.Services.Embeddings.OllamaEmbeddingService;
+using IEmbeddingService = GA.Business.Core.AI.Services.Embeddings.IEmbeddingService;
 using Services;
 using Services.DocumentProcessing;
 using Services.AutonomousCuration;
@@ -85,10 +84,10 @@ public static class AiServiceExtensions
             _batchService = batchService;
         }
 
-        public async Task<List<float>> GenerateEmbeddingAsync(string text)
+        public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
         {
             var results = await _batchService.GenerateBatchEmbeddingsAsync(new[] { text });
-            return results[0].ToList();
+            return [.. results[0]];
         }
 #pragma warning restore SKEXP0001
     }

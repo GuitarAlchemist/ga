@@ -27,7 +27,7 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
     public static IReadOnlyCollection<MajorPentatonicScaleDegree> Items =>
         ValueObjectUtils<MajorPentatonicScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static MajorPentatonicScaleDegree MajorPentatonic => new(1);

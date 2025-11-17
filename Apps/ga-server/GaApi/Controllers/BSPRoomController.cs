@@ -50,7 +50,7 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
                 Height = dungeon.Height,
                 Seed = @params.Seed,
                 Params = @params,
-                Rooms = dungeon.Rooms.Select(r => new RoomDto
+                Rooms = [.. dungeon.Rooms.Select(r => new RoomDto
                 {
                     X = r.X,
                     Y = r.Y,
@@ -58,16 +58,16 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
                     Height = r.Height,
                     CenterX = r.CenterX,
                     CenterY = r.CenterY
-                }).ToList(),
-                Corridors = dungeon.Corridors.Select(c => new CorridorDto
+                })],
+                Corridors = [.. dungeon.Corridors.Select(c => new CorridorDto
                 {
                     Width = c.Width,
-                    Points = c.Points.Select(p => new PointDto
+                    Points = [.. c.Points.Select(p => new PointDto
                     {
                         X = p.X,
                         Y = p.Y
-                    }).ToList()
-                }).ToList()
+                    })]
+                })]
             };
 
             logger.LogInformation("Generated dungeon with {RoomCount} rooms and {CorridorCount} corridors",
@@ -175,7 +175,7 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
                     Height = dungeon.Height,
                     Seed = @params.Seed,
                     Params = @params,
-                    Rooms = dungeon.Rooms.Select(r => new RoomDto
+                    Rooms = [.. dungeon.Rooms.Select(r => new RoomDto
                     {
                         X = r.X,
                         Y = r.Y,
@@ -183,16 +183,16 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
                         Height = r.Height,
                         CenterX = r.CenterX,
                         CenterY = r.CenterY
-                    }).ToList(),
-                    Corridors = dungeon.Corridors.Select(c => new CorridorDto
+                    })],
+                    Corridors = [.. dungeon.Corridors.Select(c => new CorridorDto
                     {
                         Width = c.Width,
-                        Points = c.Points.Select(p => new PointDto
+                        Points = [.. c.Points.Select(p => new PointDto
                         {
                             X = p.X,
                             Y = p.Y
-                        }).ToList()
-                    }).ToList()
+                        })]
+                    })]
                 });
             }
 

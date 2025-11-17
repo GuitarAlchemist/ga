@@ -22,7 +22,7 @@ public readonly record struct WholeToneScaleDegree : IRangeValueObject<WholeTone
 
     public static IReadOnlyCollection<WholeToneScaleDegree> All => ValueObjectUtils<WholeToneScaleDegree>.Items;
     public static IReadOnlyCollection<WholeToneScaleDegree> Items => ValueObjectUtils<WholeToneScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static WholeToneScaleDegree WholeTone => new(1);

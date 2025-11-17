@@ -33,21 +33,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetTotalCount()
     {
-        var tryCount = await _monadicChordService.GetTotalCountAsync();
-
-        return tryCount.Match<IActionResult>(
-            onSuccess: count => Ok(new { count }),
-            onFailure: ex =>
+        try
+        {
+            var count = await _monadicChordService.GetTotalCountAsync();
+            return Ok(new { count });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get total chord count");
+            return StatusCode(500, new ErrorResponse
             {
-                _logger.LogError(ex, "Failed to get total chord count");
-                return StatusCode(500, new ErrorResponse
-                {
-                    Error = "InternalServerError",
-                    Message = "Failed to retrieve chord count",
-                    Details = ex.Message
-                });
-            }
-        );
+                Error = "InternalServerError",
+                Message = "Failed to retrieve chord count",
+                Details = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -60,12 +60,22 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(string id)
     {
-        var chordOption = await _monadicChordService.GetByIdAsync(id);
-
-        return chordOption.Match<IActionResult>(
-            chord => Ok(chord),
-            () => NotFound(new { message = $"Chord with ID {id} not found" })
-        );
+        try
+        {
+            var chord = await _monadicChordService.GetByIdAsync(id);
+            if (chord == null)
+                return NotFound(new { message = $"Chord with ID {id} not found" });
+            return Ok(chord);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get chord by ID {Id}", id);
+            return StatusCode(500, new ErrorResponse
+            {
+                Error = "InternalServerError",
+                Message = "Failed to retrieve chord"
+            });
+        }
     }
 
     /// <summary>
@@ -80,30 +90,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetByQuality(string quality, [FromQuery] int limit = 100)
     {
-        var result = await _monadicChordService.GetByQualityAsync(quality, limit);
-
-        return result.Match<IActionResult>(
-            chords => Ok(chords),
-            error => error.Type switch
+        try
+        {
+            var result = await _monadicChordService.GetByQualityAsync(quality, new { limit });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get chords by quality {Quality}", quality);
+            return StatusCode(500, new ErrorResponse
             {
-                ChordErrorType.ValidationError => BadRequest(new ErrorResponse
-                {
-                    Error = "ValidationError",
-                    Message = error.Message
-                }),
-                ChordErrorType.DatabaseError => StatusCode(500, new ErrorResponse
-                {
-                    Error = "DatabaseError",
-                    Message = "Failed to retrieve chords from database",
-                    Details = error.Message
-                }),
-                _ => StatusCode(500, new ErrorResponse
-                {
-                    Error = "UnknownError",
-                    Message = error.Message
-                })
-            }
-        );
+                Error = "InternalServerError",
+                Message = "Failed to retrieve chords by quality",
+                Details = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -120,10 +121,13 @@ public class MonadicChordsController : ControllerBase
     {
         var result = await _monadicChordService.GetByExtensionAsync(extension, limit);
 
-        return result.Match<IActionResult>(
-            chords => Ok(chords),
-            error => MapChordErrorToResponse(error)
-        );
+        // Handle the result directly since service returns List<object>
+        if (result != null && result.Any())
+        {
+            return Ok(result);
+        }
+
+        return NotFound($"No chords found with extension: {extension}");
     }
 
     /// <summary>
@@ -138,12 +142,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetByStackingType(string stackingType, [FromQuery] int limit = 100)
     {
-        var result = await _monadicChordService.GetByStackingTypeAsync(stackingType, limit);
-
-        return result.Match<IActionResult>(
-            chords => Ok(chords),
-            error => MapChordErrorToResponse(error)
-        );
+        try
+        {
+            var result = await _monadicChordService.GetByStackingTypeAsync(stackingType, new { limit });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get chords by stacking type {StackingType}", stackingType);
+            return StatusCode(500, new ErrorResponse
+            {
+                Error = "InternalServerError",
+                Message = "Failed to retrieve chords by stacking type",
+                Details = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -158,12 +171,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int limit = 100)
     {
-        var result = await _monadicChordService.SearchChordsAsync(query, limit);
-
-        return result.Match<IActionResult>(
-            chords => Ok(chords),
-            error => MapChordErrorToResponse(error)
-        );
+        try
+        {
+            var result = await _monadicChordService.SearchChordsAsync(query, new { limit });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to search chords with query {Query}", query);
+            return StatusCode(500, new ErrorResponse
+            {
+                Error = "InternalServerError",
+                Message = "Failed to search chords",
+                Details = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -179,20 +201,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetSimilar(string id, [FromQuery] int limit = 10)
     {
-        var result = await _monadicChordService.GetSimilarChordsAsync(id, limit);
-
-        return result.Match<IActionResult>(
-            chords => Ok(chords),
-            error => error.Type switch
+        try
+        {
+            var result = await _monadicChordService.GetSimilarChordsAsync(id, new { limit });
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get similar chords for {Id}", id);
+            return StatusCode(500, new ErrorResponse
             {
-                ChordErrorType.NotFound => NotFound(new ErrorResponse
-                {
-                    Error = "NotFound",
-                    Message = $"Chord with ID {id} not found"
-                }),
-                _ => MapChordErrorToResponse(error)
-            }
-        );
+                Error = "InternalServerError",
+                Message = "Failed to retrieve similar chords",
+                Details = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -204,22 +227,22 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetStatistics()
     {
-        var tryStats = await _monadicChordService.GetStatisticsAsync();
-
-        return tryStats.Match<IActionResult>(
-            onSuccess: stats => Ok(stats),
-            onFailure: ex =>
+        try
+        {
+            var stats = await _monadicChordService.GetStatisticsAsync();
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get chord statistics");
+            return StatusCode(500, new ErrorResponse
             {
-                _logger.LogError(ex, "Failed to get chord statistics");
-                return StatusCode(500, new ErrorResponse
-                {
-                    Error = "InternalServerError",
+                Error = "InternalServerError",
                     Message = "Failed to retrieve chord statistics",
                     Details = ex.Message
                 });
             }
-        );
-    }
+        }
 
     /// <summary>
     ///     Get available chord qualities using Try monad
@@ -230,17 +253,21 @@ public class MonadicChordsController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAvailableQualities()
     {
-        var tryQualities = await _monadicChordService.GetAvailableQualitiesAsync();
-
-        return tryQualities.Match<IActionResult>(
-            onSuccess: qualities => Ok(qualities),
-            onFailure: ex => StatusCode(500, new ErrorResponse
+        try
+        {
+            var qualities = await _monadicChordService.GetAvailableQualitiesAsync();
+            return Ok(qualities);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get available qualities");
+            return StatusCode(500, new ErrorResponse
             {
                 Error = "InternalServerError",
                 Message = "Failed to retrieve available qualities",
                 Details = ex.Message
-            })
-        );
+            });
+        }
     }
 
     // Helper method to map ChordError to IActionResult

@@ -196,7 +196,7 @@ public class Simplex : IEquatable<Simplex>
 {
     public Simplex(IEnumerable<object> vertices)
     {
-        Vertices = vertices.OrderBy(v => v.GetHashCode()).ToList();
+        Vertices = [.. vertices.OrderBy(v => v.GetHashCode())];
     }
 
     public IReadOnlyList<object> Vertices { get; }
@@ -227,7 +227,7 @@ public class Simplex : IEquatable<Simplex>
 
         for (var i = 0; i < Vertices.Count; i++)
         {
-            var faceVertices = Vertices.Where((v, idx) => idx != i);
+            var faceVertices = Vertices.Where((_, idx) => idx != i);
             yield return new Simplex(faceVertices);
         }
     }

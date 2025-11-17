@@ -1,0 +1,25 @@
+{
+  "name": "guitar-web-wasm-demo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "auto:record": "node scripts/record-and-analyze.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.7.6",
+    "jotai": "^2.0.0",
+    "onnxruntime-node": "^1.23.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.53.2",
+    "@vitejs/plugin-react": "^4.0.0",
+    "playwright": "^1.56.1",
+    "vite": "^5.0.0"
+  }
+}

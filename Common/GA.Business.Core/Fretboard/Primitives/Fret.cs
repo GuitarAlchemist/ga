@@ -1,18 +1,19 @@
 ﻿namespace GA.Business.Core.Fretboard.Primitives;
 
+using System;
+using static ValueObjectUtils<Fret>;
+
 /// <summary>
 ///     An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IEquatable{Fret}" /> <see cref="IComparable{Fret}" />, <see cref="IComparable" />
+///     Implements <see cref="IStaticValueObjectList{Fret}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct Fret : IStaticValueObjectList<Fret>
 {
     private const int _minValue = -1;
     private const int _maxValue = 36;
-
-    private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
 
     /// <summary>
     ///     Creates a new Fret from an int value with range validation.
@@ -34,35 +35,41 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
         _value = CheckRange(value);
     }
 
-    public static Fret Muted => _lazyDefaults.Value.DefaultMuted;
-    public static Fret Open => _lazyDefaults.Value.DefaultOpen;
-    public static Fret One => _lazyDefaults.Value.DefaultOne;
-    public static Fret Two => _lazyDefaults.Value.DefaultTwo;
-    public static Fret Three => _lazyDefaults.Value.DefaultThree;
-    public static Fret Four => _lazyDefaults.Value.DefaultFour;
-    public static Fret Five => _lazyDefaults.Value.DefaultFive;
+    public static Fret Min => FromValue(_minValue);
+    public static Fret Max => FromValue(_maxValue);
+    public static readonly Fret Muted = new(-1);
+    public static readonly Fret Open  = new(0);
+    public static readonly Fret One   = new(1);
+    public static readonly Fret Two   = new(2);
+    public static readonly Fret Three = new(3);
+    public static readonly Fret Four  = new(4);
+    public static readonly Fret Five  = new(5);
 
     public bool IsMuted => this == Muted;
     public bool IsOpen => this == Open;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Fret FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new Fret { Value = value };
-    }
+    public static Fret FromValue([ValueRange(_minValue, _maxValue)] int value) => new() { Value = value };
+    public static implicit operator Fret(int value) => new() { Value = value };
+    public static implicit operator int(Fret fret) => fret.Value;
 
-    public static Fret Min => _lazyDefaults.Value.DefaultMin;
-    public static Fret Max => _lazyDefaults.Value.DefaultMax;
-
-    public static implicit operator Fret(int value)
+    /// <summary>
+    /// Returns the <see cref="FretKind"/> of the fret.
+    /// </summary>
+    public FretKind Kind => _value switch
     {
-        return new Fret { Value = value };
-    }
+        -1 => FretKind.Muted,
+        0 => FretKind.Open,
+        _  => FretKind.Fretted
+    };
 
-    public static implicit operator int(Fret fret)
-    {
-        return fret.Value;
-    }
+    /// <summary>
+    /// Returns the fret number if the fret is fretted, otherwise null.
+    /// </summary>
+    public int? FrettedNumber =>
+        Kind == FretKind.Fretted
+            ? _value
+            : null;
 
     /// <summary>
     ///     Attempts to create a Fret from an int value, returning a Result instead of throwing.
@@ -81,99 +88,52 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     ///     );
     /// </code>
     /// </remarks>
-    public static Result<Fret, string> TryCreate(int value)
-    {
-        if (value is < _minValue or > _maxValue)
-        {
-            return Result<Fret, string>.Failure(
-                $"Fret number must be between {_minValue} (muted) and {_maxValue}, got {value}");
-        }
+    public static Result<Fret, string> TryCreate(int value) => value is < _minValue or > _maxValue
+        ? Result<Fret, string>.Failure($"Fret number must be between {_minValue} (muted) and {_maxValue}, got {value}")
+        : Result<Fret, string>.Success(new Fret { Value = value });
 
-        return Result<Fret, string>.Success(new Fret { Value = value });
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<Fret>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static IReadOnlyCollection<Fret> Range(int start, int count) =>
+        GetItems(start, count);
 
-    public static IReadOnlyCollection<Fret> Range(int start, int count)
-    {
-        return ValueObjectUtils<Fret>.GetItems(start, count);
-    }
+    public static IReadOnlyCollection<Fret> Range(int start, int count, bool includeOpen) =>
+        includeOpen ? GetItemsWithHead(Open, start, count) : Range(start, count);
 
-    public static IReadOnlyCollection<Fret> Range(int start, int count, bool includeOpen)
-    {
-        return includeOpen ? ValueObjectUtils<Fret>.GetItemsWithHead(Open, start, count) : Range(start, count);
-    }
+    public static ImmutableSortedSet<Fret> Set(Range range) =>
+        Set(Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value));
 
-    public static ImmutableSortedSet<Fret> Set(Range range)
-    {
-        return Set(Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value));
-    }
+    public static ImmutableSortedSet<Fret> Set(IEnumerable<int> values) =>
+        [..values.Select(FromValue)];
 
-    public static ImmutableSortedSet<Fret> Set(IEnumerable<int> values)
-    {
-        return values.Select(FromValue).ToImmutableSortedSet();
-    }
+    public static ImmutableSortedSet<Fret> Set(params int[] values) =>
+        [..values];
 
-    public static ImmutableSortedSet<Fret> Set(params int[] values)
-    {
-        return Set(values.AsEnumerable());
-    }
+    public static ImmutableSortedSet<Fret> Set(int value, Range range) =>
+        Set(value, Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value + 1));
 
-    public static ImmutableSortedSet<Fret> Set(int value, Range range)
-    {
-        return Set(value, Enumerable.Range(range.Start.Value, range.End.Value - range.Start.Value + 1));
-    }
+    public static ImmutableSortedSet<Fret> Set(int value, params int[] values) =>
+        Set(value, values.AsEnumerable());
 
-    public static ImmutableSortedSet<Fret> Set(int value, params int[] values)
-    {
-        return Set(value, values.AsEnumerable());
-    }
+    public static ImmutableSortedSet<Fret> Set(int value, IEnumerable<int> values) =>
+        Set(new[] { value }.Union(values));
 
-    public static ImmutableSortedSet<Fret> Set(int value, IEnumerable<int> values)
-    {
-        return Set(new[] { value }.Union(values));
-    }
+    public static Fret operator +(Fret fret, RelativeFret relativeFret) =>
+        new() { Value = fret.Value + relativeFret.Value };
 
-    public static Fret operator +(Fret fret, RelativeFret relativeFret)
-    {
-        return new Fret { Value = fret.Value + relativeFret.Value };
-    }
+    public void CheckMaxValue(int maxValue) =>
+        EnsureValueRange(Value, _minValue, maxValue);
 
-    public void CheckMaxValue(int maxValue)
+    public override string ToString() => _value switch
     {
-        ValueObjectUtils<Fret>.EnsureValueRange(Value, _minValue, maxValue);
-    }
-
-    public override string ToString()
-    {
-        return _value switch
-        {
-            -1 => "x",
-            0 => "O",
-            _ => Value.ToString()
-        };
-    }
-
-    private class Defaults
-    {
-        public Fret DefaultMin { get; } = FromValue(_minValue);
-        public Fret DefaultMax { get; } = FromValue(_maxValue);
-        public Fret DefaultMuted { get; } = FromValue(-1);
-        public Fret DefaultOpen { get; } = FromValue(0);
-        public Fret DefaultOne { get; } = FromValue(1);
-        public Fret DefaultTwo { get; } = FromValue(2);
-        public Fret DefaultThree { get; } = FromValue(3);
-        public Fret DefaultFour { get; } = FromValue(4);
-        public Fret DefaultFive { get; } = FromValue(5);
-    }
+        -1 => "x",
+        0 => "O",
+        _ => Value.ToString()
+    };
 
     #region IStaticValueObjectList<Fret> Members
 
@@ -186,6 +146,16 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     /// Gets all Fret values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<Fret>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full fret range.
+    /// </summary>
+    public static ReadOnlySpan<Fret> ItemsSpan => ValueObjectUtils<Fret>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each fret.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<Fret>.ValuesSpan;
 
     #endregion
 
@@ -203,30 +173,20 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
 
     #region Relational members
 
-    public int CompareTo(Fret other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(Fret other) =>
+        _value.CompareTo(other._value);
 
-    public static bool operator <(Fret left, Fret right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(Fret left, Fret right) =>
+         left.CompareTo(right) < 0;
 
-    public static bool operator >(Fret left, Fret right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(Fret left, Fret right) =>
+         left.CompareTo(right) > 0;
 
-    public static bool operator <=(Fret left, Fret right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(Fret left, Fret right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(Fret left, Fret right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(Fret left, Fret right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

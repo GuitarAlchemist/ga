@@ -5,7 +5,6 @@ using Core.Atonal.Grothendieck;
 using Core.Fretboard.Positions;
 using Core.Fretboard.Primitives;
 using Core.Fretboard.Shapes;
-using Microsoft.Extensions.Logging;
 using Moq;
 
 [TestFixture]
@@ -14,14 +13,12 @@ public class ShapeGraphBuilderTests
     [SetUp]
     public void SetUp()
     {
-        _loggerMock = new Mock<ILogger<ShapeGraphBuilder>>();
         _grothendieckMock = new Mock<IGrothendieckService>();
-        _builder = new ShapeGraphBuilder(_grothendieckMock.Object, _loggerMock.Object);
+        _builder = new ShapeGraphBuilder(_grothendieckMock.Object);
         _standardTuning = Tuning.Default; // E A D G B E
     }
 
     private ShapeGraphBuilder _builder = null!;
-    private Mock<ILogger<ShapeGraphBuilder>> _loggerMock = null!;
     private Mock<IGrothendieckService> _grothendieckMock = null!;
     private Tuning _standardTuning = null!;
 

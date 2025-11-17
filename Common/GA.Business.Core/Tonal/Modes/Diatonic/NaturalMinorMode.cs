@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Diatonic;
 using Scales;
 
@@ -15,7 +16,7 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
     IStaticEnumerable<NaturalMinorMode>
 {
     private static readonly Lazy<ScaleModeCollection<NaturalMinorScaleDegree, NaturalMinorMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     public static NaturalMinorMode Aeolian => new(1);
     public static NaturalMinorMode Locrian => new(2);
@@ -38,8 +39,16 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
     };
 
 
-    public static IEnumerable<NaturalMinorMode> Items =>
-        NaturalMinorScaleDegree.Items.Select(degree => new NaturalMinorMode(degree));
+    public static IEnumerable<NaturalMinorMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<NaturalMinorScaleDegree>.Items)
+            {
+                yield return new NaturalMinorMode(degree);
+            }
+        }
+    }
 
     public static NaturalMinorMode Get(NaturalMinorScaleDegree degree)
     {
@@ -56,3 +65,5 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
         return $"{Name} - {Formula}";
     }
 }
+
+

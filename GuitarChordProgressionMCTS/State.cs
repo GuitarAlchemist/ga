@@ -253,8 +253,6 @@ public class State
             // ... Add more mappings as necessary
         };
 
-        return Sequence
-            .Select(chord => scaleDegrees.GetValueOrDefault(chord.Name, "?"))
-            .ToImmutableList();
+        return [.. Sequence.Select(chord => scaleDegrees.GetValueOrDefault(chord.Name, "?"))];
     }
 }

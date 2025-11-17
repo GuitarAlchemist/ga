@@ -1,6 +1,4 @@
 ﻿@page "/analysis"
-@using GA.Business.Core.Atonal
-@using GA.Business.Core.Atonal.Grothendieck
 
 <PageTitle>SetClass Analysis - Guitar Alchemist</PageTitle>
 
@@ -8,9 +6,21 @@
     <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="mr-2"/>
     SetClass Spectral & Grothendieck Analysis
 </MudText>
-<MudText Typo="Typo.body1" Class="mb-4">
+<MudText Typo="Typo.body1" Class="mb-2">
     Advanced music theory analysis using spectral graph theory and Grothendieck group operations.
 </MudText>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4">
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.subtitle2">Label notation:</MudText>
+        <MudSelect T="GA.Business.Core.Atonal.SetClassNotation" @bind-Value="_selectedNotation" Dense="true" Variant="Variant.Outlined">
+            <MudSelectItem Value="GA.Business.Core.Atonal.SetClassNotation.Forte">Forte (default)</MudSelectItem>
+            <MudSelectItem Value="GA.Business.Core.Atonal.SetClassNotation.Rahn">Rahn</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+    <MudText Typo="Typo.caption" Class="mt-2">This setting only affects how set-class labels are displayed; analysis remains unchanged.</MudText>
+
+</MudPaper>
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <!-- Tab 1: Spectral Analysis -->
@@ -23,6 +33,25 @@
                                   Variant="Variant.Outlined"
                                   HelperText="Enter pitch classes (0-11) separated by commas or spaces. Example: 0,4,7 for C major triad"
                                   Immediate="true"/>
+
+                    <MudDivider Class="my-3" />
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.subtitle2">OPTIC Options</MudText>
+                        <MudTooltip Text="OPTIC = Octave, Permutation, Transposition, Inversion (see REFERENCES.md)">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Class="ml-1" />
+                        </MudTooltip>
+                    </MudStack>
+                    <MudStack Row="true" Spacing="2" Class="mt-2">
+                        <MudSwitch T="bool" Checked="_opticOctave" CheckedChanged="OnOctaveChanged" Color="Color.Primary" Dense="true">Octave (O)</MudSwitch>
+                        <MudSwitch T="bool" Checked="_opticPermutation" CheckedChanged="OnPermutationChanged" Color="Color.Primary" Dense="true">Permutation (P)</MudSwitch>
+                        <MudSwitch T="bool" Checked="_opticTransposition" CheckedChanged="OnTranspositionChanged" Color="Color.Primary" Dense="true">Transposition (T)</MudSwitch>
+                        <MudSwitch T="bool" Checked="_opticInversion" CheckedChanged="OnInversionChanged" Color="Color.Primary" Dense="true">Inversion (I)</MudSwitch>
+                    </MudStack>
+                    <MudStack Row="true" Spacing="2" Class="mt-2">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ResetOpticDefaults" Size="Size.Small">
+                            Reset OPT Defaults
+                        </MudButton>
+                    </MudStack>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                OnClick="AnalyzeSpectrum" Class="mt-4" FullWidth="true"
                                Disabled="_analyzingSpectrum">
@@ -51,8 +80,15 @@
                                     <td>@_spectralResult.PrimeForm</td>
                                 </tr>
                                 <tr>
+                                    <td><strong>Label (Notation):</strong></td>
+                                    <td>
+                                        @GetSetClassLabel(_spectralResult.PrimeForm)
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">@_selectedNotation.ToString()</MudChip>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><strong>Forte Number:</strong></td>
-                                    <td>@_spectralResult.ForteNumber</td>
+                                    <td>@(_spectralResult.ForteNumber ?? "Not yet assigned")</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Cardinality:</strong></td>
@@ -105,6 +141,51 @@
                     </MudPaper>
                 </MudItem>
 
+                @if (_unifiedDesc is not null)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="1" Class="pa-4">
+                            <MudText Typo="Typo.h6" GutterBottom="true">Unified Mode Summary</MudText>
+                            <MudSimpleTable Dense="true" Hover="true">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>@_unifiedDesc.PrimaryName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Summary:</strong></td>
+                                    <td>@_unifiedDesc.Summary</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ICV:</strong></td>
+                                    <td>@_unifiedDesc.IntervalClassVector</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Prime Form:</strong></td>
+                                    <td>@_unifiedDesc.PrimeForm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Forte:</strong></td>
+                                    <td>@_unifiedDesc.ForteNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Symmetry:</strong></td>
+                                    <td>@(_unifiedDesc.Symmetry ?? "—")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rotation:</strong></td>
+                                    <td>@_unifiedDesc.RotationIndex</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Family:</strong></td>
+                                    <td>@(_unifiedDesc.FamilyInfo ?? "None")</td>
+                                </tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudPaper>
+                    </MudItem>
+                }
+
                 <MudItem xs="12">
                     <MudPaper Elevation="1" Class="pa-4">
                         <MudText Typo="Typo.h6" GutterBottom="true">Magnitude Spectrum (Table)</MudText>
@@ -153,6 +234,33 @@
                                 <MudTd DataLabel="Modal Family">@(context.ModalFamily ?? "None")</MudTd>
                             </RowTemplate>
                         </MudTable>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- OPTIC (Voice-Leading) Neighbors -->
+                <MudItem xs="12">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6" GutterBottom="true">Nearest Set Classes by OPTIC (Voice-Leading) Geometry</MudText>
+                            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                Distances computed in an OPTI quotient space (Octave, Permutation, Transposition; Inversion optional).
+                                This follows Tymoczko/Callender–Quinn–Tymoczko’s geometry of music. See the project’s REFERENCES.md for citations.
+                            </MudAlert>
+                            <MudTable Items="_spectralResult.NearestOpticSetClasses" Dense="true" Hover="true" Striped="true">
+                                <HeaderContent>
+                                    <MudTh>Prime Form</MudTh>
+                                    <MudTh>ICV</MudTh>
+                                    <MudTh>OPTIC Distance</MudTh>
+                                    <MudTh>Modal Family</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Prime Form">@context.PrimeForm</MudTd>
+                                    <MudTd DataLabel="ICV">@context.IntervalClassVector</MudTd>
+                                    <MudTd DataLabel="OPTIC Distance">@context.OpticDistance.ToString("F4")</MudTd>
+                                    <MudTd DataLabel="Modal Family">@(context.ModalFamily ?? "None")</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudStack>
                     </MudPaper>
                 </MudItem>
             }
@@ -345,6 +453,13 @@
                                 <tr>
                                     <td><strong>Prime Form:</strong></td>
                                     <td>@_dftResult.PrimeForm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Label (Notation):</strong></td>
+                                    <td>
+                                        @GetSetClassLabel(_dftResult.PrimeForm)
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">@_selectedNotation.ToString()</MudChip>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong>Forte Number:</strong></td>

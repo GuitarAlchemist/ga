@@ -39,13 +39,12 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
         // Decompose base 12 value
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
         var dividend = value;
-        var intervalClasses =
-            IntervalClass
-                .Range(1, 6)
-                .Reverse(); // Start by least significant weight
 
-        foreach (var intervalClass in intervalClasses)
+        // Iterate deterministically from IC6 down to IC1. This avoids LINQ Reverse() over a custom collection
+        // and keeps the same least-significant-first decomposition as ToValue's weight accumulation.
+        for (var icValue = 6; icValue >= 1; icValue--)
         {
+            var intervalClass = IntervalClass.FromValue(icValue);
             var intervalClassCount = dividend % valueBase; // Remainder
             dictBuilder.Add(intervalClass, intervalClassCount);
             dividend /= valueBase;
@@ -66,16 +65,14 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     private static int ToValue(IReadOnlyDictionary<IntervalClass, int> countByIntervalClass, int valueBase = 12)
     {
         // Normalize: ensure all interval classes [1..6] are present with default value 0
-        var normalized = IntervalClass.Items
-            .Where(ic => ic.Value is >= 1 and <= 6)
-            .OrderByDescending(ic => ic.Value)
-            .ToImmutableArray();
-
+        // Accumulate weights starting from IC6 (least significant digit) up to IC1 (most significant)
+        // to match GetVector() decomposition and the documented encoding (e.g., 254361).
         var value = 0;
         var weight = 1;
 
-        foreach (var ic in normalized)
+        for (var icValue = 6; icValue >= 1; icValue--)
         {
+            var ic = IntervalClass.FromValue(icValue);
             var count = countByIntervalClass.GetValueOrDefault(ic, 0);
             value += count * weight;
             weight *= valueBase;

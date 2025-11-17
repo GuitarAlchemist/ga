@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
 using Primitives.Exotic;
 using Scales;
 
@@ -16,7 +17,7 @@ public sealed class BluesScaleMode(BluesScaleDegree degree) : TonalScaleMode<Blu
     IStaticEnumerable<BluesScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<BluesScaleDegree, BluesScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static BluesScaleMode Blues => new(BluesScaleDegree.Blues);
@@ -30,8 +31,16 @@ public sealed class BluesScaleMode(BluesScaleDegree degree) : TonalScaleMode<Blu
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<BluesScaleMode> Items =>
-        BluesScaleDegree.Items.Select(degree => new BluesScaleMode(degree));
+    public static IEnumerable<BluesScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<BluesScaleDegree>.Items)
+            {
+                yield return new BluesScaleMode(degree);
+            }
+        }
+    }
 
     public static BluesScaleMode Get(BluesScaleDegree degree)
     {
@@ -43,3 +52,5 @@ public sealed class BluesScaleMode(BluesScaleDegree degree) : TonalScaleMode<Blu
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

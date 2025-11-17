@@ -1,7 +1,6 @@
 ﻿namespace GaApi.Services.DocumentProcessing;
 
-using GA.Data.MongoDB;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -65,7 +64,8 @@ public class MusicTheoryKnowledgeProcessor
 
             // Step 4: Generate embeddings for semantic search
             _logger.LogInformation("Generating embeddings for document: {Title}", title);
-            var embedding = await _embeddingService.GenerateEmbeddingAsync(summary);
+            var embeddingArray = await _embeddingService.GenerateEmbeddingAsync(summary);
+            var embedding = embeddingArray.ToList();
 
             // Step 5: Store in MongoDB
             _logger.LogInformation("Storing music theory document in MongoDB: {Title}", title);

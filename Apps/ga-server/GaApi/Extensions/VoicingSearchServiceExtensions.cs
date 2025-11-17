@@ -2,6 +2,7 @@ namespace GaApi.Extensions;
 
 using GaApi.Services;
 using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,9 +21,11 @@ public static class VoicingSearchServiceExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
+        services.AddMemoryCache();
         services.AddSingleton<VoicingIndexingService>();
-        services.AddSingleton<IVoicingSearchStrategy, IlgpuVoicingSearchStrategy>();
+        services.AddSingleton<IVoicingSearchStrategy, GpuVoicingSearchStrategy>();
         services.AddSingleton<EnhancedVoicingSearchService>();
+        services.AddSingleton<IVoicingEmbeddingCache, VoicingEmbeddingCache>();
         services.AddHostedService<VoicingIndexInitializationService>();
 
         return services;

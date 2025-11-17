@@ -35,7 +35,7 @@ var mongoUrl = builder.Configuration["MONGO_URL"] ?? "mongodb://localhost:27017/
 var mongo = new MongoClient(mongoUrl).GetDatabase("scenes_db");
 
 builder.Services.AddSingleton(mongo);
-builder.Services.AddSingleton<ISceneStore>(sp => new MongoSceneStore(mongoUrl));
+builder.Services.AddSingleton<ISceneStore>(_ => new MongoSceneStore(mongoUrl));
 builder.Services.AddSingleton<IJobStore, MongoJobStore>();
 builder.Services.AddSingleton<ICancelStore, MongoCancelStore>();
 builder.Services.AddSingleton<GlbSceneBuilder>();

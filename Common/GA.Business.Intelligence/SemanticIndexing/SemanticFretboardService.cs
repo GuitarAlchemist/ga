@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Intelligence.SemanticIndexing;
 
-using GA.Business.Core;
-using GA.Business.Core.Fretboard;
+using Core.Fretboard;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -12,7 +11,7 @@ public class SemanticFretboardService
 {
     private readonly SemanticSearchService _searchService;
     private readonly ILogger<SemanticFretboardService> _logger;
-    private bool _isIndexed = false;
+    private bool _isIndexed;
 
     /// <summary>
     /// Interface for Ollama LLM service

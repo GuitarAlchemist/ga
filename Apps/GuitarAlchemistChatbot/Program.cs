@@ -43,7 +43,7 @@ if (args.Length > 0 && args[0] == "--cli")
 
     // Test a search
     Console.WriteLine("Testing search for 'major seventh chord'...");
-    var searchResults = await vectorStore.SearchAsync("major seventh chord", 5);
+    var searchResults = await vectorStore.SearchAsync("major seventh chord");
 
     Console.WriteLine($"Found {searchResults.Count()} results:");
     foreach (var searchResult in searchResults.Take(5))

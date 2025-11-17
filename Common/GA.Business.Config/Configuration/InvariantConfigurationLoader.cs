@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core;
 
 using Invariants;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -91,7 +92,7 @@ public class InvariantConfigurationLoader(
             EnableRaisingEvents = true
         };
 
-        watcher.Changed += async (sender, e) =>
+        watcher.Changed += async (_, _) =>
         {
             try
             {
@@ -322,7 +323,7 @@ public class ConfigurableInvariantFactory(
 
                 var invariants = (IList)createMethod.Invoke(this, [groupDefinition])!;
 
-                allInvariants[targetType] = invariants.Cast<object>().ToList();
+                allInvariants[targetType] = [.. invariants.Cast<object>()];
             }
             catch (Exception ex)
             {

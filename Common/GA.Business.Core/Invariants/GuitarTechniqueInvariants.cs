@@ -7,13 +7,13 @@ public static class GuitarTechniqueInvariants
 {
     public static IReadOnlyCollection<IInvariant<GuitarTechniqueDefinition>> GetAll()
     {
-        return new IInvariant<GuitarTechniqueDefinition>[]
-        {
+        return
+        [
             new TechniqueNameInvariant(),
             new DescriptionLengthInvariant(),
             new CategoryInvariant(),
             new ExampleCompletenessInvariant()
-        }.ToImmutableArray();
+        ];
     }
 
     private sealed class TechniqueNameInvariant : InvariantBase<GuitarTechniqueDefinition>

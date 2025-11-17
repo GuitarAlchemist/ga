@@ -86,6 +86,16 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<CompoundIntervalSize>.Values;
 
+    /// <summary>
+    /// Gets the cached span representing the full compound interval size range.
+    /// </summary>
+    public static ReadOnlySpan<CompoundIntervalSize> ItemsSpan => ValueObjectUtils<CompoundIntervalSize>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each compound interval size.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<CompoundIntervalSize>.ValuesSpan;
+
     #endregion
 
     #region IParsable Members

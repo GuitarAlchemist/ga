@@ -3,6 +3,7 @@
 global using System;
 global using System.Collections;
 global using System.Collections.Concurrent;
+global using System.Collections.Frozen;
 global using System.Collections.Generic;
 global using System.Collections.Immutable;
 global using System.Collections.ObjectModel;
@@ -21,5 +22,4 @@ global using GA.Core.Collections.Abstractions;
 global using GA.Business.Core.Extensions;
 global using GA.Core.Functional;
 global using JetBrains.Annotations;
-global using Microsoft.Extensions.Logging;
 global using PCRE;

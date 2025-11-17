@@ -289,12 +289,11 @@ internal class Program
     private static ChordData[] GenerateChordData(int count)
     {
         var random = new Random(42);
-        return Enumerable.Range(0, count)
+        return [.. Enumerable.Range(0, count)
             .Select(i => new ChordData(
                 $"Chord{i}",
                 GenerateTestData(12), // 12-tone representation
-                random.Next(1, 25))) // Fret position
-            .ToArray();
+                random.Next(1, 25)))];
     }
 
     private static (double scalar, double vector) BenchmarkChordSimilarity(float[] data1, float[] data2)

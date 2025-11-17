@@ -27,7 +27,7 @@ public readonly record struct DoubleHarmonicScaleDegree : IRangeValueObject<Doub
     public static IReadOnlyCollection<DoubleHarmonicScaleDegree> Items =>
         ValueObjectUtils<DoubleHarmonicScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static DoubleHarmonicScaleDegree DoubleHarmonic => new(1);

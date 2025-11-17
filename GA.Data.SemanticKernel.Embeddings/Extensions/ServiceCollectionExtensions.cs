@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
             configuration.GetSection("Embeddings"));
 
         // Register Semantic Kernel builder
-        services.AddScoped(sp =>
+        services.AddScoped(_ =>
         {
             var config = configuration
                 .GetSection("Embeddings")

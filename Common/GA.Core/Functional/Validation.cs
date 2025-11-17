@@ -80,7 +80,7 @@ public readonly record struct Validation<TValue>
     /// </summary>
     public static Validation<TValue> Invalid(params string[] errors)
     {
-        return new Validation<TValue>(errors.ToImmutableList());
+        return new Validation<TValue>([.. errors]);
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public readonly record struct Validation<TValue>
     /// </summary>
     public static Validation<TValue> Invalid(IEnumerable<string> errors)
     {
-        return new Validation<TValue>(errors.ToImmutableList());
+        return new Validation<TValue>([.. errors]);
     }
 
     /// <summary>

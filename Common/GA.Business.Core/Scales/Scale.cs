@@ -5,6 +5,7 @@ using Atonal.Primitives;
 using GA.Core.Extensions;
 using Intervals;
 using Notes;
+using Notes.Extensions;
 
 /// <summary>
 ///     A scale

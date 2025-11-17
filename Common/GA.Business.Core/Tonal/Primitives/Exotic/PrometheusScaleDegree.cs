@@ -22,7 +22,7 @@ public readonly record struct PrometheusScaleDegree : IRangeValueObject<Promethe
 
     public static IReadOnlyCollection<PrometheusScaleDegree> All => ValueObjectUtils<PrometheusScaleDegree>.Items;
     public static IReadOnlyCollection<PrometheusScaleDegree> Items => ValueObjectUtils<PrometheusScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static PrometheusScaleDegree Prometheus => new(1);

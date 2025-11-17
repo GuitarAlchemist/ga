@@ -1,14 +1,11 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
-using Actors.Messages;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
-using Microsoft.AspNetCore.RateLimiting;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
-// using GA.Business.Core.Fretboard.Shapes.Applications // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 ///     API controller for Adaptive AI Difficulty System

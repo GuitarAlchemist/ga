@@ -1,6 +1,7 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using Business.Core.Chords;
+using Business.Core.Notes.Extensions;
 using Microsoft.Extensions.Logging;
 using Models;
 using Models.References;
@@ -20,11 +21,10 @@ public class ChordSyncService(
                     Name = template.PitchClassSet.Name,
                     Root = template.PitchClassSet.Notes.First().ToString(),
                     Quality = DetermineQuality(template),
-                    Intervals = template.PitchClassSet.Notes
+                    Intervals = [.. template.PitchClassSet.Notes
                         .Skip(1)
-                        .Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())
-                        .ToList(),
-                    Notes = template.PitchClassSet.Notes.Select(n => n.ToString()).ToList(),
+                        .Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())],
+                    Notes = [.. template.PitchClassSet.Notes.Select(n => n.ToString())],
                     RelatedScales = GetRelatedScales(template),
                     CommonProgressions = GetCommonProgressions(template)
                 })

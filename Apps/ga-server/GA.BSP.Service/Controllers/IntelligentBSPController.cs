@@ -6,6 +6,8 @@ using GA.Business.Core.Notes;
 using Microsoft.AspNetCore.RateLimiting;
 using GA.BSP.Service.Models;
 
+// TODO: Re-enable when GA.Business.Orchestration project is created with IntelligentBspGenerator and IShapeGraphBuilder
+/*
 /// <summary>
 ///     API controller for Intelligent BSP Level Generation
 ///     Uses ALL 9 advanced mathematical techniques to create musically-aware BSP levels
@@ -256,3 +258,4 @@ public class LevelStatsDto
     public required double Complexity { get; init; }
     public required double Quality { get; init; }
 }
+*/

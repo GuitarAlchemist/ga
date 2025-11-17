@@ -24,7 +24,7 @@ public class IntervalStructure : IParsable<IntervalStructure>,
     /// <exception cref="InvalidEnumArgumentException">Thrown when the sum of semitone distance is not equal to 12</exception>
     public IntervalStructure(IEnumerable<Semitones> semitoneCollection)
     {
-        _semitonesList = semitoneCollection as IReadOnlyList<Semitones> ?? semitoneCollection.ToImmutableList();
+        _semitonesList = semitoneCollection as IReadOnlyList<Semitones> ?? [.. semitoneCollection];
         if (_semitonesList.Sum(semitones => semitones.Value) != 12)
         {
             throw new InvalidEnumArgumentException(

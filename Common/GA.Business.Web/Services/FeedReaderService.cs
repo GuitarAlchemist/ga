@@ -171,7 +171,7 @@ public class FeedReaderService(
         using var xmlReader = XmlReader.Create(stringReader);
 
         var feed = SyndicationFeed.Load(xmlReader);
-        return feed.Items.ToList();
+        return [.. feed.Items];
     }
 
     private string FormatFeedItems(List<SyndicationItem> items, string title)

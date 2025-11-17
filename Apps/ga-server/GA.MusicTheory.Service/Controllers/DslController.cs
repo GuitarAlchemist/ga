@@ -1,9 +1,9 @@
 namespace GA.MusicTheory.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
-using GA.MusicTheory.DSL.Generators;
-using GA.MusicTheory.DSL.Parsers;
-using GA.MusicTheory.DSL.Types;
+using DSL.Generators;
+using DSL.Parsers;
+using DSL.Types;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.FSharp.Core;
 

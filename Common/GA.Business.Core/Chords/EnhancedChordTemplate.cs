@@ -188,7 +188,7 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
             chordTones.Add(new ChordTone(pitchClass, interval.Function));
         }
 
-        return chordTones.ToArray();
+        return [.. chordTones];
     }
 
     private double CalculateCompatibilityScore(Scale scale)

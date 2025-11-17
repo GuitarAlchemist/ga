@@ -22,7 +22,7 @@ public readonly record struct BluesScaleDegree : IRangeValueObject<BluesScaleDeg
 
     public static IReadOnlyCollection<BluesScaleDegree> All => ValueObjectUtils<BluesScaleDegree>.Items;
     public static IReadOnlyCollection<BluesScaleDegree> Items => ValueObjectUtils<BluesScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static BluesScaleDegree Blues => new(1);

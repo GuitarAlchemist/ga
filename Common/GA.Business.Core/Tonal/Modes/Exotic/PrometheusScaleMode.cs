@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
+
 using Primitives.Exotic;
 using Scales;
 
@@ -18,7 +20,7 @@ public sealed class PrometheusScaleMode(PrometheusScaleDegree degree)
         IStaticEnumerable<PrometheusScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<PrometheusScaleDegree, PrometheusScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static PrometheusScaleMode Prometheus => new(PrometheusScaleDegree.Prometheus);
@@ -32,8 +34,16 @@ public sealed class PrometheusScaleMode(PrometheusScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<PrometheusScaleMode> Items =>
-        PrometheusScaleDegree.Items.Select(degree => new PrometheusScaleMode(degree));
+    public static IEnumerable<PrometheusScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<PrometheusScaleDegree>.Items)
+            {
+                yield return new PrometheusScaleMode(degree);
+            }
+        }
+    }
 
     public static PrometheusScaleMode Get(PrometheusScaleDegree degree)
     {
@@ -45,3 +55,5 @@ public sealed class PrometheusScaleMode(PrometheusScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

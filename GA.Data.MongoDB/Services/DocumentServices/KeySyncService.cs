@@ -17,7 +17,7 @@ public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongo
                 Name = key.ToString(),
                 Root = key.Root.ToString(),
                 Mode = key.KeyMode.ToString(),
-                AccidentedNotes = key.KeySignature.AccidentedNotes.Select(n => n.ToString()).ToList(),
+                AccidentedNotes = [.. key.KeySignature.AccidentedNotes.Select(n => n.ToString())],
                 NumberOfAccidentals = key.KeySignature.AccidentalCount,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

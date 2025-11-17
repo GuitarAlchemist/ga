@@ -1,15 +1,11 @@
 ﻿namespace FretboardVoicingsCLI;
 
-using System.Numerics;
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Voicings;
 using GA.Business.Core.Fretboard.Voicings.Analysis;
 using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard.Voicings.Filtering;
 using GA.Business.Core.Fretboard.Voicings.Generation;
-using GA.Business.Core.Notes.Primitives;
-using GA.Core.Combinatorics;
 using Spectre.Console;
 
 internal class Program

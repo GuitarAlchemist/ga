@@ -4,6 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,13 @@ builder.Services.Configure<MongoDbSettings>(
 // Register services
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<PerformanceMetricsService>();
+builder.Services.AddScoped<SemanticSearchService>();
+builder.Services.AddScoped<EnhancedUserPersonalizationService>();
+builder.Services.AddScoped<VectorSearchService>();
+builder.Services.AddScoped<EnhancedVectorSearchService>();
+builder.Services.AddScoped<ICachingService, CachingService>();
+builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
+builder.Services.AddScoped<ActorSystemManager>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();

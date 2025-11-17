@@ -44,12 +44,12 @@ public class InvariantAiServiceTests
         _httpClient.Dispose();
     }
 
-    private InvariantAiService _aiService;
-    private Mock<ILogger<InvariantAiService>> _mockLogger;
-    private Mock<InvariantAnalyticsService> _mockAnalyticsService;
-    private Mock<HttpMessageHandler> _mockHttpHandler;
-    private HttpClient _httpClient;
-    private AiConfiguration _config;
+    private InvariantAiService _aiService = null!;
+    private Mock<ILogger<InvariantAiService>> _mockLogger = null!;
+    private Mock<InvariantAnalyticsService> _mockAnalyticsService = null!;
+    private Mock<HttpMessageHandler> _mockHttpHandler = null!;
+    private HttpClient _httpClient = null!;
+    private AiConfiguration _config = null!;
 
     [Test]
     public async Task GenerateRecommendationsAsync_WithValidData_ShouldReturnRecommendations()

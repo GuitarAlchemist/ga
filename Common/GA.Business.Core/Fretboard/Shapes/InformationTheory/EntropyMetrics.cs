@@ -53,7 +53,7 @@ public static class EntropyMetrics
         if (Math.Abs(sum - 1.0) > 0.01)
         {
             // Normalize
-            probs = probs.Select(p => p / sum).ToArray();
+            probs = [.. probs.Select(p => p / sum)];
         }
 
         return -probs.Sum(p => p * Math.Log(p) / _log2);

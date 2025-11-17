@@ -2,8 +2,8 @@
 
 using Analysis;
 using Core;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Tonal;
+using Primitives;
+using Tonal;
 using Generation;
 
 /// <summary>
@@ -157,9 +157,7 @@ public static class VoicingKeyFilters
         }
 
         // Sort by match quality (best matches first)
-        return matches.OrderByDescending(m => m.MatchQuality)
-                     .ThenBy(m => m.ChromaticNotes)
-                     .ToList();
+        return [.. matches.OrderByDescending(m => m.MatchQuality).ThenBy(m => m.ChromaticNotes)];
     }
 
     /// <summary>

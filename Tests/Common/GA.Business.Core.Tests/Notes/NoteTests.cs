@@ -1,6 +1,7 @@
 ﻿namespace GA.Business.Core.Tests.Notes;
 
 using Core.Notes;
+using Core.Notes.Extensions;
 using Core.Notes.Primitives;
 
 [TestFixture]

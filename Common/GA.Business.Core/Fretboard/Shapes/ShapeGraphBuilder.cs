@@ -1,10 +1,8 @@
 ﻿namespace GA.Business.Core.Fretboard.Shapes;
 
-using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using Atonal;
 using Atonal.Grothendieck;
-using Microsoft.Extensions.Logging;
 using Positions;
 using Primitives;
 
@@ -12,8 +10,7 @@ using Primitives;
 /// Builds fretboard shape graphs with transitions
 /// </summary>
 public class ShapeGraphBuilder(
-    IGrothendieckService grothendieckService,
-    ILogger<ShapeGraphBuilder> logger)
+    IGrothendieckService grothendieckService)
     : IShapeGraphBuilder
 {
     /// <inheritdoc />
@@ -22,8 +19,6 @@ public class ShapeGraphBuilder(
         PitchClassSet pitchClassSet,
         ShapeGraphBuildOptions options)
     {
-        logger.LogDebug("Generating shapes for {PitchClassSet} on {Tuning}", pitchClassSet.Id, tuning.ToString());
-
         var shapes = new List<FretboardShape>();
         var fretboard = new Fretboard(tuning, options.MaxFret);
 
@@ -74,8 +69,6 @@ public class ShapeGraphBuilder(
         IEnumerable<PitchClassSet> pitchClassSets,
         ShapeGraphBuildOptions options)
     {
-        logger.LogInformation("Building shape graph for {Count} pitch-class sets", pitchClassSets.Count());
-
         // Generate all shapes
         var allShapes = new List<FretboardShape>();
         foreach (var pcs in pitchClassSets)
@@ -83,8 +76,6 @@ public class ShapeGraphBuilder(
             var shapes = GenerateShapes(tuning, pcs, options);
             allShapes.AddRange(shapes);
         }
-
-        logger.LogDebug("Generated {Count} total shapes", allShapes.Count);
 
         // Build shape dictionary
         var shapesDict = allShapes.ToImmutableDictionary(s => s.Id);
@@ -106,13 +97,8 @@ public class ShapeGraphBuilder(
                 }
             }
 
-            adjacency[fromShape.Id] = transitions.ToImmutableList();
+            adjacency[fromShape.Id] = [.. transitions];
         }
-
-        logger.LogInformation(
-            "Built graph with {ShapeCount} shapes and {TransitionCount} transitions",
-            shapesDict.Count,
-            adjacency.Values.Sum(list => list.Count));
 
         var result = new ShapeGraph
         {

@@ -22,7 +22,7 @@ public class OllamaApiClient(HttpClient httpClient)
                 return [];
             }
 
-            return response.Models.Select(m => m.Name).ToImmutableList();
+            return [.. response.Models.Select(m => m.Name)];
         }
         catch (HttpRequestException ex)
         {

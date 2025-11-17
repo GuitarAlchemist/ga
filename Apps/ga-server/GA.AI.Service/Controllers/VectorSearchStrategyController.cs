@@ -1,7 +1,8 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 
 [ApiController]

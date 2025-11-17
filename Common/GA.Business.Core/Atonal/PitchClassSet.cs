@@ -44,7 +44,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     {
         ArgumentNullException.ThrowIfNull(pitchClasses);
 
-        var pitchClassesSet = pitchClasses as ImmutableSortedSet<PitchClass> ?? pitchClasses.ToImmutableSortedSet();
+        var pitchClassesSet = pitchClasses as ImmutableSortedSet<PitchClass> ?? [.. pitchClasses];
         _pitchClassesSet = pitchClassesSet;
 
         var mask = 0;
@@ -105,8 +105,39 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// <summary>
     ///     Gets the <see cref="IReadOnlyCollection{PitchClassSet}" />
     /// </summary>
-    public IReadOnlyCollection<PitchClassSet> TranspositionsAndInversions =>
-        _lazyIntervalClassVectorGroup.Value[IntervalClassVector].ToImmutableList();
+    private IReadOnlyCollection<PitchClassSet>? _transpositionsAndInversions;
+
+    public IReadOnlyCollection<PitchClassSet> TranspositionsAndInversions
+    {
+        get
+        {
+            if (_transpositionsAndInversions is not null)
+            {
+                return _transpositionsAndInversions;
+            }
+
+            // Generate the 24 forms: 12 rotations (transpositions) and 12 rotations of the inversion
+            var values = new HashSet<int>();
+
+            var baseId = Id;
+            var invId = Id.Inverse;
+
+            for (var i = 0; i < 12; i++)
+            {
+                values.Add(baseId.Rotate(i).Value);
+                values.Add(invId.Rotate(i).Value);
+            }
+
+            // Map back to PitchClassSet instances deterministically ordered by id
+            var list = values
+                .OrderBy(v => v)
+                .Select(v => ((PitchClassSetId)v).ToPitchClassSet())
+                .ToImmutableList();
+
+            _transpositionsAndInversions = list;
+            return _transpositionsAndInversions;
+        }
+    }
 
     /// <summary>
     ///     Gets the <see cref="Nullable{PitchClassSet}" />

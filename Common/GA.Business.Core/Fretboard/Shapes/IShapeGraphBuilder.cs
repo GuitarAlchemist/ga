@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Shapes;
 
 using Atonal;
-using Primitives;
 
 /// <summary>
 /// Interface for building fretboard shape graphs

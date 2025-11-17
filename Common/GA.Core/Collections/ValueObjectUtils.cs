@@ -1,5 +1,7 @@
 namespace GA.Core.Collections;
 
+using System;
+using System.Collections.Immutable;
 using Extensions;
 
 [PublicAPI]
@@ -9,6 +11,14 @@ public static class ValueObjectUtils<TSelf>
     public static IReadOnlyCollection<TSelf> Items => ValueObjectCollection<TSelf>.Create();
 
     public static ImmutableArray<int> Values => ValueObjectCache<TSelf>.AllValues;
+
+    public static ReadOnlySpan<TSelf> ItemsSpan => ValueObjectCache<TSelf>.ItemsSpan;
+
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectCache<TSelf>.ValuesSpan;
+
+    public static FrozenSet<TSelf> ItemsFrozenSet => ValueObjectCache<TSelf>.ItemsSet;
+
+    public static FrozenSet<int> ValuesFrozenSet => ValueObjectCache<TSelf>.ValuesSet;
 
     /// <summary>
     ///     Ensure the value is in range.

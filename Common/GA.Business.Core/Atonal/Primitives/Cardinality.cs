@@ -43,6 +43,16 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
 
     public static IReadOnlyCollection<Cardinality> Items => IStaticReadonlyCollectionFromValues<Cardinality>.Items;
 
+    /// <summary>
+    /// Gets the cached span representing the full cardinality range.
+    /// </summary>
+    public static ReadOnlySpan<Cardinality> ItemsSpan => ValueObjectUtils<Cardinality>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each cardinality.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<Cardinality>.ValuesSpan;
+
     private const int _minValue = 0;
     private const int _maxValue = 12;
 

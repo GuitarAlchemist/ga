@@ -1,7 +1,7 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 using GA.Data.MongoDB.Models.Rag;
-using GA.Data.MongoDB.Services.Embeddings;
+using Embeddings;
 using Microsoft.Extensions.Logging;
 using global::MongoDB.Driver;
 
@@ -67,7 +67,7 @@ public class MusicTheoryRagService(
         {
             // Generate embeddings for semantic search
             var embedding = await EmbeddingService.GenerateEmbeddingAsync(doc.SearchText);
-            doc.Embedding = embedding.ToArray();
+            doc.Embedding = [.. embedding];
         }
 
         return documents;
@@ -97,7 +97,7 @@ public class MusicTheoryRagService(
                 .Select(doc => new
                 {
                     Document = doc,
-                    Similarity = CosineSimilarity(queryEmbedding.ToArray(), doc.Embedding)
+                    Similarity = CosineSimilarity([.. queryEmbedding], doc.Embedding)
                 })
                 .Where(x => x.Similarity >= minSimilarity)
                 .OrderByDescending(x => x.Similarity)
@@ -166,7 +166,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return relationships.Distinct().ToList();
+        return [.. relationships.Distinct()];
     }
 
     private List<string> ExtractVoiceLeadingRules(string content)
@@ -183,7 +183,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return rules.Distinct().ToList();
+        return [.. rules.Distinct()];
     }
 
     private List<string> ExtractHarmonicProgressions(string content)
@@ -200,7 +200,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return progressions.Distinct().ToList();
+        return [.. progressions.Distinct()];
     }
 
     private List<string> ExtractChordSubstitutions(string content)
@@ -217,7 +217,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return substitutions.Distinct().ToList();
+        return [.. substitutions.Distinct()];
     }
 
     private List<string> ExtractModalTheory(string content)
@@ -234,7 +234,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return modes.Distinct().ToList();
+        return [.. modes.Distinct()];
     }
 
     private List<string> ExtractJazzHarmonyConcepts(string content)
@@ -251,7 +251,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return concepts.Distinct().ToList();
+        return [.. concepts.Distinct()];
     }
 
     private List<string> ExtractFunctionalHarmony(string content)
@@ -268,7 +268,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return functions.Distinct().ToList();
+        return [.. functions.Distinct()];
     }
 
     private List<string> ExtractTheoreticalConcepts(string content)
@@ -285,7 +285,7 @@ public class MusicTheoryRagService(
             }
         }
         
-        return concepts.Distinct().ToList();
+        return [.. concepts.Distinct()];
     }
 }
 

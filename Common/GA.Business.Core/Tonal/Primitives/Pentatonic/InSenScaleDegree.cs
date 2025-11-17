@@ -22,7 +22,7 @@ public readonly record struct InSenScaleDegree : IRangeValueObject<InSenScaleDeg
 
     public static IReadOnlyCollection<InSenScaleDegree> All => ValueObjectUtils<InSenScaleDegree>.Items;
     public static IReadOnlyCollection<InSenScaleDegree> Items => ValueObjectUtils<InSenScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static InSenScaleDegree InSen => new(1);

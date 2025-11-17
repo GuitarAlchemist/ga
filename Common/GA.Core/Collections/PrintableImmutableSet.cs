@@ -12,7 +12,7 @@ public abstract class PrintableImmutableSet<T>(ImmutableSortedSet<T> items) : La
             return set;
         }
 
-        return items.ToImmutableSortedSet();
+        return [.. items];
     }
 
     #region IImmutableSet<T> Members

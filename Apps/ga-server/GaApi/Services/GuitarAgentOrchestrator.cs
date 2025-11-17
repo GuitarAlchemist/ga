@@ -227,9 +227,7 @@ public sealed class GuitarAgentOrchestrator(
 
         cancellationToken.ThrowIfCancellationRequested();
         return response.TryDeserialize(_serializerOptions, out QualityReviewDto? review) && review is not null
-            ? warnings.Concat(NormalizeList(review.AdditionalWarnings))
-                .Distinct()
-                .ToArray()
+            ? [.. warnings.Concat(NormalizeList(review.AdditionalWarnings)).Distinct()]
             : warnings;
     }
 
@@ -679,7 +677,7 @@ public sealed class GuitarAgentOrchestrator(
                 Focus = "A section – establishing the vibe",
                 Description =
                     "Intro bars keep the tonic minor sound while pivoting through suspensions to create a floating texture.",
-                Chords = progression.Take(4).ToList(),
+                Chords = [.. progression.Take(4)],
                 VoicingTips = new List<string>
                 {
                     "Voice the tonic m9 with the 9th on top for an immediate lofi pad feel.",
@@ -696,7 +694,7 @@ public sealed class GuitarAgentOrchestrator(
                 Focus = "B section – tension and release",
                 Description =
                     "Halfway point brings borrowed Ø7 and altered dominants before gliding back to the tonic.",
-                Chords = progression.Skip(4).ToList(),
+                Chords = [.. progression.Skip(4)],
                 VoicingTips = new List<string>
                 {
                     "Keep the Ø7 compact; target the minor 3rd and flat 5 for clear voice-leading.",

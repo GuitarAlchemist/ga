@@ -1,6 +1,6 @@
 ﻿namespace GA.Business.Core.Fretboard.Voicings.Core;
 
-using GA.Business.Core.Fretboard.Primitives;
+using Primitives;
 using GA.Business.Core.Notes.Primitives;
 
 /// <summary>

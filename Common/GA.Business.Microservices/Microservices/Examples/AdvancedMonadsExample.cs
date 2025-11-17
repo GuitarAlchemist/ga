@@ -60,7 +60,7 @@ public static class TryMonadExamples
     public static void Example2()
     {
         var result = ParseInt("invalid")
-            .Recover(ex => 0) // Provide default value
+            .Recover(_ => 0) // Provide default value
             .Match(
                 value => $"Result: {value}",
                 ex => $"Error: {ex.Message}"

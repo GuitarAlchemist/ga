@@ -4,9 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
 using GA.Data.EntityFramework.Data;
-// using GA.Business.Core.Services // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.Mvc;
+using GA.Analytics.Service.Models;
+using GA.Analytics.Service.Services;
 
 /// <summary>
 ///     Advanced analytics controller with AI-powered insights and real-time recommendations
@@ -41,10 +40,14 @@ public class AdvancedAnalyticsController(
                 return BadRequest("Max depth must be between 1 and 5");
             }
 
-            var analysis = await analyticsService.PerformDeepAnalysisAsync(conceptName, conceptType, maxDepth);
+            var analysis = await analyticsService.PerformDeepAnalysisAsync(
+                conceptType,
+                new Dictionary<string, object> { ["conceptName"] = conceptName },
+                new Dictionary<string, object> { ["maxDepth"] = maxDepth }
+            );
 
-            logger.LogInformation("Deep analysis completed for {ConceptType}: {ConceptName} with {NodeCount} nodes",
-                conceptType, conceptName, analysis.RelationshipGraph.Nodes.Count);
+            logger.LogInformation("Deep analysis completed for {ConceptType}: {ConceptName}",
+                conceptType, conceptName);
 
             return Ok(analysis);
         }
@@ -70,10 +73,9 @@ public class AdvancedAnalyticsController(
     {
         try
         {
-            var trends = await analyticsService.AnalyzeMusicalTrendsAsync();
+            var trends = await analyticsService.AnalyzeMusicalTrendsAsync("general", DateTime.UtcNow.AddDays(-30), DateTime.UtcNow);
 
-            logger.LogInformation("Musical trend analysis completed with {TrendCount} emerging trends",
-                trends.EmergingTrends.Count);
+            logger.LogInformation("Musical trend analysis completed");
 
             return Ok(trends);
         }
@@ -115,10 +117,17 @@ public class AdvancedAnalyticsController(
                 Instruments = ["Guitar"]
             };
 
-            var session = await analyticsService.GeneratePracticeSessionAsync(userProfile, durationMinutes);
+            var session = await analyticsService.GeneratePracticeSessionAsync(
+                "personalized",
+                new Dictionary<string, object>
+                {
+                    ["userProfile"] = userProfile,
+                    ["durationMinutes"] = durationMinutes
+                }
+            );
 
-            logger.LogInformation("Generated practice session with {ExerciseCount} exercises for user {UserId}",
-                session.TotalExercises, userId);
+            logger.LogInformation("Generated practice session for user {UserId}",
+                userId);
 
             return Ok(session);
         }
@@ -166,10 +175,14 @@ public class AdvancedAnalyticsController(
                 Instruments = ["Guitar"]
             };
 
-            var curriculum = await analyticsService.GenerateCurriculumAsync(userProfile, targetSkillLevel, focusAreas);
+            var curriculum = await analyticsService.GenerateCurriculumAsync(
+                targetSkillLevel,
+                new Dictionary<string, object> { ["userProfile"] = userProfile },
+                new Dictionary<string, object> { ["focusAreas"] = focusAreas }
+            );
 
-            logger.LogInformation("Generated curriculum with {ModuleCount} modules for user {UserId}",
-                curriculum.LearningModules.Count, userId);
+            logger.LogInformation("Generated curriculum for user {UserId}",
+                userId);
 
             return Ok(curriculum);
         }
@@ -203,11 +216,14 @@ public class AdvancedAnalyticsController(
         {
             context ??= new Dictionary<string, object>();
 
-            var recommendations =
-                await analyticsService.GetRealtimeRecommendationsAsync(userId, currentActivity, context);
+            var recommendations = await analyticsService.GetRealtimeRecommendationsAsync(
+                currentActivity,
+                new Dictionary<string, object> { ["userId"] = userId },
+                new Dictionary<string, object> { ["context"] = context }
+            );
 
-            logger.LogInformation("Generated {SuggestionCount} real-time recommendations for user {UserId}",
-                recommendations.ImmediateSuggestions.Count, userId);
+            logger.LogInformation("Generated real-time recommendations for user {UserId}",
+                userId);
 
             return Ok(recommendations);
         }

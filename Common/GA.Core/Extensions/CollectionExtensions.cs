@@ -33,7 +33,7 @@ public static class CollectionExtensions
     [PublicAPI]
     public class RotatedCollection<T>(IReadOnlyCollection<T> items, int shift = 0) : IReadOnlyList<T>
     {
-        private readonly ImmutableList<T> _items = items.ToImmutableList();
+        private readonly ImmutableList<T> _items = [.. items];
 
         public IEnumerator<T> GetEnumerator()
         {

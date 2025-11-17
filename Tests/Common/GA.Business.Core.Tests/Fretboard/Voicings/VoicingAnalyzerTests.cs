@@ -5,7 +5,6 @@ using Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Fretboard.Positions;
 using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings;
 using GA.Business.Core.Notes.Primitives;
 
 /// <summary>
@@ -307,36 +306,26 @@ public class VoicingAnalyzerTests
     /// </summary>
     private static Voicing CreateVoicingFromPitchClasses(int[] pitchClasses)
     {
-        // Create positions on a standard-tuned 6-string guitar
         var positions = new List<Position>();
         var notes = new List<MidiNote>();
-        var stringTunings = new[] { 64, 59, 55, 50, 45, 40 }; // E A D G B E (MIDI note numbers for standard tuning)
+        const int baseMidi = 60; // Middle C
 
-        var pitchClassList = pitchClasses.ToList();
-        var positionIndex = 0;
-
-        for (int str = 0; str < 6 && positionIndex < pitchClasses.Length; str++)
+        for (var index = 0; index < pitchClasses.Length; index++)
         {
-            if (positionIndex >= pitchClasses.Length) break;
+            var normalized = ((pitchClasses[index] % 12) + 12) % 12;
+            var midiValue = baseMidi + normalized;
+            var midiNote = new MidiNote(midiValue);
 
-            var targetPitchClass = pitchClasses[positionIndex];
-            var stringTuning = stringTunings[str];
-
-            // Find fret that produces the target pitch class
-            var fret = (targetPitchClass - (stringTuning % 12) + 12) % 12;
-            if (fret < 0) fret += 12;
-
-            var location = new PositionLocation(new Str(str + 1), new Fret(fret));
-            var midiNote = new MidiNote(stringTuning + fret);
+            // Use extended virtual strings so we can represent more than six unique notes
+            var stringNumber = Math.Min(index + 1, 26);
+            var location = new PositionLocation(new Str(stringNumber), new Fret(normalized));
 
             positions.Add(new Position.Played(location, midiNote));
             notes.Add(midiNote);
-            positionIndex++;
         }
 
-        return new Voicing(positions.ToArray(), notes.ToArray());
+        return new Voicing([.. positions], [.. notes]);
     }
 
     #endregion
 }
-

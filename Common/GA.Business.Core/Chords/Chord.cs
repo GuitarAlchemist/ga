@@ -4,6 +4,7 @@ using Atonal;
 using Intervals;
 using Intervals.Primitives;
 using Notes;
+using Parsing;
 
 /// <summary>
 ///     Represents a musical chord with its notes, intervals, and harmonic properties
@@ -122,7 +123,7 @@ public class Chord : IEquatable<Chord>
     /// </summary>
     public static Chord FromSymbol(string symbol)
     {
-        var parser = new ChordSymbolParser();
+        var parser = new GA.Business.Core.Chords.Parsing.ChordSymbolParser();
         return parser.Parse(symbol);
     }
 

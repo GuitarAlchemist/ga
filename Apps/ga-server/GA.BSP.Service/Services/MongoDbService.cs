@@ -205,6 +205,8 @@ public class MongoDbService
         }
     }
 
+    // TODO: Re-enable when ChordStatistics type is available in GA.Business.Orchestration
+    /*
     public async Task<ChordStatistics> GetChordStatisticsAsync()
     {
         var totalCount = await GetTotalChordCountAsync();
@@ -278,6 +280,7 @@ public class MongoDbService
             NoteCountDistribution = noteCountDistribution
         };
     }
+    */
 
     public async Task<List<Chord>> SearchChordsAsync(string query, int limit = 100)
     {

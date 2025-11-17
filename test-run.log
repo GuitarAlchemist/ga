@@ -1,0 +1,92 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  GA.Core -> C:\Users\spare\source\repos\ga\Common\GA.Core\bin\Debug\net10.0\GA.Core.dll
+  GA.Business.Config -> C:\Users\spare\source\repos\ga\Common\GA.Business.Config\bin\Debug\net10.0\GA.Business.Config.dll
+  GA.Business.Core -> C:\Users\spare\source\repos\ga\Common\GA.Business.Core\bin\Debug\net10.0\GA.Business.Core.dll
+  GA.Business.Assets -> C:\Users\spare\source\repos\ga\Common\GA.Business.Assets\bin\Debug\net10.0\GA.Business.Assets.dll
+  GA.Data.EntityFramework -> C:\Users\spare\source\repos\ga\Common\GA.Data.EntityFramework\bin\Debug\net10.0\GA.Data.EntityFramework.dll
+  GA.Business.Core.Analysis.Gpu -> C:\Users\spare\source\repos\ga\Common\GA.Business.Core.Analysis.Gpu\bin\Debug\net10.0\GA.Business.Core.Analysis.Gpu.dll
+  GA.BSP.Core -> C:\Users\spare\source\repos\ga\Common\GA.BSP.Core\bin\Debug\net10.0\GA.BSP.Core.dll
+  GA.Business.Core.AI -> C:\Users\spare\source\repos\ga\Common\GA.Business.Core.AI\bin\Debug\net10.0\GA.Business.Core.AI.dll
+  GA.Business.Analytics -> C:\Users\spare\source\repos\ga\Common\GA.Business.Analytics\bin\Debug\net10.0\GA.Business.Analytics.dll
+  GA.Data.MongoDB -> C:\Users\spare\source\repos\ga\GA.Data.MongoDB\bin\Debug\net10.0\GA.Data.MongoDB.dll
+  GA.Business.AI -> C:\Users\spare\source\repos\ga\Common\GA.Business.AI\bin\Debug\net10.0\GA.Business.AI.dll
+  GA.Business.Intelligence -> C:\Users\spare\source\repos\ga\Common\GA.Business.Intelligence\bin\Debug\net10.0\GA.Business.Intelligence.dll
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Analytics\InvariantAnalyticsServiceTests.cs(25,39): warning CS8618: Non-nullable field '_analyticsService' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Analytics\InvariantAnalyticsServiceTests.cs(26,54): warning CS8618: Non-nullable field '_mockLogger' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Analytics\InvariantAnalyticsServiceTests.cs(27,26): warning CS8618: Non-nullable field '_memoryCache' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Services\VoicingEmbeddingCacheTests.cs(38,36): warning CS8620: Argument of type 'Dictionary<string, string>' cannot be used for parameter 'initialData' of type 'IEnumerable<KeyValuePair<string, string?>>' in 'IConfigurationBuilder MemoryConfigurationBuilderExtensions.AddInMemoryCollection(IConfigurationBuilder configurationBuilder, IEnumerable<KeyValuePair<string, string?>>? initialData)' due to differences in the nullability of reference types. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Spatial\TonalBSPTests.cs(23,29): warning CS8618: Non-nullable field '_bspService' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Spatial\TonalBSPTests.cs(24,30): warning CS8618: Non-nullable field '_analyzer' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Spatial\TonalBSPTests.cs(25,44): warning CS8618: Non-nullable field '_mockBspLogger' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Spatial\TonalBSPTests.cs(26,45): warning CS8618: Non-nullable field '_mockAnalyzerLogger' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(47,32): warning CS8618: Non-nullable field '_aiService' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(48,47): warning CS8618: Non-nullable field '_mockLogger' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(49,45): warning CS8618: Non-nullable field '_mockAnalyticsService' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(50,38): warning CS8618: Non-nullable field '_mockHttpHandler' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(51,24): warning CS8618: Non-nullable field '_httpClient' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\InvariantAIServiceTests.cs(52,29): warning CS8618: Non-nullable field '_config' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable. [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\AI\RedisVectorServiceTests.cs(49,34): warning CS0649: Field 'RedisVectorServiceTests._redisService' is never assigned to, and will always have its default value null [C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\GA.Business.Core.Tests.csproj]
+  GA.Business.Core.Tests -> C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll
+Test run for C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+  Skipped Chat_BasicMusicTheory_ShouldReturnCorrectResponse [6 ms]
+  Skipped Chat_ChordDiagram_ShouldReturnDiagramInfo [7 ms]
+  Skipped Chat_ChordProgression_ShouldReturnProgressionInfo [7 ms]
+  Skipped Chat_ErrorHandling_ShouldHandleInvalidInput [7 ms]
+  Skipped Chat_GuitarTechnique_ShouldReturnDetailedExplanation [7 ms]
+  Skipped Chat_MusicTheoryExplanation_ShouldReturnDetailedExplanation [7 ms]
+  Skipped Chat_ScaleTheory_ShouldReturnCorrectNotes [7 ms]
+  Skipped Chat_WithSemanticSearch_ShouldReturnEnhancedResponse [7 ms]
+  Skipped ChatbotExamples_ShouldReturnExampleQueries [7 ms]
+  Skipped ChatbotStatus_ShouldReturnAvailable [7 ms]
+  Skipped CacheHeatMapAsync_ShouldExpireAfterTTL [10 ms]
+  Skipped CacheHeatMapAsync_ShouldStoreAndRetrieve [10 ms]
+  Skipped FindSimilarPitchClassSetsAsync_ShouldReturnSimilarSets [10 ms]
+  Skipped FindSimilarShapesAsync_ShouldReturnSimilarShapes [10 ms]
+  Skipped GetCachedHeatMapAsync_ShouldReturnNullForMissingKey [10 ms]
+  Skipped GetUserSessionAsync_ShouldReturnNullForNonExistentUser [10 ms]
+  Skipped IndexPitchClassSetsAsync_ShouldIndexAllSets [10 ms]
+  Skipped IndexShapesAsync_ShouldIndexAllShapes [10 ms]
+  Skipped SearchShapesAsync_ShouldReturnRelevantShapes [10 ms]
+  Skipped StoreUserSessionAsync_ShouldStoreAndRetrieve [10 ms]
+  Skipped ShouldComputeDelta_FromCMajorToCMinor [< 1 ms]
+  Skipped ShouldComputeDelta_FromCMajorToGMajor [< 1 ms]
+  Skipped ShouldComputeDelta_WithExplanation [< 1 ms]
+  Skipped ShouldComputeHarmonicCost_AsL1Norm [< 1 ms]
+  Skipped ShouldComputeHarmonicCost_ZeroForIdentity [< 1 ms]
+  Skipped ShouldComputeICV_ForCMajorScale [< 1 ms]
+  Skipped ShouldComputeICV_ForCMajorTriad [< 1 ms]
+  Skipped ShouldComputeICV_ForCMinorScale [< 1 ms]
+  Skipped ShouldComputeICV_ForEmptySet [< 1 ms]
+  Skipped ShouldFindNearby_IncludeSelfAtDistanceZero [< 1 ms]
+  Skipped ShouldFindNearby_OrderedByCost [< 1 ms]
+  Skipped ShouldFindNearby_WithinMaxDistance [< 1 ms]
+  Skipped ShouldFindShortestPath_BetweenRelatedKeys [< 1 ms]
+  Skipped ShouldFindShortestPath_ToSelf [< 1 ms]
+  Skipped ShouldReturnEmpty_WhenNoPathExists [< 1 ms]
+  Skipped ShouldComputeICV_InLessThan1ms [< 1 ms]
+  Skipped ShouldFindNearby_InLessThan50ms [< 1 ms]
+  Skipped GenerateFromAllModalFamilies_ShouldCoverAllScales [< 1 ms]
+  Skipped FindInstrumentsByName_ReturnsMatchingInstruments [< 1 ms]
+  Skipped GetAllInstruments_ReturnsNonEmptyList [< 1 ms]
+  Skipped ListAllInstrumentNames_ReturnsNonEmptyList [< 1 ms]
+  Skipped ListAllInstrumentTunings_ReturnsNonEmptyList [< 1 ms]
+  Skipped ReloadConfig_DoesNotThrowException [< 1 ms]
+  Skipped TryGetInstrument_ReturnsCorrectInstrument [< 1 ms]
+  Skipped TryGetInstrument_ReturnsNoneForNonexistentInstrument [< 1 ms]
+  Skipped ChordProgressionsService_ShouldLoadAndQueryProgressions [< 1 ms]
+  Skipped GuitarTechniquesService_ShouldLoadAndQueryTechniques [< 1 ms]
+  Skipped MusicalKnowledgeService_ShouldProvideComprehensiveSearch [< 1 ms]
+  Skipped MusicalKnowledgeService_ShouldProvideStatistics [< 1 ms]
+  Skipped MusicalKnowledgeService_ShouldProvideUnifiedSearch [< 1 ms]
+  Skipped MusicalKnowledgeService_ShouldValidateAllConfigurations [< 1 ms]
+  Skipped SpecializedTuningsService_ShouldLoadAndQueryTunings [1 ms]
+  Skipped ShouldGenerateShapes_WithDifferentDiagness [< 1 ms]
+  Skipped ShouldBuildGraph_InLessThan5Seconds [< 1 ms]
+  Skipped TonalBSPService_FindRelatedScales_ShouldReturnScales [< 1 ms]
+
+Passed!  - Failed:     0, Passed:   364, Skipped:    54, Total:   418, Duration: 10 s - GA.Business.Core.Tests.dll (net10.0)

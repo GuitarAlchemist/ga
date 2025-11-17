@@ -22,7 +22,7 @@ public readonly record struct MajorScaleDegree : IRangeValueObject<MajorScaleDeg
 
     public static IReadOnlyCollection<MajorScaleDegree> All => ValueObjectUtils<MajorScaleDegree>.Items;
     public static IReadOnlyCollection<MajorScaleDegree> Items => ValueObjectUtils<MajorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static MajorScaleDegree Ionian => new(1);

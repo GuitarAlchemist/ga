@@ -1,11 +1,9 @@
 namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
-using Microsoft.Extensions.Logging;
-
 /// <summary>
 /// Optimizes chord progressions for practice
 /// </summary>
-public class ProgressionOptimizer(ILogger<ProgressionOptimizer> logger)
+public class ProgressionOptimizer
 {
     /// <summary>
     /// Generate an optimal practice progression
@@ -14,8 +12,6 @@ public class ProgressionOptimizer(ILogger<ProgressionOptimizer> logger)
         ShapeGraph graph,
         ProgressionConstraints constraints)
     {
-        logger.LogDebug("Generating practice progression with length {Length}", constraints.TargetLength);
-
         // Start from a random high-ergonomics shape
         var startShape = graph.Shapes.Values
             .OrderByDescending(s => s.Ergonomics)

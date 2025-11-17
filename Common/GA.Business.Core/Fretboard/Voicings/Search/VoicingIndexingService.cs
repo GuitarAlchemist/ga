@@ -4,22 +4,15 @@ using System.Diagnostics;
 using Analysis;
 using Core;
 using Filtering;
-using GA.Business.Core.Fretboard.Positions;
+using Positions;
 using Generation;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Service for indexing guitar voicings into a vector store for semantic search
 /// </summary>
 public class VoicingIndexingService
 {
-    private readonly ILogger<VoicingIndexingService> _logger;
     private readonly List<VoicingDocument> _indexedDocuments = new();
-
-    public VoicingIndexingService(ILogger<VoicingIndexingService> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// Gets the count of indexed documents
@@ -39,7 +32,6 @@ public class VoicingIndexingService
         RelativeFretVectorCollection vectorCollection,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting voicing indexing...");
         var stopwatch = Stopwatch.StartNew();
 
         try
@@ -47,14 +39,11 @@ public class VoicingIndexingService
             _indexedDocuments.Clear();
 
             // Decompose voicings to get equivalence groups
-            _logger.LogInformation("Decomposing voicings into equivalence groups...");
             var voicingsList = allVoicings.ToList();
             var decomposed = VoicingDecomposer.DecomposeVoicings(voicingsList, vectorCollection).ToList();
-            _logger.LogInformation("Decomposed {Count} voicings", decomposed.Count);
 
             // Filter to only prime forms to avoid indexing duplicates
             var primeFormsOnly = decomposed.Where(d => d.PrimeForm != null).ToList();
-            _logger.LogInformation("Found {Count} unique prime forms", primeFormsOnly.Count);
 
             var processedCount = 0;
             var errorCount = 0;
@@ -84,8 +73,7 @@ public class VoicingIndexingService
                             var document = VoicingDocument.FromAnalysis(
                                 decomposedVoicing.Voicing,
                                 analysis,
-                                decomposedVoicing.PrimeForm?.ToString(),
-                                0); // Prime forms have 0 translation offset
+                                decomposedVoicing.PrimeForm?.ToString()); // Prime forms have 0 translation offset
 
                             lock (documentsLock)
                             {
@@ -95,15 +83,10 @@ public class VoicingIndexingService
                             lock (progressLock)
                             {
                                 processedCount++;
-                                if (processedCount % 1000 == 0)
-                                {
-                                    _logger.LogInformation("Processed {Count} voicings...", processedCount);
-                                }
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
-                            _logger.LogError(ex, "Error processing voicing {Voicing}", decomposedVoicing.Voicing);
                             lock (progressLock)
                             {
                                 errorCount++;
@@ -114,16 +97,10 @@ public class VoicingIndexingService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Indexing cancelled after processing {Count} voicings", processedCount);
             }
 
             stopwatch.Stop();
 
-            _logger.LogInformation(
-                "Voicing indexing complete: {Count} documents indexed in {ElapsedMs}ms ({ErrorCount} errors)",
-                processedCount,
-                stopwatch.ElapsedMilliseconds,
-                errorCount);
 
             return new VoicingIndexingResult(
                 Success: true,
@@ -135,7 +112,6 @@ public class VoicingIndexingService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "Failed to index voicings");
 
             return new VoicingIndexingResult(
                 Success: false,
@@ -155,7 +131,6 @@ public class VoicingIndexingService
         VoicingFilterCriteria criteria,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting filtered voicing indexing with criteria: {Criteria}", criteria);
         var stopwatch = Stopwatch.StartNew();
 
         try
@@ -169,8 +144,8 @@ public class VoicingIndexingService
 
             // Convert vectorCollection to array for O(1) access
             var vectorArray = vectorCollection.ToArray();
-            var variations = new GA.Core.Combinatorics.VariationsWithRepetitions<GA.Business.Core.Fretboard.Primitives.RelativeFret>(
-                GA.Business.Core.Fretboard.Primitives.RelativeFret.Range(0, 5),
+            var variations = new GA.Core.Combinatorics.VariationsWithRepetitions<Primitives.RelativeFret>(
+                Primitives.RelativeFret.Range(0, 5),
                 length: 6);
 
             // Use parallel processing with early termination support
@@ -199,7 +174,7 @@ public class VoicingIndexingService
                         try
                         {
                             // OPTIMIZATION 1: Early filtering by note count (before decomposition)
-                            var playedNotes = voicing.Positions.Count(p => p is GA.Business.Core.Fretboard.Primitives.Position.Played);
+                            var playedNotes = voicing.Positions.Count(p => p is Primitives.Position.Played);
                             var passesNoteCountFilter = criteria.NoteCount switch
                             {
                                 NoteCountFilter.TwoNotes => playedNotes == 2,
@@ -233,7 +208,7 @@ public class VoicingIndexingService
                             var matchingVector = vectorArray[(int)index];
 
                             // OPTIMIZATION 3: Only process prime forms (skip translations early)
-                            if (matchingVector is not GA.Business.Core.Fretboard.Primitives.RelativeFretVector.PrimeForm primeForm)
+                            if (matchingVector is not Primitives.RelativeFretVector.PrimeForm primeForm)
                             {
                                 lock (progressLock)
                                 {
@@ -265,8 +240,7 @@ public class VoicingIndexingService
                             var document = VoicingDocument.FromAnalysis(
                                 voicing,
                                 analysis,
-                                primeForm.ToString(),
-                                0);
+                                primeForm.ToString());
 
                             lock (documentsLock)
                             {
@@ -283,15 +257,13 @@ public class VoicingIndexingService
 
                                 if (processedCount >= criteria.MaxResults)
                                 {
-                                    _logger.LogInformation("Reached max results limit of {MaxResults}", criteria.MaxResults);
                                     shouldStop = true;
                                     state.Stop();
                                 }
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
-                            _logger.LogError(ex, "Error processing voicing");
                             lock (progressLock)
                             {
                                 errorCount++;
@@ -302,17 +274,10 @@ public class VoicingIndexingService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Filtered indexing cancelled after processing {Count} voicings", processedCount);
             }
 
             stopwatch.Stop();
 
-            _logger.LogInformation(
-                "Filtered indexing complete: {Count} documents indexed, {FilteredCount} filtered out, {DecomposedCount} decomposed in {ElapsedMs}ms",
-                processedCount,
-                filteredCount,
-                decomposedCount,
-                stopwatch.ElapsedMilliseconds);
 
             return new VoicingIndexingResult(
                 Success: true,
@@ -324,7 +289,6 @@ public class VoicingIndexingService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "Failed to index filtered voicings");
 
             return new VoicingIndexingResult(
                 Success: false,
@@ -381,4 +345,3 @@ public record VoicingIndexingResult(
     TimeSpan Duration,
     int ErrorCount,
     string Message);
-

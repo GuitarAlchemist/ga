@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GA.Data.MongoDB.Services;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using MongoDB.Bson;
 using System.Text;
 

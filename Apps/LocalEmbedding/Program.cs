@@ -228,7 +228,7 @@ internal class Program
         // Simple tokenization - convert text to basic tokens
         // For a proper implementation, we'd need the exact tokenizer for all-MiniLM-L6-v2
         var words = text.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var inputIds = words.Select((word, index) => (long)(word.GetHashCode() % 30000 + 1)).ToArray();
+        var inputIds = words.Select((word, _) => (long)(word.GetHashCode() % 30000 + 1)).ToArray();
 
         // Ensure we have at least some tokens and limit to reasonable length
         if (inputIds.Length == 0)
@@ -238,7 +238,7 @@ internal class Program
 
         if (inputIds.Length > 512)
         {
-            inputIds = inputIds.Take(512).ToArray(); // Limit sequence length
+            inputIds = [.. inputIds.Take(512)]; // Limit sequence length
         }
 
         var attentionMask = Enumerable.Repeat(1L, inputIds.Length).ToArray();

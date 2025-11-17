@@ -127,17 +127,17 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
 
     public static NaturalNote operator ++(NaturalNote naturalNote)
     {
-        return FromValue((naturalNote.Value + 1) % 7);
+        return FromValue(WrapValue(naturalNote.Value + 1));
     }
 
     public static NaturalNote operator --(NaturalNote naturalNote)
     {
-        return FromValue((naturalNote.Value - 1) % 7);
+        return FromValue(WrapValue(naturalNote.Value - 1));
     }
 
     public static NaturalNote operator +(NaturalNote naturalNote, SimpleIntervalSize intervalSize)
     {
-        return FromValue((naturalNote.Value + intervalSize.Value - 1) % 7);
+        return FromValue(WrapValue(naturalNote.Value + intervalSize.Value - 1));
     }
 
     public static SimpleIntervalSize operator -(NaturalNote endNote, NaturalNote startNote)
@@ -158,6 +158,12 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     public SimpleIntervalSize GetInterval(NaturalNote other)
     {
         return NaturalNoteIntervals.Get(new(this, other));
+    }
+
+    private static int WrapValue(int value)
+    {
+        var wrapped = value % 7;
+        return wrapped < 0 ? wrapped + 7 : wrapped;
     }
 
     public IReadOnlyCollection<NaturalNote> GetDegrees(int count)
@@ -253,7 +259,17 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     #region IStaticReadonlyCollection<NaturalNote> Members
 
     public static IReadOnlyCollection<NaturalNote> Items => GetItems();
-    public static IReadOnlyList<int> Values => Items.ToValueList();
+    public static IReadOnlyList<int> Values => ValueObjectUtils<NaturalNote>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full natural note range.
+    /// </summary>
+    public static ReadOnlySpan<NaturalNote> ItemsSpan => ValueObjectUtils<NaturalNote>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each natural note.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<NaturalNote>.ValuesSpan;
 
     #endregion
 

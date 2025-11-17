@@ -1,24 +1,21 @@
 namespace GA.Business.Core.Fretboard.Shapes.Spectral;
 
-using Microsoft.Extensions.Logging;
 using MathNet.Numerics.LinearAlgebra;
 
 /// <summary>
 /// Analyzes shape graphs using spectral graph theory
 /// </summary>
-public class SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
+public class SpectralGraphAnalyzer
 {
     /// <summary>
     /// Analyze spectral properties of the shape graph
     /// </summary>
     public SpectralMetrics Analyze(ShapeGraph graph)
     {
-        logger.LogDebug("Analyzing spectral properties for graph with {ShapeCount} shapes", graph.ShapeCount);
-
         // Build Laplacian matrix
         var n = graph.ShapeCount;
         var eigenvalues = new double[n];
-        var eigenvectors = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.Dense(n, n);
+        var eigenvectors = Matrix<double>.Build.Dense(n, n);
 
         // Simplified: just create identity matrix for now
         for (var i = 0; i < n; i++)
@@ -39,8 +36,6 @@ public class SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
     /// </summary>
     public List<ChordFamily> Cluster(ShapeGraph graph, int k)
     {
-        logger.LogDebug("Clustering {ShapeCount} shapes into {K} families", graph.ShapeCount, k);
-
         // Simple clustering based on pitch-class set similarity
         var families = new List<ChordFamily>();
         var shapesByPcs = graph.Shapes.Values

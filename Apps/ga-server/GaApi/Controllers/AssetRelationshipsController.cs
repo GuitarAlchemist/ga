@@ -300,7 +300,7 @@ public class AssetRelationshipsController(
 
         if (node.Children.Any())
         {
-            result[node.AssetType] = node.Children.Select(c => c.AssetType).ToList();
+            result[node.AssetType] = [.. node.Children.Select(c => c.AssetType)];
 
             foreach (var child in node.Children)
             {

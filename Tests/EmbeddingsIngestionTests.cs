@@ -1,7 +1,7 @@
 ﻿namespace GA.Tests;
 
 using GA.Business.Core.Chords;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using GA.Data.SemanticKernel.Embeddings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

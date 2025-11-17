@@ -22,7 +22,7 @@ public readonly record struct NaturalMinorScaleDegree : IRangeValueObject<Natura
 
     public static IReadOnlyCollection<NaturalMinorScaleDegree> All => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
     public static IReadOnlyCollection<NaturalMinorScaleDegree> Items => ValueObjectUtils<NaturalMinorScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static NaturalMinorScaleDegree Aeolian => new(1);

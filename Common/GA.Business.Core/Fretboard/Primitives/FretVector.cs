@@ -44,7 +44,7 @@ public class FretVector : IReadOnlyCollection<Fret>,
 
     private ImmutableHashSet<PositionLocation> GetPositionLocations()
     {
-        return _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value)).ToImmutableHashSet();
+        return [.. _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value))];
     }
 
     #region IReadOnlyCollection<Fret> Members

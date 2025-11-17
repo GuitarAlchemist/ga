@@ -4,6 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.Analytics.Service.Models;
 using GA.Analytics.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,14 @@ builder.Services.Configure<MongoDbSettings>(
 // Register services
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<PerformanceMetricsService>();
+builder.Services.AddScoped<AdvancedMusicalAnalyticsService>();
+builder.Services.AddScoped<AgentSpectralAnalyzer>();
+builder.Services.AddScoped<ICachingService, CachingService>();
+builder.Services.AddScoped<InvariantValidationService>();
+builder.Services.AddScoped<RealtimeInvariantMonitoringService>();
+builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
+builder.Services.AddScoped<HarmonicAnalysisEngine>();
+builder.Services.AddScoped<ProgressionOptimizer>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();

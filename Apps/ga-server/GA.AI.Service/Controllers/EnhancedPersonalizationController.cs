@@ -1,11 +1,10 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-// using GA.Business.Core.Services // REMOVED - namespace does not exist;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using GA.AI.Service.Models;
+using GA.AI.Service.Services;
 
 /// <summary>
 ///     Enhanced personalization controller with AI-driven adaptive learning and real-time assistance

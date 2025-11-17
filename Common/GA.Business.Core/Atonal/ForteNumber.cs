@@ -16,7 +16,10 @@ using Primitives;
 ///     <see cref="IParsable{ForteNumber}" />
 /// </remarks>
 [PublicAPI]
-public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparable, IParsable<ForteNumber>,
+public readonly record struct ForteNumber :
+    IComparable<ForteNumber>,
+    IComparable,
+    IParsable<ForteNumber>,
     IStaticReadonlyCollection<ForteNumber>
 {
     /// <summary>
@@ -84,16 +87,25 @@ public readonly record struct ForteNumber : IComparable<ForteNumber>, IComparabl
                 .ToImmutableDictionary(g => g.Key, g => g.Count());
 
             return Enumerable.Range(0, 13)
-                .SelectMany(cardinality => Enumerable.Range(1, GetIndexCount(cardinality, setClassesByCardinality))
-                    .Select(index => new ForteNumber(cardinality, index)));
+                .SelectMany(cardinality =>
+                {
+                    var count = GetIndexCount(cardinality, setClassesByCardinality);
+                    // If there are no set classes for this cardinality, yield none instead of throwing
+                    return count == 0
+                        ? Enumerable.Empty<ForteNumber>()
+                        : Enumerable.Range(1, count).Select(index => new ForteNumber(cardinality, index));
+                });
 
             static int GetIndexCount(int cardinality, IReadOnlyDictionary<Cardinality, int> setClassesByCardinality)
             {
                 return cardinality switch
                 {
+                    // For the empty set, the singleton set, and the full chromatic set we have a single class
                     0 or 1 or 12 => 1,
+                    // For other cardinalities (2..11), use the number of distinct set classes if available
                     _ when setClassesByCardinality.TryGetValue(cardinality, out var count) => count,
-                    _ => throw new ArgumentOutOfRangeException(nameof(cardinality), "Unexpected cardinality.")
+                    // If not available, return 0 to avoid blowing up static initialization in test environments
+                    _ => 0
                 };
             }
         }

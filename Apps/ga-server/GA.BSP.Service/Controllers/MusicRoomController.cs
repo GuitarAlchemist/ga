@@ -10,6 +10,8 @@ using GA.BSP.Service.Services;
 // using GA.Business.Core.Spatial // REMOVED - namespace does not exist;
 using Microsoft.AspNetCore.Mvc;
 
+// TODO: Re-enable when GA.Business.Orchestration project is created with MusicRoomService
+/*
 /// <summary>
 ///     API controller for music theory-based room generation in BSP DOOM Explorer
 /// </summary>
@@ -518,3 +520,4 @@ public class QueueGenerationRequest
     public int FloorSize { get; set; } = 100;
     public int? Seed { get; set; }
 }
+*/

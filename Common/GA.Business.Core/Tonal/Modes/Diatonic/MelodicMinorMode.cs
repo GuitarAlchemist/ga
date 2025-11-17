@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Diatonic;
 using Scales;
 
@@ -16,7 +17,7 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
 {
     // Cached singletons to avoid repeated allocations
     private static readonly Lazy<ScaleModeCollection<MelodicMinorScaleDegree, MelodicMinorMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     public static MelodicMinorMode MelodicMinorModeMinor { get; } = new(1);
 
@@ -44,8 +45,16 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    public static IEnumerable<MelodicMinorMode> Items =>
-        MelodicMinorScaleDegree.Items.Select(degree => new MelodicMinorMode(degree));
+    public static IEnumerable<MelodicMinorMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<MelodicMinorScaleDegree>.Items)
+            {
+                yield return new MelodicMinorMode(degree);
+            }
+        }
+    }
 
     public static MelodicMinorMode Get(MelodicMinorScaleDegree degree)
     {
@@ -62,3 +71,5 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
         return $"{Name} - {Formula}";
     }
 }
+
+

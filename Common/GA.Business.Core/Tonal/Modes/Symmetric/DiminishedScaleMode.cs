@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Symmetric;
 
+using global::GA.Core.Collections;
+
 using Primitives.Symmetric;
 using Scales;
 
@@ -18,7 +20,7 @@ public sealed class DiminishedScaleMode(DiminishedScaleDegree degree)
         IStaticEnumerable<DiminishedScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<DiminishedScaleDegree, DiminishedScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static DiminishedScaleMode HalfWhole => new(DiminishedScaleDegree.HalfWhole);
@@ -44,8 +46,16 @@ public sealed class DiminishedScaleMode(DiminishedScaleDegree degree)
     public override int TranspositionCount => 3;
 
     // Collection and access methods
-    public static IEnumerable<DiminishedScaleMode> Items =>
-        DiminishedScaleDegree.Items.Select(degree => new DiminishedScaleMode(degree));
+    public static IEnumerable<DiminishedScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<DiminishedScaleDegree>.Items)
+            {
+                yield return new DiminishedScaleMode(degree);
+            }
+        }
+    }
 
     public static DiminishedScaleMode Get(DiminishedScaleDegree degree)
     {
@@ -57,3 +67,5 @@ public sealed class DiminishedScaleMode(DiminishedScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

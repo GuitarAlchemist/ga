@@ -199,7 +199,7 @@ public class TabConversionService : ITabConversionService
     {
         return Task.FromResult(new FormatsResponse
         {
-            Formats = _supportedFormats.ToList() // Return a copy to prevent external modification
+            Formats = [.. _supportedFormats] // Return a copy to prevent external modification
         });
     }
 

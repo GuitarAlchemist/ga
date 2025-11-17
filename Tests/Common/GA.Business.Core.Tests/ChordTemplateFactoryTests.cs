@@ -157,7 +157,6 @@ public class ChordTemplateFactoryTests
     }
 
     [Test]
-    [Ignore("GenerateFromAllModalFamilies is a TODO stub - ModalFamilyScaleModeFactory not yet implemented")]
     public void GenerateFromAllModalFamilies_ShouldCoverAllScales()
     {
         // Test that we generate from all modal families systematically

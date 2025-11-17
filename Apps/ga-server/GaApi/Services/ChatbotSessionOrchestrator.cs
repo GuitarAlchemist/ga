@@ -37,9 +37,7 @@ public sealed class ChatbotSessionOrchestrator(
 
         if (_options.HistoryLimit > 0 && normalized.Count > _options.HistoryLimit)
         {
-            normalized = normalized
-                .TakeLast(_options.HistoryLimit)
-                .ToList();
+            normalized = [.. normalized.TakeLast(_options.HistoryLimit)];
         }
 
         return normalized;

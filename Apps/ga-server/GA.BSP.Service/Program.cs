@@ -4,6 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.BSP.Service.Models;
 using GA.BSP.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 

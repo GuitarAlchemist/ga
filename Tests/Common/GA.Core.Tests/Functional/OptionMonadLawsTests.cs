@@ -183,7 +183,7 @@ public class OptionMonadLawsTests
     {
         // Arrange
         var option = Option<int>.Some(10);
-        Func<int, Option<int>> f = x => Option<int>.None;
+        Func<int, Option<int>> f = _ => Option<int>.None;
         Func<int, Option<string>> g = x => Option<string>.Some($"Value: {x}");
 
         // Act

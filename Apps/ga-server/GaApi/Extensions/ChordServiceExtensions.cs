@@ -1,7 +1,7 @@
 ﻿namespace GaApi.Extensions;
 
-using Services;
-// using GA.Business.Core.Services // REMOVED - namespace does not exist;
+using Microsoft.Extensions.DependencyInjection;
+using GaApi.Services;
 
 /// <summary>
 ///     Extension methods for registering chord-related services
@@ -20,6 +20,9 @@ public static class ChordServiceExtensions
     {
         // Core chord service
         services.AddScoped<IChordService, ChordService>();
+
+        // Unified chord naming façade
+        services.AddScoped<GA.Business.Core.Chords.IChordNamingService, GA.Business.Core.Chords.ChordNamingService>();
 
         // Contextual chord services for key-aware chord generation
         services.AddScoped<IContextualChordService, ContextualChordService>();

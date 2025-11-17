@@ -1,11 +1,18 @@
-﻿namespace GA.Business.Core.Chords;
+﻿// NOTE: This file duplicated the implementation in Chords\Parsing\ChordSymbolParser.cs,
+// causing type conflicts. To resolve ambiguity while keeping the code for reference,
+// we move it to an internal legacy namespace and rename the class. Nothing references
+// this type directly.
+namespace GA.Business.Core.Chords.Parsing.Legacy;
 
+using System;
+using System.Text.RegularExpressions;
+using GA.Business.Core.Chords;
 using Notes;
 
 /// <summary>
 ///     Parses chord symbols into Chord objects
 /// </summary>
-public class ChordSymbolParser
+internal class LegacyChordSymbolParser
 {
     private static readonly Regex _chordSymbolRegex = new(
         @"^([A-G][#b]?)(.*)$",

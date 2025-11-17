@@ -22,7 +22,7 @@ public readonly record struct TritoneScaleDegree : IRangeValueObject<TritoneScal
 
     public static IReadOnlyCollection<TritoneScaleDegree> All => ValueObjectUtils<TritoneScaleDegree>.Items;
     public static IReadOnlyCollection<TritoneScaleDegree> Items => ValueObjectUtils<TritoneScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static TritoneScaleDegree Tritone => new(1);

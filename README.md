@@ -109,6 +109,15 @@ See [AGENTS.md](./AGENTS.md) for:
 - Testing requirements
 - Pull request process
 
+## 🙏 Acknowledgements
+
+This project’s voice‑leading geometry features are inspired by:
+
+- Dmitri Tymoczko. 2011. A Geometry of Music: Harmony and Counterpoint in the Extended Common Practice. Oxford University Press.
+- Clifton Callender, Ian Quinn, and Dmitri Tymoczko. 2008. "Generalized Voice‑Leading Spaces" (Music Theory Online 14(3)).
+
+See REFERENCES.md for full citations and implementation notes on OPTIC (Octave, Permutation, Transposition, Inversion, Cardinality) quotienting and distances used in `VoiceLeadingSpace` and `SetClassOpticIndex`.
+
 ## 📄 License
 
 [Add license information here]

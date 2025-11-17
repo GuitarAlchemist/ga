@@ -3,7 +3,7 @@
 using Core.Chords;
 using Core.Tonal.Modes.Diatonic;
 using Core.Tonal.Primitives.Diatonic;
-using Intervals.Chords;
+using GA.Business.Core.Chords.Construction;
 
 /// <summary>
 ///     Tests for different chord stacking types (tertian, quartal, quintal)

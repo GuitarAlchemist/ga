@@ -198,7 +198,7 @@ internal static class Program
 
     private static List<object> BuildChordData(List<ChordTemplate> allChords)
     {
-        return allChords.Select((chord, index) => new
+        return [.. allChords.Select((chord, index) => new
         {
             Id = index + 1,
             chord.Name,
@@ -217,7 +217,7 @@ internal static class Program
             ScaleDegree = chord.GetScaleDegree(),
             Description = chord.GetDescription(),
             ConstructionType = chord.GetConstructionType()
-        }).ToList<object>();
+        })];
     }
 
     private static async Task ExportChordTemplates(string outputPath, StatusContext ctx)
@@ -249,7 +249,7 @@ internal static class Program
 
     private static List<object> BuildTemplateData(List<ChordTemplate> templates)
     {
-        return templates
+        return [.. templates
             .GroupBy(t => string.Join(",", t.PitchClassSet.ToList().Select(pc => pc.Value).OrderBy(v => v)))
             .Select(g => new
             {
@@ -269,8 +269,7 @@ internal static class Program
                     ParentScale = t.GetParentScale()?.Name,
                     ScaleDegree = t.GetScaleDegree()
                 }).ToList()
-            })
-            .ToList<object>();
+            })];
     }
 
     private static async Task WriteJsonFile(string outputPath, string fileName, object data)

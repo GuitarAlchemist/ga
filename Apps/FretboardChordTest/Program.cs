@@ -330,6 +330,6 @@ internal class Program
             positions.Add(new Position.Played(location, MidiNote.FromValue(60))); // Dummy MIDI note
         }
 
-        return positions.ToImmutableList();
+        return [.. positions];
     }
 }

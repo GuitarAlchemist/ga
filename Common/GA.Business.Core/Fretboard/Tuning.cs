@@ -75,7 +75,7 @@ public class Tuning : IIndexer<Str, Pitch>
             return [];
         }
 
-        var buffer = items as Pitch[] ?? items.ToArray();
+        var buffer = items as Pitch[] ?? [.. items];
         var result = new Pitch[buffer.Length];
 
         if (buffer[0] < buffer[^1])

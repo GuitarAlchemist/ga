@@ -1,8 +1,6 @@
 ﻿@page "/documents"
 @using GaApi.Services
 @using GaApi.GraphQL.Types
-@using MongoDB.Bson
-@using MongoDB.Driver
 @inject MongoDbService MongoDb
 @inject ISnackbar Snackbar
 
@@ -191,6 +189,70 @@
                 </MudList>
             }
         </MudPaper>
+    </MudTabPanel>
+
+    <MudTabPanel Text="Unified Mode" Icon="@Icons.Material.Filled.ShapeLine">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Quick Unified Summary</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        Enter pitch classes (0–11) for a set/mode and view unified descriptors (ICV, Prime, Forte, etc.).
+                    </MudText>
+                    <MudTextField @bind-Value="_unifiedInput" Label="Pitch Classes" Variant="Variant.Outlined" FullWidth="true"
+                                  Placeholder="e.g., 0,2,4,5,7,9,11" Class="mb-3" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Calculate"
+                               OnClick="AnalyzeUnified">
+                        Analyze
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            @if (_unifiedDesc is not null)
+            {
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Unified Summary</MudText>
+                        <MudSimpleTable Dense="true" Hover="true">
+                            <tbody>
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td>@_unifiedDesc.PrimaryName</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Summary:</strong></td>
+                                <td>@_unifiedDesc.Summary</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ICV:</strong></td>
+                                <td>@_unifiedDesc.IntervalClassVector</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Prime Form:</strong></td>
+                                <td>@_unifiedDesc.PrimeForm</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Forte:</strong></td>
+                                <td>@_unifiedDesc.ForteNumber</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Symmetry:</strong></td>
+                                <td>@(_unifiedDesc.Symmetry ?? "—")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rotation:</strong></td>
+                                <td>@_unifiedDesc.RotationIndex</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Family:</strong></td>
+                                <td>@(_unifiedDesc.FamilyInfo ?? "None")</td>
+                            </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
     </MudTabPanel>
 </MudTabs>
 

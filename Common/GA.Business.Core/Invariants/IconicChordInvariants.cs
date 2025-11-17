@@ -10,15 +10,15 @@ public static class IconicChordInvariants
     /// </summary>
     public static IReadOnlyCollection<IInvariant<IconicChordDefinition>> GetAll()
     {
-        return new IInvariant<IconicChordDefinition>[]
-        {
+        return
+        [
             new NameNotEmptyInvariant(),
             new TheoreticalNameValidInvariant(),
             new PitchClassesValidInvariant(),
             new GuitarVoicingValidInvariant(),
             new GenreValidInvariant(),
             new AlternateNamesUniqueInvariant()
-        }.ToImmutableArray();
+        ];
     }
 
     private sealed class NameNotEmptyInvariant : InvariantBase<IconicChordDefinition>

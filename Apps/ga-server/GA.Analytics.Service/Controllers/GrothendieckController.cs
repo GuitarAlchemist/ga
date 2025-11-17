@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Constants;
+using static GA.Analytics.Service.Services.Constants;
 using GA.Business.Config;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Grothendieck;
@@ -13,12 +13,10 @@ using GA.Business.Core.Notes;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using GA.Analytics.Service.Services;
+using GA.Analytics.Service.Constants;
 // using GA.Business.Core.Fretboard.Shapes.Applications // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
 // using GA.Business.Core.Fretboard.Shapes.InformationTheory // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
 // using GA.Business.Core.Fretboard.Shapes.DynamicalSystems // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 ///     API endpoints for Grothendieck monoid operations and fretboard shape navigation
@@ -28,7 +26,7 @@ using Microsoft.AspNetCore.Mvc;
 [Produces("application/json")]
 [EnableRateLimiting("regular")]
 public class GrothendieckController(
-    IGrothendieckService grothendieckService,
+    GA.Analytics.Service.Services.IGrothendieckService grothendieckService,
     IShapeGraphBuilder shapeGraphBuilder,
     MarkovWalker markovWalker,
     HarmonicAnalysisEngine harmonicAnalysisEngine,
@@ -46,7 +44,7 @@ public class GrothendieckController(
     [HttpPost("compute-icv")]
     [ProducesResponseType(typeof(IntervalClassVector), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<IntervalClassVector> ComputeICV([FromBody] ComputeIcvRequest request)
+    public async Task<ActionResult<IntervalClassVector>> ComputeICV([FromBody] ComputeIcvRequest request)
     {
         using var _ = metrics.TrackRegularRequest();
 
@@ -60,7 +58,10 @@ public class GrothendieckController(
             return BadRequest("Pitch classes must be between 0 and 11");
         }
 
-        var icv = grothendieckService.ComputeICV(request.PitchClasses);
+        var icv = await grothendieckService.ComputeICV(
+            "pitch_classes",
+            new Dictionary<string, object> { ["pitchClasses"] = request.PitchClasses }
+        );
         return Ok(icv);
     }
 

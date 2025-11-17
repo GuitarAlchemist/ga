@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
 using Primitives.Exotic;
 using Scales;
 
@@ -18,7 +19,7 @@ public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)
         IStaticEnumerable<DoubleHarmonicScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<DoubleHarmonicScaleDegree, DoubleHarmonicScaleMode>>
-        _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+        _lazyModeByDegree = new(() => new([.. Items]));
 
     // Static instances for each mode
     public static DoubleHarmonicScaleMode DoubleHarmonic => new(DoubleHarmonicScaleDegree.DoubleHarmonic);
@@ -40,8 +41,16 @@ public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<DoubleHarmonicScaleMode> Items =>
-        DoubleHarmonicScaleDegree.Items.Select(degree => new DoubleHarmonicScaleMode(degree));
+    public static IEnumerable<DoubleHarmonicScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<DoubleHarmonicScaleDegree>.Items)
+            {
+                yield return new DoubleHarmonicScaleMode(degree);
+            }
+        }
+    }
 
     public static DoubleHarmonicScaleMode Get(DoubleHarmonicScaleDegree degree)
     {
@@ -53,3 +62,5 @@ public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

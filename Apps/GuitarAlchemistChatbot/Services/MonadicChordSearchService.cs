@@ -1,6 +1,5 @@
 ﻿namespace GuitarAlchemistChatbot.Services;
 
-using GA.Business.Core.Microservices;
 using GA.Business.Core.Microservices.Microservices;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -186,7 +185,7 @@ public class MonadicChordSearchService : MonadicServiceBase<MonadicChordSearchSe
         int limit = 10)
     {
         var tasks = queries.Select(query => SearchChordsAsync(query, limit));
-        return (await Task.WhenAll(tasks)).ToList();
+        return [.. (await Task.WhenAll(tasks))];
     }
 
     // Demo data methods (same as original)
@@ -255,7 +254,7 @@ public class MonadicChordSearchService : MonadicServiceBase<MonadicChordSearchSe
             (queryLower.Contains("quartal") && chord.StackingType == "Quartal")
         ).Take(limit).ToList();
 
-        return filtered.Any() ? filtered : demoChords.Take(limit).ToList();
+        return filtered.Any() ? filtered : [.. demoChords.Take(limit)];
     }
 
     private List<ChordSearchResult> GetDemoSimilarChords(int chordId, int limit)
@@ -282,7 +281,7 @@ public class MonadicChordSearchService : MonadicServiceBase<MonadicChordSearchSe
             }
         };
 
-        return similarChords.Take(limit).ToList();
+        return [.. similarChords.Take(limit)];
     }
 
     private ChordSearchResult? GetDemoChordById(int chordId)

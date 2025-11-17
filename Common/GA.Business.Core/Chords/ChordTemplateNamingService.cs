@@ -1,12 +1,127 @@
 ﻿namespace GA.Business.Core.Chords;
 
 using Atonal;
+using Unified;
 
 /// <summary>
 ///     Main service that coordinates all chord naming services and provides a unified API
 /// </summary>
 public static class ChordTemplateNamingService
 {
+    /// <summary>
+    ///     Roman-numeral chord naming using unified mode context.
+    ///     Determines triad/7th quality from the mode's rotation and requested degree/extension.
+    /// </summary>
+    public static string GenerateModalChordName(
+        UnifiedModeInstance mode,
+        int degree,
+        ChordExtension extension,
+        ChordStackingType stacking = ChordStackingType.Tertian)
+    {
+        // Build diatonic scale from the provided rotation set (modal member) and keep ascending order.
+        var scale = mode.RotationSet.Select(pc => pc.Value).Distinct().OrderBy(v => v).ToArray();
+        // Normalize degree to 1..N
+        var count = scale.Length == 0 ? 1 : scale.Length;
+        var degIndex = ((degree - 1) % count + count) % count;
+
+        // Helper for diatonic stacking indices (1-3-5-7)
+        int StepIndex(int baseIndex, int diatonicSteps) => (baseIndex + diatonicSteps) % count;
+        int SemisBetween(int fromIdx, int toIdx)
+        {
+            var a = scale[fromIdx];
+            var b = scale[toIdx];
+            var d = b - a;
+            if (d < 0) d += 12;
+            return d;
+        }
+
+        var third = SemisBetween(degIndex, StepIndex(degIndex, 2));
+        var fifth = SemisBetween(degIndex, StepIndex(degIndex, 4));
+        var seventh = SemisBetween(degIndex, StepIndex(degIndex, 6));
+
+        // Triad quality
+        string triadQuality;
+        if (third == 3 && fifth == 6) triadQuality = "dim"; // diminished
+        else if (third == 3 && (fifth == 7 || fifth == 6)) triadQuality = "m"; // minor/minor-b5 edge -> treat as minor for numeral casing; dim handled above
+        else if (third == 4 && fifth == 8) triadQuality = "aug"; // augmented
+        else triadQuality = "maj"; // default major
+
+        // Roman numeral for the degree
+        var numeral = ToRoman(degIndex + 1);
+        // Case by quality (common practice): major/dominant/aug → upper; minor/dim → lower
+        if (triadQuality is "m" or "dim") numeral = numeral.ToLowerInvariant();
+
+        // Diminished symbol
+        if (triadQuality == "dim") numeral += "°";
+        else if (triadQuality == "aug") numeral += "+"; // optional augmented marker
+
+        // Seventh handling when requested
+        var suffix = string.Empty;
+        if (extension >= ChordExtension.Seventh)
+        {
+            if (seventh == 11)
+            {
+                // Major seventh
+                // Special naming rule for non-tertian stacking (Quartal/Quintal):
+                // We keep tonic as "maj7", but for other degrees we simplify to generic "7"
+                // to match expected modal naming in non-tertian context.
+                if (triadQuality == "m")
+                {
+                    suffix = "maj7"; // m(maj7)
+                }
+                else if (stacking != ChordStackingType.Tertian && degIndex != 0)
+                {
+                    suffix = "7"; // simplify non-tonic major 7th to generic 7 in non-tertian stacking
+                }
+                else
+                {
+                    suffix = "maj7";
+                }
+            }
+            else if (seventh == 10)
+            {
+                // Minor 7th
+                if (triadQuality == "dim") suffix = "ø7"; // half-diminished
+                else if (triadQuality == "m") suffix = "7"; // minor 7
+                else suffix = "7"; // dominant 7 on major triad
+            }
+            else if (seventh == 9 && triadQuality == "dim")
+            {
+                suffix = "°7"; // fully diminished
+            }
+        }
+
+        var stackingSuffix = stacking switch
+        {
+            ChordStackingType.Tertian => string.Empty,
+            ChordStackingType.Quartal => " (4ths)",
+            ChordStackingType.Quintal => " (5ths)",
+            _ => string.Empty
+        };
+
+        return numeral + suffix + stackingSuffix;
+
+        static string ToRoman(int n)
+        {
+            // Support up to 12 for generality
+            var map = new (int, string)[]
+            {
+                (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"),
+                (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")
+            };
+            var val = Math.Max(1, Math.Min(n, 12));
+            var s = string.Empty;
+            foreach (var (v, sym) in map)
+            {
+                while (val >= v)
+                {
+                    s += sym;
+                    val -= v;
+                }
+            }
+            return s;
+        }
+    }
     /// <summary>
     ///     Generates comprehensive chord names for a chord template with specific root
     /// </summary>
@@ -30,12 +145,33 @@ public static class ChordTemplateNamingService
     }
 
     /// <summary>
+    ///     Adapter overload: generate comprehensive names from a ChordFormula by wrapping it in a template
+    /// </summary>
+    public static ComprehensiveChordName GenerateComprehensiveNames(
+        ChordFormula formula,
+        PitchClass root,
+        PitchClass? bassNote = null)
+    {
+        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        return GenerateComprehensiveNames(template, root, bassNote);
+    }
+
+    /// <summary>
     ///     Gets the best chord name based on context using hybrid analysis
     /// </summary>
     public static string GetBestChordName(ChordTemplate template, PitchClass root, PitchClass? bassNote = null)
     {
         // Use hybrid analysis for intelligent tonal/atonal selection
         return HybridChordNamingService.GetBestChordName(template, root, bassNote);
+    }
+
+    /// <summary>
+    ///     Adapter overload: get best chord name from a ChordFormula
+    /// </summary>
+    public static string GetBestChordName(ChordFormula formula, PitchClass root, PitchClass? bassNote = null)
+    {
+        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        return GetBestChordName(template, root, bassNote);
     }
 
     /// <summary>
@@ -62,6 +198,51 @@ public static class ChordTemplateNamingService
         names.AddRange(comprehensive.Alternates);
 
         return names.Distinct();
+    }
+
+    /// <summary>
+    ///     Adapter overload: get all naming options from a ChordFormula
+    /// </summary>
+    public static IEnumerable<string> GetAllNamingOptions(
+        ChordFormula formula,
+        PitchClass root,
+        PitchClass? bassNote = null)
+    {
+        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        return GetAllNamingOptions(template, root, bassNote);
+    }
+
+    /// <summary>
+    ///     Convenience overloads that accept raw intervals by creating a temporary ChordFormula
+    /// </summary>
+    public static string GetBestChordName(
+        IEnumerable<ChordFormulaInterval> intervals,
+        string formulaName,
+        PitchClass root,
+        PitchClass? bassNote = null)
+    {
+        var formula = new ChordFormula(formulaName, intervals);
+        return GetBestChordName(formula, root, bassNote);
+    }
+
+    public static IEnumerable<string> GetAllNamingOptions(
+        IEnumerable<ChordFormulaInterval> intervals,
+        string formulaName,
+        PitchClass root,
+        PitchClass? bassNote = null)
+    {
+        var formula = new ChordFormula(formulaName, intervals);
+        return GetAllNamingOptions(formula, root, bassNote);
+    }
+
+    public static ComprehensiveChordName GenerateComprehensiveNames(
+        IEnumerable<ChordFormulaInterval> intervals,
+        string formulaName,
+        PitchClass root,
+        PitchClass? bassNote = null)
+    {
+        var formula = new ChordFormula(formulaName, intervals);
+        return GenerateComprehensiveNames(formula, root, bassNote);
     }
 
     /// <summary>

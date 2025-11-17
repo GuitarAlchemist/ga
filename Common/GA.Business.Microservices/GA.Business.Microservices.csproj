@@ -20,6 +20,16 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
   </ItemGroup>
 
 </Project>

@@ -5,6 +5,7 @@ using GA.Core.Extensions;
 using Intervals;
 using Intervals.Primitives;
 using Notes;
+using Notes.Extensions;
 using Primitives.Diatonic;
 using Scales;
 

@@ -144,9 +144,9 @@ internal sealed class VoicingIndexInitializationService(
 
     private static string GetCacheFilePath(int documentCount)
     {
-        var cacheDir = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "cache", "embeddings");
+        var cacheDir = Path.Combine(Directory.GetCurrentDirectory(), "cache", "embeddings");
         Directory.CreateDirectory(cacheDir);
-        return System.IO.Path.Combine(cacheDir, $"voicing_embeddings_{documentCount}.bin");
+        return Path.Combine(cacheDir, $"voicing_embeddings_{documentCount}.bin");
     }
 
     private async Task<Dictionary<string, float[]>> LoadOrGenerateEmbeddingsFromCacheAsync(
@@ -157,7 +157,7 @@ internal sealed class VoicingIndexInitializationService(
     {
         if (File.Exists(cacheFile))
         {
-            logger.LogInformation("Loading embeddings from cache: {CacheFile}", System.IO.Path.GetFileName(cacheFile));
+            logger.LogInformation("Loading embeddings from cache: {CacheFile}", Path.GetFileName(cacheFile));
             try
             {
                 var embeddings = LoadEmbeddingsFromCache(cacheFile, documents);
@@ -200,14 +200,14 @@ internal sealed class VoicingIndexInitializationService(
                     var docId = docIds[0];
                     if (allEmbeddings.TryGetValue(docId, out var embedding))
                     {
-                        return embedding.Select(f => (double)f).ToArray();
+                        return [.. embedding.Select(f => (double)f)];
                     }
                 }
 
                 logger.LogWarning("Embedding not found for text '{Text}', generating on-demand",
                     text[..Math.Min(50, text.Length)]);
                 var result = await batchEmbeddingService.GenerateBatchEmbeddingsAsync(new[] { text }, stoppingToken);
-                return result[0].Select(f => (double)f).ToArray();
+                return [.. result[0].Select(f => (double)f)];
             },
             stoppingToken);
     }
@@ -323,7 +323,7 @@ internal sealed class VoicingIndexInitializationService(
             }
 
             logger.LogInformation("✓ Saved {Count} embeddings to cache: {CacheFile}",
-                embeddings.Count, System.IO.Path.GetFileName(cacheFile));
+                embeddings.Count, Path.GetFileName(cacheFile));
         }
         catch (Exception ex)
         {

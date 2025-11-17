@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Diatonic;
 using Scales;
 
@@ -17,7 +18,7 @@ public sealed class HarmonicMajorScaleMode(HarmonicMajorScaleDegree degree)
         IStaticEnumerable<HarmonicMajorScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<HarmonicMajorScaleDegree, HarmonicMajorScaleMode>>
-        _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+        _lazyModeByDegree = new(() => new([.. Items]));
 
     // Static instances for each mode
     public static HarmonicMajorScaleMode HarmonicMajor => new(HarmonicMajorScaleDegree.HarmonicMajor);
@@ -35,8 +36,16 @@ public sealed class HarmonicMajorScaleMode(HarmonicMajorScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<HarmonicMajorScaleMode> Items =>
-        HarmonicMajorScaleDegree.Items.Select(degree => new HarmonicMajorScaleMode(degree));
+    public static IEnumerable<HarmonicMajorScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<HarmonicMajorScaleDegree>.Items)
+            {
+                yield return new HarmonicMajorScaleMode(degree);
+            }
+        }
+    }
 
     public static HarmonicMajorScaleMode Get(HarmonicMajorScaleDegree degree)
     {
@@ -48,3 +57,5 @@ public sealed class HarmonicMajorScaleMode(HarmonicMajorScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

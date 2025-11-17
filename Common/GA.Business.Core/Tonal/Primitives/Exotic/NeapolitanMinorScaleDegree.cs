@@ -27,7 +27,7 @@ public readonly record struct NeapolitanMinorScaleDegree : IRangeValueObject<Nea
     public static IReadOnlyCollection<NeapolitanMinorScaleDegree> Items =>
         ValueObjectUtils<NeapolitanMinorScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static NeapolitanMinorScaleDegree NeapolitanMinor => new(1);

@@ -7,12 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>184fd7b8-9deb-426e-8493-4d585a01c48f</UserSecretsId>
-    <NoWarn>NU1608;NU1605</NoWarn>
+    <NoWarn>NU1608;NU1605;SKEXP0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.1"/>
-    <PackageReference Include="FSharp.Core" Version="10.0.100-preview7.25451.107"/>
+    <PackageReference Include="FSharp.Core" Version="10.0.100"/>
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1"/>
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.91.241101.1"/>
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.38.0"/>
@@ -35,6 +35,7 @@
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
     <ProjectReference Include="..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
+    <ProjectReference Include="..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

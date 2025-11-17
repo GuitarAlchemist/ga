@@ -1,11 +1,12 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
-using Microsoft.AspNetCore.RateLimiting;
 using GA.AI.Service.Models;
+using GA.AI.Service.Services;
 
 /// <summary>
 ///     API controller for Advanced AI Features

@@ -13,64 +13,36 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
     private const int _minValue = 0;
     private const int _maxValue = 5;
 
-    private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
-    public static FingerCount Zero => _lazyDefaults.Value.DefaultZero;
-    public static FingerCount One => _lazyDefaults.Value.DefaultOne;
-    public static FingerCount Two => _lazyDefaults.Value.DefaultTwo;
-    public static FingerCount Three => _lazyDefaults.Value.DefaultThree;
-    public static FingerCount Four => _lazyDefaults.Value.DefaultFour;
-    public static FingerCount Five => _lazyDefaults.Value.DefaultFive;
+    public static FingerCount Zero { get; } = FromValue(0);
+    public static FingerCount One { get; } = FromValue(1);
+    public static FingerCount Two { get; } = FromValue(2);
+    public static FingerCount Three { get; } = FromValue(3);
+    public static FingerCount Four { get; } = FromValue(4);
+    public static FingerCount Five { get; } = FromValue(5);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static FingerCount FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new FingerCount { Value = value };
-    }
+    public static FingerCount FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
-    public static FingerCount Min => _lazyDefaults.Value.DefaultMin;
-    public static FingerCount Max => _lazyDefaults.Value.DefaultMax;
+    public static FingerCount Min { get; } = FromValue(_minValue);
+    public static FingerCount Max { get; } = FromValue(_maxValue);
 
-    public static implicit operator FingerCount(int value)
-    {
-        return new FingerCount { Value = value };
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator FingerCount(int value) => new() { Value = value };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator int(FingerCount fingerCount) => fingerCount.Value;
 
-    public static implicit operator int(FingerCount fingerCount)
-    {
-        return fingerCount.Value;
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<FingerCount>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<FingerCount>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<FingerCount>.EnsureValueInRange(value, minValue, maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<FingerCount>.EnsureValueInRange(value, minValue, maxValue);
-    }
-
-    public void CheckMaxValue(int maxValue)
-    {
+    public void CheckMaxValue(int maxValue) =>
         ValueObjectUtils<FingerCount>.EnsureValueRange(Value, _minValue, maxValue);
-    }
 
-    public override string ToString()
-    {
-        return _value switch { _ => Value.ToString() };
-    }
-
-    private class Defaults
-    {
-        public FingerCount DefaultMin { get; } = FromValue(_minValue);
-        public FingerCount DefaultMax { get; } = FromValue(_maxValue);
-        public FingerCount DefaultZero { get; } = FromValue(0);
-        public FingerCount DefaultOne { get; } = FromValue(1);
-        public FingerCount DefaultTwo { get; } = FromValue(2);
-        public FingerCount DefaultThree { get; } = FromValue(3);
-        public FingerCount DefaultFour { get; } = FromValue(4);
-        public FingerCount DefaultFive { get; } = FromValue(5);
-    }
+    /// <inheritdoc/>
+    public override string ToString() => Value.ToString();
 
     #region IStaticValueObjectList<FingerCount> Members
 
@@ -83,6 +55,16 @@ public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>
     /// Gets all FingerCount values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<FingerCount>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full finger count range.
+    /// </summary>
+    public static ReadOnlySpan<FingerCount> ItemsSpan => ValueObjectUtils<FingerCount>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each finger count.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<FingerCount>.ValuesSpan;
 
     #endregion
 

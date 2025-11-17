@@ -97,10 +97,6 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         #region IParsable Members
 
-        //language=regexp
-        public static readonly string RegexPattern = "([A-G])(#?)(10|11|[0-9])";
-        private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
-
         /// <inheritdoc />
         public static Sharp Parse(string s, IFormatProvider? provider = null)
         {
@@ -115,59 +111,11 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Sharp result)
         {
-            result = default!;
-            if (string.IsNullOrWhiteSpace(s))
-            {
-                return false;
-            }
-
-            result = C0;
-            var match = _regex.Match(s);
-            if (!match.Success)
-            {
-                return false; // Failed
-            }
-
-            var noteGroup = match.Groups[1];
-            var accidentalGroup = match.Groups[2];
-            var octaveGroup = match.Groups[3];
-            if (!noteGroup.IsDefined)
-            {
-                return false; // Missing note
-            }
-
-            if (!octaveGroup.IsDefined)
-            {
-                return false; // Missing octave
-            }
-
-            // Parse natural note
-            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote))
-            {
-                return false;
-            }
-
-            // Parse sharp accidental
-            SharpAccidental? accidental = null;
-            if (accidentalGroup.IsDefined &&
-                SharpAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
-            {
-                accidental = parsedAccidental;
-            }
-
-            // Parse octave
-            if (!int.TryParse(octaveGroup, out var parsedOctaveValue))
-            {
-                return false;
-            }
-
-            var octave = new Octave { Value = parsedOctaveValue };
-
-            var note = new Note.Sharp(naturalNote, accidental);
-
-            // Result
-            result = new(note, octave);
-            return true;
+            return PitchParser.TryParse<SharpAccidental, Note.Sharp, Sharp>(
+                s,
+                (naturalNote, accidental) => new Note.Sharp(naturalNote, accidental),
+                (note, octave) => new Sharp(note, octave),
+                out result);
         }
 
         #endregion
@@ -193,7 +141,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Sharp DSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.D, octave);
+            return new Sharp(Notes.Note.Sharp.DSharp, octave);
         }
 
         public static Sharp E(Octave octave)
@@ -208,7 +156,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Sharp FSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.G, octave);
+            return new Sharp(Notes.Note.Sharp.FSharp, octave);
         }
 
         public static Sharp G(Octave octave)
@@ -218,7 +166,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Sharp GSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.A, octave);
+            return new Sharp(Notes.Note.Sharp.GSharp, octave);
         }
 
         public static Sharp A(Octave octave)
@@ -379,10 +327,6 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         #region IParsable Members
 
-        //language=regexp
-        public static readonly string RegexPattern = "([A-G])(#?)(10|11|[0-9])";
-        private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
-
         /// <inheritdoc />
         public static Flat Parse(string s, IFormatProvider? provider = null)
         {
@@ -397,60 +341,11 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         /// <inheritdoc />
         public static bool TryParse(string? s, IFormatProvider? provider, out Flat result)
         {
-            result = default!;
-            if (string.IsNullOrWhiteSpace(s))
-            {
-                return false;
-            }
-
-            result = C0;
-            var match = _regex.Match(s);
-            if (!match.Success)
-            {
-                return false; // Failed
-            }
-
-            var noteGroup = match.Groups[1];
-            var accidentalGroup = match.Groups[2];
-            var octaveGroup = match.Groups[3];
-            if (!noteGroup.IsDefined)
-            {
-                return false; // Missing note
-            }
-
-            if (!octaveGroup.IsDefined)
-            {
-                return false; // Missing octave
-            }
-
-            // Parse natural note
-            if (!NaturalNote.TryParse(noteGroup.Value, null, out var naturalNote))
-            {
-                return false;
-            }
-
-            // Parse flat accidental
-            FlatAccidental? accidental = null;
-            if (accidentalGroup.IsDefined
-                &&
-                FlatAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
-            {
-                accidental = parsedAccidental;
-            }
-
-            // Parse octave
-            if (!int.TryParse(octaveGroup, out var parsedOctaveValue))
-            {
-                return false;
-            }
-
-            var octave = new Octave { Value = parsedOctaveValue };
-
-            var note = new Note.Flat(naturalNote, accidental);
-
-            // Result
-            result = new(note, octave);
-            return true;
+            return PitchParser.TryParse<FlatAccidental, Note.Flat, Flat>(
+                s,
+                (naturalNote, accidental) => new Note.Flat(naturalNote, accidental),
+                (note, octave) => new Flat(note, octave),
+                out result);
         }
 
         #endregion

@@ -22,7 +22,7 @@ public readonly record struct EnigmaticScaleDegree : IRangeValueObject<Enigmatic
 
     public static IReadOnlyCollection<EnigmaticScaleDegree> All => ValueObjectUtils<EnigmaticScaleDegree>.Items;
     public static IReadOnlyCollection<EnigmaticScaleDegree> Items => ValueObjectUtils<EnigmaticScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static EnigmaticScaleDegree Enigmatic => new(1);

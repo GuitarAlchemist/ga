@@ -1,13 +1,16 @@
+namespace GaApi.Components.Pages;
+
 using GaApi.GraphQL.Types;
-using Microsoft.AspNetCore.Components;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MudBlazor;
-
-namespace GaApi.Components.Pages;
+using GA.Business.Core.Atonal;
+using GA.Business.Core.Unified;
 
 public partial class Documents
 {
+    [Microsoft.AspNetCore.Components.Inject] private IUnifiedModeService UnifiedModeService { get; set; } = null!;
+
     private List<ProcessedDocumentType> _documents = [];
     private List<ProcessedDocumentType> _searchResults = [];
     private ProcessedDocumentType? _selectedDocument;
@@ -23,6 +26,10 @@ public partial class Documents
     private string _uploadContent = string.Empty;
     private string _uploadTextSourceType = "Markdown";
     private string _semanticSearchQuery = string.Empty;
+
+    // Unified Mode quick summary
+    private string _unifiedInput = "0,2,4,5,7,9,11"; // default Ionian
+    private UnifiedModeDescription? _unifiedDesc;
 
     private readonly DialogOptions _dialogOptions = new()
     {
@@ -66,7 +73,7 @@ public partial class Documents
                 .Limit(100)
                 .ToListAsync();
 
-            _documents = documents.Select(MapBsonToProcessedDocument).ToList();
+            _documents = [.. documents.Select(MapBsonToProcessedDocument)];
         }
         catch (Exception ex)
         {
@@ -112,12 +119,12 @@ public partial class Documents
         }
     }
 
-    private async Task UploadFromUrl()
+    private Task UploadFromUrl()
     {
         if (string.IsNullOrWhiteSpace(_uploadUrl))
         {
             Snackbar.Add("Please enter a URL", Severity.Warning);
-            return;
+            return Task.CompletedTask;
         }
 
         _uploading = true;
@@ -136,14 +143,16 @@ public partial class Documents
         {
             _uploading = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task UploadTextContent()
+    private Task UploadTextContent()
     {
         if (string.IsNullOrWhiteSpace(_uploadTitle) || string.IsNullOrWhiteSpace(_uploadContent))
         {
             Snackbar.Add("Please enter both title and content", Severity.Warning);
-            return;
+            return Task.CompletedTask;
         }
 
         _uploading = true;
@@ -163,14 +172,16 @@ public partial class Documents
         {
             _uploading = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task PerformSemanticSearch()
+    private Task PerformSemanticSearch()
     {
         if (string.IsNullOrWhiteSpace(_semanticSearchQuery))
         {
             Snackbar.Add("Please enter a search query", Severity.Warning);
-            return;
+            return Task.CompletedTask;
         }
 
         _searching = true;
@@ -189,6 +200,8 @@ public partial class Documents
         {
             _searching = false;
         }
+
+        return Task.CompletedTask;
     }
 
     private static Color GetSourceTypeColor(string sourceType)
@@ -224,16 +237,48 @@ public partial class Documents
             } : null,
             ExtractedKnowledge = doc.Contains("extractedKnowledge") ? new ExtractedKnowledgeType
             {
-                ChordProgressions = doc["extractedKnowledge"].AsBsonDocument.GetValue("chordProgressions", new BsonArray())
-                    .AsBsonArray.Select(x => x.AsString).ToList(),
-                Scales = doc["extractedKnowledge"].AsBsonDocument.GetValue("scales", new BsonArray())
-                    .AsBsonArray.Select(x => x.AsString).ToList(),
-                Techniques = doc["extractedKnowledge"].AsBsonDocument.GetValue("techniques", new BsonArray())
-                    .AsBsonArray.Select(x => x.AsString).ToList(),
-                Concepts = doc["extractedKnowledge"].AsBsonDocument.GetValue("concepts", new BsonArray())
-                    .AsBsonArray.Select(x => x.AsString).ToList()
+                ChordProgressions = [.. doc["extractedKnowledge"].AsBsonDocument.GetValue("chordProgressions", new BsonArray())
+                    .AsBsonArray.Select(x => x.AsString)],
+                Scales = [.. doc["extractedKnowledge"].AsBsonDocument.GetValue("scales", new BsonArray())
+                    .AsBsonArray.Select(x => x.AsString)],
+                Techniques = [.. doc["extractedKnowledge"].AsBsonDocument.GetValue("techniques", new BsonArray())
+                    .AsBsonArray.Select(x => x.AsString)],
+                Concepts = [.. doc["extractedKnowledge"].AsBsonDocument.GetValue("concepts", new BsonArray())
+                    .AsBsonArray.Select(x => x.AsString)]
             } : null
         };
+    }
+
+    private Task AnalyzeUnified()
+    {
+        try
+        {
+            var parts = _unifiedInput
+                .Split(new[] { ',', ' ', ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var v) ? v : -1)
+                .Where(v => v >= 0 && v <= 11)
+                .Distinct()
+                .OrderBy(v => v)
+                .ToArray();
+
+            if (parts.Length == 0)
+            {
+                Snackbar.Add("Enter 0–11 pitch classes (e.g., 0,2,4,5,7,9,11)", Severity.Warning);
+                _unifiedDesc = null;
+                return Task.CompletedTask;
+            }
+
+            var pcs = new PitchClassSet([.. parts.Select(PitchClass.FromValue)]);
+            var inst = UnifiedModeService.FromPitchClassSet(pcs, PitchClass.C);
+            _unifiedDesc = UnifiedModeService.Describe(inst);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unified summary failed: {ex.Message}", Severity.Error);
+            _unifiedDesc = null;
+        }
+
+        return Task.CompletedTask;
     }
 }
 

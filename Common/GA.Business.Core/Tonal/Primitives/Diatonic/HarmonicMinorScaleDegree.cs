@@ -25,7 +25,7 @@ public readonly record struct HarmonicMinorScaleDegree : IRangeValueObject<Harmo
     public static IReadOnlyCollection<HarmonicMinorScaleDegree> Items =>
         ValueObjectUtils<HarmonicMinorScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static HarmonicMinorScaleDegree HarmonicMinor => new(1);

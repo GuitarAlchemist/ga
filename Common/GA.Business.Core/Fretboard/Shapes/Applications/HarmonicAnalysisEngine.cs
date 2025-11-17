@@ -1,17 +1,17 @@
 ﻿namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
 using DynamicalSystems;
-using Microsoft.Extensions.Logging;
 using Spectral;
 
 /// <summary>
 /// Comprehensive harmonic analysis engine combining all techniques
 /// </summary>
-public class HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
+public class HarmonicAnalysisEngine
 {
-    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new(loggerFactory.CreateLogger<SpectralGraphAnalyzer>());
-    private readonly HarmonicDynamics _dynamicsAnalyzer = new(loggerFactory.CreateLogger<HarmonicDynamics>());
-    private readonly ProgressionAnalyzer _progressionAnalyzer = new(loggerFactory.CreateLogger<ProgressionAnalyzer>());
+    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new();
+    private readonly HarmonicDynamics _dynamicsAnalyzer = new();
+    private readonly ProgressionAnalyzer _progressionAnalyzer = new();
+    private readonly ProgressionOptimizer _progressionOptimizer = new();
 
     /// <summary>
     /// Perform comprehensive analysis of a shape graph
@@ -21,9 +21,6 @@ public class HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
         HarmonicAnalysisOptions? options = null)
     {
         options ??= new HarmonicAnalysisOptions();
-
-        var logger = loggerFactory.CreateLogger<HarmonicAnalysisEngine>();
-        logger.LogInformation("Starting comprehensive harmonic analysis");
 
         // Run analyses in parallel
         var spectralTask = Task.Run(() =>
@@ -86,8 +83,6 @@ public class HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
         int pathLength,
         PracticeGoal goal)
     {
-        var optimizer = new ProgressionOptimizer(loggerFactory.CreateLogger<ProgressionOptimizer>());
-
         var strategy = goal switch
         {
             PracticeGoal.MaximizeInformationGain => OptimizationStrategy.MaximizeVariety,
@@ -95,7 +90,7 @@ public class HarmonicAnalysisEngine(ILoggerFactory loggerFactory)
             _ => OptimizationStrategy.BalancedPractice
         };
 
-        var result = optimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
+        var result = _progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
         {
             TargetLength = pathLength,
             Strategy = strategy
@@ -166,4 +161,3 @@ public enum PracticeGoal
     MinimizePhysicalCost,
     Balanced
 }
-

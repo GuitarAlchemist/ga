@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Default: exclude Integration category so backend is not required -->
+  <NUnit>
+    <!-- Exclude tests marked with [Category("Integration")] -->
+    <Where>cat != Integration</Where>
+  </NUnit>
+  <!-- Optional: speed up by parallelizing within assemblies if supported -->
+  <RunConfiguration>
+    <MaxCpuCount>0</MaxCpuCount>
+  </RunConfiguration>
+</RunSettings>

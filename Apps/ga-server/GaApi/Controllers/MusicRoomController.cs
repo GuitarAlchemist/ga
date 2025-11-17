@@ -121,13 +121,13 @@ public class MusicRoomController(
                     "Chromatic", "Diatonic", "Pentatonic", "Hexatonic",
                     "Octatonic", "Whole Tone", "Augmented", "Diminished"
                 ],
-                Items = SetClass.Items.Select(sc => new MusicItemData
+                Items = [.. SetClass.Items.Select(sc => new MusicItemData
                 {
                     Name = sc.ToString(),
                     Category = sc.IsModal ? "Modal" : "Atonal",
-                    PitchClasses = sc.PrimeForm.Select(pc => pc.Value).ToList(),
+                    PitchClasses = [.. sc.PrimeForm.Select(pc => pc.Value)],
                     Description = $"Cardinality: {sc.Cardinality.Value}, ICV: {sc.IntervalClassVector}"
-                }).ToList()
+                })]
             },
             1 => new FloorMusicData
             {
@@ -138,12 +138,12 @@ public class MusicRoomController(
                     "Triads (3-x)", "Tetrads (4-x)", "Pentachords (5-x)",
                     "Hexachords (6-x)", "Septachords (7-x)", "Octachords (8-x)"
                 ],
-                Items = ForteNumber.Items.Select(fn => new MusicItemData
+                Items = [.. ForteNumber.Items.Select(fn => new MusicItemData
                 {
                     Name = fn.ToString(),
                     Category = $"{fn.Cardinality.Value}-note sets",
                     Description = $"Forte Number: {fn}"
-                }).ToList()
+                })]
             },
             2 => new FloorMusicData
             {
@@ -154,16 +154,16 @@ public class MusicRoomController(
                     "Major Triads", "Minor Triads", "Diminished", "Augmented",
                     "Suspended", "Seventh Chords", "Extended Chords"
                 ],
-                Items = PitchClassSet.Items
+                Items = [.. PitchClassSet.Items
                     .Where(pcs => pcs.IsPrimeForm)
                     .Take(200)
                     .Select(pcs => new MusicItemData
                     {
                         Name = pcs.Name,
                         Category = pcs.IsModal ? "Modal" : "Atonal",
-                        PitchClasses = pcs.Select(pc => pc.Value).ToList(),
+                        PitchClasses = [.. pcs.Select(pc => pc.Value)],
                         Description = $"Prime Form: {pcs.Id}"
-                    }).ToList()
+                    })]
             },
             3 => new FloorMusicData
             {
@@ -281,7 +281,7 @@ public class MusicRoomController(
                 CenterY = room.CenterY,
                 Floor = floor,
                 Category = category,
-                Items = categoryItems.Select(item => item.Name).ToList(),
+                Items = [.. categoryItems.Select(item => item.Name)],
                 Color = GetCategoryColor(categoryIndex, categories.Count),
                 Description = $"{category} - Floor {floor}"
             });
@@ -459,7 +459,7 @@ public class MusicRoomController(
             FloorSize = document.FloorSize,
             TotalItems = document.TotalItems,
             Categories = document.Categories,
-            Rooms = document.Rooms.Select(r => new MusicRoomDto
+            Rooms = [.. document.Rooms.Select(r => new MusicRoomDto
             {
                 Id = r.Id,
                 X = r.X,
@@ -473,12 +473,12 @@ public class MusicRoomController(
                 Items = r.Items,
                 Color = r.Color,
                 Description = r.Description
-            }).ToList(),
-            Corridors = document.Corridors.Select(c => new CorridorDto
+            })],
+            Corridors = [.. document.Corridors.Select(c => new CorridorDto
             {
                 Width = c.Width,
-                Points = c.Points.Select(p => new PointDto { X = p.X, Y = p.Y }).ToList()
-            }).ToList(),
+                Points = [.. c.Points.Select(p => new PointDto { X = p.X, Y = p.Y })]
+            })],
             Seed = document.Seed
         };
     }

@@ -16,17 +16,134 @@ using MathNet.Numerics.LinearAlgebra.Double;
 ///     - Octave equivalence creates a torus topology
 ///     - Permutation equivalence creates an orbifold
 ///     - Voice leading distance = L¹ metric on the orbifold
-///     References:
-///     - Tymoczko, D. (2011). A Geometry of Music. Oxford University Press.
-///     - Callender, C., Quinn, I., & Tymoczko, D. (2008). "Generalized voice-leading spaces"
-///     - do Carmo, M. P. (1992). Riemannian Geometry
+///
+///     References and links:
+///     - Tymoczko, D. (2011). A Geometry of Music. Oxford University Press. ISBN 978-0195336672.
+///     - Callender, C., Quinn, I., & Tymoczko, D. (2008). Generalized Voice-Leading Spaces. Music Theory Online 14(3).
+///       Open access: http://mtosmt.org/issues/mto.08.14.3/mto.08.14.3.callender_quinn_tymoczko.html
+///     - do Carmo, M. P. (1992). Riemannian Geometry. Birkhäuser.
+///
+///     Acknowledgements: Implementation inspired by the OPTIC framework (Octave, Permutation, Transposition,
+///     Inversion, Cardinality) articulated by Callender–Quinn–Tymoczko.
 /// </remarks>
 [PublicAPI]
 public class VoiceLeadingSpace(
     int voices,
     bool octaveEquivalence = true,
-    bool permutationEquivalence = true)
+    bool permutationEquivalence = true,
+    bool transpositionEquivalence = false,
+    bool inversionEquivalence = false)
 {
+    #region Helpers
+
+    private static double Mod12(double x)
+    {
+        var r = x % 12.0;
+        return r < 0 ? r + 12.0 : r;
+    }
+
+    private static double CircularDistance(double a, double b)
+    {
+        var d = Math.Abs(Mod12(a) - Mod12(b));
+        return Math.Min(d, 12.0 - d);
+    }
+
+    private static double[] SortAscending(double[] v)
+    {
+        var copy = v.ToArray();
+        Array.Sort(copy);
+        return copy;
+    }
+
+    private static double[] NormalizeByTransposition(double[] v)
+    {
+        if (v.Length == 0)
+        {
+            return v;
+        }
+
+        // NOTE: This helper assumes octave equivalence (mod 12). If octave equivalence is disabled,
+        // callers should avoid using this normalization.
+        var w = v.Select(Mod12).ToArray();
+        // shift so first coordinate is 0, then sort to fundamental domain
+        var shift = w[0];
+        for (var i = 0; i < w.Length; i++)
+        {
+            w[i] = Mod12(w[i] - shift);
+        }
+        Array.Sort(w);
+        return w;
+    }
+
+    private static int LexCompare(double[] a, double[] b)
+    {
+        var n = Math.Min(a.Length, b.Length);
+        for (var i = 0; i < n; i++)
+        {
+            var cmp = a[i].CompareTo(b[i]);
+            if (cmp != 0) return cmp;
+        }
+        return a.Length.CompareTo(b.Length);
+    }
+
+    private double[] CanonicalizeOptic(double[] v)
+    {
+        // Start from input, only apply operations that are enabled by toggles.
+        var a = octaveEquivalence ? v.Select(Mod12).ToArray() : v.ToArray();
+
+        // permutation equivalence
+        if (permutationEquivalence)
+        {
+            Array.Sort(a);
+        }
+
+        // transposition equivalence
+        if (transpositionEquivalence)
+        {
+            if (octaveEquivalence)
+            {
+                a = NormalizeByTransposition(a);
+            }
+            else
+            {
+                // Without octave equivalence, normalize by subtracting the first coordinate (no wrap) then sort if P on
+                var shift = a[0];
+                for (var i = 0; i < a.Length; i++)
+                {
+                    a[i] = a[i] - shift;
+                }
+                if (permutationEquivalence) Array.Sort(a);
+            }
+        }
+
+        // inversion equivalence
+        if (inversionEquivalence)
+        {
+            double[] inv;
+            if (octaveEquivalence)
+            {
+                inv = a.Select(x => Mod12(-x)).ToArray();
+            }
+            else
+            {
+                inv = a.Select(x => -x).ToArray();
+            }
+            if (permutationEquivalence) Array.Sort(inv);
+            if (transpositionEquivalence)
+            {
+                inv = octaveEquivalence ? NormalizeByTransposition(inv) : inv; // already normalized above for non-octave
+            }
+
+            if (LexCompare(inv, a) < 0)
+            {
+                a = inv;
+            }
+        }
+
+        return a;
+    }
+
+    #endregion
     /// <summary>
     ///     Compute voice leading distance between two voicings
     /// </summary>
@@ -45,18 +162,53 @@ public class VoiceLeadingSpace(
             throw new ArgumentException($"Voicings must have {voices} voices");
         }
 
-        if (!permutationEquivalence)
+        // Trivial case: zero voices -> zero distance
+        if (voices == 0)
         {
-            return VoiceLeadingCost(from, to);
+            return 0.0;
         }
 
+        // Transposition equivalence: minimize over 12 transpositions (or over a reasonable range if octaveEquivalence is off)
+        if (transpositionEquivalence)
+        {
+            var min = double.MaxValue;
+            for (var k = 0; k < 12; k++)
+            {
+                var shifted = new double[voices];
+                for (var i = 0; i < voices; i++)
+                {
+                    var val = to[i] + k;
+                    shifted[i] = octaveEquivalence ? Mod12(val) : val;
+                }
+                var d = permutationEquivalence
+                    ? DistanceWithPermutation(from, shifted)
+                    : VoiceLeadingCost(from, shifted);
+                if (d < min) min = d;
+            }
+            return min;
+        }
+
+        // Without transposition equivalence
+        return permutationEquivalence
+            ? DistanceWithPermutation(from, to)
+            : VoiceLeadingCost(from, to);
+    }
+
+    private double DistanceWithPermutation(double[] from, double[] to)
+    {
         // Find optimal permutation (Hungarian algorithm would be better for large n)
         var minCost = double.MaxValue;
 
         foreach (var perm in Permutations(to))
         {
             var cost = VoiceLeadingCost(from, perm);
-            minCost = Math.Min(minCost, cost);
+            if (cost < minCost) minCost = cost;
+        }
+
+        // If there are no permutations (e.g., 0 voices), return 0 cost
+        if (double.IsPositiveInfinity(minCost) || minCost == double.MaxValue)
+        {
+            return 0.0;
         }
 
         return minCost;
@@ -98,12 +250,15 @@ public class VoiceLeadingSpace(
     /// <returns>Sequence of voicings along geodesic</returns>
     public List<double[]> Geodesic(double[] from, double[] to, int steps = 10)
     {
-        var path = new List<double[]> { from };
+        var start = ProjectToFundamentalDomain(from);
+        var path = new List<double[]> { start };
 
         // Find optimal voice assignment
         var optimalTo = permutationEquivalence
             ? FindOptimalPermutation(from, to)
             : to;
+
+        optimalTo = ProjectToFundamentalDomain(optimalTo);
 
         // Linear interpolation (geodesic in Euclidean space)
         for (var i = 1; i < steps; i++)
@@ -113,10 +268,11 @@ public class VoiceLeadingSpace(
 
             for (var v = 0; v < voices; v++)
             {
-                intermediate[v] = from[v] + t * (optimalTo[v] - from[v]);
+                intermediate[v] = start[v] + t * (optimalTo[v] - start[v]);
             }
 
-            path.Add(intermediate);
+            // Re-project each step to remain on the quotient chart
+            path.Add(ProjectToFundamentalDomain(intermediate));
         }
 
         path.Add(optimalTo);
@@ -197,20 +353,38 @@ public class VoiceLeadingSpace(
     /// </summary>
     private double[] FindOptimalPermutation(double[] from, double[] to)
     {
-        var minCost = double.MaxValue;
-        double[]? bestPerm = null;
-
-        foreach (var perm in Permutations(to))
+        // For small n, exhaustive search is fine; for larger n, use a greedy fallback.
+        if (to.Length <= 6)
         {
-            var cost = VoiceLeadingCost(from, perm);
-            if (cost < minCost)
+            var minCost = double.MaxValue;
+            double[]? bestPerm = null;
+
+            foreach (var perm in Permutations(to))
             {
-                minCost = cost;
-                bestPerm = perm;
+                var cost = VoiceLeadingCost(from, perm);
+                if (cost < minCost)
+                {
+                    minCost = cost;
+                    bestPerm = perm;
+                }
             }
+
+            return bestPerm ?? to;
         }
 
-        return bestPerm ?? to;
+        // Greedy assignment by closest circular distance
+        var remaining = to.Select((val, idx) => (val, idx)).ToList();
+        var result = new double[to.Length];
+        for (var i = 0; i < from.Length; i++)
+        {
+            var best = remaining
+                .Select(r => (r.val, r.idx, dist: CircularDistance(from[i], r.val)))
+                .OrderBy(t => t.dist)
+                .First();
+            result[i] = best.val;
+            remaining.RemoveAll(p => p.idx == best.idx);
+        }
+        return result;
     }
 
     /// <summary>
@@ -247,24 +421,19 @@ public class VoiceLeadingSpace(
     /// </remarks>
     public double[] ProjectToFundamentalDomain(double[] voicing)
     {
-        var result = voicing.ToArray();
-
-        // Octave equivalence
-        if (octaveEquivalence)
+        // Respect toggles in this space: octave, permutation, plus optional T/I
+        if (!octaveEquivalence && !permutationEquivalence && !transpositionEquivalence && !inversionEquivalence)
         {
-            for (var i = 0; i < result.Length; i++)
-            {
-                result[i] = (result[i] % 12 + 12) % 12;
-            }
+            return [.. voicing];
         }
 
-        // Permutation equivalence (sort)
-        if (permutationEquivalence)
+        var projected = voicing;
+        if (octaveEquivalence || permutationEquivalence || transpositionEquivalence || inversionEquivalence)
         {
-            Array.Sort(result);
+            projected = CanonicalizeOptic(voicing);
         }
 
-        return result;
+        return projected;
     }
 }
 

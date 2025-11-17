@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Business.Core.Analytics.Spectral;
+using GA.Analytics.Service.Models;
+using GA.Analytics.Service.Services;
 
 /// <summary>
 ///     Provides spectral analysis for external autonomous systems (e.g., TARS Tier2 governance).
