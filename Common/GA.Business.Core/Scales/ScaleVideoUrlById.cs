@@ -5,7 +5,7 @@ using Atonal.Primitives;
 public class ScaleVideoUrlById() : LazyIndexerBase<PitchClassSetId, Uri>(GetVideoUrlByNumber())
 {
     internal static readonly ScaleVideoUrlById Instance = new();
-    public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+    public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => [.. Instance.Dictionary.Keys];
 
     public static bool IsValidScaleNumber(PitchClassSetId pitchClassSetIdentity)
     {

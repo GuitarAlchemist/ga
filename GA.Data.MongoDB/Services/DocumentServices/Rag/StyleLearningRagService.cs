@@ -1,7 +1,7 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 using GA.Data.MongoDB.Models.Rag;
-using GA.Data.MongoDB.Services.Embeddings;
+using Embeddings;
 using Microsoft.Extensions.Logging;
 using global::MongoDB.Driver;
 
@@ -67,7 +67,7 @@ public class StyleLearningRagService(
         {
             // Generate embeddings for semantic search
             var embedding = await EmbeddingService.GenerateEmbeddingAsync(doc.SearchText);
-            doc.Embedding = embedding.ToArray();
+            doc.Embedding = [.. embedding];
         }
 
         return documents;
@@ -97,7 +97,7 @@ public class StyleLearningRagService(
                 .Select(doc => new
                 {
                     Document = doc,
-                    Similarity = CosineSimilarity(queryEmbedding.ToArray(), doc.Embedding)
+                    Similarity = CosineSimilarity([.. queryEmbedding], doc.Embedding)
                 })
                 .Where(x => x.Similarity >= minSimilarity)
                 .OrderByDescending(x => x.Similarity)
@@ -129,7 +129,7 @@ public class StyleLearningRagService(
             var collection = GetCollection();
             var filter = Builders<StyleLearningRagDocument>.Filter.Regex(
                 x => x.ArtistOrStyle,
-                new global::MongoDB.Bson.BsonRegularExpression(artistOrStyle, "i"));
+                new BsonRegularExpression(artistOrStyle, "i"));
 
             var docs = await collection.Find(filter).Limit(limit).ToListAsync();
 
@@ -184,7 +184,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return progressions.Distinct().ToList();
+        return [.. progressions.Distinct()];
     }
 
     private List<string> ExtractVoicings(string content)
@@ -201,7 +201,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return voicings.Distinct().ToList();
+        return [.. voicings.Distinct()];
     }
 
     private List<string> ExtractMelodicPatterns(string content)
@@ -218,7 +218,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return patterns.Distinct().ToList();
+        return [.. patterns.Distinct()];
     }
 
     private List<string> ExtractRhythmicCharacteristics(string content)
@@ -235,7 +235,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return characteristics.Distinct().ToList();
+        return [.. characteristics.Distinct()];
     }
 
     private List<string> ExtractHarmonicTechniques(string content)
@@ -252,7 +252,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return techniques.Distinct().ToList();
+        return [.. techniques.Distinct()];
     }
 
     private List<string> ExtractPlayingTechniques(string content)
@@ -269,7 +269,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return techniques.Distinct().ToList();
+        return [.. techniques.Distinct()];
     }
 
     private List<string> ExtractTonalPreferences(string content)
@@ -286,7 +286,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return preferences.Distinct().ToList();
+        return [.. preferences.Distinct()];
     }
 
     private List<string> ExtractStylisticInfluences(string content)
@@ -303,7 +303,7 @@ public class StyleLearningRagService(
             }
         }
         
-        return influences.Distinct().ToList();
+        return [.. influences.Distinct()];
     }
 }
 

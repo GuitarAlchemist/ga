@@ -1,9 +1,12 @@
 ﻿namespace GaApi.Controllers;
 
+using System.Threading;
+using System.Threading.Tasks;
 using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// API controller for voicing semantic search using GPU-accelerated vector search
@@ -15,6 +18,7 @@ using Microsoft.AspNetCore.RateLimiting;
 public class VoicingSearchController(
     EnhancedVoicingSearchService voicingSearch,
     IEmbeddingService embeddingService,
+    IVoicingEmbeddingCache embeddingCache,
     ILogger<VoicingSearchController> logger)
     : ControllerBase
 {
@@ -39,7 +43,7 @@ public class VoicingSearchController(
     [ProducesResponseType(503)]
     public async Task<ActionResult<List<VoicingSearchResult>>> SemanticSearch(
         [FromQuery] string q,
-        [FromQuery] int limit = 10,
+        [FromQuery] int limit = 1,
         [FromQuery] string? difficulty = null,
         [FromQuery] string? position = null,
         [FromQuery] string? voicingType = null,
@@ -56,7 +60,8 @@ public class VoicingSearchController(
                 return BadRequest("Query parameter 'q' is required");
             }
 
-            if (!voicingSearch.IsInitialized)
+            var cancellationToken = HttpContext.RequestAborted;
+            if (!await EnsureInitializedAsync(cancellationToken))
             {
                 return StatusCode(503, "Voicing search is not initialized. Please wait for indexing to complete.");
             }
@@ -84,10 +89,9 @@ public class VoicingSearchController(
                     requireBarreChord);
             }
 
-            // TODO: Replace with actual embedding generator (Ollama, OpenAI, etc.)
             var results = await voicingSearch.SearchAsync(
                 q,
-                GenerateMockEmbedding,
+                text => embeddingCache.GetOrCreateAsync(text, cancellationToken),
                 limit,
                 filters);
 
@@ -125,7 +129,8 @@ public class VoicingSearchController(
     {
         try
         {
-            if (!voicingSearch.IsInitialized)
+            var cancellationToken = HttpContext.RequestAborted;
+            if (!await EnsureInitializedAsync(cancellationToken))
             {
                 return StatusCode(503, "Voicing search is not initialized. Please wait for indexing to complete.");
             }
@@ -237,7 +242,7 @@ public class VoicingSearchController(
                 async text =>
                 {
                     var embedding = await embeddingService.GenerateEmbeddingAsync(text);
-                    return embedding.Select(f => (double)f).ToArray();
+                    return [.. embedding.Select(f => (double)f)];
                 },
                 cancellationToken);
 
@@ -253,30 +258,6 @@ public class VoicingSearchController(
         {
             _initializationLock.Release();
         }
-    }
-
-    // TODO: Replace with actual embedding generator
-    private static async Task<double[]> GenerateMockEmbedding(string text)
-    {
-        await Task.Delay(1); // Simulate async operation
-
-        var random = new Random(text.GetHashCode());
-        // Use 768 dimensions to match the cached embeddings (mxbai-embed-large model)
-        var embedding = new double[768];
-
-        for (var i = 0; i < embedding.Length; i++)
-        {
-            embedding[i] = random.NextDouble() * 2 - 1; // Range: -1 to 1
-        }
-
-        // Normalize
-        var magnitude = Math.Sqrt(embedding.Sum(x => x * x));
-        for (var i = 0; i < embedding.Length; i++)
-        {
-            embedding[i] /= magnitude;
-        }
-
-        return embedding;
     }
 }
 
@@ -296,5 +277,3 @@ public class VoicingSearchStatsDto
     public bool RequiresGpu { get; set; }
     public bool RequiresNetwork { get; set; }
 }
-
-

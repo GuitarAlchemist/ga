@@ -292,7 +292,7 @@ public class GuitarAlchemistFunctions(
         try
         {
             logger.LogInformation("AI function called: FetchMusicTheoryArticle for URL: {Url}", url);
-            var content = await webScrapingService.FetchWebPageAsync(url, true);
+            var content = await webScrapingService.FetchWebPageAsync(url);
             logger.LogInformation("Fetched content from URL: {Url}", url);
             return content;
         }
@@ -462,9 +462,9 @@ public class GuitarAlchemistFunctions(
             // Filter by position if specified
             var filteredVoicings = position.ToLower() switch
             {
-                "open" => voicings.Where(v => v.Position.Contains("Open", StringComparison.OrdinalIgnoreCase)).ToList(),
-                "barre" => voicings.Where(v =>
-                    v.Position.Contains("Barre", StringComparison.OrdinalIgnoreCase) || v.Barre != null).ToList(),
+                "open" => [.. voicings.Where(v => v.Position.Contains("Open", StringComparison.OrdinalIgnoreCase))],
+                "barre" => [.. voicings.Where(v =>
+                    v.Position.Contains("Barre", StringComparison.OrdinalIgnoreCase) || v.Barre != null)],
                 _ => voicings
             };
 

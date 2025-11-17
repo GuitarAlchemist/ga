@@ -81,7 +81,7 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
                     .ToFlatNotes() // Circle of Fourths, starting from B
                 : GetNotes(NaturalNote.F, count, SimpleIntervalSize.Fifth)
                     .ToSharpNotes(); // Circle of Fifths, starting from F
-        return notes.ToImmutableList();
+        return [.. notes];
 
         static IEnumerable<NaturalNote> GetNotes(NaturalNote firstItem, int count, SimpleIntervalSize increment)
         {
@@ -96,7 +96,22 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
 
     #region IStaticReadonlyCollectionFromValues<KeySignature> Members
 
-    public static IReadOnlyCollection<KeySignature> Items => IStaticReadonlyCollectionFromValues<KeySignature>.Items;
+    // Note: Use an explicit, allocation-safe construction to avoid potential
+    // static initialization ordering issues observed in some test runners.
+    public static IReadOnlyCollection<KeySignature> Items
+        => Enumerable.Range(_minValue, _maxValue - _minValue + 1)
+            .Select(FromValue)
+            .ToImmutableList();
+
+    /// <summary>
+    /// Gets the cached span representing the full key signature range.
+    /// </summary>
+    public static ReadOnlySpan<KeySignature> ItemsSpan => ValueObjectUtils<KeySignature>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each key signature.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<KeySignature>.ValuesSpan;
 
     public static KeySignature Min => new(_minValue);
     public static KeySignature Max => new(_maxValue);

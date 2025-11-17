@@ -41,8 +41,8 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
                 documents.Add(new ScaleDocument
                 {
                     Name = scale.Name,
-                    Notes = scaleObj.Select(n => n.ToString()).ToList(),
-                    Intervals = scaleObj.Intervals.Select(i => i.ToString(Interval.Diatonic.Format.ShortName)).ToList(),
+                    Notes = [.. scaleObj.Select(n => n.ToString())],
+                    Intervals = [.. scaleObj.Intervals.Select(i => i.ToString(Interval.Diatonic.Format.ShortName))],
                     IntervalClassVector = scaleObj.IntervalClassVector.ToString(),
                     IsModal = scaleObj.IsModal,
                     ModalFamily = scaleObj.ModalFamily?.ToString(),

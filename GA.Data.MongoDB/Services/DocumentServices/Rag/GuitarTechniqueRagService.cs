@@ -1,7 +1,7 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 using GA.Data.MongoDB.Models.Rag;
-using GA.Data.MongoDB.Services.Embeddings;
+using Embeddings;
 using Microsoft.Extensions.Logging;
 using global::MongoDB.Driver;
 
@@ -66,7 +66,7 @@ public class GuitarTechniqueRagService(
         {
             // Generate embeddings for semantic search
             var embedding = await EmbeddingService.GenerateEmbeddingAsync(doc.SearchText);
-            doc.Embedding = embedding.ToArray();
+            doc.Embedding = [.. embedding];
         }
 
         return documents;
@@ -96,7 +96,7 @@ public class GuitarTechniqueRagService(
                 .Select(doc => new
                 {
                     Document = doc,
-                    Similarity = CosineSimilarity(queryEmbedding.ToArray(), doc.Embedding)
+                    Similarity = CosineSimilarity([.. queryEmbedding], doc.Embedding)
                 })
                 .Where(x => x.Similarity >= minSimilarity)
                 .OrderByDescending(x => x.Similarity)
@@ -156,7 +156,7 @@ public class GuitarTechniqueRagService(
             patterns.Add("CAGED system");
         }
 
-        return patterns.Distinct().ToList();
+        return [.. patterns.Distinct()];
     }
 
     private List<string> ExtractExercises(string content)
@@ -178,7 +178,7 @@ public class GuitarTechniqueRagService(
             }
         }
 
-        return exercises.Distinct().ToList();
+        return [.. exercises.Distinct()];
     }
 
     private List<string> ExtractChordVoicings(string content)
@@ -200,7 +200,7 @@ public class GuitarTechniqueRagService(
         var matches = chordRegex.Matches(content);
         voicings.AddRange(matches.Select(m => m.Value).Distinct().Take(10));
 
-        return voicings.Distinct().ToList();
+        return [.. voicings.Distinct()];
     }
 
     private List<string> ExtractTechniques(string content)
@@ -224,7 +224,7 @@ public class GuitarTechniqueRagService(
             }
         }
 
-        return techniques.Distinct().ToList();
+        return [.. techniques.Distinct()];
     }
 
     private List<string> ExtractProgressions(string content)
@@ -241,7 +241,7 @@ public class GuitarTechniqueRagService(
             }
         }
 
-        return progressions.Distinct().ToList();
+        return [.. progressions.Distinct()];
     }
 
     private List<string> ExtractStyles(string content)
@@ -264,7 +264,7 @@ public class GuitarTechniqueRagService(
             }
         }
 
-        return styles.Distinct().ToList();
+        return [.. styles.Distinct()];
     }
 
     private List<string> ExtractFretboardPositions(string content)
@@ -281,7 +281,7 @@ public class GuitarTechniqueRagService(
         matches = stringSetRegex.Matches(content);
         positions.AddRange(matches.Select(m => m.Value).Distinct());
 
-        return positions.Distinct().ToList();
+        return [.. positions.Distinct()];
     }
 }
 

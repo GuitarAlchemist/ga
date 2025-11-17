@@ -70,28 +70,26 @@ public static class ChordTemplateFactory
     /// </summary>
     public static IEnumerable<ChordTemplate> GenerateFromAllModalFamilies()
     {
-        foreach (var modalFamily in ModalFamily.Items)
+        // Until a generalized ModalFamily -> Modes factory exists, we aggregate from
+        // all currently implemented modal families to ensure comprehensive coverage.
+
+        // 1) Traditional diatonic families (major, natural minor, harmonic minor, melodic minor)
+        foreach (var chord in GenerateFromTraditionalScales())
         {
-            // Skip families with too few or too many notes for practical chord generation
-            if (modalFamily.NoteCount is < 3 or > 12)
-            {
-                continue;
-            }
-
-            // TODO: Implement ModalFamilyScaleModeFactory
-            // var modes = ModalFamilyScaleModeFactory.CreateModesFromFamily(modalFamily);
-            var modes = Enumerable.Empty<object>(); // Temporary stub
-
-            // TODO: Implement mode processing
-            // foreach (var mode in modes)
-            // {
-            //     foreach (var chord in GenerateFromScaleMode(mode))
-            //         yield return chord;
-            // }
+            yield return chord;
         }
 
-        // Temporary return to satisfy compiler
-        yield break;
+        // 2) Symmetrical scale families (whole tone, diminished, augmented)
+        foreach (var chord in GenerateFromSymmetricalScales())
+        {
+            yield return chord;
+        }
+
+        // 3) Pentatonic families (major pentatonic, Hirajoshi, In Sen)
+        foreach (var chord in GenerateFromPentatonicScales())
+        {
+            yield return chord;
+        }
     }
 
     /// <summary>

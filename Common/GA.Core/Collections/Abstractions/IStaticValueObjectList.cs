@@ -9,23 +9,38 @@
 ///     Derives from <see cref="IStaticReadonlyCollection{TSelf}" /> and <see cref="IRangeValueObject{TSelf}" />.
 ///     </para>
 ///     <para>
-///     This interface provides default implementations for both <see cref="Items"/> and <see cref="Values"/>
-///     that are automatically memoized via <see cref="ValueObjectUtils{TSelf}"/>. Implementations should
-///     use these default implementations by simply declaring the properties without a body.
+///     Use the memoized utilities provided by <see cref="ValueObjectUtils{TSelf}"/> for consistency across all
+///     implementers. In particular, expose:
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <description><see cref="Items"/> via <c>ValueObjectUtils&lt;TSelf&gt;.Items</c></description>
+///         </item>
+///         <item>
+///             <description><see cref="Values"/> via <c>ValueObjectUtils&lt;TSelf&gt;.Values</c></description>
+///         </item>
+///     </list>
+///     <para>
+///     Optionally, implement the cached spans to avoid allocations in tight loops:
+///     </para>
+///     <code>
+///     public static ReadOnlySpan&lt;TSelf&gt; ItemsSpan =&gt; ValueObjectUtils&lt;TSelf&gt;.ItemsSpan;
+///     public static ReadOnlySpan&lt;int&gt;   ValuesSpan =&gt; ValueObjectUtils&lt;TSelf&gt;.ValuesSpan;
+///     </code>
+///     <para>
+///     Memoization details: <see cref="ValueObjectCache{T}"/> materializes all instances from
+///     <see cref="IRangeValueObject{TSelf}.Min"/> to <see cref="IRangeValueObject{TSelf}.Max"/> on the first access
+///     and caches them for the lifetime of the application domain.
 ///     </para>
 ///     <para>
-///     The memoization is performed by <see cref="ValueObjectCache{T}"/> which creates all instances
-///     from <see cref="IRangeValueObject{TSelf}.Min"/> to <see cref="IRangeValueObject{TSelf}.Max"/>
-///     on first access and caches them for the lifetime of the application.
-///     </para>
-///     <para>
-///     Example implementation:
+///     Minimal example:
 ///     <code>
 ///     public readonly record struct MyType : IStaticValueObjectList&lt;MyType&gt;
 ///     {
-///         // Items and Values use default memoized implementations
 ///         public static IReadOnlyCollection&lt;MyType&gt; Items =&gt; ValueObjectUtils&lt;MyType&gt;.Items;
 ///         public static IReadOnlyList&lt;int&gt; Values =&gt; ValueObjectUtils&lt;MyType&gt;.Values;
+///         public static ReadOnlySpan&lt;MyType&gt; ItemsSpan =&gt; ValueObjectUtils&lt;MyType&gt;.ItemsSpan; // optional
+///         public static ReadOnlySpan&lt;int&gt;   ValuesSpan =&gt; ValueObjectUtils&lt;MyType&gt;.ValuesSpan; // optional
 ///     }
 ///     </code>
 ///     </para>

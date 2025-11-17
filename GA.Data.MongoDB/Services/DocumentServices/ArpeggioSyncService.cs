@@ -2,6 +2,7 @@ namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using Business.Core.Chords;
 using Business.Core.Notes;
+using Business.Core.Notes.Extensions;
 using Microsoft.Extensions.Logging;
 using Models;
 
@@ -17,10 +18,8 @@ public class ArpeggioSyncService(ILogger<ArpeggioSyncService> logger, MongoDbSer
             {
                 Name = template.PitchClassSet.Name,
                 Root = template.PitchClassSet.Notes.First().ToString(),
-                Intervals = template.PitchClassSet.Notes.Skip(1)
-                    .Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())
-                    .ToList(),
-                Notes = template.PitchClassSet.Notes.Select(n => n.ToString()).ToList(),
+                Intervals = [.. template.PitchClassSet.Notes.Skip(1).Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())],
+                Notes = [.. template.PitchClassSet.Notes.Select(n => n.ToString())],
                 Category = template.PitchClassSet.Contains(Note.Chromatic.DSharpOrEFlat.PitchClass) ? "Minor" : "Major",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

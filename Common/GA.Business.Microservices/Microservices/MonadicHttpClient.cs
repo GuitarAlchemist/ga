@@ -201,7 +201,7 @@ public class MonadicHttpClient(HttpClient httpClient, ILogger<MonadicHttpClient>
         CancellationToken cancellationToken = default)
     {
         var tasks = urls.Select(url => GetAsync<T>(url, cancellationToken));
-        return (await Task.WhenAll(tasks)).ToList();
+        return [.. (await Task.WhenAll(tasks))];
     }
 
     /// <summary>

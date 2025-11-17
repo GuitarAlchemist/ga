@@ -33,7 +33,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
             }
         }
 
-        return results.ToImmutableList();
+        return [.. results];
     }
 
     public async Task<ImmutableList<IngestedDocument>> GetDeletedDocumentsAsync(
@@ -45,7 +45,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
             .Where(d => !sourceFileIds.Contains(d.Id))
             .ToListAsync();
 
-        return result.ToImmutableList();
+        return [.. result];
     }
 
     public async Task<ImmutableList<SemanticSearchRecord>> CreateRecordsForDocumentAsync(
@@ -56,7 +56,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
 
         var embeddings = await embeddingGenerator.GenerateAsync(paragraphs.Select(c => c.Text));
 
-        var results = paragraphs.Zip(embeddings).Select((pair, index) => new SemanticSearchRecord
+        var results = paragraphs.Zip(embeddings).Select((pair, _) => new SemanticSearchRecord
         {
             Key = $"{Path.GetFileNameWithoutExtension(documentId)}_{pair.First.PageNumber}_{pair.First.IndexOnPage}",
             FileName = documentId,
@@ -65,7 +65,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
             Vector = pair.Second.Vector
         });
 
-        return results.ToImmutableList();
+        return [.. results];
     }
 
     private static string SourceFileId(string path)
@@ -86,7 +86,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
             .Select((text, index) => new PageParagraph(pdfPage.Number, index, text));
 #pragma warning restore SKEXP0050 // Type is for evaluation purposes only
 
-        return results.ToImmutableList();
+        return [.. results];
     }
 
     private record PageParagraph(int PageNumber, int IndexOnPage, string Text);

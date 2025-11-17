@@ -188,7 +188,7 @@ public class MonadMetrics
         stopwatch.Stop();
 
         return result.Match(
-            success =>
+            _ =>
             {
                 RecordResultSuccess(operation, stopwatch.Elapsed.TotalMilliseconds);
                 return result;
@@ -207,7 +207,7 @@ public class MonadMetrics
     public static Option<T> TrackOption<T>(string operation, Option<T> option)
     {
         return option.Match(
-            value =>
+            _ =>
             {
                 RecordOptionSome(operation);
                 return option;

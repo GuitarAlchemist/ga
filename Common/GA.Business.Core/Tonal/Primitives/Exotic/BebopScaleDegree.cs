@@ -22,7 +22,7 @@ public readonly record struct BebopScaleDegree : IRangeValueObject<BebopScaleDeg
 
     public static IReadOnlyCollection<BebopScaleDegree> All => ValueObjectUtils<BebopScaleDegree>.Items;
     public static IReadOnlyCollection<BebopScaleDegree> Items => ValueObjectUtils<BebopScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static BebopScaleDegree BebopDominant => new(1);

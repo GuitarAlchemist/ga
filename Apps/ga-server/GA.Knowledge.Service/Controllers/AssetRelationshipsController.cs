@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 
 using GA.Knowledge.Service.Models;
+using GA.Knowledge.Service.Services;
 
 /// <summary>
 ///     Controller for managing asset relationships and hierarchical data structures

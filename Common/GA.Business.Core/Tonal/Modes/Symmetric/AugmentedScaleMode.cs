@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Symmetric;
 
+using global::GA.Core.Collections;
+
 using Primitives.Symmetric;
 using Scales;
 
@@ -18,7 +20,7 @@ public sealed class AugmentedScaleMode(AugmentedScaleDegree degree)
         IStaticEnumerable<AugmentedScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<AugmentedScaleDegree, AugmentedScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static AugmentedScaleMode Augmented => new(AugmentedScaleDegree.Augmented);
@@ -46,8 +48,16 @@ public sealed class AugmentedScaleMode(AugmentedScaleDegree degree)
     public override int TranspositionCount => 4;
 
     // Collection and access methods
-    public static IEnumerable<AugmentedScaleMode> Items =>
-        AugmentedScaleDegree.Items.Select(degree => new AugmentedScaleMode(degree));
+    public static IEnumerable<AugmentedScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<AugmentedScaleDegree>.Items)
+            {
+                yield return new AugmentedScaleMode(degree);
+            }
+        }
+    }
 
     public static AugmentedScaleMode Get(AugmentedScaleDegree degree)
     {
@@ -59,3 +69,5 @@ public sealed class AugmentedScaleMode(AugmentedScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

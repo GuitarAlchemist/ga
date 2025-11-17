@@ -1,8 +1,8 @@
 ﻿namespace GA.Business.Core.Fretboard.Voicings.Generation;
 
 using Core;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
+using Positions;
+using Primitives;
 using GA.Core.Combinatorics;
 
 /// <summary>
@@ -13,7 +13,7 @@ public static class VoicingDecomposer
     /// <summary>
     /// Decomposes a list of voicings into relative fret vectors
     /// </summary>
-    /// <param name="voicings">The voicings to decompose</param></param>
+    /// <param name="voicings">The voicings to decompose</param>
     /// <param name="vectorCollection">The collection of relative fret vectors to match against</param>
     /// <returns>List of decomposed voicings with their relative fret vectors</returns>
     public static List<DecomposedVoicing> DecomposeVoicings(

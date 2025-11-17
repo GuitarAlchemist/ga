@@ -1,5 +1,12 @@
 namespace GA.Business.Core.Tests.Fretboard.Invariants;
 
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Numerics;
+using GA.Business.Core.Fretboard;
+using GA.Business.Core.Fretboard.Invariants;
+using GA.Business.Core.Atonal;
+
 [TestFixture]
 public class ChordPatternEquivalenceTests
 {

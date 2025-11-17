@@ -407,18 +407,16 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
 
     private static List<string> ExtractIssues(string text)
     {
-        return text.Split('\n')
+        return [.. text.Split('\n')
             .Where(line => line.ToLowerInvariant().Contains("issue") || line.ToLowerInvariant().Contains("problem"))
-            .Take(5)
-            .ToList();
+            .Take(5)];
     }
 
     private static List<string> ExtractRecommendations(string text)
     {
-        return text.Split('\n')
+        return [.. text.Split('\n')
             .Where(line => line.ToLowerInvariant().Contains("recommend") || line.ToLowerInvariant().Contains("suggest"))
-            .Take(5)
-            .ToList();
+            .Take(5)];
     }
 
     private static string ExtractInvariantName(string line)

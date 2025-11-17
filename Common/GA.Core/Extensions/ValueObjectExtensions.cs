@@ -16,6 +16,6 @@ public static class ValueObjectExtensions
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        return items.Select(item => item.Value).ToImmutableList();
+        return [.. items.Select(item => item.Value)];
     }
 }

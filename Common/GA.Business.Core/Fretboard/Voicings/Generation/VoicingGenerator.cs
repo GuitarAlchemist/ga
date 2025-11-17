@@ -3,8 +3,8 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Core;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
+using Positions;
+using Primitives;
 using GA.Business.Core.Notes.Primitives;
 
 /// <summary>
@@ -153,7 +153,7 @@ public static class VoicingGenerator
         var maxStartFret = fretboard.FretCount - windowSize;
 
         // Pre-cache instances once for all windows
-        var cachedFrets = Fret.Items.ToArray();
+        var cachedFrets = Fret.ItemsSpan.ToArray();
         var cachedStrings = Str.Range(fretboard.StringCount).ToArray();
         var cachedMutedPositions = cachedStrings.Select(s => new Position.Muted(s)).ToArray();
 

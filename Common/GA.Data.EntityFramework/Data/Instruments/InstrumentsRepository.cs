@@ -20,7 +20,7 @@ public sealed class InstrumentsRepository
     /// <summary>
     ///     Gets the instrument names <see cref="IReadOnlyCollection{String}" />
     /// </summary>
-    public IReadOnlyCollection<string> InstrumentNames => _instruments.Values.Select(i => i.Name).ToImmutableList();
+    public IReadOnlyCollection<string> InstrumentNames => [.. _instruments.Values.Select(i => i.Name)];
 
     /// <summary>
     ///     Gets the <see cref="IReadOnlyCollection{InstrumentInfo}" />
@@ -82,7 +82,7 @@ public sealed class InstrumentsRepository
                     t => new TuningInfo(t.Name, t, t.Tuning),
                     StringComparer.OrdinalIgnoreCase);
 
-            _instruments.Add(instrument.Name, new(instrument.Name, tuningsDict, null));
+            _instruments.Add(instrument.Name, new(instrument.Name, tuningsDict));
         }
     }
 

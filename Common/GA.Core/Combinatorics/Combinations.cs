@@ -54,12 +54,14 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
 
     private ImmutableDictionary<T, BigInteger> GetWeightByItem()
     {
-        var weight = BigInteger.One;
+        // MSB-first weighting: first element has highest weight (2^(n-1))
+        var count = Elements.Count;
+        var weight = BigInteger.One << (count == 0 ? 0 : count - 1);
         var weightByItemBuilder = ImmutableDictionary.CreateBuilder<T, BigInteger>();
         foreach (var item in Elements)
         {
             weightByItemBuilder.Add(item, weight);
-            weight <<= 1;
+            weight >>= 1;
         }
 
         return weightByItemBuilder.ToImmutable();

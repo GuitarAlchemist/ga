@@ -22,7 +22,7 @@ public readonly record struct HirajoshiScaleDegree : IRangeValueObject<Hirajoshi
 
     public static IReadOnlyCollection<HirajoshiScaleDegree> All => ValueObjectUtils<HirajoshiScaleDegree>.Items;
     public static IReadOnlyCollection<HirajoshiScaleDegree> Items => ValueObjectUtils<HirajoshiScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static HirajoshiScaleDegree Hirajoshi => new(1);

@@ -29,24 +29,22 @@ public sealed class SpectralAnalyticsController(
         {
             var graph = new AgentInteractionGraph
             {
-                Agents = request.Agents
+                Agents = [.. request.Agents
                     .Select(a => new AgentNode
                     {
                         Id = a.Id,
                         DisplayName = a.DisplayName ?? a.Id,
                         Weight = a.Weight,
                         Signals = a.Signals ?? new Dictionary<string, double>()
-                    })
-                    .ToList(),
-                Edges = request.Edges
+                    })],
+                Edges = [.. request.Edges
                     .Select(e => new AgentInteractionEdge
                     {
                         Source = e.Source,
                         Target = e.Target,
                         Weight = e.Weight,
                         Features = e.Features ?? new Dictionary<string, double>()
-                    })
-                    .ToList(),
+                    })],
                 IsUndirected = request.IsUndirected,
                 Metadata = request.Metadata ?? new Dictionary<string, string>()
             };

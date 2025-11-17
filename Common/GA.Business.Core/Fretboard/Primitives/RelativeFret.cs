@@ -12,12 +12,15 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     private const int _minValue = 0;
     private const int _maxValue = 36;
 
-    private static readonly Lazy<Defaults> _lazyDefaults = new(() => new());
-    public static RelativeFret Zero => _lazyDefaults.Value.DefaultZero;
-    public static RelativeFret One => _lazyDefaults.Value.DefaultOne;
-    public static RelativeFret Two => _lazyDefaults.Value.DefaultTwo;
-    public static RelativeFret Three => _lazyDefaults.Value.DefaultThree;
-    public static RelativeFret Four => _lazyDefaults.Value.DefaultFour;
+    public static RelativeFret Zero { get; } = FromValue(0);
+
+    public static RelativeFret One { get; } = FromValue(1);
+
+    public static RelativeFret Two { get; } = FromValue(2);
+
+    public static RelativeFret Three { get; } = FromValue(3);
+
+    public static RelativeFret Four { get; } = FromValue(4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RelativeFret FromValue([ValueRange(_minValue, _maxValue)] int value)
@@ -25,8 +28,9 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
         return new RelativeFret { Value = value };
     }
 
-    public static RelativeFret Min => _lazyDefaults.Value.DefaultMin;
-    public static RelativeFret Max => _lazyDefaults.Value.DefaultMax;
+    public static RelativeFret Min { get; } = FromValue(_minValue);
+
+    public static RelativeFret Max { get; } = FromValue(_maxValue);
 
     public static implicit operator RelativeFret(int value)
     {
@@ -38,20 +42,14 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
         return relativeFret.Value;
     }
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<RelativeFret>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<RelativeFret>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<RelativeFret>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<RelativeFret>.EnsureValueInRange(value, minValue, maxValue);
 
-    public static IReadOnlyCollection<RelativeFret> Range(int start, int count)
-    {
-        return ValueObjectUtils<RelativeFret>.GetItems(start, count);
-    }
+    public static IReadOnlyCollection<RelativeFret> Range(int start, int count) =>
+        ValueObjectUtils<RelativeFret>.GetItems(start, count);
 
     public void CheckMaxValue(int maxValue)
     {
@@ -61,17 +59,6 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     public override string ToString()
     {
         return _value.ToString();
-    }
-
-    private class Defaults
-    {
-        public RelativeFret DefaultMin { get; } = FromValue(_minValue);
-        public RelativeFret DefaultMax { get; } = FromValue(_maxValue);
-        public RelativeFret DefaultZero { get; } = FromValue(1);
-        public RelativeFret DefaultOne { get; } = FromValue(1);
-        public RelativeFret DefaultTwo { get; } = FromValue(2);
-        public RelativeFret DefaultThree { get; } = FromValue(3);
-        public RelativeFret DefaultFour { get; } = FromValue(4);
     }
 
     #region IStaticValueObjectList<RelativeFret> Members
@@ -85,6 +72,16 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     /// Gets all RelativeFret values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full relative fret range.
+    /// </summary>
+    public static ReadOnlySpan<RelativeFret> ItemsSpan => ValueObjectUtils<RelativeFret>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each relative fret.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<RelativeFret>.ValuesSpan;
 
     #endregion
 

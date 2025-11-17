@@ -12,7 +12,7 @@ public readonly record struct Octave : IRangeValueObject<Octave>,
     IFormattable
 {
     private const int _minValue = -1;
-    private const int _maxValue = 8;
+    private const int _maxValue = 9;
 
     private readonly int _value;
 
@@ -96,6 +96,7 @@ public readonly record struct Octave : IRangeValueObject<Octave>,
             6 => "three-line (6)",
             7 => "four-line (7)",
             8 => "five-line (8)",
+            9 => "six-line (9)",
             _ => ""
         };
     }

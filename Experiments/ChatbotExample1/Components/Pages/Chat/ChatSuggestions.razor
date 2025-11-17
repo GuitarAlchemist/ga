@@ -72,7 +72,7 @@
         // Get any leading system messages, plus up to 5 user/assistant messages
         // This should be enough context to generate suggestions without unnecessarily resending entire conversations when long
         var systemMessages = messages.TakeWhile(m => m.Role == ChatRole.System);
-        var otherMessages = messages.Where((m, index) => m.Role == ChatRole.User || m.Role == ChatRole.Assistant).Where(m => !string.IsNullOrEmpty(m.Text)).TakeLast(5);
+        var otherMessages = messages.Where((m, _) => m.Role == ChatRole.User || m.Role == ChatRole.Assistant).Where(m => !string.IsNullOrEmpty(m.Text)).TakeLast(5);
         return systemMessages.Concat(otherMessages);
     }
 

@@ -220,8 +220,7 @@ public class MusicRoomService
         var generator = new BspRoomGenerator(
             seed,
             roomParams.MinRoomSize,
-            roomParams.MaxRoomSize,
-            1
+            roomParams.MaxRoomSize
         );
 
         var dungeon = generator.GenerateDungeon(floorSize, floorSize, roomParams.MaxDepth);
@@ -238,7 +237,7 @@ public class MusicRoomService
             Seed = seed,
             TotalItems = musicData.TotalItems,
             Categories = musicData.Categories,
-            Rooms = musicRooms.Select(r => new RoomData
+            Rooms = [.. musicRooms.Select(r => new RoomData
             {
                 Id = r.Id,
                 X = r.X,
@@ -252,12 +251,12 @@ public class MusicRoomService
                 Items = r.Items,
                 Color = r.Color,
                 Description = r.Description
-            }).ToList(),
-            Corridors = dungeon.Corridors.Select(c => new CorridorData
+            })],
+            Corridors = [.. dungeon.Corridors.Select(c => new CorridorData
             {
                 Width = c.Width,
-                Points = c.Points.Select(p => new PointData { X = p.X, Y = p.Y }).ToList()
-            }).ToList(),
+                Points = [.. c.Points.Select(p => new PointData { X = p.X, Y = p.Y })]
+            })],
             GenerationParams = new GenerationParamsData
             {
                 MinRoomSize = roomParams.MinRoomSize,
@@ -298,8 +297,7 @@ public class MusicRoomService
         var generator = new BspRoomGenerator(
             seed,
             roomParams.MinRoomSize,
-            roomParams.MaxRoomSize,
-            1
+            roomParams.MaxRoomSize
         );
 
         var dungeon = generator.GenerateDungeon(floorSize, floorSize, roomParams.MaxDepth);
@@ -572,12 +570,12 @@ public class MusicRoomService
         _logger.LogInformation("Using fallback data access for floor {Floor}", floor);
         return floor switch
         {
-            0 => SetClass.Items.Select(sc => sc.ToString()).ToList(),
-            1 => ForteNumber.Items.Select(fn => fn.ToString()).ToList(),
-            2 => SetClass.Items.Take(200).Select(sc => $"Prime: {sc}").ToList(),
-            3 => SetClass.Items.Take(350).Select(sc => $"Chord: {sc}").ToList(),
-            4 => SetClass.Items.Take(100).Select(sc => $"Inversion: {sc}").ToList(),
-            5 => SetClass.Items.Take(200).Select(sc => $"Voicing: {sc}").ToList(),
+            0 => [.. SetClass.Items.Select(sc => sc.ToString())],
+            1 => [.. ForteNumber.Items.Select(fn => fn.ToString())],
+            2 => [.. SetClass.Items.Take(200).Select(sc => $"Prime: {sc}")],
+            3 => [.. SetClass.Items.Take(350).Select(sc => $"Chord: {sc}")],
+            4 => [.. SetClass.Items.Take(100).Select(sc => $"Inversion: {sc}")],
+            5 => [.. SetClass.Items.Take(200).Select(sc => $"Voicing: {sc}")],
             _ => []
         };
     }

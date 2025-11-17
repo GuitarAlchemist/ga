@@ -31,7 +31,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 Mode = "Major",
                 KeySignature = k.KeySignature.Value,
                 AccidentalKind = k.AccidentalKind.ToString(),
-                Notes = k.Notes.Select(n => n.ToString()).ToList()
+                Notes = [.. k.Notes.Select(n => n.ToString())]
             });
 
             var minorKeys = Key.Minor.MinorItems.Select(k => new KeyDto
@@ -41,7 +41,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 Mode = "Minor",
                 KeySignature = k.KeySignature.Value,
                 AccidentalKind = k.AccidentalKind.ToString(),
-                Notes = k.Notes.Select(n => n.ToString()).ToList()
+                Notes = [.. k.Notes.Select(n => n.ToString())]
             });
 
             var allKeys = majorKeys.Concat(minorKeys).ToList();
@@ -91,8 +91,8 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                     Name = mode.Name,
                     Degree = index + 1,
                     IsMinor = mode.IsMinorMode,
-                    Intervals = mode.SimpleIntervals.Select(i => i.ToString()).ToList(),
-                    CharacteristicNotes = mode.CharacteristicNotes.Select(n => n.ToString()).ToList()
+                    Intervals = [.. mode.SimpleIntervals.Select(i => i.ToString())],
+                    CharacteristicNotes = [.. mode.CharacteristicNotes.Select(n => n.ToString())]
                 };
             }).ToList();
 
@@ -192,7 +192,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 KeyName = key.ToString(),
                 Root = key.Root.ToString(),
                 Mode = key.KeyMode.ToString(),
-                Notes = key.Notes.Select(n => n.ToString()).ToList(),
+                Notes = [.. key.Notes.Select(n => n.ToString())],
                 KeySignature = key.KeySignature.Value,
                 AccidentalKind = key.AccidentalKind.ToString()
             };

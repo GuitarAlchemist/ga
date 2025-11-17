@@ -1,6 +1,5 @@
 using GA.MusicTheory.Service.Models;
 using GA.MusicTheory.Service.Services;
-using Microsoft.Extensions.Caching.Memory;
 using System.Reflection;
 using AllProjects.ServiceDefaults;
 using Hellang.Middleware.ProblemDetails;
@@ -48,7 +47,7 @@ builder.Services.AddSwaggerGen(c =>
 // Add problem details middleware
 builder.Services.AddProblemDetails(options =>
 {
-    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
+    options.IncludeExceptionDetails = (_, _) => builder.Environment.IsDevelopment();
     options.MapToStatusCode<NotImplementedException>(StatusCodes.Status501NotImplemented);
     options.MapToStatusCode<ArgumentException>(StatusCodes.Status400BadRequest);
 });
@@ -67,10 +66,10 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(httpContext =>
+    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
-            factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
                 PermitLimit = 100,

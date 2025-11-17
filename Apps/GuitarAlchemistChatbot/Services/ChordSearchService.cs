@@ -203,7 +203,7 @@ public class ChordSearchService
             (queryLower.Contains("quartal") && chord.StackingType == "Quartal")
         ).Take(limit).ToList();
 
-        return filtered.Any() ? filtered : demoChords.Take(limit).ToList();
+        return filtered.Any() ? filtered : [.. demoChords.Take(limit)];
     }
 
     /// <summary>
@@ -234,7 +234,7 @@ public class ChordSearchService
             }
         };
 
-        return similarChords.Take(limit).ToList();
+        return [.. similarChords.Take(limit)];
     }
 
     /// <summary>

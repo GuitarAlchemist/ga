@@ -4,6 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.Fretboard.Service.Models;
 using GA.Fretboard.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,16 @@ builder.Services.Configure<MongoDbSettings>(
 // Register services
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<PerformanceMetricsService>();
+builder.Services.AddScoped<ActorSystemManager>();
+builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
+builder.Services.AddScoped<ProgressionAnalyzer>();
+builder.Services.AddScoped<HarmonicDynamics>();
+builder.Services.AddScoped<HandPoseClient>();
+builder.Services.AddScoped<SoundBankClient>();
+builder.Services.AddScoped<MonadicChordService>();
+builder.Services.AddScoped<IContextualChordService, ContextualChordService>();
+builder.Services.AddScoped<IVoicingFilterService, VoicingFilterService>();
+builder.Services.AddScoped<IModulationService, ModulationService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();

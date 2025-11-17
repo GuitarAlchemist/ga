@@ -67,7 +67,7 @@ public abstract class InvariantBase<T> : IInvariant<T>
             InvariantName = InvariantName,
             Severity = Severity,
             Category = Category,
-            ErrorMessages = errorMessages.ToList()
+            ErrorMessages = [.. errorMessages]
         };
     }
 }

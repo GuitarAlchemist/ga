@@ -1,0 +1,305 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="49529b13-04ca-40e6-898f-1eb1cc4ae5e8" name="spareilleux@XPS-STEF 2025-11-11 21:07:03" runUser="XPS-STEF\spareilleux" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-11-11T21:07:03.9379243-05:00" queuing="2025-11-11T21:07:03.9379247-05:00" start="2025-11-11T21:07:01.6113289-05:00" finish="2025-11-11T21:07:04.3334596-05:00" />
+  <TestSettings name="default" id="2b039f75-2b33-4d2a-ac5f-2bed88e319d9">
+    <Deployment runDeploymentRoot="spareilleux_XPS-STEF_2025-11-11_21_07_03" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="0f273f87-4b58-4b27-be6b-b6c519583783" testId="2add5be1-f669-3cd3-5e77-426f9dc66014" testName="DetectMode_Altered_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.8744980" startTime="2025-11-11T21:07:03.1481440-05:00" endTime="2025-11-11T21:07:04.0226409-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0f273f87-4b58-4b27-be6b-b6c519583783">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Altered scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_Altered_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 241&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_Altered_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 241&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="fee3b85a-d5c3-4385-93a0-fac1925d7f19" testId="ebe452ea-9608-6a6e-78c8-9ade5be20fd7" testName="DetectMode_DorianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0071710" startTime="2025-11-11T21:07:04.0509481-05:00" endTime="2025-11-11T21:07:04.0581182-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fee3b85a-d5c3-4385-93a0-fac1925d7f19">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Dorian"))&#xD;
+  Expected: String containing "Dorian"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_DorianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 50&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_DorianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 50&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="312be925-1f90-4653-bad0-baf58736e00e" testId="e8c42c2e-9517-6c8e-b5b0-4fd62772f4fc" testName="DetectMode_AeolianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.3946850" startTime="2025-11-11T21:07:02.7519580-05:00" endTime="2025-11-11T21:07:03.1465380-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="312be925-1f90-4653-bad0-baf58736e00e">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Aeolian").Or.Contains("Minor"))&#xD;
+  Expected: String containing "Aeolian" or String containing "Minor"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_AeolianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 123&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_AeolianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 123&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0b4b85b2-d97f-43f8-a7e7-e34554af2e29" testId="60c18e8c-2d2a-ca44-6196-32fbe0f0f967" testName="DetectMode_ChromaticVoicing_ShouldHandleGracefully" computerName="XPS-STEF" duration="00:00:00.0281700" startTime="2025-11-11T21:07:04.0227040-05:00" endTime="2025-11-11T21:07:04.0508734-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0b4b85b2-d97f-43f8-a7e7-e34554af2e29">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.IntervallicInfo.Features, Does.Contain("Cluster (4 semitones)"))&#xD;
+  Expected: some item equal to "Cluster (4 semitones)"&#xD;
+  But was:  &lt; "Whole tone content" &gt;&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_ChromaticVoicing_ShouldHandleGracefully() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 297&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_ChromaticVoicing_ShouldHandleGracefully() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 297&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2a6b1398-b57e-4642-ac02-a3d00b31f3a2" testId="76e4e4b3-0d86-2c05-1bcc-ecb2baa7c766" testName="DetectMode_HarmonicMinor_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0050070" startTime="2025-11-11T21:07:04.0581557-05:00" endTime="2025-11-11T21:07:04.0631619-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2a6b1398-b57e-4642-ac02-a3d00b31f3a2">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Harmonic Minor scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_HarmonicMinor_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 162&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_HarmonicMinor_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 162&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="fccd882c-e081-47b2-8fdf-4511ad453351" testId="a5a89d9a-0a71-0b89-6a48-6c50ed53c4da" testName="DetectMode_PhrygianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0220840" startTime="2025-11-11T21:07:04.1490671-05:00" endTime="2025-11-11T21:07:04.1711507-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fccd882c-e081-47b2-8fdf-4511ad453351">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Phrygian"))&#xD;
+  Expected: String containing "Phrygian"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_PhrygianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 69&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_PhrygianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 69&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e94b7306-c3bc-459e-b29d-37c449d7f51c" testId="d258f43b-87eb-dadd-ecbb-8da0dc7d8ac0" testName="DetectMode_MelodicMinor_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0081689" startTime="2025-11-11T21:07:04.1129524-05:00" endTime="2025-11-11T21:07:04.1211208-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e94b7306-c3bc-459e-b29d-37c449d7f51c">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Melodic Minor scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_MelodicMinor_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 222&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_MelodicMinor_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 222&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d2b7c7f4-0e5c-409f-8218-f019f09b37f8" testId="bb0bcfdf-c46b-14da-fcf9-9dbebb64b544" testName="DetectMode_MixolydianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0197250" startTime="2025-11-11T21:07:04.1217052-05:00" endTime="2025-11-11T21:07:04.1414293-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d2b7c7f4-0e5c-409f-8218-f019f09b37f8">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Mixolydian"))&#xD;
+  Expected: String containing "Mixolydian"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_MixolydianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 105&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_MixolydianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 105&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="763ebc2b-622f-4244-b31d-407349bda7b7" testId="39cdf9b7-62d1-4fed-6a50-22cd68fe63b8" testName="DetectMode_LocrianNatural6_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0109599" startTime="2025-11-11T21:07:04.0857193-05:00" endTime="2025-11-11T21:07:04.0966784-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="763ebc2b-622f-4244-b31d-407349bda7b7">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Locrian ♮6 scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LocrianNatural6_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 200&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LocrianNatural6_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 200&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5c5a3396-b3eb-4f01-a143-030b07d6fb2b" testId="ee0d1656-e271-10a4-360d-ffa5328de862" testName="DetectMode_Triad_ShouldReturnNull" computerName="XPS-STEF" duration="00:00:00.0049020" startTime="2025-11-11T21:07:04.1711906-05:00" endTime="2025-11-11T21:07:04.1760910-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c5a3396-b3eb-4f01-a143-030b07d6fb2b" />
+    <UnitTestResult executionId="e9831575-bfac-4d33-924d-a1420e08712c" testId="12c76180-7378-0075-f6f3-b1b6faccab49" testName="DetectMode_LydianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0079410" startTime="2025-11-11T21:07:04.1048272-05:00" endTime="2025-11-11T21:07:04.1127668-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e9831575-bfac-4d33-924d-a1420e08712c">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Lydian"))&#xD;
+  Expected: String containing "Lydian"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LydianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 87&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LydianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 87&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3b7b8771-8ffb-475e-871e-eb2abf622ae1" testId="9d322a5f-a54e-6042-8e7f-af7a266eaa84" testName="DetectMode_LocrianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0152950" startTime="2025-11-11T21:07:04.0703770-05:00" endTime="2025-11-11T21:07:04.0856715-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b7b8771-8ffb-475e-871e-eb2abf622ae1" />
+    <UnitTestResult executionId="67efe04d-2ac4-4a89-8fb0-92820ce22d8d" testId="a496c3e8-c03a-a43b-2f33-61a1b90d37ac" testName="DetectMode_IonianMode_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0060820" startTime="2025-11-11T21:07:04.0637523-05:00" endTime="2025-11-11T21:07:04.0698337-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="67efe04d-2ac4-4a89-8fb0-92820ce22d8d">
+      <Output>
+        <ErrorInfo>
+          <Message>  Assert.That(analysis.ModeInfo!.ModeName, Does.Contain("Ionian").Or.Contains("Major"))&#xD;
+  Expected: String containing "Ionian" or String containing "Major"&#xD;
+  But was:  "Locrian"&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_IonianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 31&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_IonianMode_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 31&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="94f3d749-d941-4d82-a377-0a9f493f0b2c" testId="6a529e49-4a1a-67a2-02ee-039b952b9b32" testName="DetectMode_LydianDominant_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0070270" startTime="2025-11-11T21:07:04.0972275-05:00" endTime="2025-11-11T21:07:04.1042533-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="94f3d749-d941-4d82-a377-0a9f493f0b2c">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Lydian Dominant scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LydianDominant_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 259&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_LydianDominant_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 259&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="791df21b-ac4a-414a-b65a-e7e04aeb226c" testId="71bad35a-41d9-f094-7286-0743dc9aa2f4" testName="DetectMode_PhrygianDominant_ShouldIdentifyCorrectly" computerName="XPS-STEF" duration="00:00:00.0075460" startTime="2025-11-11T21:07:04.1414736-05:00" endTime="2025-11-11T21:07:04.1490188-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="791df21b-ac4a-414a-b65a-e7e04aeb226c">
+      <Output>
+        <ErrorInfo>
+          <Message>  Should detect mode for Phrygian Dominant scale&#xD;
+Assert.That(analysis.ModeInfo, Is.Not.Null)&#xD;
+  Expected: not null&#xD;
+  But was:  null&#xD;
+</Message>
+          <StackTrace>   at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_PhrygianDominant_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 181&#xD;
+
+1)    at GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests.DetectMode_PhrygianDominant_ShouldIdentifyCorrectly() in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\Fretboard\Voicings\VoicingAnalyzerTests.cs:line 181&#xD;
+
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="DetectMode_DorianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="ebe452ea-9608-6a6e-78c8-9ade5be20fd7">
+      <Execution id="fee3b85a-d5c3-4385-93a0-fac1925d7f19" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_DorianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_IonianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="a496c3e8-c03a-a43b-2f33-61a1b90d37ac">
+      <Execution id="67efe04d-2ac4-4a89-8fb0-92820ce22d8d" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_IonianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_Altered_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="2add5be1-f669-3cd3-5e77-426f9dc66014">
+      <Execution id="0f273f87-4b58-4b27-be6b-b6c519583783" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_Altered_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_AeolianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="e8c42c2e-9517-6c8e-b5b0-4fd62772f4fc">
+      <Execution id="312be925-1f90-4653-bad0-baf58736e00e" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_AeolianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_LydianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="12c76180-7378-0075-f6f3-b1b6faccab49">
+      <Execution id="e9831575-bfac-4d33-924d-a1420e08712c" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_LydianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_PhrygianDominant_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="71bad35a-41d9-f094-7286-0743dc9aa2f4">
+      <Execution id="791df21b-ac4a-414a-b65a-e7e04aeb226c" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_PhrygianDominant_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_MixolydianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="bb0bcfdf-c46b-14da-fcf9-9dbebb64b544">
+      <Execution id="d2b7c7f4-0e5c-409f-8218-f019f09b37f8" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_MixolydianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_ChromaticVoicing_ShouldHandleGracefully" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="60c18e8c-2d2a-ca44-6196-32fbe0f0f967">
+      <Execution id="0b4b85b2-d97f-43f8-a7e7-e34554af2e29" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_ChromaticVoicing_ShouldHandleGracefully" />
+    </UnitTest>
+    <UnitTest name="DetectMode_MelodicMinor_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="d258f43b-87eb-dadd-ecbb-8da0dc7d8ac0">
+      <Execution id="e94b7306-c3bc-459e-b29d-37c449d7f51c" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_MelodicMinor_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_LocrianNatural6_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="39cdf9b7-62d1-4fed-6a50-22cd68fe63b8">
+      <Execution id="763ebc2b-622f-4244-b31d-407349bda7b7" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_LocrianNatural6_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_HarmonicMinor_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="76e4e4b3-0d86-2c05-1bcc-ecb2baa7c766">
+      <Execution id="2a6b1398-b57e-4642-ac02-a3d00b31f3a2" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_HarmonicMinor_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_LocrianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="9d322a5f-a54e-6042-8e7f-af7a266eaa84">
+      <Execution id="3b7b8771-8ffb-475e-871e-eb2abf622ae1" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_LocrianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_PhrygianMode_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="a5a89d9a-0a71-0b89-6a48-6c50ed53c4da">
+      <Execution id="fccd882c-e081-47b2-8fdf-4511ad453351" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_PhrygianMode_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_LydianDominant_ShouldIdentifyCorrectly" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="6a529e49-4a1a-67a2-02ee-039b952b9b32">
+      <Execution id="94f3d749-d941-4d82-a377-0a9f493f0b2c" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_LydianDominant_ShouldIdentifyCorrectly" />
+    </UnitTest>
+    <UnitTest name="DetectMode_Triad_ShouldReturnNull" storage="c:\users\spare\source\repos\ga\tests\common\ga.business.core.tests\bin\debug\net10.0\ga.business.core.tests.dll" id="ee0d1656-e271-10a4-360d-ffa5328de862">
+      <Execution id="5c5a3396-b3eb-4f01-a143-030b07d6fb2b" />
+      <TestMethod codeBase="C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll" adapterTypeName="executor://nunit3testexecutor/" className="GA.Business.Core.Tests.Fretboard.Voicings.VoicingAnalyzerTests" name="DetectMode_Triad_ShouldReturnNull" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="2add5be1-f669-3cd3-5e77-426f9dc66014" executionId="0f273f87-4b58-4b27-be6b-b6c519583783" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ebe452ea-9608-6a6e-78c8-9ade5be20fd7" executionId="fee3b85a-d5c3-4385-93a0-fac1925d7f19" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e8c42c2e-9517-6c8e-b5b0-4fd62772f4fc" executionId="312be925-1f90-4653-bad0-baf58736e00e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="60c18e8c-2d2a-ca44-6196-32fbe0f0f967" executionId="0b4b85b2-d97f-43f8-a7e7-e34554af2e29" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="76e4e4b3-0d86-2c05-1bcc-ecb2baa7c766" executionId="2a6b1398-b57e-4642-ac02-a3d00b31f3a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a5a89d9a-0a71-0b89-6a48-6c50ed53c4da" executionId="fccd882c-e081-47b2-8fdf-4511ad453351" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d258f43b-87eb-dadd-ecbb-8da0dc7d8ac0" executionId="e94b7306-c3bc-459e-b29d-37c449d7f51c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bb0bcfdf-c46b-14da-fcf9-9dbebb64b544" executionId="d2b7c7f4-0e5c-409f-8218-f019f09b37f8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="39cdf9b7-62d1-4fed-6a50-22cd68fe63b8" executionId="763ebc2b-622f-4244-b31d-407349bda7b7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee0d1656-e271-10a4-360d-ffa5328de862" executionId="5c5a3396-b3eb-4f01-a143-030b07d6fb2b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="12c76180-7378-0075-f6f3-b1b6faccab49" executionId="e9831575-bfac-4d33-924d-a1420e08712c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9d322a5f-a54e-6042-8e7f-af7a266eaa84" executionId="3b7b8771-8ffb-475e-871e-eb2abf622ae1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a496c3e8-c03a-a43b-2f33-61a1b90d37ac" executionId="67efe04d-2ac4-4a89-8fb0-92820ce22d8d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a529e49-4a1a-67a2-02ee-039b952b9b32" executionId="94f3d749-d941-4d82-a377-0a9f493f0b2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="71bad35a-41d9-f094-7286-0743dc9aa2f4" executionId="791df21b-ac4a-414a-b65a-e7e04aeb226c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="15" executed="15" passed="2" failed="13" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>NUnit Adapter 4.6.0.0: Test execution started&#xD;
+Running selected tests in C:\Users\spare\source\repos\ga\Tests\Common\GA.Business.Core.Tests\bin\Debug\net10.0\GA.Business.Core.Tests.dll&#xD;
+   NUnit3TestExecutor discovered 15 of 15 NUnit test cases using Current Discovery mode, Non-Explicit run&#xD;
+NUnit Adapter 4.6.0.0: Test execution complete&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

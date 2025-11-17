@@ -13,7 +13,7 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
     {
     }
 
-    public AccidentedNoteCollection(IEnumerable<Note.Accidented> notes) : base(notes.ToImmutableList())
+    public AccidentedNoteCollection(IEnumerable<Note.Accidented> notes) : base([.. notes])
     {
     }
 

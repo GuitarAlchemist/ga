@@ -38,7 +38,7 @@ public class NonEuclideanSimilarityService(ILogger<NonEuclideanSimilarityService
 
         var unitA = a.Select(x => x / normA).ToArray();
         var unitB = b.Select(x => x / normB).ToArray();
-        return Math.Abs(Cosine(unitA.Select(Convert.ToSingle).ToArray(), unitB.Select(Convert.ToSingle).ToArray()));
+        return Math.Abs(Cosine([.. unitA.Select(Convert.ToSingle)], [.. unitB.Select(Convert.ToSingle)]));
     }
 
     private static double Hyperbolic(float[] a, float[] b)
@@ -105,7 +105,7 @@ public class NonEuclideanSimilarityService(ILogger<NonEuclideanSimilarityService
         var window = Math.Max(3, a.Length / 8);
         var avgA = WindowedAverage(a, window);
         var avgB = WindowedAverage(b, window);
-        return Cosine(avgA.Select(Convert.ToSingle).ToArray(), avgB.Select(Convert.ToSingle).ToArray());
+        return Cosine([.. avgA.Select(Convert.ToSingle)], [.. avgB.Select(Convert.ToSingle)]);
     }
 
     private static double Minkowski(float[] a, float[] b)

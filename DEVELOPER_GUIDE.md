@@ -581,3 +581,63 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 Happy coding! 🎸
 
+
+### Using IChordNamingService (Unified Modes + Legacy Naming)
+
+This guide shows how to use the DI‑friendly `IChordNamingService` for both:
+- Unified Roman‑numeral chord naming in modal context (via `UnifiedModeInstance`).
+- Legacy naming from chord templates, formulas, or raw interval lists.
+
+Prerequisites
+- Register the service (already done in hosts):
+  - API host (`GaApi/Program.cs`): `services.AddScoped<IChordNamingService, ChordNamingService>();`
+  - Blazor host (`GA.WebBlazorApp/Program.cs`): same registration.
+
+Unified Roman numerals (modal context)
+```csharp
+// Build a UnifiedModeInstance from a pitch‑class set and root
+var pcs = new PitchClassSet(new [] { PitchClass.FromValue(0), PitchClass.FromValue(2), PitchClass.FromValue(4),
+                                     PitchClass.FromValue(5), PitchClass.FromValue(7), PitchClass.FromValue(9),
+                                     PitchClass.FromValue(11) }); // Ionian
+var unified = new UnifiedModeService().FromPitchClassSet(pcs, PitchClass.C);
+
+// Injected service usage
+var numeral = chordNamingService.GenerateModalChordName(unified, degree: 5, ChordExtension.Seventh);
+// Example output: "V7"
+```
+
+Legacy naming (ChordTemplate)
+```csharp
+// Example: C major triad from a pitch‑class set
+var template = ChordTemplate.Analytical.FromPitchClassSet(
+    new PitchClassSet(new [] { PitchClass.FromValue(0), PitchClass.FromValue(4), PitchClass.FromValue(7) }),
+    "C Major Triad");
+
+var best = chordNamingService.GetBestChordName(template, PitchClass.C); // e.g., "C" or "Cmaj"
+var options = chordNamingService.GetAllNamingOptions(template, PitchClass.C);
+var comprehensive = chordNamingService.GenerateComprehensiveNames(template, PitchClass.C);
+```
+
+Legacy naming (ChordFormula)
+```csharp
+var bestMaj7 = chordNamingService.GetBestChordName(CommonChordFormulas.Major7, PitchClass.C);   // "Cmaj7" or "CM7"
+var bestMin7 = chordNamingService.GetBestChordName(CommonChordFormulas.Minor7, PitchClass.C);   // "Cm7" or "Cmin7"
+var bestDom7 = chordNamingService.GetBestChordName(CommonChordFormulas.Dominant7, PitchClass.C); // "C7" (some variants tolerated)
+```
+
+Legacy naming (Intervals list)
+```csharp
+var intervals = new List<ChordFormulaInterval>
+{
+    new(new Interval.Chromatic(Semitones.FromValue(3)), ChordFunction.Third),
+    new(new Interval.Chromatic(Semitones.FromValue(7)), ChordFunction.Fifth)
+};
+var bestMinor = chordNamingService.GetBestChordName(intervals, "Minor", PitchClass.C); // contains "Cm" or starts with "C"
+```
+
+Conventions and tolerated variants
+- Roman numerals: upper case for major/dominant/aug; lower for minor/diminished; suffixes `maj7`, `7`, `ø7`, `°7`.
+- Diminished/half‑diminished: tests accept `°7`/`o7` and `ø7`/`m7b5`.
+- Augmented: accept `aug` or `+` markers.
+- Sixth vs 13th family: when both 6 and 9 are present, some outputs may render as a related 13th symbol; tests accept either `6/9` or a `13` family variant.
+- Outputs may vary slightly depending on heuristics; tests are tolerant to common, musically equivalent variants.

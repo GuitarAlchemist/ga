@@ -1,6 +1,9 @@
 namespace GA.Business.Core.Tests.Fretboard.Invariants;
 
-using Core.Atonal;
+using GA.Business.Core.Atonal;
+using GA.Business.Core.Fretboard;
+using GA.Business.Core.Fretboard.Invariants;
+using System.Linq;
 
 [TestFixture]
 public class ChordInvariantTests

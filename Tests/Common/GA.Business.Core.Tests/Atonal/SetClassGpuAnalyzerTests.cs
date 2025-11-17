@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Tests.Atonal;
 
 using System.Linq;
-using Core.Analysis.Gpu;
+using Analysis.Gpu;
 using Core.Atonal;
 using Core.Notes;
 using Extensions;
@@ -49,7 +49,7 @@ public class SetClassGpuAnalyzerTests
         using var analyzer = new SetClassGpuAnalyzer();
 
         // Act
-        var result = analyzer.AnalyzeSpectra(new[] { singleton }).Single();
+        var result = analyzer.AnalyzeSpectra([singleton]).Single();
 
         // Assert
         Assert.That(result.SpectralCentroid, Is.EqualTo(singleton.GetSpectralCentroid()).Within(1e-6));

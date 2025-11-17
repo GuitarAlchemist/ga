@@ -30,7 +30,7 @@
     <!-- <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
     <!-- <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/> -->
     <ProjectReference Include="..\GA.BSP.Core\GA.BSP.Core.csproj"/>
-    <ProjectReference Include="..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
+    <ProjectReference Include="..\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

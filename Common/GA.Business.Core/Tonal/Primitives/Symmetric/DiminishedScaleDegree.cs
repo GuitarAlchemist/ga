@@ -22,7 +22,7 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
 
     public static IReadOnlyCollection<DiminishedScaleDegree> All => ValueObjectUtils<DiminishedScaleDegree>.Items;
     public static IReadOnlyCollection<DiminishedScaleDegree> Items => ValueObjectUtils<DiminishedScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static DiminishedScaleDegree HalfWhole => new(1);

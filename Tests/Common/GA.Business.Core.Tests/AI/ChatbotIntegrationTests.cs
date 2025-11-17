@@ -18,7 +18,7 @@ public class ChatbotIntegrationTests
         // Create HttpClientHandler that accepts any SSL certificate (for localhost testing)
         var handler = new HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
         };
 
         _httpClient = new HttpClient(handler)

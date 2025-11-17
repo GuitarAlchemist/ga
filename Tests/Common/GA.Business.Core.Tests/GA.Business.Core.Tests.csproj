@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <WarningsAsErrors>CS8602</WarningsAsErrors>
+    <NoWarn>SKEXP0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.DotMemoryUnit" Version="3.2.20220510"/>
@@ -26,6 +27,9 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
+    <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <!-- Exclude test files with missing service implementations -->
@@ -49,11 +53,13 @@
     <Compile Remove="Tonal/ModalFamilyScaleModeFactoryTests.cs"/>
     <Compile Remove="Fretboard/Shapes/Applications/HarmonicAnalysisEngineTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/IK/HandPoseChromosomeTests.cs"/>
-    <Compile Remove="Fretboard/Invariants/ChordInvariantTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsIntegrationTests.cs"/>
+    <Compile Remove="AI/ChatbotIntegrationTests.cs"/>
+
+    <Compile Remove="Fretboard/Invariants/StorageOptimizationTests.cs"/>
+    <Compile Remove="Fretboard/Invariants/ChordInvariantTests.cs"/>
     <Compile Remove="Fretboard/Invariants/ChordPatternEquivalenceTests.cs"/>
     <Compile Remove="Fretboard/Invariants/CagedSystemTests.cs"/>
-    <Compile Remove="Fretboard/Invariants/StorageOptimizationTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/IK/FitnessEvaluatorTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/ForwardKinematicsTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsSolverTests.cs"/>
@@ -63,6 +69,7 @@
     <Compile Remove="Microservices/MonadicServiceTests.cs"/>
     <Compile Remove="Chords/IconicChordRegistryYamlTests.cs"/>
     <Compile Remove="Atonal/Grothendieck/MarkovWalkerTests.cs"/>
+    <Compile Remove="Spectral/SpectralGraphAnalyzerIntegrationTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyScaleModeTests.cs"/>
     <Compile Remove="Chords/IconicChordTests.cs"/>

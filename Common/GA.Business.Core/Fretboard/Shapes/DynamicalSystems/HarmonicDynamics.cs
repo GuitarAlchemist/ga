@@ -1,19 +1,15 @@
 namespace GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
 
-using Microsoft.Extensions.Logging;
-
 /// <summary>
 /// Analyzes harmonic dynamics using dynamical systems theory
 /// </summary>
-public class HarmonicDynamics(ILogger<HarmonicDynamics> logger)
+public class HarmonicDynamics
 {
     /// <summary>
     /// Analyze the dynamical system properties of a shape graph
     /// </summary>
     public DynamicalSystemInfo Analyze(ShapeGraph graph)
     {
-        logger.LogDebug("Analyzing dynamical system for graph with {ShapeCount} shapes", graph.ShapeCount);
-
         var attractors = FindAttractors(graph);
         var fixedPoints = FindFixedPoints(graph);
         var limitCycles = FindLimitCycles(graph);

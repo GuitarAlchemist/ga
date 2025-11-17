@@ -43,7 +43,8 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     public static IntervalClass FromValue(int value)
     {
         var inOctaveValue = Math.Abs(value) % 12; // Apply octave equivalence
-        var normalizedValue = inOctaveValue > _maxValue ? 12 - value : value; // Apply interval inversion equivalence
+        // Apply interval inversion equivalence correctly based on the in-octave value
+        var normalizedValue = inOctaveValue > _maxValue ? 12 - inOctaveValue : inOctaveValue;
 
         return new() { Value = normalizedValue };
     }
@@ -112,6 +113,16 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     /// Gets all IntervalClass values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<IntervalClass>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full interval class range.
+    /// </summary>
+    public static ReadOnlySpan<IntervalClass> ItemsSpan => ValueObjectUtils<IntervalClass>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each interval class.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<IntervalClass>.ValuesSpan;
 
     #endregion
 

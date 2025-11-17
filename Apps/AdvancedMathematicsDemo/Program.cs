@@ -64,7 +64,7 @@ internal class Program
 
         // Compute degree matrix
         var degrees = adjacency.RowSums();
-        var degreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray(degrees.ToArray());
+        var degreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray([.. degrees]);
 
         logger.LogInformation("Degree Matrix:");
         logger.LogInformation(degreeMatrix.ToString());

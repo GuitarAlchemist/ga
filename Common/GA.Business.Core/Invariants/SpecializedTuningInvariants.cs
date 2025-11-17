@@ -7,12 +7,12 @@ public static class SpecializedTuningInvariants
 {
     public static IReadOnlyCollection<IInvariant<SpecializedTuningDefinition>> GetAll()
     {
-        return new IInvariant<SpecializedTuningDefinition>[]
-        {
+        return
+        [
             new TuningNameInvariant(),
             new PitchClassRangeInvariant(),
             new StringConfigurationInvariant()
-        }.ToImmutableArray();
+        ];
     }
 
     private sealed class TuningNameInvariant : InvariantBase<SpecializedTuningDefinition>

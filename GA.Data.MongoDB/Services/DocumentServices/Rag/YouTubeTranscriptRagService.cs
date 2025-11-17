@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Models.Rag;
 using Models.References;
 using global::MongoDB.Driver;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -237,7 +236,7 @@ public sealed class YouTubeTranscriptRagService(
             }
         }
 
-        return techniques.Distinct().ToList();
+        return [.. techniques.Distinct()];
     }
 
     private static List<string> ExtractTheoryConcepts(string transcript)
@@ -261,7 +260,7 @@ public sealed class YouTubeTranscriptRagService(
             }
         }
 
-        return concepts.Distinct().ToList();
+        return [.. concepts.Distinct()];
     }
 
     #endregion

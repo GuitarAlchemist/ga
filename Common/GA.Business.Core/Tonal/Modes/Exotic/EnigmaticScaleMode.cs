@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
 using Primitives.Exotic;
 using Scales;
 
@@ -18,7 +19,7 @@ public sealed class EnigmaticScaleMode(EnigmaticScaleDegree degree)
         IStaticEnumerable<EnigmaticScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<EnigmaticScaleDegree, EnigmaticScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static EnigmaticScaleMode Enigmatic => new(EnigmaticScaleDegree.Enigmatic);
@@ -33,8 +34,16 @@ public sealed class EnigmaticScaleMode(EnigmaticScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<EnigmaticScaleMode> Items =>
-        EnigmaticScaleDegree.Items.Select(degree => new EnigmaticScaleMode(degree));
+    public static IEnumerable<EnigmaticScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<EnigmaticScaleDegree>.Items)
+            {
+                yield return new EnigmaticScaleMode(degree);
+            }
+        }
+    }
 
     public static EnigmaticScaleMode Get(EnigmaticScaleDegree degree)
     {
@@ -46,3 +55,5 @@ public sealed class EnigmaticScaleMode(EnigmaticScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

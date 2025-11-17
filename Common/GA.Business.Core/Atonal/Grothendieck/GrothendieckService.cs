@@ -6,7 +6,7 @@ using System.Buffers;
 ///     Service for Grothendieck group operations on pitch-class sets
 /// </summary>
 [PublicAPI]
-public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothendieckService
+public class GrothendieckService : IGrothendieckService
 {
     /// <inheritdoc />
     public IntervalClassVector ComputeIcv(IEnumerable<int> pitchClasses)
@@ -35,14 +35,14 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
         PitchClassSet source,
         int maxDistance)
     {
-        logger.LogInformation(
-            "Finding pitch-class sets within distance {MaxDistance} of {Source}",
-            maxDistance,
-            source
-        );
-
         var sourceIcv = source.IntervalClassVector;
         var results = new List<(PitchClassSet, GrothendieckDelta, double)>();
+
+        // Always include the source set itself at distance 0 for identity semantics
+        if (maxDistance >= 0)
+        {
+            results.Add((source, GrothendieckDelta.Zero, 0.0));
+        }
 
         // Check all pitch-class sets
         foreach (var candidate in PitchClassSet.Items)
@@ -52,7 +52,11 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
             if (delta.L1Norm <= maxDistance)
             {
                 var cost = ComputeHarmonicCost(delta);
-                results.Add((candidate, delta, cost));
+                // Avoid adding duplicate self-entry (cost already added above)
+                if (!ReferenceEquals(candidate, source))
+                {
+                    results.Add((candidate, delta, cost));
+                }
             }
         }
 
@@ -66,13 +70,6 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
         PitchClassSet target,
         int maxSteps = 5)
     {
-        logger.LogInformation(
-            "Finding shortest path from {Source} to {Target} (max {MaxSteps} steps)",
-            source,
-            target,
-            maxSteps
-        );
-
         // Simple breadth-first search
         var queue = new Queue<(PitchClassSet Current, List<PitchClassSet> Path)>();
         var visited = new HashSet<PitchClassSet> { source };
@@ -95,9 +92,13 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
                 continue;
             }
 
-            // Find nearby sets (within distance 2)
+            // Find nearby sets (within small distance) to keep the graph sparse and paths musically local.
+            // Using radius=2 connects closely related diatonic collections (e.g., C major → G major)
+            // that typically differ by one accidental yet may exceed radius=1 under the ICV L1 metric.
             var nearby = FindNearby(current, 2)
                 .Select(r => r.Set)
+                // Restrict traversal to sets with the same cardinality to avoid unrealistic one-step jumps
+                .Where(s => s.Cardinality == current.Cardinality)
                 .Where(s => !visited.Contains(s));
 
             foreach (var next in nearby)
@@ -109,7 +110,6 @@ public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothen
         }
 
         // No path found
-        logger.LogWarning("No path found from {Source} to {Target}", source, target);
         return [];
     }
 

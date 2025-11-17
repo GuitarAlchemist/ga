@@ -1,12 +1,13 @@
 ﻿namespace GA.Business.Core.Notes;
 
+using GA.Core.Collections;
 using Atonal;
 using Atonal.Abstractions;
 using Atonal.Primitives;
+using Extensions;
 using Intervals;
 using Intervals.Primitives;
 using Primitives;
-using Tonal;
 
 /// <summary>
 ///     Note discriminated union
@@ -59,37 +60,6 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     public Chromatic ToChromatic()
     {
         return new Chromatic(PitchClass);
-    }
-
-    /// <summary>
-    ///     Gets the unsigned interval between another note and the current note
-    /// </summary>
-    /// <param name="other">The other <see cref="Note" /></param>
-    /// <returns>The <see cref="Interval.Simple" /></returns>
-    /// <exception cref="ArgumentNullException">Thrown when <see cref="other" /> is null</exception>
-    public virtual Interval.Simple GetInterval(Note other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-
-        var startNote = ToAccidented();
-        var endNote = other.ToAccidented();
-
-        var result = startNote.GetInterval(endNote);
-
-        return result;
-    }
-
-    /// <summary>
-    ///     Gets the shortest distance between two notes
-    /// </summary>
-    /// <remarks>See https://en.wikipedia.org/wiki/Interval_class</remarks>
-    /// <param name="other">The other <see cref="Note" /></param>
-    /// <returns>The <see cref="Semitones" /> distance</returns>
-    // ReSharper disable once InconsistentNaming
-    public IntervalClass GetIntervalClass(Note other)
-    {
-        var semitones = GetInterval(other).Semitones;
-        return IntervalClass.FromSemitones(semitones);
     }
 
     /// <summary>
@@ -152,10 +122,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         }
 
         public static ImmutableList<Chromatic> Items =>
-            Enumerable
+            [.. Enumerable
                 .Range(0, 12)
-                .Select(i => new Chromatic(i))
-                .ToImmutableList();
+                .Select(i => new Chromatic(i))];
 
         #endregion
 
@@ -555,17 +524,6 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     public sealed record Accidented(NaturalNote NaturalNote, Accidental? Accidental = null)
         : Note, IStaticReadonlyCollection<Accidented>, IParsable<Accidented>
     {
-        private static readonly Lazy<Dictionary<NaturalNote, Key.Major>> _lazyMajorKeyByNaturalNote = new(() => new()
-        {
-            [NaturalNote.C] = Key.Major.C,
-            [NaturalNote.D] = Key.Major.D,
-            [NaturalNote.E] = Key.Major.E,
-            [NaturalNote.F] = Key.Major.F,
-            [NaturalNote.G] = Key.Major.G,
-            [NaturalNote.A] = Key.Major.A,
-            [NaturalNote.B] = Key.Major.B
-        });
-
         public override PitchClass PitchClass => GetPitchClass();
 
         #region IStaticReadonlyCollection<Accidented> Members
@@ -599,16 +557,6 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             return this;
         }
 
-        public override Interval.Simple GetInterval(Note other)
-        {
-            return GetInterval(other.ToAccidented());
-        }
-
-        public Interval.Simple GetInterval(Accidented other)
-        {
-            return GetInterval(this, other);
-        }
-
         /// <inheritdoc />
         public override string ToString()
         {
@@ -628,150 +576,6 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             return result;
         }
 
-        /// <summary>
-        ///     Gets the interval between two accidented notes
-        /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        private static Interval.Simple GetInterval(
-            Accidented start,
-            Accidented end)
-        {
-            if (start == end)
-            {
-                return Interval.Simple.Unison;
-            }
-
-            var majorKeyByNaturalNote = _lazyMajorKeyByNaturalNote.Value;
-            if (!majorKeyByNaturalNote.TryGetValue(start.NaturalNote, out var key))
-            {
-                throw new InvalidOperationException($"No major key found for {start.NaturalNote}");
-            }
-
-            var size = end.NaturalNote - start.NaturalNote;
-            var qualityIncrement = GetQualityIncrement(key, start, end);
-            var quality = GetQuality(size, qualityIncrement);
-            var result = new Interval.Simple
-            {
-                Size = size,
-                Quality = quality
-            };
-
-            return result;
-
-            static Semitones GetQualityIncrement(
-                Key key,
-                Accidented startNote,
-                Accidented endNote)
-            {
-                var result = Semitones.None;
-
-                // Quality - Start note
-                if (startNote.Accidental.HasValue)
-                {
-                    result -= startNote.Accidental.Value.ToSemitones();
-                }
-
-                // Quality - End note
-                var (endNaturalNote, endNoteAccidental) = endNote;
-                if (key.KeySignature.IsNoteAccidented(endNaturalNote))
-                {
-                    var expectedEndNoteAccidental =
-                        key.AccidentalKind == AccidentalKind.Flat
-                            ? Intervals.Primitives.Accidental.Flat
-                            : Intervals.Primitives.Accidental.Sharp;
-
-                    if (endNoteAccidental == expectedEndNoteAccidental)
-                    {
-                        return result;
-                    }
-
-                    var actualEndNoteAccidentalValue = endNoteAccidental?.Value ?? 0;
-                    var endNoteAccidentalDelta = actualEndNoteAccidentalValue - expectedEndNoteAccidental.Value;
-                    result += endNoteAccidentalDelta;
-                }
-                else if (endNoteAccidental.HasValue)
-                {
-                    result += endNoteAccidental.Value.ToSemitones();
-                }
-
-                return result;
-            }
-
-            static IntervalQuality GetQuality(
-                SimpleIntervalSize number,
-                Semitones qualityIncrement)
-            {
-                if (number.Consonance == IntervalConsonance.Perfect)
-                {
-                    // Handle perfect intervals (unison, fourth, fifth, octave)
-                    if (qualityIncrement.Value <= -2)
-                    {
-                        return IntervalQuality.DoublyDiminished;
-                    }
-
-                    if (qualityIncrement.Value == -1)
-                    {
-                        return IntervalQuality.Diminished;
-                    }
-
-                    if (qualityIncrement.Value == 0)
-                    {
-                        return IntervalQuality.Perfect;
-                    }
-
-                    if (qualityIncrement.Value == 1)
-                    {
-                        return IntervalQuality.Augmented;
-                    }
-
-                    if (qualityIncrement.Value >= 2)
-                    {
-                        return IntervalQuality.DoublyAugmented;
-                    }
-
-                    // Default fallback (should never reach here)
-                    return IntervalQuality.Perfect;
-                }
-
-                // Handle imperfect intervals (seconds, thirds, sixths, sevenths)
-                if (qualityIncrement.Value <= -3)
-                {
-                    return IntervalQuality.DoublyDiminished;
-                }
-
-                if (qualityIncrement.Value == -2)
-                {
-                    return IntervalQuality.Diminished;
-                }
-
-                if (qualityIncrement.Value == -1)
-                {
-                    return IntervalQuality.Minor;
-                }
-
-                if (qualityIncrement.Value == 0)
-                {
-                    return IntervalQuality.Major;
-                }
-
-                if (qualityIncrement.Value == 1)
-                {
-                    return IntervalQuality.Augmented;
-                }
-
-                if (qualityIncrement.Value >= 2)
-                {
-                    return IntervalQuality.DoublyAugmented;
-                }
-
-                // Default fallback (should never reach here)
-                return IntervalQuality.Major;
-            }
-        }
-
         private class AllNotes() : LazyCollectionBase<Accidented>(GetAll())
         {
             public static readonly AllNotes Instance = new();
@@ -787,7 +591,8 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                     Intervals.Primitives.Accidental.DoubleSharp
                 };
 
-                foreach (var naturalNote in NaturalNote.Items)
+                var naturalNotes = ValueObjectUtils<NaturalNote>.Items;
+                foreach (var naturalNote in naturalNotes)
                 foreach (var accidental in accidentals)
                 {
                     yield return new(naturalNote, accidental);
@@ -942,3 +747,5 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
     #endregion
 }
+
+

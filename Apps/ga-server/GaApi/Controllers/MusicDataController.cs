@@ -197,11 +197,11 @@ public class MusicDataController(
             var items = floorNumber switch
             {
                 0 => SetClass.Items.Select(sc => sc.ToString()).ToList(),
-                1 => ForteNumber.Items.Select(fn => fn.ToString()).ToList(),
-                2 => SetClass.Items.Take(200).Select(sc => $"Prime: {sc}").ToList(),
-                3 => SetClass.Items.Take(350).Select(sc => $"Chord: {sc}").ToList(),
-                4 => SetClass.Items.Take(100).Select(sc => $"Inversion: {sc}").ToList(),
-                5 => SetClass.Items.Take(200).Select(sc => $"Voicing: {sc}").ToList(),
+                1 => [.. ForteNumber.Items.Select(fn => fn.ToString())],
+                2 => [.. SetClass.Items.Take(200).Select(sc => $"Prime: {sc}")],
+                3 => [.. SetClass.Items.Take(350).Select(sc => $"Chord: {sc}")],
+                4 => [.. SetClass.Items.Take(100).Select(sc => $"Inversion: {sc}")],
+                5 => [.. SetClass.Items.Take(200).Select(sc => $"Voicing: {sc}")],
                 _ => []
             };
 

@@ -27,7 +27,7 @@ public readonly record struct HungarianMinorScaleDegree : IRangeValueObject<Hung
     public static IReadOnlyCollection<HungarianMinorScaleDegree> Items =>
         ValueObjectUtils<HungarianMinorScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static HungarianMinorScaleDegree HungarianMinor => new(1);

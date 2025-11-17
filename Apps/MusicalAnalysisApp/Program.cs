@@ -153,7 +153,7 @@ internal class Program
 
         // Compute Laplacian matrix
         var degrees = adjacency.RowSums();
-        var degreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray(degrees.ToArray());
+        var degreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray([.. degrees]);
         var laplacian = degreeMatrix - adjacency;
 
         AnsiConsole.MarkupLine("\n[yellow]Laplacian Matrix:[/]");
@@ -308,7 +308,7 @@ internal class Program
         });
 
         var simpleDegrees = simpleGraph.RowSums();
-        var simpleDegreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray(simpleDegrees.ToArray());
+        var simpleDegreeMatrix = Matrix<double>.Build.DenseOfDiagonalArray([.. simpleDegrees]);
         var simpleLaplacian = simpleDegreeMatrix - simpleGraph;
         var simpleEvd = simpleLaplacian.Evd();
         var fiedlerValue = simpleEvd.EigenValues.Real().OrderBy(x => x).Skip(1).First();

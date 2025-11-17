@@ -1,0 +1,141 @@
+﻿param(
+    [switch]$SkipNpmInstall
+)
+
+$ErrorActionPreference = 'Stop'
+
+Write-Host "=== GA Guitar demo: full automatic pipeline ==="
+
+$scriptRoot = $PSScriptRoot
+if (-not $scriptRoot) {
+    $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+Set-Location $scriptRoot
+
+function Resolve-NpmCommand {
+    $candidates = @('npm.cmd', 'npm')
+    foreach ($name in $candidates) {
+        try {
+            $cmd = Get-Command $name -ErrorAction Stop
+            if ($cmd -and $cmd.Source) {
+                return $cmd.Source
+            }
+        } catch {
+            continue
+        }
+    }
+    throw 'Unable to locate npm on PATH. Please ensure Node.js is installed.'
+}
+
+function Stop-ViteProcesses {
+    Write-Host "== Ensuring prior Vite/node processes are stopped =="
+    try {
+        $nodeProcs = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'"
+        foreach ($proc in $nodeProcs) {
+            if ($proc.CommandLine -and $proc.CommandLine -match 'vite') {
+                Write-Host "Killing lingering node.exe (PID $($proc.ProcessId)) running Vite"
+                Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+        }
+    } catch {
+        Write-Warning "Unable to enumerate node/Vite processes: $_"
+    }
+}
+
+function Write-IterationMetadata {
+    param(
+        [string]$DestinationFile
+    )
+
+    $timestamp = Get-Date -Format 'yyyy-MM-ddTHH:mm:ssK'
+    $gitHead = ''
+    $gitStatus = ''
+    try {
+        $gitHead = (git -C $scriptRoot rev-parse HEAD).Trim()
+        $gitStatus = (git -C $scriptRoot status --short).Trim()
+    } catch {
+        $gitHead = 'unknown'
+        $gitStatus = 'git unavailable'
+    }
+    if (-not $gitStatus) {
+        $gitStatus = 'clean'
+    }
+
+    $note = $env:GA_ITERATION_NOTE
+    if (-not $note) {
+        $note = 'Automated acoustic iteration'
+    }
+
+    $content = @(
+        "timestamp: $timestamp",
+        "git_head: $gitHead",
+        "note: $note",
+        "changes: $gitStatus"
+    )
+
+    Set-Content -Path $DestinationFile -Value $content -Encoding UTF8
+}
+
+Write-Host "== Ensuring wasm32-unknown-unknown target =="
+rustup target add wasm32-unknown-unknown
+
+Write-Host "== Building Rust WASM engine =="
+Push-Location .\rust-engine
+cargo build --release --target wasm32-unknown-unknown
+$wasmPath = Join-Path (Resolve-Path .\target\wasm32-unknown-unknown\release) 'guitar_engine.wasm'
+Pop-Location
+
+Write-Host "== Copying WASM to public/guitar_engine.wasm =="
+New-Item -ItemType Directory -Force -Path .\public | Out-Null
+Copy-Item $wasmPath -Destination .\public\guitar_engine.wasm -Force
+
+Write-Host "== Exporting latest lib.rs for downstream agents =="
+New-Item -ItemType Directory -Force -Path .\playwright-downloads | Out-Null
+Copy-Item .\rust-engine\src\lib.rs -Destination .\playwright-downloads\lib.rs -Force
+Write-IterationMetadata -DestinationFile .\playwright-downloads\iteration-info.txt
+
+if (-not $SkipNpmInstall) {
+    Write-Host "== Running npm install =="
+    npm install
+}
+
+Stop-ViteProcesses
+
+Write-Host "== Starting Vite dev server on http://localhost:5173 =="
+$npmCommand = Resolve-NpmCommand
+$dev = Start-Process -FilePath $npmCommand -ArgumentList @('run', 'dev') -PassThru
+
+try {
+    # Wait for server to be ready
+    Write-Host "Waiting for dev server to respond ..."
+    $maxTries = 40
+    $ok = $false
+    for ($i = 0; $i -lt $maxTries; $i++) {
+        try {
+            $resp = Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 2
+            if ($resp.StatusCode -eq 200) {
+                $ok = $true
+                break
+            }
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+
+    if (-not $ok) {
+        throw "Dev server not reachable."
+    }
+
+    Write-Host "== Running Playwright auto-record script =="
+    $env:GA_DEMO_URL = 'http://localhost:5173/'
+    node .\scripts\record-and-analyze.js
+}
+finally {
+    Write-Host "== Stopping dev server =="
+    if ($dev -and !$dev.HasExited) {
+        $dev.Kill()
+    }
+    Stop-ViteProcesses
+}
+
+Write-Host "Done. WAV and spectrogram PNG should be ready (see WAV_PATH / SPECTRO_PATH in output)."

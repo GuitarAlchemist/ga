@@ -1,8 +1,6 @@
 ﻿namespace GaApi.Services;
 
 using ILGPU;
-using ILGPU.Runtime;
-using System.Numerics;
 
 /// <summary>
 /// ILGPU kernels for GPU-accelerated vector operations

@@ -187,7 +187,7 @@ public class ResultMonadLawsTests
     {
         // Arrange
         var result = Result<int, string>.Success(10);
-        Func<int, Result<int, string>> f = x => Result<int, string>.Failure("error in f");
+        Func<int, Result<int, string>> f = _ => Result<int, string>.Failure("error in f");
         Func<int, Result<string, string>> g = x => Result<string, string>.Success($"Value: {x}");
 
         // Act

@@ -12,7 +12,8 @@ public abstract class LazyCollectionBase<T> : IReadOnlyCollection<T>
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        _lazy = new([..items]);
+        // Defer enumeration until first access; avoid evaluating possibly dependent iterators at type init time
+        _lazy = new(() => [..items]);
         _separator = separator;
     }
 

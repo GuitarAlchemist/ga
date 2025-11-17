@@ -135,7 +135,7 @@ public sealed record SpectralMetrics
     public double[] GetSmallestEigenvalues(int k)
     {
         k = Math.Min(k, Eigenvalues.Length);
-        return Eigenvalues.Take(k).ToArray();
+        return [.. Eigenvalues.Take(k)];
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public sealed record SpectralMetrics
     public double[] GetLargestEigenvalues(int k)
     {
         k = Math.Min(k, Eigenvalues.Length);
-        return Eigenvalues.TakeLast(k).Reverse().ToArray();
+        return [.. Eigenvalues.TakeLast(k).Reverse()];
     }
 
     /// <summary>

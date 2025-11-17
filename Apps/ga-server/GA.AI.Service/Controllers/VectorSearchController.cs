@@ -1,7 +1,8 @@
 namespace GA.AI.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 
 [ApiController]
@@ -9,7 +10,7 @@ using GA.AI.Service.Services;
 [EnableRateLimiting("semantic")]
 public class VectorSearchController(
     VectorSearchService vectorSearch,
-    ICachingService cache,
+    Services.ICachingService cache,
     PerformanceMetricsService metrics,
     ILogger<VectorSearchController> logger)
     : ControllerBase

@@ -22,7 +22,7 @@ public readonly record struct AugmentedScaleDegree : IRangeValueObject<Augmented
 
     public static IReadOnlyCollection<AugmentedScaleDegree> All => ValueObjectUtils<AugmentedScaleDegree>.Items;
     public static IReadOnlyCollection<AugmentedScaleDegree> Items => ValueObjectUtils<AugmentedScaleDegree>.Items;
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static AugmentedScaleDegree Augmented => new(1);

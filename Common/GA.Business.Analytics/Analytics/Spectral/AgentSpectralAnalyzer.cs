@@ -74,7 +74,7 @@ public sealed class AgentSpectralAnalyzer(ILogger<AgentSpectralAnalyzer> logger)
             AlgebraicConnectivity = algebraicConnectivity,
             SpectralGap = spectralGap,
             SpectralRadius = spectralRadius,
-            DegreeDistribution = degrees.ToArray(),
+            DegreeDistribution = [.. degrees],
             Centrality = centrality
         };
 

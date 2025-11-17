@@ -13,18 +13,10 @@ public static class MusicalKnowledgeService
         var result = new MusicalKnowledgeSearchResult
         {
             SearchTerm = searchTerm,
-            IconicChords = IconicChordsService.GetAllChords()
-                .Where(c => ContainsSearchTerm(c, searchTerm))
-                .ToList(),
-            ChordProgressions = ChordProgressionsService.GetAllProgressions()
-                .Where(p => ContainsSearchTerm(p, searchTerm))
-                .ToList(),
-            GuitarTechniques = GuitarTechniquesService.GetAllTechniques()
-                .Where(t => ContainsSearchTerm(t, searchTerm))
-                .ToList(),
-            SpecializedTunings = SpecializedTuningsService.GetAllTunings()
-                .Where(t => ContainsSearchTerm(t, searchTerm))
-                .ToList()
+            IconicChords = [.. IconicChordsService.GetAllChords().Where(c => ContainsSearchTerm(c, searchTerm))],
+            ChordProgressions = [.. ChordProgressionsService.GetAllProgressions().Where(p => ContainsSearchTerm(p, searchTerm))],
+            GuitarTechniques = [.. GuitarTechniquesService.GetAllTechniques().Where(t => ContainsSearchTerm(t, searchTerm))],
+            SpecializedTunings = [.. SpecializedTuningsService.GetAllTunings().Where(t => ContainsSearchTerm(t, searchTerm))]
         };
 
         return result;
@@ -38,12 +30,10 @@ public static class MusicalKnowledgeService
         return new MusicalKnowledgeByCategory
         {
             Category = category,
-            IconicChords = IconicChordsService.GetAllChords()
-                .Where(c => string.Equals(c.Genre, category, StringComparison.OrdinalIgnoreCase))
-                .ToList(),
-            ChordProgressions = ChordProgressionsService.FindProgressionsByCategory(category).ToList(),
-            GuitarTechniques = GuitarTechniquesService.FindTechniquesByCategory(category).ToList(),
-            SpecializedTunings = SpecializedTuningsService.FindTuningsByCategory(category).ToList()
+            IconicChords = [.. IconicChordsService.GetAllChords().Where(c => string.Equals(c.Genre, category, StringComparison.OrdinalIgnoreCase))],
+            ChordProgressions = [.. ChordProgressionsService.FindProgressionsByCategory(category)],
+            GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByCategory(category)],
+            SpecializedTunings = [.. SpecializedTuningsService.FindTuningsByCategory(category)]
         };
     }
 
@@ -55,8 +45,8 @@ public static class MusicalKnowledgeService
         return new MusicalKnowledgeByDifficulty
         {
             Difficulty = difficulty,
-            ChordProgressions = ChordProgressionsService.FindProgressionsByDifficulty(difficulty).ToList(),
-            GuitarTechniques = GuitarTechniquesService.FindTechniquesByDifficulty(difficulty).ToList()
+            ChordProgressions = [.. ChordProgressionsService.FindProgressionsByDifficulty(difficulty)],
+            GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByDifficulty(difficulty)]
         };
     }
 
@@ -68,10 +58,10 @@ public static class MusicalKnowledgeService
         return new MusicalKnowledgeByArtist
         {
             Artist = artist,
-            IconicChords = IconicChordsService.FindChordsByArtist(artist).ToList(),
-            ChordProgressions = ChordProgressionsService.FindProgressionsByArtist(artist).ToList(),
-            GuitarTechniques = GuitarTechniquesService.FindTechniquesByArtist(artist).ToList(),
-            SpecializedTunings = SpecializedTuningsService.FindTuningsByArtist(artist).ToList()
+            IconicChords = [.. IconicChordsService.FindChordsByArtist(artist)],
+            ChordProgressions = [.. ChordProgressionsService.FindProgressionsByArtist(artist)],
+            GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByArtist(artist)],
+            SpecializedTunings = [.. SpecializedTuningsService.FindTuningsByArtist(artist)]
         };
     }
 
@@ -115,11 +105,8 @@ public static class MusicalKnowledgeService
             ChordProgressionsValidation = progressionsValidation,
             GuitarTechniquesValidation = techniquesValidation,
             SpecializedTuningsValidation = tuningsValidation,
-            AllErrors = iconicChordsValidation.Errors
-                .Concat(progressionsValidation.Errors)
-                .Concat(techniquesValidation.Errors)
-                .Concat(tuningsValidation.Errors)
-                .ToList()
+            AllErrors = [.. iconicChordsValidation.Errors
+, .. progressionsValidation.Errors, .. techniquesValidation.Errors, .. tuningsValidation.Errors]
         };
     }
 

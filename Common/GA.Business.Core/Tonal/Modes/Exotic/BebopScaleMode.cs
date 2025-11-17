@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
 using Primitives.Exotic;
 using Scales;
 
@@ -18,7 +19,7 @@ public sealed class BebopScaleMode(BebopScaleDegree degree)
         IStaticEnumerable<BebopScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<BebopScaleDegree, BebopScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static BebopScaleMode BebopDominant => new(BebopScaleDegree.BebopDominant);
@@ -34,8 +35,16 @@ public sealed class BebopScaleMode(BebopScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<BebopScaleMode> Items =>
-        BebopScaleDegree.Items.Select(degree => new BebopScaleMode(degree));
+    public static IEnumerable<BebopScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<BebopScaleDegree>.Items)
+            {
+                yield return new BebopScaleMode(degree);
+            }
+        }
+    }
 
     public static BebopScaleMode Get(BebopScaleDegree degree)
     {
@@ -47,3 +56,5 @@ public sealed class BebopScaleMode(BebopScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

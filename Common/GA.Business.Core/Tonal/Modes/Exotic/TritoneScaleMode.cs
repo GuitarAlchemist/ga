@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
+
 using Primitives.Exotic;
 using Scales;
 
@@ -19,7 +21,7 @@ public sealed class TritoneScaleMode(TritoneScaleDegree degree)
         IStaticEnumerable<TritoneScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<TritoneScaleDegree, TritoneScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static TritoneScaleMode Tritone => new(TritoneScaleDegree.Tritone);
@@ -29,8 +31,16 @@ public sealed class TritoneScaleMode(TritoneScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<TritoneScaleMode> Items =>
-        TritoneScaleDegree.Items.Select(degree => new TritoneScaleMode(degree));
+    public static IEnumerable<TritoneScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<TritoneScaleDegree>.Items)
+            {
+                yield return new TritoneScaleMode(degree);
+            }
+        }
+    }
 
     public static TritoneScaleMode Get(TritoneScaleDegree degree)
     {
@@ -42,3 +52,5 @@ public sealed class TritoneScaleMode(TritoneScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

@@ -1,0 +1,165 @@
+@page "/tools/chord-probe"
+@using System.Text
+@using System.Text.Json
+@inject NavigationManager Nav
+
+<MudPaper Class="pa-4" Elevation="2">
+    <MudText Typo="Typo.h5">Chord Name Probe</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-4">Quickly test the GraphQL chord-naming endpoints.</MudText>
+
+    <MudGrid Class="mb-2">
+        <MudItem xs="12" md="6">
+            <MudTextField Label="Formula Name" @bind-Value="FormulaName" Placeholder="Demo" Required="true" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <MudNumericField @bind-Value="Root" Label="Root (0-11)" Min="0" Max="11" Required="true" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <MudNumericField @bind-Value="Bass" Label="Bass (optional 0-11)" Min="0" Max="11" Immediate="true" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Intervals (CSV of semitones)" @bind-Value="IntervalsCsv" Placeholder="4,7,10" Required="true" />
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RunQueries" Disabled="_busy">Run</MudButton>
+    @if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-2">@_error</MudAlert>
+    }
+
+    @if (_bestName is not null)
+    {
+        <MudPaper Class="pa-3 mt-4" Elevation="1">
+            <MudText Typo="Typo.h6">Results</MudText>
+            <MudStack Spacing="2">
+                <MudText><b>Best:</b> @_bestName</MudText>
+                @if (_allNames?.Length > 0)
+                {
+                    <div>
+                        <b>Alternates:</b>
+                        <ul class="mud-list">
+                            @foreach (var n in _allNames)
+                            {
+                                <li class="mud-list-item">@n</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (_comprehensive is not null)
+                {
+                    <div>
+                        <b>Comprehensive:</b>
+                        <div>Primary: @_comprehensive.primary</div>
+                        <div>Enharmonic: @_comprehensive.enharmonicEquivalent</div>
+                        <div>Quartal: @_comprehensive.quartal</div>
+                        <div>Atonal: @_comprehensive.atonalName</div>
+                        <div>Key-Aware: @_comprehensive.keyAwareName (@_comprehensive.mostProbableKey)</div>
+                    </div>
+                }
+            </MudStack>
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    private string FormulaName { get; set; } = "Demo";
+    private int Root { get; set; } = 0;
+    private int? Bass { get; set; }
+    private string IntervalsCsv { get; set; } = "4,7,10";
+
+    private bool _busy;
+    private string? _error;
+    private string? _bestName;
+    private string[]? _allNames;
+    private ComprehensiveDto? _comprehensive;
+
+    private record GraphQlRequest(string query, object? variables = null);
+    private record GraphQlResponse<T>(T? data, GraphQlError[]? errors);
+    private record GraphQlError(string message);
+
+    private record BestNameData(string chordBestName);
+    private record AllNamesData(string[] chordAllNames);
+    private record ComprehensiveData(ComprehensiveDto chordComprehensiveNames);
+    private record ComprehensiveDto(string primary, string? slashChord, string? quartal, string? withAlterations,
+        string? enharmonicEquivalent, string? atonalName, string? keyAwareName, string? mostProbableKey,
+        string? iconicName, string? iconicDescription, string[] alternates);
+
+    private async Task RunQueries()
+    {
+        _busy = true; _error = null;
+
+        try
+        {
+            var intervals = ParseIntervals(IntervalsCsv);
+            var baseUri = new Uri(Nav.BaseUri);
+            using var http = new HttpClient { BaseAddress = baseUri };
+            var opts = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
+            // 1) Best name
+            const string qBest = "query($name:String!,$root:Int!,$intervals:[Int!]!,$bass:Int){ chordBestName(formulaName:$name, root:$root, intervals:$intervals, bass:$bass) }";
+            var bestPayload = new GraphQlRequest(qBest, new { name = FormulaName, root = Root, intervals, bass = Bass });
+            var bestResp = await http.PostAsync("graphql", new StringContent(JsonSerializer.Serialize(bestPayload, opts), Encoding.UTF8, "application/json"));
+            var bestDoc = await bestResp.Content.ReadFromJsonAsync<JsonElement>(opts);
+            if (bestDoc.TryGetProperty("errors", out var e1) && e1.ValueKind == JsonValueKind.Array && e1.GetArrayLength() > 0)
+            {
+                _error = e1[0].GetProperty("message").GetString();
+                return;
+            }
+            _bestName = bestDoc.GetProperty("data").GetProperty("chordBestName").GetString();
+
+            // 2) All names
+            const string qAll = "query($name:String!,$root:Int!,$intervals:[Int!]!,$bass:Int){ chordAllNames(formulaName:$name, root:$root, intervals:$intervals, bass:$bass) }";
+            var allPayload = new GraphQlRequest(qAll, new { name = FormulaName, root = Root, intervals, bass = Bass });
+            var allResp = await http.PostAsync("graphql", new StringContent(JsonSerializer.Serialize(allPayload, opts), Encoding.UTF8, "application/json"));
+            var allDoc = await allResp.Content.ReadFromJsonAsync<JsonElement>(opts);
+            if (allDoc.TryGetProperty("errors", out var e2) && e2.ValueKind == JsonValueKind.Array && e2.GetArrayLength() > 0)
+            {
+                _error = e2[0].GetProperty("message").GetString();
+                return;
+            }
+            _allNames = allDoc.GetProperty("data").GetProperty("chordAllNames").EnumerateArray().Select(x => x.GetString() ?? string.Empty).ToArray();
+
+            // 3) Comprehensive
+            const string qComp = "query($name:String!,$root:Int!,$intervals:[Int!]!,$bass:Int){ chordComprehensiveNames(formulaName:$name, root:$root, intervals:$intervals, bass:$bass){ primary slashChord quartal withAlterations enharmonicEquivalent atonalName keyAwareName mostProbableKey iconicName iconicDescription alternates } }";
+            var compPayload = new GraphQlRequest(qComp, new { name = FormulaName, root = Root, intervals, bass = Bass });
+            var compResp = await http.PostAsync("graphql", new StringContent(JsonSerializer.Serialize(compPayload, opts), Encoding.UTF8, "application/json"));
+            var compDoc = await compResp.Content.ReadFromJsonAsync<JsonElement>(opts);
+            if (compDoc.TryGetProperty("errors", out var e3) && e3.ValueKind == JsonValueKind.Array && e3.GetArrayLength() > 0)
+            {
+                _error = e3[0].GetProperty("message").GetString();
+                return;
+            }
+            var comp = compDoc.GetProperty("data").GetProperty("chordComprehensiveNames");
+            _comprehensive = new ComprehensiveDto(
+                comp.GetProperty("primary").GetString() ?? string.Empty,
+                comp.GetProperty("slashChord").GetString(),
+                comp.GetProperty("quartal").GetString(),
+                comp.GetProperty("withAlterations").GetString(),
+                comp.GetProperty("enharmonicEquivalent").GetString(),
+                comp.GetProperty("atonalName").GetString(),
+                comp.GetProperty("keyAwareName").GetString(),
+                comp.GetProperty("mostProbableKey").GetString(),
+                comp.GetProperty("iconicName").GetString(),
+                comp.GetProperty("iconicDescription").GetString(),
+                comp.GetProperty("alternates").EnumerateArray().Select(x => x.GetString() ?? string.Empty).ToArray()
+            );
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static int[] ParseIntervals(string csv)
+    {
+        return csv
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => int.TryParse(s, out var v) ? v : 0)
+            .ToArray();
+    }
+}

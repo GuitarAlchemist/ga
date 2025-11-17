@@ -24,17 +24,16 @@ public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger,
                         Name = instrument.Name,
                         Category = "String",
                         StringCount = countNotes?.Count ?? 0,
-                        Tunings = instrument.Tunings
+                        Tunings = [.. instrument.Tunings
                             .Select(t => new TuningDocument
                             {
                                 Name = t.Key,
                                 Notes = AccidentedNoteCollection.TryParse(t.Value.Tuning, null, out var notes)
-                                    ? notes.Select(n => n.ToString()).ToList()
+                                    ? [.. notes.Select(n => n.ToString())]
                                     : [],
                                 IsStandard = t.Value.IsStandard,
                                 Description = null
-                            })
-                            .ToList(),
+                            })],
                         Description = null,
                         Family = "String",
                         Range = null,

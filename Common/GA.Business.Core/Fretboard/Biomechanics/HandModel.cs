@@ -349,22 +349,21 @@ public record HandModel
         {
             PalmWidth = standard.PalmWidth * scaleFactor,
             PalmLength = standard.PalmLength * scaleFactor,
-            Fingers = standard.Fingers.Select(f => f with
+            Fingers = [.. standard.Fingers.Select(f => f with
             {
                 BasePosition = f.BasePosition * scaleFactor,
-                Joints = f.Joints.Select(j => j with
+                Joints = [.. f.Joints.Select(j => j with
                 {
                     BoneLength = j.BoneLength * scaleFactor
-                }).ToImmutableList()
-            }).ToImmutableList(),
-            FingerSpreadConstraints = standard.FingerSpreadConstraints
+                })]
+            })],
+            FingerSpreadConstraints = [.. standard.FingerSpreadConstraints
                 .Select(c => c with
                 {
                     PreferredSeparationMm = c.PreferredSeparationMm * scaleFactor,
                     MaxSeparationMm = c.MaxSeparationMm * scaleFactor,
                     MinSeparationMm = c.MinSeparationMm * scaleFactor
-                })
-                .ToImmutableList()
+                })]
         };
     }
 
@@ -581,7 +580,7 @@ public static class PersonalizedHandModel
         {
             Type = finger.Type,
             BasePosition = finger.BasePosition * scaleFactor,
-            Joints = finger.Joints.Select(joint => new FingerJoint
+            Joints = [.. finger.Joints.Select(joint => new FingerJoint
             {
                 Type = joint.Type,
                 BoneLength = joint.BoneLength * scaleFactor,
@@ -592,7 +591,7 @@ public static class PersonalizedHandModel
                 MaxAbduction = joint.MaxAbduction,
                 RestFlexion = joint.RestFlexion,
                 RestAbduction = joint.RestAbduction
-            }).ToImmutableList()
+            })]
         }).ToImmutableList();
 
         return new HandModel

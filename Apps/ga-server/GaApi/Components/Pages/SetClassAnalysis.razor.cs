@@ -3,15 +3,20 @@
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Grothendieck;
 using GA.Business.Core.Atonal.Primitives;
+using GA.Business.Core.Unified;
 using GA.Business.Core.Scales;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using System.Text;
+using GA.Business.Core.Fretboard.Shapes.Geometry;
+using Microsoft.JSInterop;
 
 public partial class SetClassAnalysis
 {
     [Inject] private IGrothendieckService GrothendieckService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+    [Inject] private IUnifiedModeService UnifiedModeService { get; set; } = null!;
 
     // Spectral Analysis
     private string _spectralInput = "0,4,7"; // C major triad
@@ -20,6 +25,94 @@ public partial class SetClassAnalysis
     private string _magnitudeSpectrumChartHtml = string.Empty;
     private string _intervalVectorChartHtml = string.Empty;
     private string _nearestSetsChartHtml = string.Empty;
+
+    // OPTIC options (user-toggleable)
+    private bool _opticOctave = true;        // O
+    private bool _opticPermutation = true;   // P
+    private bool _opticTransposition = true; // T
+    private bool _opticInversion = false;    // I (off by default)
+
+    // Persistence keys
+    private const string OpticOctaveKey = "ga.optic.o";
+    private const string OpticPermKey = "ga.optic.p";
+    private const string OpticTransKey = "ga.optic.t";
+    private const string OpticInvKey = "ga.optic.i";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            // Load persisted toggle values if present
+            var o = await JS.InvokeAsync<string?>("localStorage.getItem", OpticOctaveKey);
+            var p = await JS.InvokeAsync<string?>("localStorage.getItem", OpticPermKey);
+            var t = await JS.InvokeAsync<string?>("localStorage.getItem", OpticTransKey);
+            var i = await JS.InvokeAsync<string?>("localStorage.getItem", OpticInvKey);
+
+            if (bool.TryParse(o ?? string.Empty, out var ob)) _opticOctave = ob;
+            if (bool.TryParse(p ?? string.Empty, out var pb)) _opticPermutation = pb;
+            if (bool.TryParse(t ?? string.Empty, out var tb)) _opticTransposition = tb;
+            if (bool.TryParse(i ?? string.Empty, out var ib)) _opticInversion = ib;
+
+            StateHasChanged();
+        }
+        catch
+        {
+            // Ignore storage errors; fall back to defaults
+        }
+    }
+
+    private async Task PersistOpticAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", OpticOctaveKey, _opticOctave.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", OpticPermKey, _opticPermutation.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", OpticTransKey, _opticTransposition.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", OpticInvKey, _opticInversion.ToString());
+        }
+        catch
+        {
+            // Non-fatal
+        }
+    }
+
+    private async Task OnOctaveChanged(bool value)
+    {
+        _opticOctave = value;
+        await PersistOpticAsync();
+    }
+
+    private async Task OnPermutationChanged(bool value)
+    {
+        _opticPermutation = value;
+        await PersistOpticAsync();
+    }
+
+    private async Task OnTranspositionChanged(bool value)
+    {
+        _opticTransposition = value;
+        await PersistOpticAsync();
+    }
+
+    private async Task OnInversionChanged(bool value)
+    {
+        _opticInversion = value;
+        await PersistOpticAsync();
+    }
+
+    private async Task ResetOpticDefaults()
+    {
+        _opticOctave = true;
+        _opticPermutation = true;
+        _opticTransposition = true;
+        _opticInversion = false;
+        await PersistOpticAsync();
+        Snackbar.Add("OPTIC options reset to defaults (OPT)", Severity.Info);
+    }
+
+    // Unified Mode summary (read-only panel)
+    private UnifiedModeDescription? _unifiedDesc;
 
     // Grothendieck Analysis
     private string _grothendieckSourceInput = "0,2,4,5,7,9,11"; // C major scale
@@ -47,7 +140,24 @@ public partial class SetClassAnalysis
     private bool _findingPath;
     private List<PathStepResult>? _pathResults;
 
-    private async Task AnalyzeSpectrum()
+    // Display: Set-class label notation (Forte default, toggleable to Rahn)
+    private SetClassNotation _selectedNotation = SetClassNotation.Forte;
+
+    private string GetSetClassLabel(string primeForm)
+    {
+        try
+        {
+            var pcs = PitchClassSet.Parse(primeForm);
+            var sc = new SetClass(pcs);
+            return SetClassLabelFormatter.ToLabel(sc, _selectedNotation);
+        }
+        catch
+        {
+            return "-";
+        }
+    }
+
+    private Task AnalyzeSpectrum()
     {
         _analyzingSpectrum = true;
         try
@@ -56,7 +166,7 @@ public partial class SetClassAnalysis
             if (pitchClasses == null || pitchClasses.Length == 0)
             {
                 Snackbar.Add("Invalid pitch class input. Please enter numbers 0-11 separated by commas or spaces.", Severity.Error);
-                return;
+                return Task.CompletedTask;
             }
 
             var pitchClassSet = CreatePitchClassSet(pitchClasses);
@@ -67,7 +177,7 @@ public partial class SetClassAnalysis
             var spectralCentroid = setClass.GetSpectralCentroid();
 
             // Find nearest set classes by spectral similarity
-            var nearestSetClasses = SetClassSpectralIndex.GetNearestBySpectrum(setClass, 8)
+            var nearestSetClasses = SetClassSpectralIndex.GetNearestBySpectrum(setClass)
                 .Select(sc => new NearestSetClassResult
                 {
                     PrimeForm = sc.PrimeForm.ToString(),
@@ -77,11 +187,33 @@ public partial class SetClassAnalysis
                 })
                 .ToList();
 
+            // Find nearest set classes by OPTIC (voice-leading) geometry using user toggles
+            var opticOptions = new VoiceLeadingOptions
+            {
+                OctaveEquivalence = _opticOctave,
+                PermutationEquivalence = _opticPermutation,
+                TranspositionEquivalence = _opticTransposition,
+                InversionEquivalence = _opticInversion
+            };
+            var nearestOptic = SetClassOpticIndex.GetNearestByOptic(setClass, 10, opticOptions)
+                .Select(t => new OpticNearestSetClassResult
+                {
+                    PrimeForm = t.setClass.PrimeForm.ToString(),
+                    IntervalClassVector = t.setClass.IntervalClassVector.ToString(),
+                    OpticDistance = t.distance,
+                    ModalFamily = t.setClass.ModalFamily?.ToString()
+                })
+                .ToList();
+
             // Get scale name if available
             var scaleName = ScaleNameById.Get(setClass.PrimeForm.Id);
 
-            // Calculate Forte number (simplified - based on cardinality and ICV id)
-            var forteNumber = $"{setClass.Cardinality.Value}-{setClass.IntervalClassVector.Id.Value % 100}";
+            // Forte number: use catalog mapping when available; otherwise leave null (display fallback in UI)
+            string? forteNumber = null;
+            if (ForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var forte))
+            {
+                forteNumber = forte.ToString();
+            }
 
             _spectralResult = new SpectralAnalysisResult
             {
@@ -92,11 +224,23 @@ public partial class SetClassAnalysis
                 MagnitudeSpectrum = magnitudeSpectrum,
                 ModalFamily = setClass.ModalFamily?.ToString(),
                 NearestSetClasses = nearestSetClasses,
+                NearestOpticSetClasses = nearestOptic,
                 ForteNumber = forteNumber,
                 ScaleName = string.IsNullOrEmpty(scaleName) ? null : scaleName,
                 IanRingUrl = setClass.PrimeForm.ScalePageUrl.ToString(),
                 PitchClassSetId = setClass.PrimeForm.Id
             };
+
+            // Unified summary via unified mode service (root at C)
+            try
+            {
+                var unified = UnifiedModeService.FromPitchClassSet(pitchClassSet, PitchClass.C);
+                _unifiedDesc = UnifiedModeService.Describe(unified);
+            }
+            catch
+            {
+                _unifiedDesc = null;
+            }
 
             // Generate visualizations
             GenerateMagnitudeSpectrumChart(magnitudeSpectrum);
@@ -113,9 +257,11 @@ public partial class SetClassAnalysis
         {
             _analyzingSpectrum = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task AnalyzeDft()
+    private Task AnalyzeDft()
     {
         _analyzingDft = true;
         try
@@ -124,7 +270,7 @@ public partial class SetClassAnalysis
             if (pitchClasses == null || pitchClasses.Length == 0)
             {
                 Snackbar.Add("Invalid pitch class input. Please enter numbers 0-11 separated by commas or spaces.", Severity.Error);
-                return;
+                return Task.CompletedTask;
             }
 
             var pitchClassSet = CreatePitchClassSet(pitchClasses);
@@ -138,8 +284,12 @@ public partial class SetClassAnalysis
             // Get scale name if available
             var scaleName = ScaleNameById.Get(setClass.PrimeForm.Id);
 
-            // Calculate Forte number
-            var forteNumber = $"{setClass.Cardinality.Value}-{setClass.IntervalClassVector.Id.Value % 100}";
+            // Forte number via catalog mapping if available
+            string? forteNumber = null;
+            if (ForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var forte))
+            {
+                forteNumber = forte.ToString();
+            }
 
             _dftResult = new DftAnalysisResult
             {
@@ -166,9 +316,11 @@ public partial class SetClassAnalysis
         {
             _analyzingDft = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task AnalyzeGrothendieck()
+    private Task AnalyzeGrothendieck()
     {
         _analyzingGrothendieck = true;
         try
@@ -179,7 +331,7 @@ public partial class SetClassAnalysis
             if (sourcePitchClasses == null || targetPitchClasses == null)
             {
                 Snackbar.Add("Invalid pitch class input. Please enter numbers 0-11 separated by commas or spaces.", Severity.Error);
-                return;
+                return Task.CompletedTask;
             }
 
             var sourceIcv = GrothendieckService.ComputeIcv(sourcePitchClasses);
@@ -207,9 +359,11 @@ public partial class SetClassAnalysis
         {
             _analyzingGrothendieck = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task FindNearby()
+    private Task FindNearby()
     {
         _findingNearby = true;
         try
@@ -218,13 +372,13 @@ public partial class SetClassAnalysis
             if (pitchClasses == null || pitchClasses.Length == 0)
             {
                 Snackbar.Add("Invalid pitch class input. Please enter numbers 0-11 separated by commas or spaces.", Severity.Error);
-                return;
+                return Task.CompletedTask;
             }
 
             var pitchClassSet = CreatePitchClassSet(pitchClasses);
             var nearby = GrothendieckService.FindNearby(pitchClassSet, _maxDistance);
 
-            _nearbyResults = nearby
+            _nearbyResults = [.. nearby
                 .Select(result => new NearbySetResult
                 {
                     PrimeForm = result.Set.PrimeForm?.ToString() ?? result.Set.ToString(),
@@ -232,8 +386,7 @@ public partial class SetClassAnalysis
                     Delta = result.Delta.ToString(),
                     L1Norm = result.Delta.L1Norm,
                     Cost = result.Cost
-                })
-                .ToList();
+                })];
 
             Snackbar.Add($"Found {_nearbyResults.Count} nearby set classes!", Severity.Success);
         }
@@ -245,9 +398,11 @@ public partial class SetClassAnalysis
         {
             _findingNearby = false;
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task FindShortestPath()
+    private Task FindShortestPath()
     {
         _findingPath = true;
         try
@@ -258,7 +413,7 @@ public partial class SetClassAnalysis
             if (sourcePitchClasses == null || targetPitchClasses == null)
             {
                 Snackbar.Add("Invalid pitch class input. Please enter numbers 0-11 separated by commas or spaces.", Severity.Error);
-                return;
+                return Task.CompletedTask;
             }
 
             var sourcePitchClassSet = CreatePitchClassSet(sourcePitchClasses);
@@ -308,6 +463,8 @@ public partial class SetClassAnalysis
         {
             _findingPath = false;
         }
+
+        return Task.CompletedTask;
     }
 
     private static int[]? ParsePitchClasses(string input)
@@ -317,11 +474,10 @@ public partial class SetClassAnalysis
 
         try
         {
-            return input
+            return [.. input
                 .Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => int.Parse(s.Trim()))
-                .Where(pc => pc >= 0 && pc <= 11)
-                .ToArray();
+                .Where(pc => pc >= 0 && pc <= 11)];
         }
         catch
         {
@@ -367,6 +523,7 @@ public partial class SetClassAnalysis
         public double[] MagnitudeSpectrum { get; set; } = [];
         public string? ModalFamily { get; set; }
         public List<NearestSetClassResult> NearestSetClasses { get; set; } = [];
+        public List<OpticNearestSetClassResult> NearestOpticSetClasses { get; set; } = [];
         public string? ForteNumber { get; set; }
         public string? ScaleName { get; set; }
         public string? IanRingUrl { get; set; }
@@ -378,6 +535,14 @@ public partial class SetClassAnalysis
         public string PrimeForm { get; set; } = string.Empty;
         public string IntervalClassVector { get; set; } = string.Empty;
         public double Distance { get; set; }
+        public string? ModalFamily { get; set; }
+    }
+
+    private class OpticNearestSetClassResult
+    {
+        public string PrimeForm { get; set; } = string.Empty;
+        public string IntervalClassVector { get; set; } = string.Empty;
+        public double OpticDistance { get; set; }
         public string? ModalFamily { get; set; }
     }
 

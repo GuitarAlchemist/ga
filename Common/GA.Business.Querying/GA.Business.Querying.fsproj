@@ -5,10 +5,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
-    <ItemGroup>
-        <!-- Match FSharp.Core version with GA.Business.AI -->
-        <PackageReference Include="FSharp.Core" Version="10.0.100-rc2.25502.107"/>
-    </ItemGroup>
+    <!-- FSharp.Core is automatically included in F# projects -->
 
     <ItemGroup>
         <Compile Include="SampleTypeProvider.fs"/>

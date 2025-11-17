@@ -1,4 +1,6 @@
 using GA.Core.UI.Components.Grids;
+using GA.Business.Core.Chords;
+using GA.Business.Core.Unified;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -21,6 +23,8 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddScoped<AgGridTabularDataLoader>();
+builder.Services.AddScoped<IChordNamingService, ChordNamingService>();
+builder.Services.AddSingleton<IUnifiedModeService, UnifiedModeService>();
 
 // builder.Services.AddSingleton<GenericDataGridLoader>();
 

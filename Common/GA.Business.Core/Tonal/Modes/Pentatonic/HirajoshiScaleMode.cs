@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Pentatonic;
 
+using global::GA.Core.Collections;
+
 using Primitives.Pentatonic;
 using Scales;
 
@@ -18,7 +20,7 @@ public sealed class HirajoshiScaleMode(HirajoshiScaleDegree degree)
         IStaticEnumerable<HirajoshiScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<HirajoshiScaleDegree, HirajoshiScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static HirajoshiScaleMode Hirajoshi => new(HirajoshiScaleDegree.Hirajoshi);
@@ -31,8 +33,16 @@ public sealed class HirajoshiScaleMode(HirajoshiScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<HirajoshiScaleMode> Items =>
-        HirajoshiScaleDegree.Items.Select(degree => new HirajoshiScaleMode(degree));
+    public static IEnumerable<HirajoshiScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<HirajoshiScaleDegree>.Items)
+            {
+                yield return new HirajoshiScaleMode(degree);
+            }
+        }
+    }
 
     public static HirajoshiScaleMode Get(HirajoshiScaleDegree degree)
     {
@@ -44,3 +54,5 @@ public sealed class HirajoshiScaleMode(HirajoshiScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

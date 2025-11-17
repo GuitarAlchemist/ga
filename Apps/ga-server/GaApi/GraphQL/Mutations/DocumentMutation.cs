@@ -197,7 +197,7 @@ public class DocumentMutation
                 Success = result.Status == "Completed",
                 ProcessedVideos = result.VideosEvaluated,
                 AcceptedVideos = result.VideosAccepted,
-                Decisions = result.Decisions.Select(d => new CurationDecisionType
+                Decisions = [.. result.Decisions.Select(d => new CurationDecisionType
                 {
                     DecisionTime = d.DecisionTime,
                     Action = d.Action,
@@ -219,7 +219,7 @@ public class DocumentMutation
                         DependentTopics = d.RelatedGap.DependentTopics,
                         EstimatedLearningTimeMinutes = d.RelatedGap.EstimatedLearningTimeMinutes
                     } : null
-                }).ToList()
+                })]
             };
         }
         catch (Exception ex)
@@ -365,19 +365,19 @@ public class DocumentMutation
             ExtractedKnowledge = extractedKnowledge != null ? new ExtractedKnowledgeType
             {
                 ChordProgressions = extractedKnowledge.Contains("chord_progressions")
-                    ? extractedKnowledge["chord_progressions"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["chord_progressions"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Scales = extractedKnowledge.Contains("scales")
-                    ? extractedKnowledge["scales"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["scales"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Techniques = extractedKnowledge.Contains("techniques")
-                    ? extractedKnowledge["techniques"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["techniques"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Concepts = extractedKnowledge.Contains("concepts")
-                    ? extractedKnowledge["concepts"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["concepts"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 KeyInsights = extractedKnowledge.Contains("key_insights")
-                    ? extractedKnowledge["key_insights"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["key_insights"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>()
             } : null,
             Metadata = metadata != null ? new DocumentMetadataType

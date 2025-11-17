@@ -3,7 +3,6 @@ namespace PsychoacousticVoicingDemo;
 using System.Collections.Immutable;
 using GA.Business.Core.Fretboard.Positions;
 using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings;
 using GA.Business.Core.Notes.Primitives;
 using Spectre.Console;
 
@@ -258,7 +257,7 @@ internal class Program
             positions.Add(new Position.Played(location, MidiNote.FromValue(60))); // Dummy MIDI note
         }
 
-        return positions.ToImmutableList();
+        return [.. positions];
     }
 
     // TODO: Fix GetPlayabilityColor - PlayabilityLevel type not found

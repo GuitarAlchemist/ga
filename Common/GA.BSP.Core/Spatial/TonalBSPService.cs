@@ -36,7 +36,7 @@ public class TonalBspService
         var cacheKey = $"chord_{chord.Name}_{root}";
 
         // GetOrAdd is atomic and thread-safe
-        var result = _queryCache.GetOrAdd(cacheKey, key =>
+        var result = _queryCache.GetOrAdd(cacheKey, _ =>
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -66,7 +66,7 @@ public class TonalBspService
         var cacheKey = $"pitchset_{pitchClassSet}";
 
         // GetOrAdd is atomic and thread-safe
-        var result = _queryCache.GetOrAdd(cacheKey, key =>
+        var result = _queryCache.GetOrAdd(cacheKey, _ =>
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -92,7 +92,7 @@ public class TonalBspService
         var cacheKey = $"scales_{pitchClassSet}";
 
         // GetOrAdd is atomic and thread-safe
-        var result = _queryCache.GetOrAdd(cacheKey, key =>
+        var result = _queryCache.GetOrAdd(cacheKey, _ =>
         {
             var stopwatch = Stopwatch.StartNew();
 

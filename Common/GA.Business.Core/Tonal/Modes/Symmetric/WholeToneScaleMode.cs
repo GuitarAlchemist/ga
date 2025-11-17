@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Symmetric;
 
+using global::GA.Core.Collections;
 using Primitives.Symmetric;
 using Scales;
 
@@ -17,7 +18,7 @@ public sealed class WholeToneScaleMode(WholeToneScaleDegree degree)
         IStaticEnumerable<WholeToneScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<WholeToneScaleDegree, WholeToneScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static WholeToneScaleMode WholeTone => new(WholeToneScaleDegree.WholeTone);
@@ -43,8 +44,16 @@ public sealed class WholeToneScaleMode(WholeToneScaleDegree degree)
     public override int TranspositionCount => 2;
 
     // Collection and access methods
-    public static IEnumerable<WholeToneScaleMode> Items =>
-        WholeToneScaleDegree.Items.Select(degree => new WholeToneScaleMode(degree));
+    public static IEnumerable<WholeToneScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<WholeToneScaleDegree>.Items)
+            {
+                yield return new WholeToneScaleMode(degree);
+            }
+        }
+    }
 
     public static WholeToneScaleMode Get(WholeToneScaleDegree degree)
     {
@@ -56,3 +65,5 @@ public sealed class WholeToneScaleMode(WholeToneScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

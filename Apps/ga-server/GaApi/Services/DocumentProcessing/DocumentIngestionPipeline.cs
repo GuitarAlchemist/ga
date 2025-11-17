@@ -1,10 +1,8 @@
 ﻿namespace GaApi.Services.DocumentProcessing;
 
-using GA.Data.MongoDB;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
-using MongoDB.Driver;
 
 /// <summary>
 /// Pipeline for ingesting and processing documents (YouTube transcripts, PDFs, markdown, web pages)
@@ -78,7 +76,8 @@ public class DocumentIngestionPipeline
 
             // Step 5: Generate embeddings for semantic search
             _logger.LogInformation("Generating embeddings for video: {VideoId}", videoId);
-            var embedding = await _embeddingService.GenerateEmbeddingAsync(summary);
+            var embeddingArray = await _embeddingService.GenerateEmbeddingAsync(summary);
+            var embedding = embeddingArray.ToList();
 
             // Step 6: Store in MongoDB
             _logger.LogInformation("Storing processed document in MongoDB: {VideoId}", videoId);

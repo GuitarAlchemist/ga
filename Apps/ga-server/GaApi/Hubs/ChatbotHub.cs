@@ -94,14 +94,14 @@ public sealed class ChatbotHub(
             var cancellationToken = Context.ConnectionAborted;
             var results = await _semanticKnowledge.SearchAsync(query, limit, cancellationToken);
 
-            return results.Select(r => new SemanticSearchResult
+            return [.. results.Select(r => new SemanticSearchResult
             {
                 Id = r.Id,
                 Content = r.Content,
                 Category = r.Category,
                 Score = r.Score,
                 Reason = r.MatchReason
-            }).ToList();
+            })];
         }
         catch (OperationCanceledException)
         {

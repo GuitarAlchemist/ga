@@ -1,7 +1,5 @@
 ﻿namespace EmbeddingGenerator;
 
-using System.ClientModel;
-using Azure.AI.OpenAI;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;

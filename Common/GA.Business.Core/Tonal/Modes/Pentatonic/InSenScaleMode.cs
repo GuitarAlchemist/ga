@@ -17,7 +17,7 @@ public sealed class InSenScaleMode(InSenScaleDegree degree) : TonalScaleMode<InS
     IStaticEnumerable<InSenScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<InSenScaleDegree, InSenScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Static instances for each mode
     public static InSenScaleMode InSen => new(InSenScaleDegree.InSen);

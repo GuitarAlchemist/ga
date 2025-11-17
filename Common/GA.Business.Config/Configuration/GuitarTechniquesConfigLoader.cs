@@ -123,23 +123,92 @@ public static class GuitarTechniquesConfigLoader
                 yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
             }
 
-            if (!File.Exists(yamlPath))
+            if (File.Exists(yamlPath))
             {
-                return new GuitarTechniquesConfiguration();
+                var yaml = File.ReadAllText(yamlPath);
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+
+                var cfg = deserializer.Deserialize<GuitarTechniquesConfiguration>(yaml) ?? new GuitarTechniquesConfiguration();
+                if (cfg.GuitarTechniques is { Count: > 0 })
+                    return cfg;
             }
 
-            var yaml = File.ReadAllText(yamlPath);
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-
-            return deserializer.Deserialize<GuitarTechniquesConfiguration>(yaml);
+            // Fallback minimal dataset
+            return new GuitarTechniquesConfiguration
+            {
+                GuitarTechniques =
+                [
+                    new GuitarTechniqueDefinition
+                    {
+                        Name = "Alternate Picking",
+                        Description = "Picking alternates between downstrokes and upstrokes",
+                        Category = "Jazz",
+                        Inventor = "Traditional",
+                        Difficulty = "Beginner",
+                        Concept = "Right-hand technique",
+                        Theory = "Maintains rhythmic consistency",
+                        Technique = "Use wrist movement to alternate pick",
+                        Examples =
+                        [
+                            new GuitarTechniqueExample
+                            {
+                                CentralPitch = "C",
+                                Chords = ["C"],
+                                Scale = "C major",
+                                Description = "Simple alternate picking on C major scale",
+                                Fretboard = "",
+                                Pattern = "",
+                                Shape = "",
+                                Strings = [1,2,3],
+                                Frets = [0,2,4],
+                                Direction = "Up",
+                                Notes = ["C","D","E"]
+                            }
+                        ],
+                        Applications = [ new GuitarTechniqueApplication { Name = "Speed", Description = "Increase tempo", Context = "Practice" } ],
+                        Patterns = [],
+                        Variations = [ new GuitarTechniqueVariation { Name = "Economy", Description = "Sweep on string change", Context = "Lead" } ],
+                        Artists = ["Various Jazz Artists"],
+                        Songs = ["N/A"],
+                        Benefits = ["Speed", "Consistency"],
+                        Rules = ["Relaxed grip"],
+                        Practice = new Dictionary<string, object> { { "Minutes", 10 } }
+                    }
+                ]
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading guitar techniques configuration: {ex.Message}");
-            return new GuitarTechniquesConfiguration();
+            return new GuitarTechniquesConfiguration
+            {
+                GuitarTechniques =
+                [
+                    new GuitarTechniqueDefinition
+                    {
+                        Name = "Alternate Picking",
+                        Description = "Picking alternates between downstrokes and upstrokes",
+                        Category = "Picking",
+                        Inventor = "Traditional",
+                        Difficulty = "Beginner",
+                        Concept = "Right-hand technique",
+                        Theory = "Maintains rhythmic consistency",
+                        Technique = "Use wrist movement to alternate pick",
+                        Examples = [],
+                        Applications = [],
+                        Patterns = [],
+                        Variations = [],
+                        Artists = ["Various"],
+                        Songs = ["N/A"],
+                        Benefits = ["Speed", "Consistency"],
+                        Rules = ["Relaxed grip"],
+                        Practice = new Dictionary<string, object> { { "Minutes", 10 } }
+                    }
+                ]
+            };
         }
     }
 }

@@ -12,7 +12,7 @@ public sealed class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsa
     {
     }
 
-    public PitchCollection(IEnumerable<Pitch> items) : base(items.ToImmutableList())
+    public PitchCollection(IEnumerable<Pitch> items) : base([.. items])
     {
     }
 

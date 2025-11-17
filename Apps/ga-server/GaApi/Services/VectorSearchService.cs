@@ -81,7 +81,7 @@ public class VectorSearchService
                 var embeddingClient = _openAiClient.GetEmbeddingClient(_embeddingModel);
                 var response = await embeddingClient.GenerateEmbeddingAsync(text);
                 var floats = response.Value.ToFloats();
-                return floats.ToArray().Select(f => (double)f).ToArray();
+                return [.. floats.ToArray().Select(f => (double)f)];
             }
         }
     }
@@ -127,7 +127,7 @@ public class VectorSearchService
                 .Aggregate<BsonDocument>(pipeline)
                 .ToListAsync();
 
-            return results.Select(doc => new ChordSearchResult
+            return [.. results.Select(doc => new ChordSearchResult
             {
                 Id = doc.GetValue("Id", 0).AsInt32,
                 Name = doc.GetValue("Name", "").AsString,
@@ -137,7 +137,7 @@ public class VectorSearchService
                 NoteCount = doc.GetValue("NoteCount", 0).AsInt32,
                 Description = doc.GetValue("Description", "").AsString,
                 Score = doc.GetValue("score", 0.0).AsDouble
-            }).ToList();
+            })];
         }
         catch (Exception ex)
         {
@@ -207,7 +207,7 @@ public class VectorSearchService
                 .Aggregate<BsonDocument>(pipeline)
                 .ToListAsync();
 
-            return results.Select(doc => new ChordSearchResult
+            return [.. results.Select(doc => new ChordSearchResult
             {
                 Id = doc.GetValue("Id", 0).AsInt32,
                 Name = doc.GetValue("Name", "").AsString,
@@ -217,7 +217,7 @@ public class VectorSearchService
                 NoteCount = doc.GetValue("NoteCount", 0).AsInt32,
                 Description = doc.GetValue("Description", "").AsString,
                 Score = doc.GetValue("score", 0.0).AsDouble
-            }).ToList();
+            })];
         }
         catch (Exception ex)
         {
@@ -302,7 +302,7 @@ public class VectorSearchService
                 .Aggregate<BsonDocument>(pipelineStages)
                 .ToListAsync();
 
-            return results.Select(doc => new ChordSearchResult
+            return [.. results.Select(doc => new ChordSearchResult
             {
                 Id = doc.GetValue("Id", 0).AsInt32,
                 Name = doc.GetValue("Name", "").AsString,
@@ -312,7 +312,7 @@ public class VectorSearchService
                 NoteCount = doc.GetValue("NoteCount", 0).AsInt32,
                 Description = doc.GetValue("Description", "").AsString,
                 Score = doc.GetValue("score", 0.0).AsDouble
-            }).ToList();
+            })];
         }
         catch (Exception ex)
         {
@@ -355,7 +355,7 @@ public class VectorSearchService
                 .Aggregate<BsonDocument>(pipeline)
                 .ToListAsync();
 
-            return results.Select(MapTemplateResult).ToList();
+            return [.. results.Select(MapTemplateResult)];
         }
         catch (Exception ex)
         {
@@ -433,7 +433,7 @@ public class VectorSearchService
                 .Aggregate<BsonDocument>(pipelineStages)
                 .ToListAsync();
 
-            return results.Select(MapTemplateResult).ToList();
+            return [.. results.Select(MapTemplateResult)];
         }
         catch (Exception ex)
         {
@@ -447,7 +447,7 @@ public class VectorSearchService
         var pcs = new List<int>();
         if (doc.Contains("PitchClassSet") && doc["PitchClassSet"].IsBsonArray)
         {
-            pcs = doc["PitchClassSet"].AsBsonArray.Select(v => v.AsInt32).ToList();
+            pcs = [.. doc["PitchClassSet"].AsBsonArray.Select(v => v.AsInt32)];
         }
 
         var templates = new List<TemplateInfo>();

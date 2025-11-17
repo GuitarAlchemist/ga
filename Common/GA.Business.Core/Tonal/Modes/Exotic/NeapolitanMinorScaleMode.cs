@@ -1,5 +1,7 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using global::GA.Core.Collections;
+
 using Primitives.Exotic;
 using Scales;
 
@@ -18,7 +20,7 @@ public sealed class NeapolitanMinorScaleMode(NeapolitanMinorScaleDegree degree)
         IStaticEnumerable<NeapolitanMinorScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<NeapolitanMinorScaleDegree, NeapolitanMinorScaleMode>>
-        _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+        _lazyModeByDegree = new(() => new([.. Items]));
 
     // Static instances for each mode
     public static NeapolitanMinorScaleMode NeapolitanMinor => new(NeapolitanMinorScaleDegree.NeapolitanMinor);
@@ -33,8 +35,16 @@ public sealed class NeapolitanMinorScaleMode(NeapolitanMinorScaleDegree degree)
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<NeapolitanMinorScaleMode> Items =>
-        NeapolitanMinorScaleDegree.Items.Select(degree => new NeapolitanMinorScaleMode(degree));
+    public static IEnumerable<NeapolitanMinorScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<NeapolitanMinorScaleDegree>.Items)
+            {
+                yield return new NeapolitanMinorScaleMode(degree);
+            }
+        }
+    }
 
     public static NeapolitanMinorScaleMode Get(NeapolitanMinorScaleDegree degree)
     {
@@ -46,3 +56,5 @@ public sealed class NeapolitanMinorScaleMode(NeapolitanMinorScaleDegree degree)
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

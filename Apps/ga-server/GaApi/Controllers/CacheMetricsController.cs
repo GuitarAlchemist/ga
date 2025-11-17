@@ -96,13 +96,13 @@ public class CacheMetricsController(
                 OverallHitRate = allMetrics.Values.Sum(m => m.TotalRequests) > 0
                     ? (double)allMetrics.Values.Sum(m => m.TotalHits) / allMetrics.Values.Sum(m => m.TotalRequests)
                     : 0,
-                CacheTypes = allMetrics.Select(kvp => new CacheTypeSummary
+                CacheTypes = [.. allMetrics.Select(kvp => new CacheTypeSummary
                 {
                     CacheType = kvp.Key,
                     HitRate = kvp.Value.HitRate,
                     TotalRequests = kvp.Value.TotalRequests,
                     LastRequestTime = kvp.Value.LastRequestTime
-                }).OrderByDescending(c => c.TotalRequests).ToList()
+                }).OrderByDescending(c => c.TotalRequests)]
             };
 
             logger.LogInformation("Retrieved cache summary: {TotalRequests} requests, {HitRate:P2} hit rate",

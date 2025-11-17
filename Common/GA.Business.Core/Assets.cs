@@ -108,4 +108,4 @@ public static class AssetCatalog
 public abstract record Asset(string Name, IReadOnlyCollection<object> Items);
 
 public sealed record Asset<T>(string Name, IReadOnlyCollection<T> TypedItems)
-    : Asset(Name, TypedItems.Cast<object>().ToImmutableList()) where T : notnull;
+    : Asset(Name, [.. TypedItems.Cast<object>()]) where T : notnull;

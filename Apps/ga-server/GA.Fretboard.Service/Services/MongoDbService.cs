@@ -271,11 +271,8 @@ public class MongoDbService
 
         return new ChordStatistics
         {
-            TotalChords = totalCount,
-            QualityDistribution = qualityDistribution,
-            ExtensionDistribution = extensionDistribution,
-            StackingTypeDistribution = stackingDistribution,
-            NoteCountDistribution = noteCountDistribution
+            TotalChords = (int)totalCount,
+            QualityDistribution = qualityDistribution
         };
     }
 

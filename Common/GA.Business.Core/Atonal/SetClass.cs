@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Atonal;
 
-using System.Linq;
 using System.Numerics;
 using Primitives;
 
@@ -85,18 +84,16 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     /// </remarks>
     public Complex[] GetFourierCoefficients()
     {
-        if (_fourierCoefficients != null)
-        {
-            return _fourierCoefficients;
-        }
+        // Ensure we only compute once
+        if (_fourierCoefficients != null) return _fourierCoefficients;
 
-        var vector = GetSpectralPrimeForm().ToBinaryVector(_pitchClassSpaceSize);
+        // Compute Fourier coefficients
+        var vector = GetSpectralPrimeForm().ToBinaryVector();
         var result = new Complex[_pitchClassSpaceSize];
 
         for (var k = 0; k < _pitchClassSpaceSize; k++)
         {
             var sum = Complex.Zero;
-
             for (var n = 0; n < _pitchClassSpaceSize; n++)
             {
                 var angle = -2.0 * Math.PI * k * n / _pitchClassSpaceSize;
@@ -200,15 +197,11 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
 
     #endregion
 
-    internal PitchClassSet GetSpectralPrimeForm()
-    {
-        if (PrimeForm.Cardinality.Value > 0)
-        {
-            return PrimeForm;
-        }
+    internal PitchClassSet GetSpectralPrimeForm() =>
+        PrimeForm.Cardinality.Value > 0
+            ? PrimeForm
+            : pitchClassSet;
 
-        return pitchClassSet;
-    }
 
     #region Innner Classes
 

@@ -269,7 +269,7 @@
         {
             for (var i = 0; i <= 5; i++)
             {
-                var floorData = await FloorService.GetFloorAsync(i, 80);
+                var floorData = await FloorService.GetFloorAsync(i);
                 if (floorData != null)
                 {
                     _allFloors[i] = floorData;

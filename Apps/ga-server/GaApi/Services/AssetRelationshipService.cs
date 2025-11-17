@@ -25,29 +25,26 @@ public class AssetRelationshipService : IAssetRelationshipService
 
     public List<AssetRelationship> GetRelationshipsForAsset(string assetType)
     {
-        return _relationships.Where(r =>
+        return [.. _relationships.Where(r =>
                 r.ParentAssetType == assetType ||
-                (r.IsBidirectional && r.ChildAssetType == assetType))
-            .ToList();
+                (r.IsBidirectional && r.ChildAssetType == assetType))];
     }
 
     public List<string> GetChildAssetTypes(string parentAssetType)
     {
-        return _relationships
+        return [.. _relationships
             .Where(r => r.ParentAssetType == parentAssetType)
             .Select(r => r.ChildAssetType)
-            .Distinct()
-            .ToList();
+            .Distinct()];
     }
 
     public List<string> GetParentAssetTypes(string childAssetType)
     {
-        return _relationships
+        return [.. _relationships
             .Where(r => r.ChildAssetType == childAssetType ||
                         (r.IsBidirectional && r.ParentAssetType == childAssetType))
             .Select(r => r.ParentAssetType)
-            .Distinct()
-            .ToList();
+            .Distinct()];
     }
 
     public AssetHierarchyNode BuildAssetHierarchy()

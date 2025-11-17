@@ -19,8 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj" />
+    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj" /> -->
     <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj" />
   </ItemGroup>
 </Project>

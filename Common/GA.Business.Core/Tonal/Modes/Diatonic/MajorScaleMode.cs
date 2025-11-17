@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Diatonic;
 using Scales;
 
@@ -15,14 +16,22 @@ public sealed class MajorScaleMode(MajorScaleDegree degree) : TonalScaleMode<Maj
     IStaticEnumerable<MajorScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<MajorScaleDegree, MajorScaleMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     // Properties
     public override string Name => ParentScaleDegree.ToName();
 
     // Collection and access methods
-    public static IEnumerable<MajorScaleMode> Items =>
-        MajorScaleDegree.Items.Select(degree => new MajorScaleMode(degree));
+    public static IEnumerable<MajorScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<MajorScaleDegree>.Items)
+            {
+                yield return new MajorScaleMode(degree);
+            }
+        }
+    }
 
     public static MajorScaleMode FromDegree(MajorScaleDegree degree)
     {
@@ -44,3 +53,5 @@ public sealed class MajorScaleMode(MajorScaleDegree degree) : TonalScaleMode<Maj
         return $"{Name} - {Formula}";
     }
 }
+
+

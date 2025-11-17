@@ -32,16 +32,14 @@ public interface IVoicingSearchStrategy
     /// </summary>
     Task<List<VoicingSearchResult>> SemanticSearchAsync(
         double[] queryEmbedding,
-        int limit = 10,
-        int numCandidates = 100);
+        int limit = 10);
 
     /// <summary>
     /// Find voicings similar to a specific voicing
     /// </summary>
     Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(
         string voicingId,
-        int limit = 10,
-        int numCandidates = 100);
+        int limit = 10);
 
     /// <summary>
     /// Hybrid search with filters
@@ -49,8 +47,7 @@ public interface IVoicingSearchStrategy
     Task<List<VoicingSearchResult>> HybridSearchAsync(
         double[] queryEmbedding,
         VoicingSearchFilters filters,
-        int limit = 10,
-        int numCandidates = 100);
+        int limit = 10);
 
     /// <summary>
     /// Get memory usage statistics

@@ -1,12 +1,11 @@
 namespace GA.Business.Core.Atonal.Grothendieck;
 
 using Fretboard.Shapes;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Markov walker for navigating shape graphs
 /// </summary>
-public class MarkovWalker(ILogger<MarkovWalker> logger)
+public class MarkovWalker
 {
     private readonly Random _random = new();
 
@@ -18,8 +17,6 @@ public class MarkovWalker(ILogger<MarkovWalker> logger)
         FretboardShape startShape,
         WalkOptions options)
     {
-        logger.LogDebug("Generating walk from {ShapeId} with {Steps} steps", startShape.Id, options.Steps);
-
         var path = new List<FretboardShape> { startShape };
         var currentShape = startShape;
 
@@ -32,7 +29,6 @@ public class MarkovWalker(ILogger<MarkovWalker> logger)
             currentShape = nextShape;
         }
 
-        logger.LogDebug("Generated path with {Count} shapes", path.Count);
         return path;
     }
 
@@ -151,9 +147,7 @@ public class MarkovWalker(ILogger<MarkovWalker> logger)
 
         var totalWeight = weights.Sum();
 
-        return transitionsList
-            .Zip(weights, (t, w) => (t, w / totalWeight))
-            .ToList();
+        return [.. transitionsList.Zip(weights, (t, w) => (t, w / totalWeight))];
     }
 }
 

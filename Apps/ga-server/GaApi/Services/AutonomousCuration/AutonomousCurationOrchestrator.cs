@@ -397,7 +397,7 @@ public class AutonomousCurationOrchestrator
             filtered = filtered.Where(g => request.FocusPriorities.Contains(g.Priority));
         }
 
-        return filtered.ToList();
+        return [.. filtered];
     }
 }
 

@@ -132,7 +132,7 @@ public class ConversationContextService(ILogger<ConversationContextService> logg
     /// </summary>
     public List<ContextEntry> GetRecentContext(int count = 10)
     {
-        return _contextHistory.TakeLast(count).ToList();
+        return [.. _contextHistory.TakeLast(count)];
     }
 
     /// <summary>

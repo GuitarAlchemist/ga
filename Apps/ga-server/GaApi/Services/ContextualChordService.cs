@@ -367,20 +367,20 @@ public class ContextualChordService(
             var root = modeNotes[degree - 1].PitchClass;
             var template = chordTemplates.ElementAt(degree - 1);
 
-            // Use hybrid naming for modal chords
-            var hybridAnalysis = HybridChordNamingService.AnalyzeChord(template, root);
+            // Use unified naming service for modal chords
+            var bestName = ChordTemplateNamingService.GetBestChordName(template, root);
+            var alternates = ChordTemplateNamingService.GetAllNamingOptions(template, root).ToArray();
 
             chords.Add(new ChordInContext
             {
                 Template = template,
                 Root = root,
-                ContextualName = hybridAnalysis.RecommendedName,
+                ContextualName = bestName,
                 ScaleDegree = degree,
                 Function = KeyAwareChordNamingService.ChordFunction.Unknown,
                 Commonality = CalculateModalCommonality(degree, mode),
                 IsNaturallyOccurring = true,
-                AlternateNames = new[] { hybridAnalysis.TonalName ?? hybridAnalysis.AtonalName ?? "" }
-                    .Where(s => !string.IsNullOrEmpty(s)).ToArray(),
+                AlternateNames = alternates,
                 FunctionalDescription = $"Degree {degree} in {mode.Name}",
                 Context = new MusicalContext
                 {

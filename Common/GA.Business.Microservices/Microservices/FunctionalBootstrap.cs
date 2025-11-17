@@ -753,7 +753,7 @@ public abstract record Validation<T, TError>
             (Validation<Func<T, TResult>, TError>.Success f, Success v) => new Validation<TResult, TError>.Success(
                 f.Value(v.Value)),
             (Validation<Func<T, TResult>, TError>.Failure f1, Failure f2) => new Validation<TResult, TError>.Failure(
-                f1.Errors.Concat(f2.Errors).ToList()),
+                [.. f1.Errors, .. f2.Errors]),
             (Validation<Func<T, TResult>, TError>.Failure f, _) => new Validation<TResult, TError>.Failure(f.Errors),
             (_, Failure f) => new Validation<TResult, TError>.Failure(f.Errors),
             _ => throw new InvalidOperationException()
@@ -842,18 +842,18 @@ public record Writer<TLog, T>(T Value, IReadOnlyList<TLog> Log)
     public Writer<TLog, TResult> Bind<TResult>(Func<T, Writer<TLog, TResult>> binder)
     {
         var result = binder(Value);
-        return new Writer<TLog, TResult>(result.Value, Log.Concat(result.Log).ToList());
+        return new Writer<TLog, TResult>(result.Value, [.. Log, .. result.Log]);
     }
 
     // Tell - add log entry
     public Writer<TLog, T> Tell(TLog logEntry)
     {
-        return new Writer<TLog, T>(Value, Log.Append(logEntry).ToList());
+        return new Writer<TLog, T>(Value, [.. Log, logEntry]);
     }
 
     public Writer<TLog, T> Tell(params TLog[] logEntries)
     {
-        return new Writer<TLog, T>(Value, Log.Concat(logEntries).ToList());
+        return new Writer<TLog, T>(Value, [.. Log, .. logEntries]);
     }
 
     // LINQ support
@@ -1362,22 +1362,22 @@ public static class AutoConfiguration
 
     public static MicroserviceStarter WithDependency(this MicroserviceStarter starter, string dependency)
     {
-        return starter with { Dependencies = starter.Dependencies.Append(dependency).ToList() };
+        return starter with { Dependencies = [.. starter.Dependencies, dependency] };
     }
 
     public static MicroserviceStarter WithConfiguration(this MicroserviceStarter starter, object config)
     {
-        return starter with { Configurations = starter.Configurations.Append(config).ToList() };
+        return starter with { Configurations = [.. starter.Configurations, config] };
     }
 
     public static MicroserviceStarter WithService(this MicroserviceStarter starter, object service)
     {
-        return starter with { Services = starter.Services.Append(service).ToList() };
+        return starter with { Services = [.. starter.Services, service] };
     }
 
     public static MicroserviceStarter WithCondition(this MicroserviceStarter starter, ServiceCondition condition)
     {
-        return starter with { Conditions = starter.Conditions.Append(condition).ToList() };
+        return starter with { Conditions = [.. starter.Conditions, condition] };
     }
 
     public static MicroserviceStarter WithStartup(this MicroserviceStarter starter,

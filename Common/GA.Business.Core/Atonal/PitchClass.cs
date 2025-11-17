@@ -1,8 +1,6 @@
 ﻿namespace GA.Business.Core.Atonal;
 
 using Abstractions;
-using GA.Core.Combinatorics;
-using GA.Core.Extensions;
 using Intervals;
 using Intervals.Primitives;
 using Notes;
@@ -56,6 +54,9 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     ];
 
     private readonly int _value;
+
+    // Static members for IRangeValueObject / IStaticValueObjectList are declared below in the
+    // corresponding region to avoid duplicate declarations.
 
     #region IPitchClass<PitchClass> Members
 
@@ -142,11 +143,15 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         private static ImmutableDictionary<(int, int), PitchClass> GetSubtractionDictionary()
         {
             var builder = ImmutableDictionary.CreateBuilder<(int, int), PitchClass>();
-            foreach (var (pcValue1, pcValue2) in new CartesianProduct<int>(Values))
+            // Build from fixed 0..11 range to avoid dependency on cached collections during static init
+            foreach (var pcValue1 in Enumerable.Range(0, 12))
             {
-                builder.Add(
-                    (pcValue1, pcValue2),
-                    FromValue((pcValue1 - pcValue2 + 12) % 12));
+                for (var pcValue2 = 0; pcValue2 < 12; pcValue2++)
+                {
+                    builder.Add(
+                        (pcValue1, pcValue2),
+                        FromValue((pcValue1 - pcValue2 + 12) % 12));
+                }
             }
 
             return builder.ToImmutable();
@@ -166,6 +171,16 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     /// Gets all PitchClass values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClass>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full pitch class range.
+    /// </summary>
+    public static ReadOnlySpan<PitchClass> ItemsSpan => ValueObjectUtils<PitchClass>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each pitch class.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<PitchClass>.ValuesSpan;
 
     /// <inheritdoc />
     public static PitchClass Min => FromValue(_minValue);
@@ -288,6 +303,14 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
                 result = FromValue(10);
                 return true;
             case "E":
+                result = FromValue(11);
+                return true;
+            // Accept common hex-like aliases sometimes used in set notation
+            // A -> 10, B -> 11 (while keeping existing T/E support). This is parse-only; ToString still uses T/E.
+            case "A":
+                result = FromValue(10);
+                return true;
+            case "B":
                 result = FromValue(11);
                 return true;
             default:

@@ -123,7 +123,7 @@ public class TonalBspAnalyzer(TonalBspService bspService, ILogger<TonalBspAnalyz
         }
 
         // Return top suggestions
-        return substitutions.Take(10).ToList();
+        return [.. substitutions.Take(10)];
     }
 
     /// <summary>

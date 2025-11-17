@@ -1,9 +1,5 @@
 ﻿namespace GaApi.GraphQL.Types;
 
-using HotChocolate;
-using Models.AutonomousCuration;
-using Services.DocumentProcessing;
-
 /// <summary>
 /// GraphQL type for processed documents
 /// </summary>

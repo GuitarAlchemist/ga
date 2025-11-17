@@ -20,10 +20,10 @@ public class TonalBspTests
         _analyzer = new TonalBspAnalyzer(_bspService, _mockAnalyzerLogger.Object);
     }
 
-    private TonalBspService _bspService;
-    private TonalBspAnalyzer _analyzer;
-    private Mock<ILogger<TonalBspService>> _mockBspLogger;
-    private Mock<ILogger<TonalBspAnalyzer>> _mockAnalyzerLogger;
+    private TonalBspService _bspService = null!;
+    private TonalBspAnalyzer _analyzer = null!;
+    private Mock<ILogger<TonalBspService>> _mockBspLogger = null!;
+    private Mock<ILogger<TonalBspAnalyzer>> _mockAnalyzerLogger = null!;
 
     [Test]
     public void TonalBSPTree_ShouldInitializeCorrectly()

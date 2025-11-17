@@ -13,7 +13,15 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     static ModalFamily()
     {
         _lazyModalFamilies = new(() =>
-            ModalFamilyCollection.SharedInstance.ToDictionary(family => family.IntervalClassVector, family => family));
+        {
+            // Some IntervalClassVector values can theoretically collide across different cardinalities
+            // (e.g., degenerate cases). Ensure distinct keys by grouping and picking the first family.
+            var families = ModalFamilyCollection.SharedInstance.ToList();
+            var dict = families
+                .GroupBy(f => f.IntervalClassVector)
+                .ToDictionary(g => g.Key, g => g.First());
+            return dict;
+        });
         _lazyModalIntervalVectors = new(() => _lazyModalFamilies.Value.Keys.ToImmutableHashSet());
     }
 
@@ -31,7 +39,7 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
         NoteCount = noteCount;
         IntervalClassVector = intervalClassVector;
         Modes = modes;
-        ModeIds = modes.Select(set => set.Id).ToImmutableList();
+        ModeIds = [.. modes.Select(set => set.Id)];
         PrimeMode = modes.MinBy(set => set.Id.Value)!;
     }
 

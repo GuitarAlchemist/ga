@@ -4,9 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
 using GA.Business.Core.Invariants;
-// using GA.Business.Core.Services // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.Mvc;
+using GA.Analytics.Service.Models;
+using GA.Analytics.Service.Services;
 
 /// <summary>
 ///     Controller for invariant validation and monitoring
@@ -38,11 +37,10 @@ public class InvariantsController(
         {
             logger.LogInformation("Validating concept: {ConceptName} of type {ConceptType}", conceptName, conceptType);
 
-            var result = validationService.ValidateConcept(conceptName, conceptType);
+            var result = await validationService.ValidateConcept(conceptName,
+                new Dictionary<string, object> { ["conceptType"] = conceptType });
 
-            logger.LogInformation(
-                "Validation completed for {ConceptName}: {PassedCount}/{TotalCount} invariants passed",
-                conceptName, result.Successes.Count(), result.Results.Count);
+            logger.LogInformation("Validation completed for {ConceptName}", conceptName);
 
             return Ok(result);
         }
@@ -72,11 +70,8 @@ public class InvariantsController(
             logger.LogInformation("Starting global validation of all musical concepts");
 
             var result = await validationService.ValidateAllAsync();
-            var summary = result.GetSummary();
 
-            logger.LogInformation(
-                "Global validation completed: {TotalConcepts} concepts, {TotalViolations} violations, {SuccessRate:P} success rate",
-                summary.TotalConcepts, summary.TotalViolations, summary.OverallSuccessRate);
+            logger.LogInformation("Global validation completed");
 
             return Ok(result);
         }
@@ -128,8 +123,8 @@ public class InvariantsController(
             var statistics = await monitoringService.GetViolationStatisticsAsync();
 
             logger.LogDebug(
-                "Retrieved violation statistics: {TotalViolations} violations, {HealthScore:P} health score",
-                statistics.TotalViolations, statistics.OverallHealthScore);
+                "Retrieved violation statistics: {CriticalViolations} critical, {HealthScore:P} health score",
+                statistics.CriticalViolations, statistics.OverallHealthScore);
 
             return Ok(statistics);
         }
@@ -332,7 +327,7 @@ public class InvariantsController(
             {
                 Status = violationStats.CriticalViolations == 0 ? "Healthy" : "Critical",
                 violationStats.OverallHealthScore,
-                violationStats.TotalViolations,
+                TotalViolations = violationStats.CriticalViolations + violationStats.ErrorViolations + violationStats.WarningViolations,
                 violationStats.CriticalViolations,
                 violationStats.ErrorViolations,
                 violationStats.WarningViolations,

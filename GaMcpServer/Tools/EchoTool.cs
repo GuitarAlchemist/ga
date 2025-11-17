@@ -16,6 +16,6 @@ public static class EchoTool
     [Description("Echoes in reverse the message sent by the client.")]
     public static string ReverseEcho(string message)
     {
-        return new string(message.Reverse().ToArray());
+        return new string([.. message.Reverse()]);
     }
 }

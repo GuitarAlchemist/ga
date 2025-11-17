@@ -4,6 +4,7 @@ using Atonal;
 using GA.Core.Extensions;
 using Intervals;
 using Intervals.Primitives;
+using Notes.Extensions;
 using Notes.Primitives;
 using static Notes.Note;
 
@@ -94,7 +95,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         return new ReadOnlyItems<KeyNote>(
             KeySignature.Value < 0
                 ? GetFlatNotes(Root, accidentedNotes).ToImmutableList()
-                : GetSharpNotes(Root, accidentedNotes).ToImmutableList());
+                : [.. GetSharpNotes(Root, accidentedNotes)]);
 
         static IEnumerable<KeyNote> GetSharpNotes(
             KeyNote root,

@@ -35,7 +35,7 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
                 MaxExecutionTime = executionTime,
                 LastValidated = DateTime.UtcNow
             },
-            (k, existing) =>
+            (_, existing) =>
             {
                 existing.TotalValidations++;
                 if (isValid)
@@ -99,7 +99,7 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// </summary>
     public virtual List<InvariantAnalytics> GetAllAnalytics()
     {
-        return _metrics.Values.Select(CreateAnalytics).OrderByDescending(a => a.FailureRate).ToList();
+        return [.. _metrics.Values.Select(CreateAnalytics).OrderByDescending(a => a.FailureRate)];
     }
 
     /// <summary>
@@ -107,11 +107,10 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// </summary>
     public virtual List<InvariantAnalytics> GetAnalyticsByConceptType(string conceptType)
     {
-        return _metrics.Values
+        return [.. _metrics.Values
             .Where(m => m.ConceptType.Equals(conceptType, StringComparison.OrdinalIgnoreCase))
             .Select(CreateAnalytics)
-            .OrderByDescending(a => a.FailureRate)
-            .ToList();
+            .OrderByDescending(a => a.FailureRate)];
     }
 
     /// <summary>
@@ -119,13 +118,12 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// </summary>
     public List<InvariantAnalytics> GetTopFailingInvariants(int count = 10)
     {
-        return _metrics.Values
+        return [.. _metrics.Values
             .Select(CreateAnalytics)
             .Where(a => a.FailedValidations > 0)
             .OrderByDescending(a => a.FailureRate)
             .ThenByDescending(a => a.FailedValidations)
-            .Take(count)
-            .ToList();
+            .Take(count)];
     }
 
     /// <summary>
@@ -133,11 +131,10 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// </summary>
     public List<InvariantAnalytics> GetSlowestInvariants(int count = 10)
     {
-        return _metrics.Values
+        return [.. _metrics.Values
             .Select(CreateAnalytics)
             .OrderByDescending(a => a.AverageExecutionTime)
-            .Take(count)
-            .ToList();
+            .Take(count)];
     }
 
     /// <summary>
@@ -145,7 +142,7 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// </summary>
     public virtual List<ViolationEvent> GetRecentViolations(int count = 100)
     {
-        return _violationEvents.TakeLast(count).OrderByDescending(v => v.Timestamp).ToList();
+        return [.. _violationEvents.TakeLast(count).OrderByDescending(v => v.Timestamp)];
     }
 
     /// <summary>
@@ -280,7 +277,7 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
             });
         }
 
-        return recommendations.OrderByDescending(r => r.Priority).ToList();
+        return [.. recommendations.OrderByDescending(r => r.Priority)];
     }
 
     /// <summary>

@@ -16,6 +16,8 @@ using MudBlazor.Services;
 using Polly;
 using Polly.Extensions.Http;
 using Path = System.IO.Path;
+using GA.Business.Core.Chords;
+using GA.Business.Core.Unified;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +70,12 @@ builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<LocalEmbeddingService>();
 builder.Services.AddSingleton<VectorSearchService>();
 
+// Music theory naming services
+builder.Services.AddScoped<IChordNamingService, ChordNamingService>();
+
+// Unified modes service
+builder.Services.AddSingleton<IUnifiedModeService, UnifiedModeService>();
+
 // Register ILGPU GPU acceleration services
 builder.Services.AddSingleton<IIlgpuContextManager, IlgpuContextManager>();
 builder.Services.AddSingleton(sp =>
@@ -80,7 +88,8 @@ builder.Services.AddSingleton<IVectorSearchStrategy, IlgpuVectorSearchStrategy>(
 // Register vector search services
 builder.Services.AddVectorSearchServices();
 
-// TODO: Add chord services when available
+// Optionally register additional chord-related services via extension when needed
+// (Keeping direct registration for naming façade above ensures availability even if extension changes)
 // builder.Services.AddChordServices();
 
 // Register Graphiti services
@@ -233,6 +242,7 @@ builder.Services
     .AddMutationType(d => d.Name("Mutation"))
     .AddTypeExtension<DocumentQuery>()
     .AddTypeExtension<DocumentMutation>()
+    .AddTypeExtension<ChordNamingQuery>()
     // TODO: Add FretboardQuery when available
     // .AddTypeExtension<FretboardQuery>()
     // TODO: Add MusicHierarchyQuery when available

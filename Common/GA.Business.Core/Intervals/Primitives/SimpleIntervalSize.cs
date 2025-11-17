@@ -202,8 +202,18 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
 
     #region IIntervalSize<IntervalSize> Members
 
-    public static IReadOnlyCollection<SimpleIntervalSize> Items => ValueObjectCollection<SimpleIntervalSize>.Create();
-    public static IReadOnlyList<int> Values => Items.ToValueList();
+    public static IReadOnlyCollection<SimpleIntervalSize> Items => ValueObjectUtils<SimpleIntervalSize>.Items;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<SimpleIntervalSize>.Values;
+
+    /// <summary>
+    /// Gets the cached span representing the full simple interval size range.
+    /// </summary>
+    public static ReadOnlySpan<SimpleIntervalSize> ItemsSpan => ValueObjectUtils<SimpleIntervalSize>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each simple interval size.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<SimpleIntervalSize>.ValuesSpan;
 
     #endregion
 

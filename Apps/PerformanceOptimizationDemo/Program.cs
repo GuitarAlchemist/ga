@@ -183,7 +183,7 @@ internal class Program
             .Where(batch => batch.Count > 0)
             .SelectMany(batch => ProcessBatchAsync(batch))
             .Subscribe(
-                result =>
+                _ =>
                 {
                     Interlocked.Increment(ref processedCount);
                     if (processedCount % 100 == 0)

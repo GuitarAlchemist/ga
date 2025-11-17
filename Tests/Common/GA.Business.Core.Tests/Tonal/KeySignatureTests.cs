@@ -29,6 +29,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
 
         // Assert
+        TestContext.Out.WriteLine($"[KeySignature_AccidentedNotes] value={value}\n  expected=[{string.Join(", ", expected)}]\n  actual=[{string.Join(", ", actual)}]");
         Assert.That(actual, Is.EqualTo(expected));
     }
 
@@ -56,6 +57,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentedNotes.ToString();
 
         // Assert
+        TestContext.Out.WriteLine($"[KeySignature_AccidentedNotes_Printable] value={value}\n  expected='{expected}'\n  actual='{actual}'");
         Assert.That(actual, Is.EqualTo(expected));
     }
 
@@ -83,6 +85,7 @@ public class KeySignatureTests
         var actual = keySignature.AccidentalKind;
 
         // Assert
+        TestContext.Out.WriteLine($"[KeySignature_AccidentalKind] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));
     }
 
@@ -110,6 +113,7 @@ public class KeySignatureTests
         var actual = keySignature.IsSharpKey;
 
         // Assert
+        TestContext.Out.WriteLine($"[KeySignature_IsSharpKey] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));
     }
 
@@ -137,6 +141,7 @@ public class KeySignatureTests
         var actual = keySignature.IsFlatKey;
 
         // Assert
+        TestContext.Out.WriteLine($"[KeySignature_IsFlatKey] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));
     }
 }

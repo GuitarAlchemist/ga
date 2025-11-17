@@ -1,13 +1,11 @@
 namespace GaCLI.Commands;
 
-using GA.Core.Functional;
 using GA.Business.Intelligence.SemanticIndexing;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 /// <summary>
 ///     CLI command for testing semantic fretboard indexing and natural language querying
@@ -166,7 +164,7 @@ public class SemanticFretboardCommand
         AnsiConsole.MarkupLine($"[yellow]Processing query: '{query}'[/]");
 
         await AnsiConsole.Status()
-            .StartAsync("Searching and generating response...", async ctx =>
+            .StartAsync("Searching and generating response...", async _ =>
             {
                 var result = await _semanticService.ProcessNaturalLanguageQueryAsync(query);
 

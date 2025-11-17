@@ -84,7 +84,7 @@ public class PitchClassSetIdEquivalences
 
         public ImmutableSortedSet<PitchClassSetId> Complements { get; } = [id, id.Complement];
         public ImmutableSortedSet<PitchClassSetId> Inversions { get; } = [id, id.Inverse];
-        public ImmutableSortedSet<PitchClassSetId> Rotations { get; } = id.GetRotations().ToImmutableSortedSet();
+        public ImmutableSortedSet<PitchClassSetId> Rotations { get; } = [.. id.GetRotations()];
 
         public override string ToString()
         {

@@ -147,7 +147,7 @@ public static class FretboardChordAnalyzer
             recommendations.Add("High harmonic tension - consider resolution");
         }
 
-        return recommendations.ToImmutableArray();
+        return [.. recommendations];
     }
 
     // Helper methods with simplified implementations
@@ -178,12 +178,12 @@ public static class FretboardChordAnalyzer
 
     private static ImmutableArray<FingerPosition> GenerateFingerPositions(Position[] positions)
     {
-        return positions.Select((pos, i) => new FingerPosition(
+        return [.. positions.Select((pos, i) => new FingerPosition(
             (FingerType)(i % 4 + 1), // Simplified finger assignment
             pos.Location.Str.Value,
             pos.Location.Fret.Value,
             0.5f,
-            false)).ToImmutableArray();
+            false))];
     }
 
     private static double CalculateConsonance(PitchClassSet pcs)

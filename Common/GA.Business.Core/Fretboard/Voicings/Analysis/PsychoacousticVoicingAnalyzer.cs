@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.Core.Fretboard.Voicings.Analysis;
 
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
+using Positions;
+using Primitives;
 
 /// <summary>
 /// Analyzes voicings using psychoacoustic principles

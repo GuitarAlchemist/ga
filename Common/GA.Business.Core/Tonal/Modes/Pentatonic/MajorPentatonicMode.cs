@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Pentatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -15,10 +16,9 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
     IStaticEnumerable<MajorPentatonicMode>
 {
     private static readonly Lazy<ScaleModeCollection<MajorPentatonicScaleDegree, MajorPentatonicMode>>
-        _lazyModeByDegree = new(() => new(Items.ToImmutableList()));
+        _lazyModeByDegree = new(() => new([.. Items]));
 
-    public static IReadOnlyCollection<MajorPentatonicMode> All => MajorPentatonicScaleDegree.Items
-        .Select(degree => new MajorPentatonicMode(degree)).ToImmutableList();
+    public static IReadOnlyCollection<MajorPentatonicMode> All => [.. MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree))];
 
     public override string Name => ParentScaleDegree.Value switch
     {
@@ -30,8 +30,16 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    public static IEnumerable<MajorPentatonicMode> Items =>
-        MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree));
+    public static IEnumerable<MajorPentatonicMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<MajorPentatonicScaleDegree>.Items)
+            {
+                yield return new MajorPentatonicMode(degree);
+            }
+        }
+    }
 
     public override string ToString()
     {
@@ -48,3 +56,5 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

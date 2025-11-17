@@ -1,19 +1,15 @@
 namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
-using Microsoft.Extensions.Logging;
-
 /// <summary>
 /// Analyzes chord progressions using information theory
 /// </summary>
-public class ProgressionAnalyzer(ILogger<ProgressionAnalyzer> logger)
+public class ProgressionAnalyzer
 {
     /// <summary>
     /// Analyze a progression using information theory
     /// </summary>
     public ProgressionInfo AnalyzeProgression(ShapeGraph graph, List<FretboardShape> progression)
     {
-        logger.LogDebug("Analyzing progression with {Count} shapes", progression.Count);
-
         var entropy = ComputeEntropy(progression);
         var perplexity = Math.Pow(2, entropy);
         var complexity = ComputeComplexity(graph, progression);

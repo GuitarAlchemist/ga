@@ -84,7 +84,7 @@ public class MonadicMusicService
             let cacheKey = $"chord:{chordId}"
             let cached = Option<Chord>.OfNullable(deps.Cache.Get<Chord>(cacheKey))
             select cached.Match(
-                chord =>
+                _ =>
                 {
                     deps.Logger.LogInformation($"Cache hit for chord {chordId}");
                     return cached;

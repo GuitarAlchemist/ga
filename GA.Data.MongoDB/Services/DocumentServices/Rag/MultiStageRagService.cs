@@ -170,7 +170,7 @@ public abstract class MultiStageRagService<TDocument>(
         foreach (var doc in documents)
         {
             doc.GenerateSearchText();
-            doc.Embedding = (await EmbeddingService.GenerateEmbeddingAsync(doc.SearchText)).ToArray();
+            doc.Embedding = [.. (await EmbeddingService.GenerateEmbeddingAsync(doc.SearchText))];
         }
     }
 
@@ -202,7 +202,7 @@ public abstract class MultiStageRagService<TDocument>(
                 .Select(doc => new
                 {
                     Document = doc,
-                    Similarity = CosineSimilarity(queryEmbedding.ToArray(), doc.Embedding)
+                    Similarity = CosineSimilarity([.. queryEmbedding], doc.Embedding)
                 })
                 .OrderByDescending(x => x.Similarity)
                 .Take(limit)

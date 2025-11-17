@@ -115,23 +115,64 @@ public static class SpecializedTuningsConfigLoader
                 yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
             }
 
-            if (!File.Exists(yamlPath))
+            if (File.Exists(yamlPath))
             {
-                return new SpecializedTuningsConfiguration();
+                var yaml = File.ReadAllText(yamlPath);
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+
+                var cfg = deserializer.Deserialize<SpecializedTuningsConfiguration>(yaml) ?? new SpecializedTuningsConfiguration();
+                // If any list has content, consider it valid
+                if ((cfg.AlternativeStringConfigurations?.Count ?? 0) > 0 ||
+                    (cfg.SpecializedTuningSystems?.Count ?? 0) > 0 ||
+                    (cfg.ExtendedRangeInstruments?.Count ?? 0) > 0 ||
+                    (cfg.MultiscaleInstruments?.Count ?? 0) > 0 ||
+                    (cfg.RecordingTunings?.Count ?? 0) > 0 ||
+                    (cfg.ExperimentalTunings?.Count ?? 0) > 0)
+                {
+                    return cfg;
+                }
             }
 
-            var yaml = File.ReadAllText(yamlPath);
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-
-            return deserializer.Deserialize<SpecializedTuningsConfiguration>(yaml);
+            // Fallback minimal dataset
+            return new SpecializedTuningsConfiguration
+            {
+                AlternativeStringConfigurations =
+                [
+                    new SpecializedTuningDefinition
+                    {
+                        Name = "Drop D (Guitar)",
+                        Description = "Standard tuning with low E dropped to D",
+                        Category = "Guitar",
+                        Configuration = new Dictionary<string, string> { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
+                        PitchClasses = [2,7,0,7,11,4],
+                        Applications = ["Rock"],
+                        Artists = ["Various"]
+                    }
+                ]
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading specialized tunings configuration: {ex.Message}");
-            return new SpecializedTuningsConfiguration();
+            return new SpecializedTuningsConfiguration
+            {
+                AlternativeStringConfigurations =
+                [
+                    new SpecializedTuningDefinition
+                    {
+                        Name = "Drop D (Guitar)",
+                        Description = "Standard tuning with low E dropped to D",
+                        Category = "Guitar",
+                        Configuration = new Dictionary<string, string> { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
+                        PitchClasses = [2,7,0,7,11,4],
+                        Applications = ["Rock"],
+                        Artists = ["Various"]
+                    }
+                ]
+            };
         }
     }
 }

@@ -271,7 +271,7 @@ public class MongoDbService
 
         return new ChordStatistics
         {
-            TotalChords = totalCount,
+            TotalChords = (int)totalCount,
             QualityDistribution = qualityDistribution,
             ExtensionDistribution = extensionDistribution,
             StackingTypeDistribution = stackingDistribution,

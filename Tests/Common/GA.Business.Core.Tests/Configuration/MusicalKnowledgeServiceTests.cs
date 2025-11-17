@@ -4,7 +4,6 @@ namespace GA.Business.Core.Tests.Configuration;
 public class MusicalKnowledgeServiceTests
 {
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void MusicalKnowledgeService_ShouldProvideUnifiedSearch()
     {
         // Act
@@ -24,7 +23,6 @@ public class MusicalKnowledgeServiceTests
     }
 
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void MusicalKnowledgeService_ShouldProvideStatistics()
     {
         // Act
@@ -92,7 +90,6 @@ public class MusicalKnowledgeServiceTests
     }
 
     [Test]
-    [Ignore("Configuration files not loaded in test environment")]
     public void MusicalKnowledgeService_ShouldValidateAllConfigurations()
     {
         // Act

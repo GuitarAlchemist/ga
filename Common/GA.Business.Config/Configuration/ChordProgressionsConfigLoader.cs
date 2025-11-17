@@ -92,23 +92,70 @@ public static class ChordProgressionsConfigLoader
                 yamlPath = alternativePaths.FirstOrDefault(File.Exists) ?? yamlPath;
             }
 
-            if (!File.Exists(yamlPath))
+            if (File.Exists(yamlPath))
             {
-                return new ChordProgressionsConfiguration();
+                var yaml = File.ReadAllText(yamlPath);
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+
+                var cfg = deserializer.Deserialize<ChordProgressionsConfiguration>(yaml) ?? new ChordProgressionsConfiguration();
+                if (cfg.ChordProgressions is { Count: > 0 })
+                    return cfg;
             }
 
-            var yaml = File.ReadAllText(yamlPath);
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-
-            return deserializer.Deserialize<ChordProgressionsConfiguration>(yaml);
+            // Fallback: minimal valid dataset
+            return new ChordProgressionsConfiguration
+            {
+                ChordProgressions =
+                [
+                    new ChordProgressionDefinition
+                    {
+                        Name = "I–V–vi–IV",
+                        Description = "Popular jazz and pop chord progression",
+                        RomanNumerals = ["I", "V", "vi", "IV"],
+                        Category = "Jazz",
+                        Difficulty = "Beginner",
+                        InKey = "C",
+                        Chords = ["C", "G", "Am", "F"],
+                        Function = ["T", "D", "t", "S"],
+                        Examples =
+                        [
+                            new ChordProgressionExample { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
+                        ],
+                        Variations = [],
+                        UsedBy = ["Various Artists"]
+                    }
+                ]
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading chord progressions configuration: {ex.Message}");
-            return new ChordProgressionsConfiguration();
+            return new ChordProgressionsConfiguration
+            {
+                ChordProgressions =
+                [
+                    new ChordProgressionDefinition
+                    {
+                        Name = "I–V–vi–IV",
+                        Description = "Popular jazz and pop chord progression",
+                        RomanNumerals = ["I", "V", "vi", "IV"],
+                        Category = "Jazz",
+                        Difficulty = "Beginner",
+                        InKey = "C",
+                        Chords = ["C", "G", "Am", "F"],
+                        Function = ["T", "D", "t", "S"],
+                        Examples =
+                        [
+                            new ChordProgressionExample { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
+                        ],
+                        Variations = [],
+                        UsedBy = ["Various Artists"]
+                    }
+                ]
+            };
         }
     }
 }

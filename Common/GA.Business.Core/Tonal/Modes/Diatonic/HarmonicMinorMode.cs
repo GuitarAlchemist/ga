@@ -1,5 +1,6 @@
 ﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using global::GA.Core.Collections;
 using Primitives.Diatonic;
 using Scales;
 
@@ -15,7 +16,7 @@ public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorSc
     IStaticEnumerable<HarmonicMinorMode>
 {
     private static readonly Lazy<ScaleModeCollection<HarmonicMinorScaleDegree, HarmonicMinorMode>> _lazyModeByDegree =
-        new(() => new(Items.ToImmutableList()));
+        new(() => new([.. Items]));
 
     public static HarmonicMinorMode HarmonicMinorModeMinorScale => new(1);
     public static HarmonicMinorMode LocrianNaturalSixth => new(2);
@@ -37,8 +38,16 @@ public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorSc
         _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
     };
 
-    public static IEnumerable<HarmonicMinorMode> Items =>
-        HarmonicMinorScaleDegree.Items.Select(degree => new HarmonicMinorMode(degree));
+    public static IEnumerable<HarmonicMinorMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<HarmonicMinorScaleDegree>.Items)
+            {
+                yield return new HarmonicMinorMode(degree);
+            }
+        }
+    }
 
     public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree)
     {
@@ -50,3 +59,5 @@ public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorSc
         return _lazyModeByDegree.Value[degree];
     }
 }
+
+

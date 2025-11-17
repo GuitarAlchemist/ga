@@ -1,8 +1,8 @@
 namespace GA.MusicTheory.Service.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using GA.MusicTheory.Service.Models;
-using GA.MusicTheory.Service.Services;
+using Models;
+using Services;
 
 /// <summary>
 /// Simple, intuitive API for querying chords

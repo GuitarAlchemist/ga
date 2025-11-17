@@ -1,0 +1,26 @@
+﻿# Frontend / Node
+node_modules/
+dist/
+
+# Rust build artifacts for the WASM guitar engine
+rust-engine/target/
+
+# WASM binary copied to public for the demo
+public/guitar_engine.wasm
+
+# Playwright recordings, analysis reports, and spectrograms
+playwright-downloads/
+
+# Reference-derived artifacts (keep the .wav, ignore derived files)
+reference/*.mp3
+reference/*-spectrogram.png
+
+# Local DDSP checkpoints (large model files, not for git)
+ddsp-checkpoints/
+
+# Generic logs
+*.log
+
+
+# Large ONNX models for local critics
+critic/*.onnx

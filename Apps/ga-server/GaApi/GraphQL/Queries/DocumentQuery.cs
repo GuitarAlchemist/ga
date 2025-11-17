@@ -153,7 +153,7 @@ public class DocumentQuery
         {
             AnalysisDate = analysis.AnalysisDate,
             TotalGaps = analysis.TotalGaps,
-            Gaps = analysis.Gaps.Select(g => new KnowledgeGapType
+            Gaps = [.. analysis.Gaps.Select(g => new KnowledgeGapType
             {
                 Category = g.Category,
                 Topic = g.Topic,
@@ -163,7 +163,7 @@ public class DocumentQuery
                 PriorityReason = g.PriorityReason,
                 DependentTopics = g.DependentTopics,
                 EstimatedLearningTimeMinutes = g.EstimatedLearningTimeMinutes
-            }).ToList()
+            })]
         };
     }
 
@@ -181,7 +181,7 @@ public class DocumentQuery
             .Limit(limit)
             .ToListAsync();
 
-        return documents.Select(MapBsonToCurationDecision).ToList();
+        return [.. documents.Select(MapBsonToCurationDecision)];
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public class DocumentQuery
             .Limit(limit)
             .ToListAsync();
 
-        return documents.Select(MapBsonToProcessedDocument).ToList();
+        return [.. documents.Select(MapBsonToProcessedDocument)];
     }
 
     // Helper methods for mapping BSON to GraphQL types
@@ -229,19 +229,19 @@ public class DocumentQuery
             ExtractedKnowledge = extractedKnowledge != null ? new ExtractedKnowledgeType
             {
                 ChordProgressions = extractedKnowledge.Contains("chord_progressions")
-                    ? extractedKnowledge["chord_progressions"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["chord_progressions"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Scales = extractedKnowledge.Contains("scales")
-                    ? extractedKnowledge["scales"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["scales"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Techniques = extractedKnowledge.Contains("techniques")
-                    ? extractedKnowledge["techniques"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["techniques"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 Concepts = extractedKnowledge.Contains("concepts")
-                    ? extractedKnowledge["concepts"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["concepts"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 KeyInsights = extractedKnowledge.Contains("key_insights")
-                    ? extractedKnowledge["key_insights"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. extractedKnowledge["key_insights"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>()
             } : null,
             Metadata = metadata != null ? new DocumentMetadataType
@@ -276,10 +276,10 @@ public class DocumentQuery
             QualityScore = doc.Contains("qualityScore") ? doc["qualityScore"].AsDouble : 0.0,
             Reasoning = doc.GetValue("reasoning", "").AsString,
             PositiveFactors = doc.Contains("positiveFactors")
-                ? doc["positiveFactors"].AsBsonArray.Select(x => x.AsString).ToList()
+                ? [.. doc["positiveFactors"].AsBsonArray.Select(x => x.AsString)]
                 : new List<string>(),
             NegativeFactors = doc.Contains("negativeFactors")
-                ? doc["negativeFactors"].AsBsonArray.Select(x => x.AsString).ToList()
+                ? [.. doc["negativeFactors"].AsBsonArray.Select(x => x.AsString)]
                 : new List<string>(),
             RelatedGap = relatedGap != null ? new KnowledgeGapType
             {
@@ -290,7 +290,7 @@ public class DocumentQuery
                 SuggestedSearchQuery = relatedGap.GetValue("suggestedSearchQuery", "").AsString,
                 PriorityReason = relatedGap.GetValue("priorityReason", "").AsString,
                 DependentTopics = relatedGap.Contains("dependentTopics")
-                    ? relatedGap["dependentTopics"].AsBsonArray.Select(x => x.AsString).ToList()
+                    ? [.. relatedGap["dependentTopics"].AsBsonArray.Select(x => x.AsString)]
                     : new List<string>(),
                 EstimatedLearningTimeMinutes = relatedGap.Contains("estimatedLearningTimeMinutes")
                     ? relatedGap["estimatedLearningTimeMinutes"].AsInt32

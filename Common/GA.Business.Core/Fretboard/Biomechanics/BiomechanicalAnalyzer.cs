@@ -179,7 +179,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             hasBarreChord,
             usesThumb,
             $"Finger span of {fingerSpan} frets",
-            recommendations.ToImmutableList()
+            [.. recommendations]
         );
     }
 
@@ -190,18 +190,44 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             return new WristPostureAnalysis(0, PostureType.Neutral, true);
         }
 
-        // Simplified wrist angle calculation
-        var avgFret = fretPositions.Average(p => p.Fret);
-        var wristAngle = avgFret < 5 ? 15.0 : avgFret < 12 ? 10.0 : 5.0;
+        // Filter out open strings for fret span calculation
+        var frettedPositions = fretPositions.Where(p => p.Fret > 0).ToList();
+
+        // If all strings are open or muted, it's neutral posture
+        if (frettedPositions.Count == 0)
+        {
+            return new WristPostureAnalysis(0, PostureType.Neutral, true);
+        }
+
+        // Calculate wrist angle based on position and fret span
+        var avgFret = frettedPositions.Average(p => p.Fret);
+        var minFret = frettedPositions.Min(p => p.Fret);
+        var maxFret = frettedPositions.Max(p => p.Fret);
+        var fretSpan = maxFret - minFret;
+
+        // Base angle from position (higher positions require more wrist flexion)
+        var baseAngle = avgFret switch
+        {
+            < 5 => 5.0,   // Low position - neutral
+            < 9 => 10.0,  // Mid position - slight flexion
+            < 12 => 15.0, // High position - moderate flexion
+            _ => 25.0     // Very high position - extended
+        };
+
+        // Add angle for wide stretches (each fret of span adds wrist extension)
+        var stretchPenalty = fretSpan > 3 ? (fretSpan - 3) * 5.0 : 0.0;
+
+        var wristAngle = baseAngle + stretchPenalty;
 
         var postureType = wristAngle switch
         {
-            < 5 => PostureType.Neutral,
-            < 10 => PostureType.SlightlyFlexed,
+            < 10 => PostureType.Neutral,
+            < 15 => PostureType.SlightlyFlexed,
             < 20 => PostureType.Flexed,
             _ => PostureType.Extended
         };
 
+        // Ergonomic if angle < 20 degrees (neutral to flexed range)
         var isErgonomic = wristAngle < 20;
 
         return new WristPostureAnalysis(wristAngle, postureType, isErgonomic);

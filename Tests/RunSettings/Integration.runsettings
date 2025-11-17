@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Integration: run ONLY tests marked with [Category("Integration")] -->
+  <NUnit>
+    <Where>cat == Integration</Where>
+  </NUnit>
+  <RunConfiguration>
+    <MaxCpuCount>0</MaxCpuCount>
+  </RunConfiguration>
+</RunSettings>

@@ -15,7 +15,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     /// <param name="values">The values to include in the list</param>
     public ValueList(IEnumerable<T> values)
     {
-        _values = values.ToImmutableList();
+        _values = [.. values];
     }
 
     /// <summary>

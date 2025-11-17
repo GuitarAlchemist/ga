@@ -14,7 +14,7 @@ public class KnowledgeGapAnalysis
     /// </summary>
     public List<KnowledgeGap> GetGapsByPriority(string priority)
     {
-        return Gaps.Where(g => g.Priority.Equals(priority, StringComparison.OrdinalIgnoreCase)).ToList();
+        return [.. Gaps.Where(g => g.Priority.Equals(priority, StringComparison.OrdinalIgnoreCase))];
     }
 
     /// <summary>
@@ -22,7 +22,7 @@ public class KnowledgeGapAnalysis
     /// </summary>
     public List<KnowledgeGap> GetGapsByCategory(string category)
     {
-        return Gaps.Where(g => g.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+        return [.. Gaps.Where(g => g.Category.Equals(category, StringComparison.OrdinalIgnoreCase))];
     }
 
     /// <summary>
@@ -38,10 +38,9 @@ public class KnowledgeGapAnalysis
             { "Low", 3 }
         };
 
-        return Gaps
+        return [.. Gaps
             .OrderBy(g => priorityOrder.GetValueOrDefault(g.Priority, 999))
-            .Take(count)
-            .ToList();
+            .Take(count)];
     }
 }
 

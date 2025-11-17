@@ -129,7 +129,7 @@ public static class ChordTemplateRegistry
 
     private static ChordTemplate[] BuildAllTemplates()
     {
-        return ChordTemplateFactory.GenerateAllPossibleChords().ToArray();
+        return [.. ChordTemplateFactory.GenerateAllPossibleChords()];
     }
 
     private static ChordInterpretation[] AnalyzeAllInterpretations(PitchClassSet pitchClassSet)
@@ -156,7 +156,7 @@ public static class ChordTemplateRegistry
         }
 
         // Sort by likelihood (highest first)
-        return interpretations.OrderByDescending(i => i.RootLikelihood).ToArray();
+        return [.. interpretations.OrderByDescending(i => i.RootLikelihood)];
     }
 
     private static double CalculateRootLikelihood(PitchClassSet pitchClassSet, PitchClass root)

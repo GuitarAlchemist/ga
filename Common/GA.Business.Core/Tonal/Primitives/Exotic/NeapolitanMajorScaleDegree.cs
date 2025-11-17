@@ -27,7 +27,7 @@ public readonly record struct NeapolitanMajorScaleDegree : IRangeValueObject<Nea
     public static IReadOnlyCollection<NeapolitanMajorScaleDegree> Items =>
         ValueObjectUtils<NeapolitanMajorScaleDegree>.Items;
 
-    public static IReadOnlyCollection<int> Values => Items.Select(degree => degree.Value).ToImmutableList();
+    public static IReadOnlyCollection<int> Values => [.. Items.Select(degree => degree.Value)];
 
     // Static instances for convenience
     public static NeapolitanMajorScaleDegree NeapolitanMajor => new(1);

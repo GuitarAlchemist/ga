@@ -1,6 +1,6 @@
 using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
-using GA.Data.MongoDB.Services.Embeddings;
+using GA.Business.Core.AI.Services.Embeddings;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +50,10 @@ if (args.Length > 0)
         case "asset-delete":
             await RunAssetDelete(args, configuration);
             return;
+
+        case "gpu-voicing-search":
+            await RunGpuVoicingSearch(args);
+            return;
     }
 }
 
@@ -61,11 +65,14 @@ WriteLine("  analyze-progression    Analyze biomechanical playability of a chord
 WriteLine("  asset-import           Import 3D assets (GLB files) into the asset library");
 WriteLine("  asset-list             List all imported assets");
 WriteLine("  asset-delete           Delete an asset by ID");
+WriteLine("  gpu-voicing-search [N] GPU-accelerated semantic voicing search demo");
+WriteLine("                         Optional: 1=Quick, 2=Performance, 3=Batch, 4=Interactive, 5=Stats");
 WriteLine();
 WriteLine("Examples:");
 WriteLine("  dotnet run -- analyze-chord Cmaj7 --hand-size Medium --verbose");
 WriteLine("  dotnet run -- analyze-progression C,Am,F,G --hand-size Large");
 WriteLine("  dotnet run -- asset-import path/to/model.glb --category Gems --license \"CC BY 4.0\"");
+WriteLine("  dotnet run -- gpu-voicing-search 2    # Run performance benchmark directly");
 WriteLine("  dotnet run -- asset-import path/to/assets --directory --category Architecture");
 WriteLine("  dotnet run -- asset-list --category Gems --verbose");
 WriteLine("  dotnet run -- asset-delete <asset-id>");
@@ -352,4 +359,15 @@ static string? GetArgValue(string[] args, string argName)
     }
 
     return null;
+}
+
+static async Task RunGpuVoicingSearch(string[] args)
+{
+    var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+    var logger = loggerFactory.CreateLogger<GpuVoicingSearchCommand>();
+    var command = new GpuVoicingSearchCommand(logger);
+
+    // Pass demo choice if provided (args[1] since args[0] is the command name)
+    var demoChoice = args.Length > 1 ? args[1] : null;
+    await command.ExecuteAsync(demoChoice);
 }

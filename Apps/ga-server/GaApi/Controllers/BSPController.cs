@@ -57,15 +57,15 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                     Name = result.Region.Name,
                     TonalityType = result.Region.TonalityType.ToString(),
                     TonalCenter = (int)result.Region.TonalCenter,
-                    PitchClasses = result.Region.PitchClassSet.Select(pc => pc.ToString()).ToList()
+                    PitchClasses = [.. result.Region.PitchClassSet.Select(pc => pc.ToString())]
                 },
-                Elements = result.Elements.Select(e => new BspElementDto
+                Elements = [.. result.Elements.Select(e => new BspElementDto
                 {
                     Name = e.Name,
                     TonalityType = e.TonalityType.ToString(),
                     TonalCenter = (int)e.TonalCenter,
-                    PitchClasses = e.PitchClassSet.Select(pc => pc.ToString()).ToList()
-                }).ToList(),
+                    PitchClasses = [.. e.PitchClassSet.Select(pc => pc.ToString())]
+                })],
                 Confidence = result.Confidence,
                 QueryTimeMs = result.QueryTime.TotalMilliseconds
             };
@@ -113,7 +113,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                     Name = result.Region.Name,
                     TonalityType = result.Region.TonalityType.ToString(),
                     TonalCenter = (int)result.Region.TonalCenter,
-                    PitchClasses = result.Region.PitchClassSet.Select(pc => pc.ToString()).ToList()
+                    PitchClasses = [.. result.Region.PitchClassSet.Select(pc => pc.ToString())]
                 },
                 Confidence = result.Confidence,
                 QueryTimeMs = result.QueryTime.TotalMilliseconds,
@@ -180,7 +180,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                         Name = context.Region.Name,
                         TonalityType = context.Region.TonalityType.ToString(),
                         TonalCenter = (int)context.Region.TonalCenter,
-                        PitchClasses = context.Region.PitchClassSet.Select(pc => pc.ToString()).ToList()
+                        PitchClasses = [.. context.Region.PitchClassSet.Select(pc => pc.ToString())]
                     },
                     Confidence = context.Confidence,
                     QueryTimeMs = context.QueryTime.TotalMilliseconds
@@ -211,7 +211,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
 
             var response = new BspProgressionAnalysisResponse
             {
-                Progression = request.Chords.Select(c => c.Name).ToList(),
+                Progression = [.. request.Chords.Select(c => c.Name)],
                 ChordAnalyses = chordAnalyses,
                 Transitions = transitions,
                 OverallAnalysis = new BspOverallAnalysisDto
@@ -249,7 +249,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                 RootRegion = "Chromatic Space",
                 TotalRegions = 3, // Root + Major + Minor
                 MaxDepth = 2,
-                PartitionStrategies = Enum.GetNames<TonalPartitionStrategy>().ToList(),
+                PartitionStrategies = [.. Enum.GetNames<TonalPartitionStrategy>()],
                 SupportedOperations =
                 [
                     "Spatial Query",
@@ -337,7 +337,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                     Name = node.Region.Name,
                     TonalityType = node.Region.TonalityType.ToString(),
                     TonalCenter = (int)node.Region.TonalCenter,
-                    PitchClasses = node.Region.PitchClassSet.Select(pc => pc.ToString()).ToList()
+                    PitchClasses = [.. node.Region.PitchClassSet.Select(pc => pc.ToString())]
                 },
                 IsLeaf = node.IsLeaf,
                 Depth = depth
@@ -345,13 +345,13 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
 
             if (node.IsLeaf)
             {
-                nodeDto.Elements = node.Elements.Select(e => new BspElementDto
+                nodeDto.Elements = [.. node.Elements.Select(e => new BspElementDto
                 {
                     Name = e.Name,
                     TonalityType = e.TonalityType.ToString(),
                     TonalCenter = (int)e.TonalCenter,
-                    PitchClasses = e.PitchClassSet.Select(pc => pc.ToString()).ToList()
-                }).ToList();
+                    PitchClasses = [.. e.PitchClassSet.Select(pc => pc.ToString())]
+                })];
             }
             else if (node.PartitionPlane != null)
             {
@@ -422,7 +422,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
                 Name = node.Region.Name,
                 TonalityType = node.Region.TonalityType.ToString(),
                 TonalCenter = (int)node.Region.TonalCenter,
-                PitchClasses = node.Region.PitchClassSet.Select(pc => pc.ToString()).ToList()
+                PitchClasses = [.. node.Region.PitchClassSet.Select(pc => pc.ToString())]
             },
             IsLeaf = node.IsLeaf,
             Depth = depth
@@ -431,13 +431,13 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
         if (node.IsLeaf)
         {
             regionCount++;
-            nodeDto.Elements = node.Elements.Select(e => new BspElementDto
+            nodeDto.Elements = [.. node.Elements.Select(e => new BspElementDto
             {
                 Name = e.Name,
                 TonalityType = e.TonalityType.ToString(),
                 TonalCenter = (int)e.TonalCenter,
-                PitchClasses = e.PitchClassSet.Select(pc => pc.ToString()).ToList()
-            }).ToList();
+                PitchClasses = [.. e.PitchClassSet.Select(pc => pc.ToString())]
+            })];
         }
         else
         {

@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.AI;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard.Shapes;
+using Core.Atonal;
+using Core.Fretboard.Shapes;
 using JetBrains.Annotations;
 
 /// <summary>

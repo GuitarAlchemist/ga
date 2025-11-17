@@ -1,5 +1,8 @@
 namespace GA.Core.Collections;
 
+using System;
+using System.Text;
+
 [PublicAPI]
 public sealed class ValueObjectCollection<T> : IReadOnlyCollection<T>
     where T : IRangeValueObject<T>
@@ -108,17 +111,37 @@ public sealed class ValueObjectCollection<T> : IReadOnlyCollection<T>
     public struct Enumerator : IEnumerator<T>
     {
         private readonly T[] _source;
+        private readonly int _start;
         private readonly int _end;
         private int _index;
 
         public Enumerator(T[] source, int start, int count)
         {
             _source = source;
-            _end = start + count;
+            _start = start;
+            // Clamp the logical end to the underlying array length to prevent
+            // accidental out-of-range access when the backing cache is empty
+            // or smaller than the requested window (defensive programming).
+            var desiredEnd = start + count;
+            _end = desiredEnd <= source.Length ? desiredEnd : source.Length;
             _index = start - 1;
         }
 
-        public readonly T Current => _source[_index];
+        public readonly T Current
+        {
+            get
+            {
+                // Per IEnumerator contract, Current is undefined before the first MoveNext()
+                // and after MoveNext() has returned false. Throw a well-defined exception
+                // rather than indexing out of range or exposing elements outside the view window.
+                if (_index < _start || _index >= _end)
+                {
+                    throw new InvalidOperationException("Enumeration has not started or has already finished.");
+                }
+
+                return _source[_index];
+            }
+        }
 
         readonly object IEnumerator.Current => Current!;
 
@@ -142,47 +165,5 @@ public sealed class ValueObjectCollection<T> : IReadOnlyCollection<T>
         public void Dispose()
         {
         }
-    }
-}
-
-internal static class ValueObjectCache<T>
-    where T : IRangeValueObject<T>
-{
-    internal static readonly int Min = T.Min.Value;
-    internal static readonly int Max = T.Max.Value;
-    internal static readonly int Count = Max - Min + 1;
-    internal static readonly T[] AllItems = CreateItems();
-    internal static readonly ImmutableArray<int> AllValues = CreateValues();
-
-    private static T[] CreateItems()
-    {
-        if (Count <= 0)
-        {
-            return [];
-        }
-
-        var array = new T[Count];
-        for (var i = 0; i < Count; i++)
-        {
-            array[i] = T.FromValue(Min + i);
-        }
-
-        return array;
-    }
-
-    private static ImmutableArray<int> CreateValues()
-    {
-        if (Count <= 0)
-        {
-            return [];
-        }
-
-        var builder = ImmutableArray.CreateBuilder<int>(Count);
-        for (var i = 0; i < Count; i++)
-        {
-            builder.Add(Min + i);
-        }
-
-        return builder.MoveToImmutable();
     }
 }

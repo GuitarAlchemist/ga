@@ -57,7 +57,7 @@ internal class Program
         foreach (var query in queries)
         {
             AnsiConsole.Status()
-                .Start($"Searching for: {query}", ctx =>
+                .Start($"Searching for: {query}", _ =>
                 {
                     // Simulate semantic search
                     Thread.Sleep(500);
@@ -100,7 +100,7 @@ internal class Program
             AnsiConsole.MarkupLine($"[bold yellow]Q:[/] {question}");
 
             AnsiConsole.Status()
-                .Start("AI is thinking...", ctx => { Thread.Sleep(800); });
+                .Start("AI is thinking...", _ => { Thread.Sleep(800); });
 
             AnsiConsole.MarkupLine($"[bold green]A:[/] {answer}\n");
         }
@@ -164,7 +164,7 @@ internal class Program
         foreach (var style in styles)
         {
             AnsiConsole.Status()
-                .Start($"Generating {style} progression...", ctx => { Thread.Sleep(600); });
+                .Start($"Generating {style} progression...", _ => { Thread.Sleep(600); });
 
             var progression = await GenerateProgression(style);
 

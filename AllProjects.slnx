@@ -1,7 +1,5 @@
 <Solution>
   <Configurations>
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
     <Platform Name="x86" />
@@ -60,7 +58,7 @@
     <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
     <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj" />
-    <Project Path="Common\GA.Business.Config\GA.Business.Config.fsproj" Type="Classic F#">
+    <Project Path="Common\GA.Business.Config\GA.Business.Config.fsproj" Type="F#">
       <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
       <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
       <Configuration Solution="Release|x64" Project="Release|Any CPU" />
@@ -191,8 +189,10 @@
     <File Path="Scripts/START_SERVICES_README.md" />
     <File Path="Scripts/test-chatbot.ps1" />
     <File Path="Scripts/test-chord-api.ps1" />
+    <File Path="Scripts/test-integration.ps1" />
     <File Path="Scripts/test-mcp-servers.ps1" />
     <File Path="Scripts/test-music-generation.ps1" />
+    <File Path="Scripts/test-unit.ps1" />
     <File Path="Scripts/test-vector-search.ps1" />
     <File Path="Scripts/TEST_SUITE_README.md" />
     <File Path="Scripts\create-microservices.ps1" />
@@ -213,6 +213,7 @@
     <File Path="Scripts\replace-newtonsoft-with-systemtextjson.ps1" />
     <File Path="Scripts\fix-blazor-build-errors.ps1" />
     <File Path="Scripts\test-voicing-search-api.ps1" />
+    <File Path="Scripts\test-ilgpu-performance.ps1" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="DevNotes.txt" />

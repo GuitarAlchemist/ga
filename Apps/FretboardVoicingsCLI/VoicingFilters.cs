@@ -1,11 +1,8 @@
 ﻿namespace FretboardVoicingsCLI;
 
-using GA.Business.Core.Fretboard.Voicings;
-using GA.Business.Core.Chords;
 using GA.Business.Core.Fretboard.Voicings.Analysis;
 using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard.Voicings.Filtering;
-using GA.Business.Core.Tonal;
 
 /// <summary>
 /// Filters voicings based on specified criteria

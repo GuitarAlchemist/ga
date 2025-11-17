@@ -1,54 +1,39 @@
 ﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
 
-using System.Diagnostics;
 using Core;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Enhanced voicing search service with support for multiple search strategies
 /// including GPU-accelerated ILGPU and in-memory search
 /// </summary>
-public class EnhancedVoicingSearchService
+public class EnhancedVoicingSearchService(
+    VoicingIndexingService indexingService,
+    IVoicingSearchStrategy searchStrategy)
 {
-    private readonly ILogger<EnhancedVoicingSearchService> _logger;
-    private readonly VoicingIndexingService _indexingService;
-    private readonly IVoicingSearchStrategy _searchStrategy;
-    private bool _isInitialized;
-
-    public EnhancedVoicingSearchService(
-        ILogger<EnhancedVoicingSearchService> logger,
-        VoicingIndexingService indexingService,
-        IVoicingSearchStrategy searchStrategy)
-    {
-        _logger = logger;
-        _indexingService = indexingService;
-        _searchStrategy = searchStrategy;
-    }
-
     /// <summary>
     /// Gets the name of the current search strategy
     /// </summary>
-    public string StrategyName => _searchStrategy.Name;
+    public string StrategyName => searchStrategy.Name;
 
     /// <summary>
     /// Gets whether the search strategy is available
     /// </summary>
-    public bool IsAvailable => _searchStrategy.IsAvailable;
+    public bool IsAvailable => searchStrategy.IsAvailable;
 
     /// <summary>
     /// Gets whether the service is initialized
     /// </summary>
-    public bool IsInitialized => _isInitialized;
+    public bool IsInitialized { get; private set; }
 
     /// <summary>
     /// Gets the number of indexed documents
     /// </summary>
-    public int DocumentCount => _indexingService.DocumentCount;
+    public int DocumentCount => indexingService.DocumentCount;
 
     /// <summary>
     /// Gets performance statistics
     /// </summary>
-    public VoicingSearchPerformance Performance => _searchStrategy.Performance;
+    public VoicingSearchPerformance Performance => searchStrategy.Performance;
 
     /// <summary>
     /// Initialize the service with embeddings for all indexed documents
@@ -58,64 +43,46 @@ public class EnhancedVoicingSearchService
         Func<string, Task<double[]>> embeddingGenerator,
         CancellationToken cancellationToken = default)
     {
-        if (!_searchStrategy.IsAvailable)
-            throw new InvalidOperationException($"Search strategy '{_searchStrategy.Name}' is not available");
+        if (!searchStrategy.IsAvailable)
+            throw new InvalidOperationException($"Search strategy '{searchStrategy.Name}' is not available");
 
-        _logger.LogInformation("Initializing voicing embeddings using {Strategy} strategy...", _searchStrategy.Name);
-        var stopwatch = Stopwatch.StartNew();
+        var documents = indexingService.Documents;
+        var voicingEmbeddings = new List<VoicingEmbedding>(documents.Count);
 
-        try
+        // Process all embeddings in parallel for maximum speed
+        var embeddingTasks = documents.Select(async doc =>
         {
-            var documents = _indexingService.Documents;
-            var voicingEmbeddings = new List<VoicingEmbedding>(documents.Count);
+            var embedding = await embeddingGenerator(doc.SearchableText);
 
-            // Process all embeddings in parallel for maximum speed
-            var embeddingTasks = documents.Select(async doc =>
-            {
-                var embedding = await embeddingGenerator(doc.SearchableText);
+            return new VoicingEmbedding(
+                doc.Id,
+                doc.ChordName ?? "Unknown",
+                doc.VoicingType,
+                doc.Position,
+                doc.Difficulty,
+                doc.ModeName,
+                doc.ModalFamily,
+                doc.SemanticTags,
+                doc.PrimeFormId ?? "",
+                doc.TranslationOffset,
+                doc.Diagram,
+                doc.MidiNotes,
+                doc.PitchClassSet,
+                doc.IntervalClassVector,
+                doc.MinFret,
+                doc.MaxFret,
+                doc.BarreRequired,
+                doc.HandStretch,
+                doc.YamlAnalysis,
+                embedding);
+        }).ToList();
 
-                return new VoicingEmbedding(
-                    doc.Id,
-                    doc.ChordName ?? "Unknown",
-                    doc.VoicingType,
-                    doc.Position,
-                    doc.Difficulty,
-                    doc.ModeName,
-                    doc.ModalFamily,
-                    doc.SemanticTags,
-                    doc.PrimeFormId ?? "",
-                    doc.TranslationOffset,
-                    doc.Diagram,
-                    doc.MidiNotes,
-                    doc.PitchClassSet,
-                    doc.IntervalClassVector,
-                    doc.MinFret,
-                    doc.MaxFret,
-                    doc.BarreRequired,
-                    doc.HandStretch,
-                    doc.YamlAnalysis,
-                    embedding);
-            }).ToList();
+        // Wait for all embeddings to complete
+        var results = await Task.WhenAll(embeddingTasks);
+        voicingEmbeddings.AddRange(results);
 
-            // Wait for all embeddings to complete
-            var results = await Task.WhenAll(embeddingTasks);
-            voicingEmbeddings.AddRange(results);
-
-            _logger.LogInformation("Loaded {Count} pre-generated embeddings", voicingEmbeddings.Count);
-
-            await _searchStrategy.InitializeAsync(voicingEmbeddings);
-            _isInitialized = true;
-
-            stopwatch.Stop();
-            _logger.LogInformation(
-                "Initialized {Count} voicing embeddings using {Strategy} in {ElapsedMs}ms",
-                voicingEmbeddings.Count, _searchStrategy.Name, stopwatch.ElapsedMilliseconds);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize voicing embeddings");
-            throw;
-        }
+        await searchStrategy.InitializeAsync(voicingEmbeddings);
+        IsInitialized = true;
     }
 
     /// <summary>
@@ -130,35 +97,14 @@ public class EnhancedVoicingSearchService
     {
         EnsureInitialized();
 
-        _logger.LogInformation("Searching voicings for query: {Query}", query);
-        var stopwatch = Stopwatch.StartNew();
+        var queryEmbedding = await embeddingGenerator(query);
 
-        try
+        if (filters != null)
         {
-            var queryEmbedding = await embeddingGenerator(query);
-
-            List<VoicingSearchResult> results;
-            if (filters != null)
-            {
-                results = await _searchStrategy.HybridSearchAsync(queryEmbedding, filters, topK);
-            }
-            else
-            {
-                results = await _searchStrategy.SemanticSearchAsync(queryEmbedding, topK);
-            }
-
-            stopwatch.Stop();
-            _logger.LogInformation(
-                "Found {Count} results for query '{Query}' in {ElapsedMs}ms using {Strategy}",
-                results.Count, query, stopwatch.ElapsedMilliseconds, _searchStrategy.Name);
-
-            return results;
+            return await searchStrategy.HybridSearchAsync(queryEmbedding, filters, topK);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error searching voicings for query: {Query}", query);
-            throw;
-        }
+
+        return await searchStrategy.SemanticSearchAsync(queryEmbedding, topK);
     }
 
     /// <summary>
@@ -171,25 +117,7 @@ public class EnhancedVoicingSearchService
     {
         EnsureInitialized();
 
-        _logger.LogInformation("Finding voicings similar to: {VoicingId}", voicingId);
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            var results = await _searchStrategy.FindSimilarVoicingsAsync(voicingId, topK);
-
-            stopwatch.Stop();
-            _logger.LogInformation(
-                "Found {Count} similar voicings to '{VoicingId}' in {ElapsedMs}ms using {Strategy}",
-                results.Count, voicingId, stopwatch.ElapsedMilliseconds, _searchStrategy.Name);
-
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error finding similar voicings for: {VoicingId}", voicingId);
-            throw;
-        }
+        return await searchStrategy.FindSimilarVoicingsAsync(voicingId, topK);
     }
 
     /// <summary>
@@ -197,13 +125,12 @@ public class EnhancedVoicingSearchService
     /// </summary>
     public VoicingSearchStats GetStats()
     {
-        return _searchStrategy.GetStats();
+        return searchStrategy.GetStats();
     }
 
     private void EnsureInitialized()
     {
-        if (!_isInitialized)
+        if (!IsInitialized)
             throw new InvalidOperationException("Service not initialized. Call InitializeEmbeddingsAsync first.");
     }
 }
-

@@ -22,9 +22,9 @@ public class InvariantAnalyticsServiceTests
         _memoryCache.Dispose();
     }
 
-    private InvariantAnalyticsService _analyticsService;
-    private Mock<ILogger<InvariantAnalyticsService>> _mockLogger;
-    private IMemoryCache _memoryCache;
+    private InvariantAnalyticsService _analyticsService = null!;
+    private Mock<ILogger<InvariantAnalyticsService>> _mockLogger = null!;
+    private IMemoryCache _memoryCache = null!;
 
     [Test]
     public void RecordValidation_ValidInput_ShouldRecordMetrics()

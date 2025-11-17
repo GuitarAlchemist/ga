@@ -1,6 +1,7 @@
 namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 using Business.Core.Chords;
+using Business.Core.Notes.Extensions;
 using Embeddings;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
@@ -25,11 +26,10 @@ public sealed class ChordRagSyncService(
                     Name = template.PitchClassSet.Name,
                     Root = template.PitchClassSet.Notes.First().ToString(),
                     Quality = DetermineQuality(template),
-                    Intervals = template.PitchClassSet.Notes
+                    Intervals = [.. template.PitchClassSet.Notes
                         .Skip(1)
-                        .Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())
-                        .ToList(),
-                    Notes = template.PitchClassSet.Notes.Select(n => n.ToString()).ToList(),
+                        .Select(n => template.PitchClassSet.Notes.First().GetInterval(n).ToString())],
+                    Notes = [.. template.PitchClassSet.Notes.Select(n => n.ToString())],
                     RelatedScales = GetRelatedScales(template),
                     CommonProgressions = GetCommonProgressions(template),
                     CreatedAt = DateTime.UtcNow,
@@ -41,7 +41,7 @@ public sealed class ChordRagSyncService(
             foreach (var doc in documents)
             {
                 doc.GenerateSearchText();
-                doc.Embedding = (await _embeddingService.GenerateEmbeddingAsync(doc.SearchText)).ToArray();
+                doc.Embedding = [.. (await _embeddingService.GenerateEmbeddingAsync(doc.SearchText))];
             }
 
             await _mongoDb.ChordsRag.DeleteManyAsync(Builders<ChordRagEmbedding>.Filter.Empty);

@@ -1,7 +1,9 @@
-﻿namespace GA.Business.Core.Atonal.Primitives;
+namespace GA.Business.Core.Atonal.Primitives;
 
+using GA.Core.Collections;
 using Notes;
 using Notes.Extensions;
+using System.Numerics;
 
 /// <summary>
 ///     A pitch class set ID
@@ -21,7 +23,9 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     static PitchClassSetId()
     {
-        Items = IStaticReadonlyCollectionFromValues<PitchClassSetId>.Items;
+        // Build items explicitly to avoid any potential circular static initialization
+        _items = BuildAllItems();
+        Items = _items;
         _lazyByValue = new(() => Items.ToImmutableDictionary(id => id.Value));
     }
 
@@ -73,6 +77,22 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// </remarks>
     public PitchClassSetId Inverse => new(MirrorValue(Value));
 
+    /// <summary>
+    ///     Number of pitch classes (bits) set to 1. Uses fast popcount.
+    /// </summary>
+    public int Cardinality => BitOperations.PopCount((uint)(Value & Mask12));
+
+    /// <summary>
+    ///     Transpose this set by the given number of semitones (bit-rotate within 12 bits).
+    /// </summary>
+    public PitchClassSetId Transpose(int semitones)
+    {
+        var n = ((semitones % 12) + 12) % 12;
+        var v = (uint)Value & Mask12;
+        var rot = ((v << n) | (v >> (12 - n))) & Mask12;
+        return new PitchClassSetId((int)rot);
+    }
+
     #region Static Helpers
 
     /// <summary>
@@ -95,20 +115,18 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
         static int GetBase12Value(IReadOnlySet<PitchClass> pitchClassesSet)
         {
+            // Compute 12-bit mask directly from 0..11 to avoid dependency on cached PitchClass collections
             var value = 0;
-            var index = 0;
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var pitchClass in PitchClass.Items)
+            for (var i = 0; i < 12; i++)
             {
-                var weight = 1 << index++;
-                if (pitchClassesSet.Contains(pitchClass))
+                var pc = PitchClass.FromValue(i);
+                if (pitchClassesSet.Contains(pc))
                 {
-                    value += weight;
+                    value |= 1 << i;
                 }
             }
 
-            return value;
+            return value & Mask12;
         }
     }
 
@@ -303,6 +321,30 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// </summary>
     public static IReadOnlyCollection<PitchClassSetId> Items { get; }
 
+    /// <summary>
+    /// Gets the cached span representing the full pitch-class set id range.
+    /// </summary>
+    public static ReadOnlySpan<PitchClassSetId> ItemsSpan => ValueObjectUtils<PitchClassSetId>.ItemsSpan;
+
+    /// <summary>
+    /// Gets the cached span representing the numeric values for each pitch-class set id.
+    /// </summary>
+    public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<PitchClassSetId>.ValuesSpan;
+
+    private static readonly IReadOnlyCollection<PitchClassSetId> _items;
+
+    private static IReadOnlyCollection<PitchClassSetId> BuildAllItems()
+    {
+        // Generate full 12-bit space [0..4095]
+        var array = new PitchClassSetId[_maxValue - _minValue + 1];
+        for (var i = 0; i < array.Length; i++)
+        {
+            array[i] = new PitchClassSetId(_minValue + i);
+        }
+
+        return array;
+    }
+
     /// <inheritdoc />
     public static PitchClassSetId Min => new(_minValue);
 
@@ -322,6 +364,36 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     private const int _minValue = 0;
     private const int _maxValue = 4095;
+    private const int Mask12 = 0xFFF;
+
+    /// <summary>
+    ///     Compute intersection size (bits in common) using popcount.
+    /// </summary>
+    [Pure]
+    public static int IntersectionCount(PitchClassSetId a, PitchClassSetId b)
+    {
+        return BitOperations.PopCount((uint)((a.Value & b.Value) & Mask12));
+    }
+
+    /// <summary>
+    ///     Compute union size (bits present in either) using popcount.
+    /// </summary>
+    [Pure]
+    public static int UnionCount(PitchClassSetId a, PitchClassSetId b)
+    {
+        return BitOperations.PopCount((uint)(((a.Value | b.Value) & Mask12)));
+    }
+
+    /// <summary>
+    ///     Jaccard similarity of two pitch-class sets.
+    /// </summary>
+    [Pure]
+    public static double Jaccard(PitchClassSetId a, PitchClassSetId b)
+    {
+        var inter = IntersectionCount(a, b);
+        var uni = UnionCount(a, b);
+        return uni == 0 ? 0.0 : (double)inter / uni;
+    }
 
     #endregion
 
@@ -371,3 +443,5 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     #endregion
 }
+
+

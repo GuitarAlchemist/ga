@@ -16,7 +16,7 @@ public class PitchClassSyncService(ILogger<PitchClassSyncService> logger, MongoD
             {
                 Value = pc.Value,
                 Name = pc.ToString(),
-                Notes = new[] { pc.ToSharpNote().ToString(), pc.ToFlatNote().ToString() }.Distinct().ToList(),
+                Notes = [.. new[] { pc.ToSharpNote().ToString(), pc.ToFlatNote().ToString() }.Distinct()],
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }).ToList();

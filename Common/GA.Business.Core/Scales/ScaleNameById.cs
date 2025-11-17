@@ -9,7 +9,7 @@ public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScale
         return Instance.Dictionary.ContainsKey(id);
     }
 
-    public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => Instance.Dictionary.Keys.ToImmutableList();
+    public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => [.. Instance.Dictionary.Keys];
 
     public static string Get(PitchClassSetId id)
     {

@@ -78,7 +78,7 @@ public class BatchOllamaEmbeddingService : IBatchEmbeddingService
     /// </summary>
     private async Task<float[][]> GenerateConcurrentEmbeddingsAsync(string[] texts, CancellationToken cancellationToken)
     {
-        var tasks = texts.Select(async (text, index) =>
+        var tasks = texts.Select(async (text, _) =>
         {
             await _concurrencyLimiter.WaitAsync(cancellationToken);
             try
@@ -140,7 +140,7 @@ public class BatchOllamaEmbeddingService : IBatchEmbeddingService
             chunks.Add(chunk);
         }
 
-        return chunks.ToArray();
+        return [.. chunks];
     }
 
     public void Dispose()

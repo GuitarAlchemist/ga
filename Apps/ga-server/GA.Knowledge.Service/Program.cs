@@ -4,6 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.Knowledge.Service.Models;
 using GA.Knowledge.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.Configure<MongoDbSettings>(
 // Register services
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<PerformanceMetricsService>();
+builder.Services.AddScoped<IAssetRelationshipService, AssetRelationshipService>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();

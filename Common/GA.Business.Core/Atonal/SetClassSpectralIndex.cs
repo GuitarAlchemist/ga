@@ -1,19 +1,15 @@
 ﻿namespace GA.Business.Core.Atonal;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 public static class SetClassSpectralIndex
 {
     private static readonly Lazy<List<(SetClass SetClass, double[] Spectrum)>> _index =
-        new(() => BuildIndex());
+        new(BuildIndex);
 
     private static List<(SetClass SetClass, double[] Spectrum)> BuildIndex()
     {
-        return SetClass.Items
-            .Select(setClass => (SetClass: setClass, Spectrum: setClass.GetMagnitudeSpectrum()))
-            .ToList();
+        return [.. SetClass.Items.Select(setClass => (SetClass: setClass, Spectrum: setClass.GetMagnitudeSpectrum()))];
     }
 
     /// <summary>
@@ -27,12 +23,11 @@ public static class SetClassSpectralIndex
         var targetCount = Math.Max(0, count);
         var sourceSpectrum = source.GetMagnitudeSpectrum();
 
-        return _index.Value
+        return [.. _index.Value
             .Where(entry => !ReferenceEquals(entry.SetClass, source))
             .OrderBy(entry => SpectralDistance(sourceSpectrum, entry.Spectrum))
             .Take(targetCount)
-            .Select(entry => entry.SetClass)
-            .ToList();
+            .Select(entry => entry.SetClass)];
     }
 
     /// <summary>
