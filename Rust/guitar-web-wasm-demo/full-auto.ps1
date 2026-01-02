@@ -372,7 +372,18 @@ finally {
     Stop-ViteProcesses
 }
 
-$wavPath = Join-Path $scriptRoot 'playwright-downloads\guitar-mix.wav'
+# Resolve WAV/spectrogram file names by guitar profile (if GA_GUITAR_TYPE is set)
+$guitarTypeEnv = $env:GA_GUITAR_TYPE
+if ([string]::IsNullOrWhiteSpace($guitarTypeEnv)) {
+    $wavFileName = 'guitar-mix.wav'
+    $spectrogramFileName = 'guitar-mix-spectrogram.png'
+} else {
+    $suffix = $guitarTypeEnv.Trim()
+    $wavFileName = "guitar-mix-profile$suffix.wav"
+    $spectrogramFileName = "guitar-mix-profile$suffix-spectrogram.png"
+}
+
+$wavPath = Join-Path $scriptRoot ("playwright-downloads\" + $wavFileName)
 
 # Optional DDSP timbre coloration
 $useDdsp = $env:GA_USE_DDSP
@@ -397,7 +408,7 @@ if ($useDdsp -eq '1') {
     }
 }
 
-$spectrogramPath = Join-Path $scriptRoot 'playwright-downloads\guitar-mix-spectrogram.png'
+$spectrogramPath = Join-Path $scriptRoot ("playwright-downloads\" + $spectrogramFileName)
 $iterationInfoPath = Join-Path $scriptRoot 'playwright-downloads\iteration-info.txt'
 $reportPath = Join-Path $scriptRoot 'playwright-downloads\iteration-report.md'
 Write-IterationReport -DestinationFile $reportPath -WavPath $wavPath -SpectrogramPath $spectrogramPath -IterationInfoPath $iterationInfoPath -ProjectRoot $scriptRoot -SourceFileRelative 'rust-engine/src/lib.rs'

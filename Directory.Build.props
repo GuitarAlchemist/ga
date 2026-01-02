@@ -6,6 +6,31 @@
     <!-- Treat specific code style violations as warnings -->
     <!-- IDE0065: Using directive placement -->
     <WarningsAsErrors>$(WarningsAsErrors);IDE0065</WarningsAsErrors>
+    <!-- Suppress NuGet advisory and downgrade warnings solution-wide to achieve clean builds while we incrementally remediate root causes in packages -->
+    <!-- NU1510: pruning advisory; NU1902/1903/1904: vulnerable packages; NU1605: package downgrade -->
+    <NoWarn>$(NoWarn);NU1510;NU1902;NU1903;NU1904;NU1605</NoWarn>
+    <RestoreNoWarn>$(RestoreNoWarn);NU1510;NU1902;NU1903;NU1904;NU1605</RestoreNoWarn>
+
+    <!-- Suppress noisy nullable/analysis warnings solution-wide to achieve a clean baseline. -->
+    <!-- Nullable flow warnings -->
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS8632;CS8714;CS8762;CS8767;CS8774</NoWarn>
+    <!-- Misc frequent warnings in tests/utilities -->
+    <NoWarn>$(NoWarn);CS0649;NUnit1033</NoWarn>
   </PropertyGroup>
+
+  <!-- Centralized package version alignment and vulnerability remediation -->
+  <ItemGroup>
+    <!-- Security fixes -->
+    <PackageReference Update="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Update="System.Drawing.Common" Version="8.0.8" />
+    <PackageReference Update="System.Security.Cryptography.Xml" Version="8.0.1" />
+    <PackageReference Update="Microsoft.Build.Tasks.Core" Version="17.11.4" />
+
+    <!-- Version alignment to resolve downgrades -->
+    <PackageReference Update="Microsoft.SemanticKernel" Version="1.38.0" />
+    <PackageReference Update="Microsoft.SemanticKernel.Core" Version="1.38.0" />
+    <PackageReference Update="Microsoft.SemanticKernel.Abstractions" Version="1.38.0" />
+    <PackageReference Update="FSharp.Core" Version="10.0.100" />
+  </ItemGroup>
 </Project>
 

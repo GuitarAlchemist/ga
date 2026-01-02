@@ -1,13 +1,10 @@
 namespace GA.Business.Core.Tests.Scales;
 
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Scales;
-using GA.Business.Core.Tonal.Modes;
 using NUnit.Framework;
 
 [TestFixture]

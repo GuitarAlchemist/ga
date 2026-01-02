@@ -35,7 +35,8 @@ public class VoicingEmbeddingCacheTests
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         var embeddingService = new CountingEmbeddingService();
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string>
+            // Use nullable value type to satisfy AddInMemoryCollection signature expecting IEnumerable<KeyValuePair<string, string?>>
+            .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["VoicingSearch:EmbeddingCacheMinutes"] = "1"
             })

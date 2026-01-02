@@ -1,0 +1,3 @@
+﻿# Large binary cache files
+cache/embeddings/*.bin
+

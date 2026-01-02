@@ -5,7 +5,6 @@ namespace GaCLI.Commands;
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Data.SemanticKernel.Embeddings;
 using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;

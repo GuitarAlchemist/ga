@@ -1,6 +1,5 @@
 ﻿namespace GA.Core.Tests.Collections;
 
-using System.Linq;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard.Fingering;

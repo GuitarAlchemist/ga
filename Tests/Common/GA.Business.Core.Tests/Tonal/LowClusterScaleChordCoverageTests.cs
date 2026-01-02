@@ -2,11 +2,9 @@ namespace GA.Business.Core.Tests.Tonal;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Notes;
-using GA.Business.Core.Scales;
 using GA.Business.Core.Tonal.Modes;
 using GA.Business.Core.Tonal.Modes.Diatonic;
 using GA.Business.Core.Tonal.Modes.Exotic;

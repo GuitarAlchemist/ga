@@ -1,4 +1,4 @@
-// GA Guitar WASM demo – iteration (2025-11-16T20:55:49-05:00, 8a4cdf5, Automated acoustic iteration)
+// GA Guitar WASM demo – iteration (2025-11-16T23:06:19-05:00, dbc4548, Automated acoustic iteration)
 use core::f32::consts::TAU;
 
 /// Simple linear congruential generator for deterministic noise.

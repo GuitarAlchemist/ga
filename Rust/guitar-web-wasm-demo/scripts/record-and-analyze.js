@@ -62,8 +62,13 @@ async function runPlaywright(baseUrl, downloadDir, guitarType) {
     page.getByRole('button', { name: 'Stop & download' }).click(),
   ]);
 
-  const suggested = await download.suggestedFilename();
-  const webmPath = path.join(downloadDir, suggested || 'guitar-mix.webm');
+  // Choose deterministic base name based on guitar profile (if provided)
+  let baseName = 'guitar-mix';
+  if (typeof guitarType === 'number' && guitarType >= 0 && guitarType <= 3) {
+    baseName = `guitar-mix-profile${guitarType}`;
+  }
+
+  const webmPath = path.join(downloadDir, `${baseName}.webm`);
   await download.saveAs(webmPath);
 
   console.log('Downloaded recording:', webmPath);

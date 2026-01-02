@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10"/>
+    <PackageReference Include="Spectre.Console" Version="0.51.1"/>
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
+

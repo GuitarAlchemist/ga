@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Apps\GA.TabConversion.Api\GA.TabConversion.Api.csproj"/>
+    <ProjectReference Include="..\..\..\Tools\GA.TabConversion.Api\GA.TabConversion.Api.csproj" />
   </ItemGroup>
 
 </Project>

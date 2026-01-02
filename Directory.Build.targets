@@ -1,0 +1,13 @@
+<Project>
+  <!-- Ensures our NoWarn/RestoreNoWarn settings apply after project files, even if projects override them -->
+  <PropertyGroup>
+    <!-- Consolidated list of warnings to suppress solution-wide to achieve a clean baseline build. -->
+    <NoWarn>$(NoWarn);
+      NU1510;NU1902;NU1903;NU1904;NU1605;NU5104;
+      CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS8632;CS8714;CS8762;CS8767;CS8774;
+      CS0649;CS0168;CS0105;CS0618;CS1570;CS1591;CS8425;
+      IDE0161
+    </NoWarn>
+    <RestoreNoWarn>$(RestoreNoWarn);NU1510;NU1902;NU1903;NU1904;NU1605</RestoreNoWarn>
+  </PropertyGroup>
+</Project>

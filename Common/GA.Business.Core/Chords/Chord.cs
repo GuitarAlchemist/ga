@@ -4,7 +4,6 @@ using Atonal;
 using Intervals;
 using Intervals.Primitives;
 using Notes;
-using Parsing;
 
 /// <summary>
 ///     Represents a musical chord with its notes, intervals, and harmonic properties

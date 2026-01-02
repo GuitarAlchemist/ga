@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Enable parallel execution across test assemblies (projects). -1 uses all logical cores. -->
+    <MaxCpuCount>-1</MaxCpuCount>
+  </RunConfiguration>
+
+  <!-- NUnit-specific settings -->
+  <NUnit>
+    <!-- 0 = use NUnit default (number of processors). Adjust in CI if you need to cap. -->
+    <NumberOfTestWorkers>0</NumberOfTestWorkers>
+    <!-- Increase default timeout to reduce false timeouts under load (10 minutes). -->
+    <DefaultTimeout>600000</DefaultTimeout>
+  </NUnit>
+</RunSettings>

@@ -8,8 +8,8 @@ using GA.Business.Core.Scales;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using System.Text;
-using GA.Business.Core.Fretboard.Shapes.Geometry;
 using Microsoft.JSInterop;
+using GA.Business.Core.Fretboard.Shapes.Geometry;
 
 public partial class SetClassAnalysis
 {
@@ -37,6 +37,25 @@ public partial class SetClassAnalysis
     private const string OpticPermKey = "ga.optic.p";
     private const string OpticTransKey = "ga.optic.t";
     private const string OpticInvKey = "ga.optic.i";
+
+    // Voice-leading tools state
+    private string _vlProbeA = "0,4,7";
+    private string _vlProbeB = "11,3,6";
+    private double? _vlProbeDistance;
+    private bool _probingDistance;
+
+    private string _vlSourceInput = "0,4,7";
+    private string _vlTargetInput = "11,3,6";
+    private int _vlSteps = 12;
+    private string _geodesicSvgHtml = string.Empty;
+    private bool _analyzingGeodesic;
+
+    private string _heatmapTargetInput = "0,7"; // two-voice target: perfect fifth
+    private int _heatmapResolution = 48;
+    private string _heatmapSvgHtml = string.Empty;
+    private bool _generatingHeatmap;
+
+    private string _opticGraphSvgHtml = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -109,6 +128,293 @@ public partial class SetClassAnalysis
         _opticInversion = false;
         await PersistOpticAsync();
         Snackbar.Add("OPTIC options reset to defaults (OPT)", Severity.Info);
+    }
+
+    // =====================
+    // Voice-leading tools
+    // =====================
+
+    private Task ProbeOpticDistance()
+    {
+        if (_probingDistance) return Task.CompletedTask;
+        _probingDistance = true;
+        try
+        {
+            var a = ParsePitchClasses(_vlProbeA);
+            var b = ParsePitchClasses(_vlProbeB);
+            if (a == null || b == null || a.Length == 0 || b.Length == 0)
+            {
+                Snackbar.Add("Enter valid pitch-class sets for A and B.", Severity.Error);
+                return Task.CompletedTask;
+            }
+
+            var scA = new SetClass(CreatePitchClassSet(a));
+            var scB = new SetClass(CreatePitchClassSet(b));
+
+            var options = new VoiceLeadingOptions
+            {
+                OctaveEquivalence = _opticOctave,
+                PermutationEquivalence = _opticPermutation,
+                TranspositionEquivalence = _opticTransposition,
+                InversionEquivalence = _opticInversion
+            };
+
+            _vlProbeDistance = SetClassOpticIndex.Distance(scA, scB, options);
+        }
+        catch (Exception ex)
+        {
+            _vlProbeDistance = null;
+            Snackbar.Add($"Distance probe failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _probingDistance = false;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task AnalyzeGeodesic()
+    {
+        if (_analyzingGeodesic) return Task.CompletedTask;
+        _analyzingGeodesic = true;
+        try
+        {
+            var src = ParsePitchClasses(_vlSourceInput);
+            var dst = ParsePitchClasses(_vlTargetInput);
+            if (src == null || dst == null || src.Length == 0 || dst.Length == 0)
+            {
+                Snackbar.Add("Enter valid pitch-class sets for Source and Target.", Severity.Error);
+                return Task.CompletedTask;
+            }
+
+            var vFrom = src.Select(x => (double)((x % 12 + 12) % 12)).ToArray();
+            var vToRaw = dst.Select(x => (double)((x % 12 + 12) % 12)).ToArray();
+            var n = Math.Max(vFrom.Length, vToRaw.Length);
+            vFrom = ExpandToCardinality(vFrom, n);
+            var vTo = ExpandToCardinality(vToRaw, n);
+
+            var space = new VoiceLeadingSpace(
+                voices: n,
+                octaveEquivalence: _opticOctave,
+                permutationEquivalence: _opticPermutation,
+                transpositionEquivalence: _opticTransposition,
+                inversionEquivalence: _opticInversion);
+
+            var steps = System.Math.Clamp(_vlSteps, 2, 64);
+            var path = space.Geodesic(vFrom, vTo, steps);
+            _geodesicSvgHtml = RenderGeodesicSvg(path, width: 720, height: 220);
+        }
+        catch (Exception ex)
+        {
+            _geodesicSvgHtml = string.Empty;
+            Snackbar.Add($"Geodesic computation failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _analyzingGeodesic = false;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task GenerateTwoVoiceHeatmap()
+    {
+        if (_generatingHeatmap) return Task.CompletedTask;
+        _generatingHeatmap = true;
+        try
+        {
+            var tgt = ParsePitchClasses(_heatmapTargetInput);
+            if (tgt == null || tgt.Length == 0)
+            {
+                Snackbar.Add("Enter a valid two-voice target (e.g., 0,7).", Severity.Error);
+                return Task.CompletedTask;
+            }
+
+            // Use first two classes; if single provided, duplicate
+            double[] target = tgt.Length >= 2
+                ? new[] { (double)(tgt[0] % 12), (double)(tgt[1] % 12) }
+                : new[] { (double)(tgt[0] % 12), (double)(tgt[0] % 12) };
+
+            var res = System.Math.Clamp(_heatmapResolution, 16, 96);
+            _heatmapSvgHtml = RenderTwoVoiceHeatmapSvg(target, res, width: 360, height: 360);
+        }
+        catch (Exception ex)
+        {
+            _heatmapSvgHtml = string.Empty;
+            Snackbar.Add($"Heatmap generation failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _generatingHeatmap = false;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task BuildOpticNeighborGraphFromCurrent()
+    {
+        try
+        {
+            if (_spectralResult == null || _spectralResult.NearestOpticSetClasses.Count == 0)
+            {
+                Snackbar.Add("Analyze a set first to get OPTIC neighbors.", Severity.Info);
+                return Task.CompletedTask;
+            }
+            _opticGraphSvgHtml = RenderOpticNeighborGraphSvg(_spectralResult.NearestOpticSetClasses, 720, 420);
+        }
+        catch (Exception ex)
+        {
+            _opticGraphSvgHtml = string.Empty;
+            Snackbar.Add($"Failed to build neighbor graph: {ex.Message}", Severity.Error);
+        }
+        return Task.CompletedTask;
+    }
+
+    // =====================
+    // Rendering helpers (SVG)
+    // =====================
+
+    private static double[] ExpandToCardinality(double[] v, int target)
+    {
+        if (v.Length == target) return v;
+        if (v.Length == 0) return new double[target];
+        var result = new double[target];
+        for (var i = 0; i < target; i++) result[i] = v[i % v.Length];
+        return result;
+    }
+
+    private static string RenderGeodesicSvg(List<double[]> path, int width, int height)
+    {
+        if (path.Count == 0) return string.Empty;
+        var n = path[0].Length;
+        var sb = new StringBuilder();
+        sb.Append($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
+        sb.Append("<rect width='100%' height='100%' fill='white' />");
+
+        // axes
+        sb.Append("<line x1='40' y1='10' x2='40' y2='" + (height - 30) + "' stroke='#ccc' stroke-width='1'/>");
+        sb.Append("<line x1='40' y1='" + (height - 30) + "' x2='" + (width - 10) + "' y2='" + (height - 30) + "' stroke='#ccc' stroke-width='1'/>");
+        sb.Append("<text x='5' y='20' font-size='10' fill='#666'>pc</text>");
+
+        // color palette
+        string[] colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999"];
+
+        double left = 50, right = width - 20; int steps = path.Count;
+        double usableW = right - left;
+        double dx = usableW / System.Math.Max(1, steps - 1);
+        double top = 10, bottom = height - 40;
+
+        double Y(double pc) => bottom - (pc % 12.0) / 12.0 * (bottom - top);
+
+        // draw polylines per voice
+        for (int v = 0; v < n; v++)
+        {
+            var pts = new StringBuilder();
+            for (int i = 0; i < steps; i++)
+            {
+                double x = left + dx * i;
+                double y = Y(path[i][v]);
+                pts.Append($"{x},{y} ");
+            }
+            var color = colors[v % colors.Length];
+            sb.Append($"<polyline fill='none' stroke='{color}' stroke-width='2' points='{pts}' />");
+        }
+
+        // draw markers
+        for (int i = 0; i < steps; i++)
+        {
+            double x = left + dx * i;
+            sb.Append($"<circle cx='{x}' cy='{bottom}' r='2' fill='#888' />");
+        }
+
+        sb.Append("</svg>");
+        return sb.ToString();
+    }
+
+    private string RenderTwoVoiceHeatmapSvg(double[] target, int res, int width, int height)
+    {
+        var space = new VoiceLeadingSpace(2, _opticOctave, _opticPermutation, _opticTransposition, _opticInversion);
+        var sb = new StringBuilder();
+        sb.Append($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
+        sb.Append("<rect width='100%' height='100%' fill='white' />");
+
+        double cellW = (double)width / res;
+        double cellH = (double)height / res;
+
+        for (int i = 0; i < res; i++)
+        {
+            for (int j = 0; j < res; j++)
+            {
+                double xpc = i * 12.0 / res; // [0,12)
+                double ypc = j * 12.0 / res;
+                var d = space.Distance(new[] { xpc, ypc }, target);
+                // Normalize distance into [0,1] roughly; cap at 6
+                double t = System.Math.Min(System.Math.Abs(d) / 6.0, 1.0);
+                var color = LerpColor("#2ecc71", "#e74c3c", t); // green->red
+                double x = i * cellW;
+                double y = (res - 1 - j) * cellH; // invert y so low pc at bottom
+                sb.Append($"<rect x='{x:F2}' y='{y:F2}' width='{cellW + 0.5:F2}' height='{cellH + 0.5:F2}' fill='{color}' stroke='none' />");
+            }
+        }
+
+        sb.Append("</svg>");
+        return sb.ToString();
+
+        static string LerpColor(string hexA, string hexB, double t)
+        {
+            (int r1, int g1, int b1) = HexToRgb(hexA);
+            (int r2, int g2, int b2) = HexToRgb(hexB);
+            int r = (int)System.Math.Round(r1 + (r2 - r1) * t);
+            int g = (int)System.Math.Round(g1 + (g2 - g1) * t);
+            int b = (int)System.Math.Round(b1 + (b2 - b1) * t);
+            return $"rgb({r},{g},{b})";
+        }
+
+        static (int, int, int) HexToRgb(string hex)
+        {
+            hex = hex.TrimStart('#');
+            int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+            int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+            int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+            return (r, g, b);
+        }
+    }
+
+    private static string RenderOpticNeighborGraphSvg(List<OpticNearestSetClassResult> neighbors, int width, int height)
+    {
+        if (neighbors.Count == 0) return string.Empty;
+        var sb = new StringBuilder();
+        sb.Append($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
+        sb.Append("<rect width='100%' height='100%' fill='white' />");
+
+        double cx = width / 2.0, cy = height / 2.0; double radius = System.Math.Min(width, height) * 0.35;
+        int n = neighbors.Count; double angleStep = 2 * Math.PI / n;
+
+        // node positions
+        var pts = new (double x, double y)[n];
+        for (int i = 0; i < n; i++)
+        {
+            double ang = i * angleStep - Math.PI / 2;
+            pts[i] = (cx + radius * Math.Cos(ang), cy + radius * Math.Sin(ang));
+        }
+
+        // edges to nearest few (e.g., 3)
+        for (int i = 0; i < n; i++)
+        {
+            int j = (i + 1) % n;
+            double d = neighbors[i].OpticDistance;
+            double sw = Math.Max(0.5, 3.5 - d); // smaller distance => thicker line
+            sb.Append($"<line x1='{pts[i].x:F2}' y1='{pts[i].y:F2}' x2='{pts[j].x:F2}' y2='{pts[j].y:F2}' stroke='#888' stroke-width='{sw:F1}' opacity='0.6' />");
+        }
+
+        // nodes and labels
+        for (int i = 0; i < n; i++)
+        {
+            sb.Append($"<circle cx='{pts[i].x:F2}' cy='{pts[i].y:F2}' r='10' fill='#1976d2' />");
+            var label = System.Net.WebUtility.HtmlEncode(neighbors[i].PrimeForm);
+            sb.Append($"<text x='{pts[i].x + 12:F2}' y='{pts[i].y + 4:F2}' font-size='12' fill='#333'>{label}</text>");
+        }
+
+        sb.Append("</svg>");
+        return sb.ToString();
     }
 
     // Unified Mode summary (read-only panel)

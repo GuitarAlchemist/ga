@@ -610,5 +610,92 @@
             }
         </MudGrid>
     </MudTabPanel>
+
+    <!-- Tab 3: Voice-Leading Tools (Tymoczko/OPTIC) -->
+    <MudTabPanel Text="Voice‑Leading Tools" Icon="@Icons.Material.Filled.MultilineChart">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6" GutterBottom="true">OPTIC Distance Probe</MudText>
+                        <MudText Typo="Typo.body2">
+                            Compute Tymoczko/OPTIC distance between two pitch‑class sets using the OPTIC toggles above.
+                        </MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_vlProbeA" Label="Set A (e.g., 0,4,7)" Variant="Variant.Outlined" Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_vlProbeB" Label="Set B (e.g., 11,3,6)" Variant="Variant.Outlined" Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ProbeOpticDistance" Disabled="_probingDistance" FullWidth="true">
+                                    @if (_probingDistance)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <text>Computing...</text>
+                                    }
+                                    else { <text>Compute OPTIC Distance</text> }
+                                </MudButton>
+                            </MudItem>
+                            @if (_vlProbeDistance is not null)
+                            {
+                                <MudItem xs="12">
+                                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                        Distance: @_vlProbeDistance?.ToString("F4")
+                                    </MudAlert>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Geodesic Preview (OPTIC space)</MudText>
+                    <MudTextField @bind-Value="_vlSourceInput" Label="Source Set (e.g., 0,4,7)" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="_vlTargetInput" Label="Target Set (e.g., 11,3,6)" Variant="Variant.Outlined" Immediate="true" Class="mt-2" />
+                    <MudNumericField @bind-Value="_vlSteps" Label="Steps (2-64)" Min="2" Max="64" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AnalyzeGeodesic" Disabled="_analyzingGeodesic" Class="mt-3" FullWidth="true">
+                        @if (_analyzingGeodesic)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <text>Analyzing...</text>
+                        }
+                        else { <text>Compute Geodesic</text> }
+                    </MudButton>
+                    <div class="mt-3">@((MarkupString)_geodesicSvgHtml)</div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Two‑Voice Heatmap (Orbifold intuition)</MudText>
+                    <MudText Typo="Typo.caption" Class="mb-2">Samples the 2‑voice plane [0,12)×[0,12) and colors by OPTIC distance to the target.</MudText>
+                    <MudTextField @bind-Value="_heatmapTargetInput" Label="Target (e.g., 0,7)" Variant="Variant.Outlined" Immediate="true" />
+                    <MudNumericField @bind-Value="_heatmapResolution" Label="Resolution (16-96)" Min="16" Max="96" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateTwoVoiceHeatmap" Disabled="_generatingHeatmap" Class="mt-3" FullWidth="true">
+                        @if (_generatingHeatmap)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <text>Generating...</text>
+                        }
+                        else { <text>Generate Heatmap</text> }
+                    </MudButton>
+                    <div class="mt-3">@((MarkupString)_heatmapSvgHtml)</div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Elevation="1" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">OPTIC Neighborhood Graph</MudText>
+                    <MudText Typo="Typo.caption" Class="mb-2">Graph of nearest neighbors by OPTIC distance for the last analyzed set.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="BuildOpticNeighborGraphFromCurrent" FullWidth="true">Build from Current Analysis</MudButton>
+                    <div class="mt-3">@((MarkupString)_opticGraphSvgHtml)</div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudTabPanel>
 </MudTabs>
 

@@ -34,15 +34,38 @@ public sealed record ShapeTransition
     public required double PhysicalCost { get; init; }
 
     /// <summary>
+    ///     OPTIC voice-leading cost between voicings (Tymoczko space)
+    /// </summary>
+    public double VoiceLeadingCost { get; init; }
+
+    /// <summary>
+    ///     Weight applied to voice-leading cost when computing <see cref="ExtendedScore"/>.
+    ///     Provided for transparency; 0.0 means VL did not influence the score.
+    /// </summary>
+    public double VoiceLeadingWeightUsed { get; init; }
+
+    /// <summary>
     ///     Combined score (lower is better)
     /// </summary>
     public double Score => HarmonicCost + PhysicalCost;
+
+    /// <summary>
+    ///     Extended combined score including voice-leading if a non-zero weight was used.
+    ///     Lower is better. Falls back to <see cref="Score"/> if <see cref="VoiceLeadingWeightUsed"/> is 0.
+    /// </summary>
+    public double ExtendedScore => Score + (VoiceLeadingWeightUsed > 0 ? VoiceLeadingWeightUsed * VoiceLeadingCost : 0);
 
     /// <summary>
     ///     Probability weight for Markov chain (higher is better)
     ///     Inverse of score, normalized
     /// </summary>
     public double Weight => 1.0 / (1.0 + Score);
+
+    /// <summary>
+    ///     Probability weight derived from <see cref="ExtendedScore"/> (when applicable).
+    ///     Consumers preferring OPTIC-aware scoring can use this instead of <see cref="Weight"/>.
+    /// </summary>
+    public double ExtendedWeight => 1.0 / (1.0 + ExtendedScore);
 
     /// <summary>
     ///     Compute physical cost between two shapes

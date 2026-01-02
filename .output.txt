@@ -1,0 +1,1082 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        new file:   .output.txt
+        new file:   .runsettings
+        new file:   AllProjects.sln
+        modified:   AllProjects.sln.DotSettings.user
+        modified:   AllProjects.slnx
+        modified:   Apps/GuitarAlchemistChatbot/Program.cs
+        modified:   Apps/GuitarAlchemistChatbot/appsettings.json
+        new file:   Apps/appsettings.Shared.json
+        new file:   Apps/ga-server/GaApi/.gitignore
+        modified:   Apps/ga-server/GaApi/Components/Pages/SetClassAnalysis.razor
+        modified:   Apps/ga-server/GaApi/Components/Pages/SetClassAnalysis.razor.cs
+        modified:   Apps/ga-server/GaApi/Program.cs
+        modified:   Apps/ga-server/GaApi/appsettings.json
+        modified:   Common/GA.Business.AI/GA.Business.AI.csproj
+        modified:   Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj
+        modified:   Common/GA.Business.Core/Atonal/SetClassNotationMap.cs
+        modified:   Common/GA.Business.Core/Chords/Chord.cs
+        modified:   Common/GA.Business.Core/Fretboard/Shapes/ShapeGraphBuildOptions.cs
+        modified:   Common/GA.Business.Core/Fretboard/Shapes/ShapeGraphBuilder.cs
+        modified:   Common/GA.Business.Core/Fretboard/Shapes/ShapeTransition.cs
+        modified:   Common/GA.Business.Core/Intervals/Primitives/SimpleIntervalSize.cs
+        modified:   Common/GA.Business.Core/Notes/Primitives/NaturalNote.cs
+        modified:   Common/GA.Business.Core/Unified/UnifiedModeService.cs
+        renamed:    Apps/AIIntegrationDemo/AIIntegrationDemo.csproj -> Demos/Advanced/AIIntegrationDemo/AIIntegrationDemo.csproj
+        renamed:    Apps/AIIntegrationDemo/Program.cs -> Demos/Advanced/AIIntegrationDemo/Program.cs
+        renamed:    Apps/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj -> Demos/Advanced/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj
+        renamed:    Apps/AdvancedMathematicsDemo/Program.cs -> Demos/Advanced/AdvancedMathematicsDemo/Program.cs
+        renamed:    Apps/BSPDemo/BSPDemo.csproj -> Demos/Advanced/BSPDemo/BSPDemo.csproj
+        renamed:    Apps/BSPDemo/Program.cs -> Demos/Advanced/BSPDemo/Program.cs
+        renamed:    Apps/BSPDemo/README.md -> Demos/Advanced/BSPDemo/README.md
+        renamed:    Apps/InternetContentDemo/InternetContentDemo.csproj -> Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj
+        renamed:    Apps/InternetContentDemo/Program.cs -> Demos/Advanced/InternetContentDemo/Program.cs
+        renamed:    Apps/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj -> Demos/Music Theory/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj
+        renamed:    Apps/AdvancedFretboardAnalysisDemo/Program.cs -> Demos/Music Theory/AdvancedFretboardAnalysisDemo/Program.cs
+        renamed:    Apps/ChordNamingDemo/ChordNamingDemo.csproj -> Demos/Music Theory/ChordNamingDemo/ChordNamingDemo.csproj
+        renamed:    Apps/ChordNamingDemo/Program.cs -> Demos/Music Theory/ChordNamingDemo/Program.cs
+        renamed:    Apps/FretboardChordTest/FretboardChordTest.csproj -> Demos/Music Theory/FretboardChordTest/FretboardChordTest.csproj
+        renamed:    Apps/FretboardChordTest/Program.cs -> Demos/Music Theory/FretboardChordTest/Program.cs
+        renamed:    Apps/FretboardExplorer/Components/App.razor -> Demos/Music Theory/FretboardExplorer/Components/App.razor
+        renamed:    Apps/FretboardExplorer/Components/Layout/MainLayout.razor -> Demos/Music Theory/FretboardExplorer/Components/Layout/MainLayout.razor
+        renamed:    Apps/FretboardExplorer/Components/Pages/FretSpanExplorer.razor -> Demos/Music Theory/FretboardExplorer/Components/Pages/FretSpanExplorer.razor
+        renamed:    Apps/FretboardExplorer/Components/Pages/Home.razor -> Demos/Music Theory/FretboardExplorer/Components/Pages/Home.razor
+        renamed:    Apps/FretboardExplorer/Components/Routes.razor -> Demos/Music Theory/FretboardExplorer/Components/Routes.razor
+        renamed:    Apps/FretboardExplorer/Components/_Imports.razor -> Demos/Music Theory/FretboardExplorer/Components/_Imports.razor
+        renamed:    Apps/FretboardExplorer/FretboardExplorer.csproj -> Demos/Music Theory/FretboardExplorer/FretboardExplorer.csproj
+        renamed:    Apps/FretboardExplorer/Program.cs -> Demos/Music Theory/FretboardExplorer/Program.cs
+        renamed:    Apps/FretboardExplorer/Properties/launchSettings.json -> Demos/Music Theory/FretboardExplorer/Properties/launchSettings.json
+        renamed:    Apps/FretboardExplorer/appsettings.Development.json -> Demos/Music Theory/FretboardExplorer/appsettings.Development.json
+        renamed:    Apps/FretboardExplorer/appsettings.json -> Demos/Music Theory/FretboardExplorer/appsettings.json
+        renamed:    Apps/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj -> Demos/Music Theory/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj
+        renamed:    Apps/FretboardVoicingsCLI/Program.cs -> Demos/Music Theory/FretboardVoicingsCLI/Program.cs
+        renamed:    Apps/FretboardVoicingsCLI/USAGE_EXAMPLES.md -> Demos/Music Theory/FretboardVoicingsCLI/USAGE_EXAMPLES.md
+        renamed:    Apps/FretboardVoicingsCLI/VoicingFilters.cs -> Demos/Music Theory/FretboardVoicingsCLI/VoicingFilters.cs
+        renamed:    Apps/MusicalAnalysisApp/MusicalAnalysisApp.csproj -> Demos/Music Theory/MusicalAnalysisApp/MusicalAnalysisApp.csproj
+        renamed:    Apps/MusicalAnalysisApp/Program.cs -> Demos/Music Theory/MusicalAnalysisApp/Program.cs
+        renamed:    Apps/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj -> Demos/Music Theory/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj
+        renamed:    Apps/PracticeRoutineDSLDemo/Program.cs -> Demos/Music Theory/PracticeRoutineDSLDemo/Program.cs
+        renamed:    Apps/PracticeRoutineDSLDemo/TestParsing.cs -> Demos/Music Theory/PracticeRoutineDSLDemo/TestParsing.cs
+        renamed:    Apps/PsychoacousticVoicingDemo/Program.cs -> Demos/Music Theory/PsychoacousticVoicingDemo/Program.cs
+        renamed:    Apps/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj -> Demos/Music Theory/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj
+        renamed:    Apps/GpuBenchmark/DummyMain.cs -> Demos/Performance/GpuBenchmark/DummyMain.cs
+        renamed:    Apps/GpuBenchmark/GpuBenchmark.csproj -> Demos/Performance/GpuBenchmark/GpuBenchmark.csproj
+        renamed:    Apps/GpuBenchmark/Program.cs -> Demos/Performance/GpuBenchmark/Program.cs
+        renamed:    Apps/HighPerformanceDemo/HighPerformanceDemo.csproj -> Demos/Performance/HighPerformanceDemo/HighPerformanceDemo.csproj
+        renamed:    Apps/HighPerformanceDemo/Program.cs -> Demos/Performance/HighPerformanceDemo/Program.cs
+        renamed:    Apps/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj -> Demos/Performance/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj
+        renamed:    Apps/PerformanceOptimizationDemo/Program.cs -> Demos/Performance/PerformanceOptimizationDemo/Program.cs
+        renamed:    Apps/VectorSearchBenchmark/Program.cs -> Demos/Performance/VectorSearchBenchmark/Program.cs
+        renamed:    Apps/VectorSearchBenchmark/VectorSearchBenchmark.csproj -> Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj
+        renamed:    Apps/VectorSearchBenchmark/appsettings.json -> Demos/Performance/VectorSearchBenchmark/appsettings.json
+        modified:   Directory.Build.props
+        new file:   Directory.Build.targets
+        modified:   GaCLI/Commands/GpuVoicingSearchCommand.cs
+        modified:   Rust/.idea/AugmentWebviewStateStore.xml
+        new file:   Rust/MCP/mcp-audio-analyzer.zip
+        new file:   Rust/MCP/mcp-audio-analyzer/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/mcp.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/dist/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsc
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsc.cmd
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsc.ps1
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsserver
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsserver.cmd
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.bin/tsserver.ps1
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/.package-lock.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/cli.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/cli.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/cli.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/cli.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/index.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/sse.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/sse.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/sse.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/sse.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/stdio.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/websocket.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/websocket.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/websocket.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/client/websocket.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/inMemory.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/index.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/sse.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/sse.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/sse.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/sse.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/server/stdio.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.test.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.test.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.test.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/stdio.test.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/transport.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/transport.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/transport.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/shared/transport.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/types.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/types.d.ts.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/types.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/dist/types.js.map
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/@modelcontextprotocol/sdk/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/bytes/History.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/bytes/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/bytes/Readme.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/bytes/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/bytes/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/content-type/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/content-type/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/content-type/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/content-type/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/content-type/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/History.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/Readme.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/lib/browser/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/depd/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/http-errors/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/http-errors/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/http-errors/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/http-errors/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/http-errors/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/Changelog.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/dbcs-codec.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/dbcs-data.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/internal.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/sbcs-codec.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/sbcs-data-generated.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/sbcs-data.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/big5-added.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/cp936.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/cp949.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/cp950.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/eucjp.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/gbk-added.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/tables/shiftjis.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/utf16.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/utf32.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/encodings/utf7.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/lib/bom-handling.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/lib/helpers/merge-exports.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/lib/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/lib/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/lib/streams.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/iconv-lite/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/inherits/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/inherits/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/inherits/inherits.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/inherits/inherits_browser.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/inherits/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/SECURITY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/raw-body/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/Porting-Buffer.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/Readme.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/dangerous.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/safer.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/safer-buffer/tests.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/setprototypeof/test/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/codes.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/statuses/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/toidentifier/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/toidentifier/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/toidentifier/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/toidentifier/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/toidentifier/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/LICENSE.txt
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/SECURITY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/ThirdPartyNoticeText.txt
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/_tsc.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/_tsserver.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/_typingsInstaller.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/cs/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/de/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/es/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/fr/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/it/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/ja/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/ko/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.decorators.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.decorators.legacy.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.dom.asynciterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.dom.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.dom.iterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.collection.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.core.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.generator.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.iterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.proxy.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.reflect.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.symbol.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2016.array.include.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2016.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2016.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2016.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.arraybuffer.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.date.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.object.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2017.typedarrays.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.asynciterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2018.regexp.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.array.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.object.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2019.symbol.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.bigint.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.date.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.number.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2021.weakref.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.array.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.error.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.object.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.regexp.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2022.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2023.array.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2023.collection.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2023.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2023.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2023.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.arraybuffer.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.collection.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.object.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.regexp.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.sharedmemory.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es2024.string.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es5.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.es6.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.array.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.collection.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.decorators.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.disposable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.error.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.float16.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.full.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.intl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.iterator.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.promise.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.esnext.sharedmemory.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.scripthost.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.webworker.asynciterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.webworker.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.webworker.importscripts.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/lib.webworker.iterable.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/pl/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/pt-br/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/ru/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/tr/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/tsc.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/tsserver.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/tsserverlibrary.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/tsserverlibrary.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/typesMap.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/typescript.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/typescript.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/typingsInstaller.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/watchGuard.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/zh-cn/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/lib/zh-tw/diagnosticMessages.generated.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/typescript/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/unpipe/HISTORY.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/unpipe/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/unpipe/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/unpipe/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/unpipe/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/LICENSE
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/README.md
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/ZodError.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/datetime.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/discriminatedUnion.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/ipv4.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/object.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/primitives.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/realworld.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/string.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/benchmarks/union.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/errors.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/external.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/enumUtil.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/errorUtil.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/parseUtil.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/partialUtil.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/typeAliases.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/helpers/util.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/locales/en.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/standard-schema.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/Mocker.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/all-errors.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/anyunknown.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/array.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/async-parsing.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/async-refinements.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/base.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/bigint.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/branded.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/catch.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/coerce.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/complex.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/custom.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/date.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/deepmasking.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/default.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/description.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/discriminated-unions.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/enum.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/error.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/firstparty.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/firstpartyschematypes.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/function.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/generics.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/instanceof.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/intersection.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/language-server.source.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/language-server.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/literal.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/map.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/masking.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/mocker.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/nan.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/nativeEnum.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/nullable.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/number.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/object-augmentation.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/object-in-es5-env.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/object.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/optional.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/parseUtil.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/parser.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/partials.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/pickomit.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/pipeline.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/preprocess.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/primitive.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/promise.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/readonly.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/record.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/recursive.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/refine.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/safeparse.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/set.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/standard-schema.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/string.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/transformer.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/tuple.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/unions.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/validations.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/tests/void.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v3/types.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4-mini/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/checks.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/coerce.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/compat.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/errors.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/external.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/iso.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/parse.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/schemas.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/anyunknown.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/array.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/assignability.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/async-parsing.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/async-refinements.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/base.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/bigint.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/brand.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/catch.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/coalesce.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/coerce.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/continuability.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/custom.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/date.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/datetime.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/default.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/description.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/discriminated-unions.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/enum.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/error-utils.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/error.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/file.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/firstparty.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/function.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/generics.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/index.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/instanceof.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/intersection.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/json.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/lazy.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/literal.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/map.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/nan.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/nested-refine.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/nonoptional.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/nullable.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/number.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/object.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/optional.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/partial.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/pickomit.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/pipe.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/prefault.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/preprocess.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/primitive.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/promise.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/prototypes.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/readonly.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/record.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/recursive-types.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/refine.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/registries.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/set.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/standard-schema.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/string-formats.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/string.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/stringbool.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/template-literal.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/to-json-schema.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/transform.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/tuple.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/union.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/validations.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/classic/tests/void.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/api.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/checks.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/config.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/core.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/doc.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/errors.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/function.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/json-schema.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/parse.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/regexes.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/registries.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/schemas.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/standard-schema.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/tests/index.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/tests/locales/be.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/tests/locales/en.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/tests/locales/ru.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/tests/locales/tr.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/to-json-schema.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/util.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/versions.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/core/zsf.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ar.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/az.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/be.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ca.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/cs.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/de.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/en.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/eo.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/es.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/fa.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/fi.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/fr-CA.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/fr.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/he.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/hu.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/id.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/it.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ja.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/kh.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ko.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/mk.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ms.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/nl.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/no.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ota.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/pl.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ps.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/pt.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ru.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/sl.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/sv.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ta.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/th.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/tr.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ua.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/ur.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/vi.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/zh-CN.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/locales/zh-TW.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/checks.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/coerce.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/external.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/iso.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/parse.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/schemas.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/assignability.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/brand.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/checks.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/computed.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/error.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/functions.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/index.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/number.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/object.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/prototypes.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/recursive-types.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/src/v4/mini/tests/string.test.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/ZodError.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/ZodError.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/ZodError.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/ZodError.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/errors.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/errors.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/errors.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/errors.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/external.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/external.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/external.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/external.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/enumUtil.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/enumUtil.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/enumUtil.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/enumUtil.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/errorUtil.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/errorUtil.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/errorUtil.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/errorUtil.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/parseUtil.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/parseUtil.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/parseUtil.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/parseUtil.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/partialUtil.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/partialUtil.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/partialUtil.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/partialUtil.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/typeAliases.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/typeAliases.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/typeAliases.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/typeAliases.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/util.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/util.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/util.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/helpers/util.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/locales/en.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/locales/en.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/locales/en.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/locales/en.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/standard-schema.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/standard-schema.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/standard-schema.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/standard-schema.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/types.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/types.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/types.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v3/types.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4-mini/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4-mini/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4-mini/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4-mini/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/checks.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/checks.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/checks.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/checks.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/coerce.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/coerce.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/coerce.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/coerce.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/compat.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/compat.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/compat.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/compat.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/errors.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/errors.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/errors.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/errors.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/external.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/external.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/external.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/external.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/iso.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/iso.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/iso.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/iso.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/parse.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/parse.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/parse.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/parse.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/schemas.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/schemas.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/schemas.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/classic/schemas.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/api.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/api.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/api.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/api.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/checks.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/checks.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/checks.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/checks.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/core.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/core.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/core.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/core.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/doc.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/doc.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/doc.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/doc.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/errors.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/errors.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/errors.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/errors.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/function.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/function.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/function.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/function.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/json-schema.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/json-schema.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/json-schema.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/json-schema.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/parse.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/parse.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/parse.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/parse.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/regexes.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/regexes.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/regexes.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/regexes.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/registries.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/registries.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/registries.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/registries.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/schemas.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/schemas.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/schemas.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/schemas.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/standard-schema.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/standard-schema.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/standard-schema.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/standard-schema.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/to-json-schema.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/to-json-schema.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/to-json-schema.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/to-json-schema.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/util.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/util.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/util.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/util.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/versions.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/versions.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/versions.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/core/versions.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ar.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ar.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ar.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ar.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/az.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/az.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/az.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/az.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/be.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/be.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/be.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/be.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ca.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ca.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ca.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ca.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/cs.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/cs.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/cs.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/cs.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/de.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/de.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/de.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/de.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/en.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/en.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/en.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/en.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/eo.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/eo.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/eo.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/eo.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/es.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/es.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/es.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/es.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fa.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fa.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fa.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fa.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fi.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fi.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fi.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fi.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr-CA.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr-CA.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr-CA.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr-CA.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/fr.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/he.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/he.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/he.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/he.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/hu.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/hu.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/hu.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/hu.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/id.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/id.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/id.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/id.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/it.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/it.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/it.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/it.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ja.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ja.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ja.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ja.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/kh.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/kh.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/kh.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/kh.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ko.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ko.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ko.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ko.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/mk.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/mk.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/mk.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/mk.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ms.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ms.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ms.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ms.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/nl.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/nl.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/nl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/nl.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/no.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/no.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/no.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/no.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ota.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ota.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ota.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ota.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pl.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pl.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pl.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ps.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ps.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ps.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ps.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pt.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pt.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pt.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/pt.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ru.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ru.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ru.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ru.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sl.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sl.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sl.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sl.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sv.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sv.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sv.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/sv.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ta.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ta.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ta.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ta.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/th.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/th.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/th.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/th.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/tr.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/tr.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/tr.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/tr.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ua.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ua.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ua.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ua.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ur.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ur.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ur.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/ur.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/vi.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/vi.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/vi.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/vi.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-CN.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-CN.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-CN.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-CN.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-TW.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-TW.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-TW.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/locales/zh-TW.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/checks.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/checks.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/checks.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/checks.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/coerce.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/coerce.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/coerce.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/coerce.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/external.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/external.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/external.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/external.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/index.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/index.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/index.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/index.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/iso.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/iso.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/iso.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/iso.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/parse.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/parse.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/parse.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/parse.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/schemas.cjs
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/schemas.d.cts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/schemas.d.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/node_modules/zod/v4/mini/schemas.js
+        new file:   Rust/MCP/mcp-audio-analyzer/node/package-lock.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/package.json
+        new file:   Rust/MCP/mcp-audio-analyzer/node/src/index.ts
+        new file:   Rust/MCP/mcp-audio-analyzer/node/tsconfig.json
+        new file:   Rust/MCP/mcp-audio-analyzer/python/audio_analyzer/__init__.py
+        new file:   Rust/MCP/mcp-audio-analyzer/python/audio_analyzer/features.py
+        new file:   Rust/MCP/mcp-audio-analyzer/python/audio_analyzer/model.py
+        new file:   Rust/MCP/mcp-audio-analyzer/python/audio_analyzer/server.py
+        new file:   Rust/MCP/mcp-audio-analyzer/python/download_model.py
+        new file:   Rust/MCP/mcp-audio-analyzer/python/requirements.txt
+        modified:   Rust/guitar-web-wasm-demo/full-auto.ps1
+        modified:   Rust/guitar-web-wasm-demo/rust-engine/src/lib.rs
+        modified:   Rust/guitar-web-wasm-demo/scripts/record-and-analyze.js
+        modified:   Tests/AllProjects.AppHost.Tests/AllProjects.AppHost.Tests.csproj
+        modified:   Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj
+        new file:   Tests/Apps/GA.TabConversion.Api.Tests/xunit.runner.json
+        new file:   Tests/Common/GA.Business.Core.Graphiti.Tests/AssemblyInfo.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Api/VoicingSearchControllerTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/AssemblyInfo.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Atonal/Grothendieck/GrothendieckServiceTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Atonal/GrothendieckServiceIntegrationTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Chords/AtonalAnalysisMetadataTests.cs
+        new file:   Tests/Common/GA.Business.Core.Tests/Chords/ChordSymbolParserDifferentialTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Fretboard/Voicings/GpuVoicingSearchPerformanceTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Fretboard/Voicings/VoicingCharacterizationTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Scales/PitchClassSetScaleCoverageTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Services/VoicingEmbeddingCacheTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Tonal/LowClusterScaleChordCoverageTests.cs
+        modified:   Tests/Common/GA.Business.Core.Tests/Tonal/ScaleModalMetadataTests.cs
+        new file:   Tests/Common/GA.Core.Tests/AssemblyInfo.cs
+        modified:   Tests/Common/GA.Core.Tests/Collections/ValueObjectMemoizationTests.cs
+        modified:   Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj
+        new file:   Tests/Common/GA.InteractiveExtension/xunit.runner.json
+        new file:   Tests/Common/GA.MusicTheory.DSL.Tests/AssemblyInfo.cs
+        modified:   Tests/RunSettings/Default.runsettings
+        renamed:    Apps/EmbeddingGenerator/EmbeddingGenerator.csproj -> Tools/EmbeddingGenerator/EmbeddingGenerator.csproj
+        renamed:    Apps/EmbeddingGenerator/Program.cs -> Tools/EmbeddingGenerator/Program.cs
+        renamed:    Apps/EmbeddingGenerator/appsettings.json -> Tools/EmbeddingGenerator/appsettings.json
+        renamed:    Apps/GA.TabConversion.Api/Controllers/TabConversionController.cs -> Tools/GA.TabConversion.Api/Controllers/TabConversionController.cs
+        renamed:    Apps/GA.TabConversion.Api/GA.TabConversion.Api.csproj -> Tools/GA.TabConversion.Api/GA.TabConversion.Api.csproj
+        renamed:    Apps/GA.TabConversion.Api/GA.TabConversion.Api.http -> Tools/GA.TabConversion.Api/GA.TabConversion.Api.http
+        renamed:    Apps/GA.TabConversion.Api/Models/ConversionRequest.cs -> Tools/GA.TabConversion.Api/Models/ConversionRequest.cs
+        renamed:    Apps/GA.TabConversion.Api/Program.cs -> Tools/GA.TabConversion.Api/Program.cs
+        renamed:    Apps/GA.TabConversion.Api/Properties/launchSettings.json -> Tools/GA.TabConversion.Api/Properties/launchSettings.json
+        renamed:    Apps/GA.TabConversion.Api/Services/ITabConversionService.cs -> Tools/GA.TabConversion.Api/Services/ITabConversionService.cs
+        renamed:    Apps/GA.TabConversion.Api/Services/MonadicTabConversionService.cs -> Tools/GA.TabConversion.Api/Services/MonadicTabConversionService.cs
+        renamed:    Apps/GA.TabConversion.Api/Services/TabConversionService.cs -> Tools/GA.TabConversion.Api/Services/TabConversionService.cs
+        renamed:    Apps/GA.TabConversion.Api/appsettings.Development.json -> Tools/GA.TabConversion.Api/appsettings.Development.json
+        renamed:    Apps/GA.TabConversion.Api/appsettings.json -> Tools/GA.TabConversion.Api/appsettings.json
+        renamed:    Apps/GaDataCLI/GaDataCLI.csproj -> Tools/GaDataCLI/GaDataCLI.csproj
+        renamed:    Apps/GaDataCLI/Program.cs -> Tools/GaDataCLI/Program.cs
+        renamed:    Apps/GaDataCLI/README.md -> Tools/GaDataCLI/README.md
+        renamed:    Apps/LocalEmbedding/LocalEmbedding.csproj -> Tools/LocalEmbedding/LocalEmbedding.csproj
+        renamed:    Apps/LocalEmbedding/Program.cs -> Tools/LocalEmbedding/Program.cs
+        renamed:    Apps/MongoImporter/MongoImporter.csproj -> Tools/MongoImporter/MongoImporter.csproj
+        renamed:    Apps/MongoImporter/Program.cs -> Tools/MongoImporter/Program.cs
+        renamed:    Apps/MongoImporter/Verify.cs -> Tools/MongoImporter/Verify.cs
+        renamed:    Apps/MongoVerify/CheckSchema.cs -> Tools/MongoVerify/CheckSchema.cs
+        renamed:    Apps/MongoVerify/MongoVerify.csproj -> Tools/MongoVerify/MongoVerify.csproj
+        renamed:    Apps/MongoVerify/Program.cs -> Tools/MongoVerify/Program.cs
+        renamed:    Apps/MongoVerify/ShowRawDocument.cs -> Tools/MongoVerify/ShowRawDocument.cs
+        new file:   Voice leading - Continuous Transformations.pdf
+        new file:   build.log
+        new file:   build_v2.log
+        new file:   build_v3.log
+        new file:   vuln.log
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+  (commit or discard the untracked or modified content in submodules)
+        modified:   .gitignore
+        modified:   AllProjects.sln
+        modified:   AllProjects.sln.DotSettings.user
+        modified:   AllProjects.slnx
+        deleted:    Scripts/fix-all-builds.ps1
+        deleted:    Scripts/fix-all-syntax-issues.ps1
+        deleted:    Scripts/fix-blazor-build-errors.ps1
+        deleted:    Scripts/fix-broken-files.ps1
+        deleted:    Scripts/fix-bsp-namespaces.ps1
+        deleted:    Scripts/fix-builds-simple.ps1
+        deleted:    Scripts/fix-circular-references.ps1
+        deleted:    Scripts/fix-controller-usings.ps1
+        deleted:    Scripts/fix-cs1998-errors.ps1
+        deleted:    Scripts/fix-cs1998-smart.ps1
+        deleted:    Scripts/fix-file-scoped-namespaces.ps1
+        deleted:    Scripts/fix-internal-namespaces.ps1
+        deleted:    Scripts/fix-mcp-servers.ps1
+        deleted:    Scripts/fix-microservices-rate-limiter.ps1
+        deleted:    Scripts/fix-missing-braces.ps1
+        deleted:    Scripts/fix-namespace-syntax.ps1
+        deleted:    Scripts/fix-net9-packages.ps1
+        deleted:    Scripts/fix-package-versions.ps1
+        deleted:    Scripts/fix-remaining-namespaces.ps1
+        deleted:    Scripts/fix-syntax-errors.ps1
+        deleted:    Scripts/fix-tars-mcp.ps1
+        deleted:    Scripts/fix-test-errors.ps1
+        deleted:    Scripts/fix-using-statements.ps1
+        modified:   mcp-servers/meshy-ai (modified content)
+        modified:   three-js-mcp (modified content)

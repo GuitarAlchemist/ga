@@ -2,8 +2,6 @@ namespace GA.Business.Core.Tests.Atonal.Grothendieck;
 
 using Core.Atonal;
 using Core.Atonal.Grothendieck;
-using Core.Atonal.Primitives;
-using Moq;
 
 [TestFixture]
 public class GrothendieckServiceTests
