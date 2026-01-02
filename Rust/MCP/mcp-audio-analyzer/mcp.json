@@ -1,0 +1,13 @@
+{
+  "name": "ga-audio-analyzer",
+  "version": "0.1.0",
+  "description": "MCP server that analyzes audio files (spectral stats, transients, loudness, optional CLAP embedding).",
+  "command": "node",
+  "args": [
+    "dist/index.js"
+  ],
+  "env": {
+    "PYTHON": "python"
+  },
+  "workingDirectory": "node"
+}

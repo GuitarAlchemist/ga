@@ -5,6 +5,9 @@ using Atonal;
 using Atonal.Grothendieck;
 using Positions;
 using Primitives;
+using GA.Business.Core.Atonal;
+using GA.Business.Core.Atonal.Primitives;
+using GA.Business.Core.Fretboard.Shapes.Geometry;
 
 /// <summary>
 /// Builds fretboard shape graphs with transitions
@@ -213,13 +216,44 @@ public class ShapeGraphBuilder(
             return null;
         }
 
+        // Optional: Compute OPTIC voice-leading cost (Tymoczko) between set classes
+        // Only influences extended score/weight if VoiceLeadingWeight > 0.
+        double vlCost = 0.0;
+        double vlWeightUsed = 0.0;
+        if (options.VoiceLeadingWeight > 0)
+        {
+            try
+            {
+                var vlOptions = new VoiceLeadingOptions
+                {
+                    OctaveEquivalence = options.VlOctaveEquivalence,
+                    PermutationEquivalence = options.VlPermutationEquivalence,
+                    TranspositionEquivalence = options.VlTranspositionEquivalence,
+                    InversionEquivalence = options.VlInversionEquivalence
+                };
+
+                var scFrom = new SetClass(new PitchClassSet(fromShape.PitchClassSet));
+                var scTo = new SetClass(new PitchClassSet(toShape.PitchClassSet));
+                vlCost = SetClassOpticIndex.Distance(scFrom, scTo, vlOptions);
+                vlWeightUsed = options.VoiceLeadingWeight;
+            }
+            catch
+            {
+                // Fallback silently if anything goes wrong
+                vlCost = 0.0;
+                vlWeightUsed = 0.0;
+            }
+        }
+
         return new ShapeTransition
         {
             FromId = fromShape.Id,
             ToId = toShape.Id,
             Delta = delta,
             HarmonicCost = harmonicCost,
-            PhysicalCost = physicalCost
+            PhysicalCost = physicalCost,
+            VoiceLeadingCost = vlCost,
+            VoiceLeadingWeightUsed = vlWeightUsed
         };
     }
 }

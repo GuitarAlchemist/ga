@@ -2,7 +2,6 @@
 
 using Atonal;
 using Atonal.Abstractions;
-using GA.Core.Extensions;
 using Intervals.Primitives;
 
 /// <summary>

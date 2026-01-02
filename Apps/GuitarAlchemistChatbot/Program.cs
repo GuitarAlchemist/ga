@@ -58,6 +58,10 @@ if (args.Length > 0 && args[0] == "--cli")
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add shared configuration
+builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "../appsettings.Shared.json"), optional: true, reloadOnChange: true);
+
+
 // Add Aspire service defaults (telemetry, health checks, service discovery)
 builder.AddServiceDefaults();
 

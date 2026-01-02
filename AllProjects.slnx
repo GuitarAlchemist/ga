@@ -18,16 +18,16 @@
     <Project Path="Apps/ga-server/GaApi/CUDA/VectorOperations.csproj" />
   </Folder>
   <Folder Name="/Backend/CLI &amp; Tools/">
-    <Project Path="Apps/EmbeddingGenerator/EmbeddingGenerator.csproj" />
-    <Project Path="Apps/FretboardChordTest/FretboardChordTest.csproj" />
-    <Project Path="Apps/GA.TabConversion.Api/GA.TabConversion.Api.csproj" />
-    <Project Path="Apps/GaDataCLI/GaDataCLI.csproj" />
+    <Project Path="Tools/EmbeddingGenerator/EmbeddingGenerator.csproj" />
+    <Project Path="Demos/Music Theory/FretboardChordTest/FretboardChordTest.csproj" />
+    <Project Path="Tools/GA.TabConversion.Api/GA.TabConversion.Api.csproj" />
+    <Project Path="Tools/GaDataCLI/GaDataCLI.csproj" />
     <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj" />
-    <Project Path="Apps/GpuBenchmark/GpuBenchmark.csproj" />
-    <Project Path="Apps/LocalEmbedding/LocalEmbedding.csproj" />
-    <Project Path="Apps/MongoImporter/MongoImporter.csproj" />
-    <Project Path="Apps/MongoVerify/MongoVerify.csproj" />
-    <Project Path="Apps/VectorSearchBenchmark/VectorSearchBenchmark.csproj" />
+    <Project Path="Demos/Performance/GpuBenchmark/GpuBenchmark.csproj" />
+    <Project Path="Tools/LocalEmbedding/LocalEmbedding.csproj" />
+    <Project Path="Tools/MongoImporter/MongoImporter.csproj" />
+    <Project Path="Tools/MongoVerify/MongoVerify.csproj" />
+    <Project Path="Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj" />
     <Project Path="GaCLI/GaCLI.csproj" />
   </Folder>
   <Folder Name="/Backend/Infrastructure/">
@@ -58,12 +58,7 @@
     <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
     <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj" />
-    <Project Path="Common\GA.Business.Config\GA.Business.Config.fsproj" Type="F#">
-      <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
-      <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
-      <Configuration Solution="Release|x64" Project="Release|Any CPU" />
-      <Configuration Solution="Release|x86" Project="Release|Any CPU" />
-    </Project>
+    <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj" />
   </Folder>
   <Folder Name="/Data &amp; Integration/">
     <Project Path="Common/GA.Data.EntityFramework/GA.Data.EntityFramework.csproj" />
@@ -72,20 +67,20 @@
   </Folder>
   <Folder Name="/Demos/" />
   <Folder Name="/Demos/Advanced Features/">
-    <Project Path="Apps/AIIntegrationDemo/AIIntegrationDemo.csproj" />
-    <Project Path="Apps/BSPDemo/BSPDemo.csproj" />
+    <Project Path="Demos/Advanced/AIIntegrationDemo/AIIntegrationDemo.csproj" />
+    <Project Path="Demos/Advanced/BSPDemo/BSPDemo.csproj" />
   </Folder>
   <Folder Name="/Demos/Music Theory/">
-    <Project Path="Apps/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj" />
-    <Project Path="Apps/ChordNamingDemo/ChordNamingDemo.csproj" />
-    <Project Path="Apps/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj" />
-    <Project Path="Apps/MusicalAnalysisApp/MusicalAnalysisApp.csproj" />
-    <Project Path="Apps/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj" />
-    <Project Path="Apps/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj" />
+    <Project Path="Demos/Music Theory/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj" />
+    <Project Path="Demos/Music Theory/ChordNamingDemo/ChordNamingDemo.csproj" />
+    <Project Path="Demos/Music Theory/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj" />
+    <Project Path="Demos/Music Theory/MusicalAnalysisApp/MusicalAnalysisApp.csproj" />
+    <Project Path="Demos/Music Theory/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj" />
+    <Project Path="Demos/Music Theory/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj" />
   </Folder>
   <Folder Name="/Demos/Performance &amp; Benchmarks/">
-    <Project Path="Apps/HighPerformanceDemo/HighPerformanceDemo.csproj" />
-    <Project Path="Apps/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj" />
+    <Project Path="Demos/Performance/HighPerformanceDemo/HighPerformanceDemo.csproj" />
+    <Project Path="Demos/Performance/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj" />
   </Folder>
   <Folder Name="/Documentation/">
     <File Path="docs/AGENTS.md" />
@@ -165,11 +160,6 @@
     <File Path="Scripts/check-mcp-status.ps1" />
     <File Path="Scripts/Consume GA NuGet packages.fsx" />
     <File Path="Scripts/create-vector-index.js" />
-    <File Path="Scripts/fix-cs1998-errors.ps1" />
-    <File Path="Scripts/fix-cs1998-smart.ps1" />
-    <File Path="Scripts/fix-mcp-servers.ps1" />
-    <File Path="Scripts/fix-tars-mcp.ps1" />
-    <File Path="Scripts/fix-test-errors.ps1" />
     <File Path="Scripts/health-check.ps1" />
     <File Path="Scripts/import-to-mongodb.ps1" />
     <File Path="Scripts/install-git-hooks.ps1" />
@@ -196,11 +186,9 @@
     <File Path="Scripts/test-vector-search.ps1" />
     <File Path="Scripts/TEST_SUITE_README.md" />
     <File Path="Scripts\create-microservices.ps1" />
-    <File Path="Scripts\fix-microservices-rate-limiter.ps1" />
     <File Path="Scripts\update-controller-namespaces.ps1" />
     <File Path="Scripts\migrate-all-controllers.ps1" />
     <File Path="Scripts\setup-music-theory-service.ps1" />
-    <File Path="Scripts\fix-controller-usings.ps1" />
     <File Path="Scripts\complete-microservices-migration.ps1" />
     <File Path="Scripts\test-mcp-server.ps1" />
     <File Path="Scripts\complete-all-microservices.ps1" />
@@ -211,7 +199,6 @@
     <File Path="Scripts\test-graphql-and-curation.ps1" />
     <File Path="Scripts\quick-graphql-test.ps1" />
     <File Path="Scripts\replace-newtonsoft-with-systemtextjson.ps1" />
-    <File Path="Scripts\fix-blazor-build-errors.ps1" />
     <File Path="Scripts\test-voicing-search-api.ps1" />
     <File Path="Scripts\test-ilgpu-performance.ps1" />
   </Folder>
@@ -237,6 +224,6 @@
   <Folder Name="/_Local Ga.Interactive NuGet/">
     <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />
   </Folder>
-  <Project Path="Apps/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj" />
-  <Project Path="Apps/InternetContentDemo/InternetContentDemo.csproj" />
+  <Project Path="Demos/Advanced/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj" />
+  <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj" />
 </Solution>

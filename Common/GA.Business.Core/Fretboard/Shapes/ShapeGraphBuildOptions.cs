@@ -34,5 +34,33 @@ public record ShapeGraphBuildOptions
     /// Maximum physical cost for transitions (default: 10.0)
     /// </summary>
     public double MaxPhysicalCost { get; init; } = 10.0;
+
+    // --- OPTIC (Tymoczko) voice-leading integration for transitions ---
+
+    /// <summary>
+    /// Weight applied to OPTIC voice-leading cost when computing transition weighted score.
+    /// Set to 0.0 to disable influence (default).
+    /// </summary>
+    public double VoiceLeadingWeight { get; init; } = 0.0;
+
+    /// <summary>
+    /// Voice-leading space: Octave equivalence (O)
+    /// </summary>
+    public bool VlOctaveEquivalence { get; init; } = true;
+
+    /// <summary>
+    /// Voice-leading space: Permutation equivalence (P)
+    /// </summary>
+    public bool VlPermutationEquivalence { get; init; } = true;
+
+    /// <summary>
+    /// Voice-leading space: Transposition equivalence (T)
+    /// </summary>
+    public bool VlTranspositionEquivalence { get; init; } = true;
+
+    /// <summary>
+    /// Voice-leading space: Inversion equivalence (I)
+    /// </summary>
+    public bool VlInversionEquivalence { get; init; } = false;
 }
 

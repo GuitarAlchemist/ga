@@ -1,7 +1,6 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
 using System.Collections.Generic;
-using System.Linq;
 using GA.Business.Core.Fretboard.Positions;
 using GA.Business.Core.Fretboard.Voicings.Analysis;
 using GA.Business.Core.Fretboard.Voicings.Core;

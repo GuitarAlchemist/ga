@@ -2,8 +2,8 @@
 <RunSettings>
   <!-- Default: exclude Integration category so backend is not required -->
   <NUnit>
-    <!-- Exclude tests marked with [Category("Integration")] -->
-    <Where>cat != Integration</Where>
+    <!-- Exclude tests marked with [Category("Integration")] and heavy categories by default -->
+    <Where>cat != Integration && cat != Performance && cat != GPU</Where>
   </NUnit>
   <!-- Optional: speed up by parallelizing within assemblies if supported -->
   <RunConfiguration>

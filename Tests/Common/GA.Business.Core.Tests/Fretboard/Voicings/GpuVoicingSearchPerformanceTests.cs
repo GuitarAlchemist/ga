@@ -1,16 +1,16 @@
 ﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
 using System.Diagnostics;
-using Core.Fretboard.Voicings;
+using NUnit.Framework;
 using Core.Fretboard.Voicings.Core;
 using Core.Fretboard.Voicings.Search;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Performance tests for GPU-accelerated voicing search
 /// Tests GPU kernel execution and compares with CPU baseline
 /// </summary>
 [TestFixture]
+[NonParallelizable]
 [Category("Performance")]
 [Category("GPU")]
 public class GpuVoicingSearchPerformanceTests
