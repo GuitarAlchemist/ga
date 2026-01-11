@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
+namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -42,7 +46,7 @@ public sealed class HarmonicMajorScaleMode(HarmonicMajorScaleDegree degree)
         {
             foreach (var degree in ValueObjectUtils<HarmonicMajorScaleDegree>.Items)
             {
-                yield return new HarmonicMajorScaleMode(degree);
+                yield return new(degree);
             }
         }
     }

@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
 
+using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using Notes.Primitives;
 using Positions;
 

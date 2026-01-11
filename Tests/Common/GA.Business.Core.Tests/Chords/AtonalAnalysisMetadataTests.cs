@@ -3,6 +3,7 @@ namespace GA.Business.Core.Tests.Chords;
 using System.Linq;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Chords;
+using GA.Business.Core.Chords.Analysis.Atonal;
 using GA.Business.Core.Scales;
 using TonalChordTemplate = GA.Business.Core.Chords.ChordTemplate;
 using NUnit.Framework;

@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A major pentatonic scale degree
@@ -39,7 +47,8 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static MajorPentatonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new MajorPentatonicScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static MajorPentatonicScaleDegree Min => FromValue(_minValue);

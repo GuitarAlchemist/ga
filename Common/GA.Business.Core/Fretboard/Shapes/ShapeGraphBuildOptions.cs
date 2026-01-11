@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
 
 /// <summary>
 /// Options for building shape graphs

@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <!-- Temporarily exclude MonadicFloorService due to type inference issues -->
-    <Compile Remove="Services\MonadicFloorService.cs"/>
+    <Compile Remove="_Parked\**"/>
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 
 /// <summary>
@@ -149,7 +153,7 @@ public static class ChordTemplateRegistry
                     var inversion = CalculateInversion(pitchClassSet, root);
                     var name = GenerateChordName(template, root);
 
-                    interpretations.Add(new ChordInterpretation(
+                    interpretations.Add(new(
                         template, root, likelihood, inversion, name));
                 }
             }
@@ -215,7 +219,7 @@ public static class ChordTemplateRegistry
 
     private static VoicingAnalysis AnalyzeVoicing(ChordVoicing voicing)
     {
-        return new VoicingAnalysis(
+        return new(
             voicing.IsInverted,
             voicing.GetInversion(),
             false, // isDropVoicing - would need more analysis

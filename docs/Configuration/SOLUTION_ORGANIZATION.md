@@ -26,7 +26,7 @@ Apps/
 ├─ MusicalAnalysisApp
 ├─ PerformanceOptimizationDemo
 ├─ PracticeRoutineDSLDemo
-├─ PsychoacousticVoicingDemo
+
 ├─ VectorSearchBenchmark
 ├─ ga-client (Production)
 ├─ ga-graphiti-service (Production)
@@ -46,7 +46,7 @@ Apps/
 │  ├─ ChordNamingDemo
 │  ├─ FretboardChordTest
 │  ├─ FretboardExplorer
-│  ├─ PsychoacousticVoicingDemo
+
 │  ├─ MusicalAnalysisApp
 │  └─ PracticeRoutineDSLDemo
 │
@@ -89,7 +89,7 @@ Apps/
 | **ChordNamingDemo** | Demonstrates chord naming algorithms and conventions |
 | **FretboardChordTest** | Tests chord generation and fretboard positioning |
 | **FretboardExplorer** | Interactive fretboard exploration and visualization |
-| **PsychoacousticVoicingDemo** | Demonstrates psychoacoustic principles in chord voicing |
+
 | **MusicalAnalysisApp** | Musical analysis and theory exploration |
 | **PracticeRoutineDSLDemo** | Domain-specific language for practice routines |
 

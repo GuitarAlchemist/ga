@@ -22,12 +22,8 @@ public enum PitchClass
 /// <summary>
 ///     Simple pitch class set for demonstration
 /// </summary>
-public class PitchClassSet : HashSet<PitchClass>
+public class PitchClassSet(IEnumerable<PitchClass> pitchClasses) : HashSet<PitchClass>(pitchClasses)
 {
-    public PitchClassSet(IEnumerable<PitchClass> pitchClasses) : base(pitchClasses)
-    {
-    }
-
     public override string ToString()
     {
         return string.Join(", ", this.OrderBy(pc => (int)pc));
@@ -37,16 +33,10 @@ public class PitchClassSet : HashSet<PitchClass>
 /// <summary>
 ///     Simple BSP node for demonstration
 /// </summary>
-public class BspNode
+public class BspNode(string name, PitchClassSet region)
 {
-    public BspNode(string name, PitchClassSet region)
-    {
-        Name = name;
-        Region = region;
-    }
-
-    public string Name { get; set; }
-    public PitchClassSet Region { get; set; }
+    public string Name { get; set; } = name;
+    public PitchClassSet Region { get; set; } = region;
     public BspNode? Left { get; set; }
     public BspNode? Right { get; set; }
 }

@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using GA.Core.Extensions;
 
 public static class ModeIntervalExtensions

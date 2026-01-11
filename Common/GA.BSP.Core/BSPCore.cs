@@ -24,12 +24,8 @@ public enum PitchClass
 /// <summary>
 ///     Simple pitch class set for BSP operations
 /// </summary>
-public class PitchClassSet : HashSet<PitchClass>
+public class PitchClassSet(IEnumerable<PitchClass> pitchClasses) : HashSet<PitchClass>(pitchClasses)
 {
-    public PitchClassSet(IEnumerable<PitchClass> pitchClasses) : base(pitchClasses)
-    {
-    }
-
     public override string ToString()
     {
         return string.Join(", ", this.OrderBy(pc => (int)pc));
@@ -278,12 +274,7 @@ public class TonalBspQueryResult
 /// </summary>
 public class TonalBspService
 {
-    private readonly TonalBspTree _tree;
-
-    public TonalBspService()
-    {
-        _tree = new TonalBspTree();
-    }
+    private readonly TonalBspTree _tree = new();
 
     /// <summary>
     ///     Perform spatial query for similar elements

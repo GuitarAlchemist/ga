@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A Prometheus scale degree
@@ -35,7 +43,8 @@ public readonly record struct PrometheusScaleDegree : IRangeValueObject<Promethe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PrometheusScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new PrometheusScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static PrometheusScaleDegree Min => FromValue(_minValue);

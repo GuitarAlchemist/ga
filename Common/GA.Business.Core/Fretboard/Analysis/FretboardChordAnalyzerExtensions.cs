@@ -1,5 +1,6 @@
-﻿namespace GA.Business.Core.Fretboard.Analysis;
+namespace GA.Business.Core.Fretboard.Analysis;
 
+using System.Collections.Generic;
 using Primitives;
 
 /// <summary>

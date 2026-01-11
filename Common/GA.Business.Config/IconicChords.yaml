@@ -1,102 +1,132 @@
-# Guitar Techniques Configuration
-# Defines guitar-specific playing techniques and theoretical concepts
-# Conventions:
-# - Use concise, copyable drills with BPM ladders.
-# - Fret numbers are from the nut; string numbers are 6 (low E) → 1 (high E).
-# - "Mechanics" is split by hand and muting details for fast troubleshooting.
+# Iconic Chord Configurations
+# This file defines famous chord voicings with their cultural and historical significance
 
-GuitarTechniques:
-  - Name: "Pitch Axis Theory"
-    Description: "Keep a central pitch while the harmony around it changes"
-    Category: "Lead Guitar"
-    Inventor: "Joe Satriani"
-    Difficulty: "Advanced"
-    Concept: "Sustain a central note (axis) through modal or functional shifts"
-    Theory: "Static melody over moving harmony creates tension/release without altering the axis"
-    Mechanics:
-      PickingHand: "Sustain/ornament axis note; ghost-pick for time feel"
-      FrettingHand: "Hold/return to axis, outline chord/harmony tones around it"
-      Muting: "RH palm lightly touching adjacent strings; LH finger flats for sympathetic control"
-    Examples:
-      - CentralPitch: "E"
-        ContextHarmony: [ "Em7", "E", "Esus4", "E7", "Emaj7", "Cmaj7/E", "D/E", "F/E" ]
-        SuggestedScales: [ "E Dorian", "E Mixolydian", "E Lydian", "E Altered over E7alt" ]
-        AxisRegister: "12th fret, 1st string (E) or 9th fret, 3rd string (E)"
-      - CentralPitch: "G"
-        ContextHarmony: [ "G", "Gm", "G7", "Gsus4", "Gadd9", "Eb/G", "F/G" ]
-        SuggestedScales: [ "G Ionian", "G Dorian", "G Mixolydian", "G Lydian" ]
-        AxisRegister: "15th fret, 1st string (G) or 12th fret, 3rd string (G)"
-    Applications:
-      - "Lead lines that ignore functional shifts while implying them"
-      - "Layered loop parts (axis on top, harmony below)"
-      - "Film/game ostinati with evolving modes"
-    Songs: [ "Surfing with the Alien", "Always with Me, Always with You" ]
-    Drills:
-      - Name: "Axis ornaments"
-        Steps: [ "Hold axis E (12th fret, 1st string)", "Add neighbor F/F#", "Resolve to E on strong beats" ]
-        BPMLadder: [ 60, 72, 84, 96 ]
+IconicChords:
+  - Name: "Hendrix Chord"
+    TheoreticalName: "E7#9"
+    Description: "The signature chord from Purple Haze - a dominant 7th with a sharp 9th"
+    Artist: "Jimi Hendrix"
+    Song: "Purple Haze"
+    Era: "1960s"
+    Genre: "Rock/Blues"
+    PitchClasses: [ 4, 8, 11, 2, 7 ]  # E, G#, B, D, G
+    GuitarVoicing: [ 0, 7, 6, 7, 8, 0 ]  # Standard Hendrix chord voicing
+    AlternateNames: [ "Purple Haze Chord", "E7#9" ]
 
-  - Name: "Sweep Picking"
-    Description: "Single, continuous pick motion across strings for arpeggios"
-    Category: "Lead Guitar"
-    Difficulty: "Advanced"
-    Theory: "Economizes string-crossings; each note is a separate fretted event under one directional stroke"
-    Mechanics:
-      PickingHand: "Rest-stroke glide; tiny forearm rotation; no string hopping"
-      FrettingHand: "One finger per note; release pressure immediately (no ringing)"
-      Muting: "RH palm trails; LH release + index-flat to kill previous string"
-    CorePatterns:
-      - Shape: "Minor Triad (Am)"
-        Strings: [ 5, 4, 3, 2, 1 ]
-        Frets: [ 12, 10, 9, 10, 12 ]
-        Direction: "Down sweep"
-        NotesFromA: [ "A", "E", "A", "C", "E" ]
-      - Shape: "Major 7th (Cmaj7)"
-        Strings: [ 5, 4, 3, 2, 1 ]
-        Frets: [ 15, 14, 12, 13, 12 ]
-        Direction: "Down-up"
-        NotesFromC: [ "C", "G", "C", "E", "B" ]
-    Drills:
-      - Name: "3-string mini-sweep (minor)"
-        Strings: [ 3, 2, 1 ]
-        Frets: [ 9, 10, 12 ]
-        BPMLadder: [ 50, 60, 70, 80 ]
-      - Name: "5-string up/down"
-        Strings: [ 5, 4, 3, 2, 1, 2, 3, 4 ]
-        Frets: [ 12,10, 9,10,12,10, 9,10 ]
-        BPMLadder: [ 40, 52, 64, 76 ]
-    Artists: [ "Frank Gambale", "Jason Becker", "Yngwie Malmsteen" ]
-    Pitfalls: [ "Letting notes ring together", "Over-picking instead of gliding" ]
+  - Name: "James Bond Chord"
+    TheoreticalName: "Em(maj7)"
+    Description: "The mysterious spy movie chord - minor triad with major 7th"
+    Artist: "John Barry"
+    Song: "James Bond Theme"
+    Era: "1960s"
+    Genre: "Film Score"
+    PitchClasses: [ 4, 7, 11, 3 ]  # E, G, B, D#
+    GuitarVoicing: [ 0, 2, 1, 0, 0, 0 ]  # Em(maj7) open voicing
+    AlternateNames: [ "Spy Chord", "Em(maj7)", "Minor-Major 7th" ]
 
-  - Name: "Legato Playing"
-    Description: "Hammers, pulls, slides, and trills to connect notes with minimal picking"
-    Category: "Lead Guitar"
-    Difficulty: "Intermediate"
-    Theory: "Shifts articulation to the fretting hand; enables smooth phrasing and speed bursts"
-    Mechanics:
-      PickingHand: "Light accents on phrase onsets"
-      FrettingHand: "Snap-like pull-offs; decisive hammers; relaxed thumb"
-      Muting: "RH palm + LH finger flats to control sympathetic ring"
-    Applications:
-      - "Scalar lines with articulation variety"
-      - "Intervallic runs with slides"
-      - "Sustain-efficient phrasing over clean tones"
-    Examples:
-      - Pattern: "3-note-per-string ascending legato (A minor)"
-        Strings: [ 6, 6, 6 ]
-        Frets: [ 5, 7, 8 ]
-        Technique: "Pick 5 only; hammer 7→8"
-      - Pattern: "Descending pull-off ladder"
-        Strings: [ 1 ]
-        Frets: [ 8, 7, 5 ]
-        Technique: "Pick 8 only; pull 7→5"
-    Drills:
-      - Name: "Legato grid"
-        Path: "3NPS A minor across neck"
-        Rule: "Pick only string changes"
-        BPMLadder: [ 60, 72, 84, 96 ]
-    Artists: [ "Allan Holdsworth", "Joe Satriani", "Steve Vai" ]
-    Pitfalls: [ "Weak pull-offs (volume mismatch)", "Left-hand tension" ]
+  - Name: "Tristan Chord"
+    TheoreticalName: "F7#11"
+    Description: "Wagner's famous unresolved dissonance from Tristan und Isolde"
+    Artist: "Richard Wagner"
+    Song: "Tristan und Isolde"
+    Era: "1860s"
+    Genre: "Classical/Opera"
+    PitchClasses: [ 5, 11, 3, 8 ]  # F, B, D#, G#
+    AlternateNames: [ "Wagner Chord", "Tristan Dissonance" ]
+
+  - Name: "Mystic Chord"
+    TheoreticalName: "C6#11"
+    Description: "Scriabin's synthetic chord built from fourths"
+    Artist: "Alexander Scriabin"
+    Song: "Prometheus"
+    Era: "1910s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 0, 6, 10, 4, 9, 2 ]  # C, F#, Bb, E, A, D
+    AlternateNames: [ "Prometheus Chord", "Scriabin Chord" ]
+
+  - Name: "So What Chord"
+    TheoreticalName: "Em11"
+    Description: "Bill Evans' famous quartal voicing from Kind of Blue"
+    Artist: "Bill Evans"
+    Song: "So What"
+    Era: "1950s"
+    Genre: "Jazz"
+    PitchClasses: [ 4, 9, 2, 7, 11 ]  # E, A, D, G, B
+    AlternateNames: [ "Evans Chord", "Em11", "Quartal Voicing" ]
+
+  - Name: "Mu Major Chord"
+    TheoreticalName: "Cadd9(no3)"
+    Description: "Steely Dan's signature chord - major with 9th but no 3rd"
+    Artist: "Steely Dan"
+    Song: "Various"
+    Era: "1970s"
+    Genre: "Jazz Rock"
+    PitchClasses: [ 0, 7, 2 ]  # C, G, D
+    GuitarVoicing: [ 0, 3, 0, 0, 3, 0 ]  # Cadd9(no3) voicing
+    AlternateNames: [ "Mu Chord", "Add9(no3)", "Steely Dan Chord" ]
+
+  - Name: "Elektra Chord"
+    TheoreticalName: "E7b9#11"
+    Description: "Strauss's dissonant chord from Elektra"
+    Artist: "Richard Strauss"
+    Song: "Elektra"
+    Era: "1900s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 4, 8, 11, 2, 5, 10 ]  # E, G#, B, D, F, Bb
+    AlternateNames: [ "Strauss Chord" ]
+
+  - Name: "Petrushka Chord"
+    TheoreticalName: "C/F# Polychord"
+    Description: "Stravinsky's bitonal chord - C major over F# major"
+    Artist: "Igor Stravinsky"
+    Song: "Petrushka"
+    Era: "1910s"
+    Genre: "Classical/Modern"
+    PitchClasses: [ 0, 4, 7, 6, 10, 1 ]  # C, E, G, F#, A#, C#
+    AlternateNames: [ "Stravinsky Chord", "Bitonal Chord" ]
+
+  - Name: "Cowboy Chord"
+    TheoreticalName: "G"
+    Description: "The classic open G major chord - staple of country and folk"
+    Artist: "Traditional"
+    Song: "Various"
+    Era: "Traditional"
+    Genre: "Country/Folk"
+    PitchClasses: [ 7, 11, 2 ]  # G, B, D
+    GuitarVoicing: [ 3, 2, 0, 0, 3, 3 ]  # Open G major
+    AlternateNames: [ "Open G", "G Major" ]
+
+  - Name: "Power Chord"
+    TheoreticalName: "G5"
+    Description: "The quintessential rock chord - root and fifth only"
+    Artist: "Various Rock Artists"
+    Song: "Various"
+    Era: "1950s-Present"
+    Genre: "Rock/Metal"
+    PitchClasses: [ 7, 2 ]  # G, D
+    GuitarVoicing: [ 3, 5, 5, -1, -1, -1 ]  # G5 power chord
+    AlternateNames: [ "Fifth Chord", "G5" ]
+
+  - Name: "Joni Mitchell Chord"
+    TheoreticalName: "Dmaj7add6"
+    Description: "Complex open tuning chord popularized by Joni Mitchell"
+    Artist: "Joni Mitchell"
+    Song: "Both Sides Now"
+    Era: "1960s-70s"
+    Genre: "Folk/Jazz"
+    PitchClasses: [ 2, 6, 9, 1, 4 ]  # D, F#, A, C#, E
+    AlternateNames: [ "Mitchell Voicing", "Open Tuning Chord" ]
+
+  - Name: "Blackbird Chord"
+    TheoreticalName: "G/B"
+    Description: "The distinctive fingerpicked chord from The Beatles' Blackbird"
+    Artist: "The Beatles"
+    Song: "Blackbird"
+    Era: "1960s"
+    Genre: "Rock/Pop"
+    PitchClasses: [ 7, 11, 2 ]  # G, B, D
+    GuitarVoicing: [ 0, 0, 0, 0, 2, 0 ]  # Blackbird fingerpicking pattern
+    AlternateNames: [ "Beatles Chord", "G/B" ]
 
   - Name: "Tapping"
     Description: "Use picking-hand fingers to fret notes"

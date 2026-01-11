@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 
 /// <summary>
@@ -36,42 +39,42 @@ public static class BasicChordExtensionsService
     {
         return extension switch
         {
-            ChordExtension.Triad => new ChordExtensionInfo(
+            ChordExtension.Triad => new(
                 extension, "", "", "Basic triad (1-3-5)", new[] { 3, 7 }.ToList().AsReadOnly()),
 
-            ChordExtension.Sixth => new ChordExtensionInfo(
+            ChordExtension.Sixth => new(
                 extension, "6", "6", "Sixth chord (1-3-5-6)", new[] { 3, 7, 9 }.ToList().AsReadOnly()),
 
-            ChordExtension.Seventh => new ChordExtensionInfo(
+            ChordExtension.Seventh => new(
                 extension, "7", "7", "Seventh chord (1-3-5-7)", new[] { 3, 7, 10 }.ToList().AsReadOnly()),
 
-            ChordExtension.Ninth => new ChordExtensionInfo(
+            ChordExtension.Ninth => new(
                 extension, "9", "9", "Ninth chord (1-3-5-7-9)", new[] { 3, 7, 10, 2 }.ToList().AsReadOnly()),
 
-            ChordExtension.Eleventh => new ChordExtensionInfo(
+            ChordExtension.Eleventh => new(
                 extension, "11", "11", "Eleventh chord (1-3-5-7-9-11)", new[] { 3, 7, 10, 2, 5 }.ToList().AsReadOnly()),
 
-            ChordExtension.Thirteenth => new ChordExtensionInfo(
+            ChordExtension.Thirteenth => new(
                 extension, "13", "13", "Thirteenth chord (1-3-5-7-9-11-13)",
                 new[] { 3, 7, 10, 2, 5, 9 }.ToList().AsReadOnly()),
 
-            ChordExtension.Add9 => new ChordExtensionInfo(
+            ChordExtension.Add9 => new(
                 extension, "add9", "add9", "Added ninth (1-3-5-9, no 7th)", new[] { 3, 7, 2 }.ToList().AsReadOnly()),
 
-            ChordExtension.Add11 => new ChordExtensionInfo(
+            ChordExtension.Add11 => new(
                 extension, "add11", "add11", "Added eleventh (1-3-5-11, no 7th)",
                 new[] { 3, 7, 5 }.ToList().AsReadOnly()),
 
-            ChordExtension.SixNine => new ChordExtensionInfo(
+            ChordExtension.SixNine => new(
                 extension, "6/9", "6/9", "Sixth/ninth chord (1-3-5-6-9)", new[] { 3, 7, 9, 2 }.ToList().AsReadOnly()),
 
-            ChordExtension.Sus2 => new ChordExtensionInfo(
+            ChordExtension.Sus2 => new(
                 extension, "sus2", "sus2", "Suspended second (1-2-5)", new[] { 2, 7 }.ToList().AsReadOnly()),
 
-            ChordExtension.Sus4 => new ChordExtensionInfo(
+            ChordExtension.Sus4 => new(
                 extension, "sus4", "sus4", "Suspended fourth (1-4-5)", new[] { 5, 7 }.ToList().AsReadOnly()),
 
-            _ => new ChordExtensionInfo(
+            _ => new(
                 extension, "", "", "Unknown extension", new List<int>().AsReadOnly())
         };
     }
@@ -156,6 +159,11 @@ public static class BasicChordExtensionsService
             return ChordExtension.Sus2;
         }
 
+        if (intervalSet.Contains(10) || (intervalSet.Contains(4) && intervalSet.Contains(10)))
+        {
+             // Dominant family logic handled in quality
+        }
+
         return ChordExtension.Triad;
     }
 
@@ -164,7 +172,7 @@ public static class BasicChordExtensionsService
     /// </summary>
     public static string GenerateChordName(PitchClass root, ChordQuality quality, ChordExtension extension)
     {
-        var rootName = GetNoteName(root);
+        var rootName = GetBestNoteName(root);
         var extensionNotation = GetExtensionNotation(extension, quality);
 
         // For triads, we need to add quality notation separately
@@ -189,7 +197,8 @@ public static class BasicChordExtensionsService
             ChordQuality.Minor => "m7",
             ChordQuality.Diminished => "dim7",
             ChordQuality.Augmented => "aug7",
-            _ => "7" // Dominant 7th
+            ChordQuality.Dominant => "7",
+            _ => "7" // Default to dominant for Seventh extension
         };
     }
 
@@ -204,7 +213,8 @@ public static class BasicChordExtensionsService
             ChordQuality.Minor => "m9",
             ChordQuality.Diminished => "dim9",
             ChordQuality.Augmented => "aug9",
-            _ => "9" // Dominant 9th
+            ChordQuality.Dominant => "9",
+            _ => "9" // Default to dominant for Ninth extension
         };
     }
 
@@ -217,7 +227,8 @@ public static class BasicChordExtensionsService
         {
             ChordQuality.Major => "maj11",
             ChordQuality.Minor => "m11",
-            _ => "11" // Dominant 11th
+            ChordQuality.Dominant => "11",
+            _ => "11" // Default to dominant for Eleventh extension
         };
     }
 
@@ -230,7 +241,8 @@ public static class BasicChordExtensionsService
         {
             ChordQuality.Major => "maj13",
             ChordQuality.Minor => "m13",
-            _ => "13" // Dominant 13th
+            ChordQuality.Dominant => "13",
+            _ => "13" // Default to dominant for Thirteenth extension
         };
     }
 
@@ -244,7 +256,8 @@ public static class BasicChordExtensionsService
             ChordQuality.Minor => "m",
             ChordQuality.Diminished => "dim",
             ChordQuality.Augmented => "aug",
-            ChordQuality.Suspended => "",
+            ChordQuality.Suspended => "sus",
+            ChordQuality.Dominant => "", // Dominant quality notation is in extension
             ChordQuality.Major => "",
             _ => ""
         };
@@ -253,15 +266,25 @@ public static class BasicChordExtensionsService
     /// <summary>
     ///     Gets the note name for a pitch class
     /// </summary>
-    private static string GetNoteName(PitchClass pitchClass)
+    /// <summary>
+    ///     Gets the note name for a pitch class with natural preference for flats in certain contexts
+    /// </summary>
+    private static string GetBestNoteName(PitchClass pitchClass)
     {
         return pitchClass.Value switch
         {
-            0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
-            6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
-            _ => "?"
+            1 => "Db",
+            3 => "Eb",
+            8 => "Ab",
+            10 => "Bb",
+            _ => pitchClass.ToSharpNote().ToString()
         };
     }
+
+    /// <summary>
+    ///     Gets the note name for a pitch class (Deprecated, use GetBestNoteName)
+    /// </summary>
+    private static string GetNoteName(PitchClass pitchClass) => GetBestNoteName(pitchClass);
 
     /// <summary>
     ///     Validates that a chord extension is properly formed

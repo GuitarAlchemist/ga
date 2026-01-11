@@ -23,6 +23,7 @@
         <Compile Include="InstrumentsConfig.fs"/>
         <Compile Include="ScalesConfig.fs"/>
         <Compile Include="ModesConfig.fs"/>
+        <Compile Include="SemanticConfig.fs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -60,24 +61,63 @@
         <None Include="IconicChords.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <Content Include="AdvancedHarmony.yaml"/>
-        <Content Include="ArticulationTechniques.yaml"/>
-        <Content Include="AtonalTechniques.yaml"/>
-        <Content Include="ChordProgressions.yaml"/>
-        <Content Include="Counterpoint.yaml"/>
-        <Content Include="ExtendedChords.yaml"/>
-        <Content Include="FormAndComposition.yaml"/>
-        <Content Include="GuitarEffects.yaml"/>
-        <Content Include="GuitarTechniques.yaml"/>
-        <Content Include="ImprovisationConcepts.yaml"/>
-        <Content Include="KeyModulationTechniques.yaml"/>
-        <Content Include="ModalInterchange.yaml"/>
-        <Content Include="NotationSchema.yaml"/>
-        <Content Include="PedalTones.yaml"/>
-        <Content Include="RhythmicConcepts.yaml"/>
-        <Content Include="SpecializedTunings.yaml"/>
-        <Content Include="StringInstrumentTechniques.yaml"/>
-        <Content Include="VoiceLeading.yaml"/>
+        <Content Include="AdvancedHarmony.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="ArticulationTechniques.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="AtonalTechniques.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="ChordProgressions.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Counterpoint.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="ExtendedChords.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FormAndComposition.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="GuitarEffects.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="GuitarTechniques.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="ImprovisationConcepts.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="KeyModulationTechniques.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="ModalInterchange.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="NotationSchema.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="PedalTones.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="RhythmicConcepts.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="SpecializedTunings.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="StringInstrumentTechniques.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="VoiceLeading.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Include="SemanticNomenclature.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

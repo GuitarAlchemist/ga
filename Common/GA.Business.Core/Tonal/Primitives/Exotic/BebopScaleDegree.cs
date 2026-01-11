@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A bebop scale degree
@@ -37,7 +45,8 @@ public readonly record struct BebopScaleDegree : IRangeValueObject<BebopScaleDeg
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BebopScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new BebopScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static BebopScaleDegree Min => FromValue(_minValue);

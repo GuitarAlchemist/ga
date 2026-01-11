@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 
 /// <summary>
@@ -95,7 +97,7 @@ public static class EnharmonicNamingService
             _ => (sharpName ?? flatName ?? naturalName, "", "Default preference")
         };
 
-        return new EnharmonicResult(
+        return new(
             preferred ?? GetDefaultNoteName(root),
             alternate ?? "",
             context,

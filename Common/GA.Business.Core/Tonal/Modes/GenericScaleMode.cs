@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
 
+using System;
+using JetBrains.Annotations;
 using Primitives;
 using Scales;
 

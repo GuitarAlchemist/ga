@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Filtering;
+namespace GA.Business.Core.Fretboard.Voicings.Filtering;
 
 /// <summary>
 /// Filtering criteria for voicing analysis

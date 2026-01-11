@@ -10,19 +10,9 @@ using Services;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class TabConversionController : ControllerBase
+public class TabConversionController(ITabConversionService conversionService,
+    ILogger<TabConversionController> logger) : ControllerBase
 {
-    private readonly ITabConversionService _conversionService;
-    private readonly ILogger<TabConversionController> _logger;
-
-    public TabConversionController(
-        ITabConversionService conversionService,
-        ILogger<TabConversionController> logger)
-    {
-        _conversionService = conversionService;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Convert tab from one format to another
     /// </summary>
@@ -58,10 +48,10 @@ public class TabConversionController : ControllerBase
                 });
             }
 
-            _logger.LogInformation("Conversion request: {Source} -> {Target}",
+            logger.LogInformation("Conversion request: {Source} -> {Target}",
                 request.SourceFormat, request.TargetFormat);
 
-            var response = await _conversionService.ConvertAsync(request, cancellationToken).ConfigureAwait(false);
+            var response = await conversionService.ConvertAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (!response.Success)
             {
@@ -72,7 +62,7 @@ public class TabConversionController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument in conversion request");
+            logger.LogWarning(ex, "Invalid argument in conversion request");
             return BadRequest(new ConversionResponse
             {
                 Success = false,
@@ -81,7 +71,7 @@ public class TabConversionController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing conversion request");
+            logger.LogError(ex, "Error processing conversion request");
             return StatusCode(500, new ConversionResponse
             {
                 Success = false,
@@ -115,9 +105,9 @@ public class TabConversionController : ControllerBase
                 });
             }
 
-            _logger.LogInformation("Validation request for format: {Format}", request.Format);
+            logger.LogInformation("Validation request for format: {Format}", request.Format);
 
-            var response = await _conversionService.ValidateAsync(request, cancellationToken).ConfigureAwait(false);
+            var response = await conversionService.ValidateAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Return BadRequest if format is unsupported
             if (response.Errors.Any(e => e.Contains("Unsupported format", StringComparison.OrdinalIgnoreCase)))
@@ -129,7 +119,7 @@ public class TabConversionController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing validation request");
+            logger.LogError(ex, "Error processing validation request");
             return StatusCode(500, new ValidationResponse
             {
                 IsValid = false,
@@ -150,14 +140,14 @@ public class TabConversionController : ControllerBase
     {
         try
         {
-            var response = await _conversionService.GetFormatsAsync(cancellationToken).ConfigureAwait(false);
+            var response = await conversionService.GetFormatsAsync(cancellationToken).ConfigureAwait(false);
             // Return the display names (e.g., "VexTab", "ASCII Tab") instead of IDs
             var formatNames = response.Formats.Select(f => f.Name).ToList();
             return Ok(formatNames);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting formats");
+            logger.LogError(ex, "Error getting formats");
             return StatusCode(500, new List<string>());
         }
     }
@@ -188,13 +178,13 @@ public class TabConversionController : ControllerBase
                 return BadRequest(new ErrorResponse { Error = "Content cannot be empty" });
             }
 
-            var format = await _conversionService.DetectFormatAsync(request.Content, cancellationToken)
+            var format = await conversionService.DetectFormatAsync(request.Content, cancellationToken)
                 .ConfigureAwait(false);
             return Ok(new DetectFormatResponse { Format = format ?? "Unknown" });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error detecting format");
+            logger.LogError(ex, "Error detecting format");
             return StatusCode(500, new ErrorResponse { Error = "Internal server error during format detection" });
         }
     }

@@ -1,4 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.Topology;
+namespace GA.Business.Core.Fretboard.Shapes.Topology;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A simplicial complex for topological data analysis
@@ -129,7 +134,7 @@ public class SimplicialComplex
             {
                 if (distances(points[i], points[j]) <= epsilon)
                 {
-                    complex.AddSimplex(new Simplex([points[i], points[j]]));
+                    complex.AddSimplex(new([points[i], points[j]]));
                 }
             }
         }
@@ -174,7 +179,7 @@ public class SimplicialComplex
                     if (allClose)
                     {
                         var newVertices = simplex.Vertices.Append(point).ToArray();
-                        complex.AddSimplex(new Simplex(newVertices));
+                        complex.AddSimplex(new(newVertices));
                     }
                 }
             }
@@ -228,7 +233,7 @@ public class Simplex : IEquatable<Simplex>
         for (var i = 0; i < Vertices.Count; i++)
         {
             var faceVertices = Vertices.Where((_, idx) => idx != i);
-            yield return new Simplex(faceVertices);
+            yield return new(faceVertices);
         }
     }
 

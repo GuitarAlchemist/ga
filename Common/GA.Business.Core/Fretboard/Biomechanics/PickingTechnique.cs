@@ -1,4 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
+
+using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 ///     Represents the picking technique used to play a chord or passage
@@ -46,7 +49,7 @@ public record PickingAnalysis(
     /// </summary>
     public static PickingAnalysis Standard(int stringCount, string reason = "All strings played with pick")
     {
-        return new PickingAnalysis(PickingTechnique.Standard, stringCount, 0, 1.0, reason);
+        return new(PickingTechnique.Standard, stringCount, 0, 1.0, reason);
     }
 
     /// <summary>
@@ -54,7 +57,7 @@ public record PickingAnalysis(
     /// </summary>
     public static PickingAnalysis Fingerstyle(int stringCount, string reason = "All strings played with fingers")
     {
-        return new PickingAnalysis(PickingTechnique.Fingerstyle, 0, stringCount, 1.0, reason);
+        return new(PickingTechnique.Fingerstyle, 0, stringCount, 1.0, reason);
     }
 
     /// <summary>
@@ -62,7 +65,7 @@ public record PickingAnalysis(
     /// </summary>
     public static PickingAnalysis Hybrid(int pickedCount, int fingeredCount, double confidence, string reason)
     {
-        return new PickingAnalysis(PickingTechnique.Hybrid, pickedCount, fingeredCount, confidence, reason);
+        return new(PickingTechnique.Hybrid, pickedCount, fingeredCount, confidence, reason);
     }
 
     /// <summary>
@@ -70,7 +73,7 @@ public record PickingAnalysis(
     /// </summary>
     public static PickingAnalysis Unknown(string reason = "Unable to determine picking technique")
     {
-        return new PickingAnalysis(PickingTechnique.Unknown, 0, 0, 0.0, reason);
+        return new(PickingTechnique.Unknown, 0, 0, 0.0, reason);
     }
 }
 

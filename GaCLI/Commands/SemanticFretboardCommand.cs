@@ -11,19 +11,9 @@ using System.CommandLine;
 ///     CLI command for testing semantic fretboard indexing and natural language querying
 ///     Provides an interactive interface to index voicings and ask questions
 /// </summary>
-public class SemanticFretboardCommand
+public class SemanticFretboardCommand(SemanticFretboardService semanticService,
+    ILogger<SemanticFretboardCommand> logger)
 {
-    private readonly ILogger<SemanticFretboardCommand> _logger;
-    private readonly SemanticFretboardService _semanticService;
-
-    public SemanticFretboardCommand(
-        SemanticFretboardService semanticService,
-        ILogger<SemanticFretboardCommand> logger)
-    {
-        _semanticService = semanticService;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Create the CLI command definition
     /// </summary>
@@ -75,7 +65,7 @@ public class SemanticFretboardCommand
         catch (Exception ex)
         {
             AnsiConsole.WriteException(ex);
-            _logger.LogError(ex, "Error executing semantic fretboard command");
+            logger.LogError(ex, "Error executing semantic fretboard command");
         }
     }
 
@@ -102,7 +92,7 @@ public class SemanticFretboardCommand
                     task.Description = $"[green]Indexing voicings ({p.Indexed}/{p.Total}, {p.ErrorRate:P1} errors)[/]";
                 };
 
-                var result = await _semanticService.IndexFretboardVoicingsAsync(
+                var result = await semanticService.IndexFretboardVoicingsAsync(
                     tuning,
                     instrumentName: $"{options.Tuning} Guitar",
                     maxFret: options.MaxFret,
@@ -166,7 +156,7 @@ public class SemanticFretboardCommand
         await AnsiConsole.Status()
             .StartAsync("Searching and generating response...", async _ =>
             {
-                var result = await _semanticService.ProcessNaturalLanguageQueryAsync(query);
+                var result = await semanticService.ProcessNaturalLanguageQueryAsync(query);
 
                 AnsiConsole.MarkupLine($"\n[green]✓ Query completed in {result.ElapsedTime.TotalMilliseconds:F0}ms[/]");
                 AnsiConsole.MarkupLine(
@@ -222,7 +212,7 @@ public class SemanticFretboardCommand
     /// </summary>
     private async Task ShowIndexStatistics()
     {
-        var stats = _semanticService.GetIndexStatistics();
+        var stats = semanticService.GetIndexStatistics();
 
         var table = new Table();
         table.AddColumn("Metric");

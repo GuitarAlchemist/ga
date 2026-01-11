@@ -4,7 +4,7 @@ namespace GaApi.Services;
 ///     Ollama-based embedding service implementation
 ///     Uses local Ollama instance for generating embeddings
 /// </summary>
-public class OllamaEmbeddingService : SemanticSearchService.IEmbeddingService
+public class OllamaEmbeddingService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OllamaEmbeddingService> _logger;
@@ -22,7 +22,7 @@ public class OllamaEmbeddingService : SemanticSearchService.IEmbeddingService
         _logger = logger;
     }
 
-    public async Task<float[]> GenerateEmbeddingAsync(string text)
+    public virtual async Task<float[]> GenerateEmbeddingAsync(string text)
     {
         try
         {

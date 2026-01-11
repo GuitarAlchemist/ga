@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
 
 /// <summary>
 ///     See https://en.wikibooks.org/wiki/Music_Theory/Consonance_and_Dissonance

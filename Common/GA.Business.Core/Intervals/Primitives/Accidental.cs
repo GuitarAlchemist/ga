@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
 
+using System;
+using GA.Core.Abstractions;
+using JetBrains.Annotations;
 using Notes.Primitives;
 
 /// <summary>
@@ -48,7 +51,8 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
 
     public static Accidental FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Accidental { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator Accidental(int value)
@@ -123,7 +127,8 @@ public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsa
 
     public Semitones ToSemitones()
     {
-        return new Semitones { Value = _value };
+        return new()
+            { Value = _value };
     }
 
     #region IRangeValueObject

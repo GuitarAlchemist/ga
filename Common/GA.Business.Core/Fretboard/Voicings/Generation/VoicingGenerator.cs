@@ -1,7 +1,13 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Generation;
+namespace GA.Business.Core.Fretboard.Voicings.Generation;
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Core;
 using Positions;
 using Primitives;
@@ -101,7 +107,7 @@ public static class VoicingGenerator
             if (playedCount >= minPlayedNotes)
             {
                 // Check fret span constraint
-                var isValid = minFret == int.MaxValue || (maxFret - minFret <= maxFretSpan);
+                var isValid = minFret == int.MaxValue || maxFret - minFret <= maxFretSpan;
 
                 if (isValid)
                 {
@@ -116,7 +122,7 @@ public static class VoicingGenerator
                         }
                     }
 
-                    results.Add(new Voicing(combination, notes));
+                    results.Add(new(combination, notes));
                 }
             }
 
@@ -163,14 +169,14 @@ public static class VoicingGenerator
         {
             for (var f = 0; f <= fretboard.FretCount; f++)
             {
-                cachedLocations[s, f] = new PositionLocation(cachedStrings[s], cachedFrets[f - fretMin]);
+                cachedLocations[s, f] = new(cachedStrings[s], cachedFrets[f - fretMin]);
             }
         }
 
         if (parallel)
         {
             // Use channels for parallel processing with ordering preserved
-            var channel = Channel.CreateUnbounded<(int WindowIndex, List<Voicing> Voicings)>(new UnboundedChannelOptions
+            var channel = Channel.CreateUnbounded<(int WindowIndex, List<Voicing> Voicings)>(new()
             {
                 SingleReader = true,
                 SingleWriter = false
@@ -206,31 +212,36 @@ public static class VoicingGenerator
                 channel.Writer.Complete();
             }, cancellationToken);
 
-            // Consumer: Collect results and sort by window index
-            var windowResults = new List<(int WindowIndex, List<Voicing> Voicings)>();
+            // Consumer: Process results as they come in
+            // For true streaming we can't guarantee global order perfectly without buffering,
+            // but we can yield window-by-window if we want to stream out faster.
+            // However, to maintain the original contract of deduplication across windows,
+            // we really should just lock the HashSet or accept that dedupe might drift if we don't strictly order windows.
+            // But since windows overlap, strict ordering is better for the seenDiagrams logic.
+            
+            // To fix "stalled" UI, we will process windows as they complete, but we must be careful with duplicate detection.
+            // The safest parallel way is to collect all, sort, then dedupe. 
+            // BUT that blocks the UI until ALL valid voicings are generated (millions).
+            
+            // ALTERNATIVE: Use a concurrent dictionary for seen diagrams and yield immediately.
+            // We lose strict fret-order, but indexing doesn't care about order.
+            
+            var seenDiagrams = new ConcurrentDictionary<string, byte>();
+
+            // Just stream results as they are ready
             await foreach (var result in channel.Reader.ReadAllAsync(cancellationToken))
             {
-                windowResults.Add(result);
-            }
-
-            await producerTask;
-
-            // Sort by window index to maintain deterministic order
-            windowResults.Sort((a, b) => a.WindowIndex.CompareTo(b.WindowIndex));
-
-            // Deduplicate and yield in order
-            var seenDiagrams = new HashSet<string>();
-            foreach (var (_, voicings) in windowResults)
-            {
-                foreach (var voicing in voicings)
+                foreach (var voicing in result.Voicings)
                 {
                     var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
-                    if (seenDiagrams.Add(diagram))
+                    if (seenDiagrams.TryAdd(diagram, 0))
                     {
                         yield return voicing;
                     }
                 }
             }
+
+            await producerTask;
         }
         else
         {

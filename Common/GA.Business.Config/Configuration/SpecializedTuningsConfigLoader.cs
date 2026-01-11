@@ -1,5 +1,9 @@
 namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -137,16 +141,17 @@ public static class SpecializedTuningsConfigLoader
             }
 
             // Fallback minimal dataset
-            return new SpecializedTuningsConfiguration
+            return new()
             {
                 AlternativeStringConfigurations =
                 [
-                    new SpecializedTuningDefinition
+                    new()
                     {
                         Name = "Drop D (Guitar)",
                         Description = "Standard tuning with low E dropped to D",
                         Category = "Guitar",
-                        Configuration = new Dictionary<string, string> { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
+                        Configuration = new()
+                            { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
                         PitchClasses = [2,7,0,7,11,4],
                         Applications = ["Rock"],
                         Artists = ["Various"]
@@ -157,16 +162,17 @@ public static class SpecializedTuningsConfigLoader
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading specialized tunings configuration: {ex.Message}");
-            return new SpecializedTuningsConfiguration
+            return new()
             {
                 AlternativeStringConfigurations =
                 [
-                    new SpecializedTuningDefinition
+                    new()
                     {
                         Name = "Drop D (Guitar)",
                         Description = "Standard tuning with low E dropped to D",
                         Category = "Guitar",
-                        Configuration = new Dictionary<string, string> { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
+                        Configuration = new()
+                            { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
                         PitchClasses = [2,7,0,7,11,4],
                         Applications = ["Rock"],
                         Artists = ["Various"]

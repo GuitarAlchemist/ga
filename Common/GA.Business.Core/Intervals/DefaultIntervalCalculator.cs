@@ -1,5 +1,8 @@
 namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Functional;
 using Notes;
 using Notes.Primitives;
 using Tonal;

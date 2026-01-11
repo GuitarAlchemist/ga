@@ -1,5 +1,9 @@
 ﻿namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 ///     Unified service providing access to all musical knowledge from YAML configurations
 /// </summary>
@@ -27,7 +31,7 @@ public static class MusicalKnowledgeService
     /// </summary>
     public static MusicalKnowledgeByCategory GetByCategory(string category)
     {
-        return new MusicalKnowledgeByCategory
+        return new()
         {
             Category = category,
             IconicChords = [.. IconicChordsService.GetAllChords().Where(c => string.Equals(c.Genre, category, StringComparison.OrdinalIgnoreCase))],
@@ -42,7 +46,7 @@ public static class MusicalKnowledgeService
     /// </summary>
     public static MusicalKnowledgeByDifficulty GetByDifficulty(string difficulty)
     {
-        return new MusicalKnowledgeByDifficulty
+        return new()
         {
             Difficulty = difficulty,
             ChordProgressions = [.. ChordProgressionsService.FindProgressionsByDifficulty(difficulty)],
@@ -55,7 +59,7 @@ public static class MusicalKnowledgeService
     /// </summary>
     public static MusicalKnowledgeByArtist GetByArtist(string artist)
     {
-        return new MusicalKnowledgeByArtist
+        return new()
         {
             Artist = artist,
             IconicChords = [.. IconicChordsService.FindChordsByArtist(artist)],
@@ -70,7 +74,7 @@ public static class MusicalKnowledgeService
     /// </summary>
     public static MusicalKnowledgeStatistics GetStatistics()
     {
-        return new MusicalKnowledgeStatistics
+        return new()
         {
             TotalIconicChords = IconicChordsService.GetAllChords().Count(),
             TotalChordProgressions = ChordProgressionsService.GetAllProgressions().Count(),
@@ -97,7 +101,7 @@ public static class MusicalKnowledgeService
         var techniquesValidation = GuitarTechniquesService.ValidateConfiguration();
         var tuningsValidation = SpecializedTuningsService.ValidateConfiguration();
 
-        return new MusicalKnowledgeValidationResult
+        return new()
         {
             IsValid = iconicChordsValidation.IsValid && progressionsValidation.IsValid &&
                       techniquesValidation.IsValid && tuningsValidation.IsValid,

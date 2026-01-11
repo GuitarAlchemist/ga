@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.Geometry;
+namespace GA.Business.Core.Fretboard.Shapes.Geometry;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 
@@ -458,7 +462,7 @@ public class VoiceLeadingAnalyzer(int voices)
         var geodesic = _space.Geodesic(fromVoicing, toVoicing, 5);
         var curvature = _space.Curvature(fromVoicing);
 
-        return new VoiceLeadingInfo
+        return new()
         {
             FromShape = from.Id,
             ToShape = to.Id,

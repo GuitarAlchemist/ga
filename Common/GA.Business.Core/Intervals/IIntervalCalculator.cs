@@ -1,5 +1,6 @@
 namespace GA.Business.Core.Intervals;
 
+using GA.Core.Functional;
 using Notes;
 
 /// <summary>

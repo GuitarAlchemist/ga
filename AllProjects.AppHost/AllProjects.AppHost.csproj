@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Apps\ga-server\GaApi\GaApi.csproj"/>
-    <ProjectReference Include="..\Apps\GuitarAlchemistChatbot\GuitarAlchemistChatbot.csproj"/>
+
     <ProjectReference Include="..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
   </ItemGroup>
 

@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A Hirajoshi scale degree (Japanese pentatonic scale)
@@ -34,7 +42,8 @@ public readonly record struct HirajoshiScaleDegree : IRangeValueObject<Hirajoshi
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HirajoshiScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new HirajoshiScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static HirajoshiScaleDegree Min => FromValue(_minValue);

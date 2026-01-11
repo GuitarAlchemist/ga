@@ -1,4 +1,11 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A diminished scale degree
@@ -31,7 +38,8 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DiminishedScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new DiminishedScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static DiminishedScaleDegree Min => FromValue(_minValue);

@@ -1,5 +1,12 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -43,7 +50,7 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     public IntervalClassVectorId Id => id;
 
     /// <summary>
-    ///     Gets the <see cref="ImmutableSortedDictionary{IntervalClass, Int32}" />
+    ///     Gets the <see cref="ImmutableSortedDictionary" />
     /// </summary>
     public ImmutableSortedDictionary<IntervalClass, int> Vector => Id.Vector;
 
@@ -226,7 +233,7 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return ReferenceEquals(this, obj) || (obj is IntervalClassVector other && Equals(other));
+        return ReferenceEquals(this, obj) || obj is IntervalClassVector other && Equals(other);
     }
 
     /// <inheritdoc />

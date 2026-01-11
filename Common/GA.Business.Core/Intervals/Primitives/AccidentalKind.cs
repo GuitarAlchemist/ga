@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
 
 public enum AccidentalKind
 {

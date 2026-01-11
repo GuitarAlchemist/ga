@@ -1,6 +1,9 @@
-﻿namespace GA.Business.Core.Extensions;
+namespace GA.Business.Core.Extensions;
 
+using System.Collections.Generic;
+using System.Linq;
 using Fretboard.Primitives;
+using JetBrains.Annotations;
 
 [PublicAPI]
 public static class FretExtensions

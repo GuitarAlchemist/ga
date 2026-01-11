@@ -1,5 +1,12 @@
-﻿namespace GA.Business.Core.Extensions;
+namespace GA.Business.Core.Extensions;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.ComponentModel;
+using System.Linq;
+using GA.Core.Abstractions;
 using Intervals;
 using Intervals.Primitives;
 
@@ -7,8 +14,8 @@ using Intervals.Primitives;
 ///     The list of semitones distance between a series of notes (e.g. Major Scale: 2, 2, 1, 2, 2, 2, 1)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IReadOnlyList{Semitones}" />, <see cref="IValueObject" />,
-///     <see cref="IEquatable{ScaleIntervalPattern}" />
+///     Implements <see cref="IReadOnlyList{T}" />, <see cref="IValueObject" />,
+///     <see cref="IEquatable{T}" />
 /// </remarks>
 public class IntervalStructure : IParsable<IntervalStructure>,
     IReadOnlyList<Semitones>,

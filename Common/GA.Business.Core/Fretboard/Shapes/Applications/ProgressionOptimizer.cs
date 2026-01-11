@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 /// Optimizes chord progressions for practice
 /// </summary>
@@ -19,9 +23,9 @@ public class ProgressionOptimizer
 
         if (startShape == null)
         {
-            return new OptimizedProgression
+            return new()
             {
-                Shapes = new List<FretboardShape>(),
+                Shapes = [],
                 Score = 0.0,
                 Quality = 0.0
             };
@@ -52,7 +56,7 @@ public class ProgressionOptimizer
 
         var quality = ComputeQuality(progression, score);
 
-        return new OptimizedProgression
+        return new()
         {
             Shapes = progression,
             Score = score,
@@ -107,7 +111,7 @@ public class ProgressionOptimizer
         var variety = progression.Select(s => s.Id).Distinct().Count() / (double)progression.Count;
         var costPenalty = Math.Min(1.0, score / (progression.Count * 10.0));
 
-        return (avgErgonomics * 0.4 + variety * 0.4 + (1.0 - costPenalty) * 0.2);
+        return avgErgonomics * 0.4 + variety * 0.4 + (1.0 - costPenalty) * 0.2;
     }
 }
 

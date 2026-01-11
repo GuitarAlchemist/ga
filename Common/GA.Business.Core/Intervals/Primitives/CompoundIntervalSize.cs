@@ -1,4 +1,10 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
+
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A compound interval size (Between 9 and 16 semitones)
@@ -17,7 +23,8 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CompoundIntervalSize FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new CompoundIntervalSize { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static CompoundIntervalSize Min => FromValue(_minValue);
@@ -25,7 +32,8 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
 
     public static implicit operator CompoundIntervalSize(int value)
     {
-        return new CompoundIntervalSize { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(CompoundIntervalSize size)
@@ -49,7 +57,8 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     /// <returns>The <see cref="SimpleIntervalSize" /></returns>
     public SimpleIntervalSize ToSimple()
     {
-        return new SimpleIntervalSize { Value = _value - 8 };
+        return new()
+            { Value = _value - 8 };
     }
 
     /// <inheritdoc />

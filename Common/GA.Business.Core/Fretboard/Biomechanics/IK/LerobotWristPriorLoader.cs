@@ -1,5 +1,10 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics.IK;
+namespace GA.Business.Core.Fretboard.Biomechanics.IK;
 
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Numerics;
+using System.Reflection;
 using System.Text.Json;
 
 internal static class LerobotWristPriorLoader
@@ -103,7 +108,7 @@ internal static class LerobotWristPriorLoader
         var mean = ReadVector(priorElement, "mean");
         var std = ReadVector(priorElement, "stddev");
 
-        prior = new WristPrior(mean, std);
+        prior = new(mean, std);
         return true;
     }
 
@@ -130,6 +135,6 @@ internal static class LerobotWristPriorLoader
         var y = ReadComponent();
         var z = ReadComponent();
 
-        return new Vector3(x, y, z);
+        return new(x, y, z);
     }
 }

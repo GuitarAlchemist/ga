@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Notes.Extensions;
+namespace GA.Business.Core.Notes.Extensions;
 
+using System.Collections.Generic;
+using System.Linq;
 using Primitives;
 
 public static class NaturalNoteExtensions

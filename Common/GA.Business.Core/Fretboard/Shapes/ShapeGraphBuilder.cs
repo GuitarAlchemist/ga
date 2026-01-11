@@ -1,13 +1,19 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Atonal;
-using Atonal.Grothendieck;
+using GA.Business.Core.Atonal.Grothendieck;
 using Positions;
 using Primitives;
-using GA.Business.Core.Atonal;
+using Atonal;
 using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Fretboard.Shapes.Geometry;
+using Geometry;
 
 /// <summary>
 /// Builds fretboard shape graphs with transitions
@@ -156,7 +162,7 @@ public class ShapeGraphBuilder(
         var ergonomics = ComputeErgonomics(positions, maxFret - minFret);
         var fingerCount = EstimateFingerCount(positions);
 
-        return new FretboardShape
+        return new()
         {
             Id = FretboardShape.GenerateId(tuningId, positionsList),
             TuningId = tuningId,
@@ -218,8 +224,8 @@ public class ShapeGraphBuilder(
 
         // Optional: Compute OPTIC voice-leading cost (Tymoczko) between set classes
         // Only influences extended score/weight if VoiceLeadingWeight > 0.
-        double vlCost = 0.0;
-        double vlWeightUsed = 0.0;
+        var vlCost = 0.0;
+        var vlWeightUsed = 0.0;
         if (options.VoiceLeadingWeight > 0)
         {
             try
@@ -232,8 +238,8 @@ public class ShapeGraphBuilder(
                     InversionEquivalence = options.VlInversionEquivalence
                 };
 
-                var scFrom = new SetClass(new PitchClassSet(fromShape.PitchClassSet));
-                var scTo = new SetClass(new PitchClassSet(toShape.PitchClassSet));
+                var scFrom = new SetClass(new(fromShape.PitchClassSet));
+                var scTo = new SetClass(new(toShape.PitchClassSet));
                 vlCost = SetClassOpticIndex.Distance(scFrom, scTo, vlOptions);
                 vlWeightUsed = options.VoiceLeadingWeight;
             }
@@ -245,7 +251,7 @@ public class ShapeGraphBuilder(
             }
         }
 
-        return new ShapeTransition
+        return new()
         {
             FromId = fromShape.Id,
             ToId = toShape.Id,

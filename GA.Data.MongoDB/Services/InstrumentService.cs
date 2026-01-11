@@ -1,6 +1,6 @@
 namespace GA.Data.MongoDB.Services;
 
-using EntityFramework.Data.Instruments;
+// using EntityFramework.Data.Instruments;
 using Models;
 
 public class InstrumentService : IInstrumentService
@@ -13,40 +13,13 @@ public class InstrumentService : IInstrumentService
         CreateIndexes();
     }
 
+    /*
     public async Task<InstrumentDocument> CreateInstrumentAsync(InstrumentsRepository.InstrumentInfo instrumentInfo)
     {
-        var timestamp = DateTime.UtcNow;
-        var stringCount = GetStringCount(instrumentInfo);
-
-        var document = new InstrumentDocument
-        {
-            Name = instrumentInfo.Name,
-            Category = DetermineInstrumentCategory(instrumentInfo.Name),
-            StringCount = stringCount,
-            Family = DetermineInstrumentFamily(instrumentInfo.Name),
-            Tunings = [.. instrumentInfo.Tunings
-                .Where(t => !string.IsNullOrWhiteSpace(t.Value.Tuning))
-                .Select(t => new TuningDocument
-                {
-                    Name = t.Value.Name,
-                    Notes = [.. t.Value.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries)],
-                    IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
-                    Description = GetTuningDescription(t.Value)
-                })],
-            Description = $"Standard {instrumentInfo.Name} with {instrumentInfo.Tunings.Count} available tunings",
-            Metadata = new Dictionary<string, string>
-            {
-                ["stringCount"] = stringCount.ToString(),
-                ["hasStandardTuning"] = instrumentInfo.Tunings.Any(t =>
-                    t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase)).ToString()
-            },
-            CreatedAt = timestamp,
-            UpdatedAt = timestamp
-        };
-
-        await _instruments.InsertOneAsync(document);
-        return document;
+        // ... implementation commented out ...
+        throw new NotImplementedException();
     }
+    */
 
     public async Task<InstrumentDocument?> GetInstrumentAsync(string name)
     {
@@ -62,25 +35,12 @@ public class InstrumentService : IInstrumentService
             .ToListAsync();
     }
 
+    /*
     public async Task<bool> UpdateInstrumentAsync(string name, InstrumentsRepository.InstrumentInfo instrumentInfo)
     {
-        var update = Builders<InstrumentDocument>.Update
-            .Set(i => i.Name, instrumentInfo.Name)
-            .Set(i => i.Tunings, [.. instrumentInfo.Tunings.Select(t => new TuningDocument
-            {
-                Name = t.Value.Name,
-                Notes = [.. t.Value.Tuning.Split(' ')],
-                IsStandard = t.Value.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase),
-                Description = null
-            })])
-            .Set(i => i.UpdatedAt, DateTime.UtcNow);
-
-        var result = await _instruments.UpdateOneAsync(
-            i => i.Name == name,
-            update);
-
-        return result.ModifiedCount > 0;
+       throw new NotImplementedException();
     }
+    */
 
     public async Task<bool> DeleteInstrumentAsync(string name)
     {
@@ -177,23 +137,17 @@ public class InstrumentService : IInstrumentService
         };
     }
 
+    /*
     private static int GetStringCount(InstrumentsRepository.InstrumentInfo instrument)
     {
-        var standardTuning = instrument.Tunings.Values
-            .FirstOrDefault(t => t.Name.Contains("Standard", StringComparison.OrdinalIgnoreCase));
-
-        if (standardTuning != null)
-        {
-            return standardTuning.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
-        }
-
-        return instrument.Tunings.Values
-            .FirstOrDefault()?.Tuning.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
+        return 0;
     }
+    */
 
+    /*
     private static string? GetTuningDescription(InstrumentsRepository.TuningInfo tuningInfo)
     {
-        var fullNameProp = tuningInfo.TuningInstance.GetType().GetProperty("FullName");
-        return fullNameProp?.GetValue(tuningInfo.TuningInstance) as string;
+        return null;
     }
+    */
 }

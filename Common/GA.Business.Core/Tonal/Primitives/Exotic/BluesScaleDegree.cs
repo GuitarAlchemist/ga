@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A blues scale degree
@@ -35,7 +43,8 @@ public readonly record struct BluesScaleDegree : IRangeValueObject<BluesScaleDeg
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BluesScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new BluesScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static BluesScaleDegree Min => FromValue(_minValue);

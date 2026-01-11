@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.Spectral;
+namespace GA.Business.Core.Fretboard.Shapes.Spectral;
 
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 using MathNet.Numerics.LinearAlgebra;
+using Math=System.Math;
 
 /// <summary>
 ///     Spectral metrics computed from the graph Laplacian

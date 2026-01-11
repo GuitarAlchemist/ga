@@ -1,4 +1,11 @@
-﻿namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes;
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 [PublicAPI]
 public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.Accidented>,
@@ -81,7 +88,7 @@ public sealed class AccidentedNoteCollection : LazyPrintableCollectionBase<Note.
             builder.Add(pitch);
         }
 
-        result = new AccidentedNoteCollection(builder);
+        result = new(builder);
         return true;
     }
 

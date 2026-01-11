@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Generation;
+namespace GA.Business.Core.Fretboard.Voicings.Generation;
 
+using System.Collections.Generic;
+using System.Linq;
 using Core;
 using Positions;
 using Primitives;
@@ -41,7 +43,7 @@ public static class VoicingDecomposer
             var index = variations.GetIndex(relativeFrets);
             var matchingVector = vectorArray[(int)index];
 
-            results.Add(new DecomposedVoicing(
+            results.Add(new(
                 voicing,
                 matchingVector,
                 matchingVector as RelativeFretVector.PrimeForm,

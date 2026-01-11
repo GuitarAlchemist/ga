@@ -22,7 +22,6 @@
     <ProjectReference Include="..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>
-    <ProjectReference Include="..\Common\GA.Business.Web\GA.Business.Web.csproj"/>
   </ItemGroup>
 
 </Project>

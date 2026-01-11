@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Diatonic;
+namespace GA.Business.Core.Tonal.Primitives.Diatonic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A major scale degree
@@ -36,7 +44,8 @@ public readonly record struct MajorScaleDegree : IRangeValueObject<MajorScaleDeg
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static MajorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new MajorScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static MajorScaleDegree Min => FromValue(_minValue);

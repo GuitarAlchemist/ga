@@ -1,6 +1,9 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
+using GA.Business.Core.Chords.Analysis.Atonal;
 
 /// <summary>
 ///     Hybrid service that tries tonal analysis first, then falls back to atonal methods
@@ -45,9 +48,9 @@ public static class HybridChordNamingService
 
         // Determine best strategy and name
         var (recommendedName, strategyUsed, reasoning) = DetermineRecommendedApproach(
-            tonalName, atonalName, requiresAtonal, template);
+            tonalName, atonalName, requiresAtonal);
 
-        return new HybridAnalysis(
+        return new(
             recommendedName, strategyUsed, tonalName, atonalName,
             tonalDescription, atonalDescription, requiresAtonal, reasoning);
     }
@@ -64,6 +67,12 @@ public static class HybridChordNamingService
         if (!string.IsNullOrEmpty(comprehensive.IconicName))
         {
             return comprehensive.IconicName;
+        }
+
+        // If we have specific alterations, they are usually more descriptive than the primary name
+        if (!string.IsNullOrEmpty(comprehensive.WithAlterations))
+        {
+            return comprehensive.WithAlterations;
         }
 
         return analysis.RecommendedName;
@@ -125,7 +134,7 @@ public static class HybridChordNamingService
             var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(template, root, bassNote);
 
             // Check if we got a meaningful tonal name
-            if (IsMeaningfulTonalName(comprehensive.Primary, template))
+            if (IsMeaningfulTonalName(comprehensive.Primary))
             {
                 return comprehensive.Primary;
             }
@@ -179,7 +188,7 @@ public static class HybridChordNamingService
     ///     Determines the recommended approach
     /// </summary>
     private static (string name, AnalysisStrategy strategy, string reasoning) DetermineRecommendedApproach(
-        string? tonalName, string? atonalName, bool requiresAtonal, ChordTemplate template)
+        string? tonalName, string? atonalName, bool requiresAtonal)
     {
         // If atonal analysis is required and we have an atonal name
         if (requiresAtonal && atonalName != null)
@@ -189,7 +198,7 @@ public static class HybridChordNamingService
         }
 
         // If we have a good tonal name and it's not overly complex
-        if (tonalName != null && IsMeaningfulTonalName(tonalName, template))
+        if (tonalName != null && IsMeaningfulTonalName(tonalName))
         {
             return (tonalName, AnalysisStrategy.Tonal,
                 "Chord fits traditional tonal harmony patterns");
@@ -249,7 +258,7 @@ public static class HybridChordNamingService
     /// <summary>
     ///     Checks if a tonal name is meaningful
     /// </summary>
-    private static bool IsMeaningfulTonalName(string tonalName, ChordTemplate template)
+    private static bool IsMeaningfulTonalName(string tonalName)
     {
         // Avoid overly complex tonal names
         if (tonalName.Length > 20)

@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Intervals;
 using Intervals.Primitives;
 using Notes;
@@ -38,7 +41,7 @@ public class ChordBuilder
     /// </summary>
     public ChordBuilder WithInterval(Interval interval, ChordFunction function, bool isEssential = true)
     {
-        _intervals.Add(new ChordFormulaInterval(interval, function, isEssential));
+        _intervals.Add(new(interval, function, isEssential));
         return this;
     }
 
@@ -48,7 +51,7 @@ public class ChordBuilder
     public ChordBuilder WithInterval(int semitones, ChordFunction function, bool isEssential = true)
     {
         var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
-        _intervals.Add(new ChordFormulaInterval(interval, function, isEssential));
+        _intervals.Add(new(interval, function, isEssential));
         return this;
     }
 
@@ -287,13 +290,13 @@ public class ChordBuilder
         var thirdIndex = (rootIndex + 2) % scaleNotes.Count;
         var thirdSemitones = (scaleNotes[thirdIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
         var thirdInterval = new Interval.Chromatic(Semitones.FromValue(thirdSemitones));
-        _intervals.Add(new ChordFormulaInterval(thirdInterval, ChordFunction.Third));
+        _intervals.Add(new(thirdInterval, ChordFunction.Third));
 
         // Add fifth
         var fifthIndex = (rootIndex + 4) % scaleNotes.Count;
         var fifthSemitones = (scaleNotes[fifthIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
         var fifthInterval = new Interval.Chromatic(Semitones.FromValue(fifthSemitones));
-        _intervals.Add(new ChordFormulaInterval(fifthInterval, ChordFunction.Fifth));
+        _intervals.Add(new(fifthInterval, ChordFunction.Fifth));
 
         // Add extensions if requested
         if (extension >= ChordExtension.Seventh)
@@ -301,7 +304,7 @@ public class ChordBuilder
             var seventhIndex = (rootIndex + 6) % scaleNotes.Count;
             var seventhSemitones = (scaleNotes[seventhIndex].PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
             var seventhInterval = new Interval.Chromatic(Semitones.FromValue(seventhSemitones));
-            _intervals.Add(new ChordFormulaInterval(seventhInterval, ChordFunction.Seventh));
+            _intervals.Add(new(seventhInterval, ChordFunction.Seventh));
         }
 
         WithName($"{mode.Name} {degree} {extension}");
@@ -319,7 +322,7 @@ public class ChordBuilder
         }
 
         var formula = new ChordFormula(_name ?? "Custom", _intervals, _stackingType);
-        return new Chord(_root, formula);
+        return new(_root, formula);
     }
 
     /// <summary>
@@ -327,7 +330,7 @@ public class ChordBuilder
     /// </summary>
     public static ChordBuilder Create()
     {
-        return new ChordBuilder();
+        return new();
     }
 
     /// <summary>

@@ -1,7 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Pentatonic;
+namespace GA.Business.Core.Tonal.Modes.Pentatonic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
-
+using JetBrains.Annotations;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -39,7 +42,7 @@ public sealed class HirajoshiScaleMode(HirajoshiScaleDegree degree)
         {
             foreach (var degree in ValueObjectUtils<HirajoshiScaleDegree>.Items)
             {
-                yield return new HirajoshiScaleMode(degree);
+                yield return new(degree);
             }
         }
     }

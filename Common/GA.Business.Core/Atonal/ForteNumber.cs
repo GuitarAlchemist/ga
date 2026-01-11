@@ -1,5 +1,13 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -12,7 +20,7 @@ using Primitives;
 ///     Forte numbers are used to classify and analyze pitch class sets in atonal music theory.
 ///     They provide a standardized way to refer to specific pitch class set types.
 ///     Example: "3-11" represents the major and minor triads (both have the same Forte number).
-///     Implements <see cref="IComparable{ForteNumber}" /> | <see cref="IComparable" /> |
+///     Implements <see cref="IComparable" /> | <see cref="IComparable" /> |
 ///     <see cref="IParsable{ForteNumber}" />
 /// </remarks>
 [PublicAPI]
@@ -58,7 +66,7 @@ public readonly record struct ForteNumber :
 
     /// <summary>
     ///     Gets all 4096 possible pitch class sets (See https://harmoniousapp.net/p/0b/Clocks-Pitch-Classes)
-    ///     <br /><see cref="IReadOnlyCollection{PitchClassSet}" />
+    ///     <br /><see cref="IReadOnlyCollection{T}" />
     /// </summary>
     public static IReadOnlyCollection<ForteNumber> Items => AllForteNumbers.Instance;
 
@@ -92,7 +100,7 @@ public readonly record struct ForteNumber :
                     var count = GetIndexCount(cardinality, setClassesByCardinality);
                     // If there are no set classes for this cardinality, yield none instead of throwing
                     return count == 0
-                        ? Enumerable.Empty<ForteNumber>()
+                        ? []
                         : Enumerable.Range(1, count).Select(index => new ForteNumber(cardinality, index));
                 });
 

@@ -1,6 +1,9 @@
-﻿namespace GA.Business.Core.Scales;
+namespace GA.Business.Core.Scales;
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Atonal.Primitives;
+using GA.Core.Collections;
 
 public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScaleNameById())
 {

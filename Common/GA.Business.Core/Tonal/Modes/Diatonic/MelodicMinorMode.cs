@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
+namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -51,7 +55,7 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
         {
             foreach (var degree in ValueObjectUtils<MelodicMinorScaleDegree>.Items)
             {
-                yield return new MelodicMinorMode(degree);
+                yield return new(degree);
             }
         }
     }

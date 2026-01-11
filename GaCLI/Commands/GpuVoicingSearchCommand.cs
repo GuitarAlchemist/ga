@@ -12,6 +12,10 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Security.Cryptography;
 
+using OnnxEmbeddingService = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingService;
+using OnnxEmbeddingOptions = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingOptions;
+using OnnxEmbeddingPoolingStrategy = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingPoolingStrategy;
+
 /// <summary>
 /// CLI command for demonstrating GPU-accelerated voicing search
 /// Showcases GPU-powered semantic search with blazing-fast performance
@@ -580,6 +584,7 @@ public class GpuVoicingSearchCommand
                 Difficulty: difficulties[i % difficulties.Length],
                 ModeName: "Ionian",
                 ModalFamily: "Major",
+                PossibleKeys: [],
                 SemanticTags: new[] { "jazz", "smooth" },
                 PrimeFormId: $"pf{i % 100}",
                 TranslationOffset: i % 12,
@@ -591,8 +596,25 @@ public class GpuVoicingSearchCommand
                 MaxFret: 12,
                 BarreRequired: false,
                 HandStretch: 4,
+                StackingType: null,
+                RootPitchClass: 0,
+                MidiBassNote: 0,
+                HarmonicFunction: null,
+                IsNaturallyOccurring: true,
+                ConsonanceScore: 0.5,
+                BrightnessScore: 0.5,
+                IsRootless: false,
+                HasGuideTones: false,
+                Inversion: 0,
+                TopPitchClass: null,
+                TexturalDescription: null,
+                DoubledTones: null,
+                AlternateNames: null,
+                OmittedTones: null,
+                CagedShape: null,
                 Description: $"Sample voicing {i + 1}",
-                Embedding: GenerateRandomEmbedding()
+                Embedding: GenerateRandomEmbedding(),
+                TextEmbedding: null
             ));
         }
 
@@ -909,6 +931,7 @@ public class GpuVoicingSearchCommand
                 Difficulty: difficulty,
                 ModeName: null,
                 ModalFamily: null,
+                PossibleKeys: [],
                 SemanticTags: new[] { position, difficulty, $"span-{fretSpan}" },
                 PrimeFormId: "",
                 TranslationOffset: 0,
@@ -920,8 +943,25 @@ public class GpuVoicingSearchCommand
                 MaxFret: maxFret ?? 0,
                 BarreRequired: VoicingExtensions.HasBarre(voicing.Positions),
                 HandStretch: fretSpan,
+                StackingType: null,
+                RootPitchClass: 0,
+                MidiBassNote: 0,
+                HarmonicFunction: null,
+                IsNaturallyOccurring: true,
+                ConsonanceScore: 0.5,
+                BrightnessScore: 0.5,
+                IsRootless: false,
+                HasGuideTones: false,
+                Inversion: 0,
+                TopPitchClass: null,
+                TexturalDescription: null,
+                DoubledTones: null,
+                AlternateNames: null,
+                OmittedTones: null,
+                CagedShape: null,
                 Description: description,
-                Embedding: GenerateRandomEmbedding() // Will be replaced with real embeddings
+                Embedding: GenerateRandomEmbedding(), // Will be replaced with real embeddings
+                TextEmbedding: null
             ));
 
             count++;
@@ -967,7 +1007,6 @@ public class GpuVoicingSearchCommand
     private List<VoicingEmbedding> GenerateWithOnnx(List<VoicingEmbedding> voicings)
     {
         var result = new VoicingEmbedding[voicings.Count];
-        var batchSize = 1000; // Process 1000 at a time
         var startTime = DateTime.Now;
         var errorCount = 0;
         var processedCount = 0;
@@ -1038,7 +1077,6 @@ public class GpuVoicingSearchCommand
     private List<VoicingEmbedding> GenerateWithOllama(List<VoicingEmbedding> voicings)
     {
         var result = new VoicingEmbedding[voicings.Count];
-        var batchSize = 100;
         var startTime = DateTime.Now;
         var errorCount = 0;
         var processedCount = 0;
@@ -1161,6 +1199,7 @@ public class GpuVoicingSearchCommand
                 Difficulty: difficulty,
                 ModeName: "Ionian",
                 ModalFamily: "Major",
+                PossibleKeys: [],
                 SemanticTags: new[] { $"CAGED-{(char)('C' + i % 5)}", difficulty, position },
                 PrimeFormId: "[0,4,7,11]",
                 TranslationOffset: i % 12,
@@ -1172,8 +1211,25 @@ public class GpuVoicingSearchCommand
                 MaxFret: 12,
                 BarreRequired: diagram.Contains("7-7") || diagram.Contains("10-10"),
                 HandStretch: diagram.Contains("10") ? 5 : diagram.Contains("7-9") ? 4 : 3,
+                StackingType: null,
+                RootPitchClass: 0,
+                MidiBassNote: 0,
+                HarmonicFunction: null,
+                IsNaturallyOccurring: true,
+                ConsonanceScore: 0.5,
+                BrightnessScore: 0.5,
+                IsRootless: false,
+                HasGuideTones: false,
+                Inversion: 0,
+                TopPitchClass: null,
+                TexturalDescription: null,
+                DoubledTones: null,
+                AlternateNames: null,
+                OmittedTones: null,
+                CagedShape: null,
                 Description: $"{chordType} {position} position - {difficulty}",
-                Embedding: GenerateRandomEmbedding()
+                Embedding: GenerateRandomEmbedding(),
+                TextEmbedding: null
             ));
         }
 

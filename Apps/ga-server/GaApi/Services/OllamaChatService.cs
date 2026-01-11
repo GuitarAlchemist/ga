@@ -100,11 +100,10 @@ public class OllamaChatService : IOllamaChatService
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
 
-        while (!reader.EndOfStream)
+        while (await reader.ReadLineAsync() is { } line)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var line = await reader.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line))
             {
                 continue;

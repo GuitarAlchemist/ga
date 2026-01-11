@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Scales;
+namespace GA.Business.Core.Scales;
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal.Primitives;
+using GA.Core.Collections;
 
 public class ScaleNumberByName() : LazyIndexerBase<string, PitchClassSetId>(GetScaleNumberByName())
 {

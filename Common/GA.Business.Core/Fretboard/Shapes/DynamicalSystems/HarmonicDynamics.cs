@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 /// Analyzes harmonic dynamics using dynamical systems theory
 /// </summary>
@@ -15,7 +19,7 @@ public class HarmonicDynamics
         var limitCycles = FindLimitCycles(graph);
         var lyapunovExponent = ComputeLyapunovExponent(graph);
 
-        return new DynamicalSystemInfo
+        return new()
         {
             Attractors = attractors,
             FixedPoints = fixedPoints,
@@ -44,7 +48,7 @@ public class HarmonicDynamics
         var avgInDegree = inDegrees.Any() ? inDegrees.Values.Average() : 0;
         foreach (var (shapeId, inDegree) in inDegrees.Where(kvp => kvp.Value > avgInDegree))
         {
-            attractors.Add(new Attractor
+            attractors.Add(new()
             {
                 ShapeId = shapeId,
                 Strength = inDegree / (double)graph.ShapeCount,
@@ -83,7 +87,7 @@ public class HarmonicDynamics
         {
             if (!visited.Contains(shapeId))
             {
-                FindCyclesFromNode(graph, shapeId, visited, stack, new List<string>(), cycles);
+                FindCyclesFromNode(graph, shapeId, visited, stack, [], cycles);
             }
         }
 
@@ -116,7 +120,7 @@ public class HarmonicDynamics
 
                     if (cycleShapes.Count >= 2 && cycleShapes.Count <= 10)
                     {
-                        cycles.Add(new LimitCycle
+                        cycles.Add(new()
                         {
                             ShapeIds = cycleShapes,
                             Period = cycleShapes.Count,

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Core;
+namespace GA.Business.Core.Fretboard.Voicings.Core;
 
 using Primitives;
 using GA.Business.Core.Notes.Primitives;

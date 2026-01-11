@@ -15,8 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
-    <ProjectReference Include="..\..\Common\GA.Business.Microservices\GA.Business.Microservices.csproj"/>
-    <ProjectReference Include="..\..\Common\GA.MusicTheory.DSL\GA.MusicTheory.DSL.fsproj"/>
+    <ProjectReference Include="..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
   </ItemGroup>
 
   <ItemGroup>

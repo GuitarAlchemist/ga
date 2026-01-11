@@ -1,12 +1,18 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+namespace GA.Business.Core.Notes.Primitives;
 
+using System;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
 using Intervals.Primitives;
+using JetBrains.Annotations;
+using PCRE;
 
 /// <summary>
 ///     Flat accidental (bbb | bbb | bb)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{FlatAccidental}" />
+///     Implements <see cref="IRangeValueObject{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>, IParsable<FlatAccidental>
@@ -22,7 +28,8 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FlatAccidental FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new FlatAccidental { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator Semitones(FlatAccidental value)
@@ -32,7 +39,8 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
 
     public Semitones ToSemitones()
     {
-        return new Semitones { Value = _value };
+        return new()
+            { Value = _value };
     }
 
     public override string ToString()
@@ -59,7 +67,8 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
 
     public static implicit operator FlatAccidental(int value)
     {
-        return new FlatAccidental { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(FlatAccidental item)

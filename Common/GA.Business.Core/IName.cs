@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core;
+namespace GA.Business.Core;
 
 public interface IName
 {

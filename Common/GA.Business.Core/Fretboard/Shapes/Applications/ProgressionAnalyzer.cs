@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 /// Analyzes chord progressions using information theory
 /// </summary>
@@ -13,9 +17,9 @@ public class ProgressionAnalyzer
         var entropy = ComputeEntropy(progression);
         var perplexity = Math.Pow(2, entropy);
         var complexity = ComputeComplexity(graph, progression);
-        var predictability = 1.0 - (entropy / Math.Log2(graph.ShapeCount));
+        var predictability = 1.0 - entropy / Math.Log2(graph.ShapeCount);
 
-        return new ProgressionInfo
+        return new()
         {
             Entropy = entropy,
             Perplexity = perplexity,
@@ -32,12 +36,12 @@ public class ProgressionAnalyzer
         List<FretboardShape> progression,
         int topK)
     {
-        if (!progression.Any()) return new List<FretboardShape>();
+        if (!progression.Any()) return [];
 
         var currentShape = progression.Last();
         if (!graph.Adjacency.TryGetValue(currentShape.Id, out var transitions))
         {
-            return new List<FretboardShape>();
+            return [];
         }
 
         // Rank by information gain (prefer less common transitions)

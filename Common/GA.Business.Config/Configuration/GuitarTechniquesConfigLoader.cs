@@ -1,5 +1,9 @@
 namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -137,11 +141,11 @@ public static class GuitarTechniquesConfigLoader
             }
 
             // Fallback minimal dataset
-            return new GuitarTechniquesConfiguration
+            return new()
             {
                 GuitarTechniques =
                 [
-                    new GuitarTechniqueDefinition
+                    new()
                     {
                         Name = "Alternate Picking",
                         Description = "Picking alternates between downstrokes and upstrokes",
@@ -153,7 +157,7 @@ public static class GuitarTechniquesConfigLoader
                         Technique = "Use wrist movement to alternate pick",
                         Examples =
                         [
-                            new GuitarTechniqueExample
+                            new()
                             {
                                 CentralPitch = "C",
                                 Chords = ["C"],
@@ -168,14 +172,17 @@ public static class GuitarTechniquesConfigLoader
                                 Notes = ["C","D","E"]
                             }
                         ],
-                        Applications = [ new GuitarTechniqueApplication { Name = "Speed", Description = "Increase tempo", Context = "Practice" } ],
+                        Applications = [ new()
+                            { Name = "Speed", Description = "Increase tempo", Context = "Practice" } ],
                         Patterns = [],
-                        Variations = [ new GuitarTechniqueVariation { Name = "Economy", Description = "Sweep on string change", Context = "Lead" } ],
+                        Variations = [ new()
+                            { Name = "Economy", Description = "Sweep on string change", Context = "Lead" } ],
                         Artists = ["Various Jazz Artists"],
                         Songs = ["N/A"],
                         Benefits = ["Speed", "Consistency"],
                         Rules = ["Relaxed grip"],
-                        Practice = new Dictionary<string, object> { { "Minutes", 10 } }
+                        Practice = new()
+                            { { "Minutes", 10 } }
                     }
                 ]
             };
@@ -183,11 +190,11 @@ public static class GuitarTechniquesConfigLoader
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading guitar techniques configuration: {ex.Message}");
-            return new GuitarTechniquesConfiguration
+            return new()
             {
                 GuitarTechniques =
                 [
-                    new GuitarTechniqueDefinition
+                    new()
                     {
                         Name = "Alternate Picking",
                         Description = "Picking alternates between downstrokes and upstrokes",
@@ -205,7 +212,8 @@ public static class GuitarTechniquesConfigLoader
                         Songs = ["N/A"],
                         Benefits = ["Speed", "Consistency"],
                         Rules = ["Relaxed grip"],
-                        Practice = new Dictionary<string, object> { { "Minutes", 10 } }
+                        Practice = new()
+                            { { "Minutes", 10 } }
                     }
                 ]
             };

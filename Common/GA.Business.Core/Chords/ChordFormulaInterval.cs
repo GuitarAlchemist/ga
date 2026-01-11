@@ -1,5 +1,6 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
 using Intervals;
 
 /// <summary>

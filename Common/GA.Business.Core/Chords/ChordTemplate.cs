@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Intervals;
 using Intervals.Primitives;
@@ -17,7 +20,7 @@ public abstract record ChordTemplate
     private ChordTemplate(ChordFormula formula)
     {
         Formula = formula ?? throw new ArgumentNullException(nameof(formula));
-        _lazyPitchClassSet = new Lazy<PitchClassSet>(() => CreatePitchClassSet(formula));
+        _lazyPitchClassSet = new(() => CreatePitchClassSet(formula));
     }
 
     /// <summary>Gets the chord formula defining this chord's interval structure</summary>
@@ -70,7 +73,7 @@ public abstract record ChordTemplate
             pitchClasses.Add(pitchClass);
         }
 
-        return new PitchClassSet(pitchClasses);
+        return new(pitchClasses);
     }
 
     /// <summary>
@@ -84,19 +87,41 @@ public abstract record ChordTemplate
             throw new ArgumentException("Pitch class set cannot be empty", nameof(pitchClassSet));
         }
 
-        // Assume first pitch class is root
+        // Assume first pitch class is root (legacy behavior)
         var root = pitchClasses[0];
-        var intervals = new List<ChordFormulaInterval>();
-
-        for (var i = 1; i < pitchClasses.Count; i++)
+        return AnalyzePitchClassSet(pitchClassSet, root, name);
+    }
+    
+    /// <summary>
+    ///     Analyzes a pitch class set to create a chord formula with explicit root
+    /// </summary>
+    internal static ChordFormula AnalyzePitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
+    {
+        var pitchClasses = pitchClassSet.ToList();
+        if (pitchClasses.Count == 0)
         {
-            var semitones = (pitchClasses[i].Value - root.Value + 12) % 12;
-            var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
-            var function = DetermineChordFunction(semitones);
-            intervals.Add(new ChordFormulaInterval(interval, function));
+            throw new ArgumentException("Pitch class set cannot be empty", nameof(pitchClassSet));
         }
 
-        return new ChordFormula(name, intervals);
+        var intervals = new List<ChordFormulaInterval>();
+        var semitonesList = pitchClasses.Select(pc => (pc.Value - root.Value + 12) % 12).Where(s => s != 0).ToList();
+
+        foreach (var semitones in semitonesList)
+        {
+            var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
+            var function = DetermineChordFunction(semitones);
+
+            // SPECIAL CASE: Hendrix Chord / Split Thirds
+            // If we have both 3 and 4 semitones, 4 is the Third and 3 is the Sharp Ninth
+            if (semitones == 3 && semitonesList.Contains(4))
+            {
+                function = ChordFunction.Ninth;
+            }
+
+            intervals.Add(new(interval, function));
+        }
+
+        return new(name, intervals);
     }
 
     private static ChordFunction DetermineChordFunction(int semitones)
@@ -162,14 +187,24 @@ public abstract record ChordTemplate
         {
             var formula = AnalyzePitchClassSet(pitchClassSet, name);
             return new(formula, "Pitch Class Set Analysis", pitchClassSet,
-                new Dictionary<string, object> { ["SourceName"] = name });
+                new()
+                    { ["SourceName"] = name });
+        }
+        
+        /// <summary>Creates a chord from pitch class set analysis with explicit root</summary>
+        public static Analytical FromPitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
+        {
+            var formula = AnalyzePitchClassSet(pitchClassSet, root, name);
+            return new(formula, "Pitch Class Set Analysis", pitchClassSet,
+                new()
+                    { ["SourceName"] = name, ["Root"] = root });
         }
 
         /// <summary>Creates a chord from set theory analysis</summary>
         public static Analytical FromSetTheory(ChordFormula formula, string setClass,
             Dictionary<string, object>? analysisData = null)
         {
-            return new Analytical(formula, "Set Theory Analysis", null,
+            return new(formula, "Set Theory Analysis", null,
                 analysisData ?? new Dictionary<string, object> { ["SetClass"] = setClass });
         }
     }

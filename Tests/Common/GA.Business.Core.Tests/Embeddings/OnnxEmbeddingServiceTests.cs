@@ -165,35 +165,21 @@ public class OnnxEmbeddingServiceTests
         }
     }
 
-    private sealed class FakeOnnxSessionFactory : IOnnxSessionFactory
+    private sealed class FakeOnnxSessionFactory(int hiddenSize) : IOnnxSessionFactory
     {
-        private readonly int _hiddenSize;
-
-        public FakeOnnxSessionFactory(int hiddenSize)
-        {
-            _hiddenSize = hiddenSize;
-        }
-
-        public int HiddenSize => _hiddenSize;
+        public int HiddenSize => hiddenSize;
         public FakeOnnxSession? LastSession { get; private set; }
 
         public IOnnxSession Create(string modelPath)
         {
-            var session = new FakeOnnxSession(_hiddenSize);
+            var session = new FakeOnnxSession(hiddenSize);
             LastSession = session;
             return session;
         }
     }
 
-    private sealed class FakeOnnxSession : IOnnxSession
+    private sealed class FakeOnnxSession(int hiddenSize) : IOnnxSession
     {
-        private readonly int _hiddenSize;
-
-        public FakeOnnxSession(int hiddenSize)
-        {
-            _hiddenSize = hiddenSize;
-        }
-
         public long[]? LastInputIds { get; private set; }
         public long[]? LastAttentionMask { get; private set; }
 
@@ -206,7 +192,7 @@ public class OnnxEmbeddingServiceTests
             LastInputIds = inputIds;
             LastAttentionMask = attentionMask;
 
-            var tensor = BuildTensor(attentionMask, _hiddenSize);
+            var tensor = BuildTensor(attentionMask, hiddenSize);
             var value = NamedOnnxValue.CreateFromTensor("last_hidden_state", tensor);
             return new FakeResultCollection(value);
         }
@@ -233,14 +219,9 @@ public class OnnxEmbeddingServiceTests
         }
     }
 
-    private sealed class FakeResultCollection : IDisposableReadOnlyCollection<NamedOnnxValue>
+    private sealed class FakeResultCollection(params NamedOnnxValue[] values) : IDisposableReadOnlyCollection<NamedOnnxValue>
     {
-        private readonly IReadOnlyList<NamedOnnxValue> _values;
-
-        public FakeResultCollection(params NamedOnnxValue[] values)
-        {
-            _values = values;
-        }
+        private readonly IReadOnlyList<NamedOnnxValue> _values = values;
 
         public int Count => _values.Count;
         public NamedOnnxValue this[int index] => _values[index];

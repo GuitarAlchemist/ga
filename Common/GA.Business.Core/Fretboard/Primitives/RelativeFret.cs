@@ -1,6 +1,14 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
 
-/// <inheritdoc cref="IEquatable{RelativeFret}" />
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
+
+/// <inheritdoc cref="IEquatable{T}" />
 /// <inheritdoc cref="IComparable{RelativeFret}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
@@ -25,7 +33,8 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RelativeFret FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new RelativeFret { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static RelativeFret Min { get; } = FromValue(_minValue);
@@ -34,7 +43,8 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
 
     public static implicit operator RelativeFret(int value)
     {
-        return new RelativeFret { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(RelativeFret relativeFret)

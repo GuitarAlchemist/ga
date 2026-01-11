@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Intervals;
 using Intervals.Primitives;
@@ -17,7 +19,7 @@ public static class ChordBuilderEx
     public static ChordProgression ToProgression(this IEnumerable<ChordBuilder> builders)
     {
         var chords = builders.Select(b => b.Build()).ToList();
-        return new ChordProgression(chords);
+        return new(chords);
     }
 
     /// <summary>
@@ -204,7 +206,7 @@ public class ChordProgression
             return new Chord(newRoot, chord.Formula, chord.Symbol);
         });
 
-        return new ChordProgression(transposedChords);
+        return new(transposedChords);
     }
 
     public override string ToString()

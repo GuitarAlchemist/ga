@@ -1,6 +1,14 @@
-﻿namespace GA.Business.Core.Fretboard.Fingering;
+namespace GA.Business.Core.Fretboard.Fingering;
 
-/// <inheritdoc cref="IEquatable{Finger}" />
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
+
+/// <inheritdoc cref="IEquatable{T}" />
 /// <inheritdoc cref="IComparable{Finger}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>
@@ -22,7 +30,8 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Finger FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Finger { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static Finger Min => _lazyDefaults.Value.DefaultMin;
@@ -30,7 +39,8 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
 
     public static implicit operator Finger(int value)
     {
-        return new Finger { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(Finger finger)

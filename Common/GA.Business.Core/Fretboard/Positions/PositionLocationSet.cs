@@ -1,4 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Positions;
+namespace GA.Business.Core.Fretboard.Positions;
+
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 public class PositionLocationSet(IEnumerable<PositionLocation> positions) : IReadOnlySet<PositionLocation>
 {

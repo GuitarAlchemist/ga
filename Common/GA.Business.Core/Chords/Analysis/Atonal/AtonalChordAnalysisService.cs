@@ -1,5 +1,6 @@
 namespace GA.Business.Core.Chords.Analysis.Atonal;
 
+using System.Collections.Generic;
 using System.Linq;
 using GA.Business.Core.Atonal;
 
@@ -79,7 +80,7 @@ public static class AtonalChordAnalysisService
         var isModal = setClass.IsModal;
         var alternateNames = GenerateAlternateAtonalNames(root, setClass, pitchClassSet);
 
-        return new AtonalAnalysis(
+        return new(
             pitchClassSet, setClass, primeForm, forteNumber, intervalClassVector,
             suggestedName, theoreticalDescription, isSymmetrical, isModal, alternateNames);
     }
@@ -137,12 +138,14 @@ public static class AtonalChordAnalysisService
     /// </summary>
     private static string GenerateForteNumber(SetClass setClass)
     {
-        // Simplified Forte number generation based on cardinality and interval class vector
+        if (ForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var forte))
+        {
+            return forte.ToString();
+        }
+
+        // Fallback for failed identification
         var cardinality = setClass.Cardinality.Value;
         var icvId = setClass.IntervalClassVector.Id.Value;
-
-        // This is a simplified approach - in a full implementation,
-        // you'd have a complete Forte number lookup table
         return $"{cardinality}-{icvId % 100}";
     }
 

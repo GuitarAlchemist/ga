@@ -1,4 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
+
+using System.Collections.Immutable;
+using System.Linq;
 
 /// <summary>
 /// Directed graph of fretboard shapes with weighted transitions

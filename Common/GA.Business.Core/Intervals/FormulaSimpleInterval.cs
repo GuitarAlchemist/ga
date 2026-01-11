@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
 using Primitives;
 

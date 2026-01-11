@@ -1,7 +1,11 @@
-﻿namespace GA.Business.Core.Atonal.Grothendieck;
+namespace GA.Business.Core.Atonal.Grothendieck;
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics.Tensors;
-using Primitives;
+using JetBrains.Annotations;
+using GA.Business.Core.Atonal.Primitives;
 
 /// <summary>
 ///     Represents a signed delta in the Grothendieck group
@@ -136,7 +140,7 @@ public sealed record GrothendieckDelta
     /// </summary>
     public static GrothendieckDelta operator +(GrothendieckDelta a, GrothendieckDelta b)
     {
-        return new GrothendieckDelta
+        return new()
         {
             Ic1 = a.Ic1 + b.Ic1,
             Ic2 = a.Ic2 + b.Ic2,
@@ -152,7 +156,7 @@ public sealed record GrothendieckDelta
     /// </summary>
     public static GrothendieckDelta operator -(GrothendieckDelta a)
     {
-        return new GrothendieckDelta
+        return new()
         {
             Ic1 = -a.Ic1,
             Ic2 = -a.Ic2,

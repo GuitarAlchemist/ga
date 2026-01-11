@@ -22,15 +22,16 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core.Analysis.Gpu\GA.Business.Core.Analysis.Gpu.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Analytics\GA.Business.Analytics.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
-    <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Testing.Semantic\GA.Testing.Semantic.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
   </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Exclude test files with missing service implementations -->
     <Compile Remove="Fretboard/FretboardEquivalenceGroupsTests.cs"/>
@@ -46,7 +47,6 @@
     <Compile Remove="Fretboard/Biomechanics/SqliteBiomechanicalCacheTests.cs"/>
     <Compile Remove="Fretboard/SemanticIndexing/OllamaIntegrationTests.cs"/>
     <Compile Remove="Fretboard/SemanticIndexing/SemanticFretboardServiceTests.cs"/>
-    <Compile Remove="Fretboard/Shapes/Spectral/SpectralGraphAnalyzerTests.cs"/>
     <Compile Remove="Fretboard/SemanticIndexing/OptimizedIndexingPerformanceTests.cs"/>
     <Compile Remove="Fretboard/SemanticIndexing/SemanticFretboardPerformanceTests.cs"/>
     <Compile Remove="Fretboard/Biomechanics/BiomechanicalAnalyzerTests.cs"/>
@@ -69,7 +69,6 @@
     <Compile Remove="Microservices/MonadicServiceTests.cs"/>
     <Compile Remove="Chords/IconicChordRegistryYamlTests.cs"/>
     <Compile Remove="Atonal/Grothendieck/MarkovWalkerTests.cs"/>
-    <Compile Remove="Spectral/SpectralGraphAnalyzerIntegrationTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyTests.cs"/>
     <Compile Remove="Tonal/ModalFamilyScaleModeTests.cs"/>
     <Compile Remove="Chords/IconicChordTests.cs"/>

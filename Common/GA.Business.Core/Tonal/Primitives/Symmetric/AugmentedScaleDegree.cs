@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     An augmented scale degree
@@ -33,7 +41,8 @@ public readonly record struct AugmentedScaleDegree : IRangeValueObject<Augmented
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AugmentedScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new AugmentedScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static AugmentedScaleDegree Min => FromValue(_minValue);

@@ -1,7 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
+namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
-
+using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -41,7 +44,7 @@ public sealed class NeapolitanMinorScaleMode(NeapolitanMinorScaleDegree degree)
         {
             foreach (var degree in ValueObjectUtils<NeapolitanMinorScaleDegree>.Items)
             {
-                yield return new NeapolitanMinorScaleMode(degree);
+                yield return new(degree);
             }
         }
     }

@@ -1,5 +1,10 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Fretboard.Voicings.Search;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Core;
 
 /// <summary>
@@ -36,11 +41,14 @@ public class EnhancedVoicingSearchService(
     public VoicingSearchPerformance Performance => searchStrategy.Performance;
 
     /// <summary>
-    /// Initialize the service with embeddings for all indexed documents
+    /// Computes embeddings for all indexed documents to prepare for semantic search.
     /// </summary>
-    /// <param name="embeddingGenerator">Function to generate embeddings from text</param>
+    /// <param name="semanticEmbeddingGenerator">Function to generate embeddings from text (e.g. BERT/ONNX)</param>
+    /// <param name="musicalEmbeddingGenerator">Optional function to generate musical feature embeddings (78-dim)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     public async Task InitializeEmbeddingsAsync(
-        Func<string, Task<double[]>> embeddingGenerator,
+        Func<string, Task<double[]>> semanticEmbeddingGenerator,
+        Func<VoicingDocument, Task<double[]>>? musicalEmbeddingGenerator = null,
         CancellationToken cancellationToken = default)
     {
         if (!searchStrategy.IsAvailable)
@@ -52,7 +60,18 @@ public class EnhancedVoicingSearchService(
         // Process all embeddings in parallel for maximum speed
         var embeddingTasks = documents.Select(async doc =>
         {
-            var embedding = await embeddingGenerator(doc.SearchableText);
+            // Use cached embeddings if available, otherwise generate
+            var musicalEmbedding = doc.Embedding;
+            if (musicalEmbedding == null && musicalEmbeddingGenerator != null)
+            {
+                musicalEmbedding = await musicalEmbeddingGenerator(doc);
+            }
+            
+            var textEmbedding = doc.TextEmbedding;
+            if (textEmbedding == null)
+            {
+                textEmbedding = await semanticEmbeddingGenerator(doc.SearchableText);
+            }
 
             return new VoicingEmbedding(
                 doc.Id,
@@ -62,6 +81,7 @@ public class EnhancedVoicingSearchService(
                 doc.Difficulty,
                 doc.ModeName,
                 doc.ModalFamily,
+                doc.PossibleKeys,
                 doc.SemanticTags,
                 doc.PrimeFormId ?? "",
                 doc.TranslationOffset,
@@ -73,8 +93,25 @@ public class EnhancedVoicingSearchService(
                 doc.MaxFret,
                 doc.BarreRequired,
                 doc.HandStretch,
+                doc.StackingType,
+                doc.RootPitchClass,
+                doc.MidiBassNote,
+                doc.HarmonicFunction,
+                doc.IsNaturallyOccurring,
+                doc.Consonance,
+                doc.Brightness,
+                doc.IsRootless,
+                doc.HasGuideTones,
+                doc.Inversion,
+                GetTopPitchClass(doc), // Added for Chord Melody support
+                doc.TexturalDescription, // Added for AI Agents
+                doc.DoubledTones, // Added for AI Agents
+                doc.AlternateNames, // Added for AI Agents
+                doc.OmittedTones ?? [],
+                doc.CagedShape, // Pass CAGED shape
                 doc.YamlAnalysis,
-                embedding);
+                musicalEmbedding ?? new double[78], // Fallback to empty if still null
+                textEmbedding);
         }).ToList();
 
         // Wait for all embeddings to complete
@@ -98,6 +135,16 @@ public class EnhancedVoicingSearchService(
         EnsureInitialized();
 
         var queryEmbedding = await embeddingGenerator(query);
+        
+        // Phase 7: Parse symbolic intent
+        var parser = new SymbolicQueryParser();
+        var symbolicIndices = parser.ParseQueryTags(query);
+        
+        if (symbolicIndices.Any())
+        {
+            filters ??= new VoicingSearchFilters();
+            filters = filters with { SymbolicBitIndices = [.. symbolicIndices] };
+        }
 
         if (filters != null)
         {
@@ -132,5 +179,21 @@ public class EnhancedVoicingSearchService(
     {
         if (!IsInitialized)
             throw new InvalidOperationException("Service not initialized. Call InitializeEmbeddingsAsync first.");
+    }
+
+    private int? GetTopPitchClass(VoicingDocument doc)
+    {
+        // 1. Prefer explicit property
+        if (doc.TopPitchClass.HasValue) 
+            return doc.TopPitchClass;
+
+        // 2. Fallback to computing from MidiNotes if available
+        if (doc.MidiNotes is { Length: > 0 })
+        {
+            var maxNote = doc.MidiNotes.Max();
+            return maxNote % 12;
+        }
+
+        return null;
     }
 }

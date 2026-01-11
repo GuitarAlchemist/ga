@@ -1,6 +1,13 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Diatonic;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using GA.Core.Extensions;
 using Intervals;
 using Intervals.Primitives;

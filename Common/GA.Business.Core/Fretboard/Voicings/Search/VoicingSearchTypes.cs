@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Fretboard.Voicings.Search;
 
 using Biomechanics;
 
@@ -34,6 +34,33 @@ public record VoicingSearchFilters(
     bool? IsOpenVoicing = null,       // Open vs closed voicing
     bool? IsRootless = null,          // Rootless voicing
     string? DropVoicing = null,       // "Drop-2", "Drop-3", etc.
-    string? CagedShape = null         // "C", "A", "G", "E", "D"
+    string? CagedShape = null,        // "C", "A", "G", "E", "D"
+
+    // Structured Query filters (Requested)
+    string? ChordName = null,         // Partial or exact match
+    string? StackingType = null,      // "Tertian", "Quartal", "Secundal"
+    bool? IsSlashChord = null,        // Bass note != Root
+    int? MinMidiPitch = null,         // Lowest note in voicing
+    int? MaxMidiPitch = null,         // Highest note in voicing
+    int? FingerCount = null,          // Number of fingers used (approx)
+    string? SetClassId = null,        // e.g., "3-11"
+    string? RahnPrimeForm = null,     // e.g., "{0,3,7}"
+
+    // Extended Filters (Phase 3)
+    string? HarmonicFunction = null,  // "Tonic", "Dominant", etc.
+    bool? IsNaturallyOccurring = null,
+    bool? HasGuideTones = null,
+    int? Inversion = null,            // 0=Root, 1=1st, etc.
+    double? MinConsonance = null,     // 0.0-1.0
+    double? MinBrightness = null,     // 0.0-1.0
+    double? MaxBrightness = null,     // 0.0-1.0
+    string[]? OmittedTones = null,    // e.g. ["Root", "5th"]
+    int? TopPitchClass = null,        // 0-11 for Melody Note
+    
+    // AI Agent Metadata Filters (Phase 4)
+    string? TexturalDescriptionContains = null, // e.g., "warm", "muddy"
+    string[]? DoubledTonesContain = null,       // e.g., ["5th"]
+    string? AlternateNameMatch = null,           // Match C6/Am7 equivalents
+    int[]? SymbolicBitIndices = null             // Indices 0-11 for targeted trait boosting
 );
 

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
 /// <summary>
 ///     Represents the extension of a chord (7th, 9th, 11th, 13th, etc.)

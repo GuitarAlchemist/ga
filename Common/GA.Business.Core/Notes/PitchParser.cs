@@ -1,6 +1,8 @@
 namespace GA.Business.Core.Notes;
 
+using System;
 using Intervals;
+using PCRE;
 using Primitives;
 
 internal static class PitchParser

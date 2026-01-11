@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
 
+using System.Linq;
+using GA.Core.Abstractions;
+using JetBrains.Annotations;
 using Notes;
 using Scales;
 

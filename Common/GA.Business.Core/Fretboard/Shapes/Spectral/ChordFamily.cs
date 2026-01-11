@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.Spectral;
+namespace GA.Business.Core.Fretboard.Shapes.Spectral;
+
+using System.Collections.Generic;
 
 /// <summary>
 /// A family of related chords discovered through spectral clustering

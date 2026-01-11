@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes;
+
+using System;
 
 public class AccidentedNotePair(
     Note.Accidented note1,

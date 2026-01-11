@@ -1,9 +1,15 @@
 namespace GA.Business.Core.Atonal.Primitives;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using GA.Core.Collections;
 using Notes;
 using Notes.Extensions;
 using System.Numerics;
+using GA.Core.Abstractions;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A pitch class set ID
@@ -14,7 +20,7 @@ using System.Numerics;
 ///     2^12 => 4096 combinations
 ///     IStaticReadonlyCollectionFromValues level - derives from <see cref="IStaticReadonlyCollection{TSelf}" /> |
 ///     <see cref="IRangeValueObject{TSelf}" />
-///     IValueObject level - derives from <see cref="IComparable{TSelf}" /> | <see cref="IEquatable{TSelf}" />
+///     IValueObject level - derives from <see cref="IComparable" /> | <see cref="IEquatable{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromValues<PitchClassSetId>
@@ -87,10 +93,10 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// </summary>
     public PitchClassSetId Transpose(int semitones)
     {
-        var n = ((semitones % 12) + 12) % 12;
+        var n = (semitones % 12 + 12) % 12;
         var v = (uint)Value & Mask12;
-        var rot = ((v << n) | (v >> (12 - n))) & Mask12;
-        return new PitchClassSetId((int)rot);
+        var rot = (v << n | v >> 12 - n) & Mask12;
+        return new((int)rot);
     }
 
     #region Static Helpers
@@ -139,7 +145,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// <returns>The <see cref="PitchClassSetId" /></returns>
     public PitchClassSetId Rotate(int count)
     {
-        return new PitchClassSetId(RotateValue(Value, count));
+        return new(RotateValue(Value, count));
     }
 
     /// <summary>
@@ -182,7 +188,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     private static int RotateValue(int value, int count)
     {
         count = Math.Abs(count) % 12; // Normalize count
-        var result = ((value << count) | (value >> (12 - count))) & 0xFFF;
+        var result = (value << count | value >> 12 - count) & 0xFFF;
         return result;
     }
 
@@ -198,7 +204,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
             var bitPosition = (12 - i) % 12;
 
             // Set the bit at the new position if it's set in the original
-            if ((value & (1 << i)) != 0)
+            if ((value & 1 << i) != 0)
             {
                 result |= 1 << bitPosition;
             }
@@ -240,9 +246,9 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         // Check for three consecutive '1's in a circular manner using modulo arithmetic
         for (var i = 0; i < 12; i++)
         {
-            var bit1 = (value >> i) & 1;
-            var bit2 = (value >> ((i + 1) % 12)) & 1;
-            var bit3 = (value >> ((i + 2) % 12)) & 1;
+            var bit1 = value >> i & 1;
+            var bit2 = value >> (i + 1) % 12 & 1;
+            var bit3 = value >> (i + 2) % 12 & 1;
 
             if (bit1 == 1 && bit2 == 1 && bit3 == 1)
             {
@@ -339,7 +345,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         var array = new PitchClassSetId[_maxValue - _minValue + 1];
         for (var i = 0; i < array.Length; i++)
         {
-            array[i] = new PitchClassSetId(_minValue + i);
+            array[i] = new(_minValue + i);
         }
 
         return array;
@@ -354,7 +360,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     /// <inheritdoc />
     public static PitchClassSetId FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new PitchClassSetId(value);
+        return new(value);
     }
 
     /// <inheritdoc />
@@ -372,7 +378,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     [Pure]
     public static int IntersectionCount(PitchClassSetId a, PitchClassSetId b)
     {
-        return BitOperations.PopCount((uint)((a.Value & b.Value) & Mask12));
+        return BitOperations.PopCount((uint)(a.Value & b.Value & Mask12));
     }
 
     /// <summary>
@@ -381,7 +387,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     [Pure]
     public static int UnionCount(PitchClassSetId a, PitchClassSetId b)
     {
-        return BitOperations.PopCount((uint)(((a.Value | b.Value) & Mask12)));
+        return BitOperations.PopCount((uint)((a.Value | b.Value) & Mask12));
     }
 
     /// <summary>

@@ -1,12 +1,18 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+namespace GA.Business.Core.Notes.Primitives;
 
+using System;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
 using Intervals.Primitives;
+using JetBrains.Annotations;
+using PCRE;
 
 /// <summary>
 ///     Sharp accidental (# | x)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{SharpAccidental}" />
+///     Implements <see cref="IRangeValueObject{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidental>, IParsable<SharpAccidental>
@@ -21,7 +27,8 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SharpAccidental FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new SharpAccidental { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator Semitones(SharpAccidental value)
@@ -31,7 +38,8 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
 
     public Semitones ToSemitones()
     {
-        return new Semitones { Value = _value };
+        return new()
+            { Value = _value };
     }
 
     /// <inheritdoc />
@@ -58,7 +66,8 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
 
     public static implicit operator SharpAccidental(int value)
     {
-        return new SharpAccidental { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(SharpAccidental item)

@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Exotic;
+namespace GA.Business.Core.Tonal.Modes.Exotic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -37,7 +41,7 @@ public sealed class BluesScaleMode(BluesScaleDegree degree) : TonalScaleMode<Blu
         {
             foreach (var degree in ValueObjectUtils<BluesScaleDegree>.Items)
             {
-                yield return new BluesScaleMode(degree);
+                yield return new(degree);
             }
         }
     }

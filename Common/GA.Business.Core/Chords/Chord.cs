@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Intervals;
 using Intervals.Primitives;
@@ -28,7 +31,7 @@ public class Chord : IEquatable<Chord>
             notes.Add(newNote);
         }
 
-        Notes = new AccidentedNoteCollection(notes);
+        Notes = new(notes);
         PitchClassSet = Notes.ToPitchClassSet();
 
         Quality = DetermineQuality();
@@ -122,7 +125,7 @@ public class Chord : IEquatable<Chord>
     /// </summary>
     public static Chord FromSymbol(string symbol)
     {
-        var parser = new GA.Business.Core.Chords.Parsing.ChordSymbolParser();
+        var parser = new ChordSymbolParser();
         return parser.Parse(symbol);
     }
 
@@ -158,7 +161,7 @@ public class Chord : IEquatable<Chord>
         var notesList = Notes.ToList();
         var invertedNotes = notesList.Skip(inversion).Concat(notesList.Take(inversion));
 
-        return new Chord(new AccidentedNoteCollection(invertedNotes), Root);
+        return new(new(invertedNotes), Root);
     }
 
     private ChordFormula AnalyzeChordFormula()
@@ -169,26 +172,15 @@ public class Chord : IEquatable<Chord>
         {
             var semitones = (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12;
             var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
-            var function = DetermineChordFunction(interval);
+
+            var function = ChordFunctionExtensions.FromSemitones(semitones);
             intervals.Add(new ChordFormulaInterval(interval, function));
         }
 
-        return new ChordFormula($"Analyzed_{Root}", intervals);
+        return new($"Analyzed_{Root}", intervals);
     }
 
-    private ChordFunction DetermineChordFunction(Interval interval)
-    {
-        return interval.Semitones.Value switch
-        {
-            3 or 4 => ChordFunction.Third,
-            7 => ChordFunction.Fifth,
-            10 or 11 => ChordFunction.Seventh,
-            2 or 14 => ChordFunction.Ninth,
-            5 or 17 => ChordFunction.Eleventh,
-            9 or 21 => ChordFunction.Thirteenth,
-            _ => ChordFunction.Root
-        };
-    }
+
 
     private ChordQuality DetermineQuality()
     {
@@ -264,7 +256,6 @@ public class Chord : IEquatable<Chord>
             ChordQuality.Minor => "m",
             ChordQuality.Diminished => "dim",
             ChordQuality.Augmented => "aug",
-            ChordQuality.Major => "",
             _ => ""
         };
 
@@ -310,5 +301,6 @@ public enum ChordQuality
     Diminished,
     Augmented,
     Suspended,
+    Dominant,
     Other
 }

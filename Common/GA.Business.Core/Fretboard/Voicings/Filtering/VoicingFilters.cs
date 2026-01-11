@@ -1,5 +1,6 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Filtering;
+namespace GA.Business.Core.Fretboard.Voicings.Filtering;
 
+using System.Linq;
 using Analysis;
 using Core;
 
@@ -61,8 +62,8 @@ public static class VoicingFilters
             ChordTypeFilter.ExtendedChords => chordName.Contains("9") || chordName.Contains("11") ||
                                              chordName.Contains("13"),
             ChordTypeFilter.MajorChords => chordName.Contains("maj") ||
-                                          (!chordName.Contains("m") && !chordName.Contains("dim") &&
-                                           !chordName.Contains("aug") && !chordName.Contains("sus")),
+                                          !chordName.Contains("m") && !chordName.Contains("dim") &&
+                                          !chordName.Contains("aug") && !chordName.Contains("sus"),
             ChordTypeFilter.MinorChords => chordName.Contains("m") && !chordName.Contains("maj") &&
                                           !chordName.Contains("dim"),
             ChordTypeFilter.DominantChords => chordName.Contains("7") && !chordName.Contains("maj7") &&

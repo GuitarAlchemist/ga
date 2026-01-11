@@ -1,5 +1,9 @@
 namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -106,11 +110,11 @@ public static class ChordProgressionsConfigLoader
             }
 
             // Fallback: minimal valid dataset
-            return new ChordProgressionsConfiguration
+            return new()
             {
                 ChordProgressions =
                 [
-                    new ChordProgressionDefinition
+                    new()
                     {
                         Name = "I–V–vi–IV",
                         Description = "Popular jazz and pop chord progression",
@@ -122,7 +126,8 @@ public static class ChordProgressionsConfigLoader
                         Function = ["T", "D", "t", "S"],
                         Examples =
                         [
-                            new ChordProgressionExample { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
+                            new()
+                                { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
                         ],
                         Variations = [],
                         UsedBy = ["Various Artists"]
@@ -133,11 +138,11 @@ public static class ChordProgressionsConfigLoader
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading chord progressions configuration: {ex.Message}");
-            return new ChordProgressionsConfiguration
+            return new()
             {
                 ChordProgressions =
                 [
-                    new ChordProgressionDefinition
+                    new()
                     {
                         Name = "I–V–vi–IV",
                         Description = "Popular jazz and pop chord progression",
@@ -149,7 +154,8 @@ public static class ChordProgressionsConfigLoader
                         Function = ["T", "D", "t", "S"],
                         Examples =
                         [
-                            new ChordProgressionExample { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
+                            new()
+                                { Song = "Autumn Leaves", Artist = "Various Jazz Artists", Usage = "Standard" }
                         ],
                         Variations = [],
                         UsedBy = ["Various Artists"]

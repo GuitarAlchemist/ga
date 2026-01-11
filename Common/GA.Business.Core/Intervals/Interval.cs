@@ -1,7 +1,11 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Atonal;
 using Atonal.Abstractions;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -68,7 +72,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
 
         public static implicit operator Chromatic(int size)
         {
-            return new Chromatic((Semitones)size);
+            return new((Semitones)size);
         }
 
         public static implicit operator int(Chromatic interval)
@@ -83,7 +87,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
 
         public static Chromatic operator !(Chromatic interval)
         {
-            return new Chromatic(!interval.Size);
+            return new(!interval.Size);
         }
 
         /// <inheritdoc />
@@ -349,7 +353,8 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <returns>The <see cref="Interval.Simple" /> inverse interval</returns>
         public Simple ToInverse()
         {
-            return new Simple { Size = !Size, Quality = !Quality };
+            return new()
+                { Size = !Size, Quality = !Quality };
         }
 
         /// <summary>
@@ -358,7 +363,8 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <returns>The <see cref="Interval.Compound" /></returns>
         public Compound ToCompound()
         {
-            return new Compound { Size = Size.ToCompound(), Quality = Quality };
+            return new()
+                { Size = Size.ToCompound(), Quality = Quality };
         }
 
         /// <summary>
@@ -367,7 +373,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <returns>The <see cref="FormulaSimpleInterval" /></returns>
         public override FormulaSimpleInterval ToFormulaInterval()
         {
-            return new FormulaSimpleInterval(Size, Quality);
+            return new(Size, Quality);
         }
 
         /// <inheritdoc />
@@ -654,7 +660,7 @@ public abstract partial record Interval : IComparable<Interval>, IComparable
         /// <returns>The <see cref="FormulaCompoundInterval" /></returns>
         public override FormulaCompoundInterval ToFormulaInterval()
         {
-            return new FormulaCompoundInterval(Size, Quality);
+            return new(Size, Quality);
         }
 
         /// <inheritdoc />

@@ -32,16 +32,10 @@ public class MongoDbService
     public IMongoCollection<BsonDocument> Progressions =>
         Database.GetCollection<BsonDocument>(_settings.Collections.Progressions);
 
-    // Music room collections
-    public IMongoCollection<MusicRoomDocument> MusicRoomLayouts =>
-        Database.GetCollection<MusicRoomDocument>("musicRoomLayouts");
+    public IMongoCollection<VoicingEntity> Voicings =>
+        Database.GetCollection<VoicingEntity>(_settings.Collections.Voicings);
 
-    public IMongoCollection<RoomGenerationJob> RoomGenerationJobs =>
-        Database.GetCollection<RoomGenerationJob>("roomGenerationJobs");
 
-    // Document processing collections
-    public IMongoCollection<BsonDocument> ProcessedDocuments =>
-        Database.GetCollection<BsonDocument>("processedDocuments");
 
     // Chord query methods
     public async Task<List<Chord>> GetChordsByQualityAsync(string quality, int limit = 100)
@@ -209,79 +203,7 @@ public class MongoDbService
         }
     }
 
-    public async Task<ChordStatistics> GetChordStatisticsAsync()
-    {
-        var totalCount = await GetTotalChordCountAsync();
 
-        // Get quality distribution
-        var qualityPipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument
-            {
-                ["_id"] = "$Quality",
-                ["count"] = new BsonDocument("$sum", 1)
-            })
-        };
-        var qualityResults = await Chords.Aggregate<BsonDocument>(qualityPipeline).ToListAsync();
-        var qualityDistribution = qualityResults.ToDictionary(
-            doc => doc["_id"].AsString,
-            doc => doc["count"].AsInt32
-        );
-
-        // Get extension distribution
-        var extensionPipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument
-            {
-                ["_id"] = "$Extension",
-                ["count"] = new BsonDocument("$sum", 1)
-            })
-        };
-        var extensionResults = await Chords.Aggregate<BsonDocument>(extensionPipeline).ToListAsync();
-        var extensionDistribution = extensionResults.ToDictionary(
-            doc => doc["_id"].AsString,
-            doc => doc["count"].AsInt32
-        );
-
-        // Get stacking type distribution
-        var stackingPipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument
-            {
-                ["_id"] = "$StackingType",
-                ["count"] = new BsonDocument("$sum", 1)
-            })
-        };
-        var stackingResults = await Chords.Aggregate<BsonDocument>(stackingPipeline).ToListAsync();
-        var stackingDistribution = stackingResults.ToDictionary(
-            doc => doc["_id"].AsString,
-            doc => doc["count"].AsInt32
-        );
-
-        // Get note count distribution
-        var noteCountPipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument
-            {
-                ["_id"] = "$NoteCount",
-                ["count"] = new BsonDocument("$sum", 1)
-            })
-        };
-        var noteCountResults = await Chords.Aggregate<BsonDocument>(noteCountPipeline).ToListAsync();
-        var noteCountDistribution = noteCountResults.ToDictionary(
-            doc => doc["_id"].AsInt32,
-            doc => doc["count"].AsInt32
-        );
-
-        return new ChordStatistics
-        {
-            TotalChords = totalCount,
-            QualityDistribution = qualityDistribution,
-            ExtensionDistribution = extensionDistribution,
-            StackingTypeDistribution = stackingDistribution,
-            NoteCountDistribution = noteCountDistribution
-        };
-    }
 
     public async Task<List<Chord>> SearchChordsAsync(string query, int limit = 100)
     {

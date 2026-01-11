@@ -1,10 +1,20 @@
-﻿namespace GA.Business.Core.Atonal.Primitives;
+namespace GA.Business.Core.Atonal.Primitives;
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using GA.Core.Functional;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Cardinality is the count of unique pitch classes in a pitch class set
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IStaticValueObjectList{Cardinality}" />, <see cref="IName" />
+///     Implements <see cref="IStaticValueObjectList{TSelf}" />, <see cref="IName" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<Cardinality>,
@@ -75,7 +85,8 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Cardinality FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Cardinality { Value = value };
+        return new()
+            { Value = value };
     }
 
     /// <summary>
@@ -103,12 +114,14 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
                 $"Cardinality must be between {_minValue} and {_maxValue}, got {value}");
         }
 
-        return Result<Cardinality, string>.Success(new Cardinality { Value = value });
+        return Result<Cardinality, string>.Success(new()
+            { Value = value });
     }
 
     public static implicit operator Cardinality(int value)
     {
-        return new Cardinality { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(Cardinality fret)

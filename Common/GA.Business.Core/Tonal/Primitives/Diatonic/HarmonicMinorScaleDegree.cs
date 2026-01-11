@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Diatonic;
+namespace GA.Business.Core.Tonal.Primitives.Diatonic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A harmonic minor scale degree
@@ -39,7 +47,8 @@ public readonly record struct HarmonicMinorScaleDegree : IRangeValueObject<Harmo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HarmonicMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new HarmonicMinorScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static HarmonicMinorScaleDegree Min => FromValue(_minValue);

@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Extensions;
+namespace GA.Business.Core.Extensions;
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal;
 using Atonal.Abstractions;
 using Intervals.Primitives;

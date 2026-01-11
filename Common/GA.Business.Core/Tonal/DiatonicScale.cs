@@ -1,6 +1,9 @@
-﻿namespace GA.Business.Core.Tonal;
+namespace GA.Business.Core.Tonal;
 
+using System.Collections;
+using System.Collections.Generic;
 using Intervals;
+using JetBrains.Annotations;
 
 [PublicAPI]
 public abstract record DiatonicScale

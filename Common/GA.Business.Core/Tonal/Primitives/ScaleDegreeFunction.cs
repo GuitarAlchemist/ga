@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+namespace GA.Business.Core.Tonal.Primitives;
 
 /// <summary>
 ///     The function of a scale degree

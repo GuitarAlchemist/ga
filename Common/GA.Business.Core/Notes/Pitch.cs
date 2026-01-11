@@ -1,8 +1,11 @@
-﻿namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes;
 
+using System;
+using System.Collections.Generic;
 using Atonal;
 using Atonal.Abstractions;
 using Intervals;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -113,8 +116,8 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         {
             return PitchParser.TryParse<SharpAccidental, Note.Sharp, Sharp>(
                 s,
-                (naturalNote, accidental) => new Note.Sharp(naturalNote, accidental),
-                (note, octave) => new Sharp(note, octave),
+                (naturalNote, accidental) => new(naturalNote, accidental),
+                (note, octave) => new(note, octave),
                 out result);
         }
 
@@ -126,62 +129,62 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Sharp C(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.C, octave);
+            return new(Notes.Note.Sharp.C, octave);
         }
 
         public static Sharp CSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.CSharp, octave);
+            return new(Notes.Note.Sharp.CSharp, octave);
         }
 
         public static Sharp D(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.D, octave);
+            return new(Notes.Note.Sharp.D, octave);
         }
 
         public static Sharp DSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.DSharp, octave);
+            return new(Notes.Note.Sharp.DSharp, octave);
         }
 
         public static Sharp E(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.E, octave);
+            return new(Notes.Note.Sharp.E, octave);
         }
 
         public static Sharp F(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.F, octave);
+            return new(Notes.Note.Sharp.F, octave);
         }
 
         public static Sharp FSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.FSharp, octave);
+            return new(Notes.Note.Sharp.FSharp, octave);
         }
 
         public static Sharp G(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.G, octave);
+            return new(Notes.Note.Sharp.G, octave);
         }
 
         public static Sharp GSharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.GSharp, octave);
+            return new(Notes.Note.Sharp.GSharp, octave);
         }
 
         public static Sharp A(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.A, octave);
+            return new(Notes.Note.Sharp.A, octave);
         }
 
         public static Sharp ASharp(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.ASharp, octave);
+            return new(Notes.Note.Sharp.ASharp, octave);
         }
 
         public static Sharp B(Octave octave)
         {
-            return new Sharp(Notes.Note.Sharp.B, octave);
+            return new(Notes.Note.Sharp.B, octave);
         }
 
         public static Sharp C0 => Sharp0(Notes.Note.Sharp.C);
@@ -264,32 +267,32 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         private static Sharp Sharp0(Note.Sharp note)
         {
-            return new Sharp(note, 0);
+            return new(note, 0);
         }
 
         private static Sharp Sharp1(Note.Sharp note)
         {
-            return new Sharp(note, 1);
+            return new(note, 1);
         }
 
         private static Sharp Sharp2(Note.Sharp note)
         {
-            return new Sharp(note, 2);
+            return new(note, 2);
         }
 
         private static Sharp Sharp3(Note.Sharp note)
         {
-            return new Sharp(note, 3);
+            return new(note, 3);
         }
 
         private static Sharp Sharp4(Note.Sharp note)
         {
-            return new Sharp(note, 4);
+            return new(note, 4);
         }
 
         private static Sharp Sharp5(Note.Sharp note)
         {
-            return new Sharp(note, 5);
+            return new(note, 5);
         }
 
         #endregion
@@ -343,8 +346,8 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         {
             return PitchParser.TryParse<FlatAccidental, Note.Flat, Flat>(
                 s,
-                (naturalNote, accidental) => new Note.Flat(naturalNote, accidental),
-                (note, octave) => new Flat(note, octave),
+                (naturalNote, accidental) => new(naturalNote, accidental),
+                (note, octave) => new(note, octave),
                 out result);
         }
 
@@ -356,62 +359,62 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Flat C(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.C, octave);
+            return new(Notes.Note.Flat.C, octave);
         }
 
         public static Flat CFlat(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.CFlat, octave);
+            return new(Notes.Note.Flat.CFlat, octave);
         }
 
         public static Flat D(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.D, octave);
+            return new(Notes.Note.Flat.D, octave);
         }
 
         public static Flat DFlat(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.D, octave);
+            return new(Notes.Note.Flat.D, octave);
         }
 
         public static Flat E(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.E, octave);
+            return new(Notes.Note.Flat.E, octave);
         }
 
         public static Flat F(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.F, octave);
+            return new(Notes.Note.Flat.F, octave);
         }
 
         public static Flat FFlat(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.G, octave);
+            return new(Notes.Note.Flat.G, octave);
         }
 
         public static Flat G(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.G, octave);
+            return new(Notes.Note.Flat.G, octave);
         }
 
         public static Flat GFlat(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.A, octave);
+            return new(Notes.Note.Flat.A, octave);
         }
 
         public static Flat A(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.A, octave);
+            return new(Notes.Note.Flat.A, octave);
         }
 
         public static Flat AFlat(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.AFlat, octave);
+            return new(Notes.Note.Flat.AFlat, octave);
         }
 
         public static Flat B(Octave octave)
         {
-            return new Flat(Notes.Note.Flat.B, octave);
+            return new(Notes.Note.Flat.B, octave);
         }
 
         public static Flat C0 => Flat0(Notes.Note.Flat.C);
@@ -494,32 +497,32 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         private static Flat Flat0(Note.Flat note)
         {
-            return new Flat(note, 0);
+            return new(note, 0);
         }
 
         private static Flat Flat1(Note.Flat note)
         {
-            return new Flat(note, 1);
+            return new(note, 1);
         }
 
         private static Flat Flat2(Note.Flat note)
         {
-            return new Flat(note, 2);
+            return new(note, 2);
         }
 
         private static Flat Flat3(Note.Flat note)
         {
-            return new Flat(note, 3);
+            return new(note, 3);
         }
 
         private static Flat Flat4(Note.Flat note)
         {
-            return new Flat(note, 4);
+            return new(note, 4);
         }
 
         private static Flat Flat5(Note.Flat note)
         {
-            return new Flat(note, 5);
+            return new(note, 5);
         }
 
         #endregion

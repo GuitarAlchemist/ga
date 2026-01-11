@@ -62,6 +62,37 @@ You can also run specific sets of tests:
 *   **Backend only:** `pwsh Scripts/run-all-tests.ps1 -BackendOnly`
 *   **Playwright UI tests:** `pwsh Scripts/run-all-tests.ps1 -PlaywrightOnly`
 
+### Semantic Analysis & Indexing
+
+The `VoicingAnalyzer` component now generates rich semantic tags to power the Chatbot and "Intelligent Feedback" features.
+
+**Supported Semantic Dimensions:**
+*   **Mood/Emotion:** `sad` (minor), `happy` (major), `dreamy` (lydian/maj7), `tense` (dim7/dom7), `melancholy` (minor triads), `aggressive` (power chords).
+*   **Genre:** `neo-soul` (m9/maj9), `funk` (E9 types), `flamenco` (phrygian), `jazz-comping` (rootless), `rock-guitar` (power chords).
+*   **Structure:** `shell-voicing` (essential 3rd/7th), `drop-voicing` (drop-2/drop-3), `quartal-harmony` (fourths), `so-what-chord`.
+*   **Famous Chords:** `hendrix-chord` (7#9), `james-bond-chord` (mMaj9), `mu-major` (add9), `tristan-chord`.
+*   **Playability:** `beginner-friendly`, `campfire-chord` (open strings), `wide-stretch`, `shred-guitar`.
+
+These tags are indexed in MongoDB (`VoicingEntity.SemanticTags`) and searchable via `VoicingSearchController` or `search-voicings` CLI.
+
+### GaCLI Tools
+
+The project includes a powerful CLI utility `GaCLI` for managing data and interacting with the engine.
+
+Run commands via:
+```powershell
+dotnet run --project GaCLI -- <command> [args]
+```
+
+**Key Commands:**
+*   `index-voicings`: Generates and indexes millions of guitar voicings into MongoDB.
+*   `search-voicings`: Query the database with rich filters.
+    *   Example: `search-voicings --name "Cmaj7" --register Mid-High --no-barre`
+*   `identify <diagram>`: Identify a chord from a string representation.
+    *   Example: `identify x32010` (Low-to-High string order)
+*   `similar <diagram>`: Find alternative voicings (same notes/function) for a given shape.
+    *   Example: `similar x32010 --limit 5`
+
 ## Development Conventions
 
 The project follows a set of development conventions to ensure code quality and consistency.

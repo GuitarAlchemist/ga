@@ -1,7 +1,15 @@
-﻿namespace GA.Business.Core.Scales;
+namespace GA.Business.Core.Scales;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal;
 using Atonal.Primitives;
+using Extensions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using GA.Core.Extensions;
 using Intervals;
 using Notes;
@@ -99,7 +107,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     public static Scale FromPitchClassSetId(PitchClassSetId id)
     {
-        return new Scale(id.Notes);
+        return new(id.Notes);
     }
 
     public override string ToString()

@@ -9,19 +9,13 @@ using Models;
 /// <summary>
 ///     Integration tests for Tab Conversion API endpoints
 /// </summary>
-public class TabConversionApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class TabConversionApiTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public TabConversionApiTests(WebApplicationFactory<Program> factory)
+    private readonly HttpClient _client = factory.CreateClient();
+    private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        _client = factory.CreateClient();
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-    }
+        PropertyNameCaseInsensitive = true
+    };
 
     #region Health Check Tests
 

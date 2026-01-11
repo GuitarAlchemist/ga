@@ -1,6 +1,11 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
 
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using GA.Core.Combinatorics;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     List of <see cref="RelativeFret" /> items, indexed by string.
@@ -29,7 +34,7 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IE
     /// <returns>The <see cref="FretVector" />.</returns>
     public FretVector ToFretVector(Fret startFret)
     {
-        return new FretVector(_relativeFretByStr.Values.Select(relativeFret => startFret + relativeFret));
+        return new(_relativeFretByStr.Values.Select(relativeFret => startFret + relativeFret));
     }
 
     public override string ToString()

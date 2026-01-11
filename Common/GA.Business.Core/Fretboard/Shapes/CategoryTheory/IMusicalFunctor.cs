@@ -1,4 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.CategoryTheory;
+namespace GA.Business.Core.Fretboard.Shapes.CategoryTheory;
+
+using System;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A functor between musical categories

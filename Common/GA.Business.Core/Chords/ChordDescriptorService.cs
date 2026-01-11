@@ -9,14 +9,9 @@ using Abstractions;
 /// Facade that orchestrates chord analysis strategies and falls back to the
 /// existing naming pipeline when no specialized analyzer applies.
 /// </summary>
-public sealed class ChordDescriptorService
+public sealed class ChordDescriptorService(IEnumerable<IChordAnalysisService> analyzers)
 {
-    private readonly IReadOnlyList<IChordAnalysisService> _analyzers;
-
-    public ChordDescriptorService(IEnumerable<IChordAnalysisService> analyzers)
-    {
-        _analyzers = analyzers?.ToList() ?? new List<IChordAnalysisService>();
-    }
+    private readonly IReadOnlyList<IChordAnalysisService> _analyzers = analyzers?.ToList() ?? [];
 
     /// <summary>
     /// Returns the best available chord name. Uses the first analyzer whose
