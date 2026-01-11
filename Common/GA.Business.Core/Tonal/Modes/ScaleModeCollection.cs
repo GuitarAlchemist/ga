@@ -1,4 +1,11 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using GA.Core.Abstractions;
+using GA.Core.Collections.Abstractions;
 
 public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>,
     IIndexer<TScaleModeDegree, TScaleMode>

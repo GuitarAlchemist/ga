@@ -1,7 +1,12 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using Atonal;
+using JetBrains.Annotations;
 using Positions;
 
 /// <summary>
@@ -190,7 +195,7 @@ public sealed record FretboardShape
         var mask = 0;
         foreach (var pos in positions.Where(p => !p.IsMuted))
         {
-            mask |= 1 << (pos.Str.Value - 1);
+            mask |= 1 << pos.Str.Value - 1;
         }
 
         return mask;

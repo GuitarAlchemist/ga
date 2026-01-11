@@ -1,14 +1,21 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+namespace GA.Business.Core.Notes.Primitives;
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Atonal;
 using Atonal.Abstractions;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Functional;
 using Intervals;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A MIDI note (0 to 127)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{MidiNote}" /> and <see cref="IPitchClass" />
+///     Implements <see cref="IRangeValueObject{TSelf}" /> and <see cref="IPitchClass" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClass
@@ -44,7 +51,8 @@ public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClas
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static MidiNote FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new MidiNote { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static MidiNote Min => FromValue(_minValue);
@@ -91,7 +99,8 @@ public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClas
                 $"MIDI note number must be between {_minValue} and {_maxValue}, got {value}");
         }
 
-        return Result<MidiNote, string>.Success(new MidiNote { Value = value });
+        return Result<MidiNote, string>.Success(new()
+            { Value = value });
     }
 
     public static int CheckRange(int value)
@@ -171,17 +180,17 @@ public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClas
 
     public Pitch.Chromatic ToChromaticPitch()
     {
-        return new Pitch.Chromatic(ToChromaticNote(), Octave);
+        return new(ToChromaticNote(), Octave);
     }
 
     public Pitch.Sharp ToSharpPitch()
     {
-        return new Pitch.Sharp(ToSharpNote(), Octave);
+        return new(ToSharpNote(), Octave);
     }
 
     public Pitch.Flat ToFlatPitch()
     {
-        return new Pitch.Flat(ToFlatNote(), Octave);
+        return new(ToFlatNote(), Octave);
     }
 
     #region Relational members

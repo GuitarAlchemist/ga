@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections.Generic;
+using System.Text;
 using Atonal;
 using Atonal.Abstractions;
 using Primitives;

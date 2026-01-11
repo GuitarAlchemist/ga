@@ -1,4 +1,9 @@
-﻿namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes;
+
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 [PublicAPI]
 public sealed class PitchCollection : LazyPrintableCollectionBase<Pitch>, IParsable<PitchCollection>

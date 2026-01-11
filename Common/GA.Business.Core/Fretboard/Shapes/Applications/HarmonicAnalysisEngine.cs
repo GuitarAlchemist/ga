@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes.Applications;
+namespace GA.Business.Core.Fretboard.Shapes.Applications;
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using DynamicalSystems;
 using Spectral;
 
@@ -20,7 +23,7 @@ public class HarmonicAnalysisEngine
         ShapeGraph graph,
         HarmonicAnalysisOptions? options = null)
     {
-        options ??= new HarmonicAnalysisOptions();
+        options ??= new();
 
         // Run analyses in parallel
         var spectralTask = Task.Run(() =>
@@ -30,11 +33,11 @@ public class HarmonicAnalysisEngine
             options.IncludeDynamicalAnalysis ? _dynamicsAnalyzer.Analyze(graph) : null);
 
         var clusteringTask = Task.Run(() =>
-            options.ClusterCount > 0 ? _spectralAnalyzer.Cluster(graph, options.ClusterCount) : new List<ChordFamily>());
+            options.ClusterCount > 0 ? _spectralAnalyzer.Cluster(graph, options.ClusterCount) : []);
 
         await Task.WhenAll(spectralTask, dynamicsTask, clusteringTask);
 
-        return new HarmonicAnalysisReport
+        return new()
         {
             Spectral = await spectralTask,
             Dynamics = await dynamicsTask,
@@ -65,7 +68,7 @@ public class HarmonicAnalysisEngine
         var similarity = 1.0 - Math.Abs(info1.Entropy - info2.Entropy) / Math.Max(info1.Entropy, info2.Entropy);
         var wassersteinDistance = Math.Abs(info1.Complexity - info2.Complexity);
 
-        return new ProgressionComparison
+        return new()
         {
             Similarity = similarity,
             WassersteinDistance = wassersteinDistance,
@@ -90,7 +93,7 @@ public class HarmonicAnalysisEngine
             _ => OptimizationStrategy.BalancedPractice
         };
 
-        var result = _progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
+        var result = _progressionOptimizer.GeneratePracticeProgression(graph, new()
         {
             TargetLength = pathLength,
             Strategy = strategy
@@ -102,7 +105,7 @@ public class HarmonicAnalysisEngine
     private TopologyInfo? ComputeTopology(ShapeGraph graph)
     {
         // Simplified topology analysis
-        return new TopologyInfo
+        return new()
         {
             ConnectedComponents = 1,
             EulerCharacteristic = graph.ShapeCount - graph.TransitionCount
@@ -128,7 +131,7 @@ public record HarmonicAnalysisReport
 {
     public SpectralMetrics? Spectral { get; init; }
     public DynamicalSystemInfo? Dynamics { get; init; }
-    public List<ChordFamily> ChordFamilies { get; init; } = new();
+    public List<ChordFamily> ChordFamilies { get; init; } = [];
     public TopologyInfo? Topology { get; init; }
 }
 

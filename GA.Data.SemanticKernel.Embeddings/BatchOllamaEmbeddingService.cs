@@ -9,26 +9,14 @@ using Microsoft.Extensions.Logging.Abstractions;
 ///     High-performance batch embedding service for Ollama
 ///     Optimized for throughput with concurrent requests and intelligent batching
 /// </summary>
-public class BatchOllamaEmbeddingService : IBatchEmbeddingService
+public class BatchOllamaEmbeddingService(HttpClient httpClient,
+    string modelName = "nomic-embed-text",
+    int maxConcurrentRequests = 10,
+    ILogger<BatchOllamaEmbeddingService>? logger = null)
+    : IBatchEmbeddingService
 {
-    private readonly SemaphoreSlim _concurrencyLimiter;
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<BatchOllamaEmbeddingService> _logger;
-    private readonly int _maxConcurrentRequests;
-    private readonly string _modelName;
-
-    public BatchOllamaEmbeddingService(
-        HttpClient httpClient,
-        string modelName = "nomic-embed-text",
-        int maxConcurrentRequests = 10,
-        ILogger<BatchOllamaEmbeddingService>? logger = null)
-    {
-        _httpClient = httpClient;
-        _modelName = modelName;
-        _logger = logger ?? NullLogger<BatchOllamaEmbeddingService>.Instance;
-        _maxConcurrentRequests = maxConcurrentRequests;
-        _concurrencyLimiter = new SemaphoreSlim(maxConcurrentRequests, maxConcurrentRequests);
-    }
+    private readonly SemaphoreSlim _concurrencyLimiter = new(maxConcurrentRequests, maxConcurrentRequests);
+    private readonly ILogger<BatchOllamaEmbeddingService> _logger = logger ?? NullLogger<BatchOllamaEmbeddingService>.Instance;
 
     /// <summary>
     ///     Generate embeddings for multiple texts concurrently
@@ -44,14 +32,14 @@ public class BatchOllamaEmbeddingService : IBatchEmbeddingService
         _logger.LogDebug("Generating embeddings for {Count} texts", texts.Length);
 
         // For small batches, use concurrent individual requests
-        if (texts.Length <= _maxConcurrentRequests)
+        if (texts.Length <= maxConcurrentRequests)
         {
             return await GenerateConcurrentEmbeddingsAsync(texts, cancellationToken);
         }
 
         // For large batches, chunk them
         var results = new float[texts.Length][];
-        var chunks = ChunkArray(texts, _maxConcurrentRequests);
+        var chunks = ChunkArray(texts, maxConcurrentRequests);
         var currentIndex = 0;
 
         foreach (var chunk in chunks)
@@ -103,11 +91,11 @@ public class BatchOllamaEmbeddingService : IBatchEmbeddingService
         {
             var request = new OllamaEmbeddingRequest
             {
-                Model = _modelName,
+                Model = modelName,
                 Prompt = text
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/embeddings", request, cancellationToken);
+            var response = await httpClient.PostAsJsonAsync("/api/embeddings", request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(cancellationToken);

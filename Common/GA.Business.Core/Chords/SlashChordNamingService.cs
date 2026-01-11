@@ -1,5 +1,6 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
 using Atonal;
 
 /// <summary>
@@ -34,7 +35,7 @@ public static class SlashChordNamingService
         var isCommon = isInversion;
         var type = isInversion ? SlashChordType.Inversion : SlashChordType.Other;
         var notation = $"{ToNoteName(root)}/{ToNoteName(bass)}";
-        return new SlashChordAnalysis(type, notation, isCommon);
+        return new(type, notation, isCommon);
     }
 
     /// <summary>

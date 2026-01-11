@@ -1,6 +1,11 @@
 namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Fretboard.Shapes.Geometry;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     OPTIC-inspired geometric utilities for <see cref="SetClass"/>.
@@ -22,7 +27,7 @@ public static class SetClassOpticIndex
 {
     // Simple static cache for mapping SetClass prime-form IDs to their double[] vectors.
     // Safe for reuse across calls; vectors are small (<=12) and immutable by convention.
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, double[]> _vectorCache = new();
+    private static readonly ConcurrentDictionary<int, double[]> _vectorCache = new();
 
     private static byte ToToggleMask(VoiceLeadingOptions o)
     {

@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Intervals.Primitives;
 using Tonal;
@@ -48,7 +51,7 @@ public static class KeyAwareChordNamingService
         var recommendedName = GenerateRecommendedName(template, root, mostProbable);
         var recommendedSpelling = GetRecommendedEnharmonicSpelling(root, mostProbable.Key);
 
-        return new KeyAwareAnalysis(
+        return new(
             root, template, sortedContexts, mostProbable, recommendedName, recommendedSpelling);
     }
 
@@ -66,7 +69,7 @@ public static class KeyAwareChordNamingService
         var chordName = GenerateKeyContextChordName(template, root, key);
         var functionalDescription = GenerateFunctionalDescription(function, scaleDegree, key);
 
-        return new KeyContextResult(
+        return new(
             key, probability, chordName, romanNumeral, function, scaleDegree,
             isNaturallyOccurring, requiresAccidentals, functionalDescription);
     }
@@ -272,7 +275,7 @@ public static class KeyAwareChordNamingService
     {
         // Common progressions: I-V-vi-IV, ii-V-I, vi-IV-I-V
         var commonDegrees = new[] { 1, 2, 4, 5, 6 };
-        return commonDegrees.Contains(scaleDegree);
+        return Enumerable.Contains(commonDegrees, scaleDegree);
     }
 
     /// <summary>

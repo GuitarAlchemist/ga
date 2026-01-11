@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
+
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Functional;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     An instrument string (Between <see cref="Min" /> and <see cref="Max" />)
@@ -30,7 +38,8 @@ public readonly record struct Str : IRangeValueObject<Str>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Str FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Str { Value = value };
+        return new()
+            { Value = value };
     }
 
     /// <summary>
@@ -45,7 +54,8 @@ public readonly record struct Str : IRangeValueObject<Str>
 
     public static implicit operator Str(int value)
     {
-        return new Str { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(Str str)
@@ -84,7 +94,8 @@ public readonly record struct Str : IRangeValueObject<Str>
                 $"String number must be between {_minValue} and {_maxValue}, got {value}");
         }
 
-        return Result<Str, string>.Success(new Str { Value = value });
+        return Result<Str, string>.Success(new()
+            { Value = value });
     }
 
     public static Str operator ++(Str str)

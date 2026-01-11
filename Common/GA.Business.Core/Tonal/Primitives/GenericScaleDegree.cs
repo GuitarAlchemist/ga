@@ -1,4 +1,7 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+namespace GA.Business.Core.Tonal.Primitives;
+
+using GA.Core.Abstractions;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A generic scale degree that can be used for any scale.
@@ -16,7 +19,8 @@ public readonly record struct GenericScaleDegree : IValueObject<GenericScaleDegr
     /// <returns>A new instance of the <see cref="GenericScaleDegree" /> class.</returns>
     public static GenericScaleDegree FromValue(int value)
     {
-        return new GenericScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     /// <summary>

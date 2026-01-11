@@ -1,9 +1,16 @@
-﻿namespace GA.Business.Core.Tonal;
+namespace GA.Business.Core.Tonal;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using GA.Core.Extensions;
 using Intervals;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Notes.Extensions;
 using Notes.Primitives;
 using static Notes.Note;
@@ -58,7 +65,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
     ///     Gets the collection of keys for the key mode (Major | Minor)
     /// </summary>
     /// <param name="keyMode">The <see cref="KeyMode" /></param>
-    /// <returns>The <see cref="IReadOnlyCollection{Key}" /></returns>
+    /// <returns>The <see cref="IReadOnlyCollection{T}" /></returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="KeyMode" /> is not supported</exception>
     public static IReadOnlyCollection<Key> GetItems(KeyMode keyMode)
     {
@@ -92,7 +99,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
             KeySignature.AccidentedNotes
                 .Select(note => note.NaturalNote)
                 .ToImmutableHashSet();
-        return new ReadOnlyItems<KeyNote>(
+        return new(
             KeySignature.Value < 0
                 ? GetFlatNotes(Root, accidentedNotes).ToImmutableList()
                 : [.. GetSharpNotes(Root, accidentedNotes)]);

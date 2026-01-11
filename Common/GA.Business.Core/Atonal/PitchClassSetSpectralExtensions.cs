@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
 using System;
 
@@ -17,7 +17,7 @@ public static class PitchClassSetSpectralExtensions
         var mask = set.PitchClassMask;
         for (var i = 0; i < size; i++)
         {
-            vector[i] = (mask & (1 << (i % _pitchClassSpaceSize))) != 0 ? 1.0 : 0.0;
+            vector[i] = (mask & 1 << i % _pitchClassSpaceSize) != 0 ? 1.0 : 0.0;
         }
 
         return vector;

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Engine;
+namespace GA.Business.Core.Fretboard.Engine;
 
 using Notes;
 using Primitives;

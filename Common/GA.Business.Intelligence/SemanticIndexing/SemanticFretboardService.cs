@@ -7,34 +7,15 @@ using Microsoft.Extensions.Logging;
 /// Semantic fretboard service
 /// Provides a simplified interface for semantic indexing and natural language querying of fretboard voicings
 /// </summary>
-public class SemanticFretboardService
+public class SemanticFretboardService(SemanticSearchService searchService,
+    ILogger<SemanticFretboardService> logger)
 {
-    private readonly SemanticSearchService _searchService;
-    private readonly ILogger<SemanticFretboardService> _logger;
     private bool _isIndexed;
-
-    /// <summary>
-    /// Interface for Ollama LLM service
-    /// </summary>
-    public interface IOllamaLlmService
-    {
-        Task<bool> EnsureBestModelAvailableAsync();
-        Task<string> GetBestAvailableModelAsync();
-        Task<string> ProcessNaturalLanguageQueryAsync(string query, string context);
-    }
-
-    public SemanticFretboardService(
-        SemanticSearchService searchService,
-        ILogger<SemanticFretboardService> logger)
-    {
-        _searchService = searchService;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Index fretboard voicings for semantic search
     /// </summary>
-    public async Task<IndexingResult> IndexFretboardVoicingsAsync(
+    public Task<IndexingResult> IndexFretboardVoicingsAsync(
         Tuning tuning,
         string instrumentName = "Guitar",
         int maxFret = 12,
@@ -42,20 +23,20 @@ public class SemanticFretboardService
         IProgress<IndexingProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Indexing fretboard voicings for {Instrument}", instrumentName);
+        logger.LogInformation("Indexing fretboard voicings for {Instrument}", instrumentName);
 
         // Stub implementation - just mark as indexed
         _isIndexed = true;
         progress?.Report(new IndexingProgress(Total: 100, Indexed: 100, Errors: 0));
 
-        return new IndexingResult(
+        return Task.FromResult(new IndexingResult(
             InstrumentName: instrumentName,
             TuningName: tuning.ToString(),
             TotalVoicings: 100,
             IndexedVoicings: 100,
             Errors: 0,
             ElapsedTime: TimeSpan.FromSeconds(1),
-            IndexSize: 100);
+            IndexSize: 100));
     }
 
     /// <summary>
@@ -66,12 +47,12 @@ public class SemanticFretboardService
         int maxResults = 10,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Processing query: {Query}", naturalLanguageQuery);
+        logger.LogInformation("Processing query: {Query}", naturalLanguageQuery);
 
         if (!_isIndexed)
             throw new InvalidOperationException("Fretboard voicings must be indexed before querying");
 
-        var results = await _searchService.SearchAsync(naturalLanguageQuery, maxResults);
+        var results = await searchService.SearchAsync(naturalLanguageQuery, maxResults);
 
         return new QueryResult(
             Query: naturalLanguageQuery,
@@ -86,7 +67,7 @@ public class SemanticFretboardService
     /// </summary>
     public SemanticSearchService.IndexStatistics GetIndexStatistics()
     {
-        return _searchService.GetStatistics();
+        return searchService.GetStatistics();
     }
 
     /// <summary>
@@ -94,7 +75,7 @@ public class SemanticFretboardService
     /// </summary>
     public void ClearIndex()
     {
-        _searchService.Clear();
+        searchService.Clear();
         _isIndexed = false;
     }
 }
@@ -123,8 +104,8 @@ public record IndexingProgress(
     int Indexed,
     int Errors)
 {
-    public double PercentComplete => Total > 0 ? (Indexed * 100.0) / Total : 0;
-    public double ErrorRate => Total > 0 ? (Errors * 100.0) / Total : 0;
+    public double PercentComplete => Total > 0 ? Indexed * 100.0 / Total : 0;
+    public double ErrorRate => Total > 0 ? Errors * 100.0 / Total : 0;
 }
 
 /// <summary>

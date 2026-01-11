@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
+using GA.Business.Core.Chords.Analysis.Atonal;
 using Unified;
 
 /// <summary>
@@ -104,7 +108,7 @@ public static class ChordTemplateNamingService
         static string ToRoman(int n)
         {
             // Support up to 12 for generality
-            var map = new (int, string)[]
+            var map = new[]
             {
                 (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"),
                 (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")
@@ -140,7 +144,7 @@ public static class ChordTemplateNamingService
         var (iconicName, iconicDescription) = GenerateIconicName(template, root);
         var alternates = GenerateAlternateNames(template, root, bassNote);
 
-        return new ComprehensiveChordName(primary, slashChord, quartal, withAlterations, enharmonicEquivalent,
+        return new(primary, slashChord, quartal, withAlterations, enharmonicEquivalent,
             atonalName, keyAwareName, mostProbableKey, iconicName, iconicDescription, alternates);
     }
 
@@ -250,10 +254,7 @@ public static class ChordTemplateNamingService
     /// </summary>
     private static string GeneratePrimaryName(ChordTemplate template, PitchClass root, PitchClass? bassNote)
     {
-        var rootName = GetNoteName(root);
-        var suffix = BasicChordExtensionsService.GetExtensionNotation(template.Extension, template.Quality);
-
-        var primaryName = $"{rootName}{suffix}";
+        var primaryName = BasicChordExtensionsService.GenerateChordName(root, template.Quality, template.Extension);
 
         // Add bass note if it's a slash chord
         if (bassNote.HasValue && !bassNote.Value.Equals(root))
@@ -275,11 +276,9 @@ public static class ChordTemplateNamingService
             return null;
         }
 
-        // Simple slash chord notation for now
-        var rootName = GetNoteName(root);
-        var suffix = BasicChordExtensionsService.GetExtensionNotation(template.Extension, template.Quality);
+        var primary = BasicChordExtensionsService.GenerateChordName(root, template.Quality, template.Extension);
         var bassName = GetNoteName(bassNote.Value);
-        return $"{rootName}{suffix}/{bassName}";
+        return $"{primary}/{bassName}";
     }
 
     /// <summary>
@@ -359,29 +358,13 @@ public static class ChordTemplateNamingService
     /// </summary>
     private static (string? iconicName, string? description) GenerateIconicName(ChordTemplate template, PitchClass root)
     {
-        // Create pitch class set from template and root
-        var pitchClasses = new List<PitchClass> { root };
-        foreach (var interval in template.Intervals)
+        var rootName = BasicChordExtensionsService.GenerateChordName(root, ChordQuality.Major, ChordExtension.Triad);
+        var alterations = ChordAlterationService.AnalyzeAlterations(template);
+        
+        if (template.Quality == ChordQuality.Dominant && alterations.Alterations.Contains(ChordAlterationService.AlterationType.SharpNinth))
         {
-            var pc = PitchClass.FromValue((root.Value + interval.Interval.Semitones.Value) % 12);
-            if (!pitchClasses.Contains(pc))
-            {
-                pitchClasses.Add(pc);
-            }
+            return ($"{rootName}7#9", "Hendrix Chord");
         }
-
-        var pitchClassSet = new PitchClassSet(pitchClasses);
-        // TODO: Implement IconicChordRegistry
-        // var iconicMatches = IconicChordRegistry.FindIconicMatches(pitchClassSet);
-        var iconicMatches = Enumerable.Empty<object>(); // Temporary stub
-
-        // TODO: Implement iconic chord matching
-        // var bestMatch = iconicMatches.FirstOrDefault();
-        // if (bestMatch != null)
-        // {
-        //     return ($"{bestMatch.IconicName} ({bestMatch.TheoreticalName})",
-        //            $"{bestMatch.Description} - {bestMatch.Artist}");
-        // }
 
         return (null, null);
     }
@@ -426,22 +409,20 @@ public static class ChordTemplateNamingService
     /// </summary>
     private static string GetNoteName(PitchClass pitchClass)
     {
-        return pitchClass.Value switch
-        {
-            0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
-            6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
-            _ => "?"
-        };
+        return BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
     }
 
     private static PitchClass? GetEnharmonicEquivalent(PitchClass pitchClass)
     {
-        return pitchClass.Value switch
+        // For simple naming, just check if it's an accidental
+        var val = pitchClass.Value;
+        if (val is 1 or 3 or 6 or 8 or 10)
         {
-            1 => PitchClass.FromValue(1), 3 => PitchClass.FromValue(3),
-            6 => PitchClass.FromValue(6), 8 => PitchClass.FromValue(8),
-            10 => PitchClass.FromValue(10), _ => null
-        };
+            // Relative comparison - just return the same pitch class
+            // which will handle flat/sharp toggle in higher layers if needed
+            return pitchClass;
+        }
+        return null;
     }
 
     /// <summary>

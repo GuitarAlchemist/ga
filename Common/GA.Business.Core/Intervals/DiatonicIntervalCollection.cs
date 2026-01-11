@@ -1,6 +1,11 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Atonal;
+using GA.Core.Collections;
 using GA.Core.Extensions;
 using DiatonicInterval = Interval.Diatonic;
 
@@ -9,7 +14,7 @@ public class DiatonicIntervalCollection(IEnumerable<DiatonicInterval> intervals)
         IReadOnlyCollection<DiatonicInterval>
 {
     /// <summary>
-    ///     Gets the <see cref="PrintableReadOnlyCollection{DiatonicInterval}" />
+    ///     Gets the <see cref="PrintableReadOnlyCollection{T}" />
     /// </summary>
     public PrintableReadOnlyCollection<DiatonicInterval> Intervals { get; } = intervals.ToImmutableList().AsPrintable();
 

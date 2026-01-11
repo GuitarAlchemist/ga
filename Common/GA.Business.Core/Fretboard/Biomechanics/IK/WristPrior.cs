@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics.IK;
+namespace GA.Business.Core.Fretboard.Biomechanics.IK;
+
+using System.Numerics;
 
 /// <summary>
 ///     Represents a wrist pose prior derived from external datasets (e.g., LeRobot).

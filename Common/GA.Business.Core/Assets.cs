@@ -1,10 +1,17 @@
-﻿namespace GA.Business.Core;
+namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using Atonal;
 using Atonal.Primitives;
 using Fretboard.Fingering;
 using Fretboard.Primitives;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Notes;
 using Notes.Primitives;
 using Scales;

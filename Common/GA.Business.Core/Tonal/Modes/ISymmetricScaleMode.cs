@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
+
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Interface for symmetric scale modes that don't have a tonal center.

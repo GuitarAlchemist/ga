@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Common\GA.MusicTheory.DSL\GA.MusicTheory.DSL.fsproj"/>
+        <ProjectReference Include="..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
     </ItemGroup>
 
     <ItemGroup>

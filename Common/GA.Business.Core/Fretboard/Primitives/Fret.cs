@@ -1,13 +1,22 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
 
 using System;
-using static ValueObjectUtils<Fret>;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using GA.Core.Functional;
+using JetBrains.Annotations;
+using static GA.Core.Collections.ValueObjectUtils<Fret>;
 
 /// <summary>
 ///     An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IStaticValueObjectList{Fret}" />
+///     Implements <see cref="IStaticValueObjectList{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct Fret : IStaticValueObjectList<Fret>
@@ -90,7 +99,8 @@ public readonly record struct Fret : IStaticValueObjectList<Fret>
     /// </remarks>
     public static Result<Fret, string> TryCreate(int value) => value is < _minValue or > _maxValue
         ? Result<Fret, string>.Failure($"Fret number must be between {_minValue} (muted) and {_maxValue}, got {value}")
-        : Result<Fret, string>.Success(new Fret { Value = value });
+        : Result<Fret, string>.Success(new()
+            { Value = value });
 
     public static int CheckRange(int value) =>
         IRangeValueObject<Fret>.EnsureValueInRange(value, _minValue, _maxValue);

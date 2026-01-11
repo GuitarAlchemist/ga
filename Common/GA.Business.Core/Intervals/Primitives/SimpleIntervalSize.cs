@@ -1,4 +1,11 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A simple interval size (Between 1 and 8 semitones)
@@ -59,7 +66,8 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SimpleIntervalSize FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new SimpleIntervalSize { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static SimpleIntervalSize Min => FromValue(_minValue);
@@ -67,7 +75,8 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
 
     public static implicit operator SimpleIntervalSize(int value)
     {
-        return new SimpleIntervalSize { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(SimpleIntervalSize intervalSize)
@@ -112,7 +121,8 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
 
     public static SimpleIntervalSize operator +(SimpleIntervalSize intervalSize, int increment)
     {
-        return new SimpleIntervalSize { Value = intervalSize.Value + increment % 7 };
+        return new()
+            { Value = intervalSize.Value + increment % 7 };
     }
 
     public static SimpleIntervalSize operator ++(SimpleIntervalSize intervalSize)
@@ -137,7 +147,8 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
 
     public CompoundIntervalSize ToCompound()
     {
-        return new CompoundIntervalSize { Value = _value + 7 };
+        return new()
+            { Value = _value + 7 };
     }
 
     /// <summary>

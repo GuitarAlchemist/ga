@@ -1,4 +1,6 @@
-﻿namespace GA.Business.Core.Tonal.Primitives;
+namespace GA.Business.Core.Tonal.Primitives;
+
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Interface for mapping scale degrees to their functional roles

@@ -52,16 +52,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="bin\**"/>
-    <Compile Remove="DotnetInteractive\**"/>
-    <Compile Remove="**\*.Optimized.cs"/>
-    <Compile Remove="Fretboard\Biomechanics\IK\GpuVectorOps.cs"/>
+    <Compile Remove="bin\**" />
+    <Compile Remove="DotnetInteractive\**" />
+    <Compile Remove="**\*.Optimized.cs" />
+    <Compile Remove="Fretboard\Biomechanics\IK\GpuVectorOps.cs" />
     <!-- Exclude stub files that duplicate real implementations -->
-    <Compile Remove="Stubs\**"/>
-    <EmbeddedResource Remove="bin\**"/>
-    <EmbeddedResource Remove="DotnetInteractive\**"/>
-    <None Remove="bin\**"/>
-    <None Remove="DotnetInteractive\**"/>
+    <Compile Remove="Stubs\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="DotnetInteractive\**" />
+    <None Remove="bin\**" />
+    <None Remove="DotnetInteractive\**" />
   </ItemGroup>
 
   <!-- See https://bartwullems.blogspot.com/2022/01/nugetadd-readme-to-your-nuget-package.html -->
@@ -69,20 +69,22 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\"/>
-    <None Include="bin\$(Configuration)\net10.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net10.0\"/>
-    <None Include="bin\$(Configuration)\net10.0\GA.Core.dll" Pack="true" PackagePath="lib\net10.0\"/>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="bin\$(Configuration)\net10.0\GA.Business.Config.dll" Pack="true" PackagePath="lib\net10.0\" />
+    <None Include="bin\$(Configuration)\net10.0\GA.Core.dll" Pack="true" PackagePath="lib\net10.0\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.Configuration" Version="2.0.0">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="FSharp.Core" Version="10.0.100-rc2.25502.107"/>
-    <PackageReference Include="ILGPU" Version="1.5.1"/>
-    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1"/>
-    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
-    <PackageReference Include="MathNet.Numerics" Version="5.0.0"/>
+    <PackageReference Include="FSharp.Core" Version="10.0.100-rc2.25502.107" />
+    <PackageReference Include="ILGPU" Version="1.5.1" />
+    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
 
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.11.0">
       <PrivateAssets>all</PrivateAssets>
@@ -92,20 +94,20 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="PCRE.NET" Version="1.1.0"/>
-    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10"/>
-    <PackageReference Include="System.Reactive" Version="6.1.0"/>
-    <PackageReference Include="YamlDotNet" Version="16.3.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5"/>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10"/>
+    <PackageReference Include="PCRE.NET" Version="1.1.0" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10" />
+    <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
@@ -115,15 +117,14 @@
     <ProjectReference Include="..\GA.Core\GA.Core.csproj">
       <PrivateAssets>All</PrivateAssets>
     </ProjectReference>
-
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\GA.Business.Config\Configuration\**\*.cs" Link="Configuration\%(RecursiveDir)%(Filename)%(Extension)"/>
+    <Compile Include="..\GA.Business.Config\Configuration\**\*.cs" Link="Configuration\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Fretboard\Biomechanics\IK\Data\lerobot-wrist-priors.json"/>
-    <EmbeddedResource Include="Atonal\Data\SetClassNotationMap.json" />
+    <EmbeddedResource Include="Fretboard\Biomechanics\IK\Data\lerobot-wrist-priors.json" />
+    <EmbeddedResource Include="Scales\Data\scale_video_urls.json" />
   </ItemGroup>
 </Project>

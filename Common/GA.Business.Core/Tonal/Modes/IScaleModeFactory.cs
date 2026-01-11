@@ -1,4 +1,8 @@
-﻿namespace GA.Business.Core.Tonal.Modes;
+namespace GA.Business.Core.Tonal.Modes;
+
+using System.Collections.Generic;
+using GA.Core.Abstractions;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Interface for scale mode factory methods

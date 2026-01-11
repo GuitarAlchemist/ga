@@ -1,4 +1,8 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
+
+using GA.Core.Abstractions;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     See https://Objects.utk.edu/theorycomp/courses/murphy/documents/Intervals.pdf

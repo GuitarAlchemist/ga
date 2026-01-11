@@ -1,6 +1,11 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Pentatonic;
+namespace GA.Business.Core.Tonal.Modes.Pentatonic;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -36,7 +41,7 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
         {
             foreach (var degree in ValueObjectUtils<MajorPentatonicScaleDegree>.Items)
             {
-                yield return new MajorPentatonicMode(degree);
+                yield return new(degree);
             }
         }
     }

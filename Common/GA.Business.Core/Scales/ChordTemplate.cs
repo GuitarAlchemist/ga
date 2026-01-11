@@ -1,5 +1,6 @@
-﻿namespace GA.Business.Core.Scales;
+namespace GA.Business.Core.Scales;
 
+using System.Collections.Immutable;
 using Atonal;
 
 public class ChordTemplate(PitchClassSet pitchClassSet)

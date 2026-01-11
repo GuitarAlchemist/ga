@@ -3,12 +3,8 @@
 // A DbContext that keeps track of which documents have been ingested.
 // This makes it possible to avoid re-ingesting documents that have not changed,
 // and to delete documents that have been removed from the underlying source.
-public class IngestionCacheDbContext : DbContext
+public class IngestionCacheDbContext(DbContextOptions<IngestionCacheDbContext> options) : DbContext(options)
 {
-    public IngestionCacheDbContext(DbContextOptions<IngestionCacheDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<IngestedDocument> Documents { get; set; } = default!;
     public DbSet<IngestedRecord> Records { get; set; } = default!;
 

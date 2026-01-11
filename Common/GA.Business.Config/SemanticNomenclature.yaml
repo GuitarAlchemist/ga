@@ -1,0 +1,246 @@
+Categories:
+  - Name: "Mood"
+    Priority: 2
+    Tags:
+      - Id: "dreamy"
+        Name: "Dreamy"
+        Description: "A lush, atmospheric sound with a sense of wonder and floating harmony."
+        MusicalClues: "maj7, Lydian, add9, open strings"
+        NarrativeFragment: "creates a floating, ethereal texture that feels suspended in space."
+        TitleTemplate: "A Luminous, Floating Texture"
+        Priority: 10
+      - Id: "tense"
+        Name: "Tense"
+        Description: "High harmonic pressure requiring immediate resolution."
+        MusicalClues: "dim7, dom7b9, tritone, half-diminished"
+        NarrativeFragment: "possesses a biting dissonance and high harmonic pressure."
+        TitleTemplate: "An Unsettled Harmonic Edge"
+        Priority: 10
+      - Id: "sad"
+        Name: "Sad"
+        Description: "Wistful, mournful, or somber character."
+        MusicalClues: "minor triad, m9, b6 intervals"
+        NarrativeFragment: "carries a wistful, somber weight that evokes a sense of longing."
+        TitleTemplate: "A Melancholy Harmonic Shade"
+        Priority: 5
+      - Id: "aggressive"
+        Name: "Aggressive"
+        Description: "Raw power, bite, and harmonic density."
+        MusicalClues: "power chords, distortion-friendly, low-register clusters"
+        NarrativeFragment: "delivers raw power and aggressive bite, perfect for high-gain environments."
+        TitleTemplate: "Raw Power and High Tension"
+        Priority: 10
+      - Id: "soulful"
+        Name: "Soulful"
+        Description: "Warm, sophisticated, and expressive."
+        MusicalClues: "m11, maj9, 13 chords, rootless voicings"
+        NarrativeFragment: "offers a warm, expressive character with deep harmonic roots."
+        TitleTemplate: "Warm and Soulful Sophistication"
+        Priority: 5
+      - Id: "bright"
+        Name: "Bright"
+        Description: "A clear, lifting sound with high-frequency clarity."
+        MusicalClues: "Major triads, Lydian extensions, high register"
+        NarrativeFragment: "has a bright, lifting quality that adds clarity and light."
+        Priority: 5
+      - Id: "stable"
+        Name: "Stable"
+        Description: "Harmonically grounded and requiring no resolution."
+        MusicalClues: "Major/Minor triads, perfect intervals"
+        NarrativeFragment: "felt as a stable harmonic home, providing a sense of rest."
+        Priority: 1
+      - Id: "melancholy"
+        Name: "Melancholy"
+        Description: "A deep, reflective sadness with a touch of beauty."
+        MusicalClues: "Minor 9th, b2, minor triads with extensions"
+        NarrativeFragment: "possesses a beautiful melancholy that invites reflection."
+        Priority: 6
+
+  - Name: "Genre"
+    Priority: 3
+    Tags:
+      - Id: "jazz"
+        Name: "Jazz"
+        Description: "Sophisticated harmonic language of the jazz tradition."
+        MusicalClues: "extensions, alterations, rootless, guide tones"
+        NarrativeFragment: "speaks the sophisticated language of the jazz tradition."
+        TitleTemplate: "Jazz Sophistication"
+        Priority: 8
+        SuggestedContexts:
+          - "Use this in a II-V-I progression to add harmonic sophistication."
+      - Id: "neo-soul"
+        Name: "Neo-Soul"
+        Description: "Modern, laid-back, and richly textured guitar parts."
+        MusicalClues: "m9, 11th extensions, double-stops"
+        NarrativeFragment: "fits perfectly into an R&B or Neo-Soul pocket with its rich, modern texture."
+        TitleTemplate: "Sophisticated Soul and Modern Depth"
+        Priority: 10
+        SuggestedContexts: []
+      - Id: "rock-guitar"
+        Name: "Rock"
+        Description: "Powerful, driven shapes typical of rock music."
+        MusicalClues: "power chords, barres, CAGED shapes"
+        NarrativeFragment: "anchors the sound with the grit and power typical of classic rock."
+        TitleTemplate: "Driven Rock Energy"
+        Priority: 5
+        SuggestedContexts: []
+      - Id: "flamenco"
+        Name: "Flamenco"
+        Description: "The sharp, passionate sound of Spanish guitar."
+        MusicalClues: "Phrygian dominant, b2 clusters, rapid strumming shapes"
+        NarrativeFragment: "evokes the sharp, passionate character of Spanish flamenco tradition."
+        TitleTemplate: "The Spirit of Flamenco"
+        Priority: 10
+        SuggestedContexts:
+          - "Use this over a Phrygian bassline to evoke a traditional Spanish flavor."
+
+  - Name: "Famous"
+    Priority: 1
+    Tags:
+      - Id: "hendrix-chord"
+        Name: "Hendrix Chord"
+        Description: "The iconic 7#9 chord popularized by Jimi Hendrix."
+        MusicalClues: "7#9, dominant function with sharpened 9th"
+        NarrativeFragment: "is the legendary 'Hendrix Chord,' blending blues grit with psychedelic dissonance."
+        TitleTemplate: "The Vibe of the Psychedelic Edge"
+        Priority: 100
+      - Id: "james-bond-chord"
+        Name: "James Bond Chord"
+        Description: "The mysterious and noir-sounding minor major 9th."
+        MusicalClues: "mMaj9, iconic spy-thriller ending chord"
+        NarrativeFragment: "is the 'James Bond Chord,' instantly evoking a sense of noir-spy mystery."
+        TitleTemplate: "Noir Mystery and Spy Intrigue"
+        Priority: 100
+      - Id: "mu-major"
+        Name: "Mu Major"
+        Description: "A major add 2 chord with the 2nd voiced right next to the 3rd."
+        MusicalClues: "Major add 2, Steely Dan sound, cluster density"
+        NarrativeFragment: "is the 'Mu Major' chord, famous for its sophisticated Steely Dan harmonic cluster."
+        TitleTemplate: "The Sophisticated Mu-Major Cluster"
+        Priority: 90
+      - Id: "so-what-chord"
+        Name: "So What Voicing"
+        Description: "A quartal structure based on the Bill Evans voicing."
+        MusicalClues: "quartal, Dorian context, 4th intervals"
+        NarrativeFragment: "uses the iconic 'So What' quartal structure, a cornerstone of modal jazz."
+        TitleTemplate: "Quartal Modal Sophistication"
+        Priority: 90
+
+  - Name: "Structure"
+    Priority: 4
+    Tags:
+      - Id: "shell-voicing"
+        Name: "Shell Voicing"
+        Description: "A minimalist voicing containing only the 3rd and 7th."
+        MusicalClues: "guide tones only, Freddie Green style"
+        NarrativeFragment: "is a minimalist shell voicing, focusing strictly on the essential guide tones."
+        TitleTemplate: "Essential Shell Simplicity"
+        Priority: 15
+      - Id: "rootless"
+        Name: "Rootless"
+        Description: "A voicing that omits the root, leaving it for the bass."
+        MusicalClues: "Jazz comping, 3-5-7-9 structures"
+        NarrativeFragment: "omits the root to leave space for the bass, a hallmark of professional comping."
+        TitleTemplate: "Pro-Level Rootless Comping"
+        Priority: 15
+      - Id: "open-voicing"
+        Name: "Open Voicing"
+        Description: "Notes spread across more than an octave."
+        MusicalClues: "Resonance, sustain, piano-like spacing"
+        NarrativeFragment: "spreads its notes across a wide range, creates a resonant, piano-like spacing."
+        TitleTemplate: "Wide Resonant Spacing"
+        Priority: 10
+      - Id: "closed-voicing"
+        Name: "Closed Voicing"
+        Description: "Notes kept within a single octave."
+        MusicalClues: "Tight clusters, compact, dense"
+        NarrativeFragment: "keeps its notes close together, creating a dense and compact harmonic texture."
+        Priority: 10
+      - Id: "dense"
+        Name: "Dense"
+        Description: "High concentration of notes in a small range."
+        MusicalClues: "Clusters, low-range chords"
+        NarrativeFragment: "has a high harmonic density that feels tight and focused."
+        Priority: 5
+      - Id: "resonant"
+        Name: "Resonant"
+        Description: "Sustaining, clear, and harmonically rich."
+        MusicalClues: "Open strings, wide spacing"
+        NarrativeFragment: "is highly resonant, allowing the harmonies to bloom and sustain."
+        Priority: 5
+
+  - Name: "Register"
+    Priority: 3
+    Tags:
+      - Id: "register:low"
+        Name: "Low Register"
+        Description: "Chords in the lower range of the guitar (Strings 6-5-4)."
+        NarrativeFragment: "has a deep, dark, and heavy presence."
+        Priority: 5
+      - Id: "register:mid-low"
+        Name: "Mid-Low Register"
+        Description: "Chords in the mid-lower range."
+        NarrativeFragment: "has a warm, grounded character."
+        Priority: 5
+      - Id: "register:mid"
+        Name: "Mid Register"
+        Description: "Chords in the middle range of the guitar."
+        NarrativeFragment: "sits in the balanced, vocal range of the instrument."
+        Priority: 5
+      - Id: "register:mid-high"
+        Name: "Mid-High Register"
+        Description: "Chords in the mid-upper range."
+        NarrativeFragment: "begins to exhibit a crystalline, bright quality."
+        Priority: 5
+      - Id: "register:high"
+        Name: "High Register"
+        Description: "Chords in the upper range of the guitar (Strings 3-2-1, high frets)."
+        NarrativeFragment: "delivers a luminous, crystalline energy that cuts through a mix."
+        Priority: 5
+
+  - Name: "Playability"
+    Priority: 5
+    Tags:
+      - Id: "beginner-friendly"
+        Name: "Beginner Friendly"
+        Description: "Easy to play with minimal finger stretching."
+        MusicalClues: "open strings, 3 fingers or less, low fret range"
+        NarrativeFragment: "is very beginner-friendly, requiring simple fingerings and minimal stretching."
+        TitleTemplate: "Easy and Accessible Shape"
+        Priority: 20
+      - Id: "campfire-chord"
+        Name: "Campfire Chord"
+        Description: "A classic open chord that sounds great on acoustic guitar."
+        MusicalClues: "open strings, resonant, strum-friendly"
+        NarrativeFragment: "is a classic campfire chord that rings out beautifully on an acoustic guitar."
+        TitleTemplate: "Resonant Open Character"
+        Priority: 15
+
+  - Name: "CAGED"
+    Priority: 5
+    Tags:
+      - Id: "c-shape"
+        Name: "C-Shape"
+        Description: "Voicing derived from the open C chord shape."
+        NarrativeFragment: "uses the C-shape architecture."
+        Priority: 10
+      - Id: "a-shape"
+        Name: "A-Shape"
+        Description: "Voicing derived from the open A chord shape."
+        NarrativeFragment: "uses the A-shape architecture."
+        Priority: 10
+      - Id: "g-shape"
+        Name: "G-Shape"
+        Description: "Voicing derived from the open G chord shape."
+        NarrativeFragment: "uses the G-shape architecture."
+        Priority: 10
+      - Id: "e-shape"
+        Name: "E-Shape"
+        Description: "Voicing derived from the open E chord shape."
+        NarrativeFragment: "uses the E-shape architecture."
+        Priority: 10
+      - Id: "d-shape"
+        Name: "D-Shape"
+        Description: "Voicing derived from the open D chord shape."
+        NarrativeFragment: "uses the D-shape architecture."
+        Priority: 10

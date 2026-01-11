@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
+namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -45,7 +49,7 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
         {
             foreach (var degree in ValueObjectUtils<NaturalMinorScaleDegree>.Items)
             {
-                yield return new NaturalMinorMode(degree);
+                yield return new(degree);
             }
         }
     }

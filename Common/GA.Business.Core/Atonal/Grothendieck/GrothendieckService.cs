@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Atonal.Grothendieck;
+namespace GA.Business.Core.Atonal.Grothendieck;
 
+using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Service for Grothendieck group operations on pitch-class sets

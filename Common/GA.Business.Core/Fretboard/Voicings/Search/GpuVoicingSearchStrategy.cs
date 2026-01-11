@@ -1,6 +1,12 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Fretboard.Voicings.Search;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Core;
 using ILGPU;
 using ILGPU.Runtime;
@@ -176,9 +182,13 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
                     filteredVoicings = ApplyBiomechanicalFilters(filteredVoicings, filters);
                 }
 
-                // Musical characteristic filters (Quick Win 3)
+                // Musical characteristic filters (Quick Win 3) and Extended Filters (Phase 3)
                 if (filters.IsOpenVoicing.HasValue || filters.IsRootless.HasValue ||
-                    !string.IsNullOrEmpty(filters.DropVoicing) || !string.IsNullOrEmpty(filters.CagedShape))
+                    !string.IsNullOrEmpty(filters.DropVoicing) || !string.IsNullOrEmpty(filters.CagedShape) ||
+                    !string.IsNullOrEmpty(filters.HarmonicFunction) || filters.IsNaturallyOccurring.HasValue ||
+                    filters.HasGuideTones.HasValue || filters.Inversion.HasValue ||
+                    filters.MinConsonance.HasValue || filters.MinBrightness.HasValue || filters.MaxBrightness.HasValue ||
+                    (filters.OmittedTones != null && filters.OmittedTones.Length > 0))
                 {
                     filteredVoicings = ApplyMusicalFilters(filteredVoicings, filters);
                 }
@@ -204,7 +214,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     public VoicingSearchStats GetStats()
     {
-        return new VoicingSearchStats(
+        return new(
             _voicings.Count,
             CalculateGpuMemoryUsage(),
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
@@ -288,11 +298,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
         var voicingOffset = index * embeddingDim;
 
-        double dotProduct = 0.0;
-        double queryNorm = 0.0;
-        double voicingNorm = 0.0;
+        var dotProduct = 0.0;
+        var queryNorm = 0.0;
+        var voicingNorm = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var queryVal = queryVector[i];
             var voicingVal = voicingEmbeddings[voicingOffset + i];
@@ -324,11 +334,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         var voicingIdx = allowedIndices[index];
         var voicingOffset = voicingIdx * embeddingDim;
 
-        double dotProduct = 0.0;
-        double queryNorm = 0.0;
-        double voicingNorm = 0.0;
+        var dotProduct = 0.0;
+        var queryNorm = 0.0;
+        var voicingNorm = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var queryVal = queryVector[i];
             var voicingVal = voicingEmbeddings[voicingOffset + i];
@@ -364,7 +374,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         if (_accelerator.AcceleratorType != AcceleratorType.CPU && _cosineSimilarityKernel != null)
         {
             _deviceEmbeddings = _accelerator.Allocate1D(_hostEmbeddings);
-            var memoryMB = (_hostEmbeddings.Length * sizeof(double)) / (1024.0 * 1024.0);
+            var memoryMB = _hostEmbeddings.Length * sizeof(double) / (1024.0 * 1024.0);
             Trace.TraceInformation($"Pre-allocated {memoryMB:F2} MB GPU memory for {voicings.Count} embeddings");
         }
         else
@@ -537,20 +547,50 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
             ModeName = voicing.ModeName,
             ModalFamily = voicing.ModalFamily,
             SemanticTags = voicing.SemanticTags,
+            PossibleKeys = voicing.PossibleKeys,
             PrimeFormId = voicing.PrimeFormId,
             TranslationOffset = voicing.TranslationOffset,
             YamlAnalysis = voicing.Description, // Using description as YAML for now
             Diagram = voicing.Diagram,
             MidiNotes = voicing.MidiNotes,
+            PitchClasses = [.. voicing.MidiNotes.Select(n => n % 12).Distinct().OrderBy(p => p)],
             PitchClassSet = voicing.PitchClassSet,
             IntervalClassVector = voicing.IntervalClassVector,
             MinFret = voicing.MinFret,
             MaxFret = voicing.MaxFret,
             BarreRequired = voicing.BarreRequired,
-            HandStretch = voicing.HandStretch
+            HandStretch = voicing.HandStretch,
+
+            // New fields populated with defaults/derived values
+            AnalysisEngine = "GpuVoicingSearchStrategy",
+            AnalysisVersion = "1.0.0",
+            Jobs = [],
+            TuningId = "Standard",
+            PitchClassSetId = voicing.PrimeFormId,
+            StackingType = voicing.StackingType,
+            RootPitchClass = voicing.RootPitchClass,
+            MidiBassNote = voicing.MidiBassNote,
+            DifficultyScore = voicing.Difficulty == "Beginner" ? 1.0 : (voicing.Difficulty == "Intermediate" ? 2.0 : 3.0),
+
+            // Phase 3 Mapping
+            HarmonicFunction = voicing.HarmonicFunction,
+            IsNaturallyOccurring = voicing.IsNaturallyOccurring,
+            HasGuideTones = voicing.HasGuideTones,
+            IsRootless = voicing.IsRootless,
+            Inversion = voicing.Inversion,
+            TopPitchClass = voicing.TopPitchClass, // Added for Chord Melody support
+            Consonance = voicing.ConsonanceScore,
+            Brightness = voicing.BrightnessScore,
+            Roughness = 1.0 - voicing.ConsonanceScore, // Rough approximation if needed
+            OmittedTones = voicing.OmittedTones,
+
+            // AI Agent Metadata
+            TexturalDescription = voicing.TexturalDescription,
+            DoubledTones = voicing.DoubledTones,
+            AlternateNames = voicing.AlternateNames
         };
 
-        return new VoicingSearchResult(document, score, query);
+        return new(document, score, query);
     }
 
     private void EnsureInitialized()
@@ -587,7 +627,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         // Use pre-computed HandStretch field for fast filtering
         // Only do full biomechanical analysis if comfort/ergonomic filters are specified
         var needsFullAnalysis = filters.MinComfortScore.HasValue ||
-                                (filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value);
+                                filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value;
 
         if (!needsFullAnalysis)
         {
@@ -654,8 +694,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
             // Filter by rootless
             if (filters.IsRootless.HasValue)
             {
-                var isRootless = v.VoicingType?.Contains("rootless", StringComparison.OrdinalIgnoreCase) ?? false;
-                if (isRootless != filters.IsRootless.Value)
+                if (v.IsRootless != filters.IsRootless.Value)
                     return false;
             }
 
@@ -675,6 +714,68 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
                     tag.Contains($"{filters.CagedShape} shape", StringComparison.OrdinalIgnoreCase));
                 if (!hasCagedShape)
                     return false;
+            }
+
+            // Phase 3 Filters
+
+            if (!string.IsNullOrEmpty(filters.HarmonicFunction))
+            {
+                if (!string.Equals(v.HarmonicFunction, filters.HarmonicFunction, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            if (filters.IsNaturallyOccurring.HasValue)
+            {
+                if (v.IsNaturallyOccurring != filters.IsNaturallyOccurring.Value)
+                    return false;
+            }
+
+            if (filters.HasGuideTones.HasValue)
+            {
+                if (v.HasGuideTones != filters.HasGuideTones.Value)
+                    return false;
+            }
+
+            if (filters.Inversion.HasValue)
+            {
+                if (v.Inversion != filters.Inversion.Value)
+                    return false;
+            }
+
+            if (filters.MinConsonance.HasValue)
+            {
+                if (v.ConsonanceScore < filters.MinConsonance.Value)
+                    return false;
+            }
+
+            if (filters.MinBrightness.HasValue)
+            {
+                if (v.BrightnessScore < filters.MinBrightness.Value)
+                    return false;
+            }
+
+            if (filters.MaxBrightness.HasValue)
+            {
+                if (v.BrightnessScore > filters.MaxBrightness.Value)
+                    return false;
+            }
+
+            if (filters.TopPitchClass.HasValue)
+            {
+                if (v.TopPitchClass != filters.TopPitchClass.Value)
+                    return false;
+            }
+
+            if (filters.OmittedTones != null && filters.OmittedTones.Length > 0)
+            {
+                // Check if ALL requested omissions are present in voicing's OmittedTones
+                // Or maybe just ANY? Usually filters are restrictive (Must omit X).
+                // Let's assume MUST omit all specified.
+                foreach (var omission in filters.OmittedTones)
+                {
+                    if (v.OmittedTones == null || !v.OmittedTones.Contains(omission, StringComparer.OrdinalIgnoreCase))
+                        return false;
+                }
             }
 
             return true;
@@ -725,10 +826,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         if (_isDisposed)
             return;
 
-        _deviceEmbeddings?.Dispose();
-        _accelerator?.Dispose();
-        _context?.Dispose();
+        try { _deviceEmbeddings?.Dispose(); } catch { /* Ignore cleanup errors */ }
+        try { _accelerator?.Dispose(); } catch { /* Ignore cleanup errors */ }
+        try { _context?.Dispose(); } catch { /* Ignore cleanup errors */ }
 
         _isDisposed = true;
     }
+
 }

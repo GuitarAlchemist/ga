@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Analysis;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal;
 using Biomechanics;
 using Chords;
@@ -39,7 +43,7 @@ public static class FretboardChordAnalyzer
         // Generate recommendations
         var recommendations = GenerateRecommendations(ergonomics, harmonics, voiceLeading);
 
-        return new FretboardChordAnalysis(
+        return new(
             voicingArray,
             fretboard,
             ergonomics,
@@ -69,7 +73,7 @@ public static class FretboardChordAnalyzer
             isPlayable = difficultyScore < 0.8; // Threshold for playability
         }
 
-        return new ErgonomicAnalysis(
+        return new(
             difficultyScore,
             stretchFactor,
             barreComplexity,
@@ -92,7 +96,7 @@ public static class FretboardChordAnalyzer
         var majorFormula = CommonChordFormulas.Major;
         var chordTemplate = new ChordTemplate.Analytical(majorFormula, "Simple Major", pcs);
 
-        return new HarmonicAnalysis(
+        return new(
             pcs,
             chordTemplate,
             ImmutableArray<Interval>.Empty,
@@ -104,7 +108,7 @@ public static class FretboardChordAnalyzer
     private static VoiceLeadingAnalysis AnalyzeVoiceLeading(ImmutableArray<Position> voicing)
     {
         // Simplified - for single chord analysis
-        return new VoiceLeadingAnalysis(
+        return new(
             ImmutableArray<VoiceMovement>.Empty,
             1.0,
             0.0,

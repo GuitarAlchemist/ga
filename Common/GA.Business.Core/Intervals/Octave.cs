@@ -1,11 +1,17 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
+
+using System;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Octave (Double-contra | sub-contra | contra | great | small | 1 line | 2 lines | 3 lines | 4 lines | 5 lines | 6
 ///     lines)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{Octave}" />, <see cref="IFormattable" />
+///     Implements <see cref="IRangeValueObject{TSelf}" />, <see cref="IFormattable" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct Octave : IRangeValueObject<Octave>,
@@ -40,7 +46,8 @@ public readonly record struct Octave : IRangeValueObject<Octave>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Octave FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Octave { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static Octave Min => FromValue(_minValue);

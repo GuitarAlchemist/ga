@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
+namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
+using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -28,14 +32,14 @@ public sealed class MajorScaleMode(MajorScaleDegree degree) : TonalScaleMode<Maj
         {
             foreach (var degree in ValueObjectUtils<MajorScaleDegree>.Items)
             {
-                yield return new MajorScaleMode(degree);
+                yield return new(degree);
             }
         }
     }
 
     public static MajorScaleMode FromDegree(MajorScaleDegree degree)
     {
-        return new MajorScaleMode(degree);
+        return new(degree);
     }
 
     public static MajorScaleMode Get(MajorScaleDegree degree)

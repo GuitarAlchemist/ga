@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Primitives;
 
 /// <summary>
@@ -8,11 +11,11 @@ using Primitives;
 /// <remarks>
 ///     e.g. &lt;2, 5, 4, 3, 6, 1&gt; Interval Class Vector (From major scale or its modes) => 254361
 /// </remarks>
-/// <param name="Value">The base-12 <see cref="Int32" /> value</param>
+/// <param name="Value">The base-12 <see cref="int" /> value</param>
 public readonly record struct IntervalClassVectorId(int Value) : IComparable<IntervalClassVectorId>
 {
     /// <summary>
-    ///     Gets the <see cref="ImmutableSortedDictionary{IntervalClass, Int32}" /> interval class vector for the ID
+    ///     Gets the <see cref="ImmutableSortedDictionary" /> interval class vector for the ID
     /// </summary>
     public ImmutableSortedDictionary<IntervalClass, int> Vector => GetVector(Value);
 
@@ -90,7 +93,7 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
 
     public static implicit operator IntervalClassVectorId(int value)
     {
-        return new IntervalClassVectorId(value);
+        return new(value);
     }
 
     /// <summary>

@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.MusicTheory.DSL\GA.MusicTheory.DSL.fsproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
   </ItemGroup>
 
 </Project>

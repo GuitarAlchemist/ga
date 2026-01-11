@@ -1,10 +1,11 @@
 ﻿namespace GaApi.Extensions;
 
-using MongoDbService = GA.Data.MongoDB.Services.MongoDbService;
-using IEmbeddingService = GA.Business.Core.AI.Services.Embeddings.IEmbeddingService;
-using Services;
-using Services.DocumentProcessing;
-using Services.AutonomousCuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using GaApi.Services;
+using GA.Business.Core.AI.Services.Embeddings;
+using GA.Business.Core.Fretboard.Voicings.Search;
 
 /// <summary>
 /// Extension methods for registering AI and ML services
@@ -25,11 +26,8 @@ public static class AiServiceExtensions
         // Register vector search services
         services.AddVectorSearchServices(configuration);
 
-        // Register document processing services
-        services.AddDocumentProcessingServices();
-
-        // Register autonomous curation services
-        services.AddAutonomousCurationServices();
+        // Register chatbot services
+        services.AddChatbotServices(configuration);
 
         return services;
     }
@@ -74,19 +72,13 @@ public static class AiServiceExtensions
     /// <summary>
     /// Adapter to make IBatchEmbeddingService compatible with IEmbeddingService
     /// </summary>
-    private class BatchEmbeddingServiceAdapter : IEmbeddingService
+    private class BatchEmbeddingServiceAdapter(GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService batchService) : IEmbeddingService
     {
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only
-        private readonly GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService _batchService;
-
-        public BatchEmbeddingServiceAdapter(GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService batchService)
-        {
-            _batchService = batchService;
-        }
 
         public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
         {
-            var results = await _batchService.GenerateBatchEmbeddingsAsync(new[] { text });
+            var results = await batchService.GenerateBatchEmbeddingsAsync(new[] { text });
             return [.. results[0]];
         }
 #pragma warning restore SKEXP0001
@@ -121,44 +113,20 @@ public static class AiServiceExtensions
     }
 
     /// <summary>
-    /// Add document processing services
+    /// Add chatbot services (orchestrator, knowledge source, embedding)
     /// </summary>
-    private static IServiceCollection AddDocumentProcessingServices(this IServiceCollection services)
+    private static IServiceCollection AddChatbotServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register YouTube transcript extractor
-        services.AddSingleton<YouTubeTranscriptExtractor>();
+        // Register Ollama embedding service for generating embeddings from user queries
+        services.AddSingleton<GaApi.Services.OllamaEmbeddingService>();
 
-        // Register document ingestion pipeline
-        services.AddSingleton<DocumentIngestionPipeline>();
+        // Register semantic knowledge source (bridges voicing search to chatbot)
+        services.AddSingleton<SemanticKnowledgeSource>();
+        services.AddSingleton<ISemanticKnowledgeSource>(sp =>
+            sp.GetRequiredService<SemanticKnowledgeSource>());
 
-        // Register guitar technique processor
-        services.AddSingleton<GuitarTechniqueProcessor>();
-
-        // Register music theory knowledge processor
-        services.AddSingleton<MusicTheoryKnowledgeProcessor>();
-
-        // Register style learning processor
-        services.AddSingleton<StyleLearningProcessor>();
-
-        return services;
-    }
-
-    /// <summary>
-    /// Add autonomous curation services
-    /// </summary>
-    private static IServiceCollection AddAutonomousCurationServices(this IServiceCollection services)
-    {
-        // Register knowledge gap analyzer
-        services.AddSingleton<KnowledgeGapAnalyzer>();
-
-        // Register YouTube search service
-        services.AddSingleton<YouTubeSearchService>();
-
-        // Register video quality evaluator
-        services.AddSingleton<VideoQualityEvaluator>();
-
-        // Register autonomous curation orchestrator
-        services.AddSingleton<AutonomousCurationOrchestrator>();
+        // Register chatbot session orchestrator (manages conversation flow)
+        services.AddScoped<ChatbotSessionOrchestrator>();
 
         return services;
     }

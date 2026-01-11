@@ -16,7 +16,6 @@
     <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj"/>
     <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj"/>
-    <ProjectReference Include="..\GA.Data.EntityFramework\GA.Data.EntityFramework.csproj"/>
   </ItemGroup>
 </Project>
 

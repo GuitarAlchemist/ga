@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Atonal.Grothendieck;
+namespace GA.Business.Core.Atonal.Grothendieck;
 
 /// <summary>
 /// Options for Markov walk generation

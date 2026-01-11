@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Atonal.Abstractions;
+namespace GA.Business.Core.Atonal.Abstractions;
 
+using System;
+using GA.Core.Abstractions;
 using Primitives;
 
 /// <summary>

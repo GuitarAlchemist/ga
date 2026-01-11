@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard;
+namespace GA.Business.Core.Fretboard;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 using Notes;
 using Primitives;
 

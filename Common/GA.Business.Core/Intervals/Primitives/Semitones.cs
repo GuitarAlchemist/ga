@@ -1,11 +1,17 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
+
+using System;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A chromatic interval size expressed in semitones (From -12 octaves to +12 octaves) -
 ///     <see href="https://en.wikipedia.org/wiki/Semitone" />
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{Semitones}" />
+///     Implements <see cref="IRangeValueObject{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct Semitones : IParsable<Semitones>,
@@ -24,7 +30,8 @@ public readonly record struct Semitones : IParsable<Semitones>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Semitones FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new Semitones { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static Semitones Min => FromValue(_minValue);
@@ -32,7 +39,8 @@ public readonly record struct Semitones : IParsable<Semitones>,
 
     public static implicit operator Semitones(int value)
     {
-        return new Semitones { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(Semitones semitones)

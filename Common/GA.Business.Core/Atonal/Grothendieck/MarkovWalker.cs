@@ -1,5 +1,8 @@
 namespace GA.Business.Core.Atonal.Grothendieck;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Fretboard.Shapes;
 
 /// <summary>
@@ -137,7 +140,7 @@ public class MarkovWalker
         var transitionsList = transitions.ToList();
         if (!transitionsList.Any())
         {
-            return new List<(ShapeTransition, double)>();
+            return [];
         }
 
         // Compute weights using Boltzmann distribution

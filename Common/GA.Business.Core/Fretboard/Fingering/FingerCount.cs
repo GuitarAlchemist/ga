@@ -1,6 +1,14 @@
-﻿namespace GA.Business.Core.Fretboard.Fingering;
+namespace GA.Business.Core.Fretboard.Fingering;
 
-/// <inheritdoc cref="IEquatable{FingerCount}" />
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
+
+/// <inheritdoc cref="IEquatable{T}" />
 /// <inheritdoc cref="IComparable{FingerCount}" />
 /// <inheritdoc cref="IComparable" />
 /// <summary>

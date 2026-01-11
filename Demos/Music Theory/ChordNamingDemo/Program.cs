@@ -2,6 +2,7 @@ namespace ChordNamingDemo;
 
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Chords;
+using GA.Business.Core.Chords.Analysis.Atonal;
 using GA.Business.Core.Intervals;
 using GA.Business.Core.Intervals.Primitives;
 using Spectre.Console;

@@ -1,7 +1,16 @@
-﻿namespace GA.Business.Core.Tonal;
+namespace GA.Business.Core.Tonal;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using GA.Core.Extensions;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Notes.Extensions;
 using Notes.Primitives;
 using KeyNote = Notes.Note.KeyNote;
@@ -10,8 +19,8 @@ using KeyNote = Notes.Note.KeyNote;
 ///     Key signature (See https://en.wikipedia.org/wiki/Key_signature)
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{KeySignature}" /> |
-///     <see cref="IStaticReadonlyCollectionFromValues{KeySignature}" /> | <see cref="IReadOnlyCollection{KeyNote}" />
+///     Implements <see cref="IRangeValueObject{TSelf}" /> |
+///     <see cref="IStaticReadonlyCollectionFromValues{TSelf}" /> | <see cref="IReadOnlyCollection{T}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues<KeySignature>
@@ -32,7 +41,7 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
     public int AccidentalCount => Math.Abs(_value);
 
     /// <summary>
-    ///     Gets the <see cref="PrintableReadOnlyCollection{KeyNote}" /> of accidented notes
+    ///     Gets the <see cref="PrintableReadOnlyCollection{T}" /> of accidented notes
     /// </summary>
     public PrintableReadOnlyCollection<KeyNote> AccidentedNotes { get; }
 
@@ -119,7 +128,7 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new KeySignature(value);
+        return new(value);
     }
 
     private readonly int _value;
@@ -132,7 +141,7 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
 
     public static implicit operator KeySignature(int value)
     {
-        return new KeySignature(value);
+        return new(value);
     }
 
     public static implicit operator int(KeySignature keySignature)
@@ -192,12 +201,12 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
 
     public static KeySignature Sharp([ValueRange(0, 7)] int count)
     {
-        return new KeySignature(count);
+        return new(count);
     }
 
     public static KeySignature Flat([ValueRange(1, 7)] int count)
     {
-        return new KeySignature(-count);
+        return new(-count);
     }
 
     #endregion

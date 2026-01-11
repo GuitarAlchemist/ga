@@ -8,7 +8,7 @@ using MusicTheory.DSL.Types;
 /// <summary>
 ///     Implementation of tab conversion service
 /// </summary>
-public class TabConversionService : ITabConversionService
+public class TabConversionService(ILogger<TabConversionService> logger) : ITabConversionService
 {
     // Format detection patterns
     private const string _vexTabPattern1 = "tabstave";
@@ -72,13 +72,6 @@ public class TabConversionService : ITabConversionService
         }
     }.AsReadOnly();
 
-    private readonly ILogger<TabConversionService> _logger;
-
-    public TabConversionService(ILogger<TabConversionService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<ConversionResponse> ConvertAsync(ConversionRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -92,7 +85,7 @@ public class TabConversionService : ITabConversionService
 
         try
         {
-            _logger.LogInformation("Converting from {Source} to {Target}", request.SourceFormat, request.TargetFormat);
+            logger.LogInformation("Converting from {Source} to {Target}", request.SourceFormat, request.TargetFormat);
 
             // Validate formats
             if (!IsFormatSupported(request.SourceFormat))
@@ -130,7 +123,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during conversion from {Source} to {Target}", request.SourceFormat,
+            logger.LogError(ex, "Error during conversion from {Source} to {Target}", request.SourceFormat,
                 request.TargetFormat);
             response.Success = false;
             response.Errors.Add($"Conversion failed: {ex.Message}");
@@ -158,7 +151,7 @@ public class TabConversionService : ITabConversionService
 
         try
         {
-            _logger.LogInformation("Validating {Format} content", request.Format);
+            logger.LogInformation("Validating {Format} content", request.Format);
 
             if (!IsFormatSupported(request.Format))
             {
@@ -176,19 +169,19 @@ public class TabConversionService : ITabConversionService
             response.Warnings = validationResult.Warnings;
             response.DetectedFormat = validationResult.DetectedFormat;
 
-            _logger.LogInformation("Validation completed for {Format}: {IsValid}", request.Format, response.IsValid);
+            logger.LogInformation("Validation completed for {Format}: {IsValid}", request.Format, response.IsValid);
             return response;
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Validation cancelled for {Format}", request.Format);
+            logger.LogWarning("Validation cancelled for {Format}", request.Format);
             response.IsValid = false;
             response.Errors.Add("Validation was cancelled");
             return response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during validation of {Format}", request.Format);
+            logger.LogError(ex, "Error during validation of {Format}", request.Format);
             response.IsValid = false;
             response.Errors.Add($"Validation failed: {ex.Message}");
             return response;
@@ -239,7 +232,7 @@ public class TabConversionService : ITabConversionService
             var normalizedSource = NormalizeFormat(request.SourceFormat);
             var normalizedTarget = NormalizeFormat(request.TargetFormat);
 
-            _logger.LogDebug("Normalized formats: {Source} -> {Target}", normalizedSource, normalizedTarget);
+            logger.LogDebug("Normalized formats: {Source} -> {Target}", normalizedSource, normalizedTarget);
 
             // Run conversion in background to support cancellation
             return await Task.Run(() =>
@@ -271,7 +264,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Conversion cancelled: {Source} to {Target}", request.SourceFormat,
+            logger.LogWarning("Conversion cancelled: {Source} to {Target}", request.SourceFormat,
                 request.TargetFormat);
             response.Success = false;
             response.Errors.Add("Conversion was cancelled");
@@ -279,7 +272,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Conversion error: {Source} to {Target}", request.SourceFormat, request.TargetFormat);
+            logger.LogError(ex, "Conversion error: {Source} to {Target}", request.SourceFormat, request.TargetFormat);
             response.Success = false;
             response.Errors.Add($"Conversion error: {ex.Message}");
             return response;
@@ -295,14 +288,14 @@ public class TabConversionService : ITabConversionService
 
         try
         {
-            _logger.LogDebug("Parsing ASCII tab for conversion to VexTab");
+            logger.LogDebug("Parsing ASCII tab for conversion to VexTab");
 
             // Parse ASCII tab
             var parseResult = AsciiTabParser.parse(content);
 
             if (parseResult.IsError)
             {
-                _logger.LogWarning("Failed to parse ASCII tab: {Error}", parseResult.ErrorValue);
+                logger.LogWarning("Failed to parse ASCII tab: {Error}", parseResult.ErrorValue);
                 response.Success = false;
                 response.Errors.Add($"Failed to parse ASCII tab: {parseResult.ErrorValue}");
                 return response;
@@ -310,7 +303,7 @@ public class TabConversionService : ITabConversionService
 
             // Note: Full conversion not yet implemented
             // This would require mapping ASCII tab measures/notes to VexTab notation
-            _logger.LogWarning("ASCII to VexTab conversion not fully implemented");
+            logger.LogWarning("ASCII to VexTab conversion not fully implemented");
             response.Success = false;
             response.Errors.Add("ASCII to VexTab conversion is not yet fully implemented");
             response.Warnings.Add("Parser successfully validated the ASCII tab format");
@@ -318,7 +311,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ASCII to VexTab conversion error");
+            logger.LogError(ex, "ASCII to VexTab conversion error");
             response.Success = false;
             response.Errors.Add($"ASCII to VexTab conversion error: {ex.Message}");
             return response;
@@ -334,14 +327,14 @@ public class TabConversionService : ITabConversionService
 
         try
         {
-            _logger.LogDebug("Parsing VexTab for conversion to ASCII");
+            logger.LogDebug("Parsing VexTab for conversion to ASCII");
 
             // Parse VexTab
             var parseResult = VexTabParser.parse(content);
 
             if (parseResult.IsError)
             {
-                _logger.LogWarning("Failed to parse VexTab: {Error}", parseResult.ErrorValue);
+                logger.LogWarning("Failed to parse VexTab: {Error}", parseResult.ErrorValue);
                 response.Success = false;
                 response.Errors.Add($"Failed to parse VexTab: {parseResult.ErrorValue}");
                 return response;
@@ -349,7 +342,7 @@ public class TabConversionService : ITabConversionService
 
             // Note: Full conversion not yet implemented
             // This would require mapping VexTab notation to ASCII tab format
-            _logger.LogWarning("VexTab to ASCII conversion not fully implemented");
+            logger.LogWarning("VexTab to ASCII conversion not fully implemented");
             response.Success = false;
             response.Errors.Add("VexTab to ASCII conversion is not yet fully implemented");
             response.Warnings.Add("Parser successfully validated the VexTab format");
@@ -357,7 +350,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "VexTab to ASCII conversion error");
+            logger.LogError(ex, "VexTab to ASCII conversion error");
             response.Success = false;
             response.Errors.Add($"VexTab to ASCII conversion error: {ex.Message}");
             return response;
@@ -374,7 +367,7 @@ public class TabConversionService : ITabConversionService
 
         try
         {
-            _logger.LogDebug("Parsing Guitar Pro file for conversion to ASCII");
+            logger.LogDebug("Parsing Guitar Pro file for conversion to ASCII");
 
             // Parse Guitar Pro file (base64 encoded binary)
             var parseResult = GuitarProParser.parse(content);
@@ -382,7 +375,7 @@ public class TabConversionService : ITabConversionService
             // Pattern match on the result
             if (parseResult is GuitarProTypes.GuitarProParseResult.Error errorResult)
             {
-                _logger.LogWarning("Failed to parse Guitar Pro file: {Error}", errorResult.Item);
+                logger.LogWarning("Failed to parse Guitar Pro file: {Error}", errorResult.Item);
                 response.Success = false;
                 response.Errors.Add($"Failed to parse Guitar Pro file: {errorResult.Item}");
                 return response;
@@ -394,7 +387,7 @@ public class TabConversionService : ITabConversionService
             // Convert to ASCII tab using the built-in converter
             var ascii = GuitarProParser.toAsciiTab(gpDoc);
 
-            _logger.LogInformation("Successfully converted Guitar Pro to ASCII tab");
+            logger.LogInformation("Successfully converted Guitar Pro to ASCII tab");
             response.Success = true;
             response.Result = ascii;
             response.Warnings.Add("Guitar Pro conversion is simplified - full measure/beat/note parsing in progress");
@@ -402,7 +395,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Guitar Pro to ASCII conversion error");
+            logger.LogError(ex, "Guitar Pro to ASCII conversion error");
             response.Success = false;
             response.Errors.Add($"Guitar Pro to ASCII conversion error: {ex.Message}");
             return response;
@@ -425,68 +418,68 @@ public class TabConversionService : ITabConversionService
             switch (normalizedFormat)
             {
                 case "ascii":
-                    _logger.LogDebug("Validating ASCII tab format");
+                    logger.LogDebug("Validating ASCII tab format");
                     var asciiResult = AsciiTabParser.parse(content);
                     response.IsValid = asciiResult.IsOk;
                     if (asciiResult.IsError)
                     {
-                        _logger.LogWarning("ASCII tab validation failed: {Error}", asciiResult.ErrorValue);
+                        logger.LogWarning("ASCII tab validation failed: {Error}", asciiResult.ErrorValue);
                         response.Errors.Add(asciiResult.ErrorValue);
                     }
                     else
                     {
-                        _logger.LogDebug("ASCII tab validation succeeded");
+                        logger.LogDebug("ASCII tab validation succeeded");
                     }
 
                     break;
 
                 case "vextab":
-                    _logger.LogDebug("Validating VexTab format");
+                    logger.LogDebug("Validating VexTab format");
                     var vexTabResult = VexTabParser.parse(content);
                     response.IsValid = vexTabResult.IsOk;
                     if (vexTabResult.IsError)
                     {
-                        _logger.LogWarning("VexTab validation failed: {Error}", vexTabResult.ErrorValue);
+                        logger.LogWarning("VexTab validation failed: {Error}", vexTabResult.ErrorValue);
                         response.Errors.Add(vexTabResult.ErrorValue);
                     }
                     else
                     {
-                        _logger.LogDebug("VexTab validation succeeded");
+                        logger.LogDebug("VexTab validation succeeded");
                     }
 
                     break;
 
                 case "gp":
-                    _logger.LogDebug("Validating Guitar Pro format");
+                    logger.LogDebug("Validating Guitar Pro format");
                     var gpResult = GuitarProParser.parse(content);
                     if (gpResult is GuitarProTypes.GuitarProParseResult.Error errorResult)
                     {
                         response.IsValid = false;
                         response.Errors.Add(errorResult.Item);
-                        _logger.LogWarning("Guitar Pro validation failed: {Error}", errorResult.Item);
+                        logger.LogWarning("Guitar Pro validation failed: {Error}", errorResult.Item);
                     }
                     else
                     {
                         response.IsValid = true;
-                        _logger.LogDebug("Guitar Pro validation succeeded");
+                        logger.LogDebug("Guitar Pro validation succeeded");
                     }
 
                     break;
 
                 case "midi":
-                    _logger.LogDebug("MIDI validation not yet implemented");
+                    logger.LogDebug("MIDI validation not yet implemented");
                     response.IsValid = false;
                     response.Errors.Add("MIDI validation not yet implemented");
                     break;
 
                 case "musicxml":
-                    _logger.LogDebug("MusicXML validation not yet implemented");
+                    logger.LogDebug("MusicXML validation not yet implemented");
                     response.IsValid = false;
                     response.Errors.Add("MusicXML validation not yet implemented");
                     break;
 
                 default:
-                    _logger.LogWarning("Validation not implemented for format: {Format}", format);
+                    logger.LogWarning("Validation not implemented for format: {Format}", format);
                     response.IsValid = false;
                     response.Errors.Add($"Validation not implemented for format: {format}");
                     break;
@@ -496,7 +489,7 @@ public class TabConversionService : ITabConversionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Validation error for format {Format}", format);
+            logger.LogError(ex, "Validation error for format {Format}", format);
             response.IsValid = false;
             response.Errors.Add($"Validation error: {ex.Message}");
             return response;

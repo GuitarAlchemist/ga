@@ -6,12 +6,7 @@
   </Configurations>
   <Folder Name="/Backend/" />
   <Folder Name="/Backend/Applications/">
-    <Project Path="Apps/FloorManager/FloorManager.csproj" />
-    <Project Path="Apps/ga-server/GA.MusicTheory.Service/GA.MusicTheory.Service.csproj" />
     <Project Path="Apps/ga-server/GaApi/GaApi.csproj" />
-    <Project Path="Apps/GuitarAlchemistChatbot/GuitarAlchemistChatbot.csproj" />
-    <Project Path="Apps/InteractiveTutorial/InteractiveTutorial.csproj" />
-    <Project Path="Apps/ScenesService/ScenesService.csproj" />
   </Folder>
   <Folder Name="/Backend/Applications/ga-server/" />
   <Folder Name="/Backend/Applications/ga-server/CUDA/">
@@ -28,41 +23,31 @@
     <Project Path="Tools/MongoImporter/MongoImporter.csproj" />
     <Project Path="Tools/MongoVerify/MongoVerify.csproj" />
     <Project Path="Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj" />
-    <Project Path="GaCLI/GaCLI.csproj" />
+
   </Folder>
   <Folder Name="/Backend/Infrastructure/">
     <Project Path="AllProjects.AppHost/AllProjects.AppHost.csproj" />
     <Project Path="AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj" />
-    <Project Path="GaMcpServer/GaMcpServer.csproj" />
   </Folder>
   <Folder Name="/Backend/Utilities/">
     <Project Path="ChordSystemTest/ChordSystemTest.csproj" />
     <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj" />
   </Folder>
   <Folder Name="/Core Libraries/">
-    <Project Path="Common/GA.BSP.Core/GA.BSP.Core.csproj" />
-    <Project Path="Common/GA.Business.AI/GA.Business.AI.csproj" />
-    <Project Path="Common/GA.Business.Analytics/GA.Business.Analytics.csproj" />
-    <Project Path="Common/GA.Business.Assets/GA.Business.Assets.csproj" />
+    <Project Path="Common/GA.Business.Core.AI/GA.Business.Core.AI.csproj" />
     <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj" />
     <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
     <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj" />
-    <Project Path="Common/GA.Business.Microservices/GA.Business.Microservices.csproj" />
-    <Project Path="Common/GA.Business.Querying/GA.Business.Querying.fsproj" />
-    <Project Path="Common/GA.Business.UI/GA.Business.UI.csproj" />
-    <Project Path="Common/GA.Business.Web/GA.Business.Web.csproj" />
-    <Project Path="Common/GA.Config/GA.Config.fsproj" />
-    <Project Path="Common/GA.Core.UI/GA.Core.UI.csproj" />
+
     <Project Path="Common/GA.Core/GA.Core.csproj" />
     <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj" />
     <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
     <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
-    <Project Path="Common/GA.MusicTheory.DSL/GA.MusicTheory.DSL.fsproj" />
+    <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj" />
     <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj" />
   </Folder>
   <Folder Name="/Data &amp; Integration/">
-    <Project Path="Common/GA.Data.EntityFramework/GA.Data.EntityFramework.csproj" />
-    <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj" />
+    <Project Path="Common/GA.Testing.Semantic/GA.Testing.Semantic.csproj" />
     <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj" />
   </Folder>
   <Folder Name="/Demos/" />
@@ -72,11 +57,10 @@
   </Folder>
   <Folder Name="/Demos/Music Theory/">
     <Project Path="Demos/Music Theory/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj" />
-    <Project Path="Demos/Music Theory/ChordNamingDemo/ChordNamingDemo.csproj" />
+
     <Project Path="Demos/Music Theory/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj" />
     <Project Path="Demos/Music Theory/MusicalAnalysisApp/MusicalAnalysisApp.csproj" />
     <Project Path="Demos/Music Theory/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj" />
-    <Project Path="Demos/Music Theory/PsychoacousticVoicingDemo/PsychoacousticVoicingDemo.csproj" />
   </Folder>
   <Folder Name="/Demos/Performance &amp; Benchmarks/">
     <Project Path="Demos/Performance/HighPerformanceDemo/HighPerformanceDemo.csproj" />
@@ -99,9 +83,7 @@
     <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj" />
     <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj" />
   </Folder>
-  <Folder Name="/Frontend/">
-    <Project Path="GA.WebBlazorApp/GA.WebBlazorApp.csproj" />
-  </Folder>
+  <Folder Name="/Frontend/" />
   <Folder Name="/Frontend/ga-client/">
     <File Path="Apps/ga-client/package.json" />
     <File Path="Apps/ga-client/README.md" />
@@ -211,13 +193,11 @@
     <Project Path="Common/GA.Business.Graphiti/GA.Business.Graphiti.csproj" />
     <Project Path="Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj" />
     <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj" />
-    <Project Path="Tests/Apps/GuitarAlchemistChatbot.Tests/GuitarAlchemistChatbot.Tests.csproj" />
-    <Project Path="Tests/BSPIntegrationTests/BSPIntegrationTests.csproj" />
     <Project Path="Tests/Common/GA.Business.Core.Graphiti.Tests/GA.Business.Core.Graphiti.Tests.csproj" />
     <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
     <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
     <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
-    <Project Path="Tests/Common/GA.MusicTheory.DSL.Tests/GA.MusicTheory.DSL.Tests.csproj" />
+    <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
     <Project Path="Tests/FloorManager.Tests.Playwright/FloorManager.Tests.Playwright.csproj" />
     <Project Path="Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj" />
   </Folder>

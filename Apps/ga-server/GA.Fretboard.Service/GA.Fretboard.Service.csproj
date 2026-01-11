@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="_Parked\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj" />
     <!-- TODO: Create this project when needed -->
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj" /> -->

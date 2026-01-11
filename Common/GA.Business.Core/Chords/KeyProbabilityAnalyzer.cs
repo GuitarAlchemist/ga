@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Tonal;
 
@@ -33,7 +35,7 @@ public static class KeyProbabilityAnalyzer
         // Calculate overall tonal strength
         var tonalStrength = CalculateOverallTonalStrength(chordList, mostProbable);
 
-        return new ProgressionAnalysis(sortedResults, mostProbable, detectedProgressions, tonalStrength);
+        return new(sortedResults, mostProbable, detectedProgressions, tonalStrength);
     }
 
     /// <summary>
@@ -54,7 +56,7 @@ public static class KeyProbabilityAnalyzer
         var supportingEvidence = GenerateSupportingEvidence(chords, key, diatonicScore, functionalScore);
         var conflictingEvidence = GenerateConflictingEvidence(chords, key);
 
-        return new KeyProbabilityResult(
+        return new(
             key, probability, diatonicScore, functionalScore, progressionScore, voiceLeadingScore,
             supportingEvidence, conflictingEvidence);
     }
@@ -250,7 +252,7 @@ public static class KeyProbabilityAnalyzer
             var matches = FindProgressionMatches(scaleDegrees, pattern);
             if (matches > 0)
             {
-                detectedProgressions.Add(new CommonProgression(name, pattern, strength, key));
+                detectedProgressions.Add(new(name, pattern, strength, key));
             }
         }
 

@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Intervals;
 using Intervals.Primitives;
 
@@ -50,7 +53,7 @@ public class ChordFormula : IEquatable<ChordFormula>
     ///     Gets whether this formula represents a suspended chord
     /// </summary>
     public bool IsSuspended => Intervals.Any(i => i.Function == ChordFunction.Third &&
-                                                  (i.Interval.Semitones == 2 || i.Interval.Semitones == 5));
+                                                  (i.Interval.Semitones.Value == 2 || i.Interval.Semitones.Value == 5));
 
     /// <summary>
     ///     Gets the essential intervals (cannot be omitted)
@@ -88,11 +91,11 @@ public class ChordFormula : IEquatable<ChordFormula>
         var intervals = semitones.Select(s =>
         {
             var interval = new Interval.Chromatic(Semitones.FromValue(s));
-            var function = DetermineChordFunction(s);
+            var function = ChordFunctionExtensions.FromSemitones(s);
             return new ChordFormulaInterval(interval, function);
         });
 
-        return new ChordFormula(name, intervals);
+        return new(name, intervals);
     }
 
     /// <summary>
@@ -103,37 +106,30 @@ public class ChordFormula : IEquatable<ChordFormula>
         var intervals = intervalNames.Select(intervalName =>
         {
             var interval = Interval.Simple.Parse(intervalName, null);
-            var function = DetermineChordFunction(interval.Semitones.Value);
+            var function = ChordFunctionExtensions.FromSemitones(interval.Semitones.Value);
             return new ChordFormulaInterval(interval, function);
         });
 
-        return new ChordFormula(name, intervals);
-    }
-
-    private static ChordFunction DetermineChordFunction(int semitones)
-    {
-        return semitones switch
-        {
-            2 or 14 => ChordFunction.Ninth,
-            3 or 4 => ChordFunction.Third,
-            5 or 17 => ChordFunction.Eleventh,
-            7 => ChordFunction.Fifth,
-            9 or 21 => ChordFunction.Thirteenth,
-            10 or 11 => ChordFunction.Seventh,
-            _ => ChordFunction.Root
-        };
+        return new(name, intervals);
     }
 
     private ChordQuality DetermineQuality()
     {
-        var hasMinorThird = Intervals.Any(i => i.Interval.Semitones == 3);
-        var hasMajorThird = Intervals.Any(i => i.Interval.Semitones == 4);
-        var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones == 6);
-        var hasAugmentedFifth = Intervals.Any(i => i.Interval.Semitones == 8);
+        var hasMinorThird = Intervals.Any(i => i.Interval.Semitones.Value == 3);
+        var hasMajorThird = Intervals.Any(i => i.Interval.Semitones.Value == 4);
+        var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones.Value == 6);
+        var hasAugmentedFifth = Intervals.Any(i => i.Interval.Semitones.Value == 8);
+        var hasMinorSeventh = Intervals.Any(i => i.Interval.Semitones.Value == 10);
 
         if (IsSuspended)
         {
             return ChordQuality.Suspended;
+        }
+
+        // Dominant: Major 3rd + Minor 7th
+        if (hasMajorThird && hasMinorSeventh)
+        {
+            return ChordQuality.Dominant;
         }
 
         if (hasDiminishedFifth && hasMinorThird)
@@ -177,7 +173,7 @@ public class ChordFormula : IEquatable<ChordFormula>
         }
 
         var hasSeventh = Intervals.Any(i => i.Interval.Semitones.Value is 10 or 11);
-        var hasNinth = Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14);
+        var hasNinth = Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14 || (hasSeventh && i.Interval.Semitones.Value is 1 or 13 or 3 or 15));
         var hasEleventh = Intervals.Any(i => i.Interval.Semitones.Value is 5 or 17);
         var hasThirteenth = Intervals.Any(i => i.Interval.Semitones.Value is 9 or 21);
         var hasSixth = Intervals.Any(i => i.Interval.Semitones.Value == 9);
@@ -236,8 +232,6 @@ public class ChordFormula : IEquatable<ChordFormula>
             ChordQuality.Minor => "m",
             ChordQuality.Diminished => "dim",
             ChordQuality.Augmented => "aug",
-            ChordQuality.Major => "",
-            ChordQuality.Suspended => "",
             _ => ""
         };
 
@@ -265,7 +259,7 @@ public class ChordFormula : IEquatable<ChordFormula>
     public ChordFormula WithInterval(ChordFormulaInterval interval)
     {
         var newIntervals = Intervals.Concat([interval]);
-        return new ChordFormula($"{Name} + {interval.Function}", newIntervals, StackingType);
+        return new($"{Name} + {interval.Function}", newIntervals, StackingType);
     }
 
     /// <summary>
@@ -274,7 +268,7 @@ public class ChordFormula : IEquatable<ChordFormula>
     public ChordFormula WithoutInterval(ChordFunction function)
     {
         var newIntervals = Intervals.Where(i => i.Function != function);
-        return new ChordFormula($"{Name} - {function}", newIntervals, StackingType);
+        return new($"{Name} - {function}", newIntervals, StackingType);
     }
 
     public override bool Equals(object? obj)

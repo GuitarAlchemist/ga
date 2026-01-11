@@ -1,18 +1,14 @@
-﻿// NOTE: This file duplicated the implementation in Chords\Parsing\ChordSymbolParser.cs,
-// causing type conflicts. To resolve ambiguity while keeping the code for reference,
-// we move it to an internal legacy namespace and rename the class. Nothing references
-// this type directly.
-namespace GA.Business.Core.Chords.Parsing.Legacy;
+namespace GA.Business.Core.Chords;
 
 using System;
 using System.Text.RegularExpressions;
-using GA.Business.Core.Chords;
+using Chords;
 using Notes;
 
 /// <summary>
 ///     Parses chord symbols into Chord objects
 /// </summary>
-internal class LegacyChordSymbolParser
+public class ChordSymbolParser
 {
     private static readonly Regex _chordSymbolRegex = new(
         @"^([A-G][#b]?)(.*)$",
@@ -40,7 +36,7 @@ internal class LegacyChordSymbolParser
         var root = Note.Accidented.Parse(rootName, null);
         var formula = ParseChordSuffix(suffix);
 
-        return new Chord(root, formula, symbol);
+        return new(root, formula, symbol);
     }
 
     /// <summary>
@@ -81,7 +77,7 @@ internal class LegacyChordSymbolParser
             "6" => CreateSixthFormula(),
             "m6" => CreateMinorSixthFormula(),
             "7" => CommonChordFormulas.Dominant7,
-            "maj7" or "m7" or "△7" => CommonChordFormulas.Major7,
+            "maj7" or "△7" => CommonChordFormulas.Major7,
             "m7" or "min7" or "-7" => CommonChordFormulas.Minor7,
             "dim7" or "°7" => CreateDiminished7Formula(),
             "m7b5" or "ø7" => CreateHalfDiminished7Formula(),
@@ -142,142 +138,35 @@ internal class LegacyChordSymbolParser
             return CreateFlatThirteenFormula(suffix);
         }
 
-        // Default to major if we can't parse it
+        // Default to major if unknown
         return CommonChordFormulas.Major;
     }
 
-    // Factory methods for chord formulas
-    private static ChordFormula CreateSus2Formula()
-    {
-        return ChordFormula.FromSemitones("Sus2", 2, 7);
-    }
-
-    private static ChordFormula CreateSus4Formula()
-    {
-        return ChordFormula.FromSemitones("Sus4", 5, 7);
-    }
-
-    private static ChordFormula CreateSixthFormula()
-    {
-        return ChordFormula.FromSemitones("Sixth", 4, 7, 9);
-    }
-
-    private static ChordFormula CreateMinorSixthFormula()
-    {
-        return ChordFormula.FromSemitones("Minor Sixth", 3, 7, 9);
-    }
-
-    private static ChordFormula CreateDiminished7Formula()
-    {
-        return ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9);
-    }
-
-    private static ChordFormula CreateHalfDiminished7Formula()
-    {
-        return ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10);
-    }
-
-    private static ChordFormula CreateDominant9Formula()
-    {
-        return ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14);
-    }
-
-    private static ChordFormula CreateMajor9Formula()
-    {
-        return ChordFormula.FromSemitones("Major 9th", 4, 7, 11, 14);
-    }
-
-    private static ChordFormula CreateMinor9Formula()
-    {
-        return ChordFormula.FromSemitones("Minor 9th", 3, 7, 10, 14);
-    }
-
-    private static ChordFormula CreateDominant11Formula()
-    {
-        return ChordFormula.FromSemitones("Dominant 11th", 4, 7, 10, 14, 17);
-    }
-
-    private static ChordFormula CreateMajor11Formula()
-    {
-        return ChordFormula.FromSemitones("Major 11th", 4, 7, 11, 14, 17);
-    }
-
-    private static ChordFormula CreateMinor11Formula()
-    {
-        return ChordFormula.FromSemitones("Minor 11th", 3, 7, 10, 14, 17);
-    }
-
-    private static ChordFormula CreateDominant13Formula()
-    {
-        return ChordFormula.FromSemitones("Dominant 13th", 4, 7, 10, 14, 21);
-    }
-
-    private static ChordFormula CreateMajor13Formula()
-    {
-        return ChordFormula.FromSemitones("Major 13th", 4, 7, 11, 14, 21);
-    }
-
-    private static ChordFormula CreateMinor13Formula()
-    {
-        return ChordFormula.FromSemitones("Minor 13th", 3, 7, 10, 14, 21);
-    }
-
-    private static ChordFormula CreateAdd9Formula()
-    {
-        return ChordFormula.FromSemitones("Add9", 4, 7, 14);
-    }
-
-    private static ChordFormula CreateMinorAdd9Formula()
-    {
-        return ChordFormula.FromSemitones("Minor Add9", 3, 7, 14);
-    }
-
-    private static ChordFormula CreateSixNineFormula()
-    {
-        return ChordFormula.FromSemitones("Six Nine", 4, 7, 9, 14);
-    }
-
-    private static ChordFormula CreateMinorSixNineFormula()
-    {
-        return ChordFormula.FromSemitones("Minor Six Nine", 3, 7, 9, 14);
-    }
-
-    private static ChordFormula CreateAlteredDominantFormula()
-    {
-        return ChordFormula.FromSemitones("Altered Dominant", 4, 6, 10, 13, 15, 20);
-    }
-
-    private static ChordFormula CreateFlatFiveFormula(string suffix)
-    {
-        return suffix.Contains("7")
-            ? ChordFormula.FromSemitones("Dominant 7 b5", 4, 6, 10)
-            : ChordFormula.FromSemitones("Flat Five", 4, 6);
-    }
-
-    private static ChordFormula CreateSharpFiveFormula(string suffix)
-    {
-        return suffix.Contains("7")
-            ? ChordFormula.FromSemitones("Dominant 7 #5", 4, 8, 10)
-            : ChordFormula.FromSemitones("Sharp Five", 4, 8);
-    }
-
-    private static ChordFormula CreateFlatNineFormula(string suffix)
-    {
-        return ChordFormula.FromSemitones("Dominant 7 b9", 4, 7, 10, 13);
-    }
-
-    private static ChordFormula CreateSharpNineFormula(string suffix)
-    {
-        return ChordFormula.FromSemitones("Dominant 7 #9", 4, 7, 10, 15);
-    }
-
-    private static ChordFormula CreateSharpElevenFormula(string suffix)
-    {
-        return ChordFormula.FromSemitones("Dominant 7 #11", 4, 7, 10, 18);
-    }
-
-    private static ChordFormula CreateFlatThirteenFormula(string suffix)
-    {
-        return ChordFormula.FromSemitones("Dominant 7 b13", 4, 7, 10, 20);
-    }
+    // Implementation via ChordFormula.FromSemitones to avoid direct Interval construction here
+    private static ChordFormula CreateSus2Formula() => ChordFormula.FromSemitones("Sus2", 2, 7);
+    private static ChordFormula CreateSus4Formula() => ChordFormula.FromSemitones("Sus4", 5, 7);
+    private static ChordFormula CreateSixthFormula() => ChordFormula.FromSemitones("Sixth", 4, 7, 9);
+    private static ChordFormula CreateMinorSixthFormula() => ChordFormula.FromSemitones("Minor Sixth", 3, 7, 9);
+    private static ChordFormula CreateDiminished7Formula() => ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9);
+    private static ChordFormula CreateHalfDiminished7Formula() => ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10);
+    private static ChordFormula CreateDominant9Formula() => ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14);
+    private static ChordFormula CreateMajor9Formula() => ChordFormula.FromSemitones("Major 9th", 4, 7, 11, 14);
+    private static ChordFormula CreateMinor9Formula() => ChordFormula.FromSemitones("Minor 9th", 3, 7, 10, 14);
+    private static ChordFormula CreateDominant11Formula() => ChordFormula.FromSemitones("Dominant 11th", 4, 7, 10, 14, 17);
+    private static ChordFormula CreateMajor11Formula() => ChordFormula.FromSemitones("Major 11th", 4, 7, 11, 14, 17);
+    private static ChordFormula CreateMinor11Formula() => ChordFormula.FromSemitones("Minor 11th", 3, 7, 10, 14, 17);
+    private static ChordFormula CreateDominant13Formula() => ChordFormula.FromSemitones("Dominant 13th", 4, 7, 10, 14, 17, 21);
+    private static ChordFormula CreateMajor13Formula() => ChordFormula.FromSemitones("Major 13th", 4, 7, 11, 14, 17, 21);
+    private static ChordFormula CreateMinor13Formula() => ChordFormula.FromSemitones("Minor 13th", 3, 7, 10, 14, 17, 21);
+    private static ChordFormula CreateAdd9Formula() => ChordFormula.FromSemitones("Add9", 4, 7, 14);
+    private static ChordFormula CreateMinorAdd9Formula() => ChordFormula.FromSemitones("Minor Add9", 3, 7, 14);
+    private static ChordFormula CreateSixNineFormula() => ChordFormula.FromSemitones("6/9", 4, 7, 9, 14);
+    private static ChordFormula CreateMinorSixNineFormula() => ChordFormula.FromSemitones("Minor 6/9", 3, 7, 9, 14);
+    private static ChordFormula CreateAlteredDominantFormula() => ChordFormula.FromSemitones("Altered Dominant", 4, 7, 10, 13, 15);
+    private static ChordFormula CreateFlatFiveFormula(string _) => ChordFormula.FromSemitones("Flat5", 4, 6);
+    private static ChordFormula CreateSharpFiveFormula(string _) => ChordFormula.FromSemitones("Sharp5", 4, 8);
+    private static ChordFormula CreateFlatNineFormula(string _) => ChordFormula.FromSemitones("Flat9", 4, 7, 10, 13);
+    private static ChordFormula CreateSharpNineFormula(string _) => ChordFormula.FromSemitones("Sharp9", 4, 7, 10, 15);
+    private static ChordFormula CreateSharpElevenFormula(string _) => ChordFormula.FromSemitones("Sharp11", 4, 7, 11, 18);
+    private static ChordFormula CreateFlatThirteenFormula(string _) => ChordFormula.FromSemitones("Flat13", 4, 7, 10, 20);
 }

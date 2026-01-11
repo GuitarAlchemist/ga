@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Atonal;
+using GA.Core.Collections;
 using Primitives;
 
 public static class IntervalExtensions
@@ -8,7 +12,7 @@ public static class IntervalExtensions
     public static Indexer<SimpleIntervalSize, IntervalQuality>
         ToQualityByNumber(this IEnumerable<Interval.Simple> intervals)
     {
-        return new Indexer<SimpleIntervalSize, IntervalQuality>(intervals.DistinctBy(i => i.Size)
+        return new(intervals.DistinctBy(i => i.Size)
             .ToImmutableDictionary(i => i.Size, i => i.Quality));
     }
 

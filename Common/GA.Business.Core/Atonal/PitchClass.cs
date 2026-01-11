@@ -1,8 +1,16 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using Intervals;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Notes;
 using Primitives;
 
@@ -14,8 +22,8 @@ using Primitives;
 ///     0 => C; 1 => C# or Db; 2 => D; 3 => D# or Eb; 4 => E; 5 => F; 6 => F# or Gb; 7 => G; 8 => G# or Ab; 9 => A; T => A#
 ///     or Bb; E => B<br />
 ///     <br />
-///     Implements <see cref="IStaticValueObjectList{PitchClass}" /> | <see cref="IStaticPairIntervalClassNorm{TSelf}" /> |
-///     <see cref="IParsable{PitchClass}" />
+///     Implements <see cref="IStaticValueObjectList{TSelf}" /> | <see cref="IStaticPairIntervalClassNorm{TSelf}" /> |
+///     <see cref="IParsable{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
@@ -106,17 +114,17 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     public Pitch.Chromatic ToChromaticPitch(Octave octave)
     {
-        return new Pitch.Chromatic(ToChromaticNote(), octave);
+        return new(ToChromaticNote(), octave);
     }
 
     public Pitch.Sharp ToSharpPitch(Octave octave)
     {
-        return new Pitch.Sharp(ToSharpNote(), octave);
+        return new(ToSharpNote(), octave);
     }
 
     public Pitch.Flat ToFlatPitch(Octave octave)
     {
-        return new Pitch.Flat(ToFlatNote(), octave);
+        return new(ToFlatNote(), octave);
     }
 
     #region Inner Classes
@@ -219,7 +227,8 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new PitchClass { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static PitchClass FromSemitones(Semitones semitones)

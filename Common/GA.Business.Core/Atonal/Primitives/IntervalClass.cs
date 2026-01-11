@@ -1,6 +1,13 @@
-﻿namespace GA.Business.Core.Atonal.Primitives;
+namespace GA.Business.Core.Atonal.Primitives;
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     An interval class (Between <see cref="Min" /> and <see cref="Max" />)
@@ -16,7 +23,7 @@ using Intervals.Primitives;
 /// <remarks>
 ///     See https://en.wikipedia.org/wiki/Interval_class
 ///     http://www.jaytomlin.com/music/settheory/help.html
-///     Implements <see cref="IStaticValueObjectList{IntervalClass}" />
+///     Implements <see cref="IStaticValueObjectList{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct IntervalClass : IStaticValueObjectList<IntervalClass>

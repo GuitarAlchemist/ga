@@ -1,7 +1,11 @@
-﻿namespace GA.Business.Core.Fretboard.Positions;
+namespace GA.Business.Core.Fretboard.Positions;
 
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using GA.Core.Combinatorics;
 using GA.Core.Extensions;
+using JetBrains.Annotations;
 using Primitives;
 using static Primitives.RelativeFretVector;
 

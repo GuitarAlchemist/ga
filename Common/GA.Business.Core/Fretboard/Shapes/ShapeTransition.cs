@@ -1,6 +1,8 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
 
-using Atonal.Grothendieck;
+using System;
+using GA.Business.Core.Atonal.Grothendieck;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     Represents a transition between two fretboard shapes

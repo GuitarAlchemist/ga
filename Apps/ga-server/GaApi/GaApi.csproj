@@ -48,33 +48,24 @@
     <Compile Remove="Controllers/InvariantsController.cs"/>
     <Compile Remove="Controllers/HealthController.cs"/>
     <Compile Remove="Controllers/IntelligentBSPController.cs"/>
-    <Compile Remove="Controllers/ContextualChordsController.cs"/>
     <Compile Remove="Controllers/GrothendieckController.cs"/>
     <Compile Remove="Controllers/MonadicHealthController.cs"/>
     <Compile Remove="Controllers/ChordProgressionsController.cs"/>
     <Compile Remove="Controllers/BiomechanicsController.cs"/>
     <Compile Remove="Controllers/SemanticSearchController.cs"/>
-    <Compile Remove="Controllers/MonadicChordsController.cs"/>
+    <Compile Remove="Controllers\MonadicChordsController.cs" />
+    <Compile Remove="_Parked\**" />
     <Compile Remove="Controllers/GuitarAgentTasksController.cs"/>
     <Compile Remove="Controllers/AdaptiveAIController.cs"/>
     <Compile Remove="GraphQL/Queries/MusicHierarchyQuery.cs"/>
-    <Compile Remove="Actors/PlayerSessionActor.cs"/>
     <Compile Remove="Hubs/ConfigurationUpdateHub.cs"/>
-    <Compile Remove="Services/OllamaEmbeddingService.cs"/>
-    <Compile Remove="Services/VoicingFilterService.cs"/>
-    <Compile Remove="Services/ContextualChordService.cs"/>
-    <Compile Remove="Services/ChordQuery/ChordQueryExecutor.cs"/>
-    <Compile Remove="Services/ModulationService.cs"/>
+    <!-- Re-enabled services for testing -->
     <Compile Remove="Services/MonadicHealthCheckService.cs"/>
     <Compile Remove="Services/MusicHierarchyService.cs"/>
     <Compile Remove="Services/MonadicChordService.cs"/>
     <Compile Remove="Services/MongoVectorSearchIndexes.cs"/>
-    <Compile Remove="Models/ContextualChordDtos.cs"/>
     <Compile Remove="Extensions/BSPServiceExtensions.cs"/>
-    <Compile Remove="Extensions/ChordServiceExtensions.cs"/>
     <Compile Remove="Extensions/HealthCheckServiceExtensions.cs"/>
-    <Compile Remove="Extensions/OllamaServiceExtensions.cs"/>
-    <Compile Remove="Services/ActorSystemManager.cs"/>
     <Compile Remove="GraphQL/Types/FretboardChordAnalysisType.cs"/>
     <Compile Remove="GraphQL/Queries/FretboardQuery.cs"/>
     <Compile Remove="Controllers/Api/FretboardController.cs"/>
@@ -82,8 +73,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Analytics\GA.Business.Analytics.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
     <!-- TODO: Create this project when needed -->
@@ -91,13 +80,10 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Graphiti\GA.Business.Graphiti.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Microservices\GA.Business.Microservices.csproj"/>
     <!-- TODO: Create this project when needed -->
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.MusicTheory.DSL\GA.MusicTheory.DSL.fsproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Data.EntityFramework\GA.Data.EntityFramework.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
     <ProjectReference Include="..\..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
   </ItemGroup>
 </Project>

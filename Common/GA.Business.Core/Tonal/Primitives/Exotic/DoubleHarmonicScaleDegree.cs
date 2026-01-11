@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A double harmonic scale degree (Byzantine scale)
@@ -41,7 +49,8 @@ public readonly record struct DoubleHarmonicScaleDegree : IRangeValueObject<Doub
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DoubleHarmonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new DoubleHarmonicScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static DoubleHarmonicScaleDegree Min => FromValue(_minValue);

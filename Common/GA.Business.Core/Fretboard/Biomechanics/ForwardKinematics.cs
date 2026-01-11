@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Biomechanics;
 
+using System;
+using System.Collections.Immutable;
+using System.Numerics;
+
 /// <summary>
 ///     Forward kinematics computations for hand models
 /// </summary>
@@ -95,7 +99,7 @@ public static class ForwardKinematics
 
         foreach (var (finger, position) in fingertipPositions)
         {
-            fingertips[finger] = new FingertipPosition
+            fingertips[finger] = new()
             {
                 Position = position,
                 Normal = ComputeFingertipNormal(finger, pose),
@@ -103,7 +107,7 @@ public static class ForwardKinematics
             };
         }
 
-        return new HandPoseResult
+        return new()
         {
             Pose = pose,
             Fingertips = fingertips.ToImmutable(),

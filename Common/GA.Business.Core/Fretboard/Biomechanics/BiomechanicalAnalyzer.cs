@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Primitives;
 
 /// <summary>
@@ -56,7 +60,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         // Determine if playable
         var isPlayable = overallScore >= 0.3;
 
-        return new BiomechanicalPlayabilityAnalysis(
+        return new(
             overallScore,
             difficulty,
             isPlayable,
@@ -93,7 +97,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
     {
         if (fretPositions.Count == 0)
         {
-            return new StretchAnalysis(0, 0, "No notes", false, 0);
+            return new(0, 0, "No notes", false, 0);
         }
 
         var minFret = fretPositions.Min(p => p.Fret);
@@ -116,7 +120,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             _ => "Very wide stretch"
         };
 
-        return new StretchAnalysis(
+        return new(
             stretchDistance,
             fretSpan,
             description,
@@ -171,7 +175,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             [FingerType.Little] = 0
         };
 
-        return new FingeringEfficiencyAnalysis(
+        return new(
             fingerUsageCounts,
             efficiencyScore,
             pinkyUsage,
@@ -187,7 +191,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
     {
         if (fretPositions.Count == 0)
         {
-            return new WristPostureAnalysis(0, PostureType.Neutral, true);
+            return new(0, PostureType.Neutral, true);
         }
 
         // Filter out open strings for fret span calculation
@@ -196,7 +200,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         // If all strings are open or muted, it's neutral posture
         if (frettedPositions.Count == 0)
         {
-            return new WristPostureAnalysis(0, PostureType.Neutral, true);
+            return new(0, PostureType.Neutral, true);
         }
 
         // Calculate wrist angle based on position and fret span
@@ -230,7 +234,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         // Ergonomic if angle < 20 degrees (neutral to flexed range)
         var isErgonomic = wristAngle < 20;
 
-        return new WristPostureAnalysis(wristAngle, postureType, isErgonomic);
+        return new(wristAngle, postureType, isErgonomic);
     }
 
     private MutingAnalysis? AnalyzeMuting(List<(int String, int Fret)> fretPositions)
@@ -305,7 +309,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
 
     private BiomechanicalPlayabilityAnalysis CreateEmptyAnalysis()
     {
-        return new BiomechanicalPlayabilityAnalysis(
+        return new(
             0,
             "N/A",
             false,

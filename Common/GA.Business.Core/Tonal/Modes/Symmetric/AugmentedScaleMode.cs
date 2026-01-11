@@ -1,7 +1,10 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Symmetric;
+namespace GA.Business.Core.Tonal.Modes.Symmetric;
 
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections.Abstractions;
 using global::GA.Core.Collections;
-
+using JetBrains.Annotations;
 using Primitives.Symmetric;
 using Scales;
 
@@ -54,7 +57,7 @@ public sealed class AugmentedScaleMode(AugmentedScaleDegree degree)
         {
             foreach (var degree in ValueObjectUtils<AugmentedScaleDegree>.Items)
             {
-                yield return new AugmentedScaleMode(degree);
+                yield return new(degree);
             }
         }
     }

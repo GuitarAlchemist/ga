@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Notes.Extensions;
+namespace GA.Business.Core.Notes.Extensions;
 
 using Atonal.Primitives;
 using Intervals;
@@ -42,9 +42,11 @@ public static class NoteExtensions
         var semitones = (note2.PitchClass.Value - note1.PitchClass.Value + 12) % 12;
 
         // Determine the quality based on the size and semitones
-        var quality = DetermineQuality(size, new Semitones { Value = semitones });
+        var quality = DetermineQuality(size, new()
+            { Value = semitones });
 
-        return new Interval.Simple { Size = size, Quality = quality };
+        return new()
+            { Size = size, Quality = quality };
     }
 
     private static IntervalQuality DetermineQuality(SimpleIntervalSize size, Semitones semitones)

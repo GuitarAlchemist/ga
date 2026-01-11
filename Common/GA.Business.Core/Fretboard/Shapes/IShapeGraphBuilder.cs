@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Fretboard.Shapes;
+namespace GA.Business.Core.Fretboard.Shapes;
 
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Atonal;
 
 /// <summary>

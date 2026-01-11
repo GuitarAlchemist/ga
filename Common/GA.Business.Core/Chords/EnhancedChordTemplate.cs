@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Scales;
 
@@ -161,7 +164,7 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
     public ChordVoicing CreateVoicing(PitchClass root, PitchClass? bass = null)
     {
         var chordTones = GetChordTones(root);
-        return new ChordVoicing(CoreTemplate, chordTones, bass ?? root);
+        return new(CoreTemplate, chordTones, bass ?? root);
     }
 
     /// <summary>Gets tension notes available for this chord in the specified scale</summary>
@@ -185,7 +188,7 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
         foreach (var interval in CoreTemplate.Intervals)
         {
             var pitchClass = PitchClass.FromSemitones((root.Value + interval.Interval.Semitones) % 12);
-            chordTones.Add(new ChordTone(pitchClass, interval.Function));
+            chordTones.Add(new(pitchClass, interval.Function));
         }
 
         return [.. chordTones];

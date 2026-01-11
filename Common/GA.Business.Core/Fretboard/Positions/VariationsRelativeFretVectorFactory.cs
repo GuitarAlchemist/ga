@@ -1,6 +1,13 @@
-﻿namespace GA.Business.Core.Fretboard.Positions;
+namespace GA.Business.Core.Fretboard.Positions;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using GA.Core.Collections;
 using GA.Core.Combinatorics;
+using JetBrains.Annotations;
 using Primitives;
 using static Primitives.RelativeFretVector;
 

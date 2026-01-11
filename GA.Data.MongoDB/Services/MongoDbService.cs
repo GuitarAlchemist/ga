@@ -9,6 +9,11 @@ using Models.Rag;
 public class MongoDbService
 {
     private readonly IMongoDatabase _database;
+    
+    /// <summary>
+    /// Provides access to the underlying IMongoDatabase for advanced operations.
+    /// </summary>
+    public IMongoDatabase Database => _database;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="MongoDbService" /> class.
@@ -45,6 +50,7 @@ public class MongoDbService
         _database.GetCollection<PitchClassSetDocument>("pitchClassSets");
 
     public IMongoCollection<SetClassDocument> SetClasses => _database.GetCollection<SetClassDocument>("setClasses");
+    public IMongoCollection<VoicingEntity> Voicings => _database.GetCollection<VoicingEntity>("voicings");
 
     /// <summary>
     ///     Deletes all documents from all collections in the database.

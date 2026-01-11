@@ -1,5 +1,9 @@
 namespace GA.Business.Core.Fretboard.Biomechanics;
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Numerics;
+
 /// <summary>
 ///     Represents a target chord configuration for inverse kinematics solving
 /// </summary>
@@ -55,14 +59,14 @@ public record ChordTarget
 
             // Default approach direction (thumb from behind, others from front)
             approachDirections[finger] = finger == FingerType.Thumb
-                ? new Vector3(0f, 0f, 1f)
+                ? new(0f, 0f, 1f)
                 : new Vector3(0f, 0f, -1f);
 
             // Single string coverage by default
-            barreCoverage[finger] = ImmutableArray.Create(assignment.String);
+            barreCoverage[finger] = [assignment.String];
         }
 
-        return new ChordTarget
+        return new()
         {
             ChordName = chordName,
             FretPositions = fretPositions,
@@ -88,6 +92,6 @@ public record ChordTarget
         var y = fret * fretSpacing; // Y position along neck
         var z = nutHeight; // Z height above fretboard
 
-        return new Vector3(x, y, z);
+        return new(x, y, z);
     }
 }

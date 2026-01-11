@@ -1,5 +1,5 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
-public sealed class PitchClassSetParseException : Exception
-{
-}
+using System;
+
+public sealed class PitchClassSetParseException : Exception;

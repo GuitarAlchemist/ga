@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
 using Primitives;
 
@@ -19,6 +19,6 @@ public sealed class ScaleModeSimpleInterval(
     /// <returns>The <see cref="ScaleModeCompoundInterval" /></returns>
     public ScaleModeCompoundInterval ToCompound()
     {
-        return new ScaleModeCompoundInterval(Size.ToCompound(), Quality, RefQuality);
+        return new(Size.ToCompound(), Quality, RefQuality);
     }
 }

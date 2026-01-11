@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
 /// <summary>
 ///     Represents the type of chord stacking pattern

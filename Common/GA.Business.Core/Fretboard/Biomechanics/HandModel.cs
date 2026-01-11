@@ -1,4 +1,10 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Numerics;
 
 /// <summary>
 ///     Finger type enumeration
@@ -212,10 +218,10 @@ public record HandModel
         var fingers = ImmutableList.CreateBuilder<Finger>();
 
         // Thumb (3 joints: CMC, MCP, IP)
-        fingers.Add(new Finger
+        fingers.Add(new()
         {
             Type = FingerType.Thumb,
-            BasePosition = new Vector3(-30, 0, 0), // Left side of palm
+            BasePosition = new(-30, 0, 0), // Left side of palm
             Joints = ImmutableList.Create(
                 new FingerJoint
                 {
@@ -254,18 +260,18 @@ public record HandModel
         });
 
         // Index finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Index, new Vector3(-15, 100, 0), 40, 25, 10));
+        fingers.Add(CreateStandardFinger(FingerType.Index, new(-15, 100, 0), 40, 25, 10));
 
         // Middle finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Middle, new Vector3(0, 100, 0), 45, 30, 10));
+        fingers.Add(CreateStandardFinger(FingerType.Middle, new(0, 100, 0), 45, 30, 10));
 
         // Ring finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Ring, new Vector3(15, 100, 0), 42, 28, 10));
+        fingers.Add(CreateStandardFinger(FingerType.Ring, new(15, 100, 0), 42, 28, 10));
 
         // Little finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Little, new Vector3(30, 100, 0), 35, 20, 10));
+        fingers.Add(CreateStandardFinger(FingerType.Little, new(30, 100, 0), 35, 20, 10));
 
-        return new HandModel
+        return new()
         {
             PalmWidth = 85.0f,
             PalmLength = 100.0f,
@@ -285,7 +291,7 @@ public record HandModel
         float pipLength,
         float dipLength)
     {
-        return new Finger
+        return new()
         {
             Type = type,
             BasePosition = basePosition,
@@ -450,7 +456,7 @@ public record HandPose
             }
         }
 
-        return new HandPose
+        return new()
         {
             JointAngles = [..angles],
             Model = model,
@@ -594,7 +600,7 @@ public static class PersonalizedHandModel
             })]
         }).ToImmutableList();
 
-        return new HandModel
+        return new()
         {
             PalmWidth = baseModel.PalmWidth * scaleFactor,
             PalmLength = baseModel.PalmLength * scaleFactor,
@@ -679,7 +685,8 @@ public sealed record HandPoseResult
     {
         return Fingertips.TryGetValue(finger, out var position)
             ? position
-            : new FingertipPosition { Position = Vector3.Zero, Normal = Vector3.UnitZ };
+            : new()
+                { Position = Vector3.Zero, Normal = Vector3.UnitZ };
     }
 }
 

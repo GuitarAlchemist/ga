@@ -1,5 +1,7 @@
 namespace GA.Business.Core.Fretboard.Primitives;
 
+using System;
+using System.Collections.Generic;
 using Atonal;
 using Notes;
 using Positions;
@@ -57,7 +59,7 @@ public sealed class Fretboard
         }
 
         // Get the open string pitch and add the fret offset
-        var openStringPitch = Tuning[new Str(stringIndex + 1)]; // Tuning uses 1-based string indexing
+        var openStringPitch = Tuning[new(stringIndex + 1)]; // Tuning uses 1-based string indexing
         var resultMidiNote = openStringPitch.MidiNote + fret; // Add semitones for fret position
         var resultPitch = Pitch.Chromatic.FromPitch(openStringPitch).Note.PitchClass
             .ToChromaticPitch(resultMidiNote.Octave);
@@ -76,8 +78,8 @@ public sealed class Fretboard
             {
                 if (GetNote(stringIndex, fret).Equals(note))
                 {
-                    var location = new PositionLocation(new Str(stringIndex + 1), new Fret(fret));
-                    var openStringPitch = Tuning[new Str(stringIndex + 1)];
+                    var location = new PositionLocation(new(stringIndex + 1), new(fret));
+                    var openStringPitch = Tuning[new(stringIndex + 1)];
                     var midiNote = openStringPitch.MidiNote + fret;
                     yield return new Position.Played(location, midiNote);
                 }
@@ -109,7 +111,7 @@ public sealed class Fretboard
     /// </summary>
     public static Fretboard CreateStandardGuitar()
     {
-        return new Fretboard(Tuning.Default, 24);
+        return new(Tuning.Default, 24);
     }
 
     /// <summary>
@@ -117,7 +119,7 @@ public sealed class Fretboard
     /// </summary>
     public static Fretboard CreateGuitar(int fretCount)
     {
-        return new Fretboard(Tuning.Default, fretCount);
+        return new(Tuning.Default, fretCount);
     }
 
     public override string ToString()

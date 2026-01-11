@@ -1,12 +1,19 @@
-﻿namespace GA.Business.Core.Notes;
+namespace GA.Business.Core.Notes;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using GA.Core.Collections;
 using Atonal;
 using Atonal.Abstractions;
 using Atonal.Primitives;
 using Extensions;
+using GA.Core.Abstractions;
+using GA.Core.Collections.Abstractions;
 using Intervals;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -59,7 +66,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     /// </returns>
     public Chromatic ToChromatic()
     {
-        return new Chromatic(PitchClass);
+        return new(PitchClass);
     }
 
     /// <summary>
@@ -154,7 +161,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
         public static implicit operator Chromatic(PitchClass pitchClass)
         {
-            return new Chromatic(pitchClass.Value);
+            return new(pitchClass.Value);
         }
 
         public static Interval.Chromatic operator -(Chromatic note1, Chromatic note2)
@@ -165,7 +172,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
         public static Pitch.Chromatic operator +(Chromatic note, Octave octave)
         {
-            return new Pitch.Chromatic(note, octave);
+            return new(note, octave);
         }
 
         #endregion
@@ -220,7 +227,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         /// <returns> The <see cref="Note.Chromatic" /> </returns>
         public Chromatic ToChromaticNote()
         {
-            return new Chromatic(PitchClass);
+            return new(PitchClass);
         }
 
         /// <summary>
@@ -232,7 +239,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         /// <inheritdoc />
         public override Accidented ToAccidented()
         {
-            return new Accidented(NaturalNote, Accidental);
+            return new(NaturalNote, Accidental);
         }
 
         #region Relational Members
@@ -423,7 +430,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
         public static implicit operator Chromatic(Flat flatNote)
         {
-            return new Chromatic(flatNote.PitchClass);
+            return new(flatNote.PitchClass);
         }
 
         /// <inheritdoc />
@@ -534,12 +541,12 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
         public static implicit operator Chromatic(Accidented accidented)
         {
-            return new Chromatic(accidented.PitchClass);
+            return new(accidented.PitchClass);
         }
 
         public static implicit operator Accidented(KeyNote keyNote)
         {
-            return new Accidented(keyNote.NaturalNote, keyNote.Accidental);
+            return new(keyNote.NaturalNote, keyNote.Accidental);
         }
 
         public static Interval.Simple operator -(Accidented note1, Accidented note2)

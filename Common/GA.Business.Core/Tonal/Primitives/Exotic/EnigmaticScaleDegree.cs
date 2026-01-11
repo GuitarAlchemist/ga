@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     An enigmatic scale degree
@@ -36,7 +44,8 @@ public readonly record struct EnigmaticScaleDegree : IRangeValueObject<Enigmatic
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static EnigmaticScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new EnigmaticScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static EnigmaticScaleDegree Min => FromValue(_minValue);

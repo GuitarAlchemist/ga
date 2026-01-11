@@ -25,7 +25,6 @@ public sealed class OnnxEmbeddingService : IEmbeddingService, IDisposable
     private readonly ILogger<OnnxEmbeddingService> _logger;
     private readonly OnnxEmbeddingOptions _options;
     private readonly int _maxTokens;
-    private readonly IOnnxSessionFactory _sessionFactory;
     private readonly IOnnxSession _session;
     private readonly Dictionary<string, int> _vocabulary;
     private readonly long _padTokenId;
@@ -56,8 +55,8 @@ public sealed class OnnxEmbeddingService : IEmbeddingService, IDisposable
         _sepTokenId = GetTokenId("[SEP]");
         _unkTokenId = GetTokenId("[UNK]");
 
-        _sessionFactory = sessionFactory ?? DefaultOnnxSessionFactory.Instance;
-        _session = _sessionFactory.Create(_options.ModelPath);
+        var sessionFactory1 = sessionFactory ?? DefaultOnnxSessionFactory.Instance;
+        _session = sessionFactory1.Create(_options.ModelPath);
         _logger.LogInformation("ONNX embedding service initialized with model {Model} and vocab {Vocab}",
             _options.ModelPath,
             vocabularyPath);
@@ -501,36 +500,24 @@ internal sealed class DefaultOnnxSessionFactory : IOnnxSessionFactory
 
     public IOnnxSession Create(string modelPath) => new OnnxRuntimeSession(modelPath);
 
-    private sealed class OnnxRuntimeSession : IOnnxSession
+    private sealed class OnnxRuntimeSession(string modelPath) : IOnnxSession
     {
-        private readonly InferenceSession _session;
-
-        public OnnxRuntimeSession(string modelPath)
-        {
-            _session = new InferenceSession(modelPath);
-        }
+        private readonly InferenceSession _session = new(modelPath);
 
         public IDisposableReadOnlyCollection<NamedOnnxValue> Run(IReadOnlyCollection<NamedOnnxValue> inputs)
             => new DisposableCollectionAdapter(_session.Run(inputs));
 
         public void Dispose() => _session.Dispose();
 
-        private sealed class DisposableCollectionAdapter : IDisposableReadOnlyCollection<NamedOnnxValue>
+        private sealed class DisposableCollectionAdapter(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> inner) : IDisposableReadOnlyCollection<NamedOnnxValue>
         {
-            private readonly IDisposableReadOnlyCollection<DisposableNamedOnnxValue> _inner;
+            public int Count => inner.Count;
 
-            public DisposableCollectionAdapter(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> inner)
-            {
-                _inner = inner;
-            }
+            public NamedOnnxValue this[int index] => inner[index];
 
-            public int Count => _inner.Count;
+            public void Dispose() => inner.Dispose();
 
-            public NamedOnnxValue this[int index] => _inner[index];
-
-            public void Dispose() => _inner.Dispose();
-
-            public IEnumerator<NamedOnnxValue> GetEnumerator() => _inner.GetEnumerator();
+            public IEnumerator<NamedOnnxValue> GetEnumerator() => inner.GetEnumerator();
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }

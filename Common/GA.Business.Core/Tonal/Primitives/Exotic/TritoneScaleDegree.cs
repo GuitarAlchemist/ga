@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A Tritone scale degree (Petrushka scale)
@@ -35,7 +43,8 @@ public readonly record struct TritoneScaleDegree : IRangeValueObject<TritoneScal
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TritoneScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new TritoneScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static TritoneScaleDegree Min => FromValue(_minValue);

@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Extensions;
+namespace GA.Business.Core.Extensions;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Atonal.Abstractions;
 using Atonal.Primitives;
@@ -13,7 +15,7 @@ public static class PitchClassSetExtensions
     /// <returns>The <see cref="PitchClassSet" /></returns>
     public static PitchClassSet ToPitchClassSet(this IEnumerable<IPitchClass> items)
     {
-        return new PitchClassSet(items.Select(item => item.PitchClass));
+        return new(items.Select(item => item.PitchClass));
     }
 
     /// <summary>

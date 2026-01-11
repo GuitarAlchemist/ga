@@ -1,11 +1,17 @@
-﻿namespace GA.Business.Core.Intervals.Primitives;
+namespace GA.Business.Core.Intervals.Primitives;
+
+using System;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 // ReSharper disable GrammarMistakeInComment
 /// <summary>
 ///     Interval quality class
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IEquatable{String}" /> | <see cref="IComparable{String}" /> | <see cref="IComparable" />
+///     Implements <see cref="IEquatable{T}" /> | <see cref="IComparable{String}" /> | <see cref="IComparable" />
 ///     <code>
 ///               #                            #<br />
 /// Major =================&gt; Augmented  &lt;================= Perfect<br />
@@ -80,7 +86,8 @@ public readonly record struct IntervalQuality : IParsable<IntervalQuality>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IntervalQuality FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new IntervalQuality { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static IntervalQuality Min => FromValue(_minValue);
@@ -88,7 +95,8 @@ public readonly record struct IntervalQuality : IParsable<IntervalQuality>,
 
     public static implicit operator IntervalQuality(int value)
     {
-        return new IntervalQuality { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(IntervalQuality intervalQuality)

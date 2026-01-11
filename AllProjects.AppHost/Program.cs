@@ -3,12 +3,10 @@ var builder = DistributedApplication.CreateBuilder(args);
 // Initialize ILGPU for GPU acceleration
 // This enables cross-platform GPU support (NVIDIA CUDA, AMD ROCm, CPU fallback)
 // See: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
-var ilgpuInitialized = false;
 try
 {
     // ILGPU context will be created lazily when first vector search is performed
     // No explicit initialization needed here - services will handle it
-    ilgpuInitialized = true;
 }
 catch (Exception ex)
 {

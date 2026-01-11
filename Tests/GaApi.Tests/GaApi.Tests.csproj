@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
   </ItemGroup>
 

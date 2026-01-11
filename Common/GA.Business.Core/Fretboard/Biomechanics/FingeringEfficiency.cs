@@ -1,5 +1,8 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Primitives;
 
 /// <summary>
@@ -20,7 +23,7 @@ public record FingeringEfficiencyAnalysis(
     /// </summary>
     public static FingeringEfficiencyAnalysis None()
     {
-        return new FingeringEfficiencyAnalysis(
+        return new(
             new Dictionary<FingerType, int>(),
             0.0,
             0.0,
@@ -42,7 +45,7 @@ public record FingeringEfficiencyAnalysis(
         IReadOnlyList<string> recommendations,
         double efficiencyScore)
     {
-        return new FingeringEfficiencyAnalysis(
+        return new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),
@@ -64,7 +67,7 @@ public record FingeringEfficiencyAnalysis(
         IReadOnlyList<string> recommendations,
         double efficiencyScore)
     {
-        return new FingeringEfficiencyAnalysis(
+        return new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),
@@ -86,7 +89,7 @@ public record FingeringEfficiencyAnalysis(
         IReadOnlyList<string> recommendations,
         double efficiencyScore)
     {
-        return new FingeringEfficiencyAnalysis(
+        return new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),

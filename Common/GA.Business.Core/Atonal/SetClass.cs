@@ -1,6 +1,12 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -14,7 +20,7 @@ using Primitives;
 ///     specific pitch content (<see href="https://harmoniousapp.net/p/71/Set-Classes" />)
 ///     This class provides properties for accessing the prime form, cardinality, and interval class vector
 ///     of the set class, which are essential characteristics for set class analysis.
-///     Implement <see cref="IEquatable{SetClass}" />
+///     Implement <see cref="IEquatable{T}" />
 /// </remarks>
 [PublicAPI]
 public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>, IStaticReadonlyCollection<SetClass>
@@ -97,7 +103,7 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
             for (var n = 0; n < _pitchClassSpaceSize; n++)
             {
                 var angle = -2.0 * Math.PI * k * n / _pitchClassSpaceSize;
-                var exp = Complex.Exp(new Complex(0.0, angle));
+                var exp = Complex.Exp(new(0.0, angle));
                 sum += vector[n] * exp;
             }
 

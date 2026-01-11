@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 
 /// <summary>
@@ -30,7 +32,7 @@ public static class ChordAlterationService
         var isAlteredDominant = IsAlteredDominant(template, alterations);
         var suggestedNotation = GenerateSuggestedNotation(template, alterations, isAlteredDominant);
 
-        return new AlterationAnalysis(alterations, alterationString, isAlteredDominant, suggestedNotation);
+        return new(alterations, alterationString, isAlteredDominant, suggestedNotation);
     }
 
     /// <summary>
@@ -44,6 +46,12 @@ public static class ChordAlterationService
         if (analysis.IsAlteredDominant && template.Extension == ChordExtension.Seventh)
         {
             return $"{rootName}7alt";
+        }
+
+        // Special case for Hendrix chord (7#9)
+        if (analysis.Alterations.Contains(AlterationType.SharpNinth) && template.Quality == ChordQuality.Dominant)
+        {
+            return $"{rootName}7#9";
         }
 
         var baseName = BasicChordExtensionsService.GenerateChordName(root, template.Quality, template.Extension);
@@ -135,25 +143,14 @@ public static class ChordAlterationService
     /// </summary>
     private static bool IsAlteredDominant(ChordTemplate template, IReadOnlyList<AlterationType> alterations)
     {
-        // Must be a dominant 7th chord
-        if (template.Extension != ChordExtension.Seventh || template.Quality == ChordQuality.Major)
+        // Must be a dominant 7th chord or have dominant quality
+        if (template.Quality != ChordQuality.Dominant)
         {
             return false;
         }
 
-        // Must have at least 2 alterations, including 9th alterations
-        if (alterations.Count < 2)
-        {
-            return false;
-        }
-
-        var hasNinthAlteration = alterations.Any(a =>
-            a is AlterationType.FlatNinth or AlterationType.SharpNinth);
-
-        var hasFifthAlteration = alterations.Any(a =>
-            a is AlterationType.FlatFifth or AlterationType.SharpFifth);
-
-        return hasNinthAlteration && hasFifthAlteration;
+        // Must have at least one alteration (b9, #9, b5, #5, #11, b13)
+        return alterations.Any();
     }
 
     /// <summary>
@@ -221,8 +218,8 @@ public static class ChordAlterationService
     {
         // Can't have both flat and sharp of the same interval
         var hasConflict =
-            (alterations.Contains(AlterationType.FlatNinth) && alterations.Contains(AlterationType.SharpNinth)) ||
-            (alterations.Contains(AlterationType.FlatFifth) && alterations.Contains(AlterationType.SharpFifth));
+            alterations.Contains(AlterationType.FlatNinth) && alterations.Contains(AlterationType.SharpNinth) ||
+            alterations.Contains(AlterationType.FlatFifth) && alterations.Contains(AlterationType.SharpFifth);
 
         return !hasConflict;
     }
@@ -277,12 +274,7 @@ public static class ChordAlterationService
     /// </summary>
     private static string GetNoteName(PitchClass pitchClass)
     {
-        return pitchClass.Value switch
-        {
-            0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
-            6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
-            _ => "?"
-        };
+        return BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
 
 /// <summary>
 ///     Comprehensive biomechanical playability analysis for a chord fingering

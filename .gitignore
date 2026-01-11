@@ -127,3 +127,11 @@ paket-files/
 /Experiments/Vite/package-lock.json
 /Experiments/React/.idea/
 /Experiments/React/node_modules/
+
+# Ignore temp files
+*.txt
+!README.txt
+
+# Ignore cache indexes
+Apps/ga-server/GaApi/cache/
+jetbrains-plugin/.gradle/

@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+namespace GA.Business.Core.Tonal.Primitives.Symmetric;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A whole-tone scale degree.
@@ -31,7 +39,8 @@ public readonly record struct WholeToneScaleDegree : IRangeValueObject<WholeTone
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static WholeToneScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new WholeToneScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static WholeToneScaleDegree Min => FromValue(_minValue);

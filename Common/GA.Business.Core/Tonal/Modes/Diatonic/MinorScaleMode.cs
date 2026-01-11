@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Diatonic;
+namespace GA.Business.Core.Tonal.Modes.Diatonic;
 
+using GA.Core.Abstractions;
+using JetBrains.Annotations;
 using Scales;
 
 /// <summary>

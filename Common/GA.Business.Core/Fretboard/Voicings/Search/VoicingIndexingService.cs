@@ -1,6 +1,11 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Fretboard.Voicings.Search;
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Analysis;
 using Core;
 using Filtering;
@@ -12,7 +17,7 @@ using Generation;
 /// </summary>
 public class VoicingIndexingService
 {
-    private readonly List<VoicingDocument> _indexedDocuments = new();
+    private readonly List<VoicingDocument> _indexedDocuments = [];
 
     /// <summary>
     /// Gets the count of indexed documents
@@ -73,7 +78,8 @@ public class VoicingIndexingService
                             var document = VoicingDocument.FromAnalysis(
                                 decomposedVoicing.Voicing,
                                 analysis,
-                                decomposedVoicing.PrimeForm?.ToString()); // Prime forms have 0 translation offset
+                                tuningId: "Standard",
+                                primeFormId: decomposedVoicing.PrimeForm?.ToString()); // Prime forms have 0 translation offset
 
                             lock (documentsLock)
                             {
@@ -102,7 +108,7 @@ public class VoicingIndexingService
             stopwatch.Stop();
 
 
-            return new VoicingIndexingResult(
+            return new(
                 Success: true,
                 DocumentCount: processedCount,
                 Duration: stopwatch.Elapsed,
@@ -113,7 +119,7 @@ public class VoicingIndexingService
         {
             stopwatch.Stop();
 
-            return new VoicingIndexingResult(
+            return new(
                 Success: false,
                 DocumentCount: 0,
                 Duration: stopwatch.Elapsed,
@@ -240,7 +246,8 @@ public class VoicingIndexingService
                             var document = VoicingDocument.FromAnalysis(
                                 voicing,
                                 analysis,
-                                primeForm.ToString());
+                                tuningId: "Standard",
+                                primeFormId: primeForm.ToString());
 
                             lock (documentsLock)
                             {
@@ -279,7 +286,7 @@ public class VoicingIndexingService
             stopwatch.Stop();
 
 
-            return new VoicingIndexingResult(
+            return new(
                 Success: true,
                 DocumentCount: processedCount,
                 Duration: stopwatch.Elapsed,
@@ -290,7 +297,7 @@ public class VoicingIndexingService
         {
             stopwatch.Stop();
 
-            return new VoicingIndexingResult(
+            return new(
                 Success: false,
                 DocumentCount: 0,
                 Duration: stopwatch.Elapsed,
@@ -305,7 +312,7 @@ public class VoicingIndexingService
     public IEnumerable<VoicingDocument> GetByTags(params string[] tags)
     {
         return _indexedDocuments.Where(doc =>
-            tags.All(tag => doc.SemanticTags.Contains(tag, StringComparer.OrdinalIgnoreCase)));
+            tags.All(tag => Enumerable.Contains(doc.SemanticTags, tag, StringComparer.OrdinalIgnoreCase)));
     }
 
     /// <summary>
@@ -333,6 +340,15 @@ public class VoicingIndexingService
     {
         return _indexedDocuments.Where(doc =>
             doc.ChordName?.Contains(chordName, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    /// <summary>
+    /// Load documents directly from cache (bypassing analysis)
+    /// </summary>
+    public void LoadDocuments(IEnumerable<VoicingDocument> documents)
+    {
+        _indexedDocuments.Clear();
+        _indexedDocuments.AddRange(documents);
     }
 }
 

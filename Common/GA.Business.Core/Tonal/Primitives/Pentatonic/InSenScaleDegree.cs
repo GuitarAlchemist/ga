@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+namespace GA.Business.Core.Tonal.Primitives.Pentatonic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     An In Sen scale degree (Japanese pentatonic scale)
@@ -34,7 +42,8 @@ public readonly record struct InSenScaleDegree : IRangeValueObject<InSenScaleDeg
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static InSenScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new InSenScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static InSenScaleDegree Min => FromValue(_minValue);

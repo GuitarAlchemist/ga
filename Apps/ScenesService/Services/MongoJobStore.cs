@@ -66,14 +66,9 @@ public sealed class MongoJobStore : IJobStore
     }
 }
 
-public sealed class MongoCancelStore : ICancelStore
+public sealed class MongoCancelStore(IMongoDatabase db) : ICancelStore
 {
-    private readonly IMongoCollection<BsonDocument> _col;
-
-    public MongoCancelStore(IMongoDatabase db)
-    {
-        _col = db.GetCollection<BsonDocument>("scene_job_cancel");
-    }
+    private readonly IMongoCollection<BsonDocument> _col = db.GetCollection<BsonDocument>("scene_job_cancel");
 
     public async Task<bool> IsCanceledAsync(string jobId, CancellationToken ct = default)
     {

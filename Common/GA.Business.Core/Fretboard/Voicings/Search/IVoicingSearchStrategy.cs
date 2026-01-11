@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Fretboard.Voicings.Search;
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Core;
 
 /// <summary>

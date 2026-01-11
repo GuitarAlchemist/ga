@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Atonal.Abstractions;
+namespace GA.Business.Core.Atonal.Abstractions;
 
 /// <summary>
 ///     Abstraction for objects having a Pitch Class property

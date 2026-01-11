@@ -1,5 +1,12 @@
-﻿namespace GA.Business.Core.Fretboard.Primitives;
+namespace GA.Business.Core.Fretboard.Primitives;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
 using Positions;
 
 [PublicAPI]

@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Analysis;
+namespace GA.Business.Core.Fretboard.Analysis;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Primitives;
 using static Primitives.Position;
 
@@ -101,7 +105,7 @@ public static class PhysicalFretboardCalculator
 
         if (playedPositions.Count == 0)
         {
-            return new PhysicalPlayabilityAnalysis(
+            return new(
                 0, 0, 0, 0, 0,
                 PlayabilityDifficulty.VeryEasy,
                 true,
@@ -115,7 +119,7 @@ public static class PhysicalFretboardCalculator
         if (frettedPositions.Count == 0)
         {
             // All open strings
-            return new PhysicalPlayabilityAnalysis(
+            return new(
                 0, 0, 0, 0, 0,
                 PlayabilityDifficulty.VeryEasy,
                 true,
@@ -168,7 +172,7 @@ public static class PhysicalFretboardCalculator
         // Generate suggested fingering (simplified - could be enhanced)
         var suggestedFingering = GenerateSuggestedFingering(playedPositions, fretSpan);
 
-        return new PhysicalPlayabilityAnalysis(
+        return new(
             fretSpanMm, maxStretch, avgStretch, verticalSpanMm, diagonalStretchMm,
             difficulty, isPlayable, reason, suggestedFingering);
     }
@@ -286,7 +290,7 @@ public static class PhysicalFretboardCalculator
             // Suggest barre chord fingering
             foreach (var pos in barreCandidate)
             {
-                fingering.Add(new FingerPosition(
+                fingering.Add(new(
                     pos.Location.Str,
                     pos.Location.Fret,
                     -1, // Barre
@@ -298,7 +302,7 @@ public static class PhysicalFretboardCalculator
             var finger = 2; // Start with middle finger after barre (index)
             foreach (var pos in remainingPositions.OrderBy(p => p.Location.Fret.Value))
             {
-                fingering.Add(new FingerPosition(
+                fingering.Add(new(
                     pos.Location.Str,
                     pos.Location.Fret,
                     Math.Min(finger++, 4),
@@ -311,7 +315,7 @@ public static class PhysicalFretboardCalculator
             var finger = 1;
             foreach (var pos in sortedPositions)
             {
-                fingering.Add(new FingerPosition(
+                fingering.Add(new(
                     pos.Location.Str,
                     pos.Location.Fret,
                     Math.Min(finger++, 4),

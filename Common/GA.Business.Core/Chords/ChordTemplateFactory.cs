@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 using Intervals;
 using Intervals.Primitives;
@@ -20,13 +22,7 @@ using Tonal.Primitives.Symmetric;
 /// </summary>
 public static class ChordTemplateFactory
 {
-    /// <summary>
-    ///     BACKWARD COMPATIBILITY: Provides access to systematically generated chords.
-    ///     This replaces the old hard-coded StandardChords property.
-    ///     Use GenerateAllPossibleChords() or CreateTraditionalChordLibrary() instead.
-    /// </summary>
-    [Obsolete("Use GenerateAllPossibleChords() or CreateTraditionalChordLibrary() instead of StandardChords")]
-    public static IEnumerable<ChordTemplate> StandardChords => CreateTraditionalChordLibrary();
+
 
     /// <summary>
     ///     Generates ALL possible chord templates by systematically iterating through:
@@ -409,9 +405,10 @@ public static class ChordTemplateFactory
                 }
 
                 var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
-                var function = DetermineChordFunction(semitones);
+                var function = ChordFunctionExtensions.FromSemitones(semitones);
 
-                intervals.Add(new ChordFormulaInterval(interval, function));
+
+                intervals.Add(new(interval, function));
             }
         }
 
@@ -424,7 +421,7 @@ public static class ChordTemplateFactory
         };
 
         var name = $"{parentMode.Name} Degree{degree} {extension}{stackingSuffix}";
-        return new ChordFormula(name, intervals, stackingType);
+        return new(name, intervals, stackingType);
     }
 
     /// <summary>
@@ -442,31 +439,19 @@ public static class ChordTemplateFactory
         var susSemitones = (susNote.PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
         var susIntervalObj = new Interval.Chromatic(Semitones.FromValue(susSemitones));
         var susFunction = susInterval == 2 ? ChordFunction.Ninth : ChordFunction.Eleventh;
-        intervals.Add(new ChordFormulaInterval(susIntervalObj, susFunction));
+        intervals.Add(new(susIntervalObj, susFunction));
 
         // Add the fifth
         var fifthNoteIndex = (rootIndex + 4) % scaleNotes.Count;
         var fifthNote = scaleNotes[fifthNoteIndex];
         var fifthSemitones = (fifthNote.PitchClass.Value - rootNote.PitchClass.Value + 12) % 12;
         var fifthInterval = new Interval.Chromatic(Semitones.FromValue(fifthSemitones));
-        intervals.Add(new ChordFormulaInterval(fifthInterval, ChordFunction.Fifth));
+        intervals.Add(new(fifthInterval, ChordFunction.Fifth));
 
         return intervals;
     }
 
-    private static ChordFunction DetermineChordFunction(int semitones)
-    {
-        return semitones switch
-        {
-            2 or 14 => ChordFunction.Ninth,
-            3 or 4 => ChordFunction.Third,
-            5 or 17 => ChordFunction.Eleventh,
-            7 => ChordFunction.Fifth,
-            9 or 21 => ChordFunction.Thirteenth,
-            10 or 11 => ChordFunction.Seventh,
-            _ => ChordFunction.Root
-        };
-    }
+
 
     /// <summary>
     ///     Gets chord templates by structural characteristics (quality, extension, stacking type).
@@ -524,5 +509,13 @@ public static class ChordTemplateFactory
     public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, string name)
     {
         return ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, name);
+    }
+    
+    /// <summary>
+    ///     Creates a chord template from a pitch class set with explicit root
+    /// </summary>
+    public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
+    {
+        return ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, root, name);
     }
 }

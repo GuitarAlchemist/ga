@@ -1,5 +1,10 @@
 namespace GA.Business.Core;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -40,11 +45,11 @@ public static class IconicChordsConfigLoader
             }
 
             // Fallback default configuration (minimal but valid)
-            return new IconicChordsConfiguration
+            return new()
             {
                 IconicChords =
                 [
-                    new IconicChordDefinition
+                    new()
                     {
                         Name = "C Major Triad",
                         TheoreticalName = "Cmaj",
@@ -63,11 +68,11 @@ public static class IconicChordsConfigLoader
         catch (Exception ex)
         {
             // On any error, return defaults to keep tests and core features functional
-            return new IconicChordsConfiguration
+            return new()
             {
                 IconicChords =
                 [
-                    new IconicChordDefinition
+                    new()
                     {
                         Name = "C Major Triad",
                         TheoreticalName = "Cmaj",

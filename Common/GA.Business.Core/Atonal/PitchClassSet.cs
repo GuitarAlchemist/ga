@@ -1,7 +1,16 @@
-﻿namespace GA.Business.Core.Atonal;
+namespace GA.Business.Core.Atonal;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using GA.Core.Extensions;
 using Intervals.Primitives;
+using JetBrains.Annotations;
 using Notes;
 using Notes.Primitives;
 using Primitives;
@@ -216,7 +225,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsPitchClassInMask(int mask, int pitchClass)
     {
-        return (mask & (1 << (pitchClass & 0xF))) != 0;
+        return (mask & 1 << (pitchClass & 0xF)) != 0;
     }
 
     /// <summary>
@@ -441,7 +450,15 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return candidateKeys.FirstOrDefault();
     }
 
-    private Key? FindClosestDiatonicKey2()
+    public IReadOnlyCollection<Key> GetCompatibleKeys()
+    {
+        return Key.Items
+            .Where(key => IsSubsetOf(key.PitchClassSet))
+            .OrderBy(key => key.KeySignature.AccidentalCount)
+            .ToImmutableList();
+    }
+
+    public Key? FindClosestDiatonicKey2()
     {
         var dict = new Dictionary<Key, IReadOnlyCollection<PitchClass>>();
         foreach (var key in Key.Items)
@@ -602,7 +619,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
     public override bool Equals(object? obj)
     {
-        return ReferenceEquals(this, obj) || (obj is PitchClassSet other && Equals(other));
+        return ReferenceEquals(this, obj) || obj is PitchClassSet other && Equals(other);
     }
 
     public override int GetHashCode()

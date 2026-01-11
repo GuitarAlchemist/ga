@@ -1,6 +1,10 @@
-﻿namespace GA.Business.Core.Atonal.Primitives;
+namespace GA.Business.Core.Atonal.Primitives;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using static PitchClassSetIdEquivalences.Relationship;
 
 public class PitchClassSetIdEquivalences
@@ -175,11 +179,11 @@ public class PitchClassSetIdEquivalences
             return other != null
                    &&
                    (
-                       (EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id1) &&
-                        EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id2))
+                       EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id1) &&
+                       EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id2)
                        ||
-                       (EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id2) &&
-                        EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id1))
+                       EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id2) &&
+                       EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id1)
                    );
         }
 

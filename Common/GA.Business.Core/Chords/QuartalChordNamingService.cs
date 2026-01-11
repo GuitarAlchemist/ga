@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Chords;
+namespace GA.Business.Core.Chords;
 
+using System.Collections.Generic;
+using System.Linq;
 using Atonal;
 
 /// <summary>
@@ -49,7 +51,7 @@ public static class QuartalChordNamingService
             _ => ($"{rootName} quartal", "Quartal harmony")
         };
 
-        return new QuartalChordAnalysis(intervalAnalysis.Type, name, intervalAnalysis.IntervalSizes, description);
+        return new(intervalAnalysis.Type, name, intervalAnalysis.IntervalSizes, description);
     }
 
     /// <summary>

@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A Neapolitan minor scale degree
@@ -41,7 +49,8 @@ public readonly record struct NeapolitanMinorScaleDegree : IRangeValueObject<Nea
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NeapolitanMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new NeapolitanMinorScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static NeapolitanMinorScaleDegree Min => FromValue(_minValue);

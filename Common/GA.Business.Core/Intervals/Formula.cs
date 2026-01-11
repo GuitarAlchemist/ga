@@ -1,6 +1,12 @@
-﻿namespace GA.Business.Core.Intervals;
+namespace GA.Business.Core.Intervals;
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Atonal;
+using Extensions;
+using GA.Core.Collections;
 using GA.Core.Extensions;
 
 public class Formula : IReadOnlyCollection<FormulaIntervalBase>, IEquatable<Formula>
@@ -14,7 +20,7 @@ public class Formula : IReadOnlyCollection<FormulaIntervalBase>, IEquatable<Form
     }
 
     /// <summary>
-    ///     Gets the <see cref="PrintableReadOnlyCollection{FormulaIntervalBase}" />
+    ///     Gets the <see cref="PrintableReadOnlyCollection{T}" />
     /// </summary>
     public PrintableReadOnlySet<FormulaIntervalBase> Intervals { get; }
 

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Fretboard.Positions;
+namespace GA.Business.Core.Fretboard.Positions;
 
 using Primitives;
 

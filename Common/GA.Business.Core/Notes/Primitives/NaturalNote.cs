@@ -1,15 +1,24 @@
-﻿namespace GA.Business.Core.Notes.Primitives;
+namespace GA.Business.Core.Notes.Primitives;
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Atonal;
 using Atonal.Abstractions;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
 using Intervals.Primitives;
+using JetBrains.Annotations;
+using PCRE;
 
 /// <summary>
 ///     A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note,
 ///     https://en.wikipedia.org/wiki/Natural_(Objects))
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IStaticValueObjectList{NaturalNote}" />
+///     Implements <see cref="IStaticValueObjectList{TSelf}" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
@@ -108,7 +117,8 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NaturalNote FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new NaturalNote { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static NaturalNote Min => FromValue(_minValue);
@@ -116,7 +126,8 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
 
     public static implicit operator NaturalNote(int value)
     {
-        return new NaturalNote { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static implicit operator int(NaturalNote item)
@@ -184,7 +195,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     /// <returns>The <see cref="Note.Sharp" /></returns>
     public Note.Sharp ToSharpNote()
     {
-        return new Note.Sharp(this, SharpAccidental.Sharp);
+        return new(this, SharpAccidental.Sharp);
     }
 
     /// <summary>
@@ -194,7 +205,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     /// <returns>The <see cref="Note.Sharp" /></returns>
     public Note.Sharp ToSharpNote(SharpAccidental accidental)
     {
-        return new Note.Sharp(this, accidental);
+        return new(this, accidental);
     }
 
     /// <summary>
@@ -203,7 +214,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     /// <returns>The <see cref="Note.Flat" /></returns>
     public Note.Flat ToFlatNote()
     {
-        return new Note.Flat(this, FlatAccidental.Flat);
+        return new(this, FlatAccidental.Flat);
     }
 
     /// <summary>
@@ -213,7 +224,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     /// <returns>The <see cref="Note.Flat" /></returns>
     public Note.Flat ToFlatNote(FlatAccidental accidental)
     {
-        return new Note.Flat(this, accidental);
+        return new(this, accidental);
     }
 
     /// <inheritdoc />

@@ -1,5 +1,9 @@
-﻿namespace GA.Business.Core.Fretboard.Voicings.Filtering;
+namespace GA.Business.Core.Fretboard.Voicings.Filtering;
 
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Analysis;
 using Core;
 using Primitives;
@@ -108,7 +112,7 @@ public static class VoicingKeyFilters
             {
                 if (!grouped.ContainsKey(primaryKey))
                 {
-                    grouped[primaryKey] = new List<Voicing>();
+                    grouped[primaryKey] = [];
                 }
                 grouped[primaryKey].Add(voicing);
             }
@@ -144,9 +148,9 @@ public static class VoicingKeyFilters
             var isDiatonic = chromaticNotes == 0;
             var matchQuality = (double)commonNotes / totalNotes;
 
-            if (isDiatonic || (allowChromatic && commonNotes > 0))
+            if (isDiatonic || allowChromatic && commonNotes > 0)
             {
-                matches.Add(new KeyMatch(
+                matches.Add(new(
                     key,
                     isDiatonic,
                     matchQuality,

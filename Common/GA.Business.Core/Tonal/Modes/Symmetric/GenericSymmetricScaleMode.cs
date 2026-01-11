@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Tonal.Modes.Symmetric;
+namespace GA.Business.Core.Tonal.Modes.Symmetric;
 
+using System;
+using JetBrains.Annotations;
 using Primitives;
 using Scales;
 

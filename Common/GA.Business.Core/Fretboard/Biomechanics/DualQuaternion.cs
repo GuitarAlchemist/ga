@@ -1,4 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Biomechanics;
+namespace GA.Business.Core.Fretboard.Biomechanics;
+
+using System;
+using System.Numerics;
 
 /// <summary>
 ///     Dual quaternion for representing rigid transformations (rotation + translation).
@@ -53,7 +56,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// </summary>
     public static DualQuaternion FromRotation(Quaternion rotation)
     {
-        return new DualQuaternion(rotation, Quaternion.Zero);
+        return new(rotation, Quaternion.Zero);
     }
 
     /// <summary>
@@ -64,7 +67,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         // qt = 0.5 * t * qr where t is pure quaternion (0, tx, ty, tz)
         var t = new Quaternion(translation.X, translation.Y, translation.Z, 0);
         var dual = MultiplyScalar(t, 0.5f); // qr is identity for pure translation
-        return new DualQuaternion(Quaternion.Identity, dual);
+        return new(Quaternion.Identity, dual);
     }
 
     /// <summary>
@@ -79,7 +82,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         var t = new Quaternion(translation.X, translation.Y, translation.Z, 0);
         var qt = MultiplyScalar(Quaternion.Multiply(t, qr), 0.5f);
 
-        return new DualQuaternion(qr, qt);
+        return new(qr, qt);
     }
 
     /// <summary>
@@ -107,7 +110,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         // t = 2 * qt * qr*
         var qrConj = Quaternion.Conjugate(Real);
         var t = MultiplyScalar(Quaternion.Multiply(Dual, qrConj), 2.0f);
-        return new Vector3(t.X, t.Y, t.Z);
+        return new(t.X, t.Y, t.Z);
     }
 
     /// <summary>
@@ -121,7 +124,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
             Quaternion.Multiply(a.Real, b.Dual),
             Quaternion.Multiply(a.Dual, b.Real)
         );
-        return new DualQuaternion(real, dual);
+        return new(real, dual);
     }
 
     /// <summary>
@@ -129,7 +132,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// </summary>
     public DualQuaternion Conjugate()
     {
-        return new DualQuaternion(
+        return new(
             Quaternion.Conjugate(Real),
             Quaternion.Conjugate(Dual)
         );
@@ -140,7 +143,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// </summary>
     public DualQuaternion DualConjugate()
     {
-        return new DualQuaternion(Real, Quaternion.Negate(Dual));
+        return new(Real, Quaternion.Negate(Dual));
     }
 
     /// <summary>
@@ -148,7 +151,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// </summary>
     public DualQuaternion CombinedConjugate()
     {
-        return new DualQuaternion(
+        return new(
             Quaternion.Conjugate(Real),
             Quaternion.Negate(Quaternion.Conjugate(Dual))
         );
@@ -182,7 +185,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
             (Dual.W - Real.W * dot * invNorm * invNorm) * invNorm
         );
 
-        return new DualQuaternion(real, dual);
+        return new(real, dual);
     }
 
     /// <summary>
@@ -190,7 +193,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// </summary>
     private static Quaternion MultiplyScalar(Quaternion q, float scalar)
     {
-        return new Quaternion(q.X * scalar, q.Y * scalar, q.Z * scalar, q.W * scalar);
+        return new(q.X * scalar, q.Y * scalar, q.Z * scalar, q.W * scalar);
     }
 
     /// <summary>
@@ -230,7 +233,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         var bAdjusted = b;
         if (dot < 0)
         {
-            bAdjusted = new DualQuaternion(
+            bAdjusted = new(
                 Quaternion.Negate(b.Real),
                 Quaternion.Negate(b.Dual)
             );
@@ -243,7 +246,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         // SLERP dual part
         var dualInterp = QuaternionSlerp(a.Dual, bAdjusted.Dual, t);
 
-        return new DualQuaternion(realInterp, dualInterp);
+        return new(realInterp, dualInterp);
     }
 
     /// <summary>
@@ -252,7 +255,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     private static Quaternion QuaternionSlerp(Quaternion a, Quaternion b, float t)
     {
         // Linear interpolation for dual part (good enough for small angles)
-        return new Quaternion(
+        return new(
             a.X + t * (b.X - a.X),
             a.Y + t * (b.Y - a.Y),
             a.Z + t * (b.Z - a.Z),

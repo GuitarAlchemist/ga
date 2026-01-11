@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GA.Testing.Semantic</AssemblyName>
+    <RootNamespace>GA.Testing.Semantic</RootNamespace>
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
+    <Description>Generic semantic assertion library for AI integration testing using embeddings and vector similarity.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- We reference Core for common interfaces like IEmbeddingService if needed, 
+         but we want to keep this project as generic as possible. -->
+    <ProjectReference Include="..\GA.Business.Core.AI\GA.Business.Core.AI.csproj" />
+  </ItemGroup>
+
+</Project>

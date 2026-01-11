@@ -1,4 +1,12 @@
-﻿namespace GA.Business.Core.Tonal.Primitives.Exotic;
+namespace GA.Business.Core.Tonal.Primitives.Exotic;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using GA.Core.Abstractions;
+using GA.Core.Collections;
+using JetBrains.Annotations;
 
 /// <summary>
 ///     A Hungarian minor scale degree
@@ -41,7 +49,8 @@ public readonly record struct HungarianMinorScaleDegree : IRangeValueObject<Hung
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HungarianMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
     {
-        return new HungarianMinorScaleDegree { Value = value };
+        return new()
+            { Value = value };
     }
 
     public static HungarianMinorScaleDegree Min => FromValue(_minValue);

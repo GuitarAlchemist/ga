@@ -1,5 +1,7 @@
-﻿namespace GA.Business.Core.Fretboard.Positions;
+namespace GA.Business.Core.Fretboard.Positions;
 
+using System;
+using System.Collections.Generic;
 using Primitives;
 
 public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret, IComparable<PositionLocation>
@@ -9,12 +11,12 @@ public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
 
     public static PositionLocation Muted(Str str)
     {
-        return new PositionLocation(str, Fret.Muted);
+        return new(str, Fret.Muted);
     }
 
     public static PositionLocation Open(Str str)
     {
-        return new PositionLocation(str, Fret.Open);
+        return new(str, Fret.Open);
     }
 
     public override string ToString()
