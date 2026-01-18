@@ -46,7 +46,7 @@ services:
   gaapi:
     build:
       context: .
-      dockerfile: Apps/ga-server/GaApi/Dockerfile
+      dockerfile: Apps/ga-server/GA.AI.Service/Dockerfile
     container_name: ga-api
     restart: unless-stopped
     ports:
@@ -58,16 +58,22 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=guitar-alchemist
       - Graphiti__BaseUrl=http://graphiti-service:8000
+      - Ollama__BaseUrl=http://ollama:11434
+      - Ollama__Model=qwen:0.5b
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     depends_on:
       mongodb:
         condition: service_healthy
       graphiti-service:
         condition: service_healthy
+    volumes:
+      - ./Notebooks:/app/Notebooks
+      - ./Common/GA.Business.ML/Documentation:/app/Documentation
+      - ./Scripts/integration:/app/Scripts/integration
     networks:
       - ga-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -117,6 +123,20 @@ services:
       - ga-network
 
   # ============================================
+  # ANGULAR DASHBOARD
+  # ============================================
+  ga-dashboard:
+    build:
+      context: ./Apps/ga-dashboard
+      dockerfile: Dockerfile
+    container_name: ga-dashboard
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    networks:
+      - ga-network
+
+  # ============================================
   # FALKORDB (Graph Database for Graphiti)
   # ============================================
   falkordb:
@@ -124,14 +144,14 @@ services:
     container_name: ga-falkordb
     restart: unless-stopped
     ports:
-      - "6379:6379"    # FalkorDB
-      - "3000:3000"    # FalkorDB Browser UI
+      - "6379:6379" # FalkorDB
+      - "3000:3000" # FalkorDB Browser UI
     volumes:
       - falkordb-data:/data
     networks:
       - ga-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      test: [ "CMD", "redis-cli", "-p", "6379", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -152,8 +172,8 @@ services:
       - FALKORDB_HOST=falkordb
       - FALKORDB_PORT=6379
       - FALKORDB_DATABASE=graphiti
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
-      - OLLAMA_CHAT_MODEL=qwen2.5-coder:1.5b-base
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - OLLAMA_CHAT_MODEL=qwen:0.5b
       - OLLAMA_EMBEDDING_MODEL=nomic-embed-text
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
       - MONGODB_DATABASE_NAME=guitar-alchemist
@@ -167,7 +187,7 @@ services:
     networks:
       - ga-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -180,9 +200,43 @@ services:
     container_name: ga-jaeger
     restart: unless-stopped
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # OTLP gRPC
-      - "4318:4318"    # OTLP HTTP
+      - "16686:16686" # Jaeger UI
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+    networks:
+      - ga-network
+
+  # ============================================
+  # QDRANT (Vector Database)
+  # ============================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ga-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - ga-network
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'exec 3<> /dev/tcp/localhost/6333; echo -e \"GET /healthz HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; cat <&3 | grep \"HTTP/1.1 200 OK\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # OLLAMA (Model Runner)
+  # ============================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ga-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
     networks:
       - ga-network
 
@@ -194,6 +248,10 @@ volumes:
     driver: local
   falkordb-data:
     driver: local
+  qdrant-data:
+    driver: local
+  ollama-data:
+    driver: local
 
 # ============================================
 # NETWORKS
@@ -201,4 +259,3 @@ volumes:
 networks:
   ga-network:
     driver: bridge
-

@@ -20,12 +20,14 @@ public static class CacheKeys
     public static string GetHarmonicAnalysisKey(string shapeId) => $"{HarmonicAnalysis}:{shapeId}";
     public static string GetProgressionKey(string progressionId) => $"{ProgressionOptimization}:{progressionId}";
     public static string GetSpectralKey(string agentId) => $"{SpectralAnalysis}:{agentId}";
+    public static string GetHeatMapKey(string parameters) => $"{HeatMap}:{parameters}";
+    public static string GetFretboardShapesKey(string parameters) => $"{FretboardShapes}:{parameters}";
 }
 
 /// <summary>
 /// Optimization strategies
 /// </summary>
-public static class OptimizationStrategy
+public static class AnalyticsOptimizationStrategy
 {
     public const string Genetic = "genetic";
     public const string SimulatedAnnealing = "simulated_annealing";

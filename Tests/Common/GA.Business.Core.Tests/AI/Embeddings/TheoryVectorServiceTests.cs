@@ -1,8 +1,7 @@
 namespace GA.Business.Core.Tests.AI.Embeddings;
 
-using GA.Business.Core.AI.Embeddings;
+using GA.Business.ML.Embeddings.Services;
 using NUnit.Framework;
-using System.Linq;
 
 [TestFixture]
 public class TheoryVectorServiceTests

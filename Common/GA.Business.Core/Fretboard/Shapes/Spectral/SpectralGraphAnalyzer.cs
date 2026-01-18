@@ -194,6 +194,31 @@ public class SpectralGraphAnalyzer
              .ToList();
     }
 
+    /// <summary>
+    /// Identify bottlenecks (shapes with high bridging potential).
+    /// Uses Fiedler vector proximity to zero.
+    /// </summary>
+    public List<(string ShapeId, double Bottleneck)> FindBottlenecks(ShapeGraph graph, int topK)
+    {
+        if (graph.ShapeCount == 0) return [];
+
+        var metrics = Analyze(graph);
+        if (metrics.FiedlerVector == null) return [];
+
+        var shapeIds = graph.Shapes.Keys.OrderBy(k => k).ToList();
+        var scores = new List<(string ShapeId, double Score)>();
+
+        for (int i = 0; i < metrics.NodeCount; i++)
+        {
+            // Nodes with Fiedler component close to 0 are often bridges
+            var val = metrics.FiedlerVector[i];
+            var score = 1.0 / (Math.Abs(val) + 1e-6);
+            scores.Add((shapeIds[i], score));
+        }
+
+        return scores.OrderByDescending(x => x.Score).Take(topK).ToList();
+    }
+
     // --- Graph Metrics (Corrected/Improved Implementations) ---
 
     // Note: These methods are private in the original class but the user commented on them.
@@ -210,11 +235,11 @@ public class SpectralGraphAnalyzer
     // We don't need these private methods anymore if Analyze returns the CORRECT Eigenvalues.
 
     // --- K-Means Implementation (Simple Lloyd's Algorithm) ---
-    private int[] KMeans(MathNet.Numerics.LinearAlgebra.Vector<double>[] data, int k)
+    private int[] KMeans(Vector<double>[] data, int k)
     {
         int n = data.Length;
         int[] assignments = new int[n];
-        MathNet.Numerics.LinearAlgebra.Vector<double>[] centroids = new MathNet.Numerics.LinearAlgebra.Vector<double>[k];
+        Vector<double>[] centroids = new Vector<double>[k];
         Random rnd = new Random(42); // Deterministic seed
 
         // Init ++ style (simplified): pick random distinct points
@@ -255,10 +280,10 @@ public class SpectralGraphAnalyzer
 
             // Update step
             var counts = new int[k];
-            var newCentroids = new MathNet.Numerics.LinearAlgebra.Vector<double>[k];
+            var newCentroids = new Vector<double>[k];
             for (int c = 0; c < k; c++)
             {
-                newCentroids[c] = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.Dense(centroids[0].Count); // Size of feature vector
+                newCentroids[c] = Vector<double>.Build.Dense(centroids[0].Count); // Size of feature vector
             }
 
             for (int i = 0; i < n; i++)

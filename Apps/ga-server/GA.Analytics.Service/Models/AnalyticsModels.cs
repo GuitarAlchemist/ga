@@ -1,3 +1,5 @@
+using GA.Business.Core.Invariants;
+
 namespace GA.Analytics.Service.Models;
 
 /// <summary>
@@ -170,47 +172,6 @@ public class ShapeGraphBuildOptions
 }
 
 /// <summary>
-/// Agent interaction graph
-/// </summary>
-public class AgentInteractionGraph
-{
-    public string Id { get; set; } = string.Empty;
-    public List<AgentNode> Nodes { get; set; } = new();
-    public List<AgentNode> Agents { get; set; } = new();
-    public List<AgentEdge> Edges { get; set; } = new();
-    public bool IsUndirected { get; set; } = false;
-    public Dictionary<string, object> Metadata { get; set; } = new();
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Agent node
-/// </summary>
-public class AgentNode
-{
-    public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public double Weight { get; set; } = 1.0;
-    public Dictionary<string, object> Properties { get; set; } = new();
-    public List<string> Signals { get; set; } = new();
-}
-
-/// <summary>
-/// Agent edge
-/// </summary>
-public class AgentEdge
-{
-    public string Id { get; set; } = string.Empty;
-    public string SourceId { get; set; } = string.Empty;
-    public string TargetId { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public double Weight { get; set; } = 1.0;
-    public Dictionary<string, object> Properties { get; set; } = new();
-}
-
-/// <summary>
 /// Concept validation result
 /// </summary>
 public class ConceptValidationResult
@@ -236,22 +197,6 @@ public class ICVResult
     public string ConceptId { get; set; } = string.Empty;
     public Dictionary<string, double> ComponentScores { get; set; } = new();
     public DateTime ComputedAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Agent interaction edge
-/// </summary>
-public class AgentInteractionEdge
-{
-    public string Id { get; set; } = string.Empty;
-    public string SourceId { get; set; } = string.Empty;
-    public string TargetId { get; set; } = string.Empty;
-    public string Source { get; set; } = string.Empty;
-    public string Target { get; set; } = string.Empty;
-    public double Weight { get; set; } = 1.0;
-    public string InteractionType { get; set; } = string.Empty;
-    public Dictionary<string, object> Properties { get; set; } = new();
-    public Dictionary<string, object> Features { get; set; } = new();
 }
 
 /// <summary>
@@ -298,4 +243,96 @@ public class ProgressionConstraints
     public List<string> AllowedChords { get; set; } = new();
     public List<string> ForbiddenProgressions { get; set; } = new();
     public Dictionary<string, object> Rules { get; set; } = new();
+}
+
+public class UserProfile
+{
+    public string UserId { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string SkillLevel { get; set; } = "intermediate";
+    public List<string> PreferredGenres { get; set; } = new();
+    public List<string> Instruments { get; set; } = new();
+    public Dictionary<string, object> Preferences { get; set; } = new();
+}
+
+public record ComputeIcvRequest(int[] PitchClasses);
+public record ComputeDeltaRequest(GA.Business.Core.Atonal.IntervalClassVector Source, GA.Business.Core.Atonal.IntervalClassVector Target);
+public record GrothendieckDeltaResponse(GA.Business.Core.Atonal.Grothendieck.GrothendieckDelta Delta, double Cost, string Explanation);
+public class FindNearbyRequest
+{
+    public GA.Business.Core.Atonal.PitchClassSet Source { get; set; } = default!;
+    public int Limit { get; set; }
+    public double MaxDistance { get; set; }
+}
+public record NearbySetResponse(GA.Business.Core.Atonal.PitchClassSet Set, GA.Business.Core.Atonal.Grothendieck.GrothendieckDelta Delta, double Cost);
+
+public class GlobalValidationResult
+{
+    public string Id { get; set; } = string.Empty;
+    public int TotalInvariants { get; set; }
+    public int ValidInvariants { get; set; }
+    public int InvalidInvariants { get; set; }
+    public List<ValidationResultDetail> ValidationResults { get; set; } = new();
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+    public ValidationSummary GetSummary()
+    {
+        return new ValidationSummary
+        {
+            TotalConcepts = TotalInvariants,
+            ValidConcepts = ValidInvariants,
+            OverallSuccessRate = TotalInvariants > 0 ? (double)ValidInvariants / TotalInvariants : 0,
+            GeneratedAt = Timestamp
+        };
+    }
+
+    public Dictionary<string, CompositeInvariantValidationResult> IconicChordResults { get; set; } = new();
+    public Dictionary<string, CompositeInvariantValidationResult> ChordProgressionResults { get; set; } = new();
+    public Dictionary<string, CompositeInvariantValidationResult> GuitarTechniqueResults { get; set; } = new();
+    public Dictionary<string, CompositeInvariantValidationResult> SpecializedTuningResults { get; set; } = new();
+}
+
+public class ValidationResultDetail
+{
+    public string InvariantId { get; set; } = string.Empty;
+    public bool IsValid { get; set; }
+    public double Score { get; set; }
+}
+
+public class ValidationSummary
+{
+    public int TotalConcepts { get; set; }
+    public int ValidConcepts { get; set; }
+    public int TotalInvariants { get; set; }
+    public int TotalViolations { get; set; }
+    public int CriticalViolations { get; set; }
+    public int ErrorViolations { get; set; }
+    public int WarningViolations { get; set; }
+    public int InfoViolations { get; set; }
+    public double OverallSuccessRate { get; set; }
+    public TimeSpan Duration { get; set; }
+    public DateTime GeneratedAt { get; set; }
+}
+
+public class CacheStatistics
+{
+    public string Id { get; set; } = string.Empty;
+    public long TotalRequests { get; set; }
+    public long CacheHits { get; set; }
+    public long CacheMisses { get; set; }
+    public long TotalMemoryUsage { get; set; }
+    public Dictionary<string, long> CategoryStats { get; set; } = new();
+    
+    public double TotalHitRate => TotalRequests > 0 ? (double)CacheHits / TotalRequests : 0;
+}
+
+public class InvariantViolationEvent
+{
+    public string Id { get; set; } = string.Empty;
+    public string InvariantId { get; set; } = string.Empty;
+    public string ViolationType { get; set; } = string.Empty;
+    public string Severity { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Dictionary<string, object> Context { get; set; } = new();
+    public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
 }

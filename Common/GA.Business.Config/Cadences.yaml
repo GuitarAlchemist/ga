@@ -1,0 +1,159 @@
+# Cadences Configuration
+# Comprehensive list of musical cadences and resolution patterns across genres
+
+Cadences:
+  # === Classical / Standard ===
+  - Name: "Perfect Authentic Cadence (PAC)"
+    Category: "Classical"
+    Description: "Strongest resolution from Dominant to Tonic in root position"
+    RomanNumerals: [ "V", "I" ]
+    Function: "Conclusive"
+    InKey: "C Major"
+    Chords: [ "G", "C" ]
+    VoiceLeading: "Leading tone resolves to Tonic"
+
+  - Name: "Imperfect Authentic Cadence (IAC)"
+    Category: "Classical"
+    Description: "Dominant to Tonic resolution, inverted or melody not on root"
+    RomanNumerals: [ "V6", "I" ]
+    InKey: "C Major"
+    Chords: [ "G/B", "C" ]
+
+  - Name: "Plagal Cadence"
+    Category: "Classical"
+    Description: "Subdominant to Tonic resolution ('Amen' cadence)"
+    RomanNumerals: [ "IV", "I" ]
+    Function: "Conclusive (Gentle)"
+    InKey: "C Major"
+    Chords: [ "F", "C" ]
+
+  - Name: "Half Cadence"
+    Category: "Classical"
+    Description: "Ending on the Dominant (Suspense)"
+    RomanNumerals: [ "I", "V" ]
+    InKey: "C Major"
+    Chords: [ "C", "G" ]
+
+  - Name: "Deceptive Cadence"
+    Category: "Classical"
+    Description: "Dominant resolves to vi instead of I"
+    RomanNumerals: [ "V", "vi" ]
+    InKey: "C Major"
+    Chords: [ "G", "Am" ]
+
+  # === Jazz ===
+  - Name: "Major ii-V-I"
+    Category: "Jazz"
+    Description: "The fundamental jazz progression"
+    RomanNumerals: [ "ii7", "V7", "Imaj7" ]
+    InKey: "C Major"
+    Chords: [ "Dm7", "G7", "Cmaj7" ]
+
+  - Name: "Minor ii-V-i"
+    Category: "Jazz"
+    Description: "Fundamental minor key jazz progression"
+    RomanNumerals: [ "ii7b5", "V7alt", "im7" ]
+    InKey: "C Minor"
+    Chords: [ "Dm7b5", "G7", "Cm7" ]
+
+  - Name: "Tritone Substitution"
+    Category: "Jazz"
+    Description: "Substituting V7 with bII7"
+    RomanNumerals: [ "ii7", "bII7", "Imaj7" ]
+    InKey: "C Major"
+    Chords: [ "Dm7", "Db7", "Cmaj7" ]
+
+  - Name: "Backdoor Cadence"
+    Category: "Jazz"
+    Description: "bVII7 resolving to Imaj7"
+    RomanNumerals: [ "iv7", "bVII7", "Imaj7" ]
+    InKey: "C Major"
+    Chords: [ "Fm7", "Bb7", "Cmaj7" ]
+
+  - Name: "Tadd Dameron Turnaround"
+    Category: "Jazz"
+    Description: "Planed resolution via chromatic major 7ths"
+    RomanNumerals: [ "Imaj7", "bIIImaj7", "bVImaj7", "bIImaj7" ]
+    InKey: "C Major"
+    Chords: [ "Cmaj7", "Ebmaj7", "Abmaj7", "Dbmaj7" ]
+
+  - Name: "Coltrane Turnaround"
+    Category: "Jazz"
+    Description: "Rapid major third modulations"
+    RomanNumerals: [ "Imaj7", "bIII7", "bVImaj7", "bII7", "Imaj7" ]
+    InKey: "C Major"
+    Chords: [ "Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7" ]
+
+  # === Rock / Pop ===
+  - Name: "Rock Authentic Cadence"
+    Category: "Rock"
+    Description: "V-I using power chords"
+    RomanNumerals: [ "V5", "I5" ]
+    InKey: "C Major"
+    Chords: [ "G5", "C5" ]
+
+  - Name: "Mixolydian Cadence (bVII-I)"
+    Category: "Rock"
+    Description: "Backdoor resolution common in classic rock"
+    RomanNumerals: [ "bVII", "I" ]
+    InKey: "C Major"
+    Chords: [ "Bb", "C" ]
+
+  - Name: "Aeolian Cadence (Mario Cadence)"
+    Category: "Rock"
+    Description: "bVI-bVII-I power ascent"
+    RomanNumerals: [ "bVI", "bVII", "I" ]
+    InKey: "C Major" # Often resolves to Major I for Picardy feel, or Minor i
+    Chords: [ "Ab", "Bb", "C" ]
+
+  - Name: "Double Plagal"
+    Category: "Rock"
+    Description: "bVII - IV - I"
+    RomanNumerals: [ "bVII", "IV", "I" ]
+    InKey: "C Major"
+    Chords: [ "Bb", "F", "C" ]
+
+  # === Metal ===
+  - Name: "Phrygian Half Cadence"
+    Category: "Metal"
+    Description: "bII to i resolution or tension"
+    RomanNumerals: [ "bII", "i" ]
+    InKey: "E Minor"
+    Chords: [ "F", "Em" ]
+
+  - Name: "Chromatic Mediant (Metal)"
+    Category: "Metal"
+    Description: "Transition to distant third-related chord"
+    RomanNumerals: [ "i", "biii" ]
+    InKey: "E Minor"
+    Chords: [ "Em", "Gm" ]
+
+  # === Flamenco ===
+  - Name: "Andalusian Cadence"
+    Category: "Flamenco"
+    Description: "Descending Phrygian tetrachord"
+    RomanNumerals: [ "iv", "III", "II", "I" ] # Phrygian analysis
+    InKey: "E Phrygian" # or A Minor (i-bVII-bVI-V)
+    Chords: [ "Am", "G", "F", "E" ]
+
+  # === Neo-Soul ===
+  - Name: "Neo-Soul ii-V"
+    Category: "Neo-Soul"
+    Description: "V11 or V13sus resolving to Imaj9"
+    RomanNumerals: [ "ii9", "V13sus", "Imaj9" ]
+    InKey: "C Major"
+    Chords: [ "Dm9", "G13sus", "Cmaj9" ]
+
+  - Name: "Minor Plagal (Neo-Soul)"
+    Category: "Neo-Soul"
+    Description: "iv9 to Imaj7"
+    RomanNumerals: [ "iv9", "Imaj7" ]
+    InKey: "C Major"
+    Chords: [ "Fm9", "Cmaj7" ]
+
+  - Name: "Tritone Sub ii-V (Neo-Soul)"
+    Category: "Neo-Soul"
+    Description: "ii9 to bII13 to Imaj9"
+    RomanNumerals: [ "ii9", "bII13", "Imaj9" ]
+    InKey: "C Major"
+    Chords: [ "Dm9", "Db13", "Cmaj9" ]

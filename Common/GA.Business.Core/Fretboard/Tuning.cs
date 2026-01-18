@@ -23,6 +23,21 @@ public class Tuning : IIndexer<Str, Pitch>
     /// </summary>
     public static readonly Tuning Default = new(PitchCollection.Parse("E2 A2 D3 G3 B3 E4"));
 
+    /// <summary>
+    ///     Standard Ukulele tuning (G4 C4 E4 A4) - Soprano/Concert/Tenor
+    /// </summary>
+    public static readonly Tuning Ukulele = new(PitchCollection.Parse("G4 C4 E4 A4"));
+
+    /// <summary>
+    ///     Standard Bass Guitar tuning (E1 A1 D2 G2)
+    /// </summary>
+    public static readonly Tuning Bass = new(PitchCollection.Parse("E1 A1 D2 G2"));
+
+    /// <summary>
+    ///     7-String Guitar tuning (B1 E2 A2 D3 G3 B3 E4)
+    /// </summary>
+    public static readonly Tuning Guitar7String = new(PitchCollection.Parse("B1 E2 A2 D3 G3 B3 E4"));
+
     private readonly Pitch[] _pitches;
 
     /// <summary>

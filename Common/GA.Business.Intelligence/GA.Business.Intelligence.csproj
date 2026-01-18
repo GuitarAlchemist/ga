@@ -13,10 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Exclude files with syntax errors or missing types -->
-    <Compile Remove="SemanticIndexing\GPUAcceleratedEmbeddingService.cs"/>
-    <Compile Remove="SemanticIndexing\LockFreeDataStructures.cs"/>
-    <Compile Remove="SemanticIndexing\OptimizedSemanticFretboardService.cs"/>
     <!-- Exclude files with wrong namespace references -->
     <Compile Remove="Analytics\AdvancedMusicalAnalyticsService.cs"/>
     <Compile Remove="BSP\IntelligentBspGenerator.cs"/>
@@ -28,7 +24,7 @@
     <!-- <ProjectReference Include="..\GA.Business.Analysis\GA.Business.Analysis.csproj"/> -->
     <!-- <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
     <!-- <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/> -->
-    <ProjectReference Include="..\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
+    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

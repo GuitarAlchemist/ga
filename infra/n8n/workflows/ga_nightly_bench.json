@@ -1,0 +1,130 @@
+{
+    "name": "ga_nightly_bench",
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "triggerAtHour": 3
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "schedule-trigger",
+            "name": "Schedule (3 AM)"
+        },
+        {
+            "parameters": {
+                "command": "docker run --rm --network host ga-cli benchmark-quality --limit 50"
+            },
+            "type": "n8n-nodes-base.executeCommand",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "id": "exec-benchmark",
+            "name": "Run Benchmark (Docker)"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse stdout to create BenchmarkResult\nconst output = items[0].json.stdout || \"\";\nconst lines = output.split('\\n');\n\nconst failed = output.includes(\"[Failed]\") || output.includes(\"FAIL\");\nconst score = failed ? 0.0 : 1.0;\nconst summary = output.substring(0, 1000);\n\nreturn { \n    json: { \n        BenchmarkId: \"nightly-quality\",\n        Name: \"Nightly Quality Check\",\n        Score: score,\n        Timestamp: new Date().toISOString(),\n        RawOutput: summary,\n        Duration: \"00:05:00\" // Estimate or parse\n    } \n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "id": "format-result",
+            "name": "Format BenchmarkResult"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://gaapi:8080/api/benchmark/report",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "BenchmarkId",
+                            "value": "={{ $json.BenchmarkId }}"
+                        },
+                        {
+                            "name": "Name",
+                            "value": "={{ $json.Name }}"
+                        },
+                        {
+                            "name": "Score",
+                            "value": "={{ $json.Score }}"
+                        },
+                        {
+                            "name": "Timestamp",
+                            "value": "={{ $json.Timestamp }}"
+                        },
+                        {
+                            "name": "RawOutput",
+                            "value": "={{ $json.RawOutput }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                850,
+                300
+            ],
+            "id": "post-to-dashboard",
+            "name": "Post to Dashboard"
+        }
+    ],
+    "connections": {
+        "Schedule (3 AM)": {
+            "main": [
+                [
+                    {
+                        "node": "Run Benchmark (Docker)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run Benchmark (Docker)": {
+            "main": [
+                [
+                    {
+                        "node": "Format BenchmarkResult",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format BenchmarkResult": {
+            "main": [
+                [
+                    {
+                        "node": "Post to Dashboard",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

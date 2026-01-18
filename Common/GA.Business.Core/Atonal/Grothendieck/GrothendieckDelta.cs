@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics.Tensors;
 using JetBrains.Annotations;
-using GA.Business.Core.Atonal.Primitives;
+using Primitives;
 
 /// <summary>
 ///     Represents a signed delta in the Grothendieck group

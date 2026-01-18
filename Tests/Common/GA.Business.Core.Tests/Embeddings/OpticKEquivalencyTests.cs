@@ -1,6 +1,7 @@
 namespace GA.Business.Core.Tests.Embeddings;
 
-using GA.Business.Core.AI.Embeddings;
+using GA.Business.ML.Embeddings;
+using GA.Business.ML.Embeddings.Services;
 using NUnit.Framework;
 
 [TestFixture]
@@ -70,14 +71,14 @@ public class OpticKEquivalencyTests
     public void Identity_Encoding_OneHot_Correct()
     {
         var identityService = new IdentityVectorService();
-        
+
         var vChord = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Chord);
         var vScale = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Scale);
 
         // Chord is index 0, Scale is index 1
         Assert.That(vChord[0], Is.EqualTo(1.0));
         Assert.That(vChord[1], Is.EqualTo(0.0));
-        
+
         Assert.That(vScale[1], Is.EqualTo(1.0));
         Assert.That(vScale[0], Is.EqualTo(0.0));
     }
@@ -86,7 +87,7 @@ public class OpticKEquivalencyTests
     public void Composite_Identity_Logic_Works()
     {
         var identityService = new IdentityVectorService();
-        
+
         var vVoicing = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Voicing);
 
         // A Voicing (2) is also a Chord (0) and a PitchClassSet (5)

@@ -35,8 +35,8 @@ pwsh Scripts/run-all-tests.ps1
 ## 🎯 Key Features
 
 - **Music Theory Engine** - Comprehensive chord, scale, and progression analysis
-- **AI Chatbot** - Interactive music theory assistant powered by GPT-4
-- **Semantic Search** - Vector-based chord and scale discovery with MongoDB
+- **Spectral RAG Chatbot** - Interactive music theory assistant with harmonic-aware retrieval (Wavelet-based)
+- **Semantic Search** - Vector-based chord and scale discovery with MongoDB and OPTIC-K embeddings
 - **Real-Time Analysis** - Hand pose detection and guitar technique coaching (planned)
 - **Voice Integration** - Voice-enabled tutoring and commands (planned)
 - **Monadic APIs** - Type-safe error handling with Option/Result/Try patterns

@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);IDE0065</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,12 +14,6 @@
   <ItemGroup>
     <ProjectReference Include="../GA.Core/GA.Core.csproj"/>
     <ProjectReference Include="../GA.Business.Core/GA.Business.Core.csproj"/>
-  </ItemGroup>
-
-  <!-- Exclude IntelligentBSPGenerator files until missing types are implemented -->
-  <ItemGroup>
-    <Compile Remove="BSP\IntelligentBSPGenerator.cs"/>
-    <Compile Remove="BSP\IntelligentBSPGenerator.Optimized.cs"/>
   </ItemGroup>
 
 </Project>

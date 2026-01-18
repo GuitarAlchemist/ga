@@ -62,7 +62,7 @@ public class VoiceLeadingSpaceOpticTests
     {
         // Empty
         var space0 = new VoiceLeadingSpace(0, true, true, true, false);
-        var empty = System.Array.Empty<double>();
+        var empty = Array.Empty<double>();
         Assert.That(space0.Distance(empty, empty), Is.EqualTo(0.0));
 
         // Singleton under T

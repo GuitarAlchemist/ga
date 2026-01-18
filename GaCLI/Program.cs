@@ -1,12 +1,15 @@
 using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
-using GA.Business.Core.AI.Services.Embeddings;
+using GA.Data.MongoDB.Services.Embeddings;
+
 using GA.Business.Core.Fretboard.Voicings.Search;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using GA.Business.ML.Embeddings;
+using GA.Business.ML.Extensions;
 using Spectre.Console;
 using static System.Console;
 
@@ -104,10 +107,29 @@ if (args.Length > 0)
         case "explain":
             await RunExplainVoicing(args, configuration);
             return;
+
+        case "ingest-corpus":
+            await RunIngestCorpus(args, configuration);
+            return;
+
+        case "generate-naturalness-data":
+            await RunGenerateNaturalnessData(args, configuration);
+            return;
+
+        case "train-naturalness-model":
+            await RunTrainNaturalnessModel(args);
+            return;
+
+        case "run-benchmarks":
+            await RunBenchmarks(args, configuration);
+            return;
+
+
     }
 }
 
 WriteLine("No valid command specified. Available commands:");
+WriteLine("  run-benchmarks         Run all registered automated benchmarks");
 WriteLine("  sync-mongodb           Synchronize MongoDB data");
 WriteLine("  analyze-chord          Analyze biomechanical playability of a chord");
 WriteLine("  analyze-progression    Analyze biomechanical playability of a chord progression");
@@ -127,17 +149,17 @@ WriteLine("  dotnet run -- analyze-chord Cmaj7 --hand-size Medium --verbose");
 WriteLine("  dotnet run -- search-voicings --name \"Cmaj7\" --no-barre");
 WriteLine("  dotnet run -- identify x32010");
 
-return; 
+return;
 
 // ... existing methods ...
 
 static async Task RunBenchmarkQuality(string[] args, IConfigurationRoot config)
 {
-    try 
+    try
     {
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<BenchmarkQualityCommand>();
-        
+
         await command.ExecuteAsync();
     }
     catch (Exception ex)
@@ -148,6 +170,25 @@ static async Task RunBenchmarkQuality(string[] args, IConfigurationRoot config)
 }
 
 // ... existing RunChat ...
+
+static async Task RunBenchmarks(string[] args, IConfigurationRoot config)
+{
+    try
+    {
+        using var serviceProvider = BuildScratchServiceProvider(config);
+        var command = serviceProvider.GetRequiredService<RunBenchmarksCommand>();
+
+        string? name = args.Length > 1 ? args[1] : null;
+        if (name?.StartsWith("--") == true) name = null;
+
+        await command.ExecuteAsync(name);
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error: {ex.Message}");
+        WriteLine(ex.StackTrace);
+    }
+}
 
 static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
 {
@@ -167,33 +208,39 @@ static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
     services.AddTransient<IdentifyCommand>();
     services.AddTransient<SimilarVoicingsCommand>();
     services.AddTransient<ChatCommand>();
-    services.AddTransient<BenchmarkQualityCommand>(); // Registered
+    services.AddTransient<BenchmarkQualityCommand>();
     services.AddTransient<BenchmarkSimilarityCommand>();
-    
-    // AI / Embeddings
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.IdentityVectorService>();
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.TheoryVectorService>();
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.MorphologyVectorService>();
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.ContextVectorService>();
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.SymbolicVectorService>();
-    
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.MusicalEmbeddingGenerator>(); 
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.ChordEmbeddingGenerator>();   
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.ScaleEmbeddingGenerator>();   
-    services.AddSingleton<GA.Business.Core.AI.Embeddings.OnnxEmbeddingGenerator>(sp => 
+    services.AddTransient<RunBenchmarksCommand>();
+
+    // Tab Corpus
+    services.AddTransient<GA.Business.Core.Tabs.ITabCorpusRepository, MongoTabCorpusRepository>();
+    services.AddTransient<GA.Business.ML.Tabs.TabCorpusService>();
+    services.AddTransient<IngestCorpusCommand>();
+
+    // AI Services
+    services.AddGuitarAlchemistAI();
+
+    // Vector Store (Qdrant Spike)
+    services.AddSingleton<IVectorIndex>(sp => new QdrantVectorIndex("localhost", 6334));
+
+    services.AddSingleton<GA.Business.ML.Embeddings.OnnxEmbeddingGenerator>(sp =>
     {
          // Propose: Load from config, but for now use same hardcoded paths or a factory
          var modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models", "all-MiniLM-L6-v2.onnx");
          var vocabPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models", "vocab.txt");
-         return new GA.Business.Core.AI.Embeddings.OnnxEmbeddingGenerator(modelPath, vocabPath);
+         return new GA.Business.ML.Embeddings.OnnxEmbeddingGenerator(modelPath, vocabPath);
     });
 
-    services.AddSingleton<GA.Business.Core.AI.Services.Explanation.VoicingExplanationService>();
+    services.AddSingleton<GA.Business.ML.Musical.Explanation.VoicingExplanationService>();
     services.AddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
     services.AddSingleton<VoicingIndexingService>();
     services.AddSingleton<EnhancedVoicingSearchService>();
     services.AddTransient<ExplainVoicingCommand>();
-    
+
+    // Naturalness
+    services.AddTransient<GA.Business.ML.Naturalness.NaturalnessTrainingDataGenerator>();
+    services.AddTransient<GenerateNaturalnessDataCommand>();
+
     return services.BuildServiceProvider();
 }
 
@@ -234,7 +281,7 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
     // services.AddScoped<SemanticSearchService.IEmbeddingService>(sp =>
     //     sp.GetRequiredService<EmbeddingServiceFactory>().CreateService());
 
-    // TODO: Add LM Studio integration when GA.Business.Core.AI is available
+    // TODO: Add LM Studio integration when GA.Business.ML is available
     // services.Configure<LmStudioSettings>(options => { ... });
     // services.AddScoped<LmStudioIntegrationService>();
 
@@ -498,13 +545,13 @@ async static Task RunHybridBenchmark(string[] args, IConfigurationRoot config)
         var searchService = serviceProvider.GetRequiredService<EnhancedVoicingSearchService>();
         var mongoDbService = serviceProvider.GetRequiredService<MongoDbService>();
         var indexingService = serviceProvider.GetRequiredService<VoicingIndexingService>();
-        var textEmbeddingGenerator = serviceProvider.GetRequiredService<GA.Business.Core.AI.Embeddings.OnnxEmbeddingGenerator>();
+        var textEmbeddingGenerator = serviceProvider.GetRequiredService<GA.Business.ML.Embeddings.OnnxEmbeddingGenerator>();
 
         var verbose = args.Any(a => a == "--verbose" || a == "-v");
         var movable = args.Contains("--movable");
-        
+
         var key = GetArgValue(args, "--key");
-        
+
         int? maxFret = null;
         var maxFretArg = GetArgValue(args, "--max-fret");
         if (maxFretArg != null && int.TryParse(maxFretArg, out var mf))
@@ -544,20 +591,20 @@ static async Task RunIndexVoicings(string[] args, IConfigurationRoot config)
         var indexAll = args.Contains("--all");
         var limitArg = GetArgValue(args, "--limit");
         var limit = limitArg != null ? int.Parse(limitArg) : 1000;
-        
+
         var windowArg = GetArgValue(args, "--window");
         var window = windowArg != null ? int.Parse(windowArg) : 4;
-        
+
         var minNotesArg = GetArgValue(args, "--min-notes");
         var minNotes = minNotesArg != null ? int.Parse(minNotesArg) : 2;
-        
+
         var force = args.Contains("--force");
         var drop = args.Contains("--drop");
         var seed = args.Contains("--seed");
 
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<IndexVoicingsCommand>();
-        
+
         await command.ExecuteAsync(indexAll, limit, window, minNotes, force, drop, seed);
     }
     catch (Exception ex)
@@ -569,14 +616,14 @@ static async Task RunIndexVoicings(string[] args, IConfigurationRoot config)
 
 static async Task RunQueryVoicings(string[] args, IConfigurationRoot config)
 {
-    try 
+    try
     {
         var chordName = args.Length > 1 ? args[1] : "C Major";
         if (chordName.StartsWith("--")) chordName = "C Major"; // Handle flags if passed as 2nd arg by mistake
 
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<QueryVoicingsCommand>();
-        
+
         await command.ExecuteAsync(chordName);
     }
     catch (Exception ex)
@@ -588,11 +635,11 @@ static async Task RunQueryVoicings(string[] args, IConfigurationRoot config)
 
 static async Task RunValidateIndex(string[] args, IConfigurationRoot config)
 {
-    try 
+    try
     {
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<ValidateVoicingIndexCommand>();
-        
+
         await command.ExecuteAsync();
     }
     catch (Exception ex)
@@ -604,11 +651,11 @@ static async Task RunValidateIndex(string[] args, IConfigurationRoot config)
 
 static async Task RunDemoVoicings(string[] args, IConfigurationRoot config)
 {
-    try 
+    try
     {
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<DemoVoicingCapabilitiesCommand>();
-        
+
         await command.ExecuteAsync();
     }
     catch (Exception ex)
@@ -621,7 +668,7 @@ static async Task RunDemoVoicings(string[] args, IConfigurationRoot config)
 static async Task RunSearchVoicings(string[] args, IConfigurationRoot config)
 {
     var options = new SearchVoicingsCommand.ValidatedOptions();
-    
+
     // Manual simplistic arg-parsing for the demo
     for (int i = 0; i < args.Length; i++)
     {
@@ -636,7 +683,7 @@ static async Task RunSearchVoicings(string[] args, IConfigurationRoot config)
         if (arg == "--max-stretch" && i + 1 < args.Length) options.MaxStretch = int.Parse(args[++i]);
         if (arg == "--no-barre") options.NoBarre = true;
         if (arg == "--limit" && i + 1 < args.Length) options.Limit = int.Parse(args[++i]);
-        
+
         // NEW options for enhanced search
         if (arg == "--function" && i + 1 < args.Length) options.HarmonicFunction = args[++i];
         if (arg == "--guide-tones") options.HasGuideTones = true;
@@ -644,11 +691,12 @@ static async Task RunSearchVoicings(string[] args, IConfigurationRoot config)
         if (arg == "--register" && i + 1 < args.Length) options.Register = args[++i];
         if (arg == "--string-set" && i + 1 < args.Length) options.StringSet = args[++i];
         if (arg == "--detailed" || arg == "-d") options.Detailed = true;
+        if (arg == "--similar-to" && i + 1 < args.Length) options.SimilarTo = args[++i];
     }
 
     using var serviceProvider = BuildScratchServiceProvider(config);
     var command = serviceProvider.GetRequiredService<SearchVoicingsCommand>();
-    
+
     await command.ExecuteAsync(options);
 }
 
@@ -670,7 +718,7 @@ static async Task RunIdentify(string[] args, IConfigurationRoot config)
 
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<IdentifyCommand>();
-        
+
         await command.ExecuteAsync(diagram, verbose);
     }
     catch (Exception ex)
@@ -692,7 +740,7 @@ static async Task RunSimilar(string[] args, IConfigurationRoot config)
         var diagram = args[1];
         var sameBass = args.Contains("--same-bass");
         var limit = 5;
-        
+
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--limit" && i + 1 < args.Length && int.TryParse(args[i+1], out var l))
@@ -701,7 +749,7 @@ static async Task RunSimilar(string[] args, IConfigurationRoot config)
 
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<SimilarVoicingsCommand>();
-        
+
         await command.ExecuteAsync(diagram, sameBass, limit);
     }
     catch (Exception ex)
@@ -725,7 +773,7 @@ static async Task RunExplainVoicing(string[] args, IConfigurationRoot config)
 
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<ExplainVoicingCommand>();
-        
+
         await command.ExecuteAsync(diagram, verbose);
     }
     catch (Exception ex)
@@ -743,11 +791,11 @@ static async Task RunChat(string[] args, IConfigurationRoot config)
 
 static async Task RunBenchmarkSimilarity(string[] args, IConfigurationRoot config)
 {
-    try 
+    try
     {
         using var serviceProvider = BuildScratchServiceProvider(config);
         var command = serviceProvider.GetRequiredService<BenchmarkSimilarityCommand>();
-        
+
         await command.ExecuteAsync();
     }
     catch (Exception ex)
@@ -760,3 +808,55 @@ static async Task RunBenchmarkSimilarity(string[] args, IConfigurationRoot confi
 
 
 
+
+
+static async Task RunIngestCorpus(string[] args, IConfigurationRoot config)
+{
+    try
+    {
+        using var serviceProvider = BuildScratchServiceProvider(config);
+        var command = serviceProvider.GetRequiredService<IngestCorpusCommand>();
+        await command.ExecuteAsync();
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error: {ex.Message}");
+    }
+
+    }
+
+static async Task RunGenerateNaturalnessData(string[] args, IConfigurationRoot config)
+{
+    try
+    {
+        using var serviceProvider = BuildScratchServiceProvider(config);
+        var command = serviceProvider.GetRequiredService<GenerateNaturalnessDataCommand>();
+
+        var output = GetArgValue(args, "--output") ?? "naturalness_data.csv";
+        var limitArg = GetArgValue(args, "--limit");
+        var limit = limitArg != null ? int.Parse(limitArg) : 1000;
+
+        await command.ExecuteAsync(output, limit);
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error: {ex.Message}");
+    }
+}
+
+static async Task RunTrainNaturalnessModel(string[] args)
+{
+    try
+    {
+        var dataPath = GetArgValue(args, "--data") ?? "naturalness_data.csv";
+        var outputPath = GetArgValue(args, "--output") ?? "models/naturalness_ranker.onnx";
+
+        var command = new TrainNaturalnessModelCommand();
+        await command.ExecuteAsync(dataPath, outputPath);
+    }
+    catch (Exception ex)
+    {
+        WriteLine($"Error: {ex.Message}");
+        WriteLine(ex.StackTrace);
+    }
+}

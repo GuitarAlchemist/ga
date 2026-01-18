@@ -1,15 +1,11 @@
 namespace GA.Business.Core.Tests.Embeddings;
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using ML.Abstractions;
+using ML.Text.Onnx;
 using NUnit.Framework;
 
 [TestFixture]

@@ -14,6 +14,9 @@
         <Compile Include="Types/GuitarProTypes.fs"/>
         <Compile Include="Types/PracticeRoutineTypes.fs"/>
         <Compile Include="Types/DslCommand.fs"/>
+        <Compile Include="Types/ChordAst.fs"/>
+        <Compile Include="Types/MusicalSetTypes.fs"/>
+        <Compile Include="Parsers/ChordParser.fs"/>
         <Compile Include="Parsers/ChordProgressionParser.fs"/>
         <Compile Include="Parsers/FretboardNavigationParser.fs"/>
         <Compile Include="Parsers/ScaleTransformationParser.fs"/>
@@ -24,9 +27,12 @@
         <Compile Include="Parsers/MidiParser.fs"/>
         <Compile Include="Parsers/MusicXmlParser.fs"/>
         <Compile Include="Parsers/GuitarProParser.fs"/>
+        <Compile Include="Generators/ChordRenderer.fs"/>
         <Compile Include="Generators/VexTabGenerator.fs"/>
         <Compile Include="Generators/ChordProgressionGenerator.fs"/>
         <Compile Include="Generators/FretboardNavigationGenerator.fs"/>
+        <Compile Include="Services/ChordDslService.fs"/>
+        <Compile Include="Services/HarmonicTransformationService.fs"/>
         <Compile Include="Services/ContentValidator.fs"/>
         <Compile Include="Services/WebContentLoader.fs"/>
         <Compile Include="Services/ContentDiscovery.fs"/>

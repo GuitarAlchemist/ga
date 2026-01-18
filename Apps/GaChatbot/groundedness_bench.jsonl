@@ -1,0 +1,20 @@
+{"query": "C Major", "expected_chord": "C", "constraints": ["tonal"]}
+{"query": "Give me a jazzier Dm7", "expected_chord": "Dm9", "constraints": ["jazz", "extensions"]}
+{"query": "How to play G13?", "expected_chord": "G13", "constraints": ["dominant", "13th"]}
+{"query": "Show me a Lydian voicing for F", "expected_chord": "Fmaj7#11", "constraints": ["lydian", "#11"]}
+{"query": "Beginner G chord", "expected_chord": "G", "constraints": ["beginner", "open"]}
+{"query": "Dark sounding Am", "expected_chord": "Am", "constraints": ["dark", "low-register"]}
+{"query": "Closed voicing for E Major", "expected_chord": "E", "constraints": ["closed"]}
+{"query": "Shell voicing for Bb7", "expected_chord": "Bb7", "constraints": ["shell", "rootless"]}
+{"query": "Atonal cluster starting on C", "expected_chord": "C", "constraints": ["atonal", "cluster"]}
+{"query": "Dorian D minor voicing", "expected_chord": "Dm6", "constraints": ["dorian", "6th"]}
+{"query": "Bright Cmaj7", "expected_chord": "Cmaj7", "constraints": ["bright", "high-register"]}
+{"query": "Easy C chord no barre", "expected_chord": "C", "constraints": ["easy", "no-barre"]}
+{"query": "E9 chord for funk", "expected_chord": "E9", "constraints": ["9th", "funk"]}
+{"query": "Maj7 voicing with #11", "expected_chord": "#11", "constraints": ["lydian"]}
+{"query": "Suspended G chord", "expected_chord": "Gsus4", "constraints": ["sus4"]}
+{"query": "Am7 with a 9th", "expected_chord": "Am9", "constraints": ["9th"]}
+{"query": "Rootless Fmaj7", "expected_chord": "Fmaj7", "constraints": ["rootless"]}
+{"query": "Open D Major", "expected_chord": "D", "constraints": ["open"]}
+{"query": "Cmaj7 shell voicing", "expected_chord": "Cmaj7", "constraints": ["shell"]}
+{"query": "Jazz blues G7", "expected_chord": "G13", "constraints": ["jazz", "dominant"]}

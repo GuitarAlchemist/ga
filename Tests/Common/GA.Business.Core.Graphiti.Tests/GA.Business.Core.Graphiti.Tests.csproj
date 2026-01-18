@@ -27,8 +27,4 @@
     <PackageReference Include="FluentAssertions" Version="6.12.1"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Graphiti\GA.Business.Graphiti.csproj"/>
-  </ItemGroup>
-
 </Project>

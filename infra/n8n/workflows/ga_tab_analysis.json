@@ -1,0 +1,254 @@
+{
+    "name": "ga_tab_analysis",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "analyze-tab",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "webhook-analyze",
+            "name": "Webhook (Start)"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Heuristic Classifier\nconst text = items[0].json.tab_content || \"\";\nconst tabLines = (text.match(/^[eBGDAE]\\|/gm) || []).length;\nconst dashCount = (text.match(/-/g) || []).length;\nconst dashDensity = text.length > 0 ? dashCount / text.length : 0;\n\nif (tabLines > 2 || dashDensity > 0.1) return { json: { ...items[0].json, type: 'TAB' } };\nif (text.startsWith('/') || text.startsWith('!')) return { json: { ...items[0].json, type: 'COMMAND' } };\nreturn { json: { ...items[0].json, type: 'QUESTION' } };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "id": "classifier",
+            "name": "Heuristic Classifier"
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.type }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "TAB",
+                            "output": 0
+                        },
+                        {
+                            "value2": "QUESTION",
+                            "output": 1
+                        },
+                        {
+                            "value2": "COMMAND",
+                            "output": 2
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "id": "router-analysis",
+            "name": "Switch (Analysis)"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://host.docker.internal:5000/api/analyze",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "tab",
+                            "value": "={{ $json.tab_content }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                850,
+                100
+            ],
+            "id": "dev-agent",
+            "name": "Dev Agent (API)"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Q/A Deterministic Check\nconst result = items[0].json;\n// Mock Check\nif (!result.key) {\n   return {\n     json: {\n       ...result,\n       qa_status: \"FAIL\",\n       qa_error: { code: \"QA_FAIL\", path: \"key\", message: \"Missing key\" }\n     }\n   };\n}\nreturn { json: { ...result, qa_status: \"PASS\" } };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                100
+            ],
+            "id": "qa-check",
+            "name": "QA Agent"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.qa_status }}",
+                            "value2": "FAIL"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                100
+            ],
+            "id": "qa-if-fail",
+            "name": "QA Failed?"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://localhost:5678/webhook/autopilot-triage",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "request_id",
+                            "value": "={{ $json.request_id }}"
+                        },
+                        {
+                            "name": "workflow",
+                            "value": "ga_tab_analysis"
+                        },
+                        {
+                            "name": "attempt",
+                            "value": "={{ $json.attempt }}"
+                        },
+                        {
+                            "name": "error",
+                            "value": "={{ $json.qa_error }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                -50
+            ],
+            "id": "triage-call",
+            "name": "Call Autopilot Triage"
+        },
+        {
+            "parameters": {
+                "keepOnlySet": true,
+                "values": {
+                    "string": [
+                        {
+                            "name": "final_analysis",
+                            "value": "={{ $json }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                250
+            ],
+            "id": "clean-room",
+            "name": "Clean Room"
+        }
+    ],
+    "connections": {
+        "Webhook (Start)": {
+            "main": [
+                [
+                    {
+                        "node": "Heuristic Classifier",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Heuristic Classifier": {
+            "main": [
+                [
+                    {
+                        "node": "Switch (Analysis)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch (Analysis)": {
+            "main": [
+                [
+                    {
+                        "node": "Dev Agent (API)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Dev Agent (API)": {
+            "main": [
+                [
+                    {
+                        "node": "QA Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "QA Agent": {
+            "main": [
+                [
+                    {
+                        "node": "QA Failed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "QA Failed?": {
+            "main": [
+                [
+                    {
+                        "node": "Call Autopilot Triage",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Clean Room",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

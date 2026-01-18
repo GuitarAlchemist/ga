@@ -94,7 +94,7 @@ public class ProgressionOptimizer
                 .ThenByDescending(c => c.shape.Ergonomics)
                 .First().shape,
 
-            OptimizationStrategy.BalancedPractice => candidates
+            OptimizationStrategy.BalancedPractice or OptimizationStrategy.Balanced => candidates
                 .OrderBy(c => c.transition.Score)
                 .ThenByDescending(c => c.shape.Ergonomics)
                 .First().shape,
@@ -115,33 +115,43 @@ public class ProgressionOptimizer
     }
 }
 
-/// <summary>
-/// Constraints for progression optimization
-/// </summary>
-public record ProgressionConstraints
-{
-    public int TargetLength { get; init; } = 8;
-    public double MinErgonomics { get; init; } = 0.3;
-    public OptimizationStrategy Strategy { get; init; } = OptimizationStrategy.BalancedPractice;
-}
 
-/// <summary>
-/// Optimization strategy
-/// </summary>
-public enum OptimizationStrategy
-{
-    MinimizeVoiceLeading,
-    MaximizeVariety,
-    BalancedPractice
-}
+    /// <summary>
+    /// Optimization strategy
+    /// </summary>
+    public enum OptimizationStrategy
+    {
+        MinimizeVoiceLeading,
+        MaximizeVariety,
+        BalancedPractice,
+        Balanced // Alias for BalancedPractice
+    }
 
-/// <summary>
-/// Result of progression optimization
-/// </summary>
-public record OptimizedProgression
-{
-    public required List<FretboardShape> Shapes { get; init; }
-    public required double Score { get; init; }
-    public required double Quality { get; init; }
-}
-
+    /// <summary>
+    /// Result of progression optimization
+    /// </summary>
+    public record OptimizedProgression
+    {
+        public required List<FretboardShape> Shapes { get; init; }
+        public required double Score { get; init; }
+        public required double Quality { get; init; }
+        
+        public List<string> ShapeIds => Shapes.Select(s => s.Id).ToList();
+        public double Entropy { get; init; } = 0.5; // Placeholder
+        public double Complexity { get; init; } = 0.5; // Placeholder
+        public double Predictability { get; init; } = 0.5; // Placeholder
+        public double Diversity { get; init; } = 0.5; // Placeholder
+    }
+    
+    /// <summary>
+    /// Constraints for progression optimization
+    /// </summary>
+    public record ProgressionConstraints
+    {
+        public int TargetLength { get; init; } = 8;
+        public double MinErgonomics { get; init; } = 0.3;
+        public OptimizationStrategy Strategy { get; init; } = OptimizationStrategy.BalancedPractice;
+        public bool PreferCentralShapes { get; init; } = true;
+        public bool AllowRandomness { get; init; } = false;
+        public string? StartShapeId { get; init; }
+    }

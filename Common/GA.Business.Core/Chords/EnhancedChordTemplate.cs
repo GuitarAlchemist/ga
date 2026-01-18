@@ -137,27 +137,23 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
     }
 
     /// <summary>Gets the harmonic function of this chord in the specified scale</summary>
-    public HarmonicFunction GetHarmonicFunction(Scale scale, PitchClass root)
+    public GA.Business.Core.Tonal.HarmonicFunction GetHarmonicFunction(Scale scale, PitchClass root)
     {
         if (!IsCompatibleWith(scale))
         {
-            return HarmonicFunction.Unknown;
+            return GA.Business.Core.Tonal.HarmonicFunction.Unknown;
         }
 
         var scaleRoot = scale.PitchClassSet.First(); // Assume first pitch class is root
         var intervalFromScaleRoot = (root.Value - scaleRoot.Value + 12) % 12;
 
-        return intervalFromScaleRoot switch
+        // Map interval semitones to scale degree (simplified for heptatonic)
+        int degree = intervalFromScaleRoot switch
         {
-            0 => HarmonicFunction.Tonic,
-            2 => HarmonicFunction.Supertonic,
-            4 => HarmonicFunction.Mediant,
-            5 => HarmonicFunction.Subdominant,
-            7 => HarmonicFunction.Dominant,
-            9 => HarmonicFunction.Submediant,
-            11 => HarmonicFunction.LeadingTone,
-            _ => HarmonicFunction.Unknown
+            0 => 1, 2 => 2, 4 => 3, 5 => 4, 7 => 5, 9 => 6, 11 => 7, _ => 0
         };
+
+        return GA.Business.Core.Tonal.HarmonicFunctionAnalyzer.FromScaleDegree(degree);
     }
 
     /// <summary>Creates a chord voicing with the specified bass note</summary>
@@ -226,21 +222,6 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
 /// <param name="PitchClass">The pitch class of the chord tone</param>
 /// <param name="Function">The harmonic function of this tone in the chord</param>
 public readonly record struct ChordTone(PitchClass PitchClass, ChordFunction Function);
-
-/// <summary>
-///     Represents the harmonic function of a chord in a key
-/// </summary>
-public enum HarmonicFunction
-{
-    Unknown,
-    Tonic,
-    Supertonic,
-    Mediant,
-    Subdominant,
-    Dominant,
-    Submediant,
-    LeadingTone
-}
 
 /// <summary>
 ///     Represents a specific voicing of a chord

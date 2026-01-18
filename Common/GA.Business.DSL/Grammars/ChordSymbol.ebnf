@@ -1,0 +1,54 @@
+(* 
+  Guitar Alchemist - Comprehensive Chord Symbol Grammar
+  Supports standard, jazz, and classical notation synonyms.
+*)
+
+chord = root, [ quality ], [ extension_section ], [ alterations_section ], [ omit_section ], [ bass_note ] ;
+
+root = note, [ accidental ] ;
+
+note = "C" | "D" | "E" | "F" | "G" | "A" | "B" 
+     | "c" | "d" | "e" | "f" | "g" | "a" | "b" ;
+
+accidental = double_sharp | sharp | double_flat | flat | natural ;
+double_sharp = "##" | "x" | "𝄪" ;
+sharp = "#" | "♯" ;
+double_flat = "bb" | "𝄫" ;
+flat = "b" | "♭" ;
+natural = "♮" ;
+
+(* Foundation qualities *)
+quality = minor_quality | major_quality | diminished_quality | augmented_quality | suspended_quality ;
+
+major_quality = "maj" | "MAJ" | "Maj" | "M" | "Δ" | "ma" | "MA" | "Ma" ;
+minor_quality = "m" | "min" | "MIN" | "Min" | "-" | "mi" | "MI" ;
+diminished_quality = "dim" | "DIM" | "Dim" | "°" | "o" ;
+augmented_quality = "aug" | "AUG" | "Aug" | "+" ;
+suspended_quality = "sus" | "SUS" | "Sus" | "suspended" ;
+
+(* Extensions: can be single or grouped in parens *)
+extension_section = extension_list | ( "(", extension_list, ")" ) ;
+extension_list = extension, { [ "," | " " | "/" ], extension } ;
+
+extension = "7" | "9" | "11" | "13" 
+          | "6" | "2" | "4"
+          | "maj7" | "M7" | "Δ7" | "maj9" | "maj11" | "maj13"
+          | "m7" | "min7" | "-7" | "m9" | "m11" | "m13"
+          | "dim7" | "°7" | "o7"
+          | "m7b5" | "ø" | "ø7" | "h7" | "-7b5" | "half-dim"
+          | "add9" | "add11" | "add13" | "add2" | "add4"
+          | "6/9" | "69" ;
+
+(* Alterations: e.g. #5, b9, alt *)
+alterations_section = ( "(", alteration_list, ")" ) | alteration_list ;
+alteration_list = alteration, { [ "," | " " | "/" ], alteration } ;
+
+alteration = ( [ accidental ], alteration_degree ) | "alt" | "ALT" ;
+alteration_degree = "5" | "9" | "11" | "13" ;
+
+(* Omissions: e.g. (no 3), (omit 5) *)
+omit_section = "(", ( "no" | "omit" ), { [ " " ], alteration_degree }, ")" ;
+
+bass_note = "/", root ;
+
+whitespace = { " " | "\t" } ;

@@ -1,9 +1,9 @@
 ﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
 using System.Diagnostics;
-using NUnit.Framework;
 using Core.Fretboard.Voicings.Core;
 using Core.Fretboard.Voicings.Search;
+using NUnit.Framework;
 
 /// <summary>
 /// Performance tests for GPU-accelerated voicing search

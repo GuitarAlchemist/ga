@@ -1,9 +1,9 @@
 namespace GA.AI.Service.Models;
 
 /// <summary>
-/// Style learning system
+/// Style learning system state
 /// </summary>
-public class StyleLearningSystem
+public class StyleLearningSystemState
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -12,9 +12,9 @@ public class StyleLearningSystem
 }
 
 /// <summary>
-/// Pattern recognition system
+/// Pattern recognition system state
 /// </summary>
-public class PatternRecognitionSystem
+public class PatternRecognitionSystemState
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -210,6 +210,20 @@ public class AdaptedRecommendation
 /// </summary>
 public class UpdatePerformance
 {
+    public UpdatePerformance() { }
+    public UpdatePerformance(double accuracy, double speed, double consistency, string shapeId)
+    {
+        Accuracy = accuracy;
+        Speed = speed;
+        Consistency = consistency;
+        ShapeId = shapeId;
+    }
+
+    public double Accuracy { get; set; }
+    public double Speed { get; set; }
+    public double Consistency { get; set; }
+    public string ShapeId { get; set; } = string.Empty;
+
     public string UserId { get; set; } = string.Empty;
     public double Score { get; set; }
     public string Activity { get; set; } = string.Empty;
@@ -236,6 +250,7 @@ public class SessionStateResponse
     public string SessionId { get; set; } = string.Empty;
     public string State { get; set; } = string.Empty;
     public double Progress { get; set; }
+    public int TotalExercises { get; set; }
     public Dictionary<string, object> Data { get; set; } = new();
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 }

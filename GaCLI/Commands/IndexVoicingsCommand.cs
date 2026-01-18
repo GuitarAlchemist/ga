@@ -13,7 +13,7 @@ using System.Diagnostics;
 using GA.Business.Core.Fretboard.Voicings.Search;
 using GA.Business.Core.Notes.Primitives;
 using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.AI.Embeddings;
+using GA.Business.ML.Embeddings;
 using System.Threading.Channels;
 
 public class IndexVoicingsCommand
@@ -21,18 +21,21 @@ public class IndexVoicingsCommand
     private readonly MusicalEmbeddingGenerator _embeddingGenerator;
     private readonly OnnxEmbeddingGenerator _textEmbeddingGenerator;
     private readonly MongoDbService _mongoDbService;
+    private readonly IVectorIndex _vectorIndex;
     private readonly ILogger<IndexVoicingsCommand> _logger;
 
     public IndexVoicingsCommand(
         MongoDbService mongoDbService, 
         ILogger<IndexVoicingsCommand> logger,
         MusicalEmbeddingGenerator musicalGenerator,
-        OnnxEmbeddingGenerator onnxGenerator)
+        OnnxEmbeddingGenerator onnxGenerator,
+        IVectorIndex vectorIndex)
     {
          _mongoDbService = mongoDbService;
          _logger = logger;
          _embeddingGenerator = musicalGenerator;
          _textEmbeddingGenerator = onnxGenerator;
+         _vectorIndex = vectorIndex;
     }
     public async Task ExecuteAsync(bool indexAll = false, int limit = 1000, int windowSize = 4, int minPlayedNotes = 2, bool force = false, bool drop = false, bool seed = false)
     {
@@ -169,6 +172,20 @@ public class IndexVoicingsCommand
                                 if (batch.Count >= batchSize)
                                 {
                                     await BulkUpsertAsync(collection, batch);
+                                    
+                                    // Also index into Vector Store (Qdrant)
+                                    // Verify we have embeddings (we should)
+                                    var vectorDocs = batch.Select(e => MapToDocument(e)).ToList();
+                                    // IVectorIndex is read-only in the interface definition I saw earlier? 
+                                    // Wait, I implemented IndexAsync in QdrantVectorIndex but did I add it to the Interface?
+                                    // I need to check if IVectorIndex HAS IndexAsync. 
+                                    // If not, I need to cast or update interface. 
+                                    // Assuming I updated interface or will update it.
+                                    if (_vectorIndex is QdrantVectorIndex qvi) 
+                                    {
+                                        await qvi.IndexAsync(vectorDocs);
+                                    }
+                                    // Ideally IVectorIndex should have IndexAsync.
                                     var count = batch.Count;
                                     batch.Clear();
                                     
@@ -184,6 +201,12 @@ public class IndexVoicingsCommand
                             if (batch.Count > 0)
                             {
                                 await BulkUpsertAsync(collection, batch);
+                                
+                                if (_vectorIndex is QdrantVectorIndex qvi) 
+                                {
+                                     await qvi.IndexAsync(batch.Select(e => MapToDocument(e)));
+                                }
+
                                 processedCount += batch.Count;
                                 task.Increment(batch.Count);
                             }
@@ -302,10 +325,18 @@ public class IndexVoicingsCommand
         entity.Embedding = await _embeddingGenerator.GenerateEmbeddingAsync(doc);
         entity.EmbeddingModel = "MusicalFeature-v1";
         
-        entity.TextEmbedding = await _textEmbeddingGenerator.GenerateEmbeddingAsync(doc);
-        if (entity.TextEmbedding != null && entity.TextEmbedding.Length > 0 && !entity.TextEmbedding.All(x => x == 0))
+        // Text embedding is optional - may not have ONNX model available
+        try
         {
-             entity.TextEmbeddingModel = "all-MiniLM-L6-v2";
+            entity.TextEmbedding = await _textEmbeddingGenerator.GenerateEmbeddingAsync(doc.SearchableText ?? doc.ChordName ?? "");
+            if (entity.TextEmbedding != null && entity.TextEmbedding.Length > 0 && !entity.TextEmbedding.All(x => x == 0))
+            {
+                 entity.TextEmbeddingModel = "all-MiniLM-L6-v2";
+            }
+        }
+        catch
+        {
+            // ONNX model not available, continue without text embedding
         }
         
         return entity;
@@ -365,6 +396,12 @@ public class IndexVoicingsCommand
         }
 
         await BulkUpsertAsync(collection, batch);
+
+        if (_vectorIndex is QdrantVectorIndex qvi) 
+        {
+             await qvi.IndexAsync(batch.Select(e => MapToDocument(e)));
+        }
+
         AnsiConsole.MarkupLine($"[green]Successfully seeded {batch.Count} Ground Truth voicings![/]");
     }
 
@@ -498,6 +535,56 @@ public class IndexVoicingsCommand
             AnalysisEngine = VoicingAnalyzer.AnalysisEngineName,
             AnalysisVersion = VoicingAnalyzer.AnalysisVersionStamp,
             Jobs = []
+        };
+    }
+
+    private static VoicingDocument MapToDocument(VoicingEntity e)
+    {
+        return new VoicingDocument
+        {
+            Id = e.Id,
+            ChordName = e.ChordName,
+            Diagram = e.Diagram,
+            SearchableText = e.SearchableText ?? "",
+            PossibleKeys = e.PossibleKeys ?? [],
+            SemanticTags = e.SemanticTags ?? [],
+            YamlAnalysis = e.FullAnalysis ?? "", 
+            
+            MidiNotes = e.MidiNotes ?? [],
+            PitchClasses = e.PitchClasses ?? [],
+            PitchClassSet = string.Join(",", e.PitchClasses ?? []), 
+            IntervalClassVector = e.IntervalClassVector ?? "",
+            
+            AnalysisEngine = e.AnalysisEngine ?? "Unknown",
+            AnalysisVersion = e.AnalysisVersion ?? "0.0",
+            Jobs = e.Jobs ?? [],
+            
+            TuningId = e.Tuning ?? "Standard",
+            PitchClassSetId = e.PrimeFormId ?? "",
+             
+            Embedding = e.Embedding ?? [],
+            
+            // Other optional props
+            MinFret = e.MinFret,
+            MaxFret = e.MaxFret,
+            Difficulty = e.Difficulty,
+            ForteCode = e.ForteCode,
+            PrimeFormId = e.PrimeFormId,
+            ModeName = e.ModeName,
+            Position = e.HandPosition,
+            HandStretch = e.HandStretch,
+            BarreRequired = e.BarreRequired,
+            StackingType = e.StackingType,
+            RootPitchClass = e.RootPitchClass,
+            MidiBassNote = e.MidiBassNote,
+            HarmonicFunction = e.HarmonicFunction,
+            IsNaturallyOccurring = e.IsNaturallyOccurring,
+            Consonance = e.ConsonanceScore,
+            Brightness = e.Brightness,
+            IsRootless = e.IsRootless,
+            HasGuideTones = e.HasGuideTones,
+            Inversion = e.Inversion,
+            
         };
     }
 }

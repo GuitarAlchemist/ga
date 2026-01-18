@@ -1,0 +1,81 @@
+datasets:
+  - id: "guitarset"
+    name: "GuitarSet"
+    url: "https://zenodo.org/record/3371780"
+    format: "JAMS"
+    description: "High-quality audio and annotations (8.2GB)"
+    license: "CC BY 4.0"
+
+  - id: "dadagp"
+    name: "DadaGP"
+    url: "https://github.com/dada-bots/dada-gp"
+    format: "GuitarPro/Tokens"
+    description: "26k songs in GuitarPro/Token format (Request Access)"
+    license: "Research Only"
+
+  - id: "goat"
+    name: "GOAT"
+    url: "https://github.com/joshua-zhao/GOAT"
+    format: "Txt/Tab"
+    description: "Guitar On Audio and Tablatures"
+    license: "CC BY 4.0"
+
+  - id: "ultimate-guitar-scraped"
+    name: "Ultimate Guitar Scraped"
+    url: "file:///C:/Users/spare/Data/Tabs/UG"
+    format: "ASCII"
+    description: "Local scrape of ASCII tabs"
+    license: "Unknown / local use"
+
+  # =========================
+  # Added: fully free & open
+  # =========================
+
+  - id: "egfxset"
+    name: "EGFxSet"
+    url: "https://egfxset.github.io/"
+    format: "WAV + JSON"
+    description: "Clean DI guitar recordings with real pedal effects"
+    license: "CC BY 4.0"
+
+  - id: "guitar-fx-dist"
+    name: "GUITAR-FX-DIST"
+    url: "https://zenodo.org/record/4296040"
+    format: "WAV"
+    description: "Clean and distorted guitar signals for effects modeling"
+    license: "CC BY 4.0"
+
+  - id: "idmt-smt-guitar"
+    name: "IDMT-SMT-Guitar"
+    url: "https://www.idmt.fraunhofer.de/en/publications/datasets/guitar.html"
+    format: "WAV + CSV/XML"
+    description: "Annotated guitar recordings (notes, chords)"
+    license: "CC BY-NC-ND 4.0"
+
+  - id: "acoustic-guitar-notes"
+    name: "Acoustic Guitar Notes"
+    url: "https://www.kaggle.com/datasets/mohammedalkooheji/guitar-notes-dataset"
+    format: "WAV"
+    description: "Isolated acoustic guitar notes"
+    license: "CC0 / Kaggle"
+
+  - id: "guitar-transcription-kaggle"
+    name: "Guitar Transcription Dataset"
+    url: "https://www.kaggle.com/datasets/jacksonlightfoot/guitar-transcription-dataset"
+    format: "WAV + Labels"
+    description: "Small dataset for guitar transcription experiments"
+    license: "Kaggle (free)"
+
+  - id: "fma-guitar-filtered"
+    name: "Free Music Archive (Guitar-filtered)"
+    url: "https://github.com/mdeff/fma"
+    format: "MP3/WAV + CSV"
+    description: "Large open music corpus; filter for guitar-heavy tracks"
+    license: "Creative Commons (track-dependent)"
+
+  - id: "community-ascii-tabs"
+    name: "Community ASCII Tabs"
+    url: "https://github.com/search?q=ascii+guitar+tabs&type=repositories"
+    format: "ASCII"
+    description: "Open-source ASCII guitar tabs from GitHub"
+    license: "Varies (mostly permissive)"

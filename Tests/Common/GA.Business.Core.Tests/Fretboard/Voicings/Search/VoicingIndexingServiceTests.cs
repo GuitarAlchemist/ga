@@ -1,14 +1,11 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
-using NUnit.Framework;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Positions;
+using GA.Business.Core.Fretboard.Primitives;
+using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard.Voicings.Generation;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GA.Business.Core.Fretboard.Voicings.Search;
+using NUnit.Framework;
 
 [TestFixture]
 public class VoicingIndexingServiceTests

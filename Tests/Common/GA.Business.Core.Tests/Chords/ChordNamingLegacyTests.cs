@@ -2,9 +2,10 @@ namespace GA.Business.Core.Tests.Chords;
 
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Chords;
+using GA.Business.Core.Chords.Abstractions;
 using GA.Business.Core.Unified;
-using GA.Business.Core.Intervals;
-using GA.Business.Core.Intervals.Primitives;
+using Intervals;
+using Intervals.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 
 [TestFixture]

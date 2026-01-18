@@ -77,9 +77,7 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
     <!-- TODO: Create this project when needed -->
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
-    <ProjectReference Include="..\..\..\Common\GA.Business.Graphiti\GA.Business.Graphiti.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
     <!-- TODO: Create this project when needed -->
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>

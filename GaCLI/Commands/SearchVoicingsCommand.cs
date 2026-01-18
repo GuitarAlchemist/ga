@@ -6,7 +6,15 @@ using MongoDB.Driver;
 using Spectre.Console;
 using System.Text.RegularExpressions;
 
-public class SearchVoicingsCommand(MongoDbService mongoDbService)
+using GA.Business.ML.Embeddings;
+using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Business.Core.Fretboard.Primitives;
+using GA.Business.Core.Fretboard.Voicings.Core;
+
+public class SearchVoicingsCommand(
+    MongoDbService mongoDbService, 
+    IVectorIndex vectorIndex, 
+    MusicalEmbeddingGenerator embeddingGenerator)
 {
     public class ValidatedOptions
     {
@@ -26,6 +34,7 @@ public class SearchVoicingsCommand(MongoDbService mongoDbService)
         public string? StringSet { get; set; }
         public bool Detailed { get; set; } = false;
         public int Limit { get; set; } = 20;
+        public string? SimilarTo { get; set; } 
     }
 
     public async Task ExecuteAsync(ValidatedOptions options)
@@ -37,6 +46,14 @@ public class SearchVoicingsCommand(MongoDbService mongoDbService)
         try
         {
             var collection = mongoDbService.Voicings;
+
+            // VECTOR SEARCH PATH
+            if (!string.IsNullOrWhiteSpace(options.SimilarTo))
+            {
+                await ExecuteVectorSearchAsync(options, collection);
+                return;
+            }
+
             var builder = Builders<VoicingEntity>.Filter;
             var filter = builder.Empty;
 
@@ -231,6 +248,60 @@ public class SearchVoicingsCommand(MongoDbService mongoDbService)
             "ambiguous" => $"[dim]{func}[/]",
             _ => func
         };
+    }
+
+    private async Task ExecuteVectorSearchAsync(ValidatedOptions options, IMongoCollection<VoicingEntity> collection)
+    {
+        AnsiConsole.MarkupLine($"[yellow]Searching for voicings similar to '{options.SimilarTo}'...[/]");
+        
+        var filter = Builders<VoicingEntity>.Filter.Eq(v => v.ChordName, options.SimilarTo) | 
+                     Builders<VoicingEntity>.Filter.Eq(v => v.Diagram, options.SimilarTo);
+        var seedEntity = await collection.Find(filter).FirstOrDefaultAsync();
+        
+        double[]? queryVector = null;
+
+        if (seedEntity != null)
+        {
+             if (seedEntity.Embedding != null && seedEntity.Embedding.Length > 0)
+             {
+                 queryVector = seedEntity.Embedding;
+                 AnsiConsole.MarkupLine($"[green]Found seed voicing: {seedEntity.ChordName} ({seedEntity.Diagram})[/]");
+             }
+             else
+             {
+                  AnsiConsole.MarkupLine($"[red]Seed has no embedding. Index it first.[/]");
+                  return;
+             }
+        }
+        else
+        {
+             AnsiConsole.MarkupLine($"[red]Could not find voicing '{options.SimilarTo}'[/]");
+             return;
+        }
+
+        if (queryVector == null) return;
+
+        var results = vectorIndex.Search(queryVector, options.Limit);
+        
+        var table = new Table()
+                    .Border(TableBorder.Rounded)
+                    .AddColumn("Score")
+                    .AddColumn("Chord")
+                    .AddColumn("Diagram")
+                    .AddColumn("Tags");
+
+        foreach (var (doc, score) in results)
+        {
+             var scoreFmt = score > 0.99 ? $"[green]{score:F4}[/]" : $"{score:F4}";
+             table.AddRow(
+                 scoreFmt,
+                 $"[bold]{Markup.Escape(doc.ChordName ?? "?")}[/]",
+                 $"[cyan]{doc.Diagram}[/]",
+                 string.Join(", ", doc.SemanticTags.Take(3))
+             );
+        }
+        
+        AnsiConsole.Write(table);
     }
 }
 

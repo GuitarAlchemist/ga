@@ -1,0 +1,214 @@
+{
+    "name": "ga_autopilot_triage",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "autopilot-triage",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "webhook-trigger",
+            "name": "Webhook (Internal)"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Immune Memory Check\n// In a real scenario, this would check Redis/DB\n\nconst input = items[0].json;\nconst errorHash = input.error.code + input.error.path + (input.trace_ref || '');\n\n// Mock Memory Check\nconst isRecurring = input.attempt > 2; // Simple fallback\n\nreturn {\n  json: {\n    ...input,\n    is_recurring: isRecurring,\n    error_hash: errorHash\n  }\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "id": "immune-memory",
+            "name": "Immune Memory Check"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Failure Categorizer\nconst input = items[0].json;\n\n// 1. Hard Stop for Recursion\nif (input.attempt >= 2) return { json: { ...input, action_type: \"ESCALATE\", reason: \"RETRY_LIMIT\" } };\nif (input.is_recurring) return { json: { ...input, action_type: \"ESCALATE\", reason: \"IMMUNE_REJECT\" } };\n\n// 2. Route by Code\nlet type = \"ESCALATE\";\nlet reason = \"UNKNOWN_ERROR\";\n\nswitch (input.error.code) {\n  case \"QA_FAIL\": \n    type = \"QA\"; \n    break;\n  case \"PARSER_MISMATCH\": \n    type = \"PARSER\"; \n    break;\n  case \"API_TIMEOUT\": \n  case \"503\": \n    type = \"RETRYABLE\"; \n    break;\n  default: \n    type = \"ESCALATE\"; \n    reason = \"UNKNOWN_ERROR\";\n}\n\nreturn { json: { ...input, action_type: type, reason } };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "id": "failure-categorizer",
+            "name": "Failure Categorizer"
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.action_type }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "QA",
+                            "output": 0
+                        },
+                        {
+                            "value2": "PARSER",
+                            "output": 1
+                        },
+                        {
+                            "value2": "RETRYABLE",
+                            "output": 2
+                        },
+                        {
+                            "value2": "ESCALATE",
+                            "output": 3
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "id": "router",
+            "name": "Switch (Router)"
+        },
+        {
+            "parameters": {
+                "model": "gpt-4-turbo",
+                "prompt": "You are a QA Fixer Agent. \nYou may only modify the field at `{{ $json.error.path }}`.\nAll other fields must be byte-for-byte identical.\nIf unrepairable, respond with `status: UNREPAIRABLE`.\nInput Data: {{ JSON.stringify($json) }}"
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                100
+            ],
+            "id": "qa-fixer",
+            "name": "QA Fixer Agent"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parser Repair Proposal\nreturn {\n  json: {\n    symptom: \"Parser failure for \" + items[0].json.error.message,\n    suggested_rule_change: \"Create escalation ticket for new regex\",\n    confidence: 1.0\n  }\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                300
+            ],
+            "id": "parser-proposal",
+            "name": "Parser Repair Proposal"
+        },
+        {
+            "parameters": {
+                "amount": 5,
+                "unit": "seconds"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                500
+            ],
+            "id": "wait-retry",
+            "name": "Wait & Retry"
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "fileName": "/home/node/.n8n/logs/issues_backlog.md",
+                "content": "## 🚨 Autopilot Escalation\n- **Request ID**: `{{ $json.request_id }}`\n- **Workflow**: `{{ $json.workflow }}`\n- **Error**: `{{ $json.error.code }}` at `{{ $json.error.path }}`\n- **Reason**: `{{ $json.reason }}`\n- **Trace**: `{{ $json.trace_ref }}`\n"
+            },
+            "type": "n8n-nodes-base.readWriteFile",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                700
+            ],
+            "id": "escalation",
+            "name": "Escalation"
+        }
+    ],
+    "connections": {
+        "Webhook (Internal)": {
+            "main": [
+                [
+                    {
+                        "node": "Immune Memory Check",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Immune Memory Check": {
+            "main": [
+                [
+                    {
+                        "node": "Failure Categorizer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Failure Categorizer": {
+            "main": [
+                [
+                    {
+                        "node": "Switch (Router)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch (Router)": {
+            "main": [
+                [
+                    {
+                        "node": "QA Fixer Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Parser Repair Proposal",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait & Retry",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Escalation",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parser Repair Proposal": {
+            "main": [
+                [
+                    {
+                        "node": "Escalation",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

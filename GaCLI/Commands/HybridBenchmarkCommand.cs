@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.AI.Embeddings;
+using GA.Business.ML.Embeddings;
 using GA.Data.MongoDB.Services;
 using Microsoft.SemanticKernel;
 using MongoDB.Driver;

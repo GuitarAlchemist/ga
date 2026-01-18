@@ -5,6 +5,7 @@ using GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
 using GA.Business.Core.Fretboard.Shapes.InformationTheory;
 using GA.Business.Core.Fretboard.Shapes.Spectral;
 using GA.Business.Core.Fretboard.Shapes.Topology;
+using Microsoft.Extensions.Logging;
 
 namespace GA.BSP.Core;
 
@@ -33,11 +34,11 @@ namespace GA.BSP.Core;
 public class IntelligentBspGenerator(ILoggerFactory loggerFactory)
 {
     private readonly ILogger<IntelligentBspGenerator> _logger = loggerFactory.CreateLogger<IntelligentBspGenerator>();
-    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new(loggerFactory.CreateLogger<SpectralGraphAnalyzer>());
-    private readonly ProgressionAnalyzer _progressionAnalyzer = new(loggerFactory.CreateLogger<ProgressionAnalyzer>());
-    private readonly HarmonicDynamics _harmonicDynamics = new(loggerFactory.CreateLogger<HarmonicDynamics>());
-    private readonly ProgressionOptimizer _progressionOptimizer = new(loggerFactory);
-    private readonly HarmonicAnalysisEngine _analysisEngine = new(loggerFactory);
+    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new();
+    private readonly ProgressionAnalyzer _progressionAnalyzer = new();
+    private readonly HarmonicDynamics _harmonicDynamics = new();
+    private readonly ProgressionOptimizer _progressionOptimizer = new();
+    private readonly HarmonicAnalysisEngine _analysisEngine = new();
 
     /// <summary>
     /// Generate intelligent BSP levels with musical awareness
@@ -73,8 +74,8 @@ public class IntelligentBspGenerator(ILoggerFactory loggerFactory)
         {
             var betti = analysis.Topology.BettiNumbers;
             _logger.LogInformation("   - Topological features: H0={H0}, H1={H1}",
-                betti.Count > 0 ? betti[0] : 0,
-                betti.Count > 1 ? betti[1] : 0);
+                betti.Length > 0 ? betti[0] : 0,
+                betti.Length > 1 ? betti[1] : 0);
         }
 
         // Step 2: Create BSP floors based on chord families (spectral clustering)
@@ -115,15 +116,16 @@ public class IntelligentBspGenerator(ILoggerFactory loggerFactory)
             learningPath.Quality, learningPath.Entropy);
 
         // Step 8: Validate level quality using spectral analysis
-        _logger.LogInformation("ðŸ” Step 8: Validating level quality with spectral analysis...");
-        var spectralMetrics = _spectralAnalyzer.Analyze(graph, useWeights: true, normalized: true);
+        _logger.LogInformation("🔍 Step 8: Validating level quality with spectral analysis...");
+        var spectralMetrics = _spectralAnalyzer.Analyze(graph);
         var spectralQuality = ValidateSpectralQuality(spectralMetrics);
         _logger.LogInformation("âœ… Spectral quality: {Quality:F2} (connectivity={Connectivity:F3}, gap={Gap:F3})",
             spectralQuality, spectralMetrics.AlgebraicConnectivity, spectralMetrics.SpectralGap);
 
         // Step 9: Analyze progression flow using progression analyzer
-        _logger.LogInformation("ðŸŒŠ Step 9: Analyzing progression flow patterns...");
-        var progressionReport = _progressionAnalyzer.AnalyzeProgression(graph, learningPath.ShapeIds);
+        _logger.LogInformation("🌊 Step 9: Analyzing progression flow patterns...");
+        var progressionShapes = learningPath.ShapeIds.Select(id => graph.Shapes[id]).ToList();
+        var progressionReport = _progressionAnalyzer.AnalyzeProgression(graph, progressionShapes);
         _logger.LogInformation("âœ… Progression flow: entropy={Entropy:F2}, complexity={Complexity:F2}, predictability={Predictability:F2}",
             progressionReport.Entropy, progressionReport.Complexity, progressionReport.Predictability);
 
@@ -244,7 +246,7 @@ public class IntelligentBspGenerator(ILoggerFactory loggerFactory)
         return limitCycles.Select((cycle, index) => new BspChallengePath
         {
             Name = $"Challenge {index + 1}",
-            ShapeIds = cycle.Shapes.ToList(), // Use Shapes instead of ShapeIds
+            ShapeIds = cycle.ShapeIds.ToList(), // Use Shapes instead of ShapeIds
             Period = cycle.Period,
             Difficulty = Math.Min(1.0, cycle.Period / 10.0),
         }).ToList();

@@ -173,7 +173,7 @@ public class ChordFormula : IEquatable<ChordFormula>
         }
 
         var hasSeventh = Intervals.Any(i => i.Interval.Semitones.Value is 10 or 11);
-        var hasNinth = Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14 || (hasSeventh && i.Interval.Semitones.Value is 1 or 13 or 3 or 15));
+        var hasNinth = Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14 || (hasSeventh && (i.Interval.Semitones.Value is 1 or 13 || (i.Interval.Semitones.Value is 3 or 15 && i.Function != ChordFunction.Third))));
         var hasEleventh = Intervals.Any(i => i.Interval.Semitones.Value is 5 or 17);
         var hasThirteenth = Intervals.Any(i => i.Interval.Semitones.Value is 9 or 21);
         var hasSixth = Intervals.Any(i => i.Interval.Semitones.Value == 9);
@@ -184,12 +184,12 @@ public class ChordFormula : IEquatable<ChordFormula>
             return hasSus2 ? ChordExtension.Sus2 : ChordExtension.Sus4;
         }
 
-        if (hasThirteenth)
+        if (hasThirteenth && hasSeventh)
         {
             return ChordExtension.Thirteenth;
         }
 
-        if (hasEleventh)
+        if (hasEleventh && hasSeventh)
         {
             return ChordExtension.Eleventh;
         }
@@ -197,11 +197,6 @@ public class ChordFormula : IEquatable<ChordFormula>
         if (hasNinth && hasSeventh)
         {
             return ChordExtension.Ninth;
-        }
-
-        if (hasNinth && !hasSeventh)
-        {
-            return ChordExtension.Add9;
         }
 
         if (hasSeventh)
@@ -212,6 +207,11 @@ public class ChordFormula : IEquatable<ChordFormula>
         if (hasSixth && hasNinth)
         {
             return ChordExtension.SixNine;
+        }
+
+        if (hasNinth && !hasSeventh)
+        {
+            return ChordExtension.Add9;
         }
 
         if (hasSixth)

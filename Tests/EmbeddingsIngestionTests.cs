@@ -1,7 +1,8 @@
-﻿namespace GA.Tests;
+namespace GA.Tests;
 
 using GA.Business.Core.Chords;
-using GA.Business.Core.AI.Services.Embeddings;
+using GA.Business.ML.Abstractions;
+using GA.Business.ML.Text.Internal;
 using GA.Data.SemanticKernel.Embeddings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,7 @@ public class EmbeddingsIngestionTests
     public void Setup()
     {
         var services = new ServiceCollection();
-        
+
         // Add logging
         services.AddLogging(builder =>
         {
@@ -49,7 +50,7 @@ public class EmbeddingsIngestionTests
         // Assert
         Assert.That(embedding, Is.Not.Null);
         Assert.That(embedding.Length, Is.GreaterThan(0));
-        _logger.LogInformation("Generated embedding for '{ChordName}' with dimension {Dimension}", 
+        _logger.LogInformation("Generated embedding for '{ChordName}' with dimension {Dimension}",
             chordName, embedding.Length);
     }
 
@@ -108,12 +109,12 @@ public class EmbeddingsIngestionTests
         // Assert
         Assert.That(embeddings, Has.Count.EqualTo(chords.Length));
         Assert.That(embeddings, Is.All.Not.Null);
-        
+
         // All embeddings should have same dimension
         var firstDimension = embeddings[0].Length;
         Assert.That(embeddings, Is.All.Property("Length").EqualTo(firstDimension));
-        
-        _logger.LogInformation("Generated {Count} embeddings with dimension {Dimension}", 
+
+        _logger.LogInformation("Generated {Count} embeddings with dimension {Dimension}",
             embeddings.Count, firstDimension);
     }
 
@@ -129,7 +130,7 @@ public class EmbeddingsIngestionTests
         // Assert
         Assert.That(embedding, Is.Not.Null);
         Assert.That(embedding.Length, Is.GreaterThan(0));
-        _logger.LogInformation("Generated embedding for empty text with dimension {Dimension}", 
+        _logger.LogInformation("Generated embedding for empty text with dimension {Dimension}",
             embedding.Length);
     }
 
@@ -145,7 +146,7 @@ public class EmbeddingsIngestionTests
         // Assert
         Assert.That(embedding, Is.Not.Null);
         Assert.That(embedding.Length, Is.GreaterThan(0));
-        _logger.LogInformation("Generated embedding for chord description with dimension {Dimension}", 
+        _logger.LogInformation("Generated embedding for chord description with dimension {Dimension}",
             embedding.Length);
     }
 
@@ -160,19 +161,19 @@ public class EmbeddingsIngestionTests
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var embeddings = new List<float[]>();
-        
+
         foreach (var chord in chords)
         {
             var embedding = await _embeddingService.GenerateEmbeddingAsync(chord);
             embeddings.Add(embedding);
         }
-        
+
         stopwatch.Stop();
 
         // Assert
         Assert.That(embeddings, Has.Count.EqualTo(chords.Count));
         var avgTimeMs = stopwatch.ElapsedMilliseconds / (double)chords.Count;
-        
+
         _logger.LogInformation(
             "Generated {Count} embeddings in {TotalMs}ms (avg {AvgMs:F2}ms per embedding)",
             chords.Count, stopwatch.ElapsedMilliseconds, avgTimeMs);

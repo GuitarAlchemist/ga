@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.TestBootstrap;
 
-using System.IO;
 using NUnit.Framework;
 
 /// <summary>

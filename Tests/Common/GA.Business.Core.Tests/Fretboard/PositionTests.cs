@@ -17,9 +17,13 @@ public class PositionTests
         var muted = new Muted(str);
 
         // Assert
-        Assert.That(muted.Str, Is.EqualTo(str));
-        Assert.That(muted.Location.Fret, Is.EqualTo(Fret.Muted));
-        Assert.That(muted.Location.Str, Is.EqualTo(str));
+        TestContext.WriteLine($"Muted Position on String {str}: Location={muted.Location}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(muted.Str, Is.EqualTo(str));
+            Assert.That(muted.Location.Fret, Is.EqualTo(Fret.Muted));
+            Assert.That(muted.Location.Str, Is.EqualTo(str));
+        });
     }
 
     [Test]
@@ -33,6 +37,7 @@ public class PositionTests
         var result = muted.ToString();
 
         // Assert
+        TestContext.WriteLine($"Muted ToString: {result}");
         Assert.That(result, Is.EqualTo($"X{str}"));
     }
 
@@ -43,10 +48,18 @@ public class PositionTests
         var muted1 = new Muted(Str.Min);
         var muted2 = new Muted(Str.Min + 1);
 
-        // Act & Assert
-        Assert.That(muted1, Is.LessThan(muted2));
-        Assert.That(muted2, Is.GreaterThan(muted1));
-        Assert.That(muted1, Is.Not.EqualTo(muted2));
+        // Act
+        var isLess = muted1 < muted2;
+        var isGreater = muted2 > muted1;
+
+        // Assert
+        TestContext.WriteLine($"Muted1: {muted1}, Muted2: {muted2}, 1 < 2: {isLess}, 2 > 1: {isGreater}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(isLess, Is.True);
+            Assert.That(isGreater, Is.True);
+            Assert.That(muted1, Is.Not.EqualTo(muted2));
+        });
     }
 
     [Test]
@@ -60,9 +73,13 @@ public class PositionTests
         var played = new Played(location, midiNote);
 
         // Assert
-        Assert.That(played.Location, Is.EqualTo(location));
-        // Don't compare directly with the integer since MidiNote might be a custom type
-        Assert.That(played.MidiNote.ToString(), Is.EqualTo(midiNote.ToString()));
+        TestContext.WriteLine($"Played Position: Location={played.Location}, MIDI={played.MidiNote}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(played.Location, Is.EqualTo(location));
+            // Don't compare directly with the integer since MidiNote might be a custom type
+            Assert.That(played.MidiNote.ToString(), Is.EqualTo(midiNote.ToString()));
+        });
     }
 
     [Test]
@@ -77,6 +94,7 @@ public class PositionTests
         var result = played.ToString();
 
         // Assert
+        TestContext.WriteLine($"Played ToString: {result}");
         Assert.That(result, Is.EqualTo($"{location} {midiNote}"));
     }
 
@@ -88,12 +106,23 @@ public class PositionTests
         var played2 = new Played(new PositionLocation(Str.Min, Fret.FromValue(1)), 41);
         var played3 = new Played(new PositionLocation(Str.Min + 1, Fret.Open), 45);
 
-        // Act & Assert
-        Assert.That(played1, Is.LessThan(played2));
-        Assert.That(played1, Is.LessThan(played3));
-        Assert.That(played2, Is.LessThan(played3));
-        Assert.That(played3, Is.GreaterThan(played1));
-        Assert.That(played1, Is.Not.EqualTo(played2));
+        // Act
+        var oneLessTwo = played1 < played2;
+        var oneLessThree = played1 < played3;
+        var twoLessThree = played2 < played3;
+
+        // Assert
+        TestContext.WriteLine($"Played1: {played1}, Played2: {played2}, Played3: {played3}");
+        TestContext.WriteLine($"1 < 2: {oneLessTwo}, 1 < 3: {oneLessThree}, 2 < 3: {twoLessThree}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(oneLessTwo, Is.True);
+            Assert.That(oneLessThree, Is.True);
+            Assert.That(twoLessThree, Is.True);
+            Assert.That(played3, Is.GreaterThan(played1));
+            Assert.That(played1, Is.Not.EqualTo(played2));
+        });
     }
 
     [Test]
@@ -107,9 +136,20 @@ public class PositionTests
         var differentLocation = new PositionLocation(Str.Min + 1, Fret.Open);
         var played3 = new Played(differentLocation, midiNote); // Different location
 
-        // Act & Assert
-        Assert.That(played1, Is.EqualTo(played2));
-        Assert.That(played1, Is.Not.EqualTo(played3));
-        Assert.That(played1.GetHashCode(), Is.EqualTo(played2.GetHashCode()));
+        // Act
+        var areEqual = played1.Equals(played2);
+        var hashesEqual = played1.GetHashCode() == played2.GetHashCode();
+        var areDifferent = !played1.Equals(played3);
+
+        // Assert
+        TestContext.WriteLine($"Played1 vs Played2 Equality: {areEqual}, Hash Equality: {hashesEqual}");
+        TestContext.WriteLine($"Played1 vs Played3 Equality: {!areDifferent}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(areEqual, Is.True);
+            Assert.That(areDifferent, Is.True);
+            Assert.That(hashesEqual, Is.True);
+        });
     }
 }

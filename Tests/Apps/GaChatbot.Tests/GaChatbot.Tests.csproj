@@ -10,14 +10,25 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Testing.Semantic\GA.Testing.Semantic.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\..\..\Apps\GaChatbot\GaChatbot.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.ML.Tests\GA.Business.ML.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\Tests\Data\groundedness_bench.jsonl" Link="Data\groundedness_bench.jsonl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\voicing_index.jsonl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

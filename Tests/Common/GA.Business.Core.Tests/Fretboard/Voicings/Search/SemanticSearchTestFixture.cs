@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
-using System.IO;
 using System.Reflection;
 using GA.Business.Core.Fretboard.Voicings.Search;
 using Microsoft.Extensions.Logging.Abstractions;

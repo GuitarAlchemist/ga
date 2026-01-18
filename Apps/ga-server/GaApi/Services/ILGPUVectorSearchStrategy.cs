@@ -1,8 +1,8 @@
 ﻿namespace GaApi.Services;
 
+using System.Diagnostics;
 using ILGPU;
 using ILGPU.Runtime;
-using System.Diagnostics;
 
 /// <summary>
 /// ILGPU-accelerated vector search strategy for GPU-based similarity calculations

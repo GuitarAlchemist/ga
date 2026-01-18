@@ -1,126 +1,77 @@
-﻿namespace GA.Business.Intelligence.SemanticIndexing;
+namespace GA.Business.Intelligence.SemanticIndexing;
 
-using Core.Fretboard;
-using Microsoft.Extensions.Logging;
+using GA.Business.Core.Notes;
+using GA.Business.Core.Fretboard;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
-/// <summary>
-/// Semantic fretboard service
-/// Provides a simplified interface for semantic indexing and natural language querying of fretboard voicings
-/// </summary>
-public class SemanticFretboardService(SemanticSearchService searchService,
-    ILogger<SemanticFretboardService> logger)
+public class SemanticFretboardService
 {
-    private bool _isIndexed;
-
-    /// <summary>
-    /// Index fretboard voicings for semantic search
-    /// </summary>
-    public Task<IndexingResult> IndexFretboardVoicingsAsync(
-        Tuning tuning,
-        string instrumentName = "Guitar",
-        int maxFret = 12,
-        bool includeBiomechanicalAnalysis = true,
-        IProgress<IndexingProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+    public Task<SemanticIndexResult> IndexFretboardVoicingsAsync(
+        Tuning tuning, 
+        string instrumentName, 
+        int maxFret, 
+        bool includeBiomechanicalAnalysis, 
+        IProgress<IndexingProgress> progress)
     {
-        logger.LogInformation("Indexing fretboard voicings for {Instrument}", instrumentName);
-
-        // Stub implementation - just mark as indexed
-        _isIndexed = true;
-        progress?.Report(new IndexingProgress(Total: 100, Indexed: 100, Errors: 0));
-
-        return Task.FromResult(new IndexingResult(
-            InstrumentName: instrumentName,
-            TuningName: tuning.ToString(),
-            TotalVoicings: 100,
-            IndexedVoicings: 100,
-            Errors: 0,
-            ElapsedTime: TimeSpan.FromSeconds(1),
-            IndexSize: 100));
+        return Task.FromResult(new SemanticIndexResult());
     }
 
-    /// <summary>
-    /// Process natural language query against indexed voicings
-    /// </summary>
-    public async Task<QueryResult> ProcessNaturalLanguageQueryAsync(
-        string naturalLanguageQuery,
-        int maxResults = 10,
-        CancellationToken cancellationToken = default)
+    public Task<SemanticQueryResult> ProcessNaturalLanguageQueryAsync(string query)
     {
-        logger.LogInformation("Processing query: {Query}", naturalLanguageQuery);
-
-        if (!_isIndexed)
-            throw new InvalidOperationException("Fretboard voicings must be indexed before querying");
-
-        var results = await searchService.SearchAsync(naturalLanguageQuery, maxResults);
-
-        return new QueryResult(
-            Query: naturalLanguageQuery,
-            SearchResults: results,
-            LlmInterpretation: $"Results for query: {naturalLanguageQuery}",
-            ElapsedTime: TimeSpan.FromMilliseconds(100),
-            ModelUsed: "stub-model");
+        return Task.FromResult(new SemanticQueryResult());
     }
 
-    /// <summary>
-    /// Get index statistics
-    /// </summary>
-    public SemanticSearchService.IndexStatistics GetIndexStatistics()
+    public IndexStatistics GetIndexStatistics()
     {
-        return searchService.GetStatistics();
-    }
-
-    /// <summary>
-    /// Clear the index
-    /// </summary>
-    public void ClearIndex()
-    {
-        searchService.Clear();
-        _isIndexed = false;
+        return new IndexStatistics();
     }
 }
 
-/// <summary>
-/// Result of indexing fretboard voicings
-/// </summary>
-public record IndexingResult(
-    string InstrumentName,
-    string TuningName,
-    int TotalVoicings,
-    int IndexedVoicings,
-    int Errors,
-    TimeSpan ElapsedTime,
-    int IndexSize)
+public class SemanticIndexResult 
 {
-    public double SuccessRate => TotalVoicings > 0 ? (double)IndexedVoicings / TotalVoicings : 0;
-    public double IndexingRate => ElapsedTime.TotalSeconds > 0 ? IndexedVoicings / ElapsedTime.TotalSeconds : 0;
+    public int IndexedVoicings { get; set; }
+    public TimeSpan ElapsedTime { get; set; }
+    public double SuccessRate { get; set; }
+    public double IndexingRate { get; set; }
 }
 
-/// <summary>
-/// Progress update for indexing operation
-/// </summary>
-public record IndexingProgress(
-    int Total,
-    int Indexed,
-    int Errors)
+public class SemanticQueryResult
 {
-    public double PercentComplete => Total > 0 ? Indexed * 100.0 / Total : 0;
-    public double ErrorRate => Total > 0 ? Errors * 100.0 / Total : 0;
+    public TimeSpan ElapsedTime { get; set; }
+    public string ModelUsed { get; set; } = string.Empty;
+    public int ResultCount { get; set; }
+    public double AverageRelevanceScore { get; set; }
+    public string LlmInterpretation { get; set; } = string.Empty;
+    public List<SemanticSearchResult> SearchResults { get; set; } = new();
 }
 
-/// <summary>
-/// Result of natural language query processing
-/// </summary>
-public record QueryResult(
-    string Query,
-    List<SemanticSearchService.SearchResult> SearchResults,
-    string LlmInterpretation,
-    TimeSpan ElapsedTime,
-    string ModelUsed)
+public class SemanticSearchResult
 {
-    public int ResultCount => SearchResults.Count;
-    public double AverageRelevanceScore => SearchResults.Count > 0
-        ? SearchResults.Average(r => r.Score)
-        : 0;
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    public double Score { get; set; }
 }
 
+public class IndexStatistics
+{
+    public int TotalDocuments { get; set; }
+    public int EmbeddingDimension { get; set; }
+    public Dictionary<string, int> DocumentsByCategory { get; set; } = new();
+}
+
+public class IndexingProgress
+{
+    public int PercentComplete { get; set; }
+    public int Indexed { get; set; }
+    public int Total { get; set; }
+    public double ErrorRate { get; set; }
+}
+
+public class SemanticSearchService
+{
+    public Task<List<SemanticSearchResult>> SearchAsync(string text, int limit)
+    {
+        return Task.FromResult(new List<SemanticSearchResult>());
+    }
+}

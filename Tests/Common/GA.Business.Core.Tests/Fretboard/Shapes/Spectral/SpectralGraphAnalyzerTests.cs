@@ -2,13 +2,11 @@ namespace GA.Business.Core.Tests.Fretboard.Shapes.Spectral;
 
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Grothendieck;
+using GA.Business.Core.Atonal.Primitives; // For PitchClassSet
 using GA.Business.Core.Fretboard.Shapes;
 using GA.Business.Core.Fretboard.Shapes.Spectral;
-using GA.Business.Core.Atonal.Primitives; // For PitchClassSet
 using Moq;
 using NUnit.Framework;
-using System.Linq;
-using System.Threading.Tasks;
 
 [TestFixture]
 public class SpectralGraphAnalyzerTests

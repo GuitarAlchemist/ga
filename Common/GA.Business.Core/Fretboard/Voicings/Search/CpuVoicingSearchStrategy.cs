@@ -7,11 +7,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GA.Business.Core.Fretboard.Voicings.Core;
+using Core;
 
 /// <summary>
 /// Fast, pure C# in-memory search strategy for voicing retrieval.
 /// Used for integration tests and as a fallback when GPU is unavailable.
+/// Implements Weighted Partition Cosine Similarity for OPTIC-K Schema v1.3.1.
+/// Supports legacy OPTIC-K Schema v1.2.1.
 /// </summary>
 public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 {
@@ -42,20 +44,21 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     public async Task<List<VoicingSearchResult>> SemanticSearchAsync(double[] queryEmbedding, int limit = 10)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         var results = new ConcurrentBag<VoicingSearchResult>();
         var voicingList = _voicings.Values.ToList();
-        
+
         await Task.Run(() => {
             Parallel.ForEach(voicingList, voicing => {
-                var similarity = CosineSimilarity(queryEmbedding, voicing.Embedding);
+                var targetVec = voicing.TextEmbedding ?? voicing.Embedding;
+                var similarity = CosineSimilarity(queryEmbedding, targetVec);
                 results.Add(MapToSearchResult(voicing, similarity, "semantic search"));
             });
         });
 
         stopwatch.Stop();
         RecordSearchTime(stopwatch.Elapsed);
-        
+
         return results.OrderByDescending(r => r.Score).Take(limit).ToList();
     }
 
@@ -70,10 +73,10 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     public async Task<List<VoicingSearchResult>> HybridSearchAsync(double[] queryEmbedding, VoicingSearchFilters filters, int limit = 10)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         var results = new ConcurrentBag<VoicingSearchResult>();
         var voicingList = _voicings.Values.ToList();
-        
+
         await Task.Run(() => {
             Parallel.ForEach(voicingList, voicing => {
                 if (MatchesFilters(voicing, filters))
@@ -90,7 +93,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
                     {
                         const int symbolicOffset = 66; // From EmbeddingSchema
                         int matches = 0;
-                        
+
                         foreach (var bit in filters.SymbolicBitIndices)
                         {
                             if (bit < 12 && voicing.Embedding.Length > symbolicOffset + bit)
@@ -117,7 +120,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
         stopwatch.Stop();
         RecordSearchTime(stopwatch.Elapsed);
-        
+
         return results.OrderByDescending(r => r.Score).Take(limit).ToList();
     }
 
@@ -136,14 +139,14 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.Position != null && !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase)) return false;
         if (filters.VoicingType != null && !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase)) return false;
         if (filters.Tags != null && filters.Tags.Any() && !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase))) return false;
-        
+
         if (filters.MinFret.HasValue && voicing.MinFret < filters.MinFret.Value) return false;
         if (filters.MaxFret.HasValue && voicing.MaxFret > filters.MaxFret.Value) return false;
         if (filters.RequireBarreChord.HasValue && voicing.BarreRequired != filters.RequireBarreChord.Value) return false;
 
         // Structured Filters
         if (filters.ChordName != null && !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase)) return false;
-        
+
         if (filters.StackingType != null)
         {
             // Null check on voicing.StackingType because it's nullable
@@ -160,7 +163,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.MaxMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Max() > filters.MaxMidiPitch.Value) return false;
 
         if (filters.SetClassId != null && !voicing.PrimeFormId.Contains(filters.SetClassId, StringComparison.OrdinalIgnoreCase)) return false;
-        
+
         // PitchClassSet string looks like "{0,4,7}" or similar.
         if (filters.RahnPrimeForm != null && !voicing.PitchClassSet.Contains(filters.RahnPrimeForm, StringComparison.OrdinalIgnoreCase)) return false;
 
@@ -170,7 +173,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             // Perfect finger count requires fingering analysis which is not in the search index yet.
             var parts = voicing.Diagram.Contains('-') ? voicing.Diagram.Split('-') : voicing.Diagram.Select(c => c.ToString()).ToArray();
             int active = parts.Count(p => p != "x" && p != "m" && p != "0");
-            
+
             // Adjust for barre: if barre is required, typically reduces finger count by count of barred notes - 1
             // But without exact data, we test against active strings for now as a proxy.
             if (active != filters.FingerCount.Value) return false;
@@ -187,27 +190,27 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
         if (filters.OmittedTones != null && filters.OmittedTones.Any() && !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase))) return false;
-        
+
         // Melody Note Filter
         if (filters.TopPitchClass.HasValue && voicing.TopPitchClass != filters.TopPitchClass.Value) return false;
 
         // AI Agent Metadata Filters (Phase 4)
-        if (filters.TexturalDescriptionContains != null && 
+        if (filters.TexturalDescriptionContains != null &&
             (voicing.TexturalDescription == null || !voicing.TexturalDescription.Contains(filters.TexturalDescriptionContains, StringComparison.OrdinalIgnoreCase))) return false;
-        
+
         if (filters.DoubledTonesContain != null && filters.DoubledTonesContain.Any() &&
             (voicing.DoubledTones == null || !filters.DoubledTonesContain.All(t => voicing.DoubledTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-        
+
         if (filters.AlternateNameMatch != null &&
             (voicing.AlternateNames == null || !voicing.AlternateNames.Any(n => n.Contains(filters.AlternateNameMatch, StringComparison.OrdinalIgnoreCase)))) return false;
-        
+
         return true;
     }
 
     private static double CosineSimilarity(double[] v1, double[] v2)
     {
         if (v1.Length != v2.Length) return 0.0;
-        
+
         // SIMD-Optimized Cosine Similarity
         // Handles zero-magnitude vectors by returning 0 (via check or implementation behavior)
         // TensorPrimitives is available in .NET 9+ (System.Numerics.Tensors)
@@ -230,7 +233,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             PossibleKeys = voicing.PossibleKeys,
             PrimeFormId = voicing.PrimeFormId,
             TranslationOffset = voicing.TranslationOffset,
-            YamlAnalysis = voicing.Description, 
+            YamlAnalysis = voicing.Description,
             Diagram = voicing.Diagram,
             MidiNotes = voicing.MidiNotes,
             PitchClasses = [.. voicing.MidiNotes.Select(n => n % 12).Distinct().OrderBy(p => p)],
@@ -240,7 +243,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             MaxFret = voicing.MaxFret,
             BarreRequired = voicing.BarreRequired,
             HandStretch = voicing.HandStretch,
-            
+
             AnalysisEngine = "CpuVoicingSearchStrategy",
             AnalysisVersion = "1.0.0",
             Jobs = [],
@@ -258,13 +261,13 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             Inversion = voicing.Inversion,
             TopPitchClass = voicing.TopPitchClass, // Added for Chord Melody support
             OmittedTones = voicing.OmittedTones,
-            
+
             // AI Agent Metadata
             TexturalDescription = voicing.TexturalDescription,
             DoubledTones = voicing.DoubledTones,
             AlternateNames = voicing.AlternateNames,
             CagedShape = voicing.CagedShape, // Map CAGED shape
-            
+
             DifficultyScore = 1.0 // Simple default
         };
 

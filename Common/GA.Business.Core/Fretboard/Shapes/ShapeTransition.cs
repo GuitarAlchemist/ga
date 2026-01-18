@@ -1,7 +1,7 @@
-namespace GA.Business.Core.Fretboard.Shapes;
+﻿namespace GA.Business.Core.Fretboard.Shapes;
 
 using System;
-using GA.Business.Core.Atonal.Grothendieck;
+using Atonal.Grothendieck;
 using JetBrains.Annotations;
 
 /// <summary>

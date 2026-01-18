@@ -152,17 +152,7 @@ public abstract record ChordTemplate
         int ScaleDegree) : ChordTemplate(Formula)
     {
         /// <summary>Gets the harmonic function of this chord within its parent scale</summary>
-        public string HarmonicFunction => ScaleDegree switch
-        {
-            1 => "Tonic",
-            2 => "Supertonic",
-            3 => "Mediant",
-            4 => "Subdominant",
-            5 => "Dominant",
-            6 => "Submediant",
-            7 => "Leading Tone",
-            _ => $"Degree {ScaleDegree}"
-        };
+        public Tonal.HarmonicFunction HarmonicFunction => Tonal.HarmonicFunctionAnalyzer.FromScaleDegree(ScaleDegree);
 
         /// <summary>Gets a descriptive name for this tonal modal chord</summary>
         public string Description =>
@@ -258,7 +248,7 @@ public static class ChordTemplateExtensions
     {
         return template switch
         {
-            ChordTemplate.TonalModal tonal => tonal.HarmonicFunction,
+            ChordTemplate.TonalModal tonal => tonal.HarmonicFunction.ToString(),
             _ => null
         };
     }

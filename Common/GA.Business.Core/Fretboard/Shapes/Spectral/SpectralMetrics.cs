@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MathNet.Numerics.LinearAlgebra;
-using Math=System.Math;
+using Math=Math;
 
 /// <summary>
 ///     Spectral metrics computed from the graph Laplacian

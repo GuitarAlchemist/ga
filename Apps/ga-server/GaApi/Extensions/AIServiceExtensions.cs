@@ -1,11 +1,13 @@
-﻿namespace GaApi.Extensions;
+namespace GaApi.Extensions;
 
+using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Business.ML.Abstractions;
+using GA.Business.ML.Configuration;
+using GA.Business.ML.Text.Ollama;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using GaApi.Services;
-using GA.Business.Core.AI.Services.Embeddings;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using Services;
 
 /// <summary>
 /// Extension methods for registering AI and ML services
@@ -59,7 +61,7 @@ public static class AiServiceExtensions
         });
 
         // Register single embedding service (wraps batch service for backward compatibility)
-        services.AddSingleton<IEmbeddingService>(sp =>
+        services.AddSingleton<ITextEmbeddingService>(sp =>
         {
             var batchService = sp.GetRequiredService<GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService>();
             return new BatchEmbeddingServiceAdapter(batchService);
@@ -70,9 +72,9 @@ public static class AiServiceExtensions
     }
 
     /// <summary>
-    /// Adapter to make IBatchEmbeddingService compatible with IEmbeddingService
+    /// Adapter to make IBatchEmbeddingService compatible with ITextEmbeddingService
     /// </summary>
-    private class BatchEmbeddingServiceAdapter(GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService batchService) : IEmbeddingService
+    private class BatchEmbeddingServiceAdapter(GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService batchService) : ITextEmbeddingService
     {
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only
 
@@ -118,7 +120,7 @@ public static class AiServiceExtensions
     private static IServiceCollection AddChatbotServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Register Ollama embedding service for generating embeddings from user queries
-        services.AddSingleton<GaApi.Services.OllamaEmbeddingService>();
+        services.AddSingleton<Services.OllamaEmbeddingService>();
 
         // Register semantic knowledge source (bridges voicing search to chatbot)
         services.AddSingleton<SemanticKnowledgeSource>();

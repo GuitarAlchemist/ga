@@ -1,20 +1,20 @@
-﻿#pragma warning disable SKEXP0001 // Suppress experimental API warnings for Semantic Kernel
+#pragma warning disable SKEXP0001 // Suppress experimental API warnings for Semantic Kernel
 
 namespace GaCLI.Commands;
 
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.AI.Services.Embeddings;
+using GA.Business.ML.Text.Onnx;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Security.Cryptography;
 
-using OnnxEmbeddingService = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingService;
-using OnnxEmbeddingOptions = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingOptions;
-using OnnxEmbeddingPoolingStrategy = GA.Business.Core.AI.Services.Embeddings.OnnxEmbeddingPoolingStrategy;
+using OnnxEmbeddingService = GA.Business.ML.Text.Onnx.OnnxEmbeddingService;
+using OnnxEmbeddingOptions = GA.Business.ML.Text.Onnx.OnnxEmbeddingOptions;
+using OnnxEmbeddingPoolingStrategy = GA.Business.ML.Text.Onnx.OnnxEmbeddingPoolingStrategy;
 
 /// <summary>
 /// CLI command for demonstrating GPU-accelerated voicing search
@@ -66,7 +66,7 @@ public class GpuVoicingSearchCommand
             try
             {
                 var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:11434") };
-                var embeddingGenService = new GA.Business.Core.AI.Services.Embeddings.OllamaTextEmbeddingGeneration(httpClient, "nomic-embed-text");
+                var embeddingGenService = new GA.Business.ML.Text.Ollama.OllamaTextEmbeddingGeneration(httpClient, "nomic-embed-text");
                 _embeddingService = new GA.Data.SemanticKernel.Embeddings.OllamaEmbeddingService(embeddingGenService);
                 _logger.LogInformation("Ollama embedding service initialized (SLOW MODE - 30 emb/sec)");
             }

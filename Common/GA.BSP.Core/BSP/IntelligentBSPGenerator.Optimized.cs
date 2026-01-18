@@ -1,10 +1,10 @@
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Fretboard.Shapes.Applications;
-using GA.Business.Fretboard.Shapes.DynamicalSystems;
-using GA.Business.Fretboard.Shapes.InformationTheory;
-using GA.Business.Fretboard.Shapes.Spectral;
-using GA.Business.Fretboard.Shapes.Topology;
+using GA.Business.Core.Fretboard.Shapes.Applications;
+using GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
+using GA.Business.Core.Fretboard.Shapes.InformationTheory;
+using GA.Business.Core.Fretboard.Shapes.Spectral;
+using GA.Business.Core.Fretboard.Shapes.Topology;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Collections.Frozen;
@@ -36,11 +36,11 @@ namespace GA.BSP.Core;
 public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
 {
     private readonly ILogger<IntelligentBSPGeneratorOptimized> _logger = loggerFactory.CreateLogger<IntelligentBSPGeneratorOptimized>();
-    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new(loggerFactory.CreateLogger<SpectralGraphAnalyzer>());
-    private readonly ProgressionAnalyzer _progressionAnalyzer = new(loggerFactory.CreateLogger<ProgressionAnalyzer>());
-    private readonly HarmonicDynamics _harmonicDynamics = new(loggerFactory.CreateLogger<HarmonicDynamics>());
-    private readonly ProgressionOptimizer _progressionOptimizer = new(loggerFactory);
-    private readonly HarmonicAnalysisEngine _analysisEngine = new(loggerFactory);
+    private readonly SpectralGraphAnalyzer _spectralAnalyzer = new();
+    private readonly ProgressionAnalyzer _progressionAnalyzer = new();
+    private readonly HarmonicDynamics _harmonicDynamics = new();
+    private readonly ProgressionOptimizer _progressionOptimizer = new();
+    private readonly HarmonicAnalysisEngine _analysisEngine = new();
 
     // Memoization cache using FrozenDictionary for fast lookups
     private readonly Dictionary<string, Lazy<HarmonicAnalysisReport>> _analysisCache = new();
@@ -50,7 +50,7 @@ public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
     /// </summary>
     public async ValueTask<IntelligentBSPLevelOptimized> GenerateLevelAsync(
         ShapeGraph graph,
-        BSPLevelOptions options,
+        BspLevelOptions options,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("🎯 Generating intelligent BSP level (OPTIMIZED)...");
@@ -77,7 +77,7 @@ public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
         var learningPath = _progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
         {
             Strategy = OptimizationStrategy.Balanced,
-            TargetLength = options.TargetLength,
+            TargetLength = options.LearningPathLength,
             PreferCentralShapes = true,
             AllowRandomness = false
         });
@@ -111,10 +111,10 @@ public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<HarmonicAnalysisReport> GetOrComputeAnalysisAsync(
         ShapeGraph graph,
-        BSPLevelOptions options,
+        BspLevelOptions options,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"{graph.ShapeCount}_{options.ChordFamilyCount}_{options.TargetLength}";
+        var cacheKey = $"{graph.ShapeCount}_{options.ChordFamilyCount}_{options.LearningPathLength}";
         
         if (!_analysisCache.TryGetValue(cacheKey, out var lazyAnalysis))
         {
@@ -122,10 +122,12 @@ public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
             {
                 var analysisOptions = new HarmonicAnalysisOptions
                 {
-                    ComputeSpectral = true,
-                    ComputeDynamics = true,
-                    ComputeTopology = true,
-                    ChordFamilyCount = options.ChordFamilyCount
+                    IncludeSpectralAnalysis = true,
+                    IncludeDynamicalAnalysis = true,
+                    IncludeTopologicalAnalysis = true,
+                    ClusterCount = options.ChordFamilyCount,
+                    TopCentralShapes = options.LandmarkCount,
+                    TopBottlenecks = options.BridgeChordCount
                 };
                 
                 return _analysisEngine.AnalyzeAsync(graph, analysisOptions).GetAwaiter().GetResult();
@@ -259,7 +261,7 @@ public class IntelligentBSPGeneratorOptimized(ILoggerFactory loggerFactory)
             builder.Add(new BSPChallengePathOptimized
             {
                 Name = $"Challenge {i + 1}",
-                ShapeIds = cycle.Shapes.ToImmutableArray(),
+                ShapeIds = cycle.ShapeIds.ToImmutableArray(),
                 Period = cycle.Period,
                 Difficulty = Math.Min(1.0, cycle.Period / 10.0)
             });

@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Atonal;
 
-using System.Linq;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Grothendieck;
 using NUnit.Framework;

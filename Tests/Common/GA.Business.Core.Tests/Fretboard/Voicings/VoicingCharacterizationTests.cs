@@ -1,10 +1,9 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
-using System.Collections.Generic;
 using GA.Business.Core.Fretboard.Positions;
+using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Voicings.Analysis;
 using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Notes.Primitives;
 using NUnit.Framework;
 

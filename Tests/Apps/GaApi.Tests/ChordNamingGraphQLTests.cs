@@ -6,7 +6,7 @@ namespace GaApi.Tests
 
     public class ChordNamingGraphQLTests
     {
-        private readonly WebApplicationFactory<GaApi.Program> _factory = new();
+        private readonly WebApplicationFactory<Program> _factory = new();
         private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
         {
             PropertyNameCaseInsensitive = true
@@ -89,10 +89,10 @@ namespace GaApi.Tests
 }";
 
             // Use a raw client to assert that the server rejects the request (either via non-200 or GraphQL errors[])
-            var factory = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<GaApi.Program>();
+            var factory = new WebApplicationFactory<Program>();
             var client = factory.CreateClient();
             var payload = new { query = q, variables = new { name = "Demo", root = 0, intervals = Array.Empty<int>() } };
-            using var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
             var resp = await client.PostAsync("/graphql", content);
 
             // If the server returns a failure status code, that's an acceptable validation outcome
@@ -103,8 +103,8 @@ namespace GaApi.Tests
 
             // Otherwise, expect a GraphQL errors array
             var json = await resp.Content.ReadAsStringAsync();
-            using var doc = System.Text.Json.JsonDocument.Parse(json);
-            var hasErrors = doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == System.Text.Json.JsonValueKind.Array && errs.GetArrayLength() > 0;
+            using var doc = JsonDocument.Parse(json);
+            var hasErrors = doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0;
             Assert.That(hasErrors, Is.True, "Expected errors[] when intervals are empty");
         }
 
