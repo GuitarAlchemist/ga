@@ -1,16 +1,14 @@
 namespace GA.Business.Core.Tests.Spectral;
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
+using GA.Business.Core.Atonal;
 using GA.Business.Core.Atonal.Grothendieck;
-using GA.Business.Core.Fretboard.Shapes.Spectral;
+using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Fretboard.Positions;
+using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Shapes;
 using GA.Business.Core.Fretboard.Shapes.Spectral;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Atonal;
+using GA.Business.Core.Fretboard.Shapes.Spectral;
 using NUnit.Framework;
 
 [TestFixture]

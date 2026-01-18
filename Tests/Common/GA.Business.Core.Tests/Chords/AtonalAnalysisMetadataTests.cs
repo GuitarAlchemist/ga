@@ -1,12 +1,11 @@
 namespace GA.Business.Core.Tests.Chords;
 
-using System.Linq;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Chords.Analysis.Atonal;
 using GA.Business.Core.Scales;
-using TonalChordTemplate = GA.Business.Core.Chords.ChordTemplate;
 using NUnit.Framework;
+using TonalChordTemplate = GA.Business.Core.Chords.ChordTemplate;
 
 [TestFixture]
 public class AtonalAnalysisMetadataTests
@@ -15,9 +14,18 @@ public class AtonalAnalysisMetadataTests
     [Obsolete("Obsolete")]
     public void AnalyzeAtonally_TonalScale_ExposesForteAndModalDetails()
     {
+        // Arrange
         var scale = Scale.Major;
         var chord = TonalChordTemplate.Analytical.FromPitchClassSet(scale.PitchClassSet, "Ionian Scale Analysis");
+
+        // Act
         var analysis = AtonalChordAnalysisService.AnalyzeAtonally(chord, PitchClass.C);
+
+        // Assert
+        TestContext.WriteLine($"Scale: {scale}");
+        TestContext.WriteLine($"Forte Number: {analysis.ForteNumber}");
+        TestContext.WriteLine($"Suggested Name: {analysis.SuggestedName}");
+        TestContext.WriteLine($"Alternate Names: {string.Join(", ", analysis.AlternateNames)}");
 
         Assert.Multiple(() =>
         {

@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Chords;
 
-using System;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Notes;
 using NUnit.Framework;
@@ -28,47 +27,62 @@ public class ChordSymbolParserTests
     [Test]
     public void Parse_ReturnsValidChord_On_ValidSymbols()
     {
+        // Arrange
         var parser = new ChordSymbolParser();
 
+        // Act & Assert
         foreach (var symbol in ValidSymbols)
         {
             var chord = parser.Parse(symbol);
-            Assert.That(chord, Is.Not.Null, $"Failed to parse '{symbol}'");
-            Assert.That(chord.Symbol, Is.Not.Null); 
-            
-            // Basic check: Root should be valid
-            Assert.That(chord.Root, Is.Not.Null);
+            TestContext.WriteLine($"Parsed '{symbol}' -> Root: {chord.Root}, Full Name: {chord.Symbol}");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(chord, Is.Not.Null, $"Failed to parse '{symbol}'");
+                Assert.That(chord.Symbol, Is.Not.Null);
+                Assert.That(chord.Root, Is.Not.Null);
+            });
         }
     }
 
     [Test]
     public void Parse_Rejects_Invalid_Symbols()
     {
+        // Arrange
         var parser = new ChordSymbolParser();
 
+        // Act & Assert
         foreach (var symbol in InvalidSymbols)
         {
+            TestContext.WriteLine($"Testing invalid symbol: '{symbol}'");
             Assert.Multiple(() =>
             {
                 Assert.That(() => parser.Parse(symbol), Throws.Exception,
                     $"Should throw for invalid symbol '{symbol}'");
-                
+
                 Assert.That(parser.TryParse(symbol, out var chord), Is.False);
                 Assert.That(chord, Is.Null);
             });
         }
     }
-    
+
     [Test]
     public void TryParse_ReturnsTrue_On_ValidSymbols()
     {
+        // Arrange
         var parser = new ChordSymbolParser();
 
+        // Act & Assert
         foreach (var symbol in ValidSymbols)
         {
             var result = parser.TryParse(symbol, out var chord);
-            Assert.That(result, Is.True, $"TryParse failed for '{symbol}'");
-            Assert.That(chord, Is.Not.Null);
+            TestContext.WriteLine($"TryParse '{symbol}' -> Success: {result}, Chord: {chord?.Symbol}");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.True, $"TryParse failed for '{symbol}'");
+                Assert.That(chord, Is.Not.Null);
+            });
         }
     }
 }

@@ -1,6 +1,6 @@
-namespace GA.MusicTheory.DSL.Tests;
+namespace GA.Business.DSL.Tests;
 
-using LSP;
+using GA.MusicTheory.DSL.LSP;
 
 /// <summary>
 ///     Tests for LSP (Language Server Protocol) functionality

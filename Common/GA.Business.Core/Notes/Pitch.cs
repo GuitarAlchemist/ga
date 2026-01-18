@@ -29,6 +29,11 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
     /// <inheritdoc cref="IPitchClass.PitchClass" />
     public abstract PitchClass PitchClass { get; }
 
+    public static Pitch FromMidiNote(MidiNote midiNote)
+    {
+        return midiNote.ToPitch();
+    }
+
     #endregion
 
     #region Operators

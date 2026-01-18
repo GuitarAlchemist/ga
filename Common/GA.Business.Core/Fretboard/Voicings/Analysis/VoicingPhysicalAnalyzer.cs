@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Core;
 using Primitives;
+using GA.Business.Core.Fretboard.Analysis;
 
 /// <summary>
 /// Specialized analyzer for physical, ergonomic, and fretboard-specific properties of voicings
@@ -84,32 +85,40 @@ public static class VoicingPhysicalAnalyzer
 
     public static PlayabilityInfo CalculatePlayability(PhysicalLayout layout)
     {
-        // Calculate hand stretch (fret span)
+        // Use Physical distance (logarithmic) for accurate stretch measurement
+        var playedFrets = layout.FretPositions.Where(f => f > 0).ToList();
+        double physicalSpan = FretboardGeometry.CalculatePhysicalSpan(playedFrets);
+        double spanScore = FretboardGeometry.GetSpanEffortScore(physicalSpan);
+
+        // Calculate hand stretch (legacy field remains raw count for compatibility)
         var handStretch = layout.MaxFret - layout.MinFret;
 
-        // Detect barre requirement (same fret on multiple adjacent strings)
+        // Detect barre requirement
         var barreRequired = DetectBarreRequirement(layout.FretPositions);
 
         // Estimate minimum fingers needed
         var uniqueFrets = layout.FretPositions.Where(f => f > 0).Distinct().Count();
         var minimumFingers = Math.Min(uniqueFrets, 4);
 
-        // Determine difficulty
-        var difficulty = CalculateDifficulty(handStretch, barreRequired, layout.OpenStrings.Length);
+        // Determine difficulty (Modern logic uses spanScore)
+        string difficulty;
+        if (spanScore <= 0.8 && !barreRequired && layout.OpenStrings.Length > 0)
+            difficulty = "Beginner";
+        else if (spanScore > 1.2 || barreRequired && handStretch >= 4)
+            difficulty = "Advanced";
+        else
+            difficulty = "Intermediate";
 
-        // Detect CAGED shape (simplified - would need more sophisticated analysis)
+        // Detect CAGED shape
         var cagedShape = DetectCagedShape(layout);
 
-        // Generate barre info if needed
+        // Generate barre info
         string? barreInfo = null;
         if (barreRequired)
         {
             var barreFret = layout.FretPositions.Where(f => f > 0).GroupBy(f => f)
                 .OrderByDescending(g => g.Count()).FirstOrDefault()?.Key;
-            if (barreFret.HasValue)
-            {
-                barreInfo = $"Fret {barreFret} barre";
-            }
+            if (barreFret.HasValue) barreInfo = $"Fret {barreFret} barre";
         }
 
         // Detect shell voicing family
@@ -119,10 +128,13 @@ public static class VoicingPhysicalAnalyzer
             shellFamily = "3-4 note shell";
         }
 
-        // Compute numeric difficulty score (1-10)
+        // Compute numeric difficulty score (1-10) using spanScore
         var difficultyScore = 1.0;
         if (barreRequired) difficultyScore += 2.0;
-        difficultyScore += Math.Max(0, handStretch - 3) * 1.5;
+
+        // Use logarithmic span score instead of raw fret count
+        difficultyScore += spanScore * 3.0; // max ~4.0 extra for wide stretch
+
         if (layout.OpenStrings.Length == 0) difficultyScore += 1.0;
         if (minimumFingers == 4) difficultyScore += 1.0;
         difficultyScore = Math.Min(10.0, difficultyScore);
@@ -138,7 +150,7 @@ public static class VoicingPhysicalAnalyzer
             difficultyScore
         );
     }
-    
+
     public static ErgonomicsInfo AnalyzeErgonomics(PhysicalLayout layout, PlayabilityInfo playability)
     {
         // Count string skips (non-adjacent played strings)
@@ -149,27 +161,27 @@ public static class VoicingPhysicalAnalyzer
             var gap = playedStrings[i] - playedStrings[i - 1];
             if (gap > 1) stringSkips += gap - 1;
         }
-        
+
         // Simple finger assignment heuristic (would need more sophisticated analysis)
         string? fingerAssignment = null;
         if (playability.BarreRequired)
         {
             fingerAssignment = "1:barre";
         }
-        
+
         // Check if thumb is likely required (low bass note on string 6 with spread voicing)
         var requiresThumb = playability.HandStretch >= 5 && layout.FretPositions[0] > 0;
-        
+
         // Check for physically impossible voicings
         var isImpossible = playability.HandStretch > 6 || playability.MinimumFingers > 4;
-        
+
         string? notes = null;
         if (stringSkips > 2) notes = "Difficult arpeggiation due to string skips";
         if (isImpossible) notes = "May be physically challenging or impossible for most players";
-        
+
         return new(stringSkips, fingerAssignment, requiresThumb, isImpossible, notes);
     }
-    
+
     // ================== HELPERS ==================
 
     private static bool DetectBarreRequirement(int[] fretPositions)
@@ -208,29 +220,12 @@ public static class VoicingPhysicalAnalyzer
 
     private static string? DetectCagedShape(PhysicalLayout layout)
     {
+        var frets = layout.FretPositions;
+        if (frets.Length != 6) return null;
+
         // Basic E-Shape detection (Root on 6th string)
         // Pattern relative to barre/nut: 0-2-2-1-0-0
         // We look for the characteristic intervals on strings 6, 5, 4, 3
-        
-        // Ensure 6th string is played
-        var rootStringMatches = layout.FretPositions[5] >= 0; // String 6 is index 5? No, positions is array[6].
-        // Wait, FretPositions index 0 = String 1 (High E) usually in this codebase?
-        // Let's check ExtractPhysicalLayout: "var stringNum = i + 1;" loop 0..5.
-        // Usually index 0 is low E or high E depending on convention.
-        // "Position.LowToHigh" is standard in this project?
-        // Let's verify loop: standard 6-string guitar usually defined low-to-high or high-to-low.
-        // GA convention: usually Low (6) to High (1) if simple array?
-        // BUT "var stringNum = i + 1".
-        // In `Voicing.Positions`, is index 0 the 6th string (Low E) or 1st string (High E)?
-        // Primitives like "x-3-2-0-1-0" are typically Low-to-High in string representation.
-        // Let's assume Low-to-High (Index 0 = String 6, Low E).
-
-        // E-Shape Pattern (relative to base): 0, 2, 2, 1, 0, 0
-        // Indices: 0(E), 1(A), 2(D), 3(G), 4(B), 5(e)
-        // Check relative frets
-        
-        var frets = layout.FretPositions;
-        if (frets.Length != 6) return null;
 
         // Find the "base" fret (min played fret, treated as 0 or barre)
         // For E-shape, base is the fret on string 6 (Index 0).
@@ -247,12 +242,12 @@ public static class VoicingPhysicalAnalyzer
 
         // Allow muted high strings for "power chord" variations or variations
         // But strictly, full E-shape:
-        
+
         bool match = true;
         if (frets[1] != baseFret + 2) match = false;
         if (match && frets[2] != baseFret + 2) match = false;
         if (match && frets[3] != baseFret + 1) match = false;
-        
+
         // Top strings can be base or muted or omitted?
         // Standard E shape includes them.
         if (match)
@@ -278,7 +273,7 @@ public static class VoicingPhysicalAnalyzer
                     return "A-Shape";
             }
         }
-        
+
         // C-Shape detection (Root on 5th string)
         // Pattern: x, 3, 2, 0, 1, 0 (Base C is 3)
         // Relative: x, R, R-1, R-3, R-2, R-3 ? No.
@@ -292,12 +287,12 @@ public static class VoicingPhysicalAnalyzer
         // S2: R - 2
         // S1: R - 3 (or omitted)
         // Note: This requires R >= 3.
-        
+
         if (frets[0] == -1 && frets[1] >= 3)
         {
             var r = frets[1];
-            if (frets[2] == r - 1 && 
-                frets[3] == r - 3 && 
+            if (frets[2] == r - 1 &&
+                frets[3] == r - 3 &&
                 frets[4] == r - 2)
             {
                 return "C-Shape";

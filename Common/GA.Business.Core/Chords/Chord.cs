@@ -290,17 +290,3 @@ public class Chord : IEquatable<Chord>
         return Symbol;
     }
 }
-
-/// <summary>
-///     Represents the quality of a chord
-/// </summary>
-public enum ChordQuality
-{
-    Major,
-    Minor,
-    Diminished,
-    Augmented,
-    Suspended,
-    Dominant,
-    Other
-}

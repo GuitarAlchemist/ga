@@ -1,0 +1,40 @@
+# Modal Flavor Embedding Indices
+# AbsoluteIndex = ModalPartitionStart + Offset + (Degree - 1)
+
+SchemaVersion: "1.4"
+ModalPartitionStart: 109
+TotalModes: 107  # Sum of all modes below
+
+# ════════════════════════════════════════════════════════════
+# DIATONIC (7 modes each)
+# ════════════════════════════════════════════════════════════
+Major:             { Offset: 0,  Modes: 7 }   # 109-115
+HarmonicMinor:     { Offset: 7,  Modes: 7 }   # 116-122
+MelodicMinor:      { Offset: 14, Modes: 7 }   # 123-129
+HarmonicMajor:     { Offset: 21, Modes: 7 }   # 130-136
+DoubleHarmonic:    { Offset: 28, Modes: 7 }   # 137-143
+NeapolitanMajor:   { Offset: 35, Modes: 7 }   # 144-150
+NeapolitanMinor:   { Offset: 42, Modes: 7 }   # 151-157
+Enigmatic:         { Offset: 49, Modes: 7 }   # 158-164
+
+# ════════════════════════════════════════════════════════════
+# EXTENDED (variable modes)
+# ════════════════════════════════════════════════════════════
+Bebop:             { Offset: 56, Modes: 8 }   # 165-172
+Blues:             { Offset: 64, Modes: 6 }   # 173-178
+Prometheus:        { Offset: 70, Modes: 6 }   # 179-184
+Tritone:           { Offset: 76, Modes: 6 }   # 185-190
+
+# ════════════════════════════════════════════════════════════
+# PENTATONIC (5 modes each)
+# ════════════════════════════════════════════════════════════
+MajorPentatonic:   { Offset: 82, Modes: 5 }   # 191-195
+Hirajoshi:         { Offset: 87, Modes: 5 }   # 196-200
+InSen:             { Offset: 92, Modes: 5 }   # 201-205
+
+# ════════════════════════════════════════════════════════════
+# SYMMETRIC (2-4 modes each)
+# ════════════════════════════════════════════════════════════
+WholeTone:         { Offset: 97,  Modes: 2 }  # 206-207
+Diminished:        { Offset: 99,  Modes: 4 }  # 208-211
+Augmented:         { Offset: 103, Modes: 4 }  # 212-215

@@ -14,10 +14,16 @@ public class FretboardTests
         var fretboard = Fretboard.Default;
 
         // Assert
-        Assert.That(fretboard.StringCount, Is.EqualTo(6));
-        Assert.That(fretboard.FretCount, Is.EqualTo(24));
-        Assert.That(fretboard.Capo, Is.Null);
-        Assert.That(fretboard.Tuning.ToString(), Is.EqualTo("E2 A2 D3 G3 B3 E4"));
+        TestContext.WriteLine($"Default Fretboard: Expected StringCount=6, FretCount=24, Actual Strings={fretboard.StringCount}, Frets={fretboard.FretCount} (Standard guitar configuration)");
+        TestContext.WriteLine($"Tuning: Expected=E2 A2 D3 G3 B3 E4, Actual={fretboard.Tuning}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fretboard.StringCount, Is.EqualTo(6), "Default fretboard should have 6 strings.");
+            Assert.That(fretboard.FretCount, Is.EqualTo(24), "Default fretboard should have 24 frets.");
+            Assert.That(fretboard.Capo, Is.Null, "Default fretboard should not have a capo.");
+            Assert.That(fretboard.Tuning.ToString(), Is.EqualTo("E2 A2 D3 G3 B3 E4"), "Default tuning should be standard EADGBE.");
+        });
     }
 
     [Test]
@@ -30,9 +36,14 @@ public class FretboardTests
         var fretboard = new Fretboard(tuning, 22);
 
         // Assert
-        Assert.That(fretboard.StringCount, Is.EqualTo(6));
-        Assert.That(fretboard.FretCount, Is.EqualTo(22));
-        Assert.That(fretboard.Tuning, Is.EqualTo(tuning));
+        TestContext.WriteLine($"Custom Fretboard: {fretboard.StringCount} strings, {fretboard.FretCount} frets, Tuning: {fretboard.Tuning}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fretboard.StringCount, Is.EqualTo(6));
+            Assert.That(fretboard.FretCount, Is.EqualTo(22));
+            Assert.That(fretboard.Tuning, Is.EqualTo(tuning));
+        });
     }
 
     [Test]
@@ -81,8 +92,13 @@ public class FretboardTests
         var positions = fretboard.Positions;
 
         // Assert
-        Assert.That(positions.Muted.Count, Is.EqualTo(6)); // One muted position per string
-        Assert.That(positions.Played.Count, Is.EqualTo(138)); // Based on actual implementation
+        TestContext.WriteLine($"Fretboard Positions - Muted: {positions.Muted.Count}, Played: {positions.Played.Count}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(positions.Muted.Count, Is.EqualTo(6)); // One muted position per string
+            Assert.That(positions.Played.Count, Is.EqualTo(138)); // Based on actual implementation
+        });
     }
 
     [Test]
@@ -96,9 +112,14 @@ public class FretboardTests
         var success = fretboard.TryGetPositionFromLocation(location, out var position);
 
         // Assert
-        Assert.That(success, Is.True);
-        Assert.That(position, Is.Not.Null);
-        Assert.That(position!.Location, Is.EqualTo(location));
+        TestContext.WriteLine($"Trying to get position at {location}: Success={success}, Position={position}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(success, Is.True);
+            Assert.That(position, Is.Not.Null);
+            Assert.That(position!.Location, Is.EqualTo(location));
+        });
     }
 
     [Test]
@@ -112,8 +133,13 @@ public class FretboardTests
         var success = fretboard.TryGetPositionFromLocation(invalidLocation, out var position);
 
         // Assert
-        Assert.That(success, Is.False);
-        Assert.That(position, Is.Null, "Position should be null for invalid location");
+        TestContext.WriteLine($"Trying to get position at invalid {invalidLocation}: Success={success}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(success, Is.False);
+            Assert.That(position, Is.Null, "Position should be null for invalid location");
+        });
     }
 
     [Test]
@@ -126,6 +152,7 @@ public class FretboardTests
         fretboard.Capo = Fret.FromValue(2); // Set capo at 2nd fret
 
         // Assert
+        TestContext.WriteLine($"Fretboard Capo: {fretboard.Capo}");
         Assert.That(fretboard.Capo, Is.EqualTo(Fret.FromValue(2)));
     }
 
@@ -139,8 +166,7 @@ public class FretboardTests
         var rendered = fretboard.Render();
 
         // Assert
+        TestContext.WriteLine($"Rendered Fretboard (Sample): {rendered.Take(50)}...");
         Assert.That(rendered, Is.Not.Null.Or.Empty);
-        // Just check that it's not empty, don't check for specific content
-        // since the rendering format might change
     }
 }

@@ -2,7 +2,7 @@ namespace GA.Business.Core.Fretboard.Voicings.Search;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Config.Configuration;
+using Config.Configuration;
 
 /// <summary>
 /// Scans natural language queries for known symbolic tags to enhance search intent.
@@ -38,7 +38,7 @@ public class SymbolicQueryParser
         }
 
         // 2. Check individual tokens against registry (for partial matches like "beginner" -> "beginner-friendly")
-        var tokens = normalizedQuery.Split(new[] { ' ', ',', '.', ';' }, System.StringSplitOptions.RemoveEmptyEntries);
+        var tokens = normalizedQuery.Split(new[] { ' ', ',', '.', ';' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var token in tokens)
         {
             var bitIndex = _registry.GetBitIndex(token);

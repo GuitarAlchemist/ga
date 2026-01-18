@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Chords;
 
-using System.Linq;
 using GA.Business.Core.Atonal;
 using GA.Business.Core.Chords;
 using NUnit.Framework;

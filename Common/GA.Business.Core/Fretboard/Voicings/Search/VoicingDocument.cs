@@ -71,6 +71,11 @@ public record VoicingDocument
     public string? PrimeFormId { get; init; }
 
     /// <summary>
+    /// Forte Number (e.g. "3-11") for set-theory analysis.
+    /// </summary>
+    public string? ForteCode { get; init; }
+
+    /// <summary>
     /// Translation offset from prime form
     /// </summary>
     public int TranslationOffset { get; init; }
@@ -248,6 +253,7 @@ public record VoicingDocument
             PossibleKeys = [.. analysis.PitchClassSet.GetCompatibleKeys().Select(k => k.ToString())],
             SemanticTags = [.. analysis.SemanticTags],
             PrimeFormId = primeFormId ?? analysis.EquivalenceInfo?.PrimeFormId,
+            ForteCode = analysis.EquivalenceInfo?.ForteCode ?? (Atonal.ForteCatalog.TryGetForteNumber(analysis.PitchClassSet.PrimeForm, out var forte) ? forte.ToString() : null),
             TranslationOffset = translationOffset != 0 ? translationOffset : analysis.EquivalenceInfo?.TranslationOffset ?? 0,
             
             MidiNotes = [.. analysis.MidiNotes.Select(n => n.Value)],

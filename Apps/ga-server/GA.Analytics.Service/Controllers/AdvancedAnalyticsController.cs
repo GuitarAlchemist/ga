@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Data.EntityFramework.Data;
 using GA.Analytics.Service.Models;
 using GA.Analytics.Service.Services;
 

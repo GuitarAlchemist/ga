@@ -20,8 +20,12 @@ public class PitchClassSetIdTests
         var complementId = id.Complement;
 
         // Assert
-        Assert.That(complementId.BinaryValue, Is.EqualTo("111101101110"));
-        Assert.That(complementId.Value, Is.EqualTo(3950));
+        TestContext.WriteLine($"Input: {sMajorTriadInput}, ID: {id}, Complement ID: {complementId}, Complement Binary: {complementId.BinaryValue}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(complementId.BinaryValue, Is.EqualTo("111101101110"));
+            Assert.That(complementId.Value, Is.EqualTo(3950));
+        });
     }
 
     [Test(TestOf = typeof(PitchClassSet))]
@@ -39,6 +43,8 @@ public class PitchClassSetIdTests
         var id2Hashcode = PitchClassSetId.ComplementComparer.GetHashCode(id2);
 
         // Assert
+        TestContext.WriteLine($"ID1: {id1}, ID2 (Complement): {id2}");
+        TestContext.WriteLine($"Hashcode 1: {id1Hashcode}, Hashcode 2: {id2Hashcode}");
         Assert.That(id1Hashcode, Is.EqualTo(id2Hashcode));
     }
 
@@ -56,12 +62,18 @@ public class PitchClassSetIdTests
         var features = new PitchClassSetIdEquivalences.SetClassFeatures(id);
 
         // Assert
-        Assert.That(features, Is.Not.Null);
-        Assert.That(features.Id, Is.EqualTo(id));
-        Assert.That(features.Complements, Contains.Item(id));
-        Assert.That(features.Complements, Contains.Item(id.Complement));
-        Assert.That(features.Inversions, Contains.Item(id));
-        Assert.That(features.Rotations, Is.Not.Empty);
+        TestContext.WriteLine($"ID: {id}, Features ID: {features.Id}");
+        TestContext.WriteLine($"Complements: {string.Join(", ", features.Complements)}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(features, Is.Not.Null);
+            Assert.That(features.Id, Is.EqualTo(id));
+            Assert.That(features.Complements, Contains.Item(id));
+            Assert.That(features.Complements, Contains.Item(id.Complement));
+            Assert.That(features.Inversions, Contains.Item(id));
+            Assert.That(features.Rotations, Is.Not.Empty);
+        });
     }
 
     [Test(TestOf = typeof(PitchClassSetId))]
@@ -76,10 +88,10 @@ public class PitchClassSetIdTests
         var normalFormCount = normalFormIds.Count;
         var percentage = (double)normalFormCount / totalCount * 100;
 
-        // Print results
-        Console.WriteLine($"Total PitchClassSetId count: {totalCount}");
-        Console.WriteLine($"Normal form count: {normalFormCount}");
-        Console.WriteLine($"Percentage in normal form: {percentage:F2}%");
+        // Assert
+        TestContext.WriteLine($"Total PitchClassSetId count: {totalCount}");
+        TestContext.WriteLine($"Normal form count: {normalFormCount}");
+        TestContext.WriteLine($"Percentage in normal form: {percentage:F2}%");
 
         // Group by cardinality
         var groupedByCardinality = normalFormIds
@@ -88,15 +100,17 @@ public class PitchClassSetIdTests
             .Select(g => new { Cardinality = g.Key, Count = g.Count() })
             .ToList();
 
-        Console.WriteLine("\nNormal form counts by cardinality:");
+        TestContext.WriteLine("\nNormal form counts by cardinality:");
         foreach (var group in groupedByCardinality)
         {
-            Console.WriteLine($"Cardinality {group.Cardinality}: {group.Count}");
+            TestContext.WriteLine($"Cardinality {group.Cardinality}: {group.Count}");
         }
 
-        // Assert
-        Assert.That(normalFormCount, Is.LessThan(totalCount));
-        Assert.That(normalFormCount, Is.GreaterThan(0));
-        Assert.That(percentage, Is.GreaterThan(0).And.LessThan(100));
+        Assert.Multiple(() =>
+        {
+            Assert.That(normalFormCount, Is.LessThan(totalCount));
+            Assert.That(normalFormCount, Is.GreaterThan(0));
+            Assert.That(percentage, Is.GreaterThan(0).And.LessThan(100));
+        });
     }
 }

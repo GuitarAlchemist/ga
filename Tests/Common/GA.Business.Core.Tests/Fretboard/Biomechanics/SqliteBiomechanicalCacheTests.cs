@@ -5,6 +5,7 @@ using Core.Fretboard.Biomechanics;
 using Core.Fretboard.Positions;
 using Core.Fretboard.Primitives;
 using Core.Notes.Primitives;
+using MusicTheory.DSL.Types;
 
 [TestFixture]
 public class SqliteBiomechanicalCacheTests
@@ -276,7 +277,7 @@ public class SqliteBiomechanicalCacheTests
     {
         // Arrange
         var key1 = CreateCacheKey(capo: null);
-        var key2 = CreateCacheKey(capo: Capo.At(2));
+        var key2 = CreateCacheKey(capo: AsciiTabTypes.Annotation.Capo.At(2));
 
         // Act & Assert
         Assert.That(key1.GetHashCode(), Is.Not.EqualTo(key2.GetHashCode()));
@@ -313,7 +314,7 @@ public class SqliteBiomechanicalCacheTests
     }
 
     // Helper methods
-    private static CacheKey CreateCacheKey(int fret = 3, HandSize handSize = HandSize.Medium, Capo? capo = null)
+    private static CacheKey CreateCacheKey(int fret = 3, HandSize handSize = HandSize.Medium, AsciiTabTypes.Annotation.Capo? capo = null)
     {
         var positions = CreatePositions([(1, fret), (2, fret + 1), (3, fret + 2)]);
         return new CacheKey

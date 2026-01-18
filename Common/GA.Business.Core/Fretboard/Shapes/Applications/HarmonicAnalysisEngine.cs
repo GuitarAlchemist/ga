@@ -35,13 +35,21 @@ public class HarmonicAnalysisEngine
         var clusteringTask = Task.Run(() =>
             options.ClusterCount > 0 ? _spectralAnalyzer.Cluster(graph, options.ClusterCount) : []);
 
-        await Task.WhenAll(spectralTask, dynamicsTask, clusteringTask);
+        var centralShapesTask = Task.Run(() =>
+            options.IncludeSpectralAnalysis ? _spectralAnalyzer.FindCentralShapes(graph, options.TopCentralShapes) : []);
+
+        var bottlenecksTask = Task.Run(() =>
+            options.IncludeSpectralAnalysis ? _spectralAnalyzer.FindBottlenecks(graph, options.TopBottlenecks) : []);
+
+        await Task.WhenAll(spectralTask, dynamicsTask, clusteringTask, centralShapesTask, bottlenecksTask);
 
         return new()
         {
             Spectral = await spectralTask,
             Dynamics = await dynamicsTask,
             ChordFamilies = await clusteringTask,
+            CentralShapes = await centralShapesTask,
+            Bottlenecks = await bottlenecksTask,
             Topology = options.IncludeTopologicalAnalysis ? ComputeTopology(graph) : null
         };
     }
@@ -122,6 +130,8 @@ public record HarmonicAnalysisOptions
     public bool IncludeDynamicalAnalysis { get; init; } = true;
     public bool IncludeTopologicalAnalysis { get; init; } = false;
     public int ClusterCount { get; init; } = 5;
+    public int TopCentralShapes { get; init; } = 10;
+    public int TopBottlenecks { get; init; } = 5;
 }
 
 /// <summary>
@@ -132,6 +142,8 @@ public record HarmonicAnalysisReport
     public SpectralMetrics? Spectral { get; init; }
     public DynamicalSystemInfo? Dynamics { get; init; }
     public List<ChordFamily> ChordFamilies { get; init; } = [];
+    public List<(string ShapeId, double Centrality)> CentralShapes { get; init; } = [];
+    public List<(string ShapeId, double Bottleneck)> Bottlenecks { get; init; } = [];
     public TopologyInfo? Topology { get; init; }
 }
 
@@ -142,7 +154,15 @@ public record TopologyInfo
 {
     public int ConnectedComponents { get; init; }
     public int EulerCharacteristic { get; init; }
+    public int[] BettiNumbers { get; init; } = [];
+
+    public List<PersistenceInterval> GetIntervals(int dimension)
+    {
+        return []; // Placeholder
+    }
 }
+
+public record PersistenceInterval(double Birth, double Death);
 
 /// <summary>
 /// Comparison of two progressions

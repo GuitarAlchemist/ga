@@ -1,6 +1,7 @@
 namespace GaCLI.Commands;
 
-using GA.Business.Core.AI;
+using GA.Business.ML;
+using GA.Business.Core.Abstractions;
 using GA.Business.Core.Fretboard.Primitives;
 using GA.Business.Core.Fretboard.Voicings.Search;
 using GA.Business.Core.Fretboard.Voicings.Analysis;
@@ -14,7 +15,7 @@ using GA.Business.Core.Fretboard.Voicings.Core;
 using GA.Business.Core.Fretboard;
 using GA.Business.Core.Notes.Primitives;
 
-using GA.Business.Core.AI.Embeddings;
+using GA.Business.ML.Embeddings;
 
 public class BenchmarkSimilarityCommand
 {

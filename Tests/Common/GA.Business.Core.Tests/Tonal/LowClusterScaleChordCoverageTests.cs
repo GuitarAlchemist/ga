@@ -1,8 +1,5 @@
 namespace GA.Business.Core.Tests.Tonal;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Notes;
 using GA.Business.Core.Tonal.Modes;

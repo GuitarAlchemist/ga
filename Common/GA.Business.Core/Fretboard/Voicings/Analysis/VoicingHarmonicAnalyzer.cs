@@ -86,13 +86,8 @@ public static class VoicingHarmonicAnalyzer
                 : null;
 
             // Determine harmonic function
-            var harmonicFunction = scaleDegree switch
-            {
-                1 or 3 or 6 => "Tonic",
-                2 or 4 => "Predominant",
-                5 or 7 => "Dominant",
-                _ => "Ambiguous"
-            };
+            var function = Tonal.HarmonicFunctionAnalyzer.FromScaleDegree(scaleDegree);
+            var harmonicFunction = function.ToString();
 
             return new(
                 bestName,
@@ -202,9 +197,11 @@ public static class VoicingHarmonicAnalyzer
     public static ModeInfo? DetectMode(PitchClassSet pitchClassSet)
     {
         var icv = pitchClassSet.IntervalClassVector.ToString();
+        System.Console.WriteLine($"[DEBUG_LOG] DetectMode: ICV={icv}");
 
         if (_modeMetadataMap.TryGetValue(icv, out var metadata))
         {
+            System.Console.WriteLine($"[DEBUG_LOG] DetectMode: Found metadata for family {metadata.FamilyName}");
             var modeIndexFromMetadata = metadata.ModeIds.FindIndex(id => id.Equals(pitchClassSet.Id));
             if (modeIndexFromMetadata >= 0)
             {
@@ -214,11 +211,17 @@ public static class VoicingHarmonicAnalyzer
                     modeIndexFromMetadata + 1,
                     metadata.FamilyName);
             }
+            System.Console.WriteLine($"[DEBUG_LOG] DetectMode: Mode ID {pitchClassSet.Id} not found in metadata");
+        }
+        else
+        {
+            System.Console.WriteLine($"[DEBUG_LOG] DetectMode: No metadata for ICV={icv}");
         }
 
         var modalFamily = pitchClassSet.ModalFamily;
         if (modalFamily == null)
         {
+            System.Console.WriteLine($"[DEBUG_LOG] DetectMode: No modal family for ICV={icv}");
             return null;
         }
 
@@ -226,6 +229,7 @@ public static class VoicingHarmonicAnalyzer
         var modeIndex = modes.IndexOf(pitchClassSet);
         if (modeIndex < 0)
         {
+            System.Console.WriteLine($"[DEBUG_LOG] DetectMode: PitchClassSet not found in modal family modes");
             return null;
         }
 
@@ -671,6 +675,10 @@ public static class VoicingHarmonicAnalyzer
             // Heuristic 3: Reward presence of perfect 5th above candidate
             var has5Th = pcs.Contains(PitchClass.FromValue((candidate.Value + 7) % 12));
             if (has5Th) score += 8;
+
+            // Heuristic 3b: Strong Triad Bonus (Root + 3rd + 5th)
+            // A complete triad is a very strong indicator of the root.
+            if ((hasMajor3Rd || hasMinor3Rd) && has5Th) score += 10;
 
             // Heuristic 4: Reward presence of 7th (makes it a full chord)
             var hasMinor7Th = pcs.Contains(PitchClass.FromValue((candidate.Value + 10) % 12));

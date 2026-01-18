@@ -1,0 +1,50 @@
+{"id":"Q01","input":"Analyze this riff:\ne|-----------------|\nB|-----------------|\nG|---0---2---4-----|\nD|-2---4---5-------|\nA|-----------------|\nE|-----------------|","expected":{"type":"TAB","must_not_hallucinate_chords":true}}
+{"id":"Q02","input":"Analyze this chord progression: Dm7 - G7 - Cmaj7","expected":{"type":"TAB","must_not_hallucinate_chords":true}}
+{"id":"Q03","input":"What is the key of this tab?\ne|--0--|\nB|--1--|\nG|--0--|\nD|--2--|\nA|--3--|\nE|-----|","expected":{"type":"TAB","check_key":"C Major"}}
+{"id":"Q04","input":"Give me a jazzier version of C major","expected":{"type":"REQUEST","uses_retrieval":true, "forbidden_terms":["H#","Jb"]}}
+{"id":"Q05","input":"Explain why a tritone substitution works","expected":{"type":"QUESTION","grounded_theory":true}}
+{"id":"Q06","input":"Analyze this:\nC - F - G - C","expected":{"type":"TAB","must_not_hallucinate_chords":true}}
+{"id":"Q07","input":"Suggest a chord after Am7","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q08","input":"What scale goes over this?\ne|----------|\nB|----------|\nG|--4-5-7---|\nD|--5-7-----|\nA|----------|\nE|----------|","expected":{"type":"TAB","valid_scale":true}}
+{"id":"Q09","input":"Is this a blues riff?\ne|-----------|\nB|-----------|\nG|-----8b9---|","expected":{"type":"TAB","style_check":"Blues"}}
+{"id":"Q10","input":"Play a Dm7 chord","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q11","input":"Analyze: 3x0003","expected":{"type":"TAB","identified_chord":"G"}}
+{"id":"Q12","input":"Analyze: x32010","expected":{"type":"TAB","identified_chord":"C"}}
+{"id":"Q13","input":"Analyze: x02210","expected":{"type":"TAB","identified_chord":"Am"}}
+{"id":"Q14","input":"Analyze: xx0232","expected":{"type":"TAB","identified_chord":"D"}}
+{"id":"Q15","input":"Analyze: 022000","expected":{"type":"TAB","identified_chord":"Em"}}
+{"id":"Q16","input":"How do I play a Cmaj9?","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q17","input":"What is the relative minor of G Major?","expected":{"type":"QUESTION","answer":"E minor"}}
+{"id":"Q18","input":"Analyze this unknown chord: x46654","expected":{"type":"TAB","identified_chord":"C#m7"}}
+{"id":"Q19","input":"Why does G7 resolve to C?","expected":{"type":"QUESTION","grounded_theory":true}}
+{"id":"Q20","input":"Generate a tab for Happy Birthday","expected":{"type":"REQUEST","status":"possible"}}
+{"id":"Q21","input":"Is this metal?\ne|--0-0-0-0--|","expected":{"type":"TAB","style_check":"Metal"}}
+{"id":"Q22","input":"Analyze: e|--5--| B|--5--| G|--5--|","expected":{"type":"TAB","identified_chord":"A11"}}
+{"id":"Q23","input":"What mode is D E F G A B C D?","expected":{"type":"QUESTION","answer":"Dorian"}}
+{"id":"Q24","input":"Analyze: x35563","expected":{"type":"TAB","identified_chord":"C7"}}
+{"id":"Q25","input":"Give me a voicing for F#m7b5","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q26","input":"Analyze: 8x788x","expected":{"type":"TAB","identified_chord":"Cm13"}}
+{"id":"Q27","input":"Who is Jimi Hendrix?","expected":{"type":"QUESTION","grounded_general":true}}
+{"id":"Q28","input":"Analyze this progression: ii - V - I in C","expected":{"type":"TAB","must_not_hallucinate_chords":true}}
+{"id":"Q29","input":"What is the tempo of this?","expected":{"type":"QUESTION","status":"cannot_answer"}}
+{"id":"Q30","input":"Optimize this fingering: x-3-2-0-1-0","expected":{"type":"REQUEST","status":"optimal"}}
+{"id":"Q31","input":"Transpose this to G: C F G","expected":{"type":"REQUEST","answer":"G C D"}}
+{"id":"Q32","input":"Analyze: x02220","expected":{"type":"TAB","identified_chord":"A"}}
+{"id":"Q33","input":"Analyze: xx0231","expected":{"type":"TAB","identified_chord":"Dm"}}
+{"id":"Q34","input":"Analyze: 320003","expected":{"type":"TAB","identified_chord":"G"}}
+{"id":"Q35","input":"Analyze: 133211","expected":{"type":"TAB","identified_chord":"F"}}
+{"id":"Q36","input":"Analyze: x24432","expected":{"type":"TAB","identified_chord":"Bm"}}
+{"id":"Q37","input":"Show me a shell voicing for C7","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q38","input":"Connect C to Am with a passing chord","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q39","input":"Analyze this neo-soul chord: 3x443x","expected":{"type":"TAB","identified_chord":"Gmaj7"}}
+{"id":"Q40","input":"Why is this chord sad? x02210","expected":{"type":"QUESTION","grounded_theory":true}}
+{"id":"Q41","input":"Make this riff simpler: e|-12-15-12-|","expected":{"type":"REQUEST","status":"possible"}}
+{"id":"Q42","input":"Analyze: x-x-0-2-3-1","expected":{"type":"TAB","identified_chord":"Dm"}}
+{"id":"Q43","input":"What functions as a dominant in F?","expected":{"type":"QUESTION","answer":"C7"}}
+{"id":"Q44","input":"Analyze: 577655","expected":{"type":"TAB","identified_chord":"A"}}
+{"id":"Q45","input":"Give me a drop 2 voicing for Gmaj7","expected":{"type":"REQUEST","uses_retrieval":true}}
+{"id":"Q46","input":"Analyze: x4545x","expected":{"type":"TAB","identified_chord":"Adim7"}}
+{"id":"Q47","input":"Is this playable? 1x5x9x","expected":{"type":"QUESTION","answer":"difficult/no"}}
+{"id":"Q48","input":"Analyze: 022100","expected":{"type":"TAB","identified_chord":"E"}}
+{"id":"Q49","input":"What is the 5th of C?","expected":{"type":"QUESTION","answer":"G"}}
+{"id":"Q50","input":"Analyze: x00232","expected":{"type":"TAB","identified_chord":"D"}}

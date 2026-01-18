@@ -6,27 +6,27 @@
     <IsPackable>false</IsPackable>
     <WarningsAsErrors>CS8602</WarningsAsErrors>
     <NoWarn>SKEXP0001</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.DotMemoryUnit" Version="3.2.20220510"/>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
-    <PackageReference Include="Moq" Version="4.20.72"/>
-    <PackageReference Include="NUnit" Version="4.2.2"/>
-    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
+    <PackageReference Include="JetBrains.DotMemoryUnit" Version="3.2.20220510" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Analysis.Gpu\GA.Business.Core.Analysis.Gpu.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Analysis.Gpu\GA.Business.Core.Analysis.Gpu.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Testing.Semantic\GA.Testing.Semantic.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
-    <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -34,46 +34,41 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Exclude test files with missing service implementations -->
-    <Compile Remove="Fretboard/FretboardEquivalenceGroupsTests.cs"/>
-    <Compile Remove="Integration/InvariantSystemIntegrationTests.cs"/>
-    <Compile Remove="Atonal/Grothendieck/GpuGrothendieckServiceTests.cs"/>
-    <Compile Remove="Performance/InvariantPerformanceBenchmarks.cs"/>
-    <Compile Remove="Services/InvariantValidationServiceTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/BiomechanicalCacheMigrationTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/BiomechanicalCacheTests.cs"/>
-    <Compile Remove="Fretboard/PhysicalFretboardCalculatorTests.cs"/>
-    <Compile Remove="Fretboard/Shapes/Applications/ProgressionOptimizerTests.cs"/>
-    <Compile Remove="Fretboard/SemanticIndexing/ExtremePerformanceTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/SqliteBiomechanicalCacheTests.cs"/>
-    <Compile Remove="Fretboard/SemanticIndexing/OllamaIntegrationTests.cs"/>
-    <Compile Remove="Fretboard/SemanticIndexing/SemanticFretboardServiceTests.cs"/>
-    <Compile Remove="Fretboard/SemanticIndexing/OptimizedIndexingPerformanceTests.cs"/>
-    <Compile Remove="Fretboard/SemanticIndexing/SemanticFretboardPerformanceTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/BiomechanicalAnalyzerTests.cs"/>
-    <Compile Remove="Tonal/ModalFamilyScaleModeFactoryTests.cs"/>
-    <Compile Remove="Fretboard/Shapes/Applications/HarmonicAnalysisEngineTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/IK/HandPoseChromosomeTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsIntegrationTests.cs"/>
-    <Compile Remove="AI/ChatbotIntegrationTests.cs"/>
+    <Compile Remove="Fretboard/FretboardEquivalenceGroupsTests.cs" />
+    <Compile Remove="Integration/InvariantSystemIntegrationTests.cs" />
+    <Compile Remove="Atonal/Grothendieck/GpuGrothendieckServiceTests.cs" />
+    <Compile Remove="Performance/InvariantPerformanceBenchmarks.cs" />
+    <Compile Remove="Services/InvariantValidationServiceTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/BiomechanicalCacheMigrationTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/BiomechanicalCacheTests.cs" />
+    <Compile Remove="Fretboard/PhysicalFretboardCalculatorTests.cs" />
+    <Compile Remove="Fretboard/Shapes/Applications/ProgressionOptimizerTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/BiomechanicalAnalyzerTests.cs" />
+    <Compile Remove="Tonal/ModalFamilyScaleModeFactoryTests.cs" />
+    <Compile Remove="Fretboard/Shapes/Applications/HarmonicAnalysisEngineTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/IK/HandPoseChromosomeTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsIntegrationTests.cs" />
+    <Compile Remove="AI/ChatbotIntegrationTests.cs" />
 
-    <Compile Remove="Fretboard/Invariants/StorageOptimizationTests.cs"/>
-    <Compile Remove="Fretboard/Invariants/ChordInvariantTests.cs"/>
-    <Compile Remove="Fretboard/Invariants/ChordPatternEquivalenceTests.cs"/>
-    <Compile Remove="Fretboard/Invariants/CagedSystemTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/IK/FitnessEvaluatorTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/ForwardKinematicsTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsSolverTests.cs"/>
-    <Compile Remove="Fretboard/Biomechanics/SlideLegatoTests.cs"/>
-    <Compile Remove="Invariants/IconicChordInvariantsTests.cs"/>
-    <Compile Remove="Fretboard/FretboardTests.cs"/>
-    <Compile Remove="Microservices/MonadicServiceTests.cs"/>
-    <Compile Remove="Chords/IconicChordRegistryYamlTests.cs"/>
-    <Compile Remove="Atonal/Grothendieck/MarkovWalkerTests.cs"/>
-    <Compile Remove="Tonal/ModalFamilyTests.cs"/>
-    <Compile Remove="Tonal/ModalFamilyScaleModeTests.cs"/>
-    <Compile Remove="Chords/IconicChordTests.cs"/>
-    <Compile Remove="Examples/SimpleBSPDemoTests.cs"/>
-    <Compile Remove="Config/ModesConfigTests.cs"/>
-    <Compile Remove="Config/ScalesConfigTests.cs"/>
+    <Compile Remove="Fretboard/Invariants/StorageOptimizationTests.cs" />
+    <Compile Remove="Fretboard/Invariants/ChordInvariantTests.cs" />
+    <Compile Remove="Fretboard/Invariants/ChordPatternEquivalenceTests.cs" />
+    <Compile Remove="Fretboard/Invariants/CagedSystemTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/IK/FitnessEvaluatorTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/ForwardKinematicsTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/IK/InverseKinematicsSolverTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/SlideLegatoTests.cs" />
+    <Compile Remove="Invariants/IconicChordInvariantsTests.cs" />
+    <Compile Remove="Fretboard/FretboardTests.cs" />
+    <Compile Remove="Microservices/MonadicServiceTests.cs" />
+    <Compile Remove="Chords/IconicChordRegistryYamlTests.cs" />
+    <Compile Remove="Atonal/Grothendieck/MarkovWalkerTests.cs" />
+    <Compile Remove="Tonal/ModalFamilyTests.cs" />
+    <Compile Remove="Tonal/ModalFamilyScaleModeTests.cs" />
+    <Compile Remove="Chords/IconicChordTests.cs" />
+    <Compile Remove="Examples/SimpleBSPDemoTests.cs" />
+    <Compile Remove="Config/ModesConfigTests.cs" />
+    <Compile Remove="Config/ScalesConfigTests.cs" />
+    <Compile Remove="Fretboard/Biomechanics/SqliteBiomechanicalCacheTests.cs" />
   </ItemGroup>
 </Project>

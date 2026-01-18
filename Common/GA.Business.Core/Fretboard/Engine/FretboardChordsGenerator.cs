@@ -1,10 +1,10 @@
 namespace GA.Business.Core.Fretboard.Engine;
 
 using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Positions; // Added for PositionLocation
+using Primitives;
+using Positions; // Added for PositionLocation
 using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Atonal;
+using Atonal;
 
 using FretboardClass = GA.Business.Core.Fretboard.Primitives.Fretboard;
 
@@ -84,7 +84,7 @@ public class FretboardChordsGenerator
          // Maybe FretboardChordsGenerator was just a wrapper around VoicingGenerator?
          // I'll implement this to delegate to VoicingGenerator if no args.
          
-         return GA.Business.Core.Fretboard.Voicings.Generation.VoicingGenerator
+         return Voicings.Generation.VoicingGenerator
              .GenerateAllVoicings(_fretboard)
              .Select(v => v.Positions.ToImmutableList());
     }

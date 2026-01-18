@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using GA.Analytics.Service.Models;
 using GA.Analytics.Service.Services;
+using GA.Business.Analytics.Analytics.Spectral;
 
 /// <summary>
 ///     Provides spectral analysis for external autonomous systems (e.g., TARS Tier2 governance).
@@ -19,9 +20,9 @@ public sealed class SpectralAnalyticsController(
     ///     Compute spectral metrics for an agent interaction snapshot.
     /// </summary>
     [HttpPost("agent-loop")]
-    [ProducesResponseType(typeof(AgentSpectralMetrics), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Business.Analytics.Analytics.Spectral.AgentSpectralMetrics), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<AgentSpectralMetrics> AnalyzeAgentLoop([FromBody] AgentInteractionRequest request)
+    public ActionResult<GA.Business.Analytics.Analytics.Spectral.AgentSpectralMetrics> AnalyzeAgentLoop([FromBody] AgentInteractionRequest request)
     {
         if (request.Agents.Count == 0)
         {
@@ -30,10 +31,10 @@ public sealed class SpectralAnalyticsController(
 
         try
         {
-            var graph = new AgentInteractionGraph
+            var graph = new GA.Business.Analytics.Analytics.Spectral.AgentInteractionGraph
             {
                 Agents = request.Agents
-                    .Select(a => new AgentNode
+                    .Select(a => new GA.Business.Analytics.Analytics.Spectral.AgentNode
                     {
                         Id = a.Id,
                         DisplayName = a.DisplayName ?? a.Id,
@@ -42,7 +43,7 @@ public sealed class SpectralAnalyticsController(
                     })
                     .ToList(),
                 Edges = request.Edges
-                    .Select(e => new AgentInteractionEdge
+                    .Select(e => new GA.Business.Analytics.Analytics.Spectral.AgentInteractionEdge
                     {
                         Source = e.Source,
                         Target = e.Target,

@@ -1,7 +1,9 @@
 using GA.Analytics.Service.Models;
+using GA.Business.Core.Invariants;
 
 namespace GA.Analytics.Service.Services;
 
+/*
 /// <summary>
 /// Harmonic analysis engine
 /// </summary>
@@ -83,13 +85,14 @@ public class ProgressionOptimizer
         };
     }
 }
+*/
 
 /// <summary>
 /// Invariant validation service interface
 /// </summary>
 public interface IInvariantValidationService
 {
-    Task<object> ValidateAllAsync();
+    Task<GlobalValidationResult> ValidateAllAsync();
     Task<ValidationStatistics> GetValidationStatisticsAsync();
     Task<ViolationStatistics> GetViolationStatisticsAsync();
 }
@@ -106,24 +109,28 @@ public class InvariantValidationService : IInvariantValidationService
         _logger = logger;
     }
 
-    public async Task<object> ValidateAllAsync()
+    public async Task<GlobalValidationResult> ValidateAllAsync()
     {
         _logger.LogInformation("Validating all invariants");
         await Task.Delay(200);
 
-        return new
+        return new GlobalValidationResult
         {
             Id = Guid.NewGuid().ToString(),
             TotalInvariants = 25,
             ValidInvariants = 22,
             InvalidInvariants = 3,
-            ValidationResults = new[]
+            ValidationResults = new List<ValidationResultDetail>
             {
-                new { InvariantId = "inv1", IsValid = true, Score = 0.95 },
-                new { InvariantId = "inv2", IsValid = false, Score = 0.45 },
-                new { InvariantId = "inv3", IsValid = true, Score = 0.88 }
+                new ValidationResultDetail { InvariantId = "inv1", IsValid = true, Score = 0.95 },
+                new ValidationResultDetail { InvariantId = "inv2", IsValid = false, Score = 0.45 },
+                new ValidationResultDetail { InvariantId = "inv3", IsValid = true, Score = 0.88 }
             },
-            Timestamp = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow,
+            IconicChordResults = new Dictionary<string, CompositeInvariantValidationResult>(),
+            ChordProgressionResults = new Dictionary<string, CompositeInvariantValidationResult>(),
+            GuitarTechniqueResults = new Dictionary<string, CompositeInvariantValidationResult>(),
+            SpecializedTuningResults = new Dictionary<string, CompositeInvariantValidationResult>()
         };
     }
 
@@ -190,10 +197,31 @@ public class InvariantValidationService : IInvariantValidationService
 /// </summary>
 public interface IGrothendieckService
 {
-    Task<object> ComputeICV(string conceptId, Dictionary<string, object> parameters);
-    Task<object> ComputeDelta(string conceptId, Dictionary<string, object> parameters);
-    Task<object> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters);
-    Task<object> FindNearby(string conceptId, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> ComputeICV(string conceptId, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> ComputeDelta(string conceptId, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> FindNearby(string conceptId, Dictionary<string, object> parameters);
+    
+    // Overloads for object inputs
+    Task<GrothendieckMetricResult> ComputeICV(object concept, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> ComputeDelta(object concept, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> ComputeHarmonicCost(object concept, Dictionary<string, object> parameters);
+    Task<GrothendieckMetricResult> FindNearby(object concept, Dictionary<string, object> parameters);
+}
+
+public class GrothendieckMetricResult
+{
+    public string Id { get; set; } = string.Empty;
+    public string ConceptId { get; set; } = string.Empty;
+    public double Value { get; set; }
+    public Dictionary<string, double> Components { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    public DateTime ComputedAt { get; set; } = DateTime.UtcNow;
+
+    public string Explain()
+    {
+        return $"Grothendieck metric explanation: Value={Value:F2}. Components: {string.Join(", ", Components.Select(kv => $"{kv.Key}={kv.Value:F2}"))}";
+    }
 }
 
 /// <summary>
@@ -208,91 +236,91 @@ public class GrothendieckService : IGrothendieckService
         _logger = logger;
     }
 
-    public async Task<object> ComputeICV(string conceptId, Dictionary<string, object> parameters)
+    public async Task<GrothendieckMetricResult> ComputeICV(string conceptId, Dictionary<string, object> parameters)
     {
         _logger.LogInformation("Computing ICV for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(120);
 
-        return new
+        return new GrothendieckMetricResult
         {
             Id = Guid.NewGuid().ToString(),
             ConceptId = conceptId,
-            ICVValue = Random.Shared.NextDouble(),
-            ComponentScores = new Dictionary<string, double>
+            Value = Random.Shared.NextDouble(),
+            Components = new Dictionary<string, double>
             {
                 ["consistency"] = Random.Shared.NextDouble(),
                 ["validity"] = Random.Shared.NextDouble(),
                 ["completeness"] = Random.Shared.NextDouble()
             },
-            Parameters = parameters,
-            ComputedAt = DateTime.UtcNow
+            Metadata = parameters
         };
     }
 
-    public async Task<object> ComputeDelta(string conceptId, Dictionary<string, object> parameters)
+    public async Task<GrothendieckMetricResult> ComputeDelta(string conceptId, Dictionary<string, object> parameters)
     {
         _logger.LogInformation("Computing delta for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(100);
 
-        return new
+        return new GrothendieckMetricResult
         {
             Id = Guid.NewGuid().ToString(),
             ConceptId = conceptId,
-            DeltaValue = Random.Shared.NextDouble() * 2 - 1, // -1 to 1
-            DeltaComponents = new Dictionary<string, double>
+            Value = Random.Shared.NextDouble() * 2 - 1,
+            Components = new Dictionary<string, double>
             {
                 ["harmonic_delta"] = Random.Shared.NextDouble(),
                 ["rhythmic_delta"] = Random.Shared.NextDouble(),
                 ["melodic_delta"] = Random.Shared.NextDouble()
             },
-            Parameters = parameters,
-            ComputedAt = DateTime.UtcNow
+            Metadata = parameters
         };
     }
 
-    public async Task<object> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters)
+    public async Task<GrothendieckMetricResult> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters)
     {
         _logger.LogInformation("Computing harmonic cost for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(80);
 
-        return new
+        return new GrothendieckMetricResult
         {
             Id = Guid.NewGuid().ToString(),
             ConceptId = conceptId,
-            HarmonicCost = Random.Shared.NextDouble() * 100,
-            CostBreakdown = new Dictionary<string, double>
+            Value = Random.Shared.NextDouble() * 100,
+            Components = new Dictionary<string, double>
             {
                 ["voice_leading_cost"] = Random.Shared.NextDouble() * 30,
                 ["dissonance_cost"] = Random.Shared.NextDouble() * 40,
                 ["complexity_cost"] = Random.Shared.NextDouble() * 30
             },
-            Parameters = parameters,
-            ComputedAt = DateTime.UtcNow
+            Metadata = parameters
         };
     }
 
-    public async Task<object> FindNearby(string conceptId, Dictionary<string, object> parameters)
+    public async Task<GrothendieckMetricResult> FindNearby(string conceptId, Dictionary<string, object> parameters)
     {
         _logger.LogInformation("Finding nearby concepts for {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(90);
 
-        return new
+        return new GrothendieckMetricResult
         {
             Id = Guid.NewGuid().ToString(),
             ConceptId = conceptId,
-            NearbyItems = new[]
+            Value = 0,
+            Metadata = new Dictionary<string, object>
             {
-                new { Id = $"{conceptId}-nearby-1", Distance = Random.Shared.NextDouble(), Type = "harmonic" },
-                new { Id = $"{conceptId}-nearby-2", Distance = Random.Shared.NextDouble(), Type = "melodic" },
-                new { Id = $"{conceptId}-nearby-3", Distance = Random.Shared.NextDouble(), Type = "rhythmic" }
-            },
-            SearchRadius = parameters.ContainsKey("radius") ? parameters["radius"] : 1.0,
-            Parameters = parameters,
-            ComputedAt = DateTime.UtcNow
+                ["nearby_count"] = 3,
+                ["radius"] = parameters.ContainsKey("radius") ? parameters["radius"] : 1.0
+            }
         };
     }
+
+    public Task<GrothendieckMetricResult> ComputeICV(object concept, Dictionary<string, object> parameters) => ComputeICV(concept.ToString()!, parameters);
+    public Task<GrothendieckMetricResult> ComputeDelta(object concept, Dictionary<string, object> parameters) => ComputeDelta(concept.ToString()!, parameters);
+    public Task<GrothendieckMetricResult> ComputeHarmonicCost(object concept, Dictionary<string, object> parameters) => ComputeHarmonicCost(concept.ToString()!, parameters);
+    public Task<GrothendieckMetricResult> FindNearby(object concept, Dictionary<string, object> parameters) => FindNearby(concept.ToString()!, parameters);
 }
 
+/*
 /// <summary>
 /// Shape graph builder interface
 /// </summary>
@@ -379,6 +407,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
         };
     }
 }
+*/
 
 /// <summary>
 /// Agent spectral analyzer interface

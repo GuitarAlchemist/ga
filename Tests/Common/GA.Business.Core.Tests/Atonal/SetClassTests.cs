@@ -10,13 +10,12 @@ public class SetClassTests
     [Test(TestOf = typeof(SetClass))]
     public void Items_ReturnsNonEmptyCollection()
     {
-        // Arrange
-        var items = SetClass.Items;
-
         // Act
+        var items = SetClass.Items;
         var count = items.Count;
 
         // Assert
+        TestContext.WriteLine($"Total SetClass items: {count}");
         Assert.That(count, Is.GreaterThan(0));
         // The exact count may change as the implementation evolves, so we just verify it's non-empty
     }
@@ -24,17 +23,19 @@ public class SetClassTests
     [Test(TestOf = typeof(SetClass))]
     public void ModalItems_ReturnsSubsetOfItems()
     {
-        // Arrange
+        // Act
         var allItems = SetClass.Items;
         var modalItems = SetClass.ModalItems;
-
-        // Act
         var modalCount = modalItems.Count;
 
         // Assert
-        Assert.That(modalCount, Is.GreaterThan(0));
-        Assert.That(modalCount, Is.LessThanOrEqualTo(allItems.Count));
-        Assert.That(modalItems.All(item => item.IsModal), Is.True);
+        TestContext.WriteLine($"Total SetClasses: {allItems.Count}, Modal SetClasses: {modalCount}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(modalCount, Is.GreaterThan(0));
+            Assert.That(modalCount, Is.LessThanOrEqualTo(allItems.Count));
+            Assert.That(modalItems.All(item => item.IsModal), Is.True);
+        });
     }
 
     [Test(TestOf = typeof(SetClass))]
@@ -49,9 +50,13 @@ public class SetClassTests
         var setClass = new SetClass(majorTriadPcs);
 
         // Assert
-        Assert.That(setClass, Is.Not.Null);
-        Assert.That(setClass.Cardinality.Value, Is.EqualTo(3)); // Major triad has 3 notes
-        Assert.That(setClass.PrimeForm, Is.Not.Null);
+        TestContext.WriteLine($"Input: {sMajorTriadInput}, SetClass Cardinality: {setClass.Cardinality.Value}, Prime Form: {setClass.PrimeForm}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(setClass, Is.Not.Null);
+            Assert.That(setClass.Cardinality.Value, Is.EqualTo(3)); // Major triad has 3 notes
+            Assert.That(setClass.PrimeForm, Is.Not.Null);
+        });
     }
 
     [Test(TestOf = typeof(SetClass))]
@@ -68,9 +73,11 @@ public class SetClassTests
         // Act
         var setClass1 = new SetClass(cMajorTriadPcs);
         var setClass2 = new SetClass(gMajorTriadPcs);
+        var areEqual = setClass1.Equals(setClass2);
 
         // Assert
-        Assert.That(setClass1, Is.EqualTo(setClass2)); // Both are major triads, so same set class
+        TestContext.WriteLine($"SetClass1 (C Maj): {setClass1.PrimeForm}, SetClass2 (G Maj): {setClass2.PrimeForm}, Equal: {areEqual}");
+        Assert.That(areEqual, Is.True); // Both are major triads, so same set class
     }
 
     [Test(TestOf = typeof(SetClass))]
@@ -87,9 +94,11 @@ public class SetClassTests
         // Act
         var setClass1 = new SetClass(majorTriadPcs);
         var setClass2 = new SetClass(dimTriadPcs);
+        var areEqual = setClass1.Equals(setClass2);
 
         // Assert
-        Assert.That(setClass1, Is.Not.EqualTo(setClass2)); // Major and diminished triads are different set classes
+        TestContext.WriteLine($"SetClass1 (Maj): {setClass1.PrimeForm}, SetClass2 (Dim): {setClass2.PrimeForm}, Equal: {areEqual}");
+        Assert.That(areEqual, Is.False); // Major and diminished triads are different set classes
     }
 
     [Test(TestOf = typeof(SetClass))]
@@ -104,12 +113,16 @@ public class SetClassTests
         var dSpectrum = dMajorTriad.GetMagnitudeSpectrum();
 
         // Assert
+        TestContext.WriteLine($"C Major Spectrum energy: {cSpectrum.Sum():F4}, D Major Spectrum energy: {dSpectrum.Sum():F4}");
         Assert.That(cSpectrum.Length, Is.EqualTo(dSpectrum.Length));
-        for (var i = 0; i < cSpectrum.Length; i++)
+        Assert.Multiple(() =>
         {
-            Assert.That(cSpectrum[i], Is.EqualTo(dSpectrum[i]).Within(1e-9),
-                $"Magnitude mismatch at bin {i}");
-        }
+            for (var i = 0; i < cSpectrum.Length; i++)
+            {
+                Assert.That(cSpectrum[i], Is.EqualTo(dSpectrum[i]).Within(1e-9),
+                    $"Magnitude mismatch at bin {i}");
+            }
+        });
     }
 
     [Test(TestOf = typeof(SetClass))]
@@ -117,11 +130,12 @@ public class SetClassTests
     {
         // Arrange
         var singleton = new SetClass(AccidentedNoteCollection.Parse("C").ToPitchClassSet());
-        var spectrum = singleton.GetMagnitudeSpectrum();
+
         // Act
         var centroid = singleton.GetSpectralCentroid();
 
         // Assert
+        TestContext.WriteLine($"Singleton Set (C) Spectral Centroid: {centroid:F4}");
         Assert.That(centroid, Is.EqualTo(5.5).Within(1e-6));
     }
 }

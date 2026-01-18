@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Fretboard.Shapes;
+﻿namespace GA.Business.Core.Fretboard.Shapes;
 
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Atonal;
-using GA.Business.Core.Atonal.Grothendieck;
+using Atonal.Grothendieck;
 using Positions;
 using Primitives;
 using Atonal;

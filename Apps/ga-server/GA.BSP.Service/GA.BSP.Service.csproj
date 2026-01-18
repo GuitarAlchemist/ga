@@ -22,6 +22,6 @@
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj" /> -->
     <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
   </ItemGroup>
 </Project>

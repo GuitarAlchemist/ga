@@ -24,6 +24,10 @@
     <PackageReference Include="NetEscapades.Configuration.Yaml" Version="3.1.0"/>
     <PackageReference Include="Spectre.Console" Version="0.49.1"/>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25277.114"/>
+    <!-- ML.NET for model training -->
+    <PackageReference Include="Microsoft.ML" Version="4.0.0-preview.24478.1"/>
+    <PackageReference Include="Microsoft.ML.FastTree" Version="4.0.0-preview.24478.1"/>
+    <PackageReference Include="Microsoft.ML.OnnxConverter" Version="0.21.1"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -32,7 +36,7 @@
     <ProjectReference Include="..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
-    <ProjectReference Include="..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
+    <ProjectReference Include="..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
     <ProjectReference Include="..\Common\GA.Business.AI\GA.Business.AI.csproj"/>
     <ProjectReference Include="..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
   </ItemGroup>

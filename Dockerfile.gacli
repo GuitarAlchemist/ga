@@ -1,0 +1,35 @@
+# Start with the .NET SDK for building
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy project files first to cache restore
+COPY ["GaCLI/GaCLI.csproj", "GaCLI/"]
+COPY ["Common/GA.Business.Config/GA.Business.Config.fsproj", "Common/GA.Business.Config/"]
+COPY ["Common/GA.Business.Core/GA.Business.Core.csproj", "Common/GA.Business.Core/"]
+COPY ["Common/GA.Business.Analytics/GA.Business.Analytics.csproj", "Common/GA.Business.Analytics/"]
+COPY ["Common/GA.Business.Assets/GA.Business.Assets.csproj", "Common/GA.Business.Assets/"]
+COPY ["Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj", "Common/GA.Business.Intelligence/"]
+COPY ["Common/GA.Core/GA.Core.csproj", "Common/GA.Core/"]
+COPY ["GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj", "GA.Data.SemanticKernel.Embeddings/"]
+COPY ["Common/GA.Business.ML/GA.Business.ML.csproj", "Common/GA.Business.ML/"]
+COPY ["Common/GA.Business.AI/GA.Business.AI.csproj", "Common/GA.Business.AI/"]
+COPY ["GA.Data.MongoDB/GA.Data.MongoDB.csproj", "GA.Data.MongoDB/"]
+
+# Restore dependencies
+RUN dotnet restore "GaCLI/GaCLI.csproj"
+
+# Copy the rest of the source code
+COPY . .
+RUN rm global.json
+
+# Build and Publish
+WORKDIR "/src/GaCLI"
+RUN dotnet build "GaCLI.csproj" -c Release -o /app/build -p:GeneratePackageOnBuild=false
+FROM build AS publish
+RUN dotnet publish "GaCLI.csproj" -c Release -o /app/publish
+
+# Runtime Image
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "GaCLI.dll"]

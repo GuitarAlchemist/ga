@@ -37,7 +37,7 @@
     <ProjectReference Include="..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
     <ProjectReference Include="..\GA.Business.Analytics\GA.Business.Analytics.csproj"/>
     <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj"/>
-    <ProjectReference Include="..\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
+    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 
 </Project>

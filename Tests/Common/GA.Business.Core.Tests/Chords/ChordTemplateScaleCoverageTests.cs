@@ -1,7 +1,5 @@
 namespace GA.Business.Core.Tests.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
 using GA.Business.Core.Chords;
 using GA.Business.Core.Tonal.Modes;
 using GA.Business.Core.Tonal.Modes.Diatonic;

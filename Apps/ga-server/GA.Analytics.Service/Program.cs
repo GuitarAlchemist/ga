@@ -25,11 +25,10 @@ builder.Services.AddSingleton<PerformanceMetricsService>();
 builder.Services.AddScoped<AdvancedMusicalAnalyticsService>();
 builder.Services.AddScoped<AgentSpectralAnalyzer>();
 builder.Services.AddScoped<ICachingService, CachingService>();
-builder.Services.AddScoped<InvariantValidationService>();
-builder.Services.AddScoped<RealtimeInvariantMonitoringService>();
-builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
-builder.Services.AddScoped<HarmonicAnalysisEngine>();
-builder.Services.AddScoped<ProgressionOptimizer>();
+builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.IShapeGraphBuilder, GA.Business.Core.Fretboard.Shapes.ShapeGraphBuilder>();
+builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.Applications.HarmonicAnalysisEngine>();
+builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.Applications.ProgressionOptimizer>();
+builder.Services.AddScoped<ActorSystemManager>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();

@@ -51,6 +51,7 @@ public class MongoDbService
 
     public IMongoCollection<SetClassDocument> SetClasses => _database.GetCollection<SetClassDocument>("setClasses");
     public IMongoCollection<VoicingEntity> Voicings => _database.GetCollection<VoicingEntity>("voicings");
+    public IMongoCollection<TabEntity> Tabs => _database.GetCollection<TabEntity>("tabs");
 
     /// <summary>
     ///     Deletes all documents from all collections in the database.

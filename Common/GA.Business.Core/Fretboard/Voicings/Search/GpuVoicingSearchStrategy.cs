@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Fretboard.Voicings.Search;
+﻿namespace GA.Business.Core.Fretboard.Voicings.Search;
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +12,10 @@ using ILGPU;
 using ILGPU.Runtime;
 
 /// <summary>
-/// GPU-accelerated voicing search strategy for high-performance similarity calculations
-/// Uses ILGPU framework for cross-platform GPU acceleration (NVIDIA CUDA, AMD, Intel)
+/// GPU-accelerated voicing search strategy for high-performance similarity calculations.
+/// Uses ILGPU framework for cross-platform GPU acceleration (NVIDIA CUDA, AMD, Intel).
+/// Implements Weighted Partition Cosine Similarity for OPTIC-K Schema v1.3.1.
+/// Supports legacy OPTIC-K Schema v1.2.1.
 /// </summary>
 public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 {
@@ -34,6 +36,26 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     private bool _isDisposed;
     private long _totalSearches;
     private TimeSpan _totalSearchTime = TimeSpan.Zero;
+
+    // OPTIC-K Musical Embedding Schema Constants (v1.3.1)
+    private const int MusicalEmbeddingDim = 109;
+    private const int LegacyMusicalEmbeddingDim = 96; // v1.2.1
+
+    // Partition Offsets and Dimensions
+    private const int StructureOffset = 6;
+    private const int StructureDim = 24;
+    private const int MorphologyOffset = 30;
+    private const int MorphologyDim = 24;
+    private const int ContextOffset = 54;
+    private const int ContextDim = 12;
+    private const int SymbolicOffset = 66;
+    private const int SymbolicDim = 12;
+
+    // Similarity Weights
+    private const double StructureWeight = 0.45;
+    private const double MorphologyWeight = 0.25;
+    private const double ContextWeight = 0.20;
+    private const double SymbolicWeight = 0.10;
 
     public GpuVoicingSearchStrategy()
     {
@@ -298,27 +320,49 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
         var voicingOffset = index * embeddingDim;
 
-        var dotProduct = 0.0;
-        var queryNorm = 0.0;
-        var voicingNorm = 0.0;
-
-        for (var i = 0; i < embeddingDim; i++)
+        if (embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
         {
-            var queryVal = queryVector[i];
-            var voicingVal = voicingEmbeddings[voicingOffset + i];
+            var score = 0.0;
 
-            dotProduct += queryVal * voicingVal;
-            queryNorm += queryVal * queryVal;
-            voicingNorm += voicingVal * voicingVal;
+            // STRUCTURE
+            score += StructureWeight * ComputePartitionCosineGpu(
+                queryVector, StructureOffset, voicingEmbeddings, voicingOffset + StructureOffset, StructureDim);
+
+            // MORPHOLOGY
+            score += MorphologyWeight * ComputePartitionCosineGpu(
+                queryVector, MorphologyOffset, voicingEmbeddings, voicingOffset + MorphologyOffset, MorphologyDim);
+
+            // CONTEXT
+            score += ContextWeight * ComputePartitionCosineGpu(
+                queryVector, ContextOffset, voicingEmbeddings, voicingOffset + ContextOffset, ContextDim);
+
+            // SYMBOLIC
+            score += SymbolicWeight * ComputePartitionCosineGpu(
+                queryVector, SymbolicOffset, voicingEmbeddings, voicingOffset + SymbolicOffset, SymbolicDim);
+
+            similarities[index] = score;
         }
+        else
+        {
+            var dotProduct = 0.0;
+            var queryNorm = 0.0;
+            var voicingNorm = 0.0;
 
-        var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm);
-        similarities[index] = magnitude > 0 ? dotProduct / magnitude : 0.0;
+            for (var i = 0; i < embeddingDim; i++)
+            {
+                var queryVal = queryVector[i];
+                var voicingVal = voicingEmbeddings[voicingOffset + i];
+
+                dotProduct += queryVal * voicingVal;
+                queryNorm += queryVal * queryVal;
+                voicingNorm += voicingVal * voicingVal;
+            }
+
+            var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm);
+            similarities[index] = magnitude > 1e-10 ? dotProduct / magnitude : 0.0;
+        }
     }
 
-    /// <summary>
-    /// GPU kernel for filtered cosine similarity (only compute for allowed voicing indices)
-    /// </summary>
     private static void FilteredCosineSimilarityKernel(
         Index1D index,
         ArrayView<double> queryVector,
@@ -334,22 +378,64 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         var voicingIdx = allowedIndices[index];
         var voicingOffset = voicingIdx * embeddingDim;
 
-        var dotProduct = 0.0;
-        var queryNorm = 0.0;
-        var voicingNorm = 0.0;
-
-        for (var i = 0; i < embeddingDim; i++)
+        if (embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
         {
-            var queryVal = queryVector[i];
-            var voicingVal = voicingEmbeddings[voicingOffset + i];
+            var score = 0.0;
 
-            dotProduct += queryVal * voicingVal;
-            queryNorm += queryVal * queryVal;
-            voicingNorm += voicingVal * voicingVal;
+            // STRUCTURE
+            score += StructureWeight * ComputePartitionCosineGpu(
+                queryVector, StructureOffset, voicingEmbeddings, voicingOffset + StructureOffset, StructureDim);
+
+            // MORPHOLOGY
+            score += MorphologyWeight * ComputePartitionCosineGpu(
+                queryVector, MorphologyOffset, voicingEmbeddings, voicingOffset + MorphologyOffset, MorphologyDim);
+
+            // CONTEXT
+            score += ContextWeight * ComputePartitionCosineGpu(
+                queryVector, ContextOffset, voicingEmbeddings, voicingOffset + ContextOffset, ContextDim);
+
+            // SYMBOLIC
+            score += SymbolicWeight * ComputePartitionCosineGpu(
+                queryVector, SymbolicOffset, voicingEmbeddings, voicingOffset + SymbolicOffset, SymbolicDim);
+
+            similarities[index] = score;
         }
+        else
+        {
+            var dotProduct = 0.0;
+            var queryNorm = 0.0;
+            var voicingNorm = 0.0;
 
-        var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm);
-        similarities[index] = magnitude > 0 ? dotProduct / magnitude : 0.0;
+            for (var i = 0; i < embeddingDim; i++)
+            {
+                var queryVal = queryVector[i];
+                var voicingVal = voicingEmbeddings[voicingOffset + i];
+
+                dotProduct += queryVal * voicingVal;
+                queryNorm += queryVal * queryVal;
+                voicingNorm += voicingVal * voicingVal;
+            }
+
+            var magnitude = Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm);
+            similarities[index] = magnitude > 1e-10 ? dotProduct / magnitude : 0.0;
+        }
+    }
+
+    private static double ComputePartitionCosineGpu(
+        ArrayView<double> v1, int offset1,
+        ArrayView<double> v2, int offset2, int dim)
+    {
+        double dot = 0, n1 = 0, n2 = 0;
+        for (int i = 0; i < dim; i++)
+        {
+            double a = v1[offset1 + i];
+            double b = v2[offset2 + i];
+            dot += a * b;
+            n1 += a * a;
+            n2 += b * b;
+        }
+        double mag = Math.Sqrt(n1) * Math.Sqrt(n2);
+        return mag > 1e-10 ? dot / mag : 0;
     }
 
     private void CopyEmbeddingsToGpu(List<VoicingEmbedding> voicings)
@@ -516,11 +602,12 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
                 $"Voicing index {voicingIndex} is out of range [0, {_voicingIds.Length})");
 
         var embeddingStartIdx = voicingIndex * _embeddingDimensions;
-        var embeddingEndIdx = embeddingStartIdx + _embeddingDimensions;
 
-        if (embeddingEndIdx > _hostEmbeddings.Length)
-            throw new InvalidOperationException(
-                $"Embedding array access out of bounds. Index range [{embeddingStartIdx}, {embeddingEndIdx}) exceeds array length {_hostEmbeddings.Length}");
+        // Use weighted partition similarity for musical embeddings (v1.2.1 and v1.3.1)
+        if (_embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
+        {
+            return CalculateMusicalSimilarity(queryEmbedding, _hostEmbeddings, embeddingStartIdx);
+        }
 
         double dotProduct = 0.0, queryNorm = 0.0, voicingNorm = 0.0;
         for (var j = 0; j < _embeddingDimensions; j++)
@@ -532,6 +619,44 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
             voicingNorm += v * v;
         }
         return dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm) + 1e-10);
+    }
+
+    private static double CalculateMusicalSimilarity(double[] query, double[] database, int dbStartIdx)
+    {
+        double score = 0;
+
+        // STRUCTURE
+        score += StructureWeight * ComputePartitionCosine(
+            query, StructureOffset, database, dbStartIdx + StructureOffset, StructureDim);
+
+        // MORPHOLOGY
+        score += MorphologyWeight * ComputePartitionCosine(
+            query, MorphologyOffset, database, dbStartIdx + MorphologyOffset, MorphologyDim);
+
+        // CONTEXT
+        score += ContextWeight * ComputePartitionCosine(
+            query, ContextOffset, database, dbStartIdx + ContextOffset, ContextDim);
+
+        // SYMBOLIC
+        score += SymbolicWeight * ComputePartitionCosine(
+            query, SymbolicOffset, database, dbStartIdx + SymbolicOffset, SymbolicDim);
+
+        return score;
+    }
+
+    private static double ComputePartitionCosine(double[] v1, int offset1, double[] v2, int offset2, int dim)
+    {
+        double dot = 0, n1 = 0, n2 = 0;
+        for (int i = 0; i < dim; i++)
+        {
+            double a = v1[offset1 + i];
+            double b = v2[offset2 + i];
+            dot += a * b;
+            n1 += a * a;
+            n2 += b * b;
+        }
+        double mag = Math.Sqrt(n1) * Math.Sqrt(n2);
+        return mag > 1e-10 ? dot / mag : 0;
     }
 
     private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)

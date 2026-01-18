@@ -1,15 +1,13 @@
 namespace GA.Business.Core.Tests.Services;
 
-using System.Threading;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using GA.Business.Core.AI.Services.Embeddings;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ML.Abstractions;
+using ML.Text.Internal;
 using NUnit.Framework;
 
-public sealed class CountingEmbeddingService : IEmbeddingService
+public sealed class CountingEmbeddingService : ITextEmbeddingService
 {
     public int CallCount;
 

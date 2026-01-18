@@ -1,6 +1,6 @@
 namespace GA.Testing.Semantic;
 
-using GA.Business.Core.AI.Services.Embeddings;
+using GA.Business.ML.Abstractions;
 using NUnit.Framework;
 using System.Collections.Concurrent;
 using System.IO;
@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 /// </summary>
 public static class AssertAi
 {
-    private static IEmbeddingService? _embeddingService;
+    private static ITextEmbeddingService? _embeddingService;
     private static IJudgeService? _judgeService;
     private static readonly ConcurrentDictionary<string, float[]> EmbeddingCache = new();
 
@@ -23,7 +23,7 @@ public static class AssertAi
     /// Configures the global embedding service for AI assertions.
     /// Recommended: Use a local ONNX-based service for Level 0 speed.
     /// </summary>
-    public static void Configure(IEmbeddingService service)
+    public static void Configure(ITextEmbeddingService service)
     {
         _embeddingService = service;
         EmbeddingCache.Clear();
@@ -189,7 +189,7 @@ public static class AssertAi
 
     private static string GetSha256(string input)
     {
-        using var sha256Hash = System.Security.Cryptography.SHA256.Create();
+        using var sha256Hash = SHA256.Create();
         byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
         return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
     }

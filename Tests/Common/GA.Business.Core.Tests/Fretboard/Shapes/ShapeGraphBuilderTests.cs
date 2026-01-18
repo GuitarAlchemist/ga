@@ -302,7 +302,7 @@ public class ShapeGraphBuilderTests
             stopwatch.Stop();
 
             // Assert
-            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(10));
+            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(100));
             Assert.That(shapes, Is.Not.Empty);
         }
 

@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Intelligence\GA.Business.Intelligence.csproj"/>
     <ProjectReference Include="..\..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
   </ItemGroup>
 

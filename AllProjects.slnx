@@ -34,10 +34,9 @@
     <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj" />
   </Folder>
   <Folder Name="/Core Libraries/">
-    <Project Path="Common/GA.Business.Core.AI/GA.Business.Core.AI.csproj" />
+    <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj" />
     <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj" />
     <Project Path="Common/GA.Business.Core/GA.Business.Core.csproj" />
-    <Project Path="Common/GA.Business.Intelligence/GA.Business.Intelligence.csproj" />
 
     <Project Path="Common/GA.Core/GA.Core.csproj" />
     <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj" />
@@ -76,6 +75,46 @@
     <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md" />
     <File Path="docs/QUICK_START.md" />
     <File Path="docs/TESTING_GUIDE.md" />
+  </Folder>
+  <Folder Name="/Documentation/OPTIC-K ML/">
+    <Folder Name="Architecture">
+      <File Path="Common/GA.Business.ML/Documentation/Architecture/Chatbot_Technical_Roadmap.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Architecture/ai_testing_roadmap.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Architecture/Chatbot_Backlog.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Architecture/Spectral_RAG_Implementation_Plan.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Architecture/phase_sphere_design.md" />
+    </Folder>
+    <Folder Name="Schema">
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Embedding_Schema.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Embedding_Schema_v1.2.1.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Embedding_Schema_v1.3.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Embedding_Schema_v1.3.1.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Applications.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Schema/OPTIC-K_Applications_Guide.md" />
+    </Folder>
+    <Folder Name="Research">
+      <File Path="Common/GA.Business.ML/Documentation/Research/ML_VOICING_SPIKE.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Research/Strategy_CoverAllModes.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Research/design_phase_13_modal_tagging.md" />
+      <Folder Name="MathFoundations">
+        <File Path="Common/GA.Business.ML/Documentation/Research/MathFoundations/Math_Foundations_DFT.md" />
+        <File Path="Common/GA.Business.ML/Documentation/Research/MathFoundations/Math_Foundations_DWT.md" />
+      </Folder>
+    </Folder>
+    <Folder Name="Papers">
+      <File Path="Common/GA.Business.ML/Documentation/Papers/The_Musical_Manifold.pdf" />
+      <File Path="Common/GA.Business.ML/Documentation/Papers/The_Geometry_of_Harmony.pdf" />
+      <File Path="Common/GA.Business.ML/Documentation/Papers/The_Hidden_Geometry_of_Data.pdf" />
+      <File Path="Common/GA.Business.ML/Documentation/Papers/Digital_Dimensions_Discrete_Transforms.pdf" />
+    </Folder>
+    <Folder Name="Walkthroughs">
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/walkthrough_phase_2.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/walkthrough_phase_11.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/walkthrough_phase_12.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/walkthrough_phase_13.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/walkthrough_phase_14.md" />
+      <File Path="Common/GA.Business.ML/Documentation/Walkthroughs/qa_report.md" />
+    </Folder>
   </Folder>
   <Folder Name="/Experiments/">
     <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj" />
@@ -190,16 +229,14 @@
     <File Path="RemoveBinObj.ps1" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="Common/GA.Business.Graphiti/GA.Business.Graphiti.csproj" />
-    <Project Path="Tests/Apps/GA.TabConversion.Api.Tests/GA.TabConversion.Api.Tests.csproj" />
     <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj" />
-    <Project Path="Tests/Common/GA.Business.Core.Graphiti.Tests/GA.Business.Core.Graphiti.Tests.csproj" />
     <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
     <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
     <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
     <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
-    <Project Path="Tests/FloorManager.Tests.Playwright/FloorManager.Tests.Playwright.csproj" />
-    <Project Path="Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Common/">
+    <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj" />
   </Folder>
   <Folder Name="/_Local Ga.Interactive NuGet/">
     <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />

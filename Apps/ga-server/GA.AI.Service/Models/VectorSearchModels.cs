@@ -53,6 +53,7 @@ public class VectorSearchStats
     public DateTime CollectedAt { get; set; } = DateTime.UtcNow;
 }
 
+/*
 /// <summary>
 /// Caching service interface
 /// </summary>
@@ -185,3 +186,4 @@ public class ActorSystemManager
         return true;
     }
 }
+*/

@@ -1,5 +1,6 @@
 namespace GA.Business.Core.Chords;
 
+using GA.Business.Core.Chords.Abstractions;
 using System.Collections.Generic;
 using Atonal;
 using Unified;

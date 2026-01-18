@@ -29,7 +29,7 @@ public class InvariantsController(
     [ProducesResponseType(typeof(CompositeInvariantValidationResult), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public ActionResult<CompositeInvariantValidationResult> ValidateConcept(
+    public async Task<ActionResult<CompositeInvariantValidationResult>> ValidateConcept(
         [FromQuery] [Required] string conceptName,
         [FromQuery] [Required] string conceptType)
     {
@@ -184,7 +184,11 @@ public class InvariantsController(
         {
             logger.LogInformation("Monitoring concept: {ConceptName} of type {ConceptType}", conceptName, conceptType);
 
-            var violations = await monitoringService.ValidateConceptAsync(conceptName, conceptType);
+            var compositeResult = await monitoringService.ValidateConceptAsync(
+                conceptType,
+                new Dictionary<string, object> { ["conceptName"] = conceptName });
+
+            var violations = compositeResult.Results.Where(r => !r.IsValid).ToList();
 
             logger.LogInformation("Monitoring completed for {ConceptName}: {ViolationCount} violations found",
                 conceptName, violations.Count);

@@ -19,7 +19,7 @@
   <ItemGroup>
     <!-- We reference Core for common interfaces like IEmbeddingService if needed, 
          but we want to keep this project as generic as possible. -->
-    <ProjectReference Include="..\GA.Business.Core.AI\GA.Business.Core.AI.csproj" />
+    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj" />
   </ItemGroup>
 
 </Project>

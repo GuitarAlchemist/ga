@@ -34,13 +34,13 @@ public class MetricsController(PerformanceMetricsService metrics, ILogger<Metric
     ///     Get comprehensive system metrics including cache and performance
     /// </summary>
     [HttpGet("system")]
-    public ActionResult GetSystemMetrics(
+    public async Task<ActionResult> GetSystemMetrics(
         [FromServices] ICachingService cache)
     {
         try
         {
             var performanceStats = metrics.GetStatistics();
-            var cacheStats = cache.GetStatistics();
+            var cacheStats = await cache.GetStatistics();
 
             var systemMetrics = new
             {

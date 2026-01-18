@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Fretboard.Primitives;
+﻿namespace GA.Business.Core.Fretboard.Primitives;
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
 using GA.Core.Functional;
 using JetBrains.Annotations;
-using static GA.Core.Collections.ValueObjectUtils<Fret>;
+using static ValueObjectUtils<Fret>;
 
 /// <summary>
 ///     An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)

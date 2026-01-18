@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using Search;
 
 /// <summary>
 /// Helper for high-performance binary serialization of VoicingDocuments.

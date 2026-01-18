@@ -30,7 +30,7 @@
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
     <ProjectReference Include="..\..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core.AI\GA.Business.Core.AI.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 </Project>
 

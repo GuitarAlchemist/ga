@@ -1,7 +1,5 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
-using System.Linq;
-using System.Threading.Tasks;
 using GA.Business.Core.Fretboard.Voicings.Search;
 using NUnit.Framework;
 

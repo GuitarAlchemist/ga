@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Scales;
 
-using System.Linq;
 using System.Numerics;
 using GA.Business.Core.Atonal.Primitives;
 using GA.Business.Core.Chords;

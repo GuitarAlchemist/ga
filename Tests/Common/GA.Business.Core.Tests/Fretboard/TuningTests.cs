@@ -13,8 +13,12 @@ public class TuningTests
         var tuning = Tuning.Default;
 
         // Assert
-        Assert.That(tuning.PitchCollection.ToString(), Is.EqualTo("E2 A2 D3 G3 B3 E4"));
-        Assert.That(tuning.PitchCollection.Count, Is.EqualTo(6));
+        TestContext.WriteLine($"Default Tuning: {tuning}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(tuning.PitchCollection.ToString(), Is.EqualTo("E2 A2 D3 G3 B3 E4"));
+            Assert.That(tuning.PitchCollection.Count, Is.EqualTo(6));
+        });
     }
 
     [Test]
@@ -27,6 +31,7 @@ public class TuningTests
         var tuning = new Tuning(pitchCollection);
 
         // Assert
+        TestContext.WriteLine($"Drop D Tuning: {tuning}");
         Assert.That(tuning.PitchCollection, Is.EqualTo(pitchCollection));
     }
 
@@ -34,6 +39,7 @@ public class TuningTests
     public void Constructor_WithNullPitchCollection_ThrowsArgumentNullException()
     {
         // Act & Assert
+        TestContext.WriteLine("Verifying ArgumentNullException for null PitchCollection");
         Assert.Throws<ArgumentNullException>(() => new Tuning(null!));
     }
 
@@ -42,12 +48,14 @@ public class TuningTests
     {
         // Arrange
         var tuning = Tuning.Default;
+        var targetStr = Str.Min;
 
         // Act
-        var pitch = tuning[Str.Min]; // First string (lowest)
+        var pitch = tuning[targetStr]; // First string (lowest)
 
         // Assert
-        Assert.That(pitch.ToString(), Is.EqualTo("E4")); // Highest string is E4
+        TestContext.WriteLine($"Tuning: {tuning}, String: {targetStr}, Pitch: {pitch}");
+        Assert.That(pitch.ToString(), Is.EqualTo("E4")); // Highest string index is E4 in this collection
     }
 
     [Test]
@@ -58,6 +66,7 @@ public class TuningTests
         var invalidString = Str.Min + 10; // Out of range
 
         // Act & Assert
+        TestContext.WriteLine($"Verifying ArgumentOutOfRangeException for invalid string: {invalidString}");
         Assert.Throws<ArgumentOutOfRangeException>(() => _ = tuning[invalidString]);
     }
 
@@ -65,13 +74,15 @@ public class TuningTests
     public void ToString_ReturnsExpectedFormat()
     {
         // Arrange
-        var tuning = new Tuning(PitchCollection.Parse("D2 A2 D3 G3 B3 E4")); // Drop D tuning
+        var input = "D2 A2 D3 G3 B3 E4";
+        var tuning = new Tuning(PitchCollection.Parse(input)); // Drop D tuning
 
         // Act
         var result = tuning.ToString();
 
         // Assert
-        Assert.That(result, Is.EqualTo("D2 A2 D3 G3 B3 E4"));
+        TestContext.WriteLine($"Tuning ToString: {result}");
+        Assert.That(result, Is.EqualTo(input));
     }
 
     [Test]
@@ -94,9 +105,13 @@ public class TuningTests
             var tuning = new Tuning(pitchCollection);
 
             // Assert
-            Assert.That(tuning, Is.Not.Null, $"Failed to create {tuningName} tuning");
-            Assert.That(tuning.ToString(), Is.EqualTo(pitchString),
-                $"Incorrect string representation for {tuningName} tuning");
+            TestContext.WriteLine($"Testing {tuningName}: {tuning}");
+            Assert.Multiple(() =>
+            {
+                Assert.That(tuning, Is.Not.Null, $"Failed to create {tuningName} tuning");
+                Assert.That(tuning.ToString(), Is.EqualTo(pitchString),
+                    $"Incorrect string representation for {tuningName} tuning");
+            });
         }
     }
 }

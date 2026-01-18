@@ -87,7 +87,10 @@ public class GrothendieckServiceTests
 
             // Assert: Should have small delta (closely related keys)
             // Ensures closely-related keys have a small harmonic distance for ranking.
-            Assert.That(delta.L1Norm, Is.LessThan(5));
+            TestContext.WriteLine($"C Major ICV: {cMajorIcv}");
+            TestContext.WriteLine($"G Major ICV: {gMajorIcv}");
+            TestContext.WriteLine($"Delta L1Norm: Expected < 5, Actual={delta.L1Norm} (C and G major differ by only one accidental, meaning small harmonic distance)");
+            Assert.That(delta.L1Norm, Is.LessThan(5), "Delta between closely related keys (C and G) should be small (< 5).");
         }
 
         [Test]
@@ -105,6 +108,7 @@ public class GrothendieckServiceTests
 
             // Assert
             // Explanation should mention interval classes so UI feedback stays meaningful.
+            TestContext.WriteLine($"Delta Explanation: {explanation}");
             Assert.That(explanation, Does.Contain("ic1"));
             Assert.That(explanation, Is.Not.Empty);
         }
@@ -132,6 +136,7 @@ public class GrothendieckServiceTests
 
             // Assert: L1Norm = |1| + |-2| + |3| + |0| + |-1| + |2| = 9, cost = 9 * 0.6 = 5.4
             // Cost must follow the Manhattan norm heuristic so downstream ranking remains stable.
+            TestContext.WriteLine($"Delta: {delta}, Computed Cost: {cost}");
             Assert.That(cost, Is.EqualTo(5.4).Within(1e-9));
         }
 
@@ -153,6 +158,7 @@ public class GrothendieckServiceTests
             var cost = _service.ComputeHarmonicCost(delta);
 
             // Assert
+            TestContext.WriteLine($"Identity Delta Cost: {cost}");
             Assert.That(cost, Is.EqualTo(0.0));
         }
     }

@@ -1,11 +1,11 @@
 namespace GaApi.Extensions;
 
-using GaApi.Services;
 using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.AI.Services.Embeddings;
+using GA.Business.ML.Text.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Services;
 
 /// <summary>
 /// Extension helpers for registering the voicing search stack.
@@ -25,21 +25,21 @@ public static class VoicingSearchServiceExtensions
 
         services.AddMemoryCache();
         services.AddSingleton<VoicingIndexingService>();
-        
+
         // Strategy selection logic
         var preferredStrategy = configuration.GetValue<string>("VoicingSearch:SearchStrategy", "Auto");
-        
-        services.AddSingleton<IVoicingSearchStrategy>(sp => 
+
+        services.AddSingleton<IVoicingSearchStrategy>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<EnhancedVoicingSearchService>>();
-            
+
             if (preferredStrategy.Equals("CPU", StringComparison.OrdinalIgnoreCase))
             {
                 logger.LogInformation("Enabling CPU-based in-memory search (requested by config)");
                 return new CpuVoicingSearchStrategy();
             }
 
-            try 
+            try
             {
                 var gpuStrategy = new GpuVoicingSearchStrategy();
                 if (gpuStrategy.IsAvailable)

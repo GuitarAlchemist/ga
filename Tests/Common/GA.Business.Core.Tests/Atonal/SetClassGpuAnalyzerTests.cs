@@ -1,6 +1,5 @@
 ﻿namespace GA.Business.Core.Tests.Atonal;
 
-using System.Linq;
 using Analysis.Gpu;
 using Core.Atonal;
 using Core.Notes;

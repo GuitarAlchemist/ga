@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Tests.Tonal;
 
-using System.Linq;
 using Core.Scales;
 using NUnit.Framework;
 
