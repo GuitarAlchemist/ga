@@ -1,5 +1,7 @@
 namespace GA.Business.AI.HuggingFace;
 
+using GA.Domain.Core.Instruments;
+
 /// <summary>
 ///     Request to generate audio from text using Hugging Face models
 /// </summary>

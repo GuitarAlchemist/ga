@@ -1,5 +1,7 @@
 namespace GA.AI.Service.Controllers;
 
+using GA.Domain.Core.Instruments;
+
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;

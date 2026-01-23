@@ -1,4 +1,6 @@
-namespace GA.Business.Core.Tests.Tonal;
+namespace GA.Domain.Core.Tests.Tonal;
+
+using GA.Domain.Core.Theory.Tonal;
 
 [TestFixture]
 public class KeyTests
@@ -9,11 +11,9 @@ public class KeyTests
         // Act
         var majorKeys = Key.GetItems(KeyMode.Major);
         var keyNames = majorKeys.Select(key => key.ToString()).ToList();
-
         // Assert
         TestContext.WriteLine($"Major Keys: ExpectedCount=15, ActualCount={majorKeys.Count} (Circle of Fifths: Cb through C#)");
         TestContext.WriteLine($"Sample Major Keys: {string.Join(", ", keyNames)}");
-
         Assert.Multiple(() =>
         {
             Assert.That(majorKeys.Count, Is.EqualTo(15), "There should be exactly 15 major keys (7 sharps, 7 flats, and C natural).");
@@ -25,17 +25,14 @@ public class KeyTests
             }), "Major key names should match standard circle of fifths nomenclature.");
         });
     }
-
     [Test]
     public void GetItems_Minor_ReturnsMinorKeys()
     {
         // Act
         var minorKeys = Key.GetItems(KeyMode.Minor);
         var keyNames = minorKeys.Select(key => key.ToString()).ToList();
-
         // Assert
         TestContext.WriteLine($"Minor Keys ({minorKeys.Count}): {string.Join(", ", keyNames)}");
-
         Assert.Multiple(() =>
         {
             Assert.That(minorKeys.Count, Is.EqualTo(15));
@@ -60,23 +57,19 @@ public class KeyTests
             }));
         });
     }
-
     [Test]
     public void Items_ReturnsAllKeys()
     {
         // Act
         var allKeys = Key.Items;
         var keyNames = allKeys.Select(key => key.ToString()).ToList();
-
         // Assert
         TestContext.WriteLine($"All Keys ({allKeys.Count}): {string.Join(", ", keyNames)}");
-
         Assert.Multiple(() =>
         {
             Assert.That(allKeys.Count, Is.EqualTo(30));
             Assert.That(allKeys.Count(key => key.KeyMode == KeyMode.Major), Is.EqualTo(15));
             Assert.That(allKeys.Count(key => key.KeyMode == KeyMode.Minor), Is.EqualTo(15));
-
             Assert.That(keyNames, Is.EquivalentTo(new string[]
             {
                 "Key of Cb",

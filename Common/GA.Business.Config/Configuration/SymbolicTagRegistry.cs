@@ -1,10 +1,9 @@
-namespace GA.Business.Config.Configuration;
+namespace GA.Domain.Services;
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Core;
+using Business.Config;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 

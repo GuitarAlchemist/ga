@@ -2,7 +2,7 @@ using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Services.Embeddings;
 
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -213,7 +213,7 @@ static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
     services.AddTransient<RunBenchmarksCommand>();
 
     // Tab Corpus
-    services.AddTransient<GA.Business.Core.Tabs.ITabCorpusRepository, MongoTabCorpusRepository>();
+    services.AddTransient<GA.Domain.Core.Tabs.ITabCorpusRepository, MongoTabCorpusRepository>();
     services.AddTransient<GA.Business.ML.Tabs.TabCorpusService>();
     services.AddTransient<IngestCorpusCommand>();
 
@@ -276,7 +276,7 @@ static async Task RunMongoDbSync(IConfigurationRoot config)
     });
 
     // TODO: Fix type mismatch - EmbeddingServiceFactory returns GA.Data.MongoDB.Services.Embeddings.IEmbeddingService
-    // but SemanticSearchService expects GA.Business.Core.Fretboard.SemanticIndexing.SemanticSearchService.IEmbeddingService
+    // but SemanticSearchService expects GA.Domain.Instruments.Fretboard.SemanticIndexing.SemanticSearchService.IEmbeddingService
     // services.AddSingleton<EmbeddingServiceFactory>();
     // services.AddScoped<SemanticSearchService.IEmbeddingService>(sp =>
     //     sp.GetRequiredService<EmbeddingServiceFactory>().CreateService());

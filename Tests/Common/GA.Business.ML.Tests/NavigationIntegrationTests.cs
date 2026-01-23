@@ -4,12 +4,11 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.ML.Retrieval;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Tests.TestInfrastructure;
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Retrieval;
+using Embeddings;
+using TestInfrastructure;
+using Domain.Services.Fretboard.Analysis;
 
 [TestFixture]
 public class NavigationIntegrationTests

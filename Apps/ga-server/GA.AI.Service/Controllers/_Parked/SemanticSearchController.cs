@@ -3,7 +3,7 @@ namespace GA.AI.Service.Controllers;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Business.Core.Fretboard.Biomechanics;
+using GA.Domain.Core.Instruments.Biomechanics;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 

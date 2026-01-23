@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Tests.Microservices;
+namespace GA.Domain.Core.Tests.Microservices;
 
 using GA.Business.Microservices;
 using NUnit.Framework;

@@ -1,3 +1,6 @@
+
+namespace GaChatbot.Services;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +10,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GaChatbot.Abstractions;
 using GaChatbot.Models;
-
-namespace GaChatbot.Services;
 
 /// <summary>
 /// Narrator that uses a local Ollama LLM for natural language responses.

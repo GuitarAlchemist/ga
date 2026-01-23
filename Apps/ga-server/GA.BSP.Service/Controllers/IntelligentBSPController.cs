@@ -1,10 +1,4 @@
 namespace GA.BSP.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
-
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Notes;
-using Microsoft.AspNetCore.RateLimiting;
-using GA.BSP.Service.Models;
 
 // TODO: Re-enable when GA.Business.Orchestration project is created with IntelligentBspGenerator and IShapeGraphBuilder
 /*

@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Analysis.Gpu;
+﻿namespace GA.Domain.Core.Analysis.Gpu;
 
 public class Class1
 {

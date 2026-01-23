@@ -3,6 +3,7 @@ namespace GaApi.Services;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Configuration;
+using GA.Business.Core.Session;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Options;
 public sealed class ChatbotSessionOrchestrator(
     IOllamaChatService chatClient,
     ISemanticKnowledgeSource semanticKnowledge,
+    ISessionContextProvider sessionContext,
     IOptionsSnapshot<ChatbotOptions> options,
     ILogger<ChatbotSessionOrchestrator> logger)
 {
@@ -20,6 +22,7 @@ public sealed class ChatbotSessionOrchestrator(
     private readonly ILogger<ChatbotSessionOrchestrator> _logger = logger;
     private readonly ChatbotOptions _options = options.Value;
     private readonly ISemanticKnowledgeSource _semanticKnowledge = semanticKnowledge;
+    private readonly ISessionContextProvider _sessionContext = sessionContext;
 
     public List<ChatMessage> NormalizeHistory(IEnumerable<ChatMessage>? history)
     {
@@ -139,7 +142,7 @@ public sealed class ChatbotSessionOrchestrator(
         }
     }
 
-    private static string BuildSystemPrompt(string? context)
+    private string BuildSystemPrompt(string? context)
     {
         var prompt = new StringBuilder();
         prompt.AppendLine("You are Guitar Alchemist, an expert guitar teacher and music theory assistant.");
@@ -147,6 +150,34 @@ public sealed class ChatbotSessionOrchestrator(
         prompt.AppendLine("Provide clear, practical advice with specific fretboard examples where useful.");
         prompt.AppendLine("Explain complex concepts in simple terms, tailored to guitarists.");
         prompt.AppendLine();
+
+        // Add session context if available
+        var sessionCtx = _sessionContext.GetContext();
+        if (sessionCtx != null)
+        {
+            prompt.AppendLine("CURRENT SESSION CONTEXT:");
+            prompt.AppendLine($"- Tuning: {sessionCtx.Tuning}");
+            
+            if (sessionCtx.CurrentKey != null)
+                prompt.AppendLine($"- Current Key: {sessionCtx.CurrentKey}");
+                
+            if (sessionCtx.CurrentScale != null)
+                prompt.AppendLine($"- Current Scale: {sessionCtx.CurrentScale}");
+                
+            if (sessionCtx.SkillLevel.HasValue)
+                prompt.AppendLine($"- Skill Level: {sessionCtx.SkillLevel.Value}");
+                
+            if (sessionCtx.CurrentGenre.HasValue)
+                prompt.AppendLine($"- Musical Genre: {sessionCtx.CurrentGenre.Value}");
+                
+            if (sessionCtx.ActiveRange != null)
+                prompt.AppendLine($"- Fretboard Range: Frets {sessionCtx.ActiveRange.MinFret}-{sessionCtx.ActiveRange.MaxFret}");
+                
+            prompt.AppendLine();
+            prompt.AppendLine("Use this session context to provide more relevant and personalized responses.");
+            prompt.AppendLine("When suggesting chords or scales, consider the current key, skill level, and preferences.");
+            prompt.AppendLine();
+        }
 
         if (!string.IsNullOrWhiteSpace(context))
         {

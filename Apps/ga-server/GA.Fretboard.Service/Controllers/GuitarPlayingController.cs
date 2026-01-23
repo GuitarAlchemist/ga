@@ -1,9 +1,8 @@
 namespace GA.Fretboard.Service.Controllers;
 
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
-using GA.Fretboard.Service.Models;
-using GA.Fretboard.Service.Services;
+using Models;
+using Services;
 
 
 /// <summary>

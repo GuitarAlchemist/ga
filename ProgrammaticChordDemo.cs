@@ -1,8 +1,9 @@
-﻿using GA.Business.Core.Chords;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Primitives.Diatonic;
+﻿using GA.Domain.Core.Theory.Harmony;
 
-namespace GA.Business.Core.Demo;
+namespace GA.Domain.Core.Demo;
+
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
 
 /// <summary>
 /// Demonstrates the new fully programmatic chord generation system

@@ -38,6 +38,7 @@
     <ItemGroup>
         <Content Include="ImportantMissingModes.yaml"/>
         <Content Include="MissingModes.yaml"/>
+        <Content Include="README.md" />
     </ItemGroup>
 
     <ItemGroup>

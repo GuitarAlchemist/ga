@@ -1,9 +1,11 @@
 namespace GaApi.Hubs;
 
-using GA.Business.Core;
+using GA.Domain.Core.Instruments;
+
+using GA.Domain.Core;
 using Microsoft.AspNetCore.SignalR;
 
-// using GA.Business.Core.Services // REMOVED - namespace does not exist;
+// using GA.Domain.Core.Services // REMOVED - namespace does not exist;
 
 /// <summary>
 ///     SignalR hub for real-time configuration updates and notifications

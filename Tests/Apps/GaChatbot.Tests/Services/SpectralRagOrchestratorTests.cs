@@ -1,11 +1,13 @@
 namespace GaChatbot.Tests.Services;
 
+using GA.Domain.Core.Instruments;
+
 using GaChatbot.Services;
 using GaChatbot.Models;
 using GaChatbot.Abstractions;
-using GA.Business.Core.AI;
+using GA.Domain.Core.AI;
 using GaChatbot.Tests.Mocks;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using GA.Business.ML.Musical.Explanation;
 using Moq;
 using NUnit.Framework;

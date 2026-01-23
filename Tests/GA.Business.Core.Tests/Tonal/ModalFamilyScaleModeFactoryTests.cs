@@ -1,12 +1,13 @@
 ﻿using System;
+
+namespace GA.Domain.Core.Tests.Tonal;
+
 using System.Linq;
 using NUnit.Framework;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Scales;
-using GA.Business.Core.Tonal.Modes;
-
-namespace GA.Business.Core.Tests.Tonal;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Tonal.Scales;
+using GA.Domain.Core.Theory.Tonal.Modes;
 
 [TestFixture]
 public class ModalFamilyScaleModeFactoryTests

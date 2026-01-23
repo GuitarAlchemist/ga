@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Graphiti.Tests.Services;
+namespace GA.Domain.Core.Graphiti.Tests.Services;
 
 using System.Net;
 using System.Text;

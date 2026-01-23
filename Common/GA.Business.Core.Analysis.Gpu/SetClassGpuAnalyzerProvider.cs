@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Analysis.Gpu;
+﻿namespace GA.Domain.Core.Analysis.Gpu;
 
 using System;
 using System.Collections.Concurrent;

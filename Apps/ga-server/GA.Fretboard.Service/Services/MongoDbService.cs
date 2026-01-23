@@ -2,7 +2,7 @@ namespace GA.Fretboard.Service.Services;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
-using GA.Fretboard.Service.Models;
+using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

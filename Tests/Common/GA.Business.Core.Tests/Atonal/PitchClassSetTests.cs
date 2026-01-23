@@ -1,8 +1,9 @@
-﻿namespace GA.Business.Core.Tests.Atonal;
+﻿using GA.Domain.Core.Extensions;
+﻿namespace GA.Domain.Core.Tests.Atonal;
 
-using Core.Atonal;
-using Core.Notes;
-using Extensions;
+using Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Tonal;
 
 public class PitchClassSetTests
 {

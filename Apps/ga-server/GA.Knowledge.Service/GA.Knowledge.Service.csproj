@@ -18,10 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Assets\GA.Business.Assets.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Data.EntityFramework\GA.Data.EntityFramework.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
   </ItemGroup>
 </Project>

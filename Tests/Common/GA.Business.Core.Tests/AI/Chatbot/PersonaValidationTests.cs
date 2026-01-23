@@ -1,6 +1,6 @@
-namespace GA.Business.Core.Tests.AI.Chatbot;
+namespace GA.Domain.Core.Tests.AI.Chatbot;
 
-using ML.Abstractions;
+using GA.Business.ML.Abstractions;
 using Moq;
 using Testing.Semantic;
 
@@ -15,14 +15,11 @@ public class PersonaValidationTests
                                                   3. Music Theory Informed: Uses correct terms (root, third, fifth, extensions).
                                                   4. Concisely thorough: Clear but complete.
                                                   """;
-
     private readonly Mock<IJudgeService> _mockJudge = new();
-
     [SetUp]
     public void SetUp()
     {
         AssertAi.Configure(new Mock<ITextEmbeddingService>().Object); // Dummy for Level 0
-
         _mockJudge.Setup(j => j.EvaluateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((string text, string prompt, string rubric, CancellationToken ct) =>
             {
@@ -30,13 +27,10 @@ public class PersonaValidationTests
                 bool isPedagogical = text.Contains("look at", StringComparison.OrdinalIgnoreCase) || text.Contains("understand", StringComparison.OrdinalIgnoreCase);
                 bool isEncouraging = text.Contains("Great", StringComparison.OrdinalIgnoreCase) || text.Contains("Keep practicing", StringComparison.OrdinalIgnoreCase);
                 bool matchesPersona = text.Contains("Guitar Alchemist") && isPedagogical && isEncouraging;
-
                 return new JudgeResult(matchesPersona, matchesPersona ? "Matches persona." : "Missing core persona traits.", 0.9f);
             });
-
         AssertAi.ConfigureJudge(_mockJudge.Object);
     }
-
     [Test]
     [Category("Semantic")]
     [Category("Level1")]
@@ -50,10 +44,8 @@ public class PersonaValidationTests
                        When played together, these notes create a stable, bright sound that forms the foundation of so much music.
                        Keep practicing your open shapes, you're doing great!
                        """;
-
         AssertAi.Judges.PassesRubric(response, GuitarAlchemistRubric);
     }
-
     [Test]
     [Category("Semantic")]
     [Category("Level1")]
@@ -61,12 +53,10 @@ public class PersonaValidationTests
     {
         // simulated response that SHOULD fail (too blunt, no theory)
         var response = "C major is C E G. Just play it.";
-
         Assert.Throws<AssertionException>(() =>
             AssertAi.Judges.PassesRubric(response, GuitarAlchemistRubric)
         );
     }
-
     [Test]
     [Category("Semantic")]
     [Category("Level2")]
@@ -76,10 +66,8 @@ public class PersonaValidationTests
         // For this mock, we'll force one to fail if it doesn't have the persona signature
         var simpleResponse = "Hello! I'm Guitar Alchemist. Great job! A major is A, C#, E. To understand... look at... Keep practicing!";
         var complexResponse = "Hello! I'm Guitar Alchemist. Great job! AMaj7#11 utilizes the Lydian mode. To understand... look at... Keep practicing!";
-
         var simpleScore = AssertAi.Judges.GetRubricScore(simpleResponse, GuitarAlchemistRubric);
         var complexScore = AssertAi.Judges.GetRubricScore(complexResponse, GuitarAlchemistRubric);
-
         // We expect both to be HIGHly compliant with the persona
         Assert.That(simpleScore, Is.GreaterThan(0.7));
         Assert.That(complexScore, Is.GreaterThan(0.7));

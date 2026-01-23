@@ -1,17 +1,17 @@
 namespace GA.Business.ML.Naturalness;
 
+using Domain.Services.Fretboard.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GA.Business.Core.Tabs;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using Domain.Repositories;
 using Tabs; 
 using Tabs.Models;
-using Core.Fretboard.Primitives;
-using Core.Notes;
-using Core.Fretboard;
-using Core.Fretboard.Analysis;
 
 public class NaturalnessTrainingDataGenerator
 {

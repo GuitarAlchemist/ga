@@ -1,15 +1,13 @@
 namespace GA.Business.ML.Tabs;
 
-using System;
+
+using Domain.Services.Fretboard.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Fretboard.Voicings.Search;
-using Core.Fretboard.Analysis;
-using Core.Notes;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
 using Embeddings;
-
-using Core.Notes.Primitives;
 
 /// <summary>
 /// Optimizes an existing progression by suggesting alternative voicings that minimize voice-leading cost.

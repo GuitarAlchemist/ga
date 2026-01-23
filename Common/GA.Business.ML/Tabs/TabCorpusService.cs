@@ -1,11 +1,11 @@
 namespace GA.Business.ML.Tabs;
 
-using GA.Business.Core.Tabs;
+using Domain.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GA.Domain.Core.Tabs;
 
 public class TabCorpusService
 {

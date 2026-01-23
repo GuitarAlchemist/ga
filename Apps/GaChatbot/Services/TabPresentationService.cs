@@ -6,7 +6,7 @@ using System.Text;
 using GaChatbot.Models;
 using GA.Business.ML.Tabs.Models;
 using GA.Business.ML.Musical.Explanation;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Wavelets;
 
 using GA.Business.ML.Retrieval;

@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core.Tests.Notes;
+﻿namespace GA.Domain.Core.Tests.Notes;
 
-using Core.Atonal;
-using Core.Notes;
+using Primitives;
+using GA.Domain.Core.Theory.Atonal;
 
 public class PitchClassTests
 {
@@ -10,10 +10,8 @@ public class PitchClassTests
     {
         // Arrange
         int value = 0;
-
         // Act
         var pc = PitchClass.FromValue(value);
-
         // Assert
         TestContext.WriteLine($"Value: {value}, PitchClass: {pc}");
         Assert.Multiple(() =>
@@ -22,30 +20,24 @@ public class PitchClassTests
             Assert.That(pc.ToString(), Is.EqualTo("0"));
         });
     }
-
     [Test(TestOf = typeof(PitchClass))]
     public void Parse_ReturnsCorrectPitchClass()
     {
         // Arrange
         string input = "7";
-
         // Act
         var pc = PitchClass.Parse(input, null);
-
         // Assert
         TestContext.WriteLine($"Input: {input}, Parsed PitchClass: {pc}");
         Assert.That(pc.Value, Is.EqualTo(7));
     }
-
     [Test(TestOf = typeof(PitchClass))]
     public void ToChromaticNote_ReturnsCorrectNote()
     {
         // Arrange
         var pc = PitchClass.FromValue(4); // E
-
         // Act
         var note = pc.ToChromaticNote();
-
         // Assert
         TestContext.WriteLine($"PitchClass: {pc}, Chromatic Note: {note}");
         Assert.That(note, Is.EqualTo(Note.Chromatic.E));

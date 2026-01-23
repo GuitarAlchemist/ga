@@ -1,10 +1,10 @@
 namespace GA.Business.ML.Tabs;
 
-using System;
+
+using Domain.Services.Fretboard.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Core.Fretboard.Analysis;
 
 /// <summary>
 /// Renders internal fretboard realizations back into ASCII tablature.

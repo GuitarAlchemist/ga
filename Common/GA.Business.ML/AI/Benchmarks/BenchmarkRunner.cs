@@ -1,6 +1,6 @@
 namespace GA.Business.ML.AI.Benchmarks;
 
-using GA.Business.Core.AI.Benchmarks;
+using GA.Domain.Services.AI.Benchmarks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

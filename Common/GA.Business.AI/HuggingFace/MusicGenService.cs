@@ -1,5 +1,7 @@
 namespace GA.Business.AI.HuggingFace;
 
+using GA.Domain.Core.Instruments;
+
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Extensions.Options;

@@ -2,9 +2,9 @@ namespace GA.Business.ML.Musical.Explanation;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Config.Configuration;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Domain.Services;
 using Embeddings;
-using Embeddings.Services;
 using Enrichment;
 
 /// <summary>

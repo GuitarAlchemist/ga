@@ -1,7 +1,7 @@
 namespace GA.Business.DSL.Tests;
 
 using NUnit.Framework;
-using GA.Business.DSL.Services;
+using Services;
 using Microsoft.FSharp.Collections;
 using System.Linq;
 

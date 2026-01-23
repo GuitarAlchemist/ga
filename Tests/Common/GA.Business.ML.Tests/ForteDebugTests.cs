@@ -2,7 +2,7 @@ namespace GA.Business.ML.Tests;
 
 using System;
 using System.Linq;
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using NUnit.Framework;
 
 [TestFixture]

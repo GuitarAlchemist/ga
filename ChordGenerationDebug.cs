@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using GA.Business.Core.Chords;
-using GA.Business.Core.Scales;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal.Scales;
 
 class ChordGenerationDebug
 {

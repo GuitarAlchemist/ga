@@ -1,7 +1,7 @@
 ﻿namespace GA.BSP.Core.Spatial;
 
 using System.Numerics;
-using Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 ///     Node in the Tonal Binary Space Partitioning tree
@@ -83,7 +83,7 @@ public record TonalRegion
     /// <summary>
     ///     Check if this region contains a given pitch class set
     /// </summary>
-    public bool Contains(PitchClassSet pitchClassSet)
+    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         return TonalityType switch
         {
@@ -95,19 +95,19 @@ public record TonalRegion
         };
     }
 
-    private bool ContainsMajorTonality(PitchClassSet pitchClassSet)
+    private bool ContainsMajorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Check if the pitch class set fits within major tonality
         return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
     }
 
-    private bool ContainsMinorTonality(PitchClassSet pitchClassSet)
+    private bool ContainsMinorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Check if the pitch class set fits within minor tonality
         return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
     }
 
-    private bool ContainsModalTonality(PitchClassSet pitchClassSet)
+    private bool ContainsModalTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Check if the pitch class set fits within modal tonality
         return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
@@ -191,7 +191,7 @@ public record TonalPartitionPlane
         return Math.Abs(elementStability - referenceStability);
     }
 
-    private double CalculateBrightness(PitchClassSet pitchClassSet)
+    private double CalculateBrightness(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Calculate modal brightness based on interval content
         var intervals = pitchClassSet.IntervalClassVector;
@@ -202,7 +202,7 @@ public record TonalPartitionPlane
         return brightness / pitchClassSet.Cardinality.Value;
     }
 
-    private double CalculateStability(PitchClassSet pitchClassSet)
+    private double CalculateStability(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Calculate tonal stability based on consonant intervals
         var intervals = pitchClassSet.IntervalClassVector;

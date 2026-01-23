@@ -1,7 +1,8 @@
-namespace GA.Business.Core.Tests.Chords;
+namespace GA.Domain.Core.Tests.Chords;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Chords;
+using GA.Domain.Core.Theory.Atonal;
+using Theory.Harmony;
+using GA.Domain.Services.Chords;
 using NUnit.Framework;
 
 [TestFixture]
@@ -11,7 +12,6 @@ public class ChordTemplateFactoryTests
     public void GenerateAllPossibleChords_ProducesMajorMinorAndDiminishedTriads()
     {
         var templates = ChordTemplateFactory.GenerateAllPossibleChords().ToList();
-
         Assert.Multiple(() =>
         {
             Assert.That(templates, Is.Not.Empty, "Chord generation should yield at least one template.");
@@ -26,14 +26,12 @@ public class ChordTemplateFactoryTests
                 "Diminished triads should be produced.");
         });
     }
-
     [Test]
     public void GenerateAllPossibleChords_ReturnsNonEmptyCollection()
     {
         var templates = ChordTemplateFactory.GenerateAllPossibleChords();
         Assert.That(templates.Any(), Is.True, "Chord generator should not return an empty sequence.");
     }
-
     private static bool MatchesPitchClasses(ChordTemplate template, params int[] classes)
     {
         return classes.All(pc => template.PitchClassSet.Contains(PitchClass.FromValue(pc)));

@@ -1,8 +1,9 @@
+
+namespace GA.Domain.Core.Services;
+
 using Microsoft.EntityFrameworkCore;
 using GA.Data.EntityFramework;
-using GA.Business.Core.Configuration;
-
-namespace GA.Business.Core.Services;
+using GA.Domain.Core.Configuration;
 
 /// <summary>
 /// Enhanced user personalization service with AI-driven recommendations and adaptive learning

@@ -1,10 +1,10 @@
 namespace GA.Business.ML.Tests.TestInfrastructure;
 
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Embeddings.Services;
+using Embeddings;
+using Embeddings.Services;
 using GA.Business.ML.Tabs;
-using GA.Business.ML.Musical.Analysis;
-using GA.Business.Core.Fretboard.Analysis;
+using Musical.Analysis;
+using Domain.Services.Fretboard.Analysis;
 
 public static class TestServices
 {
@@ -31,18 +31,18 @@ public static class TestServices
 
     public static FileBasedVectorIndex CreateTempIndex()
     {
-        var tempFile = System.IO.Path.GetTempFileName();
+        var tempFile = Path.GetTempFileName();
         return new FileBasedVectorIndex(tempFile);
     }
 
-    public static GA.Business.ML.Retrieval.StyleProfileService CreateStyleProfileService(FileBasedVectorIndex index)
+    public static Retrieval.StyleProfileService CreateStyleProfileService(FileBasedVectorIndex index)
     {
-        return new GA.Business.ML.Retrieval.StyleProfileService(index);
+        return new Retrieval.StyleProfileService(index);
     }
 
     public static AdvancedTabSolver CreateAdvancedTabSolver(FileBasedVectorIndex index)
     {
-        var tuning = GA.Business.Core.Fretboard.Tuning.Default;
+        var tuning = Domain.Core.Instruments.Tuning.Default;
         var mapper = new FretboardPositionMapper(tuning);
         var cost = new PhysicalCostService();
         var style = CreateStyleProfileService(index);

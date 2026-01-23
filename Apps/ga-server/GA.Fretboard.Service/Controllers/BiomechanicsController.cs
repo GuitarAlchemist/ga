@@ -2,12 +2,13 @@ namespace GA.Fretboard.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Biomechanics;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes.Primitives;
+using GA.Domain.Core.Instruments.Biomechanics;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Services.Fretboard.Biomechanics;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Fretboard.Service.Models;
+using Models;
 
 /// <summary>
 ///     API controller for biomechanical analysis of guitar chord fingerings

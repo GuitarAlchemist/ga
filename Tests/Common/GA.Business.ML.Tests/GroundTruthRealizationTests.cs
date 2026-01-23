@@ -4,14 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using Domain.Services.Fretboard.Analysis;
 using GA.Business.ML.Tabs;
-using GA.Business.ML.Tests.TestInfrastructure;
-using GA.Business.ML.Embeddings;
+using TestInfrastructure;
+using Embeddings;
 using NUnit.Framework;
 
 [TestFixture]
@@ -43,8 +44,8 @@ public class GroundTruthRealizationTests
     [TearDown]
     public void Teardown()
     {
-        if (_testIndex != null && System.IO.File.Exists(_testIndex.FilePath))
-            System.IO.File.Delete(_testIndex.FilePath);
+        if (_testIndex != null && File.Exists(_testIndex.FilePath))
+            File.Delete(_testIndex.FilePath);
     }
 
     [Test]
@@ -68,8 +69,8 @@ E|---------------|
         var score = slices.Select(s => {
             var mNotes = _pitchConverter.GetMidiNotes(s);
             return mNotes.Select(m => {
-                var octave = GA.Business.Core.Intervals.Octave.FromValue((m / 12) - 1);
-                var pc = GA.Business.Core.Atonal.PitchClass.FromValue(m % 12);
+                var octave = Octave.FromValue((m / 12) - 1);
+                var pc = PitchClass.FromValue(m % 12);
                 return (Pitch)new Pitch.Sharp(pc.ToSharpNote(), octave);
             });
         }).ToList();
@@ -98,8 +99,8 @@ E|---------------|
             var sortedOrigNotes = slices[i].Notes.OrderByDescending(n => n.StringIndex).ToList();
             for(int k=0; k<sortedOrigNotes.Count; k++) {
                 int m = mNotes[k];
-                var pc = GA.Business.Core.Atonal.PitchClass.FromValue(m % 12);
-                var oct = GA.Business.Core.Intervals.Octave.FromValue((m/12)-1);
+                var pc = PitchClass.FromValue(m % 12);
+                var oct = Octave.FromValue((m/12)-1);
                 expectedWithPitches.Add(new FretboardPosition(Str.FromValue(6 - sortedOrigNotes[k].StringIndex), sortedOrigNotes[k].Fret, new Pitch.Sharp(pc.ToSharpNote(), oct)));
             }
 
@@ -167,8 +168,8 @@ E|---------------|
             var mNotes = _pitchConverter.GetMidiNotes(s);
             return mNotes.Select(m => {
                 var octaveValue = (m / 12) - 1;
-                var octave = GA.Business.Core.Intervals.Octave.FromValue(octaveValue);
-                var pc = GA.Business.Core.Atonal.PitchClass.FromValue(m % 12);
+                var octave = Octave.FromValue(octaveValue);
+                var pc = PitchClass.FromValue(m % 12);
                 return (Pitch)new Pitch.Sharp(pc.ToSharpNote(), octave);
             });
         }).ToList();

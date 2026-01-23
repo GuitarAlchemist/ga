@@ -1,13 +1,13 @@
 namespace GA.Business.ML.Tabs;
 
+
+using Domain.Services.Fretboard.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Fretboard.Analysis;
-using Core.Notes;
-using Embeddings;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
 
 /// <summary>
 /// Service to generate accessible alternative fingerings for a given chord progression.

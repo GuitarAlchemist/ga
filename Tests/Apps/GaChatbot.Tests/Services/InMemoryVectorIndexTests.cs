@@ -1,7 +1,9 @@
 namespace GaChatbot.Tests.Services;
 
+using GA.Domain.Core.Instruments;
+
 using GaChatbot.Services;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using NUnit.Framework;
 using System.Linq;
 

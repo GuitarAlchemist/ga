@@ -5,7 +5,7 @@ using System.Diagnostics;
 /// <summary>
 ///     Simple pitch class enumeration for BSP demo
 /// </summary>
-public enum PitchClass
+public enum BspPitchClass
 {
     C = 0,
     CSharp = 1,
@@ -24,7 +24,7 @@ public enum PitchClass
 /// <summary>
 ///     Simple pitch class set for BSP operations
 /// </summary>
-public class PitchClassSet(IEnumerable<PitchClass> pitchClasses) : HashSet<PitchClass>(pitchClasses)
+public class BspPitchClassSet(IEnumerable<BspPitchClass> pitchClasses) : HashSet<BspPitchClass>(pitchClasses)
 {
     public override string ToString()
     {
@@ -65,7 +65,7 @@ public class TonalRegion
     {
     }
 
-    public TonalRegion(string name, TonalityType tonalityType, PitchClassSet pitchClassSet, int tonalCenter)
+    public TonalRegion(string name, TonalityType tonalityType, BspPitchClassSet pitchClassSet, int tonalCenter)
     {
         Name = name;
         TonalityType = tonalityType;
@@ -75,15 +75,15 @@ public class TonalRegion
 
     public string Name { get; init; } = "";
     public TonalityType TonalityType { get; init; }
-    public PitchClassSet PitchClassSet { get; init; } = new([]);
+    public BspPitchClassSet PitchClassSet { get; init; } = new([]);
     public int TonalCenter { get; init; }
 
     /// <summary>
     ///     Check if this region contains the given pitch class set
     /// </summary>
-    public bool Contains(PitchClassSet pitchClassSet)
+    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
-        return pitchClassSet.All(pc => PitchClassSet.Contains(pc));
+        return pitchClassSet.All(pc => PitchClassSet.Contains((BspPitchClass)pc.Value));
     }
 }
 
@@ -115,7 +115,7 @@ public class TonalBspTree
     public TonalBspTree()
     {
         // Create a default root region (chromatic space)
-        var chromaticSpace = new PitchClassSet(Enum.GetValues<PitchClass>());
+        var chromaticSpace = new BspPitchClassSet(Enum.GetValues<BspPitchClass>());
         Root = new TonalBspNode(new TonalRegion("Chromatic Space", TonalityType.Chromatic, chromaticSpace, 0));
 
         // Add some basic partitions
@@ -130,19 +130,19 @@ public class TonalBspTree
         var majorRegion = new TonalRegion(
             "Major Regions",
             TonalityType.Major,
-            new PitchClassSet([
-                PitchClass.C, PitchClass.D, PitchClass.E, PitchClass.F, PitchClass.G, PitchClass.A, PitchClass.B
+            new BspPitchClassSet([
+                BspPitchClass.C, BspPitchClass.D, BspPitchClass.E, BspPitchClass.F, BspPitchClass.G, BspPitchClass.A, BspPitchClass.B
             ]),
-            (int)PitchClass.C
+            (int)BspPitchClass.C
         );
 
         var minorRegion = new TonalRegion(
             "Minor Regions",
             TonalityType.Minor,
-            new PitchClassSet([
-                PitchClass.A, PitchClass.B, PitchClass.C, PitchClass.D, PitchClass.E, PitchClass.F, PitchClass.G
+            new BspPitchClassSet([
+                BspPitchClass.A, BspPitchClass.B, BspPitchClass.C, BspPitchClass.D, BspPitchClass.E, BspPitchClass.F, BspPitchClass.G
             ]),
-            (int)PitchClass.A
+            (int)BspPitchClass.A
         );
 
         Root.Left = new TonalBspNode(majorRegion);
@@ -152,12 +152,12 @@ public class TonalBspTree
     /// <summary>
     ///     Find the best tonal region for a given pitch class set
     /// </summary>
-    public TonalRegion FindTonalRegion(PitchClassSet pitchClassSet)
+    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         return FindTonalRegionRecursive(Root, pitchClassSet);
     }
 
-    private TonalRegion FindTonalRegionRecursive(TonalBspNode node, PitchClassSet pitchClassSet)
+    private TonalRegion FindTonalRegionRecursive(TonalBspNode node, GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         if (node.IsLeaf)
         {
@@ -181,9 +181,9 @@ public class TonalBspTree
         return node.Region;
     }
 
-    private int CalculateFit(TonalRegion region, PitchClassSet pitchClassSet)
+    private int CalculateFit(TonalRegion region, GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
-        return pitchClassSet.Intersect(region.PitchClassSet).Count();
+        return pitchClassSet.Count(pc => region.PitchClassSet.Contains((BspPitchClass)pc.Value));
     }
 }
 
@@ -193,7 +193,7 @@ public class TonalBspTree
 public interface ITonalElement
 {
     string Name { get; }
-    PitchClassSet PitchClassSet { get; }
+    BspPitchClassSet PitchClassSet { get; }
     TonalityType TonalityType { get; }
     double TonalCenter { get; }
 }
@@ -207,7 +207,7 @@ public class TonalChord : ITonalElement
     {
     }
 
-    public TonalChord(string name, PitchClassSet pitchClassSet, TonalityType tonalityType, double tonalCenter)
+    public TonalChord(string name, BspPitchClassSet pitchClassSet, TonalityType tonalityType, double tonalCenter)
     {
         Name = name;
         PitchClassSet = pitchClassSet;
@@ -217,7 +217,7 @@ public class TonalChord : ITonalElement
 
     public double TonalStrength { get; init; } = 1.0;
     public string Name { get; init; } = "";
-    public PitchClassSet PitchClassSet { get; init; } = new([]);
+    public BspPitchClassSet PitchClassSet { get; init; } = new([]);
     public TonalityType TonalityType { get; init; }
     public double TonalCenter { get; init; }
 }
@@ -231,7 +231,7 @@ public class TonalScale : ITonalElement
     {
     }
 
-    public TonalScale(string name, PitchClassSet pitchClassSet, TonalityType tonalityType, double tonalCenter)
+    public TonalScale(string name, BspPitchClassSet pitchClassSet, TonalityType tonalityType, double tonalCenter)
     {
         Name = name;
         PitchClassSet = pitchClassSet;
@@ -241,7 +241,7 @@ public class TonalScale : ITonalElement
 
     public double TonalStrength { get; init; } = 1.0;
     public string Name { get; init; } = "";
-    public PitchClassSet PitchClassSet { get; init; } = new([]);
+    public BspPitchClassSet PitchClassSet { get; init; } = new([]);
     public TonalityType TonalityType { get; init; }
     public double TonalCenter { get; init; }
 }
@@ -279,14 +279,15 @@ public class TonalBspService
     /// <summary>
     ///     Perform spatial query for similar elements
     /// </summary>
-    public TonalBspQueryResult SpatialQuery(PitchClassSet center, double radius, TonalPartitionStrategy strategy)
+    public TonalBspQueryResult SpatialQuery(GA.Domain.Core.Theory.Atonal.PitchClassSet center, double radius, TonalPartitionStrategy strategy)
     {
         var stopwatch = Stopwatch.StartNew();
 
         var region = _tree.FindTonalRegion(center);
+        var bspSet = new BspPitchClassSet(center.Select(pc => (BspPitchClass)pc.Value));
         var elements = new List<ITonalElement>
         {
-            new TonalChord("Query Result", center, region.TonalityType, region.TonalCenter)
+            new TonalChord("Query Result", bspSet, region.TonalityType, region.TonalCenter)
         };
         var confidence = region.Contains(center) ? 0.9 : 0.5;
 
@@ -298,14 +299,15 @@ public class TonalBspService
     /// <summary>
     ///     Find tonal context for a chord
     /// </summary>
-    public TonalBspQueryResult FindTonalContextForChord(PitchClassSet pitchClassSet)
+    public TonalBspQueryResult FindTonalContextForChord(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         var stopwatch = Stopwatch.StartNew();
 
         var region = _tree.FindTonalRegion(pitchClassSet);
+        var bspSet = new BspPitchClassSet(pitchClassSet.Select(pc => (BspPitchClass)pc.Value));
         var elements = new List<ITonalElement>
         {
-            new TonalChord("Context", pitchClassSet, region.TonalityType, region.TonalCenter)
+            new TonalChord("Context", bspSet, region.TonalityType, region.TonalCenter)
         };
         var confidence = region.Contains(pitchClassSet) ? 0.9 : 0.5;
 

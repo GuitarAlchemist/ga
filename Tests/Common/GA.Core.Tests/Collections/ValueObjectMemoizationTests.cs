@@ -1,11 +1,10 @@
 ﻿namespace GA.Core.Tests.Collections;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Fretboard.Fingering;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Intervals.Primitives;
-using GA.Business.Core.Tonal;
+using GA.Domain.Core.Instruments.Fingering;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Tonal;
 
 /// <summary>
 /// Tests to verify that IStaticValueObjectList implementations use memoization correctly.

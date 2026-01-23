@@ -2,9 +2,9 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using Microsoft.Extensions.Logging;
-using ChordTemplate = Business.Core.Chords.ChordTemplate;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     Service for managing and querying the Tonal Binary Space Partitioning tree
@@ -61,7 +61,7 @@ public class TonalBspService
     /// <summary>
     ///     Find tonal context for a pitch class set
     /// </summary>
-    public TonalBspQueryResult FindTonalContextForChord(PitchClassSet pitchClassSet)
+    public TonalBspQueryResult FindTonalContextForChord(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         var cacheKey = $"pitchset_{pitchClassSet}";
 
@@ -87,7 +87,7 @@ public class TonalBspService
     /// <summary>
     ///     Find related scales for a given pitch class set
     /// </summary>
-    public TonalBspQueryResult FindRelatedScales(PitchClassSet pitchClassSet)
+    public TonalBspQueryResult FindRelatedScales(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         var cacheKey = $"scales_{pitchClassSet}";
 
@@ -145,7 +145,7 @@ public class TonalBspService
     /// <summary>
     ///     Perform spatial query to find elements within a tonal distance
     /// </summary>
-    public TonalBspQueryResult SpatialQuery(PitchClassSet center, double radius, TonalPartitionStrategy strategy)
+    public TonalBspQueryResult SpatialQuery(GA.Domain.Core.Theory.Atonal.PitchClassSet center, double radius, TonalPartitionStrategy strategy)
     {
         var stopwatch = Stopwatch.StartNew();
         var cacheKey = $"spatial_{center}_{radius}_{strategy}";
@@ -280,7 +280,7 @@ public class TonalBspService
         return Math.Min(baseConfidence + relationshipBonus, 1.0);
     }
 
-    private double CalculateScaleCompatibility(PitchClassSet pitchClassSet, List<ITonalElement> scales)
+    private double CalculateScaleCompatibility(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet, List<ITonalElement> scales)
     {
         if (!scales.Any())
         {
@@ -293,7 +293,7 @@ public class TonalBspService
         return compatibilityScores.Max();
     }
 
-    private double CalculateSetCompatibility(PitchClassSet set1, PitchClassSet set2)
+    private double CalculateSetCompatibility(GA.Domain.Core.Theory.Atonal.PitchClassSet set1, PitchClassSet set2)
     {
         var intersection = set1.Intersect(set2).Count();
         var union = set1.Union(set2).Count();
@@ -301,7 +301,7 @@ public class TonalBspService
         return union > 0 ? (double)intersection / union : 0.0; // Jaccard similarity
     }
 
-    private bool HasTonalRelationship(PitchClassSet set1, PitchClassSet set2)
+    private bool HasTonalRelationship(GA.Domain.Core.Theory.Atonal.PitchClassSet set1, PitchClassSet set2)
     {
         // Simple heuristic: sets have a relationship if they share at least 50% of their notes
         var intersection = set1.Intersect(set2).Count();
@@ -332,18 +332,18 @@ public class TonalBspService
         return 1;
     }
 
-    private double CalculateSpatialConfidence(PitchClassSet center, List<ITonalElement> results, double radius)
+    private double CalculateSpatialConfidence(GA.Domain.Core.Theory.Atonal.PitchClassSet center, List<ITonalElement> results, double radius)
     {
         return 0.9;
     }
 
-    private double CalculateTonalDistanceByStrategy(PitchClassSet set1, PitchClassSet set2,
+    private double CalculateTonalDistanceByStrategy(GA.Domain.Core.Theory.Atonal.PitchClassSet set1, PitchClassSet set2,
         TonalPartitionStrategy strategy)
     {
         return 0.5;
     }
 
-    private double CalculateRegionDistance(PitchClassSet center, TonalRegion region, TonalPartitionStrategy strategy)
+    private double CalculateRegionDistance(GA.Domain.Core.Theory.Atonal.PitchClassSet center, TonalRegion region, TonalPartitionStrategy strategy)
     {
         return 0.3;
     }

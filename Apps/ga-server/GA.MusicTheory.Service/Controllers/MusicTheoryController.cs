@@ -1,9 +1,9 @@
 namespace GA.MusicTheory.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
-using GA.Business.Core.Tonal;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Primitives.Diatonic;
+using GA.Domain.Core.Theory.Tonal;
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 

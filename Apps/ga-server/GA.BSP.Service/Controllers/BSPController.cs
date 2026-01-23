@@ -2,12 +2,10 @@ namespace GA.BSP.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 using System.Runtime.CompilerServices;
-using GA.BSP.Core.Spatial;
-using GA.Business.Core.Atonal;
+using Core.Spatial;
+using GA.Domain.Core.Theory.Atonal;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.BSP.Service.Models;
-// using GA.Business.Core.Spatial // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
+using Models;
 
 /// <summary>
 ///     API controller for Binary Space Partitioning (BSP) musical analysis

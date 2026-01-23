@@ -2,7 +2,8 @@ namespace GA.Data.MongoDB.Extensions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Services;
+using GA.Data.MongoDB.Services;
+using GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 public static class ServiceCollectionExtensions
 {
@@ -49,6 +50,18 @@ public static class ServiceCollectionExtensions
 
         // Register MusicalObjectsService
         services.AddSingleton<MusicalObjectsService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddRagServices(this IServiceCollection services)
+    {
+        services.AddSingleton<MusicTheoryRagService>();
+        services.AddSingleton<GuitarTechniqueRagService>();
+        services.AddSingleton<StyleLearningRagService>();
+        services.AddSingleton<YouTubeTranscriptRagService>();
+        services.AddSingleton<EnhancedChordRagService>();
+        services.AddSingleton<ChordRagSyncService>();
 
         return services;
     }

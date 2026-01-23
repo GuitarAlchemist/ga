@@ -1,4 +1,4 @@
-namespace GA.Business.Core;
+namespace GA.Domain.Services;
 
 using System;
 using System.Collections.Generic;

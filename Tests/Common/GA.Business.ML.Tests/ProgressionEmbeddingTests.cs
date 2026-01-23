@@ -2,7 +2,7 @@ namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Wavelets;
 using NUnit.Framework;
 

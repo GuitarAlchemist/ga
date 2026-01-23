@@ -1,4 +1,8 @@
 namespace GaChatbot.Tests.Integration
+
+using GA.Domain.Services.Abstractions;
+using GA.Domain.Core.Instruments;
+
 {
     using System;
     using System.Collections.Generic;
@@ -19,10 +23,10 @@ namespace GaChatbot.Tests.Integration
     using GA.Business.ML.Musical.Explanation;
     using GA.Business.ML.Naturalness;
     using GA.Business.ML.Abstractions;
-    using GA.Business.Core.Abstractions;
-    using GA.Business.Core.AI;
-    using GA.Business.Core.Fretboard.Analysis;
-    using GA.Business.Core.Fretboard.Voicings.Search;
+    using GA.Domain.Core.Abstractions;
+    using GA.Domain.Core.AI;
+    using GA.Domain.Services.Fretboard.Analysis;
+    using GA.Domain.Services.Fretboard.Voicings.Search;
     using GaChatbot.Tests.Mocks;
     using Moq;
 
@@ -62,13 +66,13 @@ namespace GaChatbot.Tests.Integration
             services.AddSingleton<ProductionOrchestrator>();
 
             // 5. Mocks (Where Real I/O is too heavy or needs control)
-            services.AddSingleton<GA.Business.Core.Fretboard.Analysis.PhysicalCostService>();
+            services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.PhysicalCostService>();
             services.AddSingleton<GroundedPromptBuilder>();
             services.AddSingleton<ResponseValidator>();
 
             // 5b. Tab Solver Dependencies
-            services.AddSingleton(GA.Business.Core.Fretboard.Tuning.Default);
-            services.AddSingleton<GA.Business.Core.Fretboard.Analysis.FretboardPositionMapper>();
+            services.AddSingleton(GA.Domain.Instruments.Fretboard.Tuning.Default);
+            services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.FretboardPositionMapper>();
             services.AddSingleton<StyleProfileService>();
             services.AddSingleton<IMlNaturalnessRanker, MlNaturalnessRanker>();
             services.AddSingleton<ITextEmbeddingService>(new Mock<ITextEmbeddingService>().Object);

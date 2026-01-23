@@ -3,7 +3,7 @@ namespace GA.Business.ML.Musical.Enrichment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
 /// Service to identify and tag "Modal Flavors" in voicings based on characteristic intervals.

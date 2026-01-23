@@ -1,7 +1,7 @@
 namespace GaApi.Extensions;
 
-using GA.Business.Core.Fretboard.Voicings.Search;
 using GA.Business.ML.Text.Internal;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

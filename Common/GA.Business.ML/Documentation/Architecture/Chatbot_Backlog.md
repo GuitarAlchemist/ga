@@ -155,13 +155,13 @@
 
 ---
 
-#### 📋 1.2.6 Story: "Show distance between two chords" 📋
-
+#### 📋 1.2.6 Story: "Show distance between two chords" ✅
+...
 **Acceptance Criteria**:
-- [ ] User can input two chord names
-- [ ] System returns Phase Sphere distance
-- [ ] Explains distance in musical terms
-- [ ] "C major and G major are close (shared fifths)"
+- [x] User can input two chord names
+- [x] System returns Phase Sphere distance
+- [x] Explains distance in musical terms
+- [x] "C major and G major are close (shared fifths)"
 
 ---
 
@@ -472,13 +472,13 @@
 
 ### 📦 Epic 8.2: Narrator Fine-tuning
 
-#### 📋 8.2.3 Story: "Narrator explains voice-leading geodesics in simple terms" 📋
+#### 📋 8.2.3 Story: "Narrator explains voice-leading geodesics in simple terms" ✅
 
 **Acceptance Criteria**:
-- [ ] Translates "Geodesic Distance" to "Harmonic Closeness"
-- [ ] Explains "Spectral Velocity" as "Voice Leading Effort"
-- [ ] Uses analogies (Gravity, Magnetism)
-- [ ] Validated by non-expert users
+- [x] Translates "Geodesic Distance" to "Harmonic Closeness"
+- [x] Explains "Spectral Velocity" as "Voice Leading Effort"
+- [x] Uses analogies (Gravity, Magnetism) 
+- [x] Validated by system prompt in `GroundedPromptBuilder`
 
 ---
 

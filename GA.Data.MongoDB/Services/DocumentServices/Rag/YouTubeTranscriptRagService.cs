@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 /// Stage 2: Deep knowledge extraction (chord progressions, scales, techniques) and embedding generation
 /// </summary>
 [UsedImplicitly]
-public sealed class YouTubeTranscriptRagService(
+public class YouTubeTranscriptRagService(
     ILogger<YouTubeTranscriptRagService> logger,
     MongoDbService mongoDb,
     IEmbeddingService embeddingService)

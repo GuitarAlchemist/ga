@@ -1,13 +1,14 @@
-﻿using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Fretboard.Shapes.Applications;
-using GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
-using GA.Business.Core.Fretboard.Shapes.InformationTheory;
-using GA.Business.Core.Fretboard.Shapes.Spectral;
-using GA.Business.Core.Fretboard.Shapes.Topology;
-using Microsoft.Extensions.Logging;
+﻿using GA.Domain.Core.Theory.Atonal;
 
 namespace GA.BSP.Core;
+
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Instruments.Shapes.Applications;
+using GA.Domain.Core.Instruments.Shapes.DynamicalSystems;
+using GA.Domain.Core.Instruments.Shapes.InformationTheory;
+using GA.Domain.Core.Instruments.Shapes.Spectral;
+using GA.Domain.Core.Instruments.Shapes.Topology;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Intelligent BSP Level Generator
@@ -368,4 +369,3 @@ public class BspLevelOptions
     public int BridgeChordCount { get; init; } = 5;
     public int LearningPathLength { get; init; } = 8;
 }
-

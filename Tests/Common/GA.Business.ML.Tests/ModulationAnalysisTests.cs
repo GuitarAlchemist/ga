@@ -4,10 +4,10 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.ML.Retrieval;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Tests.TestInfrastructure;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Retrieval;
+using Embeddings;
+using TestInfrastructure;
 
 [TestFixture]
 public class ModulationAnalysisTests
@@ -39,8 +39,8 @@ public class ModulationAnalysisTests
         var docs = new List<VoicingDocument>();
         for (int i = 0; i < progressionNames.Length; i++)
         {
-            var pcsList = progressionNotes[i].Select(m => Core.Atonal.PitchClass.FromValue(m % 12)).ToList();
-            var pcsSet = new Core.Atonal.PitchClassSet(pcsList);
+            var pcsList = progressionNotes[i].Select(m => Domain.Core.Theory.Atonal.PitchClass.FromValue(m % 12)).ToList();
+            var pcsSet = new GA.Domain.Core.Theory.Atonal.PitchClassSet(pcsList);
 
             var doc = new VoicingDocument
             {

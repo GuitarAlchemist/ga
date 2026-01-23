@@ -7,7 +7,7 @@ using Models;
 using Services;
 using Path = System.IO.Path;
 
-// using GA.Business.Core.Diagnostics // REMOVED - namespace does not exist;
+// using GA.Domain.Core.Diagnostics // REMOVED - namespace does not exist;
 
 /// <summary>
 ///     Health check and system information endpoints
@@ -246,9 +246,9 @@ public class HealthController(
     /// <response code="200">Returns comprehensive diagnostics</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/comprehensive")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.ComprehensiveDiagnostics), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.ComprehensiveDiagnostics), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.ComprehensiveDiagnostics>> GetComprehensiveDiagnostics()
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.ComprehensiveDiagnostics>> GetComprehensiveDiagnostics()
     {
         if (tarsMcpClient == null)
         {
@@ -285,9 +285,9 @@ public class HealthController(
     /// <response code="200">Returns GPU information</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/gpu")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.GpuInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.GpuInfo), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.GpuInfo>> GetGpuInfo()
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.GpuInfo>> GetGpuInfo()
     {
         if (tarsMcpClient == null)
         {
@@ -319,9 +319,9 @@ public class HealthController(
     /// <response code="200">Returns system resources</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/system-resources")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.SystemResources), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.SystemResources), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.SystemResources>> GetSystemResources()
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.SystemResources>> GetSystemResources()
     {
         if (tarsMcpClient == null)
         {
@@ -353,9 +353,9 @@ public class HealthController(
     /// <response code="200">Returns service health</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/service-health")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.ServiceHealth), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.ServiceHealth), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.ServiceHealth>> GetServiceHealth()
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.ServiceHealth>> GetServiceHealth()
     {
         if (tarsMcpClient == null)
         {
@@ -388,9 +388,9 @@ public class HealthController(
     /// <response code="200">Returns Git health</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/git-health")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.GitHealth), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.GitHealth), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.GitHealth>> GetGitHealth(
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.GitHealth>> GetGitHealth(
         [FromQuery] string? repositoryPath = null)
     {
         if (tarsMcpClient == null)
@@ -423,9 +423,9 @@ public class HealthController(
     /// <response code="200">Returns network diagnostics</response>
     /// <response code="503">TARS MCP service unavailable</response>
     [HttpGet("diagnostics/network")]
-    [ProducesResponseType(typeof(GA.Business.Core.Diagnostics.NetworkDiagnostics), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GA.Domain.Core.Diagnostics.NetworkDiagnostics), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<ActionResult<GA.Business.Core.Diagnostics.NetworkDiagnostics>> GetNetworkDiagnostics()
+    public async Task<ActionResult<GA.Domain.Core.Diagnostics.NetworkDiagnostics>> GetNetworkDiagnostics()
     {
         if (tarsMcpClient == null)
         {

@@ -244,22 +244,16 @@ export class HomeComponent implements OnInit {
     private readonly gaApi = inject(GaApiService);
     private readonly cdr = inject(ChangeDetectorRef);
 
-    isDark = true; // Default to dark theme as requested
+    isDark = true;
     lastUpdated = new Date().toLocaleString();
-    voicingCount = 742815;
-    embeddingDim = 216;
-    avgScore = 0.87;
-    searchLatencyMs = 42;
+    voicingCount = 0;
+    embeddingDim = 0;
+    avgScore = 0;
+    searchLatencyMs = 0;
     instrument = 'Guitar';
     tuning = 'Standard (E A D G B E)';
 
-    benchmarks: BenchmarkResult[] = [
-        { id: 'beginner-open-c', name: 'Beginner Open C', score: 0.95, status: 'pass', timestamp: '2026-01-17 14:30' },
-        { id: 'jazz-shell', name: 'Jazz Shell Voicing', score: 0.82, status: 'pass', timestamp: '2026-01-17 14:30' },
-        { id: 'hendrix-chord', name: 'Hendrix Chord', score: 0.91, status: 'pass', timestamp: '2026-01-17 14:30' },
-        { id: 'neo-soul', name: 'Neo-Soul Extensions', score: 0.78, status: 'warn', timestamp: '2026-01-17 14:30' },
-        { id: 'power-chord', name: 'Power Chord Shapes', score: 0.98, status: 'pass', timestamp: '2026-01-17 14:30' },
-    ];
+    benchmarks: BenchmarkResult[] = [];
 
     docLinks: DocLink[] = [];
 
@@ -272,6 +266,38 @@ export class HomeComponent implements OnInit {
 
     ngOnInit() {
         this.navService.setCrumbs([{ label: '🎸 Guitar Alchemist Dashboard' }]);
+
+        // Load stats
+        this.gaApi.getStats().subscribe({
+            next: (stats) => {
+                this.voicingCount = stats.totalVoicings;
+                this.embeddingDim = stats.embeddingDimensions;
+                this.cdr.detectChanges();
+            },
+            error: (err) => console.error('Failed to load stats', err)
+        });
+
+        // Load benchmarks
+        this.gaApi.getBenchmarks().subscribe({
+            next: (data) => {
+                this.benchmarks = data.map((b: any) => ({
+                    id: b.benchmarkId,
+                    name: b.name,
+                    score: b.score,
+                    status: b.score >= 0.8 ? 'pass' : (b.score >= 0.6 ? 'warn' : 'fail'),
+                    timestamp: new Date(b.timestamp).toLocaleString()
+                }));
+                // Calculate avg score
+                if (this.benchmarks.length > 0) {
+                    this.avgScore = this.benchmarks.reduce((acc, curr) => acc + curr.score, 0) / this.benchmarks.length;
+                }
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Failed to load benchmarks', err);
+                this.benchmarks = [];
+            }
+        });
 
         this.gaApi.getNotebooks().subscribe({
             next: (data) => {

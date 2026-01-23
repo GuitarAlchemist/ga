@@ -1,8 +1,6 @@
 namespace GA.Business.ML.Tests.Tabs;
 
-using System.Threading.Tasks;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Embeddings.Services;
+using Embeddings;
 using GA.Business.ML.Tabs;
 using NUnit.Framework;
 

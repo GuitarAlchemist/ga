@@ -1,7 +1,7 @@
 ﻿namespace GA.BSP.Core.Spatial;
 
 using System.Numerics;
-using Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 ///     Binary Space Partitioning for Tonal Space
@@ -19,7 +19,7 @@ public class TonalBspTree
     /// <summary>
     ///     Find the most appropriate tonal region for a given musical element
     /// </summary>
-    public TonalRegion FindTonalRegion(PitchClassSet pitchClassSet)
+    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         return FindRegionRecursive(Root, pitchClassSet);
     }
@@ -245,7 +245,7 @@ public class TonalBspTree
         return 0.3 * balance + 0.4 * (leftCoherence + rightCoherence) / 2.0 + 0.3 * separation;
     }
 
-    private double CalculateTonalDistance(PitchClassSet pitchClassSet, TonalPartitionPlane plane)
+    private double CalculateTonalDistance(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet, TonalPartitionPlane plane)
     {
         // Convert pitch class set to tonal coordinates
         var tonalCoords = ConvertToTonalCoordinates(pitchClassSet);
@@ -261,7 +261,7 @@ public class TonalBspTree
         };
     }
 
-    private Vector3 ConvertToTonalCoordinates(PitchClassSet pitchClassSet)
+    private Vector3 ConvertToTonalCoordinates(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Map pitch class set to 3D tonal space
         var centroid = pitchClassSet.Select(pc => (int)pc).Average();
@@ -271,7 +271,7 @@ public class TonalBspTree
         return new Vector3((float)centroid, (float)brightness, (float)spread);
     }
 
-    private double CalculateSpread(PitchClassSet pitchClassSet)
+    private double CalculateSpread(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         if (pitchClassSet.Cardinality.Value <= 1)
         {
@@ -283,7 +283,7 @@ public class TonalBspTree
         return Math.Sqrt(variance) / 6.0; // Normalize to [0,1]
     }
 
-    private double CalculateBrightness(PitchClassSet pitchClassSet)
+    private double CalculateBrightness(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
         // Higher pitch classes are "brighter"
         return pitchClassSet.Select(pc => (int)pc).Average() / 11.0; // Normalize to [0,1]

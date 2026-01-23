@@ -1,0 +1,14 @@
+# Fretboard Navigation Playground
+# Visualize moves on the neck
+
+# Start in a familiar CAGED position
+CAGED C 3   # C-shape at 3rd fret (Eb major chord)
+
+# Move up the neck to the next inversion
+move next_inversion
+
+# Slide into a soloing position
+slide from 3 5 to 5 7
+
+# Define a specific position window
+position 8 12

@@ -1,7 +1,8 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace GA.Knowledge.Service.Models;
+
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 /// <summary>
 /// Represents a room generation job in MongoDB

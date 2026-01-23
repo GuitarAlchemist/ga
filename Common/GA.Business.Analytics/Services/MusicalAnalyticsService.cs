@@ -1,7 +1,9 @@
-using GA.Business.Core.Configuration;
-// using GA.Business.Core.Data; // Namespace does not exist
+// using GA.Domain.Core.Data; // Namespace does not exist
 
-namespace GA.Business.Core.Services;
+namespace GA.Domain.Core.Services;
+
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Configuration;
 
 /// <summary>
 /// Advanced analytics service for musical relationships and recommendations

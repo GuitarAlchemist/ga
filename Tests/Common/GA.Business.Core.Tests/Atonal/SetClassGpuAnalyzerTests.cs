@@ -1,9 +1,9 @@
-﻿namespace GA.Business.Core.Tests.Atonal;
+﻿using GA.Domain.Core.Extensions;
+﻿namespace GA.Domain.Core.Tests.Atonal;
 
 using Analysis.Gpu;
-using Core.Atonal;
-using Core.Notes;
-using Extensions;
+using Primitives;
+using GA.Domain.Core.Theory.Atonal;
 using ILGPU.Runtime;
 
 [TestFixture]

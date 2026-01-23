@@ -1,7 +1,7 @@
 ﻿namespace GA.BSP.Core.Spatial;
 
-using Business.Core.Atonal;
-using Business.Core.Chords;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Harmony;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -160,7 +160,7 @@ public class TonalBspAnalyzer(TonalBspService bspService, ILogger<TonalBspAnalyz
         return (chromaticDistance / 6.0 + tonalityDistance + setDistance) / 3.0;
     }
 
-    private double CalculateSetSimilarity(PitchClassSet set1, PitchClassSet set2)
+    private double CalculateSetSimilarity(GA.Domain.Core.Theory.Atonal.PitchClassSet set1, PitchClassSet set2)
     {
         var intersection = set1.Intersect(set2).Count();
         var union = set1.Union(set2).Count();

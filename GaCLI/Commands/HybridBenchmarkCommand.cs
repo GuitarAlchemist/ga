@@ -1,20 +1,22 @@
 namespace GaCLI.Commands;
 
+using GA.Domain.Core.Instruments;
+
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using GA.Business.ML.Embeddings;
 using GA.Data.MongoDB.Services;
 using Microsoft.SemanticKernel;
 using MongoDB.Driver;
 using MongoDB.Bson;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Voicings.Analysis;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Notes.Primitives;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Core;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Primitives;
 using System.Collections.Immutable;
 using Spectre.Console;
 using static System.Console;
@@ -132,7 +134,7 @@ public class HybridBenchmarkCommand
         table.AddColumn("Tags Matched");
         table.AddColumn("Time (ms)");
 
-        var detailedResults = new System.Collections.Generic.List<(string Query, GA.Business.Core.Fretboard.Voicings.Search.VoicingSearchResult Result)>();
+        var detailedResults = new System.Collections.Generic.List<(string Query, GA.Domain.Instruments.Fretboard.Voicings.Search.VoicingSearchResult Result)>();
 
         foreach (var query in queries)
         {
@@ -192,4 +194,3 @@ private static bool HasValidEmbedding(double[]? embedding)
 }
 
 }
-

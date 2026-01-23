@@ -1,7 +1,8 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
-using Business.Core.Chords;
-using Business.Core.Notes.Extensions;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Services.Chords;
+using GA.Domain.Core.Primitives.Extensions;
 using Embeddings;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
@@ -14,7 +15,7 @@ using global::MongoDB.Driver;
 /// Stage 2: Generate embeddings and enrich with knowledge graph data
 /// </summary>
 [UsedImplicitly]
-public sealed class EnhancedChordRagService(
+public class EnhancedChordRagService(
     ILogger<EnhancedChordRagService> logger,
     MongoDbService mongoDb,
     IEmbeddingService embeddingService)

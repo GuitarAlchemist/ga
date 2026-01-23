@@ -1,18 +1,20 @@
 namespace GaCLI.Commands;
 
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Analysis;
-using GA.Business.Core.Fretboard.Voicings.Generation;
-using GA.Business.Core.Fretboard.Voicings.Core;
+using GA.Domain.Core.Instruments;
+
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Services.Fretboard.Voicings.Generation;
+using GA.Domain.Services.Fretboard.Voicings.Core;
 using GA.Data.MongoDB.Models;
 using GA.Data.MongoDB.Services;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Spectre.Console;
 using System.Diagnostics;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Notes.Primitives;
-using GA.Business.Core.Fretboard.Positions;
+using GA.Domain.Services.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Instruments.Positions;
 using GA.Business.ML.Embeddings;
 using System.Threading.Channels;
 
@@ -275,10 +277,10 @@ public class IndexVoicingsCommand
         // Enrich with Semantic Tags (AI Layer)
         var semanticTags = GA.Business.AI.Interpretation.InterpretationService.GenerateSemanticTags(
             analysis.ChordId,
-            analysis.VoicingCharacteristics,
+            analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics,
             analysis.ModeInfo,
-            analysis.PhysicalLayout,
-            analysis.PlayabilityInfo,
+            analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PhysicalLayout,
+            analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo,
             analysis.PerceptualQualities);
         
         // Map to Entity
@@ -314,6 +316,7 @@ public class IndexVoicingsCommand
             PossibleKeys = entity.PossibleKeys,
             SemanticTags = entity.SemanticTags,
             YamlAnalysis = "",
+            SchemaVersion = EmbeddingSchema.Version,
             AnalysisEngine = "VoicingIndexer", 
             AnalysisVersion = "1.0",
             Jobs = [],
@@ -452,7 +455,7 @@ public class IndexVoicingsCommand
             await collection.BulkWriteAsync(models);
     }
 
-    private static VoicingEntity MapToEntity(Voicing voicing, MusicalVoicingAnalysis analysis)
+    private static VoicingEntity MapToEntity(Voicing voicing, GA.Domain.Services.Fretboard.Voicings.Analysis.MusicalVoicingAnalysis analysis)
     {
         var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
         var id = $"voicing_{diagram.Replace("-", "_").Replace("x", "m")}";
@@ -482,9 +485,9 @@ public class IndexVoicingsCommand
             // === LAYER 2: SOUND ===
             Tuning = "Standard", // TODO: Get from context when multi-tuning support is added
             CapoPosition = 0,
-            VoicingType = analysis.VoicingCharacteristics.VoicingType,
-            VoicingSpan = analysis.VoicingCharacteristics.Span,
-            IsRootless = analysis.VoicingCharacteristics.IsRootless,
+            VoicingType = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.VoicingType,
+            VoicingSpan = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.Span,
+            IsRootless = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.IsRootless,
             TonesPresent = analysis.ToneInventory.TonesPresent.ToArray(),
             DoubledTones = analysis.ToneInventory.DoubledTones.Count > 0 ? analysis.ToneInventory.DoubledTones.ToArray() : null,
             OmittedTones = analysis.ToneInventory.OmittedTones.Count > 0 ? analysis.ToneInventory.OmittedTones.ToArray() : null,
@@ -495,27 +498,27 @@ public class IndexVoicingsCommand
             MayBeMuddy = analysis.PerceptualQualities.MayBeMuddy,
             Roughness = analysis.PerceptualQualities.Roughness,
             Spacing = analysis.PerceptualQualities.Spacing,
-            StackingType = null, // analysis.VoicingCharacteristics.StackingType,
+            StackingType = null, // analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.StackingType,
             Inversion = 0, // analysis.ChordId.Inversion,
             MidiBassNote = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0].Value : 0,
             RootConfidence = analysis.ChordId.RootConfidence,
             RootPitchClass = analysis.ChordId.RootPitchClass?.Value,
 
             // === LAYER 3: HANDS ===
-            HandPosition = analysis.PhysicalLayout.HandPosition,
-            Difficulty = analysis.PlayabilityInfo.Difficulty,
-            DifficultyScore = analysis.PlayabilityInfo.DifficultyScore,
-            MinFret = analysis.PhysicalLayout.MinFret,
-            MaxFret = analysis.PhysicalLayout.MaxFret,
-            HandStretch = analysis.PlayabilityInfo.HandStretch,
-            BarreRequired = analysis.PlayabilityInfo.BarreRequired,
-            BarreInfo = analysis.PlayabilityInfo.BarreInfo,
-            FingerAssignment = analysis.ErgonomicsInfo.FingerAssignment,
-            StringSkips = analysis.ErgonomicsInfo.StringSkips,
-            MinimumFingers = analysis.PlayabilityInfo.MinimumFingers,
-            StringSet = analysis.PhysicalLayout.StringSet,
-            CagedShape = analysis.PlayabilityInfo.CagedShape,
-            ShellFamily = analysis.PlayabilityInfo.ShellFamily,
+            HandPosition = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PhysicalLayout.HandPosition,
+            Difficulty = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.Difficulty,
+            DifficultyScore = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.DifficultyScore,
+            MinFret = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PhysicalLayout.MinFret,
+            MaxFret = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PhysicalLayout.MaxFret,
+            HandStretch = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.HandStretch,
+            BarreRequired = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.BarreRequired,
+            BarreInfo = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.BarreInfo,
+            FingerAssignment = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.ErgonomicsInfo.FingerAssignment,
+            StringSkips = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.ErgonomicsInfo.StringSkips,
+            MinimumFingers = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.MinimumFingers,
+            StringSet = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PhysicalLayout.StringSet,
+            CagedShape = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.CagedShape,
+            ShellFamily = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.ShellFamily,
 
             // === CONTEXTUAL HOOKS ===
             CommonSubstitutions = analysis.ContextualHooks.CommonSubstitutions?.ToArray(),
@@ -527,7 +530,8 @@ public class IndexVoicingsCommand
             PossibleKeys = analysis.PitchClassSet.GetCompatibleKeys().Select(k => k.ToString()).ToArray(),
             SemanticTags = analysis.SemanticTags.ToArray(),
             Embedding = null,
-            EmbeddingModel = null,
+            EmbeddingModel = "MusicalFeature-v1",
+            SchemaVersion = EmbeddingSchema.Version,
             FullAnalysis = null,
             LastUpdated = DateTime.UtcNow,
             
@@ -557,6 +561,7 @@ public class IndexVoicingsCommand
             
             AnalysisEngine = e.AnalysisEngine ?? "Unknown",
             AnalysisVersion = e.AnalysisVersion ?? "0.0",
+            SchemaVersion = e.SchemaVersion,
             Jobs = e.Jobs ?? [],
             
             TuningId = e.Tuning ?? "Standard",

@@ -1,6 +1,8 @@
-using GA.Business.Core.Invariants;
-
 namespace GA.Analytics.Service.Models;
+
+using GA.Domain.Core.Design;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal.Grothendieck;
 
 /// <summary>
 /// Deep relationship analysis result
@@ -256,15 +258,15 @@ public class UserProfile
 }
 
 public record ComputeIcvRequest(int[] PitchClasses);
-public record ComputeDeltaRequest(GA.Business.Core.Atonal.IntervalClassVector Source, GA.Business.Core.Atonal.IntervalClassVector Target);
-public record GrothendieckDeltaResponse(GA.Business.Core.Atonal.Grothendieck.GrothendieckDelta Delta, double Cost, string Explanation);
+public record ComputeDeltaRequest(IntervalClassVector Source, IntervalClassVector Target);
+public record GrothendieckDeltaResponse(GrothendieckDelta Delta, double Cost, string Explanation);
 public class FindNearbyRequest
 {
-    public GA.Business.Core.Atonal.PitchClassSet Source { get; set; } = default!;
+    public PitchClassSet Source { get; set; } = default!;
     public int Limit { get; set; }
     public double MaxDistance { get; set; }
 }
-public record NearbySetResponse(GA.Business.Core.Atonal.PitchClassSet Set, GA.Business.Core.Atonal.Grothendieck.GrothendieckDelta Delta, double Cost);
+public record NearbySetResponse(PitchClassSet Set, GrothendieckDelta Delta, double Cost);
 
 public class GlobalValidationResult
 {
@@ -322,7 +324,7 @@ public class CacheStatistics
     public long CacheMisses { get; set; }
     public long TotalMemoryUsage { get; set; }
     public Dictionary<string, long> CategoryStats { get; set; } = new();
-    
+
     public double TotalHitRate => TotalRequests > 0 ? (double)CacheHits / TotalRequests : 0;
 }
 

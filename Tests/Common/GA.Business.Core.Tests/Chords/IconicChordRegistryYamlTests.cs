@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Tests.Chords;
+namespace GA.Domain.Core.Tests.Chords;
 
 [TestFixture]
 public class IconicChordRegistryYamlTests

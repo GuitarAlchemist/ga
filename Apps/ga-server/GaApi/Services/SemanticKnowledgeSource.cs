@@ -1,7 +1,8 @@
 namespace GaApi.Services;
 
 using System.Text;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 
 /// <summary>
 ///     Implementation that bridges EnhancedVoicingSearchService to the chatbot.
@@ -61,25 +62,25 @@ public sealed class SemanticKnowledgeSource(
     private static string FormatVoicingForLlm(VoicingDocument doc)
     {
         var sb = new StringBuilder();
-        
+
         sb.AppendLine($"## {doc.ChordName}");
         sb.AppendLine($"Diagram: `{doc.Diagram}`");
-        
+
         if (!string.IsNullOrWhiteSpace(doc.TexturalDescription))
             sb.AppendLine($"Texture: {doc.TexturalDescription}");
-        
+
         if (doc.SemanticTags is { Length: > 0 })
             sb.AppendLine($"Tags: {string.Join(", ", doc.SemanticTags)}");
-        
+
         if (!string.IsNullOrWhiteSpace(doc.HarmonicFunction))
             sb.AppendLine($"Function: {doc.HarmonicFunction}");
-        
+
         if (!string.IsNullOrWhiteSpace(doc.Difficulty))
             sb.AppendLine($"Difficulty: {doc.Difficulty}");
-        
+
         if (doc.AlternateNames is { Length: > 0 })
             sb.AppendLine($"Also known as: {string.Join(", ", doc.AlternateNames)}");
-        
+
         // Include YAML analysis if available
         if (!string.IsNullOrWhiteSpace(doc.YamlAnalysis) && doc.YamlAnalysis != "{}")
         {
@@ -88,7 +89,7 @@ public sealed class SemanticKnowledgeSource(
             sb.AppendLine(doc.YamlAnalysis);
             sb.AppendLine("```");
         }
-        
+
         return sb.ToString();
     }
 }

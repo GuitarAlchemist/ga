@@ -2,7 +2,7 @@ namespace GA.AI.Service.Services;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
-using GA.AI.Service.Models;
+using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -151,7 +151,9 @@ public class MongoDbService
 
     public async Task<long> GetTotalChordCountAsync()
     {
-        return await Chords.CountDocumentsAsync(new BsonDocument());
+        // Use BsonDocument to avoid mapping issues
+        var collection = Database.GetCollection<BsonDocument>(_settings.Collections.Chords);
+        return await collection.CountDocumentsAsync(new BsonDocument());
     }
 
     public async Task<List<string>> GetDistinctQualitiesAsync()
@@ -299,6 +301,11 @@ public class MongoDbService
     public string GetDatabaseName()
     {
         return _settings.DatabaseName;
+    }
+
+    public string GetCollectionName()
+    {
+        return _settings.Collections.Chords;
     }
 
     // ========================================

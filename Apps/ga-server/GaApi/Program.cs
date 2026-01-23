@@ -1,24 +1,18 @@
-using System.Net;
-using System.Reflection;
 using AllProjects.ServiceDefaults;
+using GA.Business.Core.Session;
 using GaApi.Configuration;
 using GaApi.Extensions;
 using GaApi.Hubs;
 using GaApi.Models;
 using GaApi.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
-using Polly;
-using Polly.Extensions.Http;
 using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add shared configuration
 builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "../../appsettings.Shared.json"), optional: true, reloadOnChange: true);
-
-
 
 // Add Aspire service defaults (telemetry, health checks, service discovery)
 builder.AddServiceDefaults();
@@ -72,6 +66,9 @@ builder.Services.AddVoicingSearchServices(builder.Configuration);
 
 // Add caching services
 builder.Services.AddCachingServices();
+
+// Add session context provider (scoped = one per HTTP request)
+builder.Services.AddSessionContextScoped();
 
 // Add HTTP client for external services
 builder.Services.AddHttpClient();
@@ -161,6 +158,9 @@ app.UseAntiforgery();
 
 app.MapControllers();
 
+app.MapGet("/api/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStats");
+app.MapGet("/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStatsRoot");
+
 // Map YARP Reverse Proxy routes (API Gateway)
 app.MapReverseProxy();
 
@@ -181,10 +181,4 @@ app.MapGet("/api", () => new
 
 app.Run();
 
-// Make the implicit Program class public for integration testing
-namespace GaApi
-{
-    public partial class Program
-    {
-    }
-}
+public partial class Program { }

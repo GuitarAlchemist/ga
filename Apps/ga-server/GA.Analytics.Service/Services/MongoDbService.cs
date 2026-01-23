@@ -2,7 +2,7 @@ namespace GA.Analytics.Service.Services;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
-using GA.Analytics.Service.Models;
+using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

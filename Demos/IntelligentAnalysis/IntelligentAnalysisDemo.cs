@@ -1,3 +1,4 @@
+using GA.Domain.Core.Instruments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,9 @@ using GA.Business.ML.Embeddings.Services;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Wavelets;
 using GA.Business.ML.Extensions;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Atonal;
 
 public static class IntelligentAnalysisDemo
 {
@@ -26,7 +27,7 @@ public static class IntelligentAnalysisDemo
         services.AddSingleton<GA.Business.ML.Musical.Enrichment.AutoTaggingService>();
         services.AddSingleton<GA.Business.ML.Musical.Enrichment.ModalFlavorService>();
         services.AddSingleton<SpectralRetrievalService>(); 
-        services.AddSingleton<GA.Business.Core.Fretboard.Analysis.PhysicalCostService>();
+        services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.PhysicalCostService>();
         services.AddSingleton<PhaseSphereService>(); // Ensure Phase Sphere is registered
         var provider = services.BuildServiceProvider();
 

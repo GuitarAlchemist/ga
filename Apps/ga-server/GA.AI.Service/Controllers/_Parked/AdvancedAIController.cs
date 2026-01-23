@@ -1,15 +1,17 @@
 namespace GA.AI.Service.Controllers;
 
+using GA.Domain.Core.Instruments;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Instruments.Fretboard;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Primitives;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 
-using IShapeGraphBuilder = GA.Business.Core.Fretboard.Shapes.IShapeGraphBuilder;
+using IShapeGraphBuilder = GA.Domain.Instruments.Shapes.IShapeGraphBuilder;
 
 /// <summary>
 ///     API controller for Advanced AI Features

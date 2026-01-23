@@ -1,5 +1,6 @@
 namespace GA.Data.MongoDB.Models;
 
+using GA.Domain.Core.Instruments;
 using global::MongoDB.Bson;
 using global::MongoDB.Bson.Serialization.Attributes;
 
@@ -382,6 +383,12 @@ public class VoicingEntity
     /// </summary>
     [BsonElement("embeddingModel")]
     public string? EmbeddingModel { get; set; }
+
+    /// <summary>
+    /// OPTIC-K Schema Version (e.g. "v1.4")
+    /// </summary>
+    [BsonElement("schemaVersion")]
+    public string? SchemaVersion { get; set; }
 
     /// <summary>
     /// Vector embedding for semantic text search (ONNX/BERT)

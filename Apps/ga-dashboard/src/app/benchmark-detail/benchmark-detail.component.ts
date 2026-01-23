@@ -23,56 +23,7 @@ interface QueryResult {
   pass: boolean;
 }
 
-// Mock data fallback - in case API fails
-const MOCK_BENCHMARKS: Record<string, BenchmarkDetail> = {
-  'beginner-open-c': {
-    id: 'beginner-open-c', name: 'Beginner Open C', score: 0.95, status: 'pass', timestamp: '2026-01-17 14:30', duration: '2.3s',
-    queries: [
-      { query: 'open C major chord', expected: 'x32010', actual: 'x32010', score: 1.0, pass: true },
-      { query: 'easy G chord', expected: '320003', actual: '320003', score: 1.0, pass: true },
-      { query: 'simple D chord', expected: 'xx0232', actual: 'xx0232', score: 1.0, pass: true },
-      { query: 'basic E minor', expected: '022000', actual: '022000', score: 1.0, pass: true },
-      { query: 'beginner A major', expected: 'x02220', actual: 'x02220', score: 0.75, pass: true },
-    ],
-    rawOutput: `Quality Check: Beginner Open C\n5 / 5 passed | Avg: 0.95 | Duration: 2.3s`
-  },
-  'jazz-shell': {
-    id: 'jazz-shell', name: 'Jazz Shell Voicing', score: 0.82, status: 'pass', timestamp: '2026-01-17 14:30', duration: '1.8s',
-    queries: [
-      { query: 'Cmaj7 shell voicing', expected: 'x3x44x', actual: 'x3x44x', score: 1.0, pass: true },
-      { query: 'Dm7 jazz chord', expected: 'xx0211', actual: 'xx0211', score: 0.82, pass: true },
-      { query: 'G7 shell', expected: '3x3x01', actual: '3x344x', score: 0.65, pass: true },
-    ],
-    rawOutput: `Quality Check: Jazz Shell Voicing\n3 / 3 passed | Avg: 0.82 | Duration: 1.8s`
-  },
-  'hendrix-chord': {
-    id: 'hendrix-chord', name: 'Hendrix Chord', score: 0.91, status: 'pass', timestamp: '2026-01-17 14:30', duration: '1.5s',
-    queries: [
-      { query: 'E7#9 hendrix chord', expected: '020130', actual: '020130', score: 1.0, pass: true },
-      { query: 'purple haze chord', expected: '020130', actual: '020130', score: 1.0, pass: true },
-      { query: 'dominant #9', expected: '020130', actual: 'x76780', score: 0.73, pass: true },
-    ],
-    rawOutput: `Quality Check: Hendrix Chord\n3 / 3 passed | Avg: 0.91 | Duration: 1.5s`
-  },
-  'neo-soul': {
-    id: 'neo-soul', name: 'Neo-Soul Extensions', score: 0.78, status: 'warn', timestamp: '2026-01-17 14:30', duration: '2.1s',
-    queries: [
-      { query: 'Cmaj9 neo soul', expected: 'x3243x', actual: 'x3243x', score: 0.85, pass: true },
-      { query: 'erykah badu chord', expected: 'x5756x', actual: 'x5756x', score: 0.80, pass: true },
-      { query: 'D\'Angelo voicing', expected: 'xx0212', actual: 'xx0211', score: 0.68, pass: false },
-    ],
-    rawOutput: `Quality Check: Neo-Soul Extensions\n2 / 3 passed | Avg: 0.78 | Duration: 2.1s`
-  },
-  'power-chord': {
-    id: 'power-chord', name: 'Power Chord Shapes', score: 0.98, status: 'pass', timestamp: '2026-01-17 14:30', duration: '1.2s',
-    queries: [
-      { query: 'E5 power chord', expected: '022xxx', actual: '022xxx', score: 1.0, pass: true },
-      { query: 'A5 power chord', expected: 'x022xx', actual: 'x022xx', score: 1.0, pass: true },
-      { query: 'G5 rock chord', expected: '355xxx', actual: '355xxx', score: 0.95, pass: true },
-    ],
-    rawOutput: `Quality Check: Power Chord Shapes\n3 / 3 passed | Avg: 0.98 | Duration: 1.2s`
-  }
-};
+// Mock data deleted per user policy.
 
 @Component({
   selector: 'app-benchmark-detail',
@@ -258,7 +209,7 @@ export class BenchmarkDetailComponent implements OnInit {
         },
         error: (err) => {
           console.error('Failed to load benchmark', err);
-          this.benchmark = MOCK_BENCHMARKS[this.benchmarkId] || MOCK_BENCHMARKS['beginner-open-c'];
+          this.errorMessage = `Failed to load benchmark '${this.benchmarkId}'. Please ensure the backend is running.`;
           this.isLoading = false;
           this.updateBreadcrumbs();
         }

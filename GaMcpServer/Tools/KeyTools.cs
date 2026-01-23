@@ -1,7 +1,7 @@
 ﻿namespace GaMcpServer.Tools;
 
-using GA.Business.Core.Intervals.Primitives;
-using GA.Business.Core.Tonal;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Tonal;
 using JetBrains.Annotations;
 using ModelContextProtocol.Server;
 

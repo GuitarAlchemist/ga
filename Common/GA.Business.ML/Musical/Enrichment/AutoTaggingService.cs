@@ -3,7 +3,8 @@ namespace GA.Business.ML.Musical.Enrichment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 /// automatically generates semantic tags (e.g. "Jazz", "Campfire", "Shell") based on detailed voicing analysis.
@@ -44,10 +45,10 @@ public class AutoTaggingService
         try
         {
             // Use domain model to get Forte number
-            var pcsList = doc.PitchClasses.Select(pc => Core.Atonal.PitchClass.FromValue(pc));
-            var pcs = new Core.Atonal.PitchClassSet(pcsList);
+            var pcsList = doc.PitchClasses.Select(pc => PitchClass.FromValue(pc));
+            var pcs = new PitchClassSet(pcsList);
 
-            if (Core.Atonal.ForteCatalog.TryGetForteNumber(pcs.PrimeForm, out var forte))
+            if (ForteCatalog.TryGetForteNumber(pcs.PrimeForm, out var forte))
             {
                 tags.Add($"Set:{forte}");
             }

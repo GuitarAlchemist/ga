@@ -184,38 +184,49 @@ public abstract class MultiStageRagService<TDocument>(
     }
 
     /// <summary>
-    /// Search documents by similarity using vector search
+    /// Search documents by similarity using vector search, returning results with scores
     /// </summary>
-    public async Task<List<TDocument>> SearchBySimilarityAsync(string query, int limit = 10)
+    public virtual async Task<List<(TDocument Document, float Score)>> SearchWithScoresAsync(
+        string query, 
+        int limit = 10,
+        double minSimilarity = 0.0)
     {
         try
         {
             // Generate embedding for query
             var queryEmbedding = await EmbeddingService.GenerateEmbeddingAsync(query);
 
-            // Perform vector search (simplified - in production use MongoDB Atlas Vector Search)
+            // Perform vector search
             var collection = GetCollection();
             var allDocuments = await collection.Find(Builders<TDocument>.Filter.Empty).ToListAsync();
 
             // Calculate cosine similarity and sort
             var results = allDocuments
-                .Select(doc => new
-                {
-                    Document = doc,
-                    Similarity = CosineSimilarity([.. queryEmbedding], doc.Embedding)
-                })
-                .OrderByDescending(x => x.Similarity)
+                .Select(doc => (
+                    Document: doc,
+                    Score: (float)CosineSimilarity([.. queryEmbedding], doc.Embedding)
+                ))
+                .Where(x => x.Score >= minSimilarity)
+                .OrderByDescending(x => x.Score)
                 .Take(limit)
-                .Select(x => x.Document)
                 .ToList();
 
             return results;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error in similarity search");
+            Logger.LogError(ex, "Error in similarity search with scores");
             return [];
         }
+    }
+
+    /// <summary>
+    /// Search documents by similarity using vector search
+    /// </summary>
+    public async Task<List<TDocument>> SearchBySimilarityAsync(string query, int limit = 10)
+    {
+        var results = await SearchWithScoresAsync(query, limit);
+        return results.Select(r => r.Document).ToList();
     }
 
     /// <summary>

@@ -1,7 +1,6 @@
 namespace GA.Business.ML.Tests;
 
-using System.Linq;
-using GA.Business.ML.Embeddings;
+using Embeddings;
 using NUnit.Framework;
 
 [TestFixture]

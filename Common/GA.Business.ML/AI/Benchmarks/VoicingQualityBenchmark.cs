@@ -1,14 +1,12 @@
 namespace GA.Business.ML.AI.Benchmarks;
 
-using GA.Business.Core.AI.Benchmarks;
+using GA.Domain.Services.AI.Benchmarks;
 using GA.Data.MongoDB.Services;
-using GA.Data.MongoDB.Models;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 public class VoicingQualityBenchmark(MongoDbService mongoDbService) : IBenchmark

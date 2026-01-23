@@ -1,10 +1,10 @@
-namespace GA.MusicTheory.DSL.Tests;
+namespace GA.Business.DSL.Tests;
 
 using System.Text;
+using GA.MusicTheory.DSL.Parsers;
+using GA.MusicTheory.DSL.Types;
 using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Core;
-using Parsers;
-using Types;
 
 [TestFixture]
 public class ChordProgressionParserTests

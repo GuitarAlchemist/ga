@@ -609,3 +609,205 @@
         Description: Sixteenth mode of all interval tetrachord
         AlternateNames:
           - Berg Mode 16
+  - Name: Harmonic Major Family
+    Modes:
+      - Name: Harmonic Major
+        Notes: C D E F G Ab B
+      - Name: Dorian b5
+        Notes: C D Eb F Gb A Bb
+      - Name: Phrygian b4
+        Notes: C Db Eb Fb G Ab Bb
+      - Name: Lydian b3
+        Notes: C D Eb F# G A B
+      - Name: Mixolydian b2
+        Notes: C Db E F G A Bb
+      - Name: Lydian Augmented #2
+        Notes: C D# E F# G# A B
+      - Name: Locrian bb7
+        Notes: C Db Eb F Gb Ab Bbb
+  - Name: Double Harmonic Family
+    Modes:
+      - Name: Double Harmonic (Byzantine)
+        Notes: C Db E F G Ab B
+      - Name: Lydian #2 #6
+        Notes: C D# E F# G A# B
+      - Name: Ultraphrygian
+        Notes: C Db Eb Fb G Ab Bbb
+      - Name: Hungarian Minor
+        Notes: C D Eb F# G Ab B
+      - Name: Oriental
+        Notes: C Db E F Gb A Bb
+      - Name: Ionian Augmented #2
+        Notes: C D# E F G# A B
+      - Name: Locrian bb3 bb7
+        Notes: C Dbb Ebb F Gb Ab Bbb
+  - Name: Neapolitan Minor Family
+    Modes:
+      - Name: Neapolitan Minor
+        Notes: C Db Eb F G Ab B
+      - Name: Lydian #6
+        Notes: C D E F# G A# B
+      - Name: Mixolydian Augmented
+        Notes: C D E F G# A Bb
+      - Name: Aeolian #4 (Lydian Diminished)
+        Notes: C D Eb F# G Ab Bb
+      - Name: Locrian n3
+        Notes: C Db E F Gb Ab Bb
+      - Name: Ionian #2
+        Notes: C D# E F G A B
+      - Name: Ultralocrian bb3
+        Notes: C Dbb Eb F Gb Ab Bbb
+  - Name: Neapolitan Major Family
+    Modes:
+      - Name: Neapolitan Major
+        Notes: C Db Eb F G A B
+      - Name: Lydian Augmented #6
+        Notes: C D E F# G# A# B
+      - Name: Lydian Dominant #5
+        Notes: C D E F# G# A Bb
+      - Name: Lydian Minor (Lydian b3 b7)
+        Notes: C D Eb F# G A Bb
+      - Name: Major Locrian
+        Notes: C D Eb F Gb Ab Bb
+      - Name: Altered Dominant n2 (Locrian n2 n7)
+        Notes: C D Eb F Gb Ab B
+      - Name: Altered bb3
+        Notes: C Dbb Eb Fb Gb Ab Bb
+  - Name: Dominant Bebop Family
+    Modes:
+      - Name: Dominant Bebop
+        Notes: C D E F G A Bb B
+      - Name: Dominant Bebop Mode 2
+        Notes: C D Eb F G Ab A Bb
+      - Name: Dominant Bebop Mode 3
+        Notes: C Db Eb F Gb G Ab Bb
+      - Name: Dominant Bebop Mode 4
+        Notes: C D E F F# G A B
+      - Name: Dominant Bebop Mode 5
+        Notes: C D Eb E F G A Bb
+      - Name: Dominant Bebop Mode 6
+        Notes: C Db D Eb F G A Bb
+      - Name: Dominant Bebop Mode 7
+        Notes: C C# D E F G A B
+      - Name: Dominant Bebop Mode 8
+        Notes: C C# D# E F# G# A# B
+  - Name: Major Bebop Family
+    Modes:
+      - Name: Major Bebop
+        Notes: C D E F G G# A B
+      - Name: Major Bebop Mode 2
+        Notes: C D Eb F F# G A Bb
+      - Name: Major Bebop Mode 3
+        Notes: C Db Eb E F G Ab Bb
+      - Name: Major Bebop Mode 4
+        Notes: C D Eb F G Ab A B
+      - Name: Major Bebop Mode 5
+        Notes: C Db Eb F Gb G Bb B
+      - Name: Major Bebop Mode 6
+        Notes: C D E F F# A Bb B
+      - Name: Major Bebop Mode 7
+        Notes: C D Eb E G Ab A Bb
+      - Name: Major Bebop Mode 8
+        Notes: C Db D F Gb G Ab B
+  - Name: Prometheus Family
+    Modes:
+      - Name: Prometheus
+        Notes: C D E F# A Bb
+      - Name: Prometheus Mode 2
+        Notes: C D E G Ab Bb
+      - Name: Prometheus Mode 3
+        Notes: C D F Gb Ab Bb
+      - Name: Prometheus Mode 4
+        Notes: C Eb E G A Bb
+      - Name: Prometheus Mode 5
+        Notes: C C# E F# G# A
+      - Name: Prometheus Mode 6
+        Notes: C D# F G G# B
+  - Name: Enigmatic Family
+    Modes:
+      - Name: Enigmatic
+        Notes: C Db E F# G# A# B
+      - Name: Enigmatic Mode 2
+        Notes: C D# F G A Bb B
+      - Name: Enigmatic Mode 3
+        Notes: C D E Gb G Ab Bb
+      - Name: Enigmatic Mode 4
+        Notes: C D E F Gb Ab B
+      - Name: Enigmatic Mode 5
+        Notes: C D Eb F G B Bb
+      - Name: Enigmatic Mode 6
+        Notes: C Db Eb F A G# B
+      - Name: Enigmatic Mode 7
+        Notes: C D E G# F# A# B
+  - Name: Hungarian Major Family
+    Modes:
+      - Name: Hungarian Major
+        Notes: C D# E F# G A Bb
+      - Name: Hungarian Major Mode 2
+        Notes: C Db Eb F Gb Ab A
+      - Name: Hungarian Major Mode 3
+        Notes: C D E F G G# B
+      - Name: Hungarian Major Mode 4
+        Notes: C D Eb F F# A Bb
+      - Name: Hungarian Major Mode 5
+        Notes: C Db Eb E G Ab Bb
+      - Name: Hungarian Major Mode 6
+        Notes: C D D# F# G A B
+      - Name: Hungarian Major Mode 7
+        Notes: C C# E F G A Bb
+  - Name: Hirajoshi Family
+    Modes:
+      - Name: Hirajoshi
+        Notes: C D Eb G Ab
+      - Name: Iwato
+        Notes: C Db F Gb Bb
+      - Name: Kumoi
+        Notes: C E F A B
+      - Name: Hon-kumoi
+        Notes: C Db F G Ab
+      - Name: Chinese
+        Notes: C E F# G B
+  - Name: In Sen Family
+    Modes:
+      - Name: In Sen
+        Notes: C Db F G Bb
+      - Name: In Sen Mode 2
+        Notes: C E F Ab Bb
+      - Name: In Sen Mode 3
+        Notes: C Db F G A
+      - Name: In Sen Mode 4
+        Notes: C E F G B
+      - Name: In Sen Mode 5
+        Notes: C Db Eb G Ab
+  - Name: Diminished (Octatonic) Family
+    Modes:
+      - Name: Whole-Half Diminished
+        Notes: C D Eb F Gb Ab A B
+      - Name: Half-Whole Diminished (Dominant Diminished)
+        Notes: C Db Eb E F# G A Bb
+      - Name: Whole-Half Diminished (Inv 1)
+        Notes: C D Eb F Gb Ab A B
+      - Name: Half-Whole Diminished (Inv 1)
+        Notes: C Db Eb E F# G A Bb
+      - Name: Whole-Half Diminished (Inv 2)
+        Notes: C D Eb F Gb Ab A B
+      - Name: Half-Whole Diminished (Inv 2)
+        Notes: C Db Eb E F# G A Bb
+      - Name: Whole-Half Diminished (Inv 3)
+        Notes: C D Eb F Gb Ab A B
+      - Name: Half-Whole Diminished (Inv 3)
+        Notes: C Db Eb E F# G A Bb
+  - Name: Augmented (Hexatonic) Family
+    Modes:
+      - Name: Augmented Scale
+        Notes: C Eb E G Ab B
+      - Name: Augmented Scale (Inv 1)
+        Notes: C Db E F G# A
+      - Name: Augmented Scale (Inv 2)
+        Notes: C Eb E G Ab B
+      - Name: Augmented Scale (Inv 3)
+        Notes: C Db E F G# A
+      - Name: Augmented Scale (Inv 4)
+        Notes: C Eb E G Ab B
+      - Name: Augmented Scale (Inv 5)
+        Notes: C Db E F G# A

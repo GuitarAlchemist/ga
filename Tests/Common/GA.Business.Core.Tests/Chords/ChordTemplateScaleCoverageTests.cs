@@ -1,11 +1,11 @@
-namespace GA.Business.Core.Tests.Chords;
+namespace GA.Domain.Core.Tests.Chords;
 
-using GA.Business.Core.Chords;
-using GA.Business.Core.Tonal.Modes;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Modes.Exotic;
-using GA.Business.Core.Tonal.Modes.Pentatonic;
-using GA.Business.Core.Tonal.Modes.Symmetric;
+using GA.Domain.Core.Theory.Tonal.Modes;
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Exotic;
+using GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
+using GA.Domain.Services.Chords;
 using NUnit.Framework;
 
 [TestFixture]
@@ -34,7 +34,6 @@ public class ChordTemplateScaleCoverageTests
                 .. InSenScaleMode.Items.Cast<ScaleMode>(),
             ],
             ["Exotic"] =
-
             [
                 .. BebopScaleMode.Items.Cast<ScaleMode>()
 ,
@@ -47,14 +46,12 @@ public class ChordTemplateScaleCoverageTests
                 .. TritoneScaleMode.Items.Cast<ScaleMode>(),
             ]
         };
-
         foreach (var (groupName, modes) in groups)
         {
             var total = modes.Sum(mode => ChordTemplateFactory.GenerateFromScaleMode(mode).Count());
             Assert.That(total, Is.GreaterThan(0), $"{groupName} should generate at least one chord template.");
         }
     }
-
     [Test]
     public void GenerateAllPossibleChords_ProducesThousands()
     {

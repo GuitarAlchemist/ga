@@ -3,12 +3,12 @@ namespace GA.Business.ML.Musical.Enrichment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Intervals;
-using Core.Tonal.Modes;
-using Core.Tonal.Modes.Diatonic;
-using Core.Tonal.Modes.Exotic;
-using Core.Tonal.Modes.Pentatonic;
-using Core.Tonal.Modes.Symmetric;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Tonal.Modes;
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Exotic;
+using GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
 using Embeddings;
 
 /// <summary>

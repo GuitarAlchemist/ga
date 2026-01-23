@@ -1,7 +1,7 @@
 namespace GaApi.Tests.GraphQL.Types;
 
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Fretboard.Primitives;
+using GA.Domain.Services.Fretboard.Analysis;
+using GA.Domain.Core.Instruments.Primitives;
 using GaApi.GraphQL.Types;
 
 [TestFixture]

@@ -1,0 +1,51 @@
+{
+    "name": "ga-music-theory-dsl",
+    "displayName": "Guitar Alchemist Music Theory DSL",
+    "description": "Language support for Guitar Alchemist DSLs (Chord Progressions, Fretboard, etc.)",
+    "version": "0.1.0",
+    "publisher": "GuitarAlchemist",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+        "onLanguage:music-theory-dsl"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "music-theory-dsl",
+                "aliases": [
+                    "Music Theory DSL",
+                    "GA DSL"
+                ],
+                "extensions": [
+                    ".chordprog",
+                    ".fretboard",
+                    ".scaletrans",
+                    ".groth"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.75.0",
+        "@types/node": "^16.11.7",
+        "@typescript-eslint/eslint-plugin": "^5.42.0",
+        "@typescript-eslint/parser": "^5.42.0",
+        "eslint": "^8.26.0",
+        "typescript": "^4.8.4"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^8.1.0"
+    }
+}

@@ -1,9 +1,11 @@
-namespace GA.Business.Core.Tests.Scales;
+namespace GA.Domain.Core.Tests.Scales;
 
+using Extensions;
+using Primitives;
 using System.Numerics;
-using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Chords;
-using GA.Business.Core.Scales;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Tonal.Scales;
+using GA.Domain.Services.Chords;
 using NUnit.Framework;
 
 [TestFixture]
@@ -15,19 +17,15 @@ public class PitchClassSetScaleCoverageTests
         var ids = PitchClassSetId.Items
             .Where(id => id.IsScale && id.Value != 0 && BitOperations.PopCount((uint)id.Value) >= 3)
             .ToList();
-
         Assert.That(ids.Count, Is.GreaterThan(0), "Expect at least one scale pitch class set.");
-
         foreach (var id in ids)
         {
             var pitchClassSet = id.ToPitchClassSet();
             var scale = Scale.FromPitchClassSetId(id);
             var chord = ChordTemplateFactory.FromPitchClassSet(pitchClassSet, $"Scale {id}");
-
             Assert.That(chord, Is.Not.Null, $"Chord templates should be creatable for scale {id}");
             Assert.That(chord.PitchClassSet.Cardinality, Is.EqualTo(scale.PitchClassSet.Cardinality),
                 $"Scale {id} should preserve cardinality in chord template.");
-
             // Spot-check that we can analyze the pitch-class set via modal families if it's modal.
             if (scale.IsModal && scale.ModalFamily is { } modalFamily)
             {
@@ -36,7 +34,6 @@ public class PitchClassSetScaleCoverageTests
             }
         }
     }
-
     [Test]
     public void PrimeScaleCount_IsReasonable()
     {

@@ -3,7 +3,8 @@ namespace GA.Data.MongoDB.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.Tabs;
+using GA.Domain.Repositories;
+using GA.Domain.Core.Tabs;
 using GA.Data.MongoDB.Models;
 using global::MongoDB.Bson;
 using global::MongoDB.Driver;
@@ -65,7 +66,7 @@ public class MongoProgressionCorpusRepository : IProgressionCorpusRepository
             StyleLabel = doc["style"].AsString,
             Source = doc["source"].AsString,
             Metadata = doc["metadata"].AsBsonDocument.ToDictionary(k => k.Name, v => v.Value.ToString()),
-            Chords = new List<GA.Business.Core.Fretboard.Voicings.Search.VoicingDocument>() // IDs only in this spike
+            Chords = new List<GA.Domain.Core.Instruments.Fretboard.Voicings.Search.VoicingDocument>() // IDs only in this spike
         };
     }
 }

@@ -1,6 +1,6 @@
 namespace GA.Tests;
 
-using GA.Business.Core.Chords;
+using GA.Domain.Services.Chords;
 using GA.Business.ML.Abstractions;
 using GA.Business.ML.Text.Internal;
 using GA.Data.SemanticKernel.Embeddings;

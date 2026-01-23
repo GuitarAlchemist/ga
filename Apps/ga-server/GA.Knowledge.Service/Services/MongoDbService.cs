@@ -2,7 +2,7 @@ namespace GA.Knowledge.Service.Services;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
-using GA.Knowledge.Service.Models;
+using Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

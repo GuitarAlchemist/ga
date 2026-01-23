@@ -1,7 +1,6 @@
 namespace GA.Business.ML.Embeddings.Services;
 
-using System;
-using System.Collections.Generic;
+using GA.Domain.Core.Theory.Tonal;
 
 /// <summary>
 /// Generates the CONTEXT partition of the musical embedding (Harmonic function, tension).
@@ -30,14 +29,14 @@ public class ContextVectorService
         // [Tonic, Subdominant, Dominant]
                 if (!string.IsNullOrEmpty(harmonicFunction))
                 {
-                    var function = Core.Tonal.HarmonicFunctionAnalyzer.Parse(harmonicFunction);
-                    var primary = Core.Tonal.HarmonicFunctionAnalyzer.ToPrimaryCategory(function);
+                    var function = HarmonicFunctionAnalyzer.Parse(harmonicFunction);
+                    var primary = HarmonicFunctionAnalyzer.ToPrimaryCategory(function);
         
                     switch (primary)
                     {
-                        case Core.Tonal.HarmonicFunctionCategory.Tonic: v[0] = 1.0; break;
-                        case Core.Tonal.HarmonicFunctionCategory.Subdominant: v[1] = 1.0; break;
-                        case Core.Tonal.HarmonicFunctionCategory.Dominant: v[2] = 1.0; break;
+                        case HarmonicFunctionCategory.Tonic: v[0] = 1.0; break;
+                        case HarmonicFunctionCategory.Subdominant: v[1] = 1.0; break;
+                        case HarmonicFunctionCategory.Dominant: v[2] = 1.0; break;
                     }
                 }
         // 3: Stability Delta (Motion)

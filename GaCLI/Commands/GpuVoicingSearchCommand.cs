@@ -2,9 +2,11 @@
 
 namespace GaCLI.Commands;
 
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments;
+
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Core;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using GA.Business.ML.Text.Onnx;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
@@ -704,7 +706,7 @@ public class GpuVoicingSearchCommand
         // Demo 2: Small hands filter (max 3-fret stretch)
         AnsiConsole.MarkupLine("\n[cyan]═══ Demo 2: Small Hands Filter (Max 3-Fret Stretch) ═══[/]");
         var smallHandsFilters = new VoicingSearchFilters(
-            HandSize: GA.Business.Core.Fretboard.Biomechanics.HandSize.Small,
+            HandSize: GA.Domain.Instruments.Biomechanics.HandSize.Small,
             MaxFingerStretch: 3.0);
 
         var smallHandsResults = await _searchStrategy!.HybridSearchAsync(queryEmbedding, smallHandsFilters, limit: 10);
@@ -732,7 +734,7 @@ public class GpuVoicingSearchCommand
         // Demo 5: Combined filters (small hands + comfortable + ergonomic)
         AnsiConsole.MarkupLine("\n[cyan]═══ Demo 5: Combined Filters (Small Hands + Comfortable + Ergonomic) ═══[/]");
         var combinedFilters = new VoicingSearchFilters(
-            HandSize: GA.Business.Core.Fretboard.Biomechanics.HandSize.Small,
+            HandSize: GA.Domain.Instruments.Biomechanics.HandSize.Small,
             MaxFingerStretch: 3.0,
             MinComfortScore: 0.6,
             MustBeErgonomic: true);
@@ -778,7 +780,7 @@ public class GpuVoicingSearchCommand
         table.AddColumn("Overall");
         table.AddColumn("Difficulty");
 
-        var analyzer = new GA.Business.Core.Fretboard.Biomechanics.BiomechanicalAnalyzer();
+        var analyzer = new GA.Domain.Instruments.Biomechanics.BiomechanicalAnalyzer();
 
         foreach (var voicing in voicings)
         {
@@ -839,7 +841,7 @@ public class GpuVoicingSearchCommand
             else if (int.TryParse(part, out var fretValue))
             {
                 var fret = new Fret(fretValue);
-                var location = new GA.Business.Core.Fretboard.Positions.PositionLocation(str, fret);
+                var location = new GA.Domain.Instruments.Positions.PositionLocation(str, fret);
 
                 // Create a played position with estimated MIDI note
                 // Standard tuning: E2(40), A2(45), D3(50), G3(55), B3(59), E4(64)
@@ -847,7 +849,7 @@ public class GpuVoicingSearchCommand
                 var midiNoteValue = i < openMidiNotes.Length
                     ? openMidiNotes[i] + fretValue
                     : 60 + fretValue; // Fallback
-                var midiNote = new GA.Business.Core.Notes.Primitives.MidiNote(midiNoteValue);
+                var midiNote = new GA.Domain.Core.Notes.Primitives.MidiNote(midiNoteValue);
 
                 positions.Add(new Position.Played(location, midiNote));
             }
@@ -879,7 +881,7 @@ public class GpuVoicingSearchCommand
         var count = 0;
 
         // Generate real voicings using VoicingGenerator (exclude diads - require at least 3 notes)
-        var realVoicings = GA.Business.Core.Fretboard.Voicings.Generation.VoicingGenerator.GenerateAllVoicings(
+        var realVoicings = GA.Domain.Services.Fretboard.Voicings.Generation.VoicingGenerator.GenerateAllVoicings(
             fretboard,
             windowSize: 4,
             minPlayedNotes: 3,  // Exclude diads (2-note voicings)
@@ -1352,4 +1354,3 @@ public class GpuVoicingSearchCommand
         }
     }
 }
-

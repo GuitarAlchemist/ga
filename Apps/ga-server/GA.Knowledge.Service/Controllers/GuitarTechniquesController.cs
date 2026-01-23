@@ -1,8 +1,7 @@
 namespace GA.Knowledge.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.Mvc;
 
-using GA.Business.Core;
+using Domain.Services;
+using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 ///     API controller for guitar techniques

@@ -21,12 +21,14 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core.Analysis.Gpu\GA.Business.Core.Analysis.Gpu.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Testing.Semantic\GA.Testing.Semantic.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

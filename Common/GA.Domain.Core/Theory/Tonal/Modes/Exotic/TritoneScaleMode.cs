@@ -1,0 +1,59 @@
+namespace GA.Domain.Core.Theory.Tonal.Modes.Exotic;
+
+using System;
+using System.Collections.Generic;
+using GA.Core.Collections;
+using GA.Core.Collections.Abstractions;
+using JetBrains.Annotations;
+using Primitives.Exotic;
+using Scales;
+
+/// <summary>
+///     A Tritone scale mode (Petrushka scale)
+/// </summary>
+/// <remarks>
+///     The Tritone scale is a symmetrical scale built from alternating half steps and minor thirds.
+///     It consists of the notes C, Db, E, F#, G, A.
+///     It's used in jazz and film scoring, and was notably used by Stravinsky in his ballet "Petrushka".
+///     Due to its symmetrical structure, it has only two distinct modes.
+///     <see href="https://en.wikipedia.org/wiki/Tritone_scale" />
+/// </remarks>
+[PublicAPI]
+public sealed class TritoneScaleMode(TritoneScaleDegree degree)
+    : TonalScaleMode<TritoneScaleDegree>(Scale.Tritone, degree),
+        IStaticEnumerable<TritoneScaleMode>
+{
+    private static readonly Lazy<ScaleModeCollection<TritoneScaleDegree, TritoneScaleMode>> _lazyModeByDegree =
+        new(() => new([.. Items]));
+
+    // Static instances for each mode
+    public static TritoneScaleMode Tritone => new(TritoneScaleDegree.Tritone);
+    public static TritoneScaleMode Petrushka => new(TritoneScaleDegree.Petrushka);
+
+    // Properties
+    public override string Name => ParentScaleDegree.ToName();
+
+    // Collection and access methods
+    public static IEnumerable<TritoneScaleMode> Items
+    {
+        get
+        {
+            foreach (var degree in ValueObjectUtils<TritoneScaleDegree>.Items)
+            {
+                yield return new(degree);
+            }
+        }
+    }
+
+    public static TritoneScaleMode Get(TritoneScaleDegree degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
+
+    public static TritoneScaleMode Get(int degree)
+    {
+        return _lazyModeByDegree.Value[degree];
+    }
+}
+
+

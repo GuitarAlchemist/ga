@@ -1,13 +1,12 @@
 namespace GA.Business.ML.Tabs;
 
+using Domain.Services.Fretboard.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Fretboard.Voicings.Search;
-using Core.Fretboard.Analysis;
-using Core.Fretboard;
-using Core.Notes;
-using Core.Notes.Primitives;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
 
 /// <summary>
 /// Generates synthetic training data for the Naturalness Ranker.

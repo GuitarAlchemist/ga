@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Services;
+namespace GA.Domain.Core.Services;
 
 /// <summary>
 /// Service for broadcasting configuration changes and errors

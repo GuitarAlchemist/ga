@@ -1,10 +1,9 @@
 namespace GA.Business.ML.Musical.Analysis;
 
-using Core.Tonal.Cadences;
-using Core.Fretboard.Voicings.Search;
-using Core.Atonal;
-using Core.Tonal;
-using Core.Chords;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal.Cadences;
 
 public class CadenceDetector
 {
@@ -109,8 +108,14 @@ public class CadenceDetector
 
     private ChordQuality DeriveQuality(VoicingDocument doc)
     {
-        // Use Parser logic
-        return _parser.ParseQuality(doc.ChordName);
+        // 1. Try explicit Quality from Analysis if available
+        if (!string.IsNullOrEmpty(doc.Quality) && Enum.TryParse<ChordQuality>(doc.Quality, true, out var quality))
+        {
+            return quality;
+        }
+
+        // 2. Fallback to parsing the ChordName (brittle)
+        return _parser.ParseQuality(doc.ChordName ?? "Unknown");
     }
 
     private List<CadencePattern> InitializePatterns()

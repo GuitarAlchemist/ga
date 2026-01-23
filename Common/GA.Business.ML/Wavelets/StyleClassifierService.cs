@@ -1,10 +1,7 @@
 namespace GA.Business.ML.Wavelets;
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
 /// Classifies the musical style of a harmonic progression using wavelet-based features.

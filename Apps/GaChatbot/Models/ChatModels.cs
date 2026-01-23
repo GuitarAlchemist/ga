@@ -39,6 +39,6 @@ public sealed record CandidateVoicing(
 public sealed record ChatResponse(
     string NaturalLanguageAnswer,
     IReadOnlyList<CandidateVoicing> Candidates,
-    GA.Business.Core.Progressions.Progression? Progression = null,
+    GA.Domain.Core.Theory.Harmony.Progressions.Progression? Progression = null,
     object? DebugParams = null
 );

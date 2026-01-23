@@ -1,7 +1,7 @@
-namespace GA.Business.Core.Tests.Integration;
+namespace GA.Domain.Core.Tests.Integration;
 
-// using GA.Business.Core.Services; // Namespace does not exist
-// using GA.Business.Core.Spatial; // Namespace does not exist
+// using GA.Domain.Core.Services; // Namespace does not exist
+// using GA.Domain.Core.Spatial; // Namespace does not exist
 
 #if false // TODO: Fix missing types: BSPEnhancedChordAnalysisService, BSPEnhancedProgressionAnalysisService, Position, Fretboard
 [TestFixture]

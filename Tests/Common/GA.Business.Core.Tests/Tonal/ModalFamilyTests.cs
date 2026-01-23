@@ -1,4 +1,5 @@
-﻿namespace GA.Business.Core.Tests.Tonal;
+using GA.Domain.Core.Theory.Tonal.Scales;
+﻿namespace GA.Domain.Core.Tests.Tonal;
 
 using System.IO;
 using Core.Atonal;

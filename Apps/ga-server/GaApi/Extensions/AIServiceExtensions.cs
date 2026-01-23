@@ -1,9 +1,6 @@
 namespace GaApi.Extensions;
 
-using GA.Business.Core.Fretboard.Voicings.Search;
 using GA.Business.ML.Abstractions;
-using GA.Business.ML.Configuration;
-using GA.Business.ML.Text.Ollama;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -45,7 +42,7 @@ public static class AiServiceExtensions
         // Register the Ollama embedding service (primary)
         var ollamaEndpoint = configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
         var embeddingModel = configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
-        var maxConcurrentRequests = configuration.GetValue<int>("Ollama:MaxConcurrentRequests", 20);
+        var maxConcurrentRequests = configuration.GetValue("Ollama:MaxConcurrentRequests", 20);
 
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only
         // Register batch embedding service for high-performance concurrent embedding generation
@@ -120,7 +117,7 @@ public static class AiServiceExtensions
     private static IServiceCollection AddChatbotServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Register Ollama embedding service for generating embeddings from user queries
-        services.AddSingleton<Services.OllamaEmbeddingService>();
+        services.AddSingleton<OllamaEmbeddingService>();
 
         // Register semantic knowledge source (bridges voicing search to chatbot)
         services.AddSingleton<SemanticKnowledgeSource>();

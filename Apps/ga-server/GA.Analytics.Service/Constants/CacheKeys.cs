@@ -13,8 +13,14 @@ public static class CacheKeys
     public const string ICVResults = "icv_results";
     public const string AnalyticsMetrics = "analytics_metrics";
     public const string FretboardShapes = "fretboard_shapes";
-    public const string Durations = "durations";
     public const string HeatMap = "heat_map";
+    
+    public static class Durations
+    {
+        public static readonly TimeSpan FretboardShapes = TimeSpan.FromHours(1);
+        public static readonly TimeSpan HarmonicAnalysis = TimeSpan.FromHours(2);
+        public static readonly TimeSpan HeatMap = TimeSpan.FromMinutes(30);
+    }
     
     public static string GetShapeGraphKey(string parameters) => $"{ShapeGraph}:{parameters}";
     public static string GetHarmonicAnalysisKey(string shapeId) => $"{HarmonicAnalysis}:{shapeId}";

@@ -1,6 +1,7 @@
-using GA.Fretboard.Service.Models;
 
 namespace GA.Fretboard.Service.Services;
+
+using Models;
 
 /// <summary>
 /// Actor system manager

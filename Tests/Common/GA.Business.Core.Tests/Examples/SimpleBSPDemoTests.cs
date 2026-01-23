@@ -1,6 +1,6 @@
-namespace GA.Business.Core.Tests.Examples;
+namespace GA.Domain.Core.Tests.Examples;
 
-// using GA.Business.Core.Examples; // Namespace does not exist
+// using GA.Domain.Core.Examples; // Namespace does not exist
 
 [TestFixture]
 public class SimpleBspDemoTests

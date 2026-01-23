@@ -1,10 +1,10 @@
 namespace FretboardChordTest;
 
 using System.Collections.Immutable;
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes.Primitives;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Services.Fretboard.Analysis;
 using Spectre.Console;
 
 internal class Program

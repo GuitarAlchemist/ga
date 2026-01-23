@@ -1,5 +1,7 @@
 namespace GaCLI.Commands;
 
+using GA.Domain.Core.Instruments;
+
 using GA.Data.MongoDB.Models;
 using GA.Data.MongoDB.Services;
 using MongoDB.Driver;

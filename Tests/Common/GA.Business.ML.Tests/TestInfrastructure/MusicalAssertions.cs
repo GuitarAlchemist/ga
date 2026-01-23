@@ -2,7 +2,7 @@ namespace GA.Business.ML.Tests.TestInfrastructure;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Fretboard.Analysis;
+using Domain.Services.Fretboard.Analysis;
 using NUnit.Framework;
 
 public static class MusicalAssertions

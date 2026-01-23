@@ -1,3 +1,6 @@
+
+namespace GaChatbot.Services;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +9,10 @@ using System.Threading.Tasks;
 using GA.Business.ML.Tabs;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Embeddings;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Tabs.Models;
+using GA.Business.ML.Agents;
 using GaChatbot.Models;
-
-namespace GaChatbot.Services;
 
 /// <summary>
 /// Unifies all intelligent spikes (RAG, Motion, Style, Generation) 
@@ -27,6 +29,7 @@ public class ProductionOrchestrator
     private readonly MusicalEmbeddingGenerator _embeddingGenerator;
     private readonly AdvancedTabSolver _tabSolver;
     private readonly AlternativeFingeringService _altService;
+    private readonly SemanticRouter _router;
 
     public ProductionOrchestrator(
         TabAwareOrchestrator tabOrchestrator,
@@ -36,7 +39,8 @@ public class ProductionOrchestrator
         TabPresentationService presenter,
         MusicalEmbeddingGenerator embeddingGenerator,
         AdvancedTabSolver tabSolver,
-        AlternativeFingeringService altService)
+        AlternativeFingeringService altService,
+        SemanticRouter router)
     {
         _tabOrchestrator = tabOrchestrator;
         _tabAnalyzer = tabAnalyzer;
@@ -46,12 +50,15 @@ public class ProductionOrchestrator
         _embeddingGenerator = embeddingGenerator;
         _tabSolver = tabSolver;
         _altService = altService;
+        _router = router;
     }
 
     public async Task<ChatResponse> AnswerAsync(ChatRequest request)
     {
-        // 1. Check if the user query contains Tablature
-        if (IsTabQuery(request.Message))
+        // 1. Use Semantic Router to determine intent (Phase 6 Integration)
+        var routing = await _router.RouteAsync(request.Message);
+        
+        if (routing.SelectedAgent.AgentId == AgentIds.Tab)
         {
             if (IsAskingForOptimization(request.Message))
             {

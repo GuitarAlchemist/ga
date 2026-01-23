@@ -1,5 +1,8 @@
-﻿using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Primitives;
+using GA.Domain.Core.Extensions;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Tonal.Scales;
+﻿using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 
 [TestFixture]
 public class ScaleConfigTests

@@ -32,7 +32,7 @@ public class RunBenchmarksCommand(BenchmarkRunner runner)
         }
     }
 
-    private void DisplayResult(GA.Business.Core.AI.Benchmarks.BenchmarkResult result)
+    private void DisplayResult(GA.Domain.Core.AI.Benchmarks.BenchmarkResult result)
     {
         var color = result.Passed ? "green" : "red";
         AnsiConsole.MarkupLine($"\n[bold]{result.Name}[/] - Score: [{color}]{result.Score:P0}[/] ({result.Duration.TotalMilliseconds:F0}ms)");

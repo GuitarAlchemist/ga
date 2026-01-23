@@ -1,12 +1,12 @@
-﻿namespace GA.Business.Core.Examples;
+﻿namespace GA.Domain.Core.Examples;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.Spatial;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Spatial;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Primitives;
 
 /// <summary>
 /// Simple, working demo of BSP core functionality

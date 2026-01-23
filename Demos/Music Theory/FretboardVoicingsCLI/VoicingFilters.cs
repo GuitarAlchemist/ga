@@ -1,8 +1,10 @@
 ﻿namespace FretboardVoicingsCLI;
 
-using GA.Business.Core.Fretboard.Voicings.Analysis;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Voicings.Filtering;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
 
 /// <summary>
 /// Filters voicings based on specified criteria
@@ -90,7 +92,7 @@ public static class VoicingFilters
 
         return filter switch
         {
-            ChordTypeFilter.Triads => analysis.MidiNotes.Select(n => n.PitchClass).Distinct().Count() == 3 &&
+            ChordTypeFilter.Triads => analysis.MidiNotes.Select(n => ((MidiNote)n).PitchClass).Distinct().Count() == 3 &&
                                      !chordName.Contains("7") && !chordName.Contains("9") &&
                                      !chordName.Contains("11") && !chordName.Contains("13"),
             ChordTypeFilter.SeventhChords => chordName.Contains("7") && !chordName.Contains("9") &&
@@ -125,7 +127,7 @@ public static class VoicingFilters
             VoicingTypeFilter.Drop3 => dropVoicing == "Drop-3",
             VoicingTypeFilter.Drop2And4 => dropVoicing == "Drop-2+4",
             VoicingTypeFilter.Rootless => isRootless,
-            VoicingTypeFilter.ShellVoicings => analysis.MidiNotes.Select(n => n.PitchClass).Distinct().Count() == 3 &&
+            VoicingTypeFilter.ShellVoicings => analysis.MidiNotes.Select(n => n % 12).Distinct().Count() == 3 &&
                                                isRootless, // Shell voicings are typically rootless 3-note voicings
             VoicingTypeFilter.ClosedPosition => !isOpen,
             VoicingTypeFilter.OpenPosition => isOpen,
@@ -160,20 +162,20 @@ public static class VoicingFilters
 
         var closestKey = analysis.ChordId.ClosestKey;
         var isNaturallyOccurring = analysis.ChordId.IsNaturallyOccurring;
-        var hasChromaticNotes = analysis.ChromaticNotes != null && analysis.ChromaticNotes.Count > 0;
+        var hasChromaticNotes = analysis.ChromaticNotes != null && analysis.ChromaticNotes.Length > 0;
 
         return filter switch
         {
             KeyContextFilter.DiatonicOnly => isNaturallyOccurring && !hasChromaticNotes,
             KeyContextFilter.ChromaticOnly => hasChromaticNotes,
-            KeyContextFilter.InKeyOfC => closestKey?.ToString().Contains("C") ?? false,
-            KeyContextFilter.InKeyOfG => closestKey?.ToString().Contains("G") ?? false,
-            KeyContextFilter.InKeyOfD => closestKey?.ToString().Contains("D") ?? false,
-            KeyContextFilter.InKeyOfA => closestKey?.ToString().Contains("A") ?? false,
-            KeyContextFilter.InKeyOfE => closestKey?.ToString().Contains("E") ?? false,
-            KeyContextFilter.InKeyOfF => closestKey?.ToString().Contains("F") ?? false,
-            KeyContextFilter.InKeyOfBb => closestKey?.ToString().Contains("Bb") ?? false,
-            KeyContextFilter.InKeyOfEb => closestKey?.ToString().Contains("Eb") ?? false,
+            KeyContextFilter.InKeyOfC => closestKey?.Contains("C") ?? false,
+            KeyContextFilter.InKeyOfG => closestKey?.Contains("G") ?? false,
+            KeyContextFilter.InKeyOfD => closestKey?.Contains("D") ?? false,
+            KeyContextFilter.InKeyOfA => closestKey?.Contains("A") ?? false,
+            KeyContextFilter.InKeyOfE => closestKey?.Contains("E") ?? false,
+            KeyContextFilter.InKeyOfF => closestKey?.Contains("F") ?? false,
+            KeyContextFilter.InKeyOfBb => closestKey?.Contains("Bb") ?? false,
+            KeyContextFilter.InKeyOfEb => closestKey?.Contains("Eb") ?? false,
             _ => true
         };
     }
@@ -197,7 +199,7 @@ public static class VoicingFilters
     {
         if (filter == null || filter == NoteCountFilter.All) return true;
 
-        var noteCount = voicing.Notes.Select(n => n.PitchClass).Distinct().Count();
+        var noteCount = voicing.Notes.Select(n => n % 12).Distinct().Count();
 
         return filter switch
         {

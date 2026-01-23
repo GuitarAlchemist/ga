@@ -1,6 +1,6 @@
 namespace GA.Business.ML.Tabs.Models;
 
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 public record TabAnalysisResult
 {

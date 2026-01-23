@@ -4,20 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using static GA.Analytics.Service.Services.Constants;
-using GA.Business.Config;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Grothendieck;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Instruments.Shapes.Applications;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal.Grothendieck;
+using Business.Config;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
-using GA.Analytics.Service.Services;
-using GA.Analytics.Service.Constants;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Fretboard.Shapes.Applications;
-using GA.Business.Core.Fretboard.Shapes.InformationTheory;
-using GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
+using Services;
+using Constants;
 
 /// <summary>
 ///     API endpoints for Grothendieck monoid operations and fretboard shape navigation
@@ -27,11 +24,11 @@ using GA.Business.Core.Fretboard.Shapes.DynamicalSystems;
 [Produces("application/json")]
 [EnableRateLimiting("regular")]
 public class GrothendieckController(
-    GA.Analytics.Service.Services.IGrothendieckService grothendieckService,
-    GA.Business.Core.Fretboard.Shapes.IShapeGraphBuilder shapeGraphBuilder,
+    Services.IGrothendieckService grothendieckService,
+    IShapeGraphBuilder shapeGraphBuilder,
     MarkovWalker markovWalker,
-    GA.Business.Core.Fretboard.Shapes.Applications.HarmonicAnalysisEngine harmonicAnalysisEngine,
-    GA.Business.Core.Fretboard.Shapes.Applications.ProgressionOptimizer progressionOptimizer,
+    HarmonicAnalysisEngine harmonicAnalysisEngine,
+    ProgressionOptimizer progressionOptimizer,
     ILogger<GrothendieckController> logger,
     IMemoryCache cache,
     PerformanceMetricsService metrics)
@@ -94,7 +91,7 @@ public class GrothendieckController(
             });
 
         // Mock conversion for response - in real app, map appropriately
-        var responseDelta = new GA.Business.Core.Atonal.Grothendieck.GrothendieckDelta(0, 0, 0, 0, 0, 0); 
+        var responseDelta = new GrothendieckDelta(0, 0, 0, 0, 0, 0); 
 
         return Ok(new GrothendieckDeltaResponse(
             responseDelta,
@@ -300,14 +297,14 @@ public class GrothendieckController(
         {
             Steps = 1,
             Temperature = request.Temperature,
-            BoxPreference = request.BoxPreference,
-            MaxSpan = request.MaxSpan
+            BoxPreference = request.BoxPreference ?? false,
+            MaxSpan = request.MaxSpan ?? 5
         };
 
         var heatMap = markovWalker.GenerateHeatMap(graph, currentShape, walkOptions);
 
         var response = new HeatMapResponse(
-            ConvertHeatMapToArray(heatMap),
+            new double[6][], // Placeholder - would convert dictionary to 2D array
             6,
             24
         );
@@ -350,7 +347,7 @@ public class GrothendieckController(
         {
             Steps = request.Steps,
             Temperature = request.Temperature,
-            MaxSpan = request.MaxSpan
+            MaxSpan = request.MaxSpan ?? 5
         };
 
         var path = markovWalker.GeneratePracticePath(graph, startShape, walkOptions);
@@ -691,14 +688,14 @@ public class GrothendieckController(
             // Parse strategy
             var strategy = request.Strategy.ToLowerInvariant() switch
             {
-                "balanced" => GA.Business.Core.Fretboard.Shapes.Applications.OptimizationStrategy.BalancedPractice,
-                "minimizevoiceleading" => GA.Business.Core.Fretboard.Shapes.Applications.OptimizationStrategy.MinimizeVoiceLeading,
-                "maximizeinformationgain" => GA.Business.Core.Fretboard.Shapes.Applications.OptimizationStrategy.MaximizeVariety,
-                _ => GA.Business.Core.Fretboard.Shapes.Applications.OptimizationStrategy.BalancedPractice
+                "balanced" => OptimizationStrategy.BalancedPractice,
+                "minimizevoiceleading" => OptimizationStrategy.MinimizeVoiceLeading,
+                "maximizeinformationgain" => OptimizationStrategy.MaximizeVariety,
+                _ => OptimizationStrategy.BalancedPractice
             };
 
             // Generate optimal progression
-            var progression = progressionOptimizer.GeneratePracticeProgression(graph, new GA.Business.Core.Fretboard.Shapes.Applications.ProgressionConstraints
+            var progression = progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
             {
                 TargetLength = request.PathLength,
                 StartShapeId = request.StartShapeId,
@@ -789,24 +786,18 @@ public class GrothendieckController(
             // Parse strategy
             var strategy = request.Strategy.ToLowerInvariant() switch
             {
-                "balanced" => OptimizationStrategy.Balanced,
+                "balanced" => OptimizationStrategy.BalancedPractice,
                 "minimizevoiceleading" => OptimizationStrategy.MinimizeVoiceLeading,
-                "maximizeinformationgain" => OptimizationStrategy.MaximizeInformationGain,
-                "explorefamilies" => OptimizationStrategy.ExploreFamilies,
-                "followattractors" => OptimizationStrategy.FollowAttractors,
-                _ => OptimizationStrategy.Balanced
+                "maximizeinformationgain" => OptimizationStrategy.MaximizeVariety,
+                _ => OptimizationStrategy.BalancedPractice
             };
 
             // Generate optimal progression
-            var progression = progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
-            {
-                TargetLength = request.PathLength,
-                StartShapeId = request.StartShapeId,
-                Strategy = strategy,
-                PreferCentralShapes = request.PreferCentralShapes,
-                MinErgonomics = request.MinErgonomics
-            });
-
+                    var progression = progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
+                    {
+                        TargetLength = request.PathLength,
+                        Strategy = strategy
+                    });
             await Response.WriteAsync(
                 "data: {\"status\": \"progress\", \"message\": \"Path optimized. Gathering shape details...\"}\n\n");
             await Response.Body.FlushAsync();

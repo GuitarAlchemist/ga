@@ -1,7 +1,7 @@
-using GA.Analytics.Service.Models;
-using GA.Business.Core.Invariants;
-
 namespace GA.Analytics.Service.Services;
+
+using GA.Domain.Core.Design;
+using Models;
 
 /*
 /// <summary>

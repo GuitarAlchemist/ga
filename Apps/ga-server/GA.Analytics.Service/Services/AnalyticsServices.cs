@@ -1,7 +1,8 @@
-using GA.Analytics.Service.Models;
-using GA.Business.Core.Invariants;
-
 namespace GA.Analytics.Service.Services;
+
+using GA.Domain.Core.Design;
+using GA.Business.Analytics.Analytics.Spectral;
+using Models;
 
 /// <summary>
 /// Caching service interface
@@ -37,7 +38,7 @@ public class CachingService : ICachingService
             Interlocked.Increment(ref _hits);
             return Task.FromResult((T?)value);
         }
-        
+
         Interlocked.Increment(ref _misses);
         return Task.FromResult(default(T));
     }
@@ -136,7 +137,7 @@ public class RealtimeInvariantMonitoringService
     {
         _logger.LogInformation("Validating concept {ConceptType}", conceptType);
         await Task.Delay(50);
-        
+
         return new CompositeInvariantValidationResult
         {
             Results = new List<InvariantValidationResult>
@@ -198,30 +199,29 @@ public class AdvancedAnalyticsService
         var nodes = agentIds.Select(id => new AgentNode
         {
             Id = id,
-            Type = "agent",
-            Name = $"Agent {id}",
-            Properties = new Dictionary<string, object> { ["active"] = true }
+            DisplayName = $"Agent {id}",
+            Weight = 1.0,
+            Signals = new Dictionary<string, double> { ["active"] = 1.0 }
         }).ToList();
 
-        var edges = new List<AgentEdge>();
+        var edges = new List<AgentInteractionEdge>();
         for (int i = 0; i < nodes.Count - 1; i++)
         {
-            edges.Add(new AgentEdge
+            edges.Add(new AgentInteractionEdge
             {
-                Id = Guid.NewGuid().ToString(),
-                SourceId = nodes[i].Id,
-                TargetId = nodes[i + 1].Id,
-                Type = "interaction",
-                Weight = Random.Shared.NextDouble()
+                Source = nodes[i].Id,
+                Target = nodes[i + 1].Id,
+                Weight = Random.Shared.NextDouble(),
+                Features = new Dictionary<string, double>()
             });
         }
 
         return new AgentInteractionGraph
         {
-            Id = Guid.NewGuid().ToString(),
-            Nodes = nodes,
+            Agents = nodes,
             Edges = edges,
-            Metadata = options
+            IsUndirected = false,
+            Metadata = options.ToDictionary(k => k.Key, v => v.Value.ToString() ?? "")
         };
     }
 

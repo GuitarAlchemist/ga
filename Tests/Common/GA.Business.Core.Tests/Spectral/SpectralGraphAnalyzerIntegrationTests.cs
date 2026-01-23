@@ -1,14 +1,12 @@
-namespace GA.Business.Core.Tests.Spectral;
+namespace GA.Domain.Core.Tests.Spectral;
 
 using System.Collections.Immutable;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Grothendieck;
-using GA.Business.Core.Atonal.Primitives;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Fretboard.Shapes.Spectral;
-using GA.Business.Core.Fretboard.Shapes.Spectral;
+using Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using Instruments.Shapes;
+using GA.Domain.Core.Instruments.Shapes.Spectral;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal.Grothendieck;
 using NUnit.Framework;
 
 [TestFixture]
@@ -19,26 +17,20 @@ public class SpectralGraphAnalyzerIntegrationTests
     {
         var graph = BuildSimpleGraph();
         var analyzer = new SpectralGraphAnalyzer();
-
         var metrics = analyzer.Analyze(graph);
-
         Assert.That(metrics.Eigenvalues.Length, Is.EqualTo(graph.ShapeCount));
         Assert.That(metrics.Eigenvalues[0], Is.EqualTo(0).Within(1e-9));
         Assert.That(metrics.Eigenvalues.Max(), Is.GreaterThan(0));
     }
-
     [Test]
     public void Cluster_ReturnsFamiliesForConnectedGraph()
     {
         var graph = BuildSimpleGraph();
         var analyzer = new SpectralGraphAnalyzer();
-
         var families = analyzer.Cluster(graph, 2);
-
         Assert.That(families.Count, Is.GreaterThan(0));
         Assert.That(families.All(f => f.ShapeIds.Count > 0), Is.True);
     }
-
     private static ShapeGraph BuildSimpleGraph()
     {
         var shapes = new Dictionary<string, FretboardShape>
@@ -47,7 +39,6 @@ public class SpectralGraphAnalyzerIntegrationTests
             ["shape-2"] = CreateShape("shape-2", new[] { 0, 3, 7 }),
             ["shape-3"] = CreateShape("shape-3", new[] { 0, 4, 9 })
         };
-
         var adjacency = new Dictionary<string, ImmutableList<ShapeTransition>>
         {
             ["shape-1"] = ImmutableList.Create(new ShapeTransition
@@ -68,7 +59,6 @@ public class SpectralGraphAnalyzerIntegrationTests
             }),
             ["shape-3"] = ImmutableList<ShapeTransition>.Empty
         };
-
         return new ShapeGraph
         {
             TuningId = "standard-6-string",
@@ -76,7 +66,6 @@ public class SpectralGraphAnalyzerIntegrationTests
             Adjacency = adjacency.ToImmutableDictionary()
         };
     }
-
     private static FretboardShape CreateShape(string id, int[] pitchClasses)
     {
         var pcs = pitchClasses.Select(PitchClass.FromValue).ToList();
@@ -87,7 +76,6 @@ public class SpectralGraphAnalyzerIntegrationTests
             new PositionLocation(Str.FromValue(2), Fret.FromValue(pitchClasses[1] % 12)),
             new PositionLocation(Str.FromValue(3), Fret.FromValue(pitchClasses[^1] % 12))
         };
-
         return new FretboardShape
         {
             Id = id,

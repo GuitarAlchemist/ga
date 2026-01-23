@@ -1,7 +1,6 @@
 namespace GA.AI.Service.Controllers;
 
-using GA.Business.Core.AI.Benchmarks;
-using GA.AI.Service.Services;
+using Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 

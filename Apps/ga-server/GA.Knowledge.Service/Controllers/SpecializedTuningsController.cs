@@ -1,9 +1,9 @@
 namespace GA.Knowledge.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Business.Core;
+using Domain.Services;
 
 /// <summary>
 ///     API controller for specialized tunings

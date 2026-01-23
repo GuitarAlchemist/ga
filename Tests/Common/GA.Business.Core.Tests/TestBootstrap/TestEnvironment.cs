@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Tests.TestBootstrap;
+namespace GA.Domain.Core.Tests.TestBootstrap;
 
 using NUnit.Framework;
 
@@ -14,7 +14,6 @@ public sealed class TestEnvironment
     {
         // Enable test mode for config fallbacks (e.g., InstrumentsConfig)
         Environment.SetEnvironmentVariable("GA_TEST_MODE", "1");
-
         // Start from the test bin directory and walk up until we find a repo-root marker
         // such as AllProjects.slnx or the Common/GA.Business.Config folder.
         var dir = TestContext.CurrentContext.TestDirectory;
@@ -26,10 +25,8 @@ public sealed class TestEnvironment
                 Directory.SetCurrentDirectory(dir);
                 return;
             }
-
             dir = Path.GetDirectoryName(dir);
         }
-
         // Fallback: keep the original working directory
     }
 }

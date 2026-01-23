@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using GA.Data.MongoDB.Services;
-using GA.Business.Core.AI.Services.Embeddings;
-using MongoDB.Bson;
-using System.Text;
 
 namespace GA.LmStudio.Api.Controllers;
+
+using GA.Domain.Core.Instruments;
+using GA.Data.MongoDB.Services;
+using GA.Domain.Core.AI.Services.Embeddings;
+using MongoDB.Bson;
+using System.Text;
 
 [ApiController]
 [Route("api/[controller]")]

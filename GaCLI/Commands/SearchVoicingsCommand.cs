@@ -7,9 +7,9 @@ using Spectre.Console;
 using System.Text.RegularExpressions;
 
 using GA.Business.ML.Embeddings;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Core;
+using GA.Domain.Services.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Core;
 
 public class SearchVoicingsCommand(
     MongoDbService mongoDbService, 

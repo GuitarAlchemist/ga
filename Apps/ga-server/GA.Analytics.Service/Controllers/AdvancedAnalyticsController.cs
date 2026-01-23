@@ -1,10 +1,10 @@
 namespace GA.Analytics.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Analytics.Service.Models;
-using GA.Analytics.Service.Services;
+using Models;
+using Services;
 
 /// <summary>
 ///     Advanced analytics controller with AI-powered insights and real-time recommendations
@@ -117,16 +117,13 @@ public class AdvancedAnalyticsController(
             };
 
             var session = await analyticsService.GeneratePracticeSessionAsync(
-                "personalized",
-                new Dictionary<string, object>
-                {
-                    ["userProfile"] = userProfile,
-                    ["durationMinutes"] = durationMinutes
-                }
+                userId,
+                "standard",
+                new Dictionary<string, object>()
             );
 
-            logger.LogInformation("Generated practice session for user {UserId}",
-                userId);
+            logger.LogInformation("Generated {SessionType} practice session for user {UserId}",
+                "standard", userId);
 
             return Ok(session);
         }
@@ -142,43 +139,27 @@ public class AdvancedAnalyticsController(
     }
 
     /// <summary>
-    ///     Generate personalized curriculum for skill development
+    ///     Generate a personalized musical curriculum
     /// </summary>
     /// <param name="userId">User identifier</param>
-    /// <param name="targetSkillLevel">Target skill level (Beginner, Intermediate, Advanced, Expert)</param>
-    /// <param name="focusAreas">Areas of focus for the curriculum</param>
-    /// <returns>Personalized curriculum with learning modules, milestones, and assessment criteria</returns>
+    /// <param name="curriculumType">Type of curriculum to generate</param>
+    /// <returns>Personalized curriculum with modules and learning paths</returns>
     [HttpPost("curriculum/{userId}")]
     [ProducesResponseType(typeof(PersonalizedCurriculum), 200)]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<ActionResult<PersonalizedCurriculum>> GenerateCurriculum(
+    public async Task<IActionResult> GenerateCurriculum(
         string userId,
-        [FromQuery] [Required] string targetSkillLevel,
-        [FromQuery] List<string> focusAreas)
+        [FromQuery] [Required] string curriculumType)
     {
         try
         {
-            var validSkillLevels = new[] { "Beginner", "Intermediate", "Advanced", "Expert" };
-            if (!validSkillLevels.Contains(targetSkillLevel))
-            {
-                return BadRequest($"Target skill level must be one of: {string.Join(", ", validSkillLevels)}");
-            }
-
-            // Mock user profile - in real implementation, get from personalization service
-            var userProfile = new UserProfile
-            {
-                UserId = userId,
-                SkillLevel = "Beginner",
-                PreferredGenres = focusAreas.Any() ? focusAreas : ["General"],
-                Instruments = ["Guitar"]
-            };
-
             var curriculum = await analyticsService.GenerateCurriculumAsync(
-                targetSkillLevel,
-                new Dictionary<string, object> { ["userProfile"] = userProfile },
-                new Dictionary<string, object> { ["focusAreas"] = focusAreas }
+                userId,
+                curriculumType,
+                new Dictionary<string, object>(),
+                new Dictionary<string, object>()
             );
+
 
             logger.LogInformation("Generated curriculum for user {UserId}",
                 userId);

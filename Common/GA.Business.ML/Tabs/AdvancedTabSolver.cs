@@ -1,15 +1,15 @@
 namespace GA.Business.ML.Tabs;
 
+using GA.Domain.Services.Abstractions;
+using Domain.Services.Fretboard.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Fretboard.Analysis;
-using Core.Notes;
-using Embeddings;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Player;
+using GA.Domain.Core.Primitives;
 using Retrieval;
-
-using Core.Player;
 
 /// <summary>
 /// Modern Style-Aware Tab Realization Solver.

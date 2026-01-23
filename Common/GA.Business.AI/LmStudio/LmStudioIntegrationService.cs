@@ -1,3 +1,4 @@
+using GA.Domain.Core.Instruments;
 ﻿namespace GA.Business.AI.LmStudio;
 
 using MongoDB.Bson;

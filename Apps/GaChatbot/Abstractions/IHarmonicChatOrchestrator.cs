@@ -1,6 +1,7 @@
-using GaChatbot.Models;
 
 namespace GaChatbot.Abstractions;
+
+using GaChatbot.Models;
 
 /// <summary>
 /// Orchestrates the Spectral RAG pipeline:

@@ -2,7 +2,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using GA.Business.Core.Chords;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Services.Chords;
 using Spectre.Console;
 
 internal static class Program

@@ -1,6 +1,6 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using Microsoft.Extensions.Logging;
 using Models;
 

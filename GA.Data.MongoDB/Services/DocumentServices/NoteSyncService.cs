@@ -1,8 +1,9 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Business.Core;
-using Business.Core.Intervals;
-using Business.Core.Notes.Primitives;
+using GA.Domain.Core;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
 
