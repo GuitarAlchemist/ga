@@ -56,7 +56,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080;http://+:8081
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=guitar-alchemist
+      - MongoDB__DatabaseName=guitaralchemist
       - Graphiti__BaseUrl=http://graphiti-service:8000
       - Ollama__BaseUrl=http://ollama:11434
       - Ollama__Model=qwen:0.5b
@@ -93,7 +93,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=guitar-alchemist
+      - MongoDB__DatabaseName=guitaralchemist
       - GaApi__BaseUrl=http://gaapi:8080
       - Graphiti__BaseUrl=http://graphiti-service:8000
     depends_on:
@@ -176,7 +176,7 @@ services:
       - OLLAMA_CHAT_MODEL=qwen:0.5b
       - OLLAMA_EMBEDDING_MODEL=nomic-embed-text
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
-      - MONGODB_DATABASE_NAME=guitar-alchemist
+      - MONGODB_DATABASE_NAME=guitaralchemist
       - GRAPHITI_TELEMETRY_ENABLED=false
       - SEMAPHORE_LIMIT=10
     depends_on:

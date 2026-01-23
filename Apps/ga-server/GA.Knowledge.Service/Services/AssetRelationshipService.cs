@@ -1,6 +1,7 @@
-using GA.Knowledge.Service.Models;
 
 namespace GA.Knowledge.Service.Services;
+
+using Models;
 
 /// <summary>
 /// Implementation of asset relationship service

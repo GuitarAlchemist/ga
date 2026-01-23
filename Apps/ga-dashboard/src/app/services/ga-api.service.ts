@@ -14,8 +14,8 @@ export interface ChordSearchResult {
 export interface IndexStats {
     totalVoicings: number;
     embeddingDimensions: number;
-    averageLatencyMs: number;
-    lastUpdated: string;
+    // averageLatencyMs: number; // Removed as not yet available from backend
+    // lastUpdated: string; // Removed
 }
 
 export interface VoicingWithEmbedding {
@@ -95,6 +95,10 @@ export class GaApiService {
 
     getBenchmarks(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/benchmark`);
+    }
+
+    getStats(): Observable<IndexStats> {
+        return this.http.get<IndexStats>(`${this.apiUrl}/stats`);
     }
 
     getBenchmarkById(id: string): Observable<any> {

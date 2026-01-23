@@ -1,5 +1,7 @@
 namespace GA.Data.MongoDB.Models;
 
+using GA.Domain.Core.Instruments;
+
 [PublicAPI]
 public sealed record TuningDocument : DocumentBase
 {

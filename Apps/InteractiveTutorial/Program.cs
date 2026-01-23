@@ -1,7 +1,9 @@
 namespace InteractiveTutorial;
 
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Scales;
+using GA.Domain.Core.Instruments;
+
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Theory.Tonal.Scales;
 using Spectre.Console;
 
 internal class Program

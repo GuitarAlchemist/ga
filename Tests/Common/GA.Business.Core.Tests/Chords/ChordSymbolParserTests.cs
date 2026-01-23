@@ -1,7 +1,6 @@
-namespace GA.Business.Core.Tests.Chords;
+namespace GA.Domain.Core.Tests.Chords;
 
-using GA.Business.Core.Chords;
-using GA.Business.Core.Notes;
+using Theory.Harmony;
 using NUnit.Framework;
 
 /// <summary>
@@ -18,24 +17,20 @@ public class ChordSymbolParserTests
         "Galt", "C7b5", "C7#5", "C7b9", "C7#9", "Cmaj7#11", "C7b13",
         "C/E"
     };
-
     private static readonly string[] InvalidSymbols =
     {
         "", " ", "Hmaj7", "R7", "7", "#C", "Z"
     };
-
     [Test]
     public void Parse_ReturnsValidChord_On_ValidSymbols()
     {
         // Arrange
         var parser = new ChordSymbolParser();
-
         // Act & Assert
         foreach (var symbol in ValidSymbols)
         {
             var chord = parser.Parse(symbol);
             TestContext.WriteLine($"Parsed '{symbol}' -> Root: {chord.Root}, Full Name: {chord.Symbol}");
-
             Assert.Multiple(() =>
             {
                 Assert.That(chord, Is.Not.Null, $"Failed to parse '{symbol}'");
@@ -44,13 +39,11 @@ public class ChordSymbolParserTests
             });
         }
     }
-
     [Test]
     public void Parse_Rejects_Invalid_Symbols()
     {
         // Arrange
         var parser = new ChordSymbolParser();
-
         // Act & Assert
         foreach (var symbol in InvalidSymbols)
         {
@@ -59,25 +52,21 @@ public class ChordSymbolParserTests
             {
                 Assert.That(() => parser.Parse(symbol), Throws.Exception,
                     $"Should throw for invalid symbol '{symbol}'");
-
                 Assert.That(parser.TryParse(symbol, out var chord), Is.False);
                 Assert.That(chord, Is.Null);
             });
         }
     }
-
     [Test]
     public void TryParse_ReturnsTrue_On_ValidSymbols()
     {
         // Arrange
         var parser = new ChordSymbolParser();
-
         // Act & Assert
         foreach (var symbol in ValidSymbols)
         {
             var result = parser.TryParse(symbol, out var chord);
             TestContext.WriteLine($"TryParse '{symbol}' -> Success: {result}, Chord: {chord?.Symbol}");
-
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.True, $"TryParse failed for '{symbol}'");

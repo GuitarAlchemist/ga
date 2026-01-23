@@ -1,11 +1,13 @@
 ﻿namespace FretboardVoicingsCLI;
 
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Voicings.Analysis;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Voicings.Filtering;
-using GA.Business.Core.Fretboard.Voicings.Generation;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Domain.Services.Fretboard.Voicings.Generation;
+// For MidiNote
 using Spectre.Console;
 
 internal class Program
@@ -100,73 +102,55 @@ internal class Program
         foreach (var (voicing, analysis) in samples)
         {
             var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+            var midiNotes = string.Join(", ", analysis.MidiNotes);
 
-            // MIDI note numbers
-            var midiNotes = string.Join(", ", analysis.MidiNotes.Select(n => n.Value.ToString()));
+            // Fix: handle int[] midi notes conversion to note names
+            var noteNames = string.Join(", ", analysis.MidiNotes.Select(n => $"\"{(MidiNote)n}\"")); // MidiNote.ToString() prints value? No, I need note name.
+            // MidiNote has ToSharpNote().
+            // So: ((MidiNote)n).ToSharpNote().
+            noteNames = string.Join(", ", analysis.MidiNotes.Select(n => $"\"{((MidiNote)n).ToSharpNote()}\""));
 
-            // Note names with octave
-            var noteNames = string.Join(", ", analysis.MidiNotes.Select(n => $"\"{n.ToSharpNote()}\""));
-
-            // Pitch class set
             var pitchClasses = analysis.PitchClassSet.ToString();
-
-            // Chord name
             var chordName = analysis.ChordId.ChordName ?? "Unknown";
-            if (analysis.SymmetricalInfo != null)
-            {
-                chordName = $"{analysis.SymmetricalInfo.ScaleName} ({string.Join("/", analysis.SymmetricalInfo.PossibleRoots)})";
-            }
 
-            // Key and function
+            if (analysis.SymmetricalInfo != null)
+                chordName = analysis.SymmetricalInfo.ScaleName; // Fixed property access
+
             var keyFunction = analysis.ChordId.FunctionalDescription ?? "Atonal";
             if (!analysis.ChordId.IsNaturallyOccurring && analysis.ChordId.ClosestKey != null)
-            {
                 keyFunction += " (chromatic)";
-            }
 
-            // Interval class vector
             var icv = analysis.IntervallicInfo.IntervalClassVector;
-
-            // Features
             var features = string.Join(", ", analysis.IntervallicInfo.Features);
-            if (string.IsNullOrEmpty(features))
-            {
-                features = "none";
-            }
+            if (string.IsNullOrEmpty(features)) features = "none";
 
-            // Output YAML format
             Console.WriteLine($"  - diagram: \"{diagram}\"");
             Console.WriteLine($"    midi_notes: [{midiNotes}]");
             Console.WriteLine($"    notes: [{noteNames}]");
             Console.WriteLine($"    pitch_classes: \"{pitchClasses}\"");
             Console.WriteLine($"    chord:");
             Console.WriteLine($"      name: \"{chordName}\"");
-            if (analysis.ChordId.AlternateName != null && analysis.ChordId.AlternateName != chordName)
+
+            if (analysis.AlternateChordNames != null)
             {
-                Console.WriteLine($"      alternate_name: \"{analysis.ChordId.AlternateName}\"");
+                 var alt = analysis.AlternateChordNames.FirstOrDefault(n => n != chordName);
+                 if (alt != null)
+                    Console.WriteLine($"      alternate_name: \"{alt}\"");
             }
+
             if (analysis.ChordId.SlashChordInfo != null)
             {
                 Console.WriteLine($"      slash_chord:");
-                Console.WriteLine($"        notation: \"{analysis.ChordId.SlashChordInfo.Notation}\"");
-                Console.WriteLine($"        type: \"{analysis.ChordId.SlashChordInfo.Type}\"");
-                Console.WriteLine($"        is_common_inversion: {analysis.ChordId.SlashChordInfo.IsCommonInversion.ToString().ToLower()}");
+                Console.WriteLine($"        info: \"{analysis.ChordId.SlashChordInfo}\"");
             }
             Console.WriteLine($"      key_function: \"{keyFunction}\"");
             Console.WriteLine($"      naturally_occurring: {analysis.ChordId.IsNaturallyOccurring.ToString().ToLower()}");
-            if (analysis.ChordId.RomanNumeral != null)
-            {
-                Console.WriteLine($"      roman_numeral: \"{analysis.ChordId.RomanNumeral}\"");
-            }
-            if (analysis.ChordId.Intervals != null)
-            {
-                Console.WriteLine($"      intervals:");
-                Console.WriteLine($"        theoretical: [{string.Join(", ", analysis.ChordId.Intervals.Theoretical.Select(i => $"\"{i}\""))}]");
-                Console.WriteLine($"        actual: [{string.Join(", ", analysis.ChordId.Intervals.Actual.Select(i => $"\"{i}\""))}]");
-            }
+
+            Console.WriteLine($"      intervals: [{string.Join(", ", analysis.IntervallicInfo.Intervals)}]");
+
             Console.WriteLine($"    voicing:");
             Console.WriteLine($"      type: \"{(analysis.VoicingCharacteristics.IsOpenVoicing ? "open" : "closed")}\"");
-            Console.WriteLine($"      span_semitones: {analysis.VoicingCharacteristics.Span}");
+            Console.WriteLine($"      span_semitones: {analysis.VoicingCharacteristics.IntervalSpread}");
             if (analysis.VoicingCharacteristics.IsRootless)
             {
                 Console.WriteLine($"      rootless: true");
@@ -177,7 +161,7 @@ internal class Program
             }
             if (analysis.VoicingCharacteristics.Features.Count > 0)
             {
-                Console.WriteLine($"      features: [{string.Join(", ", analysis.VoicingCharacteristics.Features.Select(f => $"\"{f}\""))}]");
+                Console.WriteLine($"      features: [{string.Join(", ", analysis.VoicingCharacteristics.Features)}]");
             }
             if (analysis.ModeInfo != null)
             {
@@ -187,21 +171,15 @@ internal class Program
                 {
                     Console.WriteLine($"      family: \"{analysis.ModeInfo.FamilyName}\"");
                 }
-                Console.WriteLine($"      degree: {analysis.ModeInfo.DegreeInFamily}");
-                Console.WriteLine($"      note_count: {analysis.ModeInfo.NoteCount}");
-            }
-            if (analysis.ChromaticNotes != null && analysis.ChromaticNotes.Count > 0)
-            {
-                Console.WriteLine($"    chromatic_notes: [{string.Join(", ", analysis.ChromaticNotes.Select(n => $"\"{n}\""))}]");
+                Console.WriteLine($"      degree: {analysis.ModeInfo.Degree}");
             }
             Console.WriteLine($"    analysis:");
             Console.WriteLine($"      interval_class_vector: \"{icv}\"");
-            Console.WriteLine($"      features: [{string.Join(", ", analysis.IntervallicInfo.Features.Select(f => $"\"{f}\""))}]");
+            Console.WriteLine($"      features: [{features}]");
             if (analysis.SymmetricalInfo != null)
             {
                 Console.WriteLine($"      symmetrical_scale:");
                 Console.WriteLine($"        name: \"{analysis.SymmetricalInfo.ScaleName}\"");
-                Console.WriteLine($"        possible_roots: [{string.Join(", ", analysis.SymmetricalInfo.PossibleRoots.Select(r => $"\"{r}\""))}]");
             }
 
             // Equivalence information
@@ -209,9 +187,7 @@ internal class Program
             {
                 Console.WriteLine($"    equivalence:");
                 Console.WriteLine($"      prime_form_id: \"{analysis.EquivalenceInfo.PrimeFormId}\"");
-                Console.WriteLine($"      is_prime_form: {analysis.EquivalenceInfo.IsPrimeForm.ToString().ToLower()}");
                 Console.WriteLine($"      translation_offset: {analysis.EquivalenceInfo.TranslationOffset}");
-                Console.WriteLine($"      equivalence_class_size: {analysis.EquivalenceInfo.EquivalenceClassSize}");
             }
 
             // Physical layout
@@ -237,7 +213,7 @@ internal class Program
             }
 
             // Semantic tags
-            if (analysis.SemanticTags.Count > 0)
+            if (analysis.SemanticTags.Length > 0)
             {
                 Console.WriteLine($"    semantic_tags: [{string.Join(", ", analysis.SemanticTags.Select(t => $"\"{t}\""))}]");
             }
@@ -437,4 +413,3 @@ internal class Program
         AnsiConsole.MarkupLine("  FretboardVoicingsCLI --rootless --dominant --diatonic");
     }
 }
-

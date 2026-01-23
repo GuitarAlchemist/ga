@@ -3,6 +3,8 @@
 
 namespace InteractiveTutorial;
 
+using GA.Domain.Core.Instruments;
+
 internal class DummyMain
 {
     private static void Main(string[] args)

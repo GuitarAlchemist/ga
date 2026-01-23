@@ -1,6 +1,6 @@
 ﻿namespace GA.InteractiveExtension.ExtensionMethods;
 
-using Business.Core.Notes;
+using GA.Domain.Core.Primitives;
 using Ga;
 using static PocketViewTags;
 

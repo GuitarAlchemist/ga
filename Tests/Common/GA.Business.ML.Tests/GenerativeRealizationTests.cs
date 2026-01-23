@@ -1,14 +1,10 @@
 namespace GA.Business.ML.Tests;
 
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Tonal;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Retrieval;
-using GA.Business.ML.Tabs;
-using GA.Business.Core.Player;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Player;
+using GA.Domain.Core.Primitives;
+using Domain.Services.Fretboard.Analysis;
 using NUnit.Framework;
 
 [TestFixture]

@@ -1,6 +1,6 @@
 using GA.Business.Config;
-using GA.Business.Core.Atonal;
 using GA.Core.Combinatorics;
+using GA.Domain.Core.Theory.Atonal;
 
 var combinations = new Combinations<PitchClass>(PitchClass.Items);
 foreach (var combination in combinations)

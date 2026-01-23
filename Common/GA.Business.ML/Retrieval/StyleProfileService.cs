@@ -1,10 +1,8 @@
 namespace GA.Business.ML.Retrieval;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Embeddings;
-using Core.Fretboard.Voicings.Search;
 
 /// <summary>
 /// Calculates stylistic prototypes (Centroids) from the vector index.

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Configuration; // Fix IConfiguration missing
 using Moq;
 using GaApi.Services;
 using GaApi.Models; // For ChatMessage, etc.
-using GA.Business.Core.Fretboard.Primitives; // For PitchClass, etc.
+using GA.Domain.Core.Instruments.Primitives; // For PitchClass, etc.
 
 [TestFixture]
 public class ChatbotIntegrationTests

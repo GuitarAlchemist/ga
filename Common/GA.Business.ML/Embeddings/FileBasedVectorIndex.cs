@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Numerics.Tensors;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
 /// A file-backed vector index that persists data to a JSONL file.
@@ -94,8 +94,18 @@ public class FileBasedVectorIndex : IVectorIndex
         return _documents.Count > 0;
     }
 
-    private static double CosineSimilarity(float[] a, double[] b)
+    public async Task<bool> IsStaleAsync(string currentSchemaVersion)
     {
-        return TensorPrimitives.CosineSimilarity(a, b.Select(x => (float)x).ToArray());
+        if (_documents.Count == 0)
+        {
+            // If empty, try loading first
+            if (!Load()) return false;
+        }
+
+        // Stale if any document has a different schema version or missing/wrong-sized embedding
+        return _documents.Any(d => 
+            d.SchemaVersion != currentSchemaVersion || 
+            d.Embedding == null || 
+            d.Embedding.Length != EmbeddingSchema.TotalDimension);
     }
 }

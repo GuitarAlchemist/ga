@@ -1,11 +1,8 @@
 namespace GA.Business.ML.Tests;
 
-using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Embeddings.Services;
-using GA.Business.Core.Tonal.Hierarchies;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Embeddings;
 using NUnit.Framework;
 
 [TestFixture]

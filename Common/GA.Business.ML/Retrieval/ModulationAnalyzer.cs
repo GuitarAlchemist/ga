@@ -3,9 +3,9 @@ namespace GA.Business.ML.Retrieval;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
 using Embeddings;
-using Core.Fretboard.Voicings.Search;
-using Core.Atonal;
 
 /// <summary>
 /// Analyzes progression drift on the Phase Sphere to identify potential modulation targets.

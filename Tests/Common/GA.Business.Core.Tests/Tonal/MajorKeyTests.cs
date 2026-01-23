@@ -1,4 +1,6 @@
-namespace GA.Business.Core.Tests.Tonal;
+namespace GA.Domain.Core.Tests.Tonal;
+
+using GA.Domain.Core.Theory.Tonal;
 
 [TestFixture]
 public class MajorKeyTests
@@ -24,9 +26,7 @@ public class MajorKeyTests
         {
             throw new InvalidOperationException();
         }
-
         var actual = majorKey.Notes.Select(note => note.ToString()).ToArray();
-
         Assert.That(actual, Is.EqualTo(expected));
     }
 }

@@ -1,8 +1,10 @@
+
+namespace GA.Domain.Core.Services;
+
+using GA.Domain.Core.Instruments;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using GA.Business.Core.Configuration;
-
-namespace GA.Business.Core.Services;
+using GA.Domain.Core.Configuration;
 
 /// <summary>
 /// Background service that watches YAML configuration files for changes and hot-reloads them

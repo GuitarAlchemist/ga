@@ -1,5 +1,8 @@
 namespace GaChatbot.Tests.Services;
 
+using GA.Domain.Services.Abstractions;
+using GA.Domain.Core.Instruments;
+
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +15,8 @@ using GaChatbot.Services;
 using GaChatbot.Models;
 using GaChatbot.Abstractions;
 using GA.Business.ML.Abstractions;
-using GA.Business.Core.Abstractions;
-using GA.Business.Core.AI;
+using GA.Domain.Core.Abstractions;
+using GA.Domain.Core.AI;
 using NUnit.Framework;
 using Moq;
 using GaChatbot.Tests.Integration;
@@ -41,9 +44,9 @@ public class ProductionOrchestratorTests
         services.AddSingleton<ProductionOrchestrator>();
 
         // Mock requirements for Orchestrator
-        services.AddSingleton(GA.Business.Core.Fretboard.Tuning.Default);
-        services.AddSingleton<GA.Business.Core.Fretboard.Analysis.FretboardPositionMapper>();
-        services.AddSingleton<GA.Business.Core.Fretboard.Analysis.PhysicalCostService>();
+        services.AddSingleton(GA.Domain.Instruments.Fretboard.Tuning.Default);
+        services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.FretboardPositionMapper>();
+        services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.PhysicalCostService>();
         services.AddSingleton<GroundedPromptBuilder>();
         services.AddSingleton<ResponseValidator>();
         services.AddSingleton<ITextEmbeddingService>(new Mock<ITextEmbeddingService>().Object);

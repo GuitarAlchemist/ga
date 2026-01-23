@@ -1,0 +1,29 @@
+import os
+
+def fix_file(filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        new_content = content
+        
+        # 1. Fix corrupted property access
+        new_content = new_content.replace(".GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis.", ".")
+        
+        # 2. Fix Spread -> IntervalSpread
+        new_content = new_content.replace(".Spread", ".IntervalSpread")
+        
+        if new_content != content:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"Fixed {filepath}")
+    except Exception as e:
+        print(f"Error fixing {filepath}: {e}")
+
+# Run on all failing projects
+directories = ["Tests/Common/GA.Business.Core.Tests", "Demos/Music Theory/FretboardVoicingsCLI"]
+for d in directories:
+    for root, dirs, files in os.walk(d):
+        for file in files:
+            if file.endswith(".cs"):
+                fix_file(os.path.join(root, file))

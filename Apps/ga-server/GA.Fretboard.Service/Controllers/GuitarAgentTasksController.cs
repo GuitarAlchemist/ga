@@ -2,8 +2,8 @@ namespace GA.Fretboard.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Fretboard.Service.Models;
-using GA.Fretboard.Service.Services;
+using Models;
+using Services;
 
 /// <summary>
 ///     API controller for managing AI Agent tasks using Proto.Actor

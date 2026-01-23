@@ -3,9 +3,13 @@ namespace GA.Business.ML.Embeddings;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Tonal.Hierarchies;
 using Services;
-using Core.Tonal.Hierarchies; // ComplexityCalculator
-using GA.Business.Core.Abstractions;
+using GA.Domain.Services.Abstractions;
+
+// ComplexityCalculator
 
 /// <summary>
 /// Orchestrates the generation of the 109-dimensional canonical musical embedding (v1.3.1).
@@ -132,7 +136,7 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 9: HIERARCHY (128-135) — Complexity
         // ═══════════════════════════════════════════════════════════════════════
-        var pcsSet = new Core.Atonal.PitchClassSet(doc.PitchClasses.Select(Core.Atonal.PitchClass.FromValue));
+        var pcsSet = new PitchClassSet(doc.PitchClasses.Select(PitchClass.FromValue));
         combined[EmbeddingSchema.HierarchyComplexityScore] = ComplexityCalculator.CalculateScore(pcsSet);
 
         return combined;

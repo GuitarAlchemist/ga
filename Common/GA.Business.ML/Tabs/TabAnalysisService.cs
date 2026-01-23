@@ -4,10 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
 using Embeddings;
-using Models;
-using Core.Fretboard.Voicings.Search;
-using Core.Atonal; // For PitchClass, PitchClassSet
+using GA.Business.ML.Tabs.Models;
+using GA.Domain.Core.Common;
+
+// For PitchClass, PitchClassSet
 
 public class TabAnalysisService
 {
@@ -111,7 +114,7 @@ public class TabAnalysisService
                 var pcsSet = new PitchClassSet(pcsList);
                 var bassPc = PitchClass.FromValue(midiNotes.Min() % 12);
 
-                var analysis = Core.Fretboard.Voicings.Analysis.VoicingHarmonicAnalyzer.IdentifyChord(pcsSet, pcsList, bassPc);
+                var analysis = Domain.Services.Fretboard.Voicings.Analysis.VoicingHarmonicAnalyzer.IdentifyChord(pcsSet, pcsList, bassPc);
 
                 // Use domain model to get Forte number
                 string? forteCode = ForteCatalog.TryGetForteNumber(pcsSet.PrimeForm, out var forte)
@@ -120,8 +123,8 @@ public class TabAnalysisService
                 var doc = new VoicingDocument
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ChordName = analysis.ChordName ?? "Unknown",
-                    RootPitchClass = analysis.RootPitchClass?.Value ?? midiNotes.Min() % 12,
+                    ChordName = analysis.ChordName ?? AnalysisConstants.Unknown,
+                    RootPitchClass = PitchClass.TryParse(analysis.RootPitchClass, null, out var r) ? r.Value : midiNotes.Min() % 12,
                     MidiNotes = midiNotes.ToArray(),
                     PitchClasses = pitchClasses.ToArray(),
                     PitchClassSet = string.Join(",", pitchClasses),
@@ -130,6 +133,7 @@ public class TabAnalysisService
 
                     // Richer Metadata from Analyzer
                     HarmonicFunction = analysis.HarmonicFunction,
+                    Quality = analysis.Quality,
                     IsNaturallyOccurring = analysis.IsNaturallyOccurring,
 
                     // Defaults required by schema logic
@@ -142,10 +146,10 @@ public class TabAnalysisService
                     SearchableText = $"{analysis.ChordName} {analysis.HarmonicFunction}",
                     PossibleKeys = pcsSet.GetCompatibleKeys().Select(k => k.ToString()).ToArray(),
                     YamlAnalysis = "{}",
-                    AnalysisEngine = "TabParser + VoicingHarmonicAnalyzer",
+                    AnalysisEngine = AnalysisConstants.TabAnalysisEngine,
                     AnalysisVersion = "1.1",
                     Jobs = Array.Empty<string>(),
-                    TuningId = "Standard",
+                    TuningId = AnalysisConstants.DefaultTuning,
                     PitchClassSetId = pcsSet.Id.ToString(),
                     ForteCode = forteCode
                 };

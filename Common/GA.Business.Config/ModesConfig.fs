@@ -16,16 +16,25 @@ module ModesConfig =
           AlternateNames: IReadOnlyList<string> option
           FamilyName: string option }
 
+    [<CLIMutable>]
+    type ModeConfigData =
+        { Name: string
+          Notes: string
+          Description: string
+          CharacteristicIntervals: string[] }
+
+    [<CLIMutable>]
     type ModalFamily =
         { Name: string
           IntervalClassVector: string
-          Modes: ResizeArray<IDictionary<string, obj>> }
+          Modes: ResizeArray<ModeConfigData> }
 
+    [<CLIMutable>]
     type ModesYaml =
         { ModalFamilies: ResizeArray<ModalFamily> }
 
     let getConfigPath () =
-        let configName = "Modes_Simple.yaml"
+        let configName = "Modes.yaml"
 
         let possiblePaths =
             [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
@@ -39,7 +48,7 @@ module ModesConfig =
     let mutable private configPath =
         match getConfigPath () with
         | Some path -> path
-        | None -> failwith "Modes_Simple.yaml configuration file not found"
+        | None -> failwith "Modes.yaml configuration file not found"
 
     let mutable private modesData: ModesYaml option = None
     let mutable private version = Guid.NewGuid()
@@ -56,6 +65,7 @@ module ModesConfig =
             let deserializer =
                 DeserializerBuilder()
                     .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
                     .Build()
 
             let yaml = File.ReadAllText(configPath)
@@ -63,7 +73,7 @@ module ModesConfig =
             modesData <- Some data
             true
         with ex ->
-            printfn $"Failed to load Modes_Simple.yaml: %s{ex.Message}"
+            printfn $"Failed to load Modes.yaml: %s{ex.Message}"
             false
 
     let GetVersion () = version
@@ -73,7 +83,7 @@ module ModesConfig =
             configPath <-
                 match getConfigPath () with
                 | Some path -> path
-                | None -> failwith "Modes_Simple.yaml configuration file not found"
+                | None -> failwith "Modes.yaml configuration file not found"
 
             if loadModesData () then
                 // Clear caches when config is reloaded
@@ -223,6 +233,34 @@ module ModesConfig =
 
         builder.ToImmutable()
 
+    type ModeData = {
+        Name: string;
+        Notes: string;
+        CharacteristicIntervals: IReadOnlyList<string>
+    }
+    type ModalFamilyInfo =
+        { Name: string
+          Modes: IReadOnlyList<ModeData> }
+
+    let GetModalFamilies () : ImmutableList<ModalFamilyInfo> =
+        ensureLoaded ()
+        match modesData with
+        | None -> ImmutableList.Create()
+        | Some data ->
+            let builder = ImmutableList.CreateBuilder<ModalFamilyInfo>()
+            for family in data.ModalFamilies do
+                let modes =
+                    family.Modes
+                    |> Seq.map (fun m ->
+                        { Name = m.Name;
+                          Notes = m.Notes;
+                          CharacteristicIntervals = (if isNull m.CharacteristicIntervals then [||] else m.CharacteristicIntervals) :> IReadOnlyList<string> })
+                    |> Seq.toList
+
+                if not (List.isEmpty modes) then
+                    builder.Add({ Name = family.Name; Modes = modes :> IReadOnlyList<ModeData> })
+            builder.ToImmutable()
+
     let GetAllModes () : ImmutableList<ModeInfo> =
         try
             ensureLoaded ()
@@ -233,25 +271,16 @@ module ModesConfig =
                 let builder = ImmutableList.CreateBuilder<ModeInfo>()
 
                 for family in data.ModalFamilies do
-                    for modeDict in family.Modes do
-                        let name =
-                            match tryGetString modeDict "Name" with
-                            | Some n -> n
-                            | None -> ""
+                    for m in family.Modes do
+                        let name = if isNull m.Name then "" else m.Name
 
                         if not (String.IsNullOrWhiteSpace(name)) then
-                            let notes =
-                                match tryGetString modeDict "Notes" with
-                                | Some n -> n
-                                | None -> ""
+                            let notes = if isNull m.Notes then "" else m.Notes
 
-                            let intervalVector =
-                                match tryGetString modeDict "IntervalClassVector" with
-                                | Some v -> v
-                                | None -> family.IntervalClassVector
+                            let intervalVector = if isNull family.IntervalClassVector then "" else family.IntervalClassVector
 
-                            let description = tryGetString modeDict "Description"
-                            let alternateNames = tryGetStringList modeDict "AlternateNames"
+                            let description = if isNull m.Description then None else Some m.Description
+                            let alternateNames = None
 
                             builder.Add(
                                 { Name = name

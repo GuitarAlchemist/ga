@@ -1,6 +1,6 @@
 namespace GaCLI.Commands;
 
-using GA.Business.Core.Fretboard.Biomechanics;
+using GA.Domain.Core.Instruments.Biomechanics;
 using static Console;
 
 /// <summary>

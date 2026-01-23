@@ -1,8 +1,10 @@
+
+namespace GA.Domain.Core.Services;
+
+using GA.Domain.Core.Instruments;
 using Microsoft.EntityFrameworkCore;
 using GA.Data.EntityFramework;
-using GA.Business.Core.Configuration;
-
-namespace GA.Business.Core.Services;
+using GA.Domain.Core.Configuration;
 
 /// <summary>
 /// Service for managing user profiles, preferences, and personalized learning paths

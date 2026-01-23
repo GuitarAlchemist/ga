@@ -2,8 +2,8 @@ namespace GA.Analytics.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Analytics.Service.Services;
-using GA.Analytics.Service.Models;
+using Services;
+using Models;
 
 [ApiController]
 [Route("api/[controller]")]

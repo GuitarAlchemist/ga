@@ -1,7 +1,7 @@
 ﻿namespace GA.Business.AI;
 
-using Core.Atonal;
-using Core.Fretboard.Shapes;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Instruments.Shapes;
 using JetBrains.Annotations;
 
 /// <summary>
@@ -19,7 +19,7 @@ public interface IRedisVectorService
     ///     Index fretboard shapes with multi-dimensional embeddings
     /// </summary>
     Task IndexShapesAsync(
-        IEnumerable<FretboardShape> shapes,
+        IEnumerable<GA.Domain.Core.Instruments.Shapes.FretboardShape> shapes,
         CancellationToken cancellationToken = default
     );
 
@@ -30,7 +30,7 @@ public interface IRedisVectorService
     /// <param name="maxResults">Maximum number of results</param>
     /// <param name="maxDistance">Maximum L2 distance</param>
     /// <returns>List of similar pitch-class sets with distances</returns>
-    Task<IEnumerable<(PitchClassSet Set, double Distance)>> FindSimilarPitchClassSetsAsync(
+    Task<IEnumerable<(GA.Domain.Core.Theory.Atonal.PitchClassSet Set, double Distance)>> FindSimilarPitchClassSetsAsync(
         IntervalClassVector icv,
         int maxResults = 10,
         double maxDistance = 5.0
@@ -42,7 +42,7 @@ public interface IRedisVectorService
     /// <param name="shape">Reference shape</param>
     /// <param name="options">Search options</param>
     /// <returns>List of similar shapes with distances</returns>
-    Task<IEnumerable<(FretboardShape Shape, double Distance)>> FindSimilarShapesAsync(
+    Task<IEnumerable<(GA.Domain.Core.Instruments.Shapes.FretboardShape Shape, double Distance)>> FindSimilarShapesAsync(
         FretboardShape shape,
         ShapeSearchOptions options
     );
@@ -53,7 +53,7 @@ public interface IRedisVectorService
     /// <param name="query">Natural language query (e.g., "easy C major box shape")</param>
     /// <param name="maxResults">Maximum number of results</param>
     /// <returns>List of matching shapes</returns>
-    Task<IEnumerable<FretboardShape>> SearchShapesAsync(
+    Task<IEnumerable<GA.Domain.Core.Instruments.Shapes.FretboardShape>> SearchShapesAsync(
         string query,
         int maxResults = 10
     );

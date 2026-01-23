@@ -2,9 +2,9 @@ namespace GA.Business.ML.Tests.Wavelets;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Wavelets;
-using GA.Business.ML.Embeddings;
+using Embeddings;
 using NUnit.Framework;
 
 [TestFixture]
@@ -80,7 +80,7 @@ public class WaveletMotionTests
         var progression = Enumerable.Repeat(MockVoicing(cMaj, consonance: 1.0), 4).ToList();
 
         // Ensure embeddings are generated for distance calculation
-        var generator = GA.Business.ML.Tests.TestInfrastructure.TestServices.CreateGenerator();
+        var generator = TestInfrastructure.TestServices.CreateGenerator();
         for(int i=0; i<progression.Count; i++) {
             progression[i] = progression[i] with { Embedding = generator.GenerateEmbeddingAsync(progression[i]).GetAwaiter().GetResult() };
         }
@@ -112,7 +112,7 @@ public class WaveletMotionTests
         };
 
         // Generate embeddings
-        var generator = GA.Business.ML.Tests.TestInfrastructure.TestServices.CreateGenerator();
+        var generator = TestInfrastructure.TestServices.CreateGenerator();
         for(int i=0; i<progression.Count; i++) {
             progression[i] = progression[i] with { Embedding = generator.GenerateEmbeddingAsync(progression[i]).GetAwaiter().GetResult() };
         }

@@ -1,6 +1,6 @@
 namespace GA.InteractiveExtension.Ga;
 
-using Business.Core.Fretboard;
+using GA.Domain.Core.Instruments;
 
 public static class FretboardFormatter
 {

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
-using GA.AI.Service.Services;
+using Services;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -83,7 +83,7 @@ public class NotebookController : ControllerBase
         var fullPath = Path.GetFullPath(Path.Combine(_notebooksRoot, path));
         
         // Security check
-        if (!fullPath.StartsWith(_notebooksRoot, System.StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.StartsWith(_notebooksRoot, StringComparison.OrdinalIgnoreCase))
         {
             return Forbid();
         }
@@ -96,7 +96,7 @@ public class NotebookController : ControllerBase
         var json = await System.IO.File.ReadAllTextAsync(fullPath);
         try 
         {
-            if (fullPath.EndsWith(".dib", System.StringComparison.OrdinalIgnoreCase))
+            if (fullPath.EndsWith(".dib", StringComparison.OrdinalIgnoreCase))
             {
                 // Simple wrapper for .dib content to look like a one-cell notebook for our viewer
                 return Ok(new {
@@ -138,6 +138,6 @@ public class NotebookInfo
     public string Name { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public string Type { get; set; } = "ipynb";
-    public System.DateTime LastModified { get; set; }
+    public DateTime LastModified { get; set; }
     public List<string> Tags { get; set; } = new();
 }

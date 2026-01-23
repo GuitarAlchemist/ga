@@ -1,9 +1,9 @@
 ﻿namespace VoicingSearchDemo;
 
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings;
+using GA.Domain.Core.Instruments.Fretboard;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings;
 using Microsoft.Extensions.Logging;
 
 /// <summary>

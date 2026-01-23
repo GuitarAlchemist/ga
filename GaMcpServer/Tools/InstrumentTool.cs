@@ -1,5 +1,7 @@
 namespace GaMcpServer.Tools;
 
+using GA.Domain.Core.Instruments;
+
 using GA.Business.Config;
 using ModelContextProtocol.Server;
 

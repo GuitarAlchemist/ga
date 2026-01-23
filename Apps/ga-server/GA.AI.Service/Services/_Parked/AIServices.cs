@@ -1,6 +1,7 @@
-using GA.AI.Service.Models;
 
 namespace GA.AI.Service.Services;
+
+using GA.AI.Service.Models;
 
 /// <summary>
 /// Semantic search service

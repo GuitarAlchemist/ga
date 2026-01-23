@@ -3,7 +3,7 @@ namespace GaChatbot.Tests.Mocks;
 using System.Collections.Generic;
 using System.Linq;
 using GA.Business.ML.Embeddings;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 
 public class MockVectorIndex : IVectorIndex
 {
@@ -33,5 +33,10 @@ public class MockVectorIndex : IVectorIndex
         return _documents.FirstOrDefault(d => 
             d.Id == identity || 
             (d.ChordName != null && d.ChordName.Equals(identity, System.StringComparison.OrdinalIgnoreCase)));
+    }
+
+    public Task<bool> IsStaleAsync(string currentSchemaVersion)
+    {
+        return Task.FromResult(false); // Mocks are never stale by default
     }
 }

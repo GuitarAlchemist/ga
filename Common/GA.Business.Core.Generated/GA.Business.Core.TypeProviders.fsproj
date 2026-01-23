@@ -32,7 +32,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj">
+        <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj">
             <PrivateAssets>all</PrivateAssets>
         </ProjectReference>
         <ProjectReference Include="..\GA.Core\GA.Core.csproj">

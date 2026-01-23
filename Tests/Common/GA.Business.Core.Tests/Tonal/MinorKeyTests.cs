@@ -1,4 +1,6 @@
-namespace GA.Business.Core.Tests.Tonal;
+namespace GA.Domain.Core.Tests.Tonal;
+
+using GA.Domain.Core.Theory.Tonal;
 
 [TestFixture]
 public class MinorKeyTests
@@ -24,9 +26,7 @@ public class MinorKeyTests
         {
             throw new InvalidOperationException();
         }
-
         var actualNotes = minorKey.Notes.Select(note => note.ToString()).ToArray();
-
         Assert.That(expectedKeyNotes, Is.EqualTo(actualNotes));
     }
 }

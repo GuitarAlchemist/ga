@@ -62,11 +62,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-// Make Program class accessible for integration tests
-namespace GA.TabConversion.Api
-{
-    public partial class Program
-    {
-    }
-}

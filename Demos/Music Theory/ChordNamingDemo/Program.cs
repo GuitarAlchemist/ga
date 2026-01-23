@@ -1,10 +1,10 @@
 namespace ChordNamingDemo;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Chords;
-using GA.Business.Core.Chords.Analysis.Atonal;
-using GA.Business.Core.Intervals;
-using GA.Business.Core.Intervals.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Chords;
+using GA.Domain.Services.Chords.Analysis.Atonal;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives;
 using Spectre.Console;
 
 internal class Program

@@ -1,7 +1,7 @@
-﻿namespace GA.Business.Core.Analysis.Gpu;
+﻿namespace GA.Domain.Core.Analysis.Gpu;
 
 using System;
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 ///     Immutable spectral fingerprint produced by GPU kernels.

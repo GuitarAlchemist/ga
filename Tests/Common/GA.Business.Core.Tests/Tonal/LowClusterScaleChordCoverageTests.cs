@@ -1,25 +1,24 @@
-namespace GA.Business.Core.Tests.Tonal;
+namespace GA.Domain.Core.Tests.Tonal;
 
-using GA.Business.Core.Chords;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Tonal.Modes;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Modes.Exotic;
-using GA.Business.Core.Tonal.Modes.Pentatonic;
-using GA.Business.Core.Tonal.Modes.Symmetric;
+using GA.Domain.Core.Theory.Tonal.Scales;
+using Primitives;
+using GA.Domain.Core.Theory.Tonal.Modes;
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Exotic;
+using GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
+using GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
+using GA.Domain.Services.Chords;
 using NUnit.Framework;
 
 [TestFixture]
 public class LowClusterScaleChordCoverageTests
 {
     private const int ClusterHighlightThreshold = 2;
-
     [Test]
     public void EveryScaleMode_GeneratesChordsAndReportsClusters()
     {
         var modes = GetAllScaleModes();
         var flagged = new List<string>();
-
         foreach (var scaleMode in modes)
         {
             var clusterLength = GetLongestContiguousSemitoneCluster(scaleMode.Notes);
@@ -27,11 +26,9 @@ public class LowClusterScaleChordCoverageTests
             {
                 flagged.Add($"{scaleMode.Name} ({scaleMode.ParentScale.PitchClassSet.Id}) → cluster {clusterLength}");
             }
-
             var chords = ChordTemplateFactory.GenerateFromScaleMode(scaleMode).ToList();
             Assert.That(chords, Is.Not.Empty, $"{scaleMode.Name} should generate chord templates.");
         }
-
         if (flagged.Any())
         {
             TestContext.WriteLine(
@@ -42,7 +39,6 @@ public class LowClusterScaleChordCoverageTests
             }
         }
     }
-
     private static int GetLongestContiguousSemitoneCluster(IReadOnlyCollection<Note> notes)
     {
         var pitchClasses = notes.Select(note => note.PitchClass.Value).Distinct().OrderBy(value => value).ToList();
@@ -50,13 +46,10 @@ public class LowClusterScaleChordCoverageTests
         {
             return 0;
         }
-
         var extended = pitchClasses.ToList();
         extended.Add(pitchClasses[0] + 12); // wrap for bracelet notation
-
         var longest = 0;
         var currentRun = 0;
-
         for (var i = 1; i < extended.Count; i++)
         {
             if (extended[i] - extended[i - 1] == 1)
@@ -69,11 +62,9 @@ public class LowClusterScaleChordCoverageTests
                 currentRun = 0;
             }
         }
-
         longest = Math.Max(longest, currentRun);
         return longest;
     }
-
     private static IReadOnlyCollection<ScaleMode> GetAllScaleModes()
     {
         var families = new[]
@@ -97,7 +88,6 @@ public class LowClusterScaleChordCoverageTests
             PrometheusScaleMode.Items.Cast<ScaleMode>(),
             TritoneScaleMode.Items.Cast<ScaleMode>()
         };
-
         return [.. families.SelectMany(family => family)];
     }
 }

@@ -477,7 +477,20 @@ public class VectorSearchService
             Score = doc.GetValue("score", 0.0).AsDouble
         };
     }
+    public async Task<IndexStats> GetStatsAsync()
+    {
+        var count = await ChordsCollection.CountDocumentsAsync(new BsonDocument());
+        
+        // Determine dimensions based on model (approximate since we don't inspect index definition here)
+        int dims = _embeddingModel.Contains("small") ? 1536 : 
+                   _embeddingModel.Contains("nomic") ? 768 : 
+                   384; // Fallback
+
+        return new IndexStats(count, dims);
+    }
 }
+
+public record IndexStats(long TotalVoicings, int EmbeddingDimensions);
 
 public class ChordSearchResult
 {

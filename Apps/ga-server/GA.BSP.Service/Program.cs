@@ -3,7 +3,6 @@ using Hellang.Middleware.ProblemDetails;
 
 using GA.BSP.Service.Models;
 using GA.BSP.Service.Services;
-using Microsoft.Extensions.Caching.Memory;
 using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,7 +68,7 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(httpContext =>
+    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
             factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions

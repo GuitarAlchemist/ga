@@ -1,10 +1,10 @@
 namespace GA.AI.Service.Controllers;
 
-using GA.Business.Core.AI.Benchmarks;
 using GA.Business.ML.AI.Benchmarks;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Domain.Services.AI.Benchmarks;
 
 #pragma warning disable SKEXP0001
 [ApiController]

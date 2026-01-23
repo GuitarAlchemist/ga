@@ -1,3 +1,4 @@
+using GA.Domain.Core.Instruments;
 ﻿namespace GaCLI;
 
 public class SomeStuff

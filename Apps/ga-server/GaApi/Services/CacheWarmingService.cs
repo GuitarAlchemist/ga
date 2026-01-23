@@ -1,6 +1,6 @@
 ﻿namespace GaApi.Services;
 
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 ///     Background service for warming up caches on startup

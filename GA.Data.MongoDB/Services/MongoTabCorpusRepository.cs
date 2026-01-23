@@ -1,6 +1,7 @@
 namespace GA.Data.MongoDB.Services;
 
-using GA.Business.Core.Tabs;
+using GA.Domain.Repositories;
+using GA.Domain.Core.Tabs;
 using GA.Data.MongoDB.Models;
 using global::MongoDB.Bson;
 using global::MongoDB.Driver;

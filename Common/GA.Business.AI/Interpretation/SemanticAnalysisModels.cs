@@ -1,6 +1,6 @@
 namespace GA.Business.AI.Interpretation;
 
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using System.Collections.Generic;
 
 /// <summary>

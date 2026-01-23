@@ -1,5 +1,6 @@
 ﻿namespace ChatbotExample1.Services.Ingestion;
 
+using GA.Domain.Services.Abstractions;
 using Microsoft.Extensions.VectorData;
 
 public class DataIngestor(

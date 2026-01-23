@@ -44,7 +44,7 @@ public class DocumentationController : ControllerBase
         var fullPath = Path.GetFullPath(Path.Combine(_docsRoot, path));
         
         // Security check
-        if (!fullPath.StartsWith(_docsRoot, System.StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.StartsWith(_docsRoot, StringComparison.OrdinalIgnoreCase))
         {
             return Forbid();
         }
@@ -64,5 +64,5 @@ public class DocInfo
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
-    public System.DateTime LastModified { get; set; }
+    public DateTime LastModified { get; set; }
 }

@@ -2,13 +2,11 @@ namespace GA.Fretboard.Service.Controllers;
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using Microsoft.AspNetCore.RateLimiting;
+using GA.Domain.Core.Theory.Atonal;
+using Domain.Services;
 using Microsoft.AspNetCore.Mvc;
-using GA.Business.Core;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard;
-using GA.Fretboard.Service.Models;
-using GA.Fretboard.Service.Services;
+using Models;
+using Services;
 
 /// <summary>
 ///     API controller for chord progressions

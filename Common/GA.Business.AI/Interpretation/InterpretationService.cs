@@ -1,6 +1,6 @@
 namespace GA.Business.AI.Interpretation;
 
-using GA.Business.Core.Fretboard.Voicings.Analysis;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 

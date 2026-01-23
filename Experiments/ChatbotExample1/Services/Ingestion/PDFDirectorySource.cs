@@ -1,5 +1,6 @@
 ﻿namespace ChatbotExample1.Services.Ingestion;
 
+using GA.Domain.Services.Abstractions;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;

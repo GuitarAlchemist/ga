@@ -1,9 +1,11 @@
-using GA.Business.Core.Configuration;
-// using GA.Business.Core.Data; // Namespace does not exist
-using System.Text.Json;
-using GA.Business.Core.Fretboard.Primitives;
+// using GA.Domain.Core.Data; // Namespace does not exist
 
-namespace GA.Business.Core.Services;
+namespace GA.Domain.Core.Services;
+
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Configuration;
+using System.Text.Json;
+using GA.Domain.Core.Instruments.Primitives;
 
 /// <summary>
 /// Advanced analytics service with machine learning-inspired algorithms for musical analysis

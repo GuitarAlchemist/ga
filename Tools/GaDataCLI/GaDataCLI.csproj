@@ -8,12 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="FSharp.Configuration" Version="2.0.0"/>
+    <PackageReference Include="MongoDB.Driver" Version="3.2.1"/>
     <PackageReference Include="Spectre.Console" Version="0.51.1"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\..\Common\GA.Core\GA.Core.csproj"/>
   </ItemGroup>
 

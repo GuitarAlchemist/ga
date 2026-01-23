@@ -1,10 +1,12 @@
 namespace GpuBenchmark;
 
+using GA.Domain.Core.Instruments;
+
 using System.Diagnostics;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Grothendieck;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal.Grothendieck;
+using GA.Domain.Core.Instruments.Fretboard;
+using GA.Domain.Core.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;

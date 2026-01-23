@@ -2,7 +2,7 @@ namespace GA.Business.ML.Tests;
 
 using System;
 using System.Linq;
-using GA.Business.ML.Musical.Enrichment;
+using Musical.Enrichment;
 using NUnit.Framework;
 
 [TestFixture]

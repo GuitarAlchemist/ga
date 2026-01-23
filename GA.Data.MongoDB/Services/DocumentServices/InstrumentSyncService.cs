@@ -1,12 +1,11 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Business.Core.Notes;
+using GA.Domain.Core.Primitives;
 // using EntityFramework.Data.Instruments;
-using Microsoft.Extensions.Logging;
 using Models;
 
 [UsedImplicitly]
-public sealed class InstrumentSyncService(ILogger<InstrumentSyncService> logger, MongoDbService mongoDb)
+public sealed class InstrumentSyncService(MongoDbService mongoDb)
     : ISyncService<InstrumentDocument>
 {
     public async Task<bool> SyncAsync()

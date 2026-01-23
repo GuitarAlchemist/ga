@@ -1,9 +1,8 @@
 namespace GA.AI.Service.Services;
 
-using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using GA.AI.Service.Models;
+using Models;
 
 public class ActorSystemManager
 {

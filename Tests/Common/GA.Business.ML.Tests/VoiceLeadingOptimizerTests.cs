@@ -4,10 +4,10 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Tabs;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Tests.TestInfrastructure;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using Embeddings;
+using TestInfrastructure;
 
 [TestFixture]
 public class VoiceLeadingOptimizerTests

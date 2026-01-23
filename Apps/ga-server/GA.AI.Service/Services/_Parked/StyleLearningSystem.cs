@@ -3,8 +3,8 @@ namespace GA.AI.Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Theory.Atonal;
 using Microsoft.Extensions.Logging;
 using GA.AI.Service.Models;
 

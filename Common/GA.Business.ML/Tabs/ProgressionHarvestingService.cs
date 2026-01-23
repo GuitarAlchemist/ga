@@ -1,11 +1,10 @@
 namespace GA.Business.ML.Tabs;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.Tabs;
-using Embeddings;
+using GA.Domain.Core.Tabs;
+using Domain.Repositories;
 
 /// <summary>
 /// Harvests harmonic progressions from the raw Tab Corpus.

@@ -1,6 +1,6 @@
 namespace GA.Testing.Semantic;
 
-using GA.Business.ML.Abstractions;
+using Business.ML.Abstractions;
 using NUnit.Framework;
 using System.Collections.Concurrent;
 using System.IO;

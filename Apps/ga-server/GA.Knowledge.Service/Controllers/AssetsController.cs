@@ -1,9 +1,9 @@
 namespace GA.Knowledge.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.Runtime.CompilerServices;
-using GA.Business.Assets.Assets;
+using Business.Assets.Assets;
 
 /// <summary>
 ///     API endpoints for managing 3D assets

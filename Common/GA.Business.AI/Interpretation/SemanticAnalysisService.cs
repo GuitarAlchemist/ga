@@ -1,7 +1,7 @@
 namespace GA.Business.AI.Interpretation;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using JetBrains.Annotations;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +19,7 @@ public static class SemanticAnalysisService
     /// Performs a Neo-Riemannian L (Leading-tone exchange) operation on a triad.
     /// Swaps the root of a major triad with the note a semitone below, or vice versa.
     /// </summary>
-    public static NeoRiemannianResult? ApplyLeadingtone(PitchClassSet triad, PitchClass root)
+    public static NeoRiemannianResult? ApplyLeadingtone(GA.Domain.Core.Theory.Atonal.PitchClassSet triad, PitchClass root)
     {
         if (triad.Count != 3) return null;
 
@@ -56,7 +56,7 @@ public static class SemanticAnalysisService
     /// <summary>
     /// Performs a Neo-Riemannian P (Parallel) operation on a triad.
     /// </summary>
-    public static NeoRiemannianResult? ApplyParallel(PitchClassSet triad, PitchClass root)
+    public static NeoRiemannianResult? ApplyParallel(GA.Domain.Core.Theory.Atonal.PitchClassSet triad, PitchClass root)
     {
         if (triad.Count != 3) return null;
 
@@ -90,7 +90,7 @@ public static class SemanticAnalysisService
     /// <summary>
     /// Performs a Neo-Riemannian R (Relative) operation on a triad.
     /// </summary>
-    public static NeoRiemannianResult? ApplyRelative(PitchClassSet triad, PitchClass root)
+    public static NeoRiemannianResult? ApplyRelative(GA.Domain.Core.Theory.Atonal.PitchClassSet triad, PitchClass root)
     {
         if (triad.Count != 3) return null;
 
@@ -127,7 +127,7 @@ public static class SemanticAnalysisService
     /// <summary>
     /// Analyzes the relationship between two triads.
     /// </summary>
-    public static string ExplainTriadRelationship(PitchClassSet source, PitchClass sourceRoot, 
+    public static string ExplainTriadRelationship(GA.Domain.Core.Theory.Atonal.PitchClassSet source, PitchClass sourceRoot, 
                                                    PitchClassSet target, PitchClass targetRoot)
     {
         if (source.Count != 3 || target.Count != 3) 
@@ -148,7 +148,7 @@ public static class SemanticAnalysisService
     /// <summary>
     /// Provides rich interval content analysis with descriptive interpretations.
     /// </summary>
-    public static IntervalContentAnalysis AnalyzeIntervalContent(PitchClassSet set)
+    public static IntervalContentAnalysis AnalyzeIntervalContent(GA.Domain.Core.Theory.Atonal.PitchClassSet set)
     {
         var icv = set.IntervalClassVector;
         
@@ -197,7 +197,7 @@ public static class SemanticAnalysisService
     /// <summary>
     /// Gets the complement of a pitch class set (remaining chromatic notes).
     /// </summary>
-    public static SetComplementAnalysis GetComplement(PitchClassSet set)
+    public static SetComplementAnalysis GetComplement(GA.Domain.Core.Theory.Atonal.PitchClassSet set)
     {
         var allPitchClasses = Enumerable.Range(0, 12).Select(PitchClass.FromValue).ToHashSet();
         var original = set.ToHashSet();

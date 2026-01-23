@@ -1,10 +1,12 @@
 namespace GA.AI.Service.Controllers;
 
+using GA.Domain.Core.Instruments;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Shapes;
-using GA.Business.Core.Notes;
+using GA.Domain.Core.Instruments.Fretboard;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Primitives;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 

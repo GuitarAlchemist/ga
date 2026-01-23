@@ -1,3 +1,7 @@
+using GA.Domain.Services.Abstractions;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Services.AI.Benchmarks;
 #pragma warning disable SKEXP0001
 using System.Reflection;
 using Hellang.Middleware.ProblemDetails;
@@ -5,22 +9,16 @@ using Hellang.Middleware.ProblemDetails;
 using System.Text.Json;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
-using GA.Business.Core.AI.Benchmarks;
 using GA.Business.ML.AI.Benchmarks;
-using Microsoft.Extensions.Caching.Memory;
 using AllProjects.ServiceDefaults;
-using AllProjects.ServiceDefaults;
-using GA.Business.Core.Fretboard.Shapes;
 using GaChatbot.Services;
 using GaChatbot.Abstractions;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Embeddings;
-using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
 using GA.Business.ML.Musical.Enrichment;
 using GA.Business.ML.Musical.Explanation;
 using GA.Business.ML.Wavelets;
-using GA.Business.Core.Fretboard.Voicings.Search;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,28 +60,28 @@ builder.Services.AddSingleton<GroundedPromptBuilder>();
 builder.Services.AddSingleton<ResponseValidator>();
 builder.Services.AddSingleton<IGroundedNarrator, OllamaGroundedNarrator>();
 builder.Services.AddSingleton<SpectralRagOrchestrator>();
-builder.Services.AddSingleton<GA.Business.Core.Fretboard.Tuning>(GA.Business.Core.Fretboard.Tuning.Default);
-builder.Services.AddSingleton<GA.Business.Core.Fretboard.Analysis.FretboardPositionMapper>();
-builder.Services.AddSingleton<GA.Business.Core.Fretboard.Analysis.IMlNaturalnessRanker, GA.Business.ML.Naturalness.MlNaturalnessRanker>();
-builder.Services.AddSingleton<GA.Business.Core.Fretboard.Analysis.PhysicalCostService>();
-builder.Services.AddSingleton<GA.Business.Core.Abstractions.IEmbeddingGenerator, GA.Business.ML.Embeddings.MusicalEmbeddingGenerator>();
+builder.Services.AddSingleton(Tuning.Default);
+builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.FretboardPositionMapper>();
+builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.IMlNaturalnessRanker, GA.Business.ML.Naturalness.MlNaturalnessRanker>();
+builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.PhysicalCostService>();
+builder.Services.AddSingleton<IEmbeddingGenerator, MusicalEmbeddingGenerator>();
 builder.Services.AddSingleton<GA.Business.ML.Retrieval.StyleProfileService>();
 builder.Services.AddSingleton<GA.Business.ML.Retrieval.NextChordSuggestionService>();
 builder.Services.AddSingleton<GA.Business.ML.Retrieval.ModulationAnalyzer>();
-builder.Services.AddSingleton<GA.Business.ML.Tabs.AdvancedTabSolver>();
-builder.Services.AddSingleton<GA.Business.ML.Tabs.AdvancedTabSolver>();
-builder.Services.AddSingleton<GA.Business.ML.Tabs.AlternativeFingeringService>();
+builder.Services.AddSingleton<AdvancedTabSolver>();
+builder.Services.AddSingleton<AdvancedTabSolver>();
+builder.Services.AddSingleton<AlternativeFingeringService>();
 // New Dependencies
 builder.Services.AddSingleton<ModalFlavorService>();
 builder.Services.AddSingleton<VoicingExplanationService>();
 builder.Services.AddSingleton<ProgressionSignalService>();
 builder.Services.AddSingleton<StyleClassifierService>();
 
-builder.Services.AddSingleton<GaChatbot.Services.TabPresentationService>();
+builder.Services.AddSingleton<TabPresentationService>();
 builder.Services.AddSingleton<TabAnalysisService>(); // Missing
 builder.Services.AddSingleton<MusicalEmbeddingGenerator>(); // Concrete for ProductionOrchestrator
-builder.Services.AddSingleton<GaChatbot.Services.TabAwareOrchestrator>();
-builder.Services.AddSingleton<GaChatbot.Services.ProductionOrchestrator>();
+builder.Services.AddSingleton<TabAwareOrchestrator>();
+builder.Services.AddSingleton<ProductionOrchestrator>();
 
 builder.Services.AddMemoryCache();
 
@@ -136,7 +134,7 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(httpContext =>
+    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
             factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
@@ -168,5 +166,13 @@ app.UseRateLimiter();
 
 app.MapControllers();
 app.MapDefaultEndpoints();
+
+app.MapGet("/api/stats", async (MongoDbService mongo) =>
+{
+    var count = await mongo.GetTotalChordCountAsync();
+    // Assuming nomic-embed-text (768) as configured in docker-compose
+    return Results.Ok(new { totalVoicings = count, embeddingDimensions = 768 });
+})
+.WithName("GetStats");
 
 app.Run();

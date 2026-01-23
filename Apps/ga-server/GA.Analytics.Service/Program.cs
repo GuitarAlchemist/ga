@@ -3,8 +3,9 @@ using Hellang.Middleware.ProblemDetails;
 
 using GA.Analytics.Service.Models;
 using GA.Analytics.Service.Services;
-using Microsoft.Extensions.Caching.Memory;
 using AllProjects.ServiceDefaults;
+using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Core.Instruments.Shapes.Applications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,9 +26,9 @@ builder.Services.AddSingleton<PerformanceMetricsService>();
 builder.Services.AddScoped<AdvancedMusicalAnalyticsService>();
 builder.Services.AddScoped<AgentSpectralAnalyzer>();
 builder.Services.AddScoped<ICachingService, CachingService>();
-builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.IShapeGraphBuilder, GA.Business.Core.Fretboard.Shapes.ShapeGraphBuilder>();
-builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.Applications.HarmonicAnalysisEngine>();
-builder.Services.AddScoped<GA.Business.Core.Fretboard.Shapes.Applications.ProgressionOptimizer>();
+builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
+builder.Services.AddScoped<HarmonicAnalysisEngine>();
+builder.Services.AddScoped<ProgressionOptimizer>();
 builder.Services.AddScoped<ActorSystemManager>();
 builder.Services.AddMemoryCache();
 
@@ -76,7 +77,7 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(httpContext =>
+    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
             factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions

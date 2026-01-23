@@ -1,11 +1,11 @@
 namespace GA.Analytics.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Business.Core.Invariants;
-using GA.Analytics.Service.Models;
-using GA.Analytics.Service.Services;
+using GA.Domain.Core.Design;
+using Models;
+using Services;
 
 /// <summary>
 ///     Controller for invariant validation and monitoring

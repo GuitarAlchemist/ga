@@ -16,6 +16,7 @@
     <PackageReference Include="NUnit" Version="4.2.2"/>
     <PackageReference Include="NUnit.Analyzers" Version="4.4.0"/>
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
+    <PackageReference Include="xunit.extensibility.core" Version="2.9.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,7 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +35,12 @@
     <Compile Remove="VoicingFilterServiceTests.cs"/>
     <Compile Remove="ContextualChordServiceTests.cs"/>
     <Compile Remove="GraphQL/**/*.cs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="GA.Business.Intelligence">
+      <HintPath>..\..\..\Common\GA.Business.Intelligence\bin\Debug\net10.0\GA.Business.Intelligence.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

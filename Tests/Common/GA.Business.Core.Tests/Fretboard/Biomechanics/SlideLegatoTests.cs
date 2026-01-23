@@ -1,4 +1,4 @@
-namespace GA.Business.Core.Tests.Fretboard.Biomechanics;
+namespace GA.Domain.Core.Tests.Fretboard.Biomechanics;
 
 using Core.Fretboard.Biomechanics;
 using Core.Fretboard.Positions;
@@ -15,7 +15,6 @@ public class SlideLegatoTests
         var location = new PositionLocation(stringObj, fretObj);
         return new Position.Played(location, MidiNote.FromValue(60 + fret));
     }
-
     [Test]
     public void AnalyzeTransition_NoCommonStrings_ReturnsNone()
     {
@@ -25,23 +24,19 @@ public class SlideLegatoTests
             CreatePlayed(1, 3),
             CreatePlayed(2, 3)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(5, 5),
             CreatePlayed(6, 5)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.None));
         Assert.That(result.RequiresSlide, Is.False);
         Assert.That(result.RequiresHammerOn, Is.False);
         Assert.That(result.RequiresPullOff, Is.False);
     }
-
     [Test]
     public void AnalyzeTransition_SameFrets_ReturnsNone()
     {
@@ -51,20 +46,16 @@ public class SlideLegatoTests
             CreatePlayed(1, 5),
             CreatePlayed(2, 5)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(1, 5),
             CreatePlayed(2, 5)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.None));
     }
-
     [Test]
     public void AnalyzeTransition_LargeDistance_RecommendsSlide()
     {
@@ -73,15 +64,12 @@ public class SlideLegatoTests
         {
             CreatePlayed(3, 3)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(3, 7)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.Slide));
         Assert.That(result.RequiresSlide, Is.True);
@@ -93,7 +81,6 @@ public class SlideLegatoTests
         Assert.That(result.Reason, Does.Contain("Slide"));
         Assert.That(result.Reason, Does.Contain("string 3"));
     }
-
     [Test]
     public void AnalyzeTransition_SmallDistanceUp_RecommendsHammerOn()
     {
@@ -102,15 +89,12 @@ public class SlideLegatoTests
         {
             CreatePlayed(2, 5)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(2, 7)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.HammerOn));
         Assert.That(result.RequiresSlide, Is.False);
@@ -121,7 +105,6 @@ public class SlideLegatoTests
         Assert.That(result.Confidence, Is.GreaterThan(0.7));
         Assert.That(result.Reason, Does.Contain("Hammer-on"));
     }
-
     [Test]
     public void AnalyzeTransition_SmallDistanceDown_RecommendsPullOff()
     {
@@ -130,15 +113,12 @@ public class SlideLegatoTests
         {
             CreatePlayed(1, 7)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(1, 5)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.PullOff));
         Assert.That(result.RequiresSlide, Is.False);
@@ -149,7 +129,6 @@ public class SlideLegatoTests
         Assert.That(result.Confidence, Is.GreaterThan(0.7));
         Assert.That(result.Reason, Does.Contain("Pull-off"));
     }
-
     [Test]
     public void AnalyzeTransition_MultipleStringsSlide_HighConfidence()
     {
@@ -159,16 +138,13 @@ public class SlideLegatoTests
             CreatePlayed(2, 3),
             CreatePlayed(3, 3)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(2, 7),
             CreatePlayed(3, 7)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.Slide));
         Assert.That(result.AffectedStrings, Has.Count.EqualTo(2));
@@ -177,7 +153,6 @@ public class SlideLegatoTests
         Assert.That(result.FretDistance, Is.EqualTo(4));
         Assert.That(result.Confidence, Is.GreaterThanOrEqualTo(0.8));
     }
-
     [Test]
     public void AnalyzeTransition_CombinedTechniques_ReturnsCombined()
     {
@@ -187,16 +162,13 @@ public class SlideLegatoTests
             CreatePlayed(1, 3), // Will slide to 7 (4 frets)
             CreatePlayed(2, 5) // Will hammer-on to 7 (2 frets)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(1, 7),
             CreatePlayed(2, 7)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.Combined));
         Assert.That(result.RequiresSlide, Is.True);
@@ -204,7 +176,6 @@ public class SlideLegatoTests
         Assert.That(result.AffectedStrings, Has.Count.EqualTo(2));
         Assert.That(result.Reason, Does.Contain("Combined"));
     }
-
     [Test]
     public void AnalyzeTransition_EmptyFromPositions_ReturnsNone()
     {
@@ -214,14 +185,11 @@ public class SlideLegatoTests
         {
             CreatePlayed(1, 5)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.None));
     }
-
     [Test]
     public void AnalyzeTransition_EmptyToPositions_ReturnsNone()
     {
@@ -231,14 +199,11 @@ public class SlideLegatoTests
             CreatePlayed(1, 5)
         };
         var to = new List<Position.Played>();
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.None));
     }
-
     [Test]
     public void AnalyzeTransition_OneFretDistance_RecommendsHammerOn()
     {
@@ -247,20 +212,16 @@ public class SlideLegatoTests
         {
             CreatePlayed(3, 5)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(3, 6)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.HammerOn));
         Assert.That(result.FretDistance, Is.EqualTo(1));
     }
-
     [Test]
     public void AnalyzeTransition_ThreeFretDistance_RecommendsSlide()
     {
@@ -269,15 +230,12 @@ public class SlideLegatoTests
         {
             CreatePlayed(4, 5)
         };
-
         var to = new List<Position.Played>
         {
             CreatePlayed(4, 8)
         };
-
         // Act
         var result = SlideLegatoDetector.AnalyzeTransition(from, to);
-
         // Assert
         Assert.That(result.Technique, Is.EqualTo(SlideLegatoTechnique.Slide));
         Assert.That(result.FretDistance, Is.EqualTo(3));

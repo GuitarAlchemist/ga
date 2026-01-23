@@ -25,14 +25,7 @@ interface VoicingPoint {
     color: number;
 }
 
-const MOCK_VOICINGS: VoicingPoint[] = [
-    { id: '1', name: 'C Major', notes: 'C E G', fretboard: 'x32010', type: 'Open', position: [0.5, 0.2, -0.1], cagedType: 'C-Shape', harmonicAxes: { tonality: 0.9, complexity: 0.2, brightness: 0.6 }, color: 0x667eea },
-    { id: '2', name: 'G Major', notes: 'G B D', fretboard: '320003', type: 'Open', position: [-0.3, 0.8, 0.1], cagedType: 'G-Shape', harmonicAxes: { tonality: 0.85, complexity: 0.1, brightness: 0.7 }, color: 0x764ba2 },
-    { id: '3', name: 'D7', notes: 'D F# A C', fretboard: 'xx0212', type: 'Dominant', position: [0.1, -0.4, 0.9], cagedType: 'D-Shape', harmonicAxes: { tonality: 0.7, complexity: 0.5, brightness: 0.8 }, color: 0xff6b6b },
-    { id: '4', name: 'Am7', notes: 'A C E G', fretboard: 'x02010', type: 'Minor 7', position: [-0.7, -0.1, -0.5], cagedType: 'A-Shape', harmonicAxes: { tonality: 0.6, complexity: 0.4, brightness: 0.3 }, color: 0x4ecdc4 },
-    { id: '5', name: 'E9', notes: 'E G# B D F#', fretboard: '020102', type: 'Extension', position: [0.2, 0.6, -0.8], cagedType: 'E-Shape', harmonicAxes: { tonality: 0.75, complexity: 0.8, brightness: 0.9 }, color: 0xffd93d },
-    { id: '6', name: 'Fmaj7', notes: 'F A C E', fretboard: '1x221x', type: 'Shell', position: [0.8, -0.7, 0.2], cagedType: 'E-Shape', harmonicAxes: { tonality: 0.8, complexity: 0.6, brightness: 0.5 }, color: 0x6ab04c },
-];
+const MOCK_VOICINGS: VoicingPoint[] = []; // Mock data deleted per user policy.
 
 @Component({
     selector: 'app-embedding-viewer',
@@ -45,13 +38,11 @@ const MOCK_VOICINGS: VoicingPoint[] = [
           <h1>🌌 Phase Sphere Explorer</h1>
         </div>
         <div class="header-controls">
-          <div class="search-box" *ngIf="useApiData">
+          <div class="search-box">
             <input type="text" [(ngModel)]="ngModelSearchQuery" placeholder="Search chords..." (keyup.enter)="loadFromApi()" />
             <button (click)="loadFromApi()">Search</button>
           </div>
-          <button class="toggle-btn" (click)="toggleDataSource()">
-            {{ useApiData ? 'Use Mock Data' : 'Connect to GaAPI' }}
-          </button>
+          <!-- Mock toggle removed -->
           <button class="theme-toggle" (click)="toggleTheme()">{{ isDark ? '☀️' : '🌙' }}</button>
         </div>
       </header>
@@ -61,6 +52,7 @@ const MOCK_VOICINGS: VoicingPoint[] = [
           <div class="loading-overlay" *ngIf="isLoading">
             <div class="spinner"></div>
             <p>Loading Voicing Embeddings...</p>
+            <button class="cancel-btn" (click)="cancelLoading()" style="margin-top: 10px; color: #667eea; border: 1px solid #ddd; padding: 4px 12px; border-radius: 4px;">Cancel</button>
           </div>
           <div class="progress-bar" *ngIf="isAiLoading">
              <div class="progress-fill" [style.width.%]="aiProgress"></div>
@@ -188,10 +180,10 @@ export class EmbeddingViewerComponent implements OnInit, AfterViewInit, OnDestro
     private readonly gaApi = inject(GaApiService);
 
     isDark = true;
-    voicings: VoicingPoint[] = MOCK_VOICINGS;
+    voicings: VoicingPoint[] = [];
     selectedVoicing: VoicingPoint | null = null;
 
-    useApiData = false;
+    useApiData = true; // Always true
     isLoading = false;
     errorMessage = '';
     ngModelSearchQuery = 'guitar chords';
@@ -201,6 +193,7 @@ export class EmbeddingViewerComponent implements OnInit, AfterViewInit, OnDestro
     aiProgress = 0;
     remainingSeconds = 0;
     private destroy$ = new Subject<void>();
+    private loadingSubscription?: Subscription;
 
     private scene!: THREE.Scene;
     private camera!: THREE.PerspectiveCamera;
@@ -228,6 +221,7 @@ export class EmbeddingViewerComponent implements OnInit, AfterViewInit, OnDestro
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
+        this.loadingSubscription?.unsubscribe();
         window.removeEventListener('resize', this.onWindowResize);
         if (this.renderer) {
             this.renderer.dispose();
@@ -235,23 +229,31 @@ export class EmbeddingViewerComponent implements OnInit, AfterViewInit, OnDestro
         }
     }
 
+    // Mock data toggle removed
     toggleDataSource() {
-        this.useApiData = !this.useApiData;
-        if (this.useApiData) {
-            this.loadFromApi();
-        } else {
-            this.voicings = MOCK_VOICINGS;
-            this.updatePoints();
-        }
+        // No-op or removed
     }
 
     loadFromApi() {
+        if (this.loadingSubscription) this.loadingSubscription.unsubscribe();
         this.isLoading = true;
         this.errorMessage = '';
-        this.gaApi.searchVoicings(this.ngModelSearchQuery).subscribe({
+
+        this.loadingSubscription = this.gaApi.searchVoicings(this.ngModelSearchQuery).pipe(
+            takeUntil(this.destroy$),
+            catchError(err => {
+                this.errorMessage = 'Connection timed out or failed. Please ensure GaAPI is running.';
+                this.isLoading = false;
+                return of([]);
+            })
+        ).subscribe({
             next: (data) => {
-                this.voicings = data.map(v => this.transformVoicing(v));
-                this.updatePoints();
+                if (data && data.length > 0) {
+                    this.voicings = data.map(v => this.transformVoicing(v));
+                    this.updatePoints();
+                } else if (this.isLoading) {
+                    this.errorMessage = 'No voicings found for this query.';
+                }
                 this.isLoading = false;
             },
             error: (err) => {
@@ -260,6 +262,15 @@ export class EmbeddingViewerComponent implements OnInit, AfterViewInit, OnDestro
                 this.isLoading = false;
             }
         });
+    }
+
+    cancelLoading() {
+        if (this.loadingSubscription) {
+            this.loadingSubscription.unsubscribe();
+            this.loadingSubscription = undefined;
+        }
+        this.isLoading = false;
+        // Mock fallback removed.
     }
 
     getAiExplanation() {

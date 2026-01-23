@@ -6,13 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GA.Business.Core.Fretboard.Positions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard.Voicings.Filtering;
-using GA.Business.Core.Fretboard.Voicings.Generation;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Domain.Services.Fretboard.Voicings.Generation;
 using GA.Data.SemanticKernel.Embeddings;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -55,14 +56,14 @@ internal sealed class VoicingIndexInitializationService(
 
     private bool ShouldInitializeIndex()
     {
-        var enableIndexing = configuration.GetValue<bool>("VoicingSearch:EnableIndexing", true);
+        var enableIndexing = configuration.GetValue("VoicingSearch:EnableIndexing", true);
         if (!enableIndexing)
         {
             logger.LogInformation("Voicing search indexing is disabled in configuration");
             return false;
         }
 
-        var lazyLoading = configuration.GetValue<bool>("VoicingSearch:LazyLoading", false);
+        var lazyLoading = configuration.GetValue("VoicingSearch:LazyLoading", false);
         if (lazyLoading)
         {
             logger.LogInformation("Voicing search lazy loading is enabled - index will be built on first search request");
@@ -76,7 +77,7 @@ internal sealed class VoicingIndexInitializationService(
     {
         logger.LogInformation("Generating voicings from fretboard...");
         var fretboard = Fretboard.Default;
-        var minPlayedNotes = configuration.GetValue<int>("VoicingSearch:MinPlayedNotes", 2);
+        var minPlayedNotes = configuration.GetValue("VoicingSearch:MinPlayedNotes", 2);
 
         var generationStart = DateTime.UtcNow;
         var allVoicings = VoicingGenerator.GenerateAllVoicings(
@@ -96,7 +97,7 @@ internal sealed class VoicingIndexInitializationService(
         IReadOnlyCollection<Voicing> allVoicings,
         CancellationToken stoppingToken)
     {
-        var maxVoicings = configuration.GetValue<int>("VoicingSearch:MaxVoicingsToIndex", 1000);
+        var maxVoicings = configuration.GetValue("VoicingSearch:MaxVoicingsToIndex", 1000);
         var noteCountFilterStr = configuration.GetValue<string>("VoicingSearch:NoteCountFilter", "ThreeNotes");
         var noteCountFilter = Enum.Parse<NoteCountFilter>(noteCountFilterStr);
 
@@ -243,7 +244,7 @@ internal sealed class VoicingIndexInitializationService(
         var cacheFile = GetVoicingCacheFilePath();
         
         // Try Load from Cache
-        if (File.Exists(cacheFile) && configuration.GetValue<bool>("VoicingSearch:EnableBinaryCache", true))
+        if (File.Exists(cacheFile) && configuration.GetValue("VoicingSearch:EnableBinaryCache", true))
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
@@ -279,7 +280,7 @@ internal sealed class VoicingIndexInitializationService(
         var (idxTime, docCount) = await IndexVoicingsAsync(allVoicings, stoppingToken);
         
         // Save Cache
-        if (docCount > 0 && configuration.GetValue<bool>("VoicingSearch:EnableBinaryCache", true))
+        if (docCount > 0 && configuration.GetValue("VoicingSearch:EnableBinaryCache", true))
         {
             try 
             {

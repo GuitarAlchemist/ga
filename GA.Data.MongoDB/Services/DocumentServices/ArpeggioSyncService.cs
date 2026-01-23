@@ -1,8 +1,10 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using Business.Core.Chords;
-using Business.Core.Notes;
-using Business.Core.Notes.Extensions;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Services.Chords;
+using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
 

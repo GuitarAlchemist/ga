@@ -1,9 +1,7 @@
 namespace GA.Business.ML.Embeddings.Services;
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using GA.Business.Config.Configuration;
+using Domain.Services;
 
 /// <summary>
 /// Generates the SYMBOLIC partition of the musical embedding (Practice, technique, lineage).

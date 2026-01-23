@@ -26,7 +26,7 @@ global using GA.Business.ML.Embeddings.Services;
 global using GA.Business.ML.Musical.Explanation;
 global using GA.Business.ML.Text.Internal;
 
-// Dependencies from GA.Business.Core
-global using GA.Business.Core.Abstractions;
-global using GA.Business.Core.Fretboard.Voicings.Search;
+// Dependencies from GA.Domain.Core
+global using GA.Core.Abstractions;
+global using GA.Data.MongoDB.Models;
 

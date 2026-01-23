@@ -1,19 +1,22 @@
 namespace GaCLI.Commands;
 
+using GA.Domain.Services.Abstractions;
+using GA.Domain.Core.Instruments;
+
 using GA.Business.ML;
-using GA.Business.Core.Abstractions;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Fretboard.Voicings.Analysis;
-using GA.Business.Core.Fretboard.Voicings.Generation; // For DecomposedVoicing
-using GA.Business.Core.Fretboard.Positions; // For PositionLocation
-using GA.Business.Core.Notes;
-using GA.Business.Core.Intervals;
+using GA.Domain.Core.Abstractions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Search;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Services.Fretboard.Voicings.Generation; // For DecomposedVoicing
+using GA.Domain.Core.Instruments.Positions; // For PositionLocation
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives;
 using Spectre.Console;
 using System.Text.RegularExpressions;
-using GA.Business.Core.Fretboard.Voicings.Core;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Notes.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Core;
+using GA.Domain.Core.Instruments.Fretboard;
+using GA.Domain.Core.Primitives;
 
 using GA.Business.ML.Embeddings;
 
@@ -142,8 +145,8 @@ public class BenchmarkSimilarityCommand
             MidiBassNote = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0].Value : 0,
             Consonance = analysis.PerceptualQualities.ConsonanceScore,
             Brightness = analysis.PerceptualQualities.Brightness,
-            HandStretch = analysis.PlayabilityInfo.HandStretch,
-            StackingType = null, // analysis.VoicingCharacteristics.StackingType,
+            HandStretch = analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.PlayabilityInfo.HandStretch,
+            StackingType = null, // analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.StackingType,
             Inversion = 0, // analysis.ChordId.Inversion,
             
             // Required placeholders
@@ -151,8 +154,8 @@ public class BenchmarkSimilarityCommand
             MinFret = 0, MaxFret = 12, BarreRequired = false, 
             SemanticTags = [], PossibleKeys = [], Jobs = [], AnalysisEngine = "Bench", AnalysisVersion = "1.0",
             SearchableText = "", YamlAnalysis = "", TuningId = "Standard", PitchClassSetId = "", PitchClassSet = "",
-            IsRootless = false, // analysis.VoicingCharacteristics.IsRootless,
-            HasGuideTones = false, // analysis.VoicingCharacteristics.HasGuideTones,
+            IsRootless = false, // analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.IsRootless,
+            HasGuideTones = false, // analysis.GA.Domain.Services.Fretboard.Voicings.Analysis.VoicingCharacteristics.HasGuideTones,
             IsNaturallyOccurring = true,
             HarmonicFunction = null
         };
@@ -163,7 +166,7 @@ public class BenchmarkSimilarityCommand
     {
         var partsLowToHigh = diagram.Split('-');
         var positions = new Position[partsLowToHigh.Length];
-        var midiNotes = new List<GA.Business.Core.Notes.Primitives.MidiNote>();
+        var midiNotes = new List<GA.Domain.Core.Notes.Primitives.MidiNote>();
 
         for (int i = 0; i < partsLowToHigh.Length; i++)
         {

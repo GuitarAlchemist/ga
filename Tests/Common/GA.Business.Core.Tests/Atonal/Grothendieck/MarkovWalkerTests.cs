@@ -1,5 +1,6 @@
-namespace GA.Business.Core.Tests.Atonal.Grothendieck;
+namespace GA.Domain.Core.Tests.Atonal.Grothendieck;
 
+using GA.Domain.Core.Instruments;
 using Core.Atonal;
 using Core.Atonal.Grothendieck;
 using Core.Fretboard.Positions;
@@ -18,11 +19,9 @@ public class MarkovWalkerTests
         _walker = new MarkovWalker(_loggerMock.Object);
         _testGraph = CreateTestGraph();
     }
-
     private MarkovWalker _walker = null!;
     private Mock<ILogger<MarkovWalker>> _loggerMock = null!;
     private ShapeGraph _testGraph = null!;
-
     private ShapeGraph CreateTestGraph()
     {
         // Create test shapes
@@ -41,7 +40,6 @@ public class MarkovWalkerTests
             Ergonomics = 0.8,
             FingerCount = 1
         };
-
         var pcs2 = PitchClassSet.Parse("037");
         var shape2 = new FretboardShape
         {
@@ -57,7 +55,6 @@ public class MarkovWalkerTests
             Ergonomics = 0.7,
             FingerCount = 1
         };
-
         var pcs3 = PitchClassSet.Parse("048");
         var shape3 = new FretboardShape
         {
@@ -73,7 +70,6 @@ public class MarkovWalkerTests
             Ergonomics = 0.6,
             FingerCount = 1
         };
-
         // Create transitions
         var transition1To2 = new ShapeTransition
         {
@@ -83,7 +79,6 @@ public class MarkovWalkerTests
             HarmonicCost = 2.0,
             PhysicalCost = 1.0
         };
-
         var transition1To3 = new ShapeTransition
         {
             FromId = "shape1",
@@ -92,7 +87,6 @@ public class MarkovWalkerTests
             HarmonicCost = 4.0,
             PhysicalCost = 2.0
         };
-
         var transition2To3 = new ShapeTransition
         {
             FromId = "shape2",
@@ -101,7 +95,6 @@ public class MarkovWalkerTests
             HarmonicCost = 6.0,
             PhysicalCost = 1.5
         };
-
         return new ShapeGraph
         {
             TuningId = "standard",
@@ -119,7 +112,6 @@ public class MarkovWalkerTests
             }
         };
     }
-
     [TestFixture]
     public class GenerateWalk : MarkovWalkerTests
     {
@@ -129,30 +121,24 @@ public class MarkovWalkerTests
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 5, Temperature = 1.0 };
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
-
             // Assert
             Assert.That(path, Is.Not.Empty);
             Assert.That(path.First().Id, Is.EqualTo("shape1"));
             Assert.That(path.Count, Is.LessThanOrEqualTo(6)); // Start + 5 steps (may stop early)
         }
-
         [Test]
         public void ShouldGenerateWalk_StartingFromGivenShape()
         {
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 3, Temperature = 1.0 };
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
-
             // Assert
             Assert.That(path.First().Id, Is.EqualTo("shape1"));
         }
-
         [Test]
         public void ShouldGenerateWalk_WithBoxPreference()
         {
@@ -164,14 +150,11 @@ public class MarkovWalkerTests
                 Temperature = 1.0,
                 BoxPreference = true // Prefer diagness < 0.5
             };
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
-
             // Assert: Should prefer shape2 (diagness 0.3) over shape3 (diagness 0.8)
             Assert.That(path, Is.Not.Empty);
         }
-
         [Test]
         public void ShouldGenerateWalk_WithMaxSpanFilter()
         {
@@ -183,30 +166,24 @@ public class MarkovWalkerTests
                 Temperature = 1.0,
                 MaxSpan = 2
             };
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
-
             // Assert
             Assert.That(path.All(s => s.Span <= 2), Is.True);
         }
-
         [Test]
         public void ShouldStopWalk_WhenNoTransitionsAvailable()
         {
             // Arrange: Start from shape3 which has no outgoing transitions
             var startShape = _testGraph.Shapes["shape3"];
             var options = new WalkOptions { Steps = 10, Temperature = 1.0 };
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
-
             // Assert: Should only contain start shape
             Assert.That(path.Count, Is.EqualTo(1));
             Assert.That(path.First().Id, Is.EqualTo("shape3"));
         }
     }
-
     [TestFixture]
     public class GenerateHeatMap : MarkovWalkerTests
     {
@@ -216,25 +193,20 @@ public class MarkovWalkerTests
             // Arrange
             var currentShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 1, Temperature = 1.0 };
-
             // Act
             var heatMap = _walker.GenerateHeatMap(_testGraph, currentShape, options);
-
             // Assert
             Assert.That(heatMap.GetLength(0), Is.EqualTo(6)); // 6 strings
             Assert.That(heatMap.GetLength(1), Is.EqualTo(24)); // 24 frets
         }
-
         [Test]
         public void ShouldGenerateHeatMap_WithNormalizedValues()
         {
             // Arrange
             var currentShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 1, Temperature = 1.0 };
-
             // Act
             var heatMap = _walker.GenerateHeatMap(_testGraph, currentShape, options);
-
             // Assert: All values should be between 0 and 1
             for (var s = 0; s < 6; s++)
             {
@@ -244,35 +216,28 @@ public class MarkovWalkerTests
                 }
             }
         }
-
         [Test]
         public void ShouldGenerateHeatMap_WithHigherProbabilitiesForNextShapes()
         {
             // Arrange
             var currentShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 1, Temperature = 1.0 };
-
             // Act
             var heatMap = _walker.GenerateHeatMap(_testGraph, currentShape, options);
-
             // Assert: Fret 5 (shape2) and fret 7 (shape3) should have non-zero probabilities
             var fret5Prob = heatMap[0, 5]; // String 1, Fret 5 (shape2)
             var fret7Prob = heatMap[0, 7]; // String 1, Fret 7 (shape3)
-
             Assert.That(fret5Prob, Is.GreaterThan(0));
             Assert.That(fret7Prob, Is.GreaterThan(0));
         }
-
         [Test]
         public void ShouldReturnEmptyHeatMap_WhenNoTransitions()
         {
             // Arrange: shape3 has no outgoing transitions
             var currentShape = _testGraph.Shapes["shape3"];
             var options = new WalkOptions { Steps = 1, Temperature = 1.0 };
-
             // Act
             var heatMap = _walker.GenerateHeatMap(_testGraph, currentShape, options);
-
             // Assert: All values should be 0
             for (var s = 0; s < 6; s++)
             {
@@ -283,7 +248,6 @@ public class MarkovWalkerTests
             }
         }
     }
-
     [TestFixture]
     public class GeneratePracticePath : MarkovWalkerTests
     {
@@ -293,31 +257,25 @@ public class MarkovWalkerTests
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 5, Temperature = 1.0 };
-
             // Act
             var path = _walker.GeneratePracticePath(_testGraph, startShape, options);
-
             // Assert
             Assert.That(path, Is.Not.Empty);
             Assert.That(path.First().Id, Is.EqualTo("shape1"));
         }
-
         [Test]
         public void ShouldGeneratePracticePath_PreferringEasierTransitionsFirst()
         {
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 10, Temperature = 0.5 };
-
             // Act
             var path = _walker.GeneratePracticePath(_testGraph, startShape, options);
-
             // Assert: Early transitions should have lower cost
             // (This is probabilistic, so we just check the path is generated)
             Assert.That(path, Is.Not.Empty);
         }
     }
-
     [TestFixture]
     public class TemperatureControl : MarkovWalkerTests
     {
@@ -327,39 +285,32 @@ public class MarkovWalkerTests
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var greedyOptions = new WalkOptions { Steps = 5, Temperature = 0.1 }; // Very greedy
-
             // Act: Run multiple times to check consistency
             var paths = Enumerable.Range(0, 10)
                 .Select(_ => _walker.GenerateWalk(_testGraph, startShape, greedyOptions))
                 .ToList();
-
             // Assert: With low temperature, paths should be more consistent (prefer low-cost transitions)
             // shape1 -> shape2 has lower cost (3.0) than shape1 -> shape3 (6.0)
             var preferShape2 = paths.Count(p => p.Count > 1 && p[1].Id == "shape2");
             Assert.That(preferShape2, Is.GreaterThan(5)); // Should prefer shape2 most of the time
         }
-
         [Test]
         public void ShouldBeMoreExploratory_WithHighTemperature()
         {
             // Arrange
             var startShape = _testGraph.Shapes["shape1"];
             var exploratoryOptions = new WalkOptions { Steps = 5, Temperature = 10.0 }; // Very exploratory
-
             // Act: Run multiple times
             var paths = Enumerable.Range(0, 20)
                 .Select(_ => _walker.GenerateWalk(_testGraph, startShape, exploratoryOptions))
                 .ToList();
-
             // Assert: With high temperature, should explore both shape2 and shape3
             var visitedShape2 = paths.Count(p => p.Any(s => s.Id == "shape2"));
             var visitedShape3 = paths.Count(p => p.Any(s => s.Id == "shape3"));
-
             Assert.That(visitedShape2, Is.GreaterThan(0));
             Assert.That(visitedShape3, Is.GreaterThan(0));
         }
     }
-
     [TestFixture]
     public class Performance : MarkovWalkerTests
     {
@@ -370,16 +321,13 @@ public class MarkovWalkerTests
             var startShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 10, Temperature = 1.0 };
             var stopwatch = Stopwatch.StartNew();
-
             // Act
             var path = _walker.GenerateWalk(_testGraph, startShape, options);
             stopwatch.Stop();
-
             // Assert
             Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(100));
             Assert.That(path, Is.Not.Empty);
         }
-
         [Test]
         public void ShouldGenerateHeatMap_InLessThan50ms()
         {
@@ -387,11 +335,9 @@ public class MarkovWalkerTests
             var currentShape = _testGraph.Shapes["shape1"];
             var options = new WalkOptions { Steps = 1, Temperature = 1.0 };
             var stopwatch = Stopwatch.StartNew();
-
             // Act
             var heatMap = _walker.GenerateHeatMap(_testGraph, currentShape, options);
             stopwatch.Stop();
-
             // Assert
             Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(50));
             Assert.That(heatMap, Is.Not.Null);

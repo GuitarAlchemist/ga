@@ -1,8 +1,7 @@
-﻿namespace GA.Business.Core.Tests.Notes;
+﻿namespace GA.Domain.Core.Tests.Notes;
 
-using Core.Notes;
-using Core.Notes.Extensions;
-using Core.Notes.Primitives;
+using Primitives;
+using GA.Domain.Core.Primitives.Extensions;
 
 [TestFixture]
 public class NoteTests
@@ -20,7 +19,6 @@ public class NoteTests
             yield return new TestCaseData(Note.Chromatic.C, Note.Chromatic.B, Interval.Simple.M7);
         }
     }
-
     [Test]
     [TestCaseSource(nameof(GetIntervalTestCases))]
     public void Test_Chromatic_GetInterval(Note.Chromatic startingNote, Note.Chromatic endingNote,
@@ -28,12 +26,10 @@ public class NoteTests
     {
         // Act
         var actualInterval = startingNote.GetInterval(endingNote);
-
         // Assert
         TestContext.WriteLine($"From {startingNote} to {endingNote} - Expected: {expectedInterval}, Actual: {actualInterval} (Standard chromatic interval distance)");
         Assert.That(actualInterval, Is.EqualTo(expectedInterval), $"Interval from {startingNote} to {endingNote} should be {expectedInterval}.");
     }
-
     [Test(TestOf = typeof(Note.Accidented))]
     public void Test_Accidented_GetInterval_F_to_Octave()
     {
@@ -45,7 +41,6 @@ public class NoteTests
         var c = new Note.Accidented(NaturalNote.C);
         var d = new Note.Accidented(NaturalNote.D);
         var e = new Note.Accidented(NaturalNote.E);
-
         // Act
         var i1 = f.GetInterval(f);
         var i2 = f.GetInterval(g);
@@ -54,10 +49,8 @@ public class NoteTests
         var i5 = f.GetInterval(c);
         var i6 = f.GetInterval(d);
         var i7 = f.GetInterval(e);
-
         // Assert
         TestContext.WriteLine($"F to F: {i1}, F to G: {i2}, F to A: {i3}, F to B: {i4}, F to C: {i5}, F to D: {i6}, F to E: {i7}");
-
         Assert.Multiple(() =>
         {
             Assert.That(i1, Is.EqualTo(Interval.Simple.P1));

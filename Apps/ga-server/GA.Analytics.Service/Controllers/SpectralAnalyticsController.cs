@@ -1,11 +1,8 @@
 namespace GA.Analytics.Service.Controllers;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.ComponentModel.DataAnnotations;
-using GA.Analytics.Service.Models;
-using GA.Analytics.Service.Services;
-using GA.Business.Analytics.Analytics.Spectral;
 
 /// <summary>
 ///     Provides spectral analysis for external autonomous systems (e.g., TARS Tier2 governance).
@@ -13,7 +10,7 @@ using GA.Business.Analytics.Analytics.Spectral;
 [ApiController]
 [Route("api/spectral")]
 public sealed class SpectralAnalyticsController(
-    AgentSpectralAnalyzer analyzer,
+    GA.Business.Analytics.Analytics.Spectral.AgentSpectralAnalyzer analyzer,
     ILogger<SpectralAnalyticsController> logger) : ControllerBase
 {
     /// <summary>

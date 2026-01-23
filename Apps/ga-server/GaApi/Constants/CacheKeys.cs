@@ -120,7 +120,7 @@ public static class CacheKeys
             $"mode_{mode}_ext:{extension}_stack:{stackingType}_nat:{onlyNaturallyOccurring}_bor:{includeBorrowedChords}_sec:{includeSecondaryDominants}_ii-v:{includeSecondaryTwoFive}_min:{minCommonality:F2}_lim:{limit}";
     }
 
-    // Web Content Cache Keys (for GA.Business.Core.Web)
+    // Web Content Cache Keys (for GA.Domain.Core.Web)
     /// <summary>
     ///     Get cache key for web page content
     /// </summary>

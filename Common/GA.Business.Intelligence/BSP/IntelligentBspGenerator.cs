@@ -1,8 +1,8 @@
-namespace GA.Business.Core.Intelligence.BSP;
+namespace GA.Domain.Core.Intelligence.BSP;
 
-using GA.Business.Core.BSP;
+using GA.Domain.Core.BSP;
 using GA.Business.AI;
-using GA.Business.Core.Intelligence.Analytics;
+using GA.Domain.Core.Intelligence.Analytics;
 
 /// <summary>
 /// Intelligent BSP generator that uses advanced AI and analytics to create optimized BSP trees

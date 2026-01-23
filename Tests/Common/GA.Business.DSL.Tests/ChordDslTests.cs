@@ -1,9 +1,7 @@
 namespace GA.Business.DSL.Tests;
 
 using NUnit.Framework;
-using GA.Business.DSL.Services;
-using GA.Business.DSL.Types;
-using Microsoft.FSharp.Core;
+using Services;
 
 [TestFixture]
 public class ChordDslTests

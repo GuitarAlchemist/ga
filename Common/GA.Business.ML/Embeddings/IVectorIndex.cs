@@ -1,7 +1,7 @@
 namespace GA.Business.ML.Embeddings;
 
 using System.Collections.Generic;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
 /// Abstraction for a vector index that stores and retrieves voicing documents.
@@ -22,4 +22,11 @@ public interface IVectorIndex
     /// Finds a document by exact match on ChordName or Id.
     /// </summary>
     VoicingDocument? FindByIdentity(string identity);
+
+    /// <summary>
+    /// Checks if the index contains documents with outdated schema versions or missing embeddings.
+    /// </summary>
+    /// <param name="currentSchemaVersion">The expected version from EmbeddingSchema.</param>
+    /// <returns>True if the index is stale and needs reindexing.</returns>
+    Task<bool> IsStaleAsync(string currentSchemaVersion);
 }

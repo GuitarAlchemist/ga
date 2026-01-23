@@ -1,12 +1,11 @@
 namespace GA.BSP.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
-using GA.BSP.Core.Spatial;
+using Core.Spatial;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.BSP.Service.Models;
+using Models;
 
-// using GA.Business.Core.Spatial // REMOVED - namespace does not exist;
-using Microsoft.AspNetCore.Mvc;
+// using GA.Domain.Core.Spatial // REMOVED - namespace does not exist;
 
 /// <summary>
 ///     API controller for BSP dungeon room generation

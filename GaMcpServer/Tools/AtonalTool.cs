@@ -1,7 +1,7 @@
 namespace GaMcpServer.Tools;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Atonal.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using ModelContextProtocol.Server;
 
 [McpServerToolType]

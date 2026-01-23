@@ -1,6 +1,6 @@
 using GA.Core.UI.Components.Grids;
-using GA.Business.Core.Chords;
-using GA.Business.Core.Unified;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Unified;
 using MudBlazor;
 using MudBlazor.Services;
 

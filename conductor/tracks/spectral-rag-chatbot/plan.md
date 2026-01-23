@@ -162,9 +162,9 @@
 
 ### Narrator Fine-tuning
 
-- [ ] 8.2.1 Refine `GroundedPromptBuilder` for complex Jazz/Fusion scenarios
+- [x] 8.2.1 Refine `GroundedPromptBuilder` for complex Jazz/Fusion scenarios
 - [ ] 8.2.2 Implement "Suggest Smoother Path" LLM intent
-- [ ] 8.2.3 Story: "Narrator explains voice-leading geodesics in simple terms"
+- [x] 8.2.3 Story: "Narrator explains voice-leading geodesics in simple terms"
 
 ### Performance & Polish
 

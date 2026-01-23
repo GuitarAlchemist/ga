@@ -1,6 +1,6 @@
 namespace GA.Business.Intelligence.Analytics;
 
-using GA.Business.Core.Fretboard;
+using GA.Domain.Core.Instruments.Fretboard;
 using GA.Business.Harmony;
 using GA.Business.Intelligence.SemanticIndexing;
 

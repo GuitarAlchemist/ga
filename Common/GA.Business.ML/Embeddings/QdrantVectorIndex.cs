@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 
@@ -175,5 +175,17 @@ public class QdrantVectorIndex : IVectorIndex
     {
         // Naive local cache search for now, as Qdrant doesn't support "Find by Payload Value" efficiently without a Filter payload index.
         return _localCache.FirstOrDefault(d => d.ChordName == identity || d.Id == identity);
+    }
+
+    public async Task<bool> IsStaleAsync(string currentSchemaVersion)
+    {
+        // If local cache is empty, we don't know yet, so not stale (or we should load)
+        if (_localCache.Count == 0) return false;
+
+        // Sampling check (first document) to avoid full collection scan
+        var first = _localCache.First();
+        return first.SchemaVersion != currentSchemaVersion || 
+               first.Embedding == null || 
+               first.Embedding.Length != (int)_dimension;
     }
 }

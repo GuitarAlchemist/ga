@@ -1,15 +1,13 @@
 namespace GA.Business.ML.Retrieval;
 
-using System;
+using Domain.Services.Fretboard.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Primitives;
 using Embeddings;
-using Core.Fretboard.Analysis;
-using Core.Notes;
-using Core.Fretboard;
-using Core.Notes.Primitives;
 
 /// <summary>
 /// Suggests "where to go next" based on harmonic smoothness and physical playability.

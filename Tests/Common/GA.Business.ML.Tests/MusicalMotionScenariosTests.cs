@@ -2,11 +2,10 @@ namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Tonal.Cadences;
 using GA.Business.ML.Wavelets;
-using GA.Business.ML.Embeddings.Services;
-using GA.Business.Core.Tonal.Cadences;
-using GA.Business.Core.Notes.Primitives;
+using Embeddings.Services;
 using NUnit.Framework;
 
 [TestFixture]

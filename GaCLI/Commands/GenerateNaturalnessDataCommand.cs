@@ -1,5 +1,7 @@
 namespace GaCLI.Commands;
 
+using GA.Domain.Core.Instruments;
+
 using System;
 using System.IO;
 using System.Linq;
@@ -9,9 +11,9 @@ using GA.Business.ML.Naturalness;
 public class GenerateNaturalnessDataCommand
 {
     private readonly NaturalnessTrainingDataGenerator _generator;
-    private readonly GA.Business.Core.Tabs.ITabCorpusRepository _repository;
+    private readonly GA.Domain.Core.Tabs.ITabCorpusRepository _repository;
 
-    public GenerateNaturalnessDataCommand(NaturalnessTrainingDataGenerator generator, GA.Business.Core.Tabs.ITabCorpusRepository repository)
+    public GenerateNaturalnessDataCommand(NaturalnessTrainingDataGenerator generator, GA.Domain.Core.Tabs.ITabCorpusRepository repository)
     {
         _generator = generator;
         _repository = repository;
@@ -58,7 +60,7 @@ D|--2---2---3---0---|
 A|--3---0---3---2---|
 E|----------1---3---|
 ";
-        await _repository.SaveAsync(new GA.Business.Core.Tabs.TabCorpusItem 
+        await _repository.SaveAsync(new GA.Domain.Core.Tabs.TabCorpusItem 
         {
             Id = "111111111111111111111111", // valid hex id
             SourceId = "dev-seed",

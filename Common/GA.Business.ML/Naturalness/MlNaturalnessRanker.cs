@@ -1,12 +1,13 @@
 namespace GA.Business.ML.Naturalness;
 
+
+using Domain.Services.Fretboard.Analysis;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using Core.Fretboard.Analysis;
 
 /// <summary>
 /// ONNX-based naturalness ranker using the trained FastTree model.

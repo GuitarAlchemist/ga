@@ -1,7 +1,9 @@
+namespace GA.Domain.Core.Tests.Tonal;
+
+using Primitives;
+using GA.Domain.Core.Theory.Tonal;
+
 #pragma warning disable CA1861 // Avoid constant arrays as arguments
-
-namespace GA.Business.Core.Tests.Tonal;
-
 [TestFixture]
 public class KeySignatureTests
 {
@@ -24,15 +26,12 @@ public class KeySignatureTests
     {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
-
         // Act
         var actual = keySignature.AccidentedNotes.Select(note => note.ToString()).ToArray();
-
         // Assert
         TestContext.WriteLine($"[KeySignature_AccidentedNotes] value={value}\n  expected=[{string.Join(", ", expected)}]\n  actual=[{string.Join(", ", actual)}]");
         Assert.That(actual, Is.EqualTo(expected));
     }
-
     [TestCase(-7, "Bb Eb Ab Db Gb Cb Fb")]
     [TestCase(-6, "Bb Eb Ab Db Gb Cb")]
     [TestCase(-5, "Bb Eb Ab Db Gb")]
@@ -52,15 +51,12 @@ public class KeySignatureTests
     {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
-
         // Act
         var actual = keySignature.AccidentedNotes.ToString();
-
         // Assert
         TestContext.WriteLine($"[KeySignature_AccidentedNotes_Printable] value={value}\n  expected='{expected}'\n  actual='{actual}'");
         Assert.That(actual, Is.EqualTo(expected));
     }
-
     [TestCase(-7, AccidentalKind.Flat)]
     [TestCase(-6, AccidentalKind.Flat)]
     [TestCase(-5, AccidentalKind.Flat)]
@@ -80,15 +76,12 @@ public class KeySignatureTests
     {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
-
         // Act
         var actual = keySignature.AccidentalKind;
-
         // Assert
         TestContext.WriteLine($"[KeySignature_AccidentalKind] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));
     }
-
     [TestCase(-7, false)]
     [TestCase(-6, false)]
     [TestCase(-5, false)]
@@ -108,15 +101,12 @@ public class KeySignatureTests
     {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
-
         // Act
         var actual = keySignature.IsSharpKey;
-
         // Assert
         TestContext.WriteLine($"[KeySignature_IsSharpKey] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));
     }
-
     [TestCase(-7, true)]
     [TestCase(-6, true)]
     [TestCase(-5, true)]
@@ -136,10 +126,8 @@ public class KeySignatureTests
     {
         // Arrange
         var keySignature = KeySignature.FromValue(value);
-
         // Act
         var actual = keySignature.IsFlatKey;
-
         // Assert
         TestContext.WriteLine($"[KeySignature_IsFlatKey] value={value}\n  expected={expected}\n  actual={actual}");
         Assert.That(actual, Is.EqualTo(expected));

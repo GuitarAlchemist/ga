@@ -1,7 +1,9 @@
 namespace GA.Business.Intelligence.SemanticIndexing;
 
-using GA.Business.Core.Notes;
-using GA.Business.Core.Fretboard;
+using GA.Domain.Core.Instruments;
+
+using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Instruments.Fretboard;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;

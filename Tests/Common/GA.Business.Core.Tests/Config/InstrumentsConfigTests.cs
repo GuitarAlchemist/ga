@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Tests.Config;
+namespace GA.Domain.Core.Tests.Config;
 
 using Business.Config;
 
@@ -11,21 +11,18 @@ public class InstrumentsConfigTests
         var instruments = InstrumentsConfig.getAllInstruments();
         Assert.That(instruments, Is.Not.Empty);
     }
-
     [Test]
     public void ListAllInstrumentNames_ReturnsNonEmptyList()
     {
         var instrumentNames = InstrumentsConfig.listAllInstrumentNames();
         Assert.That(instrumentNames, Is.Not.Empty);
     }
-
     [Test]
     public void ListAllInstrumentTunings_ReturnsNonEmptyList()
     {
         var instrumentTunings = InstrumentsConfig.listAllInstrumentTunings();
         Assert.That(instrumentTunings, Is.Not.Empty);
     }
-
     [Test]
     public void FindInstrumentsByName_ReturnsMatchingInstruments()
     {
@@ -34,7 +31,6 @@ public class InstrumentsConfigTests
         Assert.That(matchingInstruments, Is.Not.Empty);
         Assert.That(matchingInstruments.All(i => i.Name.ToLower().Contains(searchTerm.ToLower())));
     }
-
     [Test]
     public void TryGetInstrument_ReturnsCorrectInstrument()
     {
@@ -43,7 +39,6 @@ public class InstrumentsConfigTests
         Assert.That(instrument, Is.Not.Null);
         Assert.That(instrument.Value.Name, Is.EqualTo(instrumentName));
     }
-
     [Test]
     public void TryGetInstrument_ReturnsNoneForNonexistentInstrument()
     {
@@ -51,7 +46,6 @@ public class InstrumentsConfigTests
         var instrument = InstrumentsConfig.tryGetInstrument(instrumentName);
         Assert.That(instrument, Is.Null);
     }
-
     [Test]
     public void ReloadConfig_DoesNotThrowException()
     {

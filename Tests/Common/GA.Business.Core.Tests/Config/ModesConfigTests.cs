@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Tests.Config;
+﻿namespace GA.Domain.Core.Tests.Config;
 
 [TestFixture]
 public class ModesConfigTests

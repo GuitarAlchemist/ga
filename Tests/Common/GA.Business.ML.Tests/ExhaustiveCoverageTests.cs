@@ -3,9 +3,9 @@ namespace GA.Business.ML.Tests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.ML.Musical.Enrichment;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Theory.Atonal;
+using Musical.Enrichment;
 using NUnit.Framework;
 
 [TestFixture]

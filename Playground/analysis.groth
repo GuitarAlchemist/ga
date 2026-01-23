@@ -1,0 +1,14 @@
+# Musical Category Theory Playground
+# Operations for the GrothendieckService
+
+# Analyze relationships between chords
+tensor(Cmaj7, G7)
+
+# Combine scales
+direct_sum(C_major_scale, A_minor_scale)
+
+# Find commonalities
+pullback(I_chord, V_chord)
+
+# Apply a functor (transformation)
+functor(transpose_by_fifth)

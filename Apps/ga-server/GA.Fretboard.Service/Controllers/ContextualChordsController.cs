@@ -1,17 +1,18 @@
 namespace GA.Fretboard.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
-using GA.Business.Core.Atonal;
-using GA.Business.Core.Chords;
-using GA.Business.Core.Tonal;
-using GA.Business.Core.Tonal.Modes;
-using GA.Business.Core.Tonal.Modes.Diatonic;
-using GA.Business.Core.Tonal.Primitives.Diatonic;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal;
+using GA.Domain.Core.Theory.Tonal.Modes;
+using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
+using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Microsoft.AspNetCore.Mvc;
+using GA.Domain.Services.Chords;
 using Microsoft.AspNetCore.RateLimiting;
-using GA.Fretboard.Service.Models;
-using GA.Fretboard.Service.Services;
-using ChordExtension = GA.Fretboard.Service.Models.ChordExtension;
-using ChordStackingType = GA.Fretboard.Service.Models.ChordStackingType;
+using Models;
+using Services;
+using ChordExtension = Models.ChordExtension;
+using ChordStackingType = Models.ChordStackingType;
 
 /// <summary>
 ///     API controller for contextual chord queries
@@ -387,7 +388,7 @@ public class ContextualChordsController(
     private (ChordTemplate? template, PitchClass root) ParseChordName(string chordName)
     {
         // Simplified chord name parsing
-        // This should be enhanced with proper chord name parsing from GA.Business.Core
+        // This should be enhanced with proper chord name parsing from GA.Domain.Core
 
         // Basic validation - check if chord name looks valid
         if (string.IsNullOrWhiteSpace(chordName) || chordName.Length < 2)
@@ -404,7 +405,7 @@ public class ContextualChordsController(
         // For now, return a simple major seventh chord on C
         var root = PitchClass.C;
         var scale = MajorScaleMode.Get(MajorScaleDegree.Ionian);
-        var template = ChordTemplateFactory.CreateModalChords(scale, GA.Business.Core.Chords.ChordExtension.Seventh)
+        var template = ChordTemplateFactory.CreateModalChords(scale, Domain.Core.Theory.Harmony.ChordExtension.Seventh)
             .First();
 
         return (template, root);

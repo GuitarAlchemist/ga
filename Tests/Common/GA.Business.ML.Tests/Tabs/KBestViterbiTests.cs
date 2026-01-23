@@ -1,21 +1,19 @@
 namespace GA.Business.ML.Tests.Tabs;
 
+using GA.Domain.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.Core.AI;
-using GA.Business.Core.Fretboard;
-using GA.Business.Core.Fretboard.Primitives;
-using GA.Business.Core.Fretboard.Voicings.Search;
-using GA.Business.Core.Notes;
-using GA.Business.Core.Player;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Retrieval;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using GA.Domain.Core.Player;
+using GA.Domain.Core.Primitives;
+using Embeddings;
+using Retrieval;
 using GA.Business.ML.Tabs;
 using Moq;
 using NUnit.Framework;
-using GA.Business.Core.Fretboard.Analysis;
-using GA.Business.Core.Abstractions;
+using Domain.Services.Fretboard.Analysis;
 
 [TestFixture]
 public class KBestViterbiTests

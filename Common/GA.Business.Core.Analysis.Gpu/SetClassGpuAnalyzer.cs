@@ -1,9 +1,9 @@
-﻿namespace GA.Business.Core.Analysis.Gpu;
+﻿namespace GA.Domain.Core.Analysis.Gpu;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GA.Business.Core.Atonal;
+using GA.Domain.Core.Theory.Atonal;
 using ILGPU;
 using ILGPU.Algorithms;
 using ILGPU.Runtime;
@@ -12,7 +12,7 @@ using ILGPU.Runtime;
 ///     Provides GPU-accelerated helpers for batch spectral analysis of set classes.
 /// </summary>
 /// <remarks>
-///     This layer stays above GA.Business.Core so orchestration layers can opt into GPU acceleration
+///     This layer stays above GA.Domain.Core so orchestration layers can opt into GPU acceleration
 ///     without polluting the domain model with ILGPU dependencies.
 /// </remarks>
 public sealed class SetClassGpuAnalyzer : IDisposable

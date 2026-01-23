@@ -4,13 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics.Tensors;
-using Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
 /// High-level service for retrieving musical objects using the Spectral RAG architecture.
 /// Implements Weighted Partition Cosine Similarity based on the OPTIC-K schema.
 /// </summary>
-public class SpectralRetrievalService
+public class SpectralRetrievalService : ISpectralRetrievalService
 {
     private readonly IVectorIndex _index;
 
@@ -20,12 +20,16 @@ public class SpectralRetrievalService
     }
 
     /// <summary>
-    /// Performs a weighted similarity search across the vector partitions.
+    /// Performs a weighted similarity search across the vector partitions with optional metadata filtering.
     /// </summary>
     public IEnumerable<(VoicingDocument Doc, double Score)> Search(
         double[] queryEmbedding, 
         int topK = 10,
-        SearchPreset preset = SearchPreset.Tonal)
+        SearchPreset preset = SearchPreset.Tonal,
+        string? quality = null,
+        string? extension = null,
+        string? stackingType = null,
+        int? noteCount = null)
     {
         if (queryEmbedding.Length != EmbeddingSchema.TotalDimension)
         {
@@ -40,6 +44,12 @@ public class SpectralRetrievalService
         foreach (var doc in _index.Documents)
         {
             if (doc.Embedding == null || doc.Embedding.Length != EmbeddingSchema.TotalDimension) continue;
+
+            // Apply metadata filters if provided
+            if (quality != null && doc.SemanticTags != null && !doc.SemanticTags.Contains(quality, StringComparer.OrdinalIgnoreCase)) continue;
+            if (extension != null && doc.SemanticTags != null && !doc.SemanticTags.Contains(extension, StringComparer.OrdinalIgnoreCase)) continue;
+            if (stackingType != null && doc.StackingType != null && !string.Equals(doc.StackingType, stackingType, StringComparison.OrdinalIgnoreCase)) continue;
+            if (noteCount.HasValue && doc.MidiNotes.Length != noteCount.Value) continue;
 
             double score = CalculateWeightedSimilarity(queryEmbedding, doc.Embedding, preset);
             results.Add((doc, score));

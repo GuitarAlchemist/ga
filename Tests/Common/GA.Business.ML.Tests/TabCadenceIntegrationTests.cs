@@ -2,10 +2,7 @@ namespace GA.Business.ML.Tests;
 
 using System.Threading.Tasks;
 using GA.Business.ML.Tabs;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Embeddings.Services;
-using GA.Business.ML.Musical.Analysis;
-using GA.Business.ML.Tests.TestInfrastructure;
+using TestInfrastructure;
 using NUnit.Framework;
 
 [TestFixture]

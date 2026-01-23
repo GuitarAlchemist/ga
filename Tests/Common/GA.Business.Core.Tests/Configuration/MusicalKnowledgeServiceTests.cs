@@ -1,4 +1,6 @@
-namespace GA.Business.Core.Tests.Configuration;
+namespace GA.Domain.Core.Tests.Configuration;
+
+using Domain.Services;
 
 [TestFixture]
 public class MusicalKnowledgeServiceTests
@@ -8,12 +10,10 @@ public class MusicalKnowledgeServiceTests
     {
         // Act
         var searchResult = MusicalKnowledgeService.SearchAll("jazz");
-
         // Assert
         Assert.That(searchResult, Is.Not.Null);
         Assert.That(searchResult.SearchTerm, Is.EqualTo("jazz"));
         Assert.That(searchResult.TotalResults, Is.GreaterThan(0));
-
         // Should find jazz-related content across all categories
         Console.WriteLine($"Found {searchResult.TotalResults} jazz-related items:");
         Console.WriteLine($"- Iconic Chords: {searchResult.IconicChords.Count}");
@@ -21,19 +21,16 @@ public class MusicalKnowledgeServiceTests
         Console.WriteLine($"- Guitar Techniques: {searchResult.GuitarTechniques.Count}");
         Console.WriteLine($"- Specialized Tunings: {searchResult.SpecializedTunings.Count}");
     }
-
     [Test]
     public void MusicalKnowledgeService_ShouldProvideStatistics()
     {
         // Act
         var stats = MusicalKnowledgeService.GetStatistics();
-
         // Assert
         Assert.That(stats, Is.Not.Null);
         Assert.That(stats.TotalConcepts, Is.GreaterThan(0));
         Assert.That(stats.UniqueArtists, Is.GreaterThan(0));
         Assert.That(stats.UniqueCategories, Is.GreaterThan(0));
-
         // Display comprehensive statistics
         Console.WriteLine("=== Musical Knowledge Base Statistics ===");
         Console.WriteLine($"Total Concepts: {stats.TotalConcepts}");
@@ -45,30 +42,25 @@ public class MusicalKnowledgeServiceTests
         Console.WriteLine($"Unique Artists: {stats.UniqueArtists}");
         Console.WriteLine($"Unique Categories: {stats.UniqueCategories}");
         Console.WriteLine($"Unique Difficulties: {stats.UniqueDifficulties}");
-
         Console.WriteLine("\n=== Top Categories ===");
         foreach (var category in stats.CategoriesBreakdown.Take(5))
         {
             Console.WriteLine($"{category.Key}: {category.Value} items");
         }
-
         Console.WriteLine("\n=== Top Artists ===");
         foreach (var artist in stats.ArtistBreakdown.Take(5))
         {
             Console.WriteLine($"{artist.Key}: {artist.Value} items");
         }
     }
-
     [Test]
     public void MusicalKnowledgeService_ShouldFindContentByArtist()
     {
         // Act - Search for a well-known artist
         var hendrixContent = MusicalKnowledgeService.GetByArtist("Hendrix");
-
         // Assert
         Assert.That(hendrixContent, Is.Not.Null);
         Assert.That(hendrixContent.Artist, Is.EqualTo("Hendrix"));
-
         // Should find Hendrix-related content
         if (hendrixContent.IconicChords.Any())
         {
@@ -78,7 +70,6 @@ public class MusicalKnowledgeServiceTests
                 Console.WriteLine($"- {chord.Name}: {chord.TheoreticalName} ({chord.Song})");
             }
         }
-
         if (hendrixContent.GuitarTechniques.Any())
         {
             Console.WriteLine("\n=== Hendrix Guitar Techniques ===");
@@ -88,16 +79,13 @@ public class MusicalKnowledgeServiceTests
             }
         }
     }
-
     [Test]
     public void MusicalKnowledgeService_ShouldValidateAllConfigurations()
     {
         // Act
         var validation = MusicalKnowledgeService.ValidateAll();
-
         // Assert
         Assert.That(validation, Is.Not.Null);
-
         // Display validation results
         Console.WriteLine("=== Configuration Validation Results ===");
         Console.WriteLine($"Overall Valid: {validation.IsValid}");
@@ -105,7 +93,6 @@ public class MusicalKnowledgeServiceTests
         Console.WriteLine($"Chord Progressions Valid: {validation.ChordProgressionsValidation.IsValid}");
         Console.WriteLine($"Guitar Techniques Valid: {validation.GuitarTechniquesValidation.IsValid}");
         Console.WriteLine($"Specialized Tunings Valid: {validation.SpecializedTuningsValidation.IsValid}");
-
         if (validation.AllErrors.Any())
         {
             Console.WriteLine("\n=== Validation Errors ===");
@@ -114,12 +101,10 @@ public class MusicalKnowledgeServiceTests
                 Console.WriteLine($"- {error}");
             }
         }
-
         // For this test, we expect validation to pass
         Assert.That(validation.IsValid, Is.True,
             $"Configuration validation failed with errors: {string.Join("; ", validation.AllErrors)}");
     }
-
     [Test]
     [Ignore("Configuration files not loaded in test environment")]
     public void ChordProgressionsService_ShouldLoadAndQueryProgressions()
@@ -128,17 +113,14 @@ public class MusicalKnowledgeServiceTests
         var allProgressions = ChordProgressionsService.GetAllProgressions().ToList();
         var jazzProgressions = ChordProgressionsService.FindProgressionsByCategory("Jazz").ToList();
         var iiViProgression = ChordProgressionsService.FindProgressionByName("ii-V-I");
-
         // Assert
         Assert.That(allProgressions, Is.Not.Empty, "Should load chord progressions from YAML");
         Assert.That(jazzProgressions, Is.Not.Empty, "Should find jazz progressions");
         Assert.That(iiViProgression, Is.Not.Null, "Should find ii-V-I progression");
-
         // Display progression details
         Console.WriteLine("=== Chord Progressions ===");
         Console.WriteLine($"Total progressions loaded: {allProgressions.Count}");
         Console.WriteLine($"Jazz progressions: {jazzProgressions.Count}");
-
         if (iiViProgression != null)
         {
             Console.WriteLine("\n=== ii-V-I Progression Details ===");
@@ -146,7 +128,6 @@ public class MusicalKnowledgeServiceTests
             Console.WriteLine($"Roman Numerals: {string.Join("-", iiViProgression.RomanNumerals)}");
             Console.WriteLine($"In {iiViProgression.InKey}: {string.Join("-", iiViProgression.Chords)}");
             Console.WriteLine($"Theory: {iiViProgression.Theory}");
-
             if (iiViProgression.Examples.Any())
             {
                 Console.WriteLine("Examples:");
@@ -157,7 +138,6 @@ public class MusicalKnowledgeServiceTests
             }
         }
     }
-
     [Test]
     [Ignore("Configuration files not loaded in test environment")]
     public void GuitarTechniquesService_ShouldLoadAndQueryTechniques()
@@ -166,17 +146,14 @@ public class MusicalKnowledgeServiceTests
         var allTechniques = GuitarTechniquesService.GetAllTechniques().ToList();
         var pitchAxisTechnique = GuitarTechniquesService.FindTechniqueByName("Pitch Axis Theory");
         var leadTechniques = GuitarTechniquesService.FindTechniquesByCategory("Lead Guitar").ToList();
-
         // Assert
         Assert.That(allTechniques, Is.Not.Empty, "Should load guitar techniques from YAML");
         Assert.That(pitchAxisTechnique, Is.Not.Null, "Should find Pitch Axis Theory");
         Assert.That(leadTechniques, Is.Not.Empty, "Should find lead guitar techniques");
-
         // Display technique details
         Console.WriteLine("=== Guitar Techniques ===");
         Console.WriteLine($"Total techniques loaded: {allTechniques.Count}");
         Console.WriteLine($"Lead guitar techniques: {leadTechniques.Count}");
-
         if (pitchAxisTechnique != null)
         {
             Console.WriteLine("\n=== Pitch Axis Theory Details ===");
@@ -184,14 +161,12 @@ public class MusicalKnowledgeServiceTests
             Console.WriteLine($"Description: {pitchAxisTechnique.Description}");
             Console.WriteLine($"Concept: {pitchAxisTechnique.Concept}");
             Console.WriteLine($"Theory: {pitchAxisTechnique.Theory}");
-
             if (pitchAxisTechnique.Artists.Any())
             {
                 Console.WriteLine($"Artists: {string.Join(", ", pitchAxisTechnique.Artists)}");
             }
         }
     }
-
     [Test]
     public void SpecializedTuningsService_ShouldLoadAndQueryTunings()
     {
@@ -199,7 +174,6 @@ public class MusicalKnowledgeServiceTests
         var allTunings = SpecializedTuningsService.GetAllTunings().ToList();
         var nashvilleTuning = SpecializedTuningsService.FindTuningByName("Nashville Tuning");
         var studioTunings = SpecializedTuningsService.FindTuningsByCategory("Studio Technique").ToList();
-
         // Assert
         // Note: Specialized tunings configuration not loaded in test environment
         if (allTunings.Count == 0)
@@ -207,18 +181,15 @@ public class MusicalKnowledgeServiceTests
             Assert.Inconclusive("Specialized tunings not loaded from configuration");
         }
         Assert.That(allTunings, Is.Not.Empty, "Should load specialized tunings from YAML");
-
         // Display tuning details
         Console.WriteLine("=== Specialized Tunings ===");
         Console.WriteLine($"Total tunings loaded: {allTunings.Count}");
         Console.WriteLine($"Studio technique tunings: {studioTunings.Count}");
-
         if (nashvilleTuning != null)
         {
             Console.WriteLine("\n=== Nashville Tuning Details ===");
             Console.WriteLine($"Description: {nashvilleTuning.Description}");
             Console.WriteLine($"Category: {nashvilleTuning.Category}");
-
             if (nashvilleTuning.Configuration.Any())
             {
                 Console.WriteLine("Configuration:");
@@ -227,28 +198,23 @@ public class MusicalKnowledgeServiceTests
                     Console.WriteLine($"- {config.Key}: {config.Value}");
                 }
             }
-
             if (nashvilleTuning.Applications.Any())
             {
                 Console.WriteLine($"Applications: {string.Join(", ", nashvilleTuning.Applications)}");
             }
         }
     }
-
     [Test]
     [Ignore("Configuration files not loaded in test environment")]
     public void MusicalKnowledgeService_ShouldProvideComprehensiveSearch()
     {
         // Test searching for different musical concepts
         var testSearches = new[] { "blues", "jazz", "classical", "rock", "folk" };
-
         foreach (var searchTerm in testSearches)
         {
             var results = MusicalKnowledgeService.SearchAll(searchTerm);
-
             Console.WriteLine($"\n=== Search Results for '{searchTerm}' ===");
             Console.WriteLine($"Total Results: {results.TotalResults}");
-
             if (results.IconicChords.Any())
             {
                 Console.WriteLine($"Iconic Chords ({results.IconicChords.Count}):");
@@ -257,7 +223,6 @@ public class MusicalKnowledgeServiceTests
                     Console.WriteLine($"  - {chord.Name} ({chord.TheoreticalName})");
                 }
             }
-
             if (results.ChordProgressions.Any())
             {
                 Console.WriteLine($"Chord Progressions ({results.ChordProgressions.Count}):");
@@ -266,7 +231,6 @@ public class MusicalKnowledgeServiceTests
                     Console.WriteLine($"  - {progression.Name}");
                 }
             }
-
             if (results.GuitarTechniques.Any())
             {
                 Console.WriteLine($"Guitar Techniques ({results.GuitarTechniques.Count}):");
@@ -275,7 +239,6 @@ public class MusicalKnowledgeServiceTests
                     Console.WriteLine($"  - {technique.Name}");
                 }
             }
-
             if (results.SpecializedTunings.Any())
             {
                 Console.WriteLine($"Specialized Tunings ({results.SpecializedTunings.Count}):");
@@ -287,7 +250,6 @@ public class MusicalKnowledgeServiceTests
         }
     }
 }
-
 /// <summary>
 ///     Example application demonstrating practical usage of YAML configurations
 /// </summary>
@@ -299,9 +261,7 @@ public static class MusicalKnowledgeExamples
     public static void CreatePracticeSession(string difficulty)
     {
         Console.WriteLine($"=== Practice Session: {difficulty} Level ===");
-
         var practiceContent = MusicalKnowledgeService.GetByDifficulty(difficulty);
-
         Console.WriteLine("\n📚 Chord Progressions to Practice:");
         foreach (var progression in practiceContent.ChordProgressions.Take(3))
         {
@@ -310,7 +270,6 @@ public static class MusicalKnowledgeExamples
             Console.WriteLine($"  In {progression.InKey}: {string.Join("-", progression.Chords)}");
             Console.WriteLine();
         }
-
         Console.WriteLine("🎸 Guitar Techniques to Work On:");
         foreach (var technique in practiceContent.GuitarTechniques.Take(3))
         {
@@ -320,20 +279,16 @@ public static class MusicalKnowledgeExamples
             {
                 Console.WriteLine($"  Listen to: {string.Join(", ", technique.Artists.Take(2))}");
             }
-
             Console.WriteLine();
         }
     }
-
     /// <summary>
     ///     Example: Analyze a song's musical elements
     /// </summary>
     public static void AnalyzeSong(string songTitle)
     {
         Console.WriteLine($"=== Musical Analysis: {songTitle} ===");
-
         var searchResults = MusicalKnowledgeService.SearchAll(songTitle);
-
         if (searchResults.IconicChords.Any())
         {
             Console.WriteLine("\n🎵 Iconic Chords Found:");
@@ -346,11 +301,9 @@ public static class MusicalKnowledgeExamples
                 {
                     Console.WriteLine($"  Guitar Voicing: [{string.Join(", ", chord.GuitarVoicing)}]");
                 }
-
                 Console.WriteLine();
             }
         }
-
         if (searchResults.ChordProgressions.Any())
         {
             Console.WriteLine("🎼 Related Chord Progressions:");
@@ -361,7 +314,6 @@ public static class MusicalKnowledgeExamples
                 Console.WriteLine();
             }
         }
-
         if (searchResults.GuitarTechniques.Any())
         {
             Console.WriteLine("🎸 Guitar Techniques Used:");
@@ -373,16 +325,13 @@ public static class MusicalKnowledgeExamples
             }
         }
     }
-
     /// <summary>
     ///     Example: Generate learning path for a specific artist's style
     /// </summary>
     public static void CreateArtistStudyGuide(string artistName)
     {
         Console.WriteLine($"=== Study Guide: {artistName} Style ===");
-
         var artistContent = MusicalKnowledgeService.GetByArtist(artistName);
-
         if (artistContent.IconicChords.Any())
         {
             Console.WriteLine("\n🎵 Signature Chords to Learn:");
@@ -395,11 +344,9 @@ public static class MusicalKnowledgeExamples
                 {
                     Console.WriteLine($"  Frets: [{string.Join(", ", chord.GuitarVoicing)}]");
                 }
-
                 Console.WriteLine();
             }
         }
-
         if (artistContent.GuitarTechniques.Any())
         {
             Console.WriteLine("🎸 Techniques to Master:");
@@ -411,11 +358,9 @@ public static class MusicalKnowledgeExamples
                 {
                     Console.WriteLine($"  Practice with: {string.Join(", ", technique.Songs.Take(2))}");
                 }
-
                 Console.WriteLine();
             }
         }
-
         if (artistContent.SpecializedTunings.Any())
         {
             Console.WriteLine("🎛️ Tunings to Explore:");
@@ -427,11 +372,9 @@ public static class MusicalKnowledgeExamples
                 {
                     Console.WriteLine($"  Tuning: {string.Join("-", tuning.Configuration.Values)}");
                 }
-
                 Console.WriteLine();
             }
         }
-
         if (artistContent.ChordProgressions.Any())
         {
             Console.WriteLine("🎼 Characteristic Progressions:");
@@ -444,31 +387,25 @@ public static class MusicalKnowledgeExamples
             }
         }
     }
-
     /// <summary>
     ///     Example: Find related musical concepts for composition inspiration
     /// </summary>
     public static void FindCompositionInspiration(string genre)
     {
         Console.WriteLine($"=== Composition Inspiration: {genre} ===");
-
         var genreContent = MusicalKnowledgeService.GetByCategory(genre);
-
         Console.WriteLine("\n🎼 Chord Progressions to Try:");
         foreach (var progression in genreContent.ChordProgressions.Take(3))
         {
             Console.WriteLine($"- {progression.Name}");
             Console.WriteLine($"  {string.Join("-", progression.RomanNumerals)} in {progression.InKey}");
             Console.WriteLine($"  Mood: {progression.Theory}");
-
             if (progression.Variations.Any())
             {
                 Console.WriteLine($"  Variations: {string.Join(", ", progression.Variations.Select(v => v.Name))}");
             }
-
             Console.WriteLine();
         }
-
         Console.WriteLine("🎸 Techniques to Incorporate:");
         foreach (var technique in genreContent.GuitarTechniques.Take(3))
         {
@@ -479,10 +416,8 @@ public static class MusicalKnowledgeExamples
                 Console.WriteLine(
                     $"  Use for: {string.Join(", ", technique.Applications.Take(2).Select(a => a.Description))}");
             }
-
             Console.WriteLine();
         }
-
         Console.WriteLine("🎛️ Tunings to Experiment With:");
         foreach (var tuning in genreContent.SpecializedTunings.Take(2))
         {

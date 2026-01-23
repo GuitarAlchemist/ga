@@ -6,7 +6,7 @@ using GaChatbot.Abstractions;
 using GaChatbot.Models;
 using GA.Business.ML.Embeddings; 
 using GA.Business.ML.Retrieval;
-using GA.Business.Core.Fretboard.Voicings.Search;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 public class TabAwareOrchestrator(
     SpectralRagOrchestrator ragOrchestrator,
