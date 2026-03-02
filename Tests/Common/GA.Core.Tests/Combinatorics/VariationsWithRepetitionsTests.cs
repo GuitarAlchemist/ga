@@ -1,8 +1,7 @@
 namespace GA.Core.Tests.Combinatorics;
 
-using GA.Core.Combinatorics;
 using System.Numerics;
-using System.Linq;
+using Core.Combinatorics;
 
 public class VariationsWithRepetitionsTests
 {
@@ -16,19 +15,19 @@ public class VariationsWithRepetitionsTests
         var expected = new[]
         {
             new[] { "a", "a" },
-            new[] { "a", "b" },
-            new[] { "a", "c" },
-            new[] { "b", "a" },
-            new[] { "b", "b" },
-            new[] { "b", "c" },
-            new[] { "c", "a" },
-            new[] { "c", "b" },
-            new[] { "c", "c" }
+            ["a", "b"],
+            ["a", "c"],
+            ["b", "a"],
+            ["b", "b"],
+            ["b", "c"],
+            ["c", "a"],
+            ["c", "b"],
+            ["c", "c"]
         };
 
         for (var i = 0; i < expected.Length; i++)
         {
-            var variation = v[new BigInteger(i)];
+            var variation = v[new(i)];
             Assert.That(variation.ToArray(), Is.EqualTo(expected[i]));
 
             var index = v.GetIndex(expected[i]);
@@ -74,7 +73,10 @@ public class VariationsWithRepetitionsTests
         Assert.That(v.Any(), Is.False);
 
         // Accessing any index should throw
-        Assert.Throws<InvalidOperationException>(() => { var _ = v[BigInteger.Zero]; });
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            var _ = v[BigInteger.Zero];
+        });
 
         // GetIndex also throws because alphabet is empty and length > 0
         Assert.Throws<InvalidOperationException>(() => v.GetIndex(new[] { 0, 0 }));

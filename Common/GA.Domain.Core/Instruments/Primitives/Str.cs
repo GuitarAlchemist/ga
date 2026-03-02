@@ -1,12 +1,7 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
 using GA.Core.Functional;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     An instrument string (Between <see cref="Min" /> and <see cref="Max" />)
@@ -30,17 +25,11 @@ public readonly record struct Str : IRangeValueObject<Str>
     /// <remarks>
     ///     String 1 is the highest pitch string. You can also use implicit conversion: <c>Str str = 3;</c>
     /// </remarks>
-    public Str([ValueRange(_minValue, _maxValue)] int value)
-    {
-        _value = CheckRange(value);
-    }
+    public Str([ValueRange(_minValue, _maxValue)] int value) => _value = CheckRange(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Str FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static Str FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     /// <summary>
     ///     The first string (Highest pitch)
@@ -52,16 +41,9 @@ public readonly record struct Str : IRangeValueObject<Str>
     /// </summary>
     public static Str Max => FromValue(_maxValue);
 
-    public static implicit operator Str(int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static implicit operator Str(int value) => new() { Value = value };
 
-    public static implicit operator int(Str str)
-    {
-        return str._value;
-    }
+    public static implicit operator int(Str str) => str._value;
 
     public int Value
     {
@@ -94,66 +76,33 @@ public readonly record struct Str : IRangeValueObject<Str>
                 $"String number must be between {_minValue} and {_maxValue}, got {value}");
         }
 
-        return Result<Str, string>.Success(new()
-            { Value = value });
+        return Result<Str, string>.Success(new() { Value = value });
     }
 
-    public static Str operator ++(Str str)
-    {
-        return FromValue(str._value + 1);
-    }
+    public static Str operator ++(Str str) => FromValue(str._value + 1);
 
-    public static int CheckRange(int value)
-    {
-        return ValueObjectUtils<Str>.EnsureValueRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) => ValueObjectUtils<Str>.EnsureValueRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return ValueObjectUtils<Str>.EnsureValueRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        ValueObjectUtils<Str>.EnsureValueRange(value, minValue, maxValue);
 
-    public static IReadOnlyCollection<Str> Range(int count)
-    {
-        return ValueObjectUtils<Str>.GetItems(_minValue, count);
-    }
+    public static IReadOnlyCollection<Str> Range(int count) => ValueObjectUtils<Str>.GetItems(_minValue, count);
 
-    public void CheckMaxValue(int maxValue)
-    {
-        ValueObjectUtils<Str>.EnsureValueRange(Value, _minValue, maxValue);
-    }
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Str>.EnsureValueRange(Value, _minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(Str other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(Str other) => _value.CompareTo(other._value);
 
-    public static bool operator <(Str left, Str right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(Str left, Str right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(Str left, Str right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(Str left, Str right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(Str left, Str right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(Str left, Str right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(Str left, Str right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(Str left, Str right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

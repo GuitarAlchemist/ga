@@ -521,14 +521,17 @@ public class EnhancedUserPersonalizationService(
 /// </summary>
 public static class StatisticsExtensions
 {
-    public static double StandardDeviation(this IEnumerable<double> values)
+    extension(IEnumerable<double> values)
     {
-        var enumerable = values.ToList();
-        if (!enumerable.Any()) return 0.0;
+        public double StandardDeviation()
+        {
+            var enumerable = values.ToList();
+            if (!enumerable.Any()) return 0.0;
 
-        var mean = enumerable.Average();
-        var sumOfSquares = enumerable.Sum(x => Math.Pow(x - mean, 2));
-        return Math.Sqrt(sumOfSquares / enumerable.Count);
+            var mean = enumerable.Average();
+            var sumOfSquares = enumerable.Sum(x => Math.Pow(x - mean, 2));
+            return Math.Sqrt(sumOfSquares / enumerable.Count);
+        }
     }
 }
 

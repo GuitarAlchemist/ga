@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests.Chords;
+namespace GA.Business.Core.Tests.Chords;
 
 using GA.Domain.Core.Theory.Tonal.Modes;
 using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;

@@ -1,42 +1,40 @@
 namespace GA.Business.ML.Embeddings.Validation;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-
 /// <summary>
-/// In-memory RAG index with partition-aware querying.
-/// Enables validation of OPTIC-K schema by testing retrieval dimension by dimension.
+///     In-memory RAG index with partition-aware querying.
+///     Enables validation of OPTIC-K schema by testing retrieval dimension by dimension.
 /// </summary>
 public class PartitionAwareRagIndex
 {
-    private readonly List<IndexedDocument> _documents = new();
+    private readonly List<IndexedDocument> _documents = [];
     private readonly object _lock = new();
 
     /// <summary>
-    /// Gets the number of indexed documents.
+    ///     Gets the number of indexed documents.
     /// </summary>
     public int Count => _documents.Count;
 
     /// <summary>
-    /// Adds a document with its embedding to the index.
+    ///     Adds a document with its embedding to the index.
     /// </summary>
-    public void Add(VoicingDocument document, float[] embedding)
+    public void Add(ChordVoicingRagDocument document, float[] embedding)
     {
         if (embedding.Length != EmbeddingSchema.TotalDimension)
-            throw new ArgumentException($"Expected {EmbeddingSchema.TotalDimension} dimensions, got {embedding.Length}");
+        {
+            throw new ArgumentException(
+                $"Expected {EmbeddingSchema.TotalDimension} dimensions, got {embedding.Length}");
+        }
 
         lock (_lock)
         {
-            _documents.Add(new IndexedDocument(document, embedding));
+            _documents.Add(new(document, embedding));
         }
     }
 
     /// <summary>
-    /// Adds multiple documents.
+    ///     Adds multiple documents.
     /// </summary>
-    public void AddRange(IEnumerable<(VoicingDocument Doc, float[] Embedding)> items)
+    public void AddRange(IEnumerable<(ChordVoicingRagDocument Doc, float[] Embedding)> items)
     {
         foreach (var (doc, emb) in items)
         {
@@ -45,26 +43,27 @@ public class PartitionAwareRagIndex
     }
 
     /// <summary>
-    /// Clears all indexed documents.
+    ///     Clears all indexed documents.
     /// </summary>
     public void Clear()
     {
-        lock (_lock) { _documents.Clear(); }
+        lock (_lock)
+        {
+            _documents.Clear();
+        }
     }
 
     /// <summary>
-    /// Searches using the standard weighted partition similarity.
+    ///     Searches using the standard weighted partition similarity.
     /// </summary>
     /// <param name="queryEmbedding">Query embedding vector.</param>
     /// <param name="topK">Number of results to return.</param>
     /// <returns>Ranked search results with similarity scores.</returns>
-    public IReadOnlyList<SearchResult> Search(float[] queryEmbedding, int topK = 10)
-    {
-        return SearchByPartitions(queryEmbedding, OpticKPartitions.SimilarityPartitions, topK);
-    }
+    public IReadOnlyList<SearchResult> Search(float[] queryEmbedding, int topK = 10) =>
+        SearchByPartitions(queryEmbedding, OpticKPartitions.SimilarityPartitions, topK);
 
     /// <summary>
-    /// Searches using only specific partitions.
+    ///     Searches using only specific partitions.
     /// </summary>
     /// <param name="queryEmbedding">Query embedding vector.</param>
     /// <param name="partitions">Which partitions to use for similarity.</param>
@@ -77,7 +76,7 @@ public class PartitionAwareRagIndex
     {
         var partitionList = partitions.ToList();
         var totalWeight = partitionList.Sum(p => p.Weight);
-        
+
         // If no weights, use equal weighting
         var useEqualWeight = totalWeight == 0;
         var equalWeight = useEqualWeight ? 1.0 / partitionList.Count : 0;
@@ -85,42 +84,39 @@ public class PartitionAwareRagIndex
         lock (_lock)
         {
             var results = _documents.Select(doc =>
-            {
-                var partitionScores = new Dictionary<string, double>();
-                double totalSimilarity = 0;
-
-                foreach (var partition in partitionList)
                 {
-                    var similarity = partition.CosineSimilarity(queryEmbedding, doc.Embedding);
-                    partitionScores[partition.Name] = similarity;
+                    var partitionScores = new Dictionary<string, double>();
+                    double totalSimilarity = 0;
 
-                    var weight = useEqualWeight ? equalWeight : partition.Weight / totalWeight;
-                    totalSimilarity += weight * similarity;
-                }
+                    foreach (var partition in partitionList)
+                    {
+                        var similarity = partition.CosineSimilarity(queryEmbedding, doc.Embedding);
+                        partitionScores[partition.Name] = similarity;
 
-                return new SearchResult(doc.Document, totalSimilarity, partitionScores);
-            })
-            .OrderByDescending(r => r.Similarity)
-            .Take(topK)
-            .ToList();
+                        var weight = useEqualWeight ? equalWeight : partition.Weight / totalWeight;
+                        totalSimilarity += weight * similarity;
+                    }
+
+                    return new SearchResult(doc.Document, totalSimilarity, partitionScores);
+                })
+                .OrderByDescending(r => r.Similarity)
+                .Take(topK)
+                .ToList();
 
             return results;
         }
     }
 
     /// <summary>
-    /// Searches using only a single partition.
+    ///     Searches using only a single partition.
     /// </summary>
     public IReadOnlyList<SearchResult> SearchByPartition(
         float[] queryEmbedding,
         EmbeddingPartition partition,
-        int topK = 10)
-    {
-        return SearchByPartitions(queryEmbedding, new[] { partition }, topK);
-    }
+        int topK = 10) => SearchByPartitions(queryEmbedding, new[] { partition }, topK);
 
     /// <summary>
-    /// Computes similarity breakdown by partition between two embeddings.
+    ///     Computes similarity breakdown by partition between two embeddings.
     /// </summary>
     public PartitionSimilarityBreakdown ComputeSimilarityBreakdown(float[] a, float[] b)
     {
@@ -142,11 +138,11 @@ public class PartitionAwareRagIndex
 
         var overallSimilarity = totalWeight > 0 ? weightedTotal / totalWeight : 0;
 
-        return new PartitionSimilarityBreakdown(scores, overallSimilarity);
+        return new(scores, overallSimilarity);
     }
 
     /// <summary>
-    /// Analyzes retrieval quality per partition.
+    ///     Analyzes retrieval quality per partition.
     /// </summary>
     public PartitionRetrievalReport AnalyzePartitionRetrieval(
         float[] queryEmbedding,
@@ -166,7 +162,7 @@ public class PartitionAwareRagIndex
             var topSimilarity = results.FirstOrDefault()?.Similarity ?? 0;
             var expectedSimilarity = results.FirstOrDefault(r => r.Document.Id == expectedDocId)?.Similarity ?? 0;
 
-            partitionResults[partition.Name] = new PartitionRetrievalResult(
+            partitionResults[partition.Name] = new(
                 partition.Name,
                 foundAt,
                 topSimilarity,
@@ -182,43 +178,43 @@ public class PartitionAwareRagIndex
 
         var combinedFoundAt = combinedRank.r != null ? combinedRank.i + 1 : -1;
 
-        return new PartitionRetrievalReport(
+        return new(
             expectedDocId,
             partitionResults,
             combinedFoundAt,
             combinedFoundAt == 1);
     }
 
-    private record IndexedDocument(VoicingDocument Document, float[] Embedding);
+    private record IndexedDocument(ChordVoicingRagDocument Document, float[] Embedding);
 }
 
 /// <summary>
-/// A search result with partition-level similarity breakdown.
+///     A search result with partition-level similarity breakdown.
 /// </summary>
 public record SearchResult(
-    VoicingDocument Document,
+    ChordVoicingRagDocument Document,
     double Similarity,
     IReadOnlyDictionary<string, double> PartitionSimilarities);
 
 /// <summary>
-/// Breakdown of similarity by partition.
+///     Breakdown of similarity by partition.
 /// </summary>
 public record PartitionSimilarityBreakdown(
     IReadOnlyDictionary<string, double> PartitionScores,
     double WeightedOverall);
 
 /// <summary>
-/// Result of retrieval analysis for a single partition.
+///     Result of retrieval analysis for a single partition.
 /// </summary>
 public record PartitionRetrievalResult(
     string PartitionName,
-    int RankPosition,  // 1-based, -1 if not found
+    int RankPosition, // 1-based, -1 if not found
     double TopSimilarity,
     double ExpectedDocSimilarity,
     bool IsTopResult);
 
 /// <summary>
-/// Complete retrieval analysis report.
+///     Complete retrieval analysis report.
 /// </summary>
 public record PartitionRetrievalReport(
     string ExpectedDocId,
@@ -227,19 +223,19 @@ public record PartitionRetrievalReport(
     bool IsTopWithCombined)
 {
     /// <summary>
-    /// Partitions where the expected document was the top result.
+    ///     Partitions where the expected document was the top result.
     /// </summary>
     public IEnumerable<string> SuccessfulPartitions =>
         PartitionResults.Where(kvp => kvp.Value.IsTopResult).Select(kvp => kvp.Key);
 
     /// <summary>
-    /// Partitions where the expected document was NOT the top result.
+    ///     Partitions where the expected document was NOT the top result.
     /// </summary>
     public IEnumerable<string> FailedPartitions =>
         PartitionResults.Where(kvp => !kvp.Value.IsTopResult).Select(kvp => kvp.Key);
 
     /// <summary>
-    /// Generates a human-readable report.
+    ///     Generates a human-readable report.
     /// </summary>
     public string ToReport()
     {

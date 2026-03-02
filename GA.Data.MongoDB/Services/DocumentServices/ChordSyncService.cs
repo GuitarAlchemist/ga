@@ -5,6 +5,7 @@ using GA.Domain.Services.Chords;
 using GA.Domain.Core.Primitives.Extensions;
 using Microsoft.Extensions.Logging;
 using Models;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using Models.References;
 
 [UsedImplicitly]

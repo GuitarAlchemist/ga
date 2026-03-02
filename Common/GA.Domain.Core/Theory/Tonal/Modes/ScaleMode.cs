@@ -1,21 +1,17 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Core.Primitives;
 using Core.Primitives.Extensions;
+using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using Diatonic;
 using GA.Core.Abstractions;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using GA.Core.Extensions;
 using Primitives.Diatonic;
 using Scales;
-using Interval = Core.Primitives.Interval;
-using ModeFormula = Core.Primitives.ModeFormula;
-using ScaleModeSimpleInterval = Core.Primitives.ScaleModeSimpleInterval;
+using Interval = Core.Primitives.Intervals.Interval;
+using ModeFormula = Core.Primitives.Formulas.ModeFormula;
+using ScaleModeSimpleInterval = Core.Primitives.Intervals.ScaleModeSimpleInterval;
 
 /// <summary>
 ///     See https://en.wikipedia.org/wiki/Mode_(Objects)
@@ -50,7 +46,7 @@ public abstract class ScaleMode
     private ImmutableList<Note> ModeCharacteristicNotes(IEnumerable<ScaleModeSimpleInterval> characteristicIntervals)
     {
         var rootNote = Notes.First();
-        var tuples = new List<(Note Note, Semitones Semitones)>();
+        List<(Note Note, Semitones Semitones)> tuples = [];
         foreach (var note in Notes)
         {
             var semitones = rootNote.GetInterval(note).Semitones;
@@ -83,10 +79,7 @@ public abstract class ScaleMode<TScaleDegree>(Scale parentScale, TScaleDegree pa
         new ModeSimpleAndCompoundIntervalsByScaleDegree(ParentScale)[ParentScaleDegree];
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{Name} - {Formula}";
-    }
+    public override string ToString() => $"{Name} - {Formula}";
 
     #region Inner classes
 

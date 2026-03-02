@@ -1,8 +1,5 @@
 namespace GA.Domain.Services.AI.Benchmarks;
 
-using System;
-using System.Collections.Generic;
-
 public class BenchmarkResult
 {
     public string BenchmarkId { get; set; } = string.Empty;
@@ -10,7 +7,7 @@ public class BenchmarkResult
     public double Score { get; set; }
     public TimeSpan Duration { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public List<BenchmarkStep> Steps { get; set; } = new();
+    public List<BenchmarkStep> Steps { get; set; } = [];
     public string RawOutput { get; set; } = string.Empty;
     public bool Passed => Score >= 0.8; // Standard threshold
 }

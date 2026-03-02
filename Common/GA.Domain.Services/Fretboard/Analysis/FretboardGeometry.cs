@@ -2,7 +2,6 @@ namespace GA.Domain.Services.Fretboard.Analysis;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Core.Instruments.Biomechanics;
 
 /// <summary>
@@ -30,29 +29,45 @@ public static class FretboardGeometry
     /// <summary>
     /// Calculates the absolute distance in millimeters for a given scale length.
     /// </summary>
-    public static double CalculateSpanMm(int fretLow, int fretHigh, double scaleLength = BiomechanicsConstants.StandardScaleLengthMm)
-    {
-        return CalculatePhysicalDistance(fretLow, fretHigh) * scaleLength;
-    }
+    public static double CalculateSpanMm(int fretLow, int fretHigh, double scaleLength = BiomechanicsConstants.StandardScaleLengthMm) => CalculatePhysicalDistance(fretLow, fretHigh) * scaleLength;
 
     /// <summary>
     /// Calculates the physical span of a set of frets.
     /// Considers only fingered notes (fret > 0).
     /// </summary>
-    public static double CalculatePhysicalSpan(IEnumerable<int> frets)
+    public static double CalculatePhysicalSpan(ReadOnlySpan<int> frets)
     {
-        var nonZero = frets.Where(f => f > 0).ToList();
-        if (nonZero.Count < 2) return 0;
+        var min = int.MaxValue;
+        var max = int.MinValue;
+        var count = 0;
 
-        return CalculatePhysicalDistance(nonZero.Min(), nonZero.Max());
+        foreach (var f in frets)
+        {
+            if (f > 0)
+            {
+                if (f < min) min = f;
+                if (f > max) max = f;
+                count++;
+            }
+        }
+
+        if (count < 2) return 0;
+
+        return CalculatePhysicalDistance(min, max);
     }
+
+    /// <summary>
+    /// Overload for IEnumerable compatibility
+    /// </summary>
+    public static double CalculatePhysicalSpan(IEnumerable<int> frets) => 
+        CalculatePhysicalSpan(frets is int[] arr ? arr.AsSpan() : [.. frets]);
 
     /// <summary>
     /// Returns a normalized effort score for a physical span.
     /// </summary>
     public static double GetSpanEffortScore(double physicalSpan)
     {
-        double limit = BiomechanicsConstants.ComfortableReachScaleUnits;
+        var limit = BiomechanicsConstants.ComfortableReachScaleUnits;
         if (physicalSpan <= limit) return physicalSpan / limit; 
         return 1.0 + (physicalSpan - limit) * 5.0; 
     }

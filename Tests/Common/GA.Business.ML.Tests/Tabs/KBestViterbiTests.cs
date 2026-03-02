@@ -1,14 +1,14 @@
-namespace GA.Business.ML.Tests.Tabs;
+﻿namespace GA.Business.ML.Tests.Tabs;
 
-using GA.Domain.Services.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abstractions;
+using Core.Context;
+using Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Instruments;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Core.Player;
-using GA.Domain.Core.Primitives;
 using Embeddings;
+using Rag.Models;
 using Retrieval;
 using GA.Business.ML.Tabs;
 using Moq;
@@ -28,18 +28,18 @@ public class KBestViterbiTests
     public void Setup()
     {
         var tuning = Tuning.Default;
-        _mapper = new FretboardPositionMapper(tuning);
-        _costService = new PhysicalCostService(new PlayerProfile());
+        _mapper = new(tuning);
+        _costService = new(new());
 
-        _mockGenerator = new Mock<IEmbeddingGenerator>();
-        _mockGenerator.Setup(g => g.GenerateEmbeddingAsync(It.IsAny<VoicingDocument>()))
-                      .ReturnsAsync(new double[216]);
+        _mockGenerator = new();
+        _mockGenerator.Setup(g => g.GenerateEmbeddingAsync(It.IsAny<ChordVoicingRagDocument>()))
+                      .ReturnsAsync(new float[216]);
 
-        _mockStyleService = new Mock<StyleProfileService>(Mock.Of<IVectorIndex>());
+        _mockStyleService = new(Mock.Of<IVectorIndex>());
         _mockStyleService.Setup(s => s.GetStyleCentroid(It.IsAny<string>()))
-                         .Returns((double[])null); // No style bias for basic test
+                         .Returns((float[]?)null); // No style bias for basic test
 
-        _solver = new AdvancedTabSolver(
+        _solver = new(
             _mapper,
             _costService,
             _mockStyleService.Object,
@@ -61,7 +61,7 @@ public class KBestViterbiTests
             new() { Pitch.Sharp.Parse("C3"), Pitch.Sharp.Parse("E3"), Pitch.Sharp.Parse("G3") }  // C
         };
 
-        int k = 5;
+        var k = 5;
 
         // Act
         var result = await _solver.SolveAsync(chords, k: k);
@@ -81,7 +81,7 @@ public class KBestViterbiTests
             Assert.That(distinctPaths, Is.EqualTo(result.Count), "All returned paths must be unique.");
 
             // Verify path lengths and print them
-            for (int i = 0; i < result.Count; i++)
+            for (var i = 0; i < result.Count; i++)
             {
                 var path = result[i];
                 var pathString = string.Join(" -> ", path.Select(chord =>

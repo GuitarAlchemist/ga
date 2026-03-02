@@ -1,11 +1,11 @@
-﻿namespace GA.Domain.Core.Tests.Fretboard.Voicings;
+﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
 using System.Diagnostics;
+using Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using Instruments.Positions;
+using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
-using Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
 
 /// <summary>
 /// Performance tests for VoicingAnalyzer and VoicingFilters
@@ -91,7 +91,7 @@ public class VoicingAnalyzerPerformanceTests
         // Arrange: Create complex 6-note voicings (full fretboard usage)
         var voicings = new List<Voicing>();
         var stringTunings = new[] { 64, 59, 55, 50, 45, 40 }; // E A D G B E
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             var positions = new Position[]
             {
@@ -135,12 +135,12 @@ public class VoicingAnalyzerPerformanceTests
         var voicings = new List<Voicing>();
         var random = new Random(42); // Fixed seed for reproducibility
         var stringTunings = new[] { 64, 59, 55, 50, 45, 40 }; // E A D G B E
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             var noteCount = random.Next(2, 7); // 2-6 notes
             var positions = new List<Position>();
             var notes = new List<MidiNote>();
-            for (int j = 0; j < noteCount; j++)
+            for (var j = 0; j < noteCount; j++)
             {
                 var str = j + 1; // String 1-6
                 var fret = random.Next(0, 13); // Fret 0-12

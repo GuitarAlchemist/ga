@@ -1,26 +1,25 @@
 namespace GA.Business.ML.Tabs;
 
-
 using Domain.Services.Fretboard.Analysis;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 /// <summary>
-/// Renders internal fretboard realizations back into ASCII tablature.
+///     Renders internal fretboard realizations back into ASCII tablature.
 /// </summary>
 public class TabRenderer
 {
     public string Render(List<List<FretboardPosition>> progression)
     {
-        if (progression == null || progression.Count == 0) return string.Empty;
+        if (progression == null || progression.Count == 0)
+        {
+            return string.Empty;
+        }
 
         // 6 strings: e, B, G, D, A, E
         var stringBuilders = new StringBuilder[6];
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
         {
-            stringBuilders[i] = new StringBuilder();
-            string name = GetStringName(5 - i); // Reversed for standard tab view
+            stringBuilders[i] = new();
+            var name = GetStringName(5 - i); // Reversed for standard tab view
             stringBuilders[i].Append($"{name}|--");
         }
 
@@ -28,7 +27,10 @@ public class TabRenderer
         {
             // Map realization to strings
             var frets = new string[6];
-            for (int i = 0; i < 6; i++) frets[i] = "-";
+            for (var i = 0; i < 6; i++)
+            {
+                frets[i] = "-";
+            }
 
             foreach (var pos in slice)
             {
@@ -39,9 +41,9 @@ public class TabRenderer
             }
 
             // Determine max length of any fret number in this slice
-            int maxLength = frets.Max(f => f.Length);
+            var maxLength = frets.Max(f => f.Length);
 
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 stringBuilders[i].Append(frets[i].PadRight(maxLength + 1, '-'));
                 stringBuilders[i].Append("--");
@@ -49,7 +51,7 @@ public class TabRenderer
         }
 
         var result = new StringBuilder();
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
         {
             stringBuilders[i].Append("|");
             result.AppendLine(stringBuilders[i].ToString());
@@ -58,17 +60,14 @@ public class TabRenderer
         return result.ToString();
     }
 
-    private string GetStringName(int stringIdx)
+    private string GetStringName(int stringIdx) => stringIdx switch
     {
-        return stringIdx switch
-        {
-            0 => "E",
-            1 => "A",
-            2 => "D",
-            3 => "G",
-            4 => "B",
-            5 => "e",
-            _ => "?"
-        };
-    }
+        0 => "E",
+        1 => "A",
+        2 => "D",
+        3 => "G",
+        4 => "B",
+        5 => "e",
+        _ => "?"
+    };
 }

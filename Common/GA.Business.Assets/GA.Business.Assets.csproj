@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@ public class VectorSearchStrategyManager : IDisposable
 {
     private readonly ILogger<VectorSearchStrategyManager> _logger;
     private readonly VectorSearchOptions _options;
-    private readonly Dictionary<string, IVectorSearchStrategy> _strategies = new();
+    private readonly Dictionary<string, IVectorSearchStrategy> _strategies = [];
     private readonly Lock _strategyLock = new();
 
     public VectorSearchStrategyManager(
@@ -49,12 +49,10 @@ public class VectorSearchStrategyManager : IDisposable
     /// <summary>
     ///     Gets all available strategies with their performance characteristics
     /// </summary>
-    public Dictionary<string, VectorSearchPerformance> GetAvailableStrategies()
-    {
-        return _strategies
+    public Dictionary<string, VectorSearchPerformance> GetAvailableStrategies() =>
+        _strategies
             .Where(kvp => kvp.Value.IsAvailable)
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Performance);
-    }
 
     /// <summary>
     ///     Initialize the best available strategy with chord data
@@ -238,98 +236,5 @@ public class VectorSearchStrategyManager : IDisposable
         {
             throw new InvalidOperationException("Vector search not initialized. Call InitializeAsync first.");
         }
-    }
-}
-
-/// <summary>
-///     Configuration options for vector search strategies
-/// </summary>
-public class VectorSearchOptions
-{
-    /// <summary>
-    ///     Preferred strategy order (first available will be used)
-    /// </summary>
-    public string[]? PreferredStrategies { get; set; }
-
-    /// <summary>
-    ///     Whether to enable automatic strategy switching based on performance
-    /// </summary>
-    public bool EnableAutoSwitching { get; set; } = false;
-
-    /// <summary>
-    ///     Minimum performance improvement required to switch strategies (in percentage)
-    /// </summary>
-    public double AutoSwitchThreshold { get; set; } = 20.0;
-
-    /// <summary>
-    ///     Whether to preload all available strategies
-    /// </summary>
-    public bool PreloadStrategies { get; set; } = false;
-
-    /// <summary>
-    ///     Maximum memory usage for in-memory strategies (in MB)
-    /// </summary>
-    public long MaxMemoryUsageMb { get; set; } = 2048;
-}
-
-/// <summary>
-///     MongoDB-based vector search strategy (existing implementation)
-/// </summary>
-public class MongoDbVectorSearchStrategy(
-    VectorSearchService vectorSearchService,
-    ILogger<MongoDbVectorSearchStrategy> logger)
-    : IVectorSearchStrategy
-{
-    public string Name => "MongoDB";
-    public bool IsAvailable => true; // MongoDB is always available if configured
-
-    public VectorSearchPerformance Performance => new(
-        TimeSpan.FromMilliseconds(50), // Network + DB overhead
-        0, // Uses MongoDB's memory
-        false,
-        true);
-
-    public async Task InitializeAsync(IEnumerable<ChordEmbedding> chords)
-    {
-        // MongoDB strategy doesn't need initialization - data is already in DB
-        logger.LogInformation("MongoDB vector search strategy ready (using existing database)");
-        await Task.CompletedTask;
-    }
-
-    public Task<List<ChordSearchResult>> SemanticSearchAsync(
-        double[] queryEmbedding,
-        int limit = 10,
-        int numCandidates = 100)
-    {
-        // Delegate to existing VectorSearchService
-        // This would need to be adapted to work with the embedding directly
-        throw new NotImplementedException("Adapt existing VectorSearchService.SemanticSearchAsync");
-    }
-
-    public async Task<List<ChordSearchResult>> FindSimilarChordsAsync(
-        int chordId,
-        int limit = 10,
-        int numCandidates = 100)
-    {
-        return await vectorSearchService.FindSimilarChordsAsync(chordId, limit, numCandidates);
-    }
-
-    public Task<List<ChordSearchResult>> HybridSearchAsync(
-        double[] queryEmbedding,
-        ChordSearchFilters filters,
-        int limit = 10,
-        int numCandidates = 100)
-    {
-        // Adapt existing hybrid search
-        throw new NotImplementedException("Adapt existing VectorSearchService.HybridSearchAsync");
-    }
-
-    public VectorSearchStats GetStats()
-    {
-        return new VectorSearchStats(
-            427254, // Known from database
-            0, // MongoDB handles memory
-            TimeSpan.FromMilliseconds(50), // Estimated
-            0); // Would need to track this
     }
 }

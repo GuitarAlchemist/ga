@@ -210,9 +210,12 @@ public class MonadicHealthCheckService(
 /// </summary>
 public static class MonadicHealthCheckServiceExtensions
 {
-    public static IServiceCollection AddMonadicHealthCheckService(this IServiceCollection services)
+    extension(IServiceCollection services)
     {
-        services.AddScoped<IMonadicHealthCheckService, MonadicHealthCheckService>();
-        return services;
+        public IServiceCollection AddMonadicHealthCheckService()
+        {
+            services.AddScoped<IMonadicHealthCheckService, MonadicHealthCheckService>();
+            return services;
+        }
     }
 }

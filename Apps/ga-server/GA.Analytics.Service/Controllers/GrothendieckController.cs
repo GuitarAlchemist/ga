@@ -1,20 +1,22 @@
-namespace GA.Analytics.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿namespace GA.Analytics.Service.Controllers;
 
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using GA.Domain.Core.Instruments;
-using GA.Domain.Core.Instruments.Shapes;
-using GA.Domain.Core.Instruments.Shapes.Applications;
-using GA.Domain.Core.Primitives;
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Atonal.Grothendieck;
 using Business.Config;
+using Constants;
+using Domain.Core.Instruments;
+using Domain.Core.Primitives.Notes;
+using Domain.Core.Theory.Atonal;
+using Domain.Services.Atonal.Grothendieck;
+using Domain.Services.Fretboard.Shapes;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
+using Models;
 using Services;
-using Constants;
+using IGrothendieckService = Services.IGrothendieckService;
+using ShapeGraphBuildOptions = Domain.Services.Fretboard.Shapes.ShapeGraphBuildOptions;
 
 /// <summary>
 ///     API endpoints for Grothendieck monoid operations and fretboard shape navigation
@@ -24,7 +26,7 @@ using Constants;
 [Produces("application/json")]
 [EnableRateLimiting("regular")]
 public class GrothendieckController(
-    Services.IGrothendieckService grothendieckService,
+    IGrothendieckService grothendieckService,
     IShapeGraphBuilder shapeGraphBuilder,
     MarkovWalker markovWalker,
     HarmonicAnalysisEngine harmonicAnalysisEngine,
@@ -58,7 +60,7 @@ public class GrothendieckController(
 
         var icv = await grothendieckService.ComputeICV(
             "pitch_classes",
-            new Dictionary<string, object> { ["pitchClasses"] = request.PitchClasses }
+            new() { ["pitchClasses"] = request.PitchClasses }
         );
         return Ok(icv);
     }
@@ -77,7 +79,7 @@ public class GrothendieckController(
 
         var delta = await grothendieckService.ComputeDelta(
             "delta",
-            new Dictionary<string, object>
+            new()
             {
                 ["source"] = request.Source,
                 ["target"] = request.Target
@@ -85,13 +87,13 @@ public class GrothendieckController(
 
         var cost = await grothendieckService.ComputeHarmonicCost(
             "cost",
-            new Dictionary<string, object>
+            new()
             {
                 ["delta"] = delta
             });
 
         // Mock conversion for response - in real app, map appropriately
-        var responseDelta = new GrothendieckDelta(0, 0, 0, 0, 0, 0); 
+        var responseDelta = new GrothendieckDelta(0, 0, 0, 0, 0, 0);
 
         return Ok(new GrothendieckDeltaResponse(
             responseDelta,
@@ -114,7 +116,7 @@ public class GrothendieckController(
 
         var result = await grothendieckService.FindNearby(
             string.Join(",", request.PitchClasses),
-            new Dictionary<string, object>
+            new()
             {
                 ["limit"] = request.MaxResults,
                 ["maxDistance"] = request.MaxDistance
@@ -123,7 +125,6 @@ public class GrothendieckController(
         // Mock response
         return Ok(new List<NearbySetResponse>());
     }
-
 
 
     /// <summary>
@@ -138,7 +139,9 @@ public class GrothendieckController(
     {
         using var _ = metrics.TrackRegularRequest();
 
-        var cacheKey = CacheKeys.GetFretboardShapesKey($"{request.TuningId}:{string.Join("", request.PitchClasses)}:{request.GetHashCode()}");
+        var cacheKey =
+            CacheKeys.GetFretboardShapesKey(
+                $"{request.TuningId}:{string.Join("", request.PitchClasses)}:{request.GetHashCode()}");
 
         if (cache.TryGetValue(cacheKey, out IEnumerable<FretboardShapeResponse>? cached))
         {
@@ -160,11 +163,14 @@ public class GrothendieckController(
 
         var results = shapes.Select(s => new FretboardShapeResponse(
             Id: s.Id,
-            Positions: s.Positions.Select(p => new PositionResponse(
-                String: p.Str.Value,
-                Fret: p.Fret.Value,
-                IsMuted: p.IsMuted
-            )).ToArray(),
+            Positions:
+            [
+                .. s.Positions.Select(p => new PositionResponse(
+                    String: p.Str.Value,
+                    Fret: p.Fret.Value,
+                    IsMuted: p.IsMuted
+                ))
+            ],
             MinFret: s.MinFret,
             MaxFret: s.MaxFret,
             Span: s.Span,
@@ -231,13 +237,15 @@ public class GrothendieckController(
         {
             count++;
 
-            yield return new FretboardShapeResponse(
+            yield return new(
                 shape.Id,
-                shape.Positions.Select(p => new PositionResponse(
-                    String: p.Str.Value,
-                    Fret: p.Fret.Value,
-                    IsMuted: p.IsMuted
-                )).ToArray(),
+                [
+                    .. shape.Positions.Select(p => new PositionResponse(
+                        String: p.Str.Value,
+                        Fret: p.Fret.Value,
+                        IsMuted: p.IsMuted
+                    ))
+                ],
                 shape.MinFret,
                 shape.MaxFret,
                 shape.Span,
@@ -353,21 +361,26 @@ public class GrothendieckController(
         var path = markovWalker.GeneratePracticePath(graph, startShape, walkOptions);
 
         var response = new PracticePathResponse(
-            path.Select(s => new FretboardShapeResponse(
-                Id: s.Id,
-                Positions: s.Positions.Select(p => new PositionResponse(
-                    String: p.Str.Value,
-                    Fret: p.Fret.Value,
-                    IsMuted: p.IsMuted
-                )).ToArray(),
-                MinFret: s.MinFret,
-                MaxFret: s.MaxFret,
-                Span: s.Span,
-                Diagness: s.Diagness,
-                Ergonomics: s.Ergonomics,
-                FingerCount: s.FingerCount,
-                Tags: s.Tags
-            )).ToArray()
+            [
+                .. path.Select(s => new FretboardShapeResponse(
+                    Id: s.Id,
+                    Positions:
+                    [
+                        .. s.Positions.Select(p => new PositionResponse(
+                            String: p.Str.Value,
+                            Fret: p.Fret.Value,
+                            IsMuted: p.IsMuted
+                        ))
+                    ],
+                    MinFret: s.MinFret,
+                    MaxFret: s.MaxFret,
+                    Span: s.Span,
+                    Diagness: s.Diagness,
+                    Ergonomics: s.Ergonomics,
+                    FingerCount: s.FingerCount,
+                    Tags: s.Tags
+                ))
+            ]
         );
 
         return Ok(response);
@@ -470,31 +483,41 @@ public class GrothendieckController(
                         0 // Not available in SpectralMetrics
                     )
                     : null,
-                report.ChordFamilies.Select(cf => new ChordFamilyDto(
-                    ClusterId: cf.Id,
-                    ShapeIds: cf.ShapeIds.ToList(),
-                    Representative: cf.ShapeIds.FirstOrDefault() ?? ""
-                )).ToList(),
-                report.CentralShapes.Select(cs => new CentralShapeDto(
-                    ShapeId: cs.Item1,
-                    Centrality: cs.Item2
-                )).ToList(),
-                report.Bottlenecks.Select(b => new BottleneckDto(
-                    ShapeId: b.Item1,
-                    BetweennessCentrality: b.Item2
-                )).ToList(),
+                [
+                    .. report.ChordFamilies.Select(cf => new ChordFamilyDto(
+                        ClusterId: cf.Id,
+                        ShapeIds: [.. cf.ShapeIds],
+                        Representative: cf.ShapeIds.FirstOrDefault() ?? ""
+                    ))
+                ],
+                [
+                    .. report.CentralShapes.Select(cs => new CentralShapeDto(
+                        ShapeId: cs.Item1,
+                        Centrality: cs.Item2
+                    ))
+                ],
+                [
+                    .. report.Bottlenecks.Select(b => new BottleneckDto(
+                        ShapeId: b.Item1,
+                        BetweennessCentrality: b.Item2
+                    ))
+                ],
                 report.Dynamics != null
                     ? new DynamicsDto(
-                        report.Dynamics.Attractors.Select(a => new AttractorDto(
-                            ShapeId: a.ShapeId,
-                            BasinSize: a.Strength,
-                            Type: "Attractor"
-                        )).ToList(),
-                        report.Dynamics.LimitCycles.Select(lc => new LimitCycleDto(
-                            ShapeIds: lc.ShapeIds.ToList(),
-                            Period: lc.Period,
-                            Stability: lc.Stability
-                        )).ToList(),
+                        [
+                            .. report.Dynamics.Attractors.Select(a => new AttractorDto(
+                                ShapeId: a.ShapeId,
+                                BasinSize: a.Strength,
+                                Type: "Attractor"
+                            ))
+                        ],
+                        [
+                            .. report.Dynamics.LimitCycles.Select(lc => new LimitCycleDto(
+                                ShapeIds: [.. lc.ShapeIds],
+                                Period: lc.Period,
+                                Stability: lc.Stability
+                            ))
+                        ],
                         report.Dynamics.LyapunovExponent,
                         report.Dynamics.IsChaotic,
                         true // IsStable placeholder
@@ -504,7 +527,7 @@ public class GrothendieckController(
                     ? new TopologyDto(
                         report.Topology.BettiNumbers.ElementAtOrDefault(0),
                         report.Topology.BettiNumbers.ElementAtOrDefault(1),
-                        new List<PersistentFeatureDto>() // Intervals removed
+                        [] // Intervals removed
                     )
                     : null
             );
@@ -586,31 +609,41 @@ public class GrothendieckController(
                         0
                     )
                     : null,
-                report.ChordFamilies.Select(cf => new ChordFamilyDto(
-                    ClusterId: cf.Id,
-                    ShapeIds: cf.ShapeIds.ToList(),
-                    Representative: cf.ShapeIds.FirstOrDefault() ?? ""
-                )).ToList(),
-                report.CentralShapes.Select(cs => new CentralShapeDto(
-                    ShapeId: cs.Item1,
-                    Centrality: cs.Item2
-                )).ToList(),
-                report.Bottlenecks.Select(b => new BottleneckDto(
-                    ShapeId: b.Item1,
-                    BetweennessCentrality: b.Item2
-                )).ToList(),
+                [
+                    .. report.ChordFamilies.Select(cf => new ChordFamilyDto(
+                        ClusterId: cf.Id,
+                        ShapeIds: [.. cf.ShapeIds],
+                        Representative: cf.ShapeIds.FirstOrDefault() ?? ""
+                    ))
+                ],
+                [
+                    .. report.CentralShapes.Select(cs => new CentralShapeDto(
+                        ShapeId: cs.Item1,
+                        Centrality: cs.Item2
+                    ))
+                ],
+                [
+                    .. report.Bottlenecks.Select(b => new BottleneckDto(
+                        ShapeId: b.Item1,
+                        BetweennessCentrality: b.Item2
+                    ))
+                ],
                 report.Dynamics != null
                     ? new DynamicsDto(
-                        report.Dynamics.Attractors.Select(a => new AttractorDto(
-                            ShapeId: a.ShapeId,
-                            BasinSize: a.Strength,
-                            Type: "Attractor"
-                        )).ToList(),
-                        report.Dynamics.LimitCycles.Select(lc => new LimitCycleDto(
-                            ShapeIds: lc.ShapeIds.ToList(),
-                            Period: lc.Period,
-                            Stability: lc.Stability
-                        )).ToList(),
+                        [
+                            .. report.Dynamics.Attractors.Select(a => new AttractorDto(
+                                ShapeId: a.ShapeId,
+                                BasinSize: a.Strength,
+                                Type: "Attractor"
+                            ))
+                        ],
+                        [
+                            .. report.Dynamics.LimitCycles.Select(lc => new LimitCycleDto(
+                                ShapeIds: [.. lc.ShapeIds],
+                                Period: lc.Period,
+                                Stability: lc.Stability
+                            ))
+                        ],
                         report.Dynamics.LyapunovExponent,
                         report.Dynamics.IsChaotic,
                         true // IsStable placeholder
@@ -620,7 +653,7 @@ public class GrothendieckController(
                     ? new TopologyDto(
                         report.Topology.BettiNumbers.ElementAtOrDefault(0),
                         report.Topology.BettiNumbers.ElementAtOrDefault(1),
-                        new List<PersistentFeatureDto>() // Intervals removed
+                        [] // Intervals removed
                     )
                     : null
             );
@@ -710,13 +743,15 @@ public class GrothendieckController(
             {
                 if (graph.Shapes.TryGetValue(shapeId, out var shape))
                 {
-                    shapes.Add(new FretboardShapeResponse(
+                    shapes.Add(new(
                         shape.Id,
-                        shape.Positions.Select(p => new PositionResponse(
-                            String: p.Str.Value,
-                            Fret: p.Fret.Value,
-                            IsMuted: p.IsMuted
-                        )).ToArray(),
+                        [
+                            .. shape.Positions.Select(p => new PositionResponse(
+                                String: p.Str.Value,
+                                Fret: p.Fret.Value,
+                                IsMuted: p.IsMuted
+                            ))
+                        ],
                         shape.MinFret,
                         shape.MaxFret,
                         shape.Span,
@@ -729,7 +764,7 @@ public class GrothendieckController(
             }
 
             var response = new OptimizedPracticePathResponse(
-                progression.ShapeIds.ToList(),
+                [.. progression.ShapeIds],
                 shapes,
                 progression.Entropy,
                 progression.Complexity,
@@ -793,11 +828,11 @@ public class GrothendieckController(
             };
 
             // Generate optimal progression
-                    var progression = progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
-                    {
-                        TargetLength = request.PathLength,
-                        Strategy = strategy
-                    });
+            var progression = progressionOptimizer.GeneratePracticeProgression(graph, new ProgressionConstraints
+            {
+                TargetLength = request.PathLength,
+                Strategy = strategy
+            });
             await Response.WriteAsync(
                 "data: {\"status\": \"progress\", \"message\": \"Path optimized. Gathering shape details...\"}\n\n");
             await Response.Body.FlushAsync();
@@ -808,13 +843,15 @@ public class GrothendieckController(
             {
                 if (graph.Shapes.TryGetValue(shapeId, out var shape))
                 {
-                    shapes.Add(new FretboardShapeResponse(
+                    shapes.Add(new(
                         shape.Id,
-                        shape.Positions.Select(p => new PositionResponse(
-                            String: p.Str.Value,
-                            Fret: p.Fret.Value,
-                            IsMuted: p.IsMuted
-                        )).ToArray(),
+                        [
+                            .. shape.Positions.Select(p => new PositionResponse(
+                                String: p.Str.Value,
+                                Fret: p.Fret.Value,
+                                IsMuted: p.IsMuted
+                            ))
+                        ],
                         shape.MinFret,
                         shape.MaxFret,
                         shape.Span,
@@ -827,7 +864,7 @@ public class GrothendieckController(
             }
 
             var response = new OptimizedPracticePathResponse(
-                progression.ShapeIds.ToList(),
+                [.. progression.ShapeIds],
                 shapes,
                 progression.Entropy,
                 progression.Complexity,
@@ -862,7 +899,7 @@ public class GrothendieckController(
         // Try to parse as PitchCollection
         if (PitchCollection.TryParse(tuningStr, null, out var pitchCollection))
         {
-            return new Tuning(pitchCollection);
+            return new(pitchCollection);
         }
 
         // Try to get from instruments config
@@ -876,7 +913,7 @@ public class GrothendieckController(
                 {
                     if (PitchCollection.TryParse(tuning.Tuning, null, out var pc))
                     {
-                        return new Tuning(pc);
+                        return new(pc);
                     }
                 }
             }

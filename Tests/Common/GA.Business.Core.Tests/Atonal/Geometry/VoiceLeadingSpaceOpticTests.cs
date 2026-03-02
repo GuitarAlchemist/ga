@@ -1,8 +1,7 @@
-namespace GA.Domain.Core.Tests.Atonal.Geometry;
+namespace GA.Business.Core.Tests.Atonal.Geometry;
 
-using GA.Domain.Core.Instruments.Shapes.Geometry;
-using GA.Domain.Core.Theory.Atonal;
-using NUnit.Framework;
+using Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Atonal;
 
 [TestFixture]
 public class VoiceLeadingSpaceOpticTests
@@ -22,6 +21,7 @@ public class VoiceLeadingSpaceOpticTests
         var d = space.Distance(a, b);
         Assert.That(d, Is.EqualTo(0.0).Within(1e-9));
     }
+
     [Test]
     public void Permutation_Disabled_ShouldAffectDistance()
     {
@@ -37,6 +37,25 @@ public class VoiceLeadingSpaceOpticTests
         // With P off, voices must align index-wise; expect nonzero unless identical ordering
         Assert.That(d, Is.GreaterThan(0.0));
     }
+
+    [Test]
+    public void Permutation_UsesOptimalAssignment_ForLargerN()
+    {
+        // Case where greedy pairing is suboptimal; expect optimal assignment cost.
+        var space = new VoiceLeadingSpace(
+            voices: 7,
+            octaveEquivalence: true,
+            permutationEquivalence: true,
+            transpositionEquivalence: false,
+            inversionEquivalence: false);
+
+        var from = new[] { 3.0, 11.0, 5.0, 11.0, 1.0, 3.0, 9.0 };
+        var to = new[] { 3.0, 3.0, 2.0, 8.0, 7.0, 1.0, 1.0 };
+
+        var d = space.Distance(from, to);
+        Assert.That(d, Is.EqualTo(8.0).Within(1e-9));
+    }
+
     [Test]
     public void Inversion_Equivalence_Toggle_Behavior()
     {
@@ -49,6 +68,7 @@ public class VoiceLeadingSpaceOpticTests
         var dI = spaceI.Distance(a, invA);
         Assert.That(dI, Is.LessThanOrEqualTo(dNoI));
     }
+
     [Test]
     public void EdgeCases_Empty_Singleton_Chromatic()
     {
@@ -62,6 +82,7 @@ public class VoiceLeadingSpaceOpticTests
         var y = new[] { 7.0 };
         Assert.That(space1.Distance(x, y), Is.EqualTo(0.0).Within(1e-9));
     }
+
     [Test]
     public void CardinalityEmbedding_Triad_Vs_Seventh_IsFinite()
     {
@@ -72,6 +93,7 @@ public class VoiceLeadingSpaceOpticTests
         Assert.That(d, Is.GreaterThanOrEqualTo(0.0));
         Assert.That(double.IsFinite(d), Is.True);
     }
+
     [Test]
     public void ChromaticSet_OPTI_Invariance_ShouldBeZero()
     {
@@ -88,6 +110,7 @@ public class VoiceLeadingSpaceOpticTests
         var d = SetClassOpticIndex.Distance(chromaA, chromaB, options);
         Assert.That(d, Is.EqualTo(0.0).Within(1e-9));
     }
+
     [Test]
     public void WholeToneSets_OPT_Invariance_ShouldBeZero()
     {
@@ -104,6 +127,7 @@ public class VoiceLeadingSpaceOpticTests
         var d = SetClassOpticIndex.Distance(wtA, wtB, options);
         Assert.That(d, Is.EqualTo(0.0).Within(1e-9));
     }
+
     [Test]
     public void KNN_Neighbors_ShouldBeSortedByDistance()
     {
@@ -111,7 +135,7 @@ public class VoiceLeadingSpaceOpticTests
         var options = VoiceLeadingOptions.Default; // OPT by default
         var neighbors = SetClassOpticIndex.GetNearestByOptic(triad, k: 12, options);
         // Distances should be non-decreasing
-        for (int i = 1; i < neighbors.Count; i++)
+        for (var i = 1; i < neighbors.Count; i++)
         {
             Assert.That(neighbors[i].distance, Is.GreaterThanOrEqualTo(neighbors[i - 1].distance));
         }

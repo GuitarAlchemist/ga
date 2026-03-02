@@ -19,16 +19,14 @@ public abstract class MonadicServiceBase<TService>(
     /// <summary>
     ///     Execute operation with Try monad
     /// </summary>
-    protected Try<T> Execute<T>(Func<T> operation, string operationName)
-    {
-        return Try.Of(() =>
+    protected Try<T> Execute<T>(Func<T> operation, string operationName) =>
+        Try.Of(() =>
         {
             Logger.LogDebug("Executing {Operation}", operationName);
             var result = operation();
             Logger.LogDebug("{Operation} completed successfully", operationName);
             return result;
         });
-    }
 
     /// <summary>
     ///     Execute async operation with Try monad
@@ -36,16 +34,14 @@ public abstract class MonadicServiceBase<TService>(
     protected async Task<Try<T>> ExecuteAsync<T>(
         Func<Task<T>> operation,
         string operationName,
-        CancellationToken cancellationToken = default)
-    {
-        return await Try.OfAsync(async () =>
+        CancellationToken cancellationToken = default) =>
+        await Try.OfAsync(async () =>
         {
             Logger.LogDebug("Executing {Operation}", operationName);
             var result = await operation();
             Logger.LogDebug("{Operation} completed successfully", operationName);
             return result;
         });
-    }
 
     /// <summary>
     ///     Execute operation with Result monad
@@ -59,12 +55,12 @@ public abstract class MonadicServiceBase<TService>(
             Logger.LogDebug("Executing {Operation}", operationName);
             var result = operation();
             Logger.LogDebug("{Operation} completed successfully", operationName);
-            return new Result<T, string>.Success(result);
+            return Result<T, string>.Success(result);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "{Operation} failed", operationName);
-            return new Result<T, string>.Failure(ex.Message);
+            return Result<T, string>.Failure(ex.Message);
         }
     }
 
@@ -81,12 +77,12 @@ public abstract class MonadicServiceBase<TService>(
             Logger.LogDebug("Executing {Operation}", operationName);
             var result = await operation();
             Logger.LogDebug("{Operation} completed successfully", operationName);
-            return new Result<T, string>.Success(result);
+            return Result<T, string>.Success(result);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "{Operation} failed", operationName);
-            return new Result<T, string>.Failure(ex.Message);
+            return Result<T, string>.Failure(ex.Message);
         }
     }
 
@@ -97,12 +93,12 @@ public abstract class MonadicServiceBase<TService>(
     {
         if (Cache == null)
         {
-            return new Option<T>.None();
+            return Option<T>.None;
         }
 
         return Cache.TryGetValue(cacheKey, out T? value) && value != null
-            ? new Option<T>.Some(value)
-            : new Option<T>.None();
+            ? Option<T>.Some(value)
+            : Option<T>.None;
     }
 
     /// <summary>
@@ -139,10 +135,8 @@ public abstract class MonadicServiceBase<TService>(
     protected async Task<Try<T>> GetOrSetCacheWithTryAsync<T>(
         string cacheKey,
         Func<Task<T>> factory,
-        TimeSpan? expiration = null)
-    {
-        return await Try.OfAsync(async () => { return await GetOrSetCacheAsync(cacheKey, factory, expiration); });
-    }
+        TimeSpan? expiration = null) =>
+        await Try.OfAsync(async () => { return await GetOrSetCacheAsync(cacheKey, factory, expiration); });
 
     /// <summary>
     ///     Get from cache or execute operation with Result monad
@@ -155,12 +149,12 @@ public abstract class MonadicServiceBase<TService>(
         try
         {
             var value = await GetOrSetCacheAsync(cacheKey, factory, expiration);
-            return new Result<T, string>.Success(value);
+            return Result<T, string>.Success(value);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to get or set cache for key: {CacheKey}", cacheKey);
-            return new Result<T, string>.Failure(ex.Message);
+            return Result<T, string>.Failure(ex.Message);
         }
     }
 
@@ -235,10 +229,7 @@ public abstract class MonadicServiceBase<TService>(
     /// <summary>
     ///     Execute lazy operation
     /// </summary>
-    protected LazyM<T> ExecuteLazy<T>(Func<T> operation)
-    {
-        return LazyM.Of(operation);
-    }
+    protected LazyM<T> ExecuteLazy<T>(Func<T> operation) => LazyM.Of(operation);
 }
 
 /// <summary>

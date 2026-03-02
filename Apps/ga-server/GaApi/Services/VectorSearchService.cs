@@ -482,40 +482,10 @@ public class VectorSearchService
         var count = await ChordsCollection.CountDocumentsAsync(new BsonDocument());
         
         // Determine dimensions based on model (approximate since we don't inspect index definition here)
-        int dims = _embeddingModel.Contains("small") ? 1536 : 
+        var dims = _embeddingModel.Contains("small") ? 1536 : 
                    _embeddingModel.Contains("nomic") ? 768 : 
                    384; // Fallback
 
         return new IndexStats(count, dims);
     }
-}
-
-public record IndexStats(long TotalVoicings, int EmbeddingDimensions);
-
-public class ChordSearchResult
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Quality { get; set; } = string.Empty;
-    public string Extension { get; set; } = string.Empty;
-    public string StackingType { get; set; } = string.Empty;
-    public int NoteCount { get; set; }
-    public string Description { get; set; } = string.Empty;
-    public double Score { get; set; }
-}
-
-public class ChordTemplateSearchResult
-{
-    public List<int> PitchClassSet { get; set; } = [];
-    public List<TemplateInfo> Templates { get; set; } = [];
-    public double Score { get; set; }
-}
-
-public class TemplateInfo
-{
-    public string Name { get; set; } = string.Empty;
-    public string Quality { get; set; } = string.Empty;
-    public string Extension { get; set; } = string.Empty;
-    public string StackingType { get; set; } = string.Empty;
-    public int NoteCount { get; set; }
 }

@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -38,13 +34,7 @@ public sealed class InSenScaleMode(InSenScaleDegree degree) : TonalScaleMode<InS
     public static IEnumerable<InSenScaleMode> Items =>
         InSenScaleDegree.Items.Select(degree => new InSenScaleMode(degree));
 
-    public static InSenScaleMode Get(InSenScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static InSenScaleMode Get(InSenScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static InSenScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static InSenScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }

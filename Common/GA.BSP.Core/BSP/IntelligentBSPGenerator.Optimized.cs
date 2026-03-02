@@ -2,12 +2,12 @@
 namespace GA.BSP.Core;
 
 using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Instruments.Shapes;
-using GA.Domain.Core.Instruments.Shapes.Applications;
-using GA.Domain.Core.Instruments.Shapes.DynamicalSystems;
-using GA.Domain.Core.Instruments.Shapes.InformationTheory;
-using GA.Domain.Core.Instruments.Shapes.Spectral;
-using GA.Domain.Core.Instruments.Shapes.Topology;
+using GA.Domain.Services.Fretboard.Shapes;
+using GA.Domain.Services.Fretboard.Shapes.Applications;
+using GA.Domain.Services.Fretboard.Shapes.DynamicalSystems;
+using GA.Domain.Services.Fretboard.Shapes.InformationTheory;
+using GA.Domain.Services.Fretboard.Shapes.Spectral;
+using GA.Domain.Services.Fretboard.Shapes.Topology;
 using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Collections.Frozen;

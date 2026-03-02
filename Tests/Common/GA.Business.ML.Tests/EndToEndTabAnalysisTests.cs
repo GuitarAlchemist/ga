@@ -21,11 +21,11 @@ public class EndToEndTabAnalysisTests
     public void Setup()
     {
         _generator = TestInfrastructure.TestServices.CreateGenerator();
-        _tokenizer = new TabTokenizer();
-        _converter = new TabToPitchConverter();
-        _tabService = new TabAnalysisService(_tokenizer, _converter, _generator);
-        _signalService = new ProgressionSignalService();
-        _waveletService = new WaveletTransformService();
+        _tokenizer = new();
+        _converter = new();
+        _tabService = new(_tokenizer, _converter, _generator);
+        _signalService = new();
+        _waveletService = new();
     }
 
     [Test]

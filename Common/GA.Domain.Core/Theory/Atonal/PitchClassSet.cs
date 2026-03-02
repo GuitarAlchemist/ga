@@ -1,19 +1,10 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using Extensions;
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Design;
+using Design.Attributes;
+using Design.Schema;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using GA.Core.Extensions;
-using JetBrains.Annotations;
-using Primitives;
+using Primitives.Notes;
 using Tonal;
 using Tonal.Scales;
 using KeyMode = Tonal.KeyMode;
@@ -30,7 +21,8 @@ using KeyMode = Tonal.KeyMode;
 ///     <br />
 /// </remarks>
 [PublicAPI]
-[DomainInvariant("Pitch class set must be a valid subset of 12-tone chromatic scale", "Cardinality >= 0 && Cardinality <= 12")]
+[DomainInvariant("Pitch class set must be a valid subset of 12-tone chromatic scale",
+    "Cardinality >= 0 && Cardinality <= 12")]
 [DomainRelationship(typeof(IntervalClassVector), RelationshipType.IsChildOf)]
 [DomainRelationship(typeof(ModalFamily), RelationshipType.IsChildOf)]
 public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
@@ -44,10 +36,12 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
     private readonly ImmutableSortedSet<PitchClass> _pitchClassesSet;
 
-    static PitchClassSet()
-    {
-        _lazyIntervalClassVectorGroup = new(() => Items.ToLookup(set => set.IntervalClassVector));
-    }
+    /// <summary>
+    ///     Gets the <see cref="IReadOnlyCollection{PitchClassSet}" />
+    /// </summary>
+    private IReadOnlyCollection<PitchClassSet>? _transpositionsAndInversions;
+
+    static PitchClassSet() => _lazyIntervalClassVectorGroup = new(() => Items.ToLookup(set => set.IntervalClassVector));
 
     /// <summary>
     ///     Creates a <see cref="PitchClassSet" /> instance for a collection of Pitch Classes
@@ -109,16 +103,18 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// </remarks>
     public IntervalClassVector IntervalClassVector => _pitchClassesSet.ToIntervalClassVector();
 
-    /// <summary>
-    ///     Gets the <see cref="Nullable{ModalFamily}" />
-    /// </summary>
     public ModalFamily? ModalFamily =>
         ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
     /// <summary>
-    ///     Gets the <see cref="IReadOnlyCollection{PitchClassSet}" />
+    ///     The 0-based index of this mode within its modal family (ordered by PitchClassSetId).
     /// </summary>
-    private IReadOnlyCollection<PitchClassSet>? _transpositionsAndInversions;
+    public int ModeIndex => ModalFamily?.Modes.IndexOf(this) ?? -1;
+
+    /// <summary>
+    ///     The total number of modes in this set's modal family.
+    /// </summary>
+    public int FamilySize => ModalFamily?.Modes.Count ?? 0;
 
     public IReadOnlyCollection<PitchClassSet> TranspositionsAndInversions
     {
@@ -179,9 +175,146 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     public int PitchClassMask { get; }
 
     /// <summary>
-    ///     True if this pitch class set represents a scale mode, false otherwise
+    ///     True if this set belongs to a family with multiple distinct rotations (e.g. Diatonic, Harmonic Minor).
     /// </summary>
-    public bool IsModal => ModalFamily.ModalIntervalVectors.Contains(IntervalClassVector);
+    public bool IsMultimodal => FamilySize > 1;
+
+    /// <summary>
+    ///     True if this set is the only member of its modal family (e.g. Whole Tone, Diminished).
+    /// </summary>
+    public bool IsMonomodal => FamilySize == 1;
+
+    /// <summary>
+    ///     True if this pitch class set belongs to any modal family (atonal definition).
+    /// </summary>
+    public bool IsModal => FamilySize > 0;
+
+    /// <summary>
+    ///     True if this ICV is shared by set classes that are NOT transpositions/inversions of each other.
+    /// </summary>
+    public bool IsZRelated
+    {
+        get
+        {
+            if (ModalFamily == null || FamilySize <= 1)
+            {
+                return false;
+            }
+
+            var first = ModalFamily.Modes[0];
+            return ModalFamily.Modes.Any(m => !first.TranspositionsAndInversions.Any(ti => ti.Id == m.Id));
+        }
+    }
+
+    /// <summary>
+    ///     Calculates the "Center of Gravity" of the set on the chromatic circle.
+    ///     Returns a value 0-1 representing the mean angle.
+    /// </summary>
+    public double CenterOfGravity
+    {
+        get
+        {
+            if (Count == 0)
+            {
+                return 0;
+            }
+
+            var x = _pitchClassesSet.Sum(pc => Math.Cos(pc.Value * Math.PI / 6.0));
+            var y = _pitchClassesSet.Sum(pc => Math.Sin(pc.Value * Math.PI / 6.0));
+            var angle = Math.Atan2(y, x);
+            return (angle + Math.PI) / (2 * Math.PI);
+        }
+    }
+
+    /// <summary>
+    ///     Measures the diversity of intervals between adjacent notes (Step Entropy).
+    /// </summary>
+    public double StepEntropy
+    {
+        get
+        {
+            if (Count <= 1)
+            {
+                return 0;
+            }
+
+            var steps = new List<int>();
+            var sorted = _pitchClassesSet.Select(pc => pc.Value).OrderBy(v => v).ToList();
+            for (var i = 0; i < sorted.Count; i++)
+            {
+                steps.Add((sorted[(i + 1) % sorted.Count] - sorted[i] + 12) % 12);
+            }
+
+            var counts = steps.GroupBy(s => s).ToDictionary(g => g.Key, g => g.Count());
+            var entropy = counts.Values.Sum(c =>
+            {
+                var p = (double)c / steps.Count;
+                return -p * Math.Log2(p);
+            });
+            return entropy / Math.Log2(12); // Normalized
+        }
+    }
+
+    /// <summary>
+    ///     Measures brightness based on the preponderance of large steps.
+    /// </summary>
+    public double StepBrightness
+    {
+        get
+        {
+            if (Count <= 1)
+            {
+                return 0.5;
+            }
+
+            var steps = new List<int>();
+            var sorted = _pitchClassesSet.Select(pc => pc.Value).OrderBy(v => v).ToList();
+            for (var i = 0; i < sorted.Count; i++)
+            {
+                steps.Add((sorted[(i + 1) % sorted.Count] - sorted[i] + 12) % 12);
+            }
+
+            return steps.Average(s => s) / 6.0; // Very rough proxy
+        }
+    }
+
+    /// <summary>
+    ///     Structural Consonance potential based on IC 3, 4, 5.
+    /// </summary>
+    public double ConsonancePotential
+    {
+        get
+        {
+            var icv = IntervalClassVector;
+            var total = icv.Sum();
+            if (total == 0)
+            {
+                return 0;
+            }
+
+            return (double)(icv[IntervalClass.FromValue(3)] + icv[IntervalClass.FromValue(4)] +
+                            icv[IntervalClass.FromValue(5)]) / total;
+        }
+    }
+
+    /// <summary>
+    ///     Structural Dissonance potential based on IC 1, 2, 6.
+    /// </summary>
+    public double DissonanceIndex
+    {
+        get
+        {
+            var icv = IntervalClassVector;
+            var total = icv.Sum();
+            if (total == 0)
+            {
+                return 0;
+            }
+
+            return (double)(icv[IntervalClass.FromValue(1)] + icv[IntervalClass.FromValue(2)] +
+                            icv[IntervalClass.FromValue(6)]) / total;
+        }
+    }
 
     /// <summary>
     ///     True is this pitch class set is expressed in normal form, false otherwise
@@ -215,22 +348,13 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
 
     #endregion
 
-    public static PitchClassSet FromId(PitchClassSetId id)
-    {
-        return id.ToPitchClassSet();
-    }
+    public static PitchClassSet FromId(PitchClassSetId id) => id.ToPitchClassSet();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsPitchClass(int pitchClass)
-    {
-        return IsPitchClassInMask(PitchClassMask, pitchClass);
-    }
+    public bool ContainsPitchClass(int pitchClass) => IsPitchClassInMask(PitchClassMask, pitchClass);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool IsPitchClassInMask(int mask, int pitchClass)
-    {
-        return (mask & 1 << (pitchClass & 0xF)) != 0;
-    }
+    internal static bool IsPitchClassInMask(int mask, int pitchClass) => (mask & (1 << (pitchClass & 0xF))) != 0;
 
     /// <summary>
     ///     Gets the normal form <see cref="PitchClassSet" />
@@ -417,10 +541,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return Name;
-    }
+    public override string ToString() => Name;
 
     private Key? FindClosestDiatonicKey()
     {
@@ -454,13 +575,10 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return candidateKeys.FirstOrDefault();
     }
 
-    public IReadOnlyCollection<Key> GetCompatibleKeys()
-    {
-        return Key.Items
-            .Where(key => IsSubsetOf(key.PitchClassSet))
-            .OrderBy(key => key.KeySignature.AccidentalCount)
-            .ToImmutableList();
-    }
+    public IReadOnlyCollection<Key> GetCompatibleKeys() => Key.Items
+        .Where(key => IsSubsetOf(key.PitchClassSet))
+        .OrderBy(key => key.KeySignature.AccidentalCount)
+        .ToImmutableList();
 
     public Key? FindClosestDiatonicKey2()
     {
@@ -592,105 +710,56 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return other is null ? 1 : Id.CompareTo(other.Id);
     }
 
-    public static bool operator <(PitchClassSet? left, PitchClassSet? right)
-    {
-        return Comparer<PitchClassSet>.Default.Compare(left, right) < 0;
-    }
+    public static bool operator <(PitchClassSet? left, PitchClassSet? right) =>
+        Comparer<PitchClassSet>.Default.Compare(left, right) < 0;
 
-    public static bool operator >(PitchClassSet? left, PitchClassSet? right)
-    {
-        return Comparer<PitchClassSet>.Default.Compare(left, right) > 0;
-    }
+    public static bool operator >(PitchClassSet? left, PitchClassSet? right) =>
+        Comparer<PitchClassSet>.Default.Compare(left, right) > 0;
 
-    public static bool operator <=(PitchClassSet? left, PitchClassSet? right)
-    {
-        return Comparer<PitchClassSet>.Default.Compare(left, right) <= 0;
-    }
+    public static bool operator <=(PitchClassSet? left, PitchClassSet? right) =>
+        Comparer<PitchClassSet>.Default.Compare(left, right) <= 0;
 
-    public static bool operator >=(PitchClassSet? left, PitchClassSet? right)
-    {
-        return Comparer<PitchClassSet>.Default.Compare(left, right) >= 0;
-    }
+    public static bool operator >=(PitchClassSet? left, PitchClassSet? right) =>
+        Comparer<PitchClassSet>.Default.Compare(left, right) >= 0;
 
     #endregion
 
     #region Equality Members
 
-    private bool Equals(PitchClassSet other)
-    {
-        return Id.Equals(other.Id);
-    }
+    private bool Equals(PitchClassSet other) => Id.Equals(other.Id);
 
-    public override bool Equals(object? obj)
-    {
-        return ReferenceEquals(this, obj) || obj is PitchClassSet other && Equals(other);
-    }
+    public override bool Equals(object? obj) =>
+        ReferenceEquals(this, obj) || (obj is PitchClassSet other && Equals(other));
 
-    public override int GetHashCode()
-    {
-        return Id.GetHashCode();
-    }
+    public override int GetHashCode() => Id.GetHashCode();
 
-    public static bool operator ==(PitchClassSet? left, PitchClassSet? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(PitchClassSet? left, PitchClassSet? right) => Equals(left, right);
 
-    public static bool operator !=(PitchClassSet? left, PitchClassSet? right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(PitchClassSet? left, PitchClassSet? right) => !Equals(left, right);
 
     #endregion
 
     #region IReadOnlySet members
 
-    public IEnumerator<PitchClass> GetEnumerator()
-    {
-        return _pitchClassesSet.GetEnumerator();
-    }
+    public IEnumerator<PitchClass> GetEnumerator() => _pitchClassesSet.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)_pitchClassesSet).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_pitchClassesSet).GetEnumerator();
 
     public int Count => _pitchClassesSet.Count;
 
-    public bool Contains(PitchClass item)
-    {
-        return IsPitchClassInMask(PitchClassMask, item.Value);
-    }
+    public bool Contains(PitchClass item) => IsPitchClassInMask(PitchClassMask, item.Value);
 
-    public bool IsProperSubsetOf(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.IsProperSubsetOf(other);
-    }
+    public bool IsProperSubsetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsProperSubsetOf(other);
 
-    public bool IsProperSupersetOf(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.IsProperSupersetOf(other);
-    }
+    public bool IsProperSupersetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsProperSupersetOf(other);
 
-    public bool IsSubsetOf(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.IsSubsetOf(other);
-    }
+    public bool IsSubsetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsSubsetOf(other);
 
-    public bool IsSupersetOf(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.IsSupersetOf(other);
-    }
+    public bool IsSupersetOf(IEnumerable<PitchClass> other) => _pitchClassesSet.IsSupersetOf(other);
 
-    public bool Overlaps(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.Overlaps(other);
-    }
+    public bool Overlaps(IEnumerable<PitchClass> other) => _pitchClassesSet.Overlaps(other);
 
-    public bool SetEquals(IEnumerable<PitchClass> other)
-    {
-        return _pitchClassesSet.SetEquals(other);
-    }
+    public bool SetEquals(IEnumerable<PitchClass> other) => _pitchClassesSet.SetEquals(other);
 
     #endregion
 }

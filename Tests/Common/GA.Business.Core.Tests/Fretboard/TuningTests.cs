@@ -1,8 +1,8 @@
-namespace GA.Domain.Core.Tests.Fretboard;
+﻿namespace GA.Business.Core.Tests.Fretboard;
 
-using Instruments;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
+using Domain.Core.Instruments;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
 
 [TestFixture]
 public class TuningTests
@@ -20,6 +20,7 @@ public class TuningTests
             Assert.That(tuning.PitchCollection.Count, Is.EqualTo(6));
         });
     }
+
     [Test]
     public void Constructor_WithValidPitchCollection_CreatesTuning()
     {
@@ -31,6 +32,7 @@ public class TuningTests
         TestContext.WriteLine($"Drop D Tuning: {tuning}");
         Assert.That(tuning.PitchCollection, Is.EqualTo(pitchCollection));
     }
+
     [Test]
     public void Constructor_WithNullPitchCollection_ThrowsArgumentNullException()
     {
@@ -38,6 +40,7 @@ public class TuningTests
         TestContext.WriteLine("Verifying ArgumentNullException for null PitchCollection");
         Assert.Throws<ArgumentNullException>(() => new Tuning(null!));
     }
+
     [Test]
     public void Indexer_WithValidString_ReturnsPitch()
     {
@@ -50,6 +53,7 @@ public class TuningTests
         TestContext.WriteLine($"Tuning: {tuning}, String: {targetStr}, Pitch: {pitch}");
         Assert.That(pitch.ToString(), Is.EqualTo("E4")); // Highest string index is E4 in this collection
     }
+
     [Test]
     public void Indexer_WithInvalidString_ThrowsKeyNotFoundException()
     {
@@ -60,6 +64,7 @@ public class TuningTests
         TestContext.WriteLine($"Verifying ArgumentOutOfRangeException for invalid string: {invalidString}");
         Assert.Throws<ArgumentOutOfRangeException>(() => _ = tuning[invalidString]);
     }
+
     [Test]
     public void ToString_ReturnsExpectedFormat()
     {
@@ -72,6 +77,7 @@ public class TuningTests
         TestContext.WriteLine($"Tuning ToString: {result}");
         Assert.That(result, Is.EqualTo(input));
     }
+
     [Test]
     public void CustomTunings_CanBeCreated()
     {
@@ -82,6 +88,7 @@ public class TuningTests
         TestTuning("E2 B2 E3 G3 B3 E4", "Open E");
         TestTuning("D2 G2 D3 G3 B3 D4", "Open G");
         TestTuning("C2 G2 C3 G3 C4 E4", "Open C");
+
         static void TestTuning(string pitchString, string tuningName)
         {
             // Arrange

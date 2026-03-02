@@ -11,40 +11,22 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 /// Routes user requests to the most appropriate agent based on semantic similarity.
 /// </summary>
-/// <remarks>
-/// <para>
-/// The Semantic Router uses text embeddings to compare user queries against agent descriptions,
-/// routing to the agent with the highest semantic similarity. It can also aggregate responses
-/// from multiple agents for complex queries.
-/// </para>
-/// </remarks>
-public class SemanticRouter : IDisposable
+public class SemanticRouter(
+    IEnumerable<GuitarAlchemistAgentBase> agents,
+    IChatClient? chatClient,
+    IEmbeddingGenerator<string, Embedding<float>>? textEmbeddings,
+    ILogger<SemanticRouter> logger)
+    : IDisposable
 {
-    private readonly IReadOnlyList<GuitarAlchemistAgentBase> _agents;
-    private readonly IChatClient? _chatClient;
-    private readonly IEmbeddingGenerator<string, Embedding<float>>? _textEmbeddings;
-    private readonly ILogger<SemanticRouter> _logger;
-    
+    private readonly IReadOnlyList<GuitarAlchemistAgentBase> _agents = agents.ToList() is { Count: > 0 } list
+        ? list
+        : throw new ArgumentException("At least one agent is required", nameof(agents));
+
+    private readonly ILogger<SemanticRouter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     // Cached embeddings for agent descriptions
-    private readonly Dictionary<string, float[]> _agentEmbeddings = new();
+    private readonly Dictionary<string, float[]> _agentEmbeddings = [];
     private bool _embeddingsInitialized;
-
-    public SemanticRouter(
-        IEnumerable<GuitarAlchemistAgentBase> agents,
-        IChatClient? chatClient,
-        IEmbeddingGenerator<string, Embedding<float>>? textEmbeddings,
-        ILogger<SemanticRouter> logger)
-    {
-        _agents = agents.ToList();
-        _chatClient = chatClient;
-        _textEmbeddings = textEmbeddings;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-        if (!_agents.Any())
-        {
-            throw new ArgumentException("At least one agent is required", nameof(agents));
-        }
-    }
 
     /// <summary>
     /// Gets the available agents.
@@ -70,11 +52,11 @@ public class SemanticRouter : IDisposable
 
         // 1. Try semantic routing if embeddings are available
         RoutingResult? semanticResult = null;
-        if (_textEmbeddings != null)
+        if (textEmbeddings != null)
         {
             await EnsureEmbeddingsInitializedAsync(cancellationToken);
             semanticResult = await SemanticRouteAsync(query, cancellationToken);
-            
+
             // If confidence is high, we can trust it
             if (semanticResult.Confidence > 0.85f)
             {
@@ -83,7 +65,7 @@ public class SemanticRouter : IDisposable
         }
 
         // 2. Use LLM routing for refinement if available (especially for low semantic confidence)
-        if (_chatClient != null)
+        if (chatClient != null)
         {
             var llmResult = await LlmRouteAsync(query, semanticResult, cancellationToken);
             if (llmResult != null && llmResult.Confidence > 0.6f)
@@ -101,16 +83,16 @@ public class SemanticRouter : IDisposable
         RoutingResult? semanticContext,
         CancellationToken cancellationToken)
     {
-        if (_chatClient == null) return null;
+        if (chatClient == null) return null;
 
         var agentDescriptions = string.Join("\n", _agents.Select(a => $"- {a.AgentId}: {a.Description}"));
-        var context = semanticContext != null 
-            ? $"Embeddings suggest: {semanticContext.SelectedAgent.AgentId} ({semanticContext.Confidence:P0})" 
+        var context = semanticContext != null
+            ? $"Embeddings suggest: {semanticContext.SelectedAgent.AgentId} ({semanticContext.Confidence:P0})"
             : "No embedding context available.";
 
         var prompt = $$"""
             You are a musical intent router. Your job is to select the best specialized agent for the user's query.
-            
+
             Available Agents:
             {{agentDescriptions}}
 
@@ -129,16 +111,16 @@ public class SemanticRouter : IDisposable
 
         try
         {
-            var response = await _chatClient.GetResponseAsync(prompt, cancellationToken: cancellationToken);
+            var response = await chatClient.GetResponseAsync(prompt, cancellationToken: cancellationToken);
             var text = response.Messages.Last().Text;
-            
+
             // Clean up JSON if wrapped
             if (text.Contains("```json")) text = text.Split("```json")[1].Split("```")[0].Trim();
             else if (text.Contains("```")) text = text.Split("```")[1].Split("```")[0].Trim();
 
-            var result = JsonSerializer.Deserialize<LlmRoutingResponse>(text, new JsonSerializerOptions 
-            { 
-               PropertyNameCaseInsensitive = true 
+            var result = JsonSerializer.Deserialize<LlmRoutingResponse>(text, new JsonSerializerOptions
+            {
+               PropertyNameCaseInsensitive = true
             });
 
             if (result != null)
@@ -174,10 +156,10 @@ public class SemanticRouter : IDisposable
         CancellationToken cancellationToken = default)
     {
         var routing = await RouteAsync(request.Query, cancellationToken);
-        
+
         _logger.LogInformation(
-            "Routing to {AgentName} (confidence: {Confidence:P0})", 
-            routing.SelectedAgent.Name, 
+            "Routing to {AgentName} (confidence: {Confidence:P0})",
+            routing.SelectedAgent.Name,
             routing.Confidence);
 
         return await routing.SelectedAgent.ProcessAsync(request, cancellationToken);
@@ -193,7 +175,7 @@ public class SemanticRouter : IDisposable
         CancellationToken cancellationToken = default)
     {
         var routing = await RouteAsync(request.Query, cancellationToken);
-        
+
         // Get top N agents above confidence threshold
         var candidateAgents = routing.AllScores
             .Where(s => s.Score >= minConfidence)
@@ -213,9 +195,9 @@ public class SemanticRouter : IDisposable
             string.Join(", ", candidateAgents.Select(a => a.Name)));
 
         // Process in parallel
-        var tasks = candidateAgents.Select(agent => 
+        var tasks = candidateAgents.Select(agent =>
             agent.ProcessAsync(request, cancellationToken));
-        
+
         var responses = await Task.WhenAll(tasks);
 
         return new AggregatedResponse
@@ -228,12 +210,12 @@ public class SemanticRouter : IDisposable
 
     private async Task EnsureEmbeddingsInitializedAsync(CancellationToken cancellationToken)
     {
-        if (_embeddingsInitialized || _textEmbeddings == null) return;
+        if (_embeddingsInitialized || textEmbeddings == null) return;
 
         _logger.LogDebug("Initializing agent embeddings...");
 
         var descriptions = _agents.Select(a => $"{a.Name}: {a.Description}. Capabilities: {string.Join(", ", a.Capabilities)}").ToArray();
-        var embeddings = await _textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
+        var embeddings = await textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
 
         for (var i = 0; i < _agents.Count; i++)
         {
@@ -246,11 +228,11 @@ public class SemanticRouter : IDisposable
 
     private async Task<RoutingResult> SemanticRouteAsync(string query, CancellationToken cancellationToken)
     {
-        var queryEmbedding = await _textEmbeddings!.GenerateAsync([query], cancellationToken: cancellationToken);
+        var queryEmbedding = await textEmbeddings!.GenerateAsync([query], cancellationToken: cancellationToken);
         var queryVector = queryEmbedding[0].Vector.ToArray();
 
         var scores = new List<(GuitarAlchemistAgentBase Agent, float Score)>();
-        
+
         foreach (var agent in _agents)
         {
             if (_agentEmbeddings.TryGetValue(agent.AgentId, out var agentVector))
@@ -326,7 +308,7 @@ public class SemanticRouter : IDisposable
     private static double CosineSimilarity(float[] a, float[] b)
     {
         double dot = 0, magA = 0, magB = 0;
-        for (int i = 0; i < Math.Min(a.Length, b.Length); i++)
+        for (var i = 0; i < Math.Min(a.Length, b.Length); i++)
         {
             dot += a[i] * b[i];
             magA += a[i] * a[i];
@@ -343,7 +325,7 @@ public class SemanticRouter : IDisposable
         // Simple consensus: average of top confidences, weighted by agreement
         var avgConfidence = responses.Average(r => r.Confidence);
         var varianceMultiplier = 1f - (float)responses.Select(r => r.Confidence).StandardDeviation() / 0.5f;
-        
+
         return Math.Clamp(avgConfidence * Math.Max(varianceMultiplier, 0.5f), 0f, 1f);
     }
 
@@ -386,7 +368,7 @@ internal static class EnumerableExtensions
     {
         var list = values.ToList();
         if (list.Count <= 1) return 0;
-        
+
         var avg = list.Average();
         var sumSquares = list.Sum(v => (v - avg) * (v - avg));
         return Math.Sqrt(sumSquares / list.Count);

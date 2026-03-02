@@ -11,7 +11,7 @@ using GA.Business.ML.Tabs;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Services.Abstractions;
 using GA.Domain.Services.Fretboard.Analysis;
-using GA.Domain.Core.Design;
+using GA.Domain.Core.Design.Schema;
 using GaChatbot.Abstractions;
 using GaChatbot.Services;
 
@@ -21,84 +21,87 @@ using GaChatbot.Services;
 /// </summary>
 public static class GaChatbotServiceCollectionExtensions
 {
-    /// <summary>
-    /// Registers all GaChatbot services including orchestration, anti-hallucination guardrails,
-    /// and domain services.
-    /// </summary>
-    public static IServiceCollection AddGaChatbotServices(this IServiceCollection services)
+    extension(IServiceCollection services)
     {
-        // ---- Core AI/ML Services ----
-        services.AddGuitarAlchemistAI();
-        services.AddGuitarAlchemistAgents();
-        services.AddSingleton<IVectorIndex, GaChatbot.Services.InMemoryVectorIndex>();
-        
-        // ---- Phase Sphere & Modal Services ----
-        services.AddSingleton<PhaseSphereService>();
-        services.AddSingleton<AutoTaggingService>();
-        services.AddSingleton<ModalFlavorService>();
-        
-        // ---- Spectral Retrieval ----
-        services.AddScoped<ISpectralRetrievalService, SpectralRetrievalService>();
-        services.AddScoped<SpectralRetrievalService>();
-        
-        // ---- Anti-Hallucination Guardrails (Phase 5.2.5) ----
-        services.AddSingleton<SchemaDiscoveryService>();
-        services.AddSingleton<DomainMetadataPrompter>();
-        services.AddSingleton<QueryUnderstandingService>();
-        services.AddSingleton<GroundedPromptBuilder>();
-        services.AddSingleton<ResponseValidator>();
-        
-        // ---- LLM Provider (Microsoft.Extensions.AI - 2026 Pattern) ----
-        // Configure via GA_AI_PROVIDER environment variable:
-        // - "ollama" (default): Local Ollama instance
-        // - "github": GitHub Models (free tier, requires GITHUB_TOKEN)
-        // - "openai": OpenAI API (requires OPENAI_API_KEY)
-        var aiProvider = Environment.GetEnvironmentVariable("GA_AI_PROVIDER")?.ToLowerInvariant() ?? "ollama";
-        
-        switch (aiProvider)
+        /// <summary>
+        /// Registers all GaChatbot services including orchestration, anti-hallucination guardrails,
+        /// and domain services.
+        /// </summary>
+        public IServiceCollection AddGaChatbotServices()
         {
-            case "github":
-                services.AddGitHubModelsChatClient(
-                    modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "gpt-4o-mini");
-                break;
-            case "openai":
-                var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") 
-                    ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable required for OpenAI provider");
-                services.AddOpenAIChatClient(
-                    modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "gpt-4o-mini",
-                    apiKey: openAiKey);
-                break;
-            default: // "ollama"
-                services.AddOllamaAIChatClient(
-                    modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "llama3.2",
-                    endpoint: Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "http://localhost:11434");
-                break;
+            // ---- Core AI/ML Services ----
+            services.AddGuitarAlchemistAI();
+            services.AddGuitarAlchemistAgents();
+            services.AddSingleton<IVectorIndex, GaChatbot.Services.InMemoryVectorIndex>();
+
+            // ---- Phase Sphere & Modal Services ----
+            services.AddSingleton<PhaseSphereService>();
+            services.AddSingleton<AutoTaggingService>();
+            services.AddSingleton<ModalFlavorService>();
+
+            // ---- Spectral Retrieval ----
+            services.AddScoped<ISpectralRetrievalService, SpectralRetrievalService>();
+            services.AddScoped<SpectralRetrievalService>();
+
+            // ---- Anti-Hallucination Guardrails (Phase 5.2.5) ----
+            services.AddSingleton<SchemaDiscoveryService>();
+            services.AddSingleton<DomainMetadataPrompter>();
+            services.AddSingleton<QueryUnderstandingService>();
+            services.AddSingleton<GroundedPromptBuilder>();
+            services.AddSingleton<ResponseValidator>();
+
+            // ---- LLM Provider (Microsoft.Extensions.AI - 2026 Pattern) ----
+            // Configure via GA_AI_PROVIDER environment variable:
+            // - "ollama" (default): Local Ollama instance
+            // - "github": GitHub Models (free tier, requires GITHUB_TOKEN)
+            // - "openai": OpenAI API (requires OPENAI_API_KEY)
+            var aiProvider = Environment.GetEnvironmentVariable("GA_AI_PROVIDER")?.ToLowerInvariant() ?? "ollama";
+
+            switch (aiProvider)
+            {
+                case "github":
+                    services.AddGitHubModelsChatClient(
+                        modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "gpt-4o-mini");
+                    break;
+                case "openai":
+                    var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+                        ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable required for OpenAI provider");
+                    services.AddOpenAIChatClient(
+                        modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "gpt-4o-mini",
+                        apiKey: openAiKey);
+                    break;
+                default: // "ollama"
+                    services.AddOllamaAIChatClient(
+                        modelId: Environment.GetEnvironmentVariable("GA_AI_MODEL") ?? "llama3.2",
+                        endpoint: Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "http://localhost:11434");
+                    break;
+            }
+
+            services.AddExtensionsAINarrator();
+
+            // ---- Domain Services ----
+            services.AddSingleton<Tuning>(Tuning.Default);
+            services.AddSingleton<FretboardPositionMapper>();
+            services.AddSingleton<IMlNaturalnessRanker, GA.Business.ML.Naturalness.MlNaturalnessRanker>();
+            services.AddSingleton<PhysicalCostService>();
+            services.AddSingleton<IEmbeddingGenerator, MusicalEmbeddingGenerator>();
+
+            // ---- Retrieval & Suggestion Services ----
+            services.AddSingleton<StyleProfileService>();
+            services.AddSingleton<NextChordSuggestionService>();
+            services.AddSingleton<ModulationAnalyzer>();
+
+            // ---- Tab Services ----
+            services.AddSingleton<AdvancedTabSolver>();
+            services.AddSingleton<AlternativeFingeringService>();
+            services.AddSingleton<TabPresentationService>();
+
+            // ---- Orchestrators ----
+            services.AddSingleton<SpectralRagOrchestrator>();
+            services.AddSingleton<TabAwareOrchestrator>();
+            services.AddSingleton<ProductionOrchestrator>();
+
+            return services;
         }
-        
-        services.AddExtensionsAINarrator();
-        
-        // ---- Domain Services ----
-        services.AddSingleton<Tuning>(Tuning.Default);
-        services.AddSingleton<FretboardPositionMapper>();
-        services.AddSingleton<IMlNaturalnessRanker, GA.Business.ML.Naturalness.MlNaturalnessRanker>();
-        services.AddSingleton<PhysicalCostService>();
-        services.AddSingleton<IEmbeddingGenerator, MusicalEmbeddingGenerator>();
-        
-        // ---- Retrieval & Suggestion Services ----
-        services.AddSingleton<StyleProfileService>();
-        services.AddSingleton<NextChordSuggestionService>();
-        services.AddSingleton<ModulationAnalyzer>();
-        
-        // ---- Tab Services ----
-        services.AddSingleton<AdvancedTabSolver>();
-        services.AddSingleton<AlternativeFingeringService>();
-        services.AddSingleton<TabPresentationService>();
-        
-        // ---- Orchestrators ----
-        services.AddSingleton<SpectralRagOrchestrator>();
-        services.AddSingleton<TabAwareOrchestrator>();
-        services.AddSingleton<ProductionOrchestrator>();
-        
-        return services;
     }
 }

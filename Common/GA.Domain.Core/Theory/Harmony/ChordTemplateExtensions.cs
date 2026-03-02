@@ -3,93 +3,68 @@
 using Tonal.Modes;
 
 /// <summary>
-///     Extension methods for working with ChordTemplate discriminated union
+/// Extension methods for working with ChordTemplate.
 /// </summary>
 public static class ChordTemplateExtensions
 {
     /// <summary>
-    ///     Determines if this chord template is scale-derived
+    /// Determines if this chord template is scale-derived.
     /// </summary>
-    public static bool IsScaleDerived(this ChordTemplate template)
-    {
-        return template switch
-        {
-            ChordTemplate.TonalModal => true,
-            _ => false
-        };
-    }
+    public static bool IsScaleDerived(this ChordTemplate template) => template is ChordTemplate.TonalModal;
 
     /// <summary>
-    ///     Gets the parent scale if this is a scale-derived chord
+    /// Gets the parent scale if this is a scale-derived chord.
     /// </summary>
-    public static ScaleMode? GetParentScale(this ChordTemplate template)
+    public static ScaleMode? GetParentScale(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.TonalModal tonal => tonal.ParentScale,
-            _ => null
-        };
-    }
+        ChordTemplate.TonalModal tonal => tonal.ParentScale,
+        _ => null
+    };
 
     /// <summary>
-    ///     Gets the scale degree/position if this is a scale-derived chord
+    /// Gets the scale degree/position if this is a scale-derived chord.
     /// </summary>
-    public static int? GetScaleDegree(this ChordTemplate template)
+    public static int? GetScaleDegree(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.TonalModal tonal => tonal.ScaleDegree,
-            _ => null
-        };
-    }
+        ChordTemplate.TonalModal tonal => tonal.ScaleDegree,
+        _ => null
+    };
 
     /// <summary>
-    ///     Gets the harmonic function if this is a tonal modal chord
+    /// Gets the harmonic function if this is a tonal modal chord.
     /// </summary>
-    public static string? GetHarmonicFunction(this ChordTemplate template)
+    public static string? GetHarmonicFunction(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.TonalModal tonal => tonal.HarmonicFunction.ToString(),
-            _ => null
-        };
-    }
+        ChordTemplate.TonalModal tonal => tonal.Function.ToString(),
+        _ => null
+    };
 
     /// <summary>
-    ///     Gets a human-readable description of this chord template
+    /// Gets a human-readable description of this chord template.
     /// </summary>
-    public static string GetDescription(this ChordTemplate template)
+    public static string GetDescription(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.TonalModal tonal => tonal.Description,
-            ChordTemplate.Analytical analytical => analytical.Description,
-            _ => "Unknown chord type"
-        };
-    }
+        ChordTemplate.TonalModal tonal => tonal.Description,
+        ChordTemplate.Analytical analytical => analytical.Description,
+        _ => "Unknown chord type"
+    };
 
     /// <summary>
-    ///     Gets the construction type of this chord template
+    /// Gets the construction type of this chord template.
     /// </summary>
-    public static string GetConstructionType(this ChordTemplate template)
+    public static string GetConstructionType(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.TonalModal => "Tonal Modal",
-            ChordTemplate.Analytical => "Analytical",
-            _ => "Unknown"
-        };
-    }
+        ChordTemplate.TonalModal => "Tonal Modal",
+        ChordTemplate.Analytical => "Analytical",
+        _ => "Unknown"
+    };
 
     /// <summary>
-    ///     Gets metadata if this chord has metadata
+    /// Gets metadata if this chord has metadata.
     /// </summary>
-    public static Dictionary<string, object>? GetMetadata(this ChordTemplate template)
+    public static Dictionary<string, object>? GetMetadata(this ChordTemplate template) => template switch
     {
-        return template switch
-        {
-            ChordTemplate.Analytical analytical => analytical.AnalysisData,
-            _ => null
-        };
-    }
+        ChordTemplate.Analytical analytical => analytical.AnalysisData,
+        _ => null
+    };
 }

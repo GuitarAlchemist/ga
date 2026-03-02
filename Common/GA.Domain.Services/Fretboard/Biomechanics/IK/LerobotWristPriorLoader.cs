@@ -1,7 +1,5 @@
 namespace GA.Domain.Services.Fretboard.Biomechanics.IK;
 
-using System.IO;
-using System.Net.Http;
 using System.Numerics;
 using System.Reflection;
 using System.Text.Json;

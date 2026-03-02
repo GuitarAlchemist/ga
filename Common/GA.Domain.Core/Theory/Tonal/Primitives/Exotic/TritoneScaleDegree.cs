@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Exotic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A Tritone scale degree (Petrushka scale)
@@ -23,10 +17,7 @@ public readonly record struct TritoneScaleDegree : IRangeValueObject<TritoneScal
     private readonly int _value;
 
     // Constructor
-    public TritoneScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public TritoneScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<TritoneScaleDegree> All => ValueObjectUtils<TritoneScaleDegree>.Items;
     public static IReadOnlyCollection<TritoneScaleDegree> Items => ValueObjectUtils<TritoneScaleDegree>.Items;
@@ -41,24 +32,15 @@ public readonly record struct TritoneScaleDegree : IRangeValueObject<TritoneScal
     public static TritoneScaleDegree TritoneMode6 => new(6);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TritoneScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static TritoneScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static TritoneScaleDegree Min => FromValue(_minValue);
     public static TritoneScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator TritoneScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator TritoneScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(TritoneScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(TritoneScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -66,75 +48,45 @@ public readonly record struct TritoneScaleDegree : IRangeValueObject<TritoneScal
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Tritone",
-            2 => "Petrushka",
-            3 => "Tritone mode 3",
-            4 => "Tritone mode 4",
-            5 => "Tritone mode 5",
-            6 => "Tritone mode 6",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Tritone",
+        2 => "Petrushka",
+        3 => "Tritone mode 3",
+        4 => "Tritone mode 4",
+        5 => "Tritone mode 5",
+        6 => "Tritone mode 6",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Tri",
-            2 => "Pet",
-            3 => "Tri3",
-            4 => "Tri4",
-            5 => "Tri5",
-            6 => "Tri6",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Tri",
+        2 => "Pet",
+        3 => "Tri3",
+        4 => "Tri4",
+        5 => "Tri5",
+        6 => "Tri6",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<TritoneScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) => IRangeValueObject<TritoneScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<TritoneScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<TritoneScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(TritoneScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(TritoneScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(TritoneScaleDegree left, TritoneScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(TritoneScaleDegree left, TritoneScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(TritoneScaleDegree left, TritoneScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(TritoneScaleDegree left, TritoneScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(TritoneScaleDegree left, TritoneScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(TritoneScaleDegree left, TritoneScaleDegree right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(TritoneScaleDegree left, TritoneScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(TritoneScaleDegree left, TritoneScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

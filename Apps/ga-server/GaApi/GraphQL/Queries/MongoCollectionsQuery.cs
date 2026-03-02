@@ -14,17 +14,11 @@ public class MongoCollectionsQuery
     [UseProjection]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<Chord> GetChords([Service] MongoDbService mongoService)
-    {
-        return mongoService.Chords.AsQueryable();
-    }
+    public IQueryable<Chord> GetChords([Service] MongoDbService mongoService) => mongoService.Chords.AsQueryable();
 
     [UsePaging(IncludeTotalCount = true, DefaultPageSize = 20)]
     [UseProjection]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<VoicingEntity> GetVoicings([Service] MongoDbService mongoService)
-    {
-        return mongoService.Voicings.AsQueryable();
-    }
+    public IQueryable<VoicingEntity> GetVoicings([Service] MongoDbService mongoService) => mongoService.Voicings.AsQueryable();
 }

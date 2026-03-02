@@ -2,10 +2,13 @@
 
 internal static class HttpClientExt
 {
-    public static async Task<JsonDocument> ReadJsonDocumentAsync(this HttpClient client, string requestUri)
+    extension(HttpClient client)
     {
-        using var response = await client.GetAsync(requestUri);
-        response.EnsureSuccessStatusCode();
-        return await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        public async Task<JsonDocument> ReadJsonDocumentAsync(string requestUri)
+        {
+            using var response = await client.GetAsync(requestUri);
+            response.EnsureSuccessStatusCode();
+            return await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        }
     }
 }

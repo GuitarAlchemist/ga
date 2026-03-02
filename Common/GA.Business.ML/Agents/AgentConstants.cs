@@ -1,7 +1,7 @@
 namespace GA.Business.ML.Agents;
 
 /// <summary>
-/// Centralized constants for AI agents to avoid magic strings.
+///     Centralized constants for AI agents to avoid magic strings.
 /// </summary>
 public static class AgentIds
 {

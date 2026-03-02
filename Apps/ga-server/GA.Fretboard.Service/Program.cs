@@ -1,9 +1,9 @@
 using System.Reflection;
-using Hellang.Middleware.ProblemDetails;
-
+using System.Threading.RateLimiting;
+using AllProjects.ServiceDefaults;
 using GA.Fretboard.Service.Models;
 using GA.Fretboard.Service.Services;
-using AllProjects.ServiceDefaults;
+using Hellang.Middleware.ProblemDetails;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,10 +78,10 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
-            factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            partition => new()
             {
                 AutoReplenishment = true,
                 PermitLimit = 100,

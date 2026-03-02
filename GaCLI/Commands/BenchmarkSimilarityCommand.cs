@@ -1,4 +1,4 @@
-namespace GaCLI.Commands;
+﻿namespace GaCLI.Commands;
 
 using GA.Domain.Services.Abstractions;
 using GA.Domain.Core.Instruments;
@@ -11,12 +11,21 @@ using GA.Domain.Services.Fretboard.Voicings.Analysis;
 using GA.Domain.Services.Fretboard.Voicings.Generation; // For DecomposedVoicing
 using GA.Domain.Core.Instruments.Positions; // For PositionLocation
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using Spectre.Console;
 using System.Text.RegularExpressions;
 using GA.Domain.Services.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Fretboard;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 
 using GA.Business.ML.Embeddings;
 

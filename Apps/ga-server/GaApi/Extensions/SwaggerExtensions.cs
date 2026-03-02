@@ -1,9 +1,7 @@
 namespace GaApi.Extensions;
 
 using System.Reflection;
-using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Path = System.IO.Path;
 
@@ -12,6 +10,18 @@ using Path = System.IO.Path;
 /// </summary>
 public static class SwaggerExtensions
 {
+    private static string GetControllerName(string? controllerName) =>
+        controllerName switch
+        {
+            "MusicalKnowledge" => "🎼 Musical Knowledge",
+            "ChordProgressions" => "🎵 Chord Progressions",
+            "GuitarTechniques" => "🎸 Guitar Techniques",
+            "SpecializedTunings" => "🎛️ Specialized Tunings",
+            "Analytics" => "📊 Analytics & Insights",
+            "UserPersonalization" => "👤 User Personalization",
+            _ => controllerName ?? "API"
+        };
+
     /// <summary>
     ///     Add comprehensive Swagger configuration
     /// </summary>
@@ -19,7 +29,7 @@ public static class SwaggerExtensions
     {
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo
+            c.SwaggerDoc("v1", new()
             {
                 Title = "Guitar Alchemist Musical Knowledge API",
                 Version = "v1",
@@ -77,16 +87,16 @@ Currently, the API is open for exploration. User-specific endpoints require a va
 
 Standard rate limiting applies. Contact support for higher limits.
 ",
-                Contact = new OpenApiContact
+                Contact = new()
                 {
                     Name = "Guitar Alchemist Team",
                     Email = "support@guitaralchemist.com",
-                    Url = new Uri("https://guitaralchemist.com")
+                    Url = new("https://guitaralchemist.com")
                 },
-                License = new OpenApiLicense
+                License = new()
                 {
                     Name = "MIT License",
-                    Url = new Uri("https://opensource.org/licenses/MIT")
+                    Url = new("https://opensource.org/licenses/MIT")
                 }
             });
 
@@ -106,7 +116,7 @@ Standard rate limiting applies. Contact support for higher limits.
             c.TagActionsBy(api => [GetControllerName(api.ActionDescriptor.RouteValues["controller"])]);
 
             // Add security definitions (for future authentication)
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            c.AddSecurityDefinition("Bearer", new()
             {
                 Description =
                     "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -161,132 +171,5 @@ Standard rate limiting applies. Contact support for higher limits.
         });
 
         return app;
-    }
-
-    private static string GetControllerName(string? controllerName)
-    {
-        return controllerName switch
-        {
-            "MusicalKnowledge" => "🎼 Musical Knowledge",
-            "ChordProgressions" => "🎵 Chord Progressions",
-            "GuitarTechniques" => "🎸 Guitar Techniques",
-            "SpecializedTunings" => "🎛️ Specialized Tunings",
-            "Analytics" => "📊 Analytics & Insights",
-            "UserPersonalization" => "👤 User Personalization",
-            _ => controllerName ?? "API"
-        };
-    }
-}
-
-/// <summary>
-///     Operation filter to add examples to Swagger documentation
-/// </summary>
-public class SwaggerExampleOperationFilter : IOperationFilter
-{
-    public void Apply(OpenApiOperation operation, OperationFilterContext context)
-    {
-        // Add examples for common parameters
-        if (operation.Parameters != null)
-        {
-            foreach (var parameter in operation.Parameters)
-            {
-                AddParameterExamples(parameter);
-            }
-        }
-
-        // Add response examples
-        AddResponseExamples(operation, context);
-    }
-
-    private void AddParameterExamples(OpenApiParameter parameter)
-    {
-        switch (parameter.Name.ToLowerInvariant())
-        {
-            case "query":
-                parameter.Example = new OpenApiString("jazz");
-                parameter.Description += "\n\nExample values: jazz, blues, rock, classical, hendrix, satriani";
-                break;
-            case "category":
-                parameter.Example = new OpenApiString("Jazz");
-                parameter.Description += "\n\nExample values: Jazz, Blues, Rock, Classical, Folk, Metal";
-                break;
-            case "difficulty":
-                parameter.Example = new OpenApiString("Intermediate");
-                parameter.Description += "\n\nExample values: Beginner, Intermediate, Advanced, Expert";
-                break;
-            case "artist":
-                parameter.Example = new OpenApiString("Jimi Hendrix");
-                parameter.Description += "\n\nExample values: Jimi Hendrix, Joe Satriani, John Coltrane, The Beatles";
-                break;
-            case "name":
-                if (parameter.Description?.Contains("chord") == true)
-                {
-                    parameter.Example = new OpenApiString("Hendrix Chord");
-                }
-                else if (parameter.Description?.Contains("progression") == true)
-                {
-                    parameter.Example = new OpenApiString("ii-V-I");
-                }
-                else if (parameter.Description?.Contains("technique") == true)
-                {
-                    parameter.Example = new OpenApiString("Alternate Picking");
-                }
-                else if (parameter.Description?.Contains("tuning") == true)
-                {
-                    parameter.Example = new OpenApiString("Drop D");
-                }
-
-                break;
-        }
-    }
-
-    private void AddResponseExamples(OpenApiOperation operation, OperationFilterContext context)
-    {
-        // This could be expanded to add specific response examples
-        // based on the operation and return types
-    }
-}
-
-/// <summary>
-///     Document filter to add tag descriptions
-/// </summary>
-public class SwaggerTagDescriptionFilter : IDocumentFilter
-{
-    public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
-    {
-        swaggerDoc.Tags = new List<OpenApiTag>
-        {
-            new()
-            {
-                Name = "🎼 Musical Knowledge",
-                Description =
-                    "Unified access to all musical concepts with search, filtering, and analytics capabilities"
-            },
-            new()
-            {
-                Name = "🎵 Chord Progressions",
-                Description = "Harmonic progressions across genres with Roman numeral analysis and examples"
-            },
-            new()
-            {
-                Name = "🎸 Guitar Techniques",
-                Description = "Playing techniques from basic strumming to advanced lead guitar methods"
-            },
-            new()
-            {
-                Name = "🎛️ Specialized Tunings",
-                Description = "Alternative tuning systems, extended range instruments, and studio techniques"
-            },
-            new()
-            {
-                Name = "📊 Analytics & Insights",
-                Description = "Musical relationship analysis, usage patterns, and intelligent recommendations"
-            },
-            new()
-            {
-                Name = "👤 User Personalization",
-                Description = "User profiles, learning paths, progress tracking, and personalized experiences"
-            }
-        };
     }
 }

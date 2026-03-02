@@ -1,14 +1,10 @@
 namespace GA.MusicTheory.DSL.LSP
 
 open System
-open System.IO
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open GA.MusicTheory.DSL.Types.GrammarTypes
 open GA.MusicTheory.DSL.Parsers
 open GA.MusicTheory.DSL.LSP.LspTypes
-open GA.MusicTheory.DSL.LSP.CompletionProvider
-open GA.MusicTheory.DSL.LSP.DiagnosticsProvider
 
 /// <summary>
 /// Language Server Protocol implementation for Music Theory DSL
@@ -22,18 +18,20 @@ module LanguageServer =
 
     /// Document store
     type DocumentStore() =
-        let documents = System.Collections.Concurrent.ConcurrentDictionary<string, TextDocumentItem>()
+        let documents =
+            System.Collections.Concurrent.ConcurrentDictionary<string, TextDocumentItem>()
 
-        member _.Open(doc: TextDocumentItem) =
-            documents.[doc.Uri] <- doc
+        member _.Open(doc: TextDocumentItem) = documents.[doc.Uri] <- doc
 
-        member _.Close(uri: string) =
-            documents.TryRemove(uri) |> ignore
+        member _.Close(uri: string) = documents.TryRemove(uri) |> ignore
 
         member _.Update(uri: string, text: string, version: int) =
             match documents.TryGetValue(uri) with
             | true, doc ->
-                documents.[uri] <- { doc with Text = text; Version = version }
+                documents.[uri] <-
+                    { doc with
+                        Text = text
+                        Version = version }
             | false, _ -> ()
 
         member _.Get(uri: string) =
@@ -41,8 +39,7 @@ module LanguageServer =
             | true, doc -> Some doc
             | false, _ -> None
 
-        member _.GetAll() =
-            documents.Values |> Seq.toList
+        member _.GetAll() = documents.Values |> Seq.toList
 
     // ============================================================================
     // LSP SERVER STATE
@@ -68,11 +65,21 @@ module LanguageServer =
     let parseMessage (json: string) : Result<LspMessage, string> =
         try
             let obj = JObject.Parse(json)
+
             let message =
                 { JsonRpc = obj.["jsonrpc"].ToString()
-                  Id = if obj.ContainsKey("id") then Some (obj.["id"].ToObject<int>()) else None
+                  Id =
+                    if obj.ContainsKey("id") then
+                        Some(obj.["id"].ToObject<int>())
+                    else
+                        None
                   Method = obj.["method"].ToString()
-                  Params = if obj.ContainsKey("params") then Some (obj.["params"] :?> JObject) else None }
+                  Params =
+                    if obj.ContainsKey("params") then
+                        Some(obj.["params"] :?> JObject)
+                    else
+                        None }
+
             Ok message
         with ex ->
             Error $"Failed to parse message: %s{ex.Message}"
@@ -84,11 +91,11 @@ module LanguageServer =
               Id = id
               Result = result
               Error = error }
+
         JsonConvert.SerializeObject(response)
 
     /// Create success response
-    let successResponse (id: int) (result: JObject) : string =
-        createResponse id (Some result) None
+    let successResponse (id: int) (result: JObject) : string = createResponse id (Some result) None
 
     /// Create error response
     let errorResponse (id: int) (code: int) (message: string) : string =
@@ -106,7 +113,7 @@ module LanguageServer =
         let capabilities = JObject()
 
         // Text document sync
-        capabilities.["textDocumentSync"] <- JValue(1)  // Full sync
+        capabilities.["textDocumentSync"] <- JValue(1) // Full sync
 
         // Completion provider
         let completionProvider = JObject()
@@ -123,7 +130,11 @@ module LanguageServer =
         let result = JObject()
         result.["capabilities"] <- capabilities
 
-        let newState = { state with Capabilities = capabilities; InitializeParams = Some parameters }
+        let newState =
+            { state with
+                Capabilities = capabilities
+                InitializeParams = Some parameters }
+
         (newState, successResponse 1 result)
 
     // ============================================================================
@@ -162,11 +173,13 @@ module LanguageServer =
         match ChordProgressionParser.parse text with
         | Error error ->
             let diagnostic =
-                { Range = { Start = { Line = 0; Character = 0 };
-                           End = { Line = 0; Character = text.Length } }
+                { Range =
+                    { Start = { Line = 0; Character = 0 }
+                      End = { Line = 0; Character = text.Length } }
                   Severity = DiagnosticSeverity.Error
                   Message = error
                   Source = Some "chord-progression-parser" }
+
             diagnostics.Add(diagnostic)
         | Ok _ -> ()
 
@@ -180,7 +193,10 @@ module LanguageServer =
 
         let parameters = JObject()
         parameters.["uri"] <- JValue(uri)
-        parameters.["diagnostics"] <- JArray(diagnostics |> List.map JsonConvert.SerializeObject |> List.map JToken.Parse)
+
+        parameters.["diagnostics"] <-
+            JArray(diagnostics |> List.map JsonConvert.SerializeObject |> List.map JToken.Parse)
+
         notification.["params"] <- parameters
 
         JsonConvert.SerializeObject(notification)
@@ -204,10 +220,13 @@ module LanguageServer =
         | Some doc ->
             // Calculate absolute position in the document
             let lines = doc.Text.Split([| '\n'; '\r' |], StringSplitOptions.None)
+
             let absolutePosition =
                 let mutable pos = 0
+
                 for i in 0 .. (min line (lines.Length - 1)) - 1 do
-                    pos <- pos + lines.[i].Length + 1  // +1 for newline
+                    pos <- pos + lines.[i].Length + 1 // +1 for newline
+
                 pos + character
 
             // Get completions from CompletionProvider
@@ -237,11 +256,15 @@ module LanguageServer =
             let result = JObject()
             let contents = JObject()
             contents.["kind"] <- JValue("markdown")
-            contents.["value"] <- JValue("**Music Theory DSL**\n\nSupports:\n- Chord Progressions\n- Fretboard Navigation\n- Scale Transformations\n- Grothendieck Operations")
+
+            contents.["value"] <-
+                JValue(
+                    "**Music Theory DSL**\n\nSupports:\n- Chord Progressions\n- Fretboard Navigation\n- Scale Transformations\n- Grothendieck Operations"
+                )
+
             result.["contents"] <- contents
             successResponse id result
-        | None ->
-            successResponse id (JObject())
+        | None -> successResponse id (JObject())
 
     /// Handle LSP message
     let handleMessage (state: ServerState) (message: LspMessage) : ServerState * string option =
@@ -250,8 +273,7 @@ module LanguageServer =
             let (newState, response) = handleInitialize state (message.Params.Value)
             (newState, Some response)
 
-        | "initialized" ->
-            (state, None)
+        | "initialized" -> (state, None)
 
         | "textDocument/didOpen" ->
             let newState = handleTextDocumentOpen state (message.Params.Value)
@@ -264,13 +286,13 @@ module LanguageServer =
         | "textDocument/didChange" ->
             let newState = handleTextDocumentChange state (message.Params.Value)
             let uri = message.Params.Value.["textDocument"].["uri"].ToString()
+
             match newState.Documents.Get(uri) with
             | Some doc ->
                 let diagnostics = DiagnosticsProvider.validate doc.Text
                 let notification = publishDiagnostics uri diagnostics
                 (newState, Some notification)
-            | None ->
-                (newState, None)
+            | None -> (newState, None)
 
         | "textDocument/didClose" ->
             let newState = handleTextDocumentClose state (message.Params.Value)
@@ -284,14 +306,11 @@ module LanguageServer =
             let response = handleHover state (message.Params.Value) (message.Id.Value)
             (state, Some response)
 
-        | "shutdown" ->
-            (state, Some (successResponse (message.Id.Value) (JObject())))
+        | "shutdown" -> (state, Some(successResponse (message.Id.Value) (JObject())))
 
-        | "exit" ->
-            (state, None)
+        | "exit" -> (state, None)
 
-        | _ ->
-            (state, None)
+        | _ -> (state, None)
 
     // ============================================================================
     // SERVER LOOP
@@ -307,8 +326,10 @@ module LanguageServer =
                 // Read message from stdin
                 let contentLength =
                     let mutable line = Console.ReadLine()
+
                     while not (line.StartsWith("Content-Length:")) do
                         line <- Console.ReadLine()
+
                     int (line.Substring(16).Trim())
 
                 // Skip blank line
@@ -334,9 +355,7 @@ module LanguageServer =
                     if message.Method = "exit" then
                         running <- false
 
-                | Error error ->
-                    eprintfn $"Error parsing message: %s{error}"
+                | Error error -> eprintfn $"Error parsing message: %s{error}"
 
             with ex ->
                 eprintfn $"Error in server loop: %s{ex.Message}"
-

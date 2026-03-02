@@ -4,42 +4,45 @@ using System.Reflection;
 
 public static class AssemblyExtensions
 {
-    public static ImmutableList<Type> MethodOverrideTypes(this Assembly assembly, string methodName)
+    extension(Assembly assembly)
     {
-        var list = new List<Type>();
-        var types =
-            assembly.GetTypes().Where(type => !type.IsAbstract && !type.ContainsGenericParameters).ToImmutableList();
-        foreach (var type in types)
+        public ImmutableList<Type> MethodOverrideTypes(string methodName)
         {
-            var attr = type.GetCustomAttribute<CompilerGeneratedAttribute>();
-            if (attr != null)
+            List<Type> list = [];
+            var types =
+                assembly.GetTypes().Where(type => !type.IsAbstract && !type.ContainsGenericParameters)
+                    .ToImmutableList();
+            foreach (var type in types)
             {
-                continue;
+                var attr = type.GetCustomAttribute<CompilerGeneratedAttribute>();
+                if (attr != null)
+                {
+                    continue;
+                }
+
+                var toStringMethods = type.GetMethods()
+                    .Where(info => string.Equals(info.Name, methodName, StringComparison.OrdinalIgnoreCase))
+                    .ToImmutableList();
+                if (!toStringMethods.Any())
+                {
+                    continue;
+                }
+
+                var toStringMethod = toStringMethods.FirstOrDefault();
+                if (toStringMethod == null || !IsOverride(toStringMethod))
+                {
+                    continue;
+                }
+
+                list.Add(type);
             }
 
-            var toStringMethods = type.GetMethods()
-                .Where(info => string.Equals(info.Name, methodName, StringComparison.OrdinalIgnoreCase))
-                .ToImmutableList();
-            if (!toStringMethods.Any())
+            return [.. list];
+
+            static bool IsOverride(MethodInfo method)
             {
-                continue;
+                return method.GetBaseDefinition().DeclaringType != method.DeclaringType;
             }
-
-            var toStringMethod = toStringMethods.FirstOrDefault();
-            if (toStringMethod == null || !IsOverride(toStringMethod))
-            {
-                continue;
-            }
-
-            ;
-            list.Add(type);
-        }
-
-        return [.. list];
-
-        static bool IsOverride(MethodInfo method)
-        {
-            return method.GetBaseDefinition().DeclaringType != method.DeclaringType;
         }
     }
 }

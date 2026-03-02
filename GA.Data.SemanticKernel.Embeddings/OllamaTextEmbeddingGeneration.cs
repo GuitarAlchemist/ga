@@ -31,7 +31,7 @@ public class OllamaTextEmbeddingGeneration(HttpClient httpClient, string modelNa
 
             if (result?.Embedding != null)
             {
-                embeddings.Add(new ReadOnlyMemory<float>(result.Embedding));
+                embeddings.Add(new(result.Embedding));
             }
         }
 

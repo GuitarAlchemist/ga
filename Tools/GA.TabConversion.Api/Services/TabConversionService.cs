@@ -132,7 +132,7 @@ public class TabConversionService(ILogger<TabConversionService> logger) : ITabCo
         finally
         {
             sw.Stop();
-            response.Metadata = new ConversionMetadata
+            response.Metadata = new()
             {
                 DurationMs = sw.ElapsedMilliseconds,
                 DetectedSourceFormat = request.SourceFormat
@@ -188,13 +188,11 @@ public class TabConversionService(ILogger<TabConversionService> logger) : ITabCo
         }
     }
 
-    public Task<FormatsResponse> GetFormatsAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(new FormatsResponse
+    public Task<FormatsResponse> GetFormatsAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new FormatsResponse
         {
             Formats = [.. _supportedFormats] // Return a copy to prevent external modification
         });
-    }
 
     public Task<string?> DetectFormatAsync(string content, CancellationToken cancellationToken = default)
     {

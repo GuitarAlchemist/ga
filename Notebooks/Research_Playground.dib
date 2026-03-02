@@ -1,0 +1,74 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"nodeId":"csharp","name":"csharp","languageName":"C#","aliases":["c#","C#"]},{"nodeId":"fsharp","name":"fsharp","languageName":"F#","aliases":["f#","F#"]},{"nodeId":"pwsh","name":"pwsh","languageName":"pwsh","aliases":["powershell"]},{"nodeId":"javascript","name":"javascript","languageName":"javascript","aliases":["js"]},{"nodeId":"html","name":"html","languageName":"html","aliases":["HTML"]},{"nodeId":"sql","name":"sql","languageName":"sql","aliases":["SQL"]},{"nodeId":"kql","name":"kql","languageName":"kql","aliases":["KQL"]},{"nodeId":"mermaid","name":"mermaid","languageName":"mermaid","aliases":[]},{"nodeId":"http","name":"http","languageName":"http","aliases":[]},{"nodeId":"value","name":"value","languageName":"value","aliases":[]}]}}
+
+#!markdown
+
+# 🎸 Guitar Alchemist Research Playground
+
+Welcome to the efficiency-tuned research environment for Guitar Alchemist.
+This notebook is configured to load the domain projects directly, allowing for rapid experimentation and visualization.
+
+## 🚀 Getting Started
+
+The first cell loads the necessary projects and extensions. By using `#r "project:..."`, we ensure that any changes you make to the core library are immediately available here after a build.
+
+#!csharp
+
+// Load core projects
+#r "project:../Common/GA.Core/GA.Core.csproj"
+#r "project:../Common/GA.Domain.Core/GA.Domain.Core.csproj"
+#r "project:../Common/GA.Domain.Services/GA.Domain.Services.csproj"
+#r "project:../Common/GA.Business.Core/GA.Business.Core.csproj"
+#r "project:../Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj"
+
+using GA.Domain.Core.Primitives.Notes;
+using GA.Business.Core.Tonal;
+using GA.InteractiveExtension.ExtensionMethods;
+using GA.InteractiveExtension.KernelExtensions;
+
+// Initialize GA Interactive Extensions
+await kernel.UseGaAsync();
+
+#!markdown
+
+## 🎵 Music Theory Exploration
+
+You can now use the domain objects directly. Use `.DisplayTable()` to view collections in a searchable grid.
+
+#!csharp
+
+using GA.Business.Core.Tonal.Modes;
+
+// List all Melodic Minor modes
+MelodicMinorMode.Objects.DisplayTable();
+
+#!csharp
+
+// Explore Keys
+Key.Major.MajorItems.DisplayTable();
+
+#!markdown
+
+## 🎨 Visualizations
+
+The `GA.InteractiveExtension` provides custom formatters for musical concepts.
+
+#!csharp
+
+// Example: Display a Note
+Note.Sharp.C
+
+#!csharp
+
+// Example: Use Mermaid for relationships (if implemented)
+// Note.Sharp.C.GetRelationships().ToMermaid().Display()
+
+#!markdown
+
+## 💡 Efficiency Tips
+
+1. **Project References**: Use `#r "project:..."` instead of NuGet for local development.
+2. **Interactive Extensions**: Leverage `.DisplayTable()` for large datasets.
+3. **Polyglot**: You can mix C# and F# cells to use the best language for the task.
+4. **VexTab**: Use the VexTab integration for musical notation (coming soon).

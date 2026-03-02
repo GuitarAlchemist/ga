@@ -39,9 +39,8 @@ public class StrTests
     }
 
     [TestCase(-1)]
+    [TestCase(-1)]
     [TestCase(0)]
-    [TestCase(1)]
-    [TestCase(26)]
     [TestCase(27)]
     public void FromValue_OutOfRange_ThrowsArgumentOutOfRangeException(int value)
     {

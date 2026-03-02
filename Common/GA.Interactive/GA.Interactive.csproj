@@ -63,6 +63,9 @@
     <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\GA.InteractiveExtension\GA.InteractiveExtension.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- See example here: https://github.com/dotnet/interactive/blob/main/samples/extensions/ClockExtension/ClockExtension.csproj-->

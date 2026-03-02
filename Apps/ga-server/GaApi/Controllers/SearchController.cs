@@ -1,8 +1,6 @@
 namespace GaApi.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
 using Services;
-
 
 [ApiController]
 [Route("api/[controller]")]
@@ -32,14 +30,3 @@ public class SearchController(VectorSearchService searchService, ILogger<SearchC
         }
     }
 }
-
-public record HybridSearchRequest(
-    string Query,
-    string? Quality = null,
-    string? Extension = null,
-    string? StackingType = null,
-    int? NoteCount = null,
-    int Limit = 10,
-    int NumCandidates = 100,
-    double[]? Vector = null
-);

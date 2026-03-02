@@ -18,7 +18,7 @@ public class OllamaEmbeddingService
         _httpClient = httpClientFactory.CreateClient("Ollama");
         _model = configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
         var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
-        _httpClient.BaseAddress = new Uri(baseUrl);
+        _httpClient.BaseAddress = new(baseUrl);
         _logger = logger;
     }
 

@@ -1,74 +1,73 @@
-
 namespace GA.Knowledge.Service.Models;
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 /// <summary>
-/// Represents a room generation job in MongoDB
+///     Represents a room generation job in MongoDB
 /// </summary>
 public class RoomGenerationJob
 {
     /// <summary>
-    /// MongoDB document ID
+    ///     MongoDB document ID
     /// </summary>
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// Unique job identifier
+    ///     Unique job identifier
     /// </summary>
     public string JobId { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID of the room being generated
+    ///     ID of the room being generated
     /// </summary>
     public string RoomId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Current status of the job
+    ///     Current status of the job
     /// </summary>
     public JobStatus Status { get; set; } = JobStatus.Pending;
 
     /// <summary>
-    /// Job progress (0.0 to 1.0)
+    ///     Job progress (0.0 to 1.0)
     /// </summary>
     public double Progress { get; set; }
 
     /// <summary>
-    /// Generation parameters
+    ///     Generation parameters
     /// </summary>
     public GenerationParameters Parameters { get; set; } = new();
 
     /// <summary>
-    /// Error message if job failed
+    ///     Error message if job failed
     /// </summary>
     public string? ErrorMessage { get; set; }
 
     /// <summary>
-    /// When the job was created
+    ///     When the job was created
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// When the job was started
+    ///     When the job was started
     /// </summary>
     public DateTime? StartedAt { get; set; }
 
     /// <summary>
-    /// When the job was completed
+    ///     When the job was completed
     /// </summary>
     public DateTime? CompletedAt { get; set; }
 
     /// <summary>
-    /// Job metadata
+    ///     Job metadata
     /// </summary>
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
 }
 
 /// <summary>
-/// Job status enumeration
+///     Job status enumeration
 /// </summary>
 public enum JobStatus
 {
@@ -80,27 +79,27 @@ public enum JobStatus
 }
 
 /// <summary>
-/// Parameters for room generation
+///     Parameters for room generation
 /// </summary>
 public class GenerationParameters
 {
     /// <summary>
-    /// Room type to generate
+    ///     Room type to generate
     /// </summary>
     public string RoomType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Target dimensions
+    ///     Target dimensions
     /// </summary>
     public RoomDimensions TargetDimensions { get; set; } = new();
 
     /// <summary>
-    /// Generation algorithm to use
+    ///     Generation algorithm to use
     /// </summary>
     public string Algorithm { get; set; } = "default";
 
     /// <summary>
-    /// Additional parameters
+    ///     Additional parameters
     /// </summary>
-    public Dictionary<string, object> AdditionalParameters { get; set; } = new();
+    public Dictionary<string, object> AdditionalParameters { get; set; } = [];
 }

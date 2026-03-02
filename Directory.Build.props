@@ -21,16 +21,27 @@
   <!-- Centralized package version alignment and vulnerability remediation -->
   <ItemGroup>
     <!-- Security fixes -->
-    <PackageReference Update="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Update="System.Drawing.Common" Version="8.0.8" />
-    <PackageReference Update="System.Security.Cryptography.Xml" Version="8.0.1" />
-    <PackageReference Update="Microsoft.Build.Tasks.Core" Version="17.11.4" />
+    <PackageReference Update="Newtonsoft.Json" Version="13.0.3"/>
+    <PackageReference Update="System.Drawing.Common" Version="8.0.8"/>
+    <PackageReference Update="System.Security.Cryptography.Xml" Version="8.0.1"/>
+    <PackageReference Update="Microsoft.Build.Tasks.Core" Version="17.11.4"/>
 
     <!-- Version alignment to resolve downgrades -->
-    <PackageReference Update="Microsoft.SemanticKernel" Version="1.38.0" />
-    <PackageReference Update="Microsoft.SemanticKernel.Core" Version="1.38.0" />
-    <PackageReference Update="Microsoft.SemanticKernel.Abstractions" Version="1.38.0" />
-    <PackageReference Update="FSharp.Core" Version="10.0.100" />
+    <PackageReference Update="Microsoft.SemanticKernel" Version="1.38.0"/>
+    <PackageReference Update="Microsoft.SemanticKernel.Core" Version="1.38.0"/>
+    <PackageReference Update="Microsoft.SemanticKernel.Abstractions" Version="1.38.0"/>
+    <PackageReference Update="FSharp.Core" Version="10.0.100"/>
+
+    <!-- MSB3277 conflict resolution -->
+    <PackageReference Update="System.Numerics.Tensors" Version="10.0.2"/>
+    <PackageReference Update="Microsoft.ML.OnnxRuntime" Version="1.23.2"/>
+
+    <!-- Microsoft.Extensions.* version alignment for .NET 10 -->
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0"/>
+    <PackageReference Update="Microsoft.Extensions.Caching.Abstractions" Version="10.0.0"/>
+    <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="10.0.0"/>
+    <PackageReference Update="Microsoft.Extensions.Http" Version="10.0.0"/>
+    <PackageReference Update="Microsoft.Extensions.Options" Version="10.0.0"/>
   </ItemGroup>
 </Project>
 

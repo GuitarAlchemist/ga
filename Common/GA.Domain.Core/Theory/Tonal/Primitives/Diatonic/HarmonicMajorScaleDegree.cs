@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A harmonic major scale degree
@@ -23,10 +17,7 @@ public readonly record struct HarmonicMajorScaleDegree : IRangeValueObject<Harmo
     private readonly int _value;
 
     // Constructor
-    public HarmonicMajorScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public HarmonicMajorScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<HarmonicMajorScaleDegree> All => ValueObjectUtils<HarmonicMajorScaleDegree>.Items;
 
@@ -45,24 +36,15 @@ public readonly record struct HarmonicMajorScaleDegree : IRangeValueObject<Harmo
     public static HarmonicMajorScaleDegree LocrianDoubleFlat7 => new(7);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HarmonicMajorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static HarmonicMajorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static HarmonicMajorScaleDegree Min => FromValue(_minValue);
     public static HarmonicMajorScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator HarmonicMajorScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator HarmonicMajorScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(HarmonicMajorScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(HarmonicMajorScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -70,77 +52,53 @@ public readonly record struct HarmonicMajorScaleDegree : IRangeValueObject<Harmo
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Harmonic major",
-            2 => "Dorian b5",
-            3 => "Phrygian b4",
-            4 => "Lydian b3",
-            5 => "Mixolydian b2",
-            6 => "Lydian augmented #2",
-            7 => "Locrian bb7",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Harmonic major",
+        2 => "Dorian b5",
+        3 => "Phrygian b4",
+        4 => "Lydian b3",
+        5 => "Mixolydian b2",
+        6 => "Lydian augmented #2",
+        7 => "Locrian bb7",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "I",
-            2 => "II",
-            3 => "III",
-            4 => "IV",
-            5 => "V",
-            6 => "VI",
-            7 => "VII",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "I",
+        2 => "II",
+        3 => "III",
+        4 => "IV",
+        5 => "V",
+        6 => "VI",
+        7 => "VII",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<HarmonicMajorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<HarmonicMajorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<HarmonicMajorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<HarmonicMajorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(HarmonicMajorScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(HarmonicMajorScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right) =>
+        left.CompareTo(right) < 0;
 
-    public static bool operator >(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right) =>
+        left.CompareTo(right) > 0;
 
-    public static bool operator <=(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(HarmonicMajorScaleDegree left, HarmonicMajorScaleDegree right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

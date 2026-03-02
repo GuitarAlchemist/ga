@@ -28,13 +28,13 @@ public class PitchClassTests
         Assert.That(pitchClass.Value, Is.EqualTo(value));
     }
 
-    [TestCase(-1)]
-    [TestCase(12)]
-    [TestCase(13)]
-    public void FromValue_OutOfRange_ThrowsArgumentException(int value)
+    [Test]
+    public void FromValue_Normalization_ShouldWork()
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentException>(() => PitchClass.FromValue(value));
+        Assert.That(PitchClass.FromValue(12).Value, Is.EqualTo(0));
+        Assert.That(PitchClass.FromValue(13).Value, Is.EqualTo(1));
+        Assert.That(PitchClass.FromValue(-1).Value, Is.EqualTo(11));
     }
 
     [Test]

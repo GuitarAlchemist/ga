@@ -1,9 +1,5 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
 using Analysis.Atonal;
 
 /// <summary>
@@ -64,7 +60,7 @@ public static class HybridChordNamingService
         var analysis = AnalyzeChord(template, root, bassNote);
 
         // Check for iconic chord matches first - they often provide more meaningful names
-        var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(template, root, bassNote);
+        var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(template.Formula, root, bassNote);
         if (!string.IsNullOrEmpty(comprehensive.IconicName))
         {
             return comprehensive.IconicName;
@@ -132,7 +128,7 @@ public static class HybridChordNamingService
         try
         {
             // Use existing tonal naming services
-            var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(template, root, bassNote);
+            var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(template.Formula, root, bassNote);
 
             // Check if we got a meaningful tonal name
             if (IsMeaningfulTonalName(comprehensive.Primary))
@@ -286,33 +282,28 @@ public static class HybridChordNamingService
     /// <summary>
     ///     Gets examples of chords that benefit from each approach
     /// </summary>
-    public static IEnumerable<(string ChordName, AnalysisStrategy Strategy, string Reason)> GetAnalysisExamples()
-    {
-        return
-        [
-            ("Cmaj7", AnalysisStrategy.Tonal, "Clear tertian harmony"),
-            ("C7alt", AnalysisStrategy.Tonal, "Jazz harmony with alterations"),
-            ("C cluster(5)", AnalysisStrategy.Atonal, "Cluster chord requires set theory"),
-            ("C [5-35]", AnalysisStrategy.Atonal, "Complex pitch class set"),
-            ("C whole tone", AnalysisStrategy.Atonal, "Symmetrical structure"),
-            ("C quartal", AnalysisStrategy.Hybrid, "Can be analyzed both ways"),
-            ("C(b9,#11,b13)", AnalysisStrategy.Hybrid, "Complex alterations may need atonal backup"),
-            ("C diminished 7th", AnalysisStrategy.Atonal, "Symmetrical diminished structure")
-        ];
-    }
+    public static IEnumerable<(string ChordName, AnalysisStrategy Strategy, string Reason)> GetAnalysisExamples() =>
+    [
+        ("Cmaj7", AnalysisStrategy.Tonal, "Clear tertian harmony"),
+        ("C7alt", AnalysisStrategy.Tonal, "Jazz harmony with alterations"),
+        ("C cluster(5)", AnalysisStrategy.Atonal, "Cluster chord requires set theory"),
+        ("C [5-35]", AnalysisStrategy.Atonal, "Complex pitch class set"),
+        ("C whole tone", AnalysisStrategy.Atonal, "Symmetrical structure"),
+        ("C quartal", AnalysisStrategy.Hybrid, "Can be analyzed both ways"),
+        ("C(b9,#11,b13)", AnalysisStrategy.Hybrid, "Complex alterations may need atonal backup"),
+        ("C diminished 7th", AnalysisStrategy.Atonal, "Symmetrical diminished structure")
+    ];
 
     /// <summary>
     ///     Gets the note name for a pitch class
     /// </summary>
-    private static string GetNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string GetNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
             6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
             _ => "?"
         };
-    }
 
     /// <summary>
     ///     Comprehensive analysis result combining tonal and atonal approaches

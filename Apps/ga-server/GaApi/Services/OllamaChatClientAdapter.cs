@@ -28,7 +28,7 @@ public sealed class OllamaChatClientAdapter(
         if (string.IsNullOrWhiteSpace(userMessage))
         {
             logger.LogWarning("Chat invocation is missing a user message. Returning empty response.");
-            return new ChatResponse(new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, string.Empty));
+            return new(new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, string.Empty));
         }
 
         var responseText = await chatService.ChatAsync(
@@ -37,7 +37,7 @@ public sealed class OllamaChatClientAdapter(
             systemPrompt,
             cancellationToken);
 
-        return new ChatResponse(new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, responseText));
+        return new(new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, responseText));
     }
 
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
@@ -63,7 +63,7 @@ public sealed class OllamaChatClientAdapter(
                 continue;
             }
 
-            yield return new ChatResponseUpdate
+            yield return new()
             {
                 Role = ChatRole.Assistant,
                 Contents = [new TextContent(chunk)]
@@ -76,10 +76,7 @@ public sealed class OllamaChatClientAdapter(
         // Adapter does not own any unmanaged resources.
     }
 
-    public object? GetService(Type serviceType, object? serviceKey = null)
-    {
-        return null;
-    }
+    public object? GetService(Type serviceType, object? serviceKey = null) => null;
 
     private static (string? SystemPrompt, List<ChatMessage> History, string UserMessage) PrepareConversation(
         IEnumerable<Microsoft.Extensions.AI.ChatMessage> chatMessages)
@@ -91,7 +88,7 @@ public sealed class OllamaChatClientAdapter(
         {
             if (message.Role == ChatRole.User || message.Role == ChatRole.Assistant)
             {
-                history.Add(new ChatMessage
+                history.Add(new()
                 {
                     Role = message.Role == ChatRole.User ? "user" : "assistant",
                     Content = message.Text ?? string.Empty
@@ -109,8 +106,5 @@ public sealed class OllamaChatClientAdapter(
         return (systemPrompt, history, userMessage);
     }
 
-    public TService? GetService<TService>(object? serviceKey = null)
-    {
-        return default;
-    }
+    public TService? GetService<TService>(object? serviceKey = null) => default;
 }

@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Exotic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -46,15 +42,7 @@ public sealed class BluesScaleMode(BluesScaleDegree degree) : TonalScaleMode<Blu
         }
     }
 
-    public static BluesScaleMode Get(BluesScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static BluesScaleMode Get(BluesScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static BluesScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static BluesScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

@@ -1,9 +1,6 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System;
-using System.Collections.Generic;
-using Core.Primitives;
-using JetBrains.Annotations;
+using Core.Primitives.Notes;
 using Positions;
 
 [PublicAPI]
@@ -12,10 +9,7 @@ public abstract record Position(PositionLocation Location)
     /// <inheritdoc cref="Position" />
     public sealed record Muted(Str Str) : Position(new PositionLocation(Str, Fret.Muted)), IComparable<Muted>
     {
-        public override string ToString()
-        {
-            return $"X{Str}";
-        }
+        public override string ToString() => $"X{Str}";
 
         #region Relational Members
 
@@ -29,25 +23,13 @@ public abstract record Position(PositionLocation Location)
             return other is null ? 1 : Str.CompareTo(other.Str);
         }
 
-        public static bool operator <(Muted? left, Muted? right)
-        {
-            return Comparer<Muted>.Default.Compare(left, right) < 0;
-        }
+        public static bool operator <(Muted? left, Muted? right) => Comparer<Muted>.Default.Compare(left, right) < 0;
 
-        public static bool operator >(Muted? left, Muted? right)
-        {
-            return Comparer<Muted>.Default.Compare(left, right) > 0;
-        }
+        public static bool operator >(Muted? left, Muted? right) => Comparer<Muted>.Default.Compare(left, right) > 0;
 
-        public static bool operator <=(Muted? left, Muted? right)
-        {
-            return Comparer<Muted>.Default.Compare(left, right) <= 0;
-        }
+        public static bool operator <=(Muted? left, Muted? right) => Comparer<Muted>.Default.Compare(left, right) <= 0;
 
-        public static bool operator >=(Muted? left, Muted? right)
-        {
-            return Comparer<Muted>.Default.Compare(left, right) >= 0;
-        }
+        public static bool operator >=(Muted? left, Muted? right) => Comparer<Muted>.Default.Compare(left, right) >= 0;
 
         #endregion
     }
@@ -55,10 +37,7 @@ public abstract record Position(PositionLocation Location)
     /// <inheritdoc cref="Position" />
     public sealed record Played(PositionLocation Location, MidiNote MidiNote) : Position(Location), IComparable<Played>
     {
-        public override string ToString()
-        {
-            return $"{Location} {MidiNote}";
-        }
+        public override string ToString() => $"{Location} {MidiNote}";
 
         #region Relational Members
 
@@ -77,25 +56,15 @@ public abstract record Position(PositionLocation Location)
             return Location.CompareTo(other.Location);
         }
 
-        public static bool operator <(Played? left, Played? right)
-        {
-            return Comparer<Played>.Default.Compare(left, right) < 0;
-        }
+        public static bool operator <(Played? left, Played? right) => Comparer<Played>.Default.Compare(left, right) < 0;
 
-        public static bool operator >(Played? left, Played? right)
-        {
-            return Comparer<Played>.Default.Compare(left, right) > 0;
-        }
+        public static bool operator >(Played? left, Played? right) => Comparer<Played>.Default.Compare(left, right) > 0;
 
-        public static bool operator <=(Played? left, Played? right)
-        {
-            return Comparer<Played>.Default.Compare(left, right) <= 0;
-        }
+        public static bool operator <=(Played? left, Played? right) =>
+            Comparer<Played>.Default.Compare(left, right) <= 0;
 
-        public static bool operator >=(Played? left, Played? right)
-        {
-            return Comparer<Played>.Default.Compare(left, right) >= 0;
-        }
+        public static bool operator >=(Played? left, Played? right) =>
+            Comparer<Played>.Default.Compare(left, right) >= 0;
 
         #endregion
 
@@ -116,10 +85,7 @@ public abstract record Position(PositionLocation Location)
             return base.Equals(other) && Location.Equals(other.Location);
         }
 
-        public override int GetHashCode()
-        {
-            return Location.GetHashCode();
-        }
+        public override int GetHashCode() => Location.GetHashCode();
 
         #endregion
     }

@@ -1,41 +1,37 @@
 namespace GA.Business.ML.Tests.Integration;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Embeddings.Validation;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using NUnit.Framework;
+using Embeddings;
+using Embeddings.Validation;
+using Rag.Models;
+using TestInfrastructure;
 
 /// <summary>
-/// Tests that validate the OPTIC-K embedding schema's partition-based retrieval.
-/// These tests verify that similar musical concepts retrieve each other correctly
-/// when searching by specific embedding dimensions.
+///     Tests that validate the OPTIC-K embedding schema's partition-based retrieval.
+///     These tests verify that similar musical concepts retrieve each other correctly
+///     when searching by specific embedding dimensions.
 /// </summary>
 [TestFixture]
 [Category("Validation")]
 [Category("OPTIC-K")]
 public class EmbeddingSchemaValidationTests
 {
-    private MusicalEmbeddingGenerator _generator = null!;
-    private PartitionAwareRagIndex _index = null!;
-
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        _generator = TestInfrastructure.TestServices.CreateGenerator();
-        _index = new PartitionAwareRagIndex();
-        
+        _generator = TestServices.CreateGenerator();
+        _index = new();
+
         // Seed the index with test voicings
         await SeedTestVoicingsAsync();
     }
 
-    private async Task<float[]> GenerateEmbeddingAsync(VoicingDocument doc)
+    private MusicalEmbeddingGenerator _generator = null!;
+    private PartitionAwareRagIndex _index = null!;
+
+    private async Task<float[]> GenerateEmbeddingAsync(ChordVoicingRagDocument doc)
     {
         var doubleArray = await _generator.GenerateEmbeddingAsync(doc);
-        return doubleArray.Select(d => (float)d).ToArray();
+        return [.. doubleArray.Select(d => (float)d)];
     }
 
     [Test]
@@ -80,7 +76,7 @@ public class EmbeddingSchemaValidationTests
         // Assert - Structure (pitch classes) should be very similar
         var structureSim = breakdown.PartitionScores["Structure"];
         TestContext.WriteLine($"Structure similarity (same chord, different positions): {structureSim:F4}");
-        Assert.That(structureSim, Is.GreaterThan(0.9), 
+        Assert.That(structureSim, Is.GreaterThan(0.9),
             "Same chord type should have high structure similarity");
     }
 
@@ -100,7 +96,7 @@ public class EmbeddingSchemaValidationTests
         // Assert - Morphology should differ (different positions)
         var morphologySim = breakdown.PartitionScores["Morphology"];
         TestContext.WriteLine($"Morphology similarity (same chord, different positions): {morphologySim:F4}");
-        Assert.That(morphologySim, Is.LessThan(0.95), 
+        Assert.That(morphologySim, Is.LessThan(0.95),
             "Different positions should have different morphology");
     }
 
@@ -123,7 +119,7 @@ public class EmbeddingSchemaValidationTests
 
         // Other major chords should rank high
         var topChordNames = results.Take(3).Select(r => r.Document.ChordName).ToList();
-        Assert.That(topChordNames.Any(n => n?.Contains("Major") == true), 
+        Assert.That(topChordNames.Any(n => n?.Contains("Major") == true),
             "Top results should include Major chords");
     }
 
@@ -145,8 +141,8 @@ public class EmbeddingSchemaValidationTests
         }
 
         // Results should favor similar fret positions
-        var topResult = results.First();
-        Assert.That(topResult.Similarity, Is.GreaterThan(0.5), 
+        var topResult = results[0];
+        Assert.That(topResult.Similarity, Is.GreaterThan(0.5),
             "Should find morphologically similar voicings");
     }
 
@@ -159,7 +155,7 @@ public class EmbeddingSchemaValidationTests
         _index.Add(queryDoc, queryEmb);
 
         // Act
-        var report = _index.AnalyzePartitionRetrieval(queryEmb, queryDoc.Id, 10);
+        var report = _index.AnalyzePartitionRetrieval(queryEmb, queryDoc.Id);
 
         // Assert
         TestContext.WriteLine(report.ToReport());
@@ -182,7 +178,7 @@ public class EmbeddingSchemaValidationTests
         // Assert
         var structureSim = breakdown.PartitionScores["Structure"];
         TestContext.WriteLine($"Structure similarity (Major vs Diminished): {structureSim:F4}");
-        Assert.That(structureSim, Is.LessThan(0.8), 
+        Assert.That(structureSim, Is.LessThan(0.8),
             "Different chord types should have lower structure similarity");
     }
 
@@ -192,9 +188,10 @@ public class EmbeddingSchemaValidationTests
         // Verify schema consistency
         foreach (var partition in OpticKPartitions.All)
         {
-            TestContext.WriteLine($"{partition.Name}: Offset={partition.Offset}, Dim={partition.Dimension}, End={partition.End}, Weight={partition.Weight}");
+            TestContext.WriteLine(
+                $"{partition.Name}: Offset={partition.Offset}, Dim={partition.Dimension}, End={partition.End}, Weight={partition.Weight}");
             Assert.That(partition.Dimension, Is.GreaterThan(0), $"{partition.Name} should have positive dimension");
-            Assert.That(partition.End, Is.LessThanOrEqualTo(EmbeddingSchema.TotalDimension), 
+            Assert.That(partition.End, Is.LessThanOrEqualTo(EmbeddingSchema.TotalDimension),
                 $"{partition.Name} should not exceed total dimension");
         }
     }
@@ -233,8 +230,6 @@ public class EmbeddingSchemaValidationTests
         Assert.That(results.Count, Is.GreaterThan(0), "Should return results");
     }
 
-    #region Test Data Setup
-
     private async Task SeedTestVoicingsAsync()
     {
         var voicings = new[]
@@ -257,7 +252,7 @@ public class EmbeddingSchemaValidationTests
         }
     }
 
-    private static VoicingDocument CreateCMajorOpenVoicing() => new()
+    private static ChordVoicingRagDocument CreateCMajorOpenVoicing() => new()
     {
         Id = "c-major-open",
         ChordName = "C Major",
@@ -270,10 +265,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "C Major open position",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["C Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["C Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateCMajorBarreVoicing() => new()
+    private static ChordVoicingRagDocument CreateCMajorBarreVoicing() => new()
     {
         Id = "c-major-barre",
         ChordName = "C Major",
@@ -286,10 +282,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "C Major barre chord",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["C Major"], SemanticTags = ["Major", "Triad", "Barre"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["C Major"], SemanticTags = ["Major", "Triad", "Barre"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateGMajorOpenVoicing() => new()
+    private static ChordVoicingRagDocument CreateGMajorOpenVoicing() => new()
     {
         Id = "g-major-open",
         ChordName = "G Major",
@@ -302,10 +299,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "G Major open position",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["G Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["G Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateAMinorOpenVoicing() => new()
+    private static ChordVoicingRagDocument CreateAMinorOpenVoicing() => new()
     {
         Id = "a-minor-open",
         ChordName = "A Minor",
@@ -318,10 +316,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "A Minor open position",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["A Minor"], SemanticTags = ["Minor", "Triad", "Open"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["A Minor"], SemanticTags = ["Minor", "Triad", "Open"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateEMinorOpenVoicing() => new()
+    private static ChordVoicingRagDocument CreateEMinorOpenVoicing() => new()
     {
         Id = "e-minor-open",
         ChordName = "E Minor",
@@ -334,10 +333,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "E Minor open position",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["E Minor"], SemanticTags = ["Minor", "Triad", "Open"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["E Minor"], SemanticTags = ["Minor", "Triad", "Open"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateDMajorOpenVoicing() => new()
+    private static ChordVoicingRagDocument CreateDMajorOpenVoicing() => new()
     {
         Id = "d-major-open",
         ChordName = "D Major",
@@ -350,10 +350,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "D Major open position",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["D Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["D Major"], SemanticTags = ["Major", "Triad", "Open"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateFMajorBarreVoicing() => new()
+    private static ChordVoicingRagDocument CreateFMajorBarreVoicing() => new()
     {
         Id = "f-major-barre",
         ChordName = "F Major",
@@ -366,10 +367,11 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "F Major barre chord",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "3-11", YamlAnalysis = "",
-        PossibleKeys = ["F Major"], SemanticTags = ["Major", "Triad", "Barre"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["F Major"], SemanticTags = ["Major", "Triad", "Barre"], StackingType = "Tertian",
+        Embedding = null
     };
 
-    private static VoicingDocument CreateBDiminishedVoicing() => new()
+    private static ChordVoicingRagDocument CreateBDiminishedVoicing() => new()
     {
         Id = "b-diminished",
         ChordName = "B Diminished",
@@ -385,7 +387,7 @@ public class EmbeddingSchemaValidationTests
         PossibleKeys = ["C Major"], SemanticTags = ["Diminished", "Triad"], StackingType = "Tertian", Embedding = null
     };
 
-    private static VoicingDocument CreateDominantSeventhVoicing() => new()
+    private static ChordVoicingRagDocument CreateDominantSeventhVoicing() => new()
     {
         Id = "g7-dominant",
         ChordName = "G Dominant 7",
@@ -398,8 +400,7 @@ public class EmbeddingSchemaValidationTests
         AnalysisVersion = "1.0",
         SearchableText = "G Dominant 7th chord",
         Jobs = [], TuningId = "Standard", PitchClassSetId = "4-27", YamlAnalysis = "",
-        PossibleKeys = ["C Major", "G Major"], SemanticTags = ["Dominant", "Seventh"], StackingType = "Tertian", Embedding = null
+        PossibleKeys = ["C Major", "G Major"], SemanticTags = ["Dominant", "Seventh"], StackingType = "Tertian",
+        Embedding = null
     };
-
-    #endregion
 }

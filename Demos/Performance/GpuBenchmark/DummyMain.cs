@@ -5,8 +5,5 @@ namespace GpuBenchmark;
 
 internal class DummyMain
 {
-    private static void Main(string[] args)
-    {
-        Console.WriteLine("GpuBenchmark is currently disabled - GPU features not yet implemented");
-    }
+    private static void Main(string[] args) => Console.WriteLine("GpuBenchmark is currently disabled - GPU features not yet implemented");
 }

@@ -46,7 +46,7 @@ public sealed class WeatherTools
         var pointUrl = string.Create(CultureInfo.InvariantCulture, $"/points/{latitude},{longitude}");
         using var jsonDocument = await client.ReadJsonDocumentAsync(pointUrl);
         var forecastUrl = jsonDocument.RootElement.GetProperty("properties").GetProperty("forecast").GetString()
-                          ?? throw new Exception(
+                          ?? throw new(
                               $"No forecast URL provided by {client.BaseAddress}points/{latitude},{longitude}");
 
         using var forecastDocument = await client.ReadJsonDocumentAsync(forecastUrl);

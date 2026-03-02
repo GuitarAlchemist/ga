@@ -1,8 +1,8 @@
-﻿namespace GA.Domain.Core.Tests;
+﻿namespace GA.Business.Core.Tests;
 
-using Theory.Harmony;
-using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
-using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Domain.Core.Theory.Harmony;
+using Domain.Core.Theory.Tonal.Modes.Diatonic;
+using Domain.Core.Theory.Tonal.Primitives.Diatonic;
 using Domain.Services.Chords;
 
 [TestFixture]
@@ -31,6 +31,7 @@ public class ChordTemplateFactoryTests
             Is.True);
         Assert.That(diminishedChords.All(c => c.Quality == ChordQuality.Diminished), Is.True);
     }
+
     [Test]
     public void GetChordsByIntervalPattern_ShouldReturnMatchingChords()
     {
@@ -50,6 +51,7 @@ public class ChordTemplateFactoryTests
                 $"Chord {chord.Name} should have major triad intervals");
         }
     }
+
     [Test]
     public void GenerateAllPossibleChords_ShouldReturnSystematicGeneration()
     {
@@ -72,6 +74,7 @@ public class ChordTemplateFactoryTests
         Assert.That(allChords.All(c => c is ChordTemplate.TonalModal or ChordTemplate.Analytical), Is.True,
             "All chords should be generated from scale modes or analytical methods");
     }
+
     [Test]
     public void CreateModalChords_ShouldGenerateCorrectNumberOfChords()
     {
@@ -83,6 +86,7 @@ public class ChordTemplateFactoryTests
         Assert.That(modalChords.Count, Is.EqualTo(7)); // 7 degrees in major scale
         Assert.That(modalChords.All(c => c.Extension == ChordExtension.Triad), Is.True);
     }
+
     [Test]
     public void CreateDiatonicChords_ShouldCreateSevenTriads()
     {
@@ -95,6 +99,7 @@ public class ChordTemplateFactoryTests
         Assert.That(diatonicChords.All(c => c.Extension == ChordExtension.Triad), Is.True);
         Assert.That(diatonicChords.All(c => c.StackingType == ChordStackingType.Tertian), Is.True);
     }
+
     [Test]
     public void CreateDiatonicSevenths_ShouldCreateSevenSeventhChords()
     {
@@ -107,6 +112,7 @@ public class ChordTemplateFactoryTests
         Assert.That(seventhChords.All(c => c.Extension == ChordExtension.Seventh), Is.True);
         Assert.That(seventhChords.All(c => c.StackingType == ChordStackingType.Tertian), Is.True);
     }
+
     [Test]
     public void GenerateFromScaleMode_ShouldCreateAllStackingTypes()
     {
@@ -129,6 +135,7 @@ public class ChordTemplateFactoryTests
         // All should be TonalModal chords from the scale
         Assert.That(allChords.All(c => c is ChordTemplate.TonalModal), Is.True, "All should be tonal modal chords");
     }
+
     [Test]
     public void GenerateFromAllModalFamilies_ShouldCoverAllScales()
     {
@@ -145,6 +152,7 @@ public class ChordTemplateFactoryTests
         Assert.That(modalFamilyChords.All(c => c is ChordTemplate.TonalModal), Is.True,
             "All should be tonal modal chords");
     }
+
     [Test]
     public void CreateTraditionalChordLibrary_ShouldReturnManyChords()
     {

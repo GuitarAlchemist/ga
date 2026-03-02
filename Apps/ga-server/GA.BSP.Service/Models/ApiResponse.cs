@@ -55,9 +55,8 @@ public class ApiResponse<T>
     ///     Create a successful response
     /// </summary>
     public static ApiResponse<T> Ok(T data, PaginationInfo? pagination = null,
-        Dictionary<string, object>? metadata = null, string? correlationId = null)
-    {
-        return new ApiResponse<T>
+        Dictionary<string, object>? metadata = null, string? correlationId = null) =>
+        new()
         {
             Success = true,
             Data = data,
@@ -65,15 +64,13 @@ public class ApiResponse<T>
             Metadata = metadata,
             CorrelationId = correlationId
         };
-    }
 
     /// <summary>
     ///     Create an error response
     /// </summary>
     public static ApiResponse<T> Fail(string error, string? errorDetails = null, string? errorCode = null,
-        string? correlationId = null)
-    {
-        return new ApiResponse<T>
+        string? correlationId = null) =>
+        new()
         {
             Success = false,
             Error = error,
@@ -81,7 +78,6 @@ public class ApiResponse<T>
             ErrorCode = errorCode,
             CorrelationId = correlationId
         };
-    }
 }
 
 /// <summary>
@@ -216,7 +212,7 @@ public class HealthCheckResponse
     /// <summary>
     ///     Individual service health checks
     /// </summary>
-    public Dictionary<string, ServiceHealth> Services { get; set; } = new();
+    public Dictionary<string, ServiceHealth> Services { get; set; } = [];
 
     /// <summary>
     ///     API version

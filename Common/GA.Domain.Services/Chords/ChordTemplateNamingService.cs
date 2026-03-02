@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Core.Theory.Atonal;
 using Core.Theory.Harmony;
-using Core.Unified;
+using Core.Theory.Tonal.Modes.Unified;
 using Analysis.Atonal;
-using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     Main service that coordinates all chord naming services and provides a unified API
@@ -136,14 +136,16 @@ public static class ChordTemplateNamingService
         PitchClass root,
         PitchClass? bassNote = null)
     {
+        var servicesTemplate = ConvertToServices(template);
+        
         var primary = GeneratePrimaryName(template, root, bassNote);
         var slashChord = GenerateSlashChordName(template, root, bassNote);
-        var quartal = GenerateQuartalName(template, root);
-        var withAlterations = GenerateNameWithAlterations(template, root);
+        var quartal = GenerateQuartalName(servicesTemplate, root);
+        var withAlterations = GenerateNameWithAlterations(servicesTemplate, root);
         var enharmonicEquivalent = GenerateEnharmonicEquivalent(template, root);
-        var atonalName = GenerateAtonalName(template, root);
-        var (keyAwareName, mostProbableKey) = GenerateKeyAwareName(template, root);
-        var (iconicName, iconicDescription) = GenerateIconicName(template, root);
+        var atonalName = GenerateAtonalName(servicesTemplate, root);
+        var (keyAwareName, mostProbableKey) = GenerateKeyAwareName(servicesTemplate, root);
+        var (iconicName, iconicDescription) = GenerateIconicName(servicesTemplate, root);
         var alternates = GenerateAlternateNames(template, root, bassNote);
 
         return new(primary, slashChord, quartal, withAlterations, enharmonicEquivalent,
@@ -158,7 +160,9 @@ public static class ChordTemplateNamingService
         PitchClass root,
         PitchClass? bassNote = null)
     {
-        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        var template = ChordTemplate.Analytical.FromPitchClassSet(
+            new Core.Theory.Atonal.PitchClassSet(formula.Intervals.Select(i => Core.Theory.Atonal.PitchClass.FromSemitones(i.Interval.Semitones))), 
+            formula.Name);
         return GenerateComprehensiveNames(template, root, bassNote);
     }
 
@@ -168,7 +172,8 @@ public static class ChordTemplateNamingService
     public static string GetBestChordName(ChordTemplate template, PitchClass root, PitchClass? bassNote = null)
     {
         // Use hybrid analysis for intelligent tonal/atonal selection
-        return HybridChordNamingService.GetBestChordName(template, root, bassNote);
+        var servicesTemplate = ConvertToServices(template);
+        return HybridChordNamingService.GetBestChordName(servicesTemplate, root, bassNote);
     }
 
     /// <summary>
@@ -176,7 +181,9 @@ public static class ChordTemplateNamingService
     /// </summary>
     public static string GetBestChordName(ChordFormula formula, PitchClass root, PitchClass? bassNote = null)
     {
-        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        var template = ChordTemplate.Analytical.FromPitchClassSet(
+            new Core.Theory.Atonal.PitchClassSet(formula.Intervals.Select(i => Core.Theory.Atonal.PitchClass.FromSemitones(i.Interval.Semitones))), 
+            formula.Name);
         return GetBestChordName(template, root, bassNote);
     }
 
@@ -214,7 +221,9 @@ public static class ChordTemplateNamingService
         PitchClass root,
         PitchClass? bassNote = null)
     {
-        var template = new ChordTemplate.Analytical(formula, "Direct Formula Adapter");
+        var template = ChordTemplate.Analytical.FromPitchClassSet(
+            new Core.Theory.Atonal.PitchClassSet(formula.Intervals.Select(i => Core.Theory.Atonal.PitchClass.FromSemitones(i.Interval.Semitones))), 
+            formula.Name);
         return GetAllNamingOptions(template, root, bassNote);
     }
 
@@ -319,7 +328,8 @@ public static class ChordTemplateNamingService
     /// </summary>
     private static string? GenerateEnharmonicEquivalent(ChordTemplate template, PitchClass root)
     {
-        var enharmonics = EnharmonicNamingService.GetEnharmonicEquivalents(root, template);
+        var servicesTemplate = ConvertToServices(template);
+        var enharmonics = EnharmonicNamingService.GetEnharmonicEquivalents(root, servicesTemplate);
         var primary = GeneratePrimaryName(template, root, null);
 
         return enharmonics.FirstOrDefault(name => name != primary);
@@ -371,6 +381,8 @@ public static class ChordTemplateNamingService
         return (null, null);
     }
 
+    private static ChordTemplate ConvertToServices(ChordTemplate coreTemplate) => coreTemplate;
+
     /// <summary>
     ///     Generates alternate chord names
     /// </summary>
@@ -409,10 +421,7 @@ public static class ChordTemplateNamingService
     /// <summary>
     ///     Helper methods
     /// </summary>
-    private static string GetNoteName(PitchClass pitchClass)
-    {
-        return BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
-    }
+    private static string GetNoteName(PitchClass pitchClass) => BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
 
     private static PitchClass? GetEnharmonicEquivalent(PitchClass pitchClass)
     {

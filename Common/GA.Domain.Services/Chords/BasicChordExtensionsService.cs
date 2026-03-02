@@ -1,11 +1,5 @@
 namespace GA.Domain.Services.Chords;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
-
 /// <summary>
 ///     Service for handling basic chord extensions (7th, 9th, 11th, 13th) with standard naming
 /// </summary>
@@ -14,9 +8,8 @@ public static class BasicChordExtensionsService
     /// <summary>
     ///     Gets standard notation for a chord extension
     /// </summary>
-    public static string GetExtensionNotation(ChordExtension extension, ChordQuality quality)
-    {
-        return extension switch
+    public static string GetExtensionNotation(ChordExtension extension, ChordQuality quality) =>
+        extension switch
         {
             ChordExtension.Triad => "",
             ChordExtension.Sixth => "6",
@@ -31,14 +24,12 @@ public static class BasicChordExtensionsService
             ChordExtension.Sus4 => "sus4",
             _ => ""
         };
-    }
 
     /// <summary>
     ///     Gets detailed information about a chord extension
     /// </summary>
-    public static ChordExtensionInfo GetExtensionInfo(ChordExtension extension)
-    {
-        return extension switch
+    public static ChordExtensionInfo GetExtensionInfo(ChordExtension extension) =>
+        extension switch
         {
             ChordExtension.Triad => new(
                 extension, "", "", "Basic triad (1-3-5)", new[] { 3, 7 }.ToList().AsReadOnly()),
@@ -78,7 +69,6 @@ public static class BasicChordExtensionsService
             _ => new(
                 extension, "", "", "Unknown extension", new List<int>().AsReadOnly())
         };
-    }
 
     /// <summary>
     ///     Determines if a chord template matches a specific extension
@@ -86,7 +76,7 @@ public static class BasicChordExtensionsService
     public static bool MatchesExtension(ChordTemplate template, ChordExtension targetExtension)
     {
         var expectedExtensionsIntervalsInfo = GetExtensionInfo(targetExtension);
-        var actualIntervals = template.Intervals.Select(i => i.Interval.Semitones.Value).ToHashSet();
+        var actualIntervals = template.Formula.Intervals.Select(i => i.Interval.Semitones.Value).ToHashSet();
         var expectedExtensionsIntervals = expectedExtensionsIntervalsInfo.RequiredIntervals.ToHashSet();
 
         // Check if all expectedExtensionsIntervals intervals are present
@@ -162,7 +152,7 @@ public static class BasicChordExtensionsService
 
         if (intervalSet.Contains(10) || (intervalSet.Contains(4) && intervalSet.Contains(10)))
         {
-             // Dominant family logic handled in quality
+            // Dominant family logic handled in quality
         }
 
         return ChordExtension.Triad;
@@ -190,9 +180,8 @@ public static class BasicChordExtensionsService
     /// <summary>
     ///     Gets the seventh chord notation based on quality
     /// </summary>
-    private static string GetSeventhNotation(ChordQuality quality)
-    {
-        return quality switch
+    private static string GetSeventhNotation(ChordQuality quality) =>
+        quality switch
         {
             ChordQuality.Major => "maj7",
             ChordQuality.Minor => "m7",
@@ -201,14 +190,12 @@ public static class BasicChordExtensionsService
             ChordQuality.Dominant => "7",
             _ => "7" // Default to dominant for Seventh extension
         };
-    }
 
     /// <summary>
     ///     Gets the ninth chord notation based on quality
     /// </summary>
-    private static string GetNinthNotation(ChordQuality quality)
-    {
-        return quality switch
+    private static string GetNinthNotation(ChordQuality quality) =>
+        quality switch
         {
             ChordQuality.Major => "maj9",
             ChordQuality.Minor => "m9",
@@ -217,42 +204,36 @@ public static class BasicChordExtensionsService
             ChordQuality.Dominant => "9",
             _ => "9" // Default to dominant for Ninth extension
         };
-    }
 
     /// <summary>
     ///     Gets the eleventh chord notation based on quality
     /// </summary>
-    private static string GetEleventhNotation(ChordQuality quality)
-    {
-        return quality switch
+    private static string GetEleventhNotation(ChordQuality quality) =>
+        quality switch
         {
             ChordQuality.Major => "maj11",
             ChordQuality.Minor => "m11",
             ChordQuality.Dominant => "11",
             _ => "11" // Default to dominant for Eleventh extension
         };
-    }
 
     /// <summary>
     ///     Gets the thirteenth chord notation based on quality
     /// </summary>
-    private static string GetThirteenthNotation(ChordQuality quality)
-    {
-        return quality switch
+    private static string GetThirteenthNotation(ChordQuality quality) =>
+        quality switch
         {
             ChordQuality.Major => "maj13",
             ChordQuality.Minor => "m13",
             ChordQuality.Dominant => "13",
             _ => "13" // Default to dominant for Thirteenth extension
         };
-    }
 
     /// <summary>
     ///     Gets the quality notation
     /// </summary>
-    private static string GetQualityNotation(ChordQuality quality)
-    {
-        return quality switch
+    private static string GetQualityNotation(ChordQuality quality) =>
+        quality switch
         {
             ChordQuality.Minor => "m",
             ChordQuality.Diminished => "dim",
@@ -262,7 +243,6 @@ public static class BasicChordExtensionsService
             ChordQuality.Major => "",
             _ => ""
         };
-    }
 
     /// <summary>
     ///     Gets the note name for a pitch class
@@ -270,9 +250,8 @@ public static class BasicChordExtensionsService
     /// <summary>
     ///     Gets the note name for a pitch class with natural preference for flats in certain contexts
     /// </summary>
-    private static string GetBestNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string GetBestNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             1 => "Db",
             3 => "Eb",
@@ -280,7 +259,6 @@ public static class BasicChordExtensionsService
             10 => "Bb",
             _ => pitchClass.ToSharpNote().ToString()
         };
-    }
 
     /// <summary>
     ///     Gets the note name for a pitch class (Deprecated, use GetBestNoteName)
@@ -307,20 +285,17 @@ public static class BasicChordExtensionsService
     /// <summary>
     ///     Gets common chord progressions using extensions
     /// </summary>
-    public static IEnumerable<(string Name, string Description)> GetCommonExtendedProgressions()
-    {
-        return
-        [
-            ("ii7-V7-Imaj7", "Minor 7th - Dominant 7th - Major 7th"),
-            ("vi7-ii7-V7-Imaj7", "Extended ii-V-I with vi7"),
-            ("Imaj7-vi7-ii7-V7", "Extended I-vi-ii-V"),
-            ("ii9-V13-Imaj9", "Extended ii-V-I with 9th and 13th"),
-            ("iiÃ¸7-V7alt-im7", "Half-diminished - Altered dominant - Minor 7th"),
-            ("Imaj7-IV7-viim7b5-iii7", "Extended I-IV-vii-iii"),
-            ("vi7-V7/ii-ii7-V7", "Secondary dominant progression"),
-            ("Imaj9-bVIImaj7-VImaj7-V7sus4", "Modern jazz progression")
-        ];
-    }
+    public static IEnumerable<(string Name, string Description)> GetCommonExtendedProgressions() =>
+    [
+        ("ii7-V7-Imaj7", "Minor 7th - Dominant 7th - Major 7th"),
+        ("vi7-ii7-V7-Imaj7", "Extended ii-V-I with vi7"),
+        ("Imaj7-vi7-ii7-V7", "Extended I-vi-ii-V"),
+        ("ii9-V13-Imaj9", "Extended ii-V-I with 9th and 13th"),
+        ("iiÃ¸7-V7alt-im7", "Half-diminished - Altered dominant - Minor 7th"),
+        ("Imaj7-IV7-viim7b5-iii7", "Extended I-IV-vii-iii"),
+        ("vi7-V7/ii-ii7-V7", "Secondary dominant progression"),
+        ("Imaj9-bVIImaj7-VImaj7-V7sus4", "Modern jazz progression")
+    ];
 
     /// <summary>
     ///     Basic chord extension information

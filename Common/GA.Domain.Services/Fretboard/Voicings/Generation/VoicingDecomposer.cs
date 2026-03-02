@@ -1,19 +1,16 @@
 namespace GA.Domain.Services.Fretboard.Voicings.Generation;
 
-using System.Collections.Generic;
-using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
 using GA.Core.Combinatorics;
 
 /// <summary>
-/// Decomposes voicings into relative fret vectors for pattern analysis
+///     Decomposes voicings into relative fret vectors for pattern analysis
 /// </summary>
 public static class VoicingDecomposer
 {
     /// <summary>
-    /// Decomposes a list of voicings into relative fret vectors
+    ///     Decomposes a list of voicings into relative fret vectors
     /// </summary>
     /// <param name="voicings">The voicings to decompose</param>
     /// <param name="vectorCollection">The collection of relative fret vectors to match against</param>
@@ -29,7 +26,7 @@ public static class VoicingDecomposer
         // Default parameters: fretExtent=5 (Range 0-4), stringCount=6
         var variations = new VariationsWithRepetitions<RelativeFret>(
             RelativeFret.Range(0, 5),
-            length: 6);
+            6);
 
         var results = new List<DecomposedVoicing>(voicings.Count);
 
@@ -37,7 +34,10 @@ public static class VoicingDecomposer
         {
             // Extract relative fret numbers from positions
             var relativeFrets = GetRelativeFrets(voicing.Positions);
-            if (relativeFrets == null) continue; // Skip invalid voicings
+            if (relativeFrets == null)
+            {
+                continue; // Skip invalid voicings
+            }
 
             // O(1) lookup: Get the index of this variation, then lookup the vector from array
             var index = variations.GetIndex(relativeFrets);
@@ -54,7 +54,7 @@ public static class VoicingDecomposer
     }
 
     /// <summary>
-    /// Extracts relative fret numbers from positions, normalizing to the minimum fret
+    ///     Extracts relative fret numbers from positions, normalizing to the minimum fret
     /// </summary>
     /// <param name="positions">The positions to extract relative frets from</param>
     /// <returns>Array of relative frets, or null if invalid</returns>
@@ -91,6 +91,7 @@ public static class VoicingDecomposer
                     relativeFrets[i] = RelativeFret.FromValue(0);
                 }
             }
+
             return relativeFrets;
         }
 
@@ -112,7 +113,7 @@ public static class VoicingDecomposer
 }
 
 /// <summary>
-/// Represents a voicing decomposed into its relative fret vector
+///     Represents a voicing decomposed into its relative fret vector
 /// </summary>
 /// <param name="Voicing">The original voicing</param>
 /// <param name="Vector">The relative fret vector</param>

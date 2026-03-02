@@ -1,10 +1,10 @@
-namespace GA.Domain.Core.Tests.Services;
+namespace GA.Business.Core.Tests.Services;
 
+using GA.Business.ML.Abstractions;
+using GA.Business.ML.Text.Internal;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using GA.Business.ML.Abstractions;
-using Business.ML.Text.Internal;
 using NUnit.Framework;
 
 public sealed class CountingEmbeddingService : ITextEmbeddingService

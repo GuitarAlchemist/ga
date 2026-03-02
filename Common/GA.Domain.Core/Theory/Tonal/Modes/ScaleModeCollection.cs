@@ -1,40 +1,36 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes;
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using GA.Core.Abstractions;
 using GA.Core.Collections.Abstractions;
 
-public class ScaleModeCollection<TScaleModeDegree, TScaleMode> : IReadOnlyCollection<TScaleMode>,
-    IIndexer<TScaleModeDegree, TScaleMode>
+[CollectionBuilder(typeof(ScaleModeCollectionBuilder), nameof(ScaleModeCollectionBuilder.Create))]
+public class ScaleModeCollection<TScaleModeDegree, TScaleMode>(IReadOnlyCollection<TScaleMode> modes)
+    : IReadOnlyCollection<TScaleMode>,
+        IIndexer<TScaleModeDegree, TScaleMode>
     where TScaleModeDegree : struct, IRangeValueObject<TScaleModeDegree>
     where TScaleMode : ScaleMode<TScaleModeDegree>
 {
-    private readonly ImmutableDictionary<TScaleModeDegree, TScaleMode> _modeByDegree;
-    private readonly ImmutableDictionary<int, TScaleMode> _modeByDegreeValue;
+    private readonly ImmutableDictionary<TScaleModeDegree, TScaleMode> _modeByDegree =
+        modes.ToImmutableDictionary(mode => mode.ParentScaleDegree);
 
-    public ScaleModeCollection(IReadOnlyCollection<TScaleMode> modes)
-    {
-        ArgumentNullException.ThrowIfNull(modes);
-
-        _modeByDegree = modes.ToImmutableDictionary(mode => mode.ParentScaleDegree);
-        _modeByDegreeValue = modes.ToImmutableDictionary(mode => mode.ParentScaleDegree.Value);
-    }
+    private readonly ImmutableDictionary<int, TScaleMode> _modeByDegreeValue =
+        modes.ToImmutableDictionary(mode => mode.ParentScaleDegree.Value);
 
     public TScaleMode this[int degree] => _modeByDegreeValue[degree];
     public TScaleMode this[TScaleModeDegree degree] => _modeByDegree[degree];
 
-    public IEnumerator<TScaleMode> GetEnumerator()
-    {
-        return _modeByDegree.Values.GetEnumerator();
-    }
+    public IEnumerator<TScaleMode> GetEnumerator() => _modeByDegree.Values.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public int Count => _modeByDegree.Count;
+}
+
+public static class ScaleModeCollectionBuilder
+{
+    public static ScaleModeCollection<TScaleModeDegree, TScaleMode> Create<TScaleModeDegree, TScaleMode>(
+        ReadOnlySpan<TScaleMode> modes)
+        where TScaleModeDegree : struct, IRangeValueObject<TScaleModeDegree>
+        where TScaleMode : ScaleMode<TScaleModeDegree>
+        => new(modes.ToArray());
 }

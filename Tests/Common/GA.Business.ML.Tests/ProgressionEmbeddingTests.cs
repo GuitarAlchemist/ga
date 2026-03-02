@@ -2,7 +2,7 @@ namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
 using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Rag.Models;
 using GA.Business.ML.Wavelets;
 using NUnit.Framework;
 
@@ -16,7 +16,7 @@ public class ProgressionEmbeddingTests
     {
         var waveletService = new WaveletTransformService();
         var signalService = new ProgressionSignalService();
-        _embeddingService = new ProgressionEmbeddingService(signalService, waveletService);
+        _embeddingService = new(signalService, waveletService);
     }
 
     [Test]
@@ -25,12 +25,12 @@ public class ProgressionEmbeddingTests
         // Arrange
         // Create a simple progression: C Major -> G Major -> Am -> F Major
         // (Tonic -> Dominant -> Tonic-parallel -> Predominant)
-        var progression = new List<VoicingDocument>
+        var progression = new List<ChordVoicingRagDocument>
         {
-            CreateDummyDoc("C", 0.9, new double[216]), // High stability
-            CreateDummyDoc("G", 0.7, new double[216].Select(x => 0.5).ToArray()), // Lower stability
-            CreateDummyDoc("Am", 0.8, new double[216].Select(x => 0.2).ToArray()),
-            CreateDummyDoc("F", 0.75, new double[216].Select(x => 0.8).ToArray())
+            CreateDummyDoc("C", 0.9, new float[216]), // High stability
+            CreateDummyDoc("G", 0.7, [.. new float[216].Select(x => 0.5f)]), // Lower stability
+            CreateDummyDoc("Am", 0.8, [.. new float[216].Select(x => 0.2f)]),
+            CreateDummyDoc("F", 0.75, [.. new float[216].Select(x => 0.8f)])
         };
 
         // Act
@@ -50,12 +50,12 @@ public class ProgressionEmbeddingTests
         });
     }
 
-    private VoicingDocument CreateDummyDoc(string name, double consonance, double[] embedding)
+    private ChordVoicingRagDocument CreateDummyDoc(string name, double consonance, float[] embedding)
     {
         // Set entropy (index 108) manually for test
-        embedding[108] = 0.5;
+        embedding[108] = 0.5f;
 
-        return new VoicingDocument
+        return new()
         {
             Id = name,
             SearchableText = name,

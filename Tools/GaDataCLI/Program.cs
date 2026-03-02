@@ -2,8 +2,10 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
+using GaDataCLI.Commands;
 using Spectre.Console;
 
 internal static class Program
@@ -31,6 +33,26 @@ internal static class Program
         {
             ShowHelp();
             return 0;
+        }
+
+        if (HasFlag(args, "--benchmark"))
+        {
+            return await BenchmarkCommand.ExecuteAsync(args);
+        }
+
+        if (HasFlag(args, "--test"))
+        {
+            return await TestCommand.ExecuteAsync(args);
+        }
+
+        if (HasFlag(args, "--import"))
+        {
+            return await RunImport(args);
+        }
+
+        if (HasFlag(args, "--embed", "--embedding", "--embeddings"))
+        {
+            return await RunEmbeddings(args);
         }
 
         // Interactive mode if no export type specified
@@ -138,6 +160,19 @@ internal static class Program
         AnsiConsole.MarkupLine("  [blue]-o, --output <path>[/]     Output directory path");
         AnsiConsole.MarkupLine("  [blue]-q, --quiet[/]             Quiet mode (no interactive UI)");
         AnsiConsole.MarkupLine("  [blue]-h, --help[/]              Show this help message");
+        AnsiConsole.MarkupLine("  [blue]--import[/]                Import exported chords into MongoDB");
+        AnsiConsole.MarkupLine("  [blue]--data <file>[/]           Import file path (default: C:\\Temp\\GaExport\\all-chords.json)");
+        AnsiConsole.MarkupLine("  [blue]--connection <conn>[/]     MongoDB connection string (default: mongodb://localhost:27017)");
+        AnsiConsole.MarkupLine("  [blue]--database <name>[/]       MongoDB database name (default: guitaralchemist)");
+        AnsiConsole.MarkupLine("  [blue]--collection <name>[/]     MongoDB collection name (default: chords)");
+        AnsiConsole.MarkupLine("  [blue]-f, --force[/]             Drop collection before import");
+        AnsiConsole.MarkupLine("  [blue]--embed, --embedding, --embeddings[/] Generate embeddings in MongoDB");
+        AnsiConsole.MarkupLine("  [blue]--api-key <key>[/]         OpenAI API key (required unless using --base-url)");
+        AnsiConsole.MarkupLine("  [blue]--model <name>[/]          Embedding model (default: text-embedding-3-small)");
+        AnsiConsole.MarkupLine("  [blue]--batch-size <n>[/]        Embedding batch size (default: 100)");
+        AnsiConsole.MarkupLine("  [blue]--base-url <url>[/]        OpenAI-compatible endpoint for local models");
+        AnsiConsole.MarkupLine("  [blue]--benchmark[/]             Run vector search benchmark");
+        AnsiConsole.MarkupLine("  [blue]--test[/]                  Run chatbot integration tests");
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine("Examples:");
         AnsiConsole.MarkupLine("  [dim]# Interactive mode[/]");
@@ -151,6 +186,19 @@ internal static class Program
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("  [dim]# Quiet mode for automation/scripting[/]");
         AnsiConsole.WriteLine("  GaDataCLI -e chords -o C:\\Data\\Export -q");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("  [dim]# Import exported chords into MongoDB[/]");
+        AnsiConsole.WriteLine("  GaDataCLI --import --data C:\\Temp\\GaExport\\all-chords.json");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("  [dim]# Generate embeddings using OpenAI[/]");
+        AnsiConsole.WriteLine("  GaDataCLI --embed --api-key <key> --collection chords");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("  [dim]# Generate embeddings using a local endpoint[/]");
+        AnsiConsole.WriteLine("  GaDataCLI --embed --base-url http://localhost:11434/v1 --model nomic-embed-text");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("  [dim]# Run benchmarks or tests[/]");
+        AnsiConsole.WriteLine("  GaDataCLI --benchmark");
+        AnsiConsole.WriteLine("  GaDataCLI --test");
         AnsiConsole.WriteLine();
     }
 
@@ -167,9 +215,44 @@ internal static class Program
         return null;
     }
 
-    private static bool HasFlag(string[] args, params string[] flags)
+    private static int GetIntArgument(string[] args, int defaultValue, params string[] flags)
     {
-        return args.Any(arg => flags.Contains(arg, StringComparer.OrdinalIgnoreCase));
+        var value = GetArgument(args, flags);
+        return value != null && int.TryParse(value, out var parsed) ? parsed : defaultValue;
+    }
+
+    private static bool HasFlag(string[] args, params string[] flags) => args.Any(arg => flags.Contains(arg, StringComparer.OrdinalIgnoreCase));
+
+    private static async Task<int> RunImport(string[] args)
+    {
+        var dataFile = GetArgument(args, "--data", "--data-file");
+        var connectionString = GetArgument(args, "--connection", "--conn") ?? "mongodb://localhost:27017";
+        var databaseName = GetArgument(args, "--database", "--db") ?? "guitaralchemist";
+        var collectionName = GetArgument(args, "--collection", "--col") ?? "chords";
+        var force = HasFlag(args, "--force", "-f");
+
+        return await ImportCommand.ExecuteAsync(dataFile, connectionString, databaseName, collectionName, force);
+    }
+
+    private static async Task<int> RunEmbeddings(string[] args)
+    {
+        var connectionString = GetArgument(args, "--connection", "--conn") ?? "mongodb://localhost:27017";
+        var databaseName = GetArgument(args, "--database", "--db") ?? "guitaralchemist";
+        var collectionName = GetArgument(args, "--collection", "--col") ?? "chords";
+        var apiKey = GetArgument(args, "--api-key", "--key") ?? string.Empty;
+        var model = GetArgument(args, "--model") ?? "text-embedding-3-small";
+        var batchSize = GetIntArgument(args, 100, "--batch-size");
+        var baseUrl = GetArgument(args, "--base-url");
+
+        return await EmbeddingCommand.ExecuteAsync(
+            connectionString,
+            databaseName,
+            collectionName,
+            apiKey,
+            model,
+            batchSize,
+            useOpenAi: true,
+            baseUrl: baseUrl);
     }
 
     private static async Task ExportAllChords(string outputPath, StatusContext ctx)
@@ -197,9 +280,8 @@ internal static class Program
         Console.WriteLine($"Exported {chordData.Count} chords to {Path.Combine(outputPath, "all-chords.json")}");
     }
 
-    private static List<object> BuildChordData(List<ChordTemplate> allChords)
-    {
-        return [.. allChords.Select((chord, index) => new
+    private static List<object> BuildChordData(List<ChordTemplate> allChords) =>
+        [.. allChords.Select((chord, index) => new
         {
             Id = index + 1,
             chord.Name,
@@ -207,7 +289,7 @@ internal static class Program
             Extension = chord.Extension.ToString(),
             StackingType = chord.StackingType.ToString(),
             chord.NoteCount,
-            Intervals = chord.Intervals.Select(i => new
+            Intervals = chord.Formula.Intervals.Select(i => new
             {
                 Semitones = i.Interval.Semitones.Value,
                 Function = i.Function.ToString(),
@@ -219,7 +301,6 @@ internal static class Program
             Description = chord.GetDescription(),
             ConstructionType = chord.GetConstructionType()
         })];
-    }
 
     private static async Task ExportChordTemplates(string outputPath, StatusContext ctx)
     {
@@ -248,9 +329,8 @@ internal static class Program
             $"Exported {templates.Count} templates ({templatesByPitchClass.Count} unique pitch class sets) to {Path.Combine(outputPath, "chord-templates.json")}");
     }
 
-    private static List<object> BuildTemplateData(List<ChordTemplate> templates)
-    {
-        return [.. templates
+    private static List<object> BuildTemplateData(List<ChordTemplate> templates) =>
+        [.. templates
             .GroupBy(t => string.Join(",", t.PitchClassSet.ToList().Select(pc => pc.Value).OrderBy(v => v)))
             .Select(g => new
             {
@@ -262,7 +342,7 @@ internal static class Program
                     Extension = t.Extension.ToString(),
                     StackingType = t.StackingType.ToString(),
                     t.NoteCount,
-                    Intervals = t.Intervals.Select(i => new
+                    Intervals = t.Formula.Intervals.Select(i => new
                     {
                         Semitones = i.Interval.Semitones.Value,
                         Function = i.Function.ToString()
@@ -271,7 +351,6 @@ internal static class Program
                     ScaleDegree = t.GetScaleDegree()
                 }).ToList()
             })];
-    }
 
     private static async Task WriteJsonFile(string outputPath, string fileName, object data)
     {

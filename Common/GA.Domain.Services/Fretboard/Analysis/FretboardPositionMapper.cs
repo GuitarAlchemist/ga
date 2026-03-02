@@ -1,45 +1,36 @@
 namespace GA.Domain.Services.Fretboard.Analysis;
 
-using System;
-using System.Collections.Generic;
 using Core.Instruments;
 using Core.Instruments.Primitives;
-using Core.Primitives;
+using Core.Primitives.Notes;
 
 /// <summary>
-/// Service for mapping abstract pitches (MIDI) to physical fretboard locations.
-/// Core engine for generative realization (MIDI to Tab).
+///     Service for mapping abstract pitches (MIDI) to physical fretboard locations.
+///     Core engine for generative realization (MIDI to Tab).
 /// </summary>
-public class FretboardPositionMapper
+public class FretboardPositionMapper(Tuning tuning, int maxFret = 24)
 {
-    private readonly Tuning _tuning;
-    private readonly int _maxFret;
-
-    public FretboardPositionMapper(Tuning tuning, int maxFret = 24)
-    {
-        _tuning = tuning ?? throw new ArgumentNullException(nameof(tuning));
-        _maxFret = maxFret;
-    }
+    private readonly Tuning _tuning = tuning ?? throw new ArgumentNullException(nameof(tuning));
 
     /// <summary>
-    /// Finds all possible (String, Fret) positions for a given pitch.
+    ///     Finds all possible (String, Fret) positions for a given pitch.
     /// </summary>
     public IEnumerable<FretboardPosition> MapPitch(Pitch targetPitch)
     {
         var positions = new List<FretboardPosition>();
 
-        for (int s = 1; s <= _tuning.StringCount; s++)
+        for (var s = 1; s <= _tuning.StringCount; s++)
         {
             var stringIndex = Str.FromValue(s);
             var openPitch = _tuning[stringIndex];
 
             // Calculate fret required to reach targetPitch from openPitch
             // Formula: Fret = targetPitch.MidiNote.Value - openPitch.MidiNote.Value
-            int fret = targetPitch.MidiNote.Value - openPitch.MidiNote.Value;
+            var fret = targetPitch.MidiNote.Value - openPitch.MidiNote.Value;
 
-            if (fret >= 0 && fret <= _maxFret)
+            if (fret >= 0 && fret <= maxFret)
             {
-                positions.Add(new FretboardPosition(stringIndex, fret, targetPitch));
+                positions.Add(new(stringIndex, fret, targetPitch));
             }
         }
 
@@ -47,8 +38,8 @@ public class FretboardPositionMapper
     }
 
     /// <summary>
-    /// Maps a set of pitches to all valid chord shapes (combinations of positions).
-    /// WARNING: Combinatorial complexity can be high.
+    ///     Maps a set of pitches to all valid chord shapes (combinations of positions).
+    ///     WARNING: Combinatorial complexity can be high.
     /// </summary>
     public IEnumerable<List<FretboardPosition>> MapChord(IEnumerable<Pitch> chordPitches)
     {
@@ -58,19 +49,20 @@ public class FretboardPositionMapper
         return GenerateCombinations(optionsPerNote);
     }
 
-    private IEnumerable<List<FretboardPosition>> GenerateCombinations(List<List<FretboardPosition>> options)
-    {
+    private IEnumerable<List<FretboardPosition>> GenerateCombinations(List<List<FretboardPosition>> options) =>
         // Recursively generate all possible ways to play the chord
         // Filter out shapes that use the same string for multiple notes
-        return CartesianProduct(options)
+        CartesianProduct(options)
             .Where(combination => IsPhysicallyPossible(combination));
-    }
 
     private static bool IsPhysicallyPossible(List<FretboardPosition> combination)
     {
         // 1. Unique Strings constraint
         var stringIndices = combination.Select(p => p.StringIndex.Value).ToList();
-        if (stringIndices.Distinct().Count() != combination.Count) return false;
+        if (stringIndices.Distinct().Count() != combination.Count)
+        {
+            return false;
+        }
 
         // 2. Future: Add stretch constraints? (Handled by PhysicalCostService later)
         return true;
@@ -82,12 +74,13 @@ public class FretboardPositionMapper
         foreach (var sequence in sequences)
         {
             var seq = sequence; // closure
-            result = result.SelectMany(_ => seq, (list, item) => 
+            result = result.SelectMany(_ => seq, (list, item) =>
             {
                 var newList = new List<T>(list) { item };
                 return newList;
             });
         }
+
         return result;
     }
 }

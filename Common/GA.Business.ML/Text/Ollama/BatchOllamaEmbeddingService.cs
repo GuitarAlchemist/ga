@@ -1,10 +1,6 @@
 namespace GA.Business.ML.Text.Ollama;
 
-using Abstractions;
-
-using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
@@ -19,7 +15,9 @@ public class BatchOllamaEmbeddingService(
     : IBatchTextEmbeddingService
 {
     private readonly SemaphoreSlim _concurrencyLimiter = new(maxConcurrentRequests, maxConcurrentRequests);
-    private readonly ILogger<BatchOllamaEmbeddingService> _logger = logger ?? NullLogger<BatchOllamaEmbeddingService>.Instance;
+
+    private readonly ILogger<BatchOllamaEmbeddingService> _logger =
+        logger ?? NullLogger<BatchOllamaEmbeddingService>.Instance;
 
     /// <summary>
     ///     Generate embeddings for multiple texts concurrently
@@ -29,7 +27,7 @@ public class BatchOllamaEmbeddingService(
     {
         if (texts.Length == 0)
         {
-            return Array.Empty<float[]>();
+            return [];
         }
 
         _logger.LogDebug("Generating embeddings for {Count} texts", texts.Length);
@@ -60,7 +58,7 @@ public class BatchOllamaEmbeddingService(
     /// </summary>
     public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
     {
-        var results = await GenerateBatchEmbeddingsAsync(new[] { text }, cancellationToken);
+        var results = await GenerateBatchEmbeddingsAsync([text], cancellationToken);
         return results[0];
     }
 
@@ -134,10 +132,7 @@ public class BatchOllamaEmbeddingService(
         return [.. chunks];
     }
 
-    public void Dispose()
-    {
-        _concurrencyLimiter?.Dispose();
-    }
+    public void Dispose() => _concurrencyLimiter?.Dispose();
 }
 
 /// <summary>

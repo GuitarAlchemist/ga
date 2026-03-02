@@ -1,5 +1,6 @@
 ﻿namespace EmbeddingGenerator;
 
+using Azure.AI.OpenAI;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -64,7 +65,7 @@ internal class Program
         }
 
         // Initialize OpenAI client if needed
-        Azure.AI.OpenAI.AzureOpenAIClient? openAiClient = null;
+        AzureOpenAIClient? openAiClient = null;
         if (useOpenAi)
         {
             if (string.IsNullOrEmpty(openAiApiKey))
@@ -138,7 +139,7 @@ internal class Program
     private static async Task ProcessBatch(
         List<BsonDocument> batch,
         IMongoCollection<BsonDocument> collection,
-        Azure.AI.OpenAI.AzureOpenAIClient? openAiClient,
+        AzureOpenAIClient? openAiClient,
         string model)
     {
         try

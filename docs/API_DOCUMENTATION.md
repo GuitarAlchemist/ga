@@ -21,10 +21,12 @@ GET /api/chords
 ```
 
 **Query Parameters**:
+
 - `skip` (int): Number of records to skip (default: 0)
 - `take` (int): Number of records to return (default: 100)
 
 **Response**:
+
 ```json
 {
   "total": 427000,
@@ -48,6 +50,7 @@ GET /api/chords/{id}
 ```
 
 **Response**:
+
 ```json
 {
   "id": "c-major",
@@ -73,10 +76,12 @@ GET /api/chords/search?query=major
 ```
 
 **Query Parameters**:
+
 - `query` (string): Search term
 - `limit` (int): Maximum results (default: 50)
 
 **Response**:
+
 ```json
 {
   "results": [
@@ -98,6 +103,7 @@ GET /api/scales
 ```
 
 **Response**:
+
 ```json
 {
   "scales": [
@@ -120,6 +126,7 @@ GET /api/scales/{root}/modes
 ```
 
 **Response**:
+
 ```json
 {
   "root": "C",
@@ -145,10 +152,12 @@ GET /api/semantic-search/search?query=dark%20jazz%20chords
 ```
 
 **Query Parameters**:
+
 - `query` (string): Natural language description
 - `limit` (int): Maximum results (default: 10)
 
 **Response**:
+
 ```json
 {
   "query": "dark jazz chords",
@@ -172,11 +181,13 @@ GET /api/fretboard/positions?chord=c-major&tuning=standard
 ```
 
 **Query Parameters**:
+
 - `chord` (string): Chord ID
 - `tuning` (string): Guitar tuning (default: standard)
 - `maxFret` (int): Maximum fret position (default: 12)
 
 **Response**:
+
 ```json
 {
   "chord": "C Major",
@@ -199,6 +210,7 @@ GET /api/fretboard/analysis?chord=c-major
 ```
 
 **Response**:
+
 ```json
 {
   "chord": "C Major",
@@ -223,6 +235,7 @@ POST /api/progressions/generate
 ```
 
 **Request Body**:
+
 ```json
 {
   "key": "C",
@@ -237,6 +250,7 @@ POST /api/progressions/generate
 ```
 
 **Response**:
+
 ```json
 {
   "progression": ["C Major", "A Minor", "D Minor", "G Dominant 7"],
@@ -257,6 +271,7 @@ GET /api/theory/explain?concept=circle-of-fifths
 ```
 
 **Response**:
+
 ```json
 {
   "concept": "Circle of Fifths",
@@ -277,6 +292,7 @@ GET /api/theory/intervals/{interval}
 ```
 
 **Response**:
+
 ```json
 {
   "interval": "Major Third",
@@ -322,10 +338,10 @@ GET /api/theory/intervals/{interval}
 ## Rate Limiting
 
 - **Limit**: 1000 requests per minute per IP
-- **Headers**: 
-  - `X-RateLimit-Limit`: 1000
-  - `X-RateLimit-Remaining`: 999
-  - `X-RateLimit-Reset`: 1699000000
+- **Headers**:
+    - `X-RateLimit-Limit`: 1000
+    - `X-RateLimit-Remaining`: 999
+    - `X-RateLimit-Reset`: 1699000000
 
 ## Pagination
 
@@ -373,11 +389,13 @@ All responses follow this format:
 **URL**: `wss://localhost:7001/hubs/chatbot`
 
 **Methods**:
+
 - `SendMessage(message, useSemanticSearch)`
 - `ClearHistory()`
 - `GetHistory()`
 
 **Events**:
+
 - `Connected`
 - `ReceiveMessageChunk`
 - `MessageComplete`

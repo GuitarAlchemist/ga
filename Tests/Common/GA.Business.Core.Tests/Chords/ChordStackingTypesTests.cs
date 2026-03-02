@@ -1,10 +1,10 @@
-﻿namespace GA.Domain.Core.Tests.Chords;
+﻿namespace GA.Business.Core.Tests.Chords;
 
-using Theory.Harmony;
-using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
-using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Domain.Core.Theory.Harmony;
+using Domain.Core.Theory.Tonal.Modes.Diatonic;
+using Domain.Core.Theory.Tonal.Primitives.Diatonic;
 using Domain.Services.Chords;
-using GA.Domain.Services.Chords.Construction;
+using Domain.Services.Chords.Construction;
 
 /// <summary>
 ///     Tests for different chord stacking types (tertian, quartal, quintal)
@@ -24,6 +24,7 @@ public class ChordStackingTypesTests
         Assert.That(firstDegreeChord.Formula.Intervals.Count, Is.EqualTo(2)); // 3rd, 5th (root is implicit)
         Assert.That(firstDegreeChord.Name, Does.Contain("Degree1"));
     }
+
     [Test]
     public void QuartalChord_ShouldStackFourths()
     {
@@ -40,6 +41,7 @@ public class ChordStackingTypesTests
         Assert.That(firstQuartalChord.Extension, Is.EqualTo(ChordExtension.Triad));
         Assert.That(firstQuartalChord.Name, Does.Contain("(4ths)"));
     }
+
     [Test]
     public void QuintalChord_ShouldStackFifths()
     {
@@ -56,6 +58,7 @@ public class ChordStackingTypesTests
         Assert.That(firstQuintalChord.Extension, Is.EqualTo(ChordExtension.Triad));
         Assert.That(firstQuintalChord.Name, Does.Contain("(5ths)"));
     }
+
     [Test]
     public void SystematicGeneration_ShouldGenerateQuartalChords()
     {
@@ -74,6 +77,7 @@ public class ChordStackingTypesTests
             Assert.That(chord.Extension, Is.EqualTo(ChordExtension.Triad));
         }
     }
+
     [Test]
     public void SystematicGeneration_ShouldGenerateQuintalChords()
     {
@@ -91,6 +95,7 @@ public class ChordStackingTypesTests
             Assert.That(chord.Name, Does.Contain("(5ths)"));
         }
     }
+
     [Test]
     public void ChordStackingPatternGenerator_GetIntervalStepSize_ShouldReturnCorrectValues()
     {
@@ -99,6 +104,7 @@ public class ChordStackingTypesTests
         Assert.That(ChordStackingPatternGenerator.GetIntervalStepSize(ChordStackingType.Quartal), Is.EqualTo(3));
         Assert.That(ChordStackingPatternGenerator.GetIntervalStepSize(ChordStackingType.Quintal), Is.EqualTo(4));
     }
+
     [Test]
     public void ChordStackingPatternGenerator_GetStackingDescription_ShouldReturnDescriptiveText()
     {
@@ -110,6 +116,7 @@ public class ChordStackingTypesTests
         Assert.That(ChordStackingPatternGenerator.GetStackingDescription(ChordStackingType.Quintal),
             Does.Contain("contemporary"));
     }
+
     [Test]
     public void ExtendedQuartalChord_ShouldGenerateCorrectIntervals()
     {
@@ -127,6 +134,7 @@ public class ChordStackingTypesTests
         // Verify the chord has 4 notes (root + 3 intervals for seventh chord)
         Assert.That(firstDegreeChord.NoteCount, Is.EqualTo(4), "Seventh chord should have 4 notes");
     }
+
     [Test]
     public void ExtendedQuintalChord_ShouldGenerateCorrectIntervals()
     {

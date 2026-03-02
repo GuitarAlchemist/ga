@@ -1,22 +1,15 @@
 namespace GA.Business.ML.Tabs;
 
-using Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using GA.Domain.Core.Tabs;
+using Domain.Repositories;
+using GA.Domain.Core.Theory.Tabs;
 
-public class TabCorpusService
+public class TabCorpusService(ITabCorpusRepository repository, HttpClient httpClient)
 {
-    private readonly ITabCorpusRepository _repository;
-    private readonly HttpClient _httpClient;
-
-    public TabCorpusService(ITabCorpusRepository repository, HttpClient httpClient)
-    {
-        _repository = repository;
-        _httpClient = httpClient;
-    }
+    private readonly HttpClient _httpClient = httpClient;
 
     public async Task IngestAllConfiguredSourcesAsync()
     {
@@ -32,6 +25,9 @@ public class TabCorpusService
             // Create a placeholder entry to verify persistence
             var corpusItem = new TabCorpusItem
             {
+                Id = Guid.NewGuid().ToString("N"),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 SourceId = source.Id,
                 ExternalId = "metadata-check",
                 Content = $"Source Placeholder for {source.Url}",
@@ -43,13 +39,10 @@ public class TabCorpusService
                 }
             };
 
-            await _repository.SaveAsync(corpusItem);
+            await repository.SaveAsync(corpusItem);
             Console.WriteLine($"Saved metadata placeholder for {source.Id}.");
         }
     }
-    
-    public async Task<long> GetCorpusSizeAsync()
-    {
-        return await _repository.CountAsync();
-    }
+
+    public async Task<long> GetCorpusSizeAsync() => await repository.CountAsync();
 }

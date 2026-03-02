@@ -1,8 +1,8 @@
 namespace GA.Business.ML.AI.Benchmarks;
 
-using GA.Domain.Services.AI.Benchmarks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GA.Domain.Services.AI.Benchmarks;
 
 public class BenchmarkRunner(IEnumerable<IBenchmark> benchmarks)
 {
@@ -68,8 +68,5 @@ public class BenchmarkRunner(IEnumerable<IBenchmark> benchmarks)
         return null;
     }
 
-    public void ReportResult(BenchmarkResult result)
-    {
-        _cache[result.Name] = result;
-    }
+    public void ReportResult(BenchmarkResult result) => _cache[result.Name] = result;
 }

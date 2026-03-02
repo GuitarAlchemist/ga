@@ -4,6 +4,9 @@ namespace GA.Domain.Core.Theory.Harmony;
 /// Represents the fundamental quality of a musical chord.
 /// Consolidates basic triads and common 7th chord qualities.
 /// </summary>
+/// <remarks>
+///     <see href="https://en.wikipedia.org/wiki/Chord_(music)#Chord_quality" />
+/// </remarks>
 public enum ChordQuality
 {
     Other,

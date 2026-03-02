@@ -1,7 +1,6 @@
 ﻿namespace MongoVerify;
 
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using Spectre.Console;
 
@@ -25,7 +24,7 @@ internal class CheckSchema
 
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[yellow]Full document:[/]");
-            AnsiConsole.WriteLine(sample.ToJson(new JsonWriterSettings { Indent = true }));
+            AnsiConsole.WriteLine(sample.ToJson(new() { Indent = true }));
         }
     }
 }

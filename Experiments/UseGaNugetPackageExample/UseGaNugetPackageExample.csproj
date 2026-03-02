@@ -10,8 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
-    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
-    <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj"/>
+    <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj"/>
     <ProjectReference Include="..\..\Common\GA.Core\GA.Core.csproj"/>
   </ItemGroup>
 

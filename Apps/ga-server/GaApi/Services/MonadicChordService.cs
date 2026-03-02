@@ -4,6 +4,8 @@ using Constants;
 using GA.Core.Functional;
 using HotChocolate.Utilities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Models;
 
 /// <summary>
@@ -45,10 +47,10 @@ public class MonadicChordService(
     {
         // Validate input
         var validation = ValidateQualityParameter(quality, limit);
-        if (validation is Validation<(string, int), GA.Domain.Core.Microservices.ValidationError>.Failure failure)
+        if (validation.IsInvalid)
         {
-            return new Result<List<Chord>, ChordError>.Failure(
-                new ChordError(ChordErrorType.ValidationError, failure.Errors.First().Message)
+            return Result<List<Chord>, ChordError>.Failure(
+                new ChordError(ChordErrorType.ValidationError, validation.Errors.First().Message)
             );
         }
 
@@ -61,8 +63,8 @@ public class MonadicChordService(
         );
 
         return tryChords.Match<Result<List<Chord>, ChordError>>(
-            onSuccess: chords => new Result<List<Chord>, ChordError>.Success(chords),
-            onFailure: ex => new Result<List<Chord>, ChordError>.Failure(
+            onSuccess: chords => Result<List<Chord>, ChordError>.Success(chords),
+            onFailure: ex => Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.DatabaseError, ex.Message)
             )
         );
@@ -72,10 +74,10 @@ public class MonadicChordService(
     {
         // Validate input
         var validation = ValidateExtensionParameter(extension, limit);
-        if (validation is Validation<(string, int), GA.Domain.Core.Microservices.ValidationError>.Failure failure)
+        if (validation.IsInvalid)
         {
-            return new Result<List<Chord>, ChordError>.Failure(
-                new ChordError(ChordErrorType.ValidationError, failure.Errors.First().Message)
+            return Result<List<Chord>, ChordError>.Failure(
+                new ChordError(ChordErrorType.ValidationError, validation.Errors.First().Message)
             );
         }
 
@@ -88,8 +90,8 @@ public class MonadicChordService(
         );
 
         return tryChords.Match<Result<List<Chord>, ChordError>>(
-            onSuccess: chords => new Result<List<Chord>, ChordError>.Success(chords),
-            onFailure: ex => new Result<List<Chord>, ChordError>.Failure(
+            onSuccess: chords => Result<List<Chord>, ChordError>.Success(chords),
+            onFailure: ex => Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.DatabaseError, ex.Message)
             )
         );
@@ -99,10 +101,10 @@ public class MonadicChordService(
     {
         // Validate input
         var validation = ValidateStackingTypeParameter(stackingType, limit);
-        if (validation is Validation<(string, int), GA.Domain.Core.Microservices.ValidationError>.Failure failure)
+        if (validation.IsInvalid)
         {
-            return new Result<List<Chord>, ChordError>.Failure(
-                new ChordError(ChordErrorType.ValidationError, failure.Errors.First().Message)
+            return Result<List<Chord>, ChordError>.Failure(
+                new ChordError(ChordErrorType.ValidationError, validation.Errors.First().Message)
             );
         }
 
@@ -115,8 +117,8 @@ public class MonadicChordService(
         );
 
         return tryChords.Match<Result<List<Chord>, ChordError>>(
-            onSuccess: chords => new Result<List<Chord>, ChordError>.Success(chords),
-            onFailure: ex => new Result<List<Chord>, ChordError>.Failure(
+            onSuccess: chords => Result<List<Chord>, ChordError>.Success(chords),
+            onFailure: ex => Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.DatabaseError, ex.Message)
             )
         );
@@ -127,14 +129,14 @@ public class MonadicChordService(
         // Validate input
         if (string.IsNullOrWhiteSpace(query))
         {
-            return new Result<List<Chord>, ChordError>.Failure(
+            return Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.ValidationError, "Search query cannot be empty")
             );
         }
 
         if (limit <= 0 || limit > 1000)
         {
-            return new Result<List<Chord>, ChordError>.Failure(
+            return Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.ValidationError, "Limit must be between 1 and 1000")
             );
         }
@@ -148,8 +150,8 @@ public class MonadicChordService(
         );
 
         return tryChords.Match<Result<List<Chord>, ChordError>>(
-            onSuccess: chords => new Result<List<Chord>, ChordError>.Success(chords),
-            onFailure: ex => new Result<List<Chord>, ChordError>.Failure(
+            onSuccess: chords => Result<List<Chord>, ChordError>.Success(chords),
+            onFailure: ex => Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.DatabaseError, ex.Message)
             )
         );
@@ -160,7 +162,7 @@ public class MonadicChordService(
         // Validate input
         if (string.IsNullOrWhiteSpace(id))
         {
-            return new Option<Chord>.None();
+            return Option<Chord>.None;
         }
 
         var cacheKey = $"chord_{id}";
@@ -183,16 +185,16 @@ public class MonadicChordService(
             {
                 if (chord != null)
                 {
-                    Cache<>.Set(cacheKey, chord, TimeSpan.FromMinutes(30));
-                    return new Option<Chord>.Some(chord);
+                    Cache?.Set(cacheKey, chord, TimeSpan.FromMinutes(30));
+                    return Option<Chord>.Some(chord);
                 }
 
-                return new Option<Chord>.None();
+                return Option<Chord>.None;
             },
             onFailure: ex =>
             {
                 Logger.LogError(ex, "Failed to get chord by ID: {Id}", id);
-                return new Option<Chord>.None();
+                return Option<Chord>.None;
             }
         );
     }
@@ -202,14 +204,14 @@ public class MonadicChordService(
         // Validate input
         if (string.IsNullOrWhiteSpace(chordId))
         {
-            return new Result<List<Chord>, ChordError>.Failure(
+            return Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.ValidationError, "Chord ID cannot be empty")
             );
         }
 
         if (limit <= 0 || limit > 100)
         {
-            return new Result<List<Chord>, ChordError>.Failure(
+            return Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.ValidationError, "Limit must be between 1 and 100")
             );
         }
@@ -223,8 +225,8 @@ public class MonadicChordService(
         );
 
         return tryChords.Match<Result<List<Chord>, ChordError>>(
-            onSuccess: chords => new Result<List<Chord>, ChordError>.Success(chords),
-            onFailure: ex => new Result<List<Chord>, ChordError>.Failure(
+            onSuccess: chords => Result<List<Chord>, ChordError>.Success(chords),
+            onFailure: ex => Result<List<Chord>, ChordError>.Failure(
                 new ChordError(ChordErrorType.DatabaseError, ex.Message)
             )
         );
@@ -234,7 +236,7 @@ public class MonadicChordService(
     {
         const string cacheKey = "chord_statistics";
 
-        return await GetOrSetCacheWithTryAsync(
+        return await GetOrSetCacheWithTryAsync<ChordStatistics>(
             cacheKey,
             async () => await mongoDb.GetChordStatisticsAsync(),
             TimeSpan.FromMinutes(5)
@@ -279,14 +281,14 @@ public class MonadicChordService(
     }
 
     // Validation helpers
-    private Validation<(string, int), GA.Domain.Core.Microservices.ValidationError> ValidateQualityParameter(
+    private Validation<(string, int), ValidationError> ValidateQualityParameter(
         string quality, int limit)
     {
-        var errors = new List<GA.Domain.Core.Microservices.ValidationError>();
+        var errors = new List<ValidationError>();
 
         if (string.IsNullOrWhiteSpace(quality))
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("Quality", "Quality cannot be empty"));
+            errors.Add(new ValidationError("Quality", "Quality cannot be empty"));
         }
         else
         {
@@ -295,29 +297,29 @@ public class MonadicChordService(
                 { "Major", "Minor", "Dominant", "Diminished", "Augmented", "Half-diminished", "Quartal" };
             if (!validQualities.Contains(quality, StringComparer.OrdinalIgnoreCase))
             {
-                errors.Add(new GA.Domain.Core.Microservices.ValidationError("Quality",
+                errors.Add(new ValidationError("Quality",
                     $"Invalid quality '{quality}'. Valid qualities are: {string.Join(", ", validQualities)}"));
             }
         }
 
         if (limit <= 0 || limit > 1000)
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("Limit", "Limit must be between 1 and 1000"));
+            errors.Add(new ValidationError("Limit", "Limit must be between 1 and 1000"));
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), GA.Domain.Core.Microservices.ValidationError>(errors.ToArray())
-            : Validation.Success<(string, int), GA.Domain.Core.Microservices.ValidationError>((quality, limit));
+            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            : Validation.Success<(string, int), ValidationError>((quality, limit));
     }
 
-    private Validation<(string, int), GA.Domain.Core.Microservices.ValidationError> ValidateExtensionParameter(
+    private Validation<(string, int), ValidationError> ValidateExtensionParameter(
         string extension, int limit)
     {
-        var errors = new List<GA.Domain.Core.Microservices.ValidationError>();
+        var errors = new List<ValidationError>();
 
         if (string.IsNullOrWhiteSpace(extension))
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("Extension", "Extension cannot be empty"));
+            errors.Add(new ValidationError("Extension", "Extension cannot be empty"));
         }
         else
         {
@@ -325,29 +327,29 @@ public class MonadicChordService(
             var validExtensions = new[] { "Triad", "7th", "9th", "11th", "13th", "6th", "Add9", "Sus2", "Sus4" };
             if (!validExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                errors.Add(new GA.Domain.Core.Microservices.ValidationError("Extension",
+                errors.Add(new ValidationError("Extension",
                     $"Invalid extension '{extension}'. Valid extensions are: {string.Join(", ", validExtensions)}"));
             }
         }
 
         if (limit <= 0 || limit > 1000)
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("Limit", "Limit must be between 1 and 1000"));
+            errors.Add(new ValidationError("Limit", "Limit must be between 1 and 1000"));
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), GA.Domain.Core.Microservices.ValidationError>(errors.ToArray())
-            : Validation.Success<(string, int), GA.Domain.Core.Microservices.ValidationError>((extension, limit));
+            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            : Validation.Success<(string, int), ValidationError>((extension, limit));
     }
 
-    private Validation<(string, int), GA.Domain.Core.Microservices.ValidationError> ValidateStackingTypeParameter(
+    private Validation<(string, int), ValidationError> ValidateStackingTypeParameter(
         string stackingType, int limit)
     {
-        var errors = new List<GA.Domain.Core.Microservices.ValidationError>();
+        var errors = new List<ValidationError>();
 
         if (string.IsNullOrWhiteSpace(stackingType))
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("StackingType",
+            errors.Add(new ValidationError("StackingType",
                 "Stacking type cannot be empty"));
         }
         else
@@ -356,19 +358,19 @@ public class MonadicChordService(
             var validStackingTypes = new[] { "Tertian", "Quartal", "Quintal", "Secundal", "Cluster" };
             if (!validStackingTypes.Contains(stackingType, StringComparer.OrdinalIgnoreCase))
             {
-                errors.Add(new GA.Domain.Core.Microservices.ValidationError("StackingType",
+                errors.Add(new ValidationError("StackingType",
                     $"Invalid stacking type '{stackingType}'. Valid stacking types are: {string.Join(", ", validStackingTypes)}"));
             }
         }
 
         if (limit <= 0 || limit > 1000)
         {
-            errors.Add(new GA.Domain.Core.Microservices.ValidationError("Limit", "Limit must be between 1 and 1000"));
+            errors.Add(new ValidationError("Limit", "Limit must be between 1 and 1000"));
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), GA.Domain.Core.Microservices.ValidationError>(errors.ToArray())
-            : Validation.Success<(string, int), GA.Domain.Core.Microservices.ValidationError>((stackingType, limit));
+            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            : Validation.Success<(string, int), ValidationError>((stackingType, limit));
     }
 }
 

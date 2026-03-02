@@ -3,18 +3,20 @@
 [PublicAPI]
 public static class LookupExtensions
 {
-    public static ImmutableSortedDictionary<TKey, int> GetCounts<TKey, TElement>(this ILookup<TKey, TElement> lookup)
-        where TKey : notnull
+    extension<TKey, TElement>(ILookup<TKey, TElement> lookup) where TKey : notnull
     {
-        ArgumentNullException.ThrowIfNull(lookup);
-
-        var dictBuilder = ImmutableSortedDictionary.CreateBuilder<TKey, int>();
-        foreach (var grouping in lookup)
+        public ImmutableSortedDictionary<TKey, int> GetCounts()
         {
-            var norm = grouping.Key;
-            dictBuilder.Add(norm, grouping.Count());
-        }
+            ArgumentNullException.ThrowIfNull(lookup);
 
-        return dictBuilder.ToImmutable();
+            var dictBuilder = ImmutableSortedDictionary.CreateBuilder<TKey, int>();
+            foreach (var grouping in lookup)
+            {
+                var norm = grouping.Key;
+                dictBuilder.Add(norm, grouping.Count());
+            }
+
+            return dictBuilder.ToImmutable();
+        }
     }
 }

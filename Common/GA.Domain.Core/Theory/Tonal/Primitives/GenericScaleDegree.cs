@@ -1,7 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives;
 
 using GA.Core.Abstractions;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A generic scale degree that can be used for any scale.
@@ -17,31 +16,22 @@ public readonly record struct GenericScaleDegree : IValueObject<GenericScaleDegr
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>A new instance of the <see cref="GenericScaleDegree" /> class.</returns>
-    public static GenericScaleDegree FromValue(int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static GenericScaleDegree FromValue(int value) =>
+        new() { Value = value };
 
     /// <summary>
     ///     Implicitly converts an integer to a <see cref="GenericScaleDegree" />.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>A new instance of the <see cref="GenericScaleDegree" /> class.</returns>
-    public static implicit operator GenericScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator GenericScaleDegree(int value) => FromValue(value);
 
     /// <summary>
     ///     Implicitly converts a <see cref="GenericScaleDegree" /> to an integer.
     /// </summary>
     /// <param name="degree">The degree.</param>
     /// <returns>The value of the degree.</returns>
-    public static implicit operator int(GenericScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(GenericScaleDegree degree) => degree.Value;
 
     /// <summary>
     ///     Gets or initializes the value of the degree.
@@ -50,30 +40,15 @@ public readonly record struct GenericScaleDegree : IValueObject<GenericScaleDegr
 
     #region Relational members
 
-    public int CompareTo(GenericScaleDegree other)
-    {
-        return Value.CompareTo(other.Value);
-    }
+    public int CompareTo(GenericScaleDegree other) => Value.CompareTo(other.Value);
 
-    public static bool operator <(GenericScaleDegree left, GenericScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(GenericScaleDegree left, GenericScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(GenericScaleDegree left, GenericScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(GenericScaleDegree left, GenericScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(GenericScaleDegree left, GenericScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(GenericScaleDegree left, GenericScaleDegree right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(GenericScaleDegree left, GenericScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(GenericScaleDegree left, GenericScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

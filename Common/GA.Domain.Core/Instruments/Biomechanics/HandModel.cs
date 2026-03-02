@@ -1,9 +1,5 @@
 namespace GA.Domain.Core.Instruments.Biomechanics;
 
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-
 public record HandModel
 {
     /// <summary>Palm width (mm)</summary>
@@ -103,9 +99,8 @@ public record HandModel
         Vector3 basePosition,
         float mcpLength,
         float pipLength,
-        float dipLength)
-    {
-        return new()
+        float dipLength) =>
+        new()
         {
             Type = type,
             BasePosition = basePosition,
@@ -156,7 +151,6 @@ public record HandModel
                 }
             )
         };
-    }
 
     /// <summary>
     ///     Create scaled hand model for different hand sizes
@@ -169,35 +163,40 @@ public record HandModel
         {
             PalmWidth = standard.PalmWidth * scaleFactor,
             PalmLength = standard.PalmLength * scaleFactor,
-            Fingers = [.. standard.Fingers.Select(f => f with
-            {
-                BasePosition = f.BasePosition * scaleFactor,
-                Joints = [.. f.Joints.Select(j => j with
+            Fingers =
+            [
+                .. standard.Fingers.Select(f => f with
                 {
-                    BoneLength = j.BoneLength * scaleFactor
-                })]
-            })],
-            FingerSpreadConstraints = [.. standard.FingerSpreadConstraints
-                .Select(c => c with
-                {
-                    PreferredSeparationMm = c.PreferredSeparationMm * scaleFactor,
-                    MaxSeparationMm = c.MaxSeparationMm * scaleFactor,
-                    MinSeparationMm = c.MinSeparationMm * scaleFactor
-                })]
+                    BasePosition = f.BasePosition * scaleFactor,
+                    Joints =
+                    [
+                        .. f.Joints.Select(j => j with
+                        {
+                            BoneLength = j.BoneLength * scaleFactor
+                        })
+                    ]
+                })
+            ],
+            FingerSpreadConstraints =
+            [
+                .. standard.FingerSpreadConstraints
+                    .Select(c => c with
+                    {
+                        PreferredSeparationMm = c.PreferredSeparationMm * scaleFactor,
+                        MaxSeparationMm = c.MaxSeparationMm * scaleFactor,
+                        MinSeparationMm = c.MinSeparationMm * scaleFactor
+                    })
+            ]
         };
     }
 
     /// <summary>
     ///     Get finger by type
     /// </summary>
-    public Finger GetFinger(FingerType type)
-    {
-        return Fingers[(int)type];
-    }
+    public Finger GetFinger(FingerType type) => Fingers[(int)type];
 
-    private static ImmutableList<FingerSpreadConstraint> CreateStandardFingerSpreadConstraints()
-    {
-        return ImmutableList.Create(
+    private static ImmutableList<FingerSpreadConstraint> CreateStandardFingerSpreadConstraints() =>
+        ImmutableList.Create(
             new FingerSpreadConstraint
             {
                 Primary = FingerType.Index,
@@ -223,13 +222,9 @@ public record HandModel
                 MinSeparationMm = 12f
             }
         );
-    }
 
     /// <summary>
     ///     Convert degrees to radians
     /// </summary>
-    private static float ToRadians(float degrees)
-    {
-        return degrees * MathF.PI / 180.0f;
-    }
+    private static float ToRadians(float degrees) => degrees * MathF.PI / 180.0f;
 }

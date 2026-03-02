@@ -1,7 +1,7 @@
 namespace GA.Analytics.Service.Constants;
 
 /// <summary>
-/// Cache keys for analytics service
+///     Cache keys for analytics service
 /// </summary>
 public static class CacheKeys
 {
@@ -14,24 +14,24 @@ public static class CacheKeys
     public const string AnalyticsMetrics = "analytics_metrics";
     public const string FretboardShapes = "fretboard_shapes";
     public const string HeatMap = "heat_map";
-    
-    public static class Durations
-    {
-        public static readonly TimeSpan FretboardShapes = TimeSpan.FromHours(1);
-        public static readonly TimeSpan HarmonicAnalysis = TimeSpan.FromHours(2);
-        public static readonly TimeSpan HeatMap = TimeSpan.FromMinutes(30);
-    }
-    
+
     public static string GetShapeGraphKey(string parameters) => $"{ShapeGraph}:{parameters}";
     public static string GetHarmonicAnalysisKey(string shapeId) => $"{HarmonicAnalysis}:{shapeId}";
     public static string GetProgressionKey(string progressionId) => $"{ProgressionOptimization}:{progressionId}";
     public static string GetSpectralKey(string agentId) => $"{SpectralAnalysis}:{agentId}";
     public static string GetHeatMapKey(string parameters) => $"{HeatMap}:{parameters}";
     public static string GetFretboardShapesKey(string parameters) => $"{FretboardShapes}:{parameters}";
+
+    public static class Durations
+    {
+        public static readonly TimeSpan FretboardShapes = TimeSpan.FromHours(1);
+        public static readonly TimeSpan HarmonicAnalysis = TimeSpan.FromHours(2);
+        public static readonly TimeSpan HeatMap = TimeSpan.FromMinutes(30);
+    }
 }
 
 /// <summary>
-/// Optimization strategies
+///     Optimization strategies
 /// </summary>
 public static class AnalyticsOptimizationStrategy
 {

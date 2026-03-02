@@ -14,16 +14,8 @@ public record WristConstraint(
     float MinRotation,
     float MaxRotation)
 {
-    public static WristConstraint Default { get; } = new(
-        DegreesToRadians(-35f),
-        DegreesToRadians(45f),
-        DegreesToRadians(-25f),
-        DegreesToRadians(25f),
-        DegreesToRadians(-30f),
-        DegreesToRadians(30f));
+    public static WristConstraint Default { get; } = new(DegreesToRadians(-35f), DegreesToRadians(45f),
+        DegreesToRadians(-25f), DegreesToRadians(25f), DegreesToRadians(-30f), DegreesToRadians(30f));
 
-    private static float DegreesToRadians(float degrees)
-    {
-        return degrees * MathF.PI / 180f;
-    }
+    private static float DegreesToRadians(float degrees) => degrees * MathF.PI / 180f;
 }

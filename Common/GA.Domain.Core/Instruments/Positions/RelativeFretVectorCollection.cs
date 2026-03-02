@@ -1,11 +1,6 @@
 namespace GA.Domain.Core.Instruments.Positions;
 
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using GA.Core.Combinatorics;
-using GA.Core.Extensions;
-using JetBrains.Annotations;
 using Primitives;
 using static Primitives.RelativeFretVector;
 
@@ -51,15 +46,9 @@ public class RelativeFretVectorCollection : IReadOnlyCollection<RelativeFretVect
 
     #region IReadOnlyCollection{RelativeFretVector} Members
 
-    public IEnumerator<RelativeFretVector> GetEnumerator()
-    {
-        return _factory.GetEnumerator();
-    }
+    public IEnumerator<RelativeFretVector> GetEnumerator() => _factory.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public int Count { get; }
 

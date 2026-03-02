@@ -34,10 +34,7 @@ public abstract class CartesianProductBase<T, TPair>(
 
     #region IEnumerable<TPair> Members
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public IEnumerator<TPair> GetEnumerator()
     {

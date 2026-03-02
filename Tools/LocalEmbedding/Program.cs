@@ -244,8 +244,8 @@ internal class Program
         var attentionMask = Enumerable.Repeat(1L, inputIds.Length).ToArray();
 
         // Create tensors
-        var inputIdsTensor = new DenseTensor<long>(inputIds, new[] { 1, inputIds.Length });
-        var attentionMaskTensor = new DenseTensor<long>(attentionMask, new[] { 1, attentionMask.Length });
+        var inputIdsTensor = new DenseTensor<long>(inputIds, [1, inputIds.Length]);
+        var attentionMaskTensor = new DenseTensor<long>(attentionMask, [1, attentionMask.Length]);
 
         // Run inference
         var inputs = new List<NamedOnnxValue>
@@ -255,7 +255,7 @@ internal class Program
         };
 
         using var results = session.Run(inputs);
-        var output = results.First().AsEnumerable<float>().ToArray();
+        var output = results[0].AsEnumerable<float>().ToArray();
 
         // Mean pooling
         var embeddings = new float[_embeddingDimensions];

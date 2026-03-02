@@ -3,16 +3,14 @@
 [PublicAPI]
 public static class InfiniteCollectionExtensions
 {
-    /// <summary>
-    ///     Create an infinite collection.
-    /// </summary>
-    /// <typeparam name="T">The item type.</typeparam>
-    /// <param name="items">The source items collection.</param>
-    /// <param name="skip">Number of items to skip.</param>
-    /// <returns>The <see cref="InfiniteCollection{T}" />.</returns>
-    public static InfiniteCollection<T> ToInfinite<T>(this IReadOnlyCollection<T> items, int? skip = null)
+    extension<T>(IReadOnlyCollection<T> items)
     {
-        return new InfiniteCollection<T>(items, skip);
+        /// <summary>
+        ///     Create an infinite collection.
+        /// </summary>
+        /// <param name="skip">Number of items to skip.</param>
+        /// <returns>The <see cref="InfiniteCollection{T}" />.</returns>
+        public InfiniteCollection<T> ToInfinite(int? skip = null) => new(items, skip);
     }
 
     [PublicAPI]
@@ -41,19 +39,10 @@ public static class InfiniteCollectionExtensions
             IncrementIndex();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public override string ToString()
-        {
-            return $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}";
-        }
+        public override string ToString() => $"Infinite: {string.Join(" ", this.Take(CycleItemCount))}";
 
-        private void IncrementIndex(int count = 1)
-        {
-            _index = (_index.Value + count) % CycleItemCount;
-        }
+        private void IncrementIndex(int count = 1) => _index = (_index.Value + count) % CycleItemCount;
     }
 }

@@ -1,8 +1,8 @@
 namespace GA.Analytics.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
-
 using System.ComponentModel.DataAnnotations;
+using Business.Analytics.Analytics.Spectral;
+using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 ///     Provides spectral analysis for external autonomous systems (e.g., TARS Tier2 governance).
@@ -10,16 +10,16 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 [Route("api/spectral")]
 public sealed class SpectralAnalyticsController(
-    GA.Business.Analytics.Analytics.Spectral.AgentSpectralAnalyzer analyzer,
+    AgentSpectralAnalyzer analyzer,
     ILogger<SpectralAnalyticsController> logger) : ControllerBase
 {
     /// <summary>
     ///     Compute spectral metrics for an agent interaction snapshot.
     /// </summary>
     [HttpPost("agent-loop")]
-    [ProducesResponseType(typeof(GA.Business.Analytics.Analytics.Spectral.AgentSpectralMetrics), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AgentSpectralMetrics), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<GA.Business.Analytics.Analytics.Spectral.AgentSpectralMetrics> AnalyzeAgentLoop([FromBody] AgentInteractionRequest request)
+    public ActionResult<AgentSpectralMetrics> AnalyzeAgentLoop([FromBody] AgentInteractionRequest request)
     {
         if (request.Agents.Count == 0)
         {
@@ -28,28 +28,28 @@ public sealed class SpectralAnalyticsController(
 
         try
         {
-            var graph = new GA.Business.Analytics.Analytics.Spectral.AgentInteractionGraph
+            var graph = new AgentInteractionGraph
             {
                 Agents = request.Agents
-                    .Select(a => new GA.Business.Analytics.Analytics.Spectral.AgentNode
+                    .Select(a => new AgentNode
                     {
                         Id = a.Id,
                         DisplayName = a.DisplayName ?? a.Id,
                         Weight = a.Weight,
-                        Signals = a.Signals ?? new Dictionary<string, double>()
+                        Signals = a.Signals ?? []
                     })
                     .ToList(),
                 Edges = request.Edges
-                    .Select(e => new GA.Business.Analytics.Analytics.Spectral.AgentInteractionEdge
+                    .Select(e => new AgentInteractionEdge
                     {
                         Source = e.Source,
                         Target = e.Target,
                         Weight = e.Weight,
-                        Features = e.Features ?? new Dictionary<string, double>()
+                        Features = e.Features ?? []
                     })
                     .ToList(),
                 IsUndirected = request.IsUndirected,
-                Metadata = request.Metadata ?? new Dictionary<string, string>()
+                Metadata = request.Metadata ?? []
             };
 
             var metrics = analyzer.Analyze(graph);
@@ -66,7 +66,7 @@ public sealed class SpectralAnalyticsController(
     {
         [Required] public required List<AgentNodeRequest> Agents { get; init; }
 
-        public List<AgentInteractionEdgeRequest> Edges { get; init; } = new();
+        public List<AgentInteractionEdgeRequest> Edges { get; init; } = [];
 
         public bool IsUndirected { get; init; } = true;
 

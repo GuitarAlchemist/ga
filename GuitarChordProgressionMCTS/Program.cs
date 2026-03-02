@@ -50,11 +50,9 @@ public class Program
     }
 
     // Helper method to print the voicing
-    private static void PrintVoicing(int[] voicing)
-    {
+    private static void PrintVoicing(int[] voicing) =>
         Console.WriteLine("Voicing (String 6 to 1): " +
                           string.Join("-", voicing.Select(fret => fret >= 0 ? fret.ToString() : "X")));
-    }
 
     // Helper method to get note names from MIDI numbers
     private static string GetNoteName(int midiNumber)

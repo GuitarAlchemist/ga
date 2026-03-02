@@ -7,7 +7,7 @@ public class StyleLearningSystemState
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public Dictionary<string, object> Parameters { get; set; } = new();
+    public Dictionary<string, object> Parameters { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -18,7 +18,7 @@ public class PatternRecognitionSystemState
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public Dictionary<string, object> Configuration { get; set; } = new();
+    public Dictionary<string, object> Configuration { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -29,14 +29,14 @@ public class PlayerStyleProfile
 {
     public string Id { get; set; } = string.Empty;
     public string PlayerId { get; set; } = string.Empty;
-    public Dictionary<string, double> StyleMetrics { get; set; } = new();
-    public List<string> PreferredGenres { get; set; } = new();
+    public Dictionary<string, double> StyleMetrics { get; set; } = [];
+    public List<string> PreferredGenres { get; set; } = [];
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
     // Additional properties needed by controllers
     public double PreferredComplexity { get; set; } = 0.5;
     public double ExplorationRate { get; set; } = 0.3;
-    public List<string> TopChordFamilies { get; set; } = new();
+    public List<string> TopChordFamilies { get; set; } = [];
     public int FavoriteProgressionCount { get; set; }
     public int TotalProgressionsAnalyzed { get; set; }
 }
@@ -48,7 +48,7 @@ public class AdaptiveLearningPath
 {
     public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
-    public List<LearningStep> Steps { get; set; } = new();
+    public List<LearningStep> Steps { get; set; } = [];
     public double Progress { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -72,8 +72,8 @@ public class AdaptiveLearningRequest
 {
     public string UserId { get; set; } = string.Empty;
     public string LearningGoal { get; set; } = string.Empty;
-    public Dictionary<string, object> UserPreferences { get; set; } = new();
-    public List<string> CompletedTopics { get; set; } = new();
+    public Dictionary<string, object> UserPreferences { get; set; } = [];
+    public List<string> CompletedTopics { get; set; } = [];
 }
 
 /// <summary>
@@ -83,7 +83,7 @@ public class AdaptationResult
 {
     public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
-    public List<string> Adaptations { get; set; } = new();
+    public List<string> Adaptations { get; set; } = [];
     public double ConfidenceScore { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -95,11 +95,11 @@ public class PerformanceData
 {
     public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
-    public Dictionary<string, double> Metrics { get; set; } = new();
+    public Dictionary<string, double> Metrics { get; set; } = [];
     public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 
     // Additional properties needed by controllers
-    public List<double> Scores { get; set; } = new();
+    public List<double> Scores { get; set; } = [];
     public double EngagementScore { get; set; }
 }
 
@@ -112,8 +112,8 @@ public class IntelligentPracticeSession
     public string UserId { get; set; } = string.Empty;
     public string SessionType { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
-    public List<PracticeExercise> Exercises { get; set; } = new();
-    public Dictionary<string, double> PerformanceMetrics { get; set; } = new();
+    public List<PracticeExercise> Exercises { get; set; } = [];
+    public Dictionary<string, double> PerformanceMetrics { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -138,7 +138,7 @@ public class PracticeSessionRequest
     public string UserId { get; set; } = string.Empty;
     public string SessionType { get; set; } = string.Empty;
     public int DurationMinutes { get; set; }
-    public List<string> FocusAreas { get; set; } = new();
+    public List<string> FocusAreas { get; set; } = [];
 }
 
 /// <summary>
@@ -150,7 +150,7 @@ public class LearningAssistance
     public string UserId { get; set; } = string.Empty;
     public string AssistanceType { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
-    public Dictionary<string, object> Context { get; set; } = new();
+    public Dictionary<string, object> Context { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -162,8 +162,8 @@ public class EngagementAnalysis
     public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
     public double EngagementScore { get; set; }
-    public Dictionary<string, double> EngagementFactors { get; set; } = new();
-    public List<string> Recommendations { get; set; } = new();
+    public Dictionary<string, double> EngagementFactors { get; set; } = [];
+    public List<string> Recommendations { get; set; } = [];
     public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -174,8 +174,8 @@ public class PersonalizedAchievementSystem
 {
     public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
-    public List<Achievement> Achievements { get; set; } = new();
-    public Dictionary<string, object> PersonalizationData { get; set; } = new();
+    public List<Achievement> Achievements { get; set; } = [];
+    public Dictionary<string, object> PersonalizationData { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -201,7 +201,7 @@ public class AdaptedRecommendation
     public string RecommendationType { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public double Relevance { get; set; }
-    public Dictionary<string, object> AdaptationContext { get; set; } = new();
+    public Dictionary<string, object> AdaptationContext { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -228,7 +228,7 @@ public class UpdatePerformance
     public double Score { get; set; }
     public string Activity { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
 }
 
 /// <summary>
@@ -239,7 +239,7 @@ public class DifficultyResponse
     public double CurrentDifficulty { get; set; }
     public double RecommendedDifficulty { get; set; }
     public string Reason { get; set; } = string.Empty;
-    public Dictionary<string, object> Adjustments { get; set; } = new();
+    public Dictionary<string, object> Adjustments { get; set; } = [];
 }
 
 /// <summary>
@@ -251,7 +251,7 @@ public class SessionStateResponse
     public string State { get; set; } = string.Empty;
     public double Progress { get; set; }
     public int TotalExercises { get; set; }
-    public Dictionary<string, object> Data { get; set; } = new();
+    public Dictionary<string, object> Data { get; set; } = [];
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 }
 

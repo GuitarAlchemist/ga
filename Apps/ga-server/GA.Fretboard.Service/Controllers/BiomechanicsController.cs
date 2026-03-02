@@ -1,12 +1,12 @@
-namespace GA.Fretboard.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿namespace GA.Fretboard.Service.Controllers;
 
 using System.Collections.Immutable;
-using GA.Domain.Core.Instruments.Biomechanics;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
-using GA.Domain.Services.Fretboard.Biomechanics;
+using Domain.Core.Instruments.Biomechanics;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
+using Domain.Services.Fretboard.Biomechanics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 
@@ -72,7 +72,7 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
                         HasBarreChord = analysis.FingeringEfficiencyAnalysis.HasBarreChord,
                         UsesThumb = analysis.FingeringEfficiencyAnalysis.UsesThumb,
                         Reason = analysis.FingeringEfficiencyAnalysis.Reason,
-                        Recommendations = analysis.FingeringEfficiencyAnalysis.Recommendations.ToList()
+                        Recommendations = [.. analysis.FingeringEfficiencyAnalysis.Recommendations]
                     }
                     : null,
                 WristPosture = analysis.WristPostureAnalysis != null
@@ -170,7 +170,7 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
                             HasBarreChord = analysis.FingeringEfficiencyAnalysis.HasBarreChord,
                             UsesThumb = analysis.FingeringEfficiencyAnalysis.UsesThumb,
                             Reason = analysis.FingeringEfficiencyAnalysis.Reason,
-                            Recommendations = analysis.FingeringEfficiencyAnalysis.Recommendations.ToList()
+                            Recommendations = [.. analysis.FingeringEfficiencyAnalysis.Recommendations]
                         }
                         : null,
                     WristPosture = analysis.WristPostureAnalysis != null
@@ -222,7 +222,7 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
         var location = new PositionLocation(str, fretValue);
         // Use a dummy MIDI note (60 = middle C) since we're only analyzing positions
         var midiNote = MidiNote.FromValue(60 + fret);
-        return new Position.Played(location, midiNote);
+        return new(location, midiNote);
     }
 
     private HandPoseVisualizationDto? CreateVisualizationDto(BiomechanicalPlayabilityAnalysis analysis)
@@ -238,32 +238,29 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
         var fingertips = new Dictionary<string, FingertipVisualizationDto>();
         foreach (var (fingerType, position) in result)
         {
-            fingertips[fingerType.ToString()] = new FingertipVisualizationDto
+            fingertips[fingerType.ToString()] = new()
             {
-                Position = new Vector3Dto
-                    { X = position.X, Y = position.Y, Z = position.Z },
-                Direction = new Vector3Dto
-                    { X = 0, Y = 0, Z = 1 }, // Default direction
-                JointPositions = new List<Vector3Dto>(), // Default empty list
-                ArcTrajectory = new List<Vector3Dto>(), // Default empty list
-                JointFlexionAngles = new List<float>(), // Default empty list
-                JointAbductionAngles = new List<float>() // Default empty list
+                Position = new() { X = position.X, Y = position.Y, Z = position.Z },
+                Direction = new() { X = 0, Y = 0, Z = 1 }, // Default direction
+                JointPositions = [], // Default empty list
+                ArcTrajectory = [], // Default empty list
+                JointFlexionAngles = [], // Default empty list
+                JointAbductionAngles = [] // Default empty list
             };
         }
 
-        return new HandPoseVisualizationDto
+        return new()
         {
             Fingertips = fingertips,
-            WristPosition = new Vector3Dto
-                { X = 0, Y = 0, Z = 0 }, // Default wrist position
-            PalmOrientation = new QuaternionDto
+            WristPosition = new() { X = 0, Y = 0, Z = 0 }, // Default wrist position
+            PalmOrientation = new()
             {
                 X = 0,
                 Y = 0,
                 Z = 0,
                 W = 1 // Default orientation
             },
-            FretboardGeometry = new FretboardGeometryDto
+            FretboardGeometry = new()
             {
                 ThicknessMm = 20.0f,
                 NeckThicknessAtNut = 22.0f,

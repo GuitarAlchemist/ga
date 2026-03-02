@@ -1,6 +1,6 @@
-namespace GA.Domain.Core.Tests.Atonal;
+namespace GA.Business.Core.Tests.Atonal;
 
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 
 internal class ForteNumberTests
 {

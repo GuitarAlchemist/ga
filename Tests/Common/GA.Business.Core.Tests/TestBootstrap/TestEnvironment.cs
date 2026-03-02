@@ -1,10 +1,8 @@
-namespace GA.Domain.Core.Tests.TestBootstrap;
-
-using NUnit.Framework;
+namespace GA.Business.Core.Tests.TestBootstrap;
 
 /// <summary>
-/// Ensures configuration-backed services can locate their YAML/JSON inputs during tests
-/// by normalizing the current directory to the repository root.
+///     Ensures configuration-backed services can locate their YAML/JSON inputs during tests
+///     by normalizing the current directory to the repository root.
 /// </summary>
 [SetUpFixture]
 public sealed class TestEnvironment
@@ -25,6 +23,7 @@ public sealed class TestEnvironment
                 Directory.SetCurrentDirectory(dir);
                 return;
             }
+
             dir = Path.GetDirectoryName(dir);
         }
         // Fallback: keep the original working directory

@@ -15,27 +15,25 @@ module ContentDiscovery =
     // ============================================================================
 
     /// Metadata for discovered content
-    type ContentMetadata = {
-        Id: string
-        Title: string
-        Artist: string option
-        Repository: RepositoryName
-        Url: string
-        ContentType: string
-        Difficulty: DifficultyLevel option
-        Rating: float option
-        Downloads: int option
-        License: LicenseType option
-        Tags: string list
-        PreviewUrl: string option
-    }
+    type ContentMetadata =
+        { Id: string
+          Title: string
+          Artist: string option
+          Repository: RepositoryName
+          Url: string
+          ContentType: string
+          Difficulty: DifficultyLevel option
+          Rating: float option
+          Downloads: int option
+          License: LicenseType option
+          Tags: string list
+          PreviewUrl: string option }
 
     /// Search result with relevance scoring
-    type SearchResult = {
-        Content: ContentMetadata
-        RelevanceScore: float
-        MatchedCriteria: string list
-    }
+    type SearchResult =
+        { Content: ContentMetadata
+          RelevanceScore: float
+          MatchedCriteria: string list }
 
     // ============================================================================
     // REPOSITORY-SPECIFIC DISCOVERY
@@ -46,10 +44,9 @@ module ContentDiscovery =
         task {
             try
                 // Simulate Ultimate Guitar API search
-                let mockResults = [
-                    {
-                        Content = {
-                            Id = "ug_wonderwall_123"
+                let mockResults =
+                    [ { Content =
+                          { Id = "ug_wonderwall_123"
                             Title = "Wonderwall"
                             Artist = Some "Oasis"
                             Repository = UltimateGuitar
@@ -59,15 +56,12 @@ module ContentDiscovery =
                             Rating = Some 4.8
                             Downloads = Some 150000
                             License = Some Free
-                            Tags = ["rock"; "90s"; "acoustic"; "beginner"]
-                            PreviewUrl = Some "https://tabs.ultimate-guitar.com/preview/123"
-                        }
+                            Tags = [ "rock"; "90s"; "acoustic"; "beginner" ]
+                            PreviewUrl = Some "https://tabs.ultimate-guitar.com/preview/123" }
                         RelevanceScore = 0.95
-                        MatchedCriteria = ["artist"; "title"]
-                    }
-                    {
-                        Content = {
-                            Id = "ug_blackbird_456"
+                        MatchedCriteria = [ "artist"; "title" ] }
+                      { Content =
+                          { Id = "ug_blackbird_456"
                             Title = "Blackbird"
                             Artist = Some "The Beatles"
                             Repository = UltimateGuitar
@@ -77,21 +71,18 @@ module ContentDiscovery =
                             Rating = Some 4.9
                             Downloads = Some 200000
                             License = Some Free
-                            Tags = ["classic rock"; "fingerpicking"; "acoustic"]
-                            PreviewUrl = Some "https://tabs.ultimate-guitar.com/preview/456"
-                        }
+                            Tags = [ "classic rock"; "fingerpicking"; "acoustic" ]
+                            PreviewUrl = Some "https://tabs.ultimate-guitar.com/preview/456" }
                         RelevanceScore = 0.85
-                        MatchedCriteria = ["genre"; "difficulty"]
-                    }
-                ]
+                        MatchedCriteria = [ "genre"; "difficulty" ] } ]
 
                 // Filter based on criteria
-                let filteredResults = 
+                let filteredResults =
                     mockResults
                     |> List.filter (fun result ->
                         match criteria.Artist with
-                        | Some artist -> 
-                            result.Content.Artist 
+                        | Some artist ->
+                            result.Content.Artist
                             |> Option.exists (fun a -> a.Contains(artist, StringComparison.OrdinalIgnoreCase))
                         | None -> true)
                     |> List.filter (fun result ->
@@ -100,18 +91,17 @@ module ContentDiscovery =
                         | None -> true)
 
                 return Ok filteredResults
-            with
-            | ex -> return Error $"Ultimate Guitar discovery failed: {ex.Message}"
+            with ex ->
+                return Error $"Ultimate Guitar discovery failed: {ex.Message}"
         }
 
     /// Discover content from Songsterr
     let discoverFromSongsterr (criteria: SearchCriteria) : Task<Result<SearchResult list, string>> =
         task {
             try
-                let mockResults = [
-                    {
-                        Content = {
-                            Id = "songsterr_master_789"
+                let mockResults =
+                    [ { Content =
+                          { Id = "songsterr_master_789"
                             Title = "Master of Puppets"
                             Artist = Some "Metallica"
                             Repository = Songsterr
@@ -121,27 +111,23 @@ module ContentDiscovery =
                             Rating = Some 4.7
                             Downloads = Some 75000
                             License = Some Free
-                            Tags = ["metal"; "thrash"; "advanced"; "electric"]
-                            PreviewUrl = Some "https://www.songsterr.com/preview/789"
-                        }
+                            Tags = [ "metal"; "thrash"; "advanced"; "electric" ]
+                            PreviewUrl = Some "https://www.songsterr.com/preview/789" }
                         RelevanceScore = 0.92
-                        MatchedCriteria = ["artist"; "genre"]
-                    }
-                ]
+                        MatchedCriteria = [ "artist"; "genre" ] } ]
 
                 return Ok mockResults
-            with
-            | ex -> return Error $"Songsterr discovery failed: {ex.Message}"
+            with ex ->
+                return Error $"Songsterr discovery failed: {ex.Message}"
         }
 
     /// Discover content from MuseScore
     let discoverFromMuseScore (criteria: SearchCriteria) : Task<Result<SearchResult list, string>> =
         task {
             try
-                let mockResults = [
-                    {
-                        Content = {
-                            Id = "musescore_canon_101"
+                let mockResults =
+                    [ { Content =
+                          { Id = "musescore_canon_101"
                             Title = "Canon in D"
                             Artist = Some "Johann Pachelbel"
                             Repository = MuseScore
@@ -151,27 +137,23 @@ module ContentDiscovery =
                             Rating = Some 4.6
                             Downloads = Some 50000
                             License = Some PublicDomain
-                            Tags = ["classical"; "baroque"; "wedding"; "fingerstyle"]
-                            PreviewUrl = Some "https://musescore.com/preview/101"
-                        }
+                            Tags = [ "classical"; "baroque"; "wedding"; "fingerstyle" ]
+                            PreviewUrl = Some "https://musescore.com/preview/101" }
                         RelevanceScore = 0.88
-                        MatchedCriteria = ["genre"; "license"]
-                    }
-                ]
+                        MatchedCriteria = [ "genre"; "license" ] } ]
 
                 return Ok mockResults
-            with
-            | ex -> return Error $"MuseScore discovery failed: {ex.Message}"
+            with ex ->
+                return Error $"MuseScore discovery failed: {ex.Message}"
         }
 
     /// Discover content from IMSLP
     let discoverFromIMSLP (criteria: SearchCriteria) : Task<Result<SearchResult list, string>> =
         task {
             try
-                let mockResults = [
-                    {
-                        Content = {
-                            Id = "imslp_bach_bwv999"
+                let mockResults =
+                    [ { Content =
+                          { Id = "imslp_bach_bwv999"
                             Title = "Prelude in C minor, BWV 999"
                             Artist = Some "Johann Sebastian Bach"
                             Repository = IMSLP
@@ -181,17 +163,14 @@ module ContentDiscovery =
                             Rating = Some 4.9
                             Downloads = Some 25000
                             License = Some PublicDomain
-                            Tags = ["classical"; "baroque"; "lute"; "guitar_arrangement"]
-                            PreviewUrl = Some "https://imslp.org/preview/bwv999"
-                        }
+                            Tags = [ "classical"; "baroque"; "lute"; "guitar_arrangement" ]
+                            PreviewUrl = Some "https://imslp.org/preview/bwv999" }
                         RelevanceScore = 0.94
-                        MatchedCriteria = ["artist"; "genre"; "license"]
-                    }
-                ]
+                        MatchedCriteria = [ "artist"; "genre"; "license" ] } ]
 
                 return Ok mockResults
-            with
-            | ex -> return Error $"IMSLP discovery failed: {ex.Message}"
+            with ex ->
+                return Error $"IMSLP discovery failed: {ex.Message}"
         }
 
     // ============================================================================
@@ -199,7 +178,10 @@ module ContentDiscovery =
     // ============================================================================
 
     /// Discover content from a specific repository
-    let discoverFromRepository (repository: RepositoryName) (criteria: SearchCriteria) : Task<Result<SearchResult list, string>> =
+    let discoverFromRepository
+        (repository: RepositoryName)
+        (criteria: SearchCriteria)
+        : Task<Result<SearchResult list, string>> =
         match repository with
         | UltimateGuitar -> discoverFromUltimateGuitar criteria
         | Songsterr -> discoverFromSongsterr criteria
@@ -210,15 +192,18 @@ module ContentDiscovery =
     /// Discover content across all repositories
     let discoverFromAllRepositories (criteria: SearchCriteria) : Task<Result<SearchResult list, string>> =
         task {
-            let repositories = [UltimateGuitar; Songsterr; MuseScore; IMSLP]
-            let! results = 
+            let repositories = [ UltimateGuitar; Songsterr; MuseScore; IMSLP ]
+
+            let! results =
                 repositories
                 |> List.map (fun repo -> discoverFromRepository repo criteria)
                 |> Task.WhenAll
 
             let allResults =
                 results
-                |> Array.choose (function Ok r -> Some r | Error _ -> None)
+                |> Array.choose (function
+                    | Ok r -> Some r
+                    | Error _ -> None)
                 |> Array.toList
                 |> List.concat
                 |> List.sortByDescending (fun r -> r.RelevanceScore)
@@ -230,19 +215,20 @@ module ContentDiscovery =
     let recommendContent (userPreferences: SearchCriteria) (limit: int) : Task<Result<SearchResult list, string>> =
         task {
             let! allResults = discoverFromAllRepositories userPreferences
-            
+
             match allResults with
             | Ok results ->
-                let topResults = 
+                let topResults =
                     results
                     |> List.take (min limit results.Length)
-                    |> List.map (fun r -> 
+                    |> List.map (fun r ->
                         // Boost relevance for educational content
-                        let boostedScore = 
+                        let boostedScore =
                             if r.Content.License = Some PublicDomain || r.Content.License = Some EducationalUse then
                                 r.RelevanceScore * 1.1
                             else
                                 r.RelevanceScore
+
                         { r with RelevanceScore = boostedScore })
                     |> List.sortByDescending (fun r -> r.RelevanceScore)
 

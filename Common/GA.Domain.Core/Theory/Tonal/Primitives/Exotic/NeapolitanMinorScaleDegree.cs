@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Exotic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A Neapolitan minor scale degree
@@ -24,10 +18,7 @@ public readonly record struct NeapolitanMinorScaleDegree : IRangeValueObject<Nea
     private readonly int _value;
 
     // Constructor
-    public NeapolitanMinorScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public NeapolitanMinorScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<NeapolitanMinorScaleDegree> All =>
         ValueObjectUtils<NeapolitanMinorScaleDegree>.Items;
@@ -47,24 +38,15 @@ public readonly record struct NeapolitanMinorScaleDegree : IRangeValueObject<Nea
     public static NeapolitanMinorScaleDegree UltraLocrianbb3 => new(7);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NeapolitanMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static NeapolitanMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static NeapolitanMinorScaleDegree Min => FromValue(_minValue);
     public static NeapolitanMinorScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator NeapolitanMinorScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator NeapolitanMinorScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(NeapolitanMinorScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(NeapolitanMinorScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -72,77 +54,53 @@ public readonly record struct NeapolitanMinorScaleDegree : IRangeValueObject<Nea
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Neapolitan minor",
-            2 => "Lydian #2",
-            3 => "Mixolydian augmented",
-            4 => "Hungarian Gypsy",
-            5 => "Locrian dominant",
-            6 => "Ionian #2 #5",
-            7 => "Ultra Locrian bb3",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Neapolitan minor",
+        2 => "Lydian #2",
+        3 => "Mixolydian augmented",
+        4 => "Hungarian Gypsy",
+        5 => "Locrian dominant",
+        6 => "Ionian #2 #5",
+        7 => "Ultra Locrian bb3",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "NeapMin",
-            2 => "Lyd#2",
-            3 => "Mix+",
-            4 => "HunGypsy",
-            5 => "LocDom",
-            6 => "Ion#2#5",
-            7 => "UltraLocbb3",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "NeapMin",
+        2 => "Lyd#2",
+        3 => "Mix+",
+        4 => "HunGypsy",
+        5 => "LocDom",
+        6 => "Ion#2#5",
+        7 => "UltraLocbb3",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<NeapolitanMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<NeapolitanMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<NeapolitanMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<NeapolitanMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(NeapolitanMinorScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(NeapolitanMinorScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right) =>
+        left.CompareTo(right) < 0;
 
-    public static bool operator >(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right) =>
+        left.CompareTo(right) > 0;
 
-    public static bool operator <=(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(NeapolitanMinorScaleDegree left, NeapolitanMinorScaleDegree right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

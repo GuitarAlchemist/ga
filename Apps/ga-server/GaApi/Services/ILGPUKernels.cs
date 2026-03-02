@@ -3,13 +3,13 @@
 using ILGPU;
 
 /// <summary>
-/// ILGPU kernels for GPU-accelerated vector operations
-/// Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
+///     ILGPU kernels for GPU-accelerated vector operations
+///     Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
 /// </summary>
 public static class IlgpuKernels
 {
     /// <summary>
-    /// GPU kernel for calculating cosine similarity between a query vector and multiple chord embeddings
+    ///     GPU kernel for calculating cosine similarity between a query vector and multiple chord embeddings
     /// </summary>
     /// <param name="index">Thread index</param>
     /// <param name="queryVector">Query embedding vector (shared across all threads)</param>
@@ -26,17 +26,19 @@ public static class IlgpuKernels
         int numChords)
     {
         if (index >= numChords)
+        {
             return;
+        }
 
         // Calculate offset for this chord's embedding
         var chordOffset = index * embeddingDim;
 
         // Calculate dot product, query norm, and chord norm
-        double dotProduct = 0.0;
-        double queryNorm = 0.0;
-        double chordNorm = 0.0;
+        var dotProduct = 0.0;
+        var queryNorm = 0.0;
+        var chordNorm = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var queryVal = queryVector[i];
             var chordVal = chordEmbeddings[chordOffset + i];
@@ -52,7 +54,7 @@ public static class IlgpuKernels
     }
 
     /// <summary>
-    /// GPU kernel for filtered cosine similarity (only compute for allowed chord indices)
+    ///     GPU kernel for filtered cosine similarity (only compute for allowed chord indices)
     /// </summary>
     public static void FilteredCosineSimilarityKernel(
         Index1D index,
@@ -64,18 +66,20 @@ public static class IlgpuKernels
         int numAllowedChords)
     {
         if (index >= numAllowedChords)
+        {
             return;
+        }
 
         // Get the actual chord index from the allowed indices array
         var chordIndex = allowedIndices[index];
         var chordOffset = chordIndex * embeddingDim;
 
         // Calculate dot product, query norm, and chord norm
-        double dotProduct = 0.0;
-        double queryNorm = 0.0;
-        double chordNorm = 0.0;
+        var dotProduct = 0.0;
+        var queryNorm = 0.0;
+        var chordNorm = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var queryVal = queryVector[i];
             var chordVal = chordEmbeddings[chordOffset + i];
@@ -91,7 +95,7 @@ public static class IlgpuKernels
     }
 
     /// <summary>
-    /// GPU kernel for batch cosine similarity with multiple query vectors
+    ///     GPU kernel for batch cosine similarity with multiple query vectors
     /// </summary>
     public static void BatchCosineSimilarityKernel(
         Index2D index,
@@ -106,18 +110,20 @@ public static class IlgpuKernels
         var chordIdx = index.Y;
 
         if (queryIdx >= numQueries || chordIdx >= numChords)
+        {
             return;
+        }
 
         // Calculate offsets
         var queryOffset = queryIdx * embeddingDim;
         var chordOffset = chordIdx * embeddingDim;
 
         // Calculate dot product, query norm, and chord norm
-        double dotProduct = 0.0;
-        double queryNorm = 0.0;
-        double chordNorm = 0.0;
+        var dotProduct = 0.0;
+        var queryNorm = 0.0;
+        var chordNorm = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var queryVal = queryVectors[queryOffset + i];
             var chordVal = chordEmbeddings[chordOffset + i];
@@ -134,7 +140,7 @@ public static class IlgpuKernels
     }
 
     /// <summary>
-    /// GPU kernel for Euclidean distance calculation
+    ///     GPU kernel for Euclidean distance calculation
     /// </summary>
     public static void EuclideanDistanceKernel(
         Index1D index,
@@ -145,12 +151,14 @@ public static class IlgpuKernels
         int numChords)
     {
         if (index >= numChords)
+        {
             return;
+        }
 
         var chordOffset = index * embeddingDim;
-        double sumSquaredDiff = 0.0;
+        var sumSquaredDiff = 0.0;
 
-        for (int i = 0; i < embeddingDim; i++)
+        for (var i = 0; i < embeddingDim; i++)
         {
             var diff = queryVector[i] - chordEmbeddings[chordOffset + i];
             sumSquaredDiff += diff * diff;
@@ -159,4 +167,3 @@ public static class IlgpuKernels
         distances[index] = Math.Sqrt(sumSquaredDiff);
     }
 }
-

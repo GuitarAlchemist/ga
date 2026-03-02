@@ -1,44 +1,36 @@
 namespace GA.Business.ML.Retrieval;
 
-using System;
-using System.Linq;
-using Embeddings;
-
 /// <summary>
-/// Calculates stylistic prototypes (Centroids) from the vector index.
-/// Used to bias generative realization toward specific stylistic physical patterns.
+///     Calculates stylistic prototypes (Centroids) from the vector index.
+///     Used to bias generative realization toward specific stylistic physical patterns.
 /// </summary>
-public class StyleProfileService
+public class StyleProfileService(IVectorIndex index)
 {
-    private readonly IVectorIndex _index;
-
-    public StyleProfileService(IVectorIndex index)
-    {
-        _index = index;
-    }
-
     /// <summary>
-    /// Calculates the mean morphology vector for a given style tag.
+    ///     Calculates the mean morphology vector for a given style tag.
     /// </summary>
-    public virtual double[]? GetStyleCentroid(string styleTag)
+    public virtual float[]? GetStyleCentroid(string styleTag)
     {
-        var candidates = _index.Documents
+        var candidates = index.Documents
             .Where(d => d.SemanticTags != null && d.SemanticTags.Contains(styleTag, StringComparer.OrdinalIgnoreCase))
             .Where(d => d.Embedding != null && d.Embedding.Length == EmbeddingSchema.TotalDimension)
             .ToList();
 
-        if (candidates.Count == 0) return null;
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
 
-        var centroid = new double[EmbeddingSchema.TotalDimension];
+        var centroid = new float[EmbeddingSchema.TotalDimension];
         foreach (var doc in candidates)
         {
-            for (int i = 0; i < centroid.Length; i++)
+            for (var i = 0; i < centroid.Length; i++)
             {
                 centroid[i] += doc.Embedding![i];
             }
         }
 
-        for (int i = 0; i < centroid.Length; i++)
+        for (var i = 0; i < centroid.Length; i++)
         {
             centroid[i] /= candidates.Count;
         }
@@ -47,40 +39,45 @@ public class StyleProfileService
     }
 
     /// <summary>
-    /// Calculates how "Stylistically Natural" a potential realization is.
-    /// Returns a score [0, 1] where 1 is perfect match to style prototype.
+    ///     Calculates how "Stylistically Natural" a potential realization is.
+    ///     Returns a score [0, 1] where 1 is perfect match to style prototype.
     /// </summary>
-    public virtual double CalculateNaturalness(double[] realizationEmbedding, double[] styleCentroid)
+    public virtual double CalculateNaturalness(float[] realizationEmbedding, float[] styleCentroid)
     {
         // Use Weighted Euclidean Distance for Morphology
         // This ensures that absolute register (fret numbers) matters.
-        
+
         double sumSq = 0;
-        int count = 0;
-        for (int i = EmbeddingSchema.MorphologyOffset; i < EmbeddingSchema.MorphologyEnd; i++)
+        var count = 0;
+        for (var i = EmbeddingSchema.MorphologyOffset; i < EmbeddingSchema.MorphologyEnd; i++)
         {
-            double diff = realizationEmbedding[i] - styleCentroid[i];
+            var diff = realizationEmbedding[i] - styleCentroid[i];
             sumSq += diff * diff;
             count++;
         }
 
-        double distance = Math.Sqrt(sumSq);
+        var distance = Math.Sqrt(sumSq);
         // Map distance to [0, 1] score. Typical max distance approx 1.0 - 2.0
-        return Math.Max(0, 1.0 - (distance / 2.0));
+        return Math.Max(0, 1.0 - distance / 2.0);
     }
 
-    private static double CosineSimilarity(double[] v1, int offset1, double[] v2, int offset2, int dim)
+    private static double CosineSimilarity(float[] v1, int offset1, float[] v2, int offset2, int dim)
     {
         double dot = 0, mag1 = 0, mag2 = 0;
-        for (int i = 0; i < dim; i++)
+        for (var i = 0; i < dim; i++)
         {
-            double a = v1[offset1 + i];
-            double b = v2[offset2 + i];
+            var a = v1[offset1 + i];
+            var b = v2[offset2 + i];
             dot += a * b;
             mag1 += a * a;
             mag2 += b * b;
         }
-        if (mag1 == 0 || mag2 == 0) return 0;
+
+        if (mag1 == 0 || mag2 == 0)
+        {
+            return 0;
+        }
+
         return dot / (Math.Sqrt(mag1) * Math.Sqrt(mag2));
     }
 }

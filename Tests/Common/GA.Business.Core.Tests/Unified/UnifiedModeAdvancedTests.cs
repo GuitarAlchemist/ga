@@ -1,7 +1,7 @@
-namespace GA.Domain.Core.Tests.Unified;
+namespace GA.Business.Core.Tests.Unified;
 
 using GA.Domain.Core.Theory.Atonal;
-using Domain.Services.Unified;
+using GA.Domain.Services.Unified;
 
 /// <summary>
 /// Tests for the new UnifiedModeService features:

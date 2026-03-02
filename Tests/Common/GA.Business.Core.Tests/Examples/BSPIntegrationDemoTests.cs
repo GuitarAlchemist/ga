@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests.Examples;
+namespace GA.Business.Core.Tests.Examples;
 
 // using GA.Domain.Core.Examples; // Namespace does not exist
 

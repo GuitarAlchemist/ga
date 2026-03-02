@@ -2,6 +2,7 @@ using GA.Data.MongoDB.Configuration;
 using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Services.Embeddings;
 
+using GA.Business.Intelligence.SemanticIndexing;
 using GA.Domain.Services.Fretboard.Voicings.Search;
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
@@ -58,6 +59,18 @@ if (args.Length > 0)
 
         case "gpu-voicing-search":
             await RunGpuVoicingSearch(args);
+            return;
+
+        case "debug-tags":
+            await RunDebugTags(configuration);
+            return;
+
+        case "embedding":
+            await RunEmbedding(args, configuration);
+            return;
+
+        case "semantic-fretboard":
+            await RunSemanticFretboard(args, configuration);
             return;
 
         case "index-voicings":
@@ -138,6 +151,9 @@ WriteLine("  asset-list             List all imported assets");
 WriteLine("  asset-delete           Delete an asset by ID");
 WriteLine("  gpu-voicing-search [N] GPU-accelerated semantic voicing search demo");
 WriteLine("                         Optional: 1=Quick, 2=Performance, 3=Batch, 4=Interactive, 5=Stats");
+WriteLine("  debug-tags             Show symbolic tag registry");
+WriteLine("  embedding <text>       Run semantic embedding search");
+WriteLine("  semantic-fretboard     Test semantic fretboard indexing and querying");
 WriteLine("  identify <diagram>     Identify what chord a fret diagram represents");
 WriteLine("  similar <diagram>      Find alternative voicings for a chord shape");
 WriteLine("  benchmark-similarity   Compare two voicings using musical embeddings");
@@ -190,6 +206,58 @@ static async Task RunBenchmarks(string[] args, IConfigurationRoot config)
     }
 }
 
+static Task RunDebugTags(IConfigurationRoot config)
+{
+    using var serviceProvider = BuildScratchServiceProvider(config);
+    var command = serviceProvider.GetRequiredService<DebugTagsCommand>();
+    command.Execute();
+    return Task.CompletedTask;
+}
+
+static async Task RunEmbedding(string[] args, IConfigurationRoot config)
+{
+    if (args.Length < 2)
+    {
+        WriteLine("Usage: embedding <text>");
+        return;
+    }
+
+    var text = string.Join(" ", args.Skip(1));
+
+    using var serviceProvider = BuildScratchServiceProvider(config);
+    var command = serviceProvider.GetRequiredService<EmbeddingCommand>();
+
+    await command.ExecuteAsync(text);
+}
+
+static async Task RunSemanticFretboard(string[] args, IConfigurationRoot config)
+{
+    var options = new SemanticFretboardOptions
+    {
+        ShouldIndex = args.Contains("--index"),
+        Interactive = args.Contains("--interactive")
+    };
+
+    var tuning = GetArgValue(args, "--tuning");
+    if (!string.IsNullOrWhiteSpace(tuning))
+    {
+        options.Tuning = tuning;
+    }
+
+    var maxFretArg = GetArgValue(args, "--max-fret");
+    if (maxFretArg != null && int.TryParse(maxFretArg, out var maxFret))
+    {
+        options.MaxFret = maxFret;
+    }
+
+    options.Query = GetArgValue(args, "--query");
+
+    using var serviceProvider = BuildScratchServiceProvider(config);
+    var command = serviceProvider.GetRequiredService<SemanticFretboardCommand>();
+
+    await command.ExecuteAsync(options);
+}
+
 static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
 {
     var services = new ServiceCollection();
@@ -211,6 +279,11 @@ static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
     services.AddTransient<BenchmarkQualityCommand>();
     services.AddTransient<BenchmarkSimilarityCommand>();
     services.AddTransient<RunBenchmarksCommand>();
+    services.AddTransient<DebugTagsCommand>();
+    services.AddTransient<SemanticSearchService>();
+    services.AddTransient<EmbeddingCommand>();
+    services.AddTransient<SemanticFretboardService>();
+    services.AddTransient<SemanticFretboardCommand>();
 
     // Tab Corpus
     services.AddTransient<GA.Domain.Core.Tabs.ITabCorpusRepository, MongoTabCorpusRepository>();

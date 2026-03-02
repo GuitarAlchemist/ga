@@ -1,34 +1,25 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
-using System;
-using Primitives;
+using Interval = Primitives.Intervals.Interval;
 
 /// <summary>
 ///     Represents an interval within a chord formula with additional chord-specific properties
 /// </summary>
-public class ChordFormulaInterval
+/// <remarks>
+/// Example: Major third (M3) is essential, typically doubled, and stable in voice leading
+/// </remarks>
+[PublicAPI]
+public class ChordFormulaInterval(
+    Interval interval,
+    ChordFunction function,
+    bool isEssential = true,
+    bool isTypicallyDoubled = false,
+    VoiceLeadingTendency voiceLeadingTendency = VoiceLeadingTendency.Stable)
 {
-    /// <summary>
-    ///     Initializes a new instance of the ChordFormulaInterval class
-    /// </summary>
-    public ChordFormulaInterval(
-        Interval interval,
-        ChordFunction function,
-        bool isEssential = true,
-        bool isTypicallyDoubled = false,
-        VoiceLeadingTendency voiceLeadingTendency = VoiceLeadingTendency.Stable)
-    {
-        Interval = interval;
-        Function = function;
-        IsEssential = isEssential;
-        IsTypicallyDoubled = isTypicallyDoubled;
-        VoiceLeadingTendency = voiceLeadingTendency;
-    }
-
     /// <summary>
     ///     Gets whether this interval is essential to the chord's identity
     /// </summary>
-    public bool IsEssential { get; }
+    public bool IsEssential { get; } = isEssential;
 
     /// <summary>
     ///     Gets whether this interval can be omitted in certain voicings
@@ -38,22 +29,22 @@ public class ChordFormulaInterval
     /// <summary>
     ///     Gets the chord function of this interval (root, third, fifth, etc.)
     /// </summary>
-    public ChordFunction Function { get; }
+    public ChordFunction Function { get; } = function;
 
     /// <summary>
     ///     Gets whether this interval is typically doubled in voicings
     /// </summary>
-    public bool IsTypicallyDoubled { get; }
+    public bool IsTypicallyDoubled { get; } = isTypicallyDoubled;
 
     /// <summary>
     ///     Gets the voice leading tendency of this interval
     /// </summary>
-    public VoiceLeadingTendency VoiceLeadingTendency { get; }
+    public VoiceLeadingTendency VoiceLeadingTendency { get; } = voiceLeadingTendency;
 
     /// <summary>
     ///     Gets the interval
     /// </summary>
-    public Interval Interval { get; }
+    public Interval Interval { get; } = interval;
 
     /// <summary>
     ///     Gets the chord degree number (1, 3, 5, 7, 9, 11, 13)

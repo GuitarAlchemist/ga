@@ -1,8 +1,8 @@
-﻿using GA.Domain.Core.Extensions;
-﻿namespace GA.Domain.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
-using Primitives;
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Primitives.Notes;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Extensions;
 
 public class PitchClassSetIdTests
 {
@@ -19,7 +19,8 @@ public class PitchClassSetIdTests
         var complementId = id.Complement;
 
         // Assert
-        TestContext.WriteLine($"Input: {sMajorTriadInput}, ID: {id}, Complement ID: {complementId}, Complement Binary: {complementId.BinaryValue}");
+        TestContext.WriteLine(
+            $"Input: {sMajorTriadInput}, ID: {id}, Complement ID: {complementId}, Complement Binary: {complementId.BinaryValue}");
         Assert.Multiple(() =>
         {
             Assert.That(complementId.BinaryValue, Is.EqualTo("111101101110"));

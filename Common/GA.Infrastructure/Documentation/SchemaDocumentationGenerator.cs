@@ -1,9 +1,8 @@
 namespace GA.Infrastructure.Documentation;
 
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using GA.Domain.Core.Design;
+using Domain.Core.Design.Schema;
 
 /// <summary>
 ///     Generates Markdown documentation for the domain schema.
@@ -39,6 +38,7 @@ public class SchemaDocumentationGenerator
                 sb.AppendLine($"    {type.Name}{arrow}{rel.TargetType.Name} : {rel.Type}");
             }
         }
+
         sb.AppendLine("```");
         sb.AppendLine();
 
@@ -48,7 +48,7 @@ public class SchemaDocumentationGenerator
             sb.AppendLine($"### {type.Name}");
             sb.AppendLine(type.FullName);
             sb.AppendLine();
-            
+
             if (type.Invariants.Any())
             {
                 sb.AppendLine("#### Invariants");
@@ -56,6 +56,7 @@ public class SchemaDocumentationGenerator
                 {
                     sb.AppendLine($"- {inv.Description} `{inv.Expression}`");
                 }
+
                 sb.AppendLine();
             }
 
@@ -66,6 +67,7 @@ public class SchemaDocumentationGenerator
                 {
                     sb.AppendLine($"- **{rel.Type}** {rel.TargetType.Name}: {rel.Description}");
                 }
+
                 sb.AppendLine();
             }
         }

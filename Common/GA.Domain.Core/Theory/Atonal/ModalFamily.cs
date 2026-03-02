@@ -1,13 +1,10 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Design;
 using GA.Core.Collections.Abstractions;
+using Design.Attributes;
+using Design.Schema;
 
 /// <summary>
 ///     Group of pitch class sets representing a scale that share the same interval vector
@@ -17,8 +14,8 @@ using GA.Core.Collections.Abstractions;
 [DomainRelationship(typeof(IntervalClassVector), RelationshipType.IsChildOf)]
 public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
 {
-    private static readonly Lazy<Dictionary<IntervalClassVector, ModalFamily>> _lazyModalFamilies;
-    private static readonly Lazy<IReadOnlySet<IntervalClassVector>> _lazyModalIntervalVectors;
+    private static readonly Lazy<FrozenDictionary<IntervalClassVector, ModalFamily>> _lazyModalFamilies;
+    private static readonly Lazy<FrozenSet<IntervalClassVector>> _lazyModalIntervalVectors;
 
     static ModalFamily()
     {
@@ -30,9 +27,9 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
             var dict = families
                 .GroupBy(f => f.IntervalClassVector)
                 .ToDictionary(g => g.Key, g => g.First());
-            return dict;
+            return dict.ToFrozenDictionary();
         });
-        _lazyModalIntervalVectors = new(() => _lazyModalFamilies.Value.Keys.ToImmutableHashSet());
+        _lazyModalIntervalVectors = new(() => _lazyModalFamilies.Value.Keys.ToFrozenSet());
     }
 
     /// <summary>
@@ -100,16 +97,10 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
     /// <returns>True if a modal family is found, false otherwise</returns>
     public static bool TryGetValue(
         IntervalClassVector intervalVector,
-        [MaybeNullWhen(false)] out ModalFamily modalFamily)
-    {
-        return _lazyModalFamilies.Value.TryGetValue(intervalVector, out modalFamily);
-    }
+        [MaybeNullWhen(false)] out ModalFamily modalFamily) => _lazyModalFamilies.Value.TryGetValue(intervalVector, out modalFamily);
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{NoteCount} notes - {IntervalClassVector} ({Modes.Count} items)";
-    }
+    public override string ToString() => $"{NoteCount} notes - {IntervalClassVector} ({Modes.Count} items)";
 
     #region Inner classes
 
@@ -126,7 +117,7 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
                 var noteCount = countGrouping.Key;
                 var orderedSets = countGrouping.OrderBy(set => set.IntervalClassVector.Id);
                 var setsByIntervalClassVector = orderedSets.ToLookup(set => set.IntervalClassVector);
-                var modalGroups = setsByIntervalClassVector.Where(grouping => grouping.Count() > 1);
+                var modalGroups = setsByIntervalClassVector; // Include unique/symmetric sets too
 
                 foreach (var modalGroup in modalGroups)
                 {
@@ -138,11 +129,9 @@ public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     #endregion
 }
+

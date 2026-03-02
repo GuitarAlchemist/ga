@@ -1,6 +1,5 @@
 namespace GA.Business.ML.Rag;
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;

@@ -1,7 +1,5 @@
 namespace GA.MusicTheory.DSL.Generators
 
-open System
-open System.Text
 open GA.MusicTheory.DSL.Types.GrammarTypes
 
 /// <summary>
@@ -17,6 +15,7 @@ module FretboardNavigationGenerator =
     /// Format a note
     let formatNote (note: Note) =
         let letter = string note.Letter
+
         let accidental =
             match note.Accidental with
             | Some Sharp -> "#"
@@ -31,6 +30,7 @@ module FretboardNavigationGenerator =
     /// Format a chord
     let formatChord (chord: Chord) =
         let root = formatNote chord.Root
+
         let quality =
             match chord.Quality with
             | Major -> ""
@@ -50,11 +50,11 @@ module FretboardNavigationGenerator =
             | Minor9 -> "m9"
             | Dominant9 -> "9"
             | ChordQuality.Custom s -> s
+
         if quality = "" then root else $"%s{root}%s{quality}"
 
     /// Format a fretboard position
-    let formatPosition (pos: FretboardPosition) =
-        $"%d{pos.String}:%d{pos.Fret}"
+    let formatPosition (pos: FretboardPosition) = $"%d{pos.String}:%d{pos.Fret}"
 
     /// Format a CAGED shape
     let formatCAGEDShape (shape: CAGEDShape) (fret: int) =
@@ -83,32 +83,24 @@ module FretboardNavigationGenerator =
     /// Generate navigation command DSL from AST
     let rec generate (command: NavigationCommand) : string =
         match command with
-        | GotoPosition pos ->
-            formatPosition pos
+        | GotoPosition pos -> formatPosition pos
 
-        | GotoShape (shape, fret) ->
-            formatCAGEDShape shape fret
+        | GotoShape(shape, fret) -> formatCAGEDShape shape fret
 
-        | Move (direction, distance) ->
-            $"move %s{formatDirection direction} %d{distance}"
+        | Move(direction, distance) -> $"move %s{formatDirection direction} %d{distance}"
 
-        | Slide (from, ``to``) ->
-            $"slide from %s{formatPosition from} to %s{formatPosition ``to``}"
+        | Slide(from, ``to``) -> $"slide from %s{formatPosition from} to %s{formatPosition ``to``}"
 
-        | FindNote (note, _) ->
-            $"find note %s{formatNote note}"
+        | FindNote(note, _) -> $"find note %s{formatNote note}"
 
-        | FindChord (chord, _) ->
-            $"find chord %s{formatChord chord}"
+        | FindChord(chord, _) -> $"find chord %s{formatChord chord}"
 
-        | NavigatePath (from, ``to``) ->
-            $"navigate from %s{formatPosition from} to %s{formatPosition ``to``}"
+        | NavigatePath(from, ``to``) -> $"navigate from %s{formatPosition from} to %s{formatPosition ``to``}"
 
 
-    // ============================================================================
-    // PUBLIC API
-    // ============================================================================
+// ============================================================================
+// PUBLIC API
+// ============================================================================
 
-    // Round-trip test would require importing the parser module
-    // For now, just provide the generate function
-
+// Round-trip test would require importing the parser module
+// For now, just provide the generate function

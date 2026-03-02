@@ -1,7 +1,7 @@
 namespace GA.Domain.Core.Theory.Tonal;
 
 /// <summary>
-/// Broad categories of harmonic function for high-level musical reasoning.
+///     Broad categories of harmonic function for high-level musical reasoning.
 /// </summary>
 public enum HarmonicFunctionCategory
 {

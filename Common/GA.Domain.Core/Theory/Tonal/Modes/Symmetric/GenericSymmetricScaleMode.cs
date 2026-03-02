@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
 
-using System;
-using JetBrains.Annotations;
 using Primitives;
 using Scales;
 

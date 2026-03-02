@@ -3,7 +3,7 @@ namespace GA.Domain.Services.Fretboard.Voicings.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis;
+using GA.Business.Core.Analysis.Voicings;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Primitives;
 
@@ -87,8 +87,10 @@ public static class VoicingPhysicalAnalyzer
     {
         // Use Physical distance (logarithmic) for accurate stretch measurement
         var playedFrets = layout.FretPositions.Where(f => f > 0).ToList();
-        double physicalSpan = GA.Domain.Services.Fretboard.Analysis.PhysicalFretboardCalculator.CalculateFretDistanceMm(playedFrets.Min(), playedFrets.Max());
-        double spanScore = physicalSpan / 80.0;
+        var physicalSpan = playedFrets.Any() 
+            ? GA.Domain.Services.Fretboard.Analysis.PhysicalFretboardCalculator.CalculateFretDistanceMm(playedFrets.Min(), playedFrets.Max())
+            : 0.0;
+        var spanScore = physicalSpan / 80.0;
 
         // Calculate hand stretch (legacy field remains raw count for compatibility)
         var handStretch = layout.MaxFret - layout.MinFret;
@@ -243,7 +245,7 @@ public static class VoicingPhysicalAnalyzer
         // Allow muted high strings for "power chord" variations or variations
         // But strictly, full E-shape:
 
-        bool match = true;
+        var match = true;
         if (frets[1] != baseFret + 2) match = false;
         if (match && frets[2] != baseFret + 2) match = false;
         if (match && frets[3] != baseFret + 1) match = false;

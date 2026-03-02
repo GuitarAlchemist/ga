@@ -1,21 +1,19 @@
-namespace GA.Domain.Core.Tests.Design;
+namespace GA.Business.Core.Tests.Design;
 
-using System.Linq;
-using GA.Domain.Core.Design;
-using GA.Domain.Core.Theory.Atonal;
-using Theory.Harmony;
-using GA.Domain.Core.Theory.Tonal.Scales;
-using NUnit.Framework;
+using Domain.Core.Design.Schema;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Harmony;
+using Domain.Core.Theory.Tonal.Scales;
+using GA.Infrastructure.Documentation;
 
 [TestFixture]
 public class SchemaDiscoveryTests
 {
-    private SchemaDiscoveryService _service;
     [SetUp]
-    public void Setup()
-    {
-        _service = new SchemaDiscoveryService();
-    }
+    public void Setup() => _service = new SchemaDiscoveryService();
+
+    private SchemaDiscoveryService _service;
+
     [Test]
     public void DiscoverSchema_ShouldFindAnnotatedCoreTypes()
     {
@@ -25,13 +23,17 @@ public class SchemaDiscoveryTests
         Assert.That(schema.Any(t => t.Name == nameof(Chord)), "Chord not found in schema");
         Assert.That(schema.Any(t => t.Name == nameof(Scale)), "Scale not found in schema");
     }
+
     [Test]
     public void GetTypeSchema_PitchClassSet_ShouldHaveCorrectRelationships()
     {
         var info = _service.GetTypeSchema(typeof(PitchClassSet));
-        Assert.That(info.Relationships.Any(r => r.TargetType == typeof(IntervalClassVector) && r.Type == RelationshipType.IsChildOf));
-        Assert.That(info.Relationships.Any(r => r.TargetType == typeof(ModalFamily) && r.Type == RelationshipType.IsChildOf));
+        Assert.That(info.Relationships.Any(r =>
+            r.TargetType == typeof(IntervalClassVector) && r.Type == RelationshipType.IsChildOf));
+        Assert.That(info.Relationships.Any(r =>
+            r.TargetType == typeof(ModalFamily) && r.Type == RelationshipType.IsChildOf));
     }
+
     [Test]
     public void GetTypeSchema_Chord_ShouldHaveInvariants()
     {

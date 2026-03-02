@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -37,25 +33,11 @@ public sealed class MajorScaleMode(MajorScaleDegree degree) : TonalScaleMode<Maj
         }
     }
 
-    public static MajorScaleMode FromDegree(MajorScaleDegree degree)
-    {
-        return new(degree);
-    }
+    public static MajorScaleMode FromDegree(MajorScaleDegree degree) => new(degree);
 
-    public static MajorScaleMode Get(MajorScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MajorScaleMode Get(MajorScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static MajorScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MajorScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 
-    public override string ToString()
-    {
-        return $"{Name} - {Formula}";
-    }
+    public override string ToString() => $"{Name} - {Formula}";
 }
-
-

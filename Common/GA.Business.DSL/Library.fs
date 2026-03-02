@@ -6,7 +6,6 @@
 /// </summary>
 module MusicTheoryDsl =
 
-    open System
     open GA.MusicTheory.DSL.Types.GrammarTypes
     open GA.MusicTheory.DSL.Parsers
     // Temporarily commented out - LSP files have build errors
@@ -17,12 +16,10 @@ module MusicTheoryDsl =
     // ============================================================================
 
     /// Parse a chord progression string
-    let parseChordProgression (input: string) : Result<ChordProgression, string> =
-        ChordProgressionParser.parse input
+    let parseChordProgression (input: string) : Result<ChordProgression, string> = ChordProgressionParser.parse input
 
     /// Parse a fretboard navigation command
-    let parseNavigation (input: string) : Result<NavigationCommand, string> =
-        FretboardNavigationParser.parse input
+    let parseNavigation (input: string) : Result<NavigationCommand, string> = FretboardNavigationParser.parse input
 
     /// Parse a scale transformation command
     let parseScaleTransform (input: string) : Result<Scale * ScaleTransformation list, string> =
@@ -52,8 +49,7 @@ module MusicTheoryDsl =
     // ============================================================================
 
     /// Validate a DSL command
-    let validate (command: DslCommand) : Result<DslCommand, string> =
-        Types.DslCommand.validate command
+    let validate (command: DslCommand) : Result<DslCommand, string> = Types.DslCommand.validate command
 
     // Temporarily commented out - LSP files have build errors
     // /// Get diagnostics for a text input
@@ -65,8 +61,7 @@ module MusicTheoryDsl =
     // ============================================================================
 
     /// Format a DSL command as a string
-    let format (command: DslCommand) : string =
-        Types.DslCommand.format command
+    let format (command: DslCommand) : string = Types.DslCommand.format command
 
     // ============================================================================
     // LSP SERVER API

@@ -2,10 +2,8 @@ namespace GA.Business.Config
 
 open YamlDotNet.Serialization
 open YamlDotNet.Serialization.NamingConventions
-open System.Collections.Immutable
 open System.IO
 open System
-open System.Collections.Generic
 
 module SemanticConfig =
     [<CLIMutable>]
@@ -31,52 +29,53 @@ module SemanticConfig =
 
     let getConfigPath () =
         let configName = "SemanticNomenclature.yaml"
+
         let possiblePaths =
             [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
               Path.Combine(Environment.CurrentDirectory, configName)
               Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "Debug", "net10.0", configName)
               Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "Release", "net10.0", configName)
               Path.Combine(__SOURCE_DIRECTORY__, configName) ]
+
         possiblePaths |> List.tryFind File.Exists
 
     let mutable private configData: SemanticYaml option = None
 
     let private loadData () =
         try
-            match getConfigPath() with
+            match getConfigPath () with
             | Some path ->
                 let deserializer =
-                    DeserializerBuilder()
-                        .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                        .Build()
+                    DeserializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build()
+
                 let yaml = File.ReadAllText(path)
-                configData <- Some (deserializer.Deserialize<SemanticYaml>(yaml))
+                configData <- Some(deserializer.Deserialize<SemanticYaml>(yaml))
                 true
-            | None -> 
-                false
-        with _ -> 
+            | None -> false
+        with _ ->
             false
 
     let private ensureLoaded () =
-        if configData.IsNone then loadData() |> ignore
+        if configData.IsNone then
+            loadData () |> ignore
 
     let GetAllTags () =
-        ensureLoaded()
+        ensureLoaded ()
+
         match configData with
-        | Some data -> 
-            data.Categories 
-            |> Seq.collect (fun c -> c.Tags)
-            |> Seq.toList
+        | Some data -> data.Categories |> Seq.collect (fun c -> c.Tags) |> Seq.toList
         | None -> []
 
     let GetAllCategories () =
-        ensureLoaded()
+        ensureLoaded ()
+
         match configData with
         | Some data -> data.Categories |> Seq.toList
         | None -> []
 
     let TryGetTagById (id: string) =
-        GetAllTags() |> List.tryFind (fun t -> String.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase))
+        GetAllTags()
+        |> List.tryFind (fun t -> String.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase))
 
     let TryGetTagByIdManaged (id: string) =
         match TryGetTagById id with
@@ -84,11 +83,14 @@ module SemanticConfig =
         | None -> Unchecked.defaultof<SemanticTag>
 
     let TryGetCategoryByTagId (id: string) =
-        ensureLoaded()
+        ensureLoaded ()
+
         match configData with
         | Some data ->
-            data.Categories 
-            |> Seq.tryFind (fun c -> c.Tags |> Seq.exists (fun t -> String.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase)))
+            data.Categories
+            |> Seq.tryFind (fun c ->
+                c.Tags
+                |> Seq.exists (fun t -> String.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase)))
         | None -> None
 
     let TryGetCategoryByTagIdManaged (id: string) =

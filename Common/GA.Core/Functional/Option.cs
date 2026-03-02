@@ -46,45 +46,32 @@ public readonly record struct Option<T>
     /// <summary>
     ///     Creates an Option containing the given value.
     /// </summary>
-    public static Option<T> Some(T value)
-    {
-        return new Option<T>(value);
-    }
+    public static Option<T> Some(T value) => new(value);
 
     /// <summary>
     ///     Creates an Option from a nullable value.
     ///     Returns Some if the value is not null, None otherwise.
     /// </summary>
-    public static Option<T> FromNullable(T? value)
-    {
-        return value is not null ? Some(value) : None;
-    }
+    public static Option<T> FromNullable(T? value) => value is not null ? Some(value) : None;
 
     /// <summary>
     ///     Functor: Maps the contained value to a new value using the provided function.
     ///     If this option is None, returns None.
     /// </summary>
-    public Option<TResult> Map<TResult>(Func<T, TResult> mapper)
-    {
-        return IsSome ? Option<TResult>.Some(mapper(_value!)) : Option<TResult>.None;
-    }
+    public Option<TResult> Map<TResult>(Func<T, TResult> mapper) =>
+        IsSome ? Option<TResult>.Some(mapper(_value!)) : Option<TResult>.None;
 
     /// <summary>
     ///     Monad: Binds (FlatMaps) the contained value to a new option using the provided function.
     ///     If this option is None, returns None.
     /// </summary>
-    public Option<TResult> Bind<TResult>(Func<T, Option<TResult>> binder)
-    {
-        return IsSome ? binder(_value!) : Option<TResult>.None;
-    }
+    public Option<TResult> Bind<TResult>(Func<T, Option<TResult>> binder) =>
+        IsSome ? binder(_value!) : Option<TResult>.None;
 
     /// <summary>
     ///     Pattern matching: Executes one of two functions depending on whether this is Some or None.
     /// </summary>
-    public TResult Match<TResult>(Func<T, TResult> onSome, Func<TResult> onNone)
-    {
-        return IsSome ? onSome(_value!) : onNone();
-    }
+    public TResult Match<TResult>(Func<T, TResult> onSome, Func<TResult> onNone) => IsSome ? onSome(_value!) : onNone();
 
     /// <summary>
     ///     Pattern matching (void): Executes one of two actions depending on whether this is Some or None.
@@ -104,38 +91,27 @@ public readonly record struct Option<T>
     /// <summary>
     ///     Gets the contained value or returns the provided default value if this is None.
     /// </summary>
-    public T GetValueOrDefault(T defaultValue = default!)
-    {
-        return IsSome ? _value! : defaultValue;
-    }
+    public T GetValueOrDefault(T defaultValue = default!) => IsSome ? _value! : defaultValue;
 
     /// <summary>
     ///     Gets the contained value or computes a default value using the provided function if this is None.
     /// </summary>
-    public T GetValueOrElse(Func<T> defaultProvider)
-    {
-        return IsSome ? _value! : defaultProvider();
-    }
+    public T GetValueOrElse(Func<T> defaultProvider) => IsSome ? _value! : defaultProvider();
 
     /// <summary>
     ///     Gets the contained value or throws an exception if this is None.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the option is None.</exception>
-    public T GetValueOrThrow()
-    {
-        return IsSome
+    public T GetValueOrThrow() =>
+        IsSome
             ? _value!
             : throw new InvalidOperationException("Option is None");
-    }
 
     /// <summary>
     ///     Filters the option based on a predicate.
     ///     Returns this option if it is Some and the predicate returns true, otherwise returns None.
     /// </summary>
-    public Option<T> Filter(Func<T, bool> predicate)
-    {
-        return IsSome && predicate(_value!) ? this : None;
-    }
+    public Option<T> Filter(Func<T, bool> predicate) => IsSome && predicate(_value!) ? this : None;
 
     /// <summary>
     ///     Executes the provided action if this is Some, and returns this option unchanged.
@@ -154,63 +130,44 @@ public readonly record struct Option<T>
     /// <summary>
     ///     Returns this option if it is Some, otherwise returns the alternative option.
     /// </summary>
-    public Option<T> Or(Option<T> alternative)
-    {
-        return IsSome ? this : alternative;
-    }
+    public Option<T> Or(Option<T> alternative) => IsSome ? this : alternative;
 
     /// <summary>
     ///     Returns this option if it is Some, otherwise computes an alternative option.
     /// </summary>
-    public Option<T> OrElse(Func<Option<T>> alternativeProvider)
-    {
-        return IsSome ? this : alternativeProvider();
-    }
+    public Option<T> OrElse(Func<Option<T>> alternativeProvider) => IsSome ? this : alternativeProvider();
 
     /// <summary>
     ///     Converts this option to a Result.
     ///     Returns Success if Some, Failure with the provided error if None.
     /// </summary>
-    public Result<T, TError> ToResult<TError>(TError error)
-    {
-        return IsSome
+    public Result<T, TError> ToResult<TError>(TError error) =>
+        IsSome
             ? Result<T, TError>.Success(_value!)
             : Result<T, TError>.Failure(error);
-    }
 
     /// <summary>
     ///     Converts this option to a Result.
     ///     Returns Success if Some, Failure with a computed error if None.
     /// </summary>
-    public Result<T, TError> ToResult<TError>(Func<TError> errorProvider)
-    {
-        return IsSome
+    public Result<T, TError> ToResult<TError>(Func<TError> errorProvider) =>
+        IsSome
             ? Result<T, TError>.Success(_value!)
             : Result<T, TError>.Failure(errorProvider());
-    }
 
     /// <summary>
     ///     Converts this option to a nullable value.
     ///     For value types, returns null if None, otherwise returns the value.
     ///     For reference types, returns null if None, otherwise returns the value.
     /// </summary>
-    public T? ToNullable()
-    {
-        return IsSome ? _value : default;
-    }
+    public T? ToNullable() => IsSome ? _value : default;
 
     /// <summary>
     ///     Implicit conversion from T to Option (Some).
     /// </summary>
-    public static implicit operator Option<T>(T value)
-    {
-        return Some(value);
-    }
+    public static implicit operator Option<T>(T value) => Some(value);
 
-    public override string ToString()
-    {
-        return IsSome ? $"Some({_value})" : "None";
-    }
+    public override string ToString() => IsSome ? $"Some({_value})" : "None";
 }
 
 /// <summary>
@@ -219,87 +176,88 @@ public readonly record struct Option<T>
 [PublicAPI]
 public static class OptionExtensions
 {
-    /// <summary>
-    ///     Flattens a nested Option into a single Option.
-    /// </summary>
-    public static Option<T> Flatten<T>(this Option<Option<T>> option)
+    extension<T>(Option<Option<T>> option)
     {
-        return option.Bind(inner => inner);
+        /// <summary>
+        ///     Flattens a nested Option into a single Option.
+        /// </summary>
+        public Option<T> Flatten() => option.Bind(inner => inner);
     }
 
-    /// <summary>
-    ///     Combines two options using the provided combiner function.
-    ///     Returns Some if both options are Some, otherwise returns None.
-    /// </summary>
-    public static Option<TResult> Combine<T1, T2, TResult>(
-        this Option<T1> option1,
-        Option<T2> option2,
-        Func<T1, T2, TResult> combiner)
+    extension<T1>(Option<T1> option1)
     {
-        if (option1.IsNone || option2.IsNone)
+        /// <summary>
+        ///     Combines two options using the provided combiner function.
+        ///     Returns Some if both options are Some, otherwise returns None.
+        /// </summary>
+        public Option<TResult> Combine<T2, TResult>(
+            Option<T2> option2,
+            Func<T1, T2, TResult> combiner)
         {
-            return Option<TResult>.None;
-        }
-
-        return Option<TResult>.Some(combiner(
-            option1.GetValueOrThrow(),
-            option2.GetValueOrThrow()));
-    }
-
-    /// <summary>
-    ///     Sequences a collection of options into an option of a collection.
-    ///     Returns Some if all options are Some, otherwise returns None.
-    /// </summary>
-    public static Option<ImmutableList<T>> Sequence<T>(
-        this IEnumerable<Option<T>> options)
-    {
-        var values = ImmutableList.CreateBuilder<T>();
-
-        foreach (var option in options)
-        {
-            if (option.IsNone)
+            if (option1.IsNone || option2.IsNone)
             {
-                return Option<ImmutableList<T>>.None;
+                return Option<TResult>.None;
             }
 
-            values.Add(option.GetValueOrThrow());
+            return Option<TResult>.Some(combiner(
+                option1.GetValueOrThrow(),
+                option2.GetValueOrThrow()));
+        }
+    }
+
+    extension<T>(IEnumerable<Option<T>> options)
+    {
+        /// <summary>
+        ///     Sequences a collection of options into an option of a collection.
+        ///     Returns Some if all options are Some, otherwise returns None.
+        /// </summary>
+        public Option<ImmutableList<T>> Sequence()
+        {
+            var values = ImmutableList.CreateBuilder<T>();
+
+            foreach (var option in options)
+            {
+                if (option.IsNone)
+                {
+                    return Option<ImmutableList<T>>.None;
+                }
+
+                values.Add(option.GetValueOrThrow());
+            }
+
+            return Option<ImmutableList<T>>.Some(values.ToImmutable());
         }
 
-        return Option<ImmutableList<T>>.Some(values.ToImmutable());
+        /// <summary>
+        ///     Filters a collection to only the Some values, unwrapping them.
+        /// </summary>
+        public IEnumerable<T> WhereSome() => options.Where(o => o.IsSome).Select(o => o.GetValueOrThrow());
     }
 
-    /// <summary>
-    ///     Traverses a collection, applying a function that returns an Option to each element,
-    ///     and sequences the results.
-    /// </summary>
-    public static Option<ImmutableList<TResult>> Traverse<TValue, TResult>(
-        this IEnumerable<TValue> values,
-        Func<TValue, Option<TResult>> func)
+    extension<TValue>(IEnumerable<TValue> values)
     {
-        return values.Select(func).Sequence();
+        /// <summary>
+        ///     Traverses a collection, applying a function that returns an Option to each element,
+        ///     and sequences the results.
+        /// </summary>
+        public Option<ImmutableList<TResult>> Traverse<TResult>(
+            Func<TValue, Option<TResult>> func) =>
+            values.Select(func).Sequence();
     }
 
-    /// <summary>
-    ///     Converts a nullable value to an Option.
-    /// </summary>
-    public static Option<T> ToOption<T>(this T? value) where T : struct
+    extension<T>(T? value) where T : struct
     {
-        return value.HasValue ? Option<T>.Some(value.Value) : Option<T>.None;
+        /// <summary>
+        ///     Converts a nullable value to an Option.
+        /// </summary>
+        public Option<T> ToOption() => value.HasValue ? Option<T>.Some(value.Value) : Option<T>.None;
     }
 
-    /// <summary>
-    ///     Converts a nullable reference to an Option.
-    /// </summary>
-    public static Option<T> ToOption<T>(this T? value) where T : class
+    extension<T>(T? value) where T : class
     {
-        return value is not null ? Option<T>.Some(value) : Option<T>.None;
-    }
-
-    /// <summary>
-    ///     Filters a collection to only the Some values, unwrapping them.
-    /// </summary>
-    public static IEnumerable<T> WhereSome<T>(this IEnumerable<Option<T>> options)
-    {
-        return options.Where(o => o.IsSome).Select(o => o.GetValueOrThrow());
+        /// <summary>
+        ///     Converts a nullable reference to an Option.
+        /// </summary>
+        public Option<T> ToOption() => value is not null ? Option<T>.Some(value) : Option<T>.None;
     }
 }

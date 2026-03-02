@@ -15,6 +15,7 @@ module GrothendieckGenerator =
     /// Format a note
     let formatNote (note: Note) =
         let letter = string note.Letter
+
         let accidental =
             match note.Accidental with
             | Some Sharp -> "#"
@@ -60,8 +61,7 @@ module GrothendieckGenerator =
         $"%s{root} %s{name}"
 
     /// Format a fretboard position
-    let formatFretboardPosition (pos: FretboardPosition) =
-        $"%d{pos.Fret}/%d{pos.String}"
+    let formatFretboardPosition (pos: FretboardPosition) = $"%d{pos.Fret}/%d{pos.String}"
 
     // ============================================================================
     // MUSICAL OBJECT FORMATTERS
@@ -109,18 +109,15 @@ module GrothendieckGenerator =
     /// Format a category operation
     let formatCategoryOperation (op: GrothendieckOperation) =
         match op with
-        | TensorProduct (obj1, obj2) ->
-            $"%s{formatMusicalObject obj1} ⊗ %s{formatMusicalObject obj2}"
-        | DirectSum (obj1, obj2) ->
-            $"%s{formatMusicalObject obj1} ⊕ %s{formatMusicalObject obj2}"
+        | TensorProduct(obj1, obj2) -> $"%s{formatMusicalObject obj1} ⊗ %s{formatMusicalObject obj2}"
+        | DirectSum(obj1, obj2) -> $"%s{formatMusicalObject obj1} ⊕ %s{formatMusicalObject obj2}"
         | Product objs ->
             let objStrs = objs |> List.map formatMusicalObject |> String.concat " × "
             $"product(%s{objStrs})"
         | Coproduct objs ->
             let objStrs = objs |> List.map formatMusicalObject |> String.concat ", "
             $"coproduct(%s{objStrs})"
-        | Exponential (obj1, obj2) ->
-            $"%s{formatMusicalObject obj1} ^ %s{formatMusicalObject obj2}"
+        | Exponential(obj1, obj2) -> $"%s{formatMusicalObject obj1} ^ %s{formatMusicalObject obj2}"
         | _ -> ""
 
     // ============================================================================
@@ -134,8 +131,7 @@ module GrothendieckGenerator =
             | Some maps ->
                 let mapStrs =
                     maps
-                    |> List.map (fun (name, expr) ->
-                        $"%s{name} -> %s{formatMorphismExpression expr}")
+                    |> List.map (fun (name, expr) -> $"%s{name} -> %s{formatMorphismExpression expr}")
                     |> String.concat ", "
 
                 $" {{ %s{mapStrs} }}"
@@ -147,10 +143,8 @@ module GrothendieckGenerator =
     let formatFunctorOperation (op: GrothendieckOperation) =
         match op with
         | DefineFunctor def -> formatFunctorDef def
-        | ApplyFunctor (name, obj) ->
-            $"%s{name}(%s{formatMusicalObject obj})"
-        | ComposeFunctors functors ->
-            String.concat " ∘ " functors
+        | ApplyFunctor(name, obj) -> $"%s{name}(%s{formatMusicalObject obj})"
+        | ComposeFunctors functors -> String.concat " ∘ " functors
         | _ -> ""
 
     // ============================================================================
@@ -176,8 +170,7 @@ module GrothendieckGenerator =
     let formatNatTransOperation (op: GrothendieckOperation) =
         match op with
         | DefineNatTrans def -> formatNatTransDef def
-        | ApplyNatTrans (name, obj) ->
-            $"%s{name}(%s{formatMusicalObject obj})"
+        | ApplyNatTrans(name, obj) -> $"%s{name}(%s{formatMusicalObject obj})"
         | _ -> ""
 
     // ============================================================================
@@ -195,11 +188,10 @@ module GrothendieckGenerator =
     /// Format a limit operation
     let formatLimitOperation (op: GrothendieckOperation) =
         match op with
-        | Limit spec ->
-            $"limit of %s{formatDiagramSpec spec}"
-        | Pullback (obj1, morph, obj2) ->
+        | Limit spec -> $"limit of %s{formatDiagramSpec spec}"
+        | Pullback(obj1, morph, obj2) ->
             $"pullback(%s{formatMusicalObject obj1}, %s{formatMorphismExpression morph}, %s{formatMusicalObject obj2})"
-        | Equalizer (morph1, morph2) ->
+        | Equalizer(morph1, morph2) ->
             $"equalizer(%s{formatMorphismExpression morph1}, %s{formatMorphismExpression morph2})"
         | _ -> ""
 
@@ -210,11 +202,10 @@ module GrothendieckGenerator =
     /// Format a colimit operation
     let formatColimitOperation (op: GrothendieckOperation) =
         match op with
-        | Colimit spec ->
-            $"colimit of %s{formatDiagramSpec spec}"
-        | Pushout (obj1, morph, obj2) ->
+        | Colimit spec -> $"colimit of %s{formatDiagramSpec spec}"
+        | Pushout(obj1, morph, obj2) ->
             $"pushout(%s{formatMusicalObject obj1}, %s{formatMorphismExpression morph}, %s{formatMusicalObject obj2})"
-        | Coequalizer (morph1, morph2) ->
+        | Coequalizer(morph1, morph2) ->
             $"coequalizer(%s{formatMorphismExpression morph1}, %s{formatMorphismExpression morph2})"
         | _ -> ""
 
@@ -229,10 +220,8 @@ module GrothendieckGenerator =
             match objOpt with
             | Some obj -> $"Ω(%s{formatMusicalObject obj})"
             | None -> "Ω"
-        | PowerObject obj ->
-            $"P(%s{formatMusicalObject obj})"
-        | InternalHom (obj1, obj2) ->
-            $"Hom(%s{formatMusicalObject obj1}, %s{formatMusicalObject obj2})"
+        | PowerObject obj -> $"P(%s{formatMusicalObject obj})"
+        | InternalHom(obj1, obj2) -> $"Hom(%s{formatMusicalObject obj1}, %s{formatMusicalObject obj2})"
         | _ -> ""
 
     // ============================================================================
@@ -271,16 +260,15 @@ module GrothendieckGenerator =
     let formatSheafOperation (op: GrothendieckOperation) =
         match op with
         | DefineSheaf def -> formatSheafDef def
-        | SheafRestriction (sheaf, openSet) ->
-            $"%s{sheaf} | %s{openSet}"
-        | SheafGluing (objs, rulesOpt) ->
+        | SheafRestriction(sheaf, openSet) -> $"%s{sheaf} | %s{openSet}"
+        | SheafGluing(objs, rulesOpt) ->
             let objStrs = objs |> List.map formatMusicalObject |> String.concat ", "
+
             match rulesOpt with
             | Some rules ->
                 let ruleStrs = rules |> List.map formatGluingRule |> String.concat ", "
                 $"glue {{ %s{objStrs} }} along {{ %s{ruleStrs} }}"
-            | None ->
-                $"glue {{ %s{objStrs} }}"
+            | None -> $"glue {{ %s{objStrs} }}"
         | _ -> ""
 
     // ============================================================================
@@ -290,18 +278,25 @@ module GrothendieckGenerator =
     /// Generate Grothendieck DSL text from an operation
     let generate (op: GrothendieckOperation) : string =
         match op with
-        | TensorProduct _ | DirectSum _ | Product _ | Coproduct _ | Exponential _ ->
-            formatCategoryOperation op
-        | DefineFunctor _ | ApplyFunctor _ | ComposeFunctors _ ->
-            formatFunctorOperation op
-        | DefineNatTrans _ | ApplyNatTrans _ ->
-            formatNatTransOperation op
-        | Limit _ | Pullback _ | Equalizer _ ->
-            formatLimitOperation op
-        | Colimit _ | Pushout _ | Coequalizer _ ->
-            formatColimitOperation op
-        | SubobjectClassifier _ | PowerObject _ | InternalHom _ ->
-            formatToposOperation op
-        | DefineSheaf _ | SheafRestriction _ | SheafGluing _ ->
-            formatSheafOperation op
-
+        | TensorProduct _
+        | DirectSum _
+        | Product _
+        | Coproduct _
+        | Exponential _ -> formatCategoryOperation op
+        | DefineFunctor _
+        | ApplyFunctor _
+        | ComposeFunctors _ -> formatFunctorOperation op
+        | DefineNatTrans _
+        | ApplyNatTrans _ -> formatNatTransOperation op
+        | Limit _
+        | Pullback _
+        | Equalizer _ -> formatLimitOperation op
+        | Colimit _
+        | Pushout _
+        | Coequalizer _ -> formatColimitOperation op
+        | SubobjectClassifier _
+        | PowerObject _
+        | InternalHom _ -> formatToposOperation op
+        | DefineSheaf _
+        | SheafRestriction _
+        | SheafGluing _ -> formatSheafOperation op

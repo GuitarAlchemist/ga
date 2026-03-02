@@ -1,7 +1,7 @@
-namespace GA.Domain.Core.Tests.Chords;
+namespace GA.Business.Core.Tests.Chords;
 
 using GA.Domain.Core.Theory.Atonal;
-using Theory.Harmony;
+using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
 using NUnit.Framework;
 
@@ -32,8 +32,5 @@ public class ChordTemplateFactoryTests
         var templates = ChordTemplateFactory.GenerateAllPossibleChords();
         Assert.That(templates.Any(), Is.True, "Chord generator should not return an empty sequence.");
     }
-    private static bool MatchesPitchClasses(ChordTemplate template, params int[] classes)
-    {
-        return classes.All(pc => template.PitchClassSet.Contains(PitchClass.FromValue(pc)));
-    }
+    private static bool MatchesPitchClasses(ChordTemplate template, params int[] classes) => classes.All(pc => template.PitchClassSet.Contains(PitchClass.FromValue(pc)));
 }

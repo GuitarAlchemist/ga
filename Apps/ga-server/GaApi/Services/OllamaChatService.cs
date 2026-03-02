@@ -3,26 +3,8 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Configuration;
 using Microsoft.Extensions.Options;
-
-public interface IOllamaChatService
-{
-    IAsyncEnumerable<string> ChatStreamAsync(
-        string userMessage,
-        List<ChatMessage>? conversationHistory = null,
-        string? systemPrompt = null,
-        CancellationToken cancellationToken = default);
-
-    Task<string> ChatAsync(
-        string userMessage,
-        List<ChatMessage>? conversationHistory = null,
-        string? systemPrompt = null,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default);
-}
 
 /// <summary>
 ///     Ollama-based chat service for conversational AI
@@ -45,7 +27,7 @@ public class OllamaChatService : IOllamaChatService
         _chatbotOptions = chatOptions.CurrentValue;
         _model = _chatbotOptions.Model ?? configuration["Ollama:ChatModel"] ?? "llama3.2:3b";
         var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
-        _httpClient.BaseAddress = new Uri(baseUrl);
+        _httpClient.BaseAddress = new(baseUrl);
         var timeoutSeconds = Math.Max(5, _chatbotOptions.StreamTimeoutSeconds);
         _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         _logger = logger;
@@ -67,7 +49,7 @@ public class OllamaChatService : IOllamaChatService
         // Add system prompt if provided
         if (!string.IsNullOrEmpty(systemPrompt))
         {
-            messages.Add(new ChatMessage { Role = "system", Content = systemPrompt });
+            messages.Add(new() { Role = "system", Content = systemPrompt });
         }
 
         // Add conversation history
@@ -77,7 +59,7 @@ public class OllamaChatService : IOllamaChatService
         }
 
         // Add current user message
-        messages.Add(new ChatMessage { Role = "user", Content = userMessage });
+        messages.Add(new() { Role = "user", Content = userMessage });
 
         var request = new OllamaChatRequest
         {
@@ -172,63 +154,4 @@ public class OllamaChatService : IOllamaChatService
             return false;
         }
     }
-}
-
-public class ChatMessage
-{
-    [JsonPropertyName("role")] public string Role { get; set; } = string.Empty;
-
-    [JsonPropertyName("content")] public string Content { get; set; } = string.Empty;
-}
-
-public class OllamaChatRequest
-{
-    [JsonPropertyName("model")] public string Model { get; set; } = string.Empty;
-
-    [JsonPropertyName("messages")] public List<ChatMessage> Messages { get; set; } = [];
-
-    [JsonPropertyName("stream")] public bool Stream { get; set; } = true;
-
-    [JsonPropertyName("options")] public OllamaOptions? Options { get; set; }
-}
-
-public class OllamaOptions
-{
-    [JsonPropertyName("temperature")] public double Temperature { get; set; } = 0.7;
-
-    [JsonPropertyName("top_p")] public double TopP { get; set; } = 0.9;
-
-    [JsonPropertyName("num_predict")] public int? NumPredict { get; set; }
-}
-
-public class OllamaChatResponse
-{
-    [JsonPropertyName("model")] public string? Model { get; set; }
-
-    [JsonPropertyName("message")] public ChatMessage? Message { get; set; }
-
-    [JsonPropertyName("done")] public bool Done { get; set; }
-
-    [JsonPropertyName("total_duration")] public long? TotalDuration { get; set; }
-
-    [JsonPropertyName("load_duration")] public long? LoadDuration { get; set; }
-
-    [JsonPropertyName("prompt_eval_count")]
-    public int? PromptEvalCount { get; set; }
-
-    [JsonPropertyName("eval_count")] public int? EvalCount { get; set; }
-}
-
-public class OllamaModelsResponse
-{
-    [JsonPropertyName("models")] public List<OllamaModel>? Models { get; set; }
-}
-
-public class OllamaModel
-{
-    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("size")] public long Size { get; set; }
-
-    [JsonPropertyName("modified_at")] public DateTime ModifiedAt { get; set; }
 }

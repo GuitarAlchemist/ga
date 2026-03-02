@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
 
-
 /// <summary>
 ///     Controller for guitar playing simulation using hand pose detection, AI sound generation,
 ///     and advanced fretboard analysis (ergonomics, spectral analysis, progression optimization)
@@ -253,7 +252,7 @@ public class GuitarPlayingController(
                     Style = "pluck",
                     String = position.String,
                     Fret = position.Fret,
-                    Parameters = new Dictionary<string, object>
+                    Parameters = new()
                     {
                         ["volume"] = 0.7,
                         ["techniques"] = new List<string> { "pluck" },
@@ -267,7 +266,7 @@ public class GuitarPlayingController(
                     JobId = Guid.NewGuid().ToString(),
                     Status = "started",
                     Message = "Sound generation started",
-                    Data = new Dictionary<string, object> { ["result"] = jobResult }
+                    Data = new() { ["result"] = jobResult }
                 };
                 soundJobs.Add(job);
             }
@@ -276,7 +275,7 @@ public class GuitarPlayingController(
             List<SoundSample>? completedSamples = null;
             if (waitForGeneration)
             {
-                completedSamples = new List<SoundSample>();
+                completedSamples = [];
                 foreach (var job in soundJobs)
                 {
                     var completed = await soundBankClient.WaitForJobCompletionAsync(
@@ -289,7 +288,7 @@ public class GuitarPlayingController(
                     {
                         Id = Guid.NewGuid().ToString(),
                         Name = $"Generated_{job.JobId}",
-                        AudioData = new byte[0], // Placeholder
+                        AudioData = [], // Placeholder
                         Duration = TimeSpan.FromSeconds(1),
                         Format = "wav"
                     };
@@ -360,5 +359,4 @@ public class GuitarPlayingController(
             }
         });
     }
-
 }

@@ -1,19 +1,44 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Primitives;
+using System.Diagnostics.CodeAnalysis;
+using Primitives.Intervals;
+using Interval = Primitives.Intervals.Interval;
 
 /// <summary>
 ///     Represents a chord formula defining the intervals that make up a chord type
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IEquatable{ChordFormula}" />
+/// Example: Major triad (1, 3, 5)
+/// </remarks>
+[PublicAPI]
 public class ChordFormula : IEquatable<ChordFormula>
 {
+    public static readonly ChordFormula Major =
+        FromSemitones("Major", Semitones.MajorThird, Semitones.PerfectFifth);
+    public static readonly ChordFormula Minor =
+        FromSemitones("Minor", Semitones.MinorThird, Semitones.PerfectFifth);
+    public static readonly ChordFormula Diminished =
+        FromSemitones("Diminished", Semitones.MinorThird, Semitones.DiminishedFifth);
+    public static readonly ChordFormula Augmented =
+        FromSemitones("Augmented", Semitones.MajorThird, Semitones.AugmentedFifth);
+    public static readonly ChordFormula Dominant7 = FromSemitones("Dominant 7th", Semitones.MajorThird,
+        Semitones.PerfectFifth, Semitones.MinorSeventh);
+    public static readonly ChordFormula Major7 =
+        FromSemitones("Major 7th", Semitones.MajorThird, Semitones.PerfectFifth, Semitones.MajorSeventh);
+    public static readonly ChordFormula Minor7 =
+        FromSemitones("Minor 7th", Semitones.MinorThird, Semitones.PerfectFifth, Semitones.MinorSeventh);
+    public static readonly ChordFormula Suspended2 =
+        FromSemitones("Sus2", Semitones.Tone, Semitones.PerfectFifth);
+    public static readonly ChordFormula Suspended4 =
+        FromSemitones("Sus4", Semitones.PerfectFourth, Semitones.PerfectFifth);
+
     /// <summary>
     ///     Initializes a new instance of the ChordFormula class
     /// </summary>
-    public ChordFormula(string name, IEnumerable<ChordFormulaInterval> intervals,
+    public ChordFormula(
+        string name,
+        IEnumerable<ChordFormulaInterval> intervals,
         ChordStackingType stackingType = ChordStackingType.Tertian)
     {
         Name = name;
@@ -51,8 +76,8 @@ public class ChordFormula : IEquatable<ChordFormula>
     /// <summary>
     ///     Gets whether this formula represents a suspended chord
     /// </summary>
-    public bool IsSuspended => Intervals.Any(i => i.Function == ChordFunction.Third &&
-                                                  (i.Interval.Semitones.Value == 2 || i.Interval.Semitones.Value == 5));
+    public bool IsSuspended => Intervals.Any(i =>
+        i is { Function: ChordFunction.Third, Interval.Semitones.Value: 2 or 5 });
 
     /// <summary>
     ///     Gets the essential intervals (cannot be omitted)
@@ -66,7 +91,7 @@ public class ChordFormula : IEquatable<ChordFormula>
     public IEnumerable<ChordFormulaInterval> OptionalIntervals =>
         Intervals.Where(i => i.IsOptional);
 
-    public bool Equals(ChordFormula? other)
+    public bool Equals([NotNullWhen(true)] ChordFormula? other)
     {
         if (other is null)
         {
@@ -85,21 +110,45 @@ public class ChordFormula : IEquatable<ChordFormula>
     /// <summary>
     ///     Creates a chord formula from interval semitones
     /// </summary>
-    public static ChordFormula FromSemitones(string name, params int[] semitones)
+    public static ChordFormula FromSemitones(string name, params ReadOnlySpan<int> semitones)
     {
-        var intervals = semitones.Select(s =>
+        if (semitones.IsEmpty)
+        {
+            throw new ArgumentException("At least one interval required", nameof(semitones));
+        }
+
+        List<ChordFormulaInterval> intervals = [];
+        foreach (var s in semitones)
         {
             var interval = new Interval.Chromatic(Semitones.FromValue(s));
             var function = ChordFunctionExtensions.FromSemitones(s);
-            return new ChordFormulaInterval(interval, function);
-        });
+            intervals.Add(new(interval, function));
+        }
 
         return new(name, intervals);
     }
 
     /// <summary>
-    ///     Creates a chord formula from interval names
+    ///     Creates a chord formula from interval names (Span overload - preferred)
     /// </summary>
+    [OverloadResolutionPriority(1)]
+    public static ChordFormula FromIntervalNames(string name, params ReadOnlySpan<string> intervalNames)
+    {
+        List<ChordFormulaInterval> intervals = [];
+        foreach (var intervalName in intervalNames)
+        {
+            var interval = Interval.Simple.Parse(intervalName, null);
+            var function = ChordFunctionExtensions.FromSemitones(interval.Semitones.Value);
+            intervals.Add(new(interval, function));
+        }
+
+        return new(name, intervals);
+    }
+
+    /// <summary>
+    ///     Creates a chord formula from interval names (array overload - legacy)
+    /// </summary>
+    [OverloadResolutionPriority(0)]
     public static ChordFormula FromIntervalNames(string name, params string[] intervalNames)
     {
         var intervals = intervalNames.Select(intervalName =>
@@ -114,11 +163,13 @@ public class ChordFormula : IEquatable<ChordFormula>
 
     private ChordQuality DetermineQuality()
     {
-        var hasMinorThird = Intervals.Any(i => i.Interval.Semitones.Value == 3);
-        var hasMajorThird = Intervals.Any(i => i.Interval.Semitones.Value == 4);
-        var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones.Value == 6);
-        var hasAugmentedFifth = Intervals.Any(i => i.Interval.Semitones.Value == 8);
-        var hasMinorSeventh = Intervals.Any(i => i.Interval.Semitones.Value == 10);
+        // Grounded in standard chord-quality definitions and dominant seventh conventions.
+        // https://en.wikipedia.org/wiki/Chord_(music)#Chord_quality
+        var hasMinorThird = Intervals.Any(i => i.Interval.Semitones == Semitones.MinorThird);
+        var hasMajorThird = Intervals.Any(i => i.Interval.Semitones == Semitones.MajorThird);
+        var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones == Semitones.DiminishedFifth);
+        var hasAugmentedFifth = Intervals.Any(i => i.Interval.Semitones == Semitones.AugmentedFifth);
+        var hasMinorSeventh = Intervals.Any(i => i.Interval.Semitones == Semitones.MinorSeventh);
 
         if (IsSuspended)
         {
@@ -171,15 +222,28 @@ public class ChordFormula : IEquatable<ChordFormula>
             };
         }
 
-        var hasSeventh = Intervals.Any(i => i.Interval.Semitones.Value is 10 or 11);
-        var hasNinth = Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14 || (hasSeventh && (i.Interval.Semitones.Value is 1 or 13 || (i.Interval.Semitones.Value is 3 or 15 && i.Function != ChordFunction.Third))));
-        var hasEleventh = Intervals.Any(i => i.Interval.Semitones.Value is 5 or 17);
-        var hasThirteenth = Intervals.Any(i => i.Interval.Semitones.Value is 9 or 21);
-        var hasSixth = Intervals.Any(i => i.Interval.Semitones.Value == 9);
+        var hasSeventh = Intervals.Any(i =>
+            i.Interval.Semitones == Semitones.MinorSeventh || i.Interval.Semitones == Semitones.MajorSeventh);
+
+        var hasNinth = Intervals.Any(i =>
+            i.Interval.Semitones == Semitones.Tone ||
+            i.Interval.Semitones == Semitones.MajorNinth ||
+            (hasSeventh && (
+                i.Interval.Semitones == Semitones.Semitone ||
+                i.Interval.Semitones == Semitones.MinorNinth ||
+                ((i.Interval.Semitones == Semitones.MinorThird || i.Interval.Semitones == Semitones.FromValue(15)) &&
+                 i.Function != ChordFunction.Third)
+            )));
+
+        var hasEleventh = Intervals.Any(i =>
+            i.Interval.Semitones == Semitones.PerfectFourth || i.Interval.Semitones == Semitones.PerfectEleventh);
+        var hasThirteenth = Intervals.Any(i =>
+            i.Interval.Semitones == Semitones.MajorSixth || i.Interval.Semitones == Semitones.MajorThirteenth);
+        var hasSixth = Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSixth);
 
         if (IsSuspended)
         {
-            var hasSus2 = Intervals.Any(i => i.Interval.Semitones.Value == 2);
+            var hasSus2 = Intervals.Any(i => i.Interval.Semitones == Semitones.Tone);
             return hasSus2 ? ChordExtension.Sus2 : ChordExtension.Sus4;
         }
 
@@ -270,19 +334,10 @@ public class ChordFormula : IEquatable<ChordFormula>
         return new($"{Name} - {function}", newIntervals, StackingType);
     }
 
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as ChordFormula);
-    }
+    public override bool Equals(object? obj) => Equals(obj as ChordFormula);
 
-    public override int GetHashCode()
-    {
-        return Intervals.Aggregate(0, (hash, interval) =>
-            HashCode.Combine(hash, interval.Interval.GetHashCode()));
-    }
+    public override int GetHashCode() => Intervals.Aggregate(0, (hash, interval) =>
+        HashCode.Combine(hash, interval.Interval.GetHashCode()));
 
-    public override string ToString()
-    {
-        return $"{Name} ({GetSymbolSuffix()})";
-    }
+    public override string ToString() => $"{Name} ({GetSymbolSuffix()})";
 }

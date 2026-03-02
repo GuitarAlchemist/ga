@@ -44,7 +44,7 @@
         ";
 
     private readonly ChatOptions _chatOptions = new();
-    private readonly List<ChatMessage> _messages = new();
+    private readonly List<ChatMessage> _messages = [];
     private CancellationTokenSource? _currentResponseCancellation;
     private ChatMessage? _currentResponseMessage;
     private ChatInput? _chatInput;
@@ -67,7 +67,7 @@
 
         // Stream and display a new response from the IChatClient
         var responseText = new TextContent("");
-        _currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
+        _currentResponseMessage = new(ChatRole.Assistant, [responseText]);
         _currentResponseCancellation = new();
 
         // Pass a copy of the messages then add messages to the list while handling the streaming responses

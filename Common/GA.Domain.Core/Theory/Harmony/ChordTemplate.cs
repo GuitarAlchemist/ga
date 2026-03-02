@@ -1,200 +1,76 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Atonal;
-using Primitives;
+using Tonal;
 using Tonal.Modes;
 
 /// <summary>
-///     Represents a chord template that defines the structure and properties of a chord type.
-///     This discriminated union captures all possible chord construction scenarios exhaustively.
+/// Represents a theoretical template for a chord, which can be scale-derived or analytical.
+/// A template defines the "shape" of a chord before it is realized as a specific Chord instance with a root.
 /// </summary>
+/// <remarks>
+/// Example: Cmaj7 is a chord template. Cmaj7, Dmaj7, Emaj7 are all chords derived from that template.
+/// </remarks>
 public abstract record ChordTemplate
 {
-    private readonly Lazy<PitchClassSet> _lazyPitchClassSet;
+    /// <summary>Specific name of the chord template.</summary>
+    public abstract string Name { get; }
 
-    /// <summary>Base constructor for all chord template variants</summary>
-    private ChordTemplate(ChordFormula formula)
-    {
-        Formula = formula ?? throw new ArgumentNullException(nameof(formula));
-        _lazyPitchClassSet = new(() => CreatePitchClassSet(formula));
-    }
+    /// <summary>The underlying tonal realization of the chord's pitch classes.</summary>
+    public abstract PitchClassSet PitchClassSet { get; }
 
-    /// <summary>Gets the chord formula defining this chord's interval structure</summary>
-    public ChordFormula Formula { get; }
+    /// <summary>The intervals defining this chord from its theoretical root.</summary>
+    public abstract ChordFormula Formula { get; }
 
-    /// <summary>Gets the name of this chord from the formula</summary>
-    public string Name => Formula.Name;
+    /// <summary>The collection of intervals that define this chord.</summary>
+    public IReadOnlyList<ChordFormulaInterval> Intervals => Formula.Intervals;
 
-    /// <summary>Gets the chord quality</summary>
+    /// <summary>Number of notes in the template.</summary>
+    public int NoteCount => PitchClassSet.Count;
+
+    /// <summary>The triad quality (Major, Minor, etc.).</summary>
     public ChordQuality Quality => Formula.Quality;
 
-    /// <summary>Gets the chord extension</summary>
+    /// <summary>The upper-structure extension (7, 9, 11, 13).</summary>
     public ChordExtension Extension => Formula.Extension;
 
-    /// <summary>Gets the stacking type</summary>
+    /// <summary>The stacking logic (Tertian, Quartal, etc.).</summary>
     public ChordStackingType StackingType => Formula.StackingType;
 
-    /// <summary>Gets the number of notes in this chord</summary>
-    public int NoteCount => Formula.Intervals.Count + 1; // +1 for root
-
-    /// <summary>Gets the intervals that define this chord</summary>
-    public IReadOnlyCollection<ChordFormulaInterval> Intervals => Formula.Intervals;
-
-    /// <summary>Gets the characteristic intervals (defining chord quality)</summary>
-    public IReadOnlyCollection<ChordFormulaInterval> CharacteristicIntervals =>
-        Formula.Intervals.Where(i => i.IsEssential).ToList().AsReadOnly();
-
-    /// <summary>Gets the pitch class set derived from the chord formula</summary>
-    public PitchClassSet PitchClassSet => _lazyPitchClassSet.Value;
-
-
     /// <summary>
-    ///     Gets the chord symbol suffix (e.g., "maj7", "m", "dim")
+    /// Represents a chord derived from a specific degree of a scale mode.
     /// </summary>
-    public string GetSymbolSuffix()
+    public record TonalModal(ChordFormula ChordFormula, ScaleMode ParentScale, int ScaleDegree) : ChordTemplate
     {
-        return Formula.GetSymbolSuffix();
+        public override string Name => ChordFormula.Name;
+        public override PitchClassSet PitchClassSet { get; } = new(ChordFormula.Intervals.Select(i => (PitchClass)i.Interval.Semitones.Value).Concat([(PitchClass)0]));
+        public override ChordFormula Formula => ChordFormula;
+        public string Description => $"{ParentScale.Name} degree {ScaleDegree} ({ChordFormula.Name})";
+
+        /// <summary>Inferred harmonic function based on the scale degree (e.g. Tonic, Dominant).</summary>
+        public HarmonicFunction Function => HarmonicFunctionExtensions.FromDegree(ScaleDegree);
     }
 
     /// <summary>
-    ///     Creates a pitch class set from a chord formula
+    /// Represents a chord derived from arbitrary pitch class set analysis.
     /// </summary>
-    private static PitchClassSet CreatePitchClassSet(ChordFormula formula)
+    public record Analytical(PitchClassSet InnerPitchClassSet, ChordFormula ChordFormula, string? AnalyticalName = null) : ChordTemplate
     {
-        var pitchClasses = new List<PitchClass> { PitchClass.FromValue(0) }; // Root at C
+        public override string Name => AnalyticalName ?? ChordFormula.Name;
+        public override PitchClassSet PitchClassSet => InnerPitchClassSet;
+        public override ChordFormula Formula => ChordFormula;
+        public string Description => $"Analytical: {Name}";
+        public Dictionary<string, object> AnalysisData { get; init; } = [];
 
-        foreach (var interval in formula.Intervals)
-        {
-            var pitchClass = PitchClass.FromSemitones(interval.Interval.Semitones);
-            pitchClasses.Add(pitchClass);
-        }
+        public static Analytical FromPitchClassSet(PitchClassSet pcs, string name) =>
+            new(pcs, ChordFormula.FromSemitones(name, [.. pcs.Where(p => p.Value != 0).Select(p => (int)p.Value)]), name);
 
-        return new(pitchClasses);
+        public static Analytical FromPitchClassSet(PitchClassSet pcs, PitchClass root, string name) =>
+            new(new(pcs.Select(p => p - root)), ChordFormula.FromSemitones(name, [.. pcs.Select(p => p - root).Where(p => p.Value != 0).Select(p => (int)p.Value)]), name);
+
+        public static Analytical FromSetTheory(ChordFormula formula, string name) =>
+            new(new PitchClassSet(formula.Intervals.Select(i => (PitchClass)i.Interval.Semitones.Value).Concat([(PitchClass)0])), formula, name);
     }
 
-    /// <summary>
-    ///     Analyzes a pitch class set to create a chord formula
-    /// </summary>
-    internal static ChordFormula AnalyzePitchClassSet(PitchClassSet pitchClassSet, string name)
-    {
-        var pitchClasses = pitchClassSet.ToList();
-        if (pitchClasses.Count == 0)
-        {
-            throw new ArgumentException("Pitch class set cannot be empty", nameof(pitchClassSet));
-        }
-
-        // Assume first pitch class is root (legacy behavior)
-        var root = pitchClasses[0];
-        return AnalyzePitchClassSet(pitchClassSet, root, name);
-    }
-    
-    /// <summary>
-    ///     Analyzes a pitch class set to create a chord formula with explicit root
-    /// </summary>
-    internal static ChordFormula AnalyzePitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
-    {
-        var pitchClasses = pitchClassSet.ToList();
-        if (pitchClasses.Count == 0)
-        {
-            throw new ArgumentException("Pitch class set cannot be empty", nameof(pitchClassSet));
-        }
-
-        var intervals = new List<ChordFormulaInterval>();
-        var semitonesList = pitchClasses.Select(pc => (pc.Value - root.Value + 12) % 12).Where(s => s != 0).ToList();
-
-        foreach (var semitones in semitonesList)
-        {
-            var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
-            var function = DetermineChordFunction(semitones);
-
-            // SPECIAL CASE: Hendrix Chord / Split Thirds
-            // If we have both 3 and 4 semitones, 4 is the Third and 3 is the Sharp Ninth
-            if (semitones == 3 && semitonesList.Contains(4))
-            {
-                function = ChordFunction.Ninth;
-            }
-
-            intervals.Add(new(interval, function));
-        }
-
-        return new(name, intervals);
-    }
-
-    private static ChordFunction DetermineChordFunction(int semitones)
-    {
-        return semitones switch
-        {
-            2 or 14 => ChordFunction.Ninth,
-            3 or 4 => ChordFunction.Third,
-            5 or 17 => ChordFunction.Eleventh,
-            7 => ChordFunction.Fifth,
-            9 or 21 => ChordFunction.Thirteenth,
-            10 or 11 => ChordFunction.Seventh,
-            _ => ChordFunction.Root
-        };
-    }
-
-    public override string ToString()
-    {
-        return $"{Name} ({GetSymbolSuffix()})";
-    }
-
-    /// <summary>
-    ///     A chord derived from a traditional tonal scale mode (major/minor scale families)
-    /// </summary>
-    public sealed record TonalModal(
-        ChordFormula Formula,
-        ScaleMode ParentScale,
-        int ScaleDegree) : ChordTemplate(Formula)
-    {
-        /// <summary>Gets the harmonic function of this chord within its parent scale</summary>
-        public Tonal.HarmonicFunction HarmonicFunction => Tonal.HarmonicFunctionAnalyzer.FromScaleDegree(ScaleDegree);
-
-        /// <summary>Gets a descriptive name for this tonal modal chord</summary>
-        public string Description =>
-            $"{HarmonicFunction} ({ScaleDegree}) in {ParentScale.Name} - {Extension} {StackingType}";
-    }
-
-
-    /// <summary>
-    ///     A chord derived from pitch class set analysis or set theory
-    /// </summary>
-    public sealed record Analytical(
-        ChordFormula Formula,
-        string AnalysisMethod,
-        PitchClassSet? SourcePitchClassSet = null,
-        Dictionary<string, object>? AnalysisData = null) : ChordTemplate(Formula)
-    {
-        /// <summary>Gets a descriptive name for this analytical chord</summary>
-        public string Description => $"Analytical chord via {AnalysisMethod} - {Extension} {StackingType}";
-
-        /// <summary>Creates a chord from pitch class set analysis</summary>
-        public static Analytical FromPitchClassSet(PitchClassSet pitchClassSet, string name)
-        {
-            var formula = AnalyzePitchClassSet(pitchClassSet, name);
-            return new(formula, "Pitch Class Set Analysis", pitchClassSet,
-                new()
-                    { ["SourceName"] = name });
-        }
-        
-        /// <summary>Creates a chord from pitch class set analysis with explicit root</summary>
-        public static Analytical FromPitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
-        {
-            var formula = AnalyzePitchClassSet(pitchClassSet, root, name);
-            return new(formula, "Pitch Class Set Analysis", pitchClassSet,
-                new()
-                    { ["SourceName"] = name, ["Root"] = root });
-        }
-
-        /// <summary>Creates a chord from set theory analysis</summary>
-        public static Analytical FromSetTheory(ChordFormula formula, string setClass,
-            Dictionary<string, object>? analysisData = null)
-        {
-            return new(formula, "Set Theory Analysis", null,
-                analysisData ?? new Dictionary<string, object> { ["SetClass"] = setClass });
-        }
-    }
+    public override string ToString() => Name;
 }

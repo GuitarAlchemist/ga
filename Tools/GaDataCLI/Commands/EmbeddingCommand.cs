@@ -1,5 +1,6 @@
 namespace GaDataCLI.Commands;
 
+using System.ClientModel;
 using Azure.AI.OpenAI;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -70,7 +71,7 @@ public class EmbeddingCommand
         if (useOpenAi)
         {
             var endpoint = string.IsNullOrEmpty(baseUrl) ? "https://api.openai.com/v1" : baseUrl;
-            openAiClient = new(new(endpoint), new System.ClientModel.ApiKeyCredential(openAiApiKey));
+            openAiClient = new(new(endpoint), new ApiKeyCredential(openAiApiKey));
             AnsiConsole.MarkupLine($"[green]Using Model:[/] {embeddingModel}");
             AnsiConsole.MarkupLine($"[green]Endpoint:[/] {endpoint}\n");
         }
@@ -85,7 +86,7 @@ public class EmbeddingCommand
                 new SpinnerColumn())
             .StartAsync(async ctx =>
             {
-                var task = ctx.AddTask("[green]Generating embeddings[/]", maxValue: (double)withoutEmbeddings);
+                var task = ctx.AddTask("[green]Generating embeddings[/]", maxValue: withoutEmbeddings);
 
                 var filter = Builders<BsonDocument>.Filter.Not(
                     Builders<BsonDocument>.Filter.Exists("Embedding"));
@@ -137,7 +138,10 @@ public class EmbeddingCommand
     {
         try
         {
-            if (openAiClient == null) return;
+            if (openAiClient == null)
+            {
+                return;
+            }
 
             // Prepare texts for embedding
             var texts = batch.Select(doc => CreateEmbeddingText(doc)).ToList();
@@ -160,7 +164,7 @@ public class EmbeddingCommand
 
                 var filter = Builders<BsonDocument>.Filter.Eq("_id", doc["_id"]);
                 var update = Builders<BsonDocument>.Update
-                    .Set("Embedding", new BsonArray(embedding.ToArray().Select(x => new BsonDouble((double)x))))
+                    .Set("Embedding", new BsonArray(embedding.ToArray().Select(x => new BsonDouble(x))))
                     .Set("EmbeddingModel", model);
 
                 updates.Add(new UpdateOneModel<BsonDocument>(filter, update));
@@ -191,12 +195,35 @@ public class EmbeddingCommand
         // Build comprehensive text
         var parts = new List<string>();
 
-        if (!string.IsNullOrEmpty(name)) parts.Add($"Chord: {name}");
-        if (!string.IsNullOrEmpty(quality)) parts.Add($"Quality: {quality}");
-        if (!string.IsNullOrEmpty(extension)) parts.Add($"Extension: {extension}");
-        if (!string.IsNullOrEmpty(stackingType)) parts.Add($"Stacking: {stackingType}");
-        if (!string.IsNullOrEmpty(constructionType)) parts.Add($"Construction: {constructionType}");
-        if (!string.IsNullOrEmpty(description)) parts.Add($"Description: {description}");
+        if (!string.IsNullOrEmpty(name))
+        {
+            parts.Add($"Chord: {name}");
+        }
+
+        if (!string.IsNullOrEmpty(quality))
+        {
+            parts.Add($"Quality: {quality}");
+        }
+
+        if (!string.IsNullOrEmpty(extension))
+        {
+            parts.Add($"Extension: {extension}");
+        }
+
+        if (!string.IsNullOrEmpty(stackingType))
+        {
+            parts.Add($"Stacking: {stackingType}");
+        }
+
+        if (!string.IsNullOrEmpty(constructionType))
+        {
+            parts.Add($"Construction: {constructionType}");
+        }
+
+        if (!string.IsNullOrEmpty(description))
+        {
+            parts.Add($"Description: {description}");
+        }
 
         return string.Join(". ", parts);
     }

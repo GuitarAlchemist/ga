@@ -26,7 +26,7 @@ public class BatchOllamaEmbeddingService(HttpClient httpClient,
     {
         if (texts.Length == 0)
         {
-            return Array.Empty<float[]>();
+            return [];
         }
 
         _logger.LogDebug("Generating embeddings for {Count} texts", texts.Length);
@@ -57,7 +57,7 @@ public class BatchOllamaEmbeddingService(HttpClient httpClient,
     /// </summary>
     public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
     {
-        var results = await GenerateBatchEmbeddingsAsync(new[] { text }, cancellationToken);
+        var results = await GenerateBatchEmbeddingsAsync([text], cancellationToken);
         return results[0];
     }
 
@@ -131,10 +131,7 @@ public class BatchOllamaEmbeddingService(HttpClient httpClient,
         return [.. chunks];
     }
 
-    public void Dispose()
-    {
-        _concurrencyLimiter?.Dispose();
-    }
+    public void Dispose() => _concurrencyLimiter?.Dispose();
 }
 
 /// <summary>

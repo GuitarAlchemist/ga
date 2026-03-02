@@ -1,8 +1,7 @@
 namespace GA.Analytics.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
-
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
 
@@ -41,7 +40,7 @@ public class AdvancedAnalyticsController(
 
             var analysis = await analyticsService.PerformDeepAnalysisAsync(
                 conceptType,
-                new Dictionary<string, object> { ["conceptName"] = conceptName },
+                new() { ["conceptName"] = conceptName },
                 new Dictionary<string, object> { ["maxDepth"] = maxDepth }
             );
 
@@ -72,7 +71,9 @@ public class AdvancedAnalyticsController(
     {
         try
         {
-            var trends = await analyticsService.AnalyzeMusicalTrendsAsync("general", DateTime.UtcNow.AddDays(-30), DateTime.UtcNow);
+            var trends =
+                await analyticsService.AnalyzeMusicalTrendsAsync("general", DateTime.UtcNow.AddDays(-30),
+                    DateTime.UtcNow);
 
             logger.LogInformation("Musical trend analysis completed");
 
@@ -119,7 +120,7 @@ public class AdvancedAnalyticsController(
             var session = await analyticsService.GeneratePracticeSessionAsync(
                 userId,
                 "standard",
-                new Dictionary<string, object>()
+                []
             );
 
             logger.LogInformation("Generated {SessionType} practice session for user {UserId}",
@@ -156,8 +157,8 @@ public class AdvancedAnalyticsController(
             var curriculum = await analyticsService.GenerateCurriculumAsync(
                 userId,
                 curriculumType,
-                new Dictionary<string, object>(),
-                new Dictionary<string, object>()
+                [],
+                []
             );
 
 
@@ -194,12 +195,12 @@ public class AdvancedAnalyticsController(
     {
         try
         {
-            context ??= new Dictionary<string, object>();
+            context ??= [];
 
             var recommendations = await analyticsService.GetRealtimeRecommendationsAsync(
                 currentActivity,
-                new Dictionary<string, object> { ["userId"] = userId },
-                new Dictionary<string, object> { ["context"] = context }
+                new() { ["userId"] = userId },
+                new() { ["context"] = context }
             );
 
             logger.LogInformation("Generated real-time recommendations for user {UserId}",

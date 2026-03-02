@@ -1,7 +1,7 @@
-namespace GA.Domain.Core.Tests.Fretboard.Voicings.Search;
+namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Services.Fretboard.Voicings.Search;
+using GA.Business.ML.Search;
+using GA.Business.ML.Rag.Models;
 using NUnit.Framework;
 
 [SetUpFixture]
@@ -63,12 +63,7 @@ public class SemanticSearchTestFixture
         // Phase 2: Structural & Timbral Dimensions
         if (lower.Contains("aggressive") || lower.Contains("power") || lower.Contains("distortion")) { vector[14] = 1.0; }
         if (lower.Contains("low") || lower.Contains("deep") || lower.Contains("heavy") || lower.Contains("dark")) { vector[15] = 1.0; }
-        if (lower.Contains("high") || lower.Contains("luminous") || lower.Contains("sparkle") || lower.Contains("bright")) { vector[16] = 1.0; } // Merged bright into high/luminous for simplicity or keep separate? distinct is better.
-        // Actually let's keep bright separate as per nomenclature if possible, but "bright" often overlaps high. 
-        // Let's make 16 generic "High/Bright" for now or stick to nomenclature.
-        // Nomenclature: Bright -> id:bright (Lydian, Major). High -> id:register:high.
-        // Let's separate for precision if keywords allow.
-        if (lower.Contains("high") || lower.Contains("luminous") || lower.Contains("upper")) { vector[16] = 1.0; }
+        if (lower.Contains("high") || lower.Contains("luminous") || lower.Contains("sparkle") || lower.Contains("upper")) { vector[16] = 1.0; }
         if (lower.Contains("shell") || lower.Contains("guide")) { vector[17] = 1.0; }
         if (lower.Contains("rootless")) { vector[18] = 1.0; }
         if (lower.Contains("dense") || lower.Contains("cluster") || lower.Contains("closed")) { vector[19] = 1.0; }
@@ -76,21 +71,21 @@ public class SemanticSearchTestFixture
         if (lower.Contains("bright") || lower.Contains("lydian") || lower.Contains("lift")) { vector[21] = 1.0; }
         return vector;
     }
-    private List<VoicingDocument> GenerateAndCacheVoicings(string cachePath)
+    private List<ChordVoicingRagDocument> GenerateAndCacheVoicings(string cachePath)
     {
         // Simpler approach: Create a Mock/Synthetic set of documents for testing if cache is missing.
         // This avoids the heavy dependency on the generator logic in the test fixture.
-        var documents = new List<VoicingDocument>();
+        var documents = new List<ChordVoicingRagDocument>();
         // Helper to create valid dummy document
-        VoicingDocument CreateDoc(string id, string name, string[] tags, string text, string difficulty = "Intermediate", string position = "Open", int minFret = 0, string mode = "Major", 
+        ChordVoicingRagDocument CreateDoc(string id, string name, string[] tags, string text, string difficulty = "Intermediate", string position = "Open", int minFret = 0, string mode = "Major",
             string? stacking = "Tertian", int rootPc = 0, int bassNote = 0, int[]? midiNotes = null,
             // Phase 3 Args
-            string harmonicFunction = "Tonic", bool isNatural = true, bool isRootless = false, bool hasGuideTones = true, int inversion = 0, 
+            string harmonicFunction = "Tonic", bool isNatural = true, bool isRootless = false, bool hasGuideTones = true, int inversion = 0,
             double consonance = 0.8, double brightness = 0.5, string[]? omitted = null,
             // Agent Args
             string? texture = null, string[]? doubled = null, string[]? altNames = null)
         {
-            return new VoicingDocument
+            return new ChordVoicingRagDocument
             {
                 Id = id,
                 ChordName = name,
@@ -116,7 +111,7 @@ public class SemanticSearchTestFixture
                 OmittedTones = omitted ?? [],
                 // Required dummy fields
                 YamlAnalysis = "{}",
-                Diagram = "x32010", 
+                Diagram = "x32010",
                 PitchClassSet = "{0,4,7}",
                 PitchClasses = [0, 4, 7],
                 IntervalClassVector = "000000",

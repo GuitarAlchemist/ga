@@ -1,4 +1,4 @@
-using GA.Domain.Core.Instruments;
+﻿using GA.Domain.Core.Instruments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,9 @@ using GA.Business.ML.Wavelets;
 using GA.Business.ML.Extensions;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Atonal;
 
 public static class IntelligentAnalysisDemo

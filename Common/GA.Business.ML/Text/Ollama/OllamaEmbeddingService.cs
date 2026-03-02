@@ -1,10 +1,5 @@
 namespace GA.Business.ML.Text.Ollama;
 
-using Abstractions;
-
-using System.Text;
-using System.Text.Json;
-
 public class OllamaEmbeddingService(
     HttpClient client,
     string host = "http://localhost:11434",
@@ -32,7 +27,8 @@ public class OllamaEmbeddingService(
         var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
         var responseJson = JsonSerializer.Deserialize<OllamaEmbeddingResponse>(responseString);
 
-        var embedding = responseJson?.Embedding ?? throw new InvalidOperationException("No embedding returned from Ollama");
+        var embedding = responseJson?.Embedding ??
+                        throw new InvalidOperationException("No embedding returned from Ollama");
         return embedding;
     }
 }

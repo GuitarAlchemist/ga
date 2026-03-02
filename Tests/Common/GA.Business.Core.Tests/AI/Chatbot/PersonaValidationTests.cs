@@ -1,36 +1,42 @@
-namespace GA.Domain.Core.Tests.AI.Chatbot;
+namespace GA.Business.Core.Tests.AI.Chatbot;
 
-using GA.Business.ML.Abstractions;
+using ML.Abstractions;
 using Moq;
 using Testing.Semantic;
 
 [TestFixture]
 public class PersonaValidationTests
 {
-    private const string GuitarAlchemistRubric = """
-                                                  The respondent must identify as 'Guitar Alchemist'.
-                                                  The tone must be:
-                                                  1. Pedagogical: Explains 'why' and 'how', not just 'what'.
-                                                  2. Encouraging: Uses positive reinforcement for the learner.
-                                                  3. Music Theory Informed: Uses correct terms (root, third, fifth, extensions).
-                                                  4. Concisely thorough: Clear but complete.
-                                                  """;
-    private readonly Mock<IJudgeService> _mockJudge = new();
     [SetUp]
     public void SetUp()
     {
         AssertAi.Configure(new Mock<ITextEmbeddingService>().Object); // Dummy for Level 0
-        _mockJudge.Setup(j => j.EvaluateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockJudge.Setup(j => j.EvaluateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync((string text, string prompt, string rubric, CancellationToken ct) =>
             {
                 // Simple heuristic for Mocking Persona
-                bool isPedagogical = text.Contains("look at", StringComparison.OrdinalIgnoreCase) || text.Contains("understand", StringComparison.OrdinalIgnoreCase);
-                bool isEncouraging = text.Contains("Great", StringComparison.OrdinalIgnoreCase) || text.Contains("Keep practicing", StringComparison.OrdinalIgnoreCase);
-                bool matchesPersona = text.Contains("Guitar Alchemist") && isPedagogical && isEncouraging;
-                return new JudgeResult(matchesPersona, matchesPersona ? "Matches persona." : "Missing core persona traits.", 0.9f);
+                var isPedagogical = text.Contains("look at", StringComparison.OrdinalIgnoreCase) ||
+                                    text.Contains("understand", StringComparison.OrdinalIgnoreCase);
+                var isEncouraging = text.Contains("Great", StringComparison.OrdinalIgnoreCase) ||
+                                    text.Contains("Keep practicing", StringComparison.OrdinalIgnoreCase);
+                var matchesPersona = text.Contains("Guitar Alchemist") && isPedagogical && isEncouraging;
+                return new(matchesPersona, matchesPersona ? "Matches persona." : "Missing core persona traits.", 0.9f);
             });
         AssertAi.ConfigureJudge(_mockJudge.Object);
     }
+
+    private const string GuitarAlchemistRubric = """
+                                                 The respondent must identify as 'Guitar Alchemist'.
+                                                 The tone must be:
+                                                 1. Pedagogical: Explains 'why' and 'how', not just 'what'.
+                                                 2. Encouraging: Uses positive reinforcement for the learner.
+                                                 3. Music Theory Informed: Uses correct terms (root, third, fifth, extensions).
+                                                 4. Concisely thorough: Clear but complete.
+                                                 """;
+
+    private readonly Mock<IJudgeService> _mockJudge = new();
+
     [Test]
     [Category("Semantic")]
     [Category("Level1")]
@@ -46,6 +52,7 @@ public class PersonaValidationTests
                        """;
         AssertAi.Judges.PassesRubric(response, GuitarAlchemistRubric);
     }
+
     [Test]
     [Category("Semantic")]
     [Category("Level1")]
@@ -57,6 +64,7 @@ public class PersonaValidationTests
             AssertAi.Judges.PassesRubric(response, GuitarAlchemistRubric)
         );
     }
+
     [Test]
     [Category("Semantic")]
     [Category("Level2")]
@@ -64,8 +72,10 @@ public class PersonaValidationTests
     {
         // Level 2: The persona (tone) should remain consistent even if the technical complexity changes.
         // For this mock, we'll force one to fail if it doesn't have the persona signature
-        var simpleResponse = "Hello! I'm Guitar Alchemist. Great job! A major is A, C#, E. To understand... look at... Keep practicing!";
-        var complexResponse = "Hello! I'm Guitar Alchemist. Great job! AMaj7#11 utilizes the Lydian mode. To understand... look at... Keep practicing!";
+        var simpleResponse =
+            "Hello! I'm Guitar Alchemist. Great job! A major is A, C#, E. To understand... look at... Keep practicing!";
+        var complexResponse =
+            "Hello! I'm Guitar Alchemist. Great job! AMaj7#11 utilizes the Lydian mode. To understand... look at... Keep practicing!";
         var simpleScore = AssertAi.Judges.GetRubricScore(simpleResponse, GuitarAlchemistRubric);
         var complexScore = AssertAi.Judges.GetRubricScore(complexResponse, GuitarAlchemistRubric);
         // We expect both to be HIGHly compliant with the persona

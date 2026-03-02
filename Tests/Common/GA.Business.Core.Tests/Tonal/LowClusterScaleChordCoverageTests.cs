@@ -1,19 +1,18 @@
-namespace GA.Domain.Core.Tests.Tonal;
+﻿namespace GA.Business.Core.Tests.Tonal;
 
-using GA.Domain.Core.Theory.Tonal.Scales;
-using Primitives;
-using GA.Domain.Core.Theory.Tonal.Modes;
-using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
-using GA.Domain.Core.Theory.Tonal.Modes.Exotic;
-using GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
-using GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
-using GA.Domain.Services.Chords;
-using NUnit.Framework;
+using Domain.Core.Primitives.Notes;
+using Domain.Core.Theory.Tonal.Modes;
+using Domain.Core.Theory.Tonal.Modes.Diatonic;
+using Domain.Core.Theory.Tonal.Modes.Exotic;
+using Domain.Core.Theory.Tonal.Modes.Pentatonic;
+using Domain.Core.Theory.Tonal.Modes.Symmetric;
+using Domain.Services.Chords;
 
 [TestFixture]
 public class LowClusterScaleChordCoverageTests
 {
     private const int ClusterHighlightThreshold = 2;
+
     [Test]
     public void EveryScaleMode_GeneratesChordsAndReportsClusters()
     {
@@ -26,9 +25,11 @@ public class LowClusterScaleChordCoverageTests
             {
                 flagged.Add($"{scaleMode.Name} ({scaleMode.ParentScale.PitchClassSet.Id}) → cluster {clusterLength}");
             }
+
             var chords = ChordTemplateFactory.GenerateFromScaleMode(scaleMode).ToList();
             Assert.That(chords, Is.Not.Empty, $"{scaleMode.Name} should generate chord templates.");
         }
+
         if (flagged.Any())
         {
             TestContext.WriteLine(
@@ -39,6 +40,7 @@ public class LowClusterScaleChordCoverageTests
             }
         }
     }
+
     private static int GetLongestContiguousSemitoneCluster(IReadOnlyCollection<Note> notes)
     {
         var pitchClasses = notes.Select(note => note.PitchClass.Value).Distinct().OrderBy(value => value).ToList();
@@ -46,6 +48,7 @@ public class LowClusterScaleChordCoverageTests
         {
             return 0;
         }
+
         var extended = pitchClasses.ToList();
         extended.Add(pitchClasses[0] + 12); // wrap for bracelet notation
         var longest = 0;
@@ -62,30 +65,32 @@ public class LowClusterScaleChordCoverageTests
                 currentRun = 0;
             }
         }
+
         longest = Math.Max(longest, currentRun);
         return longest;
     }
+
     private static IReadOnlyCollection<ScaleMode> GetAllScaleModes()
     {
         var families = new[]
         {
-            MajorScaleMode.Items.Cast<ScaleMode>(),
-            HarmonicMinorMode.Items.Cast<ScaleMode>(),
-            MelodicMinorMode.Items.Cast<ScaleMode>(),
-            NaturalMinorMode.Items.Cast<ScaleMode>(),
-            WholeToneScaleMode.Items.Cast<ScaleMode>(),
-            DiminishedScaleMode.Items.Cast<ScaleMode>(),
-            AugmentedScaleMode.Items.Cast<ScaleMode>(),
-            MajorPentatonicMode.Items.Cast<ScaleMode>(),
-            HirajoshiScaleMode.Items.Cast<ScaleMode>(),
-            InSenScaleMode.Items.Cast<ScaleMode>(),
-            BebopScaleMode.Items.Cast<ScaleMode>(),
-            BluesScaleMode.Items.Cast<ScaleMode>(),
-            DoubleHarmonicScaleMode.Items.Cast<ScaleMode>(),
-            EnigmaticScaleMode.Items.Cast<ScaleMode>(),
-            NeapolitanMajorScaleMode.Items.Cast<ScaleMode>(),
-            NeapolitanMinorScaleMode.Items.Cast<ScaleMode>(),
-            PrometheusScaleMode.Items.Cast<ScaleMode>(),
+            MajorScaleMode.Items,
+            HarmonicMinorMode.Items,
+            MelodicMinorMode.Items,
+            NaturalMinorMode.Items,
+            WholeToneScaleMode.Items,
+            DiminishedScaleMode.Items,
+            AugmentedScaleMode.Items,
+            MajorPentatonicMode.Items,
+            HirajoshiScaleMode.Items,
+            InSenScaleMode.Items,
+            BebopScaleMode.Items,
+            BluesScaleMode.Items,
+            DoubleHarmonicScaleMode.Items,
+            EnigmaticScaleMode.Items,
+            NeapolitanMajorScaleMode.Items,
+            NeapolitanMinorScaleMode.Items,
+            PrometheusScaleMode.Items,
             TritoneScaleMode.Items.Cast<ScaleMode>()
         };
         return [.. families.SelectMany(family => family)];

@@ -97,12 +97,12 @@ internal class Program
 
         var chords = new[]
         {
-            ("C Major", new[] { 0, 4, 7 }),
-            ("D Minor", new[] { 2, 5, 9 }),
-            ("E Minor", new[] { 4, 7, 11 }),
-            ("F Major", new[] { 5, 9, 0 }),
-            ("G Major", new[] { 7, 11, 2 }),
-            ("A Minor", new[] { 9, 0, 4 }),
+            ("C Major", [0, 4, 7]),
+            ("D Minor", [2, 5, 9]),
+            ("E Minor", [4, 7, 11]),
+            ("F Major", [5, 9, 0]),
+            ("G Major", [7, 11, 2]),
+            ("A Minor", [9, 0, 4]),
             ("B Diminished", new[] { 11, 2, 5 })
         };
 
@@ -140,9 +140,9 @@ internal class Program
         var chords = new[]
         {
             new[] { 0, 4, 7 }, // C Major
-            new[] { 9, 0, 4 }, // A Minor
-            new[] { 5, 9, 0 }, // F Major
-            new[] { 7, 11, 2 } // G Major
+            [9, 0, 4], // A Minor
+            [5, 9, 0], // F Major
+            [7, 11, 2] // G Major
         };
 
         // Build adjacency matrix based on voice leading distance
@@ -198,9 +198,9 @@ internal class Program
 
         var progressions = new[]
         {
-            ("I-vi-IV-V", new[] { new[] { 0, 4, 7 }, new[] { 9, 0, 4 }, new[] { 5, 9, 0 }, new[] { 7, 11, 2 } }),
-            ("ii-V-I", new[] { new[] { 2, 5, 9 }, new[] { 7, 11, 2 }, new[] { 0, 4, 7 } }),
-            ("vi-IV-I-V", new[] { new[] { 9, 0, 4 }, new[] { 5, 9, 0 }, new[] { 0, 4, 7 }, new[] { 7, 11, 2 } })
+            ("I-vi-IV-V", [[0, 4, 7], [9, 0, 4], [5, 9, 0], [7, 11, 2]]),
+            ("ii-V-I", [[2, 5, 9], [7, 11, 2], [0, 4, 7]]),
+            ("vi-IV-I-V", new[] { new[] { 9, 0, 4 }, [5, 9, 0], [0, 4, 7], [7, 11, 2] })
         };
 
         var optimizationTable = new Table()
@@ -400,10 +400,8 @@ internal class Program
         return vector;
     }
 
-    private static double CalculateComplexity(int[] intervalVector)
-    {
-        return intervalVector.Select((count, index) => count * (index + 1)).Sum() / (double)intervalVector.Sum();
-    }
+    private static double CalculateComplexity(int[] intervalVector) =>
+        intervalVector.Select((count, index) => count * (index + 1)).Sum() / (double)intervalVector.Sum();
 
     private static double CalculateConsonance(int[] pitchClasses)
     {
@@ -552,15 +550,11 @@ internal class Program
         await Task.WhenAll(tasks);
     }
 
-    private static async Task BenchmarkSimd(int itemCount)
-    {
+    private static async Task BenchmarkSimd(int itemCount) =>
         // Simulate SIMD optimized processing (much faster)
         await Task.Delay(itemCount / 100); // Simulate 100x speedup
-    }
 
-    private static async Task ProcessItem(int item)
-    {
+    private static async Task ProcessItem(int item) =>
         // Simulate musical processing work
         await Task.Delay(1);
-    }
 }

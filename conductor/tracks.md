@@ -8,3 +8,4 @@
 | guitar-input | Guitar Tablature Input | Active | Gemini | [Link](./tracks/guitar-input/index.md) |
 | core-schema-design | Core Schema & Relationship Design | Active | Gemini | [Link](./tracks/core-schema-design/index.md) |
 | meai-integration | Microsoft Extensions for AI Integration | Active | Gemini | [Link](./tracks/meai-integration/index.md) |
+| modernization | Project Consolidation & Modernization | Active | Antigravity | [Link](./tracks/modernization/index.md) |

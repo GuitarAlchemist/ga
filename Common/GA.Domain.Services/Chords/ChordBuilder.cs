@@ -1,10 +1,7 @@
 namespace GA.Domain.Services.Chords;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Core.Primitives;
-using Core.Theory.Harmony;
+using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using Core.Theory.Tonal.Modes;
 
 /// <summary>
@@ -57,122 +54,77 @@ public class ChordBuilder
     /// <summary>
     ///     Adds a major third to the chord
     /// </summary>
-    public ChordBuilder WithMajorThird()
-    {
-        return WithInterval(4, ChordFunction.Third);
-    }
+    public ChordBuilder WithMajorThird() => WithInterval(4, ChordFunction.Third);
 
     /// <summary>
     ///     Adds a minor third to the chord
     /// </summary>
-    public ChordBuilder WithMinorThird()
-    {
-        return WithInterval(3, ChordFunction.Third);
-    }
+    public ChordBuilder WithMinorThird() => WithInterval(3, ChordFunction.Third);
 
     /// <summary>
     ///     Adds a perfect fifth to the chord
     /// </summary>
-    public ChordBuilder WithPerfectFifth()
-    {
-        return WithInterval(7, ChordFunction.Fifth);
-    }
+    public ChordBuilder WithPerfectFifth() => WithInterval(7, ChordFunction.Fifth);
 
     /// <summary>
     ///     Adds a diminished fifth to the chord
     /// </summary>
-    public ChordBuilder WithDiminishedFifth()
-    {
-        return WithInterval(6, ChordFunction.Fifth);
-    }
+    public ChordBuilder WithDiminishedFifth() => WithInterval(6, ChordFunction.Fifth);
 
     /// <summary>
     ///     Adds an augmented fifth to the chord
     /// </summary>
-    public ChordBuilder WithAugmentedFifth()
-    {
-        return WithInterval(8, ChordFunction.Fifth);
-    }
+    public ChordBuilder WithAugmentedFifth() => WithInterval(8, ChordFunction.Fifth);
 
     /// <summary>
     ///     Adds a major seventh to the chord
     /// </summary>
-    public ChordBuilder WithMajorSeventh()
-    {
-        return WithInterval(11, ChordFunction.Seventh);
-    }
+    public ChordBuilder WithMajorSeventh() => WithInterval(11, ChordFunction.Seventh);
 
     /// <summary>
     ///     Adds a minor seventh to the chord
     /// </summary>
-    public ChordBuilder WithMinorSeventh()
-    {
-        return WithInterval(10, ChordFunction.Seventh);
-    }
+    public ChordBuilder WithMinorSeventh() => WithInterval(10, ChordFunction.Seventh);
 
     /// <summary>
     ///     Adds a diminished seventh to the chord
     /// </summary>
-    public ChordBuilder WithDiminishedSeventh()
-    {
-        return WithInterval(9, ChordFunction.Seventh);
-    }
+    public ChordBuilder WithDiminishedSeventh() => WithInterval(9, ChordFunction.Seventh);
 
     /// <summary>
     ///     Adds a ninth to the chord
     /// </summary>
-    public ChordBuilder WithNinth()
-    {
-        return WithInterval(14, ChordFunction.Ninth);
-    }
+    public ChordBuilder WithNinth() => WithInterval(14, ChordFunction.Ninth);
 
     /// <summary>
     ///     Adds a flat ninth to the chord
     /// </summary>
-    public ChordBuilder WithFlatNinth()
-    {
-        return WithInterval(13, ChordFunction.Ninth);
-    }
+    public ChordBuilder WithFlatNinth() => WithInterval(13, ChordFunction.Ninth);
 
     /// <summary>
     ///     Adds a sharp ninth to the chord
     /// </summary>
-    public ChordBuilder WithSharpNinth()
-    {
-        return WithInterval(15, ChordFunction.Ninth);
-    }
+    public ChordBuilder WithSharpNinth() => WithInterval(15, ChordFunction.Ninth);
 
     /// <summary>
     ///     Adds an eleventh to the chord
     /// </summary>
-    public ChordBuilder WithEleventh()
-    {
-        return WithInterval(17, ChordFunction.Eleventh);
-    }
+    public ChordBuilder WithEleventh() => WithInterval(17, ChordFunction.Eleventh);
 
     /// <summary>
     ///     Adds a sharp eleventh to the chord
     /// </summary>
-    public ChordBuilder WithSharpEleventh()
-    {
-        return WithInterval(18, ChordFunction.Eleventh);
-    }
+    public ChordBuilder WithSharpEleventh() => WithInterval(18, ChordFunction.Eleventh);
 
     /// <summary>
     ///     Adds a thirteenth to the chord
     /// </summary>
-    public ChordBuilder WithThirteenth()
-    {
-        return WithInterval(21, ChordFunction.Thirteenth);
-    }
+    public ChordBuilder WithThirteenth() => WithInterval(21, ChordFunction.Thirteenth);
 
     /// <summary>
     ///     Adds a flat thirteenth to the chord
     /// </summary>
-    public ChordBuilder WithFlatThirteenth()
-    {
-        return WithInterval(20, ChordFunction.Thirteenth);
-    }
+    public ChordBuilder WithFlatThirteenth() => WithInterval(20, ChordFunction.Thirteenth);
 
     /// <summary>
     ///     Sets the stacking type of the chord
@@ -231,42 +183,29 @@ public class ChordBuilder
     /// <summary>
     ///     Creates a dominant seventh chord
     /// </summary>
-    public ChordBuilder AsDominantSeventh()
-    {
-        return AsMajorTriad().WithMinorSeventh().WithName("Dominant 7th");
-    }
+    public ChordBuilder AsDominantSeventh() => AsMajorTriad().WithMinorSeventh().WithName("Dominant 7th");
 
     /// <summary>
     ///     Creates a major seventh chord
     /// </summary>
-    public ChordBuilder AsMajorSeventh()
-    {
-        return AsMajorTriad().WithMajorSeventh().WithName("Major 7th");
-    }
+    public ChordBuilder AsMajorSeventh() => AsMajorTriad().WithMajorSeventh().WithName("Major 7th");
 
     /// <summary>
     ///     Creates a minor seventh chord
     /// </summary>
-    public ChordBuilder AsMinorSeventh()
-    {
-        return AsMinorTriad().WithMinorSeventh().WithName("Minor 7th");
-    }
+    public ChordBuilder AsMinorSeventh() => AsMinorTriad().WithMinorSeventh().WithName("Minor 7th");
 
     /// <summary>
     ///     Creates a half-diminished seventh chord
     /// </summary>
-    public ChordBuilder AsHalfDiminishedSeventh()
-    {
-        return AsDiminishedTriad().WithMinorSeventh().WithName("Half Diminished 7th");
-    }
+    public ChordBuilder AsHalfDiminishedSeventh() =>
+        AsDiminishedTriad().WithMinorSeventh().WithName("Half Diminished 7th");
 
     /// <summary>
     ///     Creates a fully diminished seventh chord
     /// </summary>
-    public ChordBuilder AsFullyDiminishedSeventh()
-    {
-        return AsDiminishedTriad().WithDiminishedSeventh().WithName("Fully Diminished 7th");
-    }
+    public ChordBuilder AsFullyDiminishedSeventh() =>
+        AsDiminishedTriad().WithDiminishedSeventh().WithName("Fully Diminished 7th");
 
     /// <summary>
     ///     Creates a chord from a scale mode and degree
@@ -327,24 +266,15 @@ public class ChordBuilder
     /// <summary>
     ///     Creates a new chord builder
     /// </summary>
-    public static ChordBuilder Create()
-    {
-        return new();
-    }
+    public static ChordBuilder Create() => new();
 
     /// <summary>
     ///     Creates a chord builder with the specified root
     /// </summary>
-    public static ChordBuilder Create(Note root)
-    {
-        return new ChordBuilder().WithRoot(root);
-    }
+    public static ChordBuilder Create(Note root) => new ChordBuilder().WithRoot(root);
 
     /// <summary>
     ///     Creates a chord builder with the specified root
     /// </summary>
-    public static ChordBuilder Create(string rootName)
-    {
-        return new ChordBuilder().WithRoot(rootName);
-    }
+    public static ChordBuilder Create(string rootName) => new ChordBuilder().WithRoot(rootName);
 }

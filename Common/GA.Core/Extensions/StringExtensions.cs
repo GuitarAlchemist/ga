@@ -5,17 +5,18 @@
 /// </summary>
 public static class StringExtensions
 {
-    public static string Coalesce(
-        this string s,
-        Func<string> stringProvider)
+    extension(string s)
     {
-        if (!string.IsNullOrEmpty(s))
+        public string Coalesce(Func<string> stringProvider)
         {
-            return s;
+            if (!string.IsNullOrEmpty(s))
+            {
+                return s;
+            }
+
+            var result = stringProvider();
+
+            return result;
         }
-
-        var result = stringProvider();
-
-        return result;
     }
 }

@@ -5,7 +5,6 @@ using System.Linq;
 using HotChocolate;
 using HotChocolate.Types;
 using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Fretboard.Voicings.Analysis;
 
 [ExtendObjectType("Query")]
@@ -60,5 +59,3 @@ public class ChordNamingQuery
             throw new GraphQLException("Intervals cannot be empty");
     }
 }
-
-public record ComprehensiveName(string Primary, IEnumerable<string> Alternates);

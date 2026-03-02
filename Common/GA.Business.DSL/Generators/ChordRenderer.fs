@@ -3,14 +3,16 @@ namespace GA.Business.DSL.Generators
 open GA.Business.DSL.Types
 
 module ChordRenderer =
-    let renderAccidental = function
+    let renderAccidental =
+        function
         | Natural -> ""
         | Sharp -> "#"
         | Flat -> "b"
         | DoubleSharp -> "##"
         | DoubleFlat -> "bb"
 
-    let renderQuality = function
+    let renderQuality =
+        function
         | Major -> "maj"
         | Minor -> "m"
         | Diminished -> "dim"
@@ -18,9 +20,10 @@ module ChordRenderer =
         | Suspended -> "sus"
         | Dominant -> "" // Implied by 7 extension usually
 
-    let renderComponent = function
+    let renderComponent =
+        function
         | Extension s -> s
-        | Alteration (acc, deg) -> (renderAccidental acc) + deg
+        | Alteration(acc, deg) -> (renderAccidental acc) + deg
         | Omission deg -> "(no " + deg + ")"
         | Alt -> "alt"
 
@@ -28,9 +31,10 @@ module ChordRenderer =
         let root = ast.Root + (renderAccidental ast.RootAccidental)
         let qual = ast.Quality |> Option.map renderQuality |> Option.defaultValue ""
         let comps = ast.Components |> List.map renderComponent |> String.concat ""
-        let bass = 
+
+        let bass =
             match ast.Bass with
-            | Some (n, acc) -> "/" + n.ToUpper() + (renderAccidental acc)
+            | Some(n, acc) -> "/" + n.ToUpper() + (renderAccidental acc)
             | None -> ""
-        
+
         root + qual + comps + bass

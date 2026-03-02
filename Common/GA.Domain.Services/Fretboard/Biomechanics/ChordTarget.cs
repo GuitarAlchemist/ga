@@ -1,6 +1,5 @@
 namespace GA.Domain.Services.Fretboard.Biomechanics;
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Numerics;
 using Core.Instruments.Biomechanics;

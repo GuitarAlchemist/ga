@@ -120,11 +120,9 @@ public static class ForwardKinematics
     /// <summary>
     ///     Compute fingertip normal vector
     /// </summary>
-    private static Vector3 ComputeFingertipNormal(FingerType finger, HandPose pose)
-    {
+    private static Vector3 ComputeFingertipNormal(FingerType finger, HandPose pose) =>
         // Simplified: assume fingertips point downward for fretting
-        return finger == FingerType.Thumb ? Vector3.UnitZ : -Vector3.UnitZ;
-    }
+        finger == FingerType.Thumb ? Vector3.UnitZ : -Vector3.UnitZ;
 
     /// <summary>
     ///     Validate that a pose is within biomechanical limits

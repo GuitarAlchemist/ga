@@ -1,11 +1,8 @@
 namespace GA.Domain.Core.Instruments;
 
-using System;
-using System.Collections.Generic;
-using Core.Primitives;
-using Design;
+using Core.Primitives.Notes;
+using Design.Attributes;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives;
 
 /// <summary>
@@ -84,10 +81,7 @@ public class Tuning : IIndexer<Str, Pitch>
     /// <summary>
     ///     Exposes the pitches as a contiguous span (highest string first).
     /// </summary>
-    public ReadOnlySpan<Pitch> AsSpan()
-    {
-        return _pitches;
-    }
+    public ReadOnlySpan<Pitch> AsSpan() => _pitches;
 
     private static Pitch[] BuildPitchArray(IReadOnlyCollection<Pitch> items)
     {
@@ -115,8 +109,5 @@ public class Tuning : IIndexer<Str, Pitch>
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return PitchCollection.ToString();
-    }
+    public override string ToString() => PitchCollection.ToString();
 }

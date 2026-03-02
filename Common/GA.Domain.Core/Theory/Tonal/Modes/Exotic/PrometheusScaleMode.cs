@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Exotic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -48,15 +44,7 @@ public sealed class PrometheusScaleMode(PrometheusScaleDegree degree)
         }
     }
 
-    public static PrometheusScaleMode Get(PrometheusScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static PrometheusScaleMode Get(PrometheusScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static PrometheusScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static PrometheusScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

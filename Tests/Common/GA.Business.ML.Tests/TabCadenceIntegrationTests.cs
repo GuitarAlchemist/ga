@@ -1,20 +1,15 @@
 namespace GA.Business.ML.Tests;
 
-using System.Threading.Tasks;
-using GA.Business.ML.Tabs;
+using ML.Tabs;
 using TestInfrastructure;
-using NUnit.Framework;
 
 [TestFixture]
 public class TabCadenceIntegrationTests
 {
-    private TabAnalysisService _service;
-
     [SetUp]
-    public void Setup()
-    {
-        _service = TestServices.CreateTabAnalysisService();
-    }
+    public void Setup() => _service = TestServices.CreateTabAnalysisService();
+
+    private TabAnalysisService _service;
 
     [Test]
     public async Task Detect_PerfectAuthenticCadence_FromTab()

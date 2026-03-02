@@ -1,18 +1,24 @@
+#pragma warning disable SKEXP0001
+using System.Reflection;
+using Hellang.Middleware.ProblemDetails;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using GA.MusicTheory.Service.Models;
 using GA.MusicTheory.Service.Services;
-using System.Reflection;
 using AllProjects.ServiceDefaults;
-using Hellang.Middleware.ProblemDetails;
+using GA.Infrastructure.Documentation;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Aspire service defaults (telemetry, health checks, service discovery)
+// Add Aspire service defaults
 builder.AddServiceDefaults();
 
 // Add Redis distributed caching
 builder.AddRedisDistributedCache("redis");
 
 // Add controllers
+builder.Services.AddControllers()
+    .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; });
 
 // Configure MongoDB
 builder.Services.Configure<MongoDbSettings>(
@@ -20,8 +26,11 @@ builder.Services.Configure<MongoDbSettings>(
 
 // Register services
 builder.Services.AddSingleton<MongoDbService>();
+builder.Services.AddSingleton<SchemaDiscoveryService>();
+builder.Services.AddScoped<IMonadicChordService, MonadicChordService>();
+builder.Services.AddScoped<IMonadicHealthCheckService, MonadicHealthCheckService>();
 
-builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 
 // Add API documentation
 builder.Services.AddEndpointsApiExplorer();
@@ -29,10 +38,12 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new()
     {
-        Title = "MusicTheory Service",
+        Title = "Music Theory Service",
         Version = "v1",
-        Description = "Music theory operations (keys, modes, scales, intervals, chords)"
+        Description = "Music theory logic, chord classification, and metadata"
     });
+
+    c.EnableAnnotations();
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -40,14 +51,12 @@ builder.Services.AddSwaggerGen(c =>
     {
         c.IncludeXmlComments(xmlPath);
     }
-
-    c.EnableAnnotations();
 });
 
 // Add problem details middleware
 builder.Services.AddProblemDetails(options =>
 {
-    options.IncludeExceptionDetails = (_, _) => builder.Environment.IsDevelopment();
+    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
     options.MapToStatusCode<NotImplementedException>(StatusCodes.Status501NotImplemented);
     options.MapToStatusCode<ArgumentException>(StatusCodes.Status400BadRequest);
 });
@@ -63,20 +72,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add rate limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
-            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                PermitLimit = 100,
-                QueueLimit = 10,
-                Window = TimeSpan.FromMinutes(1)
-            }));
-});
+// builder.Services.AddRateLimiter(options => ...);
 
 var app = builder.Build();
 
@@ -88,13 +84,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "MusicTheory Service v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Music Theory Service v1");
         c.RoutePrefix = string.Empty;
     });
 }
 
 app.UseCors("AllowAll");
-app.UseRateLimiter();
+// app.UseRateLimiter();
 
 app.MapControllers();
 app.MapDefaultEndpoints();

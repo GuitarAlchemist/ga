@@ -36,10 +36,7 @@ public abstract class CartesianProduct<T, TPair>(
 
     #region IEnumerable<TPair> Members
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public IEnumerator<TPair> GetEnumerator()
     {
@@ -66,8 +63,6 @@ public class CartesianProduct<T> : CartesianProduct<T, OrderedPair<T>>
     public CartesianProduct(
         IEnumerable<T> items,
         Func<T, bool>? predicate)
-        : base(items, null, predicate)
-    {
+        : base(items, null, predicate) =>
         ArgumentNullException.ThrowIfNull(predicate);
-    }
 }

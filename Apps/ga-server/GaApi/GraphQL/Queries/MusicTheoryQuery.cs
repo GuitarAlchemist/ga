@@ -1,10 +1,8 @@
-namespace GaApi.GraphQL.Queries;
+﻿namespace GaApi.GraphQL.Queries;
 
-using HotChocolate;
 using HotChocolate.Types;
 using GA.Domain.Core.Theory.Tonal;
-using GA.Domain.Core.Primitives;
-using System.Linq;
+using GA.Domain.Core.Primitives.Notes;
 
 [ExtendObjectType("Query")]
 public class MusicTheoryQuery

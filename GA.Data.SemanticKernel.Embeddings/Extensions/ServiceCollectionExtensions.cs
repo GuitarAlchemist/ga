@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
             // Create HTTP client for Ollama
             var httpClient = new HttpClient
             {
-                BaseAddress = new Uri(config?.Endpoint ?? "http://localhost:11434")
+                BaseAddress = new(config?.Endpoint ?? "http://localhost:11434")
             };
 
             // Create the embedding generation service

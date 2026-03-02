@@ -1,61 +1,54 @@
 namespace GA.Business.ML.Embeddings;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using Microsoft.Extensions.AI;
 
 /// <summary>
-/// Bridges Guitar Alchemist's domain-specific <see cref="MusicalEmbeddingGenerator"/> to MEAI's
-/// <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> interface.
+///     Bridges Guitar Alchemist's domain-specific <see cref="MusicalEmbeddingGenerator" /> to MEAI's
+///     <see cref="Microsoft.Extensions.AI.IEmbeddingGenerator{TInput,TEmbedding}" /> interface.
 /// </summary>
 /// <remarks>
-/// <para>
-/// This adapter enables the OPTIC-K embedding system to be used with any MEAI-compatible
-/// infrastructure, including Semantic Kernel plugins and standard vector store abstractions.
-/// </para>
-/// <para>
-/// The musical embeddings are domain-specific (computed from pitch classes, intervals, morphology)
-/// rather than text-based, so this bridge wraps <see cref="VoicingDocument"/> as the input type.
-/// </para>
+///     <para>
+///         This adapter enables the OPTIC-K embedding system to be used with any MEAI-compatible
+///         infrastructure, including Semantic Kernel plugins and standard vector store abstractions.
+///     </para>
+///     <para>
+///         The musical embeddings are domain-specific (computed from pitch classes, intervals, morphology)
+///         rather than text-based, so this bridge wraps <see cref="ChordVoicingRagDocument" /> as the input type.
+///     </para>
 /// </remarks>
-public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument, Embedding<float>>
+public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<ChordVoicingRagDocument, Embedding<float>>
 {
     private readonly MusicalEmbeddingGenerator _generator;
-    private readonly EmbeddingGeneratorMetadata _metadata;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MusicalEmbeddingBridge"/> class.
+    ///     Initializes a new instance of the <see cref="MusicalEmbeddingBridge" /> class.
     /// </summary>
     /// <param name="generator">The underlying OPTIC-K embedding generator.</param>
     public MusicalEmbeddingBridge(MusicalEmbeddingGenerator generator)
     {
         _generator = generator ?? throw new ArgumentNullException(nameof(generator));
         // EmbeddingGeneratorMetadata(providerName, providerUri, modelId)
-        _metadata = new EmbeddingGeneratorMetadata(
+        Metadata = new(
             "GuitarAlchemist",
             null,
             $"OPTIC-K-v{EmbeddingSchema.Version}");
     }
 
     /// <summary>
-    /// Gets metadata describing the embedding generator.
+    ///     Gets metadata describing the embedding generator.
     /// </summary>
-    public EmbeddingGeneratorMetadata Metadata => _metadata;
+    public EmbeddingGeneratorMetadata Metadata { get; }
 
     /// <summary>
-    /// Gets the embedding dimension.
+    ///     Gets the embedding dimension.
     /// </summary>
     public int Dimension => _generator.Dimension;
 
     /// <summary>
-    /// Generates embeddings for the provided voicing documents.
+    ///     Generates embeddings for the provided voicing documents.
     /// </summary>
     public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
-        IEnumerable<VoicingDocument> values,
+        IEnumerable<ChordVoicingRagDocument> values,
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
@@ -67,17 +60,14 @@ public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument
             cancellationToken.ThrowIfCancellationRequested();
 
             // Generate domain-specific OPTIC-K embedding
-            var doubleVector = await _generator.GenerateEmbeddingAsync(doc);
+            var floatVector = await _generator.GenerateEmbeddingAsync(doc);
 
-            // Convert double[] to float[] for MEAI compatibility
-            var floatVector = Array.ConvertAll(doubleVector, v => (float)v);
-
-            embeddings.Add(new Embedding<float>(floatVector));
+            embeddings.Add(new(floatVector));
         }
 
-        return new GeneratedEmbeddings<Embedding<float>>(embeddings)
+        return new(embeddings)
         {
-            Usage = new UsageDetails
+            Usage = new()
             {
                 InputTokenCount = documents.Count,
                 TotalTokenCount = documents.Count
@@ -86,19 +76,7 @@ public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument
     }
 
     /// <summary>
-    /// Generates a single embedding for a voicing document.
-    /// </summary>
-    /// <remarks>Convenience method that wraps the batch API.</remarks>
-    public async Task<Embedding<float>> GenerateSingleAsync(
-        VoicingDocument document,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await GenerateAsync([document], cancellationToken: cancellationToken);
-        return result.First();
-    }
-
-    /// <summary>
-    /// Releases resources used by the bridge.
+    ///     Releases resources used by the bridge.
     /// </summary>
     public void Dispose()
     {
@@ -106,7 +84,7 @@ public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument
     }
 
     /// <summary>
-    /// Gets a service of the specified type from this embedding generator.
+    ///     Gets a service of the specified type from this embedding generator.
     /// </summary>
     public object? GetService(Type serviceType, object? key = null)
     {
@@ -114,10 +92,24 @@ public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument
         {
             return _generator;
         }
+
         if (serviceType == typeof(MusicalEmbeddingBridge))
         {
             return this;
         }
+
         return null;
+    }
+
+    /// <summary>
+    ///     Generates a single embedding for a voicing document.
+    /// </summary>
+    /// <remarks>Convenience method that wraps the batch API.</remarks>
+    public async Task<Embedding<float>> GenerateSingleAsync(
+        ChordVoicingRagDocument document,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await GenerateAsync([document], cancellationToken: cancellationToken);
+        return result.First();
     }
 }

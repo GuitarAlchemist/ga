@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.Text;
 using Core.Instruments.Primitives;
 using Core.Theory.Tonal;
@@ -36,15 +37,9 @@ public class KeyPositionCollection : IReadOnlyCollection<KeyPosition>
     /// </summary>
     public Key Key { get; }
 
-    public IEnumerator<KeyPosition> GetEnumerator()
-    {
-        return _keyPositions.GetEnumerator();
-    }
+    public IEnumerator<KeyPosition> GetEnumerator() => _keyPositions.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)_keyPositions).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_keyPositions).GetEnumerator();
 
     public int Count => _keyPositions.Count;
 

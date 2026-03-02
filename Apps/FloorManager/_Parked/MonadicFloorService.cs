@@ -252,37 +252,41 @@ public static class FloorServiceExtensions
     /// <summary>
     /// Convert Try&lt;FloorData&gt; to nullable FloorData (for backward compatibility)
     /// </summary>
-    public static FloorData? ToNullable(this Try<FloorData> tryFloor)
+    extension(Try<FloorData> tryFloor)
     {
-        return tryFloor.Match(
-            onSuccess: floor => floor,
-            onFailure: _ => null
-        );
+        public FloorData? ToNullable()
+        {
+            return tryFloor.Match(
+                onSuccess: floor => floor,
+                onFailure: _ => null
+            );
+        }
     }
 
     /// <summary>
     /// Convert Result&lt;FloorData, FloorError&gt; to nullable FloorData
     /// </summary>
-    public static FloorData? ToNullable(this Result<FloorData, FloorError> result)
+    extension(Result<FloorData, FloorError> result)
     {
-        return result.Match(
-            onSuccess: floor => floor,
-            onFailure: _ => null
-        );
-    }
+        public FloorData? ToNullable()
+        {
+            return result.Match(
+                onSuccess: floor => floor,
+                onFailure: _ => null
+            );
+        }
 
-    /// <summary>
-    /// Log floor errors
-    /// </summary>
-    public static Result<FloorData, FloorError> LogErrors(
-        this Result<FloorData, FloorError> result,
-        ILogger logger)
-    {
-        result.Match(
-            onSuccess: _ => { },
-            onFailure: error => logger.LogError("Floor error: {Error}", error)
-        );
-        return result;
+        /// <summary>
+        /// Log floor errors
+        /// </summary>
+        public Result<FloorData, FloorError> LogErrors(ILogger logger)
+        {
+            result.Match(
+                onSuccess: _ => { },
+                onFailure: error => logger.LogError("Floor error: {Error}", error)
+            );
+            return result;
+        }
     }
 }
 

@@ -17,9 +17,9 @@ module InstrumentsConfig =
         d :> System.Collections.Generic.IDictionary<string, obj>
 
     let private defaultData () =
-        let defaultTunings : System.Collections.Generic.IDictionary<string, obj> list =
+        let defaultTunings: System.Collections.Generic.IDictionary<string, obj> list =
             [ mkDict [ "Name", box "Standard"; "Tuning", box "E2,A2,D3,G3,B3,E4" ]
-              mkDict [ "Name", box "Drop D";   "Tuning", box "D2,A2,D3,G3,B3,E4" ] ]
+              mkDict [ "Name", box "Drop D"; "Tuning", box "D2,A2,D3,G3,B3,E4" ] ]
 
         let defaultInstruments =
             ResizeArray [ mkDict [ "Name", box "Guitar"; "Tunings", box defaultTunings ] ]
@@ -39,30 +39,42 @@ module InstrumentsConfig =
                   // Repo-root relative (when running tests from solution root)
                   Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", configName)
                   // Bin→repo relative hop for test runners
-                  Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Common", "GA.Business.Config", configName) ]
+                  Path.Combine(
+                      AppDomain.CurrentDomain.BaseDirectory,
+                      "..",
+                      "..",
+                      "..",
+                      "..",
+                      "Common",
+                      "GA.Business.Config",
+                      configName
+                  ) ]
 
             match possiblePaths |> List.tryFind File.Exists with
             | Some path ->
                 let deserializer =
-                    DeserializerBuilder()
-                        .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                        .Build()
+                    DeserializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build()
 
                 let yaml = File.ReadAllText(path)
                 let data = deserializer.Deserialize<InstrumentsYaml>(yaml)
                 // If deserialized data is null or empty, use defaults
-                if obj.ReferenceEquals(data, null) || obj.ReferenceEquals(data.Instruments, null) || data.Instruments.Count = 0 then
-                    instrumentsData <- Some (defaultData ())
+                if
+                    obj.ReferenceEquals(data, null)
+                    || obj.ReferenceEquals(data.Instruments, null)
+                    || data.Instruments.Count = 0
+                then
+                    instrumentsData <- Some(defaultData ())
                 else
                     instrumentsData <- Some data
+
                 true
             | None ->
                 // No external file found: supply a minimal built-in dataset so tests and core features can work
-                instrumentsData <- Some (defaultData ())
+                instrumentsData <- Some(defaultData ())
                 true
         with _ ->
             // On any error, fall back to defaults
-            instrumentsData <- Some (defaultData ())
+            instrumentsData <- Some(defaultData ())
             true
 
     let Instruments =
@@ -118,19 +130,22 @@ module InstrumentsConfig =
                                 |> Seq.choose (fun o ->
                                     match o with
                                     | :? System.Collections.Generic.IDictionary<string, obj> as tdict ->
-                                        let tryStr (k:string) =
+                                        let tryStr (k: string) =
                                             if tdict.ContainsKey(k) && not (isNull tdict[k]) then
                                                 match tdict[k] with
                                                 | :? string as s -> Some s
                                                 | _ -> None
-                                            else None
+                                            else
+                                                None
+
                                         match tryStr "Name", tryStr "Tuning" with
                                         | Some n, Some t -> Some { Name = n; Tuning = t }
                                         | _ -> None
                                     | _ -> None)
                                 |> Seq.toList
                             | _ -> []
-                        else []
+                        else
+                            []
 
                     match tryGetString "Name" with
                     | Some name ->

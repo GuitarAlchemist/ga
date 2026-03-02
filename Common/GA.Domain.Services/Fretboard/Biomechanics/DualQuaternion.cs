@@ -54,10 +54,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Create dual quaternion from rotation only
     /// </summary>
-    public static DualQuaternion FromRotation(Quaternion rotation)
-    {
-        return new(rotation, Quaternion.Zero);
-    }
+    public static DualQuaternion FromRotation(Quaternion rotation) => new(rotation, Quaternion.Zero);
 
     /// <summary>
     ///     Create dual quaternion from translation only
@@ -97,10 +94,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Extract rotation quaternion
     /// </summary>
-    public Quaternion GetRotation()
-    {
-        return Quaternion.Normalize(Real);
-    }
+    public Quaternion GetRotation() => Quaternion.Normalize(Real);
 
     /// <summary>
     ///     Extract translation vector
@@ -130,32 +124,25 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Conjugate of dual quaternion
     /// </summary>
-    public DualQuaternion Conjugate()
-    {
-        return new(
+    public DualQuaternion Conjugate() =>
+        new(
             Quaternion.Conjugate(Real),
             Quaternion.Conjugate(Dual)
         );
-    }
 
     /// <summary>
     ///     Dual conjugate (conjugate dual part only)
     /// </summary>
-    public DualQuaternion DualConjugate()
-    {
-        return new(Real, Quaternion.Negate(Dual));
-    }
+    public DualQuaternion DualConjugate() => new(Real, Quaternion.Negate(Dual));
 
     /// <summary>
     ///     Combined conjugate (both quaternion and dual)
     /// </summary>
-    public DualQuaternion CombinedConjugate()
-    {
-        return new(
+    public DualQuaternion CombinedConjugate() =>
+        new(
             Quaternion.Conjugate(Real),
             Quaternion.Negate(Quaternion.Conjugate(Dual))
         );
-    }
 
     /// <summary>
     ///     Normalize dual quaternion
@@ -191,10 +178,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Helper method to multiply quaternion by scalar
     /// </summary>
-    private static Quaternion MultiplyScalar(Quaternion q, float scalar)
-    {
-        return new(q.X * scalar, q.Y * scalar, q.Z * scalar, q.W * scalar);
-    }
+    private static Quaternion MultiplyScalar(Quaternion q, float scalar) => new(q.X * scalar, q.Y * scalar, q.Z * scalar, q.W * scalar);
 
     /// <summary>
     ///     Transform a point using this dual quaternion
@@ -212,10 +196,7 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Transform a vector (rotation only, no translation)
     /// </summary>
-    public Vector3 TransformVector(Vector3 vector)
-    {
-        return Vector3.Transform(vector, Real);
-    }
+    public Vector3 TransformVector(Vector3 vector) => Vector3.Transform(vector, Real);
 
     /// <summary>
     ///     Spherical linear interpolation (SLERP) between two dual quaternions
@@ -252,16 +233,14 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
     /// <summary>
     ///     Helper for quaternion SLERP (since System.Numerics.Quaternion.Slerp handles real part)
     /// </summary>
-    private static Quaternion QuaternionSlerp(Quaternion a, Quaternion b, float t)
-    {
+    private static Quaternion QuaternionSlerp(Quaternion a, Quaternion b, float t) =>
         // Linear interpolation for dual part (good enough for small angles)
-        return new(
+        new(
             a.X + t * (b.X - a.X),
             a.Y + t * (b.Y - a.Y),
             a.Z + t * (b.Z - a.Z),
             a.W + t * (b.W - a.W)
         );
-    }
 
     /// <summary>
     ///     Screw linear interpolation (ScLERP) - more accurate for dual quaternions
@@ -318,33 +297,15 @@ public readonly struct DualQuaternion : IEquatable<DualQuaternion>
         return FromRotationTranslation(rotation, translation);
     }
 
-    public bool Equals(DualQuaternion other)
-    {
-        return Real.Equals(other.Real) && Dual.Equals(other.Dual);
-    }
+    public bool Equals(DualQuaternion other) => Real.Equals(other.Real) && Dual.Equals(other.Dual);
 
-    public override bool Equals(object? obj)
-    {
-        return obj is DualQuaternion other && Equals(other);
-    }
+    public override bool Equals(object? obj) => obj is DualQuaternion other && Equals(other);
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Real, Dual);
-    }
+    public override int GetHashCode() => HashCode.Combine(Real, Dual);
 
-    public static bool operator ==(DualQuaternion left, DualQuaternion right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(DualQuaternion left, DualQuaternion right) => left.Equals(right);
 
-    public static bool operator !=(DualQuaternion left, DualQuaternion right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(DualQuaternion left, DualQuaternion right) => !left.Equals(right);
 
-    public override string ToString()
-    {
-        return $"DQ[Real: {Real}, Dual: {Dual}]";
-    }
+    public override string ToString() => $"DQ[Real: {Real}, Dual: {Dual}]";
 }

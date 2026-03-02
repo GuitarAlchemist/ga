@@ -1,10 +1,7 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
 using Core.Theory.Tonal;
-using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
+using ChordTemplate = ChordTemplate;
 
 /// <summary>
 ///     Advanced key probability analysis based on chord progressions, voice leading, and harmonic context
@@ -194,22 +191,19 @@ public static class KeyProbabilityAnalyzer
     ///     Gets common progression patterns
     /// </summary>
     private static IEnumerable<(IReadOnlyList<int> ScaleDegrees, double Strength, string Name)>
-        GetCommonProgressionPatterns()
-    {
-        return
-        [
-            (new[] { 1, 5, 6, 4 }.ToList().AsReadOnly(), 1.0, "I-V-vi-IV"),
-            (new[] { 6, 4, 1, 5 }.ToList().AsReadOnly(), 1.0, "vi-IV-I-V"),
-            (new[] { 2, 5, 1 }.ToList().AsReadOnly(), 0.9, "ii-V-I"),
-            (new[] { 1, 6, 4, 5 }.ToList().AsReadOnly(), 0.8, "I-vi-IV-V"),
-            (new[] { 1, 4, 5, 1 }.ToList().AsReadOnly(), 0.8, "I-IV-V-I"),
-            (new[] { 6, 2, 5, 1 }.ToList().AsReadOnly(), 0.7, "vi-ii-V-I"),
-            (new[] { 1, 3, 6, 4 }.ToList().AsReadOnly(), 0.6, "I-iii-vi-IV"),
-            (new[] { 4, 5, 1 }.ToList().AsReadOnly(), 0.7, "IV-V-I"),
-            (new[] { 5, 1 }.ToList().AsReadOnly(), 0.8, "V-I"),
-            (new[] { 4, 1 }.ToList().AsReadOnly(), 0.6, "IV-I")
-        ];
-    }
+        GetCommonProgressionPatterns() =>
+    [
+        (new[] { 1, 5, 6, 4 }.ToList().AsReadOnly(), 1.0, "I-V-vi-IV"),
+        (new[] { 6, 4, 1, 5 }.ToList().AsReadOnly(), 1.0, "vi-IV-I-V"),
+        (new[] { 2, 5, 1 }.ToList().AsReadOnly(), 0.9, "ii-V-I"),
+        (new[] { 1, 6, 4, 5 }.ToList().AsReadOnly(), 0.8, "I-vi-IV-V"),
+        (new[] { 1, 4, 5, 1 }.ToList().AsReadOnly(), 0.8, "I-IV-V-I"),
+        (new[] { 6, 2, 5, 1 }.ToList().AsReadOnly(), 0.7, "vi-ii-V-I"),
+        (new[] { 1, 3, 6, 4 }.ToList().AsReadOnly(), 0.6, "I-iii-vi-IV"),
+        (new[] { 4, 5, 1 }.ToList().AsReadOnly(), 0.7, "IV-V-I"),
+        (new[] { 5, 1 }.ToList().AsReadOnly(), 0.8, "V-I"),
+        (new[] { 4, 1 }.ToList().AsReadOnly(), 0.6, "IV-I")
+    ];
 
     /// <summary>
     ///     Finds matches for a progression pattern
@@ -339,26 +333,18 @@ public static class KeyProbabilityAnalyzer
     }
 
     // Helper methods (reuse from KeyAwareChordNamingService)
-    private static int GetScaleDegree(PitchClass pitchClass, Key key)
-    {
-        return KeyAwareChordNamingService.GetScaleDegree(pitchClass, key);
-    }
+    private static int GetScaleDegree(PitchClass pitchClass, Key key) =>
+        KeyAwareChordNamingService.GetScaleDegree(pitchClass, key);
 
     private static KeyAwareChordNamingService.ChordFunction DetermineChordFunction(int scaleDegree,
-        ChordTemplate template, Key key)
-    {
-        return KeyAwareChordNamingService.DetermineChordFunction(scaleDegree, template, key);
-    }
+        ChordTemplate template, Key key) =>
+        KeyAwareChordNamingService.DetermineChordFunction(scaleDegree, template, key);
 
-    private static IEnumerable<PitchClass> GetChordPitchClasses(ChordTemplate template, PitchClass root)
-    {
-        return KeyAwareChordNamingService.GetChordPitchClasses(template, root);
-    }
+    private static IEnumerable<PitchClass> GetChordPitchClasses(ChordTemplate template, PitchClass root) =>
+        KeyAwareChordNamingService.GetChordPitchClasses(template, root);
 
-    private static bool IsNaturallyOccurringInKey(ChordTemplate template, PitchClass root, Key key)
-    {
-        return KeyAwareChordNamingService.IsNaturallyOccurringInKey(template, root, key);
-    }
+    private static bool IsNaturallyOccurringInKey(ChordTemplate template, PitchClass root, Key key) =>
+        KeyAwareChordNamingService.IsNaturallyOccurringInKey(template, root, key);
 
     /// <summary>
     ///     Chord progression analysis result

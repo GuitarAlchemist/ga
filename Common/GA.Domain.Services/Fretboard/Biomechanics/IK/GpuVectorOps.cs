@@ -1,21 +1,20 @@
 namespace GA.Domain.Services.Fretboard.Biomechanics.IK;
 
-using System;
 using System.Numerics;
 using ILGPU;
 using ILGPU.Runtime;
+using ILGPU.Runtime.CPU;
 using ILGPU.Runtime.Cuda;
 using ILGPU.Runtime.OpenCL;
-using ILGPU.Runtime.CPU;
-
-
 
 internal static class GpuVectorOps
 {
     private static readonly object Sync = new();
     private static Context? _context;
     private static Accelerator? _accelerator;
-    private static Action<AcceleratorStream, Index1D, ArrayView<Float3>, ArrayView<Float3>, ArrayView<Float3>>? _subtractKernel;
+
+    private static Action<AcceleratorStream, Index1D, ArrayView<Float3>, ArrayView<Float3>, ArrayView<Float3>>?
+        _subtractKernel;
 
     static GpuVectorOps()
     {
@@ -33,6 +32,7 @@ internal static class GpuVectorOps
             {
                 output[i] = target[i] - actual[i];
             }
+
             return;
         }
 
@@ -45,7 +45,7 @@ internal static class GpuVectorOps
         bufferTarget.CopyFromCPU(target);
 
         var kernel = _subtractKernel!;
-        kernel(accelerator.DefaultStream, new Index1D(length), bufferActual.View, bufferTarget.View, bufferOutput.View);
+        kernel(accelerator.DefaultStream, new(length), bufferActual.View, bufferTarget.View, bufferOutput.View);
         accelerator.Synchronize();
 
         bufferOutput.CopyToCPU(output);
@@ -85,7 +85,9 @@ internal static class GpuVectorOps
                 accelerator ??= _context.CreateCPUAccelerator(0);
 
                 _accelerator = accelerator;
-                _subtractKernel = accelerator.LoadAutoGroupedKernel<Index1D, ArrayView<Float3>, ArrayView<Float3>, ArrayView<Float3>>(SubtractKernel);
+                _subtractKernel =
+                    accelerator.LoadAutoGroupedKernel<Index1D, ArrayView<Float3>, ArrayView<Float3>, ArrayView<Float3>>(
+                        SubtractKernel);
             }
             catch
             {
@@ -94,7 +96,8 @@ internal static class GpuVectorOps
         }
     }
 
-    private static void SubtractKernel(Index1D index, ArrayView<Float3> actual, ArrayView<Float3> target, ArrayView<Float3> output)
+    private static void SubtractKernel(Index1D index, ArrayView<Float3> actual, ArrayView<Float3> target,
+        ArrayView<Float3> output)
     {
         var diff = target[index] - actual[index];
         output[index] = diff;
@@ -112,23 +115,17 @@ internal static class GpuVectorOps
         }
     }
 
-    internal readonly struct Float3
+    internal readonly struct Float3(float x, float y, float z)
     {
-        public readonly float X;
-        public readonly float Y;
-        public readonly float Z;
-
-        public Float3(float x, float y, float z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
+        public readonly float X = x;
+        public readonly float Y = y;
+        public readonly float Z = z;
 
         public static Float3 FromVector(Vector3 vector) => new(vector.X, vector.Y, vector.Z);
 
         public Vector3 ToVector3() => new(X, Y, Z);
 
-        public static Float3 operator -(Float3 left, Float3 right) => new(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
+        public static Float3 operator -(Float3 left, Float3 right) =>
+            new(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
     }
 }

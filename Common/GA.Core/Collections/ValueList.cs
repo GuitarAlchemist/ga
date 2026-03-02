@@ -13,10 +13,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     ///     Initializes a new instance of the ValueList class
     /// </summary>
     /// <param name="values">The values to include in the list</param>
-    public ValueList(IEnumerable<T> values)
-    {
-        _values = [.. values];
-    }
+    public ValueList(IEnumerable<T> values) => _values = [.. values];
 
     /// <summary>
     ///     Gets the number of elements in the list
@@ -34,19 +31,13 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     ///     Returns an enumerator that iterates through the list
     /// </summary>
     /// <returns>An enumerator for the list</returns>
-    public IEnumerator<T> GetEnumerator()
-    {
-        return (_values ?? ImmutableList<T>.Empty).GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => (_values ?? []).GetEnumerator();
 
     /// <summary>
     ///     Returns an enumerator that iterates through the list
     /// </summary>
     /// <returns>An enumerator for the list</returns>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     ///     Determines whether the specified object is equal to the current object
@@ -73,10 +64,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     /// </summary>
     /// <param name="obj">The object to compare with the current object</param>
     /// <returns>true if the specified object is equal to the current object; otherwise, false</returns>
-    public override bool Equals(object? obj)
-    {
-        return obj is ValueList<T> other && Equals(other);
-    }
+    public override bool Equals(object? obj) => obj is ValueList<T> other && Equals(other);
 
     /// <summary>
     ///     Serves as the default hash function
@@ -104,10 +92,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     /// <param name="left">The first ValueList to compare</param>
     /// <param name="right">The second ValueList to compare</param>
     /// <returns>true if the ValueLists are equal; otherwise, false</returns>
-    public static bool operator ==(ValueList<T> left, ValueList<T> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(ValueList<T> left, ValueList<T> right) => left.Equals(right);
 
     /// <summary>
     ///     Determines whether two ValueList instances are not equal
@@ -115,10 +100,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     /// <param name="left">The first ValueList to compare</param>
     /// <param name="right">The second ValueList to compare</param>
     /// <returns>true if the ValueLists are not equal; otherwise, false</returns>
-    public static bool operator !=(ValueList<T> left, ValueList<T> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(ValueList<T> left, ValueList<T> right) => !left.Equals(right);
 
     /// <summary>
     ///     Returns a string representation of the ValueList

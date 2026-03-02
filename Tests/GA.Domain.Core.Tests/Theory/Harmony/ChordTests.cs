@@ -1,6 +1,10 @@
-namespace GA.Domain.Core.Tests.Theory.Harmony;
+﻿namespace GA.Domain.Core.Tests.Theory.Harmony;
 
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Harmony;
 using NUnit.Framework;
 
@@ -11,7 +15,7 @@ public class ChordTests
     public void Constructor_WithRootAndFormula_ShouldCreateCorrectChord()
     {
         // Arrange
-        var root = new Note.Accidented(PitchClass.C, 4, Accidental.Natural);
+        var root = new Note.Accidented(NaturalNote.C, Accidental.Natural);
         var formula = ChordFormula.Major;
 
         // Act
@@ -35,9 +39,9 @@ public class ChordTests
         // Arrange
         var notes = new AccidentedNoteCollection(
         [
-            new Note.Accidented(PitchClass.C, 4, Accidental.Natural),
-            new Note.Accidented(PitchClass.EFlat, 4, Accidental.Flat),
-            new Note.Accidented(PitchClass.G, 4, Accidental.Natural)
+            new Note.Accidented(NaturalNote.C, Accidental.Natural),
+            new Note.Accidented(NaturalNote.E, Accidental.Flat),
+            new Note.Accidented(NaturalNote.G, Accidental.Natural)
         ]);
 
         // Act
@@ -81,7 +85,7 @@ public class ChordTests
     public void Inversions_ShouldWorkCorrectly()
     {
         // Arrange
-        var root = new Note.Accidented(PitchClass.C, 4, Accidental.Natural);
+        var root = new Note.Accidented(NaturalNote.C, Accidental.Natural);
         var chord = new Chord(root, ChordFormula.Major); // C E G
 
         // Act
@@ -103,8 +107,8 @@ public class ChordTests
     public void Equals_ShouldReturnTrueForSameChord()
     {
         // Arrange
-        var chord1 = new Chord(new Note.Accidented(PitchClass.C, 4, Accidental.Natural), ChordFormula.Major);
-        var chord2 = new Chord(new Note.Accidented(PitchClass.C, 4, Accidental.Natural), ChordFormula.Major);
+        var chord1 = new Chord(new Note.Accidented(NaturalNote.C, Accidental.Natural), ChordFormula.Major);
+        var chord2 = new Chord(new Note.Accidented(NaturalNote.C, Accidental.Natural), ChordFormula.Major);
 
         // Assert
         Assert.That(chord1, Is.EqualTo(chord2));

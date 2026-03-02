@@ -94,14 +94,17 @@ public sealed class ChatbotHub(
             var cancellationToken = Context.ConnectionAborted;
             var results = await _semanticKnowledge.SearchAsync(query, limit, cancellationToken);
 
-            return [.. results.Select((r, i) => new SemanticSearchResult
-            {
-                Id = $"voicing-{i}",
-                Content = r.Content,
-                Category = "Voicings",
-                Score = r.Score,
-                Reason = "Semantic match"
-            })];
+            return
+            [
+                .. results.Select((r, i) => new SemanticSearchResult
+                {
+                    Id = $"voicing-{i}",
+                    Content = r.Content,
+                    Category = "Voicings",
+                    Score = r.Score,
+                    Reason = "Semantic match"
+                })
+            ];
         }
         catch (OperationCanceledException)
         {
@@ -128,16 +131,4 @@ public sealed class ChatbotHub(
         _conversations.TryRemove(connectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
-}
-
-/// <summary>
-///     Semantic search result payload for hub consumers.
-/// </summary>
-public sealed class SemanticSearchResult
-{
-    public string Id { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
-    public double Score { get; set; }
-    public string Reason { get; set; } = string.Empty;
 }

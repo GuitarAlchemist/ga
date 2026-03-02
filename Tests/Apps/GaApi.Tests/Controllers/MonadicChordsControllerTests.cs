@@ -10,13 +10,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 /// </summary>
 [TestFixture]
 [Category("Integration")]
-[Ignore("MonadicChordsController not yet implemented")]
 public class MonadicChordsControllerTests
 {
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new();
         _client = _factory.CreateClient();
     }
 

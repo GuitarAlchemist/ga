@@ -14,25 +14,14 @@ public abstract class LazyPrintableCollectionBase<T>(IReadOnlyCollection<T> item
     protected readonly IReadOnlyCollection<T> Items = items ?? throw new ArgumentNullException(nameof(items));
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return _lazyPrintableCollection.Value.Count != 0
-            ? _lazyPrintableCollection.Value.ToString()
-            : "(Empty)";
-    }
+    public override string ToString() => _lazyPrintableCollection.Value.Count != 0
+        ? _lazyPrintableCollection.Value.ToString()
+        : "(Empty)";
 
     #region IReadOnlyCollection Members
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return Items.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return Items.GetEnumerator();
-    }
-
+    public IEnumerator<T> GetEnumerator() => Items.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
     public int Count => Items.Count;
 
     #endregion

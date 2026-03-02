@@ -3,8 +3,8 @@ namespace GA.Domain.Core.Theory.Tonal.Hierarchies;
 using Atonal;
 
 /// <summary>
-/// Calculates the Hierarchical Complexity Level of a pitch class set.
-/// Complexity is a measure of structural depth (Triad -> Tetrad -> Extension -> Altered).
+///     Calculates the Hierarchical Complexity Level of a pitch class set.
+///     Complexity is a measure of structural depth (Triad -> Tetrad -> Extension -> Altered).
 /// </summary>
 public static class ComplexityCalculator
 {
@@ -20,17 +20,23 @@ public static class ComplexityCalculator
     }
 
     /// <summary>
-    /// Determines the semantic complexity level of a pitch class set.
+    ///     Determines the semantic complexity level of a pitch class set.
     /// </summary>
     public static ComplexityLevel CalculateLevel(PitchClassSet pcs)
     {
-        int count = pcs.Count;
+        var count = pcs.Count;
 
         // Level 0: Single Note
-        if (count <= 1) return ComplexityLevel.Note;
+        if (count <= 1)
+        {
+            return ComplexityLevel.Note;
+        }
 
         // Level 1: Interval (Dyad)
-        if (count == 2) return ComplexityLevel.Interval;
+        if (count == 2)
+        {
+            return ComplexityLevel.Interval;
+        }
 
         // Level 2: Triad (3 notes)
         // Check if it's a standard triad (Major/Minor/Dim/Aug)
@@ -57,7 +63,7 @@ public static class ComplexityCalculator
         // But purely structurally, it's a subset.
         // Here we measure *realized* complexity (count).
         // To measure *implied* complexity, we'd need context.
-        if (count >= 5 && count <= 6)
+        if (count is >= 5 and <= 6)
         {
             return ComplexityLevel.Extended;
         }
@@ -73,7 +79,7 @@ public static class ComplexityCalculator
     }
 
     /// <summary>
-    /// Calculates a normalized complexity score [0.0, 1.0].
+    ///     Calculates a normalized complexity score [0.0, 1.0].
     /// </summary>
     public static double CalculateScore(PitchClassSet pcs)
     {

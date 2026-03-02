@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests.Tonal;
+namespace GA.Business.Core.Tests.Tonal;
 
 using GA.Domain.Core.Theory.Tonal;
 

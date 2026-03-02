@@ -1,10 +1,13 @@
-namespace GaCLI.Commands;
+﻿namespace GaCLI.Commands;
 
 using GA.Domain.Core.Instruments;
 
 using GA.Business.Intelligence.SemanticIndexing;
 using GA.Domain.Core.Instruments.Fretboard;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.CommandLine;

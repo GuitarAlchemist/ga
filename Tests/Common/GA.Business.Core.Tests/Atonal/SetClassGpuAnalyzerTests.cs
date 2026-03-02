@@ -1,9 +1,9 @@
-﻿using GA.Domain.Core.Extensions;
-﻿namespace GA.Domain.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
-using Analysis.Gpu;
-using Primitives;
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Analysis.Gpu;
+using Domain.Core.Primitives.Notes;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Extensions;
 using ILGPU.Runtime;
 
 [TestFixture]
@@ -58,8 +58,8 @@ public class SetClassGpuAnalyzerTests
     public void Provider_CachesCpuAnalyzerInstances()
     {
         // Act
-        var analyzer1 = SetClassGpuAnalyzerProvider.GetAnalyzer(preferGpu: false);
-        var analyzer2 = SetClassGpuAnalyzerProvider.GetAnalyzer(preferGpu: false);
+        var analyzer1 = SetClassGpuAnalyzerProvider.GetAnalyzer(false);
+        var analyzer2 = SetClassGpuAnalyzerProvider.GetAnalyzer(false);
 
         // Assert
         Assert.That(ReferenceEquals(analyzer1, analyzer2), Is.True);

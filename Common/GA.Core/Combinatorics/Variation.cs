@@ -6,38 +6,29 @@
 /// <typeparam name="T">The element type.</typeparam>
 /// <seealso cref="VariationsWithRepetitions{T}" />
 /// <inheritdoc cref="IReadOnlyList{T>" />
-public readonly struct Variation<T>(
-    BigInteger index,
-    IReadOnlyList<T> items,
-    VariationFormat? variationFormat = null) : IReadOnlyList<T>
+public readonly record struct Variation<T>(
+    BigInteger Index,
+    IReadOnlyList<T> Items,
+    VariationFormat? VariationFormat = null) : IReadOnlyList<T>
 {
     #region IReadOnlyList<T> members
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return items.GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => Items.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)items).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Items).GetEnumerator();
 
-    public int Count => items.Count;
-    public T this[int aIndex] => items[aIndex];
+    public int Count => Items.Count;
+    public T this[int aIndex] => Items[aIndex];
 
     #endregion
 
     /// <summary>
     ///     The current variation <see cref="BigInteger" /> index (Lexicographical order)
     /// </summary>
-    public BigInteger Index { get; } = index;
+    public BigInteger Index { get; } = Index;
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return Print(this, variationFormat);
-    }
+    public override string ToString() => Print(this, VariationFormat);
 
     private static string Print(
         Variation<T> variation,

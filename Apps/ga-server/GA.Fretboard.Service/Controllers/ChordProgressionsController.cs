@@ -2,7 +2,7 @@ namespace GA.Fretboard.Service.Controllers;
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 using Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -407,11 +407,14 @@ public class ChordProgressionsController(
                 stabilityScore,
                 dynamicsData?.IsStable ?? true,
                 suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? new List<string>(),
-                new List<AttractorInfoDto> { new AttractorInfoDto(
-                    ShapeId: "default-attractor",
-                    BasinSize: 1,
-                    Strength: 0.8
-                ) }
+                new List<AttractorInfoDto>
+                {
+                    new(
+                        "default-attractor",
+                        1,
+                        0.8
+                    )
+                }
             );
 
             logger.LogInformation(
@@ -536,11 +539,14 @@ public class ChordProgressionsController(
                 stabilityScore,
                 dynamicsData2?.IsStable ?? true,
                 suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? new List<string>(),
-                new List<AttractorInfoDto> { new AttractorInfoDto(
-                    ShapeId: "default-attractor-2",
-                    BasinSize: 1,
-                    Strength: 0.8
-                ) }
+                new List<AttractorInfoDto>
+                {
+                    new(
+                        "default-attractor-2",
+                        1,
+                        0.8
+                    )
+                }
             );
 
             // Send final result
@@ -556,12 +562,10 @@ public class ChordProgressionsController(
         }
     }
 
-    private static double CalculateStabilityScore(object dynamics)
-    {
+    private static double CalculateStabilityScore(object dynamics) =>
         // Stability score based on mock calculation since dynamics is object
         // Return a reasonable stability score
-        return Random.Shared.NextDouble() * 0.5 + 0.5; // Between 0.5 and 1.0
-    }
+        Random.Shared.NextDouble() * 0.5 + 0.5; // Between 0.5 and 1.0
 }
 
 // Advanced Analysis DTOs for Chord Progressions

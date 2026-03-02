@@ -1,40 +1,30 @@
 namespace GA.Business.ML.Tests.Integration;
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using GA.Business.ML.Rag;
+using Data.MongoDB.Models.Rag;
+using Data.MongoDB.Services.DocumentServices.Rag;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using NUnit.Framework;
-using GA.Data.MongoDB.Services.DocumentServices.Rag;
-using GA.Data.MongoDB.Models.Rag;
+using Rag;
 
 [TestFixture]
 public class PartitionedRagServiceTests
 {
-    private PartitionedRagService _service;
-    private Mock<MusicTheoryRagService> _theoryMock;
-    private Mock<GuitarTechniqueRagService> _techMock;
-    private Mock<StyleLearningRagService> _styleMock;
-    private Mock<YouTubeTranscriptRagService> _youtubeMock;
-    private Mock<EnhancedChordRagService> _chordMock;
-
     [SetUp]
     public void Setup()
     {
         // Use Moq to create mocks of the services
-        _theoryMock = new Mock<MusicTheoryRagService>(
+        _theoryMock = new(
             NullLogger<MusicTheoryRagService>.Instance, null!, null!);
-        _techMock = new Mock<GuitarTechniqueRagService>(
+        _techMock = new(
             NullLogger<GuitarTechniqueRagService>.Instance, null!, null!);
-        _styleMock = new Mock<StyleLearningRagService>(
+        _styleMock = new(
             NullLogger<StyleLearningRagService>.Instance, null!, null!);
-        _youtubeMock = new Mock<YouTubeTranscriptRagService>(
+        _youtubeMock = new(
             NullLogger<YouTubeTranscriptRagService>.Instance, null!, null!);
-        _chordMock = new Mock<EnhancedChordRagService>(
+        _chordMock = new(
             NullLogger<EnhancedChordRagService>.Instance, null!, null!);
 
-        _service = new PartitionedRagService(
+        _service = new(
             NullLogger<PartitionedRagService>.Instance,
             _theoryMock.Object,
             _techMock.Object,
@@ -42,6 +32,13 @@ public class PartitionedRagServiceTests
             _youtubeMock.Object,
             _chordMock.Object);
     }
+
+    private PartitionedRagService _service;
+    private Mock<MusicTheoryRagService> _theoryMock;
+    private Mock<GuitarTechniqueRagService> _techMock;
+    private Mock<StyleLearningRagService> _styleMock;
+    private Mock<YouTubeTranscriptRagService> _youtubeMock;
+    private Mock<EnhancedChordRagService> _chordMock;
 
     [Test]
     public void ParseStructuredQuery_ExtractsChordsAndScales()
@@ -69,9 +66,9 @@ public class PartitionedRagServiceTests
     {
         // Mock a simple return
         _theoryMock.Setup(m => m.SearchWithScoresAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>()))
-            .ReturnsAsync(new List<(MusicTheoryRagDocument Document, float Score)>());
+            .ReturnsAsync([]);
 
-        var result = await _service.QueryAsync("Test", new[] { KnowledgeType.Theory }, 5);
+        var result = await _service.QueryAsync("Test", [KnowledgeType.Theory], 5);
 
         Assert.That(result, Is.Not.Null);
         _theoryMock.Verify(m => m.SearchWithScoresAsync("Test", 5, 0.0), Times.Once);
@@ -83,22 +80,22 @@ public class PartitionedRagServiceTests
         var evalService = new RagEvaluationService(_service, NullLogger<RagEvaluationService>.Instance);
         var testCases = new[]
         {
-            new RagTestCase("Cmaj7 playability", new[] { KnowledgeType.Technique }, new[] { "finger", "position" }),
-            new RagTestCase("Atonal set theory", new[] { KnowledgeType.Theory }, new[] { "pitch", "set" })
+            new RagTestCase("Cmaj7 playability", [KnowledgeType.Technique], new[] { "finger", "position" }),
+            new RagTestCase("Atonal set theory", [KnowledgeType.Theory], new[] { "pitch", "set" })
         };
 
         // Mock responses for both cases
         _techMock.Setup(m => m.SearchWithScoresAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>()))
-            .ReturnsAsync(new List<(GuitarTechniqueRagDocument Document, float Score)> 
-            { 
-                (new GuitarTechniqueRagDocument { Content = "Use fingers 1, 2, 3" }, 0.9f) 
-            });
-        
+            .ReturnsAsync(
+            [
+                (new() { Content = "Use fingers 1, 2, 3" }, 0.9f)
+            ]);
+
         _theoryMock.Setup(m => m.SearchWithScoresAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>()))
-            .ReturnsAsync(new List<(MusicTheoryRagDocument Document, float Score)> 
-            { 
-                (new MusicTheoryRagDocument { Content = "Pitch class set analysis" }, 0.85f) 
-            });
+            .ReturnsAsync(
+            [
+                (new() { Content = "Pitch class set analysis" }, 0.85f)
+            ]);
 
         var result = await evalService.RunBenchmarkAsync("Unit Test Benchmark", testCases);
 

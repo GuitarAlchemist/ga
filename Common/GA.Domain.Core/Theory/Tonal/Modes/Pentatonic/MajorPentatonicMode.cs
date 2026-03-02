@@ -1,11 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -21,9 +16,13 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
     IStaticEnumerable<MajorPentatonicMode>
 {
     private static readonly Lazy<ScaleModeCollection<MajorPentatonicScaleDegree, MajorPentatonicMode>>
-        _lazyModeByDegree = new(() => new([.. Items]));
+        _lazyModeByDegree =
+            new(() => new([.. Items]));
 
-    public static IReadOnlyCollection<MajorPentatonicMode> All => [.. MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree))];
+    public static IReadOnlyCollection<MajorPentatonicMode> All =>
+    [
+        .. MajorPentatonicScaleDegree.Items.Select(degree => new MajorPentatonicMode(degree))
+    ];
 
     public override string Name => ParentScaleDegree.Value switch
     {
@@ -46,20 +45,9 @@ public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : Ton
         }
     }
 
-    public override string ToString()
-    {
-        return $"{Name} - {Formula}";
-    }
+    public override string ToString() => $"{Name} - {Formula}";
 
-    public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MajorPentatonicMode Get(MajorPentatonicScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static MajorPentatonicMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MajorPentatonicMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

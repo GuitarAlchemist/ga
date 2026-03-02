@@ -20,10 +20,7 @@ public static class SlashChordNamingService
     /// <summary>
     ///     Determines if a slash chord (chord over bass) is valid. Minimal check: bass differs from root.
     /// </summary>
-    public static bool IsValidSlashChord(ChordTemplate template, PitchClass root, PitchClass bass)
-    {
-        return root.Value != bass.Value;
-    }
+    public static bool IsValidSlashChord(ChordTemplate template, PitchClass root, PitchClass bass) => root.Value != bass.Value;
 
     /// <summary>
     ///     Analyzes a slash chord and returns basic information including type and notation.
@@ -47,9 +44,8 @@ public static class SlashChordNamingService
         yield return $"{ToNoteName(root)}/{ToNoteName(bass)}";
     }
 
-    private static string ToNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string ToNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C",
             1 => "C#",
@@ -65,7 +61,6 @@ public static class SlashChordNamingService
             11 => "B",
             _ => "?"
         };
-    }
 
     public record SlashChordAnalysis(SlashChordType Type, string SlashNotation, bool IsCommonInversion);
 }

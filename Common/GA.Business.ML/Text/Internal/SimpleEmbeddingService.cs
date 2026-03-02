@@ -1,9 +1,5 @@
 namespace GA.Business.ML.Text.Internal;
 
-using Abstractions;
-
-using Microsoft.Extensions.Logging;
-
 public class SimpleEmbeddingService(ILogger<SimpleEmbeddingService> logger) : ITextEmbeddingService
 {
     public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)

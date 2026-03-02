@@ -1,6 +1,6 @@
-namespace GA.Domain.Core.Tests.Configuration;
+namespace GA.Business.Core.Tests.Configuration;
 
-using Domain.Services;
+using GA.Domain.Services;
 
 [TestFixture]
 public class MusicalKnowledgeServiceTests

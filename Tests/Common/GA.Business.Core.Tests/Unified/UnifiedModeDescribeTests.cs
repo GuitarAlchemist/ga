@@ -1,20 +1,21 @@
-namespace GA.Domain.Core.Tests.Unified;
+namespace GA.Business.Core.Tests.Unified;
 
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 using Domain.Services.Unified;
 
 /// <summary>
-/// Tests for the Describe method of UnifiedModeService.
+///     Tests for the Describe method of UnifiedModeService.
 /// </summary>
 /// <remarks>
-/// Note: Forte indices use the programmatic catalog (Rahn ordering) which is mathematically
-/// consistent but may differ from Allen Forte's historical numbering for some sets.
+///     Note: Forte indices use the programmatic catalog (Rahn ordering) which is mathematically
+///     consistent but may differ from Allen Forte's historical numbering for some sets.
 /// </remarks>
 [TestFixture]
 public class UnifiedModeDescribeTests
 {
     private static PitchClassSet Pcs(params int[] pcs)
         => new([.. pcs.Select(PitchClass.FromValue)]);
+
     [Test]
     public void Describe_Includes_PrimeForm_And_Forte_For_Trichord_Example()
     {
@@ -29,6 +30,7 @@ public class UnifiedModeDescribeTests
         Assert.That(desc.ForteNumber, Does.Match(@"^\d+-\d+$"));
         Assert.That(desc.ForteNumber, Does.StartWith("3-")); // Cardinality 3
     }
+
     [Test]
     public void Describe_Includes_PrimeForm_And_Forte_For_Tetrachord_Example()
     {
@@ -42,6 +44,7 @@ public class UnifiedModeDescribeTests
         Assert.That(desc.ForteNumber, Does.Match(@"^\d+-\d+$"));
         Assert.That(desc.ForteNumber, Does.StartWith("4-")); // Cardinality 4
     }
+
     [Test]
     public void RoundTrip_FromPitchClassSet_Matches_ClassIdentity_For_Ionian_Set()
     {
@@ -60,6 +63,7 @@ public class UnifiedModeDescribeTests
         Assert.That(rotations.Count, Is.GreaterThanOrEqualTo(1));
         Assert.That(rotations.Any(r => r.RotationSet.Id.Equals(set.Id)), Is.True);
     }
+
     [Test]
     public void Describe_WholeTone_HasValidForteNumber()
     {

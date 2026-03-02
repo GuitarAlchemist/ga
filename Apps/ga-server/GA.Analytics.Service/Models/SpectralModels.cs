@@ -1,23 +1,23 @@
 namespace GA.Analytics.Service.Models;
 
 /// <summary>
-/// Agent spectral metrics
+///     Agent spectral metrics
 /// </summary>
 public class AgentSpectralMetrics
 {
     public string Id { get; set; } = string.Empty;
     public string AgentId { get; set; } = string.Empty;
-    public Dictionary<string, double> SpectralData { get; set; } = new();
+    public Dictionary<string, double> SpectralData { get; set; } = [];
     public double DominantFrequency { get; set; }
     public double SpectralCentroid { get; set; }
     public double SpectralBandwidth { get; set; }
     public double SpectralRolloff { get; set; }
-    public List<SpectralPeak> Peaks { get; set; } = new();
+    public List<SpectralPeak> Peaks { get; set; } = [];
     public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
-/// Spectral peak information
+///     Spectral peak information
 /// </summary>
 public class SpectralPeak
 {
@@ -28,17 +28,17 @@ public class SpectralPeak
 }
 
 /// <summary>
-/// Validation warning
+///     Validation warning
 /// </summary>
 public class ValidationWarning
 {
     public string Code { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
-    public Dictionary<string, object> Context { get; set; } = new();
+    public Dictionary<string, object> Context { get; set; } = [];
 }
 
 /// <summary>
-/// Violation trend data
+///     Violation trend data
 /// </summary>
 public class ViolationTrend
 {
@@ -46,5 +46,3 @@ public class ViolationTrend
     public long ViolationCount { get; set; }
     public string ViolationType { get; set; } = string.Empty;
 }
-
-

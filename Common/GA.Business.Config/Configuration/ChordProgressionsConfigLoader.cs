@@ -1,9 +1,5 @@
 namespace GA.Domain.Services;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -104,9 +100,12 @@ public static class ChordProgressionsConfigLoader
                     .IgnoreUnmatchedProperties()
                     .Build();
 
-                var cfg = deserializer.Deserialize<ChordProgressionsConfiguration>(yaml) ?? new ChordProgressionsConfiguration();
+                var cfg = deserializer.Deserialize<ChordProgressionsConfiguration>(yaml) ??
+                          new ChordProgressionsConfiguration();
                 if (cfg.ChordProgressions is { Count: > 0 })
+                {
                     return cfg;
+                }
             }
 
             // Fallback: minimal valid dataset
@@ -171,46 +170,32 @@ public static class ChordProgressionsConfigLoader
 /// </summary>
 public static class ChordProgressionsService
 {
-    public static IEnumerable<ChordProgressionDefinition> GetAllProgressions()
-    {
-        return ChordProgressionsConfigLoader.GetConfiguration().ChordProgressions;
-    }
+    public static IEnumerable<ChordProgressionDefinition> GetAllProgressions() =>
+        ChordProgressionsConfigLoader.GetConfiguration().ChordProgressions;
 
-    public static ChordProgressionDefinition? FindProgressionByName(string name)
-    {
-        return GetAllProgressions().FirstOrDefault(p =>
+    public static ChordProgressionDefinition? FindProgressionByName(string name) =>
+        GetAllProgressions().FirstOrDefault(p =>
             string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByCategory(string category)
-    {
-        return GetAllProgressions().Where(p =>
+    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByCategory(string category) =>
+        GetAllProgressions().Where(p =>
             string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByDifficulty(string difficulty)
-    {
-        return GetAllProgressions().Where(p =>
+    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByDifficulty(string difficulty) =>
+        GetAllProgressions().Where(p =>
             string.Equals(p.Difficulty, difficulty, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByKey(string key)
-    {
-        return GetAllProgressions().Where(p =>
+    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByKey(string key) =>
+        GetAllProgressions().Where(p =>
             string.Equals(p.InKey, key, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByArtist(string artist)
-    {
-        return GetAllProgressions().Where(p =>
+    public static IEnumerable<ChordProgressionDefinition> FindProgressionsByArtist(string artist) =>
+        GetAllProgressions().Where(p =>
             p.UsedBy.Any(a => a.Contains(artist, StringComparison.OrdinalIgnoreCase)));
-    }
 
-    public static IEnumerable<ChordProgressionDefinition> FindProgressionsBySong(string song)
-    {
-        return GetAllProgressions().Where(p =>
+    public static IEnumerable<ChordProgressionDefinition> FindProgressionsBySong(string song) =>
+        GetAllProgressions().Where(p =>
             p.Examples.Any(e => e.Song.Contains(song, StringComparison.OrdinalIgnoreCase)));
-    }
 
     public static IEnumerable<ChordProgressionDefinition> FindProgressionsByRomanNumerals(
         IEnumerable<string> romanNumerals)
@@ -220,41 +205,33 @@ public static class ChordProgressionsService
             p.RomanNumerals.SequenceEqual(targetSequence, StringComparer.OrdinalIgnoreCase));
     }
 
-    public static IEnumerable<string> GetAllCategories()
-    {
-        return GetAllProgressions()
+    public static IEnumerable<string> GetAllCategories() =>
+        GetAllProgressions()
             .Select(p => p.Category)
             .Where(c => !string.IsNullOrEmpty(c))
             .Distinct()
             .OrderBy(c => c);
-    }
 
-    public static IEnumerable<string> GetAllDifficulties()
-    {
-        return GetAllProgressions()
+    public static IEnumerable<string> GetAllDifficulties() =>
+        GetAllProgressions()
             .Select(p => p.Difficulty)
             .Where(d => !string.IsNullOrEmpty(d))
             .Distinct()
             .OrderBy(d => d);
-    }
 
-    public static IEnumerable<string> GetAllKeys()
-    {
-        return GetAllProgressions()
+    public static IEnumerable<string> GetAllKeys() =>
+        GetAllProgressions()
             .Select(p => p.InKey)
             .Where(k => !string.IsNullOrEmpty(k))
             .Distinct()
             .OrderBy(k => k);
-    }
 
-    public static IEnumerable<string> GetAllArtists()
-    {
-        return GetAllProgressions()
+    public static IEnumerable<string> GetAllArtists() =>
+        GetAllProgressions()
             .SelectMany(p => p.UsedBy)
             .Where(a => !string.IsNullOrEmpty(a))
             .Distinct()
             .OrderBy(a => a);
-    }
 
     public static (bool IsValid, List<string> Errors) ValidateConfiguration()
     {

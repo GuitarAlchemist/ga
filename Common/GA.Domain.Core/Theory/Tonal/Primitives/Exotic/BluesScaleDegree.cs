@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Exotic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A blues scale degree
@@ -23,10 +17,7 @@ public readonly record struct BluesScaleDegree : IRangeValueObject<BluesScaleDeg
     private readonly int _value;
 
     // Constructor
-    public BluesScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public BluesScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<BluesScaleDegree> All => ValueObjectUtils<BluesScaleDegree>.Items;
     public static IReadOnlyCollection<BluesScaleDegree> Items => ValueObjectUtils<BluesScaleDegree>.Items;
@@ -41,24 +32,15 @@ public readonly record struct BluesScaleDegree : IRangeValueObject<BluesScaleDeg
     public static BluesScaleDegree BluesAeolian => new(6);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static BluesScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static BluesScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static BluesScaleDegree Min => FromValue(_minValue);
     public static BluesScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator BluesScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator BluesScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(BluesScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(BluesScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -66,75 +48,45 @@ public readonly record struct BluesScaleDegree : IRangeValueObject<BluesScaleDeg
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Blues",
-            2 => "Minor blues",
-            3 => "Blues Phrygian",
-            4 => "Blues Dorian",
-            5 => "Blues Mixolydian",
-            6 => "Blues Aeolian",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Blues",
+        2 => "Minor blues",
+        3 => "Blues Phrygian",
+        4 => "Blues Dorian",
+        5 => "Blues Mixolydian",
+        6 => "Blues Aeolian",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Blues",
-            2 => "mBlues",
-            3 => "BPhr",
-            4 => "BDor",
-            5 => "BMix",
-            6 => "BAeo",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Blues",
+        2 => "mBlues",
+        3 => "BPhr",
+        4 => "BDor",
+        5 => "BMix",
+        6 => "BAeo",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<BluesScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) => IRangeValueObject<BluesScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<BluesScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<BluesScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(BluesScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(BluesScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(BluesScaleDegree left, BluesScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(BluesScaleDegree left, BluesScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(BluesScaleDegree left, BluesScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(BluesScaleDegree left, BluesScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(BluesScaleDegree left, BluesScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(BluesScaleDegree left, BluesScaleDegree right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(BluesScaleDegree left, BluesScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(BluesScaleDegree left, BluesScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

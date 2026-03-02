@@ -1,4 +1,4 @@
-namespace GaCLI.Commands;
+﻿namespace GaCLI.Commands;
 
 using GA.Domain.Core.Instruments;
 
@@ -14,6 +14,9 @@ using Spectre.Console;
 using System.Diagnostics;
 using GA.Domain.Services.Fretboard.Voicings.Search;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Business.ML.Embeddings;
 using System.Threading.Channels;

@@ -1,15 +1,14 @@
 namespace GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 
-using System.Linq;
 using Primitives;
 
 /// <summary>
-/// Extension methods for working with voicings
+///     Extension methods for working with voicings
 /// </summary>
 public static class VoicingExtensions
 {
     /// <summary>
-    /// Gets a unique string representation of a voicing's positions (e.g., "0-0-x-x-x-x")
+    ///     Gets a unique string representation of a voicing's positions (e.g., "0-0-x-x-x-x")
     /// </summary>
     /// <param name="positions">The positions to convert to a diagram</param>
     /// <returns>String diagram representation</returns>
@@ -25,11 +24,12 @@ public static class VoicingExtensions
                 _ => "x"
             };
         }
+
         return string.Join("-", parts);
     }
 
     /// <summary>
-    /// Gets the fret span of a voicing (excluding open strings)
+    ///     Gets the fret span of a voicing (excluding open strings)
     /// </summary>
     /// <param name="positions">The positions to analyze</param>
     /// <returns>The fret span, or 0 if no fretted notes</returns>
@@ -41,7 +41,9 @@ public static class VoicingExtensions
             .ToList();
 
         if (!frettedPositions.Any())
+        {
             return 0;
+        }
 
         var minFret = frettedPositions.Min(p => p.Location.Fret.Value);
         var maxFret = frettedPositions.Max(p => p.Location.Fret.Value);
@@ -50,30 +52,24 @@ public static class VoicingExtensions
     }
 
     /// <summary>
-    /// Gets the number of played notes in a voicing
+    ///     Gets the number of played notes in a voicing
     /// </summary>
     /// <param name="positions">The positions to count</param>
     /// <returns>Number of played notes</returns>
-    public static int GetPlayedNoteCount(Position[] positions)
-    {
-        return positions.OfType<Position.Played>().Count();
-    }
+    public static int GetPlayedNoteCount(Position[] positions) => positions.OfType<Position.Played>().Count();
 
     /// <summary>
-    /// Checks if a voicing contains a barre (3 or more notes on the same fret)
+    ///     Checks if a voicing contains a barre (3 or more notes on the same fret)
     /// </summary>
     /// <param name="positions">The positions to check</param>
     /// <returns>True if the voicing contains a barre</returns>
-    public static bool HasBarre(Position[] positions)
-    {
-        return positions
-            .OfType<Position.Played>()
-            .GroupBy(p => p.Location.Fret.Value)
-            .Any(g => g.Count() >= 3);
-    }
+    public static bool HasBarre(Position[] positions) => positions
+        .OfType<Position.Played>()
+        .GroupBy(p => p.Location.Fret.Value)
+        .Any(g => g.Count() >= 3);
 
     /// <summary>
-    /// Gets the minimum fret position (excluding open strings and muted strings)
+    ///     Gets the minimum fret position (excluding open strings and muted strings)
     /// </summary>
     /// <param name="positions">The positions to analyze</param>
     /// <returns>Minimum fret, or null if no fretted notes</returns>
@@ -84,13 +80,13 @@ public static class VoicingExtensions
             .Where(p => p.Location.Fret.Value > 0)
             .ToList();
 
-        return frettedPositions.Any() 
-            ? frettedPositions.Min(p => p.Location.Fret.Value) 
+        return frettedPositions.Any()
+            ? frettedPositions.Min(p => p.Location.Fret.Value)
             : null;
     }
 
     /// <summary>
-    /// Gets the maximum fret position
+    ///     Gets the maximum fret position
     /// </summary>
     /// <param name="positions">The positions to analyze</param>
     /// <returns>Maximum fret, or null if no played notes</returns>
@@ -98,9 +94,8 @@ public static class VoicingExtensions
     {
         var playedPositions = positions.OfType<Position.Played>().ToList();
 
-        return playedPositions.Any() 
-            ? playedPositions.Max(p => p.Location.Fret.Value) 
+        return playedPositions.Any()
+            ? playedPositions.Max(p => p.Location.Fret.Value)
             : null;
     }
 }
-

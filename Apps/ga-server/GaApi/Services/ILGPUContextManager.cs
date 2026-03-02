@@ -4,63 +4,26 @@ using ILGPU;
 using ILGPU.Runtime;
 
 /// <summary>
-/// Manages ILGPU context and accelerator lifecycle
-/// Provides singleton access to GPU resources across the application
-/// Following ILGPU best practices: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
-/// </summary>
-public interface IIlgpuContextManager : IDisposable
-{
-    /// <summary>
-    /// Gets the ILGPU context
-    /// </summary>
-    Context? Context { get; }
-
-    /// <summary>
-    /// Gets the primary accelerator (GPU or CPU fallback)
-    /// </summary>
-    Accelerator? PrimaryAccelerator { get; }
-
-    /// <summary>
-    /// Gets the accelerator type (CUDA, CPU, etc.)
-    /// </summary>
-    string AcceleratorType { get; }
-
-    /// <summary>
-    /// Indicates if GPU acceleration is available
-    /// </summary>
-    bool IsGpuAvailable { get; }
-
-    /// <summary>
-    /// Gets available GPU memory in MB
-    /// </summary>
-    long AvailableGpuMemoryMb { get; }
-
-    /// <summary>
-    /// Gets total GPU memory in MB
-    /// </summary>
-    long TotalGpuMemoryMb { get; }
-}
-
-/// <summary>
 /// Default implementation of ILGPU context manager
 /// </summary>
 public class IlgpuContextManager : IIlgpuContextManager
 {
     private readonly ILogger<IlgpuContextManager> _logger;
-    private Context? _context;
-    private Accelerator? _primaryAccelerator;
     private bool _isDisposed;
 
-    public Context? Context => _context;
-    public Accelerator? PrimaryAccelerator => _primaryAccelerator;
+    public Context? Context { get; private set; }
+
+    public Accelerator? PrimaryAccelerator { get; }
+
     public string AcceleratorType { get; private set; } = "None";
     public bool IsGpuAvailable { get; private set; }
     public long AvailableGpuMemoryMb { get; private set; }
     public long TotalGpuMemoryMb { get; private set; }
 
-    public IlgpuContextManager(ILogger<IlgpuContextManager> logger)
+    public IlgpuContextManager(ILogger<IlgpuContextManager> logger, Accelerator? primaryAccelerator)
     {
         _logger = logger;
+        PrimaryAccelerator = primaryAccelerator;
         InitializeContext();
     }
 
@@ -71,9 +34,9 @@ public class IlgpuContextManager : IIlgpuContextManager
             _logger.LogInformation("Initializing ILGPU context...");
 
             // Create default context
-            _context = Context.CreateDefault();
+            Context = Context.CreateDefault();
 
-            if (_context == null)
+            if (Context == null)
             {
                 _logger.LogWarning("Failed to create ILGPU context");
                 IsGpuAvailable = false;
@@ -90,9 +53,9 @@ public class IlgpuContextManager : IIlgpuContextManager
             try
             {
                 // Get accelerator memory size
-                if (_primaryAccelerator != null)
+                if (PrimaryAccelerator != null)
                 {
-                    TotalGpuMemoryMb = (long)(_primaryAccelerator.MemorySize / (1024 * 1024));
+                    TotalGpuMemoryMb = (long)(PrimaryAccelerator.MemorySize / (1024 * 1024));
                     AvailableGpuMemoryMb = TotalGpuMemoryMb;
                     _logger.LogInformation(
                         "Accelerator Memory: {TotalMB}MB total",
@@ -120,7 +83,7 @@ public class IlgpuContextManager : IIlgpuContextManager
     /// </summary>
     public Accelerator? CreateAccelerator(int deviceIndex = 0)
     {
-        if (_context == null)
+        if (Context == null)
         {
             _logger.LogWarning("ILGPU context not initialized");
             return null;
@@ -171,8 +134,8 @@ public class IlgpuContextManager : IIlgpuContextManager
 
         try
         {
-            _primaryAccelerator?.Dispose();
-            _context?.Dispose();
+            PrimaryAccelerator?.Dispose();
+            Context?.Dispose();
             _logger.LogInformation("ILGPU context disposed");
         }
         catch (Exception ex)

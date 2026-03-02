@@ -1,27 +1,24 @@
 namespace GA.Business.ML.Tests;
 
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using Retrieval;
+using Domain.Core.Theory.Atonal;
 using Embeddings;
+using Retrieval;
 using TestInfrastructure;
+using Rag.Models;
 
 [TestFixture]
 public class ModulationAnalysisTests
 {
-    private ModulationAnalyzer _analyzer;
-    private MusicalEmbeddingGenerator _generator;
-
     [SetUp]
     public async Task Setup()
     {
         var services = await TestServices.CreateAsync();
         _generator = services.Generator;
-        _analyzer = new ModulationAnalyzer(_generator);
+        _analyzer = new(_generator);
     }
+
+    private ModulationAnalyzer _analyzer;
+    private MusicalEmbeddingGenerator _generator;
 
     [Test]
     public async Task IdentifyTargets_CtoG_Progression_IdentifiesG()
@@ -29,25 +26,26 @@ public class ModulationAnalysisTests
         // 1. Create a progression drifting from C toward G
         // C Major -> Am -> D7 -> G7
         var progressionNames = new[] { "C Major", "A Minor", "D Dominant 7", "G Dominant 7" };
-        var progressionNotes = new[] {
+        var progressionNotes = new[]
+        {
             new[] { 48, 52, 55 }, // C
-            new[] { 45, 48, 52 }, // Am
-            new[] { 50, 54, 57, 60 }, // D7 (Dominant of G)
-            new[] { 55, 59, 62, 65 }  // G7
+            [45, 48, 52], // Am
+            [50, 54, 57, 60], // D7 (Dominant of G)
+            [55, 59, 62, 65] // G7
         };
 
-        var docs = new List<VoicingDocument>();
-        for (int i = 0; i < progressionNames.Length; i++)
+        var docs = new List<ChordVoicingRagDocument>();
+        for (var i = 0; i < progressionNames.Length; i++)
         {
-            var pcsList = progressionNotes[i].Select(m => Domain.Core.Theory.Atonal.PitchClass.FromValue(m % 12)).ToList();
-            var pcsSet = new GA.Domain.Core.Theory.Atonal.PitchClassSet(pcsList);
+            var pcsList = progressionNotes[i].Select(m => PitchClass.FromValue(m % 12)).ToList();
+            var pcsSet = new PitchClassSet(pcsList);
 
-            var doc = new VoicingDocument
+            var doc = new ChordVoicingRagDocument
             {
                 Id = $"p-{i}", ChordName = progressionNames[i],
                 MidiNotes = progressionNotes[i],
-                PitchClasses = progressionNotes[i].Select(m => m % 12).ToArray(),
-                SemanticTags = new[] { "test" },
+                PitchClasses = [.. progressionNotes[i].Select(m => m % 12)],
+                SemanticTags = ["test"],
                 PossibleKeys = [],
                 YamlAnalysis = "{}",
                 PitchClassSet = string.Join(",", progressionNotes[i].Select(m => m % 12)),

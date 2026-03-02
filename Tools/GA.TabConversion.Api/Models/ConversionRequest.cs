@@ -75,12 +75,12 @@ public class ConversionResponse
     /// <summary>
     ///     Warnings during conversion
     /// </summary>
-    public List<string> Warnings { get; set; } = new();
+    public List<string> Warnings { get; set; } = [];
 
     /// <summary>
     ///     Errors during conversion
     /// </summary>
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 
     /// <summary>
     ///     Conversion metadata
@@ -154,12 +154,12 @@ public class ValidationResponse
     /// <summary>
     ///     Validation errors
     /// </summary>
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 
     /// <summary>
     ///     Validation warnings
     /// </summary>
-    public List<string> Warnings { get; set; } = new();
+    public List<string> Warnings { get; set; } = [];
 
     /// <summary>
     ///     Detected format (if different from requested)

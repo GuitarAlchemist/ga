@@ -157,25 +157,37 @@ public sealed class ChatbotSessionOrchestrator(
         {
             prompt.AppendLine("CURRENT SESSION CONTEXT:");
             prompt.AppendLine($"- Tuning: {sessionCtx.Tuning}");
-            
+
             if (sessionCtx.CurrentKey != null)
+            {
                 prompt.AppendLine($"- Current Key: {sessionCtx.CurrentKey}");
-                
+            }
+
             if (sessionCtx.CurrentScale != null)
+            {
                 prompt.AppendLine($"- Current Scale: {sessionCtx.CurrentScale}");
-                
+            }
+
             if (sessionCtx.SkillLevel.HasValue)
+            {
                 prompt.AppendLine($"- Skill Level: {sessionCtx.SkillLevel.Value}");
-                
+            }
+
             if (sessionCtx.CurrentGenre.HasValue)
+            {
                 prompt.AppendLine($"- Musical Genre: {sessionCtx.CurrentGenre.Value}");
-                
+            }
+
             if (sessionCtx.ActiveRange != null)
-                prompt.AppendLine($"- Fretboard Range: Frets {sessionCtx.ActiveRange.MinFret}-{sessionCtx.ActiveRange.MaxFret}");
-                
+            {
+                prompt.AppendLine(
+                    $"- Fretboard Range: Frets {sessionCtx.ActiveRange.MinFret}-{sessionCtx.ActiveRange.MaxFret}");
+            }
+
             prompt.AppendLine();
             prompt.AppendLine("Use this session context to provide more relevant and personalized responses.");
-            prompt.AppendLine("When suggesting chords or scales, consider the current key, skill level, and preferences.");
+            prompt.AppendLine(
+                "When suggesting chords or scales, consider the current key, skill level, and preferences.");
             prompt.AppendLine();
         }
 
@@ -192,8 +204,3 @@ public sealed class ChatbotSessionOrchestrator(
         return prompt.ToString();
     }
 }
-
-public sealed record ChatSessionRequest(
-    string Message,
-    IEnumerable<ChatMessage>? ConversationHistory,
-    bool UseSemanticSearch);

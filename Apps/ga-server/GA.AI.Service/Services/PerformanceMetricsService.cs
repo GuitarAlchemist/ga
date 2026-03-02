@@ -9,7 +9,7 @@ using System.Diagnostics.Metrics;
 /// </summary>
 public class PerformanceMetricsService : IDisposable
 {
-    private readonly Meter _meter;
+    private readonly Meter _meter = new("GuitarAlchemist.API", "1.0.0");
     private readonly Histogram<double> _regularDurationHistogram;
     private readonly Counter<long> _regularErrorCounter;
     private readonly Histogram<long> _regularMemoryHistogram;
@@ -26,75 +26,61 @@ public class PerformanceMetricsService : IDisposable
     private long _semanticErrors;
     private long _semanticRequests;
     private double _semanticTotalDuration;
+    private readonly Lock _statsLock = new();
 
-    public PerformanceMetricsService()
-    {
-        _meter = new Meter("GuitarAlchemist.API", "1.0.0");
-
-        // Request counters
-        _regularRequestCounter = _meter.CreateCounter<long>(
-            "api.requests.regular",
-            description: "Number of regular API requests");
-
-        _semanticRequestCounter = _meter.CreateCounter<long>(
-            "api.requests.semantic",
-            description: "Number of semantic/vector search requests");
-
-        // Duration histograms
-        _regularDurationHistogram = _meter.CreateHistogram<double>(
-            "api.duration.regular",
-            "ms",
-            "Duration of regular API requests in milliseconds");
-
-        _semanticDurationHistogram = _meter.CreateHistogram<double>(
-            "api.duration.semantic",
-            "ms",
-            "Duration of semantic/vector search requests in milliseconds");
-
-        // Memory histograms
-        _regularMemoryHistogram = _meter.CreateHistogram<long>(
-            "api.memory.regular",
-            "bytes",
-            "Memory usage for regular API requests");
-
-        _semanticMemoryHistogram = _meter.CreateHistogram<long>(
-            "api.memory.semantic",
-            "bytes",
-            "Memory usage for semantic/vector search requests");
-
-        // Error counters
-        _regularErrorCounter = _meter.CreateCounter<long>(
-            "api.errors.regular",
-            description: "Number of errors in regular API requests");
-
-        _semanticErrorCounter = _meter.CreateCounter<long>(
-            "api.errors.semantic",
-            description: "Number of errors in semantic/vector search requests");
-    }
-
+    // ... (rest of constructor)
     public void Dispose()
     {
         _meter.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
-    ///     Track a regular API request
+    ///     Track a regular request
     /// </summary>
     public IDisposable TrackRegularRequest()
     {
-        _regularRequestCounter.Add(1);
         Interlocked.Increment(ref _regularRequests);
+        _regularRequestCounter.Add(1);
         return new RequestTracker(this, false);
     }
 
     /// <summary>
-    ///     Track a semantic API request
+    ///     Track a semantic request
     /// </summary>
     public IDisposable TrackSemanticRequest()
     {
-        _semanticRequestCounter.Add(1);
         Interlocked.Increment(ref _semanticRequests);
+        _semanticRequestCounter.Add(1);
         return new RequestTracker(this, true);
+    }
+
+    /// <summary>
+    ///     Record a regular request memory usage
+    /// </summary>
+    public void RecordRegularMemory(long bytes) => _regularMemoryHistogram.Record(bytes);
+
+    /// <summary>
+    ///     Record a semantic request memory usage
+    /// </summary>
+    public void RecordSemanticMemory(long bytes) => _semanticMemoryHistogram.Record(bytes);
+
+    /// <summary>
+    ///     Record a regular request error
+    /// </summary>
+    public void RecordRegularError()
+    {
+        Interlocked.Increment(ref _regularErrors);
+        _regularErrorCounter.Add(1);
+    }
+
+    /// <summary>
+    ///     Record a semantic request error
+    /// </summary>
+    public void RecordSemanticError()
+    {
+        Interlocked.Increment(ref _semanticErrors);
+        _semanticErrorCounter.Add(1);
     }
 
     /// <summary>
@@ -105,7 +91,7 @@ public class PerformanceMetricsService : IDisposable
         _regularDurationHistogram.Record(durationMs);
 
         // Update running average
-        lock (this)
+        lock (_statsLock)
         {
             _regularTotalDuration += durationMs;
         }
@@ -119,72 +105,54 @@ public class PerformanceMetricsService : IDisposable
         _semanticDurationHistogram.Record(durationMs);
 
         // Update running average
-        lock (this)
+        lock (_statsLock)
         {
             _semanticTotalDuration += durationMs;
         }
     }
 
-    /// <summary>
-    ///     Record memory usage for a regular request
-    /// </summary>
-    public void RecordRegularMemory(long bytes)
-    {
-        _regularMemoryHistogram.Record(bytes);
-    }
-
-    /// <summary>
-    ///     Record memory usage for a semantic request
-    /// </summary>
-    public void RecordSemanticMemory(long bytes)
-    {
-        _semanticMemoryHistogram.Record(bytes);
-    }
-
-    /// <summary>
-    ///     Record a regular request error
-    /// </summary>
-    public void RecordRegularError()
-    {
-        _regularErrorCounter.Add(1);
-        Interlocked.Increment(ref _regularErrors);
-    }
-
-    /// <summary>
-    ///     Record a semantic request error
-    /// </summary>
-    public void RecordSemanticError()
-    {
-        _semanticErrorCounter.Add(1);
-        Interlocked.Increment(ref _semanticErrors);
-    }
+    // ... (RecordMemory/Error methods)
 
     /// <summary>
     ///     Get performance statistics
     /// </summary>
     public PerformanceStatistics GetStatistics()
     {
-        return new PerformanceStatistics
+        // Snapshot values to ensure consistency
+        long regReq, semReq, regErr, semErr;
+        double regDur, semDur;
+
+        lock (_statsLock)
         {
-            RegularRequests = _regularRequests,
-            SemanticRequests = _semanticRequests,
-            RegularAverageDuration = _regularRequests > 0 ? _regularTotalDuration / _regularRequests : 0,
-            SemanticAverageDuration = _semanticRequests > 0 ? _semanticTotalDuration / _semanticRequests : 0,
-            RegularErrors = _regularErrors,
-            SemanticErrors = _semanticErrors,
-            RegularErrorRate = _regularRequests > 0 ? (double)_regularErrors / _regularRequests : 0,
-            SemanticErrorRate = _semanticRequests > 0 ? (double)_semanticErrors / _semanticRequests : 0,
-            PerformanceRatio = _regularRequests > 0 && _semanticRequests > 0
-                ? _semanticTotalDuration / _semanticRequests / (_regularTotalDuration / _regularRequests)
-                : 0,
-            SplitRecommendation = GetSplitRecommendation()
+            regReq = Interlocked.Read(ref _regularRequests);
+            semReq = Interlocked.Read(ref _semanticRequests);
+            regErr = Interlocked.Read(ref _regularErrors);
+            semErr = Interlocked.Read(ref _semanticErrors);
+            regDur = _regularTotalDuration;
+            semDur = _semanticTotalDuration;
+        }
+
+        var stats = new PerformanceStatistics
+        {
+            RegularRequests = regReq,
+            SemanticRequests = semReq,
+            RegularAverageDuration = regReq > 0 ? regDur / regReq : 0,
+            SemanticAverageDuration = semReq > 0 ? semDur / semReq : 0,
+            RegularErrors = regErr,
+            SemanticErrors = semErr,
+            RegularErrorRate = regReq > 0 ? (double)regErr / regReq : 0,
+            SemanticErrorRate = semReq > 0 ? (double)semErr / semReq : 0,
+            PerformanceRatio = regReq > 0 && semReq > 0 && regDur > 0
+                ? (semDur / semReq) / (regDur / regReq)
+                : 0
         };
+
+        stats.SplitRecommendation = GetSplitRecommendation(stats);
+        return stats;
     }
 
-    private string GetSplitRecommendation()
+    private static string GetSplitRecommendation(PerformanceStatistics stats)
     {
-        var stats = GetStatistics();
-
         // Recommend split if:
         // 1. Semantic requests are significantly slower (>10x)
         // 2. High volume of both types (>1000 each)

@@ -2,7 +2,8 @@
 
 ## Overview
 
-Guitar Alchemist uses a comprehensive testing strategy with unit tests, integration tests, and end-to-end tests using NUnit, xUnit, and Playwright.
+Guitar Alchemist uses a comprehensive testing strategy with unit tests, integration tests, and end-to-end tests using
+NUnit, xUnit, and Playwright.
 
 ## Test Structure
 
@@ -291,6 +292,7 @@ public void ShouldCallEmbeddingService()
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Pull requests
 - Commits to main branch
 - Scheduled nightly builds

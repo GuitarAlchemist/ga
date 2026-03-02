@@ -2,7 +2,6 @@ namespace GA.Business.ML.Embeddings.Validation;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// Defines an embedding partition with its offset, dimension, and weight.
@@ -85,7 +84,7 @@ public static class VectorMath
             throw new ArgumentException($"Vector lengths don't match: {a.Length} vs {b.Length}");
         
         double dot = 0, magA = 0, magB = 0;
-        bool identical = true;
+        var identical = true;
 
         for (var i = 0; i < a.Length; i++)
         {

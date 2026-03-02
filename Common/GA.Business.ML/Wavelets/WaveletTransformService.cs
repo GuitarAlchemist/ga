@@ -30,13 +30,13 @@ public class WaveletTransformService
         if (signal == null || signal.Length == 0)
             throw new ArgumentException("Signal cannot be empty", nameof(signal));
 
-        int L = levels ?? ComputeAdaptiveLevels(signal.Length);
+        var L = levels ?? ComputeAdaptiveLevels(signal.Length);
         var (h, g) = GetFilters(family);
 
         var currentApx = signal;
         var detailCoefficients = new double[L][];
 
-        for (int l = 0; l < L; l++)
+        for (var l = 0; l < L; l++)
         {
             var (nextApx, nextDet) = Step(currentApx, h, g);
             currentApx = nextApx;
@@ -53,7 +53,7 @@ public class WaveletTransformService
     public static int ComputeAdaptiveLevels(int signalLength)
     {
         if (signalLength < 4) return 1;
-        int maxLevel = (int)Math.Floor(Math.Log2(signalLength)) - 2;
+        var maxLevel = (int)Math.Floor(Math.Log2(signalLength)) - 2;
         return Math.Clamp(maxLevel, 1, 3);
     }
 
@@ -81,27 +81,27 @@ public class WaveletTransformService
             features.Add(0.0);
         }
 
-        return features.ToArray();
+        return [.. features];
     }
 
     private (double[] Approximation, double[] Detail) Step(double[] signal, double[] h, double[] g)
     {
-        int n = signal.Length;
-        int filterLen = h.Length;
-        int half = (n + 1) / 2; // Handle odd lengths by padding conceptually or using periodic boundary
+        var n = signal.Length;
+        var filterLen = h.Length;
+        var half = (n + 1) / 2; // Handle odd lengths by padding conceptually or using periodic boundary
 
         var apx = new double[half];
         var det = new double[half];
 
-        for (int i = 0; i < half; i++)
+        for (var i = 0; i < half; i++)
         {
             double a = 0;
             double d = 0;
 
-            for (int j = 0; j < filterLen; j++)
+            for (var j = 0; j < filterLen; j++)
             {
                 // Periodic boundary extension
-                int idx = (2 * i + j) % n;
+                var idx = (2 * i + j) % n;
                 a += signal[idx] * h[j];
                 d += signal[idx] * g[j];
             }
@@ -113,44 +113,41 @@ public class WaveletTransformService
         return (apx, det);
     }
 
-    private (double[] h, double[] g) GetFilters(WaveletFamily family)
+    private (double[] h, double[] g) GetFilters(WaveletFamily family) => family switch
     {
-        return family switch
-        {
-            WaveletFamily.Haar => (
-                new[] { 0.7071067811865476, 0.7071067811865476 },
-                new[] { 0.7071067811865476, -0.7071067811865476 }
-            ),
-            WaveletFamily.Daubechies4 => (
-                new[] { 0.4829629131445341, 0.8365163037378077, 0.2241438680420134, -0.1294095225512603 },
-                new[] { -0.1294095225512603, -0.2241438680420134, 0.8365163037378077, -0.4829629131445341 }
-            ),
-            _ => throw new NotSupportedException()
-        };
-    }
+        WaveletFamily.Haar => (
+            [0.7071067811865476, 0.7071067811865476],
+            [0.7071067811865476, -0.7071067811865476]
+        ),
+        WaveletFamily.Daubechies4 => (
+            new[] { 0.4829629131445341, 0.8365163037378077, 0.2241438680420134, -0.1294095225512603 },
+            new[] { -0.1294095225512603, -0.2241438680420134, 0.8365163037378077, -0.4829629131445341 }
+        ),
+        _ => throw new NotSupportedException()
+    };
 
     private double[] ComputeStats(double[] data)
     {
-        if (data.Length == 0) return new[] { 0.0, 0.0, 0.0, 0.0 };
+        if (data.Length == 0) return [0.0, 0.0, 0.0, 0.0];
 
-        double mean = data.Average();
-        double sumSqDiff = data.Sum(x => Math.Pow(x - mean, 2));
-        double std = Math.Sqrt(sumSqDiff / data.Length);
-        double energy = data.Sum(x => x * x);
+        var mean = data.Average();
+        var sumSqDiff = data.Sum(x => Math.Pow(x - mean, 2));
+        var std = Math.Sqrt(sumSqDiff / data.Length);
+        var energy = data.Sum(x => x * x);
         
         // Normalized Shannon Entropy of coefficients
-        double totalAbs = data.Sum(x => Math.Abs(x));
+        var totalAbs = data.Sum(x => Math.Abs(x));
         double entropy = 0;
         if (totalAbs > 0)
         {
             foreach (var x in data)
             {
-                double p = Math.Abs(x) / totalAbs;
+                var p = Math.Abs(x) / totalAbs;
                 if (p > 0) entropy -= p * Math.Log2(p);
             }
         }
 
-        return new[] { mean, std, energy, entropy };
+        return [mean, std, energy, entropy];
     }
 }
 

@@ -2,7 +2,9 @@
 
 ## Overview
 
-The **Phase Sphere** is a geometric framework for understanding harmonic relationships through Fourier analysis of pitch-class sets. While interval-class vectors describe the *shadow* of harmonic structure, the phase sphere reveals its true *orientation* in spectral space.
+The **Phase Sphere** is a geometric framework for understanding harmonic relationships through Fourier analysis of
+pitch-class sets. While interval-class vectors describe the *shadow* of harmonic structure, the phase sphere reveals its
+true *orientation* in spectral space.
 
 ---
 
@@ -10,7 +12,8 @@ The **Phase Sphere** is a geometric framework for understanding harmonic relatio
 
 ### The DFT of a Pitch-Class Set
 
-Given a pitch-class set $X \subset \mathbb{Z}_{12}$, we encode it as a 12-vector $x[n]$ (binary or weighted) and compute its DFT:
+Given a pitch-class set $X \subset \mathbb{Z}_{12}$, we encode it as a 12-vector $x[n]$ (binary or weighted) and compute
+its DFT:
 
 $$F_k = \sum_{n=0}^{11} x[n] \cdot e^{-2\pi i k n / 12}$$
 
@@ -20,18 +23,19 @@ $$F_k = |F_k| \cdot e^{i\phi_k}$$
 
 ### Musical Interpretation
 
-| Component | Meaning |
-|-----------|---------|
-| $k$ | Which interval cycle (periodicity) being measured |
-| $\|F_k\|$ | How strongly the set supports that cycle |
-| $\phi_k$ | Where on that cycle the set is located |
+| Component | Meaning                                           |
+|-----------|---------------------------------------------------|
+| $k$       | Which interval cycle (periodicity) being measured |
+| $\|F_k\|$ | How strongly the set supports that cycle          |
+| $\phi_k$  | Where on that cycle the set is located            |
 
 ### Example: The Circle of Fifths ($k=5$)
 
 - $\|F_5\|$ = "diatonicness" — how well the set aligns with fifth-stacked structures
 - $\phi_5$ = key-region on the fifths circle
 
-Two sets can be **equally diatonic** (same $\|F_5\|$) but rotated by a tritone in fifth-space — that is **pure phase difference**.
+Two sets can be **equally diatonic** (same $\|F_5\|$) but rotated by a tritone in fifth-space — that is **pure phase
+difference**.
 
 ---
 
@@ -57,11 +61,11 @@ Now **all pitch-class sets live on the surface of a high-dimensional unit sphere
 
 ### Geometric Properties
 
-| Property | Description |
-|----------|-------------|
-| Dimension | Surface of 11-sphere in $\mathbb{R}^{12}$ |
+| Property      | Description                                              |
+|---------------|----------------------------------------------------------|
+| Dimension     | Surface of 11-sphere in $\mathbb{R}^{12}$                |
 | Transposition | Rigid rotation: $F_k(X+t) = e^{-2\pi i k t / 12} F_k(X)$ |
-| Distance | Angle between normalized spectral vectors |
+| Distance      | Angle between normalized spectral vectors                |
 
 ---
 
@@ -70,7 +74,7 @@ Now **all pitch-class sets live on the surface of a high-dimensional unit sphere
 ### What Prime Form Sees
 
 - Transposition equivalence
-- Inversion equivalence  
+- Inversion equivalence
 - Interval content (Forte numbers)
 
 ### What Phase Sphere Sees
@@ -94,10 +98,10 @@ The **spectral distance** is the angle between them:
 
 $$\theta = \arccos(\Re(\hat{S}(A) \cdot \overline{\hat{S}(B)}))$$
 
-| Angle | Harmonic Relationship |
-|-------|----------------------|
+| Angle | Harmonic Relationship    |
+|-------|--------------------------|
 | Small | Similar harmonic "color" |
-| Large | Radical harmonic change |
+| Large | Radical harmonic change  |
 
 ### Implication for Composition
 
@@ -120,6 +124,7 @@ But their **phases differ** — they are different points on the same shell, oft
 ### Musical Phenomenon
 
 Z-related sets:
+
 - Sound "equally complex"
 - Pull harmony in **opposite directions**
 - Are *spectral twins looking in opposite ways*
@@ -132,12 +137,12 @@ Z-related sets:
 
 Maximally even sets maximize specific $|F_k|$, placing them near **polar positions** on harmonic axes:
 
-| Set Type | Dominant Component | Position |
-|----------|-------------------|----------|
-| Diatonic | Large $\|F_5\|$ | Fifths-axis pole |
-| Whole-tone | Large $\|F_2\|$ | Tritone-axis pole |
-| Diminished | Large $\|F_3\|$ | Minor-third pole |
-| Augmented | Large $\|F_4\|$ | Major-third pole |
+| Set Type   | Dominant Component | Position          |
+|------------|--------------------|-------------------|
+| Diatonic   | Large $\|F_5\|$    | Fifths-axis pole  |
+| Whole-tone | Large $\|F_2\|$    | Tritone-axis pole |
+| Diminished | Large $\|F_3\|$    | Minor-third pole  |
+| Augmented  | Large $\|F_4\|$    | Major-third pole  |
 
 ### Gravitational Wells
 
@@ -172,12 +177,12 @@ public class PhaseSphereService
 
 #### 7.2 Enhanced Embedding Features (v1.4 Roadmap)
 
-| Index | Feature | Description |
-|-------|---------|-------------|
-| 109 | PhaseCoherence | How aligned the phases are |
-| 110 | SpectralLatitude | Total spectral energy |
-| 111 | FifthsAxisProjection | Diatonicness direction |
-| 112 | TritoneAxisProjection | Symmetric division |
+| Index | Feature               | Description                |
+|-------|-----------------------|----------------------------|
+| 109   | PhaseCoherence        | How aligned the phases are |
+| 110   | SpectralLatitude      | Total spectral energy      |
+| 111   | FifthsAxisProjection  | Diatonicness direction     |
+| 112   | TritoneAxisProjection | Symmetric division         |
 
 ---
 

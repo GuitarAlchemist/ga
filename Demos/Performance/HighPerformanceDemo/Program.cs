@@ -289,11 +289,14 @@ internal class Program
     private static ChordData[] GenerateChordData(int count)
     {
         var random = new Random(42);
-        return [.. Enumerable.Range(0, count)
-            .Select(i => new ChordData(
-                $"Chord{i}",
-                GenerateTestData(12), // 12-tone representation
-                random.Next(1, 25)))];
+        return
+        [
+            .. Enumerable.Range(0, count)
+                .Select(i => new ChordData(
+                    $"Chord{i}",
+                    GenerateTestData(12), // 12-tone representation
+                    random.Next(1, 25)))
+        ];
     }
 
     private static (double scalar, double vector) BenchmarkChordSimilarity(float[] data1, float[] data2)
@@ -312,7 +315,7 @@ internal class Program
 
         // Vector version
         sw.Restart();
-        var vectorResult = Vector.Dot(new Vector<float>(data1), new Vector<float>(data2));
+        var vectorResult = Vector.Dot(new(data1), new Vector<float>(data2));
         var vectorTime = sw.Elapsed.TotalMilliseconds;
 
         return (scalarTime, vectorTime);
@@ -419,65 +422,35 @@ internal class Program
     }
 
     // Simplified benchmark methods
-    private static (long memory, long allocs, double gc) BenchmarkArrayPooling()
-    {
-        return (1024 * 1024, 0, 0.1);
-    }
+    private static (long memory, long allocs, double gc) BenchmarkArrayPooling() => (1024 * 1024, 0, 0.1);
 
-    private static (long memory, long allocs, double gc) BenchmarkSpanUsage()
-    {
-        return (512 * 1024, 0, 0.05);
-    }
+    private static (long memory, long allocs, double gc) BenchmarkSpanUsage() => (512 * 1024, 0, 0.05);
 
-    private static (long memory, long allocs, double gc) BenchmarkMemoryMapping()
-    {
-        return (2048 * 1024, 100, 0.2);
-    }
+    private static (long memory, long allocs, double gc) BenchmarkMemoryMapping() => (2048 * 1024, 100, 0.2);
 
-    private static void AnalyzeChord(ChordData chord)
-    {
-        Thread.SpinWait(100);
-    }
+    private static void AnalyzeChord(ChordData chord) => Thread.SpinWait(100);
 
-    private static string IndexChord(ChordData chord)
-    {
-        return $"Index_{chord.Name}";
-    }
+    private static string IndexChord(ChordData chord) => $"Index_{chord.Name}";
 
-    private static double CalculateSimilarity(ChordData a, ChordData b)
-    {
-        return Vector.Dot(new Vector<float>(a.Features), new Vector<float>(b.Features));
-    }
+    private static double CalculateSimilarity(ChordData a, ChordData b) =>
+        Vector.Dot(new(a.Features), new Vector<float>(b.Features));
 
-    private static int SimulatePerformanceTest(string scenario, int targetRate)
-    {
-        return (int)(targetRate * (0.8 + new Random().NextDouble() * 0.4));
-    }
+    private static int SimulatePerformanceTest(string scenario, int targetRate) =>
+        (int)(targetRate * (0.8 + new Random().NextDouble() * 0.4));
 
-    private static double CalculateLatency(int rate)
-    {
-        return rate > 0 ? 1000.0 / rate : double.MaxValue;
-    }
+    private static double CalculateLatency(int rate) => rate > 0 ? 1000.0 / rate : double.MaxValue;
 
-    private static string FormatMemory(long bytes)
-    {
-        return $"{bytes / 1024:N0} KB";
-    }
+    private static string FormatMemory(long bytes) => $"{bytes / 1024:N0} KB";
 
-    private static string FormatAllocations(long allocs)
-    {
-        return $"{allocs:N0}/sec";
-    }
+    private static string FormatAllocations(long allocs) => $"{allocs:N0}/sec";
 
-    private static string FormatGcPressure(double pressure)
-    {
-        return pressure switch
+    private static string FormatGcPressure(double pressure) =>
+        pressure switch
         {
             < 0.1 => "[green]Low[/]",
             < 0.3 => "[yellow]Medium[/]",
             _ => "[red]High[/]"
         };
-    }
 
     private record ChordData(string Name, float[] Features, int FretPosition);
 }

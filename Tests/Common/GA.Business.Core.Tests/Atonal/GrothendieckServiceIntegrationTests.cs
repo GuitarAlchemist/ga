@@ -1,18 +1,16 @@
-namespace GA.Domain.Core.Tests.Atonal;
+namespace GA.Business.Core.Tests.Atonal;
 
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Atonal.Grothendieck;
-using NUnit.Framework;
+using Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Atonal.Grothendieck;
 
 [TestFixture]
 public class GrothendieckServiceIntegrationTests
 {
-    private IGrothendieckService _service = null!;
     [SetUp]
-    public void SetUp()
-    {
-        _service = new GrothendieckService();
-    }
+    public void SetUp() => _service = new GrothendieckService();
+
+    private IGrothendieckService _service = null!;
+
     [Test]
     public void ComputeDelta_AndCost_IsConsistent()
     {
@@ -25,6 +23,7 @@ public class GrothendieckServiceIntegrationTests
         Assert.That(delta.L1Norm, Is.GreaterThan(0));
         Assert.That(cost, Is.EqualTo(delta.L1Norm * 0.6));
     }
+
     [Test]
     public void FindNearby_ReturnsSortedResults()
     {
@@ -33,6 +32,7 @@ public class GrothendieckServiceIntegrationTests
         Assert.That(nearby.Count, Is.Positive);
         Assert.That(nearby[0].Cost, Is.LessThanOrEqualTo(nearby[^1].Cost));
     }
+
     [Test]
     public void FindShortestPath_FindsPathWithinSteps()
     {

@@ -28,11 +28,7 @@ public sealed record HandPoseResult
     /// <summary>
     ///     Get fingertip position for a specific finger
     /// </summary>
-    public FingertipPosition GetFingertip(FingerType finger)
-    {
-        return Fingertips.TryGetValue(finger, out var position)
-            ? position
-            : new()
-                { Position = Vector3.Zero, Normal = Vector3.UnitZ };
-    }
+    public FingertipPosition GetFingertip(FingerType finger) => Fingertips.TryGetValue(finger, out var position)
+        ? position
+        : new() { Position = Vector3.Zero, Normal = Vector3.UnitZ };
 }

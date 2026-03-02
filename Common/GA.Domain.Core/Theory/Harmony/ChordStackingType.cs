@@ -3,6 +3,9 @@ namespace GA.Domain.Core.Theory.Harmony;
 /// <summary>
 ///     Represents the type of chord stacking pattern
 /// </summary>
+/// <remarks>
+/// Example: Cmaj7 = tertian, C4/E4/G4/Bb4 = quartal
+/// </remarks>
 public enum ChordStackingType
 {
     /// <summary>
@@ -23,15 +26,5 @@ public enum ChordStackingType
     /// <summary>
     ///     Secundal harmony (stacked seconds)
     /// </summary>
-    Secundal,
-
-    /// <summary>
-    ///     Mixed interval stacking
-    /// </summary>
-    Mixed,
-
-    /// <summary>
-    ///     Custom interval pattern
-    /// </summary>
-    Custom
+    Secundal
 }

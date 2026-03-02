@@ -1,8 +1,7 @@
 namespace GA.AI.Service.Controllers;
 
-using Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using Services;
 
 [ApiController]
 [Route("api/[controller]")]

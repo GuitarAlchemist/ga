@@ -2,8 +2,5 @@
 
 internal class VexTabMarkdownFormatter : ITypeFormatterSource
 {
-    public IEnumerable<ITypeFormatter> CreateTypeFormatters()
-    {
-        return this.CreateVexTabTypeFormatters();
-    }
+    public IEnumerable<ITypeFormatter> CreateTypeFormatters() => this.CreateVexTabTypeFormatters();
 }

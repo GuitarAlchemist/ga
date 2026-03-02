@@ -1,9 +1,8 @@
 namespace GA.AI.Service.Controllers;
 
-using GaChatbot.Models;
-using GaChatbot.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
 
 [ApiController]
 [Route("api/[controller]")]

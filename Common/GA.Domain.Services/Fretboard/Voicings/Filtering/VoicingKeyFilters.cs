@@ -17,7 +17,7 @@ public static class VoicingKeyFilters
     /// <summary>
     /// Filters voicings to only those that contain notes from the specified key
     /// </summary>
-    /// <param name="voicings">Stream of voicings to filter</param>
+    /// <param name="voicings">The voicings stream</param>
     /// <param name="key">The musical key to filter by</param>
     /// <param name="strictDiatonic">If true, ALL notes must be in the key. If false, at least one note must be in the key.</param>
     /// <returns>Filtered stream of voicings</returns>
@@ -49,20 +49,13 @@ public static class VoicingKeyFilters
     /// Filters voicings to only those that are strictly diatonic to the specified key
     /// (all notes must be in the key's scale)
     /// </summary>
-    public static IAsyncEnumerable<Voicing> FilterByKeyStrictDiatonic(
-        this IAsyncEnumerable<Voicing> voicings,
-        Key key)
-    {
-        return voicings.FilterByKey(key, strictDiatonic: true);
-    }
+    public static IAsyncEnumerable<Voicing> FilterByKeyStrictDiatonic(this IAsyncEnumerable<Voicing> voicings, Key key) => voicings.FilterByKey(key, strictDiatonic: true);
 
     /// <summary>
     /// Filters voicings to only those that contain chromatic alterations relative to the key
     /// (at least one note outside the key's scale)
     /// </summary>
-    public static async IAsyncEnumerable<Voicing> FilterByKeyChromatic(
-        this IAsyncEnumerable<Voicing> voicings,
-        Key key)
+    public static async IAsyncEnumerable<Voicing> FilterByKeyChromatic(this IAsyncEnumerable<Voicing> voicings, Key key)
     {
         var keyPitchClasses = key.PitchClassSet.ToHashSet();
 
@@ -85,10 +78,8 @@ public static class VoicingKeyFilters
     /// <summary>
     /// Groups voicings by their primary (closest matching) key
     /// </summary>
-    /// <param name="voicings">Stream of voicings to group</param>
     /// <returns>Dictionary mapping each key to its matching voicings</returns>
-    public static async Task<Dictionary<Key, List<Voicing>>> GroupByPrimaryKey(
-        this IAsyncEnumerable<Voicing> voicings)
+    public static async Task<Dictionary<Key, List<Voicing>>> GroupByPrimaryKey(this IAsyncEnumerable<Voicing> voicings)
     {
         var grouped = new Dictionary<Key, List<Voicing>>();
 
@@ -169,16 +160,14 @@ public static class VoicingKeyFilters
         bool strictDiatonic = false,
         int windowSize = 4,
         int minPlayedNotes = 2,
-        CancellationToken cancellationToken = default)
-    {
-        return VoicingGenerator.GenerateAllVoicingsAsync(
+        CancellationToken cancellationToken = default) =>
+        VoicingGenerator.GenerateAllVoicingsAsync(
                 fretboard,
                 windowSize,
                 minPlayedNotes,
                 parallel: true,
                 cancellationToken)
             .FilterByKey(key, strictDiatonic);
-    }
 
     private static Key ParseKey(string? keyName)
     {

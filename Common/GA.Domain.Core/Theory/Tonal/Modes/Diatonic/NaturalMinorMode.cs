@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -54,20 +50,9 @@ public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScal
         }
     }
 
-    public static NaturalMinorMode Get(NaturalMinorScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static NaturalMinorMode Get(NaturalMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static NaturalMinorMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static NaturalMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 
-    public override string ToString()
-    {
-        return $"{Name} - {Formula}";
-    }
+    public override string ToString() => $"{Name} - {Formula}";
 }
-
-

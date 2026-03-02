@@ -1,15 +1,17 @@
 namespace GA.InteractiveExtension.Ga;
 
-using GA.Domain.Core.Instruments;
+using Domain.Core.Instruments;
 
 public static class FretboardFormatter
 {
-    public static string DrawFretboard(this Tuning tuning)
+    extension(Tuning tuning)
     {
-        var id = "fretboard" + Guid.NewGuid().ToString("N");
+        public string DrawFretboard()
+        {
+            var id = "fretboard" + Guid.NewGuid().ToString("N");
 
-        // Simple HTML representation of the fretboard
-        var html = $@"
+            // Simple HTML representation of the fretboard
+            var html = $@"
 <div id='{id}' class='fretboard'>
     <h4>Tuning: {tuning}</h4>
     <div class='strings'>
@@ -38,6 +40,7 @@ public static class FretboardFormatter
     </style>
 </div>";
 
-        return html;
+            return html;
+        }
     }
 }

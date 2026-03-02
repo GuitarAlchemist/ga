@@ -1,4 +1,4 @@
-namespace GA.AI.Service.Controllers;
+﻿namespace GA.AI.Service.Controllers;
 
 using GA.Domain.Core.Instruments;
 
@@ -8,6 +8,9 @@ using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Instruments.Fretboard;
 using GA.Domain.Core.Instruments.Shapes;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 

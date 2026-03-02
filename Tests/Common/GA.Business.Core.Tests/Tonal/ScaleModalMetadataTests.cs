@@ -1,7 +1,6 @@
-namespace GA.Domain.Core.Tests.Tonal;
+namespace GA.Business.Core.Tests.Tonal;
 
-using GA.Domain.Core.Theory.Tonal.Scales;
-using NUnit.Framework;
+using Domain.Core.Theory.Tonal.Scales;
 
 [TestFixture]
 public class ScaleModalMetadataTests
@@ -19,6 +18,7 @@ public class ScaleModalMetadataTests
                 $"Modal family {scale.ModalFamily} for {scale.PitchClassSet.Id} does not expose the scale's mode id.");
         }
     }
+
     [Test]
     public void MajorScale_IsAssociatedWithMajorModalFamily()
     {
@@ -27,6 +27,7 @@ public class ScaleModalMetadataTests
         Assert.That(modalFamily, Is.Not.Null, "Major scale should expose a modal family.");
         Assert.That(modalFamily!.ModeIds.Contains(major.PitchClassSet.Id), Is.True,
             "Major modal family should contain the major scale ID.");
-        Assert.That(modalFamily.NoteCount, Is.EqualTo(major.Count), "Modal family note count should match the scale's count.");
+        Assert.That(modalFamily.NoteCount, Is.EqualTo(major.Count),
+            "Modal family note count should match the scale's count.");
     }
 }

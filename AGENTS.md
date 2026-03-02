@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `AllProjects.sln` is the umbrella entry point for restore, build, and test.
+- `AllProjects.slnx` is the umbrella entry point for restore, build, and test.
 - **Core libraries** in `Common/` organized by domain:
   - `GA.Business.Core` - Core domain primitives (Note, Interval, PitchClass, etc.)
   - `GA.Business.Core.Harmony` - Chords, scales, progressions, voice leading (NEW - in development)
@@ -39,8 +39,8 @@ See `docs/MODULAR_RESTRUCTURING_PLAN.md` and `docs/MODULAR_RESTRUCTURING_PROGRES
 
 - `pwsh Scripts/setup-dev-environment.ps1` — install prerequisites, restore NuGet/npm, and build the solution.
 - `pwsh Scripts/start-all.ps1 -Dashboard` — boot Aspire AppHost with GaApi, Chatbot, MongoDB, dashboards.
-- `dotnet build AllProjects.sln -c Debug` — compile all .NET 10 targets.
-- `dotnet test AllProjects.sln --filter TestCategory=...` — run NUnit/xUnit suites; omit the filter for a full run.
+- `dotnet build AllProjects.slnx -c Debug` — compile all .NET 10 targets.
+- `dotnet test AllProjects.slnx --filter TestCategory=...` — run NUnit/xUnit suites; omit the filter for a full run.
 - `pwsh Scripts/run-all-tests.ps1 -BackendOnly -SkipBuild` — quick backend regression; remove switches to include Playwright.
 - `npm ci && npm run dev` in `ReactComponents/ga-react-components` — serve the sandbox; `npm run build` produces production bundles.
 
@@ -64,15 +64,37 @@ See `docs/MODULAR_RESTRUCTURING_PLAN.md` and `docs/MODULAR_RESTRUCTURING_PROGRES
 
 ### Modern Language Features (2026 Best Practices)
 1. **Primary Constructors**: Use for boilerplate-free dependency injection and state initialization.
-2. **Collection Expressions `[]`**: Standardize on `[]` for all collection initializations (Arrays, Lists, Spans). Avoid `new List<T>()` or `new[]`.
+2. **Collection Expressions `[]`**: Standardize on `[]` for all collection initializations (Arrays, Lists, Spans, and Custom Types). Avoid `new List<T>()` or `new[]`.
 3. **Spread Operator `..`**: Use within collection expressions to flatten or combine: `List<int> all = [..first, ..second, 42];`.
-4. **File-Scoped Namespaces**: Use `namespace MyNamespace;` to keep indentation levels low.
-5. **Using Directives**: Place **inside** the namespace declaration to avoid global scope pollution (as per `.editorconfig`).
-6. **Raw String Literals `"""`**: Use for JSON, SQL, or multi-line documentation to eliminate escape characters.
-7. **Expression-Bodied Members**: Use `=>` for single-line methods, properties, and constructors.
-8. **Lock Object**: Use `System.Threading.Lock` instead of `object` for synchronization.
+4. **Collection Builders**: For custom collection types, use `[CollectionBuilder(typeof(T), nameof(Create))]` to enable `[]` syntax.
+5. **File-Scoped Namespaces**: Use `namespace MyNamespace;` to keep indentation levels low.
+6. **Using Directives**: Place **inside** the namespace declaration to avoid global scope pollution (as per `.editorconfig`).
+7. **Raw String Literals `"""`**: Use for JSON, SQL, or multi-line documentation to eliminate escape characters.
+8. **Expression-Bodied Members**: Use `=>` for methods, properties, and constructors where the body is a single expression (even if formatted across multiple lines).
+9. **Lock Object**: Use `System.Threading.Lock` instead of `object` for synchronization.
 
 ### High-Quality 2026 Examples
+
+#### Modern Collection Pattern (2026)
+Custom types should support the `[]` syntax via the `CollectionBuilder` attribute. This enables compiler optimizations and improves readability.
+
+```csharp
+namespace GA.Domain.Core.Primitives;
+
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using GA.Core.Collections;
+
+[CollectionBuilder(typeof(AccidentedNoteCollection), nameof(Create))]
+public sealed class AccidentedNoteCollection(IReadOnlyCollection<Note.Accidented> items) 
+    : LazyPrintableCollectionBase<Note.Accidented>(items)
+{
+    public static AccidentedNoteCollection Create(ReadOnlySpan<Note.Accidented> items) => new([..items]);
+}
+
+// Usage:
+AccidentedNoteCollection notes = [Note.Chromatic.C, Note.Chromatic.E, Note.Chromatic.G];
+```
 
 #### Modern Service Pattern
 ```csharp
@@ -116,6 +138,42 @@ public string CategorizePlayer(PlayerProfile profile) => profile switch
 };
 ```
 
+#### Domain Collection Pattern
+For domain collections, enforce immutability, primary constructors, and collection expressions support via `[CollectionBuilder]`.
+
+```csharp
+namespace GA.Domain.Core.Primitives;
+
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using GA.Core.Collections;
+using JetBrains.Annotations;
+
+/// <summary>
+/// An ordered set of chromatic notes
+/// </summary>
+/// <param name="notes"></param>
+[PublicAPI]
+[CollectionBuilder(typeof(ChromaticNoteSet), nameof(Create))]
+public sealed class ChromaticNoteSet(ImmutableSortedSet<Note.Chromatic> notes)
+    : PrintableImmutableSet<Note.Chromatic>(notes)
+{
+    /// <summary>
+    ///     Empty <see cref="ChromaticNoteSet" />
+    /// </summary>
+    public static readonly ChromaticNoteSet Empty = new([]);
+
+    public static ChromaticNoteSet Create(ReadOnlySpan<Note.Chromatic> notes) => new([..notes]);
+}
+```
+
+10. **Span Conversion**: Use the `.ToSpan()` extension member to simplify converting `IEnumerable<T>` to `ReadOnlySpan<T>` while avoiding unnecessary allocations if the source is already an array.
+
+```csharp
+// Simplification
+public static double ShannonEntropy(IEnumerable<double> p) => ShannonEntropy(p.ToSpan());
+```
+
 ## Testing Guidelines
 - NUnit/xUnit projects live in `Tests/**`; name files `*Tests.cs` with behavior-focused methods (e.g., `ShouldComputeFretboardPositions`).
 - Run `dotnet test` before pushing; `pwsh Scripts/run-all-tests.ps1 -PlaywrightOnly` covers Playwright UI regression.
@@ -130,3 +188,16 @@ public string CategorizePlayer(PlayerProfile profile) => profile switch
 - Manage secrets with `dotnet user-secrets` or environment variables; audit `docs/` and `Specs/` for accidental leaks.
 - `Scripts/health-check.ps1`, Aspire (`https://localhost:15001`), Jaeger (`http://localhost:16686`), and Mongo Express (`http://localhost:8081`) monitor service health.
 - Update manifests in `GaMcpServer/` and `mcp-servers/` plus related docs whenever new agents or integrations are introduced.
+
+## Agent Skills
+The `.agent/skills` directory contains specialized instruction sets for AI agents working on this codebase. Agents MUST consult these skills when performing relevant tasks.
+
+- **C# Coding Standards** (`.agent/skills/csharp-coding-standards/SKILL.md`): Mandatory guidelines for C# 14/NET 10 development, including warning resolution and style enforcement.
+- **F# & Configuration Architecture** (`.agent/skills/fsharp-csharp-bridge/SKILL.md`): Comprehensive guide for F# development, YAML configuration standards, and C# interoperability patterns.
+- **Music Theory Validator** (`.agent/skills/music-theory-validator/SKILL.md`): Validation rules for Chords, Scales, and Intervals.
+- **OPTIC-K Schema Guardian** (`.agent/skills/optic-k-schema-guardian/SKILL.md`): Rules for the OPTIC-K embedding schema.
+- **React & Frontend Engineering** (`.agent/skills/react-frontend-engineering/SKILL.md`): Standards and best practices for React, TypeScript, and 3D visualization development within the Guitar Alchemist frontend.
+- **Semantic Search & RAG Architecture** (`.agent/skills/semantic-rag-architecture/SKILL.md`): Standards for AI embedding generation, vector indexing strategies, and Retrieval-Augmented Generation (RAG) pipelines within Guitar Alchemist.
+- **Annotations Guidance** (.agent/skills/annotations-guidance/SKILL.md): Guidelines for using JetBrains.Annotations vs native System.Diagnostics.CodeAnalysis attributes in C# 14/.NET 10+ codebases.
+- **Verification Before Completion** (.agent/skills/verification-before-completion/SKILL.md): Requires running verification commands and confirming output before making any success claims.
+- **Systematic Debugging** (.agent/skills/systematic-debugging/SKILL.md): Four-phase debugging methodology requiring root cause investigation before proposing fixes.

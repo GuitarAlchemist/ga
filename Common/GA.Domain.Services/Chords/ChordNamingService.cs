@@ -1,14 +1,12 @@
 namespace GA.Domain.Services.Chords;
 
 using Abstractions;
-using System.Collections.Generic;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
-using Core.Unified;
+using Core.Theory.Tonal.Modes.Unified;
+using ChordTemplate = ChordTemplate;
 
 /// <summary>
-/// Concrete DI-friendly service that forwards to the static
-/// <see cref="ChordTemplateNamingService"/> entry points.
+///     Concrete DI-friendly service that forwards to the static
+///     <see cref="ChordTemplateNamingService" /> entry points.
 /// </summary>
 public sealed class ChordNamingService : IChordNamingService
 {
@@ -47,10 +45,12 @@ public sealed class ChordNamingService : IChordNamingService
         => ChordTemplateNamingService.GenerateComprehensiveNames(formula, root, bassNote);
 
     // Interval list overloads
-    public string GetBestChordName(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root, PitchClass? bassNote = null)
+    public string GetBestChordName(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root,
+        PitchClass? bassNote = null)
         => ChordTemplateNamingService.GetBestChordName(intervals, formulaName, root, bassNote);
 
-    public IEnumerable<string> GetAllNamingOptions(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root, PitchClass? bassNote = null)
+    public IEnumerable<string> GetAllNamingOptions(IEnumerable<ChordFormulaInterval> intervals, string formulaName,
+        PitchClass root, PitchClass? bassNote = null)
         => ChordTemplateNamingService.GetAllNamingOptions(intervals, formulaName, root, bassNote);
 
     public ChordTemplateNamingService.ComprehensiveChordName GenerateComprehensiveNames(

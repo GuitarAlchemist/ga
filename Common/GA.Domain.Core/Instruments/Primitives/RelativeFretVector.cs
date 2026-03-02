@@ -1,11 +1,6 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using GA.Core.Combinatorics;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     List of <see cref="RelativeFret" /> items, indexed by string.
@@ -14,8 +9,9 @@ using JetBrains.Annotations;
 public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IEnumerable
 {
     private readonly ImmutableSortedDictionary<Str, RelativeFret> _relativeFretByStr = variation
-            .Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
-            .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
+        .Select((rFret, i) => (RelativeFret: rFret, Str: Str.FromValue(i + 1)))
+        .ToImmutableSortedDictionary(tuple => tuple.Str, tuple => tuple.RelativeFret);
+
     private readonly Variation<RelativeFret> _variation = variation;
 
     #region IIndexer<Str, RelativeFret> Members
@@ -32,15 +28,10 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IE
     /// </summary>
     /// <param name="startFret">The start <see cref="Fret" /></param>
     /// <returns>The <see cref="FretVector" />.</returns>
-    public FretVector ToFretVector(Fret startFret)
-    {
-        return new(_relativeFretByStr.Values.Select(relativeFret => startFret + relativeFret));
-    }
+    public FretVector ToFretVector(Fret startFret) =>
+        new(_relativeFretByStr.Values.Select(relativeFret => startFret + relativeFret));
 
-    public override string ToString()
-    {
-        return "+fret: " + string.Join(" ", _relativeFretByStr.Values);
-    }
+    public override string ToString() => "+fret: " + string.Join(" ", _relativeFretByStr.Values);
 
     /// <summary>
     ///     A prime form relative fret vector (e.g. "0 2 2 2 0 0")
@@ -58,12 +49,9 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IE
         /// </summary>
         public IReadOnlyCollection<Translation> Translations { get; } = translations;
 
-        public override string ToString()
-        {
-            return Translations.Any()
-                ? $"{base.ToString()} (Prime - {Translations.Count} translations)"
-                : $"{base.ToString()} (Prime)";
-        }
+        public override string ToString() => Translations.Any()
+            ? $"{base.ToString()} (Prime - {Translations.Count} translations)"
+            : $"{base.ToString()} (Prime)";
     }
 
     /// <summary>
@@ -84,25 +72,16 @@ public abstract class RelativeFretVector(Variation<RelativeFret> variation) : IE
         /// </summary>
         public PrimeForm PrimeFormValue => primeFormFactory.Invoke();
 
-        public override string ToString()
-        {
-            return $"{base.ToString()} (+ {Increment} from {PrimeFormValue})";
-        }
+        public override string ToString() => $"{base.ToString()} (+ {Increment} from {PrimeFormValue})";
     }
 
     #region IReadOnlyCollection<RelativeFret> Members
 
     public RelativeFret this[int index] => _variation[index];
 
-    public IEnumerator<RelativeFret> GetEnumerator()
-    {
-        return _relativeFretByStr.Values.GetEnumerator();
-    }
+    public IEnumerator<RelativeFret> GetEnumerator() => _relativeFretByStr.Values.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public int Count => _relativeFretByStr.Count;
 

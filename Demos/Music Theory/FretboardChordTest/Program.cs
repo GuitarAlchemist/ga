@@ -1,9 +1,9 @@
-namespace FretboardChordTest;
+﻿namespace FretboardChordTest;
 
 using System.Collections.Immutable;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Services.Fretboard.Analysis;
 using Spectre.Console;
 
@@ -304,10 +304,8 @@ internal class Program
         AnsiConsole.Write(table);
     }
 
-    private static List<(string name, ImmutableList<Position> positions)> GetKnownChordVoicings()
-    {
+    private static List<(string name, ImmutableList<Position> positions)> GetKnownChordVoicings() =>
         // Define some well-known chord voicings for testing
-        return
         [
             ("C Major", CreatePositions([(1, 3), (2, 2), (3, 0), (4, 1), (5, 0)])),
             ("G Major", CreatePositions([(1, 3), (2, 2), (3, 0), (4, 0), (5, 0), (6, 3)])),
@@ -316,7 +314,6 @@ internal class Program
             ("E Major", CreatePositions([(1, 0), (2, 2), (3, 2), (4, 1), (5, 0), (6, 0)])),
             ("F Major Barre", CreatePositions([(1, 1), (2, 1), (3, 3), (4, 3), (5, 2), (6, 1)]))
         ];
-    }
 
     private static ImmutableList<Position> CreatePositions(IEnumerable<(int str, int fret)> stringFretPairs)
     {

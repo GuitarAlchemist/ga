@@ -1,8 +1,8 @@
 ﻿namespace GA.Core.Tests.Collections;
 
+using Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Instruments.Fingering;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Tonal;
 

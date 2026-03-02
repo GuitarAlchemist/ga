@@ -2,7 +2,6 @@
 
 using System.Text.Json;
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using Spectre.Console;
 
@@ -193,9 +192,9 @@ internal class Program
             var sample = await collection.Find(new BsonDocument()).FirstOrDefaultAsync();
             if (sample != null)
             {
-                var panel = new Panel(sample.ToJson(new JsonWriterSettings { Indent = true }))
+                var panel = new Panel(sample.ToJson(new() { Indent = true }))
                 {
-                    Header = new PanelHeader("Sample Chord"),
+                    Header = new("Sample Chord"),
                     Border = BoxBorder.Rounded
                 };
                 AnsiConsole.Write(panel);

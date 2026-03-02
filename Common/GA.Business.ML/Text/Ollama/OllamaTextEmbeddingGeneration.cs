@@ -1,7 +1,6 @@
 namespace GA.Business.ML.Text.Ollama;
 
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Http.Json;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
 

@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Exotic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -45,15 +41,7 @@ public sealed class TritoneScaleMode(TritoneScaleDegree degree)
         }
     }
 
-    public static TritoneScaleMode Get(TritoneScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static TritoneScaleMode Get(TritoneScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static TritoneScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static TritoneScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

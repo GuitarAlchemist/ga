@@ -1,10 +1,9 @@
-namespace GA.Domain.Core.Tests.Chords;
+namespace GA.Business.Core.Tests.Chords;
 
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Tonal.Scales;
-using GA.Domain.Services.Chords.Analysis.Atonal;
-using NUnit.Framework;
-using TonalChordTemplate = Theory.Harmony.ChordTemplate;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Tonal.Scales;
+using Domain.Core.Theory.Harmony;
+using Domain.Services.Chords.Analysis.Atonal;
 
 [TestFixture]
 public class AtonalAnalysisMetadataTests
@@ -15,7 +14,7 @@ public class AtonalAnalysisMetadataTests
     {
         // Arrange
         var scale = Scale.Major;
-        var chord = TonalChordTemplate.Analytical.FromPitchClassSet(scale.PitchClassSet, "Ionian Scale Analysis");
+        var chord = ChordTemplate.Analytical.FromPitchClassSet(scale.PitchClassSet, "Ionian Scale Analysis");
         // Act
         var analysis = AtonalChordAnalysisService.AnalyzeAtonally(chord, PitchClass.C);
         // Assert

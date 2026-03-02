@@ -1,6 +1,5 @@
 ﻿namespace ChatbotExample1.Services.Ingestion;
 
-using GA.Domain.Services.Abstractions;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -69,10 +68,7 @@ public class PdfDirectorySource(string sourceDirectory) : IIngestionSource
         return [.. results];
     }
 
-    private static string SourceFileId(string path)
-    {
-        return Path.GetFileName(path);
-    }
+    private static string SourceFileId(string path) => Path.GetFileName(path);
 
     private static ImmutableList<PageParagraph> GetPageParagraphs(Page pdfPage)
     {

@@ -1,4 +1,4 @@
-﻿namespace GA.MusicTheory.Service.Models;
+namespace GA.MusicTheory.Service.Models;
 
 // Request/Response DTOs for Grothendieck operations
 public record ParseGrothendieckRequest(string Input);

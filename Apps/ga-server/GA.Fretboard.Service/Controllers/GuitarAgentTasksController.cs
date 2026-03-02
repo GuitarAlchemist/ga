@@ -1,6 +1,6 @@
 namespace GA.Fretboard.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 using Services;

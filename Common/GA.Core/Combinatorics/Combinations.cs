@@ -37,20 +37,15 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
 
     #endregion
 
-    public override string ToString()
-    {
-        return $"{typeof(T).Name}: {Elements}; {_boolVariations}";
-    }
+    public override string ToString() => $"{typeof(T).Name}: {Elements}; {_boolVariations}";
 
     /// <summary>
     ///     Gets the index of a variation.
     /// </summary>
     /// <param name="variation">The <see cref="IEnumerable{T}" /></param>
     /// <returns>The <see cref="BigInteger" /> index (Lexicographical order).</returns>
-    public BigInteger GetIndex(IEnumerable<T> variation)
-    {
-        return variation.Aggregate(BigInteger.Zero, (index, item) => index + _lazyWeightByItem.Value[item]);
-    }
+    public BigInteger GetIndex(IEnumerable<T> variation) =>
+        variation.Aggregate(BigInteger.Zero, (index, item) => index + _lazyWeightByItem.Value[item]);
 
     private ImmutableDictionary<T, BigInteger> GetWeightByItem()
     {
@@ -94,10 +89,7 @@ public class Combinations<T> : IEnumerable<Variation<T>>,
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public BigInteger Count => _boolVariations.Count;
 

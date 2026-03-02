@@ -5,49 +5,13 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 
 /// <summary>
-///     Service for managing cache invalidation strategies
-/// </summary>
-public interface ICacheInvalidationService
-{
-    /// <summary>
-    ///     Invalidate a specific cache entry
-    /// </summary>
-    void Invalidate(string key);
-
-    /// <summary>
-    ///     Invalidate all cache entries matching a pattern
-    /// </summary>
-    void InvalidatePattern(string pattern);
-
-    /// <summary>
-    ///     Invalidate all cache entries with a specific tag
-    /// </summary>
-    void InvalidateByTag(string tag);
-
-    /// <summary>
-    ///     Invalidate all cache entries
-    /// </summary>
-    void InvalidateAll();
-
-    /// <summary>
-    ///     Register a cache entry with tags for later invalidation
-    /// </summary>
-    void RegisterEntry(string key, params string[] tags);
-
-    /// <summary>
-    ///     Register a dependency between cache entries (cascading invalidation)
-    /// </summary>
-    void RegisterDependency(string key, string dependsOn);
-}
-
-/// <summary>
 ///     Implementation of cache invalidation service
 /// </summary>
 public class CacheInvalidationService(
     IMemoryCache memoryCache,
     ILogger<CacheInvalidationService> logger) : ICacheInvalidationService
 {
-    private readonly ConcurrentBag<string> _allKeys = new();
+    private readonly ConcurrentBag<string> _allKeys = [];
 
     private readonly ConcurrentDictionary<string, HashSet<string>> _dependencies = new();
 
@@ -136,7 +100,7 @@ public class CacheInvalidationService(
         {
             _keysByTag.AddOrUpdate(
                 tag,
-                _ => new HashSet<string> { key },
+                _ => [key],
                 (_, existing) =>
                 {
                     existing.Add(key);
@@ -152,7 +116,7 @@ public class CacheInvalidationService(
     {
         _dependencies.AddOrUpdate(
             dependsOn,
-            _ => new HashSet<string> { key },
+            _ => [key],
             (_, existing) =>
             {
                 existing.Add(key);

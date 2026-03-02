@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using JetBrains.Annotations;
-
 /// <summary>
 ///     Enumeration of alternate set-class label notations.
 /// </summary>

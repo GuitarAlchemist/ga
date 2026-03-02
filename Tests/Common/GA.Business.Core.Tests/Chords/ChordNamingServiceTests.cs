@@ -1,11 +1,11 @@
-namespace GA.Domain.Core.Tests.Chords;
+namespace GA.Business.Core.Tests.Chords;
 
 using GA.Domain.Core.Theory.Atonal;
-using Theory.Harmony;
-using GA.Domain.Core.Unified;
-using Domain.Services.Unified;
+using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal.Modes.Unified;
 using GA.Domain.Services.Chords;
 using GA.Domain.Services.Chords.Abstractions;
+using GA.Domain.Services.Unified;
 using Microsoft.Extensions.DependencyInjection;
 
 public class ChordNamingServiceTests

@@ -84,12 +84,10 @@ public class MongoDbService
     }
 
 
-    public Task<List<Chord>> GetChordsByIntervalSemitonesAsync(List<int> semitones, int limit = 100)
-    {
+    public Task<List<Chord>> GetChordsByIntervalSemitonesAsync(List<int> semitones, int limit = 100) =>
         // This is a complex query - for now, we'll skip it or implement it differently
         // You would need to query by the Intervals.Semitones array
-        return Task.FromResult(new List<Chord>());
-    }
+        Task.FromResult(new List<Chord>());
 
     public async Task<List<Chord>> GetChordsByScaleAsync(string parentScale, int? scaleDegree = null, int limit = 100)
     {
@@ -149,25 +147,16 @@ public class MongoDbService
         );
     }
 
-    public async Task<long> GetTotalChordCountAsync()
-    {
-        return await Chords.CountDocumentsAsync(new BsonDocument());
-    }
+    public async Task<long> GetTotalChordCountAsync() => await Chords.CountDocumentsAsync(new BsonDocument());
 
-    public async Task<List<string>> GetDistinctQualitiesAsync()
-    {
-        return await Chords.Distinct<string>("Quality", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctQualitiesAsync() =>
+        await Chords.Distinct<string>("Quality", new BsonDocument()).ToListAsync();
 
-    public async Task<List<string>> GetDistinctExtensionsAsync()
-    {
-        return await Chords.Distinct<string>("Extension", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctExtensionsAsync() =>
+        await Chords.Distinct<string>("Extension", new BsonDocument()).ToListAsync();
 
-    public async Task<List<string>> GetDistinctStackingTypesAsync()
-    {
-        return await Chords.Distinct<string>("StackingType", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctStackingTypesAsync() =>
+        await Chords.Distinct<string>("StackingType", new BsonDocument()).ToListAsync();
 
     public async Task<Chord?> GetChordByIdAsync(string id)
     {
@@ -286,23 +275,17 @@ public class MongoDbService
     {
         // Create text search filter
         var filter = Builders<Chord>.Filter.Or(
-            Builders<Chord>.Filter.Regex(c => c.Name, new BsonRegularExpression(query, "i")),
-            Builders<Chord>.Filter.Regex(c => c.Quality, new BsonRegularExpression(query, "i")),
-            Builders<Chord>.Filter.Regex(c => c.Extension, new BsonRegularExpression(query, "i"))
+            Builders<Chord>.Filter.Regex(c => c.Name, new(query, "i")),
+            Builders<Chord>.Filter.Regex(c => c.Quality, new(query, "i")),
+            Builders<Chord>.Filter.Regex(c => c.Extension, new(query, "i"))
         );
 
         return await Chords.Find(filter).Limit(limit).ToListAsync();
     }
 
-    public string GetConnectionString()
-    {
-        return _settings.ConnectionString;
-    }
+    public string GetConnectionString() => _settings.ConnectionString;
 
-    public string GetDatabaseName()
-    {
-        return _settings.DatabaseName;
-    }
+    public string GetDatabaseName() => _settings.DatabaseName;
 
     // ========================================
     // STREAMING METHODS (IAsyncEnumerable)

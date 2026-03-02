@@ -1,3 +1,5 @@
 namespace GaApi;
 
-public partial class Program { }
+public partial class Program
+{
+}

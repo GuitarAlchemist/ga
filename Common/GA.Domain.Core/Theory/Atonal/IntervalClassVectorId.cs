@@ -1,9 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-
 /// <summary>
 ///     Uniquely identifies an Interval Class Vector as a base-12 integer
 /// </summary>
@@ -25,10 +21,7 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     /// &lt;2, 5, 4, 3, 6, 1&gt;
     /// </code>
     /// </remarks>
-    public override string ToString()
-    {
-        return $"<{string.Join(" ", Vector.Values)}>";
-    }
+    public override string ToString() => $"<{string.Join(" ", Vector.Values)}>";
 
     /// <summary>
     ///     Converts a value to an interval vector representation
@@ -85,15 +78,9 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
 
     #region Static Helpers
 
-    public static implicit operator int(IntervalClassVectorId id)
-    {
-        return id.Value;
-    }
+    public static implicit operator int(IntervalClassVectorId id) => id.Value;
 
-    public static implicit operator IntervalClassVectorId(int value)
-    {
-        return new(value);
-    }
+    public static implicit operator IntervalClassVectorId(int value) => new(value);
 
     /// <summary>
     ///     Creates an ID from an Interval Class Vector
@@ -110,44 +97,23 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
 
     #region Equality Members
 
-    public bool Equals(IntervalClassVectorId other)
-    {
-        return Value == other.Value;
-    }
+    public bool Equals(IntervalClassVectorId other) => Value == other.Value;
 
-    public override int GetHashCode()
-    {
-        return Value;
-    }
+    public override int GetHashCode() => Value;
 
     #endregion
 
     #region Relational Members Members
 
-    public int CompareTo(IntervalClassVectorId other)
-    {
-        return Value.CompareTo(other.Value);
-    }
+    public int CompareTo(IntervalClassVectorId other) => Value.CompareTo(other.Value);
 
-    public static bool operator <(IntervalClassVectorId left, IntervalClassVectorId right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(IntervalClassVectorId left, IntervalClassVectorId right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(IntervalClassVectorId left, IntervalClassVectorId right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(IntervalClassVectorId left, IntervalClassVectorId right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(IntervalClassVectorId left, IntervalClassVectorId right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(IntervalClassVectorId left, IntervalClassVectorId right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(IntervalClassVectorId left, IntervalClassVectorId right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(IntervalClassVectorId left, IntervalClassVectorId right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

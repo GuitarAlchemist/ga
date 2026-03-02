@@ -1,9 +1,5 @@
 ﻿namespace GA.Domain.Services;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 /// <summary>
 ///     Unified service providing access to all musical knowledge from YAML configurations
 /// </summary>
@@ -18,9 +14,12 @@ public static class MusicalKnowledgeService
         {
             SearchTerm = searchTerm,
             IconicChords = [.. IconicChordsService.GetAllChords().Where(c => ContainsSearchTerm(c, searchTerm))],
-            ChordProgressions = [.. ChordProgressionsService.GetAllProgressions().Where(p => ContainsSearchTerm(p, searchTerm))],
-            GuitarTechniques = [.. GuitarTechniquesService.GetAllTechniques().Where(t => ContainsSearchTerm(t, searchTerm))],
-            SpecializedTunings = [.. SpecializedTuningsService.GetAllTunings().Where(t => ContainsSearchTerm(t, searchTerm))]
+            ChordProgressions =
+                [.. ChordProgressionsService.GetAllProgressions().Where(p => ContainsSearchTerm(p, searchTerm))],
+            GuitarTechniques =
+                [.. GuitarTechniquesService.GetAllTechniques().Where(t => ContainsSearchTerm(t, searchTerm))],
+            SpecializedTunings =
+                [.. SpecializedTuningsService.GetAllTunings().Where(t => ContainsSearchTerm(t, searchTerm))]
         };
 
         return result;
@@ -29,37 +28,36 @@ public static class MusicalKnowledgeService
     /// <summary>
     ///     Get all musical concepts by category
     /// </summary>
-    public static MusicalKnowledgeByCategory GetByCategory(string category)
-    {
-        return new()
+    public static MusicalKnowledgeByCategory GetByCategory(string category) =>
+        new()
         {
             Category = category,
-            IconicChords = [.. IconicChordsService.GetAllChords().Where(c => string.Equals(c.Genre, category, StringComparison.OrdinalIgnoreCase))],
+            IconicChords =
+            [
+                .. IconicChordsService.GetAllChords()
+                    .Where(c => string.Equals(c.Genre, category, StringComparison.OrdinalIgnoreCase))
+            ],
             ChordProgressions = [.. ChordProgressionsService.FindProgressionsByCategory(category)],
             GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByCategory(category)],
             SpecializedTunings = [.. SpecializedTuningsService.FindTuningsByCategory(category)]
         };
-    }
 
     /// <summary>
     ///     Get all musical concepts by difficulty level
     /// </summary>
-    public static MusicalKnowledgeByDifficulty GetByDifficulty(string difficulty)
-    {
-        return new()
+    public static MusicalKnowledgeByDifficulty GetByDifficulty(string difficulty) =>
+        new()
         {
             Difficulty = difficulty,
             ChordProgressions = [.. ChordProgressionsService.FindProgressionsByDifficulty(difficulty)],
             GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByDifficulty(difficulty)]
         };
-    }
 
     /// <summary>
     ///     Get all musical concepts associated with an artist
     /// </summary>
-    public static MusicalKnowledgeByArtist GetByArtist(string artist)
-    {
-        return new()
+    public static MusicalKnowledgeByArtist GetByArtist(string artist) =>
+        new()
         {
             Artist = artist,
             IconicChords = [.. IconicChordsService.FindChordsByArtist(artist)],
@@ -67,14 +65,12 @@ public static class MusicalKnowledgeService
             GuitarTechniques = [.. GuitarTechniquesService.FindTechniquesByArtist(artist)],
             SpecializedTunings = [.. SpecializedTuningsService.FindTuningsByArtist(artist)]
         };
-    }
 
     /// <summary>
     ///     Get comprehensive statistics about the musical knowledge base
     /// </summary>
-    public static MusicalKnowledgeStatistics GetStatistics()
-    {
-        return new()
+    public static MusicalKnowledgeStatistics GetStatistics() =>
+        new()
         {
             TotalIconicChords = IconicChordsService.GetAllChords().Count(),
             TotalChordProgressions = ChordProgressionsService.GetAllProgressions().Count(),
@@ -89,7 +85,6 @@ public static class MusicalKnowledgeService
             DifficultyBreakdown = GetDifficultyBreakdown(),
             ArtistBreakdown = GetArtistBreakdown()
         };
-    }
 
     /// <summary>
     ///     Validate all configurations and return comprehensive validation results
@@ -109,49 +104,46 @@ public static class MusicalKnowledgeService
             ChordProgressionsValidation = progressionsValidation,
             GuitarTechniquesValidation = techniquesValidation,
             SpecializedTuningsValidation = tuningsValidation,
-            AllErrors = [.. iconicChordsValidation.Errors
-, .. progressionsValidation.Errors, .. techniquesValidation.Errors, .. tuningsValidation.Errors]
+            AllErrors =
+            [
+                .. iconicChordsValidation.Errors, .. progressionsValidation.Errors, .. techniquesValidation.Errors,
+                .. tuningsValidation.Errors
+            ]
         };
     }
 
     /// <summary>
     ///     Get all unique artists across all configurations
     /// </summary>
-    public static IEnumerable<string> GetAllArtists()
-    {
-        return IconicChordsService.GetAllArtists()
+    public static IEnumerable<string> GetAllArtists() =>
+        IconicChordsService.GetAllArtists()
             .Concat(ChordProgressionsService.GetAllArtists())
             .Concat(GuitarTechniquesService.GetAllArtists())
             .Concat(SpecializedTuningsService.GetAllArtists())
             .Where(a => !string.IsNullOrEmpty(a))
             .Distinct()
             .OrderBy(a => a);
-    }
 
     /// <summary>
     ///     Get all unique categories across all configurations
     /// </summary>
-    public static IEnumerable<string> GetAllCategories()
-    {
-        return ChordProgressionsService.GetAllCategories()
+    public static IEnumerable<string> GetAllCategories() =>
+        ChordProgressionsService.GetAllCategories()
             .Concat(GuitarTechniquesService.GetAllCategories())
             .Concat(SpecializedTuningsService.GetAllCategories())
             .Where(c => !string.IsNullOrEmpty(c))
             .Distinct()
             .OrderBy(c => c);
-    }
 
     /// <summary>
     ///     Get all unique difficulty levels across all configurations
     /// </summary>
-    public static IEnumerable<string> GetAllDifficulties()
-    {
-        return ChordProgressionsService.GetAllDifficulties()
+    public static IEnumerable<string> GetAllDifficulties() =>
+        ChordProgressionsService.GetAllDifficulties()
             .Concat(GuitarTechniquesService.GetAllDifficulties())
             .Where(d => !string.IsNullOrEmpty(d))
             .Distinct()
             .OrderBy(d => d);
-    }
 
     /// <summary>
     ///     Reload all configurations
@@ -165,46 +157,38 @@ public static class MusicalKnowledgeService
     }
 
     // Private helper methods
-    private static bool ContainsSearchTerm(IconicChordDefinition chord, string searchTerm)
-    {
-        return chord.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               chord.TheoreticalName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               chord.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               chord.Artist.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               chord.Song.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               chord.AlternateNames.Any(n => n.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-    }
+    private static bool ContainsSearchTerm(IconicChordDefinition chord, string searchTerm) =>
+        chord.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        chord.TheoreticalName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        chord.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        chord.Artist.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        chord.Song.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        chord.AlternateNames.Any(n => n.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
-    private static bool ContainsSearchTerm(ChordProgressionDefinition progression, string searchTerm)
-    {
-        return progression.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               progression.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               progression.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               progression.Theory.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               progression.UsedBy.Any(u => u.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-               progression.Examples.Any(e => e.Song.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                             e.Artist.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-    }
+    private static bool ContainsSearchTerm(ChordProgressionDefinition progression, string searchTerm) =>
+        progression.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        progression.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        progression.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        progression.Theory.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        progression.UsedBy.Any(u => u.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+        progression.Examples.Any(e => e.Song.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                      e.Artist.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
-    private static bool ContainsSearchTerm(GuitarTechniqueDefinition technique, string searchTerm)
-    {
-        return technique.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               technique.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               technique.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               technique.Inventor.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               technique.Theory.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               technique.Artists.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-               technique.Songs.Any(s => s.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-    }
+    private static bool ContainsSearchTerm(GuitarTechniqueDefinition technique, string searchTerm) =>
+        technique.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        technique.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        technique.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        technique.Inventor.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        technique.Theory.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        technique.Artists.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+        technique.Songs.Any(s => s.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
-    private static bool ContainsSearchTerm(SpecializedTuningDefinition tuning, string searchTerm)
-    {
-        return tuning.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               tuning.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               tuning.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-               tuning.Applications.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-               tuning.Artists.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-    }
+    private static bool ContainsSearchTerm(SpecializedTuningDefinition tuning, string searchTerm) =>
+        tuning.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        tuning.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        tuning.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        tuning.Applications.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+        tuning.Artists.Any(a => a.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     private static Dictionary<string, int> GetCategoriesBreakdown()
     {

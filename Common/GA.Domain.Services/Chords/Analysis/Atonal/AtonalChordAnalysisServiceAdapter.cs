@@ -1,21 +1,23 @@
 namespace GA.Domain.Services.Chords.Analysis.Atonal;
 
 using Abstractions;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using ServicesChordTemplate = ChordTemplate;
 
 /// <summary>
-/// Adapter that exposes the existing static <see cref="AtonalChordAnalysisService"/>
-/// through the generic <see cref="IChordAnalysisService"/> abstraction.
+///     Adapter that exposes the existing static <see cref="AtonalChordAnalysisService" />
+///     through the generic <see cref="IChordAnalysisService" /> abstraction.
 /// </summary>
 public sealed class AtonalChordAnalysisServiceAdapter : IChordAnalysisService
 {
     public bool CanAnalyze(ChordTemplate template)
-        => AtonalChordAnalysisService.RequiresAtonalAnalysis(template);
+        => AtonalChordAnalysisService.RequiresAtonalAnalysis(ConvertToServices(template));
 
     public string GetSuggestedName(ChordTemplate template, PitchClass root)
-        => AtonalChordAnalysisService.GenerateAtonalChordName(template, root);
+        => AtonalChordAnalysisService.GenerateAtonalChordName(ConvertToServices(template), root);
 
     public string GetDescription(ChordTemplate template, PitchClass root)
-        => AtonalChordAnalysisService.GetAtonalDescription(template, root);
+        => AtonalChordAnalysisService.GetAtonalDescription(ConvertToServices(template), root);
+
+    private static ServicesChordTemplate ConvertToServices(ChordTemplate template)
+        => template;
 }

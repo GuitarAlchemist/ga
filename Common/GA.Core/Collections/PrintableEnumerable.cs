@@ -6,13 +6,7 @@ public sealed class PrintableEnumerable<T>(
 {
     private readonly IEnumerable<T> _items = items ?? throw new ArgumentNullException(nameof(items));
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

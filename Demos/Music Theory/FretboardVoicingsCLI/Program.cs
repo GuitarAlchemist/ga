@@ -1,19 +1,37 @@
 ﻿namespace FretboardVoicingsCLI;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Analysis;
+using System.Text.Json;
+using GA.Business.Core.Analysis.Voicings;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Services.Fretboard.Voicings.Filtering;
 using GA.Domain.Services.Fretboard.Voicings.Generation;
-// For MidiNote
 using Spectre.Console;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    /// <summary>
+    ///     Export mode options parsed from command-line arguments
+    /// </summary>
+    private sealed record ExportOptions(int? MaxVoicings, bool ShowHelp);
+
+    private static async Task<int> Main(string[] args)
     {
+        // Check for export mode BEFORE any AnsiConsole output
+        if (TryParseExportOptions(args, out var exportOptions))
+        {
+            if (exportOptions.ShowHelp)
+            {
+                DisplayExportHelp();
+                return 0;
+            }
+
+            return await RunExportAsync(exportOptions);
+        }
+
+        // === Interactive mode (existing behavior) ===
         AnsiConsole.Write(new FigletText("Fretboard Voicings").Color(Color.Green));
         AnsiConsole.MarkupLine("[dim]Finding all possible voicings on a 6-string guitar in standard tuning[/]\n");
 
@@ -24,10 +42,11 @@ internal class Program
         var fretboard = Fretboard.Default;
 
         // Create collection of all relative fret vectors (5-fret extent, 6 strings)
-        var vectorCollection = new RelativeFretVectorCollection(strCount: 6, fretExtent: 5);
+        var vectorCollection = new RelativeFretVectorCollection(6, 5);
 
-        AnsiConsole.MarkupLine($"[dim]Using optimized voicing generation with parallel processing[/]");
-        AnsiConsole.MarkupLine($"[dim]Vector collection: {vectorCollection.Count:N0} total vectors, {vectorCollection.PrimeForms.Count:N0} prime forms[/]\n");
+        AnsiConsole.MarkupLine("[dim]Using optimized voicing generation with parallel processing[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]Vector collection: {vectorCollection.Count:N0} total vectors, {vectorCollection.PrimeForms.Count:N0} prime forms[/]\n");
 
         const int windowSize = 4; // 5 frets: [start, start+4]
         const int maxStartFret = 22 - windowSize; // 18
@@ -35,18 +54,19 @@ internal class Program
         var totalStartTime = DateTime.Now;
 
         // Generate all voicings using the core library (with parallel processing and deduplication)
-        AnsiConsole.MarkupLine($"[dim]Generating all voicings across {maxStartFret + 1} windows using {Environment.ProcessorCount} cores[/]\n");
+        AnsiConsole.MarkupLine(
+            $"[dim]Generating all voicings across {maxStartFret + 1} windows using {Environment.ProcessorCount} cores[/]\n");
 
         var allVoicings = VoicingGenerator.GenerateAllVoicings(
             fretboard,
-            windowSize: windowSize,
-            minPlayedNotes: 2,
-            parallel: true);
+            windowSize,
+            2,
+            true);
 
         AnsiConsole.MarkupLine($"[green]Generated {allVoicings.Count:N0} unique voicings[/]\n");
 
         // Show first 20 voicings to verify ordering starts at fret 0
-        AnsiConsole.MarkupLine($"[yellow]First 20 voicings (to verify ordering):[/]\n");
+        AnsiConsole.MarkupLine("[yellow]First 20 voicings (to verify ordering):[/]\n");
         var first20 = allVoicings.Take(20).ToList();
         foreach (var voicing in first20)
         {
@@ -61,20 +81,24 @@ internal class Program
         // Keep only prime forms
         var primeFormsOnly = allDecomposed.Where(d => d.PrimeForm != null).ToList();
 
-        AnsiConsole.MarkupLine($"\n[dim]Decomposition: {allDecomposed.Count:N0} voicings → {primeFormsOnly.Count:N0} prime forms ({decompositionElapsed.TotalMilliseconds:N0}ms)[/]\n");
+        AnsiConsole.MarkupLine(
+            $"\n[dim]Decomposition: {allDecomposed.Count:N0} voicings → {primeFormsOnly.Count:N0} prime forms ({decompositionElapsed.TotalMilliseconds:N0}ms)[/]\n");
 
         allDecomposed = primeFormsOnly;
 
         var totalElapsed = DateTime.Now - totalStartTime;
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"[bold green]Total: {allDecomposed.Count:N0} unique prime form voicings across entire fretboard[/]");
-        AnsiConsole.MarkupLine($"[dim]Total time: {totalElapsed.TotalSeconds:N1}s ({totalElapsed.TotalMilliseconds:N0}ms)[/]");
+        AnsiConsole.MarkupLine(
+            $"[bold green]Total: {allDecomposed.Count:N0} unique prime form voicings across entire fretboard[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]Total time: {totalElapsed.TotalSeconds:N1}s ({totalElapsed.TotalMilliseconds:N0}ms)[/]");
 
         // Display filter criteria
         DisplayFilterCriteria(filterCriteria);
 
         // Apply filters and show matching voicings
-        AnsiConsole.MarkupLine($"[dim]Applying filters and showing up to {filterCriteria.MaxResults} matching voicings...[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]Applying filters and showing up to {filterCriteria.MaxResults} matching voicings...[/]");
 
         var filteringStart = DateTime.Now;
         var primeFormVoicings = allDecomposed.Select(d => d.Voicing);
@@ -84,16 +108,19 @@ internal class Program
 
         var filteringElapsed = DateTime.Now - filteringStart;
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"[dim]Filtering time: {filteringElapsed.TotalSeconds:F2}s ({filteringElapsed.TotalMilliseconds:N0}ms)[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]Filtering time: {filteringElapsed.TotalSeconds:F2}s ({filteringElapsed.TotalMilliseconds:N0}ms)[/]");
 
         AnsiConsole.MarkupLine("\n[green]Press any key to exit...[/]");
         Console.ReadKey();
+        return 0;
     }
 
     /// <summary>
-    /// Displays filtered voicings in YAML format with comprehensive musical analysis
+    ///     Displays filtered voicings in YAML format with comprehensive musical analysis
     /// </summary>
-    private static void DisplayFilteredVoicings(IEnumerable<(Voicing Voicing, MusicalVoicingAnalysis Analysis)> filteredVoicings)
+    private static void DisplayFilteredVoicings(
+        IEnumerable<(Voicing Voicing, MusicalVoicingAnalysis Analysis)> filteredVoicings)
     {
         var samples = filteredVoicings.ToList();
 
@@ -105,7 +132,10 @@ internal class Program
             var midiNotes = string.Join(", ", analysis.MidiNotes);
 
             // Fix: handle int[] midi notes conversion to note names
-            var noteNames = string.Join(", ", analysis.MidiNotes.Select(n => $"\"{(MidiNote)n}\"")); // MidiNote.ToString() prints value? No, I need note name.
+            var noteNames =
+                string.Join(", ",
+                    analysis.MidiNotes.Select(n =>
+                        $"\"{(MidiNote)n}\"")); // MidiNote.ToString() prints value? No, I need note name.
             // MidiNote has ToSharpNote().
             // So: ((MidiNote)n).ToSharpNote().
             noteNames = string.Join(", ", analysis.MidiNotes.Select(n => $"\"{((MidiNote)n).ToSharpNote()}\""));
@@ -114,95 +144,111 @@ internal class Program
             var chordName = analysis.ChordId.ChordName ?? "Unknown";
 
             if (analysis.SymmetricalInfo != null)
+            {
                 chordName = analysis.SymmetricalInfo.ScaleName; // Fixed property access
+            }
 
             var keyFunction = analysis.ChordId.FunctionalDescription ?? "Atonal";
             if (!analysis.ChordId.IsNaturallyOccurring && analysis.ChordId.ClosestKey != null)
+            {
                 keyFunction += " (chromatic)";
+            }
 
             var icv = analysis.IntervallicInfo.IntervalClassVector;
             var features = string.Join(", ", analysis.IntervallicInfo.Features);
-            if (string.IsNullOrEmpty(features)) features = "none";
+            if (string.IsNullOrEmpty(features))
+            {
+                features = "none";
+            }
 
             Console.WriteLine($"  - diagram: \"{diagram}\"");
             Console.WriteLine($"    midi_notes: [{midiNotes}]");
             Console.WriteLine($"    notes: [{noteNames}]");
             Console.WriteLine($"    pitch_classes: \"{pitchClasses}\"");
-            Console.WriteLine($"    chord:");
+            Console.WriteLine("    chord:");
             Console.WriteLine($"      name: \"{chordName}\"");
 
             if (analysis.AlternateChordNames != null)
             {
-                 var alt = analysis.AlternateChordNames.FirstOrDefault(n => n != chordName);
-                 if (alt != null)
+                var alt = analysis.AlternateChordNames.FirstOrDefault(n => n != chordName);
+                if (alt != null)
+                {
                     Console.WriteLine($"      alternate_name: \"{alt}\"");
+                }
             }
 
             if (analysis.ChordId.SlashChordInfo != null)
             {
-                Console.WriteLine($"      slash_chord:");
+                Console.WriteLine("      slash_chord:");
                 Console.WriteLine($"        info: \"{analysis.ChordId.SlashChordInfo}\"");
             }
+
             Console.WriteLine($"      key_function: \"{keyFunction}\"");
-            Console.WriteLine($"      naturally_occurring: {analysis.ChordId.IsNaturallyOccurring.ToString().ToLower()}");
+            Console.WriteLine(
+                $"      naturally_occurring: {analysis.ChordId.IsNaturallyOccurring.ToString().ToLower()}");
 
             Console.WriteLine($"      intervals: [{string.Join(", ", analysis.IntervallicInfo.Intervals)}]");
 
-            Console.WriteLine($"    voicing:");
+            Console.WriteLine("    voicing:");
             Console.WriteLine($"      type: \"{(analysis.VoicingCharacteristics.IsOpenVoicing ? "open" : "closed")}\"");
             Console.WriteLine($"      span_semitones: {analysis.VoicingCharacteristics.IntervalSpread}");
             if (analysis.VoicingCharacteristics.IsRootless)
             {
-                Console.WriteLine($"      rootless: true");
+                Console.WriteLine("      rootless: true");
             }
+
             if (analysis.VoicingCharacteristics.DropVoicing != null)
             {
                 Console.WriteLine($"      drop_voicing: \"{analysis.VoicingCharacteristics.DropVoicing}\"");
             }
+
             if (analysis.VoicingCharacteristics.Features.Count > 0)
             {
                 Console.WriteLine($"      features: [{string.Join(", ", analysis.VoicingCharacteristics.Features)}]");
             }
+
             if (analysis.ModeInfo != null)
             {
-                Console.WriteLine($"    mode:");
+                Console.WriteLine("    mode:");
                 Console.WriteLine($"      name: \"{analysis.ModeInfo.ModeName}\"");
                 if (analysis.ModeInfo.FamilyName != null)
                 {
                     Console.WriteLine($"      family: \"{analysis.ModeInfo.FamilyName}\"");
                 }
+
                 Console.WriteLine($"      degree: {analysis.ModeInfo.Degree}");
             }
-            Console.WriteLine($"    analysis:");
+
+            Console.WriteLine("    analysis:");
             Console.WriteLine($"      interval_class_vector: \"{icv}\"");
             Console.WriteLine($"      features: [{features}]");
             if (analysis.SymmetricalInfo != null)
             {
-                Console.WriteLine($"      symmetrical_scale:");
+                Console.WriteLine("      symmetrical_scale:");
                 Console.WriteLine($"        name: \"{analysis.SymmetricalInfo.ScaleName}\"");
             }
 
             // Equivalence information
             if (analysis.EquivalenceInfo != null)
             {
-                Console.WriteLine($"    equivalence:");
+                Console.WriteLine("    equivalence:");
                 Console.WriteLine($"      prime_form_id: \"{analysis.EquivalenceInfo.PrimeFormId}\"");
                 Console.WriteLine($"      translation_offset: {analysis.EquivalenceInfo.TranslationOffset}");
             }
 
             // Physical layout
-            Console.WriteLine($"    physical_layout:");
+            Console.WriteLine("    physical_layout:");
             Console.WriteLine($"      fret_positions: [{string.Join(", ", analysis.PhysicalLayout.FretPositions)}]");
             Console.WriteLine($"      strings_used: [{string.Join(", ", analysis.PhysicalLayout.StringsUsed)}]");
             Console.WriteLine($"      muted_strings: [{string.Join(", ", analysis.PhysicalLayout.MutedStrings)}]");
             Console.WriteLine($"      open_strings: [{string.Join(", ", analysis.PhysicalLayout.OpenStrings)}]");
-            Console.WriteLine($"      fret_range:");
+            Console.WriteLine("      fret_range:");
             Console.WriteLine($"        min: {analysis.PhysicalLayout.MinFret}");
             Console.WriteLine($"        max: {analysis.PhysicalLayout.MaxFret}");
             Console.WriteLine($"      hand_position: \"{analysis.PhysicalLayout.HandPosition}\"");
 
             // Playability
-            Console.WriteLine($"    playability:");
+            Console.WriteLine("    playability:");
             Console.WriteLine($"      difficulty: \"{analysis.PlayabilityInfo.Difficulty}\"");
             Console.WriteLine($"      hand_stretch: {analysis.PlayabilityInfo.HandStretch}");
             Console.WriteLine($"      barre_required: {analysis.PlayabilityInfo.BarreRequired.ToString().ToLower()}");
@@ -215,19 +261,20 @@ internal class Program
             // Semantic tags
             if (analysis.SemanticTags.Length > 0)
             {
-                Console.WriteLine($"    semantic_tags: [{string.Join(", ", analysis.SemanticTags.Select(t => $"\"{t}\""))}]");
+                Console.WriteLine(
+                    $"    semantic_tags: [{string.Join(", ", analysis.SemanticTags.Select(t => $"\"{t}\""))}]");
             }
         }
     }
 
     /// <summary>
-    /// Parses command-line arguments to create filter criteria
+    ///     Parses command-line arguments to create filter criteria
     /// </summary>
     private static VoicingFilterCriteria ParseArguments(string[] args)
     {
         var criteria = new VoicingFilterCriteria();
 
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             var arg = args[i].ToLower();
 
@@ -320,6 +367,7 @@ internal class Program
                         criteria.MaxResults = maxResults;
                         i++; // Skip next argument
                     }
+
                     break;
 
                 case "--help":
@@ -334,7 +382,7 @@ internal class Program
     }
 
     /// <summary>
-    /// Displays the active filter criteria
+    ///     Displays the active filter criteria
     /// </summary>
     private static void DisplayFilterCriteria(VoicingFilterCriteria criteria)
     {
@@ -342,29 +390,41 @@ internal class Program
         AnsiConsole.MarkupLine("[yellow]Active Filters:[/]");
 
         if (criteria.ChordType != null && criteria.ChordType != ChordTypeFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Chord Type:[/] {criteria.ChordType}");
+        }
 
         if (criteria.VoicingType != null && criteria.VoicingType != VoicingTypeFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Voicing Type:[/] {criteria.VoicingType}");
+        }
 
         if (criteria.Characteristics != null && criteria.Characteristics != VoicingCharacteristicFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Characteristics:[/] {criteria.Characteristics}");
+        }
 
         if (criteria.KeyContext != null && criteria.KeyContext != KeyContextFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Key Context:[/] {criteria.KeyContext}");
+        }
 
         if (criteria.FretRange != null && criteria.FretRange != FretRangeFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Fret Range:[/] {criteria.FretRange}");
+        }
 
         if (criteria.NoteCount != null && criteria.NoteCount != NoteCountFilter.All)
+        {
             AnsiConsole.MarkupLine($"  [dim]Note Count:[/] {criteria.NoteCount}");
+        }
 
         AnsiConsole.MarkupLine($"  [dim]Max Results:[/] {criteria.MaxResults}");
         AnsiConsole.WriteLine();
     }
 
     /// <summary>
-    /// Displays help information
+    ///     Displays help information
     /// </summary>
     private static void DisplayHelp()
     {
@@ -412,4 +472,97 @@ internal class Program
         AnsiConsole.MarkupLine("  FretboardVoicingsCLI --triads --open-position --key-c");
         AnsiConsole.MarkupLine("  FretboardVoicingsCLI --rootless --dominant --diatonic");
     }
+
+    #region Export Mode (JSONL)
+
+    /// <summary>
+    ///     Attempts to parse export mode options from command-line arguments.
+    ///     Returns true if --export flag is present.
+    /// </summary>
+    private static bool TryParseExportOptions(string[] args, out ExportOptions options)
+    {
+        options = default!;
+        var hasExport = args.Any(a => a.Equals("--export", StringComparison.OrdinalIgnoreCase));
+        if (!hasExport) return false;
+
+        var showHelp = args.Any(a => a.Equals("--export-help", StringComparison.OrdinalIgnoreCase));
+        int? maxVoicings = null;
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].Equals("--export-max", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                if (int.TryParse(args[i + 1], out var max)) maxVoicings = max;
+            }
+        }
+
+        options = new ExportOptions(maxVoicings, showHelp);
+        return true;
+    }
+
+    /// <summary>
+    ///     Runs export mode: streams voicings to stdout as JSONL (one JSON object per line).
+    ///     Skips decomposition, analysis, and filtering for performance.
+    /// </summary>
+    private static async Task<int> RunExportAsync(ExportOptions options)
+    {
+        var fretboard = Fretboard.Default;
+        const int windowSize = 4;
+        const int minPlayedNotes = 2;
+
+        var count = 0;
+        var maxVoicings = options.MaxVoicings ?? int.MaxValue;
+
+        await foreach (var voicing in VoicingGenerator.GenerateAllVoicingsAsync(
+                           fretboard, windowSize, minPlayedNotes, parallel: true))
+        {
+            if (count >= maxVoicings) break;
+
+            var dto = new
+            {
+                diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions),
+                frets = voicing.Positions.Select(p => p switch
+                {
+                    Position.Muted => "x",
+                    Position.Played played => played.Location.Fret.Value.ToString(),
+                    _ => "?"
+                }).ToArray(),
+                midiNotes = voicing.Notes.Select(n => (int)n).ToArray(),
+                minFret = VoicingExtensions.GetMinFret(voicing.Positions),
+                maxFret = VoicingExtensions.GetMaxFret(voicing.Positions),
+                fretSpan = VoicingExtensions.GetFretSpan(voicing.Positions)
+            };
+
+            Console.WriteLine(JsonSerializer.Serialize(dto));
+            count++;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    ///     Displays export mode help to stderr (keeping stdout clean for JSONL).
+    /// </summary>
+    private static void DisplayExportHelp()
+    {
+        Console.Error.WriteLine("Fretboard Voicings CLI - Export Mode (JSONL)");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Usage:");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export [--export-max N]");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Options:");
+        Console.Error.WriteLine("  --export          Enable export mode (JSONL to stdout)");
+        Console.Error.WriteLine("  --export-max N    Limit output to N voicings");
+        Console.Error.WriteLine("  --export-help     Show this help message");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Output Format (one JSON object per line):");
+        Console.Error.WriteLine("  {\"diagram\":\"x-3-2-0-1-0\",\"frets\":[\"x\",\"3\",\"2\",\"0\",\"1\",\"0\"],");
+        Console.Error.WriteLine("   \"midiNotes\":[48,52,55,60,64],\"minFret\":1,\"maxFret\":3,\"fretSpan\":2}");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Examples:");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export > voicings.jsonl");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export --export-max 1000 > sample.jsonl");
+    }
+
+    #endregion
 }

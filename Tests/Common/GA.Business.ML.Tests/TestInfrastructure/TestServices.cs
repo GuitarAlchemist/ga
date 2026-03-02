@@ -8,16 +8,15 @@ using Domain.Services.Fretboard.Analysis;
 
 public static class TestServices
 {
-    public static MusicalEmbeddingGenerator CreateGenerator()
-    {
-        return new MusicalEmbeddingGenerator(
+    public static MusicalEmbeddingGenerator CreateGenerator() =>
+        new MusicalEmbeddingGenerator(
             new IdentityVectorService(),
             new TheoryVectorService(),
             new MorphologyVectorService(),
             new ContextVectorService(),
             new SymbolicVectorService(),
+            new ModalVectorService(),
             new PhaseSphereService());
-    }
 
     public static TabAnalysisService CreateTabAnalysisService()
     {
@@ -26,19 +25,16 @@ public static class TestServices
         var generator = CreateGenerator();
         var detector = new CadenceDetector();
 
-        return new TabAnalysisService(tokenizer, converter, generator, detector);
+        return new(tokenizer, converter, generator, detector);
     }
 
     public static FileBasedVectorIndex CreateTempIndex()
     {
         var tempFile = Path.GetTempFileName();
-        return new FileBasedVectorIndex(tempFile);
+        return new(tempFile);
     }
 
-    public static Retrieval.StyleProfileService CreateStyleProfileService(FileBasedVectorIndex index)
-    {
-        return new Retrieval.StyleProfileService(index);
-    }
+    public static Retrieval.StyleProfileService CreateStyleProfileService(FileBasedVectorIndex index) => new(index);
 
     public static AdvancedTabSolver CreateAdvancedTabSolver(FileBasedVectorIndex index)
     {
@@ -48,7 +44,7 @@ public static class TestServices
         var style = CreateStyleProfileService(index);
         var generator = CreateGenerator();
 
-        return new AdvancedTabSolver(mapper, cost, style, generator);
+        return new(mapper, cost, style, generator);
     }
 
     public static async Task<(MusicalEmbeddingGenerator Generator, FileBasedVectorIndex Index)> CreateAsync()

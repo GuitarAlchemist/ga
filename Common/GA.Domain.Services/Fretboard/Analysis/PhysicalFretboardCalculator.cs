@@ -1,9 +1,6 @@
 namespace GA.Domain.Services.Fretboard.Analysis;
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Core.Instruments.Primitives;
 using static Core.Instruments.Primitives.Position;
 
@@ -66,10 +63,8 @@ public static class PhysicalFretboardCalculator
     /// <param name="fretNumber">Fret number</param>
     /// <param name="scaleLengthMm">Scale length in millimeters</param>
     /// <returns>Fret width in millimeters</returns>
-    public static double CalculateFretWidthMm(int fretNumber, double scaleLengthMm = ScaleLengths.Default)
-    {
-        return CalculateFretDistanceMm(fretNumber, fretNumber + 1, scaleLengthMm);
-    }
+    public static double CalculateFretWidthMm(int fretNumber, double scaleLengthMm = ScaleLengths.Default) =>
+        CalculateFretDistanceMm(fretNumber, fretNumber + 1, scaleLengthMm);
 
     /// <summary>
     ///     Calculate string spacing at a specific fret

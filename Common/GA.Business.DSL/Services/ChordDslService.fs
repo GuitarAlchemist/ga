@@ -8,19 +8,17 @@ type ChordDslService() =
     /// <summary>
     /// Parses any real-world chord string into a structured AST.
     /// </summary>
-    member _.Parse(chordStr: string) =
-        ChordParser.parse chordStr
+    member _.Parse(chordStr: string) = ChordParser.parse chordStr
 
     /// <summary>
     /// Renders an AST back into a canonical Guitar Alchemist chord string.
     /// </summary>
-    member _.Render(ast: ChordAst) =
-        ChordRenderer.render ast
+    member _.Render(ast: ChordAst) = ChordRenderer.render ast
 
     /// <summary>
     /// Normalizes a messy human chord string into a canonical one.
     /// </summary>
     member this.Normalize(chordStr: string) =
         match this.Parse chordStr with
-        | Ok ast -> Ok (this.Render ast)
+        | Ok ast -> Ok(this.Render ast)
         | Error err -> Error err

@@ -1,45 +1,34 @@
 namespace GA.Business.ML.Retrieval;
 
-using Domain.Services.Fretboard.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Domain.Core.Instruments;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Core.Primitives;
+using Domain.Core.Primitives.Notes;
+using Domain.Services.Fretboard.Analysis;
 using Embeddings;
+using GA.Domain.Core.Instruments;
 
 /// <summary>
 /// Suggests "where to go next" based on harmonic smoothness and physical playability.
 /// Implements Phase Sphere Neighbor navigation.
 /// </summary>
-public class NextChordSuggestionService
+public class NextChordSuggestionService(
+    SpectralRetrievalService retrieval,
+    PhysicalCostService costService)
 {
-    private readonly SpectralRetrievalService _retrieval;
-    private readonly PhysicalCostService _costService;
     private readonly FretboardPositionMapper _mapper = new(Tuning.Default);
 
-    public NextChordSuggestionService(
-        SpectralRetrievalService retrieval,
-        PhysicalCostService costService)
-    {
-        _retrieval = retrieval;
-        _costService = costService;
-    }
-
-    public record SuggestionResult(VoicingDocument Doc, double HarmonicScore, double PhysicalCost, double TotalScore);
+    public record SuggestionResult(ChordVoicingRagDocument Doc, double HarmonicScore, double PhysicalCost, double TotalScore);
 
     /// <summary>
     /// Suggests next voicings based on a current voicing.
     /// </summary>
-    public async Task<List<SuggestionResult>> SuggestNextAsync(
-        VoicingDocument currentDoc,
+    public Task<List<SuggestionResult>> SuggestNextAsync(
+        ChordVoicingRagDocument currentDoc,
         int topK = 5)
     {
-        if (currentDoc.Embedding == null) return new();
-
         // 1. Find Harmonic Neighbors (Phase Sphere)
-        var neighbors = _retrieval.FindSpectralNeighbors(currentDoc.Embedding, topK: 50).ToList();
+        var neighbors = retrieval.FindSpectralNeighbors(currentDoc.Embedding, topK: 50).ToList();
 
         // 2. Rank by Physical Smoothness
         var currentShape = MapToPositions(currentDoc);
@@ -50,22 +39,21 @@ public class NextChordSuggestionService
             if (neighbor.Id == currentDoc.Id) continue;
 
             var neighborShape = MapToPositions(neighbor);
-            double physicalCost = _costService.CalculateTransitionCost(currentShape, neighborShape);
-            double totalScore = (harmScore * 10.0) - physicalCost;
+            var physicalCost = costService.CalculateTransitionCost(currentShape, neighborShape);
+            var totalScore = (harmScore * 10.0) - physicalCost;
 
             ranked.Add(new SuggestionResult(neighbor, harmScore, physicalCost, totalScore));
         }
 
-        return ranked
+        return Task.FromResult<List<SuggestionResult>>([.. ranked
             .OrderByDescending(x => x.TotalScore)
-            .Take(topK)
-            .ToList();
+            .Take(topK)]);
     }
 
-    private List<FretboardPosition> MapToPositions(VoicingDocument doc)
+    private List<FretboardPosition> MapToPositions(ChordVoicingRagDocument doc)
     {
         var pitches = doc.MidiNotes.Select(m => MidiNote.FromValue(m).ToSharpPitch()).ToList();
         var realizations = _mapper.MapChord(pitches).ToList();
-        return realizations.Count > 0 ? realizations.First() : new List<FretboardPosition>();
+        return realizations.Count > 0 ? realizations.First() : [];
     }
 }

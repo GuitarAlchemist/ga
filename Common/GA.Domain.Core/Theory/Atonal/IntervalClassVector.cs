@@ -1,13 +1,8 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Design;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
+using Design.Attributes;
+using Design.Schema;
 
 /// <summary>
 ///     Represents ordered occurence for each interval class, (e.g. Major Scale => 2, 5, 4, 3, 6, 1)
@@ -108,10 +103,7 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     /// &lt;2, 5, 4, 3, 6, 1&gt;
     /// </code>
     /// </remarks>
-    public override string ToString()
-    {
-        return Id.ToString();
-    }
+    public override string ToString() => Id.ToString();
 
     #region IParsable<IntervalClassVector> Members
 
@@ -166,15 +158,9 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
 
     #region IReadOnlyCollection<int> members
 
-    public IEnumerator<int> GetEnumerator()
-    {
-        return Vector.Values.GetEnumerator();
-    }
+    public IEnumerator<int> GetEnumerator() => Vector.Values.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return Vector.Values.GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => Vector.Values.GetEnumerator();
 
     public int Count => Vector.Count;
 
@@ -182,25 +168,13 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
 
     #region Relational Members
 
-    public static bool operator <(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
-    }
+    public static bool operator <(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) < 0;
 
-    public static bool operator >(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return Comparer<IntervalClassVector>.Default.Compare(left, right) > 0;
-    }
+    public static bool operator >(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) > 0;
 
-    public static bool operator <=(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return Comparer<IntervalClassVector>.Default.Compare(left, right) <= 0;
-    }
+    public static bool operator <=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) <= 0;
 
-    public static bool operator >=(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return Comparer<IntervalClassVector>.Default.Compare(left, right) >= 0;
-    }
+    public static bool operator >=(IntervalClassVector? left, IntervalClassVector? right) => Comparer<IntervalClassVector>.Default.Compare(left, right) >= 0;
 
     /// <inheritdoc />
     public int CompareTo(IntervalClassVector? other)
@@ -217,33 +191,19 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
 
     #region Equality members
 
-    public static bool operator ==(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(IntervalClassVector? left, IntervalClassVector? right) => Equals(left, right);
 
-    public static bool operator !=(IntervalClassVector? left, IntervalClassVector? right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(IntervalClassVector? left, IntervalClassVector? right) => !Equals(left, right);
 
     /// <inheritdoc />
-    public bool Equals(IntervalClassVector? other)
-    {
-        return Id.Equals(other?.Id);
-    }
+    public bool Equals(IntervalClassVector? other) => Id.Equals(other?.Id);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return ReferenceEquals(this, obj) || obj is IntervalClassVector other && Equals(other);
-    }
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is IntervalClassVector other && Equals(other);
 
     /// <inheritdoc />
-    public override int GetHashCode()
-    {
-        return id.GetHashCode();
-    }
+    public override int GetHashCode() => id.GetHashCode();
 
     #endregion
 }
+

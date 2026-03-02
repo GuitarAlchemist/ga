@@ -25,9 +25,7 @@ module ScalesConfig =
             match possiblePaths |> List.tryFind File.Exists with
             | Some path ->
                 let deserializer =
-                    DeserializerBuilder()
-                        .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                        .Build()
+                    DeserializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build()
 
                 let yaml = File.ReadAllText(path)
                 let data = deserializer.Deserialize<ScalesYaml>(yaml)

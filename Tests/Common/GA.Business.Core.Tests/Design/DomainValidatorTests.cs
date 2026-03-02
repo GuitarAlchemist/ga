@@ -1,18 +1,16 @@
-namespace GA.Domain.Core.Tests.Design;
+namespace GA.Business.Core.Tests.Design;
 
-using System.Linq;
-using GA.Domain.Core.Design;
-using NUnit.Framework;
+using Domain.Core.Design.Attributes;
+using GA.Domain.Services.Validation;
 
 [TestFixture]
 public class DomainValidatorTests
 {
-    private DomainValidator _validator;
     [SetUp]
-    public void Setup()
-    {
-        _validator = new DomainValidator();
-    }
+    public void Setup() => _validator = new DomainValidator();
+
+    private DomainValidator _validator;
+
     [Test]
     public void Validate_ShouldCheckAnnotatedProperties()
     {
@@ -20,6 +18,7 @@ public class DomainValidatorTests
         var result = _validator.Validate(instance);
         Assert.That(result.Results.Any(r => r.Message.Contains("Name")), "Property invariant not checked");
     }
+
     private class TestEntity
     {
         [DomainInvariant("Name cannot be null", "!= null")]

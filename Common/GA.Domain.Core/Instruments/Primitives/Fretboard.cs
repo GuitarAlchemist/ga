@@ -1,38 +1,32 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System;
-using System.Collections.Generic;
-using Core.Primitives;
-using Design;
+using Core.Primitives.Notes;
+using Design.Attributes;
+using Design.Schema;
 using Positions;
 using Theory.Atonal;
 
 /// <summary>
 ///     Represents a fretboard with a specific tuning and number of frets
 /// </summary>
+/// <remarks>
+///     Initializes a new fretboard with the specified tuning and fret count
+/// </remarks>
 [DomainInvariant("Fretboard must have at least one string", "StringCount > 0")]
 [DomainInvariant("Fretboard must have a valid number of frets", "FretCount >= 0")]
 [DomainRelationship(typeof(Tuning), RelationshipType.IsChildOf, "A fretboard has a specific tuning")]
-public sealed class Fretboard
+public sealed class Fretboard(Tuning tuning, int fretCount)
 {
-    /// <summary>
-    ///     Initializes a new fretboard with the specified tuning and fret count
-    /// </summary>
-    public Fretboard(Tuning tuning, int fretCount)
-    {
-        Tuning = tuning ?? throw new ArgumentNullException(nameof(tuning));
-        FretCount = fretCount;
-    }
 
     /// <summary>
     ///     The tuning of the instrument
     /// </summary>
-    public Tuning Tuning { get; }
+    public Tuning Tuning { get; } = tuning ?? throw new ArgumentNullException(nameof(tuning));
 
     /// <summary>
     ///     Number of frets on the instrument
     /// </summary>
-    public int FretCount { get; }
+    public int FretCount { get; } = fretCount;
 
     /// <summary>
     ///     Number of strings on the instrument
@@ -94,40 +88,26 @@ public sealed class Fretboard
     /// <summary>
     ///     Checks if a position is valid on this fretboard
     /// </summary>
-    public bool IsValidPosition(Position position)
-    {
-        return position.Location.Str.Value >= 1 &&
+    public bool IsValidPosition(Position position) => position.Location.Str.Value >= 1 &&
                position.Location.Str.Value <= StringCount &&
                position.Location.Fret.Value >= 0 &&
                position.Location.Fret.Value <= FretCount;
-    }
 
     /// <summary>
     ///     Gets the pitch class of the note at the specified position
     /// </summary>
-    public PitchClass GetPitchClass(int stringIndex, int fret)
-    {
-        return GetNote(stringIndex, fret).PitchClass;
-    }
+    public PitchClass GetPitchClass(int stringIndex, int fret) => GetNote(stringIndex, fret).PitchClass;
 
     /// <summary>
     ///     Creates a standard guitar fretboard (6 strings, 24 frets, standard tuning)
     /// </summary>
-    public static Fretboard CreateStandardGuitar()
-    {
-        return new(Tuning.Default, 24);
-    }
+    public static Fretboard CreateStandardGuitar() => new(Tuning.Default, 24);
 
     /// <summary>
     ///     Creates a fretboard with the specified number of frets using standard guitar tuning
     /// </summary>
-    public static Fretboard CreateGuitar(int fretCount)
-    {
-        return new(Tuning.Default, fretCount);
-    }
+    public static Fretboard CreateGuitar(int fretCount) => new(Tuning.Default, fretCount);
 
-    public override string ToString()
-    {
-        return $"Fretboard: {StringCount} strings, {FretCount} frets, Tuning: {Tuning}";
-    }
+    public override string ToString() => $"Fretboard: {StringCount} strings, {FretCount} frets, Tuning: {Tuning}";
 }
+

@@ -1,4 +1,4 @@
-namespace GaChatbot.Services;
+﻿namespace GaChatbot.Services;
 
 using GA.Domain.Core.Instruments;
 using System;
@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using GA.Business.ML.Embeddings;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GaChatbot.Abstractions;
 using GaChatbot.Models;

@@ -1,12 +1,8 @@
-namespace GA.Domain.Core.Tests.Scales;
+namespace GA.Business.Core.Tests.Scales;
 
-using Extensions;
-using Primitives;
-using System.Numerics;
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Tonal.Scales;
-using GA.Domain.Services.Chords;
-using NUnit.Framework;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Tonal.Scales;
+using Domain.Services.Chords;
 
 [TestFixture]
 public class PitchClassSetScaleCoverageTests
@@ -34,6 +30,7 @@ public class PitchClassSetScaleCoverageTests
             }
         }
     }
+
     [Test]
     public void PrimeScaleCount_IsReasonable()
     {

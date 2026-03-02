@@ -1,10 +1,10 @@
-﻿namespace GA.Domain.Core.Tests.Fretboard.Voicings;
+﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
+using Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using Instruments.Positions;
+using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
-using Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
 
 /// <summary>
 /// Integration tests for the complete voicing analysis pipeline:
@@ -117,13 +117,15 @@ public class VoicingAnalyzerIntegrationTests
     /// </summary>
     private static List<Voicing> CreateKnownVoicings()
     {
-        var voicings = new List<Voicing>();
-        // C Major triad (open position)
-        voicings.Add(CreateVoicing([(5, 3), (4, 2), (3, 0)]));
-        // G Major triad (open position)
-        voicings.Add(CreateVoicing([(6, 3), (5, 2), (4, 0)]));
-        // D Major triad (open position)
-        voicings.Add(CreateVoicing([(4, 0), (3, 2), (2, 3)]));
+        var voicings = new List<Voicing>
+        {
+            // C Major triad (open position)
+            CreateVoicing([(5, 3), (4, 2), (3, 0)]),
+            // G Major triad (open position)
+            CreateVoicing([(6, 3), (5, 2), (4, 0)]),
+            // D Major triad (open position)
+            CreateVoicing([(4, 0), (3, 2), (2, 3)])
+        };
         return voicings;
     }
     /// <summary>
@@ -150,17 +152,17 @@ public class VoicingAnalyzerIntegrationTests
     {
         var voicings = new List<Voicing>();
         // Open position (frets 0-4)
-        for (int fret = 0; fret <= 4; fret++)
+        for (var fret = 0; fret <= 4; fret++)
         {
             voicings.Add(CreateVoicing([(1, fret), (2, fret)]));
         }
         // Middle position (frets 5-12)
-        for (int fret = 5; fret <= 12; fret++)
+        for (var fret = 5; fret <= 12; fret++)
         {
             voicings.Add(CreateVoicing([(1, fret), (2, fret)]));
         }
         // Upper position (frets 13+)
-        for (int fret = 13; fret <= 15; fret++)
+        for (var fret = 13; fret <= 15; fret++)
         {
             voicings.Add(CreateVoicing([(1, fret), (2, fret)]));
         }

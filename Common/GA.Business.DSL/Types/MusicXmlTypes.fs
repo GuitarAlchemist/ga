@@ -9,7 +9,13 @@ module MusicXmlTypes =
 
     /// Note step (C, D, E, F, G, A, B)
     type Step =
-        | C | D | E | F | G | A | B
+        | C
+        | D
+        | E
+        | F
+        | G
+        | A
+        | B
 
     /// Accidental
     type Accidental =
@@ -107,9 +113,7 @@ module MusicXmlTypes =
     // ============================================================================
 
     /// Time signature
-    type TimeSignature =
-        { Beats: int
-          BeatType: int }
+    type TimeSignature = { Beats: int; BeatType: int }
 
     /// Key signature
     type KeySignature =
@@ -182,16 +186,15 @@ module MusicXmlTypes =
           Copyright: string option }
 
     /// Score
-    type Score =
-        { Work: Work option
-          Parts: Part list }
+    type Score = { Work: Work option; Parts: Part list }
 
     // ============================================================================
     // HELPER FUNCTIONS
     // ============================================================================
 
     /// Convert step to string
-    let stepToString = function
+    let stepToString =
+        function
         | C -> "C"
         | D -> "D"
         | E -> "E"
@@ -201,7 +204,8 @@ module MusicXmlTypes =
         | B -> "B"
 
     /// Convert string to step
-    let stringToStep = function
+    let stringToStep =
+        function
         | "C" -> Some C
         | "D" -> Some D
         | "E" -> Some E
@@ -212,7 +216,8 @@ module MusicXmlTypes =
         | _ -> None
 
     /// Convert accidental to string
-    let accidentalToString = function
+    let accidentalToString =
+        function
         | Sharp -> "sharp"
         | Flat -> "flat"
         | Natural -> "natural"
@@ -220,7 +225,8 @@ module MusicXmlTypes =
         | DoubleFlat -> "double-flat"
 
     /// Convert string to accidental
-    let stringToAccidental = function
+    let stringToAccidental =
+        function
         | "sharp" -> Some Sharp
         | "flat" -> Some Flat
         | "natural" -> Some Natural
@@ -229,7 +235,8 @@ module MusicXmlTypes =
         | _ -> None
 
     /// Convert note type to string
-    let noteTypeToString = function
+    let noteTypeToString =
+        function
         | Whole -> "whole"
         | Half -> "half"
         | Quarter -> "quarter"
@@ -240,7 +247,8 @@ module MusicXmlTypes =
         | OneHundredTwentyEighth -> "128th"
 
     /// Convert string to note type
-    let stringToNoteType = function
+    let stringToNoteType =
+        function
         | "whole" -> Some Whole
         | "half" -> Some Half
         | "quarter" -> Some Quarter
@@ -252,7 +260,8 @@ module MusicXmlTypes =
         | _ -> None
 
     /// Convert clef to string
-    let clefToString = function
+    let clefToString =
+        function
         | Treble -> "G"
         | Bass -> "F"
         | Alto -> "C"
@@ -261,7 +270,8 @@ module MusicXmlTypes =
         | TAB -> "TAB"
 
     /// Convert string to clef
-    let stringToClef = function
+    let stringToClef =
+        function
         | "G" -> Some Treble
         | "F" -> Some Bass
         | "C" -> Some Alto
@@ -271,14 +281,16 @@ module MusicXmlTypes =
 
     /// Get MIDI note number from pitch
     let pitchToMidiNote (pitch: Pitch) : int =
-        let stepValue = match pitch.Step with
-                        | C -> 0
-                        | D -> 2
-                        | E -> 4
-                        | F -> 5
-                        | G -> 7
-                        | A -> 9
-                        | B -> 11
+        let stepValue =
+            match pitch.Step with
+            | C -> 0
+            | D -> 2
+            | E -> 4
+            | F -> 5
+            | G -> 7
+            | A -> 9
+            | B -> 11
+
         let alter = pitch.Alter |> Option.defaultValue 0
         (pitch.Octave + 1) * 12 + stepValue + alter
 
@@ -286,19 +298,23 @@ module MusicXmlTypes =
     let midiNoteToPitch (midiNote: int) : Pitch =
         let octave = midiNote / 12 - 1
         let pitchClass = midiNote % 12
-        let (step, alter) = match pitchClass with
-                            | 0 -> (C, 0)
-                            | 1 -> (C, 1)
-                            | 2 -> (D, 0)
-                            | 3 -> (D, 1)
-                            | 4 -> (E, 0)
-                            | 5 -> (F, 0)
-                            | 6 -> (F, 1)
-                            | 7 -> (G, 0)
-                            | 8 -> (G, 1)
-                            | 9 -> (A, 0)
-                            | 10 -> (A, 1)
-                            | 11 -> (B, 0)
-                            | _ -> (C, 0)
-        { Step = step; Alter = Some alter; Octave = octave }
 
+        let (step, alter) =
+            match pitchClass with
+            | 0 -> (C, 0)
+            | 1 -> (C, 1)
+            | 2 -> (D, 0)
+            | 3 -> (D, 1)
+            | 4 -> (E, 0)
+            | 5 -> (F, 0)
+            | 6 -> (F, 1)
+            | 7 -> (G, 0)
+            | 8 -> (G, 1)
+            | 9 -> (A, 0)
+            | 10 -> (A, 1)
+            | 11 -> (B, 0)
+            | _ -> (C, 0)
+
+        { Step = step
+          Alter = Some alter
+          Octave = octave }

@@ -1,7 +1,7 @@
-namespace GA.Domain.Core.Tests.Fretboard;
+namespace GA.Business.Core.Tests.Fretboard;
 
-using Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
 
 [TestFixture]
 public class PositionTests
@@ -22,6 +22,7 @@ public class PositionTests
             Assert.That(muted.Location.Str, Is.EqualTo(str));
         });
     }
+
     [Test]
     public void Muted_ToString_ReturnsExpectedFormat()
     {
@@ -34,6 +35,7 @@ public class PositionTests
         TestContext.WriteLine($"Muted ToString: {result}");
         Assert.That(result, Is.EqualTo($"X{str}"));
     }
+
     [Test]
     public void Muted_Comparison_WorksCorrectly()
     {
@@ -52,6 +54,7 @@ public class PositionTests
             Assert.That(muted1, Is.Not.EqualTo(muted2));
         });
     }
+
     [Test]
     public void Played_Constructor_CreatesValidPosition()
     {
@@ -69,6 +72,7 @@ public class PositionTests
             Assert.That(played.MidiNote.ToString(), Is.EqualTo(midiNote.ToString()));
         });
     }
+
     [Test]
     public void Played_ToString_ReturnsExpectedFormat()
     {
@@ -82,13 +86,14 @@ public class PositionTests
         TestContext.WriteLine($"Played ToString: {result}");
         Assert.That(result, Is.EqualTo($"{location} {midiNote}"));
     }
+
     [Test]
     public void Played_Comparison_WorksCorrectly()
     {
         // Arrange
-        var played1 = new Position.Played(new PositionLocation(Str.Min, Fret.Open), 40);
-        var played2 = new Position.Played(new PositionLocation(Str.Min, Fret.FromValue(1)), 41);
-        var played3 = new Position.Played(new PositionLocation(Str.Min + 1, Fret.Open), 45);
+        var played1 = new Position.Played(new(Str.Min, Fret.Open), 40);
+        var played2 = new Position.Played(new(Str.Min, Fret.FromValue(1)), 41);
+        var played3 = new Position.Played(new(Str.Min + 1, Fret.Open), 45);
         // Act
         var oneLessTwo = played1 < played2;
         var oneLessThree = played1 < played3;
@@ -105,6 +110,7 @@ public class PositionTests
             Assert.That(played1, Is.Not.EqualTo(played2));
         });
     }
+
     [Test]
     public void Played_Equality_WorksCorrectly()
     {

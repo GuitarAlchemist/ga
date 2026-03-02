@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -37,17 +33,7 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
 
     public static MelodicMinorMode Altered { get; } = new(7);
 
-    public override string Name => ParentScaleDegree.Value switch
-    {
-        1 => "Melodic minor",
-        2 => "Dorian \u266D2",
-        3 => "Lydian \u266F5",
-        4 => "Lydian dominant",
-        5 => "Mixolydian \u266D6",
-        6 => "Locrian \u266E2",
-        7 => "Altered",
-        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
-    };
+    public override string Name => ParentScaleDegree.ToName();
 
     public static IEnumerable<MelodicMinorMode> Items
     {
@@ -60,20 +46,11 @@ public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScal
         }
     }
 
-    public static MelodicMinorMode Get(MelodicMinorScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MelodicMinorMode Get(MelodicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static MelodicMinorMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static MelodicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 
-    public override string ToString()
-    {
-        return $"{Name} - {Formula}";
-    }
+    public override string ToString() => $"{Name} - {Formula}";
 }
 
 

@@ -15,48 +15,21 @@ public sealed class PrintableReadOnlySet<T>(
 
     public int Count => _items.Count;
 
-    public bool Contains(T item)
-    {
-        return _items.Contains(item);
-    }
+    public bool Contains(T item) => _items.Contains(item);
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
-    public bool IsProperSubsetOf(IEnumerable<T> other)
-    {
-        return _items.IsProperSubsetOf(other);
-    }
+    public bool IsProperSubsetOf(IEnumerable<T> other) => _items.IsProperSubsetOf(other);
 
-    public bool IsProperSupersetOf(IEnumerable<T> other)
-    {
-        return _items.IsProperSupersetOf(other);
-    }
+    public bool IsProperSupersetOf(IEnumerable<T> other) => _items.IsProperSupersetOf(other);
 
-    public bool IsSubsetOf(IEnumerable<T> other)
-    {
-        return _items.IsSubsetOf(other);
-    }
+    public bool IsSubsetOf(IEnumerable<T> other) => _items.IsSubsetOf(other);
 
-    public bool IsSupersetOf(IEnumerable<T> other)
-    {
-        return _items.IsSupersetOf(other);
-    }
+    public bool IsSupersetOf(IEnumerable<T> other) => _items.IsSupersetOf(other);
 
-    public bool Overlaps(IEnumerable<T> other)
-    {
-        return _items.Overlaps(other);
-    }
+    public bool Overlaps(IEnumerable<T> other) => _items.Overlaps(other);
 
-    public bool SetEquals(IEnumerable<T> other)
-    {
-        return _items.SetEquals(other);
-    }
+    public bool SetEquals(IEnumerable<T> other) => _items.SetEquals(other);
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)_items).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_items).GetEnumerator();
 }

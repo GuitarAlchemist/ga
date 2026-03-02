@@ -1,14 +1,10 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Design;
+using Design.Attributes;
+using Design.Schema;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     Represents a Forte number, which uniquely identifies a pitch class set in music set theory.
@@ -24,8 +20,10 @@ using JetBrains.Annotations;
 ///     <see cref="IParsable{ForteNumber}" />
 /// </remarks>
 [PublicAPI]
-[DomainInvariant("Forte number consists of cardinality (0-12) and index (>=1)", "Cardinality >= 0 && Cardinality <= 12 && Index >= 1")]
-[DomainRelationship(typeof(PitchClassSet), RelationshipType.IsMetadataFor, "Identifies the prime form of a pitch class set")]
+[DomainInvariant("Forte number consists of cardinality (0-12) and index (>=1)",
+    "Cardinality >= 0 && Cardinality <= 12 && Index >= 1")]
+[DomainRelationship(typeof(PitchClassSet), RelationshipType.IsMetadataFor,
+    "Identifies the prime form of a pitch class set")]
 [DomainRelationship(typeof(SetClass), RelationshipType.IsChildOf)]
 public readonly record struct ForteNumber :
     IComparable<ForteNumber>,
@@ -76,10 +74,7 @@ public readonly record struct ForteNumber :
     #endregion
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{Cardinality.Value}-{Index}";
-    }
+    public override string ToString() => $"{Cardinality.Value}-{Index}";
 
     #region Innner Classes
 

@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using Extensions;
-
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using static PitchClassSetIdEquivalences.Relationship;
 
 public class PitchClassSetIdEquivalences
@@ -92,10 +86,7 @@ public class PitchClassSetIdEquivalences
         public ImmutableSortedSet<PitchClassSetId> Inversions { get; } = [id, id.Inverse];
         public ImmutableSortedSet<PitchClassSetId> Rotations { get; } = [.. id.GetRotations()];
 
-        public override string ToString()
-        {
-            return Id.ToString();
-        }
+        public override string ToString() => Id.ToString();
     }
 
     public abstract record Relationship(UnorderedIdPair Key, RelationshipKind Kind)
@@ -116,7 +107,7 @@ public class PitchClassSetIdEquivalences
                 return 0;
             }
 
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return 1;
             }
@@ -127,7 +118,7 @@ public class PitchClassSetIdEquivalences
 
         public int CompareTo(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return 1;
             }
@@ -142,25 +133,17 @@ public class PitchClassSetIdEquivalences
                 : throw new ArgumentException($"Object must be of type {nameof(Relationship)}");
         }
 
-        public static bool operator <(Relationship? left, Relationship? right)
-        {
-            return Comparer<Relationship>.Default.Compare(left, right) < 0;
-        }
+        public static bool operator <(Relationship? left, Relationship? right) =>
+            Comparer<Relationship>.Default.Compare(left, right) < 0;
 
-        public static bool operator >(Relationship? left, Relationship? right)
-        {
-            return Comparer<Relationship>.Default.Compare(left, right) > 0;
-        }
+        public static bool operator >(Relationship? left, Relationship? right) =>
+            Comparer<Relationship>.Default.Compare(left, right) > 0;
 
-        public static bool operator <=(Relationship? left, Relationship? right)
-        {
-            return Comparer<Relationship>.Default.Compare(left, right) <= 0;
-        }
+        public static bool operator <=(Relationship? left, Relationship? right) =>
+            Comparer<Relationship>.Default.Compare(left, right) <= 0;
 
-        public static bool operator >=(Relationship? left, Relationship? right)
-        {
-            return Comparer<Relationship>.Default.Compare(left, right) >= 0;
-        }
+        public static bool operator >=(Relationship? left, Relationship? right) =>
+            Comparer<Relationship>.Default.Compare(left, right) >= 0;
 
         #endregion
     }
@@ -169,31 +152,26 @@ public class PitchClassSetIdEquivalences
         : IComparable<UnorderedIdPair>, IComparable
     {
         /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"({Id1}, {Id2})";
-        }
+        public override string ToString() => $"({Id1}, {Id2})";
 
         #region Commutative Equality Members
 
-        public bool Equals(UnorderedIdPair? other)
-        {
-            return other != null
-                   &&
-                   (
-                       EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id1) &&
-                       EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id2)
-                       ||
-                       EqualityComparer<PitchClassSetId>.Default.Equals(Id1, other.Value.Id2) &&
-                       EqualityComparer<PitchClassSetId>.Default.Equals(Id2, other.Value.Id1)
-                   );
-        }
+        public bool Equals(UnorderedIdPair? other) => other != null
+                                                      &&
+                                                      (
+                                                          (EqualityComparer<PitchClassSetId>.Default.Equals(Id1,
+                                                               other.Value.Id1) &&
+                                                           EqualityComparer<PitchClassSetId>.Default.Equals(Id2,
+                                                               other.Value.Id2))
+                                                          ||
+                                                          (EqualityComparer<PitchClassSetId>.Default.Equals(Id1,
+                                                               other.Value.Id2) &&
+                                                           EqualityComparer<PitchClassSetId>.Default.Equals(Id2,
+                                                               other.Value.Id1))
+                                                      );
 
         /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return unchecked(Id1.GetHashCode() + Id2.GetHashCode());
-        }
+        public override int GetHashCode() => unchecked(Id1.GetHashCode() + Id2.GetHashCode());
 
         #endregion
 
@@ -221,35 +199,20 @@ public class PitchClassSetIdEquivalences
         }
 
         /// <inheritdoc />
-        public int CompareTo(object? obj)
+        public int CompareTo(object? obj) => obj switch
         {
-            return obj switch
-            {
-                null => 1,
-                UnorderedIdPair other => CompareTo(other),
-                _ => throw new ArgumentException($"Object must be of type {nameof(UnorderedIdPair)}")
-            };
-        }
+            null => 1,
+            UnorderedIdPair other => CompareTo(other),
+            _ => throw new ArgumentException($"Object must be of type {nameof(UnorderedIdPair)}")
+        };
 
-        public static bool operator <(UnorderedIdPair left, UnorderedIdPair right)
-        {
-            return left.CompareTo(right) < 0;
-        }
+        public static bool operator <(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) < 0;
 
-        public static bool operator >(UnorderedIdPair left, UnorderedIdPair right)
-        {
-            return left.CompareTo(right) > 0;
-        }
+        public static bool operator >(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) > 0;
 
-        public static bool operator <=(UnorderedIdPair left, UnorderedIdPair right)
-        {
-            return left.CompareTo(right) <= 0;
-        }
+        public static bool operator <=(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) <= 0;
 
-        public static bool operator >=(UnorderedIdPair left, UnorderedIdPair right)
-        {
-            return left.CompareTo(right) >= 0;
-        }
+        public static bool operator >=(UnorderedIdPair left, UnorderedIdPair right) => left.CompareTo(right) >= 0;
 
         #endregion
     }

@@ -17,7 +17,7 @@ var credential = new ApiKeyCredential(builder.Configuration["GitHubModels:Token"
                                           "Missing configuration: GitHubModels:Token. See the README for details."));
 var openAiOptions = new OpenAIClientOptions
 {
-    Endpoint = new Uri("https://models.inference.ai.azure.com")
+    Endpoint = new("https://models.inference.ai.azure.com")
 };
 
 var ghModelsClient = new OpenAIClient(credential, openAiOptions);

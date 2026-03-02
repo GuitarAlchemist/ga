@@ -1,36 +1,40 @@
 namespace GA.Domain.Core.Theory.Harmony.Progressions;
 
-using System;
-using System.Collections.Generic;
-
 /// <summary>
-/// Represents a named sequence of chords/voicings.
-/// Used for playback, analysis, and educational examples.
+///     Represents a named sequence of chords/voicings.
+///     Used for playback, analysis, and educational examples.
 /// </summary>
-public class Progression
+public sealed record Progression
 {
     /// <summary>
-    /// Unique Identifier.
+    ///     Unique Identifier.
     /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; init; } = Guid.NewGuid().ToString();
 
     /// <summary>
-    /// Display name (e.g., "ii-V-I in C Major").
+    ///     Display name (e.g., "ii-V-I in C Major").
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// Description or theory notes.
+    ///     Description or theory notes.
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
 
     /// <summary>
-    /// The sequence of chords.
+    ///     The sequence of chords.
     /// </summary>
-    public List<ProgressionStep> Steps { get; set; } = new();
+    public IReadOnlyList<ProgressionStep> Steps { get; init; } = [];
 
     /// <summary>
-    /// Tags for categorization (e.g., "jazz", "beginner", "cadence").
+    ///     Tags for categorization (e.g., "jazz", "beginner", "cadence").
     /// </summary>
-    public List<string> Tags { get; set; } = new();
+    public IReadOnlyList<string> Tags { get; init; } = [];
+
+    public Progression WithStep(ProgressionStep step) => this with { Steps = [.. Steps, step] };
+
+    public Progression WithTag(string tag) =>
+        string.IsNullOrWhiteSpace(tag)
+            ? this
+            : this with { Tags = [.. Tags, tag] };
 }

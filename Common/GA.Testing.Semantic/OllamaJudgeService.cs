@@ -1,21 +1,18 @@
 namespace GA.Testing.Semantic;
 
-using System;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 /// <summary>
-/// Implementation of IJudgeService using a local Ollama instance.
-/// Uses JSON mode for structured evaluation.
+///     Implementation of IJudgeService using a local Ollama instance.
+///     Uses JSON mode for structured evaluation.
 /// </summary>
 public class OllamaJudgeService(HttpClient client, string modelName = "mistral") : IJudgeService
 {
-    public async Task<JudgeResult> EvaluateAsync(string text, string prompt, string rubric, CancellationToken cancellationToken = default)
+    public async Task<JudgeResult> EvaluateAsync(string text, string prompt, string rubric,
+        CancellationToken cancellationToken = default)
     {
-        var systemPrompt = 
+        var systemPrompt =
             $"{prompt}\n\n" +
             $"You are an AI Judge. Evaluate the following text against the provided rubric.\n" +
             $"TEXT TO EVALUATE:\n\"\"\"\n{text}\n\"\"\"\n\n" +
@@ -36,20 +33,23 @@ public class OllamaJudgeService(HttpClient client, string modelName = "mistral")
         var response = await client.PostAsJsonAsync("/api/generate", requestBody, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var responseJson = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken: cancellationToken);
+        var responseJson = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken);
         var content = responseJson?.Response ?? throw new InvalidOperationException("No response from Ollama");
 
-        try 
+        try
         {
-            var result = JsonSerializer.Deserialize<JudgeResultJson>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return new JudgeResult(result?.IsPassing ?? false, result?.Rationale ?? "No rationale provided", result?.Confidence ?? 0);
+            var result = JsonSerializer.Deserialize<JudgeResultJson>(content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return new(result?.IsPassing ?? false, result?.Rationale ?? "No rationale provided",
+                result?.Confidence ?? 0);
         }
         catch (JsonException ex)
         {
-            return new JudgeResult(false, $"Failed to parse Ollama JSON: {ex.Message}. Raw content: {content}", 0);
+            return new(false, $"Failed to parse Ollama JSON: {ex.Message}. Raw content: {content}", 0);
         }
     }
 
     private record OllamaGenerateResponse(string Response);
+
     private record JudgeResultJson(bool IsPassing, string Rationale, double Confidence);
 }

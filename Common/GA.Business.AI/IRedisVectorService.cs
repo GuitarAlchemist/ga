@@ -1,7 +1,7 @@
-﻿namespace GA.Business.AI;
+namespace GA.Business.AI;
 
 using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Instruments.Shapes;
+using GA.Domain.Services.Fretboard.Shapes;
 using JetBrains.Annotations;
 
 /// <summary>
@@ -19,7 +19,7 @@ public interface IRedisVectorService
     ///     Index fretboard shapes with multi-dimensional embeddings
     /// </summary>
     Task IndexShapesAsync(
-        IEnumerable<GA.Domain.Core.Instruments.Shapes.FretboardShape> shapes,
+        IEnumerable<GA.Domain.Services.Fretboard.Shapes.FretboardShape> shapes,
         CancellationToken cancellationToken = default
     );
 
@@ -42,7 +42,7 @@ public interface IRedisVectorService
     /// <param name="shape">Reference shape</param>
     /// <param name="options">Search options</param>
     /// <returns>List of similar shapes with distances</returns>
-    Task<IEnumerable<(GA.Domain.Core.Instruments.Shapes.FretboardShape Shape, double Distance)>> FindSimilarShapesAsync(
+    Task<IEnumerable<(GA.Domain.Services.Fretboard.Shapes.FretboardShape Shape, double Distance)>> FindSimilarShapesAsync(
         FretboardShape shape,
         ShapeSearchOptions options
     );
@@ -53,7 +53,7 @@ public interface IRedisVectorService
     /// <param name="query">Natural language query (e.g., "easy C major box shape")</param>
     /// <param name="maxResults">Maximum number of results</param>
     /// <returns>List of matching shapes</returns>
-    Task<IEnumerable<GA.Domain.Core.Instruments.Shapes.FretboardShape>> SearchShapesAsync(
+    Task<IEnumerable<GA.Domain.Services.Fretboard.Shapes.FretboardShape>> SearchShapesAsync(
         string query,
         int maxResults = 10
     );

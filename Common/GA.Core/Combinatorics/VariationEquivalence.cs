@@ -26,9 +26,6 @@ public abstract record VariationEquivalence(
     {
         public static readonly Translation None = new(BigInteger.Zero, BigInteger.Zero, 0);
 
-        public override string ToString()
-        {
-            return $"{FromIndex} => T+{Value}: {ToIndex}";
-        }
+        public override string ToString() => $"{FromIndex} => T+{Value}: {ToIndex}";
     }
 }

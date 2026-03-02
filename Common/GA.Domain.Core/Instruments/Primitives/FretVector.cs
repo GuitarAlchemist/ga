@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Positions;
 
 [PublicAPI]
@@ -44,27 +38,16 @@ public class FretVector : IReadOnlyCollection<Fret>,
 
     #endregion
 
-    public override string ToString()
-    {
-        return "fret: " + string.Join(" ", _fretByStr.Values);
-    }
+    public override string ToString() => "fret: " + string.Join(" ", _fretByStr.Values);
 
-    private ImmutableHashSet<PositionLocation> GetPositionLocations()
-    {
-        return [.. _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value))];
-    }
+    private ImmutableHashSet<PositionLocation> GetPositionLocations() =>
+        [.. _fretByStr.Select(pair => new PositionLocation(pair.Key, pair.Value))];
 
     #region IReadOnlyCollection<Fret> Members
 
-    public IEnumerator<Fret> GetEnumerator()
-    {
-        return _fretByStr.Values.GetEnumerator();
-    }
+    public IEnumerator<Fret> GetEnumerator() => _fretByStr.Values.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public int Count => _fretByStr.Count;
 
