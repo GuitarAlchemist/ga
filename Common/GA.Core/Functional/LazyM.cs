@@ -1,11 +1,10 @@
 namespace GA.Core.Functional;
 
-using System;
-
 /// <summary>
 ///     Represents a lazy computation.
 /// </summary>
 /// <typeparam name="T">The type of the result</typeparam>
+[PublicAPI]
 public readonly record struct LazyM<T>
 {
     private readonly Lazy<T> _lazy;

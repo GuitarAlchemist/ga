@@ -46,13 +46,16 @@ pwsh Scripts/run-all-tests.ps1
 ```
 ga/
 ├── Apps/                          # Runtime applications
-│   ├── ga-server/GaApi/          # Main REST/GraphQL API
-│   ├── GuitarAlchemistChatbot/   # AI chatbot service
+│   ├── ga-server/
+│   │   ├── GaApi/                # API Gateway (YARP + GraphQL)
+│   │   ├── GA.MusicTheory.Service # Domain: Music Theory & Metadata
+│   │   ├── GA.AI.Service          # AI/ML: Embeddings & Spectral RAG
+│   │   └── GA.TabConversion.Service # Utilities: Tab Parsing & Analysis
 │   └── ga-client/                # React frontend
 ├── Common/                        # Core libraries
 │   ├── GA.Business.Core/         # Business logic
-│   ├── GA.MusicTheory.DSL/       # Music theory domain
-│   └── GA.Data.MongoDB/          # Data access
+│   ├── GA.Business.DSL/          # Music theory domain (F#)
+│   └── GA.Infrastructure/        # Documentation & Base Services
 ├── Tests/                         # Test suites
 ├── docs/                          # Documentation
 └── Scripts/                       # Build and deployment scripts
@@ -69,13 +72,13 @@ Guitar Alchemist is evolving into a comprehensive AI-powered music learning plat
 
 ## 🛠️ Technology Stack
 
-- **.NET 9** - Backend services and APIs
-- **React + TypeScript** - Frontend UI
-- **MongoDB** - Database with vector search
+- **.NET 10** - Backend microservices and APIs
+- **React 19 + TypeScript** - Frontend UI
+- **MongoDB + Qdrant** - Database with vector search
 - **Aspire** - Cloud-native orchestration
-- **OpenAI GPT-4** - AI chatbot and semantic analysis
+- **OpenAI GPT-4o / Gemini 2.0 / Llama 3** - AI chatbot and analysis
 - **Semantic Kernel** - AI orchestration
-- **Python/FastAPI** - AI microservices (pose detection, sound synthesis)
+- **Python/FastAPI** - Real-time AI microservices (Vision, Audio)
 
 ## 📖 Getting Started
 

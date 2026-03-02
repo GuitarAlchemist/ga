@@ -1,229 +1,304 @@
 namespace GA.Knowledge.Service.Services;
 
 using Models;
+using GA.Domain.Core.Design.Schema;
+using MongoDB.Driver;
 
 /// <summary>
-///     Implementation of asset relationship service
+///     Implementation of asset relationship service using MongoDB
 /// </summary>
-public class AssetRelationshipService : IAssetRelationshipService
+public class AssetRelationshipService(ILogger<AssetRelationshipService> logger, MongoDbService mongoDbService) : IAssetRelationshipService
 {
-    private readonly ILogger<AssetRelationshipService> _logger;
-    private readonly List<AssetRelationship> _relationships = []; // TODO: Replace with actual data store
-
-    public AssetRelationshipService(ILogger<AssetRelationshipService> logger)
+    public async Task<List<AssetRelationship>> GetAllRelationshipsAsync()
     {
-        _logger = logger;
-        InitializeSampleData();
+        logger.LogInformation("Getting all asset relationships");
+        return await mongoDbService.AssetRelationships.Find(_ => true).ToListAsync();
     }
 
-    public List<AssetRelationship> GetAllRelationships()
+    public async Task<List<AssetRelationship>> GetRelationshipsForAssetAsync(string assetId)
     {
-        _logger.LogInformation("Getting all asset relationships");
-        return [.. _relationships];
+        logger.LogInformation("Getting relationships for asset: {AssetId}", assetId);
+        var filter = Builders<AssetRelationship>.Filter.Or(
+            Builders<AssetRelationship>.Filter.Eq(r => r.SourceAssetId, assetId),
+            Builders<AssetRelationship>.Filter.Eq(r => r.TargetAssetId, assetId)
+        );
+        return await mongoDbService.AssetRelationships.Find(filter).ToListAsync();
     }
 
-    public List<AssetRelationship> GetRelationshipsForAsset(string assetId)
+    public async Task<AssetRelationship> CreateRelationshipAsync(AssetRelationship relationship)
     {
-        _logger.LogInformation("Getting relationships for asset: {AssetId}", assetId);
-        return [.. _relationships.Where(r => r.SourceAssetId == assetId || r.TargetAssetId == assetId)];
-    }
-
-    public AssetRelationship CreateRelationship(AssetRelationship relationship)
-    {
-        _logger.LogInformation("Creating new relationship: {SourceId} -> {TargetId}",
+        logger.LogInformation("Creating new relationship: {SourceId} -> {TargetId}",
             relationship.SourceAssetId, relationship.TargetAssetId);
 
-        relationship.Id = Guid.NewGuid().ToString();
         relationship.CreatedAt = DateTime.UtcNow;
         relationship.UpdatedAt = DateTime.UtcNow;
 
-        _relationships.Add(relationship);
+        await mongoDbService.AssetRelationships.InsertOneAsync(relationship);
         return relationship;
     }
 
-    public AssetRelationship UpdateRelationship(string id, AssetRelationship relationship)
+    public async Task<AssetRelationship?> UpdateRelationshipAsync(string id, AssetRelationship relationship)
     {
-        _logger.LogInformation("Updating relationship: {Id}", id);
+        logger.LogInformation("Updating relationship: {Id}", id);
 
-        var existing = _relationships.FirstOrDefault(r => r.Id == id);
-        if (existing == null)
+        var update = Builders<AssetRelationship>.Update
+            .Set(r => r.SourceAssetId, relationship.SourceAssetId)
+            .Set(r => r.TargetAssetId, relationship.TargetAssetId)
+            .Set(r => r.RelationshipType, relationship.RelationshipType)
+            .Set(r => r.Strength, relationship.Strength)
+            .Set(r => r.Metadata, relationship.Metadata)
+            .Set(r => r.IsBidirectional, relationship.IsBidirectional)
+            .Set(r => r.Description, relationship.Description)
+            .Set(r => r.UpdatedAt, DateTime.UtcNow);
+
+        var result = await mongoDbService.AssetRelationships.FindOneAndUpdateAsync(
+            Builders<AssetRelationship>.Filter.Eq(r => r.Id, id),
+            update,
+            new FindOneAndUpdateOptions<AssetRelationship> { ReturnDocument = ReturnDocument.After }
+        );
+
+        return result;
+    }
+
+    public async Task<bool> DeleteRelationshipAsync(string id)
+    {
+        logger.LogInformation("Deleting relationship: {Id}", id);
+        var result = await mongoDbService.AssetRelationships.DeleteOneAsync(r => r.Id == id);
+        return result.DeletedCount > 0;
+    }
+
+    public async Task<List<AssetHierarchyNode>> GetAssetHierarchyAsync()
+    {
+        logger.LogInformation("Building asset hierarchy");
+
+        // Find all nodes that are not children of any other node (roots)
+        var allRelationships = await GetAllRelationshipsAsync();
+        var childIds = allRelationships.Select(r => r.TargetAssetId).ToHashSet();
+        
+        var rootIds = allRelationships
+            .Select(r => r.SourceAssetId)
+            .Where(id => !childIds.Contains(id))
+            .Distinct()
+            .ToList();
+
+        var roots = new List<AssetHierarchyNode>();
+        foreach (var rootId in rootIds)
         {
-            throw new ArgumentException($"Relationship with ID {id} not found");
+            roots.Add(await BuildHierarchyTreeAsync(rootId));
         }
 
-        existing.SourceAssetId = relationship.SourceAssetId;
-        existing.TargetAssetId = relationship.TargetAssetId;
-        existing.RelationshipType = relationship.RelationshipType;
-        existing.Strength = relationship.Strength;
-        existing.Metadata = relationship.Metadata;
-        existing.IsBidirectional = relationship.IsBidirectional;
-        existing.Description = relationship.Description;
-        existing.UpdatedAt = DateTime.UtcNow;
-
-        return existing;
+        return roots;
     }
 
-    public bool DeleteRelationship(string id)
+    public async Task<AssetHierarchyNode?> GetAssetHierarchyNodeAsync(string assetId)
     {
-        _logger.LogInformation("Deleting relationship: {Id}", id);
-        var relationship = _relationships.FirstOrDefault(r => r.Id == id);
-        if (relationship == null)
+        logger.LogInformation("Getting hierarchy node for asset: {AssetId}", assetId);
+
+        var parentRelationships = await mongoDbService.AssetRelationships
+            .Find(r => r.TargetAssetId == assetId)
+            .ToListAsync();
+        
+        var childRelationships = await mongoDbService.AssetRelationships
+            .Find(r => r.SourceAssetId == assetId)
+            .ToListAsync();
+
+        if (parentRelationships.Count == 0 && childRelationships.Count == 0)
         {
-            return false;
+            return null;
         }
 
-        _relationships.Remove(relationship);
-        return true;
-    }
-
-    public List<AssetHierarchyNode> GetAssetHierarchy()
-    {
-        _logger.LogInformation("Building asset hierarchy");
-
-        // TODO: Implement actual hierarchy building logic
-        return
-        [
-            new()
-            {
-                Id = "root-1",
-                AssetId = "chord-root",
-                Name = "Chord Progressions",
-                AssetType = "category",
-                Level = 0,
-                Path = "/chord-progressions"
-            }
-        ];
-    }
-
-    public AssetHierarchyNode? GetAssetHierarchyNode(string assetId)
-    {
-        _logger.LogInformation("Getting hierarchy node for asset: {AssetId}", assetId);
-
-        // TODO: Implement actual node retrieval
-        return new()
+        return new AssetHierarchyNode
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = assetId,
             Name = $"Asset {assetId}",
-            AssetType = "unknown",
-            Level = 1
+            AssetType = "node",
+            ParentId = parentRelationships.FirstOrDefault()?.SourceAssetId,
+            ChildIds = [.. childRelationships.Select(r => r.TargetAssetId)]
         };
     }
 
-    public AssetHierarchyNode BuildHierarchyTree(string rootAssetId)
+    public async Task<AssetHierarchyNode> BuildHierarchyTreeAsync(string rootAssetId)
     {
-        _logger.LogInformation("Building hierarchy tree from root: {RootAssetId}", rootAssetId);
+        logger.LogInformation("Building hierarchy tree from root: {RootAssetId}", rootAssetId);
 
-        // TODO: Implement actual tree building
-        return new()
+        var rootNode = new AssetHierarchyNode
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = rootAssetId,
-            Name = $"Root {rootAssetId}",
+            Name = $"Asset {rootAssetId}",
             AssetType = "root",
-            Level = 0
+            Level = 0,
+            Path = $"/{rootAssetId}"
         };
+
+        var allRelationships = await GetAllRelationshipsAsync();
+        var relationshipMap = allRelationships
+            .Where(r => r.RelationshipType == RelationshipType.IsChildOf || r.RelationshipType == RelationshipType.IsParentOf)
+            .GroupBy(r => r.SourceAssetId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        void BuildChildren(AssetHierarchyNode node, int currentDepth)
+        {
+            // Safeguard against infinite loops and extreme depth
+            if (currentDepth > 10 || !relationshipMap.TryGetValue(node.AssetId, out var children))
+                return;
+
+            foreach (var rel in children)
+            {
+                var childNode = new AssetHierarchyNode
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    AssetId = rel.TargetAssetId,
+                    Name = $"Asset {rel.TargetAssetId}",
+                    AssetType = "node",
+                    ParentId = node.AssetId,
+                    Level = currentDepth + 1,
+                    Path = $"{node.Path}/{rel.TargetAssetId}"
+                };
+                
+                node.ChildIds.Add(childNode.AssetId);
+                node.Children.Add(childNode);
+                
+                BuildChildren(childNode, currentDepth + 1);
+            }
+        }
+
+        BuildChildren(rootNode, 0);
+
+        return rootNode;
     }
 
-    public List<AssetRelationship> FindRelatedAssets(string assetId, int maxDepth = 3)
+    public async Task<List<AssetRelationship>> FindRelatedAssetsAsync(string assetId, int maxDepth = 3)
     {
-        _logger.LogInformation("Finding related assets for: {AssetId} (max depth: {MaxDepth})", assetId, maxDepth);
+        logger.LogInformation("Finding related assets for: {AssetId} (max depth: {MaxDepth})", assetId, maxDepth);
 
-        // TODO: Implement graph traversal
-        return GetRelationshipsForAsset(assetId);
+        var allRelationships = await GetAllRelationshipsAsync();
+        var results = new List<AssetRelationship>();
+        var visited = new HashSet<string> { assetId };
+        
+        var currentLevelIds = new HashSet<string> { assetId };
+
+        for (int depth = 0; depth < maxDepth; depth++)
+        {
+            var nextLevelIds = new HashSet<string>();
+            foreach (var currentId in currentLevelIds)
+            {
+                var connectedRels = allRelationships.Where(r => 
+                    r.SourceAssetId == currentId || 
+                    r.TargetAssetId == currentId || 
+                    (r.IsBidirectional && (r.SourceAssetId == currentId || r.TargetAssetId == currentId))
+                ).ToList();
+
+                foreach (var rel in connectedRels)
+                {
+                    var otherId = rel.SourceAssetId == currentId ? rel.TargetAssetId : rel.SourceAssetId;
+                    if (!visited.Contains(otherId))
+                    {
+                        visited.Add(otherId);
+                        nextLevelIds.Add(otherId);
+                        results.Add(rel);
+                    }
+                }
+            }
+
+            if (nextLevelIds.Count == 0) break;
+            currentLevelIds = nextLevelIds;
+        }
+
+        return results;
     }
 
-    public List<string> GetChildAssetTypes(string assetId)
+    public async Task<List<string>> GetChildAssetTypesAsync(string assetId)
     {
-        _logger.LogInformation("Getting child asset types for: {AssetId}", assetId);
+        logger.LogInformation("Getting child asset types for: {AssetId}", assetId);
 
-        var relationships = GetRelationshipsForAsset(assetId);
+        var relationships = await GetRelationshipsForAssetAsync(assetId);
         return
         [
             .. relationships
                 .Where(r => r.SourceAssetId == assetId)
-                .Select(r => r.RelationshipType)
+                .Select(r => r.TargetAssetId)
                 .Distinct()
         ];
     }
 
-    public List<string> GetParentAssetTypes(string assetId)
+    public async Task<List<string>> GetParentAssetTypesAsync(string assetId)
     {
-        _logger.LogInformation("Getting parent asset types for: {AssetId}", assetId);
+        logger.LogInformation("Getting parent asset types for: {AssetId}", assetId);
 
-        var relationships = GetRelationshipsForAsset(assetId);
+        var relationships = await GetRelationshipsForAssetAsync(assetId);
         return
         [
             .. relationships
                 .Where(r => r.TargetAssetId == assetId)
-                .Select(r => r.RelationshipType)
+                .Select(r => r.SourceAssetId)
                 .Distinct()
         ];
     }
 
-    public AssetHierarchyNode BuildAssetHierarchy(string? assetType = null)
+    public Task<AssetHierarchyNode> BuildAssetHierarchyAsync(string? assetType = null)
     {
-        _logger.LogInformation("Building asset hierarchy for type: {AssetType}", assetType ?? "all");
+        logger.LogInformation("Building asset hierarchy for type: {AssetType}", assetType ?? "all");
 
-        // TODO: Implement actual hierarchy building by asset type
+        // Assuming tree root filtering logic could be placed here.
+        // For now, return the basic tree root node.
         var rootType = assetType ?? "root";
-        return new()
+        return Task.FromResult(new AssetHierarchyNode
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = $"{rootType}-hierarchy",
             Name = $"{rootType} Hierarchy",
             AssetType = rootType,
             Level = 0,
-            Children =
-            [
-                new()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AssetId = $"{rootType}-child-1",
-                    Name = $"Sample {rootType} Child",
-                    AssetType = rootType,
-                    Level = 1
-                }
-            ]
-        };
-    }
-
-    public List<AssetRelationship> GetRelationshipPath(string sourceId, string targetId)
-    {
-        _logger.LogInformation("Getting relationship path from {SourceId} to {TargetId}", sourceId, targetId);
-
-        // TODO: Implement pathfinding algorithm
-        return
-        [
-            .. _relationships
-                .Where(r => (r.SourceAssetId == sourceId && r.TargetAssetId == targetId) ||
-                            (r.TargetAssetId == sourceId && r.SourceAssetId == targetId && r.IsBidirectional))
-        ];
-    }
-
-    private void InitializeSampleData() =>
-        // Add some sample relationships for testing
-        _relationships.AddRange(new[]
-        {
-            new AssetRelationship
-            {
-                Id = "rel-1",
-                SourceAssetId = "chord-cmaj",
-                TargetAssetId = "chord-fmaj",
-                RelationshipType = "follows",
-                Strength = 0.8,
-                IsBidirectional = false,
-                Description = "Common chord progression"
-            },
-            new AssetRelationship
-            {
-                Id = "rel-2",
-                SourceAssetId = "chord-fmaj",
-                TargetAssetId = "chord-gmaj",
-                RelationshipType = "follows",
-                Strength = 0.9,
-                IsBidirectional = false,
-                Description = "Strong progression"
-            }
+            Children = []
         });
+    }
+
+    public async Task<List<AssetRelationship>> GetRelationshipPathAsync(string sourceId, string targetId)
+    {
+        logger.LogInformation("Getting relationship path from {SourceId} to {TargetId}", sourceId, targetId);
+
+        var allRelationships = await GetAllRelationshipsAsync();
+        
+        // BFS to find the shortest path
+        var queue = new Queue<List<AssetRelationship>>();
+        var visited = new HashSet<string> { sourceId };
+
+        // Initialize queue with paths of length 1
+        var initialRels = allRelationships.Where(r => 
+            r.SourceAssetId == sourceId || (r.IsBidirectional && r.TargetAssetId == sourceId)).ToList();
+            
+        foreach (var rel in initialRels)
+        {
+            queue.Enqueue([rel]);
+        }
+
+        while (queue.Count > 0)
+        {
+            var path = queue.Dequeue();
+            var lastRel = path.Last();
+            var currentId = lastRel.SourceAssetId == sourceId || path.Count > 1 && lastRel.SourceAssetId == path[^2].TargetAssetId ? lastRel.TargetAssetId : lastRel.SourceAssetId;
+
+            if (currentId == targetId)
+            {
+                return path;
+            }
+
+            visited.Add(currentId);
+
+            var nextRels = allRelationships.Where(r => 
+                (r.SourceAssetId == currentId && !visited.Contains(r.TargetAssetId)) || 
+                (r.IsBidirectional && r.TargetAssetId == currentId && !visited.Contains(r.SourceAssetId))
+            ).ToList();
+
+            foreach (var rel in nextRels)
+            {
+                var newPath = new List<AssetRelationship>(path) { rel };
+                queue.Enqueue(newPath);
+            }
+        }
+
+        return [];
+    }
 }

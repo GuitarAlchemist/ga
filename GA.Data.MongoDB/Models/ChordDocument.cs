@@ -14,7 +14,7 @@ public sealed record ChordDocument : RagDocumentBase
     public List<ScaleReference> RelatedScales { get; init; } = [];
     public List<ProgressionReference> CommonProgressions { get; init; } = [];
 
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         var searchParts = new List<string>
         {
@@ -27,6 +27,6 @@ public sealed record ChordDocument : RagDocumentBase
             string.Join(" ", CommonProgressions.Select(p => p.Name))
         };
 
-        SearchText = string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
+        return string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
     }
 }

@@ -1,4 +1,4 @@
-open GA.MusicTheory.DSL.LSP
+open GA.Business.DSL.LSP
 
 /// <summary>
 /// Music Theory DSL Language Server

@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.Types
+namespace GA.Business.DSL.Types
 
 /// <summary>
 /// Type definitions for VexTab AST

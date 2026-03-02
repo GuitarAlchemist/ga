@@ -1,4 +1,4 @@
-﻿namespace GaApi.Controllers;
+namespace GaApi.Controllers;
 
 using Models;
 using Services;

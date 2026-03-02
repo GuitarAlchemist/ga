@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
 /// <summary>
 /// FParsec-based parser for Practice Routine DSL
@@ -7,7 +7,7 @@ namespace GA.MusicTheory.DSL.Parsers
 module PracticeRoutineParser =
 
     open FParsec
-    open GA.MusicTheory.DSL.Types.PracticeRoutineTypes
+    open GA.Business.DSL.Types.PracticeRoutineTypes
 
     // ============================================================================
     // BASIC PARSERS
@@ -338,7 +338,7 @@ module PracticeRoutineParser =
     /// Parse a practice routine string and return a DslCommand
     let parseCommand input =
         parse input
-        |> Result.map (fun routine -> GA.MusicTheory.DSL.Types.GrammarTypes.PracticeRoutineCommand $"%A{routine}")
+        |> Result.map (fun routine -> GA.Business.DSL.Types.GrammarTypes.PracticeRoutineCommand $"%A{routine}")
 
     /// Try to parse a practice routine string
     let tryParse input =

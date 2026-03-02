@@ -1,4 +1,4 @@
-﻿namespace GaApi.Extensions;
+namespace GaApi.Extensions;
 
 /// <summary>
 ///     Extension methods for ASP.NET Core controllers to simplify common operations

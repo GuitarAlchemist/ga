@@ -7,6 +7,8 @@ namespace GA.Business.ML.Rag.Models;
 public record ChordVoicingRagDocument : RagDocumentBase
 {
     public required string SearchableText { get; init; }
+    public override string ToEmbeddingString() => SearchableText;
+
     public string? ChordName { get; init; }
     public string? VoicingType { get; init; }
     public string? Position { get; init; }

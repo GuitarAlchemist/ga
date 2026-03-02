@@ -16,7 +16,7 @@
 - [x] Implement global validation engine.
 
 ## Phase 4: Migration & Documentation
-- [ ] Update microservice controllers to use the new standardized relationship DTOs.
+- [x] Update microservice controllers to use the new standardized relationship DTOs.
 - [x] Generate `docs/DOMAIN_SCHEMA.md` with Mermaid diagrams.
 - [x] Verify build and integration tests across all services.
 

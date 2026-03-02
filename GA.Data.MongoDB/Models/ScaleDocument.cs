@@ -20,7 +20,7 @@ public sealed record ScaleDocument : RagDocumentBase
     public string? Usage { get; init; }
     public List<string> Tags { get; init; } = [];
 
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         var searchParts = new List<string>
         {
@@ -35,6 +35,6 @@ public sealed record ScaleDocument : RagDocumentBase
             string.Join(" ", Tags)
         };
 
-        SearchText = string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
+        return string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
     }
 }

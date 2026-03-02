@@ -1,4 +1,4 @@
-﻿namespace GA.MusicTheory.DSL
+namespace GA.Business.DSL
 
 /// <summary>
 /// Main entry point for the Music Theory DSL library
@@ -6,10 +6,10 @@
 /// </summary>
 module MusicTheoryDsl =
 
-    open GA.MusicTheory.DSL.Types.GrammarTypes
-    open GA.MusicTheory.DSL.Parsers
+    open GA.Business.DSL.Types.GrammarTypes
+    open GA.Business.DSL.Parsers
     // Temporarily commented out - LSP files have build errors
-    // open GA.MusicTheory.DSL.LSP
+    // open GA.Business.DSL.LSP
 
     // ============================================================================
     // PARSER API

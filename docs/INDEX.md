@@ -11,6 +11,8 @@ Core system design, modular architecture, and structural decisions.
 - **CODE_SHARING_ARCHITECTURE.md** - Code sharing patterns
 - **ACTOR_MODEL.md** - Actor system design
 - **MICROSERVICES_ANALYSIS.md** - Microservices architecture
+- **AGENT_MARKETPLACE_MVP_SPEC.md** - Agent/plugin marketplace command and schema spec
+- **AGENT_TEAM_OPERATING_PLAYBOOK.md** - Multi-agent role model, handoff protocol, and quality gates
 
 ### [Guides](./Guides/)
 Step-by-step guides and quick-start documentation.
@@ -132,7 +134,7 @@ Code examples, demos, and sample implementations.
 
 ---
 
-**Last Updated**: November 8, 2025
+**Last Updated**: February 27, 2026
 **Total Documents**: 150+
 **Status**: Organized and indexed
 

@@ -1,9 +1,8 @@
-﻿# Build stage
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["AllProjects.sln", "./"]
+# Copy only necessary project files first (cache-efficient)
 COPY ["Apps/ga-server/GaApi/GaApi.csproj", "Apps/ga-server/GaApi/"]
 COPY ["AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj", "AllProjects.ServiceDefaults/"]
 COPY ["GA.Data.MongoDB/GA.Data.MongoDB.csproj", "GA.Data.MongoDB/"]
@@ -14,7 +13,7 @@ COPY ["Common/GA.Core/GA.Core.csproj", "Common/GA.Core/"]
 # Restore dependencies
 RUN dotnet restore "Apps/ga-server/GaApi/GaApi.csproj"
 
-# Copy everything else
+# Copy remaining source
 COPY . .
 
 # Build
@@ -23,7 +22,7 @@ RUN dotnet build "GaApi.csproj" -c Release -o /app/build
 
 # Publish
 FROM build AS publish
-RUN dotnet publish "GaApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "GaApi.csproj" -c Release -o /app/publish /p:UseAppHost=false -p:DebugType=none -p:DebugSymbols=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
@@ -31,6 +30,13 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GaApi.dll"]
+# Create non-root user
+RUN useradd -m -u 1000 appuser
 
+# Copy published output
+COPY --from=publish --chown=appuser:appuser /app/publish .
+
+# Switch to non-root user
+USER appuser
+
+ENTRYPOINT ["dotnet", "GaApi.dll"]

@@ -1,4 +1,4 @@
-﻿namespace GaApi.Extensions;
+namespace GaApi.Extensions;
 
 using Services;
 

@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Models;
+namespace GA.DocumentProcessing.Service.Models;
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;

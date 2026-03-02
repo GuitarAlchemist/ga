@@ -1,6 +1,6 @@
 namespace PracticeRoutineDSLDemo;
 
-using GA.MusicTheory.DSL.Parsers;
+using GA.Business.DSL.Parsers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

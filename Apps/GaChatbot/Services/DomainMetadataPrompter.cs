@@ -35,11 +35,18 @@ public class DomainMetadataPrompter(SchemaDiscoveryService schemaService)
         sb.AppendLine($"   [{string.Join(", ", voc.StackingTypes)}]");
         sb.AppendLine("   - Example: 'quartal harmony' -> StackingType='Quartal'");
         sb.AppendLine("   - Example: 'cluster voicings' -> StackingType='Cluster'");
+        
+        sb.AppendLine("4. INTENT (Field: 'Intent'):");
+        sb.AppendLine("   Identify the user's primary goal:");
+        sb.AppendLine("   - 'OptimizePath': User asks for a smoother path, better voice leading, or physical optimization of a progression (e.g., 'Suggest a smoother path for C to G', 'Optimize this tab', 'Easier way to play').");
+        sb.AppendLine("   - 'AnalyzeTab': User provides a tab and wants general analysis, key detection, or style.");
+        sb.AppendLine("   - 'Compare': User wants to compare the distance or difference between two chords.");
+        sb.AppendLine("   - 'Search': User is just looking for a specific chord or voicing (default).");
         sb.AppendLine();
 
         sb.AppendLine("### OUTPUT FORMAT ###");
         sb.AppendLine("Return a JSON object with the extracted filters. Omit fields if not specified.");
-        sb.AppendLine("Example Output: { \"Quality\": \"Minor\", \"Extension\": \"7\" }");
+        sb.AppendLine("Example Output: { \"Intent\": \"OptimizePath\", \"Quality\": \"Minor\", \"Extension\": \"7\" }");
 
         return sb.ToString();
     }

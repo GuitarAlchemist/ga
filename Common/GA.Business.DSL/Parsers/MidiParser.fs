@@ -1,6 +1,6 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
-open GA.MusicTheory.DSL.Types.MidiTypes
+open GA.Business.DSL.Types.MidiTypes
 open System.IO
 
 /// MIDI file parser using Melanchall.DryWetMidi library

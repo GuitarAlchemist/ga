@@ -1,11 +1,10 @@
 namespace GA.Core.Functional;
 
-using System;
-
 /// <summary>
 ///     Represents an IO operation that can be deferred.
 /// </summary>
 /// <typeparam name="T">The type of the result</typeparam>
+[PublicAPI]
 public readonly record struct Io<T>
 {
     private readonly Func<T> _operation;

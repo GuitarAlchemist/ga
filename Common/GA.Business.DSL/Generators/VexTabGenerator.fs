@@ -1,7 +1,7 @@
-namespace GA.MusicTheory.DSL.Generators
+namespace GA.Business.DSL.Generators
 
 open System.Text
-open GA.MusicTheory.DSL.Types.VexTabTypes
+open GA.Business.DSL.Types.VexTabTypes
 
 /// <summary>
 /// Generator for VexTab notation from DSL types

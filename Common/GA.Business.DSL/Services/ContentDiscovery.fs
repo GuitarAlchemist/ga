@@ -1,8 +1,8 @@
-namespace GA.MusicTheory.DSL.Services
+namespace GA.Business.DSL.Services
 
 open System
 open System.Threading.Tasks
-open GA.MusicTheory.DSL.Types.PracticeRoutineTypes
+open GA.Business.DSL.Types.PracticeRoutineTypes
 
 /// <summary>
 /// Content discovery service for finding musical content across various repositories

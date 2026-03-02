@@ -14,6 +14,40 @@ public record ScaleRagDocument : RagDocumentBase
     public string? ModeName { get; init; }
     public string? Family { get; init; }
     public required string[] SemanticTags { get; init; }
-    
-    public virtual void GenerateSearchText() => SearchText = $"{Name} {string.Join(" ", Aliases ?? [])} {Formula} {Family}";
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Follows rag-engineer semantic chunking principles:
+    ///     - Labelled fields improve embedding recall vs. bare concatenation.
+    ///     - SemanticTags are appended last so they act as soft signal boosters.
+    ///     - All nullable fields are guarded to avoid literal "null" tokens in the vector.
+    /// </remarks>
+    public override string ToEmbeddingString()
+    {
+        var parts = new List<string>
+        {
+            $"Scale: {Name}",
+        };
+
+        if (Aliases is { Length: > 0 })
+            parts.Add($"Also known as: {string.Join(", ", Aliases)}");
+
+        parts.Add($"Formula: {Formula}");
+        parts.Add($"Pitch classes: {string.Join(" ", PitchClasses)}");
+        parts.Add($"Interval class vector: {IntervalClassVector}");
+
+        if (!string.IsNullOrWhiteSpace(ModeName))
+            parts.Add($"Mode: {ModeName}");
+
+        if (!string.IsNullOrWhiteSpace(Family))
+            parts.Add($"Family: {Family}");
+
+        if (IsDiatonic)
+            parts.Add("diatonic");
+
+        if (SemanticTags.Length > 0)
+            parts.Add(string.Join(" ", SemanticTags));
+
+        return string.Join(". ", parts);
+    }
 }

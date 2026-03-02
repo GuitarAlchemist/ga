@@ -3,27 +3,38 @@
     <mcpServers>
       <mcpServer>
         <option name="name" value="meshy-ai" />
-        <option name="command" value="python" />
+        <option name="command" value="docker" />
         <option name="args">
           <list>
-            <option value="C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/src/server.py" />
+            <option value="run" />
+            <option value="-i" />
+            <option value="--rm" />
+            <option value="-e" />
+            <option value="MESHY_API_KEY=msy_ntI4R9Qk4x4c9v7BDvH6wJ7cwcyUUvMAMr0S" />
+            <option value="ga-meshy-mcp" />
+            <option value="npm" />
+            <option value="start" />
           </list>
         </option>
         <option name="env">
-          <map>
-            <entry key="MESHY_API_KEY" value="msy_ntI4R9Qk4x4c9v7BDvH6wJ7cwcyUUvMAMr0S" />
-          </map>
+          <map />
         </option>
         <option name="disabled" value="false" />
       </mcpServer>
       <mcpServer>
         <option name="name" value="mongodb" />
-        <option name="command" value="npx" />
+        <option name="command" value="docker" />
         <option name="args">
           <list>
+            <option value="run" />
+            <option value="-i" />
+            <option value="--rm" />
+            <option value="--network=ga_ga-network" />
+            <option value="node:18-alpine" />
+            <option value="npx" />
             <option value="-y" />
             <option value="@modelcontextprotocol/server-mongodb" />
-            <option value="mongodb://localhost:27017" />
+            <option value="mongodb://admin:changeme@ga-mongodb:27017" />
           </list>
         </option>
         <option name="env">
@@ -33,13 +44,19 @@
       </mcpServer>
       <mcpServer>
         <option name="name" value="redis" />
-        <option name="command" value="npx" />
+        <option name="command" value="docker" />
         <option name="args">
           <list>
+            <option value="run" />
+            <option value="-i" />
+            <option value="--rm" />
+            <option value="--network=ga_ga-network" />
+            <option value="node:18-alpine" />
+            <option value="npx" />
             <option value="-y" />
             <option value="redis-mcp-server" />
             <option value="--url" />
-            <option value="redis://127.0.0.1:6379" />
+            <option value="redis://ga-falkordb:6379" />
           </list>
         </option>
         <option name="env">
@@ -53,6 +70,24 @@
         <option name="args">
           <list>
             <option value="blender-mcp" />
+          </list>
+        </option>
+        <option name="env">
+          <map />
+        </option>
+        <option name="disabled" value="false" />
+      </mcpServer>
+      <mcpServer>
+        <option name="name" value="memory" />
+        <option name="command" value="docker" />
+        <option name="args">
+          <list>
+            <option value="run" />
+            <option value="-i" />
+            <option value="--rm" />
+            <option value="-v" />
+            <option value="C:/Users/spare/source/repos/ga/mcp-servers/memory-data:/app/data" />
+            <option value="mcp/memory" />
           </list>
         </option>
         <option name="env">

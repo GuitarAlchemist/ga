@@ -102,6 +102,13 @@ public sealed class InMemoryVectorIndex : IVectorIndex
         }
     }
 
+    /// <inheritdoc />
+    public Task IndexAsync(IEnumerable<ChordVoicingRagDocument> docs)
+    {
+        AddRange(docs);
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     ///     Clears all documents from the index.
     /// </summary>

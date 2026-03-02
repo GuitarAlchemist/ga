@@ -157,21 +157,22 @@ public static class VoicingAnalyzer
         // 2. Physical Analysis (Hands, Fretboard)
         var physicalLayout = VoicingPhysicalAnalyzer.ExtractPhysicalLayout(voicing);
         var playabilityInfo = VoicingPhysicalAnalyzer.CalculatePlayability(physicalLayout);
+        var ergonomicsInfo = VoicingPhysicalAnalyzer.AnalyzeErgonomics(physicalLayout, playabilityInfo);
+        var physicalTags = VoicingPhysicalAnalyzer.GeneratePhysicalTags(physicalLayout, playabilityInfo, ergonomicsInfo);
 
         // 3. Perceptual Analysis (Sound)
         var perceptualQualities = new PerceptualQualities(curVoiceChars.Consonance, 0, 0, "Neutral", "Medium");
 
         // 4. Semantic Tags
         var semanticTags = new List<string>(curVoiceChars.SemanticTags);
+        semanticTags.AddRange(physicalTags);
+
         if (modeInfo != null)
         {
             semanticTags.Add(modeInfo.ModeName.ToLowerInvariant().Replace(" ", "-"));
             semanticTags.Add(modeInfo.FamilyName.ToLowerInvariant().Replace(" ", "-"));
         }
-        if (!string.IsNullOrEmpty(playabilityInfo.Difficulty))
-        {
-            semanticTags.Add(playabilityInfo.Difficulty.ToLowerInvariant());
-        }
+        
         if (curVoiceChars.DropVoicing != null)
         {
             semanticTags.Add(curVoiceChars.DropVoicing.ToLowerInvariant());

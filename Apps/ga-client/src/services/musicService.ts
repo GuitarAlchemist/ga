@@ -4,6 +4,7 @@ import type {
   ScaleDegree,
   ChordInContext,
   ChordProgressionDefinition,
+  VoicingWithAnalysis,
 } from '../types/music';
 import type { KeyChordFilters } from '../store/atoms';
 
@@ -88,6 +89,41 @@ export const fetchChordsForKey = async ({
     `/api/contextual-chords/keys/${encodeURIComponent(keyName)}?${searchParams.toString()}`,
   );
 
+  return parseJson<ChordInContext[]>(await fetch(url, { signal }));
+};
+
+export const fetchVoicingsForChord = async (
+  baseUrl: string,
+  chordName: string,
+  maxDifficulty?: number,
+  signal?: AbortSignal,
+) => {
+  const url = buildUrl(
+    baseUrl,
+    `/api/contextual-chords/voicings/${encodeURIComponent(chordName)}${
+      maxDifficulty !== undefined ? `?maxDifficulty=${maxDifficulty}` : ''
+    }`,
+  );
+  return parseJson<VoicingWithAnalysis[]>(await fetch(url, { signal }));
+};
+
+export const fetchChordsForScale = async (
+  baseUrl: string,
+  scaleName: string,
+  rootName: string,
+  signal?: AbortSignal,
+) => {
+  const url = buildUrl(baseUrl, `/api/contextual-chords/scales/${encodeURIComponent(scaleName)}/${encodeURIComponent(rootName)}`);
+  return parseJson<ChordInContext[]>(await fetch(url, { signal }));
+};
+
+export const fetchChordsForMode = async (
+  baseUrl: string,
+  modeName: string,
+  rootName: string,
+  signal?: AbortSignal,
+) => {
+  const url = buildUrl(baseUrl, `/api/contextual-chords/modes/${encodeURIComponent(modeName)}/${encodeURIComponent(rootName)}`);
   return parseJson<ChordInContext[]>(await fetch(url, { signal }));
 };
 

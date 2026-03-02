@@ -1,4 +1,4 @@
-﻿namespace VoicingSearchDemo;
+namespace VoicingSearchDemo;
 
 using GA.Domain.Core.Instruments.Fretboard;
 using GA.Domain.Core.Instruments.Positions;

@@ -19,47 +19,60 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 ///     configurable pooling, and optional L2 normalization so it can drop in wherever
 ///     <see cref="ITextEmbeddingService"/> is consumed.
 /// </summary>
-public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddingService, IDisposable
+public sealed class OnnxEmbeddingService(
+    OnnxEmbeddingOptions options,
+    ILogger<OnnxEmbeddingService>? logger = null,
+    IOnnxSessionFactory? sessionFactory = null) : ITextEmbeddingService, ILegacyEmbeddingService, IDisposable
 {
-    private readonly ILogger<OnnxEmbeddingService> _logger;
-    private readonly OnnxEmbeddingOptions _options;
-    private readonly int _maxTokens;
-    private readonly IOnnxSessionFactory _sessionFactory;
-    private readonly IOnnxSession _session;
-    private readonly Dictionary<string, int> _vocabulary;
-    private readonly long _padTokenId;
-    private readonly long _clsTokenId;
-    private readonly long _sepTokenId;
-    private readonly long _unkTokenId;
+    private readonly ILogger<OnnxEmbeddingService> _logger = logger ?? NullLogger<OnnxEmbeddingService>.Instance;
+    private readonly InitializationContext _ctx = Initialize(options, sessionFactory ?? DefaultOnnxSessionFactory.Instance, logger ?? NullLogger<OnnxEmbeddingService>.Instance);
+    private readonly int _maxTokens = Math.Max(options.MaxTokens, 2);
     private bool _disposed;
+
+    // Private properties delegate to the immutable InitializationContext.
+    // PascalCase per coding standards (these are expression-bodied properties, not fields).
+    private OnnxEmbeddingOptions Options => _ctx.Options;
+    private IOnnxSession Session => _ctx.Session;
+    private Dictionary<string, int> Vocabulary => _ctx.Vocabulary;
+    private long PadTokenId => _ctx.PadTokenId;
+    private long ClsTokenId => _ctx.ClsTokenId;
+    private long SepTokenId => _ctx.SepTokenId;
+    private long UnkTokenId => _ctx.UnkTokenId;
 
     public OnnxEmbeddingService(string modelPath)
         : this(new OnnxEmbeddingOptions { ModelPath = modelPath })
     {
     }
 
-    public OnnxEmbeddingService(OnnxEmbeddingOptions options, ILogger<OnnxEmbeddingService>? logger = null, IOnnxSessionFactory? sessionFactory = null)
+    private record InitializationContext(
+        OnnxEmbeddingOptions Options,
+        Dictionary<string, int> Vocabulary,
+        IOnnxSession Session,
+        long PadTokenId,
+        long ClsTokenId,
+        long SepTokenId,
+        long UnkTokenId);
+
+    private static InitializationContext Initialize(OnnxEmbeddingOptions options, IOnnxSessionFactory sessionFactory, ILogger logger)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        ValidateOptions(_options);
+        var opt = options ?? throw new ArgumentNullException(nameof(options));
+        ValidateOptions(opt);
 
-        _logger = logger ?? NullLogger<OnnxEmbeddingService>.Instance;
-        _maxTokens = Math.Max(_options.MaxTokens, 2);
+        var vocabularyPath = ResolveVocabularyPath(opt);
+        var vocab = LoadVocabulary(vocabularyPath);
+        opt.VocabularyPath = vocabularyPath;
 
-        var vocabularyPath = ResolveVocabularyPath(_options);
-        _vocabulary = LoadVocabulary(vocabularyPath);
-        _options.VocabularyPath = vocabularyPath;
+        var padTokenId = GetTokenId("[PAD]", vocab, vocabularyPath);
+        var clsTokenId = GetTokenId("[CLS]", vocab, vocabularyPath);
+        var sepTokenId = GetTokenId("[SEP]", vocab, vocabularyPath);
+        var unkTokenId = GetTokenId("[UNK]", vocab, vocabularyPath);
 
-        _padTokenId = GetTokenId("[PAD]");
-        _clsTokenId = GetTokenId("[CLS]");
-        _sepTokenId = GetTokenId("[SEP]");
-        _unkTokenId = GetTokenId("[UNK]");
-
-        _sessionFactory = sessionFactory ?? DefaultOnnxSessionFactory.Instance;
-        _session = _sessionFactory.Create(_options.ModelPath);
-        _logger.LogInformation("ONNX embedding service initialized with model {Model} and vocab {Vocab}",
-            _options.ModelPath,
+        var session = sessionFactory.Create(opt.ModelPath);
+        logger.LogInformation("ONNX embedding service initialized with model {Model} and vocab {Vocab}",
+            opt.ModelPath,
             vocabularyPath);
+
+        return new InitializationContext(opt, vocab, session, padTokenId, clsTokenId, sepTokenId, unkTokenId);
     }
 
     // Legacy interface implementation
@@ -85,7 +98,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
             return;
         }
 
-        _session.Dispose();
+        Session.Dispose();
         _disposed = true;
         _logger.LogInformation("ONNX embedding session disposed");
     }
@@ -94,21 +107,21 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
     {
         var (inputTensor, attentionTensor, attentionMask) = PrepareInputs(text);
 
-        var inputValue = NamedOnnxValue.CreateFromTensor(_options.InputIdsNodeName, inputTensor);
-        var attentionValue = NamedOnnxValue.CreateFromTensor(_options.AttentionMaskNodeName, attentionTensor);
+        var inputValue = NamedOnnxValue.CreateFromTensor(Options.InputIdsNodeName, inputTensor);
+        var attentionValue = NamedOnnxValue.CreateFromTensor(Options.AttentionMaskNodeName, attentionTensor);
 
         try
         {
-            using var outputs = _session.Run(new[] { inputValue, attentionValue });
+            using var outputs = Session.Run(new[] { inputValue, attentionValue });
 
             var tokenEmbeddings = outputs
-                .FirstOrDefault(output => output.Name == _options.OutputNodeName)?.AsTensor<float>()
+                .FirstOrDefault(output => output.Name == Options.OutputNodeName)?.AsTensor<float>()
                 ?? throw new InvalidOperationException(
-                    $"Output node '{_options.OutputNodeName}' was not found in the ONNX graph.");
+                    $"Output node '{Options.OutputNodeName}' was not found in the ONNX graph.");
 
             var pooled = PoolEmbeddings(tokenEmbeddings, attentionMask);
 
-            if (_options.NormalizeEmbeddings)
+            if (Options.NormalizeEmbeddings)
             {
                 NormalizeInPlace(pooled);
             }
@@ -136,7 +149,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
         if (tokenIds.Count > _maxTokens)
         {
             tokenIds = [.. tokenIds.Take(_maxTokens)];
-            tokenIds[^1] = _sepTokenId;
+            tokenIds[^1] = SepTokenId;
         }
 
         var inputIds = new long[_maxTokens];
@@ -151,7 +164,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
 
         for (var i = validLength; i < _maxTokens; i++)
         {
-            inputIds[i] = _padTokenId;
+            inputIds[i] = PadTokenId;
         }
 
         var inputTensor = new DenseTensor<long>(inputIds, new[] { 1, _maxTokens });
@@ -162,7 +175,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
 
     private List<long> TokenizeToIds(string text)
     {
-        var tokens = new List<long>(_maxTokens) { _clsTokenId };
+        var tokens = new List<long>(_maxTokens) { ClsTokenId };
         var contentTokens = BasicTokenize(text);
 
         foreach (var token in contentTokens)
@@ -171,7 +184,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
             {
                 if (tokens.Count >= _maxTokens - 1)
                 {
-                    tokens.Add(_sepTokenId);
+                    tokens.Add(SepTokenId);
                     return tokens;
                 }
 
@@ -179,7 +192,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
             }
         }
 
-        tokens.Add(_sepTokenId);
+        tokens.Add(SepTokenId);
         return tokens;
     }
 
@@ -234,7 +247,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
             yield break;
         }
 
-        if (_vocabulary.TryGetValue(token, out var fullTokenId))
+        if (Vocabulary.TryGetValue(token, out var fullTokenId))
         {
             yield return fullTokenId;
             yield break;
@@ -257,7 +270,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
                     substring = "##" + substring;
                 }
 
-                if (_vocabulary.TryGetValue(substring, out var pieceId))
+                if (Vocabulary.TryGetValue(substring, out var pieceId))
                 {
                     currentPieceId = pieceId;
                     break;
@@ -278,7 +291,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
 
         if (isBad)
         {
-            yield return _unkTokenId;
+            yield return UnkTokenId;
             yield break;
         }
 
@@ -305,7 +318,7 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
         var hiddenSize = tokenEmbeddings.Dimensions[^1];
         var pooled = new float[hiddenSize];
 
-        if (_options.PoolingStrategy == OnnxEmbeddingPoolingStrategy.Cls)
+        if (Options.PoolingStrategy == OnnxEmbeddingPoolingStrategy.Cls)
         {
             for (var i = 0; i < hiddenSize; i++)
             {
@@ -364,15 +377,15 @@ public sealed class OnnxEmbeddingService : ITextEmbeddingService, ILegacyEmbeddi
         }
     }
 
-    private long GetTokenId(string token)
+    private static long GetTokenId(string token, Dictionary<string, int> vocabulary, string vocabularyPath)
     {
-        if (_vocabulary.TryGetValue(token, out var id))
+        if (vocabulary.TryGetValue(token, out var id))
         {
             return id;
         }
 
         throw new InvalidOperationException(
-            $"The vocabulary at '{_options.VocabularyPath}' is missing the required token '{token}'.");
+            $"The vocabulary at '{vocabularyPath}' is missing the required token '{token}'.");
     }
 
     private static string ResolveVocabularyPath(OnnxEmbeddingOptions options)

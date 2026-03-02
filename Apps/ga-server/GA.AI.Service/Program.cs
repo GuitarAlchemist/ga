@@ -55,7 +55,7 @@ builder.Services.AddSingleton<NotebookExecutionService>();
 // Chatbot Services
 builder.Services.AddGuitarAlchemistAI();
 builder.Services.AddSingleton<IVectorIndex>(sp => new QdrantVectorIndex("ga-qdrant")); // Docker host
-builder.Services.AddScoped<SpectralRetrievalService>();
+builder.Services.AddScoped<ISpectralRetrievalService, SpectralRetrievalService>();
 // TODO: These types are in GaChatbot project - need to be moved or referenced
 // builder.Services.AddSingleton<GroundedPromptBuilder>();
 // builder.Services.AddSingleton<ResponseValidator>();
@@ -84,9 +84,10 @@ builder.Services.AddSingleton<TabAnalysisService>();
 builder.Services.AddSingleton<MusicalEmbeddingGenerator>(); // Concrete for ProductionOrchestrator
 // builder.Services.AddSingleton<TabAwareOrchestrator>();
 // builder.Services.AddSingleton<ProductionOrchestrator>(); // TODO: ProductionOrchestrator is in GaChatbot project
-
 builder.Services.AddMemoryCache();
-
+#pragma warning disable EXTEXP0018
+builder.Services.AddHybridCache();
+#pragma warning restore EXTEXP0018
 builder.Services.AddControllers()
     .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; });
 

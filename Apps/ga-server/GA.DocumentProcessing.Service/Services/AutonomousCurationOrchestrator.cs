@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Services;
+namespace GA.DocumentProcessing.Service.Services;
 
 using Models;
 
@@ -13,6 +13,7 @@ public class AutonomousCurationOrchestrator
     private readonly YouTubeSearchService _youtubeSearch;
     private readonly VideoQualityEvaluator _qualityEvaluator;
     private readonly RetroactionLoopOrchestrator _retroactionLoop;
+    private readonly YouTubeTranscriptService _youtubeTranscriptService;
     private readonly MongoDbService _mongoDbService;
 
     public AutonomousCurationOrchestrator(
@@ -21,6 +22,7 @@ public class AutonomousCurationOrchestrator
         YouTubeSearchService youtubeSearch,
         VideoQualityEvaluator qualityEvaluator,
         RetroactionLoopOrchestrator retroactionLoop,
+        YouTubeTranscriptService youtubeTranscriptService,
         MongoDbService mongoDbService)
     {
         _logger = logger;
@@ -28,6 +30,7 @@ public class AutonomousCurationOrchestrator
         _youtubeSearch = youtubeSearch;
         _qualityEvaluator = qualityEvaluator;
         _retroactionLoop = retroactionLoop;
+        _youtubeTranscriptService = youtubeTranscriptService;
         _mongoDbService = mongoDbService;
     }
 
@@ -202,16 +205,19 @@ public class AutonomousCurationOrchestrator
         {
             _logger.LogInformation("Processing accepted video: {VideoId} for gap: {Topic}", video.VideoId, gap.Topic);
 
+            // Extract transcript
+            var transcript = await _youtubeTranscriptService.ExtractTranscriptAsync(video.Url, cancellationToken);
+
             // Start retroaction loop for this video
-            var retroactionRequest = new StartYouTubeRetroactionLoopRequest
+            var retroactionRequest = new RetroactionLoopRequest
             {
-                YouTubeUrl = video.Url,
+                InitialDocuments = new List<string> { transcript.FullText },
                 Focus = $"{gap.Category}: {gap.Topic}",
                 MaxIterations = 3,
                 ConvergenceThreshold = 0.85
             };
 
-            await _retroactionLoop.StartYouTubeRetroactionLoopAsync(retroactionRequest, cancellationToken);
+            await _retroactionLoop.ExecuteLoopAsync(retroactionRequest, cancellationToken);
 
             // TODO: Update Graphiti knowledge graph with new knowledge
             // await UpdateGraphitiAsync(video, gap, extractedKnowledge, cancellationToken);

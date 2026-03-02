@@ -3,7 +3,7 @@ using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Services.Embeddings;
 
 using GA.Business.Intelligence.SemanticIndexing;
-using GA.Domain.Services.Fretboard.Voicings.Search;
+
 using GaCLI.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -137,6 +137,9 @@ if (args.Length > 0)
             await RunBenchmarks(args, configuration);
             return;
 
+        case "plugin":
+            await RunPlugin(args);
+            return;
 
     }
 }
@@ -159,59 +162,41 @@ WriteLine("  similar <diagram>      Find alternative voicings for a chord shape"
 WriteLine("  benchmark-similarity   Compare two voicings using musical embeddings");
 WriteLine("  search-voicings        Search the voicing database with filters");
 WriteLine("  index-voicings         Index all possible voicings into MongoDB");
+WriteLine("  plugin                 Plugin/agent marketplace command surface (MVP scaffold)");
 WriteLine();
 WriteLine("Examples:");
 WriteLine("  dotnet run -- analyze-chord Cmaj7 --hand-size Medium --verbose");
 WriteLine("  dotnet run -- search-voicings --name \"Cmaj7\" --no-barre");
 WriteLine("  dotnet run -- identify x32010");
+WriteLine("  dotnet run -- plugin --help");
+WriteLine("  dotnet run -- plugin marketplace add <source> --scope project");
+WriteLine("  dotnet run -- plugin install <plugin-ref> --scope local");
 
 return;
 
 // ... existing methods ...
 
-static async Task RunBenchmarkQuality(string[] args, IConfigurationRoot config)
+static Task RunBenchmarkQuality(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var command = serviceProvider.GetRequiredService<BenchmarkQualityCommand>();
-
-        await command.ExecuteAsync();
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-        WriteLine(ex.StackTrace);
-    }
+    throw new NotImplementedException();
 }
 
 // ... existing RunChat ...
 
-static async Task RunBenchmarks(string[] args, IConfigurationRoot config)
+static Task RunBenchmarks(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var command = serviceProvider.GetRequiredService<RunBenchmarksCommand>();
-
-        string? name = args.Length > 1 ? args[1] : null;
-        if (name?.StartsWith("--") == true) name = null;
-
-        await command.ExecuteAsync(name);
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-        WriteLine(ex.StackTrace);
-    }
+    throw new NotImplementedException();
 }
 
 static Task RunDebugTags(IConfigurationRoot config)
 {
-    using var serviceProvider = BuildScratchServiceProvider(config);
-    var command = serviceProvider.GetRequiredService<DebugTagsCommand>();
-    command.Execute();
-    return Task.CompletedTask;
+    throw new NotImplementedException();
+}
+
+static async Task RunPlugin(string[] args)
+{
+    var command = new PluginCommand();
+    await command.ExecuteAsync(args);
 }
 
 static async Task RunEmbedding(string[] args, IConfigurationRoot config)
@@ -268,25 +253,24 @@ static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
         options.DatabaseName = config.GetValue<string>("MongoDbSettings:DatabaseName") ?? "guitaralchemist";
     });
     services.AddTransient<MongoDbService>();
-    services.AddTransient<IndexVoicingsCommand>();
+    // services.AddTransient<IndexVoicingsCommand>();
     services.AddTransient<QueryVoicingsCommand>();
     services.AddTransient<ValidateVoicingIndexCommand>();
     services.AddTransient<DemoVoicingCapabilitiesCommand>();
-    services.AddTransient<SearchVoicingsCommand>();
+    // services.AddTransient<SearchVoicingsCommand>();
     services.AddTransient<IdentifyCommand>();
     services.AddTransient<SimilarVoicingsCommand>();
-    services.AddTransient<ChatCommand>();
-    services.AddTransient<BenchmarkQualityCommand>();
-    services.AddTransient<BenchmarkSimilarityCommand>();
-    services.AddTransient<RunBenchmarksCommand>();
-    services.AddTransient<DebugTagsCommand>();
+    // services.AddTransient<ChatCommand>();
+    // services.AddTransient<BenchmarkQualityCommand>();
+    // services.AddTransient<BenchmarkSimilarityCommand>();
+    // services.AddTransient<RunBenchmarksCommand>();
+    // services.AddTransient<DebugTagsCommand>();
     services.AddTransient<SemanticSearchService>();
     services.AddTransient<EmbeddingCommand>();
     services.AddTransient<SemanticFretboardService>();
     services.AddTransient<SemanticFretboardCommand>();
-
     // Tab Corpus
-    services.AddTransient<GA.Domain.Core.Tabs.ITabCorpusRepository, MongoTabCorpusRepository>();
+    services.AddTransient<GA.Domain.Repositories.ITabCorpusRepository, MongoTabCorpusRepository>();
     services.AddTransient<GA.Business.ML.Tabs.TabCorpusService>();
     services.AddTransient<IngestCorpusCommand>();
 
@@ -305,10 +289,10 @@ static ServiceProvider BuildScratchServiceProvider(IConfigurationRoot config)
     });
 
     services.AddSingleton<GA.Business.ML.Musical.Explanation.VoicingExplanationService>();
-    services.AddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
-    services.AddSingleton<VoicingIndexingService>();
-    services.AddSingleton<EnhancedVoicingSearchService>();
-    services.AddTransient<ExplainVoicingCommand>();
+    // services.AddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
+    // services.AddSingleton<VoicingIndexingService>();
+    // services.AddSingleton<EnhancedVoicingSearchService>();
+    // services.AddTransient<ExplainVoicingCommand>();
 
     // Naturalness
     services.AddTransient<GA.Business.ML.Naturalness.NaturalnessTrainingDataGenerator>();
@@ -401,52 +385,14 @@ static async Task StartLmStudioApi(string[] args)
     }
 }
 
-static async Task RunAnalyzeChord(string[] args)
+static Task RunAnalyzeChord(string[] args)
 {
-    try
-    {
-        if (args.Length < 2)
-        {
-            WriteLine("Usage: analyze-chord <chord-name> [--hand-size <size>] [--verbose]");
-            WriteLine("Example: analyze-chord Cmaj7 --hand-size Medium --verbose");
-            return;
-        }
-
-        var chordName = args[1];
-        var handSize = GetArgValue(args, "--hand-size") ?? "Medium";
-        var verbose = args.Contains("--verbose");
-
-        var command = new BiomechanicalAnalysisCommand();
-        await command.AnalyzeChordAsync(chordName, handSize, verbose);
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-    }
+    throw new NotImplementedException();
 }
 
-static async Task RunAnalyzeProgression(string[] args)
+static Task RunAnalyzeProgression(string[] args)
 {
-    try
-    {
-        if (args.Length < 2)
-        {
-            WriteLine("Usage: analyze-progression <chords> [--hand-size <size>] [--verbose]");
-            WriteLine("Example: analyze-progression C,Am,F,G --hand-size Large --verbose");
-            return;
-        }
-
-        var chords = args[1];
-        var handSize = GetArgValue(args, "--hand-size") ?? "Medium";
-        var verbose = args.Contains("--verbose");
-
-        var command = new BiomechanicalAnalysisCommand();
-        await command.AnalyzeProgressionAsync(chords, handSize, verbose);
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-    }
+    throw new NotImplementedException();
 }
 
 static async Task RunAssetImport(string[] args, IConfigurationRoot config)
@@ -600,91 +546,19 @@ static string? GetArgValue(string[] args, string argName)
     return null;
 }
 
-static async Task RunGpuVoicingSearch(string[] args)
+static Task RunGpuVoicingSearch(string[] args)
 {
-    var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-    var logger = loggerFactory.CreateLogger<GpuVoicingSearchCommand>();
-    var command = new GpuVoicingSearchCommand(logger);
-
-    var demoChoice = args.Length > 1 ? args[1] : null;
-    await command.ExecuteAsync(demoChoice);
+    throw new NotImplementedException();
 }
 
 async static Task RunHybridBenchmark(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var searchService = serviceProvider.GetRequiredService<EnhancedVoicingSearchService>();
-        var mongoDbService = serviceProvider.GetRequiredService<MongoDbService>();
-        var indexingService = serviceProvider.GetRequiredService<VoicingIndexingService>();
-        var textEmbeddingGenerator = serviceProvider.GetRequiredService<GA.Business.ML.Embeddings.OnnxEmbeddingGenerator>();
-
-        var verbose = args.Any(a => a == "--verbose" || a == "-v");
-        var movable = args.Contains("--movable");
-
-        var key = GetArgValue(args, "--key");
-
-        int? maxFret = null;
-        var maxFretArg = GetArgValue(args, "--max-fret");
-        if (maxFretArg != null && int.TryParse(maxFretArg, out var mf))
-        {
-            maxFret = mf;
-        }
-
-        var limit = 1000;
-        if (args.Contains("--all"))
-        {
-            limit = int.MaxValue;
-        }
-        else
-        {
-            var limitArg = GetArgValue(args, "--limit");
-            if (limitArg != null && int.TryParse(limitArg, out var l))
-            {
-                limit = l;
-            }
-        }
-
-        await new GaCLI.Commands.HybridBenchmarkCommand(searchService, mongoDbService, indexingService, textEmbeddingGenerator)
-            .ExecuteAsync(verbose, key, maxFret, movable, limit);
-    }
-    catch (Exception ex)
-    {
-        AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
-        AnsiConsole.WriteException(ex);
-    }
+    throw new NotImplementedException();
 }
 
-static async Task RunIndexVoicings(string[] args, IConfigurationRoot config)
+static Task RunIndexVoicings(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        // Check arguments
-        var indexAll = args.Contains("--all");
-        var limitArg = GetArgValue(args, "--limit");
-        var limit = limitArg != null ? int.Parse(limitArg) : 1000;
-
-        var windowArg = GetArgValue(args, "--window");
-        var window = windowArg != null ? int.Parse(windowArg) : 4;
-
-        var minNotesArg = GetArgValue(args, "--min-notes");
-        var minNotes = minNotesArg != null ? int.Parse(minNotesArg) : 2;
-
-        var force = args.Contains("--force");
-        var drop = args.Contains("--drop");
-        var seed = args.Contains("--seed");
-
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var command = serviceProvider.GetRequiredService<IndexVoicingsCommand>();
-
-        await command.ExecuteAsync(indexAll, limit, window, minNotes, force, drop, seed);
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-        WriteLine(ex.StackTrace);
-    }
+    throw new NotImplementedException();
 }
 
 static async Task RunQueryVoicings(string[] args, IConfigurationRoot config)
@@ -738,39 +612,9 @@ static async Task RunDemoVoicings(string[] args, IConfigurationRoot config)
     }
 }
 
-static async Task RunSearchVoicings(string[] args, IConfigurationRoot config)
+static Task RunSearchVoicings(string[] args, IConfigurationRoot config)
 {
-    var options = new SearchVoicingsCommand.ValidatedOptions();
-
-    // Manual simplistic arg-parsing for the demo
-    for (int i = 0; i < args.Length; i++)
-    {
-        var arg = args[i];
-        if (arg == "--name" && i + 1 < args.Length) options.ChordName = args[++i];
-        if (arg == "--tag" && i + 1 < args.Length) options.Tag = args[++i];
-        if (arg == "--forte" && i + 1 < args.Length) options.ForteCode = args[++i];
-        if (arg == "--diff" && i + 1 < args.Length) options.Difficulty = args[++i];
-        if (arg == "--min-fret" && i + 1 < args.Length) options.MinFret = int.Parse(args[++i]);
-        if (arg == "--max-fret" && i + 1 < args.Length) options.MaxFret = int.Parse(args[++i]);
-        if (arg == "--min-stretch" && i + 1 < args.Length) options.MinStretch = int.Parse(args[++i]);
-        if (arg == "--max-stretch" && i + 1 < args.Length) options.MaxStretch = int.Parse(args[++i]);
-        if (arg == "--no-barre") options.NoBarre = true;
-        if (arg == "--limit" && i + 1 < args.Length) options.Limit = int.Parse(args[++i]);
-
-        // NEW options for enhanced search
-        if (arg == "--function" && i + 1 < args.Length) options.HarmonicFunction = args[++i];
-        if (arg == "--guide-tones") options.HasGuideTones = true;
-        if (arg == "--rootless") options.IsRootless = true;
-        if (arg == "--register" && i + 1 < args.Length) options.Register = args[++i];
-        if (arg == "--string-set" && i + 1 < args.Length) options.StringSet = args[++i];
-        if (arg == "--detailed" || arg == "-d") options.Detailed = true;
-        if (arg == "--similar-to" && i + 1 < args.Length) options.SimilarTo = args[++i];
-    }
-
-    using var serviceProvider = BuildScratchServiceProvider(config);
-    var command = serviceProvider.GetRequiredService<SearchVoicingsCommand>();
-
-    await command.ExecuteAsync(options);
+    throw new NotImplementedException();
 }
 
 static async Task RunIdentify(string[] args, IConfigurationRoot config)
@@ -831,51 +675,19 @@ static async Task RunSimilar(string[] args, IConfigurationRoot config)
     }
 }
 
-static async Task RunExplainVoicing(string[] args, IConfigurationRoot config)
+static Task RunExplainVoicing(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        if (args.Length < 2)
-        {
-            WriteLine("Usage: explain <diagram> [--verbose]");
-            return;
-        }
-
-        var diagram = args[1];
-        var verbose = args.Contains("--verbose");
-
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var command = serviceProvider.GetRequiredService<ExplainVoicingCommand>();
-
-        await command.ExecuteAsync(diagram, verbose);
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-    }
+    throw new NotImplementedException();
 }
 
-static async Task RunChat(string[] args, IConfigurationRoot config)
+static Task RunChat(string[] args, IConfigurationRoot config)
 {
-    using var serviceProvider = BuildScratchServiceProvider(config);
-    var command = serviceProvider.GetRequiredService<ChatCommand>();
-    await command.ExecuteAsync();
+    throw new NotImplementedException();
 }
 
-static async Task RunBenchmarkSimilarity(string[] args, IConfigurationRoot config)
+static Task RunBenchmarkSimilarity(string[] args, IConfigurationRoot config)
 {
-    try
-    {
-        using var serviceProvider = BuildScratchServiceProvider(config);
-        var command = serviceProvider.GetRequiredService<BenchmarkSimilarityCommand>();
-
-        await command.ExecuteAsync();
-    }
-    catch (Exception ex)
-    {
-        WriteLine($"Error: {ex.Message}");
-        WriteLine(ex.StackTrace);
-    }
+    throw new NotImplementedException();
 }
 
 

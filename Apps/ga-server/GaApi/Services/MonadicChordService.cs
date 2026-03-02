@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using Constants;
 using GA.Core.Functional;
@@ -243,42 +243,29 @@ public class MonadicChordService(
         );
     }
 
-    public async Task<Try<List<string>>> GetAvailableQualitiesAsync()
-    {
-        const string cacheKey = "available_qualities";
-
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableQualitiesAsync() =>
+        await ExecuteAsync<List<string>>(async () =>
         {
             // Return common chord qualities
             await Task.CompletedTask;
-            return new List<string>
-                { "Major", "Minor", "Dominant", "Diminished", "Augmented", "Half-diminished", "Quartal" };
+            return ["Major", "Minor", "Dominant", "Diminished", "Augmented", "Half-diminished", "Quartal"];
         }, "GetAvailableQualities");
-    }
 
-    public async Task<Try<List<string>>> GetAvailableExtensionsAsync()
-    {
-        const string cacheKey = "available_extensions";
-
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableExtensionsAsync() =>
+        await ExecuteAsync<List<string>>(async () =>
         {
             // Return common chord extensions
             await Task.CompletedTask;
-            return new List<string> { "Triad", "7th", "9th", "11th", "13th", "6th", "Add9", "Sus2", "Sus4" };
+            return ["Triad", "7th", "9th", "11th", "13th", "6th", "Add9", "Sus2", "Sus4"];
         }, "GetAvailableExtensions");
-    }
 
-    public async Task<Try<List<string>>> GetAvailableStackingTypesAsync()
-    {
-        const string cacheKey = "available_stacking_types";
-
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableStackingTypesAsync() =>
+        await ExecuteAsync<List<string>>(async () =>
         {
             // Return common stacking types
             await Task.CompletedTask;
-            return new List<string> { "Tertian", "Quartal", "Quintal", "Secundal", "Cluster" };
+            return ["Tertian", "Quartal", "Quintal", "Secundal", "Cluster"];
         }, "GetAvailableStackingTypes");
-    }
 
     // Validation helpers
     private Validation<(string, int), ValidationError> ValidateQualityParameter(
@@ -308,7 +295,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([.. errors])
             : Validation.Success<(string, int), ValidationError>((quality, limit));
     }
 
@@ -338,7 +325,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([.. errors])
             : Validation.Success<(string, int), ValidationError>((extension, limit));
     }
 
@@ -369,7 +356,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([.. errors])
             : Validation.Success<(string, int), ValidationError>((stackingType, limit));
     }
 }

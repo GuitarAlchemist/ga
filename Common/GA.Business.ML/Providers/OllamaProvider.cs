@@ -118,10 +118,8 @@ public static class OllamaProvider
     {
         try
         {
-            using var httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(5);
             var uri = new Uri(baseUrl ?? DefaultBaseUrl);
             var response = await httpClient.GetAsync(uri, cancellationToken);
             return response.IsSuccessStatusCode;
@@ -145,35 +143,22 @@ public static class OllamaProvider
 ///         </list>
 ///     </para>
 /// </remarks>
-public sealed class HybridEmbeddingService : IDisposable
+public sealed class HybridEmbeddingService(
+    IEmbeddingGenerator<string, Embedding<float>> textEmbeddingGenerator,
+    MusicalEmbeddingBridge? musicalEmbeddingBridge = null,
+    ILogger<HybridEmbeddingService>? logger = null) : IDisposable
 {
-    private readonly ILogger<HybridEmbeddingService>? _logger;
-
-    /// <summary>
-    ///     Initializes a new hybrid embedding service.
-    /// </summary>
-    /// <param name="textEmbeddingGenerator">Generator for text embeddings.</param>
-    /// <param name="musicalEmbeddingBridge">Optional generator for musical embeddings.</param>
-    /// <param name="logger">Optional logger.</param>
-    public HybridEmbeddingService(
-        IEmbeddingGenerator<string, Embedding<float>> textEmbeddingGenerator,
-        MusicalEmbeddingBridge? musicalEmbeddingBridge = null,
-        ILogger<HybridEmbeddingService>? logger = null)
-    {
-        TextEmbeddings = textEmbeddingGenerator ?? throw new ArgumentNullException(nameof(textEmbeddingGenerator));
-        MusicalEmbeddings = musicalEmbeddingBridge;
-        _logger = logger;
-    }
+    private readonly ILogger<HybridEmbeddingService>? _logger = logger;
 
     /// <summary>
     ///     Gets the text embedding generator.
     /// </summary>
-    public IEmbeddingGenerator<string, Embedding<float>> TextEmbeddings { get; }
+    public IEmbeddingGenerator<string, Embedding<float>> TextEmbeddings { get; } = textEmbeddingGenerator ?? throw new ArgumentNullException(nameof(textEmbeddingGenerator));
 
     /// <summary>
     ///     Gets the musical embedding bridge (if available).
     /// </summary>
-    public MusicalEmbeddingBridge? MusicalEmbeddings { get; }
+    public MusicalEmbeddingBridge? MusicalEmbeddings { get; } = musicalEmbeddingBridge;
 
     /// <inheritdoc />
     public void Dispose()

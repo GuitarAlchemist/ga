@@ -1,9 +1,9 @@
-namespace GA.MusicTheory.DSL.Adapters
+namespace GA.Business.DSL.Adapters
 
 open System
 open System.IO
 open System.Text.Json
-open GA.MusicTheory.DSL.Types.GrammarTypes
+open GA.Business.DSL.Types.GrammarTypes
 
 /// <summary>
 /// Adapter for TARS grammar system functionality

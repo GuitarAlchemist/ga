@@ -2,8 +2,8 @@ namespace GA.TabConversion.Api.Services;
 
 using System.Diagnostics;
 using Models;
-using MusicTheory.DSL.Parsers;
-using MusicTheory.DSL.Types;
+using GA.Business.DSL.Parsers;
+using GA.Business.DSL.Types;
 
 /// <summary>
 ///     Implementation of tab conversion service

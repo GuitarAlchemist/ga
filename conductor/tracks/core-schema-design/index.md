@@ -4,7 +4,7 @@ Architectural spike to formalize and document the GA domain schema, focusing on 
 
 ## Metadata
 - **Track ID**: `core-schema-design`
-- **Status**: Active
+- **Status**: Completed
 - **Owner**: Gemini
 - **Stack**: .NET 10, GA.Business.Core, MongoDB
 

@@ -26,8 +26,8 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
         "Parses and analyzes guitar tablature. Extracts chords, timing, and position information " +
         "from ASCII tab notation. Converts tab to pitch classes and MIDI notes.";
 
-    public override IReadOnlyList<string> Capabilities => new[]
-    {
+    public override IReadOnlyList<string> Capabilities =>
+    [
         "ASCII tab parsing",
         "Chord extraction from tab",
         "Tab-to-pitch conversion",
@@ -36,7 +36,7 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
         "Tab notation validation",
         "Multi-track tab reading",
         "Tab simplification"
-    };
+    ];
 
     public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,
@@ -55,7 +55,7 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
 
     private string BuildTabPrompt(AgentRequest request, bool containsTab)
     {
-        var basePrompt = BuildSystemPrompt();
+
 
         var tabSpecificGuidance = containsTab
             ? """
@@ -73,13 +73,11 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
               Help the user understand guitar tablature concepts or notation.
               """;
 
-        var contextAddition = "";
-        if (!string.IsNullOrEmpty(request.Context))
-        {
-            contextAddition = $"\n\nTuning/Context:\n{request.Context}";
-        }
+        var contextAddition = string.IsNullOrWhiteSpace(request.Context)
+            ? string.Empty
+            : $"\n\nTuning/Context:\n{request.Context}";
 
-        return basePrompt + tabSpecificGuidance + contextAddition + """
+        return BuildSystemPrompt() + tabSpecificGuidance + contextAddition + """
 
 
                                                                     IMPORTANT: Your response MUST be a valid JSON object matching this structure:
@@ -105,7 +103,7 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
         var lines = query.Split('\n');
 
         // Tab usually has 6 lines with consistent fret numbers
-        var tabPatterns = new[] { "e|", "B|", "G|", "D|", "A|", "E|", "|-", "-|" };
+        string[] tabPatterns = ["e|", "B|", "G|", "D|", "A|", "E|", "|-", "-|"];
         var digitDashPattern = lines.Any(l => l.Contains("---") || l.Contains("-0-") || l.Contains("-1-"));
         var stringIndicator = lines.Any(l => tabPatterns.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
 

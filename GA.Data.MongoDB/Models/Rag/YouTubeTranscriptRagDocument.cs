@@ -87,7 +87,7 @@ public sealed record YouTubeTranscriptRagDocument : RagDocumentBase
     /// <summary>
     /// Generate search text for embedding generation
     /// </summary>
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         // Combine all relevant text fields for embedding
         var parts = new List<string>
@@ -122,7 +122,7 @@ public sealed record YouTubeTranscriptRagDocument : RagDocumentBase
             parts.Add($"Theory Concepts: {string.Join(", ", TheoryConcepts)}");
         }
 
-        SearchText = string.Join("\n", parts);
+        return string.Join("\n", parts);
     }
 }
 

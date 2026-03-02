@@ -90,3 +90,16 @@ export interface ChordProgressionDefinition {
   examples: ChordProgressionExample[];
   usedBy: string[];
 }
+
+export interface VoicingWithAnalysis {
+  chordName: string;
+  frets: number[];
+  difficulty: string;
+  difficultyScore: number;
+  handPosition: string;
+  stringSet: string;
+  cagedShape?: string | null;
+  semanticTags: string[];
+  isBarreChord: boolean;
+  barreInfo?: string | null;
+}

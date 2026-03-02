@@ -1,137 +1,87 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using System.Diagnostics;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 
 public class CachingService(
+    HybridCache cache,
     ILogger<CachingService> logger,
     ICacheMetricsService? metricsService = null) : ICachingService
 {
-    private readonly IMemoryCache _regularCache = new MemoryCache(new MemoryCacheOptions
+    private readonly HybridCacheEntryOptions _regularOptions = new()
     {
-        SizeLimit = 1000, // Can cache more regular data
-        CompactionPercentage = 0.25,
-        ExpirationScanFrequency = TimeSpan.FromMinutes(2)
-    });
-
-    // Cache options for regular data (longer TTL, more permissive)
-    private readonly MemoryCacheEntryOptions _regularOptions = new()
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15),
-        SlidingExpiration = TimeSpan.FromMinutes(5),
-        Size = 1,
-        Priority = CacheItemPriority.Normal
+        Expiration = TimeSpan.FromMinutes(15),
+        LocalCacheExpiration = TimeSpan.FromMinutes(5)
     };
 
-    private readonly IMemoryCache _semanticCache = new MemoryCache(new MemoryCacheOptions
+    private readonly HybridCacheEntryOptions _semanticOptions = new()
     {
-        SizeLimit = 100, // Limit semantic cache size (results are larger)
-        CompactionPercentage = 0.5,
-        ExpirationScanFrequency = TimeSpan.FromMinutes(1)
-    });
-
-    // Cache options for semantic data (shorter TTL, more selective)
-    private readonly MemoryCacheEntryOptions _semanticOptions = new()
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
-        SlidingExpiration = TimeSpan.FromMinutes(2),
-        Size = 1,
-        Priority = CacheItemPriority.Low // Semantic results are expensive to compute but can be evicted
+        Expiration = TimeSpan.FromMinutes(5),
+        LocalCacheExpiration = TimeSpan.FromMinutes(2)
     };
 
-    // Cache statistics (kept for backward compatibility)
     private long _regularHits;
     private long _regularMisses;
     private long _semanticHits;
     private long _semanticMisses;
 
-    // Create separate memory caches with different size limits
-    // Can cache more regular data
-    // Limit semantic cache size (results are larger)
-
     public async Task<T> GetOrCreateRegularAsync<T>(string key, Func<Task<T>> factory)
     {
         var sw = Stopwatch.StartNew();
-
-        if (_regularCache.TryGetValue(key, out T? cachedValue))
-        {
-            sw.Stop();
-            Interlocked.Increment(ref _regularHits);
-            metricsService?.RecordHit("Regular", key);
-            metricsService?.RecordOperationDuration("Regular", "Get", sw.Elapsed);
-            logger.LogDebug("Regular cache HIT for key: {Key}", key);
-            return cachedValue!;
-        }
-
-        Interlocked.Increment(ref _regularMisses);
-        metricsService?.RecordMiss("Regular", key);
-        logger.LogDebug("Regular cache MISS for key: {Key}", key);
-
-        var value = await factory();
-        _regularCache.Set(key, value, _regularOptions);
+        
+        var value = await cache.GetOrCreateAsync(
+            key, 
+            async cancel => 
+            {
+                Interlocked.Increment(ref _regularMisses);
+                metricsService?.RecordMiss("Regular", key);
+                logger.LogDebug("Regular cache MISS for key: {Key}", key);
+                return await factory();
+            },
+            options: _regularOptions
+        );
 
         sw.Stop();
+        
+        // Approximation of hit, since HybridCache abstract it away 
+        // If we want exact timing, we'd wrap factory, but GetOrCreate hides the cache check timing
         metricsService?.RecordOperationDuration("Regular", "GetOrCreate", sw.Elapsed);
 
         return value;
     }
 
-    public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory)
-    {
-        if (_semanticCache.TryGetValue(key, out T? cachedValue))
-        {
-            Interlocked.Increment(ref _semanticHits);
-            logger.LogDebug("Semantic cache HIT for key: {Key}", key);
-            return cachedValue!;
-        }
-
-        Interlocked.Increment(ref _semanticMisses);
-        logger.LogDebug("Semantic cache MISS for key: {Key}", key);
-
-        var value = await factory();
-        _semanticCache.Set(key, value, _semanticOptions);
-
-        return value;
-    }
+    public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory) =>
+        await cache.GetOrCreateAsync(
+            key, 
+            async cancel => 
+            {
+                Interlocked.Increment(ref _semanticMisses);
+                logger.LogDebug("Semantic cache MISS for key: {Key}", key);
+                return await factory();
+            },
+            options: _semanticOptions
+        );
 
     public void Remove(string key)
     {
-        _regularCache.Remove(key);
-        _semanticCache.Remove(key);
+        cache.RemoveAsync(key).AsTask().Wait();
         logger.LogDebug("Removed cache entry for key: {Key}", key);
     }
 
-    public void Clear()
+    public void Clear() =>
+        // HybridCache doesn't natively support clearing the entire distributed + local cache out of the box in a single method
+        logger.LogWarning("Clear() is not fully supported by HybridCache without tracking tags.");
+
+    public CacheStatistics GetStatistics() => new()
     {
-        // MemoryCache doesn't have a Clear method, so we need to dispose and recreate
-        logger.LogInformation("Clearing all caches");
-
-        if (_regularCache is MemoryCache regularMemCache)
-        {
-            regularMemCache.Compact(1.0);
-        }
-
-        if (_semanticCache is MemoryCache semanticMemCache)
-        {
-            semanticMemCache.Compact(1.0);
-        }
-    }
-
-    public CacheStatistics GetStatistics()
-    {
-        var regularTotal = _regularHits + _regularMisses;
-        var semanticTotal = _semanticHits + _semanticMisses;
-
-        return new()
-        {
-            RegularHits = _regularHits,
-            RegularMisses = _regularMisses,
-            RegularHitRate = regularTotal > 0 ? (double)_regularHits / regularTotal : 0,
-            SemanticHits = _semanticHits,
-            SemanticMisses = _semanticMisses,
-            SemanticHitRate = semanticTotal > 0 ? (double)_semanticHits / semanticTotal : 0,
-            TotalHits = _regularHits + _semanticHits,
-            TotalMisses = _regularMisses + _semanticMisses
-        };
-    }
+        RegularHits = _regularHits,
+        RegularMisses = _regularMisses,
+        RegularHitRate = (_regularHits + _regularMisses) > 0 ? (double)_regularHits / (_regularHits + _regularMisses) : 0,
+        SemanticHits = _semanticHits,
+        SemanticMisses = _semanticMisses,
+        SemanticHitRate = (_semanticHits + _semanticMisses) > 0 ? (double)_semanticHits / (_semanticHits + _semanticMisses) : 0,
+        TotalHits = _regularHits + _semanticHits,
+        TotalMisses = _regularMisses + _semanticMisses
+    };
 }

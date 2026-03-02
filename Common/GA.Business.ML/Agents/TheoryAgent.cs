@@ -27,8 +27,8 @@ public class TheoryAgent(IChatClient chatClient, ILogger<TheoryAgent> logger)
         "Analyzes music theory concepts including pitch classes, harmonic functions, chord qualities, " +
         "key relationships, and voice leading. Expert in atonal and tonal theory.";
 
-    public override IReadOnlyList<string> Capabilities => new[]
-    {
+    public override IReadOnlyList<string> Capabilities =>
+    [
         "Pitch class set analysis",
         "Harmonic function identification",
         "Chord quality determination",
@@ -37,7 +37,7 @@ public class TheoryAgent(IChatClient chatClient, ILogger<TheoryAgent> logger)
         "Interval analysis",
         "Roman numeral analysis",
         "Cadence identification"
-    };
+    ];
 
     public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,
@@ -53,15 +53,11 @@ public class TheoryAgent(IChatClient chatClient, ILogger<TheoryAgent> logger)
 
     private string BuildTheoryPrompt(AgentRequest request)
     {
-        var basePrompt = BuildSystemPrompt();
+        var contextAddition = string.IsNullOrWhiteSpace(request.Context)
+            ? string.Empty
+            : $"\n\nMusical Context:\n{request.Context}";
 
-        var contextAddition = "";
-        if (!string.IsNullOrEmpty(request.Context))
-        {
-            contextAddition = $"\n\nMusical Context:\n{request.Context}";
-        }
-
-        return basePrompt + contextAddition + """
+        return BuildSystemPrompt() + contextAddition + """
 
 
                                               When analyzing music theory:

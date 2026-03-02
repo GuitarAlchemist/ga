@@ -1,9 +1,10 @@
 ﻿import { Container, Grid, Typography } from '@mui/material';
-import KeySelector from '../components/KeySelector';
+import HierarchicalNavigation from '../components/HierarchicalNavigation';
 import KeyContextPanel from '../components/dashboard/KeyContextPanel';
 import ChordPalette from '../components/dashboard/ChordPalette';
 import ProgressionExplorer from '../components/dashboard/ProgressionExplorer';
 import FretboardWorkbench from '../components/dashboard/FretboardWorkbench';
+import SmartVoicingDisplay from '../components/SmartVoicingDisplay';
 
 const HarmonicStudio = () => {
   return (
@@ -19,7 +20,7 @@ const HarmonicStudio = () => {
         </div>
       </div>
 
-      <KeySelector />
+      <HierarchicalNavigation />
 
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid item xs={12} md={4}>
@@ -33,6 +34,9 @@ const HarmonicStudio = () => {
         </Grid>
         <Grid item xs={12} md={7}>
           <ProgressionExplorer />
+        </Grid>
+        <Grid item xs={12}>
+          <SmartVoicingDisplay />
         </Grid>
       </Grid>
     </Container>

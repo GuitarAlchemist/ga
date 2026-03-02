@@ -1,7 +1,6 @@
 ﻿namespace GA.Business.ML.Tests.Tabs;
 
 using Abstractions;
-using Core.Context;
 using Domain.Core.Instruments;
 using Domain.Core.Instruments.Primitives;
 using Domain.Core.Primitives.Notes;
@@ -20,18 +19,19 @@ public class AlternativeFingeringServiceTests
     {
         var tuning = Tuning.Default;
         var mapper = new FretboardPositionMapper(tuning);
-        var cost = new PhysicalCostService(new(), null);
+        var cost = new PhysicalCostService(new());
 
         // Mock dependencies of AdvancedTabSolver
         var mockStyle = new Mock<StyleProfileService>(Mock.Of<IVectorIndex>());
         var mockGen = new Mock<IEmbeddingGenerator>();
+        var mockRanker = new Mock<IMlNaturalnessRanker>();
 
         _mockSolver = new(
             mapper,
             cost,
             mockStyle.Object,
             mockGen.Object,
-            null // PlayerProfile
+            mockRanker.Object
         );
 
         _service = new(_mockSolver.Object);

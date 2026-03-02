@@ -1,4 +1,4 @@
-﻿namespace GaApi.GraphQL.Queries;
+namespace GaApi.GraphQL.Queries;
 
 using GA.Domain.Core.Primitives.Notes;
 using GA.Infrastructure.Documentation;

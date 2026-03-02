@@ -17,7 +17,7 @@ public class RefactoringImplementationTests
 
         var tokenizer = new TabTokenizer();
         var converter = new TabToPitchConverter();
-        _tabService = new(tokenizer, converter, generator);
+        _tabService = new(tokenizer, converter, generator, new());
     }
 
     private TabAnalysisService _tabService;

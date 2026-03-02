@@ -1,10 +1,11 @@
-﻿namespace GA.DocumentProcessing.Service.Controllers;
+namespace GA.DocumentProcessing.Service.Controllers;
 
 using GA.DocumentProcessing.Service.Models;
 using GA.DocumentProcessing.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 /// API controller for NotebookLM-style document processing
@@ -66,7 +67,7 @@ public class DocumentProcessingController : ControllerBase
                 UploadedAt = document.CreatedAt
             };
 
-            return Ok(ApiResponse<DocumentUploadResponse>.Ok(response, "Document uploaded and processing started"));
+            return Ok(ApiResponse<DocumentUploadResponse>.Ok(response, correlationId: "Document uploaded and processing started"));
         }
         catch (Exception ex)
         {
@@ -107,7 +108,7 @@ public class DocumentProcessingController : ControllerBase
                 UploadedAt = document.CreatedAt
             };
 
-            return Ok(ApiResponse<DocumentUploadResponse>.Ok(uploadResponse, "URL processing started"));
+            return Ok(ApiResponse<DocumentUploadResponse>.Ok(uploadResponse, correlationId: "URL processing started"));
         }
         catch (Exception ex)
         {

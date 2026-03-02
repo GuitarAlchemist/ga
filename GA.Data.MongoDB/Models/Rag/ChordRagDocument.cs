@@ -17,4 +17,6 @@ public sealed record ChordRagEmbedding : RagDocumentBase
     // Technical details (can be filtered for RAG)
     public required List<string> Intervals { get; init; }
     public required List<string> Notes { get; init; }
+
+    public override string ToEmbeddingString() => $"{Name} {Root} {Quality} Intervals: {string.Join(", ", Intervals)} Notes: {string.Join(", ", Notes)}";
 }

@@ -184,6 +184,36 @@ public static class VoicingPhysicalAnalyzer
         return new(stringSkips, fingerAssignment, requiresThumb, isImpossible, notes);
     }
 
+    public static string[] GeneratePhysicalTags(PhysicalLayout layout, PlayabilityInfo playability, ErgonomicsInfo ergonomics)
+    {
+        var tags = new List<string>();
+
+        // Position Tags
+        tags.Add(layout.HandPosition.ToLowerInvariant().Replace(" ", "-"));
+        
+        // Difficulty Tags
+        tags.Add(playability.Difficulty.ToLowerInvariant());
+        if (playability.Difficulty == "Beginner") tags.Add("easy-to-play");
+        if (playability.Difficulty == "Advanced") tags.Add("technical");
+
+        // Construction Tags
+        if (playability.BarreRequired) tags.Add("barre-chord");
+        if (layout.OpenStrings.Length > 0) tags.Add("open-strings");
+        if (layout.OpenStrings.Length >= 3) tags.Add("ambient-open");
+        if (playability.CagedShape != null) tags.Add(playability.CagedShape.ToLowerInvariant());
+        if (playability.ShellFamily != null) tags.Add("shell-voicing");
+
+        // Ergonomic Tags
+        if (ergonomics.RequiresThumb) tags.Add("thumb-chord");
+        if (ergonomics.StringSkips > 0) tags.Add("string-skips");
+        if (ergonomics.IsImpossible) tags.Add("physically-challenging");
+
+        // String Set Tags
+        tags.Add(layout.StringSet.ToLowerInvariant().Replace(" ", "-"));
+
+        return [.. tags.Distinct()];
+    }
+
     // ================== HELPERS ==================
 
     private static bool DetectBarreRequirement(int[] fretPositions)

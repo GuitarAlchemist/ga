@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using ILGPU;
 using ILGPU.Runtime;

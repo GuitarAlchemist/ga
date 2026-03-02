@@ -21,5 +21,5 @@
 - [x] Append flavor descriptions to the output explanation.
 
 ## Phase 4: Verification
-- [ ] Manual test: Ask chatbot about a Lydian chord and verify "Lydian" context appears.
-- [ ] Manual test: Verify search results return logically related chords (Spectral search).
+- [x] Manual test: Ask chatbot about a Lydian chord and verify "Lydian" context appears.
+- [x] Manual test: Verify search results return logically related chords (Spectral search).

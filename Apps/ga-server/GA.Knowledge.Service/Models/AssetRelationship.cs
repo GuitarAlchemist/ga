@@ -1,5 +1,10 @@
 namespace GA.Knowledge.Service.Models;
 
+using System.Text.Json.Serialization;
+using GA.Domain.Core.Design.Schema;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 /// <summary>
 ///     Represents a relationship between two assets in the knowledge graph
 /// </summary>
@@ -8,6 +13,8 @@ public class AssetRelationship
     /// <summary>
     ///     Unique identifier for the relationship
     /// </summary>
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
@@ -23,7 +30,8 @@ public class AssetRelationship
     /// <summary>
     ///     Type of relationship (e.g., "contains", "references", "depends_on")
     /// </summary>
-    public string RelationshipType { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public RelationshipType RelationshipType { get; set; } = RelationshipType.IsChildOf;
 
     /// <summary>
     ///     Strength or weight of the relationship (0.0 to 1.0)

@@ -23,9 +23,18 @@ Q1 2026          Q2 2026          Q3 2026          Q4 2026
 
 ## Q1 2026: Foundation & Real-Time Vision
 
-**Theme**: Establish real-time video processing and voice capabilities
+**Theme**: Establish real-time video processing, voice capabilities, and autonomous agent infrastructure.
 
 ### Deliverables
+
+#### Autonomous Agent Teams (Epic 5)
+- **Story 5.1**: Docker MCP Gateway Orchestration
+  - Containerize MongoDB, Redis, Meshy AI
+  - Synchronize JetBrains, Augment, and Codex CLI profiles
+  - **Target**: Week 2 | **Owner**: Infra/MCP Team (Completed)
+- **Story 5.2**: Cross-Platform CLI Parity
+  - Implement skill-porter bridge
+  - **Target**: Week 4 | **Owner**: Architecture Team
 
 #### Vision Agents Integration (Epic 2.1)
 - **Story 2.1.1**: Stream Vision Agents framework integration
@@ -70,9 +79,18 @@ Q1 2026          Q2 2026          Q3 2026          Q4 2026
 
 ## Q2 2026: Core Features & Intelligence
 
-**Theme**: Build intelligent feedback and voice-controlled interaction
+**Theme**: Build intelligent feedback, voice-controlled interaction, and swarm intelligence workflows.
 
 ### Deliverables
+
+#### Swarm CI/CD & Sub-Agents (Epic 5)
+- **Story 5.3**: Specialized Sub-Agents Development
+  - Music Theory Validator agent
+  - 3D Asset Alchemist agent
+  - **Target**: Week 10 | **Owner**: Architecture Team
+- **Story 5.4**: Swarm CI/CD Integration
+  - Headless Codex/Gemini CLI pipeline execution
+  - **Target**: Week 14 | **Owner**: DevOps Team
 
 #### Intelligent Feedback (Epic 2.1)
 - **Story 2.1.3**: Chord shape recognition

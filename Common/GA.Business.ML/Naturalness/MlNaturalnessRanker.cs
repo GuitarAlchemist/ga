@@ -84,10 +84,21 @@ public class MlNaturalnessRanker : IMlNaturalnessRanker, IDisposable
             .Intersect(b.Select(p => p.StringIndex.Value)).Count();
         var changedStrings = a.Count + b.Count - 2 * sharedStrings;
 
+        var maxFingerDisp = 0f;
+        foreach (var pB in b)
+        {
+            var pA = a.FirstOrDefault(p => p.StringIndex.Value == pB.StringIndex.Value);
+            if (pA != null)
+            {
+                var disp = Math.Abs(pB.Fret - pA.Fret);
+                if (disp > maxFingerDisp) maxFingerDisp = disp;
+            }
+        }
+
         return
         [
             deltaAvg, // DeltaAvgFret
-            deltaAvg, // MaxFingerDisp (simplified)
+            maxFingerDisp, // MaxFingerDisp
             changedStrings, // StringCrossingCount
             deltaStretch, // HandStretchDelta
             sharedStrings // CommonStrings

@@ -1,6 +1,5 @@
 namespace GA.Core.Functional;
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -9,6 +8,7 @@ using System.Collections.Immutable;
 /// </summary>
 /// <typeparam name="L">The type of the log entries</typeparam>
 /// <typeparam name="T">The type of the result</typeparam>
+[PublicAPI]
 public readonly record struct Writer<L, T>
 {
     public T Value { get; }
@@ -17,7 +17,7 @@ public readonly record struct Writer<L, T>
     public Writer(T value, IEnumerable<L> log)
     {
         Value = value;
-        Log = log.ToImmutableList();
+        Log = [.. log];
     }
 
     public Writer<L, TResult> Map<TResult>(Func<T, TResult> mapper) =>

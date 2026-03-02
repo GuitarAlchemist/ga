@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Services;
+namespace GA.DocumentProcessing.Service.Services;
 
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;

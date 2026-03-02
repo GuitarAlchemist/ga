@@ -13,7 +13,7 @@ public class TabAnalysisServiceTests
         _tokenizer = new();
         _converter = new();
         _generator = TestServices.CreateGenerator();
-        _service = new(_tokenizer, _converter, _generator);
+        _service = new(_tokenizer, _converter, _generator, new());
     }
 
     private TabTokenizer _tokenizer = null!;
@@ -27,14 +27,16 @@ public class TabAnalysisServiceTests
         // Arrange
         // Simple 0-3-5 riff on Low E (Standard Tuning)
         // E string: 0 (E2), 3 (G2), 5 (A2)
-        var tab = @"
-e|-----------------|
-B|-----------------|
-G|-----------------|
-D|-----------------|
-A|-----------------|
-E|--0--3--5--------|
-";
+        var tab = """
+
+                  e|-----------------|
+                  B|-----------------|
+                  G|-----------------|
+                  D|-----------------|
+                  A|-----------------|
+                  E|--0--3--5--------|
+
+                  """;
         // Act
         var result = _service.AnalyzeAsync(tab).GetAwaiter().GetResult();
 
@@ -65,6 +67,68 @@ E|--0--3--5--------|
             TestContext.WriteLine(
                 $"Event 2 MIDI: Expected=contains 45 (A2), Actual={string.Join(", ", ev2.Document.MidiNotes)}");
             Assert.That(ev2.Document.MidiNotes, Contains.Item(45), "Event 2 should contain MIDI 45 (A2).");
+        });
+    }
+
+    [Test]
+    public void TestAnalyzeSmokeOnTheWaterPowerChords()
+    {
+        // Arrange
+        // Smoke on the water with power chords (E5, G5, A5)
+        var tab = """
+
+                  e|-----------------|
+                  B|-----------------|
+                  G|-----------------|
+                  D|--2--5--7--------|
+                  A|--2--5--7--------|
+                  E|--0--3--5--------|
+
+                  """;
+        // Act
+        var result = _service.AnalyzeAsync(tab).GetAwaiter().GetResult();
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Events.Count, Is.EqualTo(3));
+
+            foreach(var e in result.Events) {
+                TestContext.WriteLine($"Power Chord: {e.Document.ChordName}");
+            }
+        });
+    }
+
+    [Test]
+    public void TestVerifyKeyDetectionForSimpleProgression()
+    {
+        // Arrange
+        // Simple I-V-vi-IV in G Major (G - D - Em - C)
+        var tab = """
+
+            e|--3--2--0--0--|
+            B|--3--3--0--1--|
+            G|--0--2--0--0--|
+            D|--0--0--2--2--|
+            A|--2-----2--3--|
+            E|--3-----0-----|
+
+            """;
+        // Act
+        var result = _service.AnalyzeAsync(tab).GetAwaiter().GetResult();
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Events.Count, Is.EqualTo(4));
+            
+            foreach(var e in result.Events) {
+                TestContext.WriteLine($"Chord from progression: {e.Document.ChordName} - PossibleKeys: {(string.Join(", ", e.Document.PossibleKeys))}");
+            }
+            
+            var ev0 = result.Events[0];
+            Assert.That(ev0.Document.PossibleKeys, Contains.Item("Key of G"));
         });
     }
 }

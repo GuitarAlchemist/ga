@@ -81,7 +81,7 @@ public static class AiServiceExtensions
                 {
                     var host = configuration.GetValue<string>("VectorStore:Qdrant:Host") ?? "localhost";
                     var port = configuration.GetValue<int>("VectorStore:Qdrant:Port", 6334);
-                    var dimension = configuration.GetValue<ulong>("VectorStore:Qdrant:Dimension", 216);
+                    var dimension = configuration.GetValue<ulong>("VectorStore:Qdrant:Dimension", 228);
                     return new QdrantVectorIndex(host, port, dimension);
                 });
                 break;
@@ -100,6 +100,9 @@ public static class AiServiceExtensions
                 });
                 break;
         }
+
+        // Register the MEAI VectorStore adapter
+        services.TryAddSingleton<Microsoft.Extensions.VectorData.VectorStore, GA.Business.ML.Embeddings.VectorStoreAdapter>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Models;
+namespace GA.DocumentProcessing.Service.Models;
 
 /// <summary>
 /// Request to upload a document from file

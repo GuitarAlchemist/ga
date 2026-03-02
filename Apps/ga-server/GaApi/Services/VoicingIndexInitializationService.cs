@@ -17,7 +17,7 @@ using Path = System.IO.Path;
 ///     Background service that initializes the voicing index on application startup.
 ///     Extracted from VoicingSearchServiceExtensions to keep DI wiring focused.
 /// </summary>
-internal sealed class VoicingIndexInitializationService(
+public sealed class VoicingIndexInitializationService(
     VoicingIndexingService indexingService,
     EnhancedVoicingSearchService searchService,
     IBatchEmbeddingService batchEmbeddingService,
@@ -211,8 +211,19 @@ internal sealed class VoicingIndexInitializationService(
 
                 logger.LogWarning("Embedding not found for text '{Text}', generating on-demand",
                     text[..Math.Min(50, text.Length)]);
-                var result = await batchEmbeddingService.GenerateBatchEmbeddingsAsync([text], stoppingToken);
-                return [.. result[0].Select(f => (double)f)];
+                try
+                {
+                    var result = await batchEmbeddingService.GenerateBatchEmbeddingsAsync([text], stoppingToken);
+                    return [.. result[0].Select(f => (double)f)];
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex,
+                        "On-demand embedding failed for text '{Text}' — Ollama may be offline. " +
+                        "Using zero vector; semantic search degraded for this voicing.",
+                        text[..Math.Min(50, text.Length)]);
+                    return [];
+                }
             },
             doc =>
             {
@@ -332,7 +343,19 @@ internal sealed class VoicingIndexInitializationService(
             }
 
             var batch = uniqueTexts.Skip(i).Take(batchSize).ToArray();
-            var batchEmbeddings = await batchEmbeddingService.GenerateBatchEmbeddingsAsync(batch, cancellationToken);
+            float[][] batchEmbeddings;
+            try
+            {
+                batchEmbeddings = await batchEmbeddingService.GenerateBatchEmbeddingsAsync(batch, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Batch embedding generation failed for texts {Start}-{End} — Ollama may be offline. " +
+                    "Skipping batch; voicing semantic search will be degraded for these entries.",
+                    i, Math.Min(i + batchSize, uniqueTexts.Length));
+                continue;
+            }
 
             for (var j = 0; j < batch.Length; j++)
             {

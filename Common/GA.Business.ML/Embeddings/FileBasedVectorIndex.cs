@@ -63,6 +63,14 @@ public class FileBasedVectorIndex(string filePath = "voicing_index.jsonl") : IVe
     /// </summary>
     public void Add(ChordVoicingRagDocument doc) => _documents.Add(doc);
 
+    /// <inheritdoc />
+    public Task IndexAsync(IEnumerable<ChordVoicingRagDocument> docs)
+    {
+        _documents.AddRange(docs);
+        Save();
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     ///     Saves all documents to the JSONL file.
     /// </summary>

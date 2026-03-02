@@ -2,7 +2,6 @@
 
 using System.Diagnostics;
 using Abstractions;
-using Core.Context;
 using Domain.Core.Instruments;
 using Domain.Core.Primitives.Notes;
 using Domain.Services.Fretboard.Analysis;
@@ -34,7 +33,7 @@ public class AdvancedTabSolverBenchmarks
             _costService,
             _mockStyleService.Object,
             _mockGenerator.Object,
-            new()
+            new Mock<IMlNaturalnessRanker>().Object
         );
     }
 

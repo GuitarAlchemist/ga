@@ -19,12 +19,6 @@ public class TabAnalysisService(
     private readonly MusicalEmbeddingGenerator _generator = generator;
     private readonly TabTokenizer _tokenizer = tokenizer;
 
-    public TabAnalysisService(TabTokenizer tokenizer, TabToPitchConverter converter,
-        MusicalEmbeddingGenerator generator)
-        : this(tokenizer, converter, generator, new())
-    {
-    }
-
     public async Task<TabAnalysisResult> AnalyzeAsync(string asciiTab)
     {
         // Check for compact diagrams like x02210 or 3x0003
@@ -125,7 +119,7 @@ public class TabAnalysisService(
                 var doc = new ChordVoicingRagDocument
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ChordName = analysis.ChordName ?? AnalysisConstants.Unknown,
+                    ChordName = analysis.ChordName,
                     RootPitchClass = PitchClass.TryParse(analysis.RootPitchClass, null, out var r)
                         ? r.Value
                         : midiNotes.Min() % 12,
@@ -133,7 +127,7 @@ public class TabAnalysisService(
                     PitchClasses = [.. pitchClasses],
                     PitchClassSet = string.Join(",", pitchClasses),
                     SemanticTags = Array.Empty<string>(), // Will be populated by AutoTaggingService
-                    Diagram = FormatDiagram(slice, blocks),
+                    Diagram = FormatDiagram(slice),
 
                     // Richer Metadata from Analyzer
                     HarmonicFunction = analysis.HarmonicFunction,
@@ -180,7 +174,7 @@ public class TabAnalysisService(
         return new() { Events = events, DetectedCadence = cadenceString };
     }
 
-    private string FormatDiagram(TabSlice slice, List<TabBlock> blocks)
+    private string FormatDiagram(TabSlice slice)
     {
         // Infer string count from the block or slice
         // TabSlice doesn't check string count, but Notes has StringIndex.

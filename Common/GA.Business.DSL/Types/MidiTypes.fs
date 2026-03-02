@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.Types
+namespace GA.Business.DSL.Types
 
 /// MIDI-specific types for guitar tab conversion
 module MidiTypes =

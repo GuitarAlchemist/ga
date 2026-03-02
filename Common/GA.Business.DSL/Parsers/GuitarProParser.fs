@@ -1,6 +1,6 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
-open GA.MusicTheory.DSL.Types.GuitarProTypes
+open GA.Business.DSL.Types.GuitarProTypes
 open System
 open System.IO
 open System.Text
