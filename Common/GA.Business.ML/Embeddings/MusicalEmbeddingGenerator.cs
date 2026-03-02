@@ -3,20 +3,18 @@ namespace GA.Business.ML.Embeddings;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Tonal.Hierarchies;
 using Services;
-using GA.Domain.Services.Abstractions;
 
 // ComplexityCalculator
 
 /// <summary>
-/// Orchestrates the generation of the 109-dimensional canonical musical embedding (v1.3.1).
-/// Implements OPTIC-K Schema v1.3.1.
+/// Orchestrates the generation of the 228-dimensional canonical musical embedding (v1.7).
+/// Implements OPTIC-K Schema v1.7.
 ///
 /// <para>
-/// This generator produces embeddings according to the OPTIC-K v1.3.1 schema, which encodes:
+/// This generator produces embeddings according to the OPTIC-K v1.7 schema, which encodes:
 /// </para>
 ///
 /// <list type="bullet">
@@ -27,6 +25,9 @@ using GA.Domain.Services.Abstractions;
 ///   <item><description><b>SYMBOLIC (66-77)</b>: Technique and style tags</description></item>
 ///   <item><description><b>EXTENSIONS (78-95)</b>: Derived psychoacoustic features</description></item>
 ///   <item><description><b>SPECTRAL (96-108)</b>: Spectral geometry features (DFT-based)</description></item>
+///   <item><description><b>MODAL (109-148)</b>: Tonal modal characteristic flavors (v1.6)</description></item>
+///   <item><description><b>HIERARCHY (149-163)</b>: Complexity and structural depth (v1.6)</description></item>
+///   <item><description><b>ATONAL_MODAL (164-180)</b>: Universal set-theoretic modal mapping (v1.7)</description></item>
 /// </list>
 ///
 /// <para>
@@ -48,6 +49,7 @@ public class MusicalEmbeddingGenerator(
     MorphologyVectorService morphologyService,
     ContextVectorService contextService,
     SymbolicVectorService symbolicService,
+    ModalVectorService modalService,
     PhaseSphereService phaseSphereService) : IEmbeddingGenerator
 {
     /// <summary>Returns the total embedding dimension (216 for v1.4/v1.5).</summary>
@@ -58,7 +60,7 @@ public class MusicalEmbeddingGenerator(
     /// </summary>
     /// <param name="doc">The voicing document containing pitch data and metadata.</param>
     /// <returns>A double array representing the embedding vector.</returns>
-    public async Task<double[]> GenerateEmbeddingAsync(VoicingDocument doc)
+    public Task<float[]> GenerateEmbeddingAsync(ChordVoicingRagDocument doc)
     {
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 1: IDENTITY (0-5)
@@ -115,13 +117,13 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // COMBINE BASE PARTITIONS
         // ═══════════════════════════════════════════════════════════════════════
-        var combined = new double[Dimension];
+        var combined = new float[Dimension];
 
-        Array.Copy(identityVector, 0, combined, EmbeddingSchema.IdentityOffset, identityVector.Length);
-        Array.Copy(structureVector, 0, combined, EmbeddingSchema.StructureOffset, structureVector.Length);
-        Array.Copy(morphologyVector, 0, combined, EmbeddingSchema.MorphologyOffset, morphologyVector.Length);
-        Array.Copy(contextVector, 0, combined, EmbeddingSchema.ContextOffset, contextVector.Length);
-        Array.Copy(symbolicVector, 0, combined, EmbeddingSchema.SymbolicOffset, symbolicVector.Length);
+        Array.Copy(Array.ConvertAll(identityVector, x => (float)x), 0, combined, EmbeddingSchema.IdentityOffset, identityVector.Length);
+        Array.Copy(Array.ConvertAll(structureVector, x => (float)x), 0, combined, EmbeddingSchema.StructureOffset, structureVector.Length);
+        Array.Copy(Array.ConvertAll(morphologyVector, x => (float)x), 0, combined, EmbeddingSchema.MorphologyOffset, morphologyVector.Length);
+        Array.Copy(Array.ConvertAll(contextVector, x => (float)x), 0, combined, EmbeddingSchema.ContextOffset, contextVector.Length);
+        Array.Copy(Array.ConvertAll(symbolicVector, x => (float)x), 0, combined, EmbeddingSchema.SymbolicOffset, symbolicVector.Length);
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 6: EXTENSIONS (78-95)
@@ -134,15 +136,27 @@ public class MusicalEmbeddingGenerator(
         PopulateSpectralPartition(combined, doc);
 
         // ═══════════════════════════════════════════════════════════════════════
-        // PARTITION 9: HIERARCHY (128-135) — Complexity
+        // PARTITION 8: MODAL (109-127) — Modal Flavors
+        // ═══════════════════════════════════════════════════════════════════════
+        var modalVector = modalService.ComputeEmbedding(doc);
+        Array.Copy(Array.ConvertAll(modalVector, x => (float)x), 0, combined, EmbeddingSchema.ModalOffset, modalVector.Length);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // PARTITION 9: HIERARCHY (149-163) — Complexity
         // ═══════════════════════════════════════════════════════════════════════
         var pcsSet = new PitchClassSet(doc.PitchClasses.Select(PitchClass.FromValue));
-        combined[EmbeddingSchema.HierarchyComplexityScore] = ComplexityCalculator.CalculateScore(pcsSet);
+        combined[EmbeddingSchema.HierarchyComplexityScore] = (float)ComplexityCalculator.CalculateScore(pcsSet);
 
-        return combined;
+        // ═══════════════════════════════════════════════════════════════════════
+        // PARTITION 10: ATONAL MODAL (164-180) — Universal Mapping
+        // ═══════════════════════════════════════════════════════════════════════
+        var atonalModalVector = modalService.ComputeAtonalModalEmbedding(doc);
+        Array.Copy(Array.ConvertAll(atonalModalVector, x => (float)x), 0, combined, EmbeddingSchema.AtonalModalOffset, atonalModalVector.Length);
+
+        return Task.FromResult(combined);
     }
 
-    private void PopulateSpectralPartition(double[] combined, VoicingDocument doc)
+    private void PopulateSpectralPartition(float[] combined, ChordVoicingRagDocument doc)
     {
         if (doc.PitchClasses.Length == 0) return;
 
@@ -160,22 +174,22 @@ public class MusicalEmbeddingGenerator(
             EmbeddingSchema.FourierPhaseK4, EmbeddingSchema.FourierPhaseK5, EmbeddingSchema.FourierPhaseK6
         };
 
-        for (int k = 0; k < 6; k++)
+        for (var k = 0; k < 6; k++)
         {
-            combined[magnitudeIndices[k]] = Clamp01(normalized[k].Magnitude);
+            combined[magnitudeIndices[k]] = (float)Clamp01(normalized[k].Magnitude);
             // Normalize phase [-pi, pi] to [0, 1]
-            combined[phaseIndices[k]] = Clamp01((normalized[k].Phase + Math.PI) / (2.0 * Math.PI));
+            combined[phaseIndices[k]] = (float)Clamp01((normalized[k].Phase + Math.PI) / (2.0 * Math.PI));
         }
 
         // 3. Entropy
         var entropy = phaseSphereService.ComputeSpectralEntropy(doc.PitchClasses);
-        combined[EmbeddingSchema.SpectralEntropy] = Math.Clamp(1.0 - entropy, 0.0, 1.0);
+        combined[EmbeddingSchema.SpectralEntropy] = (float)Math.Clamp(1.0 - entropy, 0.0, 1.0);
     }
 
     /// <summary>
     /// Computes v1.2.1 extension features (indices 78-95).
     /// </summary>
-    private static void ComputeExtensions(double[] embedding, VoicingDocument doc)
+    private static void ComputeExtensions(float[] embedding, ChordVoicingRagDocument doc)
     {
         var midiNotes = doc.MidiNotes;
         var pitchClasses = doc.PitchClasses;
@@ -193,7 +207,7 @@ public class MusicalEmbeddingGenerator(
         var stability = doc.Consonance;
         var uniquePCs = pitchClasses.Distinct().Count();
         var topPc = midiNotes.Max() % EmbeddingSchema.PitchClassCount;
-        var sortedMidi = midiNotes.OrderBy(m => m).ToArray();
+        var sortedMidi = (int[])[.. midiNotes.OrderBy(m => m)];
         var mean = sortedMidi.Average();
         var stddev = Math.Sqrt(sortedMidi.Average(m => Math.Pow(m - mean, 2)));
         var span = sortedMidi.Max() - sortedMidi.Min();
@@ -201,41 +215,41 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // CONTEXT DYNAMICS (78-79)
         // ═══════════════════════════════════════════════════════════════════════
-        embedding[EmbeddingSchema.HarmonicInertia] = Clamp01(stability * (1.0 - tension));
-        embedding[EmbeddingSchema.ResolutionPressure] = Clamp01(0.7 * tension + 0.3 * (1.0 - stability));
+        embedding[EmbeddingSchema.HarmonicInertia] = (float)Clamp01(stability * (1.0 - tension));
+        embedding[EmbeddingSchema.ResolutionPressure] = (float)Clamp01(0.7 * tension + 0.3 * (1.0 - stability));
 
         // ═══════════════════════════════════════════════════════════════════════
         // TEXTURAL FEATURES (80-82)
         // ═══════════════════════════════════════════════════════════════════════
         var doublingRatio = (double)(n - uniquePCs) / Math.Max(1, n);
-        embedding[EmbeddingSchema.TexturalDoublingRatio] = Clamp01(doublingRatio);
+        embedding[EmbeddingSchema.TexturalDoublingRatio] = (float)Clamp01(doublingRatio);
 
         if (hasDefinedRoot)
         {
             var rootCount = pitchClasses.Count(pc => pc == rootPc);
-            embedding[EmbeddingSchema.TexturalRootDoubled] = rootCount > 1 ? 1.0 : 0.0;
+            embedding[EmbeddingSchema.TexturalRootDoubled] = rootCount > 1 ? 1.0f : 0.0f;
         }
 
         if (hasDefinedRoot)
         {
             var topRelative = ((topPc - rootPc + EmbeddingSchema.PitchClassCount) % EmbeddingSchema.PitchClassCount) / 11.0;
-            embedding[EmbeddingSchema.TexturalTopNoteRelative] = Clamp01(topRelative);
+            embedding[EmbeddingSchema.TexturalTopNoteRelative] = (float)Clamp01(topRelative);
         }
 
         // ═══════════════════════════════════════════════════════════════════════
         // SPECTRAL COLOR (84-89)
         // ═══════════════════════════════════════════════════════════════════════
         embedding[EmbeddingSchema.SpectralMeanRegister] =
-            Clamp01((mean - EmbeddingSchema.MinMidi) / EmbeddingSchema.MidiRange);
+            (float)Clamp01((mean - EmbeddingSchema.MinMidi) / EmbeddingSchema.MidiRange);
 
         var registerSpread = Clamp01(stddev / EmbeddingSchema.SpreadMax);
-        embedding[EmbeddingSchema.SpectralRegisterSpread] = registerSpread;
+        embedding[EmbeddingSchema.SpectralRegisterSpread] = (float)registerSpread;
 
         var lowCount = sortedMidi.Count(m => m < EmbeddingSchema.LowThreshold);
-        embedding[EmbeddingSchema.SpectralLowEndWeight] = (double)lowCount / n;
+        embedding[EmbeddingSchema.SpectralLowEndWeight] = (float)((double)lowCount / n);
 
         var highCount = sortedMidi.Count(m => m > EmbeddingSchema.HighThreshold);
-        embedding[EmbeddingSchema.SpectralHighEndWeight] = (double)highCount / n;
+        embedding[EmbeddingSchema.SpectralHighEndWeight] = (float)((double)highCount / n);
 
         var smallIntervals = 0;
         for (var i = 0; i < sortedMidi.Length - 1; i++)
@@ -244,7 +258,7 @@ public class MusicalEmbeddingGenerator(
                 smallIntervals++;
         }
         var localClustering = (double)smallIntervals / Math.Max(1, n - 1);
-        embedding[EmbeddingSchema.SpectralLocalClustering] = Clamp01(localClustering);
+        embedding[EmbeddingSchema.SpectralLocalClustering] = (float)Clamp01(localClustering);
 
         var beatRisk = 0.0;
         for (var i = 0; i < sortedMidi.Length - 1; i++)
@@ -257,45 +271,45 @@ public class MusicalEmbeddingGenerator(
                 beatRisk += weight;
             }
         }
-        embedding[EmbeddingSchema.SpectralRoughnessProxy] = Clamp01(beatRisk / Math.Max(1, n - 1));
+        embedding[EmbeddingSchema.SpectralRoughnessProxy] = (float)Clamp01(beatRisk / Math.Max(1, n - 1));
 
         // ═══════════════════════════════════════════════════════════════════════
         // RELATIONAL (83)
         // ═══════════════════════════════════════════════════════════════════════
         embedding[EmbeddingSchema.RelationalSmoothnessBudget] =
-            Clamp01(0.5 * doublingRatio + 0.7 * (1 - registerSpread) - 0.3 * localClustering);
+            (float)Clamp01(0.5 * doublingRatio + 0.7 * (1 - registerSpread) - 0.3 * localClustering);
 
         // ═══════════════════════════════════════════════════════════════════════
         // EXTENDED TEXTURE (90-95)
         // ═══════════════════════════════════════════════════════════════════════
-        embedding[EmbeddingSchema.ExtendedBassMelodySpan] = Clamp01(span / EmbeddingSchema.SpanMax);
+        embedding[EmbeddingSchema.ExtendedBassMelodySpan] = (float)Clamp01(span / EmbeddingSchema.SpanMax);
 
         if (hasDefinedRoot)
         {
             var majorThirdPc = (rootPc + 4) % EmbeddingSchema.PitchClassCount;
             var minorThirdPc = (rootPc + 3) % EmbeddingSchema.PitchClassCount;
             var thirdCount = pitchClasses.Count(pc => pc == majorThirdPc || pc == minorThirdPc);
-            embedding[EmbeddingSchema.ExtendedThirdDoubled] = thirdCount > 1 ? 1.0 : 0.0;
+            embedding[EmbeddingSchema.ExtendedThirdDoubled] = thirdCount > 1 ? 1.0f : 0.0f;
         }
 
         if (hasDefinedRoot)
         {
             var fifthPc = (rootPc + 7) % EmbeddingSchema.PitchClassCount;
             var fifthCount = pitchClasses.Count(pc => pc == fifthPc);
-            embedding[EmbeddingSchema.ExtendedFifthDoubled] = fifthCount > 1 ? 1.0 : 0.0;
+            embedding[EmbeddingSchema.ExtendedFifthDoubled] = fifthCount > 1 ? 1.0f : 0.0f;
         }
 
         embedding[EmbeddingSchema.ExtendedOpenPosition] =
-            span > EmbeddingSchema.OpenPositionThreshold ? 1.0 : 0.0;
+            span > EmbeddingSchema.OpenPositionThreshold ? 1.0f : 0.0f;
 
         var innerCount = sortedMidi.Count(m =>
             m > EmbeddingSchema.LowThreshold && m < EmbeddingSchema.HighThreshold);
-        embedding[EmbeddingSchema.ExtendedInnerVoiceDensity] = (double)innerCount / Math.Max(1, n);
+        embedding[EmbeddingSchema.ExtendedInnerVoiceDensity] = (float)((double)innerCount / Math.Max(1, n));
 
         if (hasDefinedRoot)
         {
             var hasRoot = pitchClasses.Contains(rootPc);
-            embedding[EmbeddingSchema.ExtendedOmittedRoot] = hasRoot ? 0.0 : 1.0;
+            embedding[EmbeddingSchema.ExtendedOmittedRoot] = hasRoot ? 0.0f : 1.0f;
         }
     }
 

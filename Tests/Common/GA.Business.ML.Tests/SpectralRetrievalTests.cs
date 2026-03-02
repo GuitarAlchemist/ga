@@ -11,16 +11,16 @@ public class SpectralRetrievalTests
     {
         // Arrange
         // Vector A: Baseline
-        var vecA = new double[EmbeddingSchema.TotalDimension];
+        var vecA = new float[EmbeddingSchema.TotalDimension];
         // Vector B: Identical Structure (6-29), Different Symbolic (66-77)
-        var vecB = new double[EmbeddingSchema.TotalDimension];
+        var vecB = new float[EmbeddingSchema.TotalDimension];
         // Vector C: Different Structure, Identical Symbolic
-        var vecC = new double[EmbeddingSchema.TotalDimension];
+        var vecC = new float[EmbeddingSchema.TotalDimension];
 
         // Fill Structure (High Weight: 0.45)
-        for (int i = 6; i < 30; i++) { vecA[i] = 1; vecB[i] = 1; vecC[i] = 0; }
+        for (var i = 6; i < 30; i++) { vecA[i] = 1; vecB[i] = 1; vecC[i] = 0; }
         // Fill Symbolic (Low Weight: 0.10)
-        for (int i = 66; i < 78; i++) { vecA[i] = 1; vecB[i] = 0; vecC[i] = 1; }
+        for (var i = 66; i < 78; i++) { vecA[i] = 1; vecB[i] = 0; vecC[i] = 1; }
 
         // Act
         var scoreAB = SpectralRetrievalService.CalculateWeightedSimilarity(vecA, vecB, SpectralRetrievalService.SearchPreset.Tonal);
@@ -39,8 +39,8 @@ public class SpectralRetrievalTests
     {
         // Arrange
         // Simple test to ensure the SIMD implementation is mathematically correct
-        var a = new double[216];
-        var b = new double[216];
+        var a = new float[216];
+        var b = new float[216];
 
         // Orthogonal vectors in Structure partition
         a[6] = 1;

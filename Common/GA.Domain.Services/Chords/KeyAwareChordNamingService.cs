@@ -3,11 +3,11 @@ namespace GA.Domain.Services.Chords;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Primitives;
+using Core.Primitives.Notes;
 using Core.Theory.Atonal;
 using Core.Theory.Harmony;
 using Core.Theory.Tonal;
-using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     Service for key-aware chord naming that analyzes chords within all major/minor keys
@@ -110,9 +110,8 @@ public static class KeyAwareChordNamingService
     /// <summary>
     ///     Gets chromatic scale degree for non-diatonic notes
     /// </summary>
-    private static int GetChromaticScaleDegree(int semitones)
-    {
-        return semitones switch
+    private static int GetChromaticScaleDegree(int semitones) =>
+        semitones switch
         {
             1 => 1, // b2
             3 => 2, // b3
@@ -121,7 +120,6 @@ public static class KeyAwareChordNamingService
             10 => 6, // b7
             _ => 1 // Default to 1
         };
-    }
 
     /// <summary>
     ///     Determines chord function within a key
@@ -206,7 +204,7 @@ public static class KeyAwareChordNamingService
     {
         yield return root;
 
-        foreach (var interval in template.Intervals)
+        foreach (var interval in template.Formula.Intervals)
         {
             var semitones = interval.Interval.Semitones.Value;
             var pitchClass = PitchClass.FromValue((root.Value + semitones) % 12);
@@ -217,10 +215,7 @@ public static class KeyAwareChordNamingService
     /// <summary>
     ///     Checks if chord root requires accidentals in the key
     /// </summary>
-    private static bool RequiresAccidentals(PitchClass root, Key key)
-    {
-        return !key.PitchClassSet.Contains(root);
-    }
+    private static bool RequiresAccidentals(PitchClass root, Key key) => !key.PitchClassSet.Contains(root);
 
     /// <summary>
     ///     Calculates probability that chord belongs to the key
@@ -320,18 +315,13 @@ public static class KeyAwareChordNamingService
     ///     Generates recommended chord name based on most probable key
     /// </summary>
     private static string GenerateRecommendedName(ChordTemplate template, PitchClass root,
-        KeyContextResult mostProbable)
-    {
-        return mostProbable.ChordName;
-    }
+        KeyContextResult mostProbable) =>
+        mostProbable.ChordName;
 
     /// <summary>
     ///     Gets recommended enharmonic spelling based on key context
     /// </summary>
-    private static string GetRecommendedEnharmonicSpelling(PitchClass root, Key key)
-    {
-        return GetContextualNoteName(root, key);
-    }
+    private static string GetRecommendedEnharmonicSpelling(PitchClass root, Key key) => GetContextualNoteName(root, key);
 
     /// <summary>
     ///     Gets chord analysis summary for display

@@ -37,10 +37,7 @@ public abstract class VariationEquivalenceCollection
         public ImmutableDictionary<BigInteger, VariationEquivalence.Translation> To => _lazyToEquivalences.Value;
         public ILookup<BigInteger, VariationEquivalence.Translation> From => _lazyFromEquivalences.Value;
 
-        public override string ToString()
-        {
-            return $"{Equivalences.Count}";
-        }
+        public override string ToString() => $"{Equivalences.Count}";
 
         private static ImmutableList<VariationEquivalence.Translation> GetTranslationEquivalences(
             Func<IEnumerable<T>, BigInteger> indexProvider,

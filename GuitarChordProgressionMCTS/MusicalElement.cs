@@ -9,18 +9,13 @@ public class MusicalElement(string name, List<int[]> voicings, HashSet<int> chor
     // Constructor
 
     // Clone method to create a deep copy
-    public MusicalElement Clone()
-    {
-        return new MusicalElement(
+    public MusicalElement Clone() =>
+        new(
             Name,
             [..Voicings.Select(v => (int[])v.Clone())],
             [..ChordTones]
         );
-    }
 
     // Override ToString() for easy display
-    public override string ToString()
-    {
-        return Name;
-    }
+    public override string ToString() => Name;
 }

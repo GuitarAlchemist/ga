@@ -1,13 +1,8 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
-using Primitives;
+using Primitives.Intervals;
 
 /// <summary>
 ///     An interval class (Between <see cref="Min" /> and <see cref="Max" />)
@@ -59,75 +54,55 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
     public static IntervalClass Min => FromValue(_minValue);
     public static IntervalClass Max => FromValue(_maxValue);
 
-    public static implicit operator IntervalClass(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator IntervalClass(int value) => FromValue(value);
 
-    public static implicit operator int(IntervalClass ic)
-    {
-        return ic.Value;
-    }
+    public static implicit operator int(IntervalClass ic) => ic.Value;
 
-    public static IntervalClass FromSemitones(Semitones semitones)
-    {
-        return FromValue(semitones.Value);
-    }
+    public static IntervalClass FromSemitones(Semitones semitones) => FromValue(semitones.Value);
 
-    public static IReadOnlyCollection<IntervalClass> Range(int start, int count)
-    {
-        return ValueObjectUtils<IntervalClass>.GetItems(start, count);
-    }
+    public static IReadOnlyCollection<IntervalClass> Range(int start, int count) =>
+        ValueObjectUtils<IntervalClass>.GetItems(start, count);
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<IntervalClass>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<IntervalClass>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<IntervalClass>.EnsureValueInRange(value, minValue, maxValue);
 
-    public void CheckMaxValue(int maxValue)
-    {
+    public void CheckMaxValue(int maxValue) =>
         ValueObjectUtils<IntervalClass>.EnsureValueRange(Value, _minValue, maxValue);
-    }
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            0 => "0 (Unison)",
-            1 => "1 (m2, M7)",
-            2 => "2 (M2, m7)",
-            3 => "3 (m3, M6)",
-            4 => "4 (M3, m6)",
-            5 => "5 (P4, P5)",
-            6 => "6 (A4, d5; Tritone)",
-            _ => throw new InvalidOperationException()
-        };
-    }
+        0 => "0 (Unison)",
+        1 => "1 (m2, M7)",
+        2 => "2 (M2, m7)",
+        3 => "3 (m3, M6)",
+        4 => "4 (M3, m6)",
+        5 => "5 (P4, P5)",
+        6 => "6 (A4, d5; Tritone)",
+        _ => throw new InvalidOperationException()
+    };
 
     #region IStaticValueObjectList<IntervalClass> Members
 
     /// <summary>
-    /// Gets all IntervalClass instances (automatically memoized).
+    ///     Gets all IntervalClass instances (automatically memoized).
     /// </summary>
     public static IReadOnlyCollection<IntervalClass> Items => ValueObjectUtils<IntervalClass>.Items;
 
     /// <summary>
-    /// Gets all IntervalClass values (automatically memoized).
+    ///     Gets all IntervalClass values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<IntervalClass>.Values;
 
     /// <summary>
-    /// Gets the cached span representing the full interval class range.
+    ///     Gets the cached span representing the full interval class range.
     /// </summary>
     public static ReadOnlySpan<IntervalClass> ItemsSpan => ValueObjectUtils<IntervalClass>.ItemsSpan;
 
     /// <summary>
-    /// Gets the cached span representing the numeric values for each interval class.
+    ///     Gets the cached span representing the numeric values for each interval class.
     /// </summary>
     public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<IntervalClass>.ValuesSpan;
 
@@ -147,30 +122,15 @@ public readonly record struct IntervalClass : IStaticValueObjectList<IntervalCla
 
     #region Relational members
 
-    public int CompareTo(IntervalClass other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(IntervalClass other) => _value.CompareTo(other._value);
 
-    public static bool operator <(IntervalClass left, IntervalClass right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(IntervalClass left, IntervalClass right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(IntervalClass left, IntervalClass right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(IntervalClass left, IntervalClass right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(IntervalClass left, IntervalClass right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(IntervalClass left, IntervalClass right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(IntervalClass left, IntervalClass right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(IntervalClass left, IntervalClass right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

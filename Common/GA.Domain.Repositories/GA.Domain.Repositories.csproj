@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj"/>
   </ItemGroup>
 
   <PropertyGroup>

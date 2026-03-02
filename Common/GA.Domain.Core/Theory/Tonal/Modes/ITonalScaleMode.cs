@@ -1,7 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes;
 
-using Core.Primitives;
-using JetBrains.Annotations;
+using Core.Primitives.Notes;
 
 /// <summary>
 ///     Interface for scale modes that have a tonal center.

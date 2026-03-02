@@ -8,28 +8,31 @@ using System.Text.RegularExpressions;
 
 internal static partial class StringExtensions
 {
-    public static string FixedGuid(this string source)
+    extension(string source)
     {
-        var reg = MyRegex();
-        var id1 = reg.Match(source).Groups["id"].Value;
-        var id = id1;
-        return source.Replace(id, "00000000000000000000000000000000");
-    }
-
-    public static string FixedCacheBuster(this string source)
-    {
-        var reg = new Regex(@".*\s+'cacheBuster=(?<cacheBuster>\S+)'\s*.*",
-            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
-        var id1 = reg.Match(source).Groups["cacheBuster"].Value;
-        var id = id1;
-
-        // Only replace if we found a match
-        if (string.IsNullOrEmpty(id))
+        public string FixedGuid()
         {
-            return source;
+            var reg = MyRegex();
+            var id1 = reg.Match(source).Groups["id"].Value;
+            var id = id1;
+            return source.Replace(id, "00000000000000000000000000000000");
         }
 
-        return source.Replace(id, "00000000000000000000000000000000");
+        public string FixedCacheBuster()
+        {
+            var reg = new Regex(@".*\s+'cacheBuster=(?<cacheBuster>\S+)'\s*.*",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+            var id1 = reg.Match(source).Groups["cacheBuster"].Value;
+            var id = id1;
+
+            // Only replace if we found a match
+            if (string.IsNullOrEmpty(id))
+            {
+                return source;
+            }
+
+            return source.Replace(id, "00000000000000000000000000000000");
+        }
     }
 
     [GeneratedRegex(@".*\s+id=""(?<id>\S+)""\s*.*",

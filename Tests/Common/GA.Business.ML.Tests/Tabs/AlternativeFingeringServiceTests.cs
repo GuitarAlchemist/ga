@@ -1,40 +1,32 @@
-namespace GA.Business.ML.Tests.Tabs;
+﻿namespace GA.Business.ML.Tests.Tabs;
 
-using GA.Domain.Services.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Player;
-using GA.Domain.Core.Primitives;
+using Abstractions;
+using Core.Context;
+using Domain.Core.Instruments;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
 using Domain.Services.Fretboard.Analysis;
 using Embeddings;
-using Retrieval;
-using GA.Business.ML.Tabs;
+using Rag.Models;
+using ML.Tabs;
 using Moq;
-using NUnit.Framework;
+using Retrieval;
 
 [TestFixture]
 public class AlternativeFingeringServiceTests
 {
-    private Mock<AdvancedTabSolver> _mockSolver;
-    private AlternativeFingeringService _service;
-
     [SetUp]
     public void Setup()
     {
         var tuning = Tuning.Default;
         var mapper = new FretboardPositionMapper(tuning);
-        var cost = new PhysicalCostService(new PlayerProfile(), null);
+        var cost = new PhysicalCostService(new(), null);
 
         // Mock dependencies of AdvancedTabSolver
         var mockStyle = new Mock<StyleProfileService>(Mock.Of<IVectorIndex>());
         var mockGen = new Mock<IEmbeddingGenerator>();
 
-        _mockSolver = new Mock<AdvancedTabSolver>(
+        _mockSolver = new(
             mapper,
             cost,
             mockStyle.Object,
@@ -42,8 +34,11 @@ public class AlternativeFingeringServiceTests
             null // PlayerProfile
         );
 
-        _service = new AlternativeFingeringService(_mockSolver.Object);
+        _service = new(_mockSolver.Object);
     }
+
+    private Mock<AdvancedTabSolver> _mockSolver;
+    private AlternativeFingeringService _service;
 
     [Test]
     public async Task GetAlternativesAsync_CategorizesPathsCorrectly()
@@ -60,12 +55,12 @@ public class AlternativeFingeringServiceTests
         var mockPaths = new List<List<List<FretboardPosition>>> { pathOpen, pathJazz, pathHigh };
 
         _mockSolver.Setup(s => s.SolveAsync(
-            It.IsAny<IEnumerable<IEnumerable<Pitch>>>(),
-            It.IsAny<string>(),
-            It.IsAny<int>()))
+                It.IsAny<IEnumerable<IEnumerable<Pitch>>>(),
+                It.IsAny<string>(),
+                It.IsAny<int>()))
             .ReturnsAsync(mockPaths);
 
-        var input = new List<VoicingDocument> { CreateDummyDoc(60) };
+        var input = new List<ChordVoicingRagDocument> { CreateDummyDoc(60) };
 
         // Act
         var result = await _service.GetAlternativesAsync(input);
@@ -96,29 +91,29 @@ public class AlternativeFingeringServiceTests
     private List<FretboardPosition> CreateChord(int[] frets)
     {
         var list = new List<FretboardPosition>();
-        for (int i = 0; i < frets.Length; i++)
+        for (var i = 0; i < frets.Length; i++)
         {
-            list.Add(new FretboardPosition(Str.FromValue(6 - i), frets[i], Pitch.FromMidiNote(60)));
+            list.Add(new(Str.FromValue(6 - i), frets[i], Pitch.FromMidiNote(60)));
         }
+
         return list;
     }
 
-    private VoicingDocument CreateDummyDoc(int midiNote)
-    {
-        return new VoicingDocument
+    private ChordVoicingRagDocument CreateDummyDoc(int midiNote) =>
+        new()
         {
             Id = Guid.NewGuid().ToString(),
             ChordName = "C",
-            MidiNotes = new[] { midiNote },
-            PitchClasses = new[] { midiNote % 12 },
+            MidiNotes = [midiNote],
+            PitchClasses = [midiNote % 12],
             PitchClassSet = (midiNote % 12).ToString(),
-            SemanticTags = Array.Empty<string>(),
+            SemanticTags = [],
             SearchableText = "C",
-            PossibleKeys = Array.Empty<string>(),
+            PossibleKeys = [],
             YamlAnalysis = "{}",
             AnalysisEngine = "Test",
             AnalysisVersion = "1.0",
-            Jobs = Array.Empty<string>(),
+            Jobs = [],
             TuningId = "Standard",
             PitchClassSetId = "0",
             Diagram = "",
@@ -132,5 +127,4 @@ public class AlternativeFingeringServiceTests
             HarmonicFunction = "Tonic",
             IsNaturallyOccurring = true
         };
-    }
 }

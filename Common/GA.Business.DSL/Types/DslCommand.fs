@@ -1,15 +1,11 @@
 namespace GA.MusicTheory.DSL.Types
 
-open System
-
 /// <summary>
 /// Helper functions for DSL commands
 /// </summary>
 module DslCommand =
 
     open GrammarTypes
-    open PracticeRoutineTypes
-
     // ============================================================================
     // COMMAND CREATION
     // ============================================================================
@@ -24,24 +20,20 @@ module DslCommand =
               Metadata = Map.empty }
 
     /// Create a navigation command
-    let navigation cmd =
-        NavigationCommand cmd
+    let navigation cmd = NavigationCommand cmd
 
     /// Create a scale transformation command
     let scaleTransform scale transformations =
-        ScaleTransformCommand (scale, transformations)
+        ScaleTransformCommand(scale, transformations)
 
     /// Create a Grothendieck operation command
-    let grothendieck operation =
-        GrothendieckCommand operation
+    let grothendieck operation = GrothendieckCommand operation
 
     /// Create a practice routine command
-    let practiceRoutine routine =
-        PracticeRoutineCommand routine
+    let practiceRoutine routine = PracticeRoutineCommand routine
 
     /// Create a composite command
-    let composite commands =
-        CompositeCommand commands
+    let composite commands = CompositeCommand commands
 
     // ============================================================================
     // COMMAND INSPECTION
@@ -94,35 +86,31 @@ module DslCommand =
     /// Map a function over all chord progression commands
     let rec mapChordProgressions f command =
         match command with
-        | ChordProgressionCommand prog -> ChordProgressionCommand (f prog)
-        | CompositeCommand commands ->
-            CompositeCommand (List.map (mapChordProgressions f) commands)
+        | ChordProgressionCommand prog -> ChordProgressionCommand(f prog)
+        | CompositeCommand commands -> CompositeCommand(List.map (mapChordProgressions f) commands)
         | other -> other
 
     /// Map a function over all navigation commands
     let rec mapNavigations f command =
         match command with
-        | NavigationCommand nav -> NavigationCommand (f nav)
-        | CompositeCommand commands ->
-            CompositeCommand (List.map (mapNavigations f) commands)
+        | NavigationCommand nav -> NavigationCommand(f nav)
+        | CompositeCommand commands -> CompositeCommand(List.map (mapNavigations f) commands)
         | other -> other
 
     /// Map a function over all scale transformation commands
     let rec mapScaleTransforms f command =
         match command with
-        | ScaleTransformCommand (scale, transforms) ->
+        | ScaleTransformCommand(scale, transforms) ->
             let (newScale, newTransforms) = f (scale, transforms)
-            ScaleTransformCommand (newScale, newTransforms)
-        | CompositeCommand commands ->
-            CompositeCommand (List.map (mapScaleTransforms f) commands)
+            ScaleTransformCommand(newScale, newTransforms)
+        | CompositeCommand commands -> CompositeCommand(List.map (mapScaleTransforms f) commands)
         | other -> other
 
     /// Flatten a composite command into a list of simple commands
     let rec flatten command =
         match command with
-        | CompositeCommand commands ->
-            commands |> List.collect flatten
-        | other -> [other]
+        | CompositeCommand commands -> commands |> List.collect flatten
+        | other -> [ other ]
 
     // ============================================================================
     // COMMAND VALIDATION
@@ -130,7 +118,8 @@ module DslCommand =
 
     /// Validate a note
     let validateNote (note: Note) =
-        let validLetters = ['A'; 'B'; 'C'; 'D'; 'E'; 'F'; 'G']
+        let validLetters = [ 'A'; 'B'; 'C'; 'D'; 'E'; 'F'; 'G' ]
+
         if not (List.contains note.Letter validLetters) then
             Error $"Invalid note letter: %c{note.Letter}"
         else
@@ -171,38 +160,38 @@ module DslCommand =
                 prog.Chords
                 |> List.map (function
                     | AbsoluteChord chord -> validateChord chord |> Result.map (fun _ -> ())
-                    | RomanNumeralChord _ -> Ok ())
+                    | RomanNumeralChord _ -> Ok())
 
             match List.tryFind Result.isError chordResults with
-            | Some (Error e) -> Error e
+            | Some(Error e) -> Error e
             | _ -> Ok command
 
         | NavigationCommand nav ->
             match nav with
             | GotoPosition pos -> validatePosition pos |> Result.map (fun _ -> command)
-            | Slide (from, ``to``) ->
+            | Slide(from, ``to``) ->
                 match validatePosition from, validatePosition ``to`` with
                 | Ok _, Ok _ -> Ok command
-                | Error e, _ | _, Error e -> Error e
-            | NavigatePath (from, ``to``) ->
+                | Error e, _
+                | _, Error e -> Error e
+            | NavigatePath(from, ``to``) ->
                 match validatePosition from, validatePosition ``to`` with
                 | Ok _, Ok _ -> Ok command
-                | Error e, _ | _, Error e -> Error e
+                | Error e, _
+                | _, Error e -> Error e
             | _ -> Ok command
 
-        | ScaleTransformCommand (scale, _) ->
-            validateScale scale |> Result.map (fun _ -> command)
+        | ScaleTransformCommand(scale, _) -> validateScale scale |> Result.map (fun _ -> command)
 
-        | GrothendieckCommand _ ->
-            Ok command  // TODO: Add validation for Grothendieck operations
+        | GrothendieckCommand _ -> Ok command // TODO: Add validation for Grothendieck operations
 
-        | PracticeRoutineCommand _ ->
-            Ok command  // Practice routines are always valid for now
+        | PracticeRoutineCommand _ -> Ok command // Practice routines are always valid for now
 
         | CompositeCommand commands ->
             let results = List.map validate commands
+
             match List.tryFind Result.isError results with
-            | Some (Error e) -> Error e
+            | Some(Error e) -> Error e
             | _ -> Ok command
 
     // ============================================================================
@@ -272,21 +261,12 @@ module DslCommand =
 
             $"Progression: %s{chords}%s{key}"
 
-        | NavigationCommand nav ->
-            $"Navigation: %A{nav}"
+        | NavigationCommand nav -> $"Navigation: %A{nav}"
 
-        | ScaleTransformCommand (scale, transforms) ->
-            $"Scale Transform: %s{formatNote scale.Root} %A{transforms}"
+        | ScaleTransformCommand(scale, transforms) -> $"Scale Transform: %s{formatNote scale.Root} %A{transforms}"
 
-        | GrothendieckCommand op ->
-            $"Grothendieck: %A{op}"
+        | GrothendieckCommand op -> $"Grothendieck: %A{op}"
 
-        | PracticeRoutineCommand routine ->
-            $"Practice Routine: %s{routine}"
+        | PracticeRoutineCommand routine -> $"Practice Routine: %s{routine}"
 
-        | CompositeCommand commands ->
-            commands
-            |> List.map format
-            |> String.concat " -> "
-            |> sprintf "Composite: %s"
-
+        | CompositeCommand commands -> commands |> List.map format |> String.concat " -> " |> sprintf "Composite: %s"

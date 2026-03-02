@@ -3,6 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <UserSecretsId>ga.musictheory.service-secrets</UserSecretsId>
     <WarningsAsErrors>CS1998</WarningsAsErrors>
   </PropertyGroup>
@@ -13,14 +15,15 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0"/>
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.9.0"/>
     <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1"/>
-      <PackageReference Include="MongoDB.Driver" Version="3.2.0"/>
+    <PackageReference Include="MongoDB.Driver" Version="3.2.0"/>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Infrastructure\GA.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

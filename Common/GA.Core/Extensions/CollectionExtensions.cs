@@ -5,29 +5,26 @@ using Collections;
 [PublicAPI]
 public static class CollectionExtensions
 {
-    public static Lazy<ImmutableList<T>> ToLazyImmutableList<T>(this IEnumerable<T> items)
+    extension<T>(IEnumerable<T> items)
     {
-        return new Lazy<ImmutableList<T>>(items.ToImmutableList);
+        public Lazy<ImmutableList<T>> ToLazyImmutableList() => new(items.ToImmutableList);
+
+        public ReadOnlySpan<T> ToSpan() => items is T[] arr ? arr : [.. items];
     }
 
-    public static LazyCollection<T> ToLazyCollection<T>(this IEnumerable<T> items)
-        where T : class
+    extension<T>(IEnumerable<T> items) where T : class
     {
-        return new LazyCollection<T>(items);
+        public LazyCollection<T> ToLazyCollection() => new(items);
     }
 
-    /// <summary>
-    ///     Rotate the items of a collection
-    /// </summary>
-    /// <typeparam name="T">The item type.</typeparam>
-    /// <param name="items">The source items collection.</param>
-    /// <param name="shift">The shift.</param>
-    /// <returns>The rotated <see cref="IReadOnlyList{T}" />.</returns>
-    public static IReadOnlyList<T> Rotate<T>(
-        this IReadOnlyCollection<T> items,
-        int shift = 0)
+    extension<T>(IReadOnlyCollection<T> items)
     {
-        return new RotatedCollection<T>(items, shift);
+        /// <summary>
+        ///     Rotate the items of a collection
+        /// </summary>
+        /// <param name="shift">The shift.</param>
+        /// <returns>The rotated <see cref="IReadOnlyList{T}" />.</returns>
+        public IReadOnlyList<T> Rotate(int shift = 0) => new RotatedCollection<T>(items, shift);
     }
 
     [PublicAPI]
@@ -44,10 +41,7 @@ public static class CollectionExtensions
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public int Count => _items.Count;
 
@@ -60,9 +54,6 @@ public static class CollectionExtensions
             }
         }
 
-        public override string ToString()
-        {
-            return string.Join(" ", this);
-        }
+        public override string ToString() => string.Join(" ", this);
     }
 }

@@ -1,20 +1,17 @@
 namespace GA.AI.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using Services;
 
 [ApiController]
 [Route("api/[controller]")]
 public class NotebookController : ControllerBase
 {
-    private readonly string _notebooksRoot = Path.Combine(Directory.GetCurrentDirectory(), "Notebooks");
-
     private readonly NotebookExecutionService _executionService;
+    private readonly string _notebooksRoot = Path.Combine(Directory.GetCurrentDirectory(), "Notebooks");
 
     public NotebookController(NotebookExecutionService executionService)
     {
@@ -26,16 +23,19 @@ public class NotebookController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<NotebookInfo>>> GetNotebooks()
+    public Task<ActionResult<IEnumerable<NotebookInfo>>> GetNotebooks()
     {
-        if (!Directory.Exists(_notebooksRoot)) return Ok(Enumerable.Empty<NotebookInfo>());
+        if (!Directory.Exists(_notebooksRoot))
+        {
+            return Task.FromResult<ActionResult<IEnumerable<NotebookInfo>>>(Ok(Enumerable.Empty<NotebookInfo>()));
+        }
 
         var ipynbFiles = Directory.GetFiles(_notebooksRoot, "*.ipynb", SearchOption.AllDirectories);
         var dibFiles = Directory.GetFiles(_notebooksRoot, "*.dib", SearchOption.AllDirectories);
-        
-        var results = new System.Collections.Concurrent.ConcurrentBag<NotebookInfo>();
 
-        Parallel.ForEach(ipynbFiles.Concat(dibFiles), file => 
+        var results = new ConcurrentBag<NotebookInfo>();
+
+        Parallel.ForEach(ipynbFiles.Concat(dibFiles), file =>
         {
             var info = new NotebookInfo
             {
@@ -55,7 +55,8 @@ public class NotebookController : ControllerBase
                     using var doc = JsonDocument.Parse(fs);
                     if (doc.RootElement.TryGetProperty("metadata", out var metadata))
                     {
-                        if (metadata.TryGetProperty("tags", out var tagsElement) && tagsElement.ValueKind == JsonValueKind.Array)
+                        if (metadata.TryGetProperty("tags", out var tagsElement) &&
+                            tagsElement.ValueKind == JsonValueKind.Array)
                         {
                             info.Tags = tagsElement.EnumerateArray()
                                 .Select(t => t.GetString())
@@ -64,8 +65,8 @@ public class NotebookController : ControllerBase
                         }
                     }
                 }
-                catch 
-                { 
+                catch
+                {
                     // Ignore parse errors, just return without tags
                 }
             }
@@ -73,15 +74,15 @@ public class NotebookController : ControllerBase
             results.Add(info);
         });
 
-        return Ok(results.OrderBy(r => r.Name));
+        return Task.FromResult<ActionResult<IEnumerable<NotebookInfo>>>(Ok(results.OrderBy(r => r.Name)));
     }
 
     [HttpGet("{*path}")]
     public async Task<ActionResult<object>> GetNotebook(string path)
     {
-        path = System.Net.WebUtility.UrlDecode(path);
+        path = WebUtility.UrlDecode(path);
         var fullPath = Path.GetFullPath(Path.Combine(_notebooksRoot, path));
-        
+
         // Security check
         if (!fullPath.StartsWith(_notebooksRoot, StringComparison.OrdinalIgnoreCase))
         {
@@ -94,14 +95,17 @@ public class NotebookController : ControllerBase
         }
 
         var json = await System.IO.File.ReadAllTextAsync(fullPath);
-        try 
+        try
         {
             if (fullPath.EndsWith(".dib", StringComparison.OrdinalIgnoreCase))
             {
                 // Simple wrapper for .dib content to look like a one-cell notebook for our viewer
-                return Ok(new {
-                    cells = new[] {
-                        new {
+                return Ok(new
+                {
+                    cells = new[]
+                    {
+                        new
+                        {
                             cell_type = "code",
                             source = (await System.IO.File.ReadAllLinesAsync(fullPath)).Select(line => line + "\n"),
                             outputs = Enumerable.Empty<object>()
@@ -109,6 +113,7 @@ public class NotebookController : ControllerBase
                     }
                 });
             }
+
             var notebook = JsonSerializer.Deserialize<JsonElement>(json);
             return Ok(notebook);
         }
@@ -121,7 +126,11 @@ public class NotebookController : ControllerBase
     [HttpPost("execute")]
     public async Task<ActionResult<ExecutionResult>> ExecuteCode([FromBody] ExecuteRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Code)) return BadRequest("Code is required");
+        if (string.IsNullOrWhiteSpace(request.Code))
+        {
+            return BadRequest("Code is required");
+        }
+
         var result = await _executionService.ExecuteCodeAsync(request.Code);
         return Ok(result);
     }
@@ -139,5 +148,5 @@ public class NotebookInfo
     public string Path { get; set; } = string.Empty;
     public string Type { get; set; } = "ipynb";
     public DateTime LastModified { get; set; }
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = [];
 }

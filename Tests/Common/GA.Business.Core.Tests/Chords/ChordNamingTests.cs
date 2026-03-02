@@ -1,8 +1,8 @@
-namespace GA.Domain.Core.Tests.Chords;
+﻿namespace GA.Business.Core.Tests.Chords;
 
-using Primitives;
-using GA.Domain.Core.Theory.Atonal;
-using Theory.Harmony;
+using Domain.Core.Primitives.Intervals;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Harmony;
 using Domain.Services.Chords;
 
 [TestFixture]
@@ -24,7 +24,8 @@ public class ChordNamingTests
         // Assert
         TestContext.WriteLine($"Maj7: Expected=Cmaj7, Actual={maj7Name}");
         TestContext.WriteLine($"Min7: Expected=Cm7, Actual={min7Name}");
-        TestContext.WriteLine($"Dom7 Extension: Expected=maj7, Actual={dom7Name} (Legacy dominant 7th extension mapping)");
+        TestContext.WriteLine(
+            $"Dom7 Extension: Expected=maj7, Actual={dom7Name} (Legacy dominant 7th extension mapping)");
         Assert.Multiple(() =>
         {
             Assert.That(maj7Name, Is.EqualTo("Cmaj7"), "Major 7th chord should be named with 'maj7' suffix.");
@@ -32,6 +33,7 @@ public class ChordNamingTests
             Assert.That(dom7Name, Is.EqualTo("maj7"), "Internal extension notation for dominant should be 'maj7'.");
         });
     }
+
     [Test]
     public void BasicChordExtensionsService_ShouldGenerateCorrectNinthChordNames()
     {
@@ -50,6 +52,7 @@ public class ChordNamingTests
             Assert.That(min9Name, Is.EqualTo("Cm9"));
         });
     }
+
     [Test]
     public void BasicChordExtensionsService_ShouldGenerateCorrectSuspendedChordNames()
     {
@@ -68,6 +71,7 @@ public class ChordNamingTests
             Assert.That(sus2Name, Is.EqualTo("Csus2"));
         });
     }
+
     [Test]
     public void BasicChordExtensionsService_ShouldGenerateCorrectAddedToneChordNames()
     {
@@ -86,6 +90,7 @@ public class ChordNamingTests
             Assert.That(sixNineName, Is.EqualTo("C6/9"));
         });
     }
+
     [Test]
     public void BasicChordExtensionsService_ShouldDetectHighestExtension()
     {
@@ -108,6 +113,7 @@ public class ChordNamingTests
             Assert.That(triadExtension, Is.EqualTo(ChordExtension.Triad));
         });
     }
+
     [Test]
     public void BasicChordExtensionsService_ShouldValidateExtensions()
     {
@@ -126,6 +132,7 @@ public class ChordNamingTests
             Assert.That(isInvalidNinth, Is.False);
         });
     }
+
     [Test]
     public void SlashChordNamingService_ShouldIdentifyInversions()
     {
@@ -136,7 +143,8 @@ public class ChordNamingTests
         var isValidSlash = SlashChordNamingService.IsValidSlashChord(majorTriad, PitchClass.C, thirdInBass);
         var analysis = SlashChordNamingService.AnalyzeSlashChord(majorTriad, PitchClass.C, thirdInBass);
         // Assert
-        TestContext.WriteLine($"Slash Chord: C/E, Valid: {isValidSlash}, Type: {analysis.Type}, Notation: {analysis.SlashNotation}, Common: {analysis.IsCommonInversion}");
+        TestContext.WriteLine(
+            $"Slash Chord: C/E, Valid: {isValidSlash}, Type: {analysis.Type}, Notation: {analysis.SlashNotation}, Common: {analysis.IsCommonInversion}");
         Assert.Multiple(() =>
         {
             Assert.That(isValidSlash, Is.True);
@@ -145,6 +153,7 @@ public class ChordNamingTests
             Assert.That(analysis.IsCommonInversion, Is.True);
         });
     }
+
     [Test]
     public void SlashChordNamingService_ShouldGenerateSlashChordNames()
     {
@@ -157,6 +166,7 @@ public class ChordNamingTests
         TestContext.WriteLine($"Generated Slash Names for C Major over F: {string.Join(", ", slashNames)}");
         Assert.That(slashNames, Contains.Item("C/F"));
     }
+
     [Test]
     public void QuartalChordNamingService_ShouldIdentifyQuartalChords()
     {
@@ -166,7 +176,8 @@ public class ChordNamingTests
         var isQuartal = QuartalChordNamingService.IsQuartalHarmony(quartalTemplate);
         var analysis = QuartalChordNamingService.AnalyzeQuartalChord(quartalTemplate, PitchClass.C);
         // Assert
-        TestContext.WriteLine($"Quartal Template - IsQuartal: {isQuartal}, Analysis Type: {analysis.Type}, Name: {analysis.PrimaryName}");
+        TestContext.WriteLine(
+            $"Quartal Template - IsQuartal: {isQuartal}, Analysis Type: {analysis.Type}, Name: {analysis.PrimaryName}");
         Assert.Multiple(() =>
         {
             Assert.That(isQuartal, Is.True);
@@ -176,6 +187,7 @@ public class ChordNamingTests
             Assert.That(analysis.IntervalSizes, Is.Not.Null);
         });
     }
+
     [Test]
     public void QuartalChordNamingService_ShouldDistinguishQuartalTypes()
     {
@@ -186,16 +198,20 @@ public class ChordNamingTests
         var perfectAnalysis = QuartalChordNamingService.AnalyzeQuartalChord(perfectFourthsTemplate, PitchClass.C);
         var augmentedAnalysis = QuartalChordNamingService.AnalyzeQuartalChord(augmentedFourthsTemplate, PitchClass.C);
         // Assert
-        TestContext.WriteLine($"Perfect 4ths Analysis Type: {perfectAnalysis.Type}, Name: {perfectAnalysis.PrimaryName}");
-        TestContext.WriteLine($"Augmented 4ths Analysis Type: {augmentedAnalysis.Type}, Name: {augmentedAnalysis.PrimaryName}");
+        TestContext.WriteLine(
+            $"Perfect 4ths Analysis Type: {perfectAnalysis.Type}, Name: {perfectAnalysis.PrimaryName}");
+        TestContext.WriteLine(
+            $"Augmented 4ths Analysis Type: {augmentedAnalysis.Type}, Name: {augmentedAnalysis.PrimaryName}");
         Assert.Multiple(() =>
         {
             Assert.That(perfectAnalysis.Type, Is.EqualTo(QuartalChordNamingService.QuartalChordType.PureFourths));
             Assert.That(perfectAnalysis.PrimaryName, Does.Contain("quartal"));
-            Assert.That(augmentedAnalysis.Type, Is.EqualTo(QuartalChordNamingService.QuartalChordType.AugmentedFourths));
+            Assert.That(augmentedAnalysis.Type,
+                Is.EqualTo(QuartalChordNamingService.QuartalChordType.AugmentedFourths));
             Assert.That(augmentedAnalysis.PrimaryName, Does.Contain("aug4"));
         });
     }
+
     [Test]
     public void ChordTemplateNamingService_ShouldGenerateComprehensiveNames()
     {
@@ -205,7 +221,8 @@ public class ChordNamingTests
         var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(
             majorTriad, PitchClass.C);
         // Assert
-        TestContext.WriteLine($"Comprehensive Names for C Major: Primary={comprehensive.Primary}, Slash={comprehensive.SlashChord}, Quartal={comprehensive.Quartal}");
+        TestContext.WriteLine(
+            $"Comprehensive Names for C Major: Primary={comprehensive.Primary}, Slash={comprehensive.SlashChord}, Quartal={comprehensive.Quartal}");
         Assert.Multiple(() =>
         {
             Assert.That(comprehensive.Primary, Is.EqualTo("C"));
@@ -213,6 +230,7 @@ public class ChordNamingTests
             Assert.That(comprehensive.Quartal, Is.Null);
         });
     }
+
     [Test]
     public void ChordTemplateNamingService_ShouldHandleSlashChords()
     {
@@ -222,13 +240,15 @@ public class ChordNamingTests
         var comprehensive = ChordTemplateNamingService.GenerateComprehensiveNames(
             majorTriad, PitchClass.C, PitchClass.E);
         // Assert
-        TestContext.WriteLine($"Comprehensive Names for C/E: Primary={comprehensive.Primary}, Slash={comprehensive.SlashChord}");
+        TestContext.WriteLine(
+            $"Comprehensive Names for C/E: Primary={comprehensive.Primary}, Slash={comprehensive.SlashChord}");
         Assert.Multiple(() =>
         {
             Assert.That(comprehensive.Primary, Is.EqualTo("C/E"));
             Assert.That(comprehensive.SlashChord, Is.EqualTo("C/E"));
         });
     }
+
     [Test]
     public void ChordTemplateNamingService_ShouldGetBestName()
     {
@@ -241,6 +261,7 @@ public class ChordNamingTests
         TestContext.WriteLine($"Best Chord Name for C over E: {bestName}");
         Assert.That(bestName, Is.EqualTo("C/E"));
     }
+
     [Test]
     public void ChordTemplateNamingService_ShouldGetAllNamingOptions()
     {
@@ -257,12 +278,14 @@ public class ChordNamingTests
             Assert.That(allOptions.Count, Is.GreaterThan(0));
         });
     }
+
     // Helper methods to create test chord templates
     private ChordTemplate CreateMajorTriadTemplate()
     {
         var formula = CommonChordFormulas.Major;
         return ChordTemplate.Analytical.FromSetTheory(formula, "Test");
     }
+
     private ChordTemplate CreateQuartalChordTemplate()
     {
         var intervals = new List<ChordFormulaInterval>
@@ -273,6 +296,7 @@ public class ChordNamingTests
         var formula = new ChordFormula("Quartal", intervals, ChordStackingType.Quartal);
         return ChordTemplate.Analytical.FromSetTheory(formula, "Test");
     }
+
     private ChordTemplate CreatePerfectFourthsTemplate()
     {
         // C-F-Bb (perfect fourths: 5 + 5 semitones)
@@ -284,6 +308,7 @@ public class ChordNamingTests
         var formula = new ChordFormula("Perfect Quartal", intervals, ChordStackingType.Quartal);
         return ChordTemplate.Analytical.FromSetTheory(formula, "Perfect Fourths");
     }
+
     private ChordTemplate CreateAugmentedFourthsTemplate()
     {
         // C-F#-C (augmented fourths: 6 + 6 semitones)

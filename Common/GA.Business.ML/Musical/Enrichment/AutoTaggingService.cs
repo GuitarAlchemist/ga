@@ -2,24 +2,15 @@ namespace GA.Business.ML.Musical.Enrichment;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 /// automatically generates semantic tags (e.g. "Jazz", "Campfire", "Shell") based on detailed voicing analysis.
 /// This enables the chatbot to explain "Why" returned results are relevant.
 /// </summary>
-public class AutoTaggingService
+public class AutoTaggingService(ModalFlavorService modalFlavorService)
 {
-    private readonly ModalFlavorService _modalFlavorService;
-
-    public AutoTaggingService(ModalFlavorService modalFlavorService)
-    {
-        _modalFlavorService = modalFlavorService;
-    }
-
-    public string[] GenerateTags(VoicingDocument doc)
+    public string[] GenerateTags(ChordVoicingRagDocument doc)
     {
         var tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -33,12 +24,12 @@ public class AutoTaggingService
         AnalyzeAtonalStructure(doc, tags);
 
         // Phase 13: Modal Flavor
-        _modalFlavorService.Enrich(doc, tags);
+        modalFlavorService.Enrich(doc, tags);
 
-        return tags.ToArray();
+        return [.. tags];
     }
 
-    private void AnalyzeAtonalStructure(VoicingDocument doc, HashSet<string> tags)
+    private void AnalyzeAtonalStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         if (doc.PitchClasses == null || doc.PitchClasses.Length == 0) return;
 
@@ -59,7 +50,7 @@ public class AutoTaggingService
         }
     }
 
-    public void Enrich(VoicingDocument doc)
+    public void Enrich(ChordVoicingRagDocument doc)
     {
         var tags = GenerateTags(doc);
         // We can't set doc.SemanticTags because it's init-only or required.
@@ -68,7 +59,7 @@ public class AutoTaggingService
         // So this method is slightly misleading, functionality sits in GenerateTags.
     }
 
-    private void AnalyzePlayability(VoicingDocument doc, HashSet<string> tags)
+    private void AnalyzePlayability(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         var shape = doc.Diagram; // e.g., "x-3-2-0-1-0"
         if (string.IsNullOrEmpty(shape)) return;
@@ -103,7 +94,7 @@ public class AutoTaggingService
         }
     }
 
-    private void AnalyzeHarmonicStructure(VoicingDocument doc, HashSet<string> tags)
+    private void AnalyzeHarmonicStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         // 1. Rootless (Pre-calculated by Analyzer)
         if (doc.IsRootless)
@@ -115,7 +106,7 @@ public class AutoTaggingService
         // 2. Shell Voicings (Derived from Tone Inventory)
         // Definition: Has Guide Tones (3rd + 7th), Omitted 5th (usually), Small size (< 5 notes)
         // If it has Guide Tones and NO 5th, it's a strong Shell candidate.
-        bool has5th = !doc.OmittedTones?.Contains("5th") ?? true; // If Omitted doesn't contain 5th, we assume it has it
+        var has5th = !doc.OmittedTones?.Contains("5th") ?? true; // If Omitted doesn't contain 5th, we assume it has it
 
         if (doc.HasGuideTones && !has5th && doc.MidiNotes.Length <= 4)
         {
@@ -145,7 +136,7 @@ public class AutoTaggingService
         }
 
         // 4. Power Chord
-        bool isPowerChord = false;
+        var isPowerChord = false;
         if (doc.ChordName != null && (doc.ChordName.EndsWith("5") || doc.ChordName.Contains("5 (") || doc.ChordName.Contains("5/")))
         {
             isPowerChord = true;

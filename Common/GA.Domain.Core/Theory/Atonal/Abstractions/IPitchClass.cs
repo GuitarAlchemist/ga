@@ -1,6 +1,6 @@
 namespace GA.Domain.Core.Theory.Atonal.Abstractions;
 
-using Primitives;
+using Primitives.Notes;
 
 /// <summary>
 ///     Abstraction for objects having a Pitch Class property

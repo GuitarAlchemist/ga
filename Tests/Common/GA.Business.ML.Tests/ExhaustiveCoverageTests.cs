@@ -1,46 +1,42 @@
 namespace GA.Business.ML.Tests;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 using Musical.Enrichment;
-using NUnit.Framework;
+using Rag.Models;
 
 [TestFixture]
 public class ExhaustiveCoverageTests
 {
-    private AutoTaggingService _autoTaggingService;
-    private ModalFlavorService _modalFlavorService;
-    private static ModalCharacteristicIntervalService _intervalService;
-
     [OneTimeSetUp]
-    public void OneTimeSetup()
-    {
-        _intervalService = ModalCharacteristicIntervalService.Instance;
-    }
+    public void OneTimeSetup() => _intervalService = ModalCharacteristicIntervalService.Instance;
 
     [SetUp]
     public void Setup()
     {
-        _modalFlavorService = new ModalFlavorService();
-        _autoTaggingService = new AutoTaggingService(_modalFlavorService);
+        _modalFlavorService = new();
+        _autoTaggingService = new(_modalFlavorService);
     }
+
+    private AutoTaggingService _autoTaggingService;
+    private ModalFlavorService _modalFlavorService;
+    private static ModalCharacteristicIntervalService _intervalService;
 
     [Test]
     [TestCaseSource(nameof(GetForteTestCases))]
     public void Test_Atonal_ForteNumber(string primeFormId, string forteNumber, int[] pitchClasses)
     {
         // Skip empty set 0-1 as it's trivial and handled by edge case logic
-        if (forteNumber == "0-1") Assert.Ignore("Empty set 0-1 ignored");
+        if (forteNumber == "0-1")
+        {
+            Assert.Ignore("Empty set 0-1 ignored");
+        }
 
-        var doc = new VoicingDocument
+        var doc = new ChordVoicingRagDocument
         {
             Id = $"forte_{forteNumber}",
             SearchableText = "",
             PitchClasses = pitchClasses,
-            
+
             // Defaults
             RootPitchClass = 0,
             MidiNotes = [],
@@ -61,7 +57,7 @@ public class ExhaustiveCoverageTests
         var tags = _autoTaggingService.GenerateTags(doc);
         var expectedTag = $"Set:{forteNumber}";
 
-        Assert.That(tags, Does.Contain(expectedTag), 
+        Assert.That(tags, Does.Contain(expectedTag),
             $"Failed to identify Forte {forteNumber} for PCs: {string.Join(",", pitchClasses)}");
     }
 
@@ -72,7 +68,7 @@ public class ExhaustiveCoverageTests
             var forteNumber = kvp.Value.ToString();
             var pcs = ProgrammaticForteCatalog.PrimeFormByForte[kvp.Value];
             var pcArray = pcs.Select(p => p.Value).ToArray();
-            
+
             yield return new TestCaseData(kvp.Key.ToString(), forteNumber, pcArray)
                 .SetName($"Forte_{forteNumber}");
         }
@@ -84,14 +80,14 @@ public class ExhaustiveCoverageTests
     {
         // Construct a voicing that perfectly matches the mode (Root 0 + Intervals)
         var pitchClasses = intervals.Select(i => i % 12).Distinct().ToArray();
-        
-        var doc = new VoicingDocument
+
+        var doc = new ChordVoicingRagDocument
         {
             Id = $"mode_{modeName}",
             SearchableText = "",
             RootPitchClass = 0,
             PitchClasses = pitchClasses,
-            
+
             // Defaults
             MidiNotes = [],
             SemanticTags = [],
@@ -116,22 +112,22 @@ public class ExhaustiveCoverageTests
         // For exotic modes (Akebono, etc.), it's acceptable if the system identifies a 
         // high-priority subset (e.g. Lydian) instead of the obscure name, 
         // as long as it identifies *something*.
-        
+
         var isStandard = IsStandardMode(modeName);
 
         // Special handling for subsets (Pentatonic/Blues) which might be identified as their parent mode (Ionian/Aeolian)
         var allowedAlternatives = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Major pentatonic", new[] { "Flavor:Ionian" } },
-            { "Minor pentatonic", new[] { "Flavor:Aeolian" } },
-            { "Blues", new[] { "Flavor:Aeolian", "Flavor:Minor pentatonic" } },
-            { "Blues minor", new[] { "Flavor:Aeolian" } }
+            { "Major pentatonic", ["Flavor:Ionian"] },
+            { "Minor pentatonic", ["Flavor:Aeolian"] },
+            { "Blues", ["Flavor:Aeolian", "Flavor:Minor pentatonic"] },
+            { "Blues minor", ["Flavor:Aeolian"] }
         };
 
         if (isStandard)
         {
-            bool matchFound = tags.Contains(expectedTag);
-            
+            var matchFound = tags.Contains(expectedTag);
+
             // Check alternatives if exact match failed
             if (!matchFound && allowedAlternatives.TryGetValue(modeName, out var alternatives))
             {
@@ -143,6 +139,7 @@ public class ExhaustiveCoverageTests
                 TestContext.WriteLine($"[Standard Mode Fail] Input: {string.Join(",", intervals)}");
                 TestContext.WriteLine($"Detected: {string.Join(", ", tags)}");
             }
+
             Assert.That(matchFound, Is.True, $"Failed to identify Standard Tonal Mode: {modeName} (or valid parent)");
         }
         else
@@ -153,8 +150,10 @@ public class ExhaustiveCoverageTests
             if (!tags.Contains(expectedTag))
             {
                 // Log for visibility but don't fail
-                TestContext.WriteLine($"[Exotic Mode Info] {modeName} identified as: {string.Join(", ", tags.Where(t => t.StartsWith("Flavor:")))}");
+                TestContext.WriteLine(
+                    $"[Exotic Mode Info] {modeName} identified as: {string.Join(", ", tags.Where(t => t.StartsWith("Flavor:")))}");
             }
+
             Assert.That(hasFlavor, Is.True, $"Should identify some flavor for {modeName}");
         }
     }
@@ -164,11 +163,15 @@ public class ExhaustiveCoverageTests
         var standard = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian",
-            "Harmonic minor", "Melodic minor", "Phrygian dominant", "Lydian dominant", "Altered", "Diminished", "Whole-tone", "Blues"
+            "Harmonic minor", "Melodic minor", "Phrygian dominant", "Lydian dominant", "Altered", "Diminished",
+            "Whole-tone", "Blues"
         };
         // Also include Pentatonic as standard-ish
-        if (name.Contains("Pentatonic", StringComparison.OrdinalIgnoreCase)) return true;
-        
+        if (name.Contains("Pentatonic", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         return standard.Contains(name);
     }
 
@@ -181,8 +184,11 @@ public class ExhaustiveCoverageTests
         foreach (var name in names)
         {
             var intervals = service.GetModeIntervals(name);
-            if (intervals == null || intervals.Count == 0) continue;
-            
+            if (intervals == null || intervals.Count == 0)
+            {
+                continue;
+            }
+
             yield return new TestCaseData(name, intervals.OrderBy(x => x).ToArray())
                 .SetName($"Mode_{name.Replace(" ", "_")}"); // Clean name for runner
         }

@@ -4,8 +4,7 @@ using Hellang.Middleware.ProblemDetails;
 using GA.Analytics.Service.Models;
 using GA.Analytics.Service.Services;
 using AllProjects.ServiceDefaults;
-using GA.Domain.Core.Instruments.Shapes;
-using GA.Domain.Core.Instruments.Shapes.Applications;
+using GA.Domain.Services.Fretboard.Shapes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +26,9 @@ builder.Services.AddScoped<AdvancedMusicalAnalyticsService>();
 builder.Services.AddScoped<AgentSpectralAnalyzer>();
 builder.Services.AddScoped<ICachingService, CachingService>();
 builder.Services.AddScoped<IShapeGraphBuilder, ShapeGraphBuilder>();
-builder.Services.AddScoped<HarmonicAnalysisEngine>();
-builder.Services.AddScoped<ProgressionOptimizer>();
+// TODO: These types need to be implemented in GA.Analytics.Service.Services
+// builder.Services.AddScoped<HarmonicAnalysisEngine>();
+// builder.Services.AddScoped<ProgressionOptimizer>();
 builder.Services.AddScoped<ActorSystemManager>();
 builder.Services.AddMemoryCache();
 

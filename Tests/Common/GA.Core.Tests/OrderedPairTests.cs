@@ -1,6 +1,6 @@
 namespace GA.Core.Tests;
 
-using Core;
+using Core.Combinatorics;
 
 public class OrderedPairTests
 {

@@ -1,17 +1,17 @@
-namespace GA.Domain.Core.Tests.Fretboard.Voicings;
+﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
-using GA.Domain.Services.Fretboard.Voicings.Analysis;
-using NUnit.Framework;
+using Domain.Core.Instruments.Fretboard.Voicings.Core;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
+using Domain.Services.Fretboard.Voicings.Analysis;
 
 [TestFixture]
 public class SlidingFretSpanVoicingTests
 {
     private const int Span = 5;
     private const double CoverageThreshold = 0.65;
+
     [Test]
     public void SlidingFiveFretWindows_ProduceChordNames()
     {
@@ -31,15 +31,18 @@ public class SlidingFretSpanVoicingTests
                 missingWindows.Add(baseFret);
             }
         }
+
         if (missingWindows.Any())
         {
             TestContext.WriteLine(
                 $"Windows missing chord names (> {ClusterThreshold(Span)}): {string.Join(", ", missingWindows)}");
         }
+
         var coverage = 1.0 - missingWindows.Count / (double)windowsAnalyzed;
         Assert.That(coverage, Is.GreaterThan(CoverageThreshold),
             "Expected most sliding windows to produce a chord name.");
     }
+
     [Test]
     public void NutWindow_HasChordName()
     {
@@ -49,21 +52,24 @@ public class SlidingFretSpanVoicingTests
         var chordName = analysis.ChordId.ChordName ?? analysis.ChordId.AlternateName;
         Assert.That(chordName, Is.Not.Null.Or.Empty);
     }
+
     private static Voicing BuildSlidingVoicing(Fretboard fretboard, int baseFret)
     {
         var positions = new List<Position.Played>();
         var notes = new List<MidiNote>();
         for (var stringIndex = 0; stringIndex < fretboard.StringCount; stringIndex++)
         {
-            var fret = baseFret + (stringIndex % Span);
+            var fret = baseFret + stringIndex % Span;
             var str = new Str(stringIndex + 1);
             var tuningNote = fretboard.Tuning[str];
             var midi = tuningNote.MidiNote + fret;
-            var location = new PositionLocation(str, new Fret(fret));
-            positions.Add(new Position.Played(location, midi));
+            var location = new PositionLocation(str, new(fret));
+            positions.Add(new(location, midi));
             notes.Add(midi);
         }
-        return new Voicing([.. positions], [.. notes]);
+
+        return new([.. positions], [.. notes]);
     }
+
     private static int ClusterThreshold(int span) => span - 1;
 }

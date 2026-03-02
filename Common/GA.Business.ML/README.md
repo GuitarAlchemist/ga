@@ -1,10 +1,12 @@
 # GA.Business.ML
 
-This project contains AI and Machine Learning services for Guitar Alchemist, following the modular architecture Layer 4 (AI/ML).
+This project contains AI and Machine Learning services for Guitar Alchemist, following the modular architecture Layer
+4 (AI/ML).
 
 ## Overview
 
 This library provides:
+
 - **Embedding Services**: Multiple implementations for generating text and musical embeddings.
 - **Spectral RAG**: Harmonic-aware retrieval augmented generation using Wavelet Transforms.
 - **Tab Analysis**: Advanced Viterbi-based tab solving and naturalness evaluation.
@@ -13,6 +15,7 @@ This library provides:
 ## Architecture
 
 This project follows the Guitar Alchemist modular architecture:
+
 - **Layer 4 (AI/ML)**: `GA.Business.ML` (this project)
 - **Dependencies**: Layers 1-3 (Core, Domain, Analysis)
 - **Consumers**: Layer 5 (Orchestration) and applications
@@ -78,6 +81,7 @@ public class MyService
 ## Migration Notes
 
 This project consolidates AI services that were previously scattered across:
+
 - `GA.Data.MongoDB/Services/Embeddings/`
 - `GA.Data.SemanticKernel.Embeddings/`
 - `GA.Business.Intelligence/SemanticIndexing/`

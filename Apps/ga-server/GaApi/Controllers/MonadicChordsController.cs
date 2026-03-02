@@ -1,7 +1,15 @@
 ﻿namespace GaApi.Controllers;
 
-using Models;
-using Services;
+using GA.Fretboard.Service.Models;
+using GaApi.Services;
+using GaApi.Models;
+using Chord = GaApi.Models.Chord;
+using ChordStatistics = GaApi.Models.ChordStatistics;
+using ChordError = GaApi.Services.ChordError;
+using ChordErrorType = GaApi.Services.ChordErrorType;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///     Controller demonstrating monadic service integration with type-safe error handling
@@ -242,9 +250,8 @@ public class MonadicChordsController : ControllerBase
     }
 
     // Helper method to map ChordError to IActionResult
-    private IActionResult MapChordErrorToResponse(ChordError error)
-    {
-        return error.Type switch
+    private IActionResult MapChordErrorToResponse(ChordError error) =>
+        error.Type switch
         {
             ChordErrorType.ValidationError => BadRequest(new ErrorResponse
             {
@@ -268,5 +275,4 @@ public class MonadicChordsController : ControllerBase
                 Message = error.Message
             })
         };
-    }
 }

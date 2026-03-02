@@ -1,29 +1,21 @@
 namespace GA.Business.ML.Tests.Integration;
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Business.ML.Embeddings;
-using GA.Business.ML.Providers;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Embeddings;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
-using NUnit.Framework;
+using Providers;
+using Rag.Models;
+using TestInfrastructure;
 
 /// <summary>
-/// Integration tests for the HybridEmbeddingService that combines
-/// musical (OPTIC-K) and text embeddings.
+///     Integration tests for the HybridEmbeddingService that combines
+///     musical (OPTIC-K) and text embeddings.
 /// </summary>
 [TestFixture]
 [Category("Integration")]
 [Category("RequiresOllama")]
 public class HybridEmbeddingServiceIntegrationTests
 {
-    private IConfiguration _configuration = null!;
-    private bool _ollamaAvailable;
-    private MusicalEmbeddingGenerator _musicalGenerator = null!;
-    private MusicalEmbeddingBridge _musicalBridge = null!;
-
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
@@ -36,17 +28,19 @@ public class HybridEmbeddingServiceIntegrationTests
             .Build();
 
         _ollamaAvailable = await OllamaProvider.IsAvailableAsync();
-        
+
         // Always create musical components (no external dependency)
-        _musicalGenerator = TestInfrastructure.TestServices.CreateGenerator();
-        _musicalBridge = new MusicalEmbeddingBridge(_musicalGenerator);
+        _musicalGenerator = TestServices.CreateGenerator();
+        _musicalBridge = new(_musicalGenerator);
     }
 
     [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _musicalBridge?.Dispose();
-    }
+    public void OneTimeTearDown() => _musicalBridge?.Dispose();
+
+    private IConfiguration _configuration = null!;
+    private bool _ollamaAvailable;
+    private MusicalEmbeddingGenerator _musicalGenerator = null!;
+    private MusicalEmbeddingBridge _musicalBridge = null!;
 
     [Test]
     public void HybridService_WithMusicalOnly_WorksWithoutOllama()
@@ -130,7 +124,7 @@ public class HybridEmbeddingServiceIntegrationTests
         var texts = new[]
         {
             "Major chord voicing",
-            "Minor chord voicing", 
+            "Minor chord voicing",
             "Dominant seventh chord"
         };
 
@@ -142,9 +136,8 @@ public class HybridEmbeddingServiceIntegrationTests
         Assert.That(embeddings.All(e => e.Vector.Length > 0), Is.True);
     }
 
-    private static VoicingDocument CreateTestVoicingDocument()
-    {
-        return new VoicingDocument
+    private static ChordVoicingRagDocument CreateTestVoicingDocument() =>
+        new()
         {
             Id = "test-hybrid-1",
             SearchableText = "C Major chord open position",
@@ -165,15 +158,12 @@ public class HybridEmbeddingServiceIntegrationTests
             StackingType = "Tertian",
             Embedding = null
         };
-    }
 
-    private static IEmbeddingGenerator<string, Embedding<float>> CreateMockTextEmbeddingGenerator()
-    {
-        return new MockTextEmbeddingGenerator();
-    }
+    private static IEmbeddingGenerator<string, Embedding<float>> CreateMockTextEmbeddingGenerator() =>
+        new MockTextEmbeddingGenerator();
 
     /// <summary>
-    /// Simple mock embedding generator for testing when Ollama is not available.
+    ///     Simple mock embedding generator for testing when Ollama is not available.
     /// </summary>
     private class MockTextEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>
     {
@@ -182,15 +172,18 @@ public class HybridEmbeddingServiceIntegrationTests
         public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
             IEnumerable<string> values,
             EmbeddingGenerationOptions? options = null,
-            System.Threading.CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default)
         {
-            var embeddings = values.Select(v => 
-                new Embedding<float>(Enumerable.Range(0, 384).Select(i => (float)i / 384f).ToArray()))
+            var embeddings = values.Select(v =>
+                    new Embedding<float>(Enumerable.Range(0, 384).Select(i => i / 384f).ToArray()))
                 .ToList();
             return Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(embeddings));
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+        }
+
         public object? GetService(Type serviceType, object? key = null) => null;
     }
 }

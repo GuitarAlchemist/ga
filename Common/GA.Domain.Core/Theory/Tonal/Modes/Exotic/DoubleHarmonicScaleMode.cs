@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Exotic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Exotic;
 using Scales;
 
@@ -23,7 +19,8 @@ public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)
         IStaticEnumerable<DoubleHarmonicScaleMode>
 {
     private static readonly Lazy<ScaleModeCollection<DoubleHarmonicScaleDegree, DoubleHarmonicScaleMode>>
-        _lazyModeByDegree = new(() => new([.. Items]));
+        _lazyModeByDegree =
+            new(() => new([.. Items]));
 
     // Static instances for each mode
     public static DoubleHarmonicScaleMode DoubleHarmonic => new(DoubleHarmonicScaleDegree.DoubleHarmonic);
@@ -56,15 +53,7 @@ public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)
         }
     }
 
-    public static DoubleHarmonicScaleMode Get(DoubleHarmonicScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static DoubleHarmonicScaleMode Get(DoubleHarmonicScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static DoubleHarmonicScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static DoubleHarmonicScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

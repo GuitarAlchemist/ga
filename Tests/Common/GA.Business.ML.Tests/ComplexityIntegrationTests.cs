@@ -1,20 +1,16 @@
 namespace GA.Business.ML.Tests;
 
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using Embeddings;
-using NUnit.Framework;
+using Rag.Models;
+using TestInfrastructure;
 
 [TestFixture]
 public class ComplexityIntegrationTests
 {
-    private MusicalEmbeddingGenerator _generator;
-
     [SetUp]
-    public void Setup()
-    {
-        _generator = TestInfrastructure.TestServices.CreateGenerator();
-    }
+    public void Setup() => _generator = TestServices.CreateGenerator();
+
+    private MusicalEmbeddingGenerator _generator;
 
     [Test]
     public async Task ComplexityScore_PopulatedInEmbedding()
@@ -23,24 +19,23 @@ public class ComplexityIntegrationTests
         var triad = CreateDoc([0, 4, 7]);
         var embTriad = await _generator.GenerateEmbeddingAsync(triad);
         var scoreTriad = embTriad[EmbeddingSchema.HierarchyComplexityScore];
-        
+
         // Level 2 / 6 = 0.333
-        Assert.That(scoreTriad, Is.EqualTo(2.0/6.0).Within(0.001));
+        Assert.That(scoreTriad, Is.EqualTo(2.0 / 6.0).Within(0.001));
 
         // Test Case 2: Cmaj9 (Level 4)
         var ext = CreateDoc([0, 4, 7, 11, 2]);
         var embExt = await _generator.GenerateEmbeddingAsync(ext);
         var scoreExt = embExt[EmbeddingSchema.HierarchyComplexityScore];
-        
+
         // Level 4 / 6 = 0.666
-        Assert.That(scoreExt, Is.EqualTo(4.0/6.0).Within(0.001));
-        
+        Assert.That(scoreExt, Is.EqualTo(4.0 / 6.0).Within(0.001));
+
         Assert.That(scoreExt, Is.GreaterThan(scoreTriad));
     }
 
-    private VoicingDocument CreateDoc(int[] pcs)
-    {
-        return new VoicingDocument
+    private ChordVoicingRagDocument CreateDoc(int[] pcs) =>
+        new()
         {
             Id = "test",
             PitchClasses = pcs,
@@ -61,5 +56,4 @@ public class ComplexityIntegrationTests
             PitchClassSetId = "0",
             Diagram = ""
         };
-    }
 }

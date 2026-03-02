@@ -1,10 +1,8 @@
 namespace GA.AI.Service.Controllers;
 
-using GA.Business.ML.AI.Benchmarks;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Business.ML.AI.Benchmarks;
 using Domain.Services.AI.Benchmarks;
+using Microsoft.AspNetCore.Mvc;
 
 #pragma warning disable SKEXP0001
 [ApiController]
@@ -23,7 +21,11 @@ public class BenchmarkController(BenchmarkRunner benchmarkRunner) : ControllerBa
     {
         // Use GetByNameAsync to avoid re-running if cached
         var result = await benchmarkRunner.GetByNameAsync(id);
-        if (result == null) return NotFound();
+        if (result == null)
+        {
+            return NotFound();
+        }
+
         return Ok(result);
     }
 
@@ -31,9 +33,14 @@ public class BenchmarkController(BenchmarkRunner benchmarkRunner) : ControllerBa
     public async Task<ActionResult<BenchmarkResult>> Run(string id)
     {
         var result = await benchmarkRunner.RunByNameAsync(id);
-        if (result == null) return NotFound();
+        if (result == null)
+        {
+            return NotFound();
+        }
+
         return Ok(result);
     }
+
     [HttpPost("report")]
     public ActionResult Report([FromBody] BenchmarkResult result)
     {

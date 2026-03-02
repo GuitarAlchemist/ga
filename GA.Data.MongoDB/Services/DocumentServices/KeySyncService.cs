@@ -1,6 +1,6 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using GA.Domain.Core;
+using GA.Business.Assets;
 using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -40,3 +40,5 @@ public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongo
         return await mongoDb.Keys.CountDocumentsAsync(Builders<KeyDocument>.Filter.Empty);
     }
 }
+
+

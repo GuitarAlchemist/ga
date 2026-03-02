@@ -1,9 +1,9 @@
 namespace GA.MusicTheory.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
-using DSL.Generators;
-using DSL.Parsers;
-using DSL.Types;
+using GA.Business.DSL.Generators;
+using GA.Business.DSL.Parsers;
+using GA.Business.DSL.Types;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.FSharp.Core;
 
@@ -22,8 +22,9 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <param name="request">The parse request containing the input string</param>
     /// <returns>Parse result with AST or error</returns>
     [HttpPost("parse-grothendieck")]
-    [ProducesResponseType(typeof(ParseGrothendieckResponse), 200)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(ParseGrothendieckResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ParseGrothendieckResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ParseGrothendieckResponse), StatusCodes.Status500InternalServerError)]
     public ActionResult<ParseGrothendieckResponse> ParseGrothendieck([FromBody] ParseGrothendieckRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Input))
@@ -83,8 +84,9 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <param name="request">The generation request containing the input DSL</param>
     /// <returns>Generated DSL code</returns>
     [HttpPost("generate-grothendieck")]
-    [ProducesResponseType(typeof(GenerateGrothendieckResponse), 200)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(GenerateGrothendieckResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GenerateGrothendieckResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(GenerateGrothendieckResponse), StatusCodes.Status500InternalServerError)]
     public ActionResult<GenerateGrothendieckResponse> GenerateGrothendieck(
         [FromBody] GenerateGrothendieckRequest request)
     {
@@ -135,9 +137,8 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <summary>
     ///     Convert F# GrothendieckOperation to a serializable object
     /// </summary>
-    private static object ConvertGrothendieckOperationToObject(GrammarTypes.GrothendieckOperation operation)
-    {
-        return operation switch
+    private static object ConvertGrothendieckOperationToObject(GrammarTypes.GrothendieckOperation operation) =>
+        operation switch
         {
             GrammarTypes.GrothendieckOperation.TensorProduct tensor => new
             {
@@ -271,14 +272,12 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
             },
             _ => new { Type = "Unknown", Value = operation.ToString() }
         };
-    }
 
     /// <summary>
     ///     Convert F# MusicalObject to a serializable object
     /// </summary>
-    private static object ConvertMusicalObjectToObject(GrammarTypes.MusicalObject obj)
-    {
-        return obj switch
+    private static object ConvertMusicalObjectToObject(GrammarTypes.MusicalObject obj) =>
+        obj switch
         {
             GrammarTypes.MusicalObject.NoteObject note => new { Type = "Note", Value = note.Item.ToString() },
             GrammarTypes.MusicalObject.ChordObject chord => new { Type = "Chord", Value = chord.Item.ToString() },
@@ -291,7 +290,6 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
                 { Type = "SetClass", Value = setClass.pitchClasses },
             _ => new { Type = "Unknown", Value = obj.ToString() }
         };
-    }
 
     /// <summary>
     ///     Parse a chord progression and return the AST
@@ -299,8 +297,9 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <param name="request">The parse request containing the input string</param>
     /// <returns>Parse result with AST or error</returns>
     [HttpPost("parse-chord-progression")]
-    [ProducesResponseType(typeof(ParseChordProgressionResponse), 200)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(ParseChordProgressionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ParseChordProgressionResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ParseChordProgressionResponse), StatusCodes.Status500InternalServerError)]
     public ActionResult<ParseChordProgressionResponse> ParseChordProgression(
         [FromBody] ParseChordProgressionRequest request)
     {
@@ -375,8 +374,9 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <param name="request">The parse request containing the input string</param>
     /// <returns>Parse result with AST or error</returns>
     [HttpPost("parse-fretboard-navigation")]
-    [ProducesResponseType(typeof(ParseFretboardNavigationResponse), 200)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(ParseFretboardNavigationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ParseFretboardNavigationResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ParseFretboardNavigationResponse), StatusCodes.Status500InternalServerError)]
     public ActionResult<ParseFretboardNavigationResponse> ParseFretboardNavigation(
         [FromBody] ParseFretboardNavigationRequest request)
     {
@@ -434,9 +434,8 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
     /// <summary>
     ///     Convert a NavigationCommand to a serializable object
     /// </summary>
-    private static object ConvertNavigationCommandToObject(GrammarTypes.NavigationCommand cmd)
-    {
-        return cmd switch
+    private static object ConvertNavigationCommandToObject(GrammarTypes.NavigationCommand cmd) =>
+        cmd switch
         {
             GrammarTypes.NavigationCommand.GotoPosition pos => new
             {
@@ -483,7 +482,6 @@ public class DslController(ILogger<DslController> logger) : ControllerBase
             },
             _ => new { Type = "Unknown", Value = cmd.ToString() }
         };
-    }
 }
 
 // Request/Response DTOs

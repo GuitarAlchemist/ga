@@ -1,0 +1,196 @@
+namespace GA.Domain.Services.Chords;
+
+using Core.Theory.Tonal;
+using Core.Theory.Tonal.Scales;
+using CoreChordTemplate = ChordTemplate;
+
+/// <summary>
+///     Enhanced chord template with scale associations and advanced harmonic analysis
+/// </summary>
+public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
+{
+    private readonly HashSet<Scale> _associatedScales = [];
+    private readonly Dictionary<PitchClass, ChordTone[]> _chordTonesCache = [];
+
+    /// <summary>
+    ///     Initializes a new instance of the EnhancedChordTemplate class
+    /// </summary>
+    public EnhancedChordTemplate(CoreChordTemplate coreTemplate) =>
+        CoreTemplate = coreTemplate ?? throw new ArgumentNullException(nameof(coreTemplate));
+
+    /// <summary>
+    ///     Initializes a new instance of the EnhancedChordTemplate class from pitch class set
+    /// </summary>
+    public EnhancedChordTemplate(PitchClassSet pitchClassSet, string name) =>
+        CoreTemplate = ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, name);
+
+    /// <summary>Gets the core chord template</summary>
+    public CoreChordTemplate CoreTemplate { get; }
+
+    /// <summary>Gets the pitch class set</summary>
+    public PitchClassSet PitchClassSet => CoreTemplate.PitchClassSet;
+
+    /// <summary>Gets the chord name</summary>
+    public string Name => CoreTemplate.Name;
+
+    /// <summary>Gets the chord formula</summary>
+    public ChordFormula Formula => CoreTemplate.Formula;
+
+    /// <summary>Gets the chord quality</summary>
+    public ChordQuality Quality => CoreTemplate.Quality;
+
+    /// <summary>Gets the chord extension</summary>
+    public ChordExtension Extension => CoreTemplate.Extension;
+
+    /// <summary>Gets the stacking type</summary>
+    public ChordStackingType StackingType => CoreTemplate.StackingType;
+
+    /// <summary>Gets the associated scales</summary>
+    public IReadOnlySet<Scale> AssociatedScales => _associatedScales.ToHashSet();
+
+    /// <summary>Gets the number of associated scales</summary>
+    public int ScaleCount => _associatedScales.Count;
+
+    /// <summary>Gets whether this chord has scale associations</summary>
+    public bool HasScaleAssociations => _associatedScales.Count > 0;
+
+    public bool Equals(EnhancedChordTemplate? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return CoreTemplate.Equals(other.CoreTemplate);
+    }
+
+    /// <summary>Adds an associated scale to this chord template</summary>
+    public void AddAssociatedScale(Scale scale)
+    {
+        if (scale == null)
+        {
+            throw new ArgumentNullException(nameof(scale));
+        }
+
+        if (IsCompatibleWith(scale))
+        {
+            _associatedScales.Add(scale);
+        }
+    }
+
+    /// <summary>Removes an associated scale from this chord template</summary>
+    public void RemoveAssociatedScale(Scale scale)
+    {
+        if (scale != null)
+        {
+            _associatedScales.Remove(scale);
+        }
+    }
+
+    /// <summary>Gets whether this chord is compatible with the specified scale</summary>
+    public bool IsCompatibleWith(Scale scale)
+    {
+        if (scale == null)
+        {
+            return false;
+        }
+
+        return CoreTemplate.PitchClassSet.IsSubsetOf(scale.PitchClassSet);
+    }
+
+    /// <summary>Gets the chord tones with their harmonic functions</summary>
+    public IReadOnlyList<ChordTone> GetChordTones(PitchClass root)
+    {
+        if (!_chordTonesCache.TryGetValue(root, out var chordTones))
+        {
+            chordTones = GenerateChordTones(root);
+            _chordTonesCache[root] = chordTones;
+        }
+
+        return chordTones;
+    }
+
+    /// <summary>Gets the most compatible scales for this chord</summary>
+    public IEnumerable<Scale> GetMostCompatibleScales() => _associatedScales
+        .OrderByDescending(scale => CalculateCompatibilityScore(scale))
+        .Take(5);
+
+    /// <summary>Gets scales that contain this chord as a subset</summary>
+    public IEnumerable<Scale> GetContainingScales() => _associatedScales.Where(scale =>
+        CoreTemplate.PitchClassSet.IsSubsetOf(scale.PitchClassSet));
+
+    /// <summary>Gets the harmonic function of this chord in the specified scale</summary>
+    public HarmonicFunction GetHarmonicFunction(Scale scale, PitchClass root)
+    {
+        if (!IsCompatibleWith(scale))
+        {
+            return HarmonicFunction.Unknown;
+        }
+
+        var scaleRoot = scale.PitchClassSet.First(); // Assume first pitch class is root
+        var intervalFromScaleRoot = (root.Value - scaleRoot.Value + 12) % 12;
+
+        // Map interval semitones to scale degree (simplified for heptatonic)
+        var degree = intervalFromScaleRoot switch
+        {
+            0 => 1, 2 => 2, 4 => 3, 5 => 4, 7 => 5, 9 => 6, 11 => 7, _ => 0
+        };
+
+        return HarmonicFunctionExtensions.FromDegree(degree);
+    }
+
+    /// <summary>Creates a chord voicing with the specified bass note</summary>
+    public ChordVoicing CreateVoicing(PitchClass root, PitchClass? bass = null)
+    {
+        var chordTones = GetChordTones(root);
+        return new(CoreTemplate, chordTones, bass ?? root);
+    }
+
+    /// <summary>Gets tension notes available for this chord in the specified scale</summary>
+    public IEnumerable<PitchClass> GetAvailableTensions(Scale scale, PitchClass root)
+    {
+        if (!IsCompatibleWith(scale))
+        {
+            return [];
+        }
+
+        var chordPitchClasses = GetChordTones(root).Select(ct => ct.PitchClass).ToHashSet();
+        var scalePitchClasses = scale.PitchClassSet.ToHashSet();
+
+        return scalePitchClasses.Except(chordPitchClasses);
+    }
+
+    private ChordTone[] GenerateChordTones(PitchClass root)
+    {
+        List<ChordTone> chordTones = [new(root, ChordFunction.Root)];
+
+        foreach (var interval in CoreTemplate.Formula.Intervals)
+        {
+            var pitchClass = PitchClass.FromSemitones((root.Value + interval.Interval.Semitones) % 12);
+            chordTones.Add(new(pitchClass, interval.Function));
+        }
+
+        return [.. chordTones];
+    }
+
+    private double CalculateCompatibilityScore(Scale scale)
+    {
+        var chordPitchClasses = CoreTemplate.PitchClassSet.Count;
+        var scalePitchClasses = scale.PitchClassSet.Count;
+        var commonPitchClasses = CoreTemplate.PitchClassSet.Intersect(scale.PitchClassSet).Count();
+
+        // Score based on how many chord tones are in the scale
+        return (double)commonPitchClasses / chordPitchClasses;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as EnhancedChordTemplate);
+
+    public override int GetHashCode() => CoreTemplate.GetHashCode();
+
+    public override string ToString() => $"{Name} (Enhanced)";
+}

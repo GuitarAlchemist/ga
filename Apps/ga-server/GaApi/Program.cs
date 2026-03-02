@@ -1,18 +1,17 @@
 using AllProjects.ServiceDefaults;
 using GA.Business.Core.Session;
-using GaApi.Configuration;
 using GaApi.Extensions;
 using GaApi.Hubs;
-using GaApi.Models;
 using GaApi.Services;
-using Microsoft.OpenApi.Models;
+using GaApi.GraphQL.Queries;
+using MudBlazor;
 using MudBlazor.Services;
 using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add shared configuration
-builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "../../appsettings.Shared.json"), optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "../../appsettings.Shared.json"), true, true);
 
 // Add Aspire service defaults (telemetry, health checks, service discovery)
 builder.AddServiceDefaults();
@@ -22,50 +21,17 @@ builder.AddRedisDistributedCache("redis");
 
 // Add services to the container.
 
-// Configure MongoDB
-builder.Services.Configure<MongoDbSettings>(
-    builder.Configuration.GetSection("MongoDB"));
+// Register core infrastructure (MongoDB, ILGPU, Redis)
+builder.Services.AddGaInfrastructure(builder.Configuration);
 
-// Configure Vector Search Options
-builder.Services.Configure<VectorSearchOptions>(
-    builder.Configuration.GetSection("VectorSearch"));
-
-// Configure Caching Options
-builder.Services.Configure<CachingOptions>(
-    builder.Configuration.GetSection(CachingOptions.SectionName));
-
-// Configure Chatbot pipeline
-builder.Services.Configure<ChatbotOptions>(
-    builder.Configuration.GetSection(ChatbotOptions.SectionName));
-    
-builder.Services.Configure<GuitarAgentOptions>(
-    builder.Configuration.GetSection(GuitarAgentOptions.SectionName));
-
-// Register core services
-builder.Services.AddSingleton<MongoDbService>();
-builder.Services.AddSingleton<LocalEmbeddingService>();
-builder.Services.AddSingleton<VectorSearchService>();
-
-// Register ILGPU GPU acceleration services
-builder.Services.AddSingleton<IIlgpuContextManager, IlgpuContextManager>();
-builder.Services.AddSingleton<ILGPU.Runtime.Accelerator>(sp =>
-{
-    var contextManager = sp.GetRequiredService<IIlgpuContextManager>();
-    return contextManager.PrimaryAccelerator!;
-});
-builder.Services.AddSingleton<IVectorSearchStrategy, IlgpuVectorSearchStrategy>();
-
-// Register vector search services
-builder.Services.AddVectorSearchServices();
-
-// Register AI services (Ollama, etc.)
+// Register AI services (Ollama, Embeddings, Vector Search, Chatbot)
 builder.Services.AddAiServices(builder.Configuration);
 
 // Register voicing search services (GPU-accelerated semantic search for guitar voicings)
 builder.Services.AddVoicingSearchServices(builder.Configuration);
 
 // Add caching services
-builder.Services.AddCachingServices();
+builder.Services.AddCachingServices(builder.Configuration);
 
 // Add session context provider (scoped = one per HTTP request)
 builder.Services.AddSessionContextScoped();
@@ -83,12 +49,24 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices(config =>
 {
-    config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomRight;
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
 });
 
 // Add YARP Reverse Proxy for API Gateway
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+// Add GraphQL Server
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<Query>()
+    .AddTypeExtension<ChordNamingQuery>()
+    .AddTypeExtension<MusicTheoryQuery>()
+    .AddTypeExtension<DomainSchemaQuery>()
+    .AddTypeExtension<MongoCollectionsQuery>()
+    .AddProjections()
+    .AddFiltering()
+    .AddSorting();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -97,15 +75,15 @@ builder.Services.AddSwaggerGen(c =>
     // Fix schema ID collisions by using full type names (including namespace)
     c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 
-    c.SwaggerDoc("v1", new OpenApiInfo
+    c.SwaggerDoc("v1", new()
     {
         Title = "Guitar Alchemist Chatbot API",
         Version = "v1",
         Description = @"RESTful API for Guitar Alchemist Chatbot",
-        Contact = new OpenApiContact
+        Contact = new()
         {
             Name = "Guitar Alchemist",
-            Url = new Uri("https://github.com/GuitarAlchemist/ga")
+            Url = new("https://github.com/GuitarAlchemist/ga")
         }
     });
 
@@ -158,6 +136,8 @@ app.UseAntiforgery();
 
 app.MapControllers();
 
+app.MapGraphQL();
+
 app.MapGet("/api/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStats");
 app.MapGet("/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStatsRoot");
 
@@ -181,4 +161,9 @@ app.MapGet("/api", () => new
 
 app.Run();
 
-public partial class Program { }
+namespace GaApi
+{
+    public partial class Program
+    {
+    }
+}

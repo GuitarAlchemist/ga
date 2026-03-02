@@ -2,7 +2,8 @@
 
 ## Overview
 
-Guitar Alchemist can be deployed in multiple environments: local development, Docker containers, Kubernetes, and cloud platforms.
+Guitar Alchemist can be deployed in multiple environments: local development, Docker containers, Kubernetes, and cloud
+platforms.
 
 ## Local Development
 

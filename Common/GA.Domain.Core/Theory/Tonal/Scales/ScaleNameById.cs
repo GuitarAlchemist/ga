@@ -1,16 +1,11 @@
 namespace GA.Domain.Core.Theory.Tonal.Scales;
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using Atonal;
 using GA.Core.Collections;
 
 public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScaleNameById())
 {
-    public static bool IsValidScaleNumber(PitchClassSetId id)
-    {
-        return Instance.Dictionary.ContainsKey(id);
-    }
+    public static bool IsValidScaleNumber(PitchClassSetId id) => Instance.Dictionary.ContainsKey(id);
 
     public static IReadOnlyList<PitchClassSetId> ValidScaleNumbers => [.. Instance.Dictionary.Keys];
 

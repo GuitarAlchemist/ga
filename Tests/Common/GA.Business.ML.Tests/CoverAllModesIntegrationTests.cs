@@ -1,7 +1,7 @@
 namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
+using Rag.Models;
 using Musical.Enrichment;
 using NUnit.Framework;
 
@@ -14,8 +14,8 @@ public class CoverAllModesIntegrationTests
     [SetUp]
     public void Setup()
     {
-        _modalFlavorService = new ModalFlavorService();
-        _autoTaggingService = new AutoTaggingService(_modalFlavorService);
+        _modalFlavorService = new();
+        _autoTaggingService = new(_modalFlavorService);
     }
 
     /// <summary>
@@ -31,13 +31,16 @@ public class CoverAllModesIntegrationTests
         string[] expectedTags,
         string[]? excludedTags = null)
     {
-        var doc = new VoicingDocument
+        var doc = new ChordVoicingRagDocument
         {
             Id = "test_voicing",
             SearchableText = description,
             RootPitchClass = root,
             PitchClasses = pitchClasses,
-            
+            ChordName = description,
+            Consonance = 0.5,
+            Embedding = new float[216],
+
             // Required placeholders
             MidiNotes = [],
             SemanticTags = [],
@@ -51,7 +54,10 @@ public class CoverAllModesIntegrationTests
             TuningId = "Standard",
             PitchClassSetId = "0",
             Diagram = "x00000",
-            BarreRequired = false
+            BarreRequired = false,
+            HandStretch = 0,
+            MinFret = 0,
+            MaxFret = 0
         };
 
         var tags = _autoTaggingService.GenerateTags(doc);
@@ -72,7 +78,7 @@ public class CoverAllModesIntegrationTests
 
     public static IEnumerable<TestCaseData> IdentificationScenarios()
     {
-        yield return new TestCaseData(
+        yield return new(
             "C Major (Ionian)",
             new[] { 0, 2, 4, 5, 7, 9, 11 },
             0,
@@ -80,7 +86,7 @@ public class CoverAllModesIntegrationTests
             new[] { "Flavor:Lydian" }
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "C Altered (Super Locrian)",
             new[] { 0, 1, 3, 4, 6, 8, 10 },
             0,
@@ -88,7 +94,7 @@ public class CoverAllModesIntegrationTests
             null
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "Whole Tone",
             new[] { 0, 2, 4, 6, 8, 10 },
             0,
@@ -96,7 +102,7 @@ public class CoverAllModesIntegrationTests
             null
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "Vienna Trichord",
             new[] { 0, 1, 6 },
             0,
@@ -104,7 +110,7 @@ public class CoverAllModesIntegrationTests
             new[] { "Flavor:Ionian", "Flavor:Major" }
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "C7 (Mixolydian check)",
             new[] { 0, 4, 7, 10 },
             0,
@@ -112,7 +118,7 @@ public class CoverAllModesIntegrationTests
             new[] { "Flavor:Enigmatic Lydian" }
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "Chromatic Cluster",
             new[] { 0, 1, 2 },
             0,
@@ -120,7 +126,7 @@ public class CoverAllModesIntegrationTests
             new[] { "Flavor:Ionian", "Flavor:Major", "Flavor:Dorian" }
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "Pentatonic Major",
             new[] { 0, 2, 4, 7, 9 },
             0,
@@ -128,7 +134,7 @@ public class CoverAllModesIntegrationTests
             null // Accepts both Pentatonic Major and Ionian
         );
 
-        yield return new TestCaseData(
+        yield return new(
             "Power Chord (Sparse)",
             new[] { 0, 7 },
             0,

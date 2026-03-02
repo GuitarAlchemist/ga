@@ -392,9 +392,12 @@ public record ChordError(ChordErrorType Type, string Message);
 /// </summary>
 public static class MonadicChordServiceExtensions
 {
-    public static IServiceCollection AddMonadicChordService(this IServiceCollection services)
+    extension(IServiceCollection services)
     {
-        services.AddScoped<IMonadicChordService, MonadicChordService>();
-        return services;
+        public IServiceCollection AddMonadicChordService()
+        {
+            services.AddScoped<IMonadicChordService, MonadicChordService>();
+            return services;
+        }
     }
 }

@@ -2,33 +2,34 @@
 
 ## System Overview
 
-Guitar Alchemist is a comprehensive AI-powered music theory and guitar learning platform built with .NET 9, React, and cutting-edge AI technologies.
+Guitar Alchemist is a comprehensive AI-powered music theory and guitar learning platform built with .NET 9, React, and
+cutting-edge AI technologies.
 
 ### Core Components
 
 1. **Backend Services** (`Apps/ga-server/GaApi`)
-   - REST/GraphQL API for music theory operations
-   - Semantic search with embeddings
-   - Chord and scale generation
-   - Fretboard analysis and optimization
-   - AI orchestration and agent services
+    - REST/GraphQL API for music theory operations
+    - Semantic search with embeddings
+    - Chord and scale generation
+    - Fretboard analysis and optimization
+    - AI orchestration and agent services
 
 2. **Frontend** (`Apps/ga-client`)
-   - React-based UI with TypeScript
-   - Interactive fretboard visualization
-   - Real-time chord and scale exploration
-   - Responsive design for desktop and tablet
+    - React-based UI with TypeScript
+    - Interactive fretboard visualization
+    - Real-time chord and scale exploration
+    - Responsive design for desktop and tablet
 
 3. **Chatbot** (`Apps/GuitarAlchemistChatbot`)
-   - Blazor-based conversational interface
-   - Ollama integration for local LLM
-   - Semantic search over chord database
-   - Function calling for music theory operations
+    - Blazor-based conversational interface
+    - Ollama integration for local LLM
+    - Semantic search over chord database
+    - Function calling for music theory operations
 
 4. **Data Layer**
-   - MongoDB for chord and scale storage
-   - Vector embeddings for semantic search
-   - Semantic Kernel integration for AI operations
+    - MongoDB for chord and scale storage
+    - Vector embeddings for semantic search
+    - Semantic Kernel integration for AI operations
 
 ## Layered Architecture
 
@@ -86,6 +87,7 @@ Guitar Alchemist is a comprehensive AI-powered music theory and guitar learning 
 ## Data Flow
 
 ### Chord Search Pipeline
+
 1. User query → Frontend
 2. Frontend → GaApi REST endpoint
 3. GaApi → Semantic search service
@@ -94,6 +96,7 @@ Guitar Alchemist is a comprehensive AI-powered music theory and guitar learning 
 6. Results → Frontend visualization
 
 ### Chatbot Pipeline
+
 1. User message → Chatbot UI
 2. Chatbot → Ollama LLM
 3. LLM → Function calling (chord search, theory explanation)

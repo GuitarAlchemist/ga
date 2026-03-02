@@ -1,6 +1,5 @@
 ﻿namespace GaApi.Controllers;
 
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Services;
 
@@ -90,9 +89,8 @@ public class ChatbotController(
     ///     Get example queries to help users get started
     /// </summary>
     [HttpGet("examples")]
-    public ActionResult<List<string>> GetExamples()
-    {
-        return Ok(new List<string>
+    public ActionResult<List<string>> GetExamples() =>
+        Ok(new List<string>
         {
             "Show me some easy beginner chords",
             "What are the modes of the major scale?",
@@ -105,7 +103,6 @@ public class ChatbotController(
             "How do I improve my fingerpicking?",
             "What are some common chord progressions?"
         });
-    }
 
     private async Task WriteSseError(string errorMessage, CancellationToken cancellationToken)
     {
@@ -113,19 +110,4 @@ public class ChatbotController(
         await Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
         await Response.Body.FlushAsync(cancellationToken);
     }
-}
-
-public class ChatRequest
-{
-    [Required] [MaxLength(2000)] public string Message { get; set; } = string.Empty;
-
-    public List<ChatMessage>? ConversationHistory { get; set; }
-    public bool UseSemanticSearch { get; set; } = true;
-}
-
-public class ChatbotStatus
-{
-    public bool IsAvailable { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; }
 }

@@ -1,7 +1,6 @@
 namespace GA.MusicTheory.DSL.LSP
 
 open System
-open GA.MusicTheory.DSL.Types.GrammarTypes
 open GA.MusicTheory.DSL.Parsers
 open GA.MusicTheory.DSL.LSP.LspTypes
 
@@ -17,8 +16,11 @@ module DiagnosticsProvider =
 
     /// Create a diagnostic from a parse error
     let createDiagnostic (error: string) (line: int) (character: int) (severity: DiagnosticSeverity) : Diagnostic =
-        { Range = { Start = { Line = line; Character = character };
-                   End = { Line = line; Character = character + 10 } }
+        { Range =
+            { Start = { Line = line; Character = character }
+              End =
+                { Line = line
+                  Character = character + 10 } }
           Severity = severity
           Message = error
           Source = Some "music-theory-dsl" }
@@ -43,25 +45,25 @@ module DiagnosticsProvider =
     let validateChordProgression (text: string) : Diagnostic list =
         match ChordProgressionParser.parse text with
         | Ok _ -> []
-        | Error error -> [createError error 0 0]
+        | Error error -> [ createError error 0 0 ]
 
     /// Validate fretboard navigation syntax
     let validateFretboardNavigation (text: string) : Diagnostic list =
         match FretboardNavigationParser.parse text with
         | Ok _ -> []
-        | Error error -> [createError error 0 0]
+        | Error error -> [ createError error 0 0 ]
 
     /// Validate scale transformation syntax
     let validateScaleTransformation (text: string) : Diagnostic list =
         match ScaleTransformationParser.parse text with
         | Ok _ -> []
-        | Error error -> [createError error 0 0]
+        | Error error -> [ createError error 0 0 ]
 
     /// Validate Grothendieck operations syntax
     let validateGrothendieckOperations (text: string) : Diagnostic list =
         match GrothendieckOperationsParser.parse text with
         | Ok _ -> []
-        | Error error -> [createError error 0 0]
+        | Error error -> [ createError error 0 0 ]
 
     // ============================================================================
     // SEMANTIC VALIDATION
@@ -76,7 +78,9 @@ module DiagnosticsProvider =
             warnings.Add(createWarning "Consecutive identical chords detected" 0 0)
 
         // Check for very long progressions (>16 chords)
-        let chordCount = text.Split([| '-'; ',' |], StringSplitOptions.RemoveEmptyEntries).Length
+        let chordCount =
+            text.Split([| '-'; ',' |], StringSplitOptions.RemoveEmptyEntries).Length
+
         if chordCount > 16 then
             warnings.Add(createWarning $"Very long progression (%d{chordCount} chords)" 0 0)
 
@@ -111,16 +115,19 @@ module DiagnosticsProvider =
         let grothendieckDiags = validateGrothendieckOperations text
 
         // If all parsers fail, report the most relevant error
-        if not (List.isEmpty chordProgressionDiags) &&
-           not (List.isEmpty navigationDiags) &&
-           not (List.isEmpty scaleTransformDiags) &&
-           not (List.isEmpty grothendieckDiags) then
+        if
+            not (List.isEmpty chordProgressionDiags)
+            && not (List.isEmpty navigationDiags)
+            && not (List.isEmpty scaleTransformDiags)
+            && not (List.isEmpty grothendieckDiags)
+        then
             // All parsers failed - report the first error
             diagnostics.AddRange(chordProgressionDiags)
         else
             // At least one parser succeeded - add semantic warnings
             if List.isEmpty chordProgressionDiags then
                 diagnostics.AddRange(checkChordProgressionSemantics text)
+
             if List.isEmpty scaleTransformDiags then
                 diagnostics.AddRange(checkScaleTransformationSemantics text)
 
@@ -146,4 +153,3 @@ module DiagnosticsProvider =
             [ "Consult DSL documentation"
               "Try a simpler expression first"
               "Check for typos" ]
-

@@ -1,10 +1,10 @@
 namespace GA.AI.Service.Services;
 
+using System.Text;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using System.Text;
 
 public class NotebookExecutionService : IDisposable
 {
@@ -13,14 +13,16 @@ public class NotebookExecutionService : IDisposable
     public NotebookExecutionService()
     {
         // Initialize Composite Kernel with C# support
-        _kernel = new CompositeKernel
-        {
+        _kernel =
+        [
             new CSharpKernel()
             // Add F# or other kernels here if needed
-        };
+        ];
 
         _kernel.DefaultKernelName = "csharp";
     }
+
+    public void Dispose() => _kernel.Dispose();
 
     public async Task<ExecutionResult> ExecuteCodeAsync(string code)
     {
@@ -36,40 +38,43 @@ public class NotebookExecutionService : IDisposable
             switch (e)
             {
                 case StandardOutputValueProduced stdout:
-                    outputBuilder.AppendLine(stdout.FormattedValues.FirstOrDefault(v => v.MimeType == "text/plain")?.Value);
+                    outputBuilder.AppendLine(stdout.FormattedValues.FirstOrDefault(v => v.MimeType == "text/plain")
+                        ?.Value);
                     break;
                 case StandardErrorValueProduced stderr:
-                    errorBuilder.AppendLine(stderr.FormattedValues.FirstOrDefault(v => v.MimeType == "text/plain")?.Value);
+                    errorBuilder.AppendLine(stderr.FormattedValues.FirstOrDefault(v => v.MimeType == "text/plain")
+                        ?.Value);
                     break;
                 case ReturnValueProduced returnValue:
                     if (returnValue.Value != null)
                     {
                         resultData.Add(returnValue.Value);
-                        outputBuilder.AppendLine(returnValue.FormattedValues.FirstOrDefault(v => v.MimeType == "text/plain")?.Value);
+                        outputBuilder.AppendLine(returnValue.FormattedValues
+                            .FirstOrDefault(v => v.MimeType == "text/plain")?.Value);
                     }
+
                     break;
                 case DisplayEvent displayEvent:
-                     // Handle rich output if needed
-                     var html = displayEvent.FormattedValues.FirstOrDefault(v => v.MimeType == "text/html")?.Value;
-                     if (html != null) resultData.Add(new { mime = "text/html", value = html });
-                     break;
-                 case CommandFailed failed:
+                    // Handle rich output if needed
+                    var html = displayEvent.FormattedValues.FirstOrDefault(v => v.MimeType == "text/html")?.Value;
+                    if (html != null)
+                    {
+                        resultData.Add(new { mime = "text/html", value = html });
+                    }
+
+                    break;
+                case CommandFailed failed:
                     errorBuilder.AppendLine(failed.Message);
                     break;
             }
         }
 
-        return new ExecutionResult
+        return new()
         {
             Output = outputBuilder.ToString(),
             Error = errorBuilder.ToString(),
             Results = resultData
         };
-    }
-
-    public void Dispose()
-    {
-        _kernel.Dispose();
     }
 }
 
@@ -77,5 +82,5 @@ public class ExecutionResult
 {
     public string Output { get; set; } = string.Empty;
     public string Error { get; set; } = string.Empty;
-    public List<object> Results { get; set; } = new();
+    public List<object> Results { get; set; } = [];
 }

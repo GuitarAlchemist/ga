@@ -1,10 +1,7 @@
 namespace GA.AI.Service.Controllers;
 
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -21,9 +18,12 @@ public class DocumentationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<DocInfo>>> GetDocs()
+    public Task<ActionResult<IEnumerable<DocInfo>>> GetDocs()
     {
-        if (!Directory.Exists(_docsRoot)) return Ok(Enumerable.Empty<DocInfo>());
+        if (!Directory.Exists(_docsRoot))
+        {
+            return Task.FromResult<ActionResult<IEnumerable<DocInfo>>>(Ok(Enumerable.Empty<DocInfo>()));
+        }
 
         var files = Directory.GetFiles(_docsRoot, "*.md", SearchOption.AllDirectories);
         var docInfos = files.Select(f => new DocInfo
@@ -34,15 +34,15 @@ public class DocumentationController : ControllerBase
             LastModified = System.IO.File.GetLastWriteTimeUtc(f)
         });
 
-        return Ok(docInfos);
+        return Task.FromResult<ActionResult<IEnumerable<DocInfo>>>(Ok(docInfos));
     }
 
     [HttpGet("{*path}")]
     public async Task<ActionResult<string>> GetDoc(string path)
     {
-        path = System.Net.WebUtility.UrlDecode(path);
+        path = WebUtility.UrlDecode(path);
         var fullPath = Path.GetFullPath(Path.Combine(_docsRoot, path));
-        
+
         // Security check
         if (!fullPath.StartsWith(_docsRoot, StringComparison.OrdinalIgnoreCase))
         {

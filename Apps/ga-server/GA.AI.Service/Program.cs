@@ -1,24 +1,24 @@
-using GA.Domain.Services.Abstractions;
-using GA.Domain.Core.Instruments.Shapes;
-using GA.Domain.Core.Instruments;
-using GA.Domain.Services.AI.Benchmarks;
 #pragma warning disable SKEXP0001
 using System.Reflection;
 using Hellang.Middleware.ProblemDetails;
-
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 using GA.Business.ML.AI.Benchmarks;
 using AllProjects.ServiceDefaults;
-using GaChatbot.Services;
-using GaChatbot.Abstractions;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Tabs;
 using GA.Business.ML.Musical.Enrichment;
 using GA.Business.ML.Musical.Explanation;
+using GA.Business.ML.Naturalness;
+using GA.Business.ML.Retrieval;
 using GA.Business.ML.Wavelets;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Services.AI.Benchmarks;
+using GA.Domain.Services.Fretboard.Analysis;
+using GA.Domain.Services.Fretboard.Shapes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,20 +54,21 @@ builder.Services.AddSingleton<NotebookExecutionService>();
 
 // Chatbot Services
 builder.Services.AddGuitarAlchemistAI();
-builder.Services.AddSingleton<IVectorIndex>(sp => new QdrantVectorIndex("ga-qdrant", 6334)); // Docker host
+builder.Services.AddSingleton<IVectorIndex>(sp => new QdrantVectorIndex("ga-qdrant")); // Docker host
 builder.Services.AddScoped<SpectralRetrievalService>();
-builder.Services.AddSingleton<GroundedPromptBuilder>();
-builder.Services.AddSingleton<ResponseValidator>();
-builder.Services.AddSingleton<IGroundedNarrator, OllamaGroundedNarrator>();
-builder.Services.AddSingleton<SpectralRagOrchestrator>();
+// TODO: These types are in GaChatbot project - need to be moved or referenced
+// builder.Services.AddSingleton<GroundedPromptBuilder>();
+// builder.Services.AddSingleton<ResponseValidator>();
+// builder.Services.AddSingleton<IGroundedNarrator, OllamaGroundedNarrator>();
+// builder.Services.AddSingleton<SpectralRagOrchestrator>();
 builder.Services.AddSingleton(Tuning.Default);
-builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.FretboardPositionMapper>();
-builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.IMlNaturalnessRanker, GA.Business.ML.Naturalness.MlNaturalnessRanker>();
-builder.Services.AddSingleton<GA.Domain.Services.Fretboard.Analysis.PhysicalCostService>();
-builder.Services.AddSingleton<IEmbeddingGenerator, MusicalEmbeddingGenerator>();
-builder.Services.AddSingleton<GA.Business.ML.Retrieval.StyleProfileService>();
-builder.Services.AddSingleton<GA.Business.ML.Retrieval.NextChordSuggestionService>();
-builder.Services.AddSingleton<GA.Business.ML.Retrieval.ModulationAnalyzer>();
+builder.Services.AddSingleton<FretboardPositionMapper>();
+builder.Services.AddSingleton<IMlNaturalnessRanker, MlNaturalnessRanker>();
+builder.Services.AddSingleton<PhysicalCostService>();
+builder.Services.AddSingleton<GA.Business.ML.Abstractions.IEmbeddingGenerator, MusicalEmbeddingGenerator>();
+builder.Services.AddSingleton<StyleProfileService>();
+builder.Services.AddSingleton<NextChordSuggestionService>();
+builder.Services.AddSingleton<ModulationAnalyzer>();
 builder.Services.AddSingleton<AdvancedTabSolver>();
 builder.Services.AddSingleton<AdvancedTabSolver>();
 builder.Services.AddSingleton<AlternativeFingeringService>();
@@ -77,19 +78,17 @@ builder.Services.AddSingleton<VoicingExplanationService>();
 builder.Services.AddSingleton<ProgressionSignalService>();
 builder.Services.AddSingleton<StyleClassifierService>();
 
-builder.Services.AddSingleton<TabPresentationService>();
-builder.Services.AddSingleton<TabAnalysisService>(); // Missing
+// TODO: These types are in GaChatbot project - need to be moved or referenced
+// builder.Services.AddSingleton<TabPresentationService>();
+builder.Services.AddSingleton<TabAnalysisService>();
 builder.Services.AddSingleton<MusicalEmbeddingGenerator>(); // Concrete for ProductionOrchestrator
-builder.Services.AddSingleton<TabAwareOrchestrator>();
-builder.Services.AddSingleton<ProductionOrchestrator>();
+// builder.Services.AddSingleton<TabAwareOrchestrator>();
+// builder.Services.AddSingleton<ProductionOrchestrator>(); // TODO: ProductionOrchestrator is in GaChatbot project
 
 builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    });
+    .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; });
 
 // Add API documentation
 builder.Services.AddEndpointsApiExplorer();
@@ -134,10 +133,10 @@ builder.Services.AddCors(options =>
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
-            factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            partition => new()
             {
                 AutoReplenishment = true,
                 PermitLimit = 100,
@@ -168,11 +167,11 @@ app.MapControllers();
 app.MapDefaultEndpoints();
 
 app.MapGet("/api/stats", async (MongoDbService mongo) =>
-{
-    var count = await mongo.GetTotalChordCountAsync();
-    // Assuming nomic-embed-text (768) as configured in docker-compose
-    return Results.Ok(new { totalVoicings = count, embeddingDimensions = 768 });
-})
-.WithName("GetStats");
+    {
+        var count = await mongo.GetTotalChordCountAsync();
+        // Assuming nomic-embed-text (768) as configured in docker-compose
+        return Results.Ok(new { totalVoicings = count, embeddingDimensions = 768 });
+    })
+    .WithName("GetStats");
 
 app.Run();

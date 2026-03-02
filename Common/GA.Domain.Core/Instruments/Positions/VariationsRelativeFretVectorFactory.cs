@@ -1,13 +1,7 @@
 namespace GA.Domain.Core.Instruments.Positions;
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using GA.Core.Collections;
 using GA.Core.Combinatorics;
-using JetBrains.Annotations;
 using Primitives;
 using static Primitives.RelativeFretVector;
 
@@ -24,7 +18,8 @@ public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<Relat
     /// <summary>
     ///     Gets the <see cref="VariationEquivalenceCollection.Translation{RelativeFret}" />.
     /// </summary>
-    public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; } = new(variations);
+    public VariationEquivalenceCollection.Translation<RelativeFret> Equivalences { get; } =
+        new(variations);
 
     /// <summary>
     ///     Create a vector from a variation.
@@ -56,15 +51,9 @@ public class VariationsRelativeFretVectorFactory(VariationsWithRepetitions<Relat
 
     #region IEnumerable<RelativeFretVector> Members
 
-    public IEnumerator<RelativeFretVector> GetEnumerator()
-    {
-        return _variations.Select(Create).GetEnumerator();
-    }
+    public IEnumerator<RelativeFretVector> GetEnumerator() => _variations.Select(Create).GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     #endregion
 }

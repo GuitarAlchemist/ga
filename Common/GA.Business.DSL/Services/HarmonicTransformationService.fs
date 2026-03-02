@@ -6,7 +6,7 @@ open GA.Business.DSL.Types.MusicalSetTypes
 /// Implements algebraic musical transformations using functional patterns.
 /// </summary>
 type HarmonicTransformationService() =
-    
+
     let normalize pc = ((pc % 12) + 12) % 12
 
     /// <summary>
@@ -36,17 +36,23 @@ type HarmonicTransformationService() =
     /// Calculates the Forte Prime Form of a pitch class set.
     /// (Simplified version: Normal order transposed to zero)
     /// </summary>
-    member this.GetNormalForm (pcs: PitchClassSet) : int list =
-        if Set.isEmpty pcs then []
+    member this.GetNormalForm(pcs: PitchClassSet) : int list =
+        if Set.isEmpty pcs then
+            []
         else
             let sorted = pcs |> Set.toList |> List.sort
             // Find rotation with smallest span
             let n = List.length sorted
-            let rotations = [0 .. n-1] |> List.map (fun i ->
-                let rot = List.append (List.skip i sorted) (List.take i sorted |> List.map (fun x -> x + 12))
-                let span = List.last rot - List.head rot
-                (span, rot))
-            
+
+            let rotations =
+                [ 0 .. n - 1 ]
+                |> List.map (fun i ->
+                    let rot =
+                        List.append (List.skip i sorted) (List.take i sorted |> List.map (fun x -> x + 12))
+
+                    let span = List.last rot - List.head rot
+                    (span, rot))
+
             let (_, bestRot) = rotations |> List.minBy fst
             let baseVal = List.head bestRot
             bestRot |> List.map (fun x -> x - baseVal)

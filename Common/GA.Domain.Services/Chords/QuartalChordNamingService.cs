@@ -1,10 +1,5 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
-
 /// <summary>
 ///     Provides basic detection and naming support for quartal harmony (chords built in fourths).
 /// </summary>
@@ -100,9 +95,8 @@ public static class QuartalChordNamingService
         return (type, intervals.AsReadOnly());
     }
 
-    private static string ToNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string ToNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C",
             1 => "C#",
@@ -118,7 +112,6 @@ public static class QuartalChordNamingService
             11 => "B",
             _ => "?"
         };
-    }
 
     public record QuartalChordAnalysis(
         QuartalChordType Type,

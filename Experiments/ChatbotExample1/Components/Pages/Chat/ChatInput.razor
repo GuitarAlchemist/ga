@@ -32,7 +32,7 @@
         if (_messageText is { Length: > 0 } text)
         {
             _messageText = null;
-            await OnSend.InvokeAsync(new ChatMessage(ChatRole.User, text));
+            await OnSend.InvokeAsync(new(ChatRole.User, text));
         }
     }
 

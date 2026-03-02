@@ -1,7 +1,7 @@
 namespace GA.Domain.Services.Fretboard.Voicings.Filtering;
 
 /// <summary>
-/// Filtering criteria for voicing analysis
+///     Filtering criteria for voicing analysis
 /// </summary>
 public class VoicingFilterCriteria
 {
@@ -70,16 +70,16 @@ public enum KeyContextFilter
 public enum FretRangeFilter
 {
     All,
-    OpenPosition,    // 0-4
-    MiddlePosition,  // 5-12
-    UpperPosition    // 12+
+    OpenPosition, // 0-4
+    MiddlePosition, // 5-12
+    UpperPosition // 12+
 }
 
 public enum NoteCountFilter
 {
     All,
     TwoNotes,
-    ThreeNotes,  // Triads
-    FourNotes,   // Seventh chords
-    FiveOrMore   // Extended chords
+    ThreeNotes, // Triads
+    FourNotes, // Seventh chords
+    FiveOrMore // Extended chords
 }

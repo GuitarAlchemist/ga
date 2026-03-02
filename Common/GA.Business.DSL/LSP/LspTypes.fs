@@ -26,18 +26,13 @@ module LspTypes =
           Error: JObject option }
 
     /// Text document identifier
-    type TextDocumentIdentifier =
-        { Uri: string }
+    type TextDocumentIdentifier = { Uri: string }
 
     /// Position in a text document
-    type Position =
-        { Line: int
-          Character: int }
+    type Position = { Line: int; Character: int }
 
     /// Range in a text document
-    type Range =
-        { Start: Position
-          End: Position }
+    type Range = { Start: Position; End: Position }
 
     /// Text document item
     type TextDocumentItem =
@@ -88,4 +83,3 @@ module LspTypes =
           Detail: string option
           Documentation: string option
           InsertText: string option }
-

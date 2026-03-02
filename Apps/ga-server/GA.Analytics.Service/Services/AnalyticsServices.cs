@@ -1,11 +1,11 @@
 namespace GA.Analytics.Service.Services;
 
-using GA.Domain.Core.Design;
-using GA.Business.Analytics.Analytics.Spectral;
+using Business.Analytics.Analytics.Spectral;
+using Domain.Services.Validation;
 using Models;
 
 /// <summary>
-/// Caching service interface
+///     Caching service interface
 /// </summary>
 public interface ICachingService
 {
@@ -17,19 +17,14 @@ public interface ICachingService
 }
 
 /// <summary>
-/// Basic caching service implementation
+///     Basic caching service implementation
 /// </summary>
-public class CachingService : ICachingService
+public class CachingService(ILogger<CachingService> logger) : ICachingService
 {
-    private readonly ILogger<CachingService> _logger;
-    private readonly Dictionary<string, object> _cache = new();
-    private long _hits = 0;
-    private long _misses = 0;
-
-    public CachingService(ILogger<CachingService> logger)
-    {
-        _logger = logger;
-    }
+    private readonly Dictionary<string, object> _cache = [];
+    private readonly ILogger<CachingService> _logger = logger;
+    private long _hits;
+    private long _misses;
 
     public Task<T?> GetAsync<T>(string key)
     {
@@ -55,45 +50,33 @@ public class CachingService : ICachingService
         return Task.CompletedTask;
     }
 
-    public Task<CacheStatistics> GetStatisticsAsync()
-    {
-        return Task.FromResult(new CacheStatistics
+    public Task<CacheStatistics> GetStatisticsAsync() =>
+        Task.FromResult(new CacheStatistics
         {
             Id = Guid.NewGuid().ToString(),
             TotalRequests = _hits + _misses,
             CacheHits = _hits,
             CacheMisses = _misses,
             TotalMemoryUsage = _cache.Count * 1024, // Rough estimate
-            CategoryStats = new Dictionary<string, long>
+            CategoryStats = new()
             {
                 ["total_keys"] = _cache.Count
             }
         });
-    }
 
-    public Task<CacheStatistics> GetStatistics()
-    {
-        return GetStatisticsAsync();
-    }
+    public Task<CacheStatistics> GetStatistics() => GetStatisticsAsync();
 }
 
 /// <summary>
-/// Realtime invariant monitoring service
+///     Realtime invariant monitoring service
 /// </summary>
-public class RealtimeInvariantMonitoringService
+public class RealtimeInvariantMonitoringService(ILogger<RealtimeInvariantMonitoringService> logger)
 {
-    private readonly ILogger<RealtimeInvariantMonitoringService> _logger;
-
-    public RealtimeInvariantMonitoringService(ILogger<RealtimeInvariantMonitoringService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<ViolationStatistics> GetViolationStatisticsAsync()
     {
         await Task.Delay(50);
 
-        return new ViolationStatistics
+        return new()
         {
             CriticalViolations = Random.Shared.Next(1, 5),
             ErrorViolations = Random.Shared.Next(2, 10),
@@ -107,16 +90,16 @@ public class RealtimeInvariantMonitoringService
         await Task.Delay(50);
 
         var violations = new List<InvariantViolationEvent>();
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            violations.Add(new InvariantViolationEvent
+            violations.Add(new()
             {
                 Id = Guid.NewGuid().ToString(),
                 InvariantId = $"inv-{Random.Shared.Next(1, 100)}",
                 ViolationType = Random.Shared.NextDouble() > 0.5 ? "constraint" : "invariant",
                 Severity = Random.Shared.NextDouble() > 0.8 ? "critical" : "warning",
                 Description = $"Sample violation {i + 1}",
-                Context = new Dictionary<string, object>
+                Context = new()
                 {
                     ["source"] = "monitoring_service",
                     ["index"] = i
@@ -128,33 +111,29 @@ public class RealtimeInvariantMonitoringService
         return violations;
     }
 
-    public List<InvariantViolationEvent> GetRecentViolations(int count = 10)
-    {
-        return GetRecentViolationsAsync(count).GetAwaiter().GetResult();
-    }
+    public List<InvariantViolationEvent> GetRecentViolations(int count = 10) =>
+        GetRecentViolationsAsync(count).GetAwaiter().GetResult();
 
-    public async Task<CompositeInvariantValidationResult> ValidateConceptAsync(string conceptType, Dictionary<string, object> parameters)
+    public async Task<CompositeInvariantValidationResult> ValidateConceptAsync(string conceptType,
+        Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Validating concept {ConceptType}", conceptType);
+        logger.LogInformation("Validating concept {ConceptType}", conceptType);
         await Task.Delay(50);
 
         return new CompositeInvariantValidationResult
         {
-            Results = new List<InvariantValidationResult>
-            {
+            Results =
+            [
                 new InvariantValidationResult(true, "Validation successful", InvariantSeverity.Info)
-            }
+            ]
         };
     }
 
-    public void ClearViolationQueue()
-    {
-        _logger.LogInformation("Clearing violation queue");
-    }
+    public void ClearViolationQueue() => logger.LogInformation("Clearing violation queue");
 }
 
 /// <summary>
-/// Constants class for analytics
+///     Constants class for analytics
 /// </summary>
 public static class Constants
 {
@@ -180,20 +159,14 @@ public static class Constants
 }
 
 /// <summary>
-/// Advanced analytics service
+///     Advanced analytics service
 /// </summary>
-public class AdvancedAnalyticsService
+public class AdvancedAnalyticsService(ILogger<AdvancedAnalyticsService> logger)
 {
-    private readonly ILogger<AdvancedAnalyticsService> _logger;
-
-    public AdvancedAnalyticsService(ILogger<AdvancedAnalyticsService> logger)
+    public async Task<AgentInteractionGraph> BuildInteractionGraphAsync(List<string> agentIds,
+        Dictionary<string, object> options)
     {
-        _logger = logger;
-    }
-
-    public async Task<AgentInteractionGraph> BuildInteractionGraphAsync(List<string> agentIds, Dictionary<string, object> options)
-    {
-        _logger.LogInformation("Building interaction graph for {Count} agents", agentIds.Count);
+        logger.LogInformation("Building interaction graph for {Count} agents", agentIds.Count);
         await Task.Delay(200);
 
         var nodes = agentIds.Select(id => new AgentNode
@@ -205,9 +178,9 @@ public class AdvancedAnalyticsService
         }).ToList();
 
         var edges = new List<AgentInteractionEdge>();
-        for (int i = 0; i < nodes.Count - 1; i++)
+        for (var i = 0; i < nodes.Count - 1; i++)
         {
-            edges.Add(new AgentInteractionEdge
+            edges.Add(new()
             {
                 Source = nodes[i].Id,
                 Target = nodes[i + 1].Id,
@@ -216,7 +189,7 @@ public class AdvancedAnalyticsService
             });
         }
 
-        return new AgentInteractionGraph
+        return new()
         {
             Agents = nodes,
             Edges = edges,
@@ -225,12 +198,13 @@ public class AdvancedAnalyticsService
         };
     }
 
-    public async Task<DeepRelationshipAnalysis> AnalyzeDeepRelationshipsAsync(string sourceId, string targetId, Dictionary<string, object> analysisOptions)
+    public async Task<DeepRelationshipAnalysis> AnalyzeDeepRelationshipsAsync(string sourceId, string targetId,
+        Dictionary<string, object> analysisOptions)
     {
-        _logger.LogInformation("Analyzing deep relationships between {SourceId} and {TargetId}", sourceId, targetId);
+        logger.LogInformation("Analyzing deep relationships between {SourceId} and {TargetId}", sourceId, targetId);
         await Task.Delay(150);
 
-        return new DeepRelationshipAnalysis
+        return new()
         {
             Id = Guid.NewGuid().ToString(),
             SourceId = sourceId,
@@ -242,21 +216,21 @@ public class AdvancedAnalyticsService
 
     public async Task<MusicalTrendAnalysis> AnalyzeTrendsAsync(string trendType, Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Analyzing trends of type {TrendType}", trendType);
+        logger.LogInformation("Analyzing trends of type {TrendType}", trendType);
         await Task.Delay(120);
 
         var dataPoints = new List<TrendDataPoint>();
-        for (int i = 0; i < 10; i++)
+        for (var i = 0; i < 10; i++)
         {
-            dataPoints.Add(new TrendDataPoint
+            dataPoints.Add(new()
             {
                 Timestamp = DateTime.UtcNow.AddDays(-i),
                 Value = Random.Shared.NextDouble() * 100,
-                Properties = new Dictionary<string, object> { ["index"] = i }
+                Properties = new() { ["index"] = i }
             });
         }
 
-        return new MusicalTrendAnalysis
+        return new()
         {
             Id = Guid.NewGuid().ToString(),
             TrendType = trendType,
@@ -268,7 +242,7 @@ public class AdvancedAnalyticsService
 
     public async Task<object> PerformDeepAnalysisAsync(Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Performing deep analysis with {ParameterCount} parameters", parameters.Count);
+        logger.LogInformation("Performing deep analysis with {ParameterCount} parameters", parameters.Count);
         await Task.Delay(200);
 
         return new
@@ -282,7 +256,7 @@ public class AdvancedAnalyticsService
 
     public async Task<object> ValidateAllAsync()
     {
-        _logger.LogInformation("Validating all concepts");
+        logger.LogInformation("Validating all concepts");
         await Task.Delay(100);
 
         return new

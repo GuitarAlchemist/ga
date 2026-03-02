@@ -1,15 +1,14 @@
-
 namespace GA.Knowledge.Service.Services;
 
 using Models;
 
 /// <summary>
-/// Implementation of asset relationship service
+///     Implementation of asset relationship service
 /// </summary>
 public class AssetRelationshipService : IAssetRelationshipService
 {
     private readonly ILogger<AssetRelationshipService> _logger;
-    private readonly List<AssetRelationship> _relationships = new(); // TODO: Replace with actual data store
+    private readonly List<AssetRelationship> _relationships = []; // TODO: Replace with actual data store
 
     public AssetRelationshipService(ILogger<AssetRelationshipService> logger)
     {
@@ -20,26 +19,24 @@ public class AssetRelationshipService : IAssetRelationshipService
     public List<AssetRelationship> GetAllRelationships()
     {
         _logger.LogInformation("Getting all asset relationships");
-        return _relationships.ToList();
+        return [.. _relationships];
     }
 
     public List<AssetRelationship> GetRelationshipsForAsset(string assetId)
     {
         _logger.LogInformation("Getting relationships for asset: {AssetId}", assetId);
-        return _relationships
-            .Where(r => r.SourceAssetId == assetId || r.TargetAssetId == assetId)
-            .ToList();
+        return [.. _relationships.Where(r => r.SourceAssetId == assetId || r.TargetAssetId == assetId)];
     }
 
     public AssetRelationship CreateRelationship(AssetRelationship relationship)
     {
-        _logger.LogInformation("Creating new relationship: {SourceId} -> {TargetId}", 
+        _logger.LogInformation("Creating new relationship: {SourceId} -> {TargetId}",
             relationship.SourceAssetId, relationship.TargetAssetId);
-        
+
         relationship.Id = Guid.NewGuid().ToString();
         relationship.CreatedAt = DateTime.UtcNow;
         relationship.UpdatedAt = DateTime.UtcNow;
-        
+
         _relationships.Add(relationship);
         return relationship;
     }
@@ -47,10 +44,12 @@ public class AssetRelationshipService : IAssetRelationshipService
     public AssetRelationship UpdateRelationship(string id, AssetRelationship relationship)
     {
         _logger.LogInformation("Updating relationship: {Id}", id);
-        
+
         var existing = _relationships.FirstOrDefault(r => r.Id == id);
         if (existing == null)
+        {
             throw new ArgumentException($"Relationship with ID {id} not found");
+        }
 
         existing.SourceAssetId = relationship.SourceAssetId;
         existing.TargetAssetId = relationship.TargetAssetId;
@@ -68,8 +67,11 @@ public class AssetRelationshipService : IAssetRelationshipService
     {
         _logger.LogInformation("Deleting relationship: {Id}", id);
         var relationship = _relationships.FirstOrDefault(r => r.Id == id);
-        if (relationship == null) return false;
-        
+        if (relationship == null)
+        {
+            return false;
+        }
+
         _relationships.Remove(relationship);
         return true;
     }
@@ -77,11 +79,11 @@ public class AssetRelationshipService : IAssetRelationshipService
     public List<AssetHierarchyNode> GetAssetHierarchy()
     {
         _logger.LogInformation("Building asset hierarchy");
-        
+
         // TODO: Implement actual hierarchy building logic
-        return new List<AssetHierarchyNode>
-        {
-            new AssetHierarchyNode
+        return
+        [
+            new()
             {
                 Id = "root-1",
                 AssetId = "chord-root",
@@ -90,15 +92,15 @@ public class AssetRelationshipService : IAssetRelationshipService
                 Level = 0,
                 Path = "/chord-progressions"
             }
-        };
+        ];
     }
 
     public AssetHierarchyNode? GetAssetHierarchyNode(string assetId)
     {
         _logger.LogInformation("Getting hierarchy node for asset: {AssetId}", assetId);
-        
+
         // TODO: Implement actual node retrieval
-        return new AssetHierarchyNode
+        return new()
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = assetId,
@@ -111,9 +113,9 @@ public class AssetRelationshipService : IAssetRelationshipService
     public AssetHierarchyNode BuildHierarchyTree(string rootAssetId)
     {
         _logger.LogInformation("Building hierarchy tree from root: {RootAssetId}", rootAssetId);
-        
+
         // TODO: Implement actual tree building
-        return new AssetHierarchyNode
+        return new()
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = rootAssetId,
@@ -136,11 +138,13 @@ public class AssetRelationshipService : IAssetRelationshipService
         _logger.LogInformation("Getting child asset types for: {AssetId}", assetId);
 
         var relationships = GetRelationshipsForAsset(assetId);
-        return relationships
-            .Where(r => r.SourceAssetId == assetId)
-            .Select(r => r.RelationshipType)
-            .Distinct()
-            .ToList();
+        return
+        [
+            .. relationships
+                .Where(r => r.SourceAssetId == assetId)
+                .Select(r => r.RelationshipType)
+                .Distinct()
+        ];
     }
 
     public List<string> GetParentAssetTypes(string assetId)
@@ -148,11 +152,13 @@ public class AssetRelationshipService : IAssetRelationshipService
         _logger.LogInformation("Getting parent asset types for: {AssetId}", assetId);
 
         var relationships = GetRelationshipsForAsset(assetId);
-        return relationships
-            .Where(r => r.TargetAssetId == assetId)
-            .Select(r => r.RelationshipType)
-            .Distinct()
-            .ToList();
+        return
+        [
+            .. relationships
+                .Where(r => r.TargetAssetId == assetId)
+                .Select(r => r.RelationshipType)
+                .Distinct()
+        ];
     }
 
     public AssetHierarchyNode BuildAssetHierarchy(string? assetType = null)
@@ -161,16 +167,16 @@ public class AssetRelationshipService : IAssetRelationshipService
 
         // TODO: Implement actual hierarchy building by asset type
         var rootType = assetType ?? "root";
-        return new AssetHierarchyNode
+        return new()
         {
             Id = Guid.NewGuid().ToString(),
             AssetId = $"{rootType}-hierarchy",
             Name = $"{rootType} Hierarchy",
             AssetType = rootType,
             Level = 0,
-            Children = new List<AssetHierarchyNode>
-            {
-                new AssetHierarchyNode
+            Children =
+            [
+                new()
                 {
                     Id = Guid.NewGuid().ToString(),
                     AssetId = $"{rootType}-child-1",
@@ -178,7 +184,7 @@ public class AssetRelationshipService : IAssetRelationshipService
                     AssetType = rootType,
                     Level = 1
                 }
-            }
+            ]
         };
     }
 
@@ -187,14 +193,15 @@ public class AssetRelationshipService : IAssetRelationshipService
         _logger.LogInformation("Getting relationship path from {SourceId} to {TargetId}", sourceId, targetId);
 
         // TODO: Implement pathfinding algorithm
-        return _relationships
-            .Where(r => (r.SourceAssetId == sourceId && r.TargetAssetId == targetId) ||
-                       (r.TargetAssetId == sourceId && r.SourceAssetId == targetId && r.IsBidirectional))
-            .ToList();
+        return
+        [
+            .. _relationships
+                .Where(r => (r.SourceAssetId == sourceId && r.TargetAssetId == targetId) ||
+                            (r.TargetAssetId == sourceId && r.SourceAssetId == targetId && r.IsBidirectional))
+        ];
     }
 
-    private void InitializeSampleData()
-    {
+    private void InitializeSampleData() =>
         // Add some sample relationships for testing
         _relationships.AddRange(new[]
         {
@@ -210,7 +217,7 @@ public class AssetRelationshipService : IAssetRelationshipService
             },
             new AssetRelationship
             {
-                Id = "rel-2", 
+                Id = "rel-2",
                 SourceAssetId = "chord-fmaj",
                 TargetAssetId = "chord-gmaj",
                 RelationshipType = "follows",
@@ -219,5 +226,4 @@ public class AssetRelationshipService : IAssetRelationshipService
                 Description = "Strong progression"
             }
         });
-    }
 }

@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Pentatonic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Pentatonic;
 using Scales;
 
@@ -47,15 +43,7 @@ public sealed class HirajoshiScaleMode(HirajoshiScaleDegree degree)
         }
     }
 
-    public static HirajoshiScaleMode Get(HirajoshiScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static HirajoshiScaleMode Get(HirajoshiScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static HirajoshiScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static HirajoshiScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

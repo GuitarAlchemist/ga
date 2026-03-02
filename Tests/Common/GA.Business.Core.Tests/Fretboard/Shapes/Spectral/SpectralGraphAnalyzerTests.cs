@@ -1,29 +1,30 @@
-namespace GA.Domain.Core.Tests.Fretboard.Shapes.Spectral;
+namespace GA.Business.Core.Tests.Fretboard.Shapes.Spectral;
 
-using Instruments;
-using GA.Domain.Core.Instruments.Shapes;
-using GA.Domain.Core.Instruments.Shapes.Spectral;
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Atonal.Grothendieck;
+using Domain.Core.Instruments;
+using Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Fretboard.Shapes;
+using GA.Domain.Services.Fretboard.Shapes.Spectral;
+using GA.Domain.Services.Atonal.Grothendieck;
 using Moq;
-using NUnit.Framework;
 
 // For PitchClassSet
 [TestFixture]
 public class SpectralGraphAnalyzerTests
 {
-    private SpectralGraphAnalyzer _analyzer;
-    private Mock<IGrothendieckService> _grothendieckMock;
-    private ShapeGraphBuilder _builder;
-    private Tuning _standardTuning;
     [SetUp]
     public void SetUp()
     {
-        _grothendieckMock = new Mock<IGrothendieckService>();
+        _grothendieckMock = new();
         _analyzer = new SpectralGraphAnalyzer();
         _builder = new ShapeGraphBuilder(_grothendieckMock.Object);
         _standardTuning = Tuning.Default;
     }
+
+    private SpectralGraphAnalyzer _analyzer;
+    private Mock<IGrothendieckService> _grothendieckMock;
+    private ShapeGraphBuilder _builder;
+    private Tuning _standardTuning;
+
     [Test]
     public async Task ShouldComputeSpectralMetrics_ForSimpleGraph()
     {
@@ -61,6 +62,7 @@ public class SpectralGraphAnalyzerTests
         // Assuming ShapeGraphBuilder creates edges.
         Assert.That(metrics.Lambda1, Is.LessThan(1e-6));
     }
+
     [Test]
     public async Task ShouldFindCentralShapes()
     {
@@ -90,6 +92,7 @@ public class SpectralGraphAnalyzerTests
             Assert.That(centralShapes[i].Score, Is.LessThanOrEqualTo(centralShapes[i - 1].Score));
         }
     }
+
     [Test]
     public async Task ShouldClusterShapes()
     {
@@ -100,7 +103,7 @@ public class SpectralGraphAnalyzerTests
             PitchClassSet.Parse("047"), // set 1
             PitchClassSet.Parse("037"), // set 2
             PitchClassSet.Parse("048"), // set 3
-            PitchClassSet.Parse("027")  // set 4
+            PitchClassSet.Parse("027") // set 4
         };
         var options = new ShapeGraphBuildOptions { MaxFret = 12, MaxShapesPerSet = 5 };
         _grothendieckMock
@@ -116,12 +119,13 @@ public class SpectralGraphAnalyzerTests
         Assert.That(families, Is.Not.Empty);
         Assert.That(families.Count, Is.LessThanOrEqualTo(2));
         // Check families structure
-        foreach(var family in families) 
+        foreach (var family in families)
         {
             Assert.That(family.ShapeIds, Is.Not.Empty);
             Assert.That(family.Size, Is.GreaterThan(0));
             Assert.That(family.AverageErgonomics, Is.EqualTo(0).Or.GreaterThan(0)); // Non-negative
         }
+
         // Ideally verify total shapes clustered matches graph size
         var totalClustered = families.Sum(f => f.ShapeIds.Count);
         Assert.That(totalClustered, Is.EqualTo(graph.ShapeCount));

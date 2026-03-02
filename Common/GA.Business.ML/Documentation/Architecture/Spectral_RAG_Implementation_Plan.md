@@ -2,11 +2,12 @@
 
 ## Executive Summary
 
-This document proposes extending OPTIC-K with **Discrete Wavelet Transforms (DWT)** to capture temporal and hierarchical musical structure that the current DFT-based Phase Sphere cannot express.
+This document proposes extending OPTIC-K with **Discrete Wavelet Transforms (DWT)** to capture temporal and hierarchical
+musical structure that the current DFT-based Phase Sphere cannot express.
 
-| Transform | Role | Domain |
-|-----------|------|--------|
-| **DFT** (existing) | Global spectral structure | Static pitch-class geometry |
+| Transform          | Role                            | Domain                         |
+|--------------------|---------------------------------|--------------------------------|
+| **DFT** (existing) | Global spectral structure       | Static pitch-class geometry    |
 | **DWT** (proposed) | Localized multi-scale structure | Temporal/hierarchical dynamics |
 
 **Key insight**: DFT sees chords as *objects*; DWT sees progressions as *signals*.
@@ -18,6 +19,7 @@ This document proposes extending OPTIC-K with **Discrete Wavelet Transforms (DWT
 ### What DFT Already Does Well
 
 OPTIC-K's Phase Sphere uses DFT to extract:
+
 - Interval cycle affinities (k=1 through k=6)
 - Transposition-invariant magnitudes
 - Key-encoding phases
@@ -27,20 +29,22 @@ This is **global** analysis—perfect for single harmonic objects.
 
 ### What DFT Cannot Do
 
-| Phenomenon | Why DFT Fails |
-|------------|---------------|
-| Progression dynamics | No temporal dimension |
-| Phrase boundaries | No locality awareness |
-| Hierarchical tension | Single-scale analysis |
-| Rhythmic harmonic changes | Static snapshot only |
+| Phenomenon                | Why DFT Fails         |
+|---------------------------|-----------------------|
+| Progression dynamics      | No temporal dimension |
+| Phrase boundaries         | No locality awareness |
+| Hierarchical tension      | Single-scale analysis |
+| Rhythmic harmonic changes | Static snapshot only  |
 
 ### The DWT Opportunity
 
 Wavelets decompose signals into:
+
 - **Frequency bands** (like DFT)
 - **Localized time windows** (unlike DFT)
 
 This enables:
+
 ```
 coarse features → slow, large-scale harmonic movement
 fine features   → quick, small-scale voice-leading events
@@ -81,13 +85,13 @@ flowchart TB
 
 Transform these scalar/vector time series with DWT:
 
-| Signal | Source | Captures |
-|--------|--------|----------|
-| `Mag_k5[t]` | Fourier magnitude k=5 | Diatonicity over time |
-| `Phase_k5[t]` | Fourier phase k=5 | Key drift trajectory |
-| `Entropy[t]` | Spectral entropy | Tension/release curve |
-| `Barycenter[t]` | Spectral center | Harmonic gravity flow |
-| `Distance[t]` | θ(chord[t], chord[t+1]) | Voice-leading cost |
+| Signal          | Source                  | Captures              |
+|-----------------|-------------------------|-----------------------|
+| `Mag_k5[t]`     | Fourier magnitude k=5   | Diatonicity over time |
+| `Phase_k5[t]`   | Fourier phase k=5       | Key drift trajectory  |
+| `Entropy[t]`    | Spectral entropy        | Tension/release curve |
+| `Barycenter[t]` | Spectral center         | Harmonic gravity flow |
+| `Distance[t]`   | θ(chord[t], chord[t+1]) | Voice-leading cost    |
 
 ### 2.3 Wavelet Decomposition
 
@@ -320,11 +324,13 @@ public class PhraseBoundaryDetector
 **Task**: Classify harmonic progressions by style (jazz, classical, rock, atonal).
 
 **Why wavelets help**: Different styles have different *transition patterns*:
+
 - Jazz: frequent, smooth modulations (high fine-scale detail)
 - Classical: phrase-based structure (periodic coarse features)
 - Rock: repetitive, stable patterns (low detail energy)
 
 **Feature set**:
+
 ```
 [OPTIC-K mean/std over progression] + [Wavelet coefficients]
 ```
@@ -334,10 +340,12 @@ public class PhraseBoundaryDetector
 **Task**: Generate a tension curve for a progression.
 
 **Why wavelets help**: Tension involves both:
+
 - Global harmonic distance from tonic (DFT → Phase Sphere)
 - Local rate of change (DWT → detail coefficients)
 
 **Formula**:
+
 ```
 Tension[t] = α × Entropy[t] + β × DetailEnergy[t] + γ × KeyDistance[t]
 ```
@@ -349,6 +357,7 @@ Tension[t] = α × Entropy[t] + β × DetailEnergy[t] + γ × KeyDistance[t]
 **Why wavelets help**: Two progressions might use similar chords but have different dynamics.
 
 **Similarity metric**:
+
 ```
 Sim(P, Q) = w₁ × CosineSim(OPTIC-K_mean(P), OPTIC-K_mean(Q))
           + w₂ × CosineSim(Wavelet(P), Wavelet(Q))
@@ -359,10 +368,12 @@ Sim(P, Q) = w₁ × CosineSim(OPTIC-K_mean(P), OPTIC-K_mean(Q))
 **Task**: Predict the next chord given a progression.
 
 **Why wavelets help**: Multi-scale context improves prediction:
+
 - Approximation: "where is the progression heading?"
 - Detail: "what small-scale pattern is active?"
 
 **Model input**:
+
 ```
 [Last N chord embeddings] + [Wavelet features of sequence]
 ```
@@ -373,17 +384,19 @@ Sim(P, Q) = w₁ × CosineSim(OPTIC-K_mean(P), OPTIC-K_mean(Q))
 
 ### 5.1 .NET Options
 
-| Library | Pros | Cons |
-|---------|------|------|
-| **Accord.NET** | Mature, well-documented | Large dependency |
-| **Math.NET Numerics** | Clean API, active | Limited wavelet support |
-| **Custom Implementation** | No dependencies | More code to maintain |
+| Library                   | Pros                    | Cons                    |
+|---------------------------|-------------------------|-------------------------|
+| **Accord.NET**            | Mature, well-documented | Large dependency        |
+| **Math.NET Numerics**     | Clean API, active       | Limited wavelet support |
+| **Custom Implementation** | No dependencies         | More code to maintain   |
 
-**Recommendation**: Start with **custom Haar/Daubechies-4** implementation for prototyping, then evaluate Accord.NET for production.
+**Recommendation**: Start with **custom Haar/Daubechies-4** implementation for prototyping, then evaluate Accord.NET for
+production.
 
 ### 5.2 Python Interop (Alternative)
 
 If heavy ML is needed:
+
 ```python
 import pywt  # PyWavelets
 
@@ -427,11 +440,11 @@ Expose via Python.NET or gRPC service.
 
 **Decision**: Ship db4, allow override.
 
-| Wavelet | Use Case | Notes |
-|---------|----------|-------|
-| **db4** (default) | General musical structure | "Good generalist" for OPTIC-K signals |
-| Haar | Segmentation / boundary detection | Ultra-fast, step-like changes |
-| db8 / sym8 | Longer phrases, expressive curves | Smoother, slightly more compute |
+| Wavelet           | Use Case                          | Notes                                 |
+|-------------------|-----------------------------------|---------------------------------------|
+| **db4** (default) | General musical structure         | "Good generalist" for OPTIC-K signals |
+| Haar              | Segmentation / boundary detection | Ultra-fast, step-like changes         |
+| db8 / sym8        | Longer phrases, expressive curves | Smoother, slightly more compute       |
 
 > Wavelets are like guitar picks: you can collect 200, but you'll play better if you always have one in your pocket.
 
@@ -440,6 +453,7 @@ Expose via Python.NET or gRPC service.
 **Decision**: Adaptive, capped at 3.
 
 **Formula**:
+
 ```
 L = min(3, floor(log₂(T)) - 2)
 ```
@@ -468,24 +482,26 @@ L = min(3, floor(log₂(T)) - 2)
 
 #### Interactive Chat Mode (Primary)
 
-| Metric | Target |
-|--------|--------|
-| DWT features | < 50 ms |
+| Metric                  | Target       |
+|-------------------------|--------------|
+| DWT features            | < 50 ms      |
 | End-to-end (before LLM) | < 200-400 ms |
 
 **Implementation**:
+
 - Small windows (8-32 events)
 - Precompute per-event signals (ring buffer)
 - DWT on scalar series only
 
 #### Live Performance Mode (Future)
 
-| Metric | Target |
-|--------|--------|
+| Metric     | Target     |
+|------------|------------|
 | Per-update | < 10-20 ms |
-| Jitter | Stable |
+| Jitter     | Stable     |
 
 **Implementation**:
+
 - Haar or db2, L ≤ 2
 - Small windows (8-16)
 - Fixed tick updates (100-200 ms)
@@ -498,12 +514,12 @@ L = min(3, floor(log₂(T)) - 2)
 
 **Approved signals**:
 
-| Signal | Source | Meaning |
-|--------|--------|----------|
-| `entropy(t)` | `SpectralEntropy` | Tension/organization |
-| `velocity(t)` | θ(chord[t], chord[t+1]) | Voice-leading speed |
-| `barycenter_drift(t)` | Spectral center delta | Harmonic gravity shift |
-| `tonal_magnetism(t)` | \|F₅\|(t) | Key pull strength |
+| Signal                | Source                  | Meaning                |
+|-----------------------|-------------------------|------------------------|
+| `entropy(t)`          | `SpectralEntropy`       | Tension/organization   |
+| `velocity(t)`         | θ(chord[t], chord[t+1]) | Voice-leading speed    |
+| `barycenter_drift(t)` | Spectral center delta   | Harmonic gravity shift |
+| `tonal_magnetism(t)`  | \|F₅\|(t)               | Key pull strength      |
 
 **Why**: Interpretable, cheap, avoids "216D wavelet soup" problem.
 
@@ -511,14 +527,15 @@ L = min(3, floor(log₂(T)) - 2)
 
 ## 8. Summary
 
-| Component | Status | Priority |
-|-----------|--------|----------|
-| `WaveletTransformService` | ✅ Done | High |
-| `ProgressionEmbeddingService` | ✅ Done | High |
-| Adaptive levels formula | ✅ Done | High |
-| Extended `EmbeddingSchema` | ✅ Done | Medium |
-| `ProgressionClassifier` | ✅ Done | Medium |
-| `PhraseBoundaryDetector` | ✅ Done | Low |
-| Live performance mode | Future | Low |
+| Component                     | Status | Priority |
+|-------------------------------|--------|----------|
+| `WaveletTransformService`     | ✅ Done | High     |
+| `ProgressionEmbeddingService` | ✅ Done | High     |
+| Adaptive levels formula       | ✅ Done | High     |
+| Extended `EmbeddingSchema`    | ✅ Done | Medium   |
+| `ProgressionClassifier`       | ✅ Done | Medium   |
+| `PhraseBoundaryDetector`      | ✅ Done | Low      |
+| Live performance mode         | Future | Low      |
 
-**Status Update (2026-01-17)**: Core implementation of Wavelet infrastructure is complete and verified by `WaveletTransformTests.cs`.
+**Status Update (2026-01-17)**: Core implementation of Wavelet infrastructure is complete and verified by
+`WaveletTransformTests.cs`.

@@ -1,31 +1,33 @@
 namespace GaDataCLI.Commands;
 
-using Spectre.Console;
 using System.Diagnostics;
+using Spectre.Console;
 
 public class BenchmarkCommand
 {
     public static async Task<int> ExecuteAsync(string[] args)
     {
         AnsiConsole.MarkupLine("[bold cyan]Running Vector Search Benchmark...[/]");
-        
+
         // Locate the Benchmark project path
         // Ascend from Tools/GaDataCLI/bin/Debug/net10.0 to root
         var currentDir = Directory.GetCurrentDirectory();
-        
+
         // This is a naive search, assuming standard repo layout
-        var projectPath = Path.Combine(currentDir, "..", "..", "..", "..", "Demos", "Performance", "VectorSearchBenchmark");
+        var projectPath = Path.Combine(currentDir, "..", "..", "..", "..", "Demos", "Performance",
+            "VectorSearchBenchmark");
         projectPath = Path.GetFullPath(projectPath);
 
         if (!Directory.Exists(projectPath))
         {
-             // Fallback search
-             projectPath = Path.Combine(currentDir, "Demos", "Performance", "VectorSearchBenchmark");
-             if (!Directory.Exists(projectPath))
-             {
-                 AnsiConsole.MarkupLine($"[red]Error: Could not locate VectorSearchBenchmark project at {projectPath}[/]");
-                 return 1;
-             }
+            // Fallback search
+            projectPath = Path.Combine(currentDir, "Demos", "Performance", "VectorSearchBenchmark");
+            if (!Directory.Exists(projectPath))
+            {
+                AnsiConsole.MarkupLine(
+                    $"[red]Error: Could not locate VectorSearchBenchmark project at {projectPath}[/]");
+                return 1;
+            }
         }
 
         AnsiConsole.MarkupLine($"[dim]Project path: {projectPath}[/]");
@@ -50,14 +52,20 @@ public class BenchmarkCommand
         };
 
         using var process = new Process { StartInfo = psi };
-        
-        process.OutputDataReceived += (sender, e) => 
+
+        process.OutputDataReceived += (sender, e) =>
         {
-            if (e.Data != null) Console.WriteLine(e.Data);
+            if (e.Data != null)
+            {
+                Console.WriteLine(e.Data);
+            }
         };
-        process.ErrorDataReceived += (sender, e) => 
+        process.ErrorDataReceived += (sender, e) =>
         {
-            if (e.Data != null) Console.Error.WriteLine(e.Data);
+            if (e.Data != null)
+            {
+                Console.Error.WriteLine(e.Data);
+            }
         };
 
         process.Start();
@@ -77,24 +85,26 @@ public class TestCommand
 
         // Locate the Test project path
         var currentDir = Directory.GetCurrentDirectory();
-        var projectPath = Path.Combine(currentDir, "..", "..", "..", "..", "Tests", "Apps", "GuitarAlchemistChatbot.Tests");
+        var projectPath = Path.Combine(currentDir, "..", "..", "..", "..", "Tests", "Apps",
+            "GuitarAlchemistChatbot.Tests");
         projectPath = Path.GetFullPath(projectPath);
 
         if (!Directory.Exists(projectPath))
-        {       
-             // Fallback search from repo root if running from there
-             projectPath = Path.Combine(currentDir, "Tests", "Apps", "GuitarAlchemistChatbot.Tests");
-             if (!Directory.Exists(projectPath))
-             {
-                 AnsiConsole.MarkupLine($"[red]Error: Could not locate GuitarAlchemistChatbot.Tests project at {projectPath}[/]");
-                 return 1;
-             }
+        {
+            // Fallback search from repo root if running from there
+            projectPath = Path.Combine(currentDir, "Tests", "Apps", "GuitarAlchemistChatbot.Tests");
+            if (!Directory.Exists(projectPath))
+            {
+                AnsiConsole.MarkupLine(
+                    $"[red]Error: Could not locate GuitarAlchemistChatbot.Tests project at {projectPath}[/]");
+                return 1;
+            }
         }
 
         AnsiConsole.MarkupLine($"[dim]Project path: {projectPath}[/]");
 
         var arguments = $"test \"{projectPath}\"";
-        
+
         return await RunProcessAsync("dotnet", arguments);
     }
 
@@ -111,14 +121,20 @@ public class TestCommand
         };
 
         using var process = new Process { StartInfo = psi };
-        
-        process.OutputDataReceived += (sender, e) => 
+
+        process.OutputDataReceived += (sender, e) =>
         {
-            if (e.Data != null) Console.WriteLine(e.Data);
+            if (e.Data != null)
+            {
+                Console.WriteLine(e.Data);
+            }
         };
-        process.ErrorDataReceived += (sender, e) => 
+        process.ErrorDataReceived += (sender, e) =>
         {
-            if (e.Data != null) Console.Error.WriteLine(e.Data);
+            if (e.Data != null)
+            {
+                Console.Error.WriteLine(e.Data);
+            }
         };
 
         process.Start();

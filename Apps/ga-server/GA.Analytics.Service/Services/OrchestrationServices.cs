@@ -1,6 +1,6 @@
 namespace GA.Analytics.Service.Services;
 
-using GA.Domain.Core.Design;
+using Domain.Services.Validation;
 using Models;
 
 /*
@@ -20,7 +20,7 @@ public class HarmonicAnalysisEngine
     {
         _logger.LogInformation("Analyzing harmonic content for {ContentId}", contentId);
         await Task.Delay(100);
-        
+
         return new
         {
             Id = contentId,
@@ -48,7 +48,7 @@ public class ProgressionOptimizer
     {
         _logger.LogInformation("Optimizing progression {ProgressionId}", progressionId);
         await Task.Delay(150);
-        
+
         return new
         {
             Id = progressionId,
@@ -67,7 +67,7 @@ public class ProgressionOptimizer
     {
         _logger.LogInformation("Getting optimization suggestions for {ProgressionId}", progressionId);
         await Task.Delay(75);
-        
+
         return new List<object>
         {
             new
@@ -100,18 +100,11 @@ public interface IInvariantValidationService
 /// <summary>
 /// Basic invariant validation service implementation
 /// </summary>
-public class InvariantValidationService : IInvariantValidationService
+public class InvariantValidationService(ILogger<InvariantValidationService> logger) : IInvariantValidationService
 {
-    private readonly ILogger<InvariantValidationService> _logger;
-
-    public InvariantValidationService(ILogger<InvariantValidationService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<GlobalValidationResult> ValidateAllAsync()
     {
-        _logger.LogInformation("Validating all invariants");
+        logger.LogInformation("Validating all invariants");
         await Task.Delay(200);
 
         return new GlobalValidationResult
@@ -120,23 +113,23 @@ public class InvariantValidationService : IInvariantValidationService
             TotalInvariants = 25,
             ValidInvariants = 22,
             InvalidInvariants = 3,
-            ValidationResults = new List<ValidationResultDetail>
-            {
+            ValidationResults =
+            [
                 new ValidationResultDetail { InvariantId = "inv1", IsValid = true, Score = 0.95 },
                 new ValidationResultDetail { InvariantId = "inv2", IsValid = false, Score = 0.45 },
                 new ValidationResultDetail { InvariantId = "inv3", IsValid = true, Score = 0.88 }
-            },
+            ],
             Timestamp = DateTime.UtcNow,
-            IconicChordResults = new Dictionary<string, CompositeInvariantValidationResult>(),
-            ChordProgressionResults = new Dictionary<string, CompositeInvariantValidationResult>(),
-            GuitarTechniqueResults = new Dictionary<string, CompositeInvariantValidationResult>(),
-            SpecializedTuningResults = new Dictionary<string, CompositeInvariantValidationResult>()
+            IconicChordResults = [],
+            ChordProgressionResults = [],
+            GuitarTechniqueResults = [],
+            SpecializedTuningResults = []
         };
     }
 
     public async Task<ValidationStatistics> GetValidationStatisticsAsync()
     {
-        _logger.LogInformation("Getting validation statistics");
+        logger.LogInformation("Getting validation statistics");
         await Task.Delay(50);
 
         return new ValidationStatistics
@@ -156,7 +149,7 @@ public class InvariantValidationService : IInvariantValidationService
 
     public async Task<ViolationStatistics> GetViolationStatisticsAsync()
     {
-        _logger.LogInformation("Getting violation statistics");
+        logger.LogInformation("Getting violation statistics");
         await Task.Delay(50);
 
         return new ViolationStatistics
@@ -177,7 +170,7 @@ public class InvariantValidationService : IInvariantValidationService
 
     public async Task<object> ValidateConcept(string conceptId, Dictionary<string, object> validationRules)
     {
-        _logger.LogInformation("Validating concept {ConceptId} with {RuleCount} rules", conceptId, validationRules.Count);
+        logger.LogInformation("Validating concept {ConceptId} with {RuleCount} rules", conceptId, validationRules.Count);
         await Task.Delay(80);
 
         return new
@@ -185,7 +178,7 @@ public class InvariantValidationService : IInvariantValidationService
             ConceptId = conceptId,
             IsValid = Random.Shared.NextDouble() > 0.3, // 70% chance of being valid
             ConfidenceScore = Random.Shared.NextDouble(),
-            ValidationErrors = Random.Shared.NextDouble() > 0.7 ? new List<string> { "Minor validation issue" } : new List<string>(),
+            ValidationErrors = Random.Shared.NextDouble() > 0.7 ? (string[])["Minor validation issue"] : [],
             ValidationData = validationRules,
             ValidatedAt = DateTime.UtcNow
         };
@@ -201,7 +194,7 @@ public interface IGrothendieckService
     Task<GrothendieckMetricResult> ComputeDelta(string conceptId, Dictionary<string, object> parameters);
     Task<GrothendieckMetricResult> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters);
     Task<GrothendieckMetricResult> FindNearby(string conceptId, Dictionary<string, object> parameters);
-    
+
     // Overloads for object inputs
     Task<GrothendieckMetricResult> ComputeICV(object concept, Dictionary<string, object> parameters);
     Task<GrothendieckMetricResult> ComputeDelta(object concept, Dictionary<string, object> parameters);
@@ -214,31 +207,21 @@ public class GrothendieckMetricResult
     public string Id { get; set; } = string.Empty;
     public string ConceptId { get; set; } = string.Empty;
     public double Value { get; set; }
-    public Dictionary<string, double> Components { get; set; } = new();
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, double> Components { get; set; } = [];
+    public Dictionary<string, object> Metadata { get; set; } = [];
     public DateTime ComputedAt { get; set; } = DateTime.UtcNow;
 
-    public string Explain()
-    {
-        return $"Grothendieck metric explanation: Value={Value:F2}. Components: {string.Join(", ", Components.Select(kv => $"{kv.Key}={kv.Value:F2}"))}";
-    }
+    public string Explain() => $"Grothendieck metric explanation: Value={Value:F2}. Components: {string.Join(", ", Components.Select(kv => $"{kv.Key}={kv.Value:F2}"))}";
 }
 
 /// <summary>
 /// Basic Grothendieck service implementation
 /// </summary>
-public class GrothendieckService : IGrothendieckService
+public class GrothendieckService(ILogger<GrothendieckService> logger) : IGrothendieckService
 {
-    private readonly ILogger<GrothendieckService> _logger;
-
-    public GrothendieckService(ILogger<GrothendieckService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<GrothendieckMetricResult> ComputeICV(string conceptId, Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Computing ICV for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
+        logger.LogInformation("Computing ICV for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(120);
 
         return new GrothendieckMetricResult
@@ -258,7 +241,7 @@ public class GrothendieckService : IGrothendieckService
 
     public async Task<GrothendieckMetricResult> ComputeDelta(string conceptId, Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Computing delta for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
+        logger.LogInformation("Computing delta for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(100);
 
         return new GrothendieckMetricResult
@@ -278,7 +261,7 @@ public class GrothendieckService : IGrothendieckService
 
     public async Task<GrothendieckMetricResult> ComputeHarmonicCost(string conceptId, Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Computing harmonic cost for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
+        logger.LogInformation("Computing harmonic cost for concept {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(80);
 
         return new GrothendieckMetricResult
@@ -298,7 +281,7 @@ public class GrothendieckService : IGrothendieckService
 
     public async Task<GrothendieckMetricResult> FindNearby(string conceptId, Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Finding nearby concepts for {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
+        logger.LogInformation("Finding nearby concepts for {ConceptId} with {ParameterCount} parameters", conceptId, parameters.Count);
         await Task.Delay(90);
 
         return new GrothendieckMetricResult
@@ -420,18 +403,11 @@ public interface IAgentSpectralAnalyzer
 /// <summary>
 /// Basic agent spectral analyzer implementation
 /// </summary>
-public class AgentSpectralAnalyzer : IAgentSpectralAnalyzer
+public class AgentSpectralAnalyzer(ILogger<AgentSpectralAnalyzer> logger) : IAgentSpectralAnalyzer
 {
-    private readonly ILogger<AgentSpectralAnalyzer> _logger;
-
-    public AgentSpectralAnalyzer(ILogger<AgentSpectralAnalyzer> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<object> Analyze(object graph)
     {
-        _logger.LogInformation("Analyzing agent spectral data");
+        logger.LogInformation("Analyzing agent spectral data");
         await Task.Delay(100);
 
         return new

@@ -33,8 +33,5 @@ public sealed record IkSolution
     /// <summary>
     ///     Get convergence rate
     /// </summary>
-    public double GetConvergenceRate()
-    {
-        return Iterations > 0 ? 1.0 / Iterations : 1.0;
-    }
+    public double GetConvergenceRate() => Iterations > 0 ? 1.0 / Iterations : 1.0;
 }

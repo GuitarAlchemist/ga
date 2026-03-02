@@ -1,7 +1,9 @@
-namespace GA.Data.MongoDB.Services.DocumentServices;
+﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using GA.Domain.Core;
-using GA.Domain.Core.Primitives;
+using GA.Business.Assets;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -56,3 +58,5 @@ public class IntervalSyncService(ILogger<IntervalSyncService> logger, MongoDbSer
         return await mongoDb.Intervals.CountDocumentsAsync(Builders<IntervalDocument>.Filter.Empty);
     }
 }
+
+

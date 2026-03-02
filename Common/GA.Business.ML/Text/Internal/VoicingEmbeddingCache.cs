@@ -1,10 +1,9 @@
 namespace GA.Business.ML.Text.Internal;
 
-using Abstractions;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Abstractions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

@@ -1,14 +1,11 @@
 namespace GA.Domain.Services.Chords.Abstractions;
 
-using System.Collections.Generic;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
-using Core.Unified;
+using Core.Theory.Tonal.Modes.Unified;
 
 /// <summary>
-/// Application-friendly façade for chord naming that delegates to
-/// the unified static <see cref="ChordTemplateNamingService"/>.
-/// Provides DI-friendly access and easier testing/mocking.
+///     Application-friendly façade for chord naming that delegates to
+///     the unified static <see cref="ChordTemplateNamingService" />.
+///     Provides DI-friendly access and easier testing/mocking.
 /// </summary>
 public interface IChordNamingService
 {
@@ -22,6 +19,7 @@ public interface IChordNamingService
     // ChordTemplate overloads
     string GetBestChordName(ChordTemplate template, PitchClass root, PitchClass? bassNote = null);
     IEnumerable<string> GetAllNamingOptions(ChordTemplate template, PitchClass root, PitchClass? bassNote = null);
+
     ChordTemplateNamingService.ComprehensiveChordName GenerateComprehensiveNames(
         ChordTemplate template,
         PitchClass root,
@@ -30,14 +28,19 @@ public interface IChordNamingService
     // ChordFormula overloads
     string GetBestChordName(ChordFormula formula, PitchClass root, PitchClass? bassNote = null);
     IEnumerable<string> GetAllNamingOptions(ChordFormula formula, PitchClass root, PitchClass? bassNote = null);
+
     ChordTemplateNamingService.ComprehensiveChordName GenerateComprehensiveNames(
         ChordFormula formula,
         PitchClass root,
         PitchClass? bassNote = null);
 
     // Interval list overloads
-    string GetBestChordName(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root, PitchClass? bassNote = null);
-    IEnumerable<string> GetAllNamingOptions(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root, PitchClass? bassNote = null);
+    string GetBestChordName(IEnumerable<ChordFormulaInterval> intervals, string formulaName, PitchClass root,
+        PitchClass? bassNote = null);
+
+    IEnumerable<string> GetAllNamingOptions(IEnumerable<ChordFormulaInterval> intervals, string formulaName,
+        PitchClass root, PitchClass? bassNote = null);
+
     ChordTemplateNamingService.ComprehensiveChordName GenerateComprehensiveNames(
         IEnumerable<ChordFormulaInterval> intervals,
         string formulaName,

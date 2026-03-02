@@ -13,7 +13,6 @@ public static class VectorSearchServiceExtensions
     ///     - Strategy manager for dynamic strategy selection
     ///     - Enhanced vector search service with fallback support
     /// </summary>
-    /// <param name="services">The service collection</param>
     /// <returns>The service collection for chaining</returns>
     /// <remarks>
     ///     Vector Search Strategies:

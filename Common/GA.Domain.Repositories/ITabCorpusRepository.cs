@@ -1,6 +1,6 @@
 namespace GA.Domain.Repositories;
 
-using Core.Tabs;
+using GA.Domain.Core.Theory.Tabs;
 
 public interface ITabCorpusRepository
 {

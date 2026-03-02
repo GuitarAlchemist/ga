@@ -1,8 +1,8 @@
 namespace GaApi.Services;
 
 using System.Text;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Services.Fretboard.Voicings.Search;
+using GA.Business.ML.Search;
+using GA.Business.ML.Rag.Models;
 
 /// <summary>
 ///     Implementation that bridges EnhancedVoicingSearchService to the chatbot.
@@ -27,7 +27,7 @@ public sealed class SemanticKnowledgeSource(
             async Task<double[]> EmbedAsync(string text)
             {
                 var floatEmbedding = await embeddingService.GenerateEmbeddingAsync(text);
-                return floatEmbedding.Select(f => (double)f).ToArray();
+                return [.. floatEmbedding.Select(f => (double)f)];
             }
 
             // Use the real voicing search with embedding generation
@@ -59,7 +59,7 @@ public sealed class SemanticKnowledgeSource(
     /// <summary>
     ///     Formats a VoicingDocument into LLM-friendly content with rich metadata.
     /// </summary>
-    private static string FormatVoicingForLlm(VoicingDocument doc)
+    private static string FormatVoicingForLlm(ChordVoicingRagDocument doc)
     {
         var sb = new StringBuilder();
 
@@ -67,19 +67,29 @@ public sealed class SemanticKnowledgeSource(
         sb.AppendLine($"Diagram: `{doc.Diagram}`");
 
         if (!string.IsNullOrWhiteSpace(doc.TexturalDescription))
+        {
             sb.AppendLine($"Texture: {doc.TexturalDescription}");
+        }
 
         if (doc.SemanticTags is { Length: > 0 })
+        {
             sb.AppendLine($"Tags: {string.Join(", ", doc.SemanticTags)}");
+        }
 
         if (!string.IsNullOrWhiteSpace(doc.HarmonicFunction))
+        {
             sb.AppendLine($"Function: {doc.HarmonicFunction}");
+        }
 
         if (!string.IsNullOrWhiteSpace(doc.Difficulty))
+        {
             sb.AppendLine($"Difficulty: {doc.Difficulty}");
+        }
 
         if (doc.AlternateNames is { Length: > 0 })
+        {
             sb.AppendLine($"Also known as: {string.Join(", ", doc.AlternateNames)}");
+        }
 
         // Include YAML analysis if available
         if (!string.IsNullOrWhiteSpace(doc.YamlAnalysis) && doc.YamlAnalysis != "{}")

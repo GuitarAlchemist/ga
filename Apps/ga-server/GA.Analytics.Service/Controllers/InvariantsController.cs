@@ -1,9 +1,8 @@
 namespace GA.Analytics.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
-
 using System.ComponentModel.DataAnnotations;
-using GA.Domain.Core.Design;
+using Domain.Services.Validation;
+using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
 
@@ -38,7 +37,7 @@ public class InvariantsController(
             logger.LogInformation("Validating concept: {ConceptName} of type {ConceptType}", conceptName, conceptType);
 
             var result = await validationService.ValidateConcept(conceptName,
-                new Dictionary<string, object> { ["conceptType"] = conceptType });
+                new() { ["conceptType"] = conceptType });
 
             logger.LogInformation("Validation completed for {ConceptName}", conceptName);
 
@@ -186,7 +185,7 @@ public class InvariantsController(
 
             var compositeResult = await monitoringService.ValidateConceptAsync(
                 conceptType,
-                new Dictionary<string, object> { ["conceptName"] = conceptName });
+                new() { ["conceptName"] = conceptName });
 
             var violations = compositeResult.Results.Where(r => !r.IsValid).ToList();
 
@@ -331,7 +330,8 @@ public class InvariantsController(
             {
                 Status = violationStats.CriticalViolations == 0 ? "Healthy" : "Critical",
                 violationStats.OverallHealthScore,
-                TotalViolations = violationStats.CriticalViolations + violationStats.ErrorViolations + violationStats.WarningViolations,
+                TotalViolations = violationStats.CriticalViolations + violationStats.ErrorViolations +
+                                  violationStats.WarningViolations,
                 violationStats.CriticalViolations,
                 violationStats.ErrorViolations,
                 violationStats.WarningViolations,

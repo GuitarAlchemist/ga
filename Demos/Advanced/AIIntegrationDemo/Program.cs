@@ -113,12 +113,12 @@ internal class Program
         var playerProfiles = new[]
         {
             ("Beginner", "Just started learning guitar",
-                new[] { "Open chords", "Basic strumming", "Simple progressions" }),
+                ["Open chords", "Basic strumming", "Simple progressions"]),
             ("Intermediate", "Knows basic chords, wants to improve",
-                new[] { "Barre chords", "Scale patterns", "Chord transitions" }),
+                ["Barre chords", "Scale patterns", "Chord transitions"]),
             ("Advanced", "Experienced player seeking new challenges",
-                new[] { "Jazz voicings", "Advanced techniques", "Composition" }),
-            ("Jazz Student", "Focused on jazz guitar", new[] { "Chord-melody", "Improvisation", "Standards" }),
+                ["Jazz voicings", "Advanced techniques", "Composition"]),
+            ("Jazz Student", "Focused on jazz guitar", ["Chord-melody", "Improvisation", "Standards"]),
             ("Rock Player", "Loves rock and metal", new[] { "Power chords", "Lead techniques", "Rhythm patterns" })
         };
 
@@ -226,48 +226,47 @@ internal class Program
 
         return query.ToLower() switch
         {
-            var q when q.Contains("jazzy") || q.Contains("sophisticated") => new()
-            {
+            var q when q.Contains("jazzy") || q.Contains("sophisticated") =>
+            [
                 new("Cmaj7#11", 0.95, "Lydian sound, very sophisticated"),
                 new("Am7b5", 0.92, "Half-diminished, complex harmony"),
                 new("Dm7/G", 0.89, "Slash chord, smooth voice leading")
-            },
-            var q when q.Contains("dark") || q.Contains("mysterious") => new()
-            {
+            ],
+            var q when q.Contains("dark") || q.Contains("mysterious") =>
+            [
                 new("Cm7b5", 0.94, "Half-diminished, ominous"),
                 new("F#dim7", 0.91, "Fully diminished, unstable"),
                 new("Bbm(maj7)", 0.88, "Minor-major 7th, haunting")
-            },
-            var q when q.Contains("bright") || q.Contains("happy") => new()
-            {
+            ],
+            var q when q.Contains("bright") || q.Contains("happy") =>
+            [
                 new("Cmaj7", 0.96, "Major 7th, uplifting"),
                 new("G6/9", 0.93, "Add9 with 6th, cheerful"),
                 new("Fmaj7#11", 0.90, "Lydian brightness")
-            },
-            var q when q.Contains("complex") || q.Contains("progressive") => new()
-            {
+            ],
+            var q when q.Contains("complex") || q.Contains("progressive") =>
+            [
                 new("C7alt", 0.97, "Altered dominant, very complex"),
                 new("Fm7b5/Bb", 0.94, "Slash chord with extensions"),
                 new("Ebmaj7#5", 0.91, "Augmented major 7th")
-            },
-            var q when q.Contains("easy") || q.Contains("beginner") => new()
-            {
+            ],
+            var q when q.Contains("easy") || q.Contains("beginner") =>
+            [
                 new("C", 0.98, "Simple major triad"),
                 new("Am", 0.96, "Natural minor, easy fingering"),
                 new("F", 0.85, "Barre chord, slightly harder")
-            },
-            _ => new()
-            {
+            ],
+            _ =>
+            [
                 new("Cmaj7", 0.80, "General purpose chord"),
                 new("Am7", 0.75, "Versatile minor 7th"),
                 new("G7", 0.70, "Classic dominant")
-            }
+            ]
         };
     }
 
-    private static string GetMusicalContext(string query)
-    {
-        return query.ToLower() switch
+    private static string GetMusicalContext(string query) =>
+        query.ToLower() switch
         {
             var q when q.Contains("jazz") => "Jazz, sophisticated harmony",
             var q when q.Contains("pop") => "Pop music, accessible",
@@ -275,7 +274,6 @@ internal class Program
             var q when q.Contains("beginner") => "Learning, foundation",
             _ => "General musical context"
         };
-    }
 
     private static async Task<string[]> GenerateRecommendations(string level, string[] currentSkills)
     {
@@ -283,23 +281,23 @@ internal class Program
 
         return level switch
         {
-            "Beginner" => new[]
-                { "Practice G-C-D progression", "Work on chord transitions", "Learn basic strumming patterns" },
-            "Intermediate" => new[]
-                { "Master F barre chord", "Learn pentatonic scales", "Practice chord embellishments" },
-            "Advanced" => new[]
-                { "Study jazz chord substitutions", "Work on fingerstyle arrangements", "Compose original pieces" },
-            "Jazz Student" => new[]
-                { "Learn ii-V-I progressions", "Practice chord-melody style", "Study jazz standards" },
-            "Rock Player" => new[]
-                { "Master power chord progressions", "Learn lead guitar techniques", "Practice rhythm patterns" },
-            _ => new[] { "Continue regular practice", "Explore new styles", "Record your playing" }
+            "Beginner" => ["Practice G-C-D progression", "Work on chord transitions", "Learn basic strumming patterns"],
+            "Intermediate" => ["Master F barre chord", "Learn pentatonic scales", "Practice chord embellishments"],
+            "Advanced" =>
+            [
+                "Study jazz chord substitutions", "Work on fingerstyle arrangements", "Compose original pieces"
+            ],
+            "Jazz Student" => ["Learn ii-V-I progressions", "Practice chord-melody style", "Study jazz standards"],
+            "Rock Player" =>
+            [
+                "Master power chord progressions", "Learn lead guitar techniques", "Practice rhythm patterns"
+            ],
+            _ => ["Continue regular practice", "Explore new styles", "Record your playing"]
         };
     }
 
-    private static string GeneratePracticeSchedule(string level)
-    {
-        return level switch
+    private static string GeneratePracticeSchedule(string level) =>
+        level switch
         {
             "Beginner" => "30 min/day: 15min chords, 15min songs",
             "Intermediate" => "45 min/day: 20min technique, 25min repertoire",
@@ -308,11 +306,9 @@ internal class Program
             "Rock Player" => "45 min/day: 25min riffs, 20min solos",
             _ => "Flexible based on goals"
         };
-    }
 
-    private static string GetNextMilestone(string level)
-    {
-        return level switch
+    private static string GetNextMilestone(string level) =>
+        level switch
         {
             "Beginner" => "Play first complete song",
             "Intermediate" => "Master barre chords",
@@ -321,7 +317,6 @@ internal class Program
             "Rock Player" => "Write original riff",
             _ => "Set personal goal"
         };
-    }
 
     private static async Task<ProgressionResult> GenerateProgression(string style)
     {

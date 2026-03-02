@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Symmetric;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Symmetric;
 using Scales;
 
@@ -62,15 +58,7 @@ public sealed class AugmentedScaleMode(AugmentedScaleDegree degree)
         }
     }
 
-    public static AugmentedScaleMode Get(AugmentedScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static AugmentedScaleMode Get(AugmentedScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static AugmentedScaleMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static AugmentedScaleMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

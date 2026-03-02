@@ -1,10 +1,8 @@
 namespace GA.Infrastructure.Persistence.Repositories;
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using GA.Domain.Core.Tabs;
-using GA.Domain.Repositories;
+using Domain.Core.Theory.Tabs;
+using Domain.Repositories;
 
 public class InMemoryTabCorpusRepository : ITabCorpusRepository
 {
@@ -12,7 +10,15 @@ public class InMemoryTabCorpusRepository : ITabCorpusRepository
 
     public Task SaveAsync(TabCorpusItem item)
     {
-        _store[item.Id] = item;
+        var now = DateTime.UtcNow;
+        var normalized = item with
+        {
+            Id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString("N") : item.Id,
+            CreatedAt = item.CreatedAt == default ? now : item.CreatedAt,
+            UpdatedAt = now
+        };
+
+        _store[normalized.Id] = normalized;
         return Task.CompletedTask;
     }
 
@@ -22,18 +28,9 @@ public class InMemoryTabCorpusRepository : ITabCorpusRepository
         return Task.FromResult(item);
     }
 
-    public Task<IEnumerable<TabCorpusItem>> GetAllAsync()
-    {
-        return Task.FromResult((IEnumerable<TabCorpusItem>)_store.Values);
-    }
+    public Task<IEnumerable<TabCorpusItem>> GetAllAsync() => Task.FromResult((IEnumerable<TabCorpusItem>)_store.Values);
 
-    public Task<bool> ExistsAsync(string id)
-    {
-        return Task.FromResult(_store.ContainsKey(id));
-    }
+    public Task<bool> ExistsAsync(string id) => Task.FromResult(_store.ContainsKey(id));
 
-    public Task<long> CountAsync()
-    {
-        return Task.FromResult((long)_store.Count);
-    }
+    public Task<long> CountAsync() => Task.FromResult((long)_store.Count);
 }

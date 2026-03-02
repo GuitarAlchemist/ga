@@ -1,17 +1,16 @@
-namespace GA.Domain.Core.Tests.Atonal.Grothendieck;
+namespace GA.Business.Core.Tests.Atonal.Grothendieck;
 
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Atonal.Grothendieck;
+using Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Atonal.Grothendieck;
 
 [TestFixture]
 public class GrothendieckServiceTests
 {
     [SetUp]
-    public void SetUp()
-    {
-        _service = new GrothendieckService();
-    }
+    public void SetUp() => _service = new GrothendieckService();
+
     private GrothendieckService _service = null!;
+
     [TestFixture]
     public class ComputeIcv : GrothendieckServiceTests
     {
@@ -24,6 +23,7 @@ public class GrothendieckServiceTests
             // Validates that the service matches the known diatonic vector for the major scale.
             Assert.That(icv, Is.EqualTo(expected));
         }
+
         [Test]
         public void ShouldComputeICV_ForCMinorScale()
         {
@@ -33,6 +33,7 @@ public class GrothendieckServiceTests
             // Ensures a minor mode still produces the same vector as its stored definition.
             Assert.That(icv, Is.EqualTo(expected));
         }
+
         [Test]
         public void ShouldComputeICV_ForCMajorTriad()
         {
@@ -42,6 +43,7 @@ public class GrothendieckServiceTests
             // Confirms that simple triads return deterministic ICVs for downstream chord naming.
             Assert.That(icv, Is.EqualTo(expected));
         }
+
         [Test]
         public void ShouldComputeICV_ForEmptySet()
         {
@@ -52,6 +54,7 @@ public class GrothendieckServiceTests
             Assert.That(icv, Is.EqualTo(expected));
         }
     }
+
     [TestFixture]
     public class ComputeDelta : GrothendieckServiceTests
     {
@@ -65,6 +68,7 @@ public class GrothendieckServiceTests
             Assert.That(delta.L1Norm, Is.GreaterThan(0));
             Assert.That(delta.Explain(), Does.Contain("ic"));
         }
+
         [Test]
         public void ShouldComputeDelta_FromCMajorToGMajor()
         {
@@ -79,9 +83,12 @@ public class GrothendieckServiceTests
             // Ensures closely-related keys have a small harmonic distance for ranking.
             TestContext.WriteLine($"C Major ICV: {cMajorIcv}");
             TestContext.WriteLine($"G Major ICV: {gMajorIcv}");
-            TestContext.WriteLine($"Delta L1Norm: Expected < 5, Actual={delta.L1Norm} (C and G major differ by only one accidental, meaning small harmonic distance)");
-            Assert.That(delta.L1Norm, Is.LessThan(5), "Delta between closely related keys (C and G) should be small (< 5).");
+            TestContext.WriteLine(
+                $"Delta L1Norm: Expected < 5, Actual={delta.L1Norm} (C and G major differ by only one accidental, meaning small harmonic distance)");
+            Assert.That(delta.L1Norm, Is.LessThan(5),
+                "Delta between closely related keys (C and G) should be small (< 5).");
         }
+
         [Test]
         public void ShouldComputeDelta_WithExplanation()
         {
@@ -100,6 +107,7 @@ public class GrothendieckServiceTests
             Assert.That(explanation, Is.Not.Empty);
         }
     }
+
     [TestFixture]
     public class ComputeHarmonicCost : GrothendieckServiceTests
     {
@@ -123,6 +131,7 @@ public class GrothendieckServiceTests
             TestContext.WriteLine($"Delta: {delta}, Computed Cost: {cost}");
             Assert.That(cost, Is.EqualTo(5.4).Within(1e-9));
         }
+
         [Test]
         public void ShouldComputeHarmonicCost_ZeroForIdentity()
         {
@@ -143,6 +152,7 @@ public class GrothendieckServiceTests
             Assert.That(cost, Is.EqualTo(0.0));
         }
     }
+
     [TestFixture]
     public class FindNearby : GrothendieckServiceTests
     {
@@ -159,6 +169,7 @@ public class GrothendieckServiceTests
             Assert.That(valueTuples.All(n => n.Delta.L1Norm <= 2), Is.True);
             Assert.That(valueTuples.Any(n => n.Set.Id == cMajor.Id), Is.True); // Should include itself (distance 0)
         }
+
         [Test]
         public void ShouldFindNearby_OrderedByCost()
         {
@@ -172,6 +183,7 @@ public class GrothendieckServiceTests
                 Assert.That(nearby[i].Cost, Is.GreaterThanOrEqualTo(nearby[i - 1].Cost));
             }
         }
+
         [Test]
         public void ShouldFindNearby_IncludeSelfAtDistanceZero()
         {
@@ -185,6 +197,7 @@ public class GrothendieckServiceTests
             Assert.That(self.Cost, Is.EqualTo(0.0));
         }
     }
+
     [TestFixture]
     public class FindShortestPath : GrothendieckServiceTests
     {
@@ -200,6 +213,7 @@ public class GrothendieckServiceTests
             Assert.That(path.Count, Is.EqualTo(1));
             Assert.That(path[0].Id, Is.EqualTo(cMajor.Id));
         }
+
         [Test]
         public void ShouldFindShortestPath_BetweenRelatedKeys()
         {
@@ -214,6 +228,7 @@ public class GrothendieckServiceTests
             Assert.That(path.First().Id, Is.EqualTo(cMajor.Id));
             Assert.That(path.Last().Id, Is.EqualTo(gMajor.Id));
         }
+
         [Test]
         public void ShouldReturnEmpty_WhenNoPathExists()
         {
@@ -226,6 +241,7 @@ public class GrothendieckServiceTests
             Assert.That(path, Is.Empty);
         }
     }
+
     [TestFixture]
     public class Performance : GrothendieckServiceTests
     {
@@ -241,10 +257,12 @@ public class GrothendieckServiceTests
             {
                 _service.ComputeIcv(pitchClasses);
             }
+
             stopwatch.Stop();
             // Tracks runtime to detect regressions even if the previous threshold is no longer realistic.
             TestContext.WriteLine($"ComputeICV loop elapsed {stopwatch.ElapsedMilliseconds} ms");
         }
+
         [Test]
         public void ShouldFindNearby_InLessThan50ms()
         {

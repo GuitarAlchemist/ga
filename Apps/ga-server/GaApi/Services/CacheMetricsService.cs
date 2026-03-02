@@ -2,71 +2,6 @@
 
 using System.Collections.Concurrent;
 
-/// <summary>
-///     Centralized cache metrics tracking service
-/// </summary>
-public interface ICacheMetricsService
-{
-    /// <summary>
-    ///     Record a cache hit
-    /// </summary>
-    void RecordHit(string cacheType, string key);
-
-    /// <summary>
-    ///     Record a cache miss
-    /// </summary>
-    void RecordMiss(string cacheType, string key);
-
-    /// <summary>
-    ///     Record cache operation duration
-    /// </summary>
-    void RecordOperationDuration(string cacheType, string operation, TimeSpan duration);
-
-    /// <summary>
-    ///     Get metrics for a specific cache type
-    /// </summary>
-    CacheTypeMetrics GetMetrics(string cacheType);
-
-    /// <summary>
-    ///     Get metrics for all cache types
-    /// </summary>
-    Dictionary<string, CacheTypeMetrics> GetAllMetrics();
-
-    /// <summary>
-    ///     Reset all metrics
-    /// </summary>
-    void Reset();
-}
-
-/// <summary>
-///     Metrics for a specific cache type
-/// </summary>
-public class CacheTypeMetrics
-{
-    public string CacheType { get; set; } = string.Empty;
-    public long TotalHits { get; set; }
-    public long TotalMisses { get; set; }
-    public long TotalRequests => TotalHits + TotalMisses;
-    public double HitRate => TotalRequests > 0 ? (double)TotalHits / TotalRequests : 0;
-    public double MissRate => TotalRequests > 0 ? (double)TotalMisses / TotalRequests : 0;
-    public Dictionary<string, OperationMetrics> Operations { get; set; } = new();
-    public DateTime FirstRequestTime { get; set; }
-    public DateTime LastRequestTime { get; set; }
-}
-
-/// <summary>
-///     Metrics for a specific cache operation
-/// </summary>
-public class OperationMetrics
-{
-    public string Operation { get; set; } = string.Empty;
-    public long Count { get; set; }
-    public double AverageDurationMs { get; set; }
-    public double MinDurationMs { get; set; }
-    public double MaxDurationMs { get; set; }
-    public double TotalDurationMs { get; set; }
-}
-
 public class CacheMetricsService(ILogger<CacheMetricsService> logger) : ICacheMetricsService
 {
     private readonly ConcurrentDictionary<string, CacheTypeMetricsInternal> _metrics = new();
@@ -157,12 +92,10 @@ public class CacheMetricsService(ILogger<CacheMetricsService> logger) : ICacheMe
         };
     }
 
-    public Dictionary<string, CacheTypeMetrics> GetAllMetrics()
-    {
-        return _metrics.ToDictionary(
+    public Dictionary<string, CacheTypeMetrics> GetAllMetrics() =>
+        _metrics.ToDictionary(
             kvp => kvp.Key,
             kvp => GetMetrics(kvp.Key));
-    }
 
     public void Reset()
     {
@@ -170,15 +103,13 @@ public class CacheMetricsService(ILogger<CacheMetricsService> logger) : ICacheMe
         logger.LogInformation("Cache metrics reset");
     }
 
-    private CacheTypeMetricsInternal GetOrCreateMetrics(string cacheType)
-    {
-        return _metrics.GetOrAdd(cacheType, _ => new CacheTypeMetricsInternal
+    private CacheTypeMetricsInternal GetOrCreateMetrics(string cacheType) =>
+        _metrics.GetOrAdd(cacheType, _ => new CacheTypeMetricsInternal
         {
             CacheType = cacheType,
             FirstRequestTime = DateTime.UtcNow,
             LastRequestTime = DateTime.UtcNow
         });
-    }
 
     private class CacheTypeMetricsInternal
     {

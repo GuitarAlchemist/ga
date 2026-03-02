@@ -195,8 +195,5 @@ public class TabConversionController(ITabConversionService conversionService,
     /// <returns>Health status</returns>
     [HttpGet("health")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult Health()
-    {
-        return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
-    }
+    public IActionResult Health() => Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
 }

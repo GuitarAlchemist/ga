@@ -1,6 +1,9 @@
-namespace GA.Domain.Core.Tests;
+﻿namespace GA.Domain.Core.Tests;
 
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Tonal.Scales;
 using GA.Domain.Core.Theory.Harmony;
@@ -70,6 +73,7 @@ public static class MusicTheoryTestData
             .ToList();
 
         var formula = new ChordFormula(name, formulaIntervals);
-        return new ChordTemplate.Analytical(formula, "Test Chord");
+        var pcs = new PitchClassSet(formulaIntervals.Select(i => PitchClass.FromValue(i.Interval.Semitones.Value)));
+        return new ChordTemplate.Analytical(pcs, formula, "Test Chord");
     }
 }

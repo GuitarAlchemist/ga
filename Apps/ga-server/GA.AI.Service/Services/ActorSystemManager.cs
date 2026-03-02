@@ -1,49 +1,41 @@
 namespace GA.AI.Service.Services;
 
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Models;
 
-public class ActorSystemManager
+public class ActorSystemManager(ILogger<ActorSystemManager> logger)
 {
-    private readonly ILogger<ActorSystemManager> _logger;
-
-    public ActorSystemManager(ILogger<ActorSystemManager> logger)
+    public Task<T> AskPlayerSession<T>(string playerId, object message)
     {
-        _logger = logger;
-    }
+        logger.LogInformation("Asking player session {PlayerId} with message {MessageType}", playerId,
+            message.GetType().Name);
 
-    public async Task<T> AskPlayerSession<T>(string playerId, object message)
-    {
-        _logger.LogInformation("Asking player session {PlayerId} with message {MessageType}", playerId, message.GetType().Name);
-        
         // Mock implementation
         if (typeof(T) == typeof(DifficultyResponse))
         {
-            return (T)(object)new DifficultyResponse
+            return Task.FromResult((T)(object)new DifficultyResponse
             {
                 CurrentDifficulty = 0.5,
                 RecommendedDifficulty = 0.55,
                 Reason = "Mock response"
-            };
-        }
-        
-        if (typeof(T) == typeof(SessionStateResponse))
-        {
-             return (T)(object)new SessionStateResponse
-             {
-                 SessionId = playerId,
-                 State = "Active",
-                 Progress = 0.5
-             };
+            });
         }
 
-        return default;
+        if (typeof(T) == typeof(SessionStateResponse))
+        {
+            return Task.FromResult((T)(object)new SessionStateResponse
+            {
+                SessionId = playerId,
+                State = "Active",
+                Progress = 0.5
+            });
+        }
+
+        return Task.FromResult<T>(default);
     }
 
     public async Task StopPlayerSession(string playerId)
     {
-        _logger.LogInformation("Stopping player session {PlayerId}", playerId);
+        logger.LogInformation("Stopping player session {PlayerId}", playerId);
         await Task.CompletedTask;
     }
 }

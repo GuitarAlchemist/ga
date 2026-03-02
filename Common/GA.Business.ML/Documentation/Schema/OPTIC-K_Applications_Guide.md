@@ -11,13 +11,13 @@
 
 Every chord, scale, voicing, or pitch-class set is embedded into a **109-dimensional hybrid manifold** that unifies:
 
-| Layer | What it encodes |
-|-------|-----------------|
-| **OPTIC/K** | Set-theoretic invariants |
-| **MORPHOLOGY** | Physical realization |
-| **CONTEXT** | Functional & temporal meaning |
-| **SYMBOLIC** | Technique & lineage |
-| **SPECTRAL** | Fourier-space geometry (Phase Sphere) |
+| Layer          | What it encodes                       |
+|----------------|---------------------------------------|
+| **OPTIC/K**    | Set-theoretic invariants              |
+| **MORPHOLOGY** | Physical realization                  |
+| **CONTEXT**    | Functional & temporal meaning         |
+| **SYMBOLIC**   | Technique & lineage                   |
+| **SPECTRAL**   | Fourier-space geometry (Phase Sphere) |
 
 The result is a system where:
 
@@ -84,9 +84,11 @@ graph TB
 
 OPTIC-K builds on foundational music theory concepts. If you're new to these ideas:
 
-> 📚 **Recommended Reading**: [Interval Class Glossary](https://harmoniousapp.net/p/bd/Glossary-Interval-Class) — A clear introduction to interval classes, pitch-class sets, and the mathematical foundations OPTIC-K is built upon.
+> 📚 **Recommended Reading**: [Interval Class Glossary](https://harmoniousapp.net/p/bd/Glossary-Interval-Class) — A clear
+> introduction to interval classes, pitch-class sets, and the mathematical foundations OPTIC-K is built upon.
 
 **Key concepts you'll encounter:**
+
 - **Pitch Class**: A note regardless of octave (C in any octave = pitch class 0)
 - **Interval Class**: The distance between two pitch classes (1-6, since 7+ "wraps around")
 - **Interval Class Vector (ICV)**: A 6-number fingerprint counting each interval type in a chord
@@ -110,9 +112,9 @@ Similarity(A,B) =
   0.10·cos(SYMBOLIC)
 ```
 
-
 > [!NOTE]
-> For a detailed explanation of why we use this partitioned approach instead of a single vector cosine, see **[Section II: Understanding the Logic](#part-ii--understanding-the-logic-why-cosine--partitions)** below.
+> For a detailed explanation of why we use this partitioned approach instead of a single vector cosine, see *
+*[Section II: Understanding the Logic](#part-ii--understanding-the-logic-why-cosine--partitions)** below.
 
 ---
 
@@ -121,6 +123,7 @@ Similarity(A,B) =
 ### 1. The Math: Partitioned Cosine Similarity
 
 Current OPTIC-K similarity formula:
+
 ```
 Similarity(A,B) =
   0.45·cos(STRUCTURE) +
@@ -129,36 +132,50 @@ Similarity(A,B) =
   0.10·cos(SYMBOLIC)
 ```
 
-Unlike standard AI embeddings which treat the vector as a single "blob", OPTIC-K slices the vector into four distinct musical dimensions and compares them individually.
+Unlike standard AI embeddings which treat the vector as a single "blob", OPTIC-K slices the vector into four distinct
+musical dimensions and compares them individually.
 
-**Why?** A "C Major Open" and "C Major Shell" might look 90% different geometrically (Morphology), but musically they are identical (Structure). If we used a single global cosine, they would be considered distant. By partitioning, we can say:
+**Why?** A "C Major Open" and "C Major Shell" might look 90% different geometrically (Morphology), but musically they
+are identical (Structure). If we used a single global cosine, they would be considered distant. By partitioning, we can
+say:
+
 - **Structure**: 1.0 (Identical notes)
 - **Morphology**: 0.2 (Different shapes)
 - **Weighted Score**: **0.80** (Highly similar because Structure is weighted heavily).
 
 ### 2. The Weights Explained
 
-The weights `[0.45, 0.25, 0.20, 0.10]` represent the **Production Preset**, optimized for a general-purpose guitar assistant.
+The weights `[0.45, 0.25, 0.20, 0.10]` represent the **Production Preset**, optimized for a general-purpose guitar
+assistant.
 
 #### **0.45 · STRUCTURE (The Musical Anchor)**
-*   **What**: Pitch Class Set, Intervals, Bass Note.
-*   **Why**: If two chords don't share fundamental harmony, they aren't "similar" in a useful way. Structure dominates so recommendations serve the correct musical function, even if the shape changes.
+
+* **What**: Pitch Class Set, Intervals, Bass Note.
+* **Why**: If two chords don't share fundamental harmony, they aren't "similar" in a useful way. Structure dominates so
+  recommendations serve the correct musical function, even if the shape changes.
 
 #### **0.25 · MORPHOLOGY (The Guitarist's Reality)**
-*   **What**: Fret range, strings used, span.
-*   **Why**: Physical constraints. A voicing at fret 3 and one at fret 15 are musically identical but physically distinct. This weight ensures "alternatives" are playable in the same neck region.
+
+* **What**: Fret range, strings used, span.
+* **Why**: Physical constraints. A voicing at fret 3 and one at fret 15 are musically identical but physically distinct.
+  This weight ensures "alternatives" are playable in the same neck region.
 
 #### **0.20 · CONTEXT (Harmonic Function)**
-*   **What**: Tonal gravity, tension/resolution.
-*   **Why**: Captures functional equivalence. It groups "Dominant" behaving chords together (e.g., tritone subs) even if their notes differ slightly.
+
+* **What**: Tonal gravity, tension/resolution.
+* **Why**: Captures functional equivalence. It groups "Dominant" behaving chords together (e.g., tritone subs) even if
+  their notes differ slightly.
 
 #### **0.10 · SYMBOLIC (The "Vibe")**
-*   **What**: Tags like "Jazz", "Hendrix", "Neo-Soul".
-*   **Why**: A nudge factor. It floats culturally relevant voicings to the top without overriding the fundamental correctness of the notes.
+
+* **What**: Tags like "Jazz", "Hendrix", "Neo-Soul".
+* **Why**: A nudge factor. It floats culturally relevant voicings to the top without overriding the fundamental
+  correctness of the notes.
 
 ### 3. Dynamic Weighting (Search Presets)
 
 These weights are dynamic. The Chatbot can shift them based on user intent:
+
 - **"Find a spread voicing shape"** → Weight **MORPHOLOGY** higher (0.45).
 - **"Find a functional substitute"** → Weight **STRUCTURE + CONTEXT** higher (0.85).
 
@@ -166,16 +183,17 @@ These weights are dynamic. The Chatbot can shift them based on user intent:
 
 ### 4. Concrete Example: The OPTIC-K Hierarchy (Decomposing Cmaj7)
 
-Consider a lush, open C Major 7 shape. OPTIC-K peels it like an onion, separating **Physicality** from **Identity** from **Structure**.
+Consider a lush, open C Major 7 shape. OPTIC-K peels it like an onion, separating **Physicality** from **Identity** from
+**Structure**.
 
-| Layer | Concept | Data Representation | Meaning |
-|-------|---------|---------------------|---------|
-| **0. VOICING** | Physical Instance | `x-3-2-0-0-0` (Fretboard) | "Specifically this open shape." |
-| **I. IDENTITY** | Musical Object | `Cmaj7` (Root: C) | "Any Cmaj7 chord." |
-| **II. CHROMA** | Pitch Class Set | `{0, 4, 7, 11}` (C, E, G, B) | "These specific notes." |
-| **III. TRANSPOSED** | Prime Form | `(0158)` | "Major 7th quality (any key)." |
-| **IV. INVARIANT** | Interval Vector | `<101220>` | "Deepest DNA: 1 semitone, 2 major thirds, 2 fifths." |
-| **V. SPECTRAL** | Fourier Bracelet | `Mag/Phase Spectra` | "Geometric shape on the circle." |
+| Layer               | Concept           | Data Representation          | Meaning                                              |
+|---------------------|-------------------|------------------------------|------------------------------------------------------|
+| **0. VOICING**      | Physical Instance | `x-3-2-0-0-0` (Fretboard)    | "Specifically this open shape."                      |
+| **I. IDENTITY**     | Musical Object    | `Cmaj7` (Root: C)            | "Any Cmaj7 chord."                                   |
+| **II. CHROMA**      | Pitch Class Set   | `{0, 4, 7, 11}` (C, E, G, B) | "These specific notes."                              |
+| **III. TRANSPOSED** | Prime Form        | `(0158)`                     | "Major 7th quality (any key)."                       |
+| **IV. INVARIANT**   | Interval Vector   | `<101220>`                   | "Deepest DNA: 1 semitone, 2 major thirds, 2 fifths." |
+| **V. SPECTRAL**     | Fourier Bracelet  | `Mag/Phase Spectra`          | "Geometric shape on the circle."                     |
 
 ```mermaid
 graph TD
@@ -192,8 +210,10 @@ graph TD
 ```
 
 **Why this matters for AI:**
+
 - When a user asks "Give me a **Cmaj7**", the AI filters by **Level I (Identity)**.
-- When they ask "Give me a **similar sound**", the AI searches near **Level IV/V (Structure)** to find substitutions (like Em9/C) that share the same deep interval content.
+- When they ask "Give me a **similar sound**", the AI searches near **Level IV/V (Structure)** to find substitutions (
+  like Em9/C) that share the same deep interval content.
 - When they ask "Give me a **similar shape**", the AI searches near **Level 0 (Morphology)**.
 
 ---
@@ -233,6 +253,7 @@ graph TB
 **SYMBOLIC (66–77)** is not a classifier — it is a **semantic projection**.
 
 Tags like:
+
 - `drop-2`
 - `neo-soul`
 - `tristan-chord`
@@ -251,12 +272,12 @@ This allows hybrid queries:
 
 **EXTENSIONS (78–95)** encode what classical theory never could:
 
-| Feature | Meaning |
-|---------|---------|
-| Mean Register | Brightness |
-| Doubling Ratio | Thickness |
-| Bass-Melody Span | Vertical width |
-| Local Clustering | Density |
+| Feature           | Meaning                 |
+|-------------------|-------------------------|
+| Mean Register     | Brightness              |
+| Doubling Ratio    | Thickness               |
+| Bass-Melody Span  | Vertical width          |
+| Local Clustering  | Density                 |
 | Smoothness Budget | Voice-leading potential |
 
 This makes OPTIC-K suitable not just for harmony, but for **arrangement**, **orchestration**, and **voicing design**.
@@ -269,7 +290,8 @@ This makes OPTIC-K suitable not just for harmony, but for **arrangement**, **orc
 
 `VoicingExplanationService` reverse-maps embedding dimensions to natural language:
 
-> *"This is a mid-register drop-2 voicing of Cmaj7. High smoothness budget suggests good voice-leading potential. Located on the fifths axis near the diatonic pole."*
+> *"This is a mid-register drop-2 voicing of Cmaj7. High smoothness budget suggests good voice-leading potential.
+Located on the fifths axis near the diatonic pole."*
 
 ---
 
@@ -285,13 +307,13 @@ normalized to lie on the **Phase Sphere** — a high-dimensional unit sphere in 
 
 This measures **location on the harmonic manifold**.
 
-| Musical idea | Phase-sphere meaning |
-|--------------|---------------------|
-| Transposition | Rotation |
-| Modulation | Continuous phase drift |
-| Z-relation | Antipodal symmetry |
-| Maximally-even | Spectral poles |
-| Tonal gravity | Fifths-axis attraction |
+| Musical idea   | Phase-sphere meaning   |
+|----------------|------------------------|
+| Transposition  | Rotation               |
+| Modulation     | Continuous phase drift |
+| Z-relation     | Antipodal symmetry     |
+| Maximally-even | Spectral poles         |
+| Tonal gravity  | Fifths-axis attraction |
 
 ---
 
@@ -304,6 +326,7 @@ Instead of counting intervals, OPTIC-K measures:
 > *How far apart are two sets on the harmonic sphere?*
 
 That angle predicts:
+
 - smoothness of transition
 - perceived relatedness
 - modulation effort
@@ -317,10 +340,12 @@ This measures **location on the harmonic manifold**.
 **Status**: ✅ Implemented
 
 Z-related sets:
+
 - share magnitude spectra
 - differ only in phase
 
-On the phase sphere, they lie on the **same latitude but opposite longitudes** — same complexity, opposite harmonic pull.
+On the phase sphere, they lie on the **same latitude but opposite longitudes** — same complexity, opposite harmonic
+pull.
 
 ```mermaid
 graph LR
@@ -344,6 +369,7 @@ graph LR
 **Musical meaning**: Z-twins sound equally complex but pull harmony in opposite directions.
 
 This makes them ideal for:
+
 - tension–release play
 - shadow harmonies
 - spectral inversion effects
@@ -356,14 +382,14 @@ This makes them ideal for:
 
 The k-cycles give real, navigable axes:
 
-| k | Axis | Musical meaning |
-|---|------|-----------------|
-| 1 | Semitone | Chromatic clumping, cluster tightness |
-| 2 | Whole-tone | Tritone structure, whole-tone affinity |
-| 3 | Minor-third | Diminished symmetry |
-| 4 | Major-third | Augmented symmetry |
-| 5 | Fifths | Tonality, diatonicness |
-| 6 | Tritone | Balance, dominant function |
+| k | Axis        | Musical meaning                        |
+|---|-------------|----------------------------------------|
+| 1 | Semitone    | Chromatic clumping, cluster tightness  |
+| 2 | Whole-tone  | Tritone structure, whole-tone affinity |
+| 3 | Minor-third | Diminished symmetry                    |
+| 4 | Major-third | Augmented symmetry                     |
+| 5 | Fifths      | Tonality, diatonicness                 |
+| 6 | Tritone     | Balance, dominant function             |
 
 These are not abstract — they are **directions in embedding space**.
 
@@ -410,12 +436,13 @@ This measures **location on the harmonic manifold**.
 
 Spectral entropy measures how concentrated the spectrum is.
 
-| Entropy | Harmonic Character |
-|---------|-------------------|
+| Entropy     | Harmonic Character     |
+|-------------|------------------------|
 | High (→1.0) | Organized, pure cycles |
-| Low (→0.0) | Chromatic, noisy |
+| Low (→0.0)  | Chromatic, noisy       |
 
 This lets you:
+
 - "find clean harmonic poles"
 - "avoid noisy chromatic clouds"
 - "locate stable attractors"
@@ -463,6 +490,7 @@ This is not visualization — it is **harmonic cognition**.
 **Status**: 🔮 Roadmap
 
 Interpolating on the phase sphere yields:
+
 - smooth, non-tonal progressions
 - spectral voice-leading
 - tension-controlled transitions
@@ -505,11 +533,13 @@ That is how humans actually hear.
 #### The Problem with Text-Only RAG
 
 Traditional music chatbots use text embeddings:
+
 - Query: "What chord sounds like Dm7 but jazzier?"
 - Retrieval: Find documents containing "Dm7" and "jazz"
 - Result: Text about jazz theory, maybe some chord names
 
 **This fails because**:
+
 - "Jazzier" is a spectral quality, not a keyword
 - "Sounds like" requires harmonic proximity, not text similarity
 - The answer should be a *voicing*, not a description
@@ -559,13 +589,13 @@ graph TB
 
 #### Query Types Spectral RAG Enables
 
-| Query | What it really asks | How OPTIC-K answers |
-|-------|--------------------|--------------------|
-| "Jazzier version of X" | Spectral neighbor with higher SYMBOLIC jazz weight | Weighted retrieval biasing jazz tags |
-| "Brighter voicing" | Higher mean register, same STRUCTURE | Filter EXTENSIONS[84] > current |
-| "More tense chord" | Higher spectral entropy or dominant function | Filter CONTEXT tension, SPECTRAL entropy |
-| "Something darker" | Lower register, minor-third axis | Shift EXTENSIONS, increase k=3 projection |
-| "Smoother voice-leading from here" | Shortest geodesic distance | Sort by `PhaseSphereService.SpectralDistance()` |
+| Query                              | What it really asks                                | How OPTIC-K answers                             |
+|------------------------------------|----------------------------------------------------|-------------------------------------------------|
+| "Jazzier version of X"             | Spectral neighbor with higher SYMBOLIC jazz weight | Weighted retrieval biasing jazz tags            |
+| "Brighter voicing"                 | Higher mean register, same STRUCTURE               | Filter EXTENSIONS[84] > current                 |
+| "More tense chord"                 | Higher spectral entropy or dominant function       | Filter CONTEXT tension, SPECTRAL entropy        |
+| "Something darker"                 | Lower register, minor-third axis                   | Shift EXTENSIONS, increase k=3 projection       |
+| "Smoother voice-leading from here" | Shortest geodesic distance                         | Sort by `PhaseSphereService.SpectralDistance()` |
 
 #### Example Dialogue
 
@@ -593,6 +623,7 @@ Bot: "Try this Cmaj9 shape — same harmonic color but with an added 9th
 Traditional chatbots answer: *"A sophisticated Cmaj7 voicing is..."* (hallucinated text)
 
 Spectral RAG answers with:
+
 - **Actual voicings** from the database
 - **Geometric justification** (spectral proximity, axis positions)
 - **Playability constraints** respected
@@ -612,9 +643,11 @@ The LLM becomes a **narrator**, not an inventor. OPTIC-K provides the **musical 
 
 ## Part IV — Why OPTIC-K Beats Neural Music Embeddings
 
-Most music-AI systems today rely on neural embeddings: large models trained on audio or symbolic data that learn to map musical objects into high-dimensional vectors where "similar things end up near each other."
+Most music-AI systems today rely on neural embeddings: large models trained on audio or symbolic data that learn to map
+musical objects into high-dimensional vectors where "similar things end up near each other."
 
 This works well for:
+
 - recommendation
 - tagging
 - genre clustering
@@ -637,6 +670,7 @@ OPTIC-K encodes musical laws:
 > *"These two things occupy nearby locations on the harmonic manifold."*
 
 In OPTIC-K:
+
 - **distance** = spectral proximity
 - **direction** = harmonic tendency
 - **rotation** = transposition
@@ -644,6 +678,7 @@ In OPTIC-K:
 - **poles** = maximally-even sets
 
 This means every chord has:
+
 - a **position**
 - an **orientation**
 - a set of **forces** acting on it
@@ -657,6 +692,7 @@ Neural vectors do not have any of that structure.
 If two chords are close in a neural embedding, you cannot explain why.
 
 In OPTIC-K, proximity decomposes into:
+
 - interval structure (OPTIC/K)
 - physical shape (MORPHOLOGY)
 - function (CONTEXT)
@@ -678,6 +714,7 @@ Neural systems cannot answer:
 OPTIC-K can.
 
 Because chords live on the Phase Sphere, you can:
+
 1. Compute their spectral positions
 2. Find the geodesic between them
 3. Walk along it, snapping to real chords
@@ -694,6 +731,7 @@ Neural embeddings collapse them.
 OPTIC-K preserves their antipodal geometry.
 
 This gives you:
+
 - harmonic shadow chords
 - tension mirrors
 - spectral inversions
@@ -707,6 +745,7 @@ This gives you:
 Neural embeddings mix everything into one cloud.
 
 OPTIC-K keeps them **separated but aligned**:
+
 - **Theory** (what the set is)
 - **Shape** (how it is played)
 - **Context** (what it does)
@@ -728,15 +767,16 @@ OPTIC-K vectors are **pure mathematical embeddings** that integrate seamlessly w
 
 **OPTIC-K vectors satisfy all standard embedding requirements:**
 
-| Property | OPTIC-K |
-|----------|---------|
-| Fixed dimension | 109 |
-| Continuous | ✅ All values in [0,1] |
-| Metric | Weighted cosine / Angular distance |
-| Differentiable | ✅ Suitable for gradient-based learning |
-| Composable | ✅ Partitions can be weighted independently |
+| Property        | OPTIC-K                                    |
+|-----------------|--------------------------------------------|
+| Fixed dimension | 109                                        |
+| Continuous      | ✅ All values in [0,1]                      |
+| Metric          | Weighted cosine / Angular distance         |
+| Differentiable  | ✅ Suitable for gradient-based learning     |
+| Composable      | ✅ Partitions can be weighted independently |
 
 **Similarity computation:**
+
 ```python
 # Standard cosine similarity works
 similarity = cosine(vector_a, vector_b)
@@ -751,6 +791,7 @@ similarity = (
 ```
 
 **Embedding reuse patterns:**
+
 - Store in vector databases (MongoDB, Pinecone, Qdrant)
 - Use for clustering, classification, regression
 - Input to downstream ML models
@@ -823,6 +864,7 @@ OPTIC-K RAG:
 > Query → Extract chord → OPTIC-K embedding → Retrieve spectrally similar → Generate
 
 **Example flow:**
+
 ```
 User: "What's a jazzier version of this C major chord?"
 
@@ -872,6 +914,7 @@ Bot responds:
 #### D. Embedding Caching for Speed
 
 Pre-compute OPTIC-K embeddings for:
+
 - Common chords → instant lookup
 - User's favorites → personalized retrieval
 - Session context → coherent suggestions
@@ -937,26 +980,30 @@ The full vision: OPTIC-K + Transformers = **Harmonic Cognition**
 
 ## Part VI — Mathematical Foundations
 
-This section makes the geometry **explicit**. OPTIC-K is not a clever feature set — it is a formal theory of harmonic space with provable properties.
+This section makes the geometry **explicit**. OPTIC-K is not a clever feature set — it is a formal theory of harmonic
+space with provable properties.
 
 ---
 
 ### 1. The Phase Sphere as a Metric Space
 
 > **Definition (Spectral Distance)**  
-> The harmonic distance between two musical objects is the **geodesic angle** between their normalized spectral vectors on the Phase Sphere.
+> The harmonic distance between two musical objects is the **geodesic angle** between their normalized spectral vectors
+> on the Phase Sphere.
 
 $$\theta(A,B) = \arccos\left(\text{Re}\left(\hat{S}(A) \cdot \overline{\hat{S}(B)}\right)\right)$$
 
 where $\hat{S}(X)$ is the normalized spectral vector of pitch-class set $X$.
 
 **Properties:**
+
 - **Metric**: Satisfies identity, symmetry, triangle inequality
 - **Bounded**: $\theta \in [0, \pi]$
 - **Continuous**: Small changes in pitch-class sets → small changes in distance
 - **Smooth**: Differentiable almost everywhere
 
 **Why this matters:**
+
 - OPTIC-K becomes a **true embedding space**, not just features
 - Downstream ML and RAG systems can use it as a **metric space**, not heuristics
 - Voice-leading optimization becomes **gradient descent on the sphere**
@@ -972,10 +1019,10 @@ $$F_k(X + t) = e^{-2\pi i k t / 12} \cdot F_k(X)$$
 
 **Implications:**
 
-| Component | Under Transposition |
-|-----------|-------------------|
+| Component               | Under Transposition              |
+|-------------------------|----------------------------------|
 | **Magnitude** $\|F_k\|$ | **Invariant** — same in all keys |
-| **Phase** $\phi_k$ | **Rotates** — encodes which key |
+| **Phase** $\phi_k$      | **Rotates** — encodes which key  |
 
 **This is the theoretical backbone of OPTIC-K:**
 
@@ -985,12 +1032,15 @@ $$F_k(X + t) = e^{-2\pi i k t / 12} \cdot F_k(X)$$
 - Z-relations preserve **magnitude** but flip **direction**
 
 **Musical meaning:**
+
 - *"What"* the chord is (structure) separates cleanly from *"where"* it is (key)
 - Learning on C major **automatically generalizes** to all keys
 
 > [!IMPORTANT]
 > **Phase Reference Frame**  
-> $\phi_5$ (and all phases) are measured relative to a **global tonic or barycenter** unless otherwise specified. Absolute phase is meaningless without key context — what musicians perceive is **relative phase** (distance from tonic). The v1.4 Tonal Gravity features (indices 119-120) make this explicit by encoding fifths-distance-to-tonic.
+> $\phi_5$ (and all phases) are measured relative to a **global tonic or barycenter** unless otherwise specified.
+> Absolute phase is meaningless without key context — what musicians perceive is **relative phase** (distance from tonic).
+> The v1.4 Tonal Gravity features (indices 119-120) make this explicit by encoding fifths-distance-to-tonic.
 
 ---
 
@@ -1002,12 +1052,14 @@ $$F_k(X + t) = e^{-2\pi i k t / 12} \cdot F_k(X)$$
 $$\text{ICV}(X) = |DFT(\text{chroma}(X))|^2$$
 
 **What this means:**
+
 - **STRUCTURE** (indices 6-29) and **SPECTRAL magnitudes** (indices 96-101) are **the same object in dual space**
 - The embedding is **internally consistent**: symbolic and spectral are mathematically linked
 - OPTIC-K is not arbitrary — it is **inevitable**
 
 **Proof sketch:**
-The interval-class vector counts pairs at each interval. The DFT of the chroma vector encodes the same information via autocorrelation. Squaring the magnitudes yields the power spectrum, which equals the ICV by the convolution theorem.
+The interval-class vector counts pairs at each interval. The DFT of the chroma vector encodes the same information via
+autocorrelation. Squaring the magnitudes yields the power spectrum, which equals the ICV by the convolution theorem.
 
 ---
 
@@ -1018,21 +1070,22 @@ The interval-class vector counts pairs at each interval. The DFT of the chroma v
 
 $$H = -\sum_{k=1}^{6} p_k \log(p_k), \quad p_k = \frac{|F_k|^2}{\sum |F_j|^2}$$
 
-| Entropy | Harmonic Character | Example |
-|---------|-------------------|---------|
-| **Low** (→0) | One dominant cycle | Diatonic scale (k=5) |
-| **High** (→1) | Uniform spectrum | Chromatic cluster |
+| Entropy       | Harmonic Character | Example              |
+|---------------|--------------------|----------------------|
+| **Low** (→0)  | One dominant cycle | Diatonic scale (k=5) |
+| **High** (→1) | Uniform spectrum   | Chromatic cluster    |
 
 **What entropy tells you:**
 
-| Low Entropy | High Entropy |
-|-------------|--------------|
-| Tonal gravity | No gravity |
-| Perceptual clarity | Ambiguity |
+| Low Entropy            | High Entropy    |
+|------------------------|-----------------|
+| Tonal gravity          | No gravity      |
+| Perceptual clarity     | Ambiguity       |
 | Strong cycle dominance | Chromatic noise |
-| Stable, consonant | Floating, tense |
+| Stable, consonant      | Floating, tense |
 
 **Applications:**
+
 - Psychoacoustic tension modeling
 - Tonal vs atonal classification
 - Finding "attractors" in harmonic space (low-entropy poles)
@@ -1049,18 +1102,19 @@ $$\bar{S} = \frac{1}{n}\sum_{i=1}^{n} \hat{S}(X_i)$$
 normalized back to the unit sphere.
 
 **Musical meaning:**
+
 - The **harmonic center of gravity** of the progression
 - Where the progression **wants to resolve**
 - A **key-less tonal center** (computed, not assumed)
 
 **Applications:**
 
-| Application | How |
-|-------------|-----|
-| Detect emerging key | Barycenter drift toward a pole |
+| Application            | How                              |
+|------------------------|----------------------------------|
+| Detect emerging key    | Barycenter drift toward a pole   |
 | Find modulation target | Barycenter of destination chords |
-| Analyze harmonic drift | Track barycenter over time |
-| Key-less analysis | No need to assume a tonic |
+| Analyze harmonic drift | Track barycenter over time       |
+| Key-less analysis      | No need to assume a tonic        |
 
 **Neural embeddings cannot do this. OPTIC-K can.**
 
@@ -1074,26 +1128,27 @@ normalized back to the unit sphere.
 $$v_i = \theta(\hat{S}(X_i), \hat{S}(X_{i+1}))$$
 
 **Musical meaning:**
+
 - **Modulation speed** — how fast harmony is moving
 - **Harmonic turbulence** — agitation vs stability
 - **Voice-leading cost** — effort to traverse
 
 **Derived metrics:**
 
-| Metric | Formula | Meaning |
-|--------|---------|---------|
-| **Mean velocity** | $\bar{v} = \frac{1}{n-1}\sum v_i$ | Overall restlessness |
-| **Velocity variance** | $\sigma^2_v$ | Consistency of motion |
-| **Acceleration** | $a_i = v_{i+1} - v_i$ | Speeding up / slowing down |
+| Metric                | Formula                           | Meaning                    |
+|-----------------------|-----------------------------------|----------------------------|
+| **Mean velocity**     | $\bar{v} = \frac{1}{n-1}\sum v_i$ | Overall restlessness       |
+| **Velocity variance** | $\sigma^2_v$                      | Consistency of motion      |
+| **Acceleration**      | $a_i = v_{i+1} - v_i$             | Speeding up / slowing down |
 
 **Progression classification:**
 
-| Velocity Profile | Character |
-|------------------|-----------|
-| Low, steady | "Static" — stays in one place |
-| High, steady | "Wandering" — constant motion |
-| Variable, spiking | "Restless" — punctuated drama |
-| Decreasing to zero | "Resolving" — cadential |
+| Velocity Profile   | Character                     |
+|--------------------|-------------------------------|
+| Low, steady        | "Static" — stays in one place |
+| High, steady       | "Wandering" — constant motion |
+| Variable, spiking  | "Restless" — punctuated drama |
+| Decreasing to zero | "Resolving" — cadential       |
 
 ---
 
@@ -1103,19 +1158,21 @@ $$v_i = \theta(\hat{S}(X_i), \hat{S}(X_{i+1}))$$
 > OPTIC-K embeddings are **group-equivariant** under the cyclic group $\mathbb{Z}_{12}$ of transpositions.
 
 Specifically:
+
 - Transposition acts as **rotation** on SPECTRAL phases
 - STRUCTURE and MORPHOLOGY are **invariant**
 - The embedding **respects harmonic symmetry**
 
 **Why this matters for AI:**
 
-| Without Equivariance | With OPTIC-K Equivariance |
-|---------------------|--------------------------|
-| Must learn C major, then D major, then E major... | Learn once, generalize to all keys |
-| Hallucination risk | Symmetry prevents impossible outputs |
-| Data-hungry | **Dramatically more data-efficient** |
+| Without Equivariance                              | With OPTIC-K Equivariance            |
+|---------------------------------------------------|--------------------------------------|
+| Must learn C major, then D major, then E major... | Learn once, generalize to all keys   |
+| Hallucination risk                                | Symmetry prevents impossible outputs |
+| Data-hungry                                       | **Dramatically more data-efficient** |
 
 **The deep AI angle:**
+
 - Fine-tuning on OPTIC-K respects the group structure
 - The model **cannot hallucinate** harmonically impossible transitions
 - Transfer learning becomes **key-agnostic**
@@ -1125,32 +1182,39 @@ Specifically:
 ### 8. Spectral Curvature (Perceptual Volatility)
 
 > **Conceptual Definition**  
-> Highly chromatic regions of the Phase Sphere have **high curvature**: small phase shifts cause large perceptual changes. Near diatonic poles, the space **flattens** and becomes stable.
+> Highly chromatic regions of the Phase Sphere have **high curvature**: small phase shifts cause large perceptual
+> changes. Near diatonic poles, the space **flattens** and becomes stable.
 
 **What curvature explains:**
 
-| Region | Curvature | Perceptual Effect |
-|--------|-----------|-------------------|
-| Near diatonic poles (major/minor scales) | **Low** (flat) | Predictable, stable, "safe" |
-| Chromatic clusters | **High** (curved) | Volatile, edgy, "anything can happen" |
-| Whole-tone / diminished regions | **Moderate** | Symmetry creates local flatness |
+| Region                                   | Curvature         | Perceptual Effect                     |
+|------------------------------------------|-------------------|---------------------------------------|
+| Near diatonic poles (major/minor scales) | **Low** (flat)    | Predictable, stable, "safe"           |
+| Chromatic clusters                       | **High** (curved) | Volatile, edgy, "anything can happen" |
+| Whole-tone / diminished regions          | **Moderate**      | Symmetry creates local flatness       |
 
 **Musical intuition:**
+
 - Tonal music operates in **flat regions** — small moves feel small
 - Atonal music operates in **curved regions** — small moves feel dramatic
-- Modulation is **navigating curvature** — leaving the flat zone, crossing high-curvature ridges, arriving at a new flat zone
+- Modulation is **navigating curvature** — leaving the flat zone, crossing high-curvature ridges, arriving at a new flat
+  zone
 
 **Relationship to entropy:**
+
 - Low entropy → near a pole → low curvature → stability
 - High entropy → in the "chromatic saddle" → high curvature → volatility
 
 > [!NOTE]
 > **Curvature and Ambiguity**  
-> Regions of high curvature correspond to areas of **high harmonic ambiguity** where multiple tonal interpretations coexist. This is what musicians actually hear when harmony becomes "slippery" or "unresolved."
+> Regions of high curvature correspond to areas of **high harmonic ambiguity** where multiple tonal interpretations
+> coexist. This is what musicians actually hear when harmony becomes "slippery" or "unresolved."
 >
-> In high-curvature regions, **small voice-leading motions can flip the perceived tonal center**, explaining why chromatic harmony supports multiple simultaneous interpretations.
+> In high-curvature regions, **small voice-leading motions can flip the perceived tonal center**, explaining why
+> chromatic harmony supports multiple simultaneous interpretations.
 
 This completes the physical metaphor:
+
 - **Position** (Phase Sphere)
 - **Motion** (velocity)
 - **Gravity** (barycenter, tonal magnetism)
@@ -1164,14 +1228,14 @@ Harmony is not just geometry — it is **differential geometry**.
 
 OPTIC-K embeds musical objects into a **109-dimensional manifold** with:
 
-| Property | Formal Statement |
-|----------|-----------------|
-| **Metric** | Geodesic angle on the Phase Sphere |
-| **Symmetry** | $\mathbb{Z}_{12}$ equivariance under transposition |
-| **Duality** | ICV = $\|DFT\|^2$ (Lewin) |
-| **Dimension measure** | Spectral entropy |
-| **Dynamics** | Barycenter, velocity, acceleration |
-| **Curvature** | Perceptual volatility (chromatic = curved, diatonic = flat) |
+| Property              | Formal Statement                                            |
+|-----------------------|-------------------------------------------------------------|
+| **Metric**            | Geodesic angle on the Phase Sphere                          |
+| **Symmetry**          | $\mathbb{Z}_{12}$ equivariance under transposition          |
+| **Duality**           | ICV = $\|DFT\|^2$ (Lewin)                                   |
+| **Dimension measure** | Spectral entropy                                            |
+| **Dynamics**          | Barycenter, velocity, acceleration                          |
+| **Curvature**         | Perceptual volatility (chromatic = curved, diatonic = flat) |
 
 This is not a feature vector.  
 This is a **theory of harmonic space**.
@@ -1180,13 +1244,13 @@ This is a **theory of harmonic space**.
 
 ## Appendix: Schema Evolution
 
-| Version | Dimensions | Key Additions |
-|---------|------------|---------------|
-| v1.1 | 78 | OPTIC/K core partitions |
-| v1.2.1 | 96 | EXTENSIONS (texture, doubling) |
-| v1.3 | 108 | SPECTRAL (DFT magnitudes, phases) |
-| v1.3.1 | 109 | Spectral Entropy, Salient Chroma |
-| **v1.4 (planned)** | **121+** | **Harmonic Context, Modal Interchange, Modulation** |
+| Version            | Dimensions | Key Additions                                       |
+|--------------------|------------|-----------------------------------------------------|
+| v1.1               | 78         | OPTIC/K core partitions                             |
+| v1.2.1             | 96         | EXTENSIONS (texture, doubling)                      |
+| v1.3               | 108        | SPECTRAL (DFT magnitudes, phases)                   |
+| v1.3.1             | 109        | Spectral Entropy, Salient Chroma                    |
+| **v1.4 (planned)** | **121+**   | **Harmonic Context, Modal Interchange, Modulation** |
 
 ---
 
@@ -1195,6 +1259,7 @@ This is a **theory of harmonic space**.
 ### The Gap in v1.3.1
 
 Current embeddings treat each chord as an **isolated object**. A D7 chord has the same embedding whether it's:
+
 - V in G major
 - **V/V in C major** (secondary dominant)
 - **♭VII7 in E major** (modal interchange)
@@ -1212,21 +1277,24 @@ v1.4 fills the **CONTEXT[6-11]** reserved slots with harmonic relationship featu
 > - Indices 0-108 remain **identical** to v1.3.1.
 > - Indices 109-120 are **new** (Harmonic Context).
 > - Implementations MUST zero-pad legacy v1.3.1 vectors when comparing with v1.4.
-> - `phase_sphere_design.md` mentions indices 109-112 for spectral features; this is **superseded** by this guide. Spectral features live at 96-108 in v1.3.1+.
+> - `phase_sphere_design.md` mentions indices 109-112 for spectral features; this is **superseded** by this guide.
+    Spectral features live at 96-108 in v1.3.1+.
 
 > [!IMPORTANT]
 > **Zero-Energy Entropy Guard**  
-> When computing Spectral Entropy (Index 108), if the total signal power is 0 (empty pitch set), the entropy is undefined. Implementations **MUST** return `0.0` or a sentinel value to prevent `NaN` propagation.
+> When computing Spectral Entropy (Index 108), if the total signal power is 0 (empty pitch set), the entropy is
+> undefined. Implementations **MUST** return `0.0` or a sentinel value to prevent `NaN` propagation.
 
 #### A. Secondary Dominants (Indices 109-111)
 
-| Index | Feature | Range | Description |
-|-------|---------|-------|-------------|
-| 109 | **Is Applied Chord** | 0.0-1.0 | Is this a secondary/applied dominant? |
-| 110 | **Applied Target Function** | 0.0-1.0 | 0=I, 0.17=ii, 0.33=iii, 0.5=IV, 0.67=V, 0.83=vi, 1.0=vii° |
-| 111 | **Applied Chord Type** | 0.0-1.0 | 0=V/x, 0.5=viio/x, 1.0=other applied |
+| Index | Feature                     | Range   | Description                                               |
+|-------|-----------------------------|---------|-----------------------------------------------------------|
+| 109   | **Is Applied Chord**        | 0.0-1.0 | Is this a secondary/applied dominant?                     |
+| 110   | **Applied Target Function** | 0.0-1.0 | 0=I, 0.17=ii, 0.33=iii, 0.5=IV, 0.67=V, 0.83=vi, 1.0=vii° |
+| 111   | **Applied Chord Type**      | 0.0-1.0 | 0=V/x, 0.5=viio/x, 1.0=other applied                      |
 
 **Examples:**
+
 - D7 as V in G: `[0.0, -, -]` (not applied)
 - D7 as V/V in C: `[1.0, 0.67, 0.0]` (applied to V)
 - F#dim7 as viio/V in C: `[1.0, 0.67, 0.5]` (diminished applied to V)
@@ -1235,13 +1303,14 @@ v1.4 fills the **CONTEXT[6-11]** reserved slots with harmonic relationship featu
 
 #### B. Modal Interchange (Indices 112-114)
 
-| Index | Feature | Range | Description |
-|-------|---------|-------|-------------|
-| 112 | **Is Borrowed Chord** | 0.0-1.0 | Is this borrowed from parallel mode? |
-| 113 | **Source Mode** | 0.0-1.0 | 0=Ionian, 0.17=Dorian, 0.33=Phrygian, 0.5=Lydian, 0.67=Mixolydian, 0.83=Aeolian, 1.0=Locrian |
-| 114 | **Borrowed Function** | 0.0-1.0 | Function in the borrowed mode |
+| Index | Feature               | Range   | Description                                                                                  |
+|-------|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| 112   | **Is Borrowed Chord** | 0.0-1.0 | Is this borrowed from parallel mode?                                                         |
+| 113   | **Source Mode**       | 0.0-1.0 | 0=Ionian, 0.17=Dorian, 0.33=Phrygian, 0.5=Lydian, 0.67=Mixolydian, 0.83=Aeolian, 1.0=Locrian |
+| 114   | **Borrowed Function** | 0.0-1.0 | Function in the borrowed mode                                                                |
 
 **Examples:**
+
 - Fm in C major (borrowed from C minor): `[1.0, 0.83, 0.5]` (♭vi from Aeolian)
 - A♭ in C major (borrowed ♭VI): `[1.0, 0.83, 0.83]`
 - E7 in C major (not borrowed, it's V/vi): `[0.0, -, -]`
@@ -1250,14 +1319,15 @@ v1.4 fills the **CONTEXT[6-11]** reserved slots with harmonic relationship featu
 
 #### C. Modulation Context (Indices 115-118)
 
-| Index | Feature | Range | Description |
-|-------|---------|-------|-------------|
-| 115 | **Is Pivot Chord** | 0.0-1.0 | Could this chord serve as a pivot? |
-| 116 | **Pivot Dual Function** | 0.0-1.0 | Encoded function in new key |
-| 117 | **Modulation Distance** | 0.0-1.0 | Fifths distance to new key (normalized) |
-| 118 | **Modulation Type** | 0.0-1.0 | 0=diatonic, 0.5=chromatic, 1.0=enharmonic |
+| Index | Feature                 | Range   | Description                               |
+|-------|-------------------------|---------|-------------------------------------------|
+| 115   | **Is Pivot Chord**      | 0.0-1.0 | Could this chord serve as a pivot?        |
+| 116   | **Pivot Dual Function** | 0.0-1.0 | Encoded function in new key               |
+| 117   | **Modulation Distance** | 0.0-1.0 | Fifths distance to new key (normalized)   |
+| 118   | **Modulation Type**     | 0.0-1.0 | 0=diatonic, 0.5=chromatic, 1.0=enharmonic |
 
 **Examples:**
+
 - Am as vi in C AND ii in G: `[1.0, 0.17, 0.08, 0.0]` (diatonic pivot, 1 fifth away)
 - D♭maj7 in C moving to D♭: `[1.0, 0.0, 0.42, 0.5]` (chromatic, 5 fifths away)
 
@@ -1265,12 +1335,13 @@ v1.4 fills the **CONTEXT[6-11]** reserved slots with harmonic relationship featu
 
 #### D. Tonal Gravity (Indices 119-120)
 
-| Index | Feature | Range | Description |
-|-------|---------|-------|-------------|
-| 119 | **Fifths Distance to Tonic** | 0.0-1.0 | Position on circle of fifths relative to key |
-| 120 | **Tonal Magnetism** | 0.0-1.0 | Strength of pull toward tonic |
+| Index | Feature                      | Range   | Description                                  |
+|-------|------------------------------|---------|----------------------------------------------|
+| 119   | **Fifths Distance to Tonic** | 0.0-1.0 | Position on circle of fifths relative to key |
+| 120   | **Tonal Magnetism**          | 0.0-1.0 | Strength of pull toward tonic                |
 
 **Computation:**
+
 ```
 FifthsDistance = (rootPC × 7) mod 12  // Convert to fifths space
 TonalMagnetism = 1.0 - (FifthsDistance / 6.0)  // Closer = stronger pull
@@ -1341,6 +1412,7 @@ public double[] ComputeEmbedding(
 ```
 
 **KeyContext structure:**
+
 ```csharp
 public record KeyContext(
     int TonicPitchClass,      // 0-11 (C=0)
@@ -1354,12 +1426,12 @@ public record KeyContext(
 
 ### Query Examples Enabled by v1.4
 
-| Query | v1.3.1 Answer | v1.4 Answer |
-|-------|---------------|-------------|
-| "Find secondary dominants to V" | Can't distinguish | Filter by `CONTEXT[109]=1.0, CONTEXT[110]=0.67` |
-| "Show modal interchange in C" | Can't identify | Filter by `CONTEXT[112]=1.0` |
-| "Find pivot chords between C and G" | Can't compute | Filter by `CONTEXT[115]=1.0, CONTEXT[117]=0.08` |
-| "Chords with strong tonal pull in this key" | Only generic tension | Sort by `CONTEXT[120]` |
+| Query                                       | v1.3.1 Answer        | v1.4 Answer                                     |
+|---------------------------------------------|----------------------|-------------------------------------------------|
+| "Find secondary dominants to V"             | Can't distinguish    | Filter by `CONTEXT[109]=1.0, CONTEXT[110]=0.67` |
+| "Show modal interchange in C"               | Can't identify       | Filter by `CONTEXT[112]=1.0`                    |
+| "Find pivot chords between C and G"         | Can't compute        | Filter by `CONTEXT[115]=1.0, CONTEXT[117]=0.08` |
+| "Chords with strong tonal pull in this key" | Only generic tension | Sort by `CONTEXT[120]`                          |
 
 ---
 
@@ -1374,27 +1446,28 @@ public record KeyContext(
 
 ### E. Box Shape Geometry (MORPHOLOGY 49-53)
 
-Guitarists think in **fragments**, not individual frets. The MORPHOLOGY partition has unused indices 49-53 that should encode box shapes.
+Guitarists think in **fragments**, not individual frets. The MORPHOLOGY partition has unused indices 49-53 that should
+encode box shapes.
 
 #### Why Box Shapes Matter
 
-| Use Case | Why Shapes Help |
-|----------|-----------------|
-| **Teaching** | "This is a D-shape moved to 5th fret" |
-| **Memory** | Guitarists memorize shapes, not individual notes |
-| **Playability** | Adjacent-string boxes are easier than spread voicings |
-| **Voice-leading** | Moving one box shape to another is fundamental |
-| **CAGED system** | Most guitar pedagogy is built on this |
+| Use Case          | Why Shapes Help                                       |
+|-------------------|-------------------------------------------------------|
+| **Teaching**      | "This is a D-shape moved to 5th fret"                 |
+| **Memory**        | Guitarists memorize shapes, not individual notes      |
+| **Playability**   | Adjacent-string boxes are easier than spread voicings |
+| **Voice-leading** | Moving one box shape to another is fundamental        |
+| **CAGED system**  | Most guitar pedagogy is built on this                 |
 
 #### Proposed Features
 
-| Index | Feature | Range | Description |
-|-------|---------|-------|-------------|
-| 49 | **String Box Type** | 0.0-1.0 | 0=2-str, 0.33=3-str, 0.67=4-str, 1.0=5+ str |
-| 50 | **Box Contiguity** | 0.0-1.0 | Are used strings adjacent? (1.0 = fully contiguous) |
-| 51 | **CAGED Shape** | 0.0-1.0 | 0=C, 0.2=A, 0.4=G, 0.6=E, 0.8=D, 1.0=other |
-| 52 | **Lowest String Used** | 0.0-1.0 | 0=E(6), 0.2=A, 0.4=D, 0.6=G, 0.8=B, 1.0=e(1) |
-| 53 | **String Span** | 0.0-1.0 | (highest_string - lowest_string) / 5 |
+| Index | Feature                | Range   | Description                                         |
+|-------|------------------------|---------|-----------------------------------------------------|
+| 49    | **String Box Type**    | 0.0-1.0 | 0=2-str, 0.33=3-str, 0.67=4-str, 1.0=5+ str         |
+| 50    | **Box Contiguity**     | 0.0-1.0 | Are used strings adjacent? (1.0 = fully contiguous) |
+| 51    | **CAGED Shape**        | 0.0-1.0 | 0=C, 0.2=A, 0.4=G, 0.6=E, 0.8=D, 1.0=other          |
+| 52    | **Lowest String Used** | 0.0-1.0 | 0=E(6), 0.2=A, 0.4=D, 0.6=G, 0.8=B, 1.0=e(1)        |
+| 53    | **String Span**        | 0.0-1.0 | (highest_string - lowest_string) / 5                |
 
 #### Example Encoding
 
@@ -1413,27 +1486,27 @@ Box analysis:
 
 #### Query Examples
 
-| Query | How It Works |
-|-------|--------------|
-| "Find 3-string triads on strings 4-3-2" | Filter `MORPHOLOGY[49]=0.33, MORPHOLOGY[52]=0.4` |
-| "Show me C-shape voicings up the neck" | Filter `MORPHOLOGY[51]=0.0` |
-| "Find contiguous box shapes (no string skipping)" | Filter `MORPHOLOGY[50]=1.0` |
-| "Voicings using high strings only" | Filter `MORPHOLOGY[52] > 0.6` |
+| Query                                             | How It Works                                     |
+|---------------------------------------------------|--------------------------------------------------|
+| "Find 3-string triads on strings 4-3-2"           | Filter `MORPHOLOGY[49]=0.33, MORPHOLOGY[52]=0.4` |
+| "Show me C-shape voicings up the neck"            | Filter `MORPHOLOGY[51]=0.0`                      |
+| "Find contiguous box shapes (no string skipping)" | Filter `MORPHOLOGY[50]=1.0`                      |
+| "Voicings using high strings only"                | Filter `MORPHOLOGY[52] > 0.6`                    |
 
 ---
 
 ## Integration Points
 
-| Service | Responsibility |
-|---------|----------------|
+| Service                     | Responsibility                              |
+|-----------------------------|---------------------------------------------|
 | `MusicalEmbeddingGenerator` | Generates 109D vectors from VoicingDocument |
-| `PhaseSphereService` | Spectral geometry computations |
-| `VoicingExplanationService` | NLG from embeddings |
-| `IdentityVectorService` | Object type classification |
-| `TheoryVectorService` | OPTIC/K structure encoding |
-| `MorphologyVectorService` | Physical realization features |
-| `ContextVectorService` | Harmonic function encoding |
-| `SymbolicVectorService` | Technique/style tagging |
+| `PhaseSphereService`        | Spectral geometry computations              |
+| `VoicingExplanationService` | NLG from embeddings                         |
+| `IdentityVectorService`     | Object type classification                  |
+| `TheoryVectorService`       | OPTIC/K structure encoding                  |
+| `MorphologyVectorService`   | Physical realization features               |
+| `ContextVectorService`      | Harmonic function encoding                  |
+| `SymbolicVectorService`     | Technique/style tagging                     |
 
 ---
 
@@ -1441,36 +1514,39 @@ Box analysis:
 
 ### Core Concepts (with links)
 
-| Concept | Description | Learn More |
-|---------|-------------|------------|
-| **Interval Class** | Distance between pitch classes (1-6) | [Harmonious Glossary](https://harmoniousapp.net/p/bd/Glossary-Interval-Class) |
-| **Pitch-Class Set** | Set of notes ignoring octave | [Wikipedia](https://en.wikipedia.org/wiki/Pitch_class) |
-| **Interval Class Vector (ICV)** | 6-number fingerprint of interval content | [Wikipedia](https://en.wikipedia.org/wiki/Interval_vector) |
-| **Z-Relation** | Sets with same ICV but different structure | [Wikipedia](https://en.wikipedia.org/wiki/Z-relation) |
-| **Discrete Fourier Transform** | Decomposes signal into frequency components | [Wikipedia](https://en.wikipedia.org/wiki/Discrete_Fourier_transform) |
-| **Circle of Fifths** | Geometric arrangement of keys by fifth intervals | [Wikipedia](https://en.wikipedia.org/wiki/Circle_of_fifths) |
-| **Maximally Even Set** | Most evenly distributed pitch-class sets | [Wikipedia](https://en.wikipedia.org/wiki/Maximally_even_set) |
-| **Voice Leading** | Smooth melodic connection between chords | [Wikipedia](https://en.wikipedia.org/wiki/Voice_leading) |
-| **Cosine Similarity** | Angle-based similarity measure for vectors | [Wikipedia](https://en.wikipedia.org/wiki/Cosine_similarity) |
-| **Geodesic** | Shortest path on a curved surface | [Wikipedia](https://en.wikipedia.org/wiki/Geodesic) |
-| **RAG (Retrieval-Augmented Generation)** | LLM grounding via document retrieval | [Wikipedia](https://en.wikipedia.org/wiki/Retrieval-augmented_generation) |
+| Concept                                  | Description                                      | Learn More                                                                    |
+|------------------------------------------|--------------------------------------------------|-------------------------------------------------------------------------------|
+| **Interval Class**                       | Distance between pitch classes (1-6)             | [Harmonious Glossary](https://harmoniousapp.net/p/bd/Glossary-Interval-Class) |
+| **Pitch-Class Set**                      | Set of notes ignoring octave                     | [Wikipedia](https://en.wikipedia.org/wiki/Pitch_class)                        |
+| **Interval Class Vector (ICV)**          | 6-number fingerprint of interval content         | [Wikipedia](https://en.wikipedia.org/wiki/Interval_vector)                    |
+| **Z-Relation**                           | Sets with same ICV but different structure       | [Wikipedia](https://en.wikipedia.org/wiki/Z-relation)                         |
+| **Discrete Fourier Transform**           | Decomposes signal into frequency components      | [Wikipedia](https://en.wikipedia.org/wiki/Discrete_Fourier_transform)         |
+| **Circle of Fifths**                     | Geometric arrangement of keys by fifth intervals | [Wikipedia](https://en.wikipedia.org/wiki/Circle_of_fifths)                   |
+| **Maximally Even Set**                   | Most evenly distributed pitch-class sets         | [Wikipedia](https://en.wikipedia.org/wiki/Maximally_even_set)                 |
+| **Voice Leading**                        | Smooth melodic connection between chords         | [Wikipedia](https://en.wikipedia.org/wiki/Voice_leading)                      |
+| **Cosine Similarity**                    | Angle-based similarity measure for vectors       | [Wikipedia](https://en.wikipedia.org/wiki/Cosine_similarity)                  |
+| **Geodesic**                             | Shortest path on a curved surface                | [Wikipedia](https://en.wikipedia.org/wiki/Geodesic)                           |
+| **RAG (Retrieval-Augmented Generation)** | LLM grounding via document retrieval             | [Wikipedia](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)     |
 
 ### Advanced Theory
 
-| Concept | Description | Source |
-|---------|-------------|--------|
-| **OPTIC Equivalence** | Orbifold model of voice-leading geometry | Tymoczko (2011) |
-| **Lewin's Lemma** | ICV = |DFT|², connecting intervals to spectra | Lewin (1959) |
-| **Spectral Analysis of PCS** | Fourier-based chord classification | Amiot (2016) |
-| **Diatonic Set Theory** | Mathematical study of scales and modes | [Wikipedia](https://en.wikipedia.org/wiki/Diatonic_set_theory) |
+| Concept                      | Description                              | Source                                                         |
+|------------------------------|------------------------------------------|----------------------------------------------------------------|
+| **OPTIC Equivalence**        | Orbifold model of voice-leading geometry | Tymoczko (2011)                                                |
+| **Lewin's Lemma**            | ICV =                                    | DFT                                                            |², connecting intervals to spectra | Lewin (1959) |
+| **Spectral Analysis of PCS** | Fourier-based chord classification       | Amiot (2016)                                                   |
+| **Diatonic Set Theory**      | Mathematical study of scales and modes   | [Wikipedia](https://en.wikipedia.org/wiki/Diatonic_set_theory) |
 
 ### Academic References
 
 - **Lewin, D. (1959)**: "Re: Intervallic Relations Between Two Collections of Notes" — *Journal of Music Theory*
-- **Amiot, E. (2016)**: [*Music Through Fourier Space*](https://link.springer.com/book/10.1007/978-3-319-45581-5) — Springer
-- **Tymoczko, D. (2011)**: [*A Geometry of Music*](https://dmitri.mycpanel.princeton.edu/geometry-of-music.html) — Oxford University Press
+- **Amiot, E. (2016)**: [*Music Through Fourier Space*](https://link.springer.com/book/10.1007/978-3-319-45581-5) —
+  Springer
+- **Tymoczko, D. (2011)**: [*A Geometry of Music*](https://dmitri.mycpanel.princeton.edu/geometry-of-music.html) —
+  Oxford University Press
 - **Quinn, I. (2006)**: "General Equal-Tempered Harmony" — *Perspectives of New Music*
-- **Forte, A. (1973)**: [*The Structure of Atonal Music*](https://yalebooks.yale.edu/book/9780300021202/the-structure-of-atonal-music/) — Yale University Press
+- **Forte, A. (1973)**: [*The Structure of Atonal
+  Music*](https://yalebooks.yale.edu/book/9780300021202/the-structure-of-atonal-music/) — Yale University Press
 
 ### Guitar Alchemist Resources
 

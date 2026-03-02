@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Instruments.Positions;
 
-using System;
-using System.Collections.Generic;
 using Primitives;
 
 public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret, IComparable<PositionLocation>
@@ -9,20 +7,11 @@ public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
     public bool IsMuted => Fret == Fret.Muted;
     public bool IsOpen => Fret == Fret.Open;
 
-    public static PositionLocation Muted(Str str)
-    {
-        return new(str, Fret.Muted);
-    }
+    public static PositionLocation Muted(Str str) => new(str, Fret.Muted);
 
-    public static PositionLocation Open(Str str)
-    {
-        return new(str, Fret.Open);
-    }
+    public static PositionLocation Open(Str str) => new(str, Fret.Open);
 
-    public override string ToString()
-    {
-        return $"{Str},{Fret}";
-    }
+    public override string ToString() => $"{Str},{Fret}";
 
     #region RelationalMembers
 
@@ -37,34 +26,19 @@ public readonly record struct PositionLocation(Str Str, Fret Fret) : IStr, IFret
         return Fret.CompareTo(other.Fret);
     }
 
-    public static bool operator <(PositionLocation left, PositionLocation right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(PositionLocation left, PositionLocation right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(PositionLocation left, PositionLocation right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(PositionLocation left, PositionLocation right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(PositionLocation left, PositionLocation right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(PositionLocation left, PositionLocation right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(PositionLocation left, PositionLocation right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(PositionLocation left, PositionLocation right) => left.CompareTo(right) >= 0;
 
     public static IComparer<PositionLocation> StrComparer { get; } = new StrRelationalComparer();
 
     private sealed class StrRelationalComparer : IComparer<PositionLocation>
     {
-        public int Compare(PositionLocation x, PositionLocation y)
-        {
-            return x.Str.CompareTo(y.Str);
-        }
+        public int Compare(PositionLocation x, PositionLocation y) => x.Str.CompareTo(y.Str);
     }
 
     #endregion

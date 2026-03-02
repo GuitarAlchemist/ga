@@ -110,76 +110,76 @@ public class ExtensionsAINarrator : IGroundedNarrator
 /// </summary>
 public static class AIServiceExtensions
 {
-    /// <summary>
-    /// Registers Ollama as the IChatClient provider (local development).
-    /// </summary>
-    public static IServiceCollection AddOllamaAIChatClient(
-        this IServiceCollection services, 
-        string modelId = "llama3.2",
-        string endpoint = "http://localhost:11434")
+    extension(IServiceCollection services)
     {
-        services.AddSingleton<IChatClient>(sp =>
+        /// <summary>
+        /// Registers Ollama as the IChatClient provider (local development).
+        /// </summary>
+        public IServiceCollection AddOllamaAIChatClient(
+            string modelId = "llama3.2",
+            string endpoint = "http://localhost:11434")
         {
-            return new OllamaChatClient(new Uri(endpoint), modelId);
-        });
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers OpenAI as the IChatClient provider (production/cloud).
-    /// Compatible with Azure OpenAI, GitHub Models, and standard OpenAI.
-    /// </summary>
-    public static IServiceCollection AddOpenAIChatClient(
-        this IServiceCollection services,
-        string modelId,
-        string apiKey,
-        string? endpoint = null)
-    {
-        services.AddSingleton<IChatClient>(_ =>
-        {
-            var options = new OpenAI.OpenAIClientOptions();
-            if (!string.IsNullOrEmpty(endpoint))
+            services.AddSingleton<IChatClient>(sp =>
             {
-                options.Endpoint = new Uri(endpoint);
-            }
+                return new OllamaChatClient(new Uri(endpoint), modelId);
+            });
 
-            var credential = new System.ClientModel.ApiKeyCredential(apiKey);
-            var openAiClient = new OpenAI.OpenAIClient(credential, options);
-            return openAiClient.AsChatClient(modelId);
-        });
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers GitHub Models as the IChatClient provider (free tier development).
-    /// Uses the GitHub Models endpoint with a personal access token.
-    /// </summary>
-    public static IServiceCollection AddGitHubModelsChatClient(
-        this IServiceCollection services,
-        string modelId = "gpt-4o-mini",
-        string? githubToken = null)
-    {
-        var token = githubToken ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        if (string.IsNullOrEmpty(token))
-        {
-            throw new InvalidOperationException(
-                "GitHub token not found. Set GITHUB_TOKEN environment variable or pass token explicitly.");
+            return services;
         }
 
-        return services.AddOpenAIChatClient(
-            modelId: modelId,
-            apiKey: token,
-            endpoint: "https://models.inference.ai.azure.com");
-    }
+        /// <summary>
+        /// Registers OpenAI as the IChatClient provider (production/cloud).
+        /// Compatible with Azure OpenAI, GitHub Models, and standard OpenAI.
+        /// </summary>
+        public IServiceCollection AddOpenAIChatClient(
+            string modelId,
+            string apiKey,
+            string? endpoint = null)
+        {
+            services.AddSingleton<IChatClient>(_ =>
+            {
+                var options = new OpenAI.OpenAIClientOptions();
+                if (!string.IsNullOrEmpty(endpoint))
+                {
+                    options.Endpoint = new Uri(endpoint);
+                }
 
-    /// <summary>
-    /// Registers the modern ExtensionsAINarrator as the IGroundedNarrator implementation.
-    /// </summary>
-    public static IServiceCollection AddExtensionsAINarrator(this IServiceCollection services)
-    {
-        services.AddSingleton<IGroundedNarrator, ExtensionsAINarrator>();
-        return services;
+                var credential = new System.ClientModel.ApiKeyCredential(apiKey);
+                var openAiClient = new OpenAI.OpenAIClient(credential, options);
+                return openAiClient.AsChatClient(modelId);
+            });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Registers GitHub Models as the IChatClient provider (free tier development).
+        /// Uses the GitHub Models endpoint with a personal access token.
+        /// </summary>
+        public IServiceCollection AddGitHubModelsChatClient(
+            string modelId = "gpt-4o-mini",
+            string? githubToken = null)
+        {
+            var token = githubToken ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException(
+                    "GitHub token not found. Set GITHUB_TOKEN environment variable or pass token explicitly.");
+            }
+
+            return services.AddOpenAIChatClient(
+                modelId: modelId,
+                apiKey: token,
+                endpoint: "https://models.inference.ai.azure.com");
+        }
+
+        /// <summary>
+        /// Registers the modern ExtensionsAINarrator as the IGroundedNarrator implementation.
+        /// </summary>
+        public IServiceCollection AddExtensionsAINarrator()
+        {
+            services.AddSingleton<IGroundedNarrator, ExtensionsAINarrator>();
+            return services;
+        }
     }
 }

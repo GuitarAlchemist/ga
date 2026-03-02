@@ -1,8 +1,5 @@
 namespace GA.Domain.Core.Theory.Tonal.Scales;
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using Atonal;
 using GA.Core.Collections;
 
@@ -10,10 +7,7 @@ public class ScaleNumberByName() : LazyIndexerBase<string, PitchClassSetId>(GetS
 {
     private static readonly ScaleNumberByName _instance = new();
 
-    public static int Get(string name)
-    {
-        return _instance[name];
-    }
+    public static int Get(string name) => _instance[name];
 
     public static IReadOnlyCollection<PitchClassSetId> Find(string? name)
     {
@@ -30,8 +24,6 @@ public class ScaleNumberByName() : LazyIndexerBase<string, PitchClassSetId>(GetS
         return result;
     }
 
-    private static IReadOnlyDictionary<string, PitchClassSetId> GetScaleNumberByName()
-    {
-        return ScaleNameById.Instance.Dictionary.ToImmutableDictionary(pair => pair.Value, pair => pair.Key);
-    }
+    private static IReadOnlyDictionary<string, PitchClassSetId> GetScaleNumberByName() =>
+        ScaleNameById.Instance.Dictionary.ToImmutableDictionary(pair => pair.Value, pair => pair.Key);
 }

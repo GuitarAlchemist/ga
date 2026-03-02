@@ -1,8 +1,6 @@
 namespace GA.Domain.Services.Fretboard.Biomechanics;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Core.Instruments.Primitives;
 using FingerType = Core.Instruments.Biomechanics.FingerType;
 
 /// <summary>
@@ -21,9 +19,8 @@ public record FingeringEfficiencyAnalysis(
     /// <summary>
     ///     Create analysis indicating no fingering (empty chord)
     /// </summary>
-    public static FingeringEfficiencyAnalysis None()
-    {
-        return new(
+    public static FingeringEfficiencyAnalysis None() =>
+        new(
             new Dictionary<FingerType, int>(),
             0.0,
             0.0,
@@ -32,7 +29,6 @@ public record FingeringEfficiencyAnalysis(
             false,
             "No finger assignments to analyze",
             []);
-    }
 
     /// <summary>
     ///     Create analysis for efficient fingering
@@ -43,9 +39,8 @@ public record FingeringEfficiencyAnalysis(
         bool hasBarreChord,
         bool usesThumb,
         IReadOnlyList<string> recommendations,
-        double efficiencyScore)
-    {
-        return new(
+        double efficiencyScore) =>
+        new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),
@@ -54,7 +49,6 @@ public record FingeringEfficiencyAnalysis(
             usesThumb,
             "Efficient finger distribution with minimal stretching",
             recommendations);
-    }
 
     /// <summary>
     ///     Create analysis for moderate fingering efficiency
@@ -65,9 +59,8 @@ public record FingeringEfficiencyAnalysis(
         bool hasBarreChord,
         bool usesThumb,
         IReadOnlyList<string> recommendations,
-        double efficiencyScore)
-    {
-        return new(
+        double efficiencyScore) =>
+        new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),
@@ -76,7 +69,6 @@ public record FingeringEfficiencyAnalysis(
             usesThumb,
             "Moderate finger efficiency with some challenges",
             recommendations);
-    }
 
     /// <summary>
     ///     Create analysis for inefficient fingering
@@ -87,9 +79,8 @@ public record FingeringEfficiencyAnalysis(
         bool hasBarreChord,
         bool usesThumb,
         IReadOnlyList<string> recommendations,
-        double efficiencyScore)
-    {
-        return new(
+        double efficiencyScore) =>
+        new(
             fingerUsage,
             efficiencyScore,
             CalculatePinkyPercentage(fingerUsage),
@@ -98,7 +89,6 @@ public record FingeringEfficiencyAnalysis(
             usesThumb,
             "Inefficient fingering with significant challenges",
             recommendations);
-    }
 
     private static double CalculatePinkyPercentage(IReadOnlyDictionary<FingerType, int> fingerUsage)
     {
@@ -122,7 +112,7 @@ public static class FingeringEfficiencyDetector
     ///     Analyze fingering efficiency based on finger assignments
     /// </summary>
     public static FingeringEfficiencyAnalysis Analyze(
-        List<(Core.Instruments.Primitives.Position.Played Position, FingerType Finger)> fingerAssignments)
+        List<(Position.Played Position, FingerType Finger)> fingerAssignments)
     {
         if (fingerAssignments.Count == 0)
         {

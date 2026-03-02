@@ -1,19 +1,18 @@
-namespace GA.Domain.Core.Tests.Fretboard.Voicings;
+﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Instruments.Fretboard.Voicings.Core;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
+using Domain.Core.Theory.Atonal;
 using Domain.Services.Fretboard.Voicings.Analysis;
 
 /// <summary>
-/// Unit tests for VoicingAnalyzer - comprehensive musical analysis of guitar voicings
+///     Unit tests for VoicingAnalyzer - comprehensive musical analysis of guitar voicings
 /// </summary>
 [TestFixture]
 public class VoicingAnalyzerTests
 {
-    #region Mode Detection Tests - Major Scale Family
     [Test]
     public void DetectMode_IonianMode_ShouldIdentifyCorrectly()
     {
@@ -30,6 +29,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(1));
         Assert.That(analysis.ModeInfo.NoteCount, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_DorianMode_ShouldIdentifyCorrectly()
     {
@@ -46,6 +46,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(2));
         Assert.That(analysis.ModeInfo.NoteCount, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_PhrygianMode_ShouldIdentifyCorrectly()
     {
@@ -61,6 +62,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Major Scale Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(3));
     }
+
     [Test]
     public void DetectMode_LydianMode_ShouldIdentifyCorrectly()
     {
@@ -76,6 +78,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Major Scale Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(4));
     }
+
     [Test]
     public void DetectMode_MixolydianMode_ShouldIdentifyCorrectly()
     {
@@ -91,6 +94,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Major Scale Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(5));
     }
+
     [Test]
     public void DetectMode_AeolianMode_ShouldIdentifyCorrectly()
     {
@@ -106,6 +110,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Major Scale Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(6));
     }
+
     [Test]
     public void DetectMode_LocrianMode_ShouldIdentifyCorrectly()
     {
@@ -121,8 +126,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Major Scale Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(7));
     }
-    #endregion
-    #region Mode Detection Tests - Harmonic Minor Family
+
     [Test]
     public void DetectMode_HarmonicMinor_ShouldIdentifyCorrectly()
     {
@@ -139,6 +143,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(1));
         Assert.That(analysis.ModeInfo.NoteCount, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_PhrygianDominant_ShouldIdentifyCorrectly()
     {
@@ -155,6 +160,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(5));
         Assert.That(analysis.ModeInfo.NoteCount, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_LocrianNatural6_ShouldIdentifyCorrectly()
     {
@@ -170,8 +176,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Harmonic Minor Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(2));
     }
-    #endregion
-    #region Mode Detection Tests - Melodic Minor Family
+
     [Test]
     public void DetectMode_MelodicMinor_ShouldIdentifyCorrectly()
     {
@@ -188,6 +193,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(1));
         Assert.That(analysis.ModeInfo.NoteCount, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_Altered_ShouldIdentifyCorrectly()
     {
@@ -203,6 +209,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Melodic Minor Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(7));
     }
+
     [Test]
     public void DetectMode_LydianDominant_ShouldIdentifyCorrectly()
     {
@@ -218,8 +225,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo.FamilyName, Is.EqualTo("Melodic Minor Family"));
         Assert.That(analysis.ModeInfo.DegreeInFamily, Is.EqualTo(4));
     }
-    #endregion
-    #region Edge Cases and Atonal Contexts
+
     [Test]
     public void DetectMode_Triad_ShouldReturnNull()
     {
@@ -232,6 +238,7 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.ModeInfo, Is.Null, "Triads should not match modal families");
         Assert.That(analysis.PitchClassSet.Count, Is.EqualTo(3));
     }
+
     [Test]
     public void DetectMode_ChromaticVoicing_ShouldHandleGracefully()
     {
@@ -245,10 +252,9 @@ public class VoicingAnalyzerTests
         Assert.That(analysis.IntervallicInfo, Is.Not.Null);
         Assert.That(analysis.IntervallicInfo.Features, Does.Contain("Cluster (4 semitones)"));
     }
-    #endregion
-    #region Helper Methods
+
     /// <summary>
-    /// Creates a voicing from pitch classes for testing
+    ///     Creates a voicing from pitch classes for testing
     /// </summary>
     private static Voicing CreateVoicingFromPitchClasses(int[] pitchClasses)
     {
@@ -257,16 +263,16 @@ public class VoicingAnalyzerTests
         const int baseMidi = 60; // Middle C
         for (var index = 0; index < pitchClasses.Length; index++)
         {
-            var normalized = ((pitchClasses[index] % 12) + 12) % 12;
+            var normalized = (pitchClasses[index] % 12 + 12) % 12;
             var midiValue = baseMidi + normalized;
             var midiNote = new MidiNote(midiValue);
             // Use extended virtual strings so we can represent more than six unique notes
             var stringNumber = Math.Min(index + 1, 26);
-            var location = new PositionLocation(new Str(stringNumber), new Fret(normalized));
+            var location = new PositionLocation(new(stringNumber), new(normalized));
             positions.Add(new Position.Played(location, midiNote));
             notes.Add(midiNote);
         }
-        return new Voicing([.. positions], [.. notes]);
+
+        return new([.. positions], [.. notes]);
     }
-    #endregion
 }

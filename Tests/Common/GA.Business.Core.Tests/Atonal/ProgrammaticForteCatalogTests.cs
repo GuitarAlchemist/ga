@@ -1,20 +1,19 @@
-namespace GA.Domain.Core.Tests.Atonal;
+namespace GA.Business.Core.Tests.Atonal;
 
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 
 /// <summary>
-/// Tests for the ProgrammaticForteCatalog which generates Forte numbers algorithmically.
+///     Tests for the ProgrammaticForteCatalog which generates Forte numbers algorithmically.
 /// </summary>
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
 public class ProgrammaticForteCatalogTests
 {
     [Test]
-    public void Catalog_Contains_All_224_SetClasses()
-    {
+    public void Catalog_Contains_All_224_SetClasses() =>
         // The complete Forte catalog has 224 set classes (cardinalities 0-12)
         Assert.That(ProgrammaticForteCatalog.Count, Is.EqualTo(224));
-    }
+
     [Test]
     public void Catalog_Cardinality_Counts_Are_Correct()
     {
@@ -33,11 +32,12 @@ public class ProgrammaticForteCatalogTests
         Assert.That(ProgrammaticForteCatalog.GetCountForCardinality(11), Is.EqualTo(1));
         Assert.That(ProgrammaticForteCatalog.GetCountForCardinality(12), Is.EqualTo(1));
     }
+
     [Test]
     public void TryGetForteNumber_MajorScale_ReturnsValidNumber()
     {
         var majorScale = new PitchClassSet([
-            PitchClass.C, 
+            PitchClass.C,
             PitchClass.FromValue(2), // D
             PitchClass.FromValue(4), // E
             PitchClass.FromValue(5), // F
@@ -50,28 +50,30 @@ public class ProgrammaticForteCatalogTests
         Assert.That(forte.Cardinality.Value, Is.EqualTo(7));
         Assert.That(forte.Index, Is.GreaterThan(0).And.LessThanOrEqualTo(38));
     }
+
     [Test]
     public void TryGetForteNumber_WholeTone_ReturnsValidNumber()
     {
         var wholeTone = new PitchClassSet([
-            PitchClass.C, 
-            PitchClass.FromValue(2), 
-            PitchClass.FromValue(4), 
-            PitchClass.FromValue(6), 
-            PitchClass.FromValue(8), 
+            PitchClass.C,
+            PitchClass.FromValue(2),
+            PitchClass.FromValue(4),
+            PitchClass.FromValue(6),
+            PitchClass.FromValue(8),
             PitchClass.FromValue(10)
         ]);
         var success = ProgrammaticForteCatalog.TryGetForteNumber(wholeTone, out var forte);
         Assert.That(success, Is.True);
         Assert.That(forte.Cardinality.Value, Is.EqualTo(6));
     }
+
     [Test]
     public void TryGetPrimeForm_RoundTrip_Succeeds()
     {
         // Get Forte number for Major triad
         var majorTriad = new PitchClassSet([
-            PitchClass.C, 
-            PitchClass.FromValue(4), 
+            PitchClass.C,
+            PitchClass.FromValue(4),
             PitchClass.FromValue(7)
         ]);
         var success1 = ProgrammaticForteCatalog.TryGetForteNumber(majorTriad, out var forte);
@@ -82,6 +84,7 @@ public class ProgrammaticForteCatalogTests
         Assert.That(primeForm, Is.Not.Null);
         Assert.That(primeForm!.Count, Is.EqualTo(3));
     }
+
     [Test]
     public void ForteByPrimeFormId_IsBidirectionalWithPrimeFormByForte()
     {
@@ -93,6 +96,7 @@ public class ProgrammaticForteCatalogTests
                 $"Forte {forte} not found in reverse catalog");
         }
     }
+
     [Test]
     public void Catalog_AllForteNumbers_AreUnique()
     {
@@ -101,6 +105,7 @@ public class ProgrammaticForteCatalogTests
         Assert.That(forteNumbers.Count, Is.EqualTo(distinct.Count),
             "All Forte numbers should be unique");
     }
+
     [Test]
     public void Catalog_ForteNumbers_AreContiguousWithinCardinality()
     {
@@ -111,7 +116,11 @@ public class ProgrammaticForteCatalogTests
                 .Where(f => f.Cardinality.Value == card)
                 .OrderBy(f => f.Index)
                 .ToList();
-            if (forteNumbers.Count == 0) continue;
+            if (forteNumbers.Count == 0)
+            {
+                continue;
+            }
+
             for (var i = 0; i < forteNumbers.Count; i++)
             {
                 Assert.That(forteNumbers[i].Index, Is.EqualTo(i + 1),

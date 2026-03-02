@@ -1,7 +1,7 @@
 namespace GA.Business.Core.Session;
 
 using System;
-using Domain.Core.Session;
+using GA.Business.Core.Context;
 using JetBrains.Annotations;
 
 /// <summary>
@@ -36,3 +36,4 @@ public interface ISessionContextProvider
     /// </summary>
     event EventHandler<MusicalSessionContext>? ContextChanged;
 }
+

@@ -7,8 +7,7 @@ using GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddMongoDb(this IServiceCollection services,
-        Action<MongoDbConfig> configureOptions)
+    public static IServiceCollection AddMongoDb(this IServiceCollection services, Action<MongoDbConfig> configureOptions)
     {
         services.Configure(configureOptions);
 

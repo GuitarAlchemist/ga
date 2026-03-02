@@ -1,13 +1,11 @@
 namespace GA.Business.ML.Tabs.Models;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-
 public record TabAnalysisResult
 {
-    public List<TabEvent> Events { get; init; } = new();
-    
+    public List<TabEvent> Events { get; init; } = [];
+
     /// <summary>
-    /// Detected harmonic cadence at the end of the phrase (if any).
+    ///     Detected harmonic cadence at the end of the phrase (if any).
     /// </summary>
     public string? DetectedCadence { get; init; }
 }
@@ -15,13 +13,13 @@ public record TabAnalysisResult
 public record TabEvent
 {
     /// <summary>
-    /// Sequential index of the event (ignoring empty slices).
+    ///     Sequential index of the event (ignoring empty slices).
     /// </summary>
     public int TimestampIndex { get; init; }
-    
+
     public TabSlice OriginalSlice { get; init; }
-    
-    public double[] Embedding { get; init; }
-    
-    public VoicingDocument Document { get; init; }
+
+    public float[] Embedding { get; init; }
+
+    public ChordVoicingRagDocument Document { get; init; }
 }

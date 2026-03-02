@@ -17,11 +17,9 @@ using Microsoft.Extensions.VectorData;
 public class JsonVectorStore(string basePath) : IVectorStore
 {
     public IVectorStoreRecordCollection<TKey, TRecord> GetCollection<TKey, TRecord>(string name,
-        VectorStoreRecordDefinition? vectorStoreRecordDefinition = null) where TKey : notnull
-    {
-        return new JsonVectorStoreRecordCollection<TKey, TRecord>(name, Path.Combine(basePath, name + ".json"),
+        VectorStoreRecordDefinition? vectorStoreRecordDefinition = null) where TKey : notnull =>
+        new JsonVectorStoreRecordCollection<TKey, TRecord>(name, Path.Combine(basePath, name + ".json"),
             vectorStoreRecordDefinition);
-    }
 
     public async IAsyncEnumerable<string> ListCollectionNamesAsync(CancellationToken cancellationToken = default)
     {
@@ -54,10 +52,8 @@ public class JsonVectorStore(string basePath) : IVectorStore
 
         public string CollectionName { get; }
 
-        public Task<bool> CollectionExistsAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(_records is not null);
-        }
+        public Task<bool> CollectionExistsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(_records is not null);
 
         public async Task CreateCollectionAsync(CancellationToken cancellationToken = default)
         {
@@ -99,10 +95,8 @@ public class JsonVectorStore(string basePath) : IVectorStore
         }
 
         public Task<TRecord?> GetAsync(TKey key, GetRecordOptions? options = null,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(_records!.GetValueOrDefault(key));
-        }
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(_records!.GetValueOrDefault(key));
 
         public async IAsyncEnumerable<TRecord> GetBatchAsync(IEnumerable<TKey> keys, GetRecordOptions? options = null,
             CancellationToken cancellationToken = default)
@@ -179,7 +173,7 @@ public class JsonVectorStore(string basePath) : IVectorStore
             {
                 foreach (var r in results)
                 {
-                    yield return new VectorSearchResult<TRecord>(r.Record, r.Similarity);
+                    yield return new(r.Record, r.Similarity);
                 }
             }
 

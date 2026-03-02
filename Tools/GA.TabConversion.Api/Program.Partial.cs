@@ -1,3 +1,5 @@
 namespace GA.TabConversion.Api;
 
-public partial class Program { }
+public class Program
+{
+}

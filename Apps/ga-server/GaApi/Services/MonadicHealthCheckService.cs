@@ -1,8 +1,12 @@
 ﻿namespace GaApi.Services;
 
 using System.Diagnostics;
+using GA.Core.Functional;
 using HotChocolate.Utilities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Models;
 
 /// <summary>
@@ -24,9 +28,8 @@ public class MonadicHealthCheckService(
     IConfiguration configuration)
     : MonadicServiceBase<MonadicHealthCheckService>(logger, cache), IMonadicHealthCheckService
 {
-    public async Task<Try<HealthCheckResponse>> GetHealthAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<HealthCheckResponse>> GetHealthAsync() =>
+        await ExecuteAsync(async () =>
         {
             var response = new HealthCheckResponse
             {
@@ -55,11 +58,9 @@ public class MonadicHealthCheckService(
 
             return response;
         }, "GetHealth");
-    }
 
-    public async Task<Try<ServiceHealth>> CheckDatabaseAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<ServiceHealth>> CheckDatabaseAsync() =>
+        await ExecuteAsync(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
             var health = new ServiceHealth();
@@ -91,11 +92,9 @@ public class MonadicHealthCheckService(
 
             return health;
         }, "CheckDatabase");
-    }
 
-    public async Task<Try<ServiceHealth>> CheckVectorSearchAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<ServiceHealth>> CheckVectorSearchAsync() =>
+        await ExecuteAsync(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
             var health = new ServiceHealth();
@@ -127,11 +126,9 @@ public class MonadicHealthCheckService(
 
             return health;
         }, "CheckVectorSearch");
-    }
 
-    public async Task<Try<ServiceHealth>> CheckMemoryCacheAsync()
-    {
-        return await ExecuteAsync<ServiceHealth>(async () =>
+    public async Task<Try<ServiceHealth>> CheckMemoryCacheAsync() =>
+        await ExecuteAsync<ServiceHealth>(async () =>
         {
             await Task.CompletedTask;
             var stopwatch = Stopwatch.StartNew();
@@ -143,8 +140,8 @@ public class MonadicHealthCheckService(
                 const string testKey = "health_check_test";
                 const string testValue = "test";
 
-                Cache<>.Set(testKey, testValue, TimeSpan.FromSeconds(1));
-                var retrieved = Cache.Get<string>(testKey);
+                Cache?.Set(testKey, testValue, TimeSpan.FromSeconds(1));
+                var retrieved = Cache?.Get<string>(testKey);
 
                 var isWorking = retrieved == testValue;
 
@@ -174,22 +171,14 @@ public class MonadicHealthCheckService(
 
             return health;
         }, "CheckMemoryCache");
-    }
 
     // Helper methods
-    private string GetApiVersion()
-    {
-        return configuration["ApiVersion"] ?? "1.0.0";
-    }
+    private string GetApiVersion() => configuration["ApiVersion"] ?? "1.0.0";
 
-    private string GetEnvironment()
-    {
-        return configuration["Environment"] ?? "Development";
-    }
+    private string GetEnvironment() => configuration["Environment"] ?? "Development";
 
-    private ServiceHealth ExtractHealthOrDegraded(Try<ServiceHealth> tryHealth, string serviceName)
-    {
-        return tryHealth.Match(
+    private ServiceHealth ExtractHealthOrDegraded(Try<ServiceHealth> tryHealth, string serviceName) =>
+        tryHealth.Match(
             onSuccess: health => health,
             onFailure: ex =>
             {
@@ -202,7 +191,6 @@ public class MonadicHealthCheckService(
                 };
             }
         );
-    }
 }
 
 /// <summary>

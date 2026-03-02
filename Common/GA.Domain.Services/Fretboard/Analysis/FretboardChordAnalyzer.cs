@@ -6,9 +6,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using Core.Instruments.Biomechanics;
 using Core.Instruments.Primitives;
-using Core.Primitives;
+using Core.Primitives.Intervals;
 using Core.Theory.Atonal;
 using Core.Theory.Harmony;
+using ServicesChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     Analyzes chord voicings on the fretboard for ergonomics, voice leading, and musical properties
@@ -94,26 +95,24 @@ public static class FretboardChordAnalyzer
 
         // Create a simple analytical chord template
         var majorFormula = CommonChordFormulas.Major;
-        var chordTemplate = new ChordTemplate.Analytical(majorFormula, "Simple Major", pcs);
+        var chordTemplate = new ServicesChordTemplate.Analytical(pcs, majorFormula, "Simple Major");
 
         return new(
             pcs,
             chordTemplate,
-            ImmutableArray<Interval>.Empty,
+            [],
             consonance,
             tension,
             "Unknown"); // Would need chord symbol generation
     }
 
-    private static VoiceLeadingAnalysis AnalyzeVoiceLeading(ImmutableArray<Position> voicing)
-    {
+    private static VoiceLeadingAnalysis AnalyzeVoiceLeading(ImmutableArray<Position> voicing) =>
         // Simplified - for single chord analysis
-        return new(
-            ImmutableArray<VoiceMovement>.Empty,
+        new(
+            [],
             1.0,
             0.0,
             0.0);
-    }
 
     private static double CalculateOverallScore(ErgonomicAnalysis ergonomics, HarmonicAnalysis harmonics,
         VoiceLeadingAnalysis voiceLeading)
@@ -155,50 +154,32 @@ public static class FretboardChordAnalyzer
     }
 
     // Helper methods with simplified implementations
-    private static double CalculateDifficultyScore(Position[] positions)
-    {
-        return Math.Min(1.0, positions.Length * 0.1 + CalculateSpread(positions) * 0.05);
-    }
+    private static double CalculateDifficultyScore(Position[] positions) => Math.Min(1.0, positions.Length * 0.1 + CalculateSpread(positions) * 0.05);
 
-    private static double CalculateStretchFactor(Position[] positions)
-    {
-        return positions.Length < 2
+    private static double CalculateStretchFactor(Position[] positions) =>
+        positions.Length < 2
             ? 0.0
             : Math.Min(1.0,
                 (positions.Max(p => p.Location.Fret.Value) - positions.Min(p => p.Location.Fret.Value)) / 5.0);
-    }
 
-    private static double CalculateBarreComplexity(Position[] positions)
-    {
-        return positions.GroupBy(p => p.Location.Fret.Value).Count(g => g.Count() > 1) * 0.3;
-    }
+    private static double CalculateBarreComplexity(Position[] positions) => positions.GroupBy(p => p.Location.Fret.Value).Count(g => g.Count() > 1) * 0.3;
 
-    private static double CalculateSpread(Position[] positions)
-    {
-        return positions.Length < 2
+    private static double CalculateSpread(Position[] positions) =>
+        positions.Length < 2
             ? 0.0
             : positions.Max(p => p.Location.Str.Value) - positions.Min(p => p.Location.Str.Value);
-    }
 
-    private static ImmutableArray<FingerPosition> GenerateFingerPositions(Position[] positions)
-    {
-        return [.. positions.Select((pos, i) => new FingerPosition(
-            (FingerType)(i % 4 + 1), // Simplified finger assignment
-            pos.Location.Str.Value,
-            pos.Location.Fret.Value,
-            0.5f,
-            false))];
-    }
+    private static ImmutableArray<FingerPosition> GenerateFingerPositions(Position[] positions) =>
+    [.. positions.Select((pos, i) => new FingerPosition(
+        (FingerType)(i % 4 + 1), // Simplified finger assignment
+        pos.Location.Str.Value,
+        pos.Location.Fret.Value,
+        0.5f,
+        false))];
 
-    private static double CalculateConsonance(PitchClassSet pcs)
-    {
-        return Math.Max(0.0, 1.0 - pcs.IntervalClassVector.Sum() / 12.0);
-    }
+    private static double CalculateConsonance(PitchClassSet pcs) => Math.Max(0.0, 1.0 - pcs.IntervalClassVector.Sum() / 12.0);
 
-    private static double CalculateTension(PitchClassSet pcs)
-    {
-        return pcs.IntervalClassVector.Sum() / 12.0;
-    }
+    private static double CalculateTension(PitchClassSet pcs) => pcs.IntervalClassVector.Sum() / 12.0;
 
     /// <summary>
     ///     Comprehensive analysis result for a fretboard chord voicing
@@ -228,7 +209,7 @@ public static class FretboardChordAnalyzer
     /// </summary>
     public record HarmonicAnalysis(
         PitchClassSet PitchClasses,
-        ChordTemplate ChordTemplate,
+        ServicesChordTemplate ChordTemplate,
         ImmutableArray<Interval> Intervals,
         double Consonance,
         double Tension,

@@ -1,50 +1,43 @@
 namespace GA.Business.ML.Providers;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Provider factory for creating Ollama-based MEAI clients.
+///     Provider factory for creating Ollama-based MEAI clients.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Ollama provides local LLM inference for development and privacy-sensitive deployments.
-/// This provider wraps Ollama's embedding capability for text (non-musical) content.
-/// </para>
-/// <para>
-/// Common embedding models:
-/// <list type="bullet">
-///   <item>nomic-embed-text (default - 768 dimensions)</item>
-///   <item>mxbai-embed-large (1024 dimensions)</item>
-///   <item>all-minilm (384 dimensions)</item>
-/// </list>
-/// </para>
+///     <para>
+///         Ollama provides local LLM inference for development and privacy-sensitive deployments.
+///         This provider wraps Ollama's embedding capability for text (non-musical) content.
+///     </para>
+///     <para>
+///         Common embedding models:
+///         <list type="bullet">
+///             <item>nomic-embed-text (default - 768 dimensions)</item>
+///             <item>mxbai-embed-large (1024 dimensions)</item>
+///             <item>all-minilm (384 dimensions)</item>
+///         </list>
+///     </para>
 /// </remarks>
 public static class OllamaProvider
 {
     /// <summary>
-    /// Default Ollama base URL.
+    ///     Default Ollama base URL.
     /// </summary>
     public const string DefaultBaseUrl = "http://localhost:11434";
 
     /// <summary>
-    /// Default chat model.
+    ///     Default chat model.
     /// </summary>
     public const string DefaultChatModel = "llama3.2:3b";
 
     /// <summary>
-    /// Default embedding model.
+    ///     Default embedding model.
     /// </summary>
     public const string DefaultEmbeddingModel = "nomic-embed-text";
 
     /// <summary>
-    /// Creates an <see cref="IChatClient"/> using Ollama.
+    ///     Creates an <see cref="IChatClient" /> using Ollama.
     /// </summary>
     /// <param name="baseUrl">The Ollama base URL (default: http://localhost:11434).</param>
     /// <param name="model">The model to use (default: llama3.2:3b).</param>
@@ -64,7 +57,7 @@ public static class OllamaProvider
     }
 
     /// <summary>
-    /// Creates an <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> for text embeddings using Ollama.
+    ///     Creates an <see cref="IEmbeddingGenerator{TInput, TEmbedding}" /> for text embeddings using Ollama.
     /// </summary>
     /// <param name="baseUrl">The Ollama base URL (default: http://localhost:11434).</param>
     /// <param name="model">The embedding model to use (default: nomic-embed-text).</param>
@@ -84,7 +77,7 @@ public static class OllamaProvider
     }
 
     /// <summary>
-    /// Creates a chat client from configuration.
+    ///     Creates a chat client from configuration.
     /// </summary>
     /// <param name="configuration">The configuration instance.</param>
     /// <param name="logger">Optional logger.</param>
@@ -99,7 +92,7 @@ public static class OllamaProvider
     }
 
     /// <summary>
-    /// Creates an embedding generator from configuration.
+    ///     Creates an embedding generator from configuration.
     /// </summary>
     /// <param name="configuration">The configuration instance.</param>
     /// <param name="logger">Optional logger.</param>
@@ -114,7 +107,7 @@ public static class OllamaProvider
     }
 
     /// <summary>
-    /// Checks if Ollama is available by attempting to connect.
+    ///     Checks if Ollama is available by attempting to connect.
     /// </summary>
     /// <param name="baseUrl">The Ollama base URL to check.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -125,7 +118,7 @@ public static class OllamaProvider
     {
         try
         {
-            using var httpClient = new System.Net.Http.HttpClient
+            using var httpClient = new HttpClient
             {
                 Timeout = TimeSpan.FromSeconds(5)
             };
@@ -141,62 +134,70 @@ public static class OllamaProvider
 }
 
 /// <summary>
-/// Provides combined embedding support using both musical (OPTIC-K) and text (Ollama) embeddings.
+///     Provides combined embedding support using both musical (OPTIC-K) and text (Ollama) embeddings.
 /// </summary>
 /// <remarks>
-/// <para>
-/// This service intelligently routes embedding requests:
-/// <list type="bullet">
-///   <item>Musical content (VoicingDocument) → OPTIC-K embeddings via MusicalEmbeddingBridge</item>
-///   <item>Text content (strings) → Ollama/GitHub Models text embeddings</item>
-/// </list>
-/// </para>
+///     <para>
+///         This service intelligently routes embedding requests:
+///         <list type="bullet">
+///             <item>Musical content (ChordVoicingRagDocument) → OPTIC-K embeddings via MusicalEmbeddingBridge</item>
+///             <item>Text content (strings) → Ollama/GitHub Models text embeddings</item>
+///         </list>
+///     </para>
 /// </remarks>
 public sealed class HybridEmbeddingService : IDisposable
 {
-    private readonly IEmbeddingGenerator<string, Embedding<float>> _textEmbeddingGenerator;
-    private readonly Embeddings.MusicalEmbeddingBridge? _musicalEmbeddingBridge;
     private readonly ILogger<HybridEmbeddingService>? _logger;
 
     /// <summary>
-    /// Initializes a new hybrid embedding service.
+    ///     Initializes a new hybrid embedding service.
     /// </summary>
     /// <param name="textEmbeddingGenerator">Generator for text embeddings.</param>
     /// <param name="musicalEmbeddingBridge">Optional generator for musical embeddings.</param>
     /// <param name="logger">Optional logger.</param>
     public HybridEmbeddingService(
         IEmbeddingGenerator<string, Embedding<float>> textEmbeddingGenerator,
-        Embeddings.MusicalEmbeddingBridge? musicalEmbeddingBridge = null,
+        MusicalEmbeddingBridge? musicalEmbeddingBridge = null,
         ILogger<HybridEmbeddingService>? logger = null)
     {
-        _textEmbeddingGenerator = textEmbeddingGenerator ?? throw new ArgumentNullException(nameof(textEmbeddingGenerator));
-        _musicalEmbeddingBridge = musicalEmbeddingBridge;
+        TextEmbeddings = textEmbeddingGenerator ?? throw new ArgumentNullException(nameof(textEmbeddingGenerator));
+        MusicalEmbeddings = musicalEmbeddingBridge;
         _logger = logger;
     }
 
     /// <summary>
-    /// Gets the text embedding generator.
+    ///     Gets the text embedding generator.
     /// </summary>
-    public IEmbeddingGenerator<string, Embedding<float>> TextEmbeddings => _textEmbeddingGenerator;
+    public IEmbeddingGenerator<string, Embedding<float>> TextEmbeddings { get; }
 
     /// <summary>
-    /// Gets the musical embedding bridge (if available).
+    ///     Gets the musical embedding bridge (if available).
     /// </summary>
-    public Embeddings.MusicalEmbeddingBridge? MusicalEmbeddings => _musicalEmbeddingBridge;
+    public MusicalEmbeddingBridge? MusicalEmbeddings { get; }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        MusicalEmbeddings?.Dispose();
+        if (TextEmbeddings is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
 
     /// <summary>
-    /// Generates text embeddings for the provided strings.
+    ///     Generates text embeddings for the provided strings.
     /// </summary>
     public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateTextEmbeddingsAsync(
         IEnumerable<string> texts,
         CancellationToken cancellationToken = default)
     {
         _logger?.LogDebug("Generating text embeddings for {Count} texts", texts.Count());
-        return await _textEmbeddingGenerator.GenerateAsync(texts, cancellationToken: cancellationToken);
+        return await TextEmbeddings.GenerateAsync(texts, cancellationToken: cancellationToken);
     }
 
     /// <summary>
-    /// Generates a single text embedding.
+    ///     Generates a single text embedding.
     /// </summary>
     public async Task<Embedding<float>> GenerateTextEmbeddingAsync(
         string text,
@@ -204,15 +205,5 @@ public sealed class HybridEmbeddingService : IDisposable
     {
         var results = await GenerateTextEmbeddingsAsync([text], cancellationToken);
         return results.First();
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _musicalEmbeddingBridge?.Dispose();
-        if (_textEmbeddingGenerator is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
     }
 }

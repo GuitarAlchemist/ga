@@ -11,14 +11,8 @@ public class Node(State state, Node? parent)
     // Constructor
 
     // Check if the node is fully expanded
-    public bool IsFullyExpanded()
-    {
-        return Children.Count == State.GetPossibleNextStates().Count;
-    }
+    public bool IsFullyExpanded() => Children.Count == State.GetPossibleNextStates().Count;
 
     // Check if the node is a leaf
-    public bool IsLeaf()
-    {
-        return Children.Count == 0;
-    }
+    public bool IsLeaf() => Children.Count == 0;
 }

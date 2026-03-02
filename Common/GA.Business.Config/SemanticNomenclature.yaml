@@ -75,7 +75,7 @@ Categories:
         NarrativeFragment: "fits perfectly into an R&B or Neo-Soul pocket with its rich, modern texture."
         TitleTemplate: "Sophisticated Soul and Modern Depth"
         Priority: 10
-        SuggestedContexts: []
+        SuggestedContexts: [ ]
       - Id: "rock-guitar"
         Name: "Rock"
         Description: "Powerful, driven shapes typical of rock music."
@@ -83,7 +83,7 @@ Categories:
         NarrativeFragment: "anchors the sound with the grit and power typical of classic rock."
         TitleTemplate: "Driven Rock Energy"
         Priority: 5
-        SuggestedContexts: []
+        SuggestedContexts: [ ]
       - Id: "flamenco"
         Name: "Flamenco"
         Description: "The sharp, passionate sound of Spanish guitar."

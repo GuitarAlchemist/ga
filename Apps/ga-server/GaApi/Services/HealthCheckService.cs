@@ -5,17 +5,6 @@ using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Models;
 
-/// <summary>
-///     Service for performing comprehensive health checks
-/// </summary>
-public interface IHealthCheckService
-{
-    Task<HealthCheckResponse> GetHealthAsync();
-    Task<ServiceHealth> CheckDatabaseAsync();
-    Task<ServiceHealth> CheckVectorSearchAsync();
-    Task<ServiceHealth> CheckMemoryCacheAsync();
-}
-
 public class HealthCheckService(
     MongoDbService mongoDb,
     IVectorSearchStrategy vectorSearch,
@@ -179,10 +168,7 @@ public class HealthCheckService(
         }
     }
 
-    private string GetEnvironment()
-    {
-        return configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development";
-    }
+    private string GetEnvironment() => configuration["ASPNETCORE_ENVIRONMENT"] ?? "Development";
 
     private static string MaskConnectionString(string connectionString)
     {

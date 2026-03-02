@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using GA.Data.MongoDB.Models.Rag;
-using GA.Data.MongoDB.Services.DocumentServices.Rag;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -167,13 +165,13 @@ public class PartitionedRagService(
                         r.Document.SourceUrl ?? ""));
 
                 default:
-                    return Enumerable.Empty<RagResult>();
+                    return [];
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching partition {Partition}", partition);
-            return Enumerable.Empty<RagResult>();
+            return [];
         }
     }
 }

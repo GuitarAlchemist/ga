@@ -1,4 +1,4 @@
-﻿namespace GA.MusicTheory.Service.Models;
+namespace GA.MusicTheory.Service.Models;
 
 /// <summary>
 ///     DTO for musical key information
@@ -47,4 +47,3 @@ public class KeyNotesDto
     public required int KeySignature { get; set; }
     public required string AccidentalKind { get; set; }
 }
-

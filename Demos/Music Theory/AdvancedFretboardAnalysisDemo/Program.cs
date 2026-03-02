@@ -1,10 +1,8 @@
-namespace AdvancedFretboardAnalysisDemo;
+﻿namespace AdvancedFretboardAnalysisDemo;
 
 using System.Collections.Immutable;
 using GA.Domain.Core.Instruments.Biomechanics;
-using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
 using GA.Domain.Services.Fretboard.Analysis;
 using Spectre.Console;
 
@@ -237,50 +235,34 @@ internal class Program
     }
 
     // Helper methods
-    private static ImmutableArray<Position> CreatePositions(IEnumerable<(int String, int Fret)> positions)
-    {
-        return [
-            ..positions.Select(p => new Position.Played(
-                new PositionLocation(new Str(p.String), new Fret(p.Fret)),
-                new MidiNote(60 + p.Fret) // Simplified MIDI note calculation
-            ))
-        ];
-    }
+    private static ImmutableArray<Position> CreatePositions(IEnumerable<(int String, int Fret)> positions) =>
+    [
+        ..positions.Select(p => new Position.Played(
+            new(new(p.String), new(p.Fret)),
+            new(60 + p.Fret) // Simplified MIDI note calculation
+        ))
+    ];
 
-    private static ImmutableArray<Position> CreateScalePositions(IEnumerable<(int String, int Fret)> positions)
-    {
-        return CreatePositions(positions);
-    }
+    private static ImmutableArray<Position> CreateScalePositions(IEnumerable<(int String, int Fret)> positions) =>
+        CreatePositions(positions);
 
-    private static string FormatDifficulty(double score)
-    {
-        return score switch
+    private static string FormatDifficulty(double score) =>
+        score switch
         {
             < 0.3 => "[green]Easy[/]",
             < 0.6 => "[yellow]Medium[/]",
             < 0.8 => "[orange3]Hard[/]",
             _ => "[red]Very Hard[/]"
         };
-    }
 
-    private static string FormatStretch(double factor)
-    {
-        return $"{factor:F2}";
-    }
+    private static string FormatStretch(double factor) => $"{factor:F2}";
 
-    private static string FormatBarre(double complexity)
-    {
-        return complexity > 0.5 ? "[yellow]Required[/]" : "[green]None[/]";
-    }
+    private static string FormatBarre(double complexity) => complexity > 0.5 ? "[yellow]Required[/]" : "[green]None[/]";
 
-    private static string FormatScore(double score)
-    {
-        return $"{score:F2}";
-    }
+    private static string FormatScore(double score) => $"{score:F2}";
 
-    private static string GetBestUseCase(string voicing)
-    {
-        return voicing switch
+    private static string GetBestUseCase(string voicing) =>
+        voicing switch
         {
             "Open Position" => "Beginner, Strumming",
             "8th Fret Barre" => "Rock, Power",
@@ -288,51 +270,35 @@ internal class Program
             "Rootless Voicing" => "Comping, Advanced",
             _ => "General"
         };
-    }
 
     // Simplified biomechanical calculations
-    private static double CalculateFingerSpread(ImmutableArray<Position> positions)
-    {
-        return positions.Any()
+    private static double CalculateFingerSpread(ImmutableArray<Position> positions) =>
+        positions.Any()
             ? positions.Max(p => p.Location.Fret.Value) - positions.Min(p => p.Location.Fret.Value) + 2.0
             : 0;
-    }
 
-    private static double CalculateWristAngle(ImmutableArray<Position> positions)
-    {
-        return Math.Min(45, positions.Count() * 3.5 + 15);
-    }
+    private static double CalculateWristAngle(ImmutableArray<Position> positions) =>
+        Math.Min(45, positions.Count() * 3.5 + 15);
 
-    private static double CalculateFingerPressure(ImmutableArray<Position> positions)
-    {
-        return positions.Count() * 2.5 + (positions.Any(p => p.Location.Fret.Value > 12) ? 5 : 0);
-    }
+    private static double CalculateFingerPressure(ImmutableArray<Position> positions) =>
+        positions.Count() * 2.5 + (positions.Any(p => p.Location.Fret.Value > 12) ? 5 : 0);
 
-    private static double CalculateHandStrain(ImmutableArray<Position> positions)
-    {
-        return Math.Min(10, positions.Count() * 0.8 + CalculateFingerSpread(positions) * 0.3);
-    }
+    private static double CalculateHandStrain(ImmutableArray<Position> positions) =>
+        Math.Min(10, positions.Count() * 0.8 + CalculateFingerSpread(positions) * 0.3);
 
-    private static int CalculateFretSpan(ImmutableArray<Position> positions)
-    {
-        return positions.Any()
+    private static int CalculateFretSpan(ImmutableArray<Position> positions) =>
+        positions.Any()
             ? positions.Max(p => p.Location.Fret.Value) - positions.Min(p => p.Location.Fret.Value) + 1
             : 0;
-    }
 
-    private static int CalculateStringChanges(ImmutableArray<Position> positions)
-    {
-        return positions.Count() > 1 ? positions.Count() - 1 : 0;
-    }
+    private static int CalculateStringChanges(ImmutableArray<Position> positions) =>
+        positions.Count() > 1 ? positions.Count() - 1 : 0;
 
-    private static double CalculatePatternDifficulty(ImmutableArray<Position> positions)
-    {
-        return Math.Min(1.0, CalculateFretSpan(positions) * 0.1 + CalculateStringChanges(positions) * 0.05);
-    }
+    private static double CalculatePatternDifficulty(ImmutableArray<Position> positions) => Math.Min(1.0,
+        CalculateFretSpan(positions) * 0.1 + CalculateStringChanges(positions) * 0.05);
 
-    private static string GetTechniqueFocus(string pattern)
-    {
-        return pattern switch
+    private static string GetTechniqueFocus(string pattern) =>
+        pattern switch
         {
             var p when p.Contains("Pentatonic") => "Bending, Expression",
             var p when p.Contains("Blues") => "Vibrato, Feel",
@@ -340,11 +306,9 @@ internal class Program
             var p when p.Contains("Pattern 2") => "Position Shifts",
             _ => "General Technique"
         };
-    }
 
-    private static string GetTechniqueDifficulty(string technique)
-    {
-        return technique switch
+    private static string GetTechniqueDifficulty(string technique) =>
+        technique switch
         {
             "Legato Run" => "[yellow]Intermediate[/]",
             "Sweep Picking" => "[red]Advanced[/]",
@@ -353,11 +317,9 @@ internal class Program
             "Hybrid Picking" => "[yellow]Intermediate[/]",
             _ => "[green]Beginner[/]"
         };
-    }
 
-    private static string GetPracticeFocus(string technique)
-    {
-        return technique switch
+    private static string GetPracticeFocus(string technique) =>
+        technique switch
         {
             "Legato Run" => "Left hand strength, timing",
             "Sweep Picking" => "Right hand economy, muting",
@@ -366,11 +328,9 @@ internal class Program
             "Hybrid Picking" => "Pick/finger independence",
             _ => "General technique"
         };
-    }
 
-    private static string GetMusicalApplication(string technique)
-    {
-        return technique switch
+    private static string GetMusicalApplication(string technique) =>
+        technique switch
         {
             "Legato Run" => "Lead guitar, melodic lines",
             "Sweep Picking" => "Arpeggios, neo-classical",
@@ -379,5 +339,4 @@ internal class Program
             "Hybrid Picking" => "Country, fingerstyle rock",
             _ => "Various styles"
         };
-    }
 }

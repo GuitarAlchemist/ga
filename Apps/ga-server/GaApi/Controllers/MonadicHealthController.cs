@@ -1,8 +1,12 @@
 namespace GaApi.Controllers;
 
 using Models;
-using Services;
+using GaApi.Models;
+using GaApi.Services;
 using GA.Core.Functional;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///     Controller demonstrating monadic health check service integration
@@ -188,9 +192,8 @@ public class MonadicHealthController : ControllerBase
     }
 
     // Helper method to extract health or create error health
-    private ServiceHealth ExtractHealthOrError(Try<ServiceHealth> tryHealth)
-    {
-        return tryHealth.Match(
+    private ServiceHealth ExtractHealthOrError(Try<ServiceHealth> tryHealth) =>
+        tryHealth.Match(
             onSuccess: health => health,
             onFailure: ex => new ServiceHealth
             {
@@ -198,5 +201,4 @@ public class MonadicHealthController : ControllerBase
                 Error = ex.Message
             }
         );
-    }
 }

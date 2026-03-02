@@ -1,11 +1,9 @@
 namespace GA.Domain.Services.Chords;
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using ChordTemplate = ChordTemplate;
+using CoreChordTemplate = ChordTemplate;
+using ServicesChordTemplate = ChordTemplate;
 
 /// <summary>
 ///     Intelligent chord template registry with forward analysis and likelihood-based lookup.
@@ -24,24 +22,20 @@ public static class ChordTemplateRegistry
     /// </summary>
     /// <param name="pitchClassSet">The pitch class set to interpret</param>
     /// <returns>The most probable chord interpretation, or null if none found</returns>
-    public static ChordInterpretation? GetMostLikelyChord(PitchClassSet pitchClassSet)
-    {
-        return _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
+    public static ChordInterpretation? GetMostLikelyChord(PitchClassSet pitchClassSet) =>
+        _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
             ? interpretations.FirstOrDefault()
             : null;
-    }
 
     /// <summary>
     ///     Gets all possible chord interpretations for a pitch class set, ordered by likelihood
     /// </summary>
     /// <param name="pitchClassSet">The pitch class set to interpret</param>
     /// <returns>Array of interpretations ordered by musical probability</returns>
-    public static ChordInterpretation[] GetAllInterpretations(PitchClassSet pitchClassSet)
-    {
-        return _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
+    public static ChordInterpretation[] GetAllInterpretations(PitchClassSet pitchClassSet) =>
+        _registry.Value.TryGetValue(pitchClassSet, out var interpretations)
             ? interpretations
             : [];
-    }
 
     /// <summary>
     ///     Gets advanced chord interpretations including drop voicings, slash chords, and complex harmonies
@@ -75,26 +69,27 @@ public static class ChordTemplateRegistry
     public static EnhancedChordTemplate? GetTemplate(PitchClassSet pitchClassSet)
     {
         var interpretation = GetMostLikelyChord(pitchClassSet);
-        return interpretation.HasValue ? new EnhancedChordTemplate(interpretation.Value.Template) : null;
+        if (interpretation == null)
+        {
+            return null;
+        }
+
+        var coreTemplate = ConvertToCore(interpretation.Value.Template);
+        return new(coreTemplate);
     }
 
     /// <summary>
     ///     Gets all cached chord templates (for compatibility with existing code)
     /// </summary>
     /// <returns>All available chord templates</returns>
-    public static IEnumerable<ChordTemplate> GetAllTemplates()
-    {
-        return _allTemplates.Value;
-    }
+    public static IEnumerable<ChordTemplate> GetAllTemplates() => _allTemplates.Value;
 
     /// <summary>
     ///     Gets common chord templates (triads and seventh chords)
     /// </summary>
     /// <returns>Common chord templates ordered by musical frequency</returns>
-    public static IEnumerable<ChordTemplate> GetCommonTemplates()
-    {
-        return _allTemplates.Value.Where(t => t.PitchClassSet.Count <= 4);
-    }
+    public static IEnumerable<ChordTemplate> GetCommonTemplates() =>
+        _allTemplates.Value.Where(t => t.PitchClassSet.Count <= 4);
 
     /// <summary>
     ///     Registers a custom chord template
@@ -132,10 +127,7 @@ public static class ChordTemplateRegistry
         return registry;
     }
 
-    private static ChordTemplate[] BuildAllTemplates()
-    {
-        return [.. ChordTemplateFactory.GenerateAllPossibleChords()];
-    }
+    private static ChordTemplate[] BuildAllTemplates() => [.. ChordTemplateFactory.GenerateAllPossibleChords()];
 
     private static ChordInterpretation[] AnalyzeAllInterpretations(PitchClassSet pitchClassSet)
     {
@@ -213,20 +205,16 @@ public static class ChordTemplateRegistry
         return pitchClasses.IndexOf(root);
     }
 
-    private static string GenerateChordName(ChordTemplate template, PitchClass root)
-    {
-        return $"{root}{template.GetSymbolSuffix()}";
-    }
+    private static string GenerateChordName(ChordTemplate template, PitchClass root) =>
+        $"{root}{BasicChordExtensionsService.GetExtensionNotation(template.Extension, template.Quality)}";
 
-    private static VoicingAnalysis AnalyzeVoicing(ChordVoicing voicing)
-    {
-        return new(
+    private static VoicingAnalysis AnalyzeVoicing(ChordVoicing voicing) =>
+        new(
             voicing.IsInverted,
             voicing.GetInversion(),
             false, // isDropVoicing - would need more analysis
             false // isSlashChord - would need more analysis
         );
-    }
 
     private static string GenerateAdvancedChordName(string baseName, VoicingAnalysis analysis)
     {
@@ -249,6 +237,12 @@ public static class ChordTemplateRegistry
 
         return name;
     }
+
+    private static CoreChordTemplate ConvertToCore(ServicesChordTemplate template) =>
+        new ChordTemplate.Analytical(
+            new(template.PitchClassSet.Select(pc => pc)),
+            template.Formula,
+            template.Name);
 }
 
 /// <summary>

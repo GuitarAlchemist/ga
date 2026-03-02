@@ -1,7 +1,7 @@
 namespace GaChatbot.Services;
 
 using System.Text;
-using GA.Domain.Core.Design;
+using GA.Domain.Core.Design.Schema;
 
 /// <summary>
 /// Generates system prompts enriched with domain vocabulary to help the LLM understand valid search filters.

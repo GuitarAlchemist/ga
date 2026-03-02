@@ -1,26 +1,33 @@
 namespace GA.MusicTheory.Service.Controllers;
 
-using GA.Domain.Core.Theory.Tonal;
-using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
-using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Domain.Core.Theory.Tonal;
+using Domain.Core.Theory.Tonal.Modes.Diatonic;
+using Domain.Core.Theory.Tonal.Primitives.Diatonic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Models;
+using GA.Infrastructure.Documentation;
+using GA.Domain.Core.Primitives.Notes;
+using GA.MusicTheory.Service.Models;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     API controller for music theory metadata (keys, modes, scales, intervals)
 /// </summary>
 [ApiController]
 [Route("api/music-theory")]
+[Produces("application/json")]
 [EnableRateLimiting("fixed")]
-public class MusicTheoryController(ILogger<MusicTheoryController> logger) : ControllerBase
+public class MusicTheoryController(
+    SchemaDiscoveryService discoveryService,
+    ILogger<MusicTheoryController> logger) : ControllerBase
 {
     /// <summary>
     ///     Get all available musical keys (major and minor)
     /// </summary>
     /// <returns>List of all keys with their properties</returns>
     [HttpGet("keys")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<KeyDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<KeyDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public IActionResult GetAllKeys()
     {
         try
@@ -33,7 +40,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 KeySignature = k.KeySignature.Value,
                 AccidentalKind = k.AccidentalKind.ToString(),
                 Notes = [.. k.Notes.Select(n => n.ToString())]
-            });
+            }).ToList();
 
             var minorKeys = Key.Minor.MinorItems.Select(k => new KeyDto
             {
@@ -43,17 +50,17 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 KeySignature = k.KeySignature.Value,
                 AccidentalKind = k.AccidentalKind.ToString(),
                 Notes = [.. k.Notes.Select(n => n.ToString())]
-            });
+            }).ToList();
 
             var allKeys = majorKeys.Concat(minorKeys).ToList();
 
             return Ok(ApiResponse<IEnumerable<KeyDto>>.Ok(
                 allKeys,
-                metadata: new Dictionary<string, object>
+                metadata: new()
                 {
                     ["totalKeys"] = allKeys.Count,
-                    ["majorKeys"] = majorKeys.Count(),
-                    ["minorKeys"] = minorKeys.Count()
+                    ["majorKeys"] = majorKeys.Count,
+                    ["minorKeys"] = minorKeys.Count
                 }));
         }
         catch (Exception ex)
@@ -70,7 +77,8 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
     /// </summary>
     /// <returns>List of all modes with their properties</returns>
     [HttpGet("modes")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ModeDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ModeDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public IActionResult GetAllModes()
     {
         try
@@ -99,7 +107,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
 
             return Ok(ApiResponse<IEnumerable<ModeDto>>.Ok(
                 modes,
-                metadata: new Dictionary<string, object>
+                metadata: new()
                 {
                     ["totalModes"] = modes.Count,
                     ["majorModes"] = modes.Count(m => !m.IsMinor),
@@ -120,7 +128,8 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
     /// </summary>
     /// <returns>List of scale degrees</returns>
     [HttpGet("scale-degrees")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ScaleDegreeDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ScaleDegreeDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public IActionResult GetScaleDegrees()
     {
         try
@@ -138,7 +147,7 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
 
             return Ok(ApiResponse<IEnumerable<ScaleDegreeDto>>.Ok(
                 degrees,
-                metadata: new Dictionary<string, object>
+                metadata: new()
                 {
                     ["totalDegrees"] = degrees.Length
                 }));
@@ -158,8 +167,9 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
     /// <param name="keyName">Key name (e.g., "C Major", "A Minor")</param>
     /// <returns>Notes in the key with fretboard positions</returns>
     [HttpGet("keys/{keyName}/notes")]
-    [ProducesResponseType(typeof(ApiResponse<KeyNotesDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<KeyNotesDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public IActionResult GetKeyNotes(string keyName)
     {
         try
@@ -208,52 +218,43 @@ public class MusicTheoryController(ILogger<MusicTheoryController> logger) : Cont
                 ex.Message));
         }
     }
-}
 
-/// <summary>
-///     DTO for musical key information
-/// </summary>
-public class KeyDto
-{
-    public required string Name { get; set; }
-    public required string Root { get; set; }
-    public required string Mode { get; set; }
-    public required int KeySignature { get; set; }
-    public required string AccidentalKind { get; set; }
-    public required List<string> Notes { get; set; }
-}
+    /// <summary>
+    ///     Get domain schema metadata (relationships, invariants)
+    /// </summary>
+    [HttpGet("schema")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public IActionResult GetDomainSchema()
+    {
+        try
+        {
+            var domainAssembly = typeof(Note).Assembly;
+            var schemaInfos = discoveryService.DiscoverSchema(domainAssembly);
 
-/// <summary>
-///     DTO for mode information
-/// </summary>
-public class ModeDto
-{
-    public required string Name { get; set; }
-    public required int Degree { get; set; }
-    public required bool IsMinor { get; set; }
-    public required List<string> Intervals { get; set; }
-    public required List<string> CharacteristicNotes { get; set; }
-}
+            var result = schemaInfos.Select(info => new 
+            {
+                info.Name,
+                info.FullName,
+                Relationships = info.Relationships.Select(r => new
+                {
+                    Target = r.TargetType.Name,
+                    r.Type,
+                    r.Description
+                }),
+                Invariants = info.Invariants.Select(i => new
+                {
+                    i.Description,
+                    i.Expression
+                })
+            });
 
-/// <summary>
-///     DTO for scale degree information
-/// </summary>
-public class ScaleDegreeDto
-{
-    public required int Degree { get; set; }
-    public required string RomanNumeral { get; set; }
-    public required string Name { get; set; }
-}
-
-/// <summary>
-///     DTO for key notes with fretboard positions
-/// </summary>
-public class KeyNotesDto
-{
-    public required string KeyName { get; set; }
-    public required string Root { get; set; }
-    public required string Mode { get; set; }
-    public required List<string> Notes { get; set; }
-    public required int KeySignature { get; set; }
-    public required string AccidentalKind { get; set; }
+            return Ok(ApiResponse<object>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting domain schema");
+            return StatusCode(500, ApiResponse<object>.Fail("Failed to retrieve domain schema", ex.Message));
+        }
+    }
 }

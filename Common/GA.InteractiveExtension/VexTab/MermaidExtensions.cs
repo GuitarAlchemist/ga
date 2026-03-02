@@ -2,11 +2,10 @@
 
 public static class MermaidExtensions
 {
-    public static T UseVexTab<T>(this T kernel)
-        where T : Kernel
+    extension<T>(T kernel) where T : Kernel
     {
-        // TODO
-
-        return kernel;
+        public T UseVexTab() =>
+            // TODO
+            kernel;
     }
 }

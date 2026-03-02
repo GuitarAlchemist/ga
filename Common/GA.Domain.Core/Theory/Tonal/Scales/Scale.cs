@@ -1,21 +1,15 @@
 namespace GA.Domain.Core.Theory.Tonal.Scales;
 
-using Extensions;
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using Atonal;
-using Core.Primitives;
 using Core.Primitives.Extensions;
-using Design;
+using Core.Primitives.Notes;
+using Design.Attributes;
+using Design.Schema;
 using Extensions;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using GA.Core.Extensions;
 using Modes;
+using Interval = Core.Primitives.Intervals.Interval;
 
 /// <summary>
 ///     A scale
@@ -28,7 +22,8 @@ using Modes;
 ///     https://chromatone.center/theory/scales/study.html
 /// </remarks>
 [DomainInvariant("A scale must have at least one note", "Count > 0")]
-[DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf, "A scale is a tonal realization of a pitch class set")]
+[DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf,
+    "A scale is a tonal realization of a pitch class set")]
 [DomainRelationship(typeof(ScaleMode), RelationshipType.IsParentOf, "A scale can generate multiple modes via rotation")]
 public class Scale : IStaticReadonlyCollection<Scale>,
     IReadOnlyCollection<Note>
@@ -45,7 +40,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
         ArgumentNullException.ThrowIfNull(notes);
 
         _notes = notes.ToImmutableList().AsPrintable();
-        PitchClassSet = PitchClassSetExtensions.ToPitchClassSet(_notes);
+        PitchClassSet = _notes.ToPitchClassSet();
         IntervalClassVector = PitchClassSet.IntervalClassVector;
         Intervals = new LazyScaleIntervals(_notes);
     }
@@ -88,15 +83,9 @@ public class Scale : IStaticReadonlyCollection<Scale>,
     public ModalFamily? ModalFamily =>
         ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
-    public IEnumerator<Note> GetEnumerator()
-    {
-        return _notes.GetEnumerator();
-    }
+    public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)_notes).GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_notes).GetEnumerator();
 
     public int Count => _notes.Count;
 
@@ -110,10 +99,7 @@ public class Scale : IStaticReadonlyCollection<Scale>,
 
     #endregion
 
-    public static Scale FromPitchClassSetId(PitchClassSetId id)
-    {
-        return new(id.Notes);
-    }
+    public static Scale FromPitchClassSetId(PitchClassSetId id) => new(id.Notes);
 
     public override string ToString()
     {

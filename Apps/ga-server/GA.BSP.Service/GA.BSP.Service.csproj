@@ -8,21 +8,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.10" />
-    <PackageReference Include="MongoDB.Driver" Version="3.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.9.0" />
-    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.10"/>
+    <PackageReference Include="MongoDB.Driver" Version="3.2.0"/>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0"/>
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.9.0"/>
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj" />
+    <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj" /> -->
-    <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 </Project>

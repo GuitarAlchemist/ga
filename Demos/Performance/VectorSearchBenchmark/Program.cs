@@ -430,7 +430,7 @@ internal class Program
 
     private static double[] GenerateRandomEmbedding(int dimensions, Random? random = null)
     {
-        random ??= new Random();
+        random ??= new();
         var embedding = new double[dimensions];
 
         // Generate normalized random vector

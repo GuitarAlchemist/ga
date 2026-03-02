@@ -3,37 +3,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 
-/// <summary>
-///     Caching service with different strategies for regular vs semantic data
-/// </summary>
-public interface ICachingService
-{
-    /// <summary>
-    ///     Get or create a cached value for regular data (longer TTL, more permissive)
-    /// </summary>
-    Task<T> GetOrCreateRegularAsync<T>(string key, Func<Task<T>> factory);
-
-    /// <summary>
-    ///     Get or create a cached value for semantic data (shorter TTL, more selective)
-    /// </summary>
-    Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory);
-
-    /// <summary>
-    ///     Remove a cached value
-    /// </summary>
-    void Remove(string key);
-
-    /// <summary>
-    ///     Clear all cached values
-    /// </summary>
-    void Clear();
-
-    /// <summary>
-    ///     Get cache statistics
-    /// </summary>
-    CacheStatistics GetStatistics();
-}
-
 public class CachingService(
     ILogger<CachingService> logger,
     ICacheMetricsService? metricsService = null) : ICachingService
@@ -153,7 +122,7 @@ public class CachingService(
         var regularTotal = _regularHits + _regularMisses;
         var semanticTotal = _semanticHits + _semanticMisses;
 
-        return new CacheStatistics
+        return new()
         {
             RegularHits = _regularHits,
             RegularMisses = _regularMisses,
@@ -165,20 +134,4 @@ public class CachingService(
             TotalMisses = _regularMisses + _semanticMisses
         };
     }
-}
-
-public class CacheStatistics
-{
-    public long RegularHits { get; set; }
-    public long RegularMisses { get; set; }
-    public double RegularHitRate { get; set; }
-    public long SemanticHits { get; set; }
-    public long SemanticMisses { get; set; }
-    public double SemanticHitRate { get; set; }
-    public long TotalHits { get; set; }
-    public long TotalMisses { get; set; }
-
-    public double TotalHitRate => TotalHits + TotalMisses > 0
-        ? (double)TotalHits / (TotalHits + TotalMisses)
-        : 0;
 }

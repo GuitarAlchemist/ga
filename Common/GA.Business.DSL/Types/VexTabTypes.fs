@@ -11,7 +11,14 @@ module VexTabTypes =
     // ============================================================================
 
     /// Note letter (A-G)
-    type NoteLetter = A | B | C | D | E | F | G
+    type NoteLetter =
+        | A
+        | B
+        | C
+        | D
+        | E
+        | F
+        | G
 
     /// Accidental
     type VexAccidental =
@@ -45,11 +52,10 @@ module VexTabTypes =
         | Percussion
 
     /// Key signature
-    type KeySignature = {
-        Root: NoteLetter
-        Accidental: VexAccidental option
-        Mode: string option  // "major" or "minor"
-    }
+    type KeySignature =
+        { Root: NoteLetter
+          Accidental: VexAccidental option
+          Mode: string option } // "major" or "minor"
 
     /// Time signature
     type TimeSignature =
@@ -65,14 +71,13 @@ module VexTabTypes =
         | Custom of (NoteLetter * VexAccidental option * Octave) list
 
     /// Tabstave options
-    type TabstaveOptions = {
-        Notation: bool option
-        Tablature: bool option
-        Clef: ClefType option
-        Key: KeySignature option
-        Time: TimeSignature option
-        Tuning: Tuning option
-    }
+    type TabstaveOptions =
+        { Notation: bool option
+          Tablature: bool option
+          Clef: ClefType option
+          Key: KeySignature option
+          Time: TimeSignature option
+          Tuning: Tuning option }
 
     // ============================================================================
     // DURATIONS
@@ -88,11 +93,10 @@ module VexTabTypes =
         | ThirtySecond
 
     /// Duration with modifiers
-    type Duration = {
-        Code: DurationCode
-        Dotted: bool
-        SlashNotation: bool
-    }
+    type Duration =
+        { Code: DurationCode
+          Dotted: bool
+          SlashNotation: bool }
 
     // ============================================================================
     // TECHNIQUES
@@ -129,34 +133,33 @@ module VexTabTypes =
         | BowDown
 
     /// Articulation position
-    type ArticulationPosition = Top | Bottom
+    type ArticulationPosition =
+        | Top
+        | Bottom
 
     /// Articulation
-    type Articulation = {
-        Type: ArticulationType
-        Position: ArticulationPosition
-    }
+    type Articulation =
+        { Type: ArticulationType
+          Position: ArticulationPosition }
 
     // ============================================================================
     // NOTES
     // ============================================================================
 
     /// Standard notation note
-    type StandardNote = {
-        Letter: NoteLetter
-        Accidental: VexAccidental option
-        Octave: Octave
-        Techniques: Technique list
-        Articulation: Articulation option
-    }
+    type StandardNote =
+        { Letter: NoteLetter
+          Accidental: VexAccidental option
+          Octave: Octave
+          Techniques: Technique list
+          Articulation: Articulation option }
 
     /// Tablature note
-    type TabNote = {
-        Fret: Fret
-        String: StringNumber
-        Techniques: Technique list
-        Articulation: Articulation option
-    }
+    type TabNote =
+        { Fret: Fret
+          String: StringNumber
+          Techniques: Technique list
+          Articulation: Articulation option }
 
     /// Chord note (can be standard or tab)
     type ChordNote =
@@ -164,15 +167,13 @@ module VexTabTypes =
         | TabChordNote of TabNote
 
     /// Chord
-    type Chord = {
-        Notes: ChordNote list
-        Techniques: Technique list
-    }
+    type Chord =
+        { Notes: ChordNote list
+          Techniques: Technique list }
 
     /// Rest
-    type Rest = {
-        Position: int option  // 0-9, bottom to top
-    }
+    type Rest =
+        { Position: int option } // 0-9, bottom to top
 
     /// Bar line type
     type BarLineType =
@@ -184,9 +185,8 @@ module VexTabTypes =
         | EndBar
 
     /// Tuplet
-    type Tuplet = {
-        Number: int  // 3 for triplet, 5 for quintuplet, etc.
-    }
+    type Tuplet =
+        { Number: int } // 3 for triplet, 5 for quintuplet, etc.
 
     // ============================================================================
     // ANNOTATIONS
@@ -194,14 +194,13 @@ module VexTabTypes =
 
     /// Text style
     type TextStyle =
-        | Preset of string  // "big", "medium", "italic"
+        | Preset of string // "big", "medium", "italic"
         | Custom of face: string * size: int * style: string
 
     /// Annotation
-    type Annotation = {
-        Style: TextStyle option
-        Text: string
-    }
+    type Annotation =
+        { Style: TextStyle option
+          Text: string }
 
     // ============================================================================
     // NOTE ITEMS
@@ -253,10 +252,7 @@ module VexTabTypes =
         | BoolValue of bool
 
     /// Option
-    type VexOption = {
-        Name: string
-        Value: OptionValue
-    }
+    type VexOption = { Name: string; Value: OptionValue }
 
     // ============================================================================
     // LINES
@@ -275,67 +271,47 @@ module VexTabTypes =
     // ============================================================================
 
     /// Complete VexTab document
-    type VexTabDocument = {
-        Lines: VexTabLine list
-    }
+    type VexTabDocument = { Lines: VexTabLine list }
 
     // ============================================================================
     // HELPER FUNCTIONS
     // ============================================================================
 
     /// Create a default tabstave with common settings
-    let defaultTabstave = {
-        Notation = Some true
-        Tablature = Some true
-        Clef = Some Treble
-        Key = None
-        Time = None
-        Tuning = Some Standard
-    }
+    let defaultTabstave =
+        { Notation = Some true
+          Tablature = Some true
+          Clef = Some Treble
+          Key = None
+          Time = None
+          Tuning = Some Standard }
 
     /// Create a default duration (quarter note)
-    let defaultDuration = {
-        Code = Quarter
-        Dotted = false
-        SlashNotation = false
-    }
+    let defaultDuration =
+        { Code = Quarter
+          Dotted = false
+          SlashNotation = false }
 
     /// Create a standard note
     let createStandardNote letter octave =
-        {
-            Letter = letter
-            Accidental = None
-            Octave = octave
-            Techniques = []
-            Articulation = None
-        }
+        { Letter = letter
+          Accidental = None
+          Octave = octave
+          Techniques = []
+          Articulation = None }
 
     /// Create a tab note
     let createTabNote fret string =
-        {
-            Fret = FretNumber fret
-            String = string
-            Techniques = []
-            Articulation = None
-        }
+        { Fret = FretNumber fret
+          String = string
+          Techniques = []
+          Articulation = None }
 
     /// Create a chord from notes
-    let createChord notes =
-        {
-            Notes = notes
-            Techniques = []
-        }
+    let createChord notes = { Notes = notes; Techniques = [] }
 
     /// Create a rest
-    let createRest () =
-        {
-            Position = None
-        }
+    let createRest () = { Position = None }
 
     /// Create an annotation
-    let createAnnotation text =
-        {
-            Style = None
-            Text = text
-        }
-
+    let createAnnotation text = { Style = None; Text = text }

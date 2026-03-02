@@ -23,6 +23,7 @@ The DFT uses **complex exponentials** as basis functions:
 $$e^{-j\theta} = \cos(\theta) - j\sin(\theta)$$
 
 Each frequency component $X[k]$ encapsulates:
+
 - **Magnitude** — strength of frequency component
 - **Phase** — timing/offset of frequency component
 
@@ -30,12 +31,12 @@ Each frequency component $X[k]$ encapsulates:
 
 ## 2. Theoretical Foundations
 
-| Property | Description |
-|----------|-------------|
-| **Orthogonality** | Basis functions are orthogonal, forming a basis in $N$-dimensional complex vector space |
-| **Change of Basis** | DFT is a rotation from impulse basis (time) to sinusoid basis (frequency) |
-| **Periodicity** | Both $x[n]$ and $X[k]$ repeat indefinitely: $x[n] = x[n+N]$ |
-| **DTFT Sampling** | DFT samples the continuous DTFT at $N$ equally spaced points |
+| Property            | Description                                                                             |
+|---------------------|-----------------------------------------------------------------------------------------|
+| **Orthogonality**   | Basis functions are orthogonal, forming a basis in $N$-dimensional complex vector space |
+| **Change of Basis** | DFT is a rotation from impulse basis (time) to sinusoid basis (frequency)               |
+| **Periodicity**     | Both $x[n]$ and $X[k]$ repeat indefinitely: $x[n] = x[n+N]$                             |
+| **DTFT Sampling**   | DFT samples the continuous DTFT at $N$ equally spaced points                            |
 
 ---
 
@@ -66,9 +67,9 @@ $$\sum_{n=0}^{N-1} |x[n]|^2 = \frac{1}{N} \sum_{k=0}^{N-1} |X[k]|^2$$
 
 ## 4. Fast Fourier Transform (FFT)
 
-| Algorithm | Complexity |
-|-----------|------------|
-| Direct DFT | $O(N^2)$ |
+| Algorithm                    | Complexity    |
+|------------------------------|---------------|
+| Direct DFT                   | $O(N^2)$      |
 | **FFT** (Cooley-Tukey, 1965) | $O(N \log N)$ |
 
 The FFT factorizes the DFT matrix into sparse factors, enabling real-time processing.
@@ -95,12 +96,12 @@ Higher frequency precision requires more samples → reduced time localization.
 
 ## 6. Applications
 
-| Domain | Application |
-|--------|-------------|
-| **Radar** | Pulse compression, Doppler filtering |
-| **Medical Imaging** | MRI k-space reconstruction |
-| **Audio Processing** | Spectral analysis, filtering, compression |
-| **OPTIC-K** | Phase Sphere coordinates, transposition invariance |
+| Domain               | Application                                        |
+|----------------------|----------------------------------------------------|
+| **Radar**            | Pulse compression, Doppler filtering               |
+| **Medical Imaging**  | MRI k-space reconstruction                         |
+| **Audio Processing** | Spectral analysis, filtering, compression          |
+| **OPTIC-K**          | Phase Sphere coordinates, transposition invariance |
 
 ---
 
@@ -115,14 +116,14 @@ In OPTIC-K, the DFT creates the **Phase Sphere** — a geometric coordinate syst
 
 ### OPTIC-K Frequency Indices
 
-| $k$ | Musical Interpretation |
-|-----|----------------------|
-| 1 | Chromatic density |
-| 2 | Tritone affinity |
-| 3 | Augmented affinity |
-| 4 | Diminished affinity |
-| 5 | **Diatonicity** (major/minor) |
-| 6 | Whole-tone affinity |
+| $k$ | Musical Interpretation        |
+|-----|-------------------------------|
+| 1   | Chromatic density             |
+| 2   | Tritone affinity              |
+| 3   | Augmented affinity            |
+| 4   | Diminished affinity           |
+| 5   | **Diatonicity** (major/minor) |
+| 6   | Whole-tone affinity           |
 
 ---
 

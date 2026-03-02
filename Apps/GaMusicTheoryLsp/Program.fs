@@ -1,4 +1,3 @@
-open System
 open GA.MusicTheory.DSL.LSP
 
 /// <summary>
@@ -10,7 +9,7 @@ open GA.MusicTheory.DSL.LSP
 let main argv =
     eprintfn "Starting Music Theory DSL Language Server..."
     eprintfn "Listening on stdin/stdout for LSP messages..."
-    
+
     try
         // Run the LSP server
         LanguageServer.run ()
@@ -19,4 +18,3 @@ let main argv =
         eprintfn "Fatal error: %s" ex.Message
         eprintfn "Stack trace: %s" ex.StackTrace
         1
-

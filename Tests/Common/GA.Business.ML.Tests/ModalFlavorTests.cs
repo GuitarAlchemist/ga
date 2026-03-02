@@ -1,21 +1,17 @@
 namespace GA.Business.ML.Tests;
 
-using System.Collections.Generic;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using Musical.Enrichment;
-using NUnit.Framework;
+using Rag.Models;
 
 [TestFixture]
 public class ModalFlavorTests
 {
-    private ModalFlavorService _service;
-
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() =>
         // This relies on Modes.yaml being copied to output dir
         _service = new();
-    }
+
+    private ModalFlavorService _service;
 
     [Test]
     public void Test_Enrich_Lydian()
@@ -25,12 +21,12 @@ public class ModalFlavorTests
         // Intervals: 0(1), 4(3), 7(5), 11(7), 6(#4)
         // #4 is the characteristic interval of Lydian
 
-        var doc = new VoicingDocument
+        var doc = new ChordVoicingRagDocument
         {
             Id = "test_lydian",
             SearchableText = "test",
             RootPitchClass = 0,
-            PitchClasses = new[] { 0, 4, 7, 11, 6 }, // Cmaj7#11
+            PitchClasses = [0, 4, 7, 11, 6], // Cmaj7#11
 
             // Required props
             Diagram = "x32000",
@@ -59,15 +55,17 @@ public class ModalFlavorTests
         // C Phrygian: C Db ...
         // Interval: 1 (b2)
 
-        var doc = new VoicingDocument
+        var doc = new ChordVoicingRagDocument
         {
             Id = "test_phryg",
             SearchableText = "test",
             RootPitchClass = 0,
-            PitchClasses = new[] { 0, 1, 7 }, // C5(b9)
+            PitchClasses = [0, 1, 7], // C5(b9)
 
             // Required props
-            Diagram = "x32000", MidiNotes = [], SemanticTags = [], PossibleKeys = [], YamlAnalysis = "", PitchClassSet = "", IntervalClassVector = "", AnalysisEngine = "", AnalysisVersion = "", Jobs = [], TuningId = "", PitchClassSetId = ""
+            Diagram = "x32000", MidiNotes = [], SemanticTags = [], PossibleKeys = [], YamlAnalysis = "",
+            PitchClassSet = "", IntervalClassVector = "", AnalysisEngine = "", AnalysisVersion = "", Jobs = [],
+            TuningId = "", PitchClassSetId = ""
         };
 
         var tags = new HashSet<string>();
@@ -84,15 +82,17 @@ public class ModalFlavorTests
         // Lydian has 7 (Maj7). Mixolydian has b7.
         // Should be Mixolydian, NOT Lydian.
 
-        var doc = new VoicingDocument
+        var doc = new ChordVoicingRagDocument
         {
             Id = "test_dom",
             SearchableText = "test",
             RootPitchClass = 0,
-            PitchClasses = new[] { 0, 4, 7, 10 },
+            PitchClasses = [0, 4, 7, 10],
 
             // Required props
-            Diagram = "x32310", MidiNotes = [], SemanticTags = [], PossibleKeys = [], YamlAnalysis = "", PitchClassSet = "", IntervalClassVector = "", AnalysisEngine = "", AnalysisVersion = "", Jobs = [], TuningId = "", PitchClassSetId = ""
+            Diagram = "x32310", MidiNotes = [], SemanticTags = [], PossibleKeys = [], YamlAnalysis = "",
+            PitchClassSet = "", IntervalClassVector = "", AnalysisEngine = "", AnalysisVersion = "", Jobs = [],
+            TuningId = "", PitchClassSetId = ""
         };
 
         var tags = new HashSet<string>();

@@ -4,18 +4,21 @@ using Core.Extensions;
 
 public static class GaFormattingExtensions
 {
-    public static ImmutableList<Type> RegisterFormatters(this Assembly assembly)
+    extension(Assembly assembly)
     {
-        ArgumentNullException.ThrowIfNull(assembly);
-
-        var result = assembly.MethodOverrideTypes("toString");
-        foreach (var type in result)
+        public ImmutableList<Type> RegisterFormatters()
         {
-            Formatter.Register(
-                type,
-                (value, textWriter) => textWriter.Write(value?.ToString()));
-        }
+            ArgumentNullException.ThrowIfNull(assembly);
 
-        return result;
+            var result = assembly.MethodOverrideTypes("toString");
+            foreach (var type in result)
+            {
+                Formatter.Register(
+                    type,
+                    (value, textWriter) => textWriter.Write(value?.ToString()));
+            }
+
+            return result;
+        }
     }
 }

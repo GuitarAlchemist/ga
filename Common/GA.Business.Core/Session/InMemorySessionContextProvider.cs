@@ -2,7 +2,7 @@ namespace GA.Business.Core.Session;
 
 using System;
 using System.Threading;
-using Domain.Core.Session;
+using GA.Business.Core.Context;
 using JetBrains.Annotations;
 
 /// <summary>
@@ -87,9 +87,7 @@ public sealed class InMemorySessionContextProvider : ISessionContextProvider
         
         OnContextChanged(defaultContext);
     }
-    
-    private void OnContextChanged(MusicalSessionContext context)
-    {
-        ContextChanged?.Invoke(this, context);
-    }
+
+    private void OnContextChanged(MusicalSessionContext context) => ContextChanged?.Invoke(this, context);
 }
+

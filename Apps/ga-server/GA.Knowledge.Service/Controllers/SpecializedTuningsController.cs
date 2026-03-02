@@ -1,9 +1,8 @@
 namespace GA.Knowledge.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
-
 using System.ComponentModel.DataAnnotations;
 using Domain.Services;
+using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 ///     API controller for specialized tunings

@@ -1,9 +1,6 @@
 namespace GA.Business.ML.Tests;
 
-using System;
-using System.Linq;
 using Musical.Enrichment;
-using NUnit.Framework;
 
 [TestFixture]
 public class ModalDebugTests
@@ -15,7 +12,7 @@ public class ModalDebugTests
         var names = service.GetAllModeNames().OrderBy(n => n).ToList();
 
         Console.WriteLine($"Total Modes: {names.Count()}");
-        foreach(var name in names)
+        foreach (var name in names)
         {
             var intervals = service.GetCharacteristicSemitones(name);
             var str = string.Join(",", intervals.OrderBy(x => x));

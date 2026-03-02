@@ -1,6 +1,6 @@
-namespace GA.Domain.Core.Tests.Fretboard.Biomechanics;
+namespace GA.Business.Core.Tests.Fretboard.Biomechanics;
 
-using GA.Domain.Core.Instruments.Biomechanics;
+using Domain.Core.Instruments.Biomechanics;
 
 [TestFixture]
 public class HandModelTests
@@ -18,6 +18,7 @@ public class HandModelTests
         Assert.That(hand.Fingers[3].Type, Is.EqualTo(FingerType.Ring));
         Assert.That(hand.Fingers[4].Type, Is.EqualTo(FingerType.Little));
     }
+
     [Test]
     public void CreateStandardAdult_ShouldHave19DegreesOfFreedom()
     {
@@ -37,6 +38,7 @@ public class HandModelTests
         Assert.That(hand.TotalDof, Is.EqualTo(expectedDof));
         Assert.That(hand.TotalDof, Is.GreaterThan(15)); // At least 15 DOF
     }
+
     [Test]
     public void Thumb_ShouldHaveThreeJoints()
     {
@@ -50,6 +52,7 @@ public class HandModelTests
         Assert.That(thumb.Joints[1].Type, Is.EqualTo(JointType.Mcp));
         Assert.That(thumb.Joints[2].Type, Is.EqualTo(JointType.Ip));
     }
+
     [Test]
     public void IndexFinger_ShouldHaveFourJoints()
     {
@@ -64,6 +67,7 @@ public class HandModelTests
         Assert.That(index.Joints[2].Type, Is.EqualTo(JointType.Pip));
         Assert.That(index.Joints[3].Type, Is.EqualTo(JointType.Dip));
     }
+
     [Test]
     public void FingerJoint_ShouldEnforceFlexionLimits()
     {
@@ -77,6 +81,7 @@ public class HandModelTests
         // Act & Assert - Above maximum
         Assert.That(mcpJoint.IsWithinLimits(ToRadians(100)), Is.False);
     }
+
     [Test]
     public void FingerJoint_ShouldClampToLimits()
     {
@@ -89,6 +94,7 @@ public class HandModelTests
         Assert.That(flexion, Is.LessThanOrEqualTo(mcpJoint.MaxFlexion));
         Assert.That(abduction, Is.LessThanOrEqualTo(mcpJoint.MaxAbduction));
     }
+
     [Test]
     public void CreateScaled_ShouldScaleAllDimensions()
     {
@@ -112,6 +118,7 @@ public class HandModelTests
             }
         }
     }
+
     [Test]
     public void HandPose_CreateRestPose_ShouldUseRestAngles()
     {
@@ -123,6 +130,7 @@ public class HandModelTests
         Assert.That(restPose.JointAngles.Length, Is.GreaterThan(0));
         Assert.That(restPose.Model, Is.EqualTo(hand));
     }
+
     [Test]
     public void HandPose_IsValid_ShouldReturnTrueForRestPose()
     {
@@ -134,6 +142,7 @@ public class HandModelTests
         // Assert
         Assert.That(isValid, Is.True);
     }
+
     [Test]
     public void HandPose_ClampToLimits_ShouldEnforceConstraints()
     {
@@ -146,12 +155,14 @@ public class HandModelTests
         {
             invalidAngles[i] = ToRadians(200); // Way beyond limits
         }
+
         var invalidPose = restPose with { JointAngles = [..invalidAngles] };
         // Act
         var clamped = invalidPose.ClampToLimits();
         // Assert
         Assert.That(clamped.IsValid(), Is.True);
     }
+
     [Test]
     public void MiddleFinger_ShouldBeLongestFinger()
     {
@@ -167,6 +178,7 @@ public class HandModelTests
         Assert.That(middle.TotalLength, Is.GreaterThan(ring.TotalLength));
         Assert.That(middle.TotalLength, Is.GreaterThan(little.TotalLength));
     }
+
     [Test]
     public void FingerBasePositions_ShouldBeSpreadAcrossPalm()
     {
@@ -184,6 +196,7 @@ public class HandModelTests
         Assert.That(middle.BasePosition.X, Is.LessThan(ring.BasePosition.X));
         Assert.That(ring.BasePosition.X, Is.LessThan(little.BasePosition.X));
     }
+
     [Test]
     public void JointConstraints_ShouldMatchBiomechanicalLimits()
     {
@@ -196,8 +209,6 @@ public class HandModelTests
         // Assert - MCP should have abduction capability
         Assert.That(indexMcp.DegreesOfFreedom, Is.EqualTo(2));
     }
-    private static float ToRadians(float degrees)
-    {
-        return degrees * MathF.PI / 180.0f;
-    }
+
+    private static float ToRadians(float degrees) => degrees * MathF.PI / 180.0f;
 }

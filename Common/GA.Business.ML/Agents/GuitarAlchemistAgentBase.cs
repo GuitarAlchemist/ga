@@ -69,9 +69,7 @@ public abstract class GuitarAlchemistAgentBase : IDisposable
     /// <summary>
     /// Builds the system prompt for this agent.
     /// </summary>
-    protected virtual string BuildSystemPrompt()
-    {
-        return $"""
+    protected virtual string BuildSystemPrompt() => $"""
             You are {Name}, a specialized AI agent for Guitar Alchemist.
             
             Your role: {Description}
@@ -84,7 +82,6 @@ public abstract class GuitarAlchemistAgentBase : IDisposable
             - Cite specific music theory concepts or techniques when applicable
             - If a request falls outside your expertise, indicate this clearly
             """;
-    }
 
     /// <summary>
     /// Sends a chat request to the LLM.

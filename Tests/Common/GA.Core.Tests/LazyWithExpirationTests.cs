@@ -1,6 +1,6 @@
 namespace GA.Core.Tests;
 
-using Core;
+using Utilities;
 
 public class LazyWithExpirationTests
 {
@@ -9,7 +9,8 @@ public class LazyWithExpirationTests
     {
         // Arrange
         var counter = 0;
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMilliseconds(200));
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
+            TimeSpan.FromMilliseconds(200));
 
         // Act
         var v1 = lazy.Value;
@@ -78,8 +79,12 @@ public class LazyWithExpirationTests
 
         // Assert
         foreach (var r in results)
+        {
             Assert.That(r, Is.EqualTo(1));
-        Assert.That(counter, Is.EqualTo(1), "Only one initialization should occur prior to expiration under concurrency");
+        }
+
+        Assert.That(counter, Is.EqualTo(1),
+            "Only one initialization should occur prior to expiration under concurrency");
     }
 
     [Test]

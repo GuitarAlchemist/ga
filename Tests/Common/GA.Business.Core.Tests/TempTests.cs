@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests;
+namespace GA.Business.Core.Tests;
 
 using GA.Domain.Core.Theory.Atonal;
 

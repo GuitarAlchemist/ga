@@ -1,9 +1,7 @@
-namespace GA.Domain.Core.Tests.Tonal;
+namespace GA.Business.Core.Tests.Tonal;
 
-using System.Linq;
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Tonal;
-using NUnit.Framework;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Tonal;
 
 [TestFixture]
 public class ModeCatalogTests
@@ -21,6 +19,7 @@ public class ModeCatalogTests
         Assert.That(majorFamily.ModeNames, Has.Length.EqualTo(7));
         Assert.That(majorFamily.ModeNames[0], Is.EqualTo("Ionian"));
     }
+
     [Test]
     public void ModeCatalog_ShouldLoadNewFamilies()
     {
@@ -28,10 +27,12 @@ public class ModeCatalogTests
         var melodicMinorPcs = new[] { 0, 2, 3, 5, 7, 9, 11 };
         var pcs = new PitchClassSet(melodicMinorPcs.Select(p => PitchClass.FromValue(p)));
         var icv = pcs.IntervalClassVector;
-        Assert.That(ModeCatalog.Metadata.ContainsKey(icv), Is.True, $"Should contain Melodic Minor Family with ICV {icv}");
+        Assert.That(ModeCatalog.Metadata.ContainsKey(icv), Is.True,
+            $"Should contain Melodic Minor Family with ICV {icv}");
         var family = ModeCatalog.Metadata[icv];
         Assert.That(family.FamilyName, Is.EqualTo("Melodic Minor Family"));
     }
+
     [Test]
     public void ModeCatalog_TryGetMode_ShouldWorkForNewModes()
     {

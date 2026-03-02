@@ -1,10 +1,10 @@
 namespace GA.Business.DSL.Tests;
 
 using System.Text;
-using GA.MusicTheory.DSL.Parsers;
-using GA.MusicTheory.DSL.Types;
 using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Core;
+using MusicTheory.DSL.Parsers;
+using MusicTheory.DSL.Types;
 
 [TestFixture]
 public class ChordProgressionParserTests
@@ -683,7 +683,7 @@ public class GuitarProParserTests
         // Arrange - Create a minimal Guitar Pro document
         var doc = new GuitarProTypes.GuitarProDocument(
             GuitarProTypes.GuitarProVersion.GP5,
-            new GuitarProTypes.SongInfo(
+            new(
                 FSharpOption<string>.Some("Test Song"),
                 FSharpOption<string>.Some("Test Subtitle"),
                 FSharpOption<string>.Some("Test Artist"),
@@ -694,13 +694,12 @@ public class GuitarProParserTests
                 FSharpOption<string>.None,
                 []
             ),
-            ListModule.OfArray(new[]
-            {
+            ListModule.OfArray([
                 new GuitarProTypes.Track(
                     "Guitar",
                     25,
                     6,
-                    ListModule.OfArray(new[] { 64, 59, 55, 50, 45, 40 }),
+                    ListModule.OfArray([64, 59, 55, 50, 45, 40]),
                     0,
                     FSharpOption<Tuple<int, int, int>>.None,
                     [],
@@ -710,7 +709,7 @@ public class GuitarProParserTests
                     64,
                     1
                 )
-            }),
+            ]),
             100,
             120,
             0,
@@ -729,8 +728,7 @@ public class GuitarProParserTests
     }
 
     [Test]
-    public void ShouldParseFileWithValidPath()
-    {
+    public void ShouldParseFileWithValidPath() =>
         // This test would require an actual Guitar Pro file
         // For now, just test that the function exists and handles missing files
         Assert.DoesNotThrow(() =>
@@ -738,7 +736,6 @@ public class GuitarProParserTests
             var result = GuitarProParser.parseFile("nonexistent.gp5");
             Assert.That(result.IsError, Is.True);
         });
-    }
 
     [Test]
     public void ShouldHandleNullOrWhitespaceInput()
@@ -759,7 +756,7 @@ public class GuitarProParserTests
         // Arrange - Create a document with multiple tracks
         var doc = new GuitarProTypes.GuitarProDocument(
             GuitarProTypes.GuitarProVersion.GP5,
-            new GuitarProTypes.SongInfo(
+            new(
                 FSharpOption<string>.Some("Multi-Track Song"),
                 FSharpOption<string>.None,
                 FSharpOption<string>.None,
@@ -770,13 +767,12 @@ public class GuitarProParserTests
                 FSharpOption<string>.None,
                 []
             ),
-            ListModule.OfArray(new[]
-            {
-                new GuitarProTypes.Track(
+            ListModule.OfArray([
+                new(
                     "Guitar 1",
                     25,
                     6,
-                    ListModule.OfArray(new[] { 64, 59, 55, 50, 45, 40 }),
+                    ListModule.OfArray([64, 59, 55, 50, 45, 40]),
                     0,
                     FSharpOption<Tuple<int, int, int>>.None,
                     [],
@@ -790,7 +786,7 @@ public class GuitarProParserTests
                     "Bass",
                     33,
                     4,
-                    ListModule.OfArray(new[] { 43, 38, 33, 28 }),
+                    ListModule.OfArray([43, 38, 33, 28]),
                     0,
                     FSharpOption<Tuple<int, int, int>>.None,
                     [],
@@ -800,7 +796,7 @@ public class GuitarProParserTests
                     64,
                     2
                 )
-            }),
+            ]),
             100,
             120,
             0,

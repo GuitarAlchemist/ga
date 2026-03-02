@@ -46,20 +46,30 @@ dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_prefer_conditional_expression_over_return = false:silent
 csharp_prefer_simple_default_expression = true:suggestion
 
+# Collection expression preferences (2026 Standards)
+dotnet_style_prefer_collection_expression = true:warning
+csharp_style_prefer_collection_expression_for_array = true:warning
+csharp_style_prefer_collection_expression_for_empty_collection = true:warning
+csharp_style_prefer_collection_expression_for_immutable_array = true:warning
+csharp_style_prefer_collection_expression_for_non_mutating_methods = true:warning
+
 # Pattern matching preferences
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+
+# Primary constructors
+csharp_style_prefer_primary_constructors = true:suggestion
 
 # Code block preferences
 csharp_prefer_braces = true:silent
 
 # Expression-bodied members
-csharp_style_expression_bodied_methods = false:silent
-csharp_style_expression_bodied_constructors = false:silent
-csharp_style_expression_bodied_operators = false:silent
-csharp_style_expression_bodied_properties = true:silent
-csharp_style_expression_bodied_indexers = true:silent
-csharp_style_expression_bodied_accessors = true:silent
+csharp_style_expression_bodied_methods = true:warning
+csharp_style_expression_bodied_constructors = true:warning
+csharp_style_expression_bodied_operators = true:warning
+csharp_style_expression_bodied_properties = true:warning
+csharp_style_expression_bodied_indexers = true:warning
+csharp_style_expression_bodied_accessors = true:warning
 
 # Naming conventions
 dotnet_naming_rule.interfaces_should_be_prefixed_with_i.severity = warning

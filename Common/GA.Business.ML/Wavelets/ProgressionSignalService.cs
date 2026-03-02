@@ -1,37 +1,27 @@
 namespace GA.Business.ML.Wavelets;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using Embeddings;
-
-using Embeddings.Services;
-
 /// <summary>
-/// Service for extracting time-series signals from musical progressions.
-/// These signals serve as input for wavelet transform analysis.
+///     Service for extracting time-series signals from musical progressions.
+///     These signals serve as input for wavelet transform analysis.
 /// </summary>
-public class ProgressionSignalService
+public class ProgressionSignalService(PhaseSphereService phaseSphereService)
 {
-    private readonly PhaseSphereService _phaseSphereService;
-
-    public ProgressionSignalService(PhaseSphereService phaseSphereService)
+    public ProgressionSignalService() : this(new())
     {
-        _phaseSphereService = phaseSphereService;
     }
 
-    public ProgressionSignalService() : this(new PhaseSphereService()) { }
-
     /// <summary>
-    /// Extracts scalar signals from a sequence of voicing documents.
+    ///     Extracts scalar signals from a sequence of voicing documents.
     /// </summary>
-    public ProgressionSignals ExtractSignals(IEnumerable<VoicingDocument> progression)
+    public ProgressionSignals ExtractSignals(IEnumerable<ChordVoicingRagDocument> progression)
     {
         var docs = progression.ToList();
-        if (docs.Count == 0) return new ProgressionSignals();
+        if (docs.Count == 0)
+        {
+            return new();
+        }
 
-        int n = docs.Count;
+        var n = docs.Count;
         var stability = new double[n];
         var tension = new double[n];
         var entropy = new double[n];
@@ -41,18 +31,18 @@ public class ProgressionSignalService
         // 1. Compute Global Spectral Barycenter (Key Center of the progression)
         // We use this as the reference point for Tonal Drift.
         var pcSets = docs.Select(d => d.PitchClasses).ToList();
-        var barycenter = _phaseSphereService.ComputeSpectralBarycenter(pcSets);
+        var barycenter = phaseSphereService.ComputeSpectralBarycenter(pcSets);
 
-        for (int i = 0; i < n; i++)
+        for (var i = 0; i < n; i++)
         {
             var doc = docs[i];
-            
+
             // 1. Stability (Consonance)
             stability[i] = doc.Consonance;
-            
+
             // 2. Tension (Inverse of Stability)
             tension[i] = 1.0 - doc.Consonance;
-            
+
             // 3. Entropy (Spectral peakiness - Index 108 in Schema v1.4)
             if (doc.Embedding != null && doc.Embedding.Length > EmbeddingSchema.SpectralEntropy)
             {
@@ -71,19 +61,19 @@ public class ProgressionSignalService
 
             // 5. Tonal Drift (Phase distance on the Circle of Fifths from Barycenter)
             // Use k=5 (index 4) for Fifth Cycle.
-            var spec = _phaseSphereService.ComputeSpectralVector(doc.PitchClasses);
-            var normSpec = _phaseSphereService.NormalizeToSphere(spec);
-            
+            var spec = phaseSphereService.ComputeSpectralVector(doc.PitchClasses);
+            var normSpec = phaseSphereService.NormalizeToSphere(spec);
+
             // Relative phase angle at k=5
-            var relPhases = _phaseSphereService.ComputeRelativePhases(normSpec, barycenter);
-            
+            var relPhases = phaseSphereService.ComputeRelativePhases(normSpec, barycenter);
+
             // Unwrapped phase or absolute distance?
             // Absolute distance from center (0 to PI).
             // This represents "how far away" we are from the average key.
-            tonalDrift[i] = Math.Abs(relPhases[4]); 
+            tonalDrift[i] = Math.Abs(relPhases[4]);
         }
 
-        return new ProgressionSignals
+        return new()
         {
             Stability = stability,
             Tension = tension,
@@ -93,28 +83,32 @@ public class ProgressionSignalService
         };
     }
 
-    private double CalculateDistance(double[]? a, double[]? b)
+    private double CalculateDistance(float[]? a, float[]? b)
     {
-        if (a == null || b == null || a.Length != b.Length) return 0.0;
-        
-        double sum = 0;
-        for (int i = 0; i < a.Length; i++)
+        if (a == null || b == null || a.Length != b.Length)
         {
-            double diff = a[i] - b[i];
+            return 0.0;
+        }
+
+        double sum = 0;
+        for (var i = 0; i < a.Length; i++)
+        {
+            var diff = a[i] - b[i];
             sum += diff * diff;
         }
+
         return Math.Sqrt(sum);
     }
 }
 
 /// <summary>
-/// Container for time-series signals extracted from a progression.
+///     Container for time-series signals extracted from a progression.
 /// </summary>
 public record ProgressionSignals
 {
-    public double[] Stability { get; init; } = Array.Empty<double>();
-    public double[] Tension { get; init; } = Array.Empty<double>();
-    public double[] Entropy { get; init; } = Array.Empty<double>();
-    public double[] Velocity { get; init; } = Array.Empty<double>();
-    public double[] TonalDrift { get; init; } = Array.Empty<double>();
+    public double[] Stability { get; init; } = [];
+    public double[] Tension { get; init; } = [];
+    public double[] Entropy { get; init; } = [];
+    public double[] Velocity { get; init; } = [];
+    public double[] TonalDrift { get; init; } = [];
 }

@@ -8,7 +8,7 @@ using Path = System.IO.Path;
 /// </summary>
 public class CudaVectorSearchStrategy : IVectorSearchStrategy
 {
-    private readonly Dictionary<int, ChordEmbedding> _chords = new();
+    private readonly Dictionary<int, ChordEmbedding> _chords = [];
     private readonly object _initLock = new();
     private readonly ILogger<CudaVectorSearchStrategy> _logger;
     private IntPtr _cudaContext = IntPtr.Zero;
@@ -75,9 +75,8 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
     public async Task<List<ChordSearchResult>> SemanticSearchAsync(
         double[] queryEmbedding,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -111,14 +110,12 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> FindSimilarChordsAsync(
         int chordId,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
 
@@ -158,15 +155,13 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> HybridSearchAsync(
         double[] queryEmbedding,
         ChordSearchFilters filters,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -225,16 +220,13 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
-    public VectorSearchStats GetStats()
-    {
-        return new VectorSearchStats(
+    public VectorSearchStats GetStats() =>
+        new(
             _chords.Count,
             CalculateGpuMemoryUsage(),
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
             _totalSearches);
-    }
 
     private void CheckCudaAvailability()
     {
@@ -281,18 +273,15 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
                File.Exists(Path.Combine(cudaPath, "bin", "cudart64_12.dll"));
     }
 
-    private void InitializeCudaContext()
-    {
+    private void InitializeCudaContext() =>
         // Initialize CUDA context
         // This would use CUDA.NET or P/Invoke to CUDA runtime
         // Placeholder implementation
         _logger.LogInformation("Initializing CUDA context...");
 
-        // cudaSetDevice(0);
-        // cudaStreamCreate(&stream);
-        // etc.
-    }
-
+    // cudaSetDevice(0);
+    // cudaStreamCreate(&stream);
+    // etc.
     private void CopyEmbeddingsToGpu(List<ChordEmbedding> chords)
     {
         // Copy all embeddings to GPU memory for fast access
@@ -312,25 +301,20 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
         // cudaMemcpy(_deviceEmbeddings, hostEmbeddings, totalBytes, cudaMemcpyHostToDevice);
     }
 
-    private IEnumerable<(int ChordId, double Score)> CalculateSimilaritiesCuda(double[] queryEmbedding)
-    {
+    private IEnumerable<(int ChordId, double Score)> CalculateSimilaritiesCuda(double[] queryEmbedding) =>
         // Launch CUDA kernel to calculate cosine similarities
         // This would be much faster than CPU calculation for large datasets
-
         // Placeholder: Fall back to CPU calculation for now
-        return _chords.Select(kvp =>
+        _chords.Select(kvp =>
             (kvp.Key, CalculateCosineSimilarity(queryEmbedding, kvp.Value.Embedding)));
-    }
 
     private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilaritiesCuda(
         double[] queryEmbedding,
-        HashSet<int> allowedIds)
-    {
+        HashSet<int> allowedIds) =>
         // CUDA kernel with filtering
-        return _chords
+        _chords
             .Where(kvp => allowedIds.Contains(kvp.Key))
             .Select(kvp => (kvp.Key, CalculateCosineSimilarity(queryEmbedding, kvp.Value.Embedding)));
-    }
 
     private static double CalculateCosineSimilarity(double[] a, double[] b)
     {

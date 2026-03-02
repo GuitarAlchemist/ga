@@ -1,24 +1,19 @@
 namespace GaApi.Extensions;
 
-using GA.Business.ML.Text.Internal;
-using GA.Domain.Services.Fretboard.Voicings.Search;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using GA.Business.ML.Search;
 using Services;
+using GA.Business.ML.Text.Internal; // Assuming this is needed, keeping original usings except the bad one
 
 /// <summary>
-/// Extension helpers for registering the voicing search stack.
+///     Extension helpers for registering the voicing search stack.
 /// </summary>
 public static class VoicingSearchServiceExtensions
 {
     /// <summary>
-    /// Registers indexing, vector search strategies, and the hosted initialization workflow.
-    /// Supports falling back to CPU search for faster integration tests or when GPU is unavailable.
+    ///     Registers indexing, vector search strategies, and the hosted initialization workflow.
+    ///     Supports falling back to CPU search for faster integration tests or when GPU is unavailable.
     /// </summary>
-    public static IServiceCollection AddVoicingSearchServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddVoicingSearchServices(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);

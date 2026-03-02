@@ -11,15 +11,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="4.2.2" />
-    <PackageReference Include="System.Numerics.Tensors" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
+    <PackageReference Include="NUnit" Version="4.2.2"/>
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.2"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0"/>
   </ItemGroup>
 
   <ItemGroup>
-    <!-- We reference Core for common interfaces like IEmbeddingService if needed, 
+    <!-- We reference Core for common interfaces like IEmbeddingService if needed,
          but we want to keep this project as generic as possible. -->
-    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 
 </Project>

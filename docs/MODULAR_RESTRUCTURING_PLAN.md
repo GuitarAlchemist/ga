@@ -2,7 +2,8 @@
 
 ## Overview
 
-The Guitar Alchemist project is transitioning from a monolithic `GA.Business.Core` library to a modular, layered architecture that separates concerns and enables independent development and testing.
+The Guitar Alchemist project is transitioning from a monolithic `GA.Business.Core` library to a modular, layered
+architecture that separates concerns and enables independent development and testing.
 
 ## Current State (Monolithic)
 
@@ -17,6 +18,7 @@ GA.Business.Core/
 ```
 
 **Problems**:
+
 - All code in single assembly
 - Circular dependencies possible
 - Difficult to test individual domains
@@ -78,6 +80,7 @@ Layer 1 (Core)
 ```
 
 **Violations to Avoid**:
+
 - ❌ Layer 1 depending on Layer 2+
 - ❌ Layer 2 depending on Layer 3+
 - ❌ Circular dependencies between layers
@@ -86,6 +89,7 @@ Layer 1 (Core)
 ## Migration Strategy
 
 ### Phase 1: Create New Assemblies (Current)
+
 - ✅ Create GA.Business.Core.Harmony
 - ✅ Create GA.Business.Core.Fretboard
 - ✅ Create GA.Business.Core.Analysis
@@ -93,6 +97,7 @@ Layer 1 (Core)
 - ✅ Create GA.Business.Core.Orchestration
 
 ### Phase 2: Move Code (In Progress)
+
 - Move chord-related code to GA.Business.Core.Harmony
 - Move fretboard code to GA.Business.Core.Fretboard
 - Move analysis code to GA.Business.Core.Analysis
@@ -100,12 +105,14 @@ Layer 1 (Core)
 - Move orchestration code to GA.Business.Core.Orchestration
 
 ### Phase 3: Update References
+
 - Update all project references
 - Fix namespace imports
 - Resolve circular dependencies
 - Update tests
 
 ### Phase 4: Cleanup
+
 - Remove moved code from GA.Business.Core
 - Verify all tests pass
 - Update documentation
@@ -113,9 +120,11 @@ Layer 1 (Core)
 ## Code Location Guidelines
 
 ### AI Code
+
 **Location**: `GA.Business.Core.AI`
 
 **Includes**:
+
 - Semantic indexing services
 - Vector search implementations
 - Ollama integration
@@ -124,14 +133,17 @@ Layer 1 (Core)
 - Style learning algorithms
 
 **NOT in GA.Business.Core**:
+
 - ❌ SemanticSearchService
 - ❌ EmbeddingService
 - ❌ VectorSearchStrategy
 
 ### Orchestration Code
+
 **Location**: `GA.Business.Core.Orchestration`
 
 **Includes**:
+
 - IntelligentBSPGenerator
 - ProgressionOptimizer
 - High-level workflows
@@ -139,12 +151,14 @@ Layer 1 (Core)
 - Service orchestration
 
 **NOT in GA.BSP.Core**:
+
 - ❌ IntelligentBSPGenerator (belongs in Orchestration)
 - ❌ Progression optimization (belongs in Orchestration)
 
 ## Testing Strategy
 
 Each layer should have corresponding test projects:
+
 - `Tests/Common/GA.Business.Core.Tests/`
 - `Tests/Common/GA.Business.Core.Harmony.Tests/`
 - `Tests/Common/GA.Business.Core.Fretboard.Tests/`

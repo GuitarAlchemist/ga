@@ -17,8 +17,8 @@ module AsciiTabTypes =
         | D
         | A
         | LowE
-        | LowB  // 7-string
-        | LowFSharp  // 8-string
+        | LowB // 7-string
+        | LowFSharp // 8-string
 
     /// Fret number or muted
     type Fret =
@@ -89,10 +89,9 @@ module AsciiTabTypes =
         | Space
 
     /// String line
-    type StringLine = {
-        StringName: StringName
-        Content: StringContentItem list
-    }
+    type StringLine =
+        { StringName: StringName
+          Content: StringContentItem list }
 
     // ============================================================================
     // ANNOTATIONS
@@ -107,23 +106,17 @@ module AsciiTabTypes =
         | Suspended
 
     /// Chord name
-    type ChordName = {
-        Root: string
-        Accidental: string option
-        Quality: ChordQuality option
-        Extension: int option
-    }
+    type ChordName =
+        { Root: string
+          Accidental: string option
+          Quality: ChordQuality option
+          Extension: int option }
 
     /// Time signature
-    type TimeSignature = {
-        Numerator: int
-        Denominator: int
-    }
+    type TimeSignature = { Numerator: int; Denominator: int }
 
     /// Tuning
-    type Tuning = {
-        Strings: StringName list
-    }
+    type Tuning = { Strings: StringName list }
 
     /// Section type
     type SectionType =
@@ -173,52 +166,48 @@ module AsciiTabTypes =
     // ============================================================================
 
     /// Staff (collection of string lines)
-    type Staff = {
-        Lines: StringLine list
-        StringCount: int
-    }
+    type Staff =
+        { Lines: StringLine list
+          StringCount: int }
 
     /// Measure (staff with optional annotations)
-    type Measure = {
-        Annotations: Annotation list
-        Staff: Staff
-    }
+    type Measure =
+        { Annotations: Annotation list
+          Staff: Staff }
 
     // ============================================================================
     // DOCUMENT STRUCTURE
     // ============================================================================
 
     /// Header information
-    type Header = {
-        Title: string option
-        Artist: string option
-        Album: string option
-        Author: string option
-        Lines: string list
-    }
+    type Header =
+        { Title: string option
+          Artist: string option
+          Album: string option
+          Author: string option
+          Lines: string list }
 
     /// ASCII Tab document
-    type AsciiTabDocument = {
-        Header: Header option
-        Measures: Measure list
-    }
+    type AsciiTabDocument =
+        { Header: Header option
+          Measures: Measure list }
 
     // ============================================================================
     // CHORD DIAGRAM
     // ============================================================================
 
     /// Chord diagram
-    type ChordDiagram = {
-        Name: ChordName
-        Frets: Fret list  // One per string
-    }
+    type ChordDiagram =
+        { Name: ChordName
+          Frets: Fret list } // One per string
 
     // ============================================================================
     // HELPER FUNCTIONS
     // ============================================================================
 
     /// Convert string name to string
-    let stringNameToString = function
+    let stringNameToString =
+        function
         | HighE -> "E"
         | B -> "B"
         | G -> "G"
@@ -229,13 +218,15 @@ module AsciiTabTypes =
         | LowFSharp -> "F#"
 
     /// Convert fret to string
-    let fretToString = function
+    let fretToString =
+        function
         | FretNumber n -> string n
         | Muted -> "x"
         | Open -> "0"
 
     /// Convert bar line type to string
-    let barLineToString = function
+    let barLineToString =
+        function
         | Single -> "|"
         | Double -> "||"
         | RepeatBegin -> "|:"
@@ -243,43 +234,30 @@ module AsciiTabTypes =
         | DoubleRepeat -> ":||:"
 
     /// Get standard tuning
-    let standardTuning = {
-        Strings = [HighE; B; G; D; A; LowE]
-    }
+    let standardTuning = { Strings = [ HighE; B; G; D; A; LowE ] }
 
     /// Get 7-string tuning
-    let sevenStringTuning = {
-        Strings = [HighE; B; G; D; A; LowE; LowB]
-    }
+    let sevenStringTuning = { Strings = [ HighE; B; G; D; A; LowE; LowB ] }
 
     /// Get 8-string tuning
-    let eightStringTuning = {
-        Strings = [HighE; B; G; D; A; LowE; LowB; LowFSharp]
-    }
+    let eightStringTuning = { Strings = [ HighE; B; G; D; A; LowE; LowB; LowFSharp ] }
 
     /// Create empty staff
     let createEmptyStaff stringCount =
-        let strings = 
+        let strings =
             match stringCount with
             | 6 -> standardTuning.Strings
             | 7 -> sevenStringTuning.Strings
             | 8 -> eightStringTuning.Strings
             | _ -> standardTuning.Strings
-        
-        {
-            Lines = strings |> List.map (fun name -> { StringName = name; Content = [] })
-            StringCount = stringCount
-        }
+
+        { Lines = strings |> List.map (fun name -> { StringName = name; Content = [] })
+          StringCount = stringCount }
 
     /// Create empty measure
-    let createEmptyMeasure stringCount = {
-        Annotations = []
-        Staff = createEmptyStaff stringCount
-    }
+    let createEmptyMeasure stringCount =
+        { Annotations = []
+          Staff = createEmptyStaff stringCount }
 
     /// Create empty document
-    let createEmptyDocument () = {
-        Header = None
-        Measures = []
-    }
-
+    let createEmptyDocument () = { Header = None; Measures = [] }

@@ -7,80 +7,74 @@ using Microsoft.JSInterop;
 [PublicAPI]
 public static class JsRuntimeExtensions
 {
-    public static async Task OpenFullScreenAsync(
-        this IJSRuntime jsRuntime,
-        ElementReference element)
+    extension(IJSRuntime jsRuntime)
     {
-        if (jsRuntime == null)
+        public async Task OpenFullScreenAsync(ElementReference element)
         {
-            throw new ArgumentNullException(nameof(jsRuntime));
+            if (jsRuntime == null)
+            {
+                throw new ArgumentNullException(nameof(jsRuntime));
+            }
+
+            await jsRuntime.InvokeVoidAsync("openFullScreen", element);
         }
 
-        await jsRuntime.InvokeVoidAsync("openFullScreen", element);
-    }
-
-    public static async Task OpenFullScreenByIdAsync(
-        this IJSRuntime jsRuntime,
-        string elementId)
-    {
-        if (jsRuntime == null)
+        public async Task OpenFullScreenByIdAsync(string elementId)
         {
-            throw new ArgumentNullException(nameof(jsRuntime));
+            if (jsRuntime == null)
+            {
+                throw new ArgumentNullException(nameof(jsRuntime));
+            }
+
+            await jsRuntime.InvokeVoidAsync("openFullScreenById", elementId);
         }
 
-        await jsRuntime.InvokeVoidAsync("openFullScreenById", elementId);
-    }
-
-    public static async Task CloseFullScreenAsync(
-        this IJSRuntime jsRuntime)
-    {
-        if (jsRuntime == null)
+        public async Task CloseFullScreenAsync()
         {
-            throw new ArgumentNullException(nameof(jsRuntime));
+            if (jsRuntime == null)
+            {
+                throw new ArgumentNullException(nameof(jsRuntime));
+            }
+
+            await jsRuntime.InvokeVoidAsync("closeFullScreen");
         }
 
-        await jsRuntime.InvokeVoidAsync("closeFullScreen");
-    }
-
-    public static async Task<bool> IsFullScreenAsync(this IJSRuntime jsRuntime)
-    {
-        if (jsRuntime == null)
+        public async Task<bool> IsFullScreenAsync()
         {
-            throw new ArgumentNullException(nameof(jsRuntime));
+            if (jsRuntime == null)
+            {
+                throw new ArgumentNullException(nameof(jsRuntime));
+            }
+
+            return await jsRuntime.InvokeAsync<bool>("isFullScreen");
         }
 
-        return await jsRuntime.InvokeAsync<bool>("isFullScreen");
-    }
-
-    public static async Task AlertAsync(
-        this IJSRuntime jsRuntime,
-        string message)
-    {
-        if (jsRuntime == null)
+        public async Task AlertAsync(string message)
         {
-            throw new ArgumentNullException(nameof(jsRuntime));
+            if (jsRuntime == null)
+            {
+                throw new ArgumentNullException(nameof(jsRuntime));
+            }
+
+            await jsRuntime.InvokeVoidAsync("alert", message);
         }
 
-        await jsRuntime.InvokeVoidAsync("alert", message);
-    }
+        public async Task DebounceEvent(
+            ElementReference element,
+            string eventName,
+            TimeSpan delay)
+        {
+            await using var module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Modules/events.js");
+            await module.InvokeVoidAsync("debounceEvent", element, eventName, (long)delay.TotalMilliseconds);
+        }
 
-    public static async Task DebounceEvent(
-        this IJSRuntime jsRuntime,
-        ElementReference element,
-        string eventName,
-        TimeSpan delay)
-    {
-        await using var module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Modules/events.js");
-        await module.InvokeVoidAsync("debounceEvent", element, eventName, (long)delay.TotalMilliseconds);
-    }
-
-    public static async Task ThrottleEvent(
-        this IJSRuntime jsRuntime,
-        ElementReference element,
-        string eventName,
-        TimeSpan delay)
-    {
-        await using var module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Modules/events.js");
-        await module.InvokeVoidAsync("throttleEvent", element, eventName, (long)delay.TotalMilliseconds);
+        public async Task ThrottleEvent(
+            ElementReference element,
+            string eventName,
+            TimeSpan delay)
+        {
+            await using var module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Modules/events.js");
+            await module.InvokeVoidAsync("throttleEvent", element, eventName, (long)delay.TotalMilliseconds);
+        }
     }
 }

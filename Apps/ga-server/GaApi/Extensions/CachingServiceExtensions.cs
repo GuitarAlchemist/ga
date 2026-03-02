@@ -1,5 +1,6 @@
 ﻿namespace GaApi.Extensions;
 
+using Configuration;
 using Services;
 
 /// <summary>
@@ -14,7 +15,7 @@ public static class CachingServiceExtensions
     ///     - Cache invalidation service for managing cache invalidation strategies
     ///     - Cache warming background service to preload frequently accessed data
     /// </summary>
-    /// <param name="services">The service collection</param>
+    /// <param name="configuration">Application configuration</param>
     /// <returns>The service collection for chaining</returns>
     /// <remarks>
     ///     Caching Strategy:
@@ -23,9 +24,12 @@ public static class CachingServiceExtensions
     ///     - Cache warming: Preloads common chord progressions and scales on startup
     ///     - Metrics: Tracks hit/miss rates, memory usage, and performance
     /// </remarks>
-    public static IServiceCollection AddCachingServices(this IServiceCollection services)
+    public static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add memory caching (legacy - for backward compatibility)
+        // 1. Configuration
+        services.Configure<CachingOptions>(configuration.GetSection(CachingOptions.SectionName));
+
+        // 2. Add memory caching
         services.AddMemoryCache();
 
         // Add cache metrics service for monitoring and performance tracking

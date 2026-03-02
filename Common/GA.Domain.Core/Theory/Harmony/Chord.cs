@@ -1,19 +1,19 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
-using Extensions;
-
 using Atonal;
-using Design;
+using Design.Attributes;
+using Design.Schema;
 using Extensions;
-using Instruments.Shapes;
-using Primitives;
+using Primitives.Intervals;
+using Primitives.Notes;
+using Interval = Primitives.Intervals.Interval;
 
 /// <summary>
 ///     Represents a musical chord with its notes, intervals, and harmonic properties
 /// </summary>
+[PublicAPI]
 [DomainInvariant("A chord must have a root note and a pitch class set", "Root != null && PitchClassSet != null")]
 [DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf, "A chord is a tonal realization of a pitch class set")]
-[DomainRelationship(typeof(FretboardShape), RelationshipType.IsParentOf, "A chord can be realized as multiple shapes on the fretboard")]
 public class Chord : IEquatable<Chord>
 {
     /// <summary>
@@ -25,7 +25,7 @@ public class Chord : IEquatable<Chord>
         Formula = formula;
 
         // Build notes from formula
-        var notes = new List<Note.Accidented> { root.ToAccidented() };
+        List<Note.Accidented> notes = [root.ToAccidented()];
         foreach (var interval in formula.Intervals)
         {
             // Transpose by adding semitones to pitch class value
@@ -53,7 +53,7 @@ public class Chord : IEquatable<Chord>
         }
 
         Notes = notes;
-        Root = root ?? notes.First();
+        Root = root ?? notes[0];
         PitchClassSet = notes.ToPitchClassSet();
 
         // Analyze the chord to determine formula
@@ -101,12 +101,12 @@ public class Chord : IEquatable<Chord>
     /// <summary>
     ///     Gets whether this is an inverted chord
     /// </summary>
-    public bool IsInverted => Notes.First() != Root;
+    public bool IsInverted => Notes[0] != Root;
 
     /// <summary>
     ///     Gets the bass note (lowest note in the voicing)
     /// </summary>
-    public Note Bass => Notes.First();
+    public Note Bass => Notes[0];
 
     public bool Equals(Chord? other)
     {
@@ -123,14 +123,6 @@ public class Chord : IEquatable<Chord>
         return PitchClassSet.Equals(other.PitchClassSet) && Root.Equals(other.Root);
     }
 
-    /// <summary>
-    ///     Creates a chord from a chord symbol (e.g., "Cmaj7", "Am", "F#dim")
-    /// </summary>
-    public static Chord FromSymbol(string symbol)
-    {
-        var parser = new ChordSymbolParser();
-        return parser.Parse(symbol);
-    }
 
     /// <summary>
     ///     Gets the inversion of this chord (0 = root position, 1 = first inversion, etc.)
@@ -143,7 +135,12 @@ public class Chord : IEquatable<Chord>
         }
 
         var rootIndex = Notes.ToList().FindIndex(n => n.PitchClass == Root.PitchClass);
-        return rootIndex == -1 ? 0 : rootIndex;
+        if (rootIndex == -1)
+        {
+            return 0;
+        }
+
+        return (Notes.Count - rootIndex) % Notes.Count;
     }
 
     /// <summary>
@@ -164,12 +161,12 @@ public class Chord : IEquatable<Chord>
         var notesList = Notes.ToList();
         var invertedNotes = notesList.Skip(inversion).Concat(notesList.Take(inversion));
 
-        return new(new(invertedNotes), Root);
+        return new(new(invertedNotes.ToList()), Root);
     }
 
     private ChordFormula AnalyzeChordFormula()
     {
-        var intervals = new List<ChordFormulaInterval>();
+        List<ChordFormulaInterval> intervals = [];
 
         foreach (var note in Notes.Skip(1)) // Skip root
         {
@@ -177,16 +174,17 @@ public class Chord : IEquatable<Chord>
             var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
 
             var function = ChordFunctionExtensions.FromSemitones(semitones);
-            intervals.Add(new ChordFormulaInterval(interval, function));
+            intervals.Add(new(interval, function));
         }
 
         return new($"Analyzed_{Root}", intervals);
     }
 
 
-
     private ChordQuality DetermineQuality()
     {
+        // Grounded in standard chord-quality definitions (triad quality by 3rd and 5th).
+        // https://en.wikipedia.org/wiki/Chord_(music)#Chord_quality
         var hasMinorThird = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 3);
         var hasMajorThird = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 4);
         var hasDiminishedFifth = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 6);
@@ -252,7 +250,19 @@ public class Chord : IEquatable<Chord>
 
     private string GenerateSymbol()
     {
-        var symbol = Root.ToString();
+        var symbol = "";
+        if (Root is Note.Accidented accidented)
+        {
+            symbol = accidented.NaturalNote.ToString();
+            if (accidented.Accidental != Accidental.Natural)
+            {
+                symbol += accidented.Accidental?.ToString() ?? "";
+            }
+        }
+        else
+        {
+            symbol = Root.ToString();
+        }
 
         symbol += Quality switch
         {
@@ -278,18 +288,9 @@ public class Chord : IEquatable<Chord>
         return symbol;
     }
 
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as Chord);
-    }
+    public override bool Equals(object? obj) => Equals(obj as Chord);
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(PitchClassSet, Root);
-    }
+    public override int GetHashCode() => HashCode.Combine(PitchClassSet, Root);
 
-    public override string ToString()
-    {
-        return Symbol;
-    }
+    public override string ToString() => Symbol;
 }

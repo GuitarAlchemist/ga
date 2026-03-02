@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes;
 
-using JetBrains.Annotations;
-
 /// <summary>
 ///     Interface for symmetric scale modes that don't have a tonal center.
 /// </summary>

@@ -1,37 +1,32 @@
 namespace GA.Business.ML.Tests.Unit;
 
-using GA.Business.ML.Embeddings;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using NUnit.Framework;
-using System.Linq;
-using System.Threading.Tasks;
+using Embeddings;
+using Rag.Models;
+using TestInfrastructure;
 
 /// <summary>
-/// Unit tests for the <see cref="MusicalEmbeddingBridge"/> MEAI adapter.
+///     Unit tests for the <see cref="MusicalEmbeddingBridge" /> MEAI adapter.
 /// </summary>
 /// <remarks>
-/// These tests verify that the bridge correctly adapts OPTIC-K embeddings
-/// to the Microsoft Extensions for AI (MEAI) IEmbeddingGenerator interface.
+///     These tests verify that the bridge correctly adapts OPTIC-K embeddings
+///     to the Microsoft Extensions for AI (MEAI) IEmbeddingGenerator interface.
 /// </remarks>
 [TestFixture]
 public class MusicalEmbeddingBridgeTests
 {
-    private MusicalEmbeddingGenerator _generator = null!;
-    private MusicalEmbeddingBridge _bridge = null!;
-
     [SetUp]
     public void Setup()
     {
         // Create real generator using TestServices factory (provides all required services)
-        _generator = TestInfrastructure.TestServices.CreateGenerator();
-        _bridge = new MusicalEmbeddingBridge(_generator);
+        _generator = TestServices.CreateGenerator();
+        _bridge = new(_generator);
     }
 
     [TearDown]
-    public void TearDown()
-    {
-        _bridge?.Dispose();
-    }
+    public void TearDown() => _bridge?.Dispose();
+
+    private MusicalEmbeddingGenerator _generator = null!;
+    private MusicalEmbeddingBridge _bridge = null!;
 
     [Test]
     public void Metadata_ReturnsCorrectProviderInfo()
@@ -148,11 +143,10 @@ public class MusicalEmbeddingBridgeTests
     }
 
     /// <summary>
-    /// Creates a minimal VoicingDocument for testing purposes.
+    ///     Creates a minimal ChordVoicingRagDocument for testing purposes.
     /// </summary>
-    private static VoicingDocument CreateMinimalVoicingDocument(string id = "test-1")
-    {
-        return new VoicingDocument
+    private static ChordVoicingRagDocument CreateMinimalVoicingDocument(string id = "test-1") =>
+        new()
         {
             Id = id,
             SearchableText = "C Major chord open position",
@@ -173,5 +167,4 @@ public class MusicalEmbeddingBridgeTests
             StackingType = "Tertian",
             Embedding = null // Will be generated
         };
-    }
 }

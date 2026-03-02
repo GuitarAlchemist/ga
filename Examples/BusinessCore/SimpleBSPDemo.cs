@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using GA.Domain.Core.Spatial;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Extensions;
 
 /// <summary>
 /// Simple, working demo of BSP core functionality

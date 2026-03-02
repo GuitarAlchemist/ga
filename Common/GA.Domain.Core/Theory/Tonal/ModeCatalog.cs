@@ -1,11 +1,9 @@
 namespace GA.Domain.Core.Theory.Tonal;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Frozen;
 using Atonal;
-using Core.Primitives;
 using Business.Config;
+using Core.Primitives.Notes;
 
 /// <summary>
 ///     Catalog of musical modes and scale families.
@@ -13,33 +11,34 @@ using Business.Config;
 /// </summary>
 public static class ModeCatalog
 {
-    private static readonly Dictionary<IntervalClassVector, ModeFamilyMetadata> _metadata = [];
-    private static readonly Dictionary<PitchClassSetId, ModeInfo> _modeLookup = [];
-
-    public static IReadOnlyDictionary<IntervalClassVector, ModeFamilyMetadata> Metadata => _metadata;
+    private static readonly FrozenDictionary<IntervalClassVector, ModeFamilyMetadata> _metadata;
+    private static readonly FrozenDictionary<PitchClassSetId, ModeInfo> _modeLookup;
 
     static ModeCatalog()
     {
-        InitializeFamilies();
+        var metadata = new Dictionary<IntervalClassVector, ModeFamilyMetadata>();
+        var modeLookup = new Dictionary<PitchClassSetId, ModeInfo>();
+        InitializeFamilies(metadata, modeLookup);
+        _metadata = metadata.ToFrozenDictionary();
+        _modeLookup = modeLookup.ToFrozenDictionary();
     }
+
+    public static IReadOnlyDictionary<IntervalClassVector, ModeFamilyMetadata> Metadata => _metadata;
 
     /// <summary>
-    /// Try to get family metadata by Interval Class Vector
+    ///     Try to get family metadata by Interval Class Vector
     /// </summary>
-    public static bool TryGetFamily(IntervalClassVector icv, out ModeFamilyMetadata metadata)
-    {
-        return _metadata.TryGetValue(icv, out metadata!);
-    }
+    public static bool TryGetFamily(IntervalClassVector icv, out ModeFamilyMetadata metadata) =>
+        _metadata.TryGetValue(icv, out metadata!);
 
     /// <summary>
-    /// Try to get mode info by Pitch Class Set ID
+    ///     Try to get mode info by Pitch Class Set ID
     /// </summary>
-    public static bool TryGetMode(PitchClassSetId id, out ModeInfo modeInfo)
-    {
-        return _modeLookup.TryGetValue(id, out modeInfo!);
-    }
+    public static bool TryGetMode(PitchClassSetId id, out ModeInfo modeInfo) =>
+        _modeLookup.TryGetValue(id, out modeInfo!);
 
-    private static void InitializeFamilies()
+    private static void InitializeFamilies(Dictionary<IntervalClassVector, ModeFamilyMetadata> metadataDict,
+        Dictionary<PitchClassSetId, ModeInfo> modeLookupDict)
     {
         var families = ModesConfig.GetModalFamilies();
         foreach (var family in families)
@@ -56,7 +55,8 @@ public static class ModeCatalog
                     .Select(n => Note.Accidented.Parse(n, null).PitchClass.Value)
                     .ToArray();
 
-                RegisterFamily(family.Name, pitchClasses, modeNames, modeCharacteristicIntervals);
+                RegisterFamily(family.Name, pitchClasses, modeNames, modeCharacteristicIntervals, metadataDict,
+                    modeLookupDict);
             }
             catch (Exception ex)
             {
@@ -66,12 +66,21 @@ public static class ModeCatalog
         }
     }
 
-    private static void RegisterFamily(string familyName, int[] parentScale, string[] modeNames, IReadOnlyList<IReadOnlyList<string>> modeCharacteristicIntervals)
+    private static void RegisterFamily(
+        string familyName,
+        int[] parentScale,
+        string[] modeNames,
+        IReadOnlyList<IReadOnlyList<string>> modeCharacteristicIntervals,
+        Dictionary<IntervalClassVector, ModeFamilyMetadata> metadataDict,
+        Dictionary<PitchClassSetId, ModeInfo> modeLookupDict)
     {
         if (modeNames.Length != parentScale.Length)
-            throw new ArgumentException($"Mode names count {modeNames.Length} does not match parent scale count {parentScale.Length}");
+        {
+            throw new ArgumentException(
+                $"Mode names count {modeNames.Length} does not match parent scale count {parentScale.Length}");
+        }
 
-        var modes = new List<(string Name, int[] PitchClasses)>();
+        List<(string Name, int[] PitchClasses)> modes = [];
 
         // Sort parent to ensure it's ascending (standard set)
         Array.Sort(parentScale);
@@ -83,7 +92,11 @@ public static class ModeCatalog
         {
             var current = parentScale[i];
             var next = parentScale[(i + 1) % count];
-            if (next < current) next += 12; // wrap around
+            if (next < current)
+            {
+                next += 12; // wrap around
+            }
+
             intervals[i] = next - current;
         }
 
@@ -114,8 +127,10 @@ public static class ModeCatalog
             var pcs = new PitchClassSet(modePcsCopy.Select(PitchClass.FromValue));
             modes.Add((modeNames[i], modePcsCopy));
 
-            var characteristicIntervals = modeCharacteristicIntervals.Count > i ? modeCharacteristicIntervals[i] : Array.Empty<string>();
-            _modeLookup[pcs.Id] = new ModeInfo(familyName, modeNames[i], i + 1, characteristicIntervals);
+            var characteristicIntervals = modeCharacteristicIntervals.Count > i
+                ? modeCharacteristicIntervals[i]
+                : Array.Empty<string>();
+            modeLookupDict[pcs.Id] = new(familyName, modeNames[i], i + 1, characteristicIntervals);
         }
 
         // Create metadata
@@ -133,6 +148,6 @@ public static class ModeCatalog
 
         var metadata = new ModeFamilyMetadata(familyName, count, names, ids);
 
-        _metadata.TryAdd(icv, metadata);
+        metadataDict.TryAdd(icv, metadata);
     }
 }

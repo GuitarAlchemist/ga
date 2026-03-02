@@ -24,10 +24,7 @@ public enum PitchClass
 /// </summary>
 public class PitchClassSet(IEnumerable<PitchClass> pitchClasses) : HashSet<PitchClass>(pitchClasses)
 {
-    public override string ToString()
-    {
-        return string.Join(", ", this.OrderBy(pc => (int)pc));
-    }
+    public override string ToString() => string.Join(", ", this.OrderBy(pc => (int)pc));
 }
 
 /// <summary>
@@ -124,8 +121,8 @@ internal class Program
         var majorTriadRegion = new PitchClassSet([PitchClass.C, PitchClass.E, PitchClass.G]);
         var minorTriadRegion = new PitchClassSet([PitchClass.A, PitchClass.C, PitchClass.E]);
 
-        root.Left = new BspNode("Major Triads", majorTriadRegion);
-        root.Right = new BspNode("Minor Triads", minorTriadRegion);
+        root.Left = new("Major Triads", majorTriadRegion);
+        root.Right = new("Minor Triads", minorTriadRegion);
 
         Console.WriteLine("✓ Created BSP tree:");
         Console.WriteLine($"  Root: {root.Name} - {root.Region}");
@@ -234,8 +231,6 @@ internal class Program
     /// <summary>
     ///     Count how many notes from the test chord are contained in the region
     /// </summary>
-    private static int CountContainedNotes(PitchClassSet testChord, PitchClassSet region)
-    {
-        return testChord.Intersect(region).Count();
-    }
+    private static int CountContainedNotes(PitchClassSet testChord, PitchClassSet region) =>
+        testChord.Intersect(region).Count();
 }

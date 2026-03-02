@@ -1,7 +1,5 @@
 namespace GA.MusicTheory.DSL.Types
 
-open GA.MusicTheory.DSL.Types.GrammarTypes
-
 /// <summary>
 /// Type definitions for Practice Routine DSL
 /// Supports structured practice sessions with exercises, timing, and skill progression
@@ -41,9 +39,19 @@ module PracticeRoutineTypes =
 
     /// Exercise type classification
     type ExerciseType =
-        | Warmup | Technique | Scales | Chords | Arpeggios
-        | Songs | Improvisation | EarTraining | Rhythm
-        | Reading | Theory | Cooldown | Stretching
+        | Warmup
+        | Technique
+        | Scales
+        | Chords
+        | Arpeggios
+        | Songs
+        | Improvisation
+        | EarTraining
+        | Rhythm
+        | Reading
+        | Theory
+        | Cooldown
+        | Stretching
 
     /// Tempo specification
     type TempoSpec =
@@ -53,14 +61,18 @@ module PracticeRoutineTypes =
 
     /// Feel type for rhythm
     type FeelType =
-        | Straight | Swing | Shuffle | Latin | Rock | Jazz
+        | Straight
+        | Swing
+        | Shuffle
+        | Latin
+        | Rock
+        | Jazz
 
     /// Timing specification
-    type TimingSpec = {
-        Tempo: TempoSpec
-        TimeSignature: string option  // simplified as string
-        Feel: FeelType option
-    }
+    type TimingSpec =
+        { Tempo: TempoSpec
+          TimeSignature: string option // simplified as string
+          Feel: FeelType option }
 
     // ============================================================================
     // GOALS AND TRACKING
@@ -68,25 +80,25 @@ module PracticeRoutineTypes =
 
     /// Practice goal types
     type Goal =
-        | AccuracyGoal of int  // percentage
-        | TempoGoal of int     // BPM
+        | AccuracyGoal of int // percentage
+        | TempoGoal of int // BPM
         | ConsistencyGoal of int // repetitions
         | TechniqueGoal of string // technique name
 
     /// Performance tracking items
     type TrackingItem =
-        | Accuracy | Tempo | Consistency | Mistakes 
-        | ImprovementRate | SessionCompletion
+        | Accuracy
+        | Tempo
+        | Consistency
+        | Mistakes
+        | ImprovementRate
+        | SessionCompletion
 
     /// Goals specification
-    type GoalsSpec = {
-        Goals: Goal list
-    }
+    type GoalsSpec = { Goals: Goal list }
 
-    /// Tracking specification  
-    type TrackingSpec = {
-        Items: TrackingItem list
-    }
+    /// Tracking specification
+    type TrackingSpec = { Items: TrackingItem list }
 
     // ============================================================================
     // INTERNET CONTENT LOADING
@@ -108,58 +120,68 @@ module PracticeRoutineTypes =
 
     /// Supported music repositories
     and RepositoryName =
-        | UltimateGuitar | Songsterr | MuseScore | IMSLP
-        | FreeMidi | GitHub | ArchiveOrg | PublicDomainRepo
+        | UltimateGuitar
+        | Songsterr
+        | MuseScore
+        | IMSLP
+        | FreeMidi
+        | GitHub
+        | ArchiveOrg
+        | PublicDomainRepo
 
     /// Search criteria for content discovery
-    and SearchCriteria = {
-        Artist: string option
-        Title: string option
-        Genre: string option
-        Difficulty: DifficultyLevel option
-        Tuning: TuningSpec option
-        Capo: int option
-        Tempo: int option
-        Key: string option
-        Tags: string list
-        License: LicenseType option
-    }
+    and SearchCriteria =
+        { Artist: string option
+          Title: string option
+          Genre: string option
+          Difficulty: DifficultyLevel option
+          Tuning: TuningSpec option
+          Capo: int option
+          Tempo: int option
+          Key: string option
+          Tags: string list
+          License: LicenseType option }
 
     /// Guitar tuning specifications
     and TuningSpec =
-        | Standard | DropD | DADGAD | OpenG | OpenD
+        | Standard
+        | DropD
+        | DADGAD
+        | OpenG
+        | OpenD
         | Custom of string list
 
     /// Content licensing types
     and LicenseType =
-        | PublicDomain | CreativeCommons | Free | EducationalUse
+        | PublicDomain
+        | CreativeCommons
+        | Free
+        | EducationalUse
 
     /// Content definition for exercises
     type ContentDefinition =
-        | LocalContent of string              // local file path
-        | RemoteContent of ContentSource      // internet source
-        | GeneratedContent of GenerationSpec  // AI-generated content
+        | LocalContent of string // local file path
+        | RemoteContent of ContentSource // internet source
+        | GeneratedContent of GenerationSpec // AI-generated content
 
     /// AI content generation specification
-    and GenerationSpec = {
-        Style: string option
-        Progression: string option
-        Scale: string option
-        Length: int option  // in bars
-        Complexity: DifficultyLevel option
-        AiModel: string option
-    }
+    and GenerationSpec =
+        { Style: string option
+          Progression: string option
+          Scale: string option
+          Length: int option // in bars
+          Complexity: DifficultyLevel option
+          AiModel: string option }
 
     /// Practice options for enhanced control
-    type PracticeOptions = {
-        Loop: int option                    // number of repetitions
-        SlowDown: int option               // percentage of original tempo
-        Transpose: int option              // semitones to transpose
-        Metronome: bool option
-        BackingTrack: bool option
-        VisualFeedback: bool option
-        RecordPerformance: bool option
-    }
+    type PracticeOptions =
+        { Loop: int option // number of repetitions
+          SlowDown: int option // percentage of original tempo
+          Transpose: int option // semitones to transpose
+          Metronome: bool option
+          BackingTrack: bool option
+          VisualFeedback: bool option
+          RecordPerformance: bool option }
 
     // ============================================================================
     // ENHANCED MUSICAL CONTENT
@@ -170,25 +192,24 @@ module PracticeRoutineTypes =
         | ChordProgressionContent of string
         | ScaleContent of string
         | TechniqueContent of string
-        | SongContent of string * ContentSource option  // song with optional source
-        | InternetContent of ContentDefinition          // internet-sourced content
+        | SongContent of string * ContentSource option // song with optional source
+        | InternetContent of ContentDefinition // internet-sourced content
 
     // ============================================================================
     // EXERCISE DEFINITION
     // ============================================================================
 
     /// Enhanced exercise definition with internet content support
-    type Exercise = {
-        Type: ExerciseType
-        Duration: Duration
-        Description: string
-        Timing: TimingSpec option
-        Difficulty: DifficultyLevel option
-        Goals: GoalsSpec option
-        Content: MusicalContent option
-        ContentSource: ContentSource option      // internet content source
-        PracticeOptions: PracticeOptions option  // enhanced practice controls
-    }
+    type Exercise =
+        { Type: ExerciseType
+          Duration: Duration
+          Description: string
+          Timing: TimingSpec option
+          Difficulty: DifficultyLevel option
+          Goals: GoalsSpec option
+          Content: MusicalContent option
+          ContentSource: ContentSource option // internet content source
+          PracticeOptions: PracticeOptions option } // enhanced practice controls
 
     // ============================================================================
     // ADVANCED FEATURES
@@ -196,41 +217,43 @@ module PracticeRoutineTypes =
 
     /// Comparison operator
     type ComparisonOp =
-        | GreaterThan | LessThan | GreaterEqual | LessEqual | Equal | NotEqual
+        | GreaterThan
+        | LessThan
+        | GreaterEqual
+        | LessEqual
+        | Equal
+        | NotEqual
 
     /// Condition types for conditional exercises
     type Condition =
         | SkillCondition of SkillLevel * ComparisonOp
-        | ProgressCondition of int * ComparisonOp  // percentage
-        | TimeCondition of int * ComparisonOp      // minutes
+        | ProgressCondition of int * ComparisonOp // percentage
+        | TimeCondition of int * ComparisonOp // minutes
 
     /// Conditional exercise
-    type ConditionalExercise = {
-        Condition: Condition
-        ThenExercise: Exercise
-        ElseExercise: Exercise option
-    }
+    type ConditionalExercise =
+        { Condition: Condition
+          ThenExercise: Exercise
+          ElseExercise: Exercise option }
 
     /// Adjustment specification for adaptive exercises
     type AdjustmentSpec =
-        | TempoAdjustment of int  // ±BPM
-        | DifficultyAdjustment of int  // ±percentage
-        | DurationAdjustment of int    // ±minutes
+        | TempoAdjustment of int // ±BPM
+        | DifficultyAdjustment of int // ±percentage
+        | DurationAdjustment of int // ±minutes
 
     /// Adaptive exercise
-    type AdaptiveExercise = {
-        Type: ExerciseType
-        Duration: Duration
-        Description: string
-        StartDifficulty: DifficultyLevel
-        Adjustment: AdjustmentSpec
-    }
+    type AdaptiveExercise =
+        { Type: ExerciseType
+          Duration: Duration
+          Description: string
+          StartDifficulty: DifficultyLevel
+          Adjustment: AdjustmentSpec }
 
     /// Practice loop
-    type PracticeLoop = {
-        Repetitions: int
-        Exercises: ExerciseItem list
-    }
+    type PracticeLoop =
+        { Repetitions: int
+          Exercises: ExerciseItem list }
 
     /// Practice cycle duration
     and CycleDuration =
@@ -239,10 +262,9 @@ module PracticeRoutineTypes =
         | Months of int
 
     /// Practice cycle
-    and PracticeCycle = {
-        Duration: CycleDuration
-        Exercises: ExerciseItem list
-    }
+    and PracticeCycle =
+        { Duration: CycleDuration
+          Exercises: ExerciseItem list }
 
     /// Exercise item (can be regular, conditional, adaptive, loop, or cycle)
     and ExerciseItem =
@@ -257,23 +279,21 @@ module PracticeRoutineTypes =
     // ============================================================================
 
     /// Metadata for practice sessions
-    type Metadata = {
-        Author: string option
-        Created: string option
-        Version: string option
-        Tags: string list
-        Description: string option
-    }
+    type Metadata =
+        { Author: string option
+          Created: string option
+          Version: string option
+          Tags: string list
+          Description: string option }
 
     /// Practice session definition
-    type PracticeSession = {
-        Name: string
-        Duration: Duration
-        SkillLevel: SkillLevel
-        Exercises: ExerciseItem list
-        Tracking: TrackingSpec option
-        Metadata: Metadata option
-    }
+    type PracticeSession =
+        { Name: string
+          Duration: Duration
+          SkillLevel: SkillLevel
+          Exercises: ExerciseItem list
+          Tracking: TrackingSpec option
+          Metadata: Metadata option }
 
     /// Top-level practice routine
     type PracticeRoutine =

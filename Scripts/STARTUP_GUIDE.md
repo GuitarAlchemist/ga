@@ -18,6 +18,7 @@ This guide explains how to start the Guitar Alchemist application with both back
 ```
 
 This will:
+
 1. Build the .NET solution
 2. Install frontend dependencies
 3. Start the backend (Aspire AppHost with dashboard)
@@ -32,6 +33,7 @@ Both services will run in separate terminal windows.
 ```
 
 This will:
+
 1. Build the .NET solution
 2. Start the Aspire AppHost with all backend services
 
@@ -44,6 +46,7 @@ This will:
 ```
 
 This will:
+
 1. Install frontend dependencies (if needed)
 2. Start the frontend development server
 
@@ -159,15 +162,15 @@ If you encounter frontend dependency issues:
    ```
 
 2. **Access the application:**
-   - Frontend: http://localhost:5173
-   - Aspire Dashboard: https://localhost:15001
+    - Frontend: http://localhost:5173
+    - Aspire Dashboard: https://localhost:15001
 
 3. **Make changes:**
-   - Frontend changes auto-reload in the browser
-   - Backend changes require rebuilding and restarting
+    - Frontend changes auto-reload in the browser
+    - Backend changes require rebuilding and restarting
 
 4. **Stop services:**
-   - Press Ctrl+C in each terminal window
+    - Press Ctrl+C in each terminal window
 
 ## Next Steps
 

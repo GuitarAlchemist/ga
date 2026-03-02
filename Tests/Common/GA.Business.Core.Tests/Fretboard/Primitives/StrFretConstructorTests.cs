@@ -1,6 +1,6 @@
-namespace GA.Domain.Core.Tests.Fretboard.Primitives;
+namespace GA.Business.Core.Tests.Fretboard.Primitives;
 
-using GA.Domain.Core.Instruments.Primitives;
+using Domain.Core.Instruments.Primitives;
 
 /// <summary>
 ///     Tests for Str and Fret constructors and creation methods
@@ -16,6 +16,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(str.Value, Is.EqualTo(1));
     }
+
     [Test]
     public void Str_Constructor_WithInvalidValue_ShouldThrow()
     {
@@ -24,6 +25,7 @@ public class StrFretConstructorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Str(27));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Str(-1));
     }
+
     [Test]
     public void Str_FromValue_WithValidValue_ShouldCreate()
     {
@@ -32,6 +34,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(str.Value, Is.EqualTo(6));
     }
+
     [Test]
     public void Str_ImplicitConversion_FromInt_ShouldCreate()
     {
@@ -40,6 +43,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(str.Value, Is.EqualTo(3));
     }
+
     [Test]
     public void Str_ImplicitConversion_ToInt_ShouldWork()
     {
@@ -50,6 +54,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(value, Is.EqualTo(4));
     }
+
     [Test]
     public void Fret_Constructor_WithValidValue_ShouldCreate()
     {
@@ -58,6 +63,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(fret.Value, Is.EqualTo(5));
     }
+
     [Test]
     public void Fret_Constructor_WithMuted_ShouldCreate()
     {
@@ -67,6 +73,7 @@ public class StrFretConstructorTests
         Assert.That(fret.Value, Is.EqualTo(-1));
         Assert.That(fret.IsMuted, Is.True);
     }
+
     [Test]
     public void Fret_Constructor_WithOpen_ShouldCreate()
     {
@@ -76,6 +83,7 @@ public class StrFretConstructorTests
         Assert.That(fret.Value, Is.EqualTo(0));
         Assert.That(fret.IsOpen, Is.True);
     }
+
     [Test]
     public void Fret_Constructor_WithInvalidValue_ShouldThrow()
     {
@@ -83,6 +91,7 @@ public class StrFretConstructorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Fret(-2));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Fret(37));
     }
+
     [Test]
     public void Fret_FromValue_WithValidValue_ShouldCreate()
     {
@@ -91,6 +100,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(fret.Value, Is.EqualTo(12));
     }
+
     [Test]
     public void Fret_ImplicitConversion_FromInt_ShouldCreate()
     {
@@ -99,6 +109,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(fret.Value, Is.EqualTo(7));
     }
+
     [Test]
     public void Fret_ImplicitConversion_ToInt_ShouldWork()
     {
@@ -109,6 +120,7 @@ public class StrFretConstructorTests
         // Assert
         Assert.That(value, Is.EqualTo(9));
     }
+
     [Test]
     public void Fret_StaticProperties_ShouldWork()
     {
@@ -121,6 +133,7 @@ public class StrFretConstructorTests
         Assert.That(Fret.Four.Value, Is.EqualTo(4));
         Assert.That(Fret.Five.Value, Is.EqualTo(5));
     }
+
     [Test]
     public void Str_AllCreationMethods_ShouldBeEquivalent()
     {
@@ -133,6 +146,7 @@ public class StrFretConstructorTests
         Assert.That(str2, Is.EqualTo(str3));
         Assert.That(str1, Is.EqualTo(str3));
     }
+
     [Test]
     public void Fret_AllCreationMethods_ShouldBeEquivalent()
     {

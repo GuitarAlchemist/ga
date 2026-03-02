@@ -54,18 +54,12 @@ public readonly record struct Result<TValue, TError>
     /// <summary>
     ///     Creates a successful result with the given value.
     /// </summary>
-    public static Result<TValue, TError> Success(TValue value)
-    {
-        return new Result<TValue, TError>(value);
-    }
+    public static Result<TValue, TError> Success(TValue value) => new(value);
 
     /// <summary>
     ///     Creates a failed result with the given error.
     /// </summary>
-    public static Result<TValue, TError> Failure(TError error)
-    {
-        return new Result<TValue, TError>(error);
-    }
+    public static Result<TValue, TError> Failure(TError error) => new(error);
 
     /// <summary>
     ///     Functor: Maps the success value to a new value using the provided function.
@@ -76,12 +70,10 @@ public readonly record struct Result<TValue, TError>
     ///     - Identity: result.Map(x => x) == result
     ///     - Composition: result.Map(f).Map(g) == result.Map(x => g(f(x)))
     /// </remarks>
-    public Result<TResult, TError> Map<TResult>(Func<TValue, TResult> mapper)
-    {
-        return IsSuccess
+    public Result<TResult, TError> Map<TResult>(Func<TValue, TResult> mapper) =>
+        IsSuccess
             ? Result<TResult, TError>.Success(mapper(_value!))
             : Result<TResult, TError>.Failure(_error!);
-    }
 
     /// <summary>
     ///     Monad: Binds (FlatMaps) the success value to a new result using the provided function.
@@ -93,20 +85,16 @@ public readonly record struct Result<TValue, TError>
     ///     - Right Identity: m.Bind(Result.Success) == m
     ///     - Associativity: m.Bind(f).Bind(g) == m.Bind(x => f(x).Bind(g))
     /// </remarks>
-    public Result<TResult, TError> Bind<TResult>(Func<TValue, Result<TResult, TError>> binder)
-    {
-        return IsSuccess
+    public Result<TResult, TError> Bind<TResult>(Func<TValue, Result<TResult, TError>> binder) =>
+        IsSuccess
             ? binder(_value!)
             : Result<TResult, TError>.Failure(_error!);
-    }
 
     /// <summary>
     ///     Pattern matching: Executes one of two functions depending on whether this is a success or failure.
     /// </summary>
-    public TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<TError, TResult> onFailure)
-    {
-        return IsSuccess ? onSuccess(_value!) : onFailure(_error!);
-    }
+    public TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<TError, TResult> onFailure) =>
+        IsSuccess ? onSuccess(_value!) : onFailure(_error!);
 
     /// <summary>
     ///     Pattern matching (void): Executes one of two actions depending on whether this is a success or failure.
@@ -126,32 +114,25 @@ public readonly record struct Result<TValue, TError>
     /// <summary>
     ///     Gets the success value or returns the provided default value if this is a failure.
     /// </summary>
-    public TValue GetValueOrDefault(TValue defaultValue = default!)
-    {
-        return IsSuccess ? _value! : defaultValue;
-    }
+    public TValue GetValueOrDefault(TValue defaultValue = default!) => IsSuccess ? _value! : defaultValue;
 
     /// <summary>
     ///     Gets the success value or throws an exception if this is a failure.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the result is in a failure state.</exception>
-    public TValue GetValueOrThrow()
-    {
-        return IsSuccess
+    public TValue GetValueOrThrow() =>
+        IsSuccess
             ? _value!
             : throw new InvalidOperationException($"Result is in failure state: {_error}");
-    }
 
     /// <summary>
     ///     Gets the error value or throws an exception if this is a success.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the result is in a success state.</exception>
-    public TError GetErrorOrThrow()
-    {
-        return IsFailure
+    public TError GetErrorOrThrow() =>
+        IsFailure
             ? _error!
             : throw new InvalidOperationException($"Result is in success state: {_value}");
-    }
 
     /// <summary>
     ///     Executes the provided action if this is a success, and returns this result unchanged.
@@ -185,33 +166,22 @@ public readonly record struct Result<TValue, TError>
     ///     Maps the error to a new error type using the provided function.
     ///     If this result is a success, the value is propagated unchanged.
     /// </summary>
-    public Result<TValue, TNewError> MapError<TNewError>(Func<TError, TNewError> mapper)
-    {
-        return IsSuccess
+    public Result<TValue, TNewError> MapError<TNewError>(Func<TError, TNewError> mapper) =>
+        IsSuccess
             ? Result<TValue, TNewError>.Success(_value!)
             : Result<TValue, TNewError>.Failure(mapper(_error!));
-    }
 
     /// <summary>
     ///     Converts this result to an Option, discarding the error if present.
     /// </summary>
-    public Option<TValue> ToOption()
-    {
-        return IsSuccess ? Option<TValue>.Some(_value!) : Option<TValue>.None;
-    }
+    public Option<TValue> ToOption() => IsSuccess ? Option<TValue>.Some(_value!) : Option<TValue>.None;
 
     /// <summary>
     ///     Implicit conversion from TValue to Result (success).
     /// </summary>
-    public static implicit operator Result<TValue, TError>(TValue value)
-    {
-        return Success(value);
-    }
+    public static implicit operator Result<TValue, TError>(TValue value) => Success(value);
 
-    public override string ToString()
-    {
-        return IsSuccess ? $"Success({_value})" : $"Failure({_error})";
-    }
+    public override string ToString() => IsSuccess ? $"Success({_value})" : $"Failure({_error})";
 }
 
 /// <summary>
@@ -220,69 +190,72 @@ public readonly record struct Result<TValue, TError>
 [PublicAPI]
 public static class ResultExtensions
 {
-    /// <summary>
-    ///     Flattens a nested Result into a single Result.
-    /// </summary>
-    public static Result<TValue, TError> Flatten<TValue, TError>(
-        this Result<Result<TValue, TError>, TError> result)
+    extension<TValue, TError>(Result<Result<TValue, TError>, TError> result)
     {
-        return result.Bind(inner => inner);
+        /// <summary>
+        ///     Flattens a nested Result into a single Result.
+        /// </summary>
+        public Result<TValue, TError> Flatten() => result.Bind(inner => inner);
     }
 
-    /// <summary>
-    ///     Combines two results using the provided combiner function.
-    ///     If either result is a failure, returns the first failure encountered.
-    /// </summary>
-    public static Result<TResult, TError> Combine<T1, T2, TResult, TError>(
-        this Result<T1, TError> result1,
-        Result<T2, TError> result2,
-        Func<T1, T2, TResult> combiner)
+    extension<T1, TError>(Result<T1, TError> result1)
     {
-        if (result1.IsFailure)
+        /// <summary>
+        ///     Combines two results using the provided combiner function.
+        ///     If either result is a failure, returns the first failure encountered.
+        /// </summary>
+        public Result<TResult, TError> Combine<T2, TResult>(
+            Result<T2, TError> result2,
+            Func<T1, T2, TResult> combiner)
         {
-            return Result<TResult, TError>.Failure(result1.GetErrorOrThrow());
-        }
-
-        if (result2.IsFailure)
-        {
-            return Result<TResult, TError>.Failure(result2.GetErrorOrThrow());
-        }
-
-        return Result<TResult, TError>.Success(combiner(
-            result1.GetValueOrThrow(),
-            result2.GetValueOrThrow()));
-    }
-
-    /// <summary>
-    ///     Sequences a collection of results into a result of a collection.
-    ///     If any result is a failure, returns the first failure encountered.
-    /// </summary>
-    public static Result<ImmutableList<TValue>, TError> Sequence<TValue, TError>(
-        this IEnumerable<Result<TValue, TError>> results)
-    {
-        var values = ImmutableList.CreateBuilder<TValue>();
-
-        foreach (var result in results)
-        {
-            if (result.IsFailure)
+            if (result1.IsFailure)
             {
-                return Result<ImmutableList<TValue>, TError>.Failure(result.GetErrorOrThrow());
+                return Result<TResult, TError>.Failure(result1.GetErrorOrThrow());
             }
 
-            values.Add(result.GetValueOrThrow());
-        }
+            if (result2.IsFailure)
+            {
+                return Result<TResult, TError>.Failure(result2.GetErrorOrThrow());
+            }
 
-        return Result<ImmutableList<TValue>, TError>.Success(values.ToImmutable());
+            return Result<TResult, TError>.Success(combiner(
+                result1.GetValueOrThrow(),
+                result2.GetValueOrThrow()));
+        }
     }
 
-    /// <summary>
-    ///     Traverses a collection, applying a function that returns a Result to each element,
-    ///     and sequences the results.
-    /// </summary>
-    public static Result<ImmutableList<TResult>, TError> Traverse<TValue, TResult, TError>(
-        this IEnumerable<TValue> values,
-        Func<TValue, Result<TResult, TError>> func)
+    extension<TValue, TError>(IEnumerable<Result<TValue, TError>> results)
     {
-        return values.Select(func).Sequence();
+        /// <summary>
+        ///     Sequences a collection of results into a result of a collection.
+        ///     If any result is a failure, returns the first failure encountered.
+        /// </summary>
+        public Result<ImmutableList<TValue>, TError> Sequence()
+        {
+            var values = ImmutableList.CreateBuilder<TValue>();
+
+            foreach (var result in results)
+            {
+                if (result.IsFailure)
+                {
+                    return Result<ImmutableList<TValue>, TError>.Failure(result.GetErrorOrThrow());
+                }
+
+                values.Add(result.GetValueOrThrow());
+            }
+
+            return Result<ImmutableList<TValue>, TError>.Success(values.ToImmutable());
+        }
+    }
+
+    extension<TValue>(IEnumerable<TValue> values)
+    {
+        /// <summary>
+        ///     Traverses a collection, applying a function that returns a Result to each element,
+        ///     and sequences the results.
+        /// </summary>
+        public Result<ImmutableList<TResult>, TError> Traverse<TResult, TError>(
+            Func<TValue, Result<TResult, TError>> func) =>
+            values.Select(func).Sequence();
     }
 }

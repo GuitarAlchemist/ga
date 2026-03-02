@@ -1,0 +1,16 @@
+namespace GA.Domain.Core.Primitives.Extensions;
+
+using Intervals;
+
+public static class ModeIntervalExtensions
+{
+    public static IReadOnlyCollection<ScaleModeCompoundInterval> ToCompound(this IReadOnlyCollection<ScaleModeSimpleInterval> modeIntervals)
+    {
+        ArgumentNullException.ThrowIfNull(modeIntervals);
+
+        return
+            modeIntervals.Select(interval => interval.ToCompound())
+                .ToImmutableList()
+                .AsPrintable();
+    }
+}

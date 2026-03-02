@@ -1,15 +1,9 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
-using Core.Abstractions;
+using System.Collections.Frozen;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
 using GA.Core.Functional;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     Cardinality is the count of unique pitch classes in a pitch class set
@@ -21,7 +15,7 @@ using JetBrains.Annotations;
 public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<Cardinality>,
     IName
 {
-    private static readonly ImmutableDictionary<int, string> _cardinalityNames = new Dictionary<int, string>
+    private static readonly FrozenDictionary<int, string> _cardinalityNames = new Dictionary<int, string>
     {
         [0] = string.Empty,
         [1] = "Monotonic",
@@ -36,16 +30,13 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
         [10] = "Decatonic",
         [11] = "Hendecatonic",
         [12] = "Dodecatonic"
-    }.ToImmutableDictionary();
+    }.ToFrozenDictionary();
 
     /// <inheritdoc cref="IName.Name" />
     public string Name => _cardinalityNames[_value];
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return string.IsNullOrEmpty(Name) ? Value.ToString() : $"{Value} ({Name})";
-    }
+    public override string ToString() => string.IsNullOrEmpty(Name) ? Value.ToString() : $"{Value} ({Name})";
 
     #region IStaticValueObjectList<Cardinality> Members
 
@@ -78,17 +69,11 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
     /// <remarks>
     ///     You can also use implicit conversion: <c>Cardinality card = 5;</c> for pentatonic sets.
     /// </remarks>
-    public Cardinality([ValueRange(_minValue, _maxValue)] int value)
-    {
-        _value = CheckRange(value);
-    }
+    public Cardinality([ValueRange(_minValue, _maxValue)] int value) => _value = CheckRange(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Cardinality FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static Cardinality FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     /// <summary>
     ///     Attempts to create a Cardinality from an int value, returning a Result instead of throwing.
@@ -115,20 +100,12 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
                 $"Cardinality must be between {_minValue} and {_maxValue}, got {value}");
         }
 
-        return Result<Cardinality, string>.Success(new()
-            { Value = value });
+        return Result<Cardinality, string>.Success(new() { Value = value });
     }
 
-    public static implicit operator Cardinality(int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static implicit operator Cardinality(int value) => new() { Value = value };
 
-    public static implicit operator int(Cardinality fret)
-    {
-        return fret.Value;
-    }
+    public static implicit operator int(Cardinality fret) => fret.Value;
 
     public int Value
     {
@@ -138,39 +115,21 @@ public readonly record struct Cardinality : IStaticReadonlyCollectionFromValues<
 
     private readonly int _value;
 
-    private static int CheckRange(int value)
-    {
-        return IRangeValueObject<Cardinality>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    private static int CheckRange(int value) => IRangeValueObject<Cardinality>.EnsureValueInRange(value, _minValue, _maxValue);
 
     #endregion
 
     #region Relational members
 
-    public int CompareTo(Cardinality other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(Cardinality other) => _value.CompareTo(other._value);
 
-    public static bool operator <(Cardinality left, Cardinality right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(Cardinality left, Cardinality right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(Cardinality left, Cardinality right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(Cardinality left, Cardinality right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(Cardinality left, Cardinality right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(Cardinality left, Cardinality right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(Cardinality left, Cardinality right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(Cardinality left, Cardinality right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

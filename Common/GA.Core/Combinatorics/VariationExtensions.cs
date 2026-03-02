@@ -5,78 +5,36 @@ using Extensions;
 [PublicAPI]
 public static class VariationExtensions
 {
-    public static IEnumerable<OrderedPair<T>> GetPairs<T>(this IEnumerable<Variation<T>> variations)
+    extension<T>(IEnumerable<Variation<T>> variations)
     {
-        return variations.Select(variation => variation.ToPair());
-    }
+        public IEnumerable<OrderedPair<T>> GetPairs() => variations.Select(variation => variation.ToPair());
 
-    public static IEnumerable<TPair> GetPairs<T, TPair>(this IEnumerable<Variation<T>> variations,
-        Func<T, T, TPair> pairFactory) where TPair : OrderedPair<T>
-    {
-        return variations.Select(variation => variation.ToPair(pairFactory));
-    }
+        public IEnumerable<TPair> GetPairs<TPair>(
+            Func<T, T, TPair> pairFactory) where TPair : OrderedPair<T> =>
+            variations.Select(variation => variation.ToPair(pairFactory));
 
-    public static IEnumerable<Tuple<T, T, T>> Get3Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple3());
-    }
+        public IEnumerable<Tuple<T, T, T>> Get3Tuples() => variations.Select(variation => variation.ToTuple3());
 
-    public static IEnumerable<Tuple<T, T, T, T>> Get4Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple4());
-    }
+        public IEnumerable<Tuple<T, T, T, T>> Get4Tuples() => variations.Select(variation => variation.ToTuple4());
 
-    public static IEnumerable<Tuple<T, T, T, T, T>> Get5Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple5());
-    }
+        public IEnumerable<Tuple<T, T, T, T, T>> Get5Tuples() => variations.Select(variation => variation.ToTuple5());
 
-    public static IEnumerable<Tuple<T, T, T, T, T, T>> Get6Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple6());
-    }
+        public IEnumerable<Tuple<T, T, T, T, T, T>> Get6Tuples() => variations.Select(variation => variation.ToTuple6());
 
-    public static IEnumerable<Tuple<T, T, T, T, T, T, T>> Get7Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple7());
-    }
+        public IEnumerable<Tuple<T, T, T, T, T, T, T>> Get7Tuples() => variations.Select(variation => variation.ToTuple7());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T)> Get8Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple8());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T)> Get8Tuples() => variations.Select(variation => variation.ToTuple8());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T, T)> Get9Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple9());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T, T)> Get9Tuples() => variations.Select(variation => variation.ToTuple9());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T, T, T)> Get10Tuples<T>(this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple10());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T, T, T)> Get10Tuples() => variations.Select(variation => variation.ToTuple10());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T)> Get11Tuples<T>(
-        this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple11());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T, T, T, T)> Get11Tuples() => variations.Select(variation => variation.ToTuple11());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T)> Get12Tuples<T>(
-        this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple12());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T)> Get12Tuples() => variations.Select(variation => variation.ToTuple12());
 
-    public static IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T, T)> Get13Tuples<T>(
-        this IEnumerable<Variation<T>> variations)
-    {
-        return variations.Select(variation => variation.ToTuple13());
-    }
+        public IEnumerable<(T, T, T, T, T, T, T, T, T, T, T, T, T)> Get13Tuples() => variations.Select(variation => variation.ToTuple13());
 
-    public static ImmutableDictionary<BigInteger, Variation<T>> ToIndexDictionary<T>(
-        this IEnumerable<Variation<T>> items)
-    {
-        return items.ToImmutableDictionary(variation => variation.Index);
+        public ImmutableDictionary<BigInteger, Variation<T>> ToIndexDictionary() => variations.ToImmutableDictionary(variation => variation.Index);
     }
 }

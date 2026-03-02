@@ -52,9 +52,9 @@
 
     <!-- Temporarily removed to avoid GA.Business.Config build errors -->
     <ItemGroup>
-      <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj" />
-      <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj" />
-      <ProjectReference Include="..\GA.Core\GA.Core.csproj" />
+        <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj"/>
+        <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj"/>
+        <ProjectReference Include="..\GA.Core\GA.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -64,7 +64,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="README.md" />
+        <Content Include="README.md"/>
     </ItemGroup>
 
 </Project>

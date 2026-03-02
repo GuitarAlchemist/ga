@@ -1,11 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Symmetric;
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A diminished scale degree
@@ -22,10 +17,7 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
     private readonly int _value;
 
     // Constructor
-    public DiminishedScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public DiminishedScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<DiminishedScaleDegree> All => ValueObjectUtils<DiminishedScaleDegree>.Items;
     public static IReadOnlyCollection<DiminishedScaleDegree> Items => ValueObjectUtils<DiminishedScaleDegree>.Items;
@@ -36,24 +28,15 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
     public static DiminishedScaleDegree WholeHalf => new(2);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DiminishedScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static DiminishedScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static DiminishedScaleDegree Min => FromValue(_minValue);
     public static DiminishedScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator DiminishedScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator DiminishedScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(DiminishedScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(DiminishedScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -61,67 +44,41 @@ public readonly record struct DiminishedScaleDegree : IRangeValueObject<Diminish
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Half-whole diminished",
-            2 => "Whole-half diminished",
-            _ => $"Diminished mode {Value}"
-        };
-    }
+        1 => "Half-whole diminished",
+        2 => "Whole-half diminished",
+        _ => $"Diminished mode {Value}"
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "H-W",
-            2 => "W-H",
-            _ => $"Dim{Value}"
-        };
-    }
+        1 => "H-W",
+        2 => "W-H",
+        _ => $"Dim{Value}"
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<DiminishedScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<DiminishedScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<DiminishedScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<DiminishedScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(DiminishedScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(DiminishedScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(DiminishedScaleDegree left, DiminishedScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(DiminishedScaleDegree left, DiminishedScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(DiminishedScaleDegree left, DiminishedScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(DiminishedScaleDegree left, DiminishedScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(DiminishedScaleDegree left, DiminishedScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(DiminishedScaleDegree left, DiminishedScaleDegree right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(DiminishedScaleDegree left, DiminishedScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(DiminishedScaleDegree left, DiminishedScaleDegree right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

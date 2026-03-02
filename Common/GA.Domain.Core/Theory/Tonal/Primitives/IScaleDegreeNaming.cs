@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives;
 
-using JetBrains.Annotations;
-
 /// <summary>
 ///     Interface for scale degree naming functionality
 /// </summary>

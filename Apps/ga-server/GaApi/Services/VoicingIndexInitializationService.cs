@@ -1,27 +1,21 @@
 namespace GaApi.Services;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GA.Domain.Services.Fretboard.Voicings.Filtering;
-using GA.Domain.Services.Fretboard.Voicings.Generation;
+using System.Diagnostics;
 using GA.Data.SemanticKernel.Embeddings;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Services.Fretboard.Voicings.Search;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Domain.Services.Fretboard.Voicings.Generation;
 
+using GA.Business.ML.Rag.Models;
+using GA.Business.ML.Search;
+using Path = System.IO.Path;
+
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only
 /// <summary>
-/// Background service that initializes the voicing index on application startup.
-/// Extracted from VoicingSearchServiceExtensions to keep DI wiring focused.
+///     Background service that initializes the voicing index on application startup.
+///     Extracted from VoicingSearchServiceExtensions to keep DI wiring focused.
 /// </summary>
 internal sealed class VoicingIndexInitializationService(
     VoicingIndexingService indexingService,
@@ -36,7 +30,9 @@ internal sealed class VoicingIndexInitializationService(
         try
         {
             if (!ShouldInitializeIndex())
+            {
                 return;
+            }
 
             logger.LogInformation("Starting voicing index initialization...");
 
@@ -66,7 +62,8 @@ internal sealed class VoicingIndexInitializationService(
         var lazyLoading = configuration.GetValue("VoicingSearch:LazyLoading", false);
         if (lazyLoading)
         {
-            logger.LogInformation("Voicing search lazy loading is enabled - index will be built on first search request");
+            logger.LogInformation(
+                "Voicing search lazy loading is enabled - index will be built on first search request");
             return false;
         }
 
@@ -82,9 +79,9 @@ internal sealed class VoicingIndexInitializationService(
         var generationStart = DateTime.UtcNow;
         var allVoicings = VoicingGenerator.GenerateAllVoicings(
             fretboard,
-            windowSize: 4,
-            minPlayedNotes: minPlayedNotes,
-            parallel: true);
+            4,
+            minPlayedNotes,
+            true);
         var generationTime = DateTime.UtcNow - generationStart;
 
         logger.LogInformation("Generated {Count} total voicings in {Seconds:F1}s",
@@ -101,7 +98,7 @@ internal sealed class VoicingIndexInitializationService(
         var noteCountFilterStr = configuration.GetValue<string>("VoicingSearch:NoteCountFilter", "ThreeNotes");
         var noteCountFilter = Enum.Parse<NoteCountFilter>(noteCountFilterStr);
 
-        var vectorCollection = new RelativeFretVectorCollection(strCount: 6, fretExtent: 5);
+        var vectorCollection = new RelativeFretVectorCollection(6, 5);
         var criteria = new VoicingFilterCriteria
         {
             MaxResults = maxVoicings,
@@ -134,7 +131,8 @@ internal sealed class VoicingIndexInitializationService(
         var documents = indexingService.Documents.ToList();
 
         var cacheFile = GetCacheFilePath(documentCount);
-        var allEmbeddings = await LoadOrGenerateEmbeddingsFromCacheAsync(cacheFile, documents, embeddingStart, stoppingToken);
+        var allEmbeddings =
+            await LoadOrGenerateEmbeddingsFromCacheAsync(cacheFile, documents, embeddingStart, stoppingToken);
 
         var embeddingTime = DateTime.UtcNow - embeddingStart;
         logger.LogInformation("Generated embeddings in {Seconds:F1}s ({MsPerEmbedding:F1}ms per embedding)",
@@ -152,7 +150,7 @@ internal sealed class VoicingIndexInitializationService(
 
     private async Task<Dictionary<string, float[]>> LoadOrGenerateEmbeddingsFromCacheAsync(
         string cacheFile,
-        List<VoicingDocument> documents,
+        List<ChordVoicingRagDocument> documents,
         DateTime startTime,
         CancellationToken stoppingToken)
     {
@@ -177,7 +175,8 @@ internal sealed class VoicingIndexInitializationService(
             logger.LogInformation("No cache found, generating embeddings using batch Ollama service...");
         }
 
-        var allEmbeddings = await GenerateEmbeddingsAsync(documents, batchEmbeddingService, startTime, logger, stoppingToken);
+        var allEmbeddings =
+            await GenerateEmbeddingsAsync(documents, batchEmbeddingService, startTime, logger, stoppingToken);
         SaveEmbeddingsToCache(cacheFile, allEmbeddings, logger);
         return allEmbeddings;
     }
@@ -187,7 +186,8 @@ internal sealed class VoicingIndexInitializationService(
         CancellationToken stoppingToken)
     {
         var documents = indexingService.Documents.ToList();
-        logger.LogInformation("Initializing search service with {Count} pre-generated embeddings...", allEmbeddings.Count);
+        logger.LogInformation("Initializing search service with {Count} pre-generated embeddings...",
+            allEmbeddings.Count);
 
         var textToIdsMap = documents
             .GroupBy(d => d.SearchableText)
@@ -196,7 +196,7 @@ internal sealed class VoicingIndexInitializationService(
         // Resolve MusicalEmbeddingGenerator via DI if possible, or create it
         // For simplicity in this demo, we'll assume it's available or we skip it (let it fallback to empty)
         // In a real app we'd inject IMusicalEmbeddingGenerator
-        
+
         await searchService.InitializeEmbeddingsAsync(
             async text =>
             {
@@ -211,12 +211,14 @@ internal sealed class VoicingIndexInitializationService(
 
                 logger.LogWarning("Embedding not found for text '{Text}', generating on-demand",
                     text[..Math.Min(50, text.Length)]);
-                var result = await batchEmbeddingService.GenerateBatchEmbeddingsAsync(new[] { text }, stoppingToken);
+                var result = await batchEmbeddingService.GenerateBatchEmbeddingsAsync([text], stoppingToken);
                 return [.. result[0].Select(f => (double)f)];
             },
-            doc => {
+            doc =>
+            {
                 // Return cached 78-dim musical embedding if available
-                return Task.FromResult(doc.Embedding ?? new double[78]);
+                var embedding = doc.Embedding != null ? Array.ConvertAll(doc.Embedding, x => (double)x) : new double[78];
+                return Task.FromResult(embedding);
             },
             stoppingToken);
     }
@@ -228,7 +230,8 @@ internal sealed class VoicingIndexInitializationService(
         int documentCount)
     {
         var totalTime = generationTime + indexingTime + embeddingTime;
-        logger.LogInformation("Voicing search index initialized successfully with {Count} voicings in {TotalSeconds:F1}s total",
+        logger.LogInformation(
+            "Voicing search index initialized successfully with {Count} voicings in {TotalSeconds:F1}s total",
             documentCount, totalTime.TotalSeconds);
 
         var stats = searchService.GetStats();
@@ -238,62 +241,64 @@ internal sealed class VoicingIndexInitializationService(
             stats.MemoryUsageMb,
             stats.AverageSearchTime.TotalMilliseconds);
     }
-    
-    private async Task<(TimeSpan generationTime, TimeSpan indexingTime, int documentCount)> LoadOrGenerateIndexAsync(CancellationToken stoppingToken)
+
+    private async Task<(TimeSpan generationTime, TimeSpan indexingTime, int documentCount)> LoadOrGenerateIndexAsync(
+        CancellationToken stoppingToken)
     {
         var cacheFile = GetVoicingCacheFilePath();
-        
+
         // Try Load from Cache
         if (File.Exists(cacheFile) && configuration.GetValue("VoicingSearch:EnableBinaryCache", true))
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 logger.LogInformation("Loading voicings from binary cache: {CacheFile}", Path.GetFileName(cacheFile));
-                
+
                 var documents = await Task.Run(() => VoicingCacheSerialization.LoadFromCache(cacheFile), stoppingToken);
-                
+
                 // Inject directly into indexing service via reflection or internal method 
                 // Since _indexedDocuments is private List<VoicingDocument>, we rely on the fact that indexingService is singleton 
                 // and we can populate it. 
                 // NOTE: We need to add a method to VoicingIndexingService to LoadDocuments(IEnumerable<VoicingDocument>)
                 // For now, let's assume we can modify VoicingIndexingService or it has a public Load method.
                 // We'll modify VoicingIndexingService next.
-                
-                // HACK: For this step, we assume the method exists, we will fix the Service in the next tool call.
-               indexingService.LoadDocuments(documents);
 
-               stopwatch.Stop();
-               logger.LogInformation("✓ Loaded {Count} voicings from binary cache in {Seconds:F2}s", 
+                // HACK: For this step, we assume the method exists, we will fix the Service in the next tool call.
+                indexingService.LoadDocuments(documents);
+
+                stopwatch.Stop();
+                logger.LogInformation("✓ Loaded {Count} voicings from binary cache in {Seconds:F2}s",
                     documents.Count, stopwatch.Elapsed.TotalSeconds);
-               
-               return (TimeSpan.Zero, stopwatch.Elapsed, documents.Count);
+
+                return (TimeSpan.Zero, stopwatch.Elapsed, documents.Count);
             }
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to load voicing cache, falling back to generation...");
             }
         }
-        
+
         // Fallback: Generate and Index
         var (genTime, allVoicings) = GenerateVoicings();
         var (idxTime, docCount) = await IndexVoicingsAsync(allVoicings, stoppingToken);
-        
+
         // Save Cache
         if (docCount > 0 && configuration.GetValue("VoicingSearch:EnableBinaryCache", true))
         {
-            try 
+            try
             {
-                 logger.LogInformation("Saving voicings to binary cache...");
-                 await Task.Run(() => VoicingCacheSerialization.SaveToCache(cacheFile, indexingService.Documents), stoppingToken);
-                 logger.LogInformation("✓ Saved {Count} voicings to cache", docCount);
+                logger.LogInformation("Saving voicings to binary cache...");
+                await Task.Run(() => VoicingCacheSerialization.SaveToCache(cacheFile, indexingService.Documents),
+                    stoppingToken);
+                logger.LogInformation("✓ Saved {Count} voicings to cache", docCount);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to save voicing cache");
             }
         }
-        
+
         return (genTime, idxTime, docCount);
     }
 
@@ -306,7 +311,7 @@ internal sealed class VoicingIndexInitializationService(
     }
 
     private static async Task<Dictionary<string, float[]>> GenerateEmbeddingsAsync(
-        List<VoicingDocument> documents,
+        List<ChordVoicingRagDocument> documents,
         IBatchEmbeddingService batchEmbeddingService,
         DateTime startTime,
         ILogger logger,
@@ -322,7 +327,9 @@ internal sealed class VoicingIndexInitializationService(
         for (var i = 0; i < uniqueTexts.Length; i += batchSize)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 break;
+            }
 
             var batch = uniqueTexts.Skip(i).Take(batchSize).ToArray();
             var batchEmbeddings = await batchEmbeddingService.GenerateBatchEmbeddingsAsync(batch, cancellationToken);
@@ -333,7 +340,7 @@ internal sealed class VoicingIndexInitializationService(
             }
 
             var processed = Math.Min(i + batchSize, uniqueTexts.Length);
-            var percentage = (processed * 100.0) / uniqueTexts.Length;
+            var percentage = processed * 100.0 / uniqueTexts.Length;
             var elapsed = DateTime.UtcNow - startTime;
             var rate = processed / Math.Max(0.1, elapsed.TotalSeconds);
             var remaining = rate > 0 ? (uniqueTexts.Length - processed) / rate : double.PositiveInfinity;
@@ -354,7 +361,8 @@ internal sealed class VoicingIndexInitializationService(
                 if (missingCount < 5)
                 {
                     logger.LogWarning("Missing embedding for document {Id} with text length {Length}: '{Text}'",
-                        doc.Id, doc.SearchableText.Length, doc.SearchableText[..Math.Min(100, doc.SearchableText.Length)]);
+                        doc.Id, doc.SearchableText.Length,
+                        doc.SearchableText[..Math.Min(100, doc.SearchableText.Length)]);
                 }
 
                 missingCount++;
@@ -408,7 +416,7 @@ internal sealed class VoicingIndexInitializationService(
 
     private static Dictionary<string, float[]> LoadEmbeddingsFromCache(
         string cacheFile,
-        List<VoicingDocument> documents)
+        List<ChordVoicingRagDocument> documents)
     {
         using var fs = new FileStream(cacheFile, FileMode.Open, FileAccess.Read);
         using var reader = new BinaryReader(fs);

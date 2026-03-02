@@ -57,7 +57,7 @@ module GrammarTypes =
 
     /// Note representation
     type Note =
-        { Letter: char  // A-G
+        { Letter: char // A-G
           Accidental: Accidental option
           Octave: int option }
 
@@ -114,7 +114,7 @@ module GrammarTypes =
 
     /// Roman numeral chord
     type RomanNumeral =
-        { Degree: int  // 1-7
+        { Degree: int // 1-7
           Quality: RomanQuality
           Accidental: Accidental option
           Extensions: ChordExtension list
@@ -139,9 +139,7 @@ module GrammarTypes =
         | AbsoluteChord of Chord
         | RomanNumeralChord of RomanNumeral
 
-    and TimeSignature =
-        { Numerator: int
-          Denominator: int }
+    and TimeSignature = { Numerator: int; Denominator: int }
 
     // ============================================================================
     // FRETBOARD NAVIGATION AST
@@ -149,8 +147,8 @@ module GrammarTypes =
 
     /// Fretboard position
     type FretboardPosition =
-        { String: int  // 1-based
-          Fret: int    // 0 = open
+        { String: int // 1-based
+          Fret: int // 0 = open
           Finger: Finger option }
 
     and Finger =
@@ -197,7 +195,7 @@ module GrammarTypes =
     /// Scale representation
     type Scale =
         { Root: Note
-          Intervals: int list  // Semitone intervals from root
+          Intervals: int list // Semitone intervals from root
           Name: string option }
 
     /// Mode
@@ -367,7 +365,7 @@ module GrammarTypes =
         | NavigationCommand of NavigationCommand
         | ScaleTransformCommand of Scale * ScaleTransformation list
         | GrothendieckCommand of GrothendieckOperation
-        | PracticeRoutineCommand of string  // simplified for now
+        | PracticeRoutineCommand of string // simplified for now
         | CompositeCommand of DslCommand list
 
     // ============================================================================
@@ -382,4 +380,3 @@ module GrammarTypes =
         | ObjectResult of MusicalObject
         | ErrorResult of error: string
         | MultiResult of ExecutionResult list
-

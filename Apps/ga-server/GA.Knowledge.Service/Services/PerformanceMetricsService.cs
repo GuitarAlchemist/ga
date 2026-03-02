@@ -72,10 +72,7 @@ public class PerformanceMetricsService : IDisposable
             description: "Number of errors in semantic/vector search requests");
     }
 
-    public void Dispose()
-    {
-        _meter.Dispose();
-    }
+    public void Dispose() => _meter.Dispose();
 
     /// <summary>
     ///     Track a regular API request
@@ -128,18 +125,12 @@ public class PerformanceMetricsService : IDisposable
     /// <summary>
     ///     Record memory usage for a regular request
     /// </summary>
-    public void RecordRegularMemory(long bytes)
-    {
-        _regularMemoryHistogram.Record(bytes);
-    }
+    public void RecordRegularMemory(long bytes) => _regularMemoryHistogram.Record(bytes);
 
     /// <summary>
     ///     Record memory usage for a semantic request
     /// </summary>
-    public void RecordSemanticMemory(long bytes)
-    {
-        _semanticMemoryHistogram.Record(bytes);
-    }
+    public void RecordSemanticMemory(long bytes) => _semanticMemoryHistogram.Record(bytes);
 
     /// <summary>
     ///     Record a regular request error
@@ -162,9 +153,8 @@ public class PerformanceMetricsService : IDisposable
     /// <summary>
     ///     Get performance statistics
     /// </summary>
-    public PerformanceStatistics GetStatistics()
-    {
-        return new PerformanceStatistics
+    public PerformanceStatistics GetStatistics() =>
+        new()
         {
             RegularRequests = _regularRequests,
             SemanticRequests = _semanticRequests,
@@ -179,7 +169,6 @@ public class PerformanceMetricsService : IDisposable
                 : 0,
             SplitRecommendation = GetSplitRecommendation()
         };
-    }
 
     private string GetSplitRecommendation()
     {

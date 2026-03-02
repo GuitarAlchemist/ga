@@ -3,7 +3,7 @@ namespace GA.Domain.Services.Chords;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Theory.Atonal;
-using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     Service for handling enharmonic equivalents and context-aware accidental choices
@@ -117,9 +117,8 @@ public static class EnharmonicNamingService
     /// <summary>
     ///     Gets sharp version of note name
     /// </summary>
-    private static string? GetSharpNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string? GetSharpNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C",
             1 => "C#",
@@ -135,14 +134,12 @@ public static class EnharmonicNamingService
             11 => "B",
             _ => null
         };
-    }
 
     /// <summary>
     ///     Gets flat version of note name
     /// </summary>
-    private static string? GetFlatNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string? GetFlatNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C",
             1 => "Db",
@@ -158,14 +155,12 @@ public static class EnharmonicNamingService
             11 => "B",
             _ => null
         };
-    }
 
     /// <summary>
     ///     Gets natural note name (if it exists)
     /// </summary>
-    private static string? GetNaturalNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string? GetNaturalNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C",
             2 => "D",
@@ -176,22 +171,17 @@ public static class EnharmonicNamingService
             11 => "B",
             _ => null // Black keys don't have natural names
         };
-    }
 
     /// <summary>
     ///     Gets default note name (sharp preference)
     /// </summary>
-    private static string GetDefaultNoteName(PitchClass pitchClass)
-    {
-        return GetSharpNoteName(pitchClass) ?? GetFlatNoteName(pitchClass) ?? "?";
-    }
+    private static string GetDefaultNoteName(PitchClass pitchClass) => GetSharpNoteName(pitchClass) ?? GetFlatNoteName(pitchClass) ?? "?";
 
     /// <summary>
     ///     Gets jazz context preference
     /// </summary>
-    private static (string preferred, string alternate, string reasoning) GetJazzPreference(PitchClass root)
-    {
-        return root.Value switch
+    private static (string preferred, string alternate, string reasoning) GetJazzPreference(PitchClass root) =>
+        root.Value switch
         {
             1 => ("Db", "C#", "Jazz prefers Db for flat keys and blues"),
             3 => ("Eb", "D#", "Jazz prefers Eb for flat keys"),
@@ -200,14 +190,12 @@ public static class EnharmonicNamingService
             10 => ("Bb", "A#", "Jazz prefers Bb for flat keys"),
             _ => (GetDefaultNoteName(root), "", "No jazz preference")
         };
-    }
 
     /// <summary>
     ///     Gets classical context preference
     /// </summary>
-    private static (string preferred, string alternate, string reasoning) GetClassicalPreference(PitchClass root)
-    {
-        return root.Value switch
+    private static (string preferred, string alternate, string reasoning) GetClassicalPreference(PitchClass root) =>
+        root.Value switch
         {
             1 => ("C#", "Db", "Classical prefers C# in sharp keys"),
             3 => ("D#", "Eb", "Classical prefers D# in sharp keys"),
@@ -216,14 +204,12 @@ public static class EnharmonicNamingService
             10 => ("A#", "Bb", "Classical prefers A# in sharp keys"),
             _ => (GetDefaultNoteName(root), "", "No classical preference")
         };
-    }
 
     /// <summary>
     ///     Gets popular music context preference
     /// </summary>
-    private static (string preferred, string alternate, string reasoning) GetPopularPreference(PitchClass root)
-    {
-        return root.Value switch
+    private static (string preferred, string alternate, string reasoning) GetPopularPreference(PitchClass root) =>
+        root.Value switch
         {
             1 => ("C#", "Db", "Popular music prefers simpler sharp notation"),
             3 => ("Eb", "D#", "Popular music prefers Eb"),
@@ -232,7 +218,6 @@ public static class EnharmonicNamingService
             10 => ("Bb", "A#", "Popular music prefers Bb"),
             _ => (GetDefaultNoteName(root), "", "No popular preference")
         };
-    }
 
     /// <summary>
     ///     Determines musical context from key signature
@@ -285,20 +270,17 @@ public static class EnharmonicNamingService
     /// <summary>
     ///     Gets common enharmonic chord pairs
     /// </summary>
-    public static IEnumerable<(string Chord1, string Chord2, string Context)> GetCommonEnharmonicPairs()
-    {
-        return
-        [
-            ("C#maj7", "Dbmaj7", "C# in sharp keys, Db in flat keys"),
-            ("D#m7", "Ebm7", "D# in sharp keys, Eb in flat keys"),
-            ("F#7", "Gb7", "F# in sharp keys, Gb in flat keys"),
-            ("G#dim", "Abdim", "G# in sharp keys, Ab in flat keys"),
-            ("A#sus4", "Bbsus4", "A# in sharp keys, Bb in flat keys"),
-            ("C#/F", "Db/F", "Slash chord enharmonics"),
-            ("F#m/A", "Gbm/A", "Minor chord enharmonics"),
-            ("G#aug", "Abaug", "Augmented chord enharmonics")
-        ];
-    }
+    public static IEnumerable<(string Chord1, string Chord2, string Context)> GetCommonEnharmonicPairs() =>
+    [
+        ("C#maj7", "Dbmaj7", "C# in sharp keys, Db in flat keys"),
+        ("D#m7", "Ebm7", "D# in sharp keys, Eb in flat keys"),
+        ("F#7", "Gb7", "F# in sharp keys, Gb in flat keys"),
+        ("G#dim", "Abdim", "G# in sharp keys, Ab in flat keys"),
+        ("A#sus4", "Bbsus4", "A# in sharp keys, Bb in flat keys"),
+        ("C#/F", "Db/F", "Slash chord enharmonics"),
+        ("F#m/A", "Gbm/A", "Minor chord enharmonics"),
+        ("G#aug", "Abaug", "Augmented chord enharmonics")
+    ];
 
     /// <summary>
     ///     Enharmonic naming result

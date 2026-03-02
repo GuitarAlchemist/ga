@@ -1,25 +1,19 @@
-namespace GA.Domain.Services.Fretboard.Voicings.Generation;
+﻿namespace GA.Domain.Services.Fretboard.Voicings.Generation;
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
+using Domain.Core.Instruments.Positions;
+using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
 
 /// <summary>
-/// Generates all possible voicings on a fretboard within specified constraints
+///     Generates all possible voicings on a fretboard within specified constraints
 /// </summary>
 public static class VoicingGenerator
 {
     /// <summary>
-    /// Generates all possible voicings within a fret window using cached instances for optimal performance
+    ///     Generates all possible voicings within a fret window using cached instances for optimal performance
     /// </summary>
     public static List<Voicing> GenerateAllVoicingsInWindowOptimized(
         Fretboard fretboard,
@@ -98,8 +92,15 @@ public static class VoicingGenerator
                     var fretValue = played.Location.Fret.Value;
                     if (fretValue > 0) // Exclude open strings from span calculation
                     {
-                        if (fretValue < minFret) minFret = fretValue;
-                        if (fretValue > maxFret) maxFret = fretValue;
+                        if (fretValue < minFret)
+                        {
+                            minFret = fretValue;
+                        }
+
+                        if (fretValue > maxFret)
+                        {
+                            maxFret = fretValue;
+                        }
                     }
                 }
             }
@@ -131,7 +132,10 @@ public static class VoicingGenerator
             {
                 indices[s]++;
                 if (indices[s] < positionsPerStringCounts[s])
+                {
                     break;
+                }
+
                 indices[s] = 0;
             }
         }
@@ -140,8 +144,8 @@ public static class VoicingGenerator
     }
 
     /// <summary>
-    /// Generates all possible voicings across the entire fretboard using a sliding window approach with channels
-    /// and returns them as an async enumerable stream
+    ///     Generates all possible voicings across the entire fretboard using a sliding window approach with channels
+    ///     and returns them as an async enumerable stream
     /// </summary>
     /// <param name="fretboard">The fretboard to generate voicings on</param>
     /// <param name="windowSize">Size of the sliding window in frets (default: 4 for 5-fret span)</param>
@@ -204,7 +208,7 @@ public static class VoicingGenerator
                             cachedMutedPositions,
                             cachedLocations,
                             minPlayedNotes,
-                            maxFretSpan: windowSize);
+                            windowSize);
 
                         await channel.Writer.WriteAsync((startFret, voicings), ct);
                     });
@@ -218,14 +222,14 @@ public static class VoicingGenerator
             // However, to maintain the original contract of deduplication across windows,
             // we really should just lock the HashSet or accept that dedupe might drift if we don't strictly order windows.
             // But since windows overlap, strict ordering is better for the seenDiagrams logic.
-            
+
             // To fix "stalled" UI, we will process windows as they complete, but we must be careful with duplicate detection.
-            // The safest parallel way is to collect all, sort, then dedupe. 
+            // The safest parallel way is to collect all, sort, then dedupe.
             // BUT that blocks the UI until ALL valid voicings are generated (millions).
-            
+
             // ALTERNATIVE: Use a concurrent dictionary for seen diagrams and yield immediately.
             // We lose strict fret-order, but indexing doesn't care about order.
-            
+
             var seenDiagrams = new ConcurrentDictionary<string, byte>();
 
             // Just stream results as they are ready
@@ -260,7 +264,7 @@ public static class VoicingGenerator
                     cachedMutedPositions,
                     cachedLocations,
                     minPlayedNotes,
-                    maxFretSpan: windowSize);
+                    windowSize);
 
                 foreach (var voicing in voicings)
                 {
@@ -275,7 +279,20 @@ public static class VoicingGenerator
     }
 
     /// <summary>
-    /// Collects all voicings into a list (convenience method)
+    ///     Synchronous wrapper that collects all voicings into a list
+    /// </summary>
+    public static List<Voicing> GenerateAllVoicings(
+        Fretboard fretboard,
+        int windowSize = 4,
+        int minPlayedNotes = 2,
+        bool parallel = true) =>
+        GenerateAllVoicingsAsync(fretboard, windowSize, minPlayedNotes, parallel)
+            .ToListAsync()
+            .GetAwaiter()
+            .GetResult();
+
+    /// <summary>
+    ///     Collects all voicings into a list (convenience method)
     /// </summary>
     public static async Task<List<Voicing>> ToListAsync(
         this IAsyncEnumerable<Voicing> source,
@@ -286,21 +303,7 @@ public static class VoicingGenerator
         {
             results.Add(item);
         }
-        return results;
-    }
 
-    /// <summary>
-    /// Synchronous wrapper that collects all voicings into a list
-    /// </summary>
-    public static List<Voicing> GenerateAllVoicings(
-        Fretboard fretboard,
-        int windowSize = 4,
-        int minPlayedNotes = 2,
-        bool parallel = true)
-    {
-        return GenerateAllVoicingsAsync(fretboard, windowSize, minPlayedNotes, parallel)
-            .ToListAsync()
-            .GetAwaiter()
-            .GetResult();
+        return results;
     }
 }

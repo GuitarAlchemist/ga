@@ -1,32 +1,32 @@
 namespace GA.AI.Service.Models;
 
 /// <summary>
-/// Chord search result
+///     Chord search result
 /// </summary>
 public class ChordSearchResult
 {
     public string Id { get; set; } = string.Empty;
     public string ChordName { get; set; } = string.Empty;
     public double SimilarityScore { get; set; }
-    public Dictionary<string, object> ChordData { get; set; } = new();
+    public Dictionary<string, object> ChordData { get; set; } = [];
     public DateTime SearchedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
-/// Vector search strategy information
+///     Vector search strategy information
 /// </summary>
 public class VectorSearchStrategyInfo
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public Dictionary<string, object> Parameters { get; set; } = new();
+    public Dictionary<string, object> Parameters { get; set; } = [];
     public double PerformanceScore { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
-/// Vector search performance metrics
+///     Vector search performance metrics
 /// </summary>
 public class VectorSearchPerformance
 {
@@ -41,15 +41,15 @@ public class VectorSearchPerformance
 }
 
 /// <summary>
-/// Vector search statistics
+///     Vector search statistics
 /// </summary>
 public class VectorSearchStats
 {
     public string Id { get; set; } = string.Empty;
     public long TotalSearches { get; set; }
     public double AverageResponseTime { get; set; }
-    public Dictionary<string, long> SearchTypeDistribution { get; set; } = new();
-    public Dictionary<string, double> PerformanceMetrics { get; set; } = new();
+    public Dictionary<string, long> SearchTypeDistribution { get; set; } = [];
+    public Dictionary<string, double> PerformanceMetrics { get; set; } = [];
     public DateTime CollectedAt { get; set; } = DateTime.UtcNow;
 }
 
@@ -83,7 +83,7 @@ public class CachingService : ICachingService
         {
             return Task.FromResult((T?)value);
         }
-        
+
         return Task.FromResult(default(T));
     }
 
@@ -125,7 +125,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
     {
         _logger.LogInformation("Building shape graph for entity {EntityId}", entityId);
         await Task.Delay(100);
-        
+
         return new
         {
             Id = entityId,
@@ -143,7 +143,7 @@ public class ShapeGraphBuilder : IShapeGraphBuilder
     {
         _logger.LogInformation("Getting connected shapes for {ShapeId}", shapeId);
         await Task.Delay(50);
-        
+
         return new List<object>
         {
             new { Id = $"{shapeId}-connected-1", Type = "triangle" },
@@ -168,7 +168,7 @@ public class ActorSystemManager
     {
         _logger.LogInformation("Creating actor of type {ActorType}", actorType);
         await Task.Delay(100);
-        
+
         return new
         {
             Id = Guid.NewGuid().ToString(),

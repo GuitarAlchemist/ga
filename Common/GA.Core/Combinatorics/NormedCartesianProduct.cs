@@ -21,10 +21,8 @@ public class NormedCartesianProduct<T, TNorm>(
     /// <param name="predicate">A <see cref="Func{T, Boolean}" /> (Optional).</param>
     /// <returns>The <see cref="ImmutableDictionary{TNorm, Int32}" />.</returns>
     public static ImmutableSortedDictionary<TNorm, int> NormCounts<TItemsCollection>(Func<T, bool>? predicate = null)
-        where TItemsCollection : IStaticReadonlyCollection<T>
-    {
-        return NormCounts(TItemsCollection.Items, predicate);
-    }
+        where TItemsCollection : IStaticReadonlyCollection<T> =>
+        NormCounts(TItemsCollection.Items, predicate);
 
     /// <summary>
     ///     Get the counts for each <see cref="TNorm" />.
@@ -33,10 +31,8 @@ public class NormedCartesianProduct<T, TNorm>(
     /// <param name="predicate">A <see cref="Func{T, Boolean}" /> (Optional).</param>
     /// <returns>The <see cref="ImmutableDictionary{TNorm, Int32}" />.</returns>
     public static ImmutableSortedDictionary<TNorm, int> NormCounts(IEnumerable<T> items,
-        Func<T, bool>? predicate = null)
-    {
-        return new NormedCartesianProduct<T, TNorm>(items, predicate).ByNormCounts();
-    }
+        Func<T, bool>? predicate = null) =>
+        new NormedCartesianProduct<T, TNorm>(items, predicate).ByNormCounts();
 
     public override string ToString()
     {

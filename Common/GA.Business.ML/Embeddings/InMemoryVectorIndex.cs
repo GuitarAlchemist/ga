@@ -1,103 +1,55 @@
 namespace GA.Business.ML.Embeddings;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics.Tensors;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 
 /// <summary>
-/// In-memory vector index for development and testing scenarios.
+///     In-memory vector index for development and testing scenarios.
 /// </summary>
 /// <remarks>
-/// This implementation is optimized for simplicity and quick iteration.
-/// For production use with large datasets, consider <see cref="QdrantVectorIndex"/>
-/// or <see cref="FileBasedVectorIndex"/> with persistence.
+///     This implementation is optimized for simplicity and quick iteration.
+///     For production use with large datasets, consider <see cref="QdrantVectorIndex" />
+///     or <see cref="FileBasedVectorIndex" /> with persistence.
 /// </remarks>
 public sealed class InMemoryVectorIndex : IVectorIndex
 {
-    private readonly List<VoicingDocument> _documents = new();
-    private readonly object _lock = new();
+    private readonly List<ChordVoicingRagDocument> _documents = [];
+    private readonly Lock _lock = new();
 
     /// <inheritdoc />
-    public IReadOnlyList<VoicingDocument> Documents
+    public IReadOnlyList<ChordVoicingRagDocument> Documents
     {
         get
         {
             lock (_lock)
             {
-                return _documents.ToList().AsReadOnly();
+                return [.. _documents];
             }
         }
     }
 
-    /// <summary>
-    /// Adds a single document to the index.
-    /// </summary>
-    public void Add(VoicingDocument document)
-    {
-        ArgumentNullException.ThrowIfNull(document);
-        lock (_lock)
-        {
-            _documents.Add(document);
-        }
-    }
-
-    /// <summary>
-    /// Adds multiple documents to the index.
-    /// </summary>
-    public void AddRange(IEnumerable<VoicingDocument> documents)
-    {
-        ArgumentNullException.ThrowIfNull(documents);
-        lock (_lock)
-        {
-            _documents.AddRange(documents);
-        }
-    }
-
-    /// <summary>
-    /// Clears all documents from the index.
-    /// </summary>
-    public void Clear()
-    {
-        lock (_lock)
-        {
-            _documents.Clear();
-        }
-    }
-
     /// <inheritdoc />
-    public IEnumerable<(VoicingDocument Doc, double Score)> Search(double[] queryVector, int topK = 10)
+    public IEnumerable<(ChordVoicingRagDocument Doc, double Score)> Search(float[] queryVector, int topK = 10)
     {
         if (queryVector.Length == 0)
         {
-            return Enumerable.Empty<(VoicingDocument, double)>();
+            return [];
         }
 
-        List<VoicingDocument> snapshot;
+        List<ChordVoicingRagDocument> snapshot;
         lock (_lock)
         {
-            snapshot = _documents.ToList();
+            snapshot = [.. _documents];
         }
 
         if (snapshot.Count == 0)
         {
-            return Enumerable.Empty<(VoicingDocument, double)>();
+            return [];
         }
-
-        // Convert query to float for TensorPrimitives
-        var queryFloat = Array.ConvertAll(queryVector, v => (float)v);
 
         // Score all documents
         var scored = snapshot
             .Where(d => d.Embedding != null && d.Embedding.Length == queryVector.Length)
-            .Select(doc =>
-            {
-                var docFloat = Array.ConvertAll(doc.Embedding!, v => (float)v);
-                var similarity = CosineSimilarity(queryFloat, docFloat);
-                return (Doc: doc, Score: similarity);
-            })
+            .Select(doc => (Doc: doc, Score: CosineSimilarity(queryVector, doc.Embedding!)))
             .OrderByDescending(x => x.Score)
             .Take(topK)
             .ToList();
@@ -106,7 +58,7 @@ public sealed class InMemoryVectorIndex : IVectorIndex
     }
 
     /// <inheritdoc />
-    public VoicingDocument? FindByIdentity(string identity)
+    public ChordVoicingRagDocument? FindByIdentity(string identity)
     {
         if (string.IsNullOrWhiteSpace(identity))
         {
@@ -122,14 +74,47 @@ public sealed class InMemoryVectorIndex : IVectorIndex
     }
 
     /// <inheritdoc />
-    public Task<bool> IsStaleAsync(string currentSchemaVersion)
-    {
+    public Task<bool> IsStaleAsync(string currentSchemaVersion) =>
         // In-memory index is never stale - it's always rebuilt from scratch
-        return Task.FromResult(false);
+        Task.FromResult(false);
+
+    /// <summary>
+    ///     Adds a single document to the index.
+    /// </summary>
+    public void Add(ChordVoicingRagDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        lock (_lock)
+        {
+            _documents.Add(document);
+        }
     }
 
     /// <summary>
-    /// Computes cosine similarity between two vectors.
+    ///     Adds multiple documents to the index.
+    /// </summary>
+    public void AddRange(IEnumerable<ChordVoicingRagDocument> documents)
+    {
+        ArgumentNullException.ThrowIfNull(documents);
+        lock (_lock)
+        {
+            _documents.AddRange(documents);
+        }
+    }
+
+    /// <summary>
+    ///     Clears all documents from the index.
+    /// </summary>
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _documents.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Computes cosine similarity between two vectors.
     /// </summary>
     private static double CosineSimilarity(ReadOnlySpan<float> a, ReadOnlySpan<float> b)
     {

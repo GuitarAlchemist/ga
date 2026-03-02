@@ -15,7 +15,7 @@ public class MonadicHealthControllerTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new();
         _client = _factory.CreateClient();
     }
 
@@ -30,7 +30,6 @@ public class MonadicHealthControllerTests
     private HttpClient? _client;
 
     [Test]
-    [Ignore("MonadicHealthController not yet implemented")]
     public async Task GetHealth_ShouldReturnHealthStatus()
     {
         // Act
@@ -57,7 +56,6 @@ public class MonadicHealthControllerTests
     }
 
     [Test]
-    [Ignore("MonadicHealthController not yet implemented")]
     public async Task CheckDatabase_ShouldReturnDatabaseHealth()
     {
         // Act

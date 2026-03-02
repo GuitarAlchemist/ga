@@ -13,17 +13,12 @@ public interface IValueObject : IComparable
     /// </summary>
     int Value { get; }
 
-    int IComparable.CompareTo(object? obj)
-    {
-        if (obj is null)
-        {
-            return 1;
-        }
-
-        return obj is IValueObject other
-            ? CompareTo(other)
-            : throw new ArgumentException($"Object must implement {nameof(IValueObject)}");
-    }
+    int IComparable.CompareTo(object? obj) =>
+        obj is null
+            ? 1
+            : obj is IValueObject other
+                ? Value.CompareTo(other.Value)
+                : throw new ArgumentException($"Object must implement {nameof(IValueObject)}");
 }
 
 /// <summary>
@@ -38,10 +33,7 @@ public interface IValueObject : IComparable
 public interface IValueObject<TSelf> : IValueObject, IComparable<TSelf>, IEquatable<TSelf>
     where TSelf : IValueObject<TSelf>
 {
-    int IComparable<TSelf>.CompareTo(TSelf? other)
-    {
-        return Value.CompareTo(other?.Value);
-    }
+    int IComparable<TSelf>.CompareTo(TSelf? other) => Value.CompareTo(other?.Value);
 
     /// <summary>
     ///     Creates an <paramtyperef name="TSelf" /> object instance from its value

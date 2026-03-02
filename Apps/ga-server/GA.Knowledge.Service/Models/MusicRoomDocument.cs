@@ -59,7 +59,7 @@ public class MusicRoomDocument
     /// <summary>
     /// Room metadata
     /// </summary>
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
 }
 
 /// <summary>
@@ -78,7 +78,7 @@ public class RoomDimensions
 public class RoomLayout
 {
     public string LayoutType { get; set; } = string.Empty;
-    public List<RoomObject> Objects { get; set; } = new();
+    public List<RoomObject> Objects { get; set; } = [];
 }
 
 /// <summary>
@@ -88,7 +88,7 @@ public class RoomObject
 {
     public string Type { get; set; } = string.Empty;
     public Position Position { get; set; } = new();
-    public Dictionary<string, object> Properties { get; set; } = new();
+    public Dictionary<string, object> Properties { get; set; } = [];
 }
 
 /// <summary>

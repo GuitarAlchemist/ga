@@ -1,9 +1,5 @@
 namespace GA.Domain.Services;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -41,7 +37,9 @@ public static class IconicChordsConfigLoader
 
                 var cfg = deserializer.Deserialize<IconicChordsConfiguration>(yaml) ?? new IconicChordsConfiguration();
                 if (cfg.IconicChords is { Count: > 0 })
+                {
                     return cfg;
+                }
             }
 
             // Fallback default configuration (minimal but valid)
@@ -106,13 +104,11 @@ public static class IconicChordsConfigLoader
                ?? throw new FileNotFoundException("IconicChords.yaml not found in any expected location");
     }
 
-    public static void ReloadConfiguration()
-    {
+    public static void ReloadConfiguration() =>
         // Force reload by creating a new lazy instance
         typeof(IconicChordsConfigLoader)
             .GetField("_configuration", BindingFlags.NonPublic | BindingFlags.Static)
             ?.SetValue(null, new Lazy<IconicChordsConfiguration>(() => LoadConfiguration()));
-    }
 }
 
 /// <summary>
@@ -145,35 +141,25 @@ public class IconicChordDefinition
 /// </summary>
 public static class IconicChordsService
 {
-    public static IEnumerable<IconicChordDefinition> GetAllChords()
-    {
-        return IconicChordsConfigLoader.Configuration.IconicChords;
-    }
+    public static IEnumerable<IconicChordDefinition> GetAllChords() =>
+        IconicChordsConfigLoader.Configuration.IconicChords;
 
-    public static IconicChordDefinition? FindChordByName(string name)
-    {
-        return GetAllChords().FirstOrDefault(chord =>
+    public static IconicChordDefinition? FindChordByName(string name) =>
+        GetAllChords().FirstOrDefault(chord =>
             string.Equals(chord.Name, name, StringComparison.OrdinalIgnoreCase) ||
             chord.AlternateNames.Any(alt => string.Equals(alt, name, StringComparison.OrdinalIgnoreCase)));
-    }
 
-    public static IEnumerable<IconicChordDefinition> FindChordsByArtist(string artist)
-    {
-        return GetAllChords().Where(chord =>
+    public static IEnumerable<IconicChordDefinition> FindChordsByArtist(string artist) =>
+        GetAllChords().Where(chord =>
             chord.Artist.Contains(artist, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<IconicChordDefinition> FindChordsByEra(string era)
-    {
-        return GetAllChords().Where(chord =>
+    public static IEnumerable<IconicChordDefinition> FindChordsByEra(string era) =>
+        GetAllChords().Where(chord =>
             chord.Era.Contains(era, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<IconicChordDefinition> FindChordsByGenre(string genre)
-    {
-        return GetAllChords().Where(chord =>
+    public static IEnumerable<IconicChordDefinition> FindChordsByGenre(string genre) =>
+        GetAllChords().Where(chord =>
             chord.Genre.Contains(genre, StringComparison.OrdinalIgnoreCase));
-    }
 
     public static IEnumerable<IconicChordDefinition> FindChordsByPitchClasses(IEnumerable<int> pitchClasses)
     {
@@ -190,25 +176,15 @@ public static class IconicChordsService
             chord.GuitarVoicing.SequenceEqual(searchVoicing));
     }
 
-    public static IEnumerable<string> GetAllChordNames()
-    {
-        return GetAllChords().Select(chord => chord.Name);
-    }
+    public static IEnumerable<string> GetAllChordNames() => GetAllChords().Select(chord => chord.Name);
 
-    public static IEnumerable<string> GetAllArtists()
-    {
-        return GetAllChords().Select(chord => chord.Artist).Distinct();
-    }
+    public static IEnumerable<string> GetAllArtists() => GetAllChords().Select(chord => chord.Artist).Distinct();
 
-    public static IEnumerable<string> GetAllEras()
-    {
-        return GetAllChords().Select(chord => chord.Era).Where(era => !string.IsNullOrEmpty(era)).Distinct();
-    }
+    public static IEnumerable<string> GetAllEras() => GetAllChords().Select(chord => chord.Era)
+        .Where(era => !string.IsNullOrEmpty(era)).Distinct();
 
-    public static IEnumerable<string> GetAllGenres()
-    {
-        return GetAllChords().Select(chord => chord.Genre).Where(genre => !string.IsNullOrEmpty(genre)).Distinct();
-    }
+    public static IEnumerable<string> GetAllGenres() => GetAllChords().Select(chord => chord.Genre)
+        .Where(genre => !string.IsNullOrEmpty(genre)).Distinct();
 
     public static (bool IsValid, List<string> Errors) ValidateConfiguration()
     {

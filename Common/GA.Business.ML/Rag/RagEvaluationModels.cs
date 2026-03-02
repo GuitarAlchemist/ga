@@ -1,10 +1,7 @@
 namespace GA.Business.ML.Rag;
 
-using System;
-using System.Collections.Generic;
-
 /// <summary>
-/// Metric results for a single RAG query evaluation.
+///     Metric results for a single RAG query evaluation.
 /// </summary>
 public record RagQueryEvaluation(
     string Query,
@@ -15,7 +12,7 @@ public record RagQueryEvaluation(
     IReadOnlyList<RagResult> Results);
 
 /// <summary>
-/// Aggregated benchmark results for a RAG performance run.
+///     Aggregated benchmark results for a RAG performance run.
 /// </summary>
 public record RagBenchmarkResult(
     string Name,
@@ -26,7 +23,7 @@ public record RagBenchmarkResult(
     IReadOnlyDictionary<KnowledgeType, int> PartitionDistribution);
 
 /// <summary>
-/// A gold-standard test case for RAG evaluation.
+///     A gold-standard test case for RAG evaluation.
 /// </summary>
 public record RagTestCase(
     string Query,

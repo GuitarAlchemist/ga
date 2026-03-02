@@ -1,7 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using JetBrains.Annotations;
-
 /// <summary>
 ///     Display-only label formatter for set-class notation (Forte/Rahn).
 ///     Uses the programmatic ForteCatalog for complete coverage.

@@ -1,10 +1,7 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Primitives;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using Core.Theory.Tonal.Modes;
 
 /// <summary>
@@ -96,14 +93,41 @@ public static class ChordBuilderEx
     /// <summary>
     ///     Adds altered tensions to a dominant chord
     /// </summary>
-    public static ChordBuilder WithAlteredTensions(this ChordBuilder builder)
-    {
-        return builder
+    public static ChordBuilder WithAlteredTensions(this ChordBuilder builder) =>
+        builder
             .WithFlatNinth()
             .WithSharpNinth()
             .WithSharpEleventh()
             .WithFlatThirteenth()
             .WithName("Altered Dominant");
+
+    /// <summary>
+    ///     Creates a slash chord (chord with different bass note)
+    /// </summary>
+    public static ChordBuilder WithBass(this ChordBuilder builder, Note bassNote)
+    {
+        var chord = builder.Build();
+        var bassSemitones = (bassNote.PitchClass.Value - chord.Root.PitchClass.Value + 12) % 12;
+        var bassInterval = new Interval.Chromatic(Semitones.FromValue(bassSemitones));
+
+        return ChordBuilder.Create(chord.Root)
+            .WithName($"{chord.Symbol}/{bassNote}")
+            .WithInterval((Interval)bassInterval, ChordFunction.Root);
+    }
+
+    /// <summary>
+    ///     Creates a chord with specific voicing
+    /// </summary>
+    public static ChordBuilder WithVoicing(this ChordBuilder builder, params int[] voicingIntervals)
+    {
+        builder.WithName($"{builder.Build().Symbol} (custom voicing)");
+
+        foreach (var interval in voicingIntervals)
+        {
+            builder.WithInterval(interval, ChordFunction.Root, false);
+        }
+
+        return builder;
     }
 
     /// <summary>
@@ -134,35 +158,6 @@ public static class ChordBuilderEx
 
         return combinedBuilder.WithName($"{upper.Symbol}/{lower.Symbol}");
     }
-
-    /// <summary>
-    ///     Creates a slash chord (chord with different bass note)
-    /// </summary>
-    public static ChordBuilder WithBass(this ChordBuilder builder, Note bassNote)
-    {
-        var chord = builder.Build();
-        var bassSemitones = (bassNote.PitchClass.Value - chord.Root.PitchClass.Value + 12) % 12;
-        var bassInterval = new Interval.Chromatic(Semitones.FromValue(bassSemitones));
-
-        return ChordBuilder.Create(chord.Root)
-            .WithName($"{chord.Symbol}/{bassNote}")
-            .WithInterval((Interval)bassInterval, ChordFunction.Root);
-    }
-
-    /// <summary>
-    ///     Creates a chord with specific voicing
-    /// </summary>
-    public static ChordBuilder WithVoicing(this ChordBuilder builder, params int[] voicingIntervals)
-    {
-        builder.WithName($"{builder.Build().Symbol} (custom voicing)");
-
-        foreach (var interval in voicingIntervals)
-        {
-            builder.WithInterval(interval, ChordFunction.Root, false);
-        }
-
-        return builder;
-    }
 }
 
 /// <summary>
@@ -173,10 +168,7 @@ public class ChordProgression
     /// <summary>
     ///     Initializes a new instance of the ChordProgression class
     /// </summary>
-    public ChordProgression(IEnumerable<Chord> chords)
-    {
-        Chords = chords.ToList().AsReadOnly();
-    }
+    public ChordProgression(IEnumerable<Chord> chords) => Chords = chords.ToList().AsReadOnly();
 
     /// <summary>
     ///     Gets the chords in the progression
@@ -186,12 +178,10 @@ public class ChordProgression
     /// <summary>
     ///     Gets the Roman numeral analysis of the progression in the given key
     /// </summary>
-    public string GetRomanNumeralAnalysis(Note key)
-    {
+    public string GetRomanNumeralAnalysis(Note key) =>
         // This would require more complex harmonic analysis
         // For now, return a simple representation
-        return string.Join(" - ", Chords.Select(c => c.Symbol));
-    }
+        string.Join(" - ", Chords.Select(c => c.Symbol));
 
     /// <summary>
     ///     Transposes the entire progression by the specified interval
@@ -208,8 +198,5 @@ public class ChordProgression
         return new(transposedChords);
     }
 
-    public override string ToString()
-    {
-        return string.Join(" | ", Chords.Select(c => c.Symbol));
-    }
+    public override string ToString() => string.Join(" | ", Chords.Select(c => c.Symbol));
 }

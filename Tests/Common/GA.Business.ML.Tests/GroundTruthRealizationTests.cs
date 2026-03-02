@@ -1,18 +1,18 @@
-namespace GA.Business.ML.Tests;
+﻿namespace GA.Business.ML.Tests;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Instruments;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives;
 using GA.Domain.Core.Theory.Atonal;
 using Domain.Services.Fretboard.Analysis;
 using GA.Business.ML.Tabs;
 using TestInfrastructure;
 using Embeddings;
+using Rag.Models;
 using NUnit.Framework;
 
 [TestFixture]
@@ -31,14 +31,14 @@ public class GroundTruthRealizationTests
         var tuning = Tuning.Default;
         var mapper = new FretboardPositionMapper(tuning);
         var cost = new PhysicalCostService();
-        _basicSolver = new TabSequenceSolver(mapper, cost);
+        _basicSolver = new(mapper, cost);
         
         _testIndex = TestServices.CreateTempIndex();
         _advancedSolver = TestServices.CreateAdvancedTabSolver(_testIndex);
         _generator = TestServices.CreateGenerator();
         
-        _pitchConverter = new TabToPitchConverter();
-        _tokenizer = new TabTokenizer();
+        _pitchConverter = new();
+        _tokenizer = new();
     }
 
     [TearDown]
@@ -83,7 +83,7 @@ E|---------------|
         TestContext.WriteLine("=== Advanced Solver Verification (Blues Riff) ===");
         var physicalCost = new PhysicalCostService();
 
-        for (int i = 0; i < solved.Count; i++)
+        for (var i = 0; i < solved.Count; i++)
         {
             // Convert TabSlice notes to FretboardPositions for comparison
             var expectedPositions = slices[i].Notes.Select(n => new FretboardPosition(
@@ -97,11 +97,11 @@ E|---------------|
             var mNotes = _pitchConverter.GetMidiNotes(slices[i]);
             var expectedWithPitches = new List<FretboardPosition>();
             var sortedOrigNotes = slices[i].Notes.OrderByDescending(n => n.StringIndex).ToList();
-            for(int k=0; k<sortedOrigNotes.Count; k++) {
-                int m = mNotes[k];
+            for(var k=0; k<sortedOrigNotes.Count; k++) {
+                var m = mNotes[k];
                 var pc = PitchClass.FromValue(m % 12);
                 var oct = Octave.FromValue((m/12)-1);
-                expectedWithPitches.Add(new FretboardPosition(Str.FromValue(6 - sortedOrigNotes[k].StringIndex), sortedOrigNotes[k].Fret, new Pitch.Sharp(pc.ToSharpNote(), oct)));
+                expectedWithPitches.Add(new(Str.FromValue(6 - sortedOrigNotes[k].StringIndex), sortedOrigNotes[k].Fret, new Pitch.Sharp(pc.ToSharpNote(), oct)));
             }
 
             // A. Harmonic Equivalence (Must match pitches and octaves)
@@ -120,22 +120,22 @@ E|---------------|
     private async Task SeedStyle(string name, int[] frets, string style)
     {
         var nonZero = frets.Where(f => f > 0).ToList();
-        int min = nonZero.Count > 0 ? nonZero.Min() : 0;
-        int max = nonZero.Count > 0 ? nonZero.Max() : 0;
+        var min = nonZero.Count > 0 ? nonZero.Min() : 0;
+        var max = nonZero.Count > 0 ? nonZero.Max() : 0;
 
         // Strings 5, 4, 3, 2 offsets
         int[] stringOffsets = [45, 50, 55, 59]; // A2, D3, G3, B3
         var midiNotes = new List<int>();
-        for(int i=0; i<frets.Length; i++) {
+        for(var i=0; i<frets.Length; i++) {
             midiNotes.Add(stringOffsets[i] + frets[i]);
         }
 
-        var doc = new VoicingDocument {
+        var doc = new ChordVoicingRagDocument {
             Id = Guid.NewGuid().ToString(),
             ChordName = name,
             SemanticTags = [style],
-            MidiNotes = midiNotes.ToArray(),
-            PitchClasses = midiNotes.Select(m => m % 12).ToArray(),
+            MidiNotes = [.. midiNotes],
+            PitchClasses = [.. midiNotes.Select(m => m % 12)],
             SearchableText = name,
             RootPitchClass = midiNotes[0] % 12,
             
@@ -179,15 +179,15 @@ E|---------------|
         Assert.That(solved.Count, Is.EqualTo(slices.Count));
 
         TestContext.WriteLine("=== Original vs Basic Solved (Blues Riff) ===");
-        for (int i = 0; i < solved.Count; i++)
+        for (var i = 0; i < solved.Count; i++)
         {
             var origNotes = slices[i].Notes.ToList();
             var solvedNotes = solved[i].ToList();
 
-            bool match = true;
+            var match = true;
             foreach (var orig in origNotes)
             {
-                int expectedStrValue = 6 - orig.StringIndex;
+                var expectedStrValue = 6 - orig.StringIndex;
                 var solvedForThisString = solvedNotes.FirstOrDefault(s => s.StringIndex.Value == expectedStrValue);
                 if (solvedForThisString == null || solvedForThisString.Fret != orig.Fret) match = false;
             }

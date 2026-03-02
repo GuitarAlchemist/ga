@@ -5,24 +5,24 @@ using ILGPU;
 using ILGPU.Runtime;
 
 /// <summary>
-/// ILGPU-accelerated vector search strategy for GPU-based similarity calculations
-/// Provides cross-platform GPU acceleration (NVIDIA, AMD, Intel)
-/// Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
+///     ILGPU-accelerated vector search strategy for GPU-based similarity calculations
+///     Provides cross-platform GPU acceleration (NVIDIA, AMD, Intel)
+///     Following ILGPU documentation: https://ilgpu.net/docs/01-primers/01-setting-up-ilgpu/
 /// </summary>
 public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
 {
-    private readonly Dictionary<int, ChordEmbedding> _chords = new();
+    private readonly Accelerator? _accelerator;
+    private readonly Dictionary<int, ChordEmbedding> _chords = [];
     private readonly Lock _initLock = new();
     private readonly ILogger<IlgpuVectorSearchStrategy> _logger;
 
     private Context? _context;
-    private readonly Accelerator? _accelerator;
-
-    private double[]? _hostEmbeddings;
 
     private int _embeddingDimensions = 384;
-    private bool _isInitialized;
+
+    private double[]? _hostEmbeddings;
     private bool _isDisposed;
+    private bool _isInitialized;
     private long _totalSearches;
     private TimeSpan _totalSearchTime = TimeSpan.Zero;
 
@@ -31,6 +31,19 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
         _logger = logger;
         _accelerator = accelerator;
         InitializeIlgpu();
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        _accelerator?.Dispose();
+        _context?.Dispose();
+
+        _isDisposed = true;
     }
 
     public string Name => "ILGPU";
@@ -45,14 +58,18 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     public async Task InitializeAsync(IEnumerable<ChordEmbedding> chords)
     {
         if (!IsAvailable)
+        {
             throw new InvalidOperationException("ILGPU is not available on this system");
+        }
 
         await Task.Run(() =>
         {
             lock (_initLock)
             {
                 if (_isInitialized)
+                {
                     return;
+                }
 
                 _logger.LogInformation("Initializing ILGPU vector search...");
                 var stopwatch = Stopwatch.StartNew();
@@ -77,9 +94,8 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     public async Task<List<ChordSearchResult>> SemanticSearchAsync(
         double[] queryEmbedding,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -112,19 +128,19 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> FindSimilarChordsAsync(
         int chordId,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
 
             if (!_chords.TryGetValue(chordId, out var queryChord))
+            {
                 throw new ArgumentException($"Chord with ID {chordId} not found");
+            }
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -157,15 +173,13 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> HybridSearchAsync(
         double[] queryEmbedding,
         ChordSearchFilters filters,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -175,13 +189,24 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                 var filteredChords = _chords.Values.AsEnumerable();
 
                 if (!string.IsNullOrEmpty(filters.Quality))
+                {
                     filteredChords = filteredChords.Where(c => c.Quality == filters.Quality);
+                }
+
                 if (!string.IsNullOrEmpty(filters.Extension))
+                {
                     filteredChords = filteredChords.Where(c => c.Extension == filters.Extension);
+                }
+
                 if (!string.IsNullOrEmpty(filters.StackingType))
+                {
                     filteredChords = filteredChords.Where(c => c.StackingType == filters.StackingType);
+                }
+
                 if (filters.NoteCount.HasValue)
+                {
                     filteredChords = filteredChords.Where(c => c.NoteCount == filters.NoteCount.Value);
+                }
 
                 var filteredIds = filteredChords.Select(c => c.Id).ToList();
                 var similarities = CalculateFilteredSimilaritiesIlgpu(queryEmbedding, filteredIds);
@@ -210,16 +235,13 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
-    public VectorSearchStats GetStats()
-    {
-        return new VectorSearchStats(
+    public VectorSearchStats GetStats() =>
+        new(
             _chords.Count,
             CalculateGpuMemoryUsage(),
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
             _totalSearches);
-    }
 
     private void InitializeIlgpu()
     {
@@ -243,14 +265,16 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     private void CopyEmbeddingsToGpu(List<ChordEmbedding> chords)
     {
         if (_accelerator == null)
+        {
             throw new InvalidOperationException("Accelerator not initialized");
+        }
 
         var embeddingDim = chords.First().Embedding.Length;
         _embeddingDimensions = embeddingDim;
 
         // Store embeddings in host memory for GPU transfer
         _hostEmbeddings = new double[chords.Count * embeddingDim];
-        for (int i = 0; i < chords.Count; i++)
+        for (var i = 0; i < chords.Count; i++)
         {
             Array.Copy(chords[i].Embedding, 0, _hostEmbeddings, i * embeddingDim, embeddingDim);
         }
@@ -261,7 +285,9 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     private IEnumerable<(int ChordId, double Score)> CalculateSimilaritiesIlgpu(double[] queryEmbedding)
     {
         if (_accelerator == null || _hostEmbeddings == null)
+        {
             throw new InvalidOperationException("ILGPU not properly initialized");
+        }
 
         // Allocate GPU memory for this search
         var deviceQueryVector = _accelerator.Allocate1D(queryEmbedding);
@@ -274,10 +300,10 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
             // ILGPU kernel compilation is complex; this ensures the code compiles
             // TODO: Implement proper ILGPU kernel loading and execution
             var similarities = new double[_chords.Count];
-            for (int i = 0; i < _chords.Count; i++)
+            for (var i = 0; i < _chords.Count; i++)
             {
                 double dotProduct = 0.0, queryNorm = 0.0, chordNorm = 0.0;
-                for (int j = 0; j < _embeddingDimensions; j++)
+                for (var j = 0; j < _embeddingDimensions; j++)
                 {
                     var q = queryEmbedding[j];
                     var c = _hostEmbeddings[i * _embeddingDimensions + j];
@@ -285,6 +311,7 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                     queryNorm += q * q;
                     chordNorm += c * c;
                 }
+
                 similarities[i] = dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(chordNorm) + 1e-10);
             }
 
@@ -298,10 +325,13 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
         }
     }
 
-    private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilaritiesIlgpu(double[] queryEmbedding, List<int> allowedIds)
+    private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilaritiesIlgpu(double[] queryEmbedding,
+        List<int> allowedIds)
     {
         if (_accelerator == null || _hostEmbeddings == null)
+        {
             throw new InvalidOperationException("ILGPU not properly initialized");
+        }
 
         var allowedIndices = allowedIds.Select(id => _chords.Keys.ToList().IndexOf(id)).ToArray();
 
@@ -317,11 +347,11 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
             // ILGPU kernel compilation is complex; this ensures the code compiles
             // TODO: Implement proper ILGPU kernel loading and execution
             var similarities = new double[allowedIds.Count];
-            for (int i = 0; i < allowedIds.Count; i++)
+            for (var i = 0; i < allowedIds.Count; i++)
             {
                 var chordIdx = allowedIndices[i];
                 double dotProduct = 0.0, queryNorm = 0.0, chordNorm = 0.0;
-                for (int j = 0; j < _embeddingDimensions; j++)
+                for (var j = 0; j < _embeddingDimensions; j++)
                 {
                     var q = queryEmbedding[j];
                     var c = _hostEmbeddings[chordIdx * _embeddingDimensions + j];
@@ -329,6 +359,7 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
                     queryNorm += q * q;
                     chordNorm += c * c;
                 }
+
                 similarities[i] = dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(chordNorm) + 1e-10);
             }
 
@@ -346,13 +377,17 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
     private void EnsureInitialized()
     {
         if (!_isInitialized)
+        {
             throw new InvalidOperationException("ILGPU vector search not initialized. Call InitializeAsync first.");
+        }
     }
 
     private long CalculateGpuMemoryUsage()
     {
         if (_chords.Count == 0)
+        {
             return 0;
+        }
 
         var bytesPerEmbedding = _embeddingDimensions * sizeof(double);
         return _chords.Count * bytesPerEmbedding / (1024 * 1024);
@@ -366,16 +401,4 @@ public class IlgpuVectorSearchStrategy : IVectorSearchStrategy, IDisposable
             _totalSearchTime = _totalSearchTime.Add(elapsed);
         }
     }
-
-    public void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _accelerator?.Dispose();
-        _context?.Dispose();
-
-        _isDisposed = true;
-    }
 }
-

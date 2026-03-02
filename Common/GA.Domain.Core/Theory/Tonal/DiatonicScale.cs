@@ -1,9 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal;
 
-using System.Collections;
-using System.Collections.Generic;
-using Core.Primitives;
-using JetBrains.Annotations;
+using Interval = Core.Primitives.Intervals.Interval;
 
 [PublicAPI]
 public abstract record DiatonicScale
@@ -21,15 +18,9 @@ public abstract record DiatonicScale
     {
         private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = [T, T, S, T, T, T, S];
 
-        public IEnumerator<Interval.Chromatic> GetEnumerator()
-        {
-            return _intervals.GetEnumerator();
-        }
+        public IEnumerator<Interval.Chromatic> GetEnumerator() => _intervals.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public int Count => _intervals.Count;
     }
@@ -38,15 +29,9 @@ public abstract record DiatonicScale
     {
         private static readonly IReadOnlyCollection<Interval.Chromatic> _intervals = [T, S, T, T, S, T, T];
 
-        public IEnumerator<Interval.Chromatic> GetEnumerator()
-        {
-            return _intervals.GetEnumerator();
-        }
+        public IEnumerator<Interval.Chromatic> GetEnumerator() => _intervals.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public int Count => _intervals.Count;
     }

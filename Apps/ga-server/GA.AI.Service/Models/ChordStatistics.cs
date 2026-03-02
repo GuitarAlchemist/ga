@@ -1,67 +1,67 @@
 namespace GA.AI.Service.Models;
 
 /// <summary>
-/// Statistical information about chords
+///     Statistical information about chords
 /// </summary>
 public class ChordStatistics
 {
     /// <summary>
-    /// Total number of chords
+    ///     Total number of chords
     /// </summary>
     public int TotalChords { get; set; }
 
     /// <summary>
-    /// Number of unique chord qualities
+    ///     Number of unique chord qualities
     /// </summary>
     public int UniqueQualities { get; set; }
 
     /// <summary>
-    /// Number of unique root notes
+    ///     Number of unique root notes
     /// </summary>
     public int UniqueRoots { get; set; }
 
     /// <summary>
-    /// Most common chord quality
+    ///     Most common chord quality
     /// </summary>
     public string MostCommonQuality { get; set; } = string.Empty;
 
     /// <summary>
-    /// Most common root note
+    ///     Most common root note
     /// </summary>
     public string MostCommonRoot { get; set; } = string.Empty;
 
     /// <summary>
-    /// Distribution of chord qualities
+    ///     Distribution of chord qualities
     /// </summary>
-    public Dictionary<string, int> QualityDistribution { get; set; } = new();
+    public Dictionary<string, int> QualityDistribution { get; set; } = [];
 
     /// <summary>
-    /// Distribution of root notes
+    ///     Distribution of root notes
     /// </summary>
-    public Dictionary<string, int> RootDistribution { get; set; } = new();
+    public Dictionary<string, int> RootDistribution { get; set; } = [];
 
     /// <summary>
-    /// Average number of notes per chord
+    ///     Average number of notes per chord
     /// </summary>
     public double AverageNotesPerChord { get; set; }
 
     /// <summary>
-    /// Distribution of chord extensions
+    ///     Distribution of chord extensions
     /// </summary>
-    public Dictionary<string, int> ExtensionDistribution { get; set; } = new();
+    public Dictionary<string, int> ExtensionDistribution { get; set; } = [];
 
     /// <summary>
-    /// Distribution of chord stacking types
+    ///     Distribution of chord stacking types
     /// </summary>
-    public Dictionary<string, int> StackingTypeDistribution { get; set; } = new();
+    public Dictionary<string, int> StackingTypeDistribution { get; set; } = [];
 
     /// <summary>
-    /// Distribution of note counts
+    ///     Distribution of note counts
     /// </summary>
-    public Dictionary<int, int> NoteCountDistribution { get; set; } = new();
+    public Dictionary<int, int> NoteCountDistribution { get; set; } = [];
 
     /// <summary>
-    /// When the statistics were calculated
+    ///     When the statistics were calculated
     /// </summary>
     public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
 }

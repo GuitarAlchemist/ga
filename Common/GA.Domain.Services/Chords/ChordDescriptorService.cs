@@ -1,49 +1,55 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
 using Abstractions;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using ServicesChordTemplate = ChordTemplate;
+using CoreChordTemplate = ChordTemplate;
 
 /// <summary>
-/// Facade that orchestrates chord analysis strategies and falls back to the
-/// existing naming pipeline when no specialized analyzer applies.
+///     Facade that orchestrates chord analysis strategies and falls back to the
+///     existing naming pipeline when no specialized analyzer applies.
 /// </summary>
 public sealed class ChordDescriptorService(IEnumerable<IChordAnalysisService> analyzers)
 {
     private readonly IReadOnlyList<IChordAnalysisService> _analyzers = analyzers?.ToList() ?? [];
 
     /// <summary>
-    /// Returns the best available chord name. Uses the first analyzer whose
-    /// <see cref="IChordAnalysisService.CanAnalyze"/> returns true; otherwise
-    /// falls back to the unified static naming service.
+    ///     Returns the best available chord name. Uses the first analyzer whose
+    ///     <see cref="IChordAnalysisService.CanAnalyze" /> returns true; otherwise
+    ///     falls back to the unified static naming service.
     /// </summary>
-    public string GetName(ChordTemplate template, PitchClass root, PitchClass? bassNote = null)
+    public string GetName(ServicesChordTemplate template, PitchClass root, PitchClass? bassNote = null)
     {
-        var analyzer = _analyzers.FirstOrDefault(a => a.CanAnalyze(template));
+        var coreTemplate = ConvertToCore(template);
+        var analyzer = _analyzers.FirstOrDefault(a => a.CanAnalyze(coreTemplate));
         if (analyzer is not null)
         {
-            return analyzer.GetSuggestedName(template, root);
+            return analyzer.GetSuggestedName(coreTemplate, root);
         }
 
         // Fallback to existing naming flow
-        return ChordTemplateNamingService.GetBestChordName(template, root, bassNote);
+        return HybridChordNamingService.GetBestChordName(template, root, bassNote);
     }
 
     /// <summary>
-    /// Returns a description from the first matching analyzer, otherwise a minimal
-    /// description based on the fallback name.
+    ///     Returns a description from the first matching analyzer, otherwise a minimal
+    ///     description based on the fallback name.
     /// </summary>
-    public string GetDescription(ChordTemplate template, PitchClass root, PitchClass? bassNote = null)
+    public string GetDescription(ServicesChordTemplate template, PitchClass root, PitchClass? bassNote = null)
     {
-        var analyzer = _analyzers.FirstOrDefault(a => a.CanAnalyze(template));
+        var coreTemplate = ConvertToCore(template);
+        var analyzer = _analyzers.FirstOrDefault(a => a.CanAnalyze(coreTemplate));
         if (analyzer is not null)
         {
-            return analyzer.GetDescription(template, root);
+            return analyzer.GetDescription(coreTemplate, root);
         }
 
-        var name = ChordTemplateNamingService.GetBestChordName(template, root, bassNote);
+        var name = ChordTemplateNamingService.GetBestChordName(coreTemplate, root, bassNote);
         return $"{name}";
     }
+
+    private static CoreChordTemplate ConvertToCore(ServicesChordTemplate template) =>
+        new ChordTemplate.Analytical(
+            new(template.PitchClassSet.Select(pc => pc)),
+            template.Formula,
+            template.Name);
 }

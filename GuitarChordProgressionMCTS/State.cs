@@ -17,10 +17,7 @@ public class State
     public List<int> MelodyNotes { get; set; } // MIDI note numbers of the melody
 
     // Check if the sequence has reached its maximum length (the length of the melody)
-    public bool IsTerminal()
-    {
-        return Sequence.Count >= MelodyNotes.Count; // Should be MelodyNotes.Count, not MaxLength
-    }
+    public bool IsTerminal() => Sequence.Count >= MelodyNotes.Count; // Should be MelodyNotes.Count, not MaxLength
 
     // Generate possible next states (children) based on the melody note and harmonization
     public List<State> GetPossibleNextStates()
@@ -34,7 +31,7 @@ public class State
             List<MusicalElement> newSequence = [..Sequence, element];
 
             // Add a new state with the updated sequence
-            nextStates.Add(new State(newSequence, MaxLength, Key, MelodyNotes));
+            nextStates.Add(new(newSequence, MaxLength, Key, MelodyNotes));
         }
 
         return nextStates;

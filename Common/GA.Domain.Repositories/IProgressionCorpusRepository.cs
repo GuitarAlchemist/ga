@@ -1,6 +1,6 @@
 namespace GA.Domain.Repositories;
 
-using Core.Tabs;
+using Core.Theory.Harmony.Progressions;
 
 public interface IProgressionCorpusRepository
 {

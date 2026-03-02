@@ -1,12 +1,7 @@
 namespace GA.Domain.Core.Instruments.Fingering;
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 
 /// <inheritdoc cref="IEquatable{T}" />
 /// <inheritdoc cref="IComparable{Finger}" />
@@ -28,54 +23,29 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
     public static Finger Pinky => _lazyDefaults.Value.DefaultPinky;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Finger FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static Finger FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static Finger Min => _lazyDefaults.Value.DefaultMin;
     public static Finger Max => _lazyDefaults.Value.DefaultMax;
 
-    public static implicit operator Finger(int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static implicit operator Finger(int value) => new() { Value = value };
 
-    public static implicit operator int(Finger finger)
-    {
-        return finger.Value;
-    }
+    public static implicit operator int(Finger finger) => finger.Value;
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<Finger>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) => IRangeValueObject<Finger>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<Finger>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<Finger>.EnsureValueInRange(value, minValue, maxValue);
 
-    public static IReadOnlyCollection<Finger> Range(int start, int count)
-    {
-        return ValueObjectUtils<Finger>.GetItems(start, count);
-    }
+    public static IReadOnlyCollection<Finger> Range(int start, int count) => ValueObjectUtils<Finger>.GetItems(start, count);
 
-    public void CheckMaxValue(int maxValue)
-    {
-        ValueObjectUtils<Finger>.EnsureValueRange(Value, _minValue, maxValue);
-    }
+    public void CheckMaxValue(int maxValue) => ValueObjectUtils<Finger>.EnsureValueRange(Value, _minValue, maxValue);
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            0 => "T",
-            _ => _value.ToString()
-        };
-    }
+        0 => "T",
+        _ => _value.ToString()
+    };
 
     private class Defaults
     {
@@ -126,30 +96,15 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
 
     #region Relational members
 
-    public int CompareTo(Finger other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(Finger other) => _value.CompareTo(other._value);
 
-    public static bool operator <(Finger left, Finger right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(Finger left, Finger right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(Finger left, Finger right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(Finger left, Finger right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(Finger left, Finger right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(Finger left, Finger right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(Finger left, Finger right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(Finger left, Finger right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

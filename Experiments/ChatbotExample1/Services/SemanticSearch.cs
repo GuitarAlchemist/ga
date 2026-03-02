@@ -1,6 +1,5 @@
 ﻿namespace ChatbotExample1.Services;
 
-using GA.Domain.Services.Abstractions;
 using Microsoft.Extensions.VectorData;
 
 public class SemanticSearch(
@@ -16,7 +15,7 @@ public class SemanticSearch(
             ? new VectorSearchFilter().EqualTo(nameof(SemanticSearchRecord.FileName), filenameFilter)
             : null;
 
-        var nearest = await vectorCollection.VectorizedSearchAsync(queryEmbedding, new VectorSearchOptions
+        var nearest = await vectorCollection.VectorizedSearchAsync(queryEmbedding, new()
         {
             Top = maxResults,
             Filter = filter

@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Exotic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     An enigmatic scale degree
@@ -23,10 +17,7 @@ public readonly record struct EnigmaticScaleDegree : IRangeValueObject<Enigmatic
     private readonly int _value;
 
     // Constructor
-    public EnigmaticScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public EnigmaticScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<EnigmaticScaleDegree> All => ValueObjectUtils<EnigmaticScaleDegree>.Items;
     public static IReadOnlyCollection<EnigmaticScaleDegree> Items => ValueObjectUtils<EnigmaticScaleDegree>.Items;
@@ -42,24 +33,15 @@ public readonly record struct EnigmaticScaleDegree : IRangeValueObject<Enigmatic
     public static EnigmaticScaleDegree EnigmaticLocrian => new(7);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static EnigmaticScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static EnigmaticScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static EnigmaticScaleDegree Min => FromValue(_minValue);
     public static EnigmaticScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator EnigmaticScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator EnigmaticScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(EnigmaticScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(EnigmaticScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -67,77 +49,49 @@ public readonly record struct EnigmaticScaleDegree : IRangeValueObject<Enigmatic
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Enigmatic",
-            2 => "Enigmatic Dorian",
-            3 => "Enigmatic Phrygian",
-            4 => "Enigmatic Lydian",
-            5 => "Enigmatic Mixolydian",
-            6 => "Enigmatic Aeolian",
-            7 => "Enigmatic Locrian",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Enigmatic",
+        2 => "Enigmatic Dorian",
+        3 => "Enigmatic Phrygian",
+        4 => "Enigmatic Lydian",
+        5 => "Enigmatic Mixolydian",
+        6 => "Enigmatic Aeolian",
+        7 => "Enigmatic Locrian",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Enig",
-            2 => "EnigDor",
-            3 => "EnigPhr",
-            4 => "EnigLyd",
-            5 => "EnigMix",
-            6 => "EnigAeo",
-            7 => "EnigLoc",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Enig",
+        2 => "EnigDor",
+        3 => "EnigPhr",
+        4 => "EnigLyd",
+        5 => "EnigMix",
+        6 => "EnigAeo",
+        7 => "EnigLoc",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<EnigmaticScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<EnigmaticScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<EnigmaticScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<EnigmaticScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(EnigmaticScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(EnigmaticScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(EnigmaticScaleDegree left, EnigmaticScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(EnigmaticScaleDegree left, EnigmaticScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(EnigmaticScaleDegree left, EnigmaticScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(EnigmaticScaleDegree left, EnigmaticScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(EnigmaticScaleDegree left, EnigmaticScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(EnigmaticScaleDegree left, EnigmaticScaleDegree right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(EnigmaticScaleDegree left, EnigmaticScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(EnigmaticScaleDegree left, EnigmaticScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

@@ -1,6 +1,5 @@
 namespace GA.MusicTheory.DSL.Generators
 
-open System
 open System.Text
 open GA.MusicTheory.DSL.Types.VexTabTypes
 
@@ -71,8 +70,8 @@ module VexTabGenerator =
         | HammerOn toFret -> $"h%d{toFret}"
         | PullOff toFret -> $"p%d{toFret}"
         | Slide toFret -> $"s%d{toFret}"
-        | Bend (toFret, None) -> $"b%d{toFret}"
-        | Bend (toFret, Some release) -> $"b%d{toFret}b%d{release}"
+        | Bend(toFret, None) -> $"b%d{toFret}"
+        | Bend(toFret, Some release) -> $"b%d{toFret}b%d{release}"
         | Vibrato false -> "v"
         | Vibrato true -> "V"
         | Tap -> "t"
@@ -123,7 +122,10 @@ module VexTabGenerator =
         let acc = note.Accidental |> Option.map formatAccidental |> Option.defaultValue ""
         let oct = string note.Octave
         let techs = formatTechniqueChain note.Techniques
-        let art = note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
+
+        let art =
+            note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
+
         $"%s{letter}%s{acc}/%s{oct}%s{techs}%s{art}"
 
     /// Format a tab note
@@ -131,7 +133,10 @@ module VexTabGenerator =
         let fret = formatFret note.Fret
         let str = string note.String
         let techs = formatTechniqueChain note.Techniques
-        let art = note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
+
+        let art =
+            note.Articulation |> Option.map formatArticulation |> Option.defaultValue ""
+
         $"%s{fret}/%s{str}%s{techs}%s{art}"
 
     /// Format a chord note
@@ -163,14 +168,13 @@ module VexTabGenerator =
         | EndBar -> "=|="
 
     /// Format a tuplet
-    let formatTuplet (tuplet: Tuplet) =
-        $"^%d{tuplet.Number}^"
+    let formatTuplet (tuplet: Tuplet) = $"^%d{tuplet.Number}^"
 
     /// Format a text style
     let formatTextStyle (style: TextStyle) =
         match style with
         | Preset name -> $".%s{name}."
-        | Custom (face, size, style) -> $".%s{face}-%d{size}-%s{style}."
+        | Custom(face, size, style) -> $".%s{face}-%d{size}-%s{style}."
 
     /// Format an annotation
     let formatAnnotation (ann: Annotation) =
@@ -211,7 +215,7 @@ module VexTabGenerator =
     /// Format a time signature
     let formatTimeSignature (time: TimeSignature) =
         match time with
-        | Numeric (num, denom) -> $"%d{num}/%d{denom}"
+        | Numeric(num, denom) -> $"%d{num}/%d{denom}"
         | CommonTime -> "C"
         | CutTime -> "C|"
 
@@ -236,10 +240,18 @@ module VexTabGenerator =
 
         opts.Notation |> Option.iter (fun v -> sb.Append $" notation=%b{v}" |> ignore)
         opts.Tablature |> Option.iter (fun v -> sb.Append $" tablature=%b{v}" |> ignore)
-        opts.Clef |> Option.iter (fun v -> sb.Append $" clef=%s{formatClefType v}" |> ignore)
-        opts.Key |> Option.iter (fun v -> sb.Append $" key=%s{formatKeySignature v}" |> ignore)
-        opts.Time |> Option.iter (fun v -> sb.Append $" time=%s{formatTimeSignature v}" |> ignore)
-        opts.Tuning |> Option.iter (fun v -> sb.Append $" tuning=%s{formatTuning v}" |> ignore)
+
+        opts.Clef
+        |> Option.iter (fun v -> sb.Append $" clef=%s{formatClefType v}" |> ignore)
+
+        opts.Key
+        |> Option.iter (fun v -> sb.Append $" key=%s{formatKeySignature v}" |> ignore)
+
+        opts.Time
+        |> Option.iter (fun v -> sb.Append $" time=%s{formatTimeSignature v}" |> ignore)
+
+        opts.Tuning
+        |> Option.iter (fun v -> sb.Append $" tuning=%s{formatTuning v}" |> ignore)
 
         sb.ToString()
 
@@ -287,7 +299,7 @@ module VexTabGenerator =
         | TextBarLine barType -> formatBarLine barType
         | TextSymbol sym -> formatSymbol sym
         | PositionModifier pos -> $".%d{pos}"
-        | FontModifier (face, size, style) -> $".font=%s{face}-%d{size}-%s{style}"
+        | FontModifier(face, size, style) -> $".font=%s{face}-%d{size}-%s{style}"
         | NewLine -> "++"
 
     /// Format a text line
@@ -311,25 +323,20 @@ module VexTabGenerator =
         match line with
         | OptionsLine opts -> formatOptionsLine opts
         | TabstaveLine opts -> formatTabstaveOptions opts
-        | NotesLine (dur, items) -> formatNotesLine (dur, items)
-        | TextLine (dur, items) -> formatTextLine (dur, items)
+        | NotesLine(dur, items) -> formatNotesLine (dur, items)
+        | TextLine(dur, items) -> formatTextLine (dur, items)
         | BlankLine -> ""
 
     /// Format a complete VexTab document
     let formatDocument (doc: VexTabDocument) =
-        doc.Lines
-        |> List.map formatLine
-        |> String.concat "\n"
+        doc.Lines |> List.map formatLine |> String.concat "\n"
 
     // ============================================================================
     // PUBLIC API
     // ============================================================================
 
     /// Generate VexTab from a document
-    let generate (doc: VexTabDocument) : string =
-        formatDocument doc
+    let generate (doc: VexTabDocument) : string = formatDocument doc
 
     /// Generate VexTab from note items
-    let generateNotes (items: NoteItem list) : string =
-        formatNotesLine (None, items)
-
+    let generateNotes (items: NoteItem list) : string = formatNotesLine (None, items)

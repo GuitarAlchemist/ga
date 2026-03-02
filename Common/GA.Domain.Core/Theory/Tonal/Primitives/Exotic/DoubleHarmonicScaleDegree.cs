@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Exotic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A double harmonic scale degree (Byzantine scale)
@@ -24,10 +18,7 @@ public readonly record struct DoubleHarmonicScaleDegree : IRangeValueObject<Doub
     private readonly int _value;
 
     // Constructor
-    public DoubleHarmonicScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public DoubleHarmonicScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<DoubleHarmonicScaleDegree> All =>
         ValueObjectUtils<DoubleHarmonicScaleDegree>.Items;
@@ -47,24 +38,15 @@ public readonly record struct DoubleHarmonicScaleDegree : IRangeValueObject<Doub
     public static DoubleHarmonicScaleDegree LocrianDoubleFlat3DoubleFlat7 => new(7);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DoubleHarmonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static DoubleHarmonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static DoubleHarmonicScaleDegree Min => FromValue(_minValue);
     public static DoubleHarmonicScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator DoubleHarmonicScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator DoubleHarmonicScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(DoubleHarmonicScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(DoubleHarmonicScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -72,77 +54,47 @@ public readonly record struct DoubleHarmonicScaleDegree : IRangeValueObject<Doub
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Double harmonic",
-            2 => "Lydian #2 #6",
-            3 => "Ultra Phrygian",
-            4 => "Hungarian minor",
-            5 => "Oriental",
-            6 => "Ionian augmented #2",
-            7 => "Locrian bb3 bb7",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Double harmonic",
+        2 => "Lydian #2 #6",
+        3 => "Ultra Phrygian",
+        4 => "Hungarian minor",
+        5 => "Oriental",
+        6 => "Ionian augmented #2",
+        7 => "Locrian bb3 bb7",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "DH",
-            2 => "Lyd#2#6",
-            3 => "UPhr",
-            4 => "HunMin",
-            5 => "Orient",
-            6 => "Ion+#2",
-            7 => "Locbb3bb7",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "DH",
+        2 => "Lyd#2#6",
+        3 => "UPhr",
+        4 => "HunMin",
+        5 => "Orient",
+        6 => "Ion+#2",
+        7 => "Locbb3bb7",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<DoubleHarmonicScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) => IRangeValueObject<DoubleHarmonicScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<DoubleHarmonicScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) => IRangeValueObject<DoubleHarmonicScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(DoubleHarmonicScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(DoubleHarmonicScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(DoubleHarmonicScaleDegree left, DoubleHarmonicScaleDegree right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

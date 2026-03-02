@@ -3,19 +3,20 @@
 [PublicAPI]
 public static class ValueObjectExtensions
 {
-    public static ImmutableArray<int> ToValueArray<T>(this IEnumerable<T> items)
-        where T : IRangeValueObject<T>, new()
+    extension<T>(IEnumerable<T> items) where T : IRangeValueObject<T>, new()
     {
-        ArgumentNullException.ThrowIfNull(items);
+        public ImmutableArray<int> ToValueArray()
+        {
+            ArgumentNullException.ThrowIfNull(items);
 
-        return [..items.Select(item => item.Value)];
-    }
+            return [..items.Select(item => item.Value)];
+        }
 
-    public static ImmutableList<int> ToValueList<T>(this IEnumerable<T> items)
-        where T : IRangeValueObject<T>, new()
-    {
-        ArgumentNullException.ThrowIfNull(items);
+        public ImmutableList<int> ToValueList()
+        {
+            ArgumentNullException.ThrowIfNull(items);
 
-        return [.. items.Select(item => item.Value)];
+            return [.. items.Select(item => item.Value)];
+        }
     }
 }

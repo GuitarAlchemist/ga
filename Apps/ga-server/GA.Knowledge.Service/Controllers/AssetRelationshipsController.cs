@@ -1,7 +1,6 @@
 namespace GA.Knowledge.Service.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-
 using Models;
 using Services;
 
@@ -265,10 +264,7 @@ public class AssetRelationshipsController(
     }
 
     // Helper methods for hierarchy analysis
-    private static int CountNodesRecursive(AssetHierarchyNode node)
-    {
-        return 1 + node.Children.Sum(CountNodesRecursive);
-    }
+    private static int CountNodesRecursive(AssetHierarchyNode node) => 1 + node.Children.Sum(CountNodesRecursive);
 
     private static int GetMaxDepthRecursive(AssetHierarchyNode node, int currentDepth)
     {
@@ -303,7 +299,7 @@ public class AssetRelationshipsController(
 
         if (node.Children.Any())
         {
-            result[node.AssetType] = node.Children.Select(c => c.AssetType).ToList();
+            result[node.AssetType] = [.. node.Children.Select(c => c.AssetType)];
 
             foreach (var child in node.Children)
             {

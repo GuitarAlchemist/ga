@@ -10,7 +10,7 @@ using System.Numerics;
 public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> logger) : IVectorSearchStrategy
 {
     private readonly ConcurrentDictionary<int, ChordEmbedding> _chords = new();
-    private readonly Dictionary<int, double[]> _embeddings = new();
+    private readonly Dictionary<int, double[]> _embeddings = [];
     private readonly Lock _initLock = new();
     private bool _isInitialized;
     private long _totalSearches;
@@ -25,8 +25,7 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
         false,
         false);
 
-    public async Task InitializeAsync(IEnumerable<ChordEmbedding> chords)
-    {
+    public async Task InitializeAsync(IEnumerable<ChordEmbedding> chords) =>
         await Task.Run(() =>
         {
             lock (_initLock)
@@ -53,14 +52,12 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
                     _chords.Count, stopwatch.ElapsedMilliseconds, CalculateMemoryUsage());
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> SemanticSearchAsync(
         double[] queryEmbedding,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -92,14 +89,12 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> FindSimilarChordsAsync(
         int chordId,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
 
@@ -139,15 +134,13 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
     public async Task<List<ChordSearchResult>> HybridSearchAsync(
         double[] queryEmbedding,
         ChordSearchFilters filters,
         int limit = 10,
-        int numCandidates = 100)
-    {
-        return await Task.Run(() =>
+        int numCandidates = 100) =>
+        await Task.Run(() =>
         {
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
@@ -206,16 +199,13 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
                 RecordSearchTime(stopwatch.Elapsed);
             }
         });
-    }
 
-    public VectorSearchStats GetStats()
-    {
-        return new VectorSearchStats(
+    public VectorSearchStats GetStats() =>
+        new(
             _chords.Count,
             CalculateMemoryUsage(),
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
             _totalSearches);
-    }
 
     private void EnsureInitialized()
     {
@@ -225,20 +215,16 @@ public class InMemoryVectorSearchStrategy(ILogger<InMemoryVectorSearchStrategy> 
         }
     }
 
-    private IEnumerable<(int ChordId, double Score)> CalculateAllSimilarities(double[] queryEmbedding)
-    {
-        return _embeddings.Select(kvp =>
+    private IEnumerable<(int ChordId, double Score)> CalculateAllSimilarities(double[] queryEmbedding) =>
+        _embeddings.Select(kvp =>
             (kvp.Key, CalculateCosineSimilarity(queryEmbedding, kvp.Value)));
-    }
 
     private IEnumerable<(int ChordId, double Score)> CalculateFilteredSimilarities(
         double[] queryEmbedding,
-        HashSet<int> allowedIds)
-    {
-        return _embeddings
+        HashSet<int> allowedIds) =>
+        _embeddings
             .Where(kvp => allowedIds.Contains(kvp.Key))
             .Select(kvp => (kvp.Key, CalculateCosineSimilarity(queryEmbedding, kvp.Value)));
-    }
 
     /// <summary>
     ///     Calculate cosine similarity using SIMD operations for performance

@@ -7,6 +7,7 @@ using Embeddings;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
 using Models.References;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using global::MongoDB.Driver;
 
 /// <summary>

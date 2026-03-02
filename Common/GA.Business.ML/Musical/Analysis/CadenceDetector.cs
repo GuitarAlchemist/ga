@@ -1,6 +1,5 @@
 namespace GA.Business.ML.Musical.Analysis;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Core.Theory.Tonal.Cadences;
@@ -19,14 +18,14 @@ public class CadenceDetector
     /// <summary>
     /// Analyzes a progression to find potential cadences at the end.
     /// </summary>
-    public CadenceMatch? DetectCadence(List<VoicingDocument> progression)
+    public CadenceMatch? DetectCadence(List<ChordVoicingRagDocument> progression)
     {
         if (progression.Count < 2) return null;
 
         // Check the end of the progression (last 2, 3, 4 chords)
         // We prioritize longer matches (e.g. ii-V-I > V-I)
         
-        for (int length = 4; length >= 2; length--)
+        for (var length = 4; length >= 2; length--)
         {
             if (progression.Count < length) continue;
 
@@ -39,7 +38,7 @@ public class CadenceDetector
         return null;
     }
 
-    private CadenceMatch? MatchPattern(List<VoicingDocument> slice)
+    private CadenceMatch? MatchPattern(List<ChordVoicingRagDocument> slice)
     {
         // If any chord has no detected root, we can't match root movement patterns
         if (slice.Any(d => d.RootPitchClass == null)) return null;
@@ -69,14 +68,14 @@ public class CadenceDetector
     private bool Matches(List<int> roots, List<ChordQuality> qualities, CadencePattern pattern)
     {
         // 1. Check Qualities
-        for (int i = 0; i < qualities.Count; i++)
+        for (var i = 0; i < qualities.Count; i++)
         {
             if (!IsQualityCompatible(qualities[i], pattern.Qualities[i])) return false;
         }
 
         // 2. Check Relative Root Movements
         // Calculate intervals between adjacent roots in input
-        for (int i = 0; i < roots.Count - 1; i++)
+        for (var i = 0; i < roots.Count - 1; i++)
         {
             var inputInterval = (roots[i+1] - roots[i] + 12) % 12;
             var patternInterval = (pattern.RelativeRoots[i+1] - pattern.RelativeRoots[i] + 12) % 12;
@@ -106,7 +105,7 @@ public class CadenceDetector
         return false;
     }
 
-    private ChordQuality DeriveQuality(VoicingDocument doc)
+    private ChordQuality DeriveQuality(ChordVoicingRagDocument doc)
     {
         // 1. Try explicit Quality from Analysis if available
         if (!string.IsNullOrEmpty(doc.Quality) && Enum.TryParse<ChordQuality>(doc.Quality, true, out var quality))
@@ -125,7 +124,10 @@ public class CadenceDetector
         // Load from CadenceCatalog and convert to patterns
         foreach (var def in CadenceCatalog.Items)
         {
-            if (def.Chords == null || def.Chords.Count == 0) continue;
+            if (def.Chords.Count == 0)
+            {
+                continue;
+            }
 
             var relativeRoots = new List<int>();
             var qualities = new List<ChordQuality>();
@@ -133,7 +135,7 @@ public class CadenceDetector
             foreach (var chordName in def.Chords)
             {
                 // Use Parser
-                int root = _parser.ParseRoot(chordName);
+                var root = _parser.ParseRoot(chordName);
                 var qual = _parser.ParseQuality(chordName);
                 
                 relativeRoots.Add(root); 

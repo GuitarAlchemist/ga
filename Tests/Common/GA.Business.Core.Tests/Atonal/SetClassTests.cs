@@ -1,10 +1,10 @@
-﻿using GA.Domain.Core.Extensions;
-﻿namespace GA.Domain.Core.Tests.Atonal;
+﻿namespace GA.Business.Core.Tests.Atonal;
 
-using Primitives;
+using Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Theory.Extensions;
 using GA.Domain.Core.Theory.Atonal;
 
-[TestFixture]
+ [TestFixture]
 public class SetClassTests
 {
     [Test(TestOf = typeof(SetClass))]
@@ -139,3 +139,4 @@ public class SetClassTests
         Assert.That(centroid, Is.EqualTo(5.5).Within(1e-6));
     }
 }
+

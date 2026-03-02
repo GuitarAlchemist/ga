@@ -1,47 +1,36 @@
 namespace GA.Business.ML.Tabs;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
-using GA.Domain.Core.Theory.Atonal;
-using Embeddings;
-using GA.Business.ML.Tabs.Models;
-using GA.Domain.Core.Common;
+using System.Text.RegularExpressions;
+using Domain.Core.Theory.Atonal;
+using Domain.Services.Fretboard.Voicings.Analysis;
+using Models;
+using Musical.Analysis;
 
 // For PitchClass, PitchClassSet
 
-public class TabAnalysisService
+public class TabAnalysisService(
+    TabTokenizer tokenizer,
+    TabToPitchConverter converter,
+    MusicalEmbeddingGenerator generator,
+    CadenceDetector cadenceDetector)
 {
-    private readonly TabTokenizer _tokenizer;
-    private readonly TabToPitchConverter _converter;
-    private readonly MusicalEmbeddingGenerator _generator;
-    private readonly Musical.Analysis.CadenceDetector _cadenceDetector;
+    private readonly CadenceDetector _cadenceDetector = cadenceDetector;
+    private readonly TabToPitchConverter _converter = converter;
+    private readonly MusicalEmbeddingGenerator _generator = generator;
+    private readonly TabTokenizer _tokenizer = tokenizer;
 
-    public TabAnalysisService(
-        TabTokenizer tokenizer,
-        TabToPitchConverter converter,
-        MusicalEmbeddingGenerator generator,
-        Musical.Analysis.CadenceDetector cadenceDetector)
-    {
-        _tokenizer = tokenizer;
-        _converter = converter;
-        _generator = generator;
-        _cadenceDetector = cadenceDetector;
-    }
-
-    public TabAnalysisService(TabTokenizer tokenizer, TabToPitchConverter converter, MusicalEmbeddingGenerator generator)
-        : this(tokenizer, converter, generator, new Musical.Analysis.CadenceDetector())
+    public TabAnalysisService(TabTokenizer tokenizer, TabToPitchConverter converter,
+        MusicalEmbeddingGenerator generator)
+        : this(tokenizer, converter, generator, new())
     {
     }
 
     public async Task<TabAnalysisResult> AnalyzeAsync(string asciiTab)
     {
         // Check for compact diagrams like x02210 or 3x0003
-        var compactMatch = System.Text.RegularExpressions.Regex.Match(asciiTab, @"\b([x\d]{6})\b");
+        var compactMatch = Regex.Match(asciiTab, @"\b([x\d]{6})\b");
         // Check for hyphenated diagrams like x-x-0-2-3-1
-        var hyphenMatch = System.Text.RegularExpressions.Regex.Match(asciiTab, @"\b((?:[x\d]-){5}[x\d])\b");
+        var hyphenMatch = Regex.Match(asciiTab, @"\b((?:[x\d]-){5}[x\d])\b");
 
         List<TabBlock> blocks;
 
@@ -49,45 +38,47 @@ public class TabAnalysisService
         {
             var code = compactMatch.Groups[1].Value;
             var notes = new List<TabNote>();
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
-                char c = code[i];
+                var c = code[i];
                 if (char.IsDigit(c))
                 {
                     // "x02210" -> Index 0 is Low E (String 0)
-                    notes.Add(new TabNote(i, c - '0'));
+                    notes.Add(new(i, c - '0'));
                 }
             }
-            blocks = new List<TabBlock>
-            {
-                new TabBlock
+
+            blocks =
+            [
+                new()
                 {
                     StringCount = 6,
-                    Slices = { new TabSlice { Notes = notes } }
+                    Slices = { new() { Notes = notes } }
                 }
-            };
+            ];
         }
         else if (hyphenMatch.Success)
         {
             var code = hyphenMatch.Groups[1].Value.Replace("-", "");
             var notes = new List<TabNote>();
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
-                char c = code[i];
+                var c = code[i];
                 if (char.IsDigit(c))
                 {
                     // "x-x-0-2-3-1" -> Index 0 is Low E
-                    notes.Add(new TabNote(i, c - '0'));
+                    notes.Add(new(i, c - '0'));
                 }
             }
-            blocks = new List<TabBlock>
-            {
-                new TabBlock
+
+            blocks =
+            [
+                new()
                 {
                     StringCount = 6,
-                    Slices = { new TabSlice { Notes = notes } }
+                    Slices = { new() { Notes = notes } }
                 }
-            };
+            ];
         }
         else
         {
@@ -95,17 +86,27 @@ public class TabAnalysisService
         }
 
         var events = new List<TabEvent>();
-        int index = 0;
+        var index = 0;
 
         foreach (var block in blocks)
         {
             foreach (var slice in block.Slices)
             {
-                if (slice.IsEmpty || slice.IsBarLine) continue;
-                if (slice.Notes.Count == 0) continue;
+                if (slice.IsEmpty || slice.IsBarLine)
+                {
+                    continue;
+                }
+
+                if (slice.Notes.Count == 0)
+                {
+                    continue;
+                }
 
                 var midiNotes = _converter.GetMidiNotes(slice);
-                if (midiNotes.Count == 0) continue;
+                if (midiNotes.Count == 0)
+                {
+                    continue;
+                }
 
                 var pitchClasses = _converter.GetPitchClasses(slice);
 
@@ -114,19 +115,22 @@ public class TabAnalysisService
                 var pcsSet = new PitchClassSet(pcsList);
                 var bassPc = PitchClass.FromValue(midiNotes.Min() % 12);
 
-                var analysis = Domain.Services.Fretboard.Voicings.Analysis.VoicingHarmonicAnalyzer.IdentifyChord(pcsSet, pcsList, bassPc);
+                var analysis = VoicingHarmonicAnalyzer.IdentifyChord(pcsSet, pcsList, bassPc);
 
                 // Use domain model to get Forte number
-                string? forteCode = ForteCatalog.TryGetForteNumber(pcsSet.PrimeForm, out var forte)
-                    ? forte.ToString() : null;
+                var forteCode = ForteCatalog.TryGetForteNumber(pcsSet.PrimeForm, out var forte)
+                    ? forte.ToString()
+                    : null;
 
-                var doc = new VoicingDocument
+                var doc = new ChordVoicingRagDocument
                 {
                     Id = Guid.NewGuid().ToString(),
                     ChordName = analysis.ChordName ?? AnalysisConstants.Unknown,
-                    RootPitchClass = PitchClass.TryParse(analysis.RootPitchClass, null, out var r) ? r.Value : midiNotes.Min() % 12,
-                    MidiNotes = midiNotes.ToArray(),
-                    PitchClasses = pitchClasses.ToArray(),
+                    RootPitchClass = PitchClass.TryParse(analysis.RootPitchClass, null, out var r)
+                        ? r.Value
+                        : midiNotes.Min() % 12,
+                    MidiNotes = [.. midiNotes],
+                    PitchClasses = [.. pitchClasses],
                     PitchClassSet = string.Join(",", pitchClasses),
                     SemanticTags = Array.Empty<string>(), // Will be populated by AutoTaggingService
                     Diagram = FormatDiagram(slice, blocks),
@@ -144,7 +148,7 @@ public class TabAnalysisService
 
                     // Required fields
                     SearchableText = $"{analysis.ChordName} {analysis.HarmonicFunction}",
-                    PossibleKeys = pcsSet.GetCompatibleKeys().Select(k => k.ToString()).ToArray(),
+                    PossibleKeys = [.. pcsSet.GetCompatibleKeys().Select(k => k.ToString())],
                     YamlAnalysis = "{}",
                     AnalysisEngine = AnalysisConstants.TabAnalysisEngine,
                     AnalysisVersion = "1.1",
@@ -183,10 +187,10 @@ public class TabAnalysisService
         // Assuming Standard Tuning 6 strings for diagram if not specified?
         // Or calculate max StringIndex + 1.
 
-        int maxStringIdx = 5; // Default to 6-string guitar
+        var maxStringIdx = 5; // Default to 6-string guitar
         if (slice.Notes.Any())
         {
-             maxStringIdx = Math.Max(maxStringIdx, slice.Notes.Max(n => n.StringIndex));
+            maxStringIdx = Math.Max(maxStringIdx, slice.Notes.Max(n => n.StringIndex));
         }
 
         // Build array of "x"

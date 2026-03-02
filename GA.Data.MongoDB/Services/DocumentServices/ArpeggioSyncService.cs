@@ -1,7 +1,9 @@
-namespace GA.Data.MongoDB.Services.DocumentServices;
+﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Intervals;
+using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Services.Chords;
 using GA.Domain;

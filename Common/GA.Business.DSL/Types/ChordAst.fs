@@ -21,10 +21,9 @@ type ChordComponent =
     | Omission of string
     | Alt
 
-type ChordAst = {
-    Root: string
-    RootAccidental: AccidentalType
-    Quality: QualityType option
-    Components: ChordComponent list
-    Bass: (string * AccidentalType) option
-}
+type ChordAst =
+    { Root: string
+      RootAccidental: AccidentalType
+      Quality: QualityType option
+      Components: ChordComponent list
+      Bass: (string * AccidentalType) option }

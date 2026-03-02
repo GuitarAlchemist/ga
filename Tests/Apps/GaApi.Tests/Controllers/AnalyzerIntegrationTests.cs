@@ -11,13 +11,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 [TestFixture]
 [Category("Integration")]
 [Category("Analyzers")]
-[Ignore("GrothendieckController and ChordProgressionsController not yet implemented")]
 public class AnalyzerIntegrationTests
 {
     [SetUp]
     public void Setup()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new();
         _client = _factory.CreateClient();
     }
 

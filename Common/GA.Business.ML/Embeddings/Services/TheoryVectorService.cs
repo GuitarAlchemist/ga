@@ -1,20 +1,16 @@
 namespace GA.Business.ML.Embeddings.Services;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 /// <summary>
-/// Generates embeddings for pure music theory concepts (Pitch, Interval, Function).
-/// Corresponds to dimensions 6-29 of the standard musical vector (STRUCTURE partition).
-/// Implements OPTIC-K Schema v1.3.1.
+///     Generates embeddings for pure music theory concepts (Pitch, Interval, Function).
+///     Corresponds to dimensions 6-29 of the standard musical vector (STRUCTURE partition).
+///     Implements OPTIC-K Schema v1.3.1.
 /// </summary>
 public class TheoryVectorService
 {
     public const int Dimension = 24;
 
     /// <summary>
-    /// Computes the Structure portion of the embedding (OPTIC/K invariants).
+    ///     Computes the Structure portion of the embedding (OPTIC/K invariants).
     /// </summary>
     public double[] ComputeEmbedding(
         IEnumerable<int> pitchClasses,
@@ -31,7 +27,9 @@ public class TheoryVectorService
         foreach (var pc in pcs)
         {
             if (pc is >= 0 and < 12)
+            {
                 v[pc] = 1.0;
+            }
         }
 
         // Boost Root (if known) - useful for tonal recognition
@@ -42,15 +40,17 @@ public class TheoryVectorService
         }
 
         // 12: Cardinality (C) - High weight for structural identity
-        v[12] = (pcs.Count / 12.0) * 2.0;
+        v[12] = pcs.Count / 12.0 * 2.0;
 
         // 13-18: Interval Class Vector (Structural Content) - Covers T and I
         if (!string.IsNullOrEmpty(intervalClassVector))
         {
-            for(var i=0; i<Math.Min(6, intervalClassVector.Length); i++)
+            for (var i = 0; i < Math.Min(6, intervalClassVector.Length); i++)
             {
                 if (char.IsDigit(intervalClassVector[i]))
+                {
                     v[13 + i] = (intervalClassVector[i] - '0') * 1.0; // High weight for ICV
+                }
             }
         }
 
@@ -65,7 +65,10 @@ public class TheoryVectorService
         v[21] = brightness;
 
         // 22: Tonal Stability (Proxy: Root strength)
-        if (rootPitchClass.HasValue) v[22] = 1.0;
+        if (rootPitchClass.HasValue)
+        {
+            v[22] = 1.0;
+        }
 
         // 23: Reserved
 

@@ -1,223 +1,257 @@
 <Solution>
-  <Configurations>
-    <Platform Name="Any CPU" />
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Folder Name="/Backend/" />
-  <Folder Name="/Backend/Applications/">
-    <Project Path="Apps/ga-server/GaApi/GaApi.csproj" />
-  </Folder>
-  <Folder Name="/Backend/Applications/ga-server/" />
-  <Folder Name="/Backend/Microservices/">
-    <Project Path="Apps/ga-server/GA.AI.Service/GA.AI.Service.csproj" />
-    <Project Path="Apps/ga-server/GA.Analytics.Service/GA.Analytics.Service.csproj" />
-    <Project Path="Apps/ga-server/GA.BSP.Service/GA.BSP.Service.csproj" />
-    <Project Path="Apps/ga-server/GA.Fretboard.Service/GA.Fretboard.Service.csproj" />
-    <Project Path="Apps/ga-server/GA.Knowledge.Service/GA.Knowledge.Service.csproj" />
-    <Project Path="Apps/ga-server/GA.MusicTheory.Service/GA.MusicTheory.Service.csproj" />
-  </Folder>
-  <Folder Name="/Backend/Applications/ga-server/CUDA/">
-    <Project Path="Apps/ga-server/GaApi/CUDA/VectorOperations.csproj" />
-  </Folder>
-  <Folder Name="/Backend/CLI &amp; Tools/">
-    <Project Path="Tools/EmbeddingGenerator/EmbeddingGenerator.csproj" />
-    <Project Path="Demos/Music Theory/FretboardChordTest/FretboardChordTest.csproj" />
-    <Project Path="Tools/GA.TabConversion.Api/GA.TabConversion.Api.csproj" />
-    <Project Path="Tools/GaDataCLI/GaDataCLI.csproj" />
-    <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj" />
-    <Project Path="Demos/Performance/GpuBenchmark/GpuBenchmark.csproj" />
-    <Project Path="Tools/LocalEmbedding/LocalEmbedding.csproj" />
-    <Project Path="Tools/MongoImporter/MongoImporter.csproj" />
-    <Project Path="Tools/MongoVerify/MongoVerify.csproj" />
-    <Project Path="Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj" />
+    <Configurations>
+        <Platform Name="Any CPU"/>
+        <Platform Name="x64"/>
+        <Platform Name="x86"/>
+    </Configurations>
+    <Folder Name="/Backend/"/>
+    <Folder Name="/Backend/Applications/">
+        <Project Path="Apps/ga-server/GaApi/GaApi.csproj"/>
+    </Folder>
+    <Folder Name="/Backend/Applications/ga-server/"/>
+    <Folder Name="/Backend/Microservices/">
+        <Project Path="Apps/ga-server/GA.AI.Service/GA.AI.Service.csproj"/>
+        <Project Path="Apps/ga-server/GA.Analytics.Service/GA.Analytics.Service.csproj"/>
+        <Project Path="Apps/ga-server/GA.BSP.Service/GA.BSP.Service.csproj"/>
+        <Project Path="Apps/ga-server/GA.Fretboard.Service/GA.Fretboard.Service.csproj"/>
+        <Project Path="Apps/ga-server/GA.Knowledge.Service/GA.Knowledge.Service.csproj"/>
+        <Project Path="Apps/ga-server/GA.MusicTheory.Service/GA.MusicTheory.Service.csproj"/>
+    </Folder>
+    <Folder Name="/Backend/Applications/ga-server/CUDA/">
+        <Project Path="Apps/ga-server/GaApi/CUDA/VectorOperations.csproj"/>
+    </Folder>
+    <Folder Name="/Backend/CLI &amp; Tools/">
+        <Project Path="Tools/EmbeddingGenerator/EmbeddingGenerator.csproj"/>
+        <Project Path="Demos/Music Theory/FretboardChordTest/FretboardChordTest.csproj"/>
+        <Project Path="Tools/GA.TabConversion.Api/GA.TabConversion.Api.csproj"/>
+        <Project Path="Tools/GaDataCLI/GaDataCLI.csproj"/>
+        <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj"/>
+        <Project Path="Demos/Performance/GpuBenchmark/GpuBenchmark.csproj"/>
+        <Project Path="Tools/LocalEmbedding/LocalEmbedding.csproj"/>
+        <Project Path="Tools/MongoImporter/MongoImporter.csproj"/>
+        <Project Path="Tools/MongoVerify/MongoVerify.csproj"/>
+        <Project Path="Demos/Performance/VectorSearchBenchmark/VectorSearchBenchmark.csproj"/>
 
-  </Folder>
-  <Folder Name="/Backend/Infrastructure/">
-    <Project Path="AllProjects.AppHost/AllProjects.AppHost.csproj" />
-    <Project Path="AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj" />
-  </Folder>
-  <Folder Name="/Backend/Utilities/">
-    <Project Path="ChordSystemTest/ChordSystemTest.csproj" />
-    <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj" />
-  </Folder>
-  <Folder Name="/Common/">
-    <Project Path="Common/GA.Application/GA.Application.csproj" />
-    <Project Path="Common/GA.Domain.Core/GA.Domain.Core.csproj" />
-    <Project Path="Common/GA.Domain.Repositories/GA.Domain.Repositories.csproj" />
-    <Project Path="Common/GA.Domain.Services/GA.Domain.Services.csproj" />
-    <Project Path="Common/GA.Infrastructure/GA.Infrastructure.csproj" />
-    <Project Path="Common/GA.Presentation/GA.Presentation.csproj" />
-  </Folder>
-  <Folder Name="/Core Libraries/">
-    <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj" />
-    <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj" />
+    </Folder>
+    <Folder Name="/Backend/Infrastructure/">
+        <Project Path="AllProjects.AppHost/AllProjects.AppHost.csproj"/>
+        <Project Path="AllProjects.ServiceDefaults/AllProjects.ServiceDefaults.csproj"/>
+    </Folder>
+    <Folder Name="/Backend/Utilities/">
+        <Project Path="ChordSystemTest/ChordSystemTest.csproj"/>
+        <Project Path="GuitarChordProgressionMCTS/GuitarChordProgressionMCTS.csproj"/>
+    </Folder>
+    <Folder Name="/1 - Foundation/">
+        <Project Path="Common/GA.Core/GA.Core.csproj"/>
+    </Folder>
+    <Folder Name="/2 - Domain/">
+        <Project Path="Common/GA.Domain.Core/GA.Domain.Core.csproj"/>
+        <Project Path="Common/GA.Domain.Repositories/GA.Domain.Repositories.csproj"/>
+        <Project Path="Common/GA.Domain.Services/GA.Domain.Services.csproj"/>
+    </Folder>
+    <Folder Name="/3 - Application/">
+        <Project Path="Common/GA.Application/GA.Application.csproj"/>
+    </Folder>
+    <Folder Name="/4 - AI &amp; ML/">
+        <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj"/>
+    </Folder>
+    <Folder Name="/5 - Infrastructure/">
+        <Project Path="Common/GA.Infrastructure/GA.Infrastructure.csproj"/>
+        <Project Path="Common/GA.Presentation/GA.Presentation.csproj"/>
+    </Folder>
+    <Folder Name="/F# Libraries/">
+        <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj"/>
+        <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj"/>
+        <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj"/>
+    </Folder>
+    <Folder Name="/Interactive &amp; Tools/">
+        <Project Path="Common/GA.Interactive/GA.Interactive.csproj"/>
+        <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj"/>
+        <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj"/>
+    </Folder>
+    <Folder Name="/Data &amp; Integration/">
+        <Project Path="Common/GA.Testing.Semantic/GA.Testing.Semantic.csproj"/>
+        <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj"/>
+    </Folder>
+    <Folder Name="/Demos/"/>
+    <Folder Name="/Demos/Advanced Features/">
+        <Project Path="Demos/Advanced/AIIntegrationDemo/AIIntegrationDemo.csproj"/>
+        <Project Path="Demos/Advanced/BSPDemo/BSPDemo.csproj"/>
+    </Folder>
+    <Folder Name="/Demos/Music Theory/">
+        <Project Path="Demos/Music Theory/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj"/>
 
-    <Project Path="Common/GA.Core/GA.Core.csproj" />
-    <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj" />
-    <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
-    <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
-    <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj" />
-    <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj" />
-  </Folder>
-  <Folder Name="/Data &amp; Integration/">
-    <Project Path="Common/GA.Testing.Semantic/GA.Testing.Semantic.csproj" />
-    <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj" />
-  </Folder>
-  <Folder Name="/Demos/" />
-  <Folder Name="/Demos/Advanced Features/">
-    <Project Path="Demos/Advanced/AIIntegrationDemo/AIIntegrationDemo.csproj" />
-    <Project Path="Demos/Advanced/BSPDemo/BSPDemo.csproj" />
-  </Folder>
-  <Folder Name="/Demos/Music Theory/">
-    <Project Path="Demos/Music Theory/AdvancedFretboardAnalysisDemo/AdvancedFretboardAnalysisDemo.csproj" />
-
-    <Project Path="Demos/Music Theory/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj" />
-    <Project Path="Demos/Music Theory/MusicalAnalysisApp/MusicalAnalysisApp.csproj" />
-    <Project Path="Demos/Music Theory/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj" />
-  </Folder>
-  <Folder Name="/Demos/Performance &amp; Benchmarks/">
-    <Project Path="Demos/Performance/HighPerformanceDemo/HighPerformanceDemo.csproj" />
-    <Project Path="Demos/Performance/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj" />
-  </Folder>
-  <Folder Name="/Documentation/" />
-  <Folder Name="/Documentation/architecture/">
-    <File Path="docs/architecture/DOMAIN_SCHEMA.md" />
-    <File Path="docs/AGENTS.md" />
-    <File Path="docs/API_DOCUMENTATION.md" />
-    <File Path="docs/ARCHITECTURE.md" />
-    <File Path="docs/BUILD_STATUS_2025.md" />
-    <File Path="docs/DEPLOYMENT_GUIDE.md" />
-    <File Path="docs/MODULAR_RESTRUCTURING_PLAN.md" />
-    <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md" />
-    <File Path="docs/QUICK_START.md" />
-    <File Path="docs/TESTING_GUIDE.md" />
-  </Folder>
-  <Folder Name="/Experiments/">
-    <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj" />
-    <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj" />
-    <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj" />
-    <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj" />
-  </Folder>
-  <Folder Name="/Frontend/" />
-  <Folder Name="/Frontend/ga-client/">
-    <File Path="Apps/ga-client/package.json" />
-    <File Path="Apps/ga-client/README.md" />
-    <File Path="Apps/ga-client/tsconfig.json" />
-    <File Path="Apps/ga-client/vite.config.ts" />
-  </Folder>
-  <Folder Name="/Frontend/ga-fretboard-app/">
-    <File Path="ga-fretboard-app/package.json" />
-    <File Path="ga-fretboard-app/README.md" />
-    <File Path="ga-fretboard-app/tsconfig.json" />
-    <File Path="ga-fretboard-app/vite.config.ts" />
-  </Folder>
-  <Folder Name="/Frontend/ga-react-components/">
-    <File Path="ReactComponents/ga-react-components/package.json" />
-    <File Path="ReactComponents/ga-react-components/README.md" />
-    <File Path="ReactComponents/ga-react-components/tsconfig.json" />
-    <File Path="ReactComponents/ga-react-components/vite.config.ts" />
-  </Folder>
-  <Folder Name="/Html Examples/">
-    <File Path="docs/Html Examples/ag-grid - Example - RequireJS.html" />
-    <File Path="docs/Html Examples/ag-grid - Example 1.html" />
-    <File Path="docs/Html Examples/d3js Example - RequireJs.html" />
-    <File Path="docs/Html Examples/Force-graph 3d.html" />
-    <File Path="docs/Html Examples/Force-graph.html" />
-    <File Path="docs/Html Examples/Mermaid Example 1.html" />
-    <File Path="docs/Html Examples/Mermaid Example 2.html" />
-    <File Path="docs/Html Examples/Plotly Example.html" />
-    <File Path="docs/Html Examples/RequireJS Template.html" />
-    <File Path="docs/Html Examples/response.html" />
-    <File Path="docs/Html Examples/Twojs Example - RequireJs.html" />
-    <File Path="docs/Html Examples/Twojs Example.html" />
-    <File Path="docs/Html Examples/Verivio Example.html" />
-    <File Path="docs/Html Examples/VexFlow Example.html" />
-    <File Path="docs/Html Examples/VexTab - Key Signature.html" />
-    <File Path="docs/Html Examples/VexTab Example 1.html" />
-    <File Path="docs/Html Examples/VexTab Example 2.html" />
-  </Folder>
-  <Folder Name="/MusicTheory/">
-    <File Path="Notebooks/MusicTheory/Assets.ipynb" />
-    <File Path="Notebooks/MusicTheory/Guitar Tunings.ipynb" />
-    <File Path="Notebooks/MusicTheory/Instruments.ipynb" />
-    <File Path="Notebooks/MusicTheory/Keys.ipynb" />
-    <File Path="Notebooks/MusicTheory/Notes.ipynb" />
-    <File Path="Notebooks/MusicTheory/Scale Modes - harmonic minor scale.ipynb" />
-    <File Path="Notebooks/MusicTheory/Scale Modes - major scale.ipynb" />
-    <File Path="Notebooks/MusicTheory/Scale Modes - melodic minor scale.ipynb" />
-    <File Path="Notebooks/MusicTheory/Ukulele Tunings.ipynb" />
-  </Folder>
-  <Folder Name="/Notebooks/" />
-  <Folder Name="/Notebooks/Samples/">
-    <File Path="Notebooks/Samples/ExtensionLab-EF.ipynb" />
-  </Folder>
-  <Folder Name="/Scripts/">
-    <File Path="Scripts/auto-fix-cs1998.ps1" />
-    <File Path="Scripts/BinObj.fsx" />
-    <File Path="Scripts/check-mcp-status.ps1" />
-    <File Path="Scripts/Consume GA NuGet packages.fsx" />
-    <File Path="Scripts/create-vector-index.js" />
-    <File Path="Scripts/health-check.ps1" />
-    <File Path="Scripts/import-to-mongodb.ps1" />
-    <File Path="Scripts/install-git-hooks.ps1" />
-    <File Path="Scripts/monitor-services.ps1" />
-    <File Path="Scripts/reorganize-demos.ps1" />
-    <File Path="Scripts/reorganize-solution-final.ps1" />
-    <File Path="Scripts/reorganize-solution-structure.py" />
-    <File Path="Scripts/reorganize-solution.py" />
-    <File Path="Scripts/run-all-tests.ps1" />
-    <File Path="Scripts/setup-dev-environment.ps1" />
-    <File Path="Scripts/start-all-dev.ps1" />
-    <File Path="Scripts/start-all.ps1" />
-    <File Path="Scripts/start-backend.ps1" />
-    <File Path="Scripts/start-frontend.ps1" />
-    <File Path="Scripts/start-redis.ps1" />
-    <File Path="Scripts/STARTUP_GUIDE.md" />
-    <File Path="Scripts/START_SERVICES_README.md" />
-    <File Path="Scripts/test-chatbot.ps1" />
-    <File Path="Scripts/test-chord-api.ps1" />
-    <File Path="Scripts/test-integration.ps1" />
-    <File Path="Scripts/test-mcp-servers.ps1" />
-    <File Path="Scripts/test-music-generation.ps1" />
-    <File Path="Scripts/test-unit.ps1" />
-    <File Path="Scripts/test-vector-search.ps1" />
-    <File Path="Scripts/TEST_SUITE_README.md" />
-    <File Path="Scripts\create-microservices.ps1" />
-    <File Path="Scripts\update-controller-namespaces.ps1" />
-    <File Path="Scripts\migrate-all-controllers.ps1" />
-    <File Path="Scripts\setup-music-theory-service.ps1" />
-    <File Path="Scripts\complete-microservices-migration.ps1" />
-    <File Path="Scripts\test-mcp-server.ps1" />
-    <File Path="Scripts\complete-all-microservices.ps1" />
-    <File Path="Scripts\add-microservice-references.ps1" />
-    <File Path="Scripts\copy-missing-models.ps1" />
-    <File Path="Scripts\test-autonomous-curation.ps1" />
-    <File Path="Scripts\test-autonomous-curation-full.ps1" />
-    <File Path="Scripts\test-graphql-and-curation.ps1" />
-    <File Path="Scripts\quick-graphql-test.ps1" />
-    <File Path="Scripts\replace-newtonsoft-with-systemtextjson.ps1" />
-    <File Path="Scripts\test-voicing-search-api.ps1" />
-    <File Path="Scripts\test-ilgpu-performance.ps1" />
-  </Folder>
-  <Folder Name="/Solution Items/">
-    <File Path="DevNotes.txt" />
-    <File Path="README.md" />
-    <File Path="RemoveBinObj.ps1" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj" />
-    <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
-    <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
-    <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
-    <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
-  </Folder>
-  <Folder Name="/Tests/Common/">
-    <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj" />
-  </Folder>
-  <Folder Name="/_Local Ga.Interactive NuGet/">
-    <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />
-  </Folder>
-  <Project Path="Demos/Advanced/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj" />
-  <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj" />
+        <Project Path="Demos/Music Theory/FretboardVoicingsCLI/FretboardVoicingsCLI.csproj"/>
+        <Project Path="Demos/Music Theory/MusicalAnalysisApp/MusicalAnalysisApp.csproj"/>
+        <Project Path="Demos/Music Theory/PracticeRoutineDSLDemo/PracticeRoutineDSLDemo.csproj"/>
+    </Folder>
+    <Folder Name="/Demos/Performance &amp; Benchmarks/">
+        <Project Path="Demos/Performance/HighPerformanceDemo/HighPerformanceDemo.csproj"/>
+        <Project Path="Demos/Performance/PerformanceOptimizationDemo/PerformanceOptimizationDemo.csproj"/>
+    </Folder>
+    <Folder Name="/Documentation/"/>
+    <Folder Name="/Documentation/architecture/">
+        <File Path="docs/architecture/DOMAIN_SCHEMA.md"/>
+        <File Path="docs/AGENTS.md"/>
+        <File Path="docs/API_DOCUMENTATION.md"/>
+        <File Path="docs/ARCHITECTURE.md"/>
+        <File Path="docs/BUILD_STATUS_2025.md"/>
+        <File Path="docs/DEPLOYMENT_GUIDE.md"/>
+        <File Path="docs/MODULAR_RESTRUCTURING_PLAN.md"/>
+        <File Path="docs/MODULAR_RESTRUCTURING_PROGRESS.md"/>
+        <File Path="docs/QUICK_START.md"/>
+        <File Path="docs/TESTING_GUIDE.md"/>
+    </Folder>
+    <Folder Name="/Experiments/">
+        <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj"/>
+        <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj"/>
+        <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj"/>
+        <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj"/>
+    </Folder>
+    <Folder Name="/Frontend/"/>
+    <Folder Name="/Frontend/ga-client/">
+        <File Path="Apps/ga-client/package.json"/>
+        <File Path="Apps/ga-client/README.md"/>
+        <File Path="Apps/ga-client/tsconfig.json"/>
+        <File Path="Apps/ga-client/vite.config.ts"/>
+    </Folder>
+    <Folder Name="/Frontend/ga-fretboard-app/">
+        <File Path="ga-fretboard-app/package.json"/>
+        <File Path="ga-fretboard-app/README.md"/>
+        <File Path="ga-fretboard-app/tsconfig.json"/>
+        <File Path="ga-fretboard-app/vite.config.ts"/>
+    </Folder>
+    <Folder Name="/Frontend/ga-react-components/">
+        <File Path="ReactComponents/ga-react-components/package.json"/>
+        <File Path="ReactComponents/ga-react-components/README.md"/>
+        <File Path="ReactComponents/ga-react-components/tsconfig.json"/>
+        <File Path="ReactComponents/ga-react-components/vite.config.ts"/>
+    </Folder>
+    <Folder Name="/Html Examples/">
+        <File Path="docs/Html Examples/ag-grid - Example - RequireJS.html"/>
+        <File Path="docs/Html Examples/ag-grid - Example 1.html"/>
+        <File Path="docs/Html Examples/d3js Example - RequireJs.html"/>
+        <File Path="docs/Html Examples/Force-graph 3d.html"/>
+        <File Path="docs/Html Examples/Force-graph.html"/>
+        <File Path="docs/Html Examples/Mermaid Example 1.html"/>
+        <File Path="docs/Html Examples/Mermaid Example 2.html"/>
+        <File Path="docs/Html Examples/Plotly Example.html"/>
+        <File Path="docs/Html Examples/RequireJS Template.html"/>
+        <File Path="docs/Html Examples/response.html"/>
+        <File Path="docs/Html Examples/Twojs Example - RequireJs.html"/>
+        <File Path="docs/Html Examples/Twojs Example.html"/>
+        <File Path="docs/Html Examples/Verivio Example.html"/>
+        <File Path="docs/Html Examples/VexFlow Example.html"/>
+        <File Path="docs/Html Examples/VexTab - Key Signature.html"/>
+        <File Path="docs/Html Examples/VexTab Example 1.html"/>
+        <File Path="docs/Html Examples/VexTab Example 2.html"/>
+    </Folder>
+    <Folder Name="/Notebooks/Music Theory/">
+        <File Path="Notebooks/MusicTheory/Assets.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Guitar Tunings.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Instruments.ipynb"/>
+        <File Path="Notebooks/MusicTheory/IntervalVectors.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Keys.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Notes.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Scale Modes - harmonic minor scale.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Scale Modes - major scale.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Scale Modes - melodic minor scale.ipynb"/>
+        <File Path="Notebooks/MusicTheory/Ukulele Tunings.ipynb"/>
+    </Folder>
+    <Folder Name="/Notebooks/Research/">
+        <File Path="Notebooks/python_research_bridge.py"/>
+        <File Path="Notebooks/README.md"/>
+        <File Path="Notebooks/Research_Playground.dib"/>
+    </Folder>
+    <Folder Name="/Notebooks/Samples/">
+        <File Path="Notebooks/Samples/ExtensionLab-EF.ipynb"/>
+    </Folder>
+    <Folder Name="/Notebooks/Experiments/">
+        <File Path="Notebooks/Experiments/ASP Net Core.ipynb"/>
+        <File Path="Notebooks/Experiments/Blazor.ipynb"/>
+        <File Path="Notebooks/Experiments/COVID-19.ipynb"/>
+        <File Path="Notebooks/Experiments/d3js.ipynb"/>
+        <File Path="Notebooks/Experiments/dotlanguage.ipynb"/>
+        <File Path="Notebooks/Experiments/F Sharp.ipynb"/>
+        <File Path="Notebooks/Experiments/GA.ipynb"/>
+        <File Path="Notebooks/Experiments/Html link test.ipynb"/>
+        <File Path="Notebooks/Experiments/Interactive.ipynb"/>
+        <File Path="Notebooks/Experiments/IPlot.ipynb"/>
+        <File Path="Notebooks/Experiments/PhaseSphereExploration.ipynb"/>
+        <File Path="Notebooks/Experiments/Random number.ipynb"/>
+        <File Path="Notebooks/Experiments/Raphael.ipynb"/>
+        <File Path="Notebooks/Experiments/skiasharp.dib"/>
+        <File Path="Notebooks/Experiments/Tagged.ipynb"/>
+        <File Path="Notebooks/Experiments/vextab.ipynb"/>
+    </Folder>
+    <Folder Name="/Scripts/">
+        <File Path="Scripts/auto-fix-cs1998.ps1"/>
+        <File Path="Scripts/BinObj.fsx"/>
+        <File Path="Scripts/check-mcp-status.ps1"/>
+        <File Path="Scripts/Consume GA NuGet packages.fsx"/>
+        <File Path="Scripts/create-vector-index.js"/>
+        <File Path="Scripts/health-check.ps1"/>
+        <File Path="Scripts/import-to-mongodb.ps1"/>
+        <File Path="Scripts/install-git-hooks.ps1"/>
+        <File Path="Scripts/monitor-services.ps1"/>
+        <File Path="Scripts/reorganize-demos.ps1"/>
+        <File Path="Scripts/reorganize-solution-final.ps1"/>
+        <File Path="Scripts/reorganize-solution-structure.py"/>
+        <File Path="Scripts/reorganize-solution.py"/>
+        <File Path="Scripts/run-all-tests.ps1"/>
+        <File Path="Scripts/setup-dev-environment.ps1"/>
+        <File Path="Scripts/start-all-dev.ps1"/>
+        <File Path="Scripts/start-all.ps1"/>
+        <File Path="Scripts/start-backend.ps1"/>
+        <File Path="Scripts/start-frontend.ps1"/>
+        <File Path="Scripts/start-redis.ps1"/>
+        <File Path="Scripts/STARTUP_GUIDE.md"/>
+        <File Path="Scripts/START_SERVICES_README.md"/>
+        <File Path="Scripts/test-chatbot.ps1"/>
+        <File Path="Scripts/test-chord-api.ps1"/>
+        <File Path="Scripts/test-integration.ps1"/>
+        <File Path="Scripts/test-mcp-servers.ps1"/>
+        <File Path="Scripts/test-music-generation.ps1"/>
+        <File Path="Scripts/test-unit.ps1"/>
+        <File Path="Scripts/test-vector-search.ps1"/>
+        <File Path="Scripts/TEST_SUITE_README.md"/>
+        <File Path="Scripts\create-microservices.ps1"/>
+        <File Path="Scripts\update-controller-namespaces.ps1"/>
+        <File Path="Scripts\migrate-all-controllers.ps1"/>
+        <File Path="Scripts\setup-music-theory-service.ps1"/>
+        <File Path="Scripts\complete-microservices-migration.ps1"/>
+        <File Path="Scripts\test-mcp-server.ps1"/>
+        <File Path="Scripts\complete-all-microservices.ps1"/>
+        <File Path="Scripts\add-microservice-references.ps1"/>
+        <File Path="Scripts\copy-missing-models.ps1"/>
+        <File Path="Scripts\test-autonomous-curation.ps1"/>
+        <File Path="Scripts\test-autonomous-curation-full.ps1"/>
+        <File Path="Scripts\test-graphql-and-curation.ps1"/>
+        <File Path="Scripts\quick-graphql-test.ps1"/>
+        <File Path="Scripts\replace-newtonsoft-with-systemtextjson.ps1"/>
+        <File Path="Scripts\test-voicing-search-api.ps1"/>
+        <File Path="Scripts\test-ilgpu-performance.ps1"/>
+    </Folder>
+    <Folder Name="/Solution Items/">
+        <File Path="DevNotes.txt"/>
+        <File Path="README.md"/>
+        <File Path="RemoveBinObj.ps1"/>
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj"/>
+        <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj"/>
+        <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj"/>
+        <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj"/>
+        <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj"/>
+    </Folder>
+    <Folder Name="/Tests/Common/">
+        <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj"/>
+    </Folder>
+    <Folder Name="/Notebooks/Local NuGet Tests/">
+        <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb"/>
+        <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet - Key.ipynb"/>
+        <File Path="Common/GA.Interactive.LocalNuGet/Local NuGet Smoke Test.ipynb"/>
+    </Folder>
+    <Project Path="Demos/Advanced/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj"/>
+    <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj"/>
 </Solution>

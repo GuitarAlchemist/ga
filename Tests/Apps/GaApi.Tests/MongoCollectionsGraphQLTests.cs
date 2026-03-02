@@ -3,17 +3,15 @@ namespace GaApi.Tests;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
-using NUnit.Framework;
 
 public class MongoCollectionsGraphQLTests
 {
-    private readonly WebApplicationFactory<Program> _factory = new();
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private record GraphQlRequest(string Query, object? Variables = null, string? OperationName = null);
+    private readonly WebApplicationFactory<Program> _factory = new();
 
     private async Task<JsonDocument> PostGraphQlAsync(string query, object? variables = null)
     {
@@ -46,7 +44,7 @@ public class MongoCollectionsGraphQLTests
 
         var doc = await PostGraphQlAsync(query);
         var root = doc.RootElement;
-        
+
         // check for errors
         if (root.TryGetProperty("errors", out var errors))
         {
@@ -56,7 +54,7 @@ public class MongoCollectionsGraphQLTests
         var data = root.GetProperty("data").GetProperty("chords");
         var nodes = data.GetProperty("nodes");
         Assert.That(nodes.ValueKind, Is.EqualTo(JsonValueKind.Array));
-        
+
         // We might not have data in the test DB, but the query should be valid
         // and return a structure.
         var totalCount = data.GetProperty("totalCount").GetInt32();
@@ -92,4 +90,6 @@ public class MongoCollectionsGraphQLTests
         var nodes = data.GetProperty("nodes");
         Assert.That(nodes.ValueKind, Is.EqualTo(JsonValueKind.Array));
     }
+
+    private record GraphQlRequest(string Query, object? Variables = null, string? OperationName = null);
 }

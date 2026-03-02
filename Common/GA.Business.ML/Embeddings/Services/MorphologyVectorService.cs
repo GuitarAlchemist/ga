@@ -1,18 +1,16 @@
 namespace GA.Business.ML.Embeddings.Services;
 
-using System;
-
 /// <summary>
-/// Generates the MORPHOLOGY partition of the musical embedding (Fretboard layout, span, difficulty).
-/// Corresponds to dimensions 30-53 of the standard musical vector.
-/// Implements OPTIC-K Schema v1.3.1 (Indices 30-53 unchanged since v1.1).
+///     Generates the MORPHOLOGY partition of the musical embedding (Fretboard layout, span, difficulty).
+///     Corresponds to dimensions 30-53 of the standard musical vector.
+///     Implements OPTIC-K Schema v1.3.1 (Indices 30-53 unchanged since v1.1).
 /// </summary>
 public class MorphologyVectorService
 {
     public const int Dimension = 24;
 
     /// <summary>
-    /// Computes the Morphology portion of the embedding.
+    ///     Computes the Morphology portion of the embedding.
     /// </summary>
     public double[] ComputeEmbedding(
         int? bassPitchClass = null,
@@ -46,13 +44,13 @@ public class MorphologyVectorService
         // 15-16: Melody (Circular Encoding)
         if (melodyPitchClass.HasValue)
         {
-            var angle = (melodyPitchClass.Value % 12) * (Math.PI * 2 / 12.0);
+            var angle = melodyPitchClass.Value % 12 * (Math.PI * 2 / 12.0);
             v[15] = Math.Sin(angle);
             v[16] = Math.Cos(angle);
         }
 
         // 17: Average Fret (Position) - Higher weight to distinguish positions
-        v[17] = (averageFret / 12.0) * 2.0;
+        v[17] = averageFret / 12.0 * 2.0;
 
         // 18: Barre Required - Technical change
         v[18] = barreRequired ? 2.0 : 0.0;

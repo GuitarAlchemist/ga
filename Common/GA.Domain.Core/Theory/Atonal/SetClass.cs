@@ -1,12 +1,9 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Design;
+using Design.Attributes;
+using Design.Schema;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     Represents a set class in post-tonal music theory.
@@ -52,7 +49,8 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     ///     Gets the <see cref="PitchClassSet" /> prime form
     /// </summary>
     public PitchClassSet PrimeForm { get; } = pitchClassSet.PrimeForm ??
-                                              throw new ArgumentException("Invalid pitch class set", nameof(pitchClassSet));
+                                              throw new ArgumentException("Invalid pitch class set",
+                                                  nameof(pitchClassSet));
 
     /// <summary>
     ///     Gets the <see cref="ModalFamily" /> of the set class, if it exists
@@ -76,10 +74,35 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     #endregion
 
     /// <inheritdoc />
-    public override string ToString()
+    public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}]";
+
+    public PitchClassSet GetSpectralPrimeForm() =>
+        PrimeForm.Cardinality.Value > 0
+            ? PrimeForm
+            : pitchClassSet;
+
+
+    #region Innner Classes
+
+    private class AllSetClasses : LazyCollectionBase<SetClass>
     {
-        return $"SetClass[{Cardinality}-{IntervalClassVector.Id}]";
+        public static readonly AllSetClasses Instance = new();
+
+        private AllSetClasses() : base(Collection, ", ")
+        {
+        }
+
+        private static IEnumerable<SetClass> Collection =>
+            PitchClassSet.Items
+                .Select(pcs => pcs.PrimeForm)
+                .Where(pf => pf != null)
+                .Distinct()
+                .Select(pf => new SetClass(pf!))
+                .OrderBy(setClass => setClass.Cardinality)
+                .ThenBy(setClass => setClass.PrimeForm.Id);
     }
+
+    #endregion
 
     #region Spectral Analysis
 
@@ -93,7 +116,10 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     public Complex[] GetFourierCoefficients()
     {
         // Ensure we only compute once
-        if (_fourierCoefficients != null) return _fourierCoefficients;
+        if (_fourierCoefficients != null)
+        {
+            return _fourierCoefficients;
+        }
 
         // Compute Fourier coefficients
         var vector = GetSpectralPrimeForm().ToBinaryVector();
@@ -205,39 +231,11 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
 
     #endregion
 
-    public PitchClassSet GetSpectralPrimeForm() =>
-        PrimeForm.Cardinality.Value > 0
-            ? PrimeForm
-            : pitchClassSet;
-
-
-    #region Innner Classes
-
-    private class AllSetClasses : LazyCollectionBase<SetClass>
-    {
-        public static readonly AllSetClasses Instance = new();
-
-        private AllSetClasses() : base(Collection, ", ")
-        {
-        }
-
-        private static IEnumerable<SetClass> Collection =>
-            PitchClassSet.Items
-                .Select(pcs => pcs.PrimeForm)
-                .Where(pf => pf != null)
-                .Distinct()
-                .Select(pf => new SetClass(pf!))
-                .OrderBy(setClass => setClass.Cardinality)
-                .ThenBy(setClass => setClass.PrimeForm.Id);
-    }
-
-    #endregion
-
     #region Equality Members
 
     public bool Equals(SetClass? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -247,7 +245,7 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -260,20 +258,11 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
         return obj.GetType() == GetType() && Equals((SetClass)obj);
     }
 
-    public override int GetHashCode()
-    {
-        return PrimeForm.GetHashCode();
-    }
+    public override int GetHashCode() => PrimeForm.GetHashCode();
 
-    public static bool operator ==(SetClass? left, SetClass? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(SetClass? left, SetClass? right) => Equals(left, right);
 
-    public static bool operator !=(SetClass? left, SetClass? right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(SetClass? left, SetClass? right) => !Equals(left, right);
 
     #endregion
 }

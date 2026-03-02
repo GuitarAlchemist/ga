@@ -1,24 +1,16 @@
 namespace GA.Domain.Services.Fretboard.Engine;
 
 using System.Collections.Immutable;
-using Core.Instruments.Positions;
 using Core.Instruments.Primitives;
-using Core.Primitives;
+using Core.Primitives.Notes;
 using Core.Theory.Atonal;
 using FretboardClass = Core.Instruments.Primitives.Fretboard;
 
 /// <summary>
 /// Generates chord voicings for specific pitch class sets.
 /// </summary>
-public class FretboardChordsGenerator
+public class FretboardChordsGenerator(FretboardClass fretboard)
 {
-    private readonly FretboardClass _fretboard;
-
-    public FretboardChordsGenerator(FretboardClass fretboard)
-    {
-        _fretboard = fretboard;
-    }
-
     /// <summary>
     /// Gets all valid chord positions (voicings) for the given set of pitch classes.
     /// </summary>
@@ -37,28 +29,29 @@ public class FretboardChordsGenerator
         // 3. Filter by span and strict match (subset/superset).
 
         // Get all locations for relevant PCs
-        var locationsPerString = new List<Position>[_fretboard.StringCount];
-        for (int s = 0; s < _fretboard.StringCount; s++)
+        var locationsPerString = new List<Position>[fretboard.StringCount];
+        for (var s = 0; s < fretboard.StringCount; s++)
         {
-            var str = _fretboard.Tuning[new Str(s + 1)]; // Tuning uses 1-based indexing for strings? 
+            var str = fretboard.Tuning[new(s + 1)]; // Tuning uses 1-based indexing for strings? 
             // Correct: Tuning indexer takes Str. Str is value object.
             // Tuning.cs: public Pitch this[Str str] ... var index = str.Value - 1;
             // So new Str(s+1) is correct.
             
-            var positions = new List<Position>();
-            
-            // Allow muted string
-            positions.Add(new Position.Muted(new Str(s + 1)));
+            var positions = new List<Position>
+            {
+                // Allow muted string
+                new Position.Muted(new(s + 1))
+            };
 
             // Check each fret
-            for (int f = 0; f <= _fretboard.FretCount; f++)
+            for (var f = 0; f <= fretboard.FretCount; f++)
             {
                 // Calculate MidiNote
-                MidiNote midiNote = (MidiNote)str + f; // Assuming MidiNote supports + int
+                var midiNote = (MidiNote)str + f; // Assuming MidiNote supports + int
                 
                 if (notes.Contains(midiNote.PitchClass))
                 {
-                    positions.Add(new Position.Played(new PositionLocation(new Str(s + 1), Fret.FromValue(f)), midiNote));
+                    positions.Add(new Position.Played(new(new(s + 1), Fret.FromValue(f)), midiNote));
                 }
             }
             locationsPerString[s] = positions;
@@ -73,20 +66,17 @@ public class FretboardChordsGenerator
     /// Explicitly adding parameterless one if semantic service used it? 
     /// Semantic service used: generator.GetChordPositions().ToList(); 
     /// </summary>
-    public IEnumerable<ImmutableList<Position>> GetChordPositions()
-    {
-         // If called without arguments, it might imply generating "all chords"? 
-         // Or maybe it was a mistake in my reading of SemanticService?
-         // SemanticService: generator.GetChordPositions().ToList();
-         // It instantiated: var generator = new FretboardChordsGenerator(fretboard);
-         // If it generates ALL voicings, that's what VoicingGenerator does.
-         // Maybe FretboardChordsGenerator was just a wrapper around VoicingGenerator?
-         // I'll implement this to delegate to VoicingGenerator if no args.
-         
-         return Voicings.Generation.VoicingGenerator
-             .GenerateAllVoicings(_fretboard)
-             .Select(v => v.Positions.ToImmutableList());
-    }
+    public IEnumerable<ImmutableList<Position>> GetChordPositions() =>
+        // If called without arguments, it might imply generating "all chords"? 
+        // Or maybe it was a mistake in my reading of SemanticService?
+        // SemanticService: generator.GetChordPositions().ToList();
+        // It instantiated: var generator = new FretboardChordsGenerator(fretboard);
+        // If it generates ALL voicings, that's what VoicingGenerator does.
+        // Maybe FretboardChordsGenerator was just a wrapper around VoicingGenerator?
+        // I'll implement this to delegate to VoicingGenerator if no args.
+        Voicings.Generation.VoicingGenerator
+            .GenerateAllVoicings(fretboard)
+            .Select(v => v.Positions.ToImmutableList());
 
     private IEnumerable<ImmutableList<Position>> GenerateCombinations(
         List<Position>[] locationsPerString, 
@@ -99,16 +89,16 @@ public class FretboardChordsGenerator
         foreach (var combination in Recurse(0, locationsPerString))
         {
             // Validate Span & Note Count
-            int playedCount = 0;
-            int minFret = int.MaxValue;
-            int maxFret = int.MinValue;
+            var playedCount = 0;
+            var minFret = int.MaxValue;
+            var maxFret = int.MinValue;
             
             foreach (var pos in combination)
             {
                 if (pos is Position.Played p)
                 {
                     playedCount++;
-                    int f = p.Location.Fret.Value;
+                    var f = p.Location.Fret.Value;
                     if (f > 0) // Ignore open strings for span? Usually yes.
                     {
                         if (f < minFret) minFret = f;
@@ -129,7 +119,7 @@ public class FretboardChordsGenerator
     {
         if (stringIndex >= locations.Length)
         {
-            yield return new List<Position>();
+            yield return [];
             yield break;
         }
 

@@ -1,9 +1,6 @@
 namespace GA.Domain.Services.Chords.Analysis.Atonal;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using ChordTemplate = ChordTemplate;
 
 /// <summary>
 ///     Service for analyzing chords using atonal theory when traditional tonal analysis fails
@@ -16,7 +13,7 @@ public static class AtonalChordAnalysisService
     public static bool RequiresAtonalAnalysis(ChordTemplate template)
     {
         // Check for characteristics that suggest atonal harmony
-        var intervals = template.Intervals.Select(i => i.Interval.Semitones.Value).ToList();
+        var intervals = template.Formula.Intervals.Select(i => i.Interval.Semitones.Value).ToList();
 
         // More than 6 different pitch classes suggests complex harmony
         if (intervals.Count > 6)
@@ -60,7 +57,7 @@ public static class AtonalChordAnalysisService
     {
         // Create pitch class set from chord intervals
         var pitchClasses = new List<PitchClass> { root };
-        foreach (var interval in template.Intervals)
+        foreach (var interval in template.Formula.Intervals)
         {
             var pc = PitchClass.FromValue((root.Value + interval.Interval.Semitones.Value) % 12);
             if (!pitchClasses.Contains(pc))
@@ -129,10 +126,8 @@ public static class AtonalChordAnalysisService
     /// <summary>
     ///     Gets prime form as string
     /// </summary>
-    private static string GetPrimeFormString(PitchClassSet primeForm)
-    {
-        return $"({string.Join(",", primeForm.OrderBy(pc => pc.Value))})";
-    }
+    private static string GetPrimeFormString(PitchClassSet primeForm) =>
+        $"({string.Join(",", primeForm.OrderBy(pc => pc.Value))})";
 
     /// <summary>
     ///     Generates Forte number notation
@@ -347,15 +342,13 @@ public static class AtonalChordAnalysisService
     /// <summary>
     ///     Gets the note name for a pitch class
     /// </summary>
-    private static string GetNoteName(PitchClass pitchClass)
-    {
-        return pitchClass.Value switch
+    private static string GetNoteName(PitchClass pitchClass) =>
+        pitchClass.Value switch
         {
             0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
             6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
             _ => "?"
         };
-    }
 
     /// <summary>
     ///     Atonal analysis result for a chord

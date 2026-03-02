@@ -1,9 +1,7 @@
 namespace GA.Domain.Services.Fretboard.Voicings.Core;
 
-using System;
-
 /// <summary>
-/// Voicing with embedding data for vector search
+///     Voicing with embedding data for vector search
 /// </summary>
 public record VoicingEmbedding(
     string Id,
@@ -26,8 +24,8 @@ public record VoicingEmbedding(
     bool BarreRequired,
     int HandStretch,
     string? StackingType, // Added for structured search
-    int? RootPitchClass,   // Added for slash chord detection
-    int MidiBassNote,     // Added for slash chord detection
+    int? RootPitchClass, // Added for slash chord detection
+    int MidiBassNote, // Added for slash chord detection
     string? HarmonicFunction, // Added Phase 3
     bool IsNaturallyOccurring, // Added Phase 3
     double ConsonanceScore, // Added Phase 3
@@ -42,11 +40,19 @@ public record VoicingEmbedding(
     string[]? OmittedTones, // Added Phase 3
     string? CagedShape, // Added for CAGED support
     string Description,
+    /// <summary>
+    /// Musical structure embedding (OPTIC-K schema).
+    /// Must be 216 dimensions.
+    /// </summary>
     double[] Embedding,
+    /// <summary>
+    /// Semantic text embedding (MiniLM).
+    /// Must be 384 dimensions.
+    /// </summary>
     double[]? TextEmbedding); // Added Phase 7 for hybrid search
 
 /// <summary>
-/// Performance characteristics of a voicing search strategy
+///     Performance characteristics of a voicing search strategy
 /// </summary>
 public record VoicingSearchPerformance(
     TimeSpan ExpectedSearchTime,
@@ -55,7 +61,7 @@ public record VoicingSearchPerformance(
     bool RequiresNetwork);
 
 /// <summary>
-/// Voicing search statistics
+///     Voicing search statistics
 /// </summary>
 public record VoicingSearchStats(
     long TotalVoicings,

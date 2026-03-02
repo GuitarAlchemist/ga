@@ -1,16 +1,12 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Collections.Frozen;
 using Abstractions;
-using Design;
-using GA.Core.Collections;
+using Design.Attributes;
+using Design.Schema;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
-using Primitives;
+using Primitives.Intervals;
+using Primitives.Notes;
 
 /// <summary>
 ///     Items pitches related to each other by octave, enharmonic equivalence, or both (
@@ -25,7 +21,8 @@ using Primitives;
 /// </remarks>
 [PublicAPI]
 [DomainInvariant("Value must be between 0 and 11 inclusive", "value >= 0 && value <= 11")]
-[DomainRelationship(typeof(Pitch), RelationshipType.IsChildOf, "A pitch class is a component of a specific pitch (pitch = pitch class + octave)")]
+[DomainRelationship(typeof(Pitch), RelationshipType.IsChildOf,
+    "A pitch class is a component of a specific pitch (pitch = pitch class + octave)")]
 public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     IParsable<PitchClass>,
     IStaticPairIntervalClassNorm<PitchClass>
@@ -69,10 +66,8 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     #region IPitchClass<PitchClass> Members
 
     /// <inheritdoc cref="IStaticPairIntervalClassNorm{TSelf}.GetNorm" />
-    public static IntervalClass GetPairNorm(PitchClass pitchClass1, PitchClass pitchClass2)
-    {
-        return IStaticPairIntervalClassNorm<PitchClass>.GetNorm(pitchClass1, pitchClass2);
-    }
+    public static IntervalClass GetPairNorm(PitchClass pitchClass1, PitchClass pitchClass2) =>
+        IStaticPairIntervalClassNorm<PitchClass>.GetNorm(pitchClass1, pitchClass2);
 
     #endregion
 
@@ -82,50 +77,27 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     /// <param name="pitchClass1">The first <see cref="PitchClass" /></param>
     /// <param name="pitchClass2">The second <see cref="PitchClass" /></param>
     /// <returns></returns>
-    public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2)
-    {
-        return FastPitchClassCalculator.NormalizedSubtraction(pitchClass1, pitchClass2);
-    }
+    public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) =>
+        FastPitchClassCalculator.NormalizedSubtraction(pitchClass1, pitchClass2);
 
-    public override string ToString()
+    public override string ToString() => _value switch
     {
-        return _value switch
-        {
-            10 => "T", // Abbreviation for 10
-            11 => "E", // Abbreviation for 11
-            _ => _value.ToString()
-        };
-    }
+        10 => "T", // Abbreviation for 10
+        11 => "E", // Abbreviation for 11
+        _ => _value.ToString()
+    };
 
-    public Note.Chromatic ToChromaticNote()
-    {
-        return _chromaticNotes[_value];
-    }
+    public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
 
-    public Note.Sharp ToSharpNote()
-    {
-        return _sharpNotes[_value];
-    }
+    public Note.Sharp ToSharpNote() => _sharpNotes[_value];
 
-    public Note.Flat ToFlatNote()
-    {
-        return _flatNotes[_value];
-    }
+    public Note.Flat ToFlatNote() => _flatNotes[_value];
 
-    public Pitch.Chromatic ToChromaticPitch(Octave octave)
-    {
-        return new(ToChromaticNote(), octave);
-    }
+    public Pitch.Chromatic ToChromaticPitch(Octave octave) => new(ToChromaticNote(), octave);
 
-    public Pitch.Sharp ToSharpPitch(Octave octave)
-    {
-        return new(ToSharpNote(), octave);
-    }
+    public Pitch.Sharp ToSharpPitch(Octave octave) => new(ToSharpNote(), octave);
 
-    public Pitch.Flat ToFlatPitch(Octave octave)
-    {
-        return new(ToFlatNote(), octave);
-    }
+    public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
 
     #region Inner Classes
 
@@ -140,17 +112,15 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         /// <summary>
         ///     Pre-computes the normalized difference between all possible combinations of pitch class pairs
         /// </summary>
-        private static readonly Lazy<ImmutableDictionary<(int, int), PitchClass>> _lazySubtractionDictionary =
+        private static readonly Lazy<FrozenDictionary<(int, int), PitchClass>> _lazySubtractionDictionary =
             new(GetSubtractionDictionary);
 
-        public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2)
-        {
-            return _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
-        }
+        public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) =>
+            _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
 
-        private static ImmutableDictionary<(int, int), PitchClass> GetSubtractionDictionary()
+        private static FrozenDictionary<(int, int), PitchClass> GetSubtractionDictionary()
         {
-            var builder = ImmutableDictionary.CreateBuilder<(int, int), PitchClass>();
+            var builder = new Dictionary<(int, int), PitchClass>();
             // Build from fixed 0..11 range to avoid dependency on cached collections during static init
             foreach (var pcValue1 in Enumerable.Range(0, 12))
             {
@@ -162,7 +132,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
                 }
             }
 
-            return builder.ToImmutable();
+            return builder.ToFrozenDictionary();
         }
     }
 
@@ -171,22 +141,22 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     #region IStaticValueObjectList<PitchClass> Members
 
     /// <summary>
-    /// Gets all PitchClass instances (automatically memoized).
+    ///     Gets all PitchClass instances (automatically memoized).
     /// </summary>
     public static IReadOnlyCollection<PitchClass> Items => ValueObjectUtils<PitchClass>.Items;
 
     /// <summary>
-    /// Gets all PitchClass values (automatically memoized).
+    ///     Gets all PitchClass values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClass>.Values;
 
     /// <summary>
-    /// Gets the cached span representing the full pitch class range.
+    ///     Gets the cached span representing the full pitch class range.
     /// </summary>
     public static ReadOnlySpan<PitchClass> ItemsSpan => ValueObjectUtils<PitchClass>.ItemsSpan;
 
     /// <summary>
-    /// Gets the cached span representing the numeric values for each pitch class.
+    ///     Gets the cached span representing the numeric values for each pitch class.
     /// </summary>
     public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<PitchClass>.ValuesSpan;
 
@@ -214,27 +184,15 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region IValueObject<PitchClass> Members
 
-    public static implicit operator PitchClass(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator PitchClass(int value) => FromValue(value);
 
-    public static implicit operator int(PitchClass octave)
-    {
-        return octave.Value;
-    }
+    public static implicit operator int(PitchClass octave) => octave.Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static PitchClass FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
-    public static PitchClass FromSemitones(Semitones semitones)
-    {
-        return FromValue(semitones.Value);
-    }
+    public static PitchClass FromSemitones(Semitones semitones) => FromValue(semitones.Value);
 
     public int Value
     {
@@ -246,31 +204,16 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region Relational members
 
-    public static bool operator <(PitchClass left, PitchClass right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(PitchClass left, PitchClass right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(PitchClass left, PitchClass right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(PitchClass left, PitchClass right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(PitchClass left, PitchClass right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(PitchClass left, PitchClass right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(PitchClass left, PitchClass right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(PitchClass left, PitchClass right) => left.CompareTo(right) >= 0;
 
     /// <inheritdoc />
-    public int CompareTo(PitchClass other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(PitchClass other) => _value.CompareTo(other._value);
 
     #endregion
 
@@ -322,24 +265,24 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             case "B":
                 result = FromValue(11);
                 return true;
-            default:
-                return false;
         }
+
+        if (Note.Chromatic.TryParse(s, provider, out var note))
+        {
+            result = note.PitchClass;
+            return true;
+        }
+
+        return false;
     }
 
     #endregion
 
     #region Operators
 
-    public static implicit operator Note.Sharp(PitchClass pitchClass)
-    {
-        return pitchClass.ToSharpNote();
-    }
+    public static implicit operator Note.Sharp(PitchClass pitchClass) => pitchClass.ToSharpNote();
 
-    public static implicit operator Note.Flat(PitchClass pitchClass)
-    {
-        return pitchClass.ToFlatNote();
-    }
+    public static implicit operator Note.Flat(PitchClass pitchClass) => pitchClass.ToFlatNote();
 
     #endregion
 }

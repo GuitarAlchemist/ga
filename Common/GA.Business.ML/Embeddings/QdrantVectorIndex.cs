@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 
@@ -34,9 +33,9 @@ public class QdrantVectorIndex : IVectorIndex
     // If we want to use Qdrant "for real", we can't load 10M docs into memory.
     // But for a "Small Corpus" validation (1k docs), we CAN load them.
     
-    private List<VoicingDocument> _localCache = new();
-
-    public IReadOnlyList<VoicingDocument> Documents => _localCache;
+    private List<ChordVoicingRagDocument> _localCache = [];
+    
+    public IReadOnlyList<ChordVoicingRagDocument> Documents => _localCache;
 
     public async Task InitializeCollectionAsync()
     {
@@ -56,7 +55,7 @@ public class QdrantVectorIndex : IVectorIndex
         try
         {
             PointId? nextOffset = null;
-            var allDocs = new List<VoicingDocument>();
+            var allDocs = new List<ChordVoicingRagDocument>();
             do
             {
                 var result = await _client.ScrollAsync(CollectionName, limit: 100, offset: nextOffset);
@@ -79,7 +78,7 @@ public class QdrantVectorIndex : IVectorIndex
         }
     }
 
-    private VoicingDocument? MapToDocument(RetrievedPoint point)
+    private ChordVoicingRagDocument? MapToDocument(RetrievedPoint point)
     {
          if (point.Payload.TryGetValue("json", out var jsonVal))
          {
@@ -88,15 +87,17 @@ public class QdrantVectorIndex : IVectorIndex
              {
                  try 
                  {
-                    var doc = JsonSerializer.Deserialize<VoicingDocument>(json);
+                    var doc = JsonSerializer.Deserialize<ChordVoicingRagDocument>(json);
                     if (doc != null)
                     {
                         if ((doc.Embedding == null || doc.Embedding.Length == 0) && point.Vectors != null)
                         {
+#pragma warning disable CS0612 // Type or member is obsolete
                             var vecData = point.Vectors.Vector?.Data;
+#pragma warning restore CS0612 // Type or member is obsolete
                             if (vecData != null)
                             {
-                                doc = doc with { Embedding = vecData.Select(x => (double)x).ToArray() };
+                                doc = doc with { Embedding = [.. vecData] };
                             }
                         }
                         return doc;
@@ -107,7 +108,7 @@ public class QdrantVectorIndex : IVectorIndex
          }
          
          // Fallback with required fields
-         return new VoicingDocument 
+         return new ChordVoicingRagDocument 
          { 
              Id = point.Id.ToString(),
              ChordName = "Unknown",
@@ -128,7 +129,7 @@ public class QdrantVectorIndex : IVectorIndex
          }; 
     }
 
-    public async Task IndexAsync(IEnumerable<VoicingDocument> docs)
+    public async Task IndexAsync(IEnumerable<ChordVoicingRagDocument> docs)
     {
         // 1. Convert docs to Points
         var points = docs.Select(d => {
@@ -136,7 +137,9 @@ public class QdrantVectorIndex : IVectorIndex
             var point = new PointStruct
             {
                 Id = id,
-                Vectors = new Vectors { Vector = new Vector { Data = { d.Embedding.Select(x => (float)x) } } },
+#pragma warning disable CS0612 // Type or member is obsolete
+                Vectors = new Vectors { Vector = new Vector { Data = { d.Embedding! } } },
+#pragma warning restore CS0612 // Type or member is obsolete
                 Payload = {
                     ["json"] = JsonSerializer.Serialize(d)
                 }
@@ -153,39 +156,37 @@ public class QdrantVectorIndex : IVectorIndex
         _localCache.AddRange(docs);
     }
 
-    public IEnumerable<(VoicingDocument Doc, double Score)> Search(double[] queryVector, int topK = 10)
+    public IEnumerable<(ChordVoicingRagDocument Doc, double Score)> Search(float[] queryVector, int topK = 10)
     {
         // Sync wrapper for Qdrant Search
-        var searchTask = _client.SearchAsync(CollectionName, queryVector.Select(d => (float)d).ToArray(), limit: (ulong)topK);
+        var searchTask = _client.SearchAsync(CollectionName, queryVector, limit: (ulong)topK);
         var searchResult = searchTask.Result;
 
-        var results = new List<(VoicingDocument, double)>();
+        var results = new List<(ChordVoicingRagDocument, double)>();
         foreach (var scoredPoint in searchResult)
         {
             if (scoredPoint.Payload.TryGetValue("json", out var jsonValue))
             {
-                 var doc = JsonSerializer.Deserialize<VoicingDocument>(jsonValue.StringValue);
+                 var doc = JsonSerializer.Deserialize<ChordVoicingRagDocument>(jsonValue.StringValue);
                  if (doc != null) results.Add((doc, scoredPoint.Score));
             }
         }
         return results;
     }
 
-    public VoicingDocument? FindByIdentity(string identity)
-    {
+    public ChordVoicingRagDocument? FindByIdentity(string identity) =>
         // Naive local cache search for now, as Qdrant doesn't support "Find by Payload Value" efficiently without a Filter payload index.
-        return _localCache.FirstOrDefault(d => d.ChordName == identity || d.Id == identity);
-    }
+        _localCache.FirstOrDefault(d => d.ChordName == identity || d.Id == identity);
 
-    public async Task<bool> IsStaleAsync(string currentSchemaVersion)
+    public Task<bool> IsStaleAsync(string currentSchemaVersion)
     {
         // If local cache is empty, we don't know yet, so not stale (or we should load)
-        if (_localCache.Count == 0) return false;
+        if (_localCache.Count == 0) return Task.FromResult(false);
 
         // Sampling check (first document) to avoid full collection scan
         var first = _localCache.First();
-        return first.SchemaVersion != currentSchemaVersion || 
-               first.Embedding == null || 
-               first.Embedding.Length != (int)_dimension;
+        return Task.FromResult(first.SchemaVersion != currentSchemaVersion || 
+                               first.Embedding == null || 
+                               first.Embedding.Length != (int)_dimension);
     }
 }

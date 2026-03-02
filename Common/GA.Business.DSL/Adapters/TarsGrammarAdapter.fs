@@ -3,7 +3,6 @@ namespace GA.MusicTheory.DSL.Adapters
 open System
 open System.IO
 open System.Text.Json
-open System.Text.Json.Nodes
 open GA.MusicTheory.DSL.Types.GrammarTypes
 
 /// <summary>
@@ -25,6 +24,7 @@ module TarsGrammarAdapter =
             else
                 let content = File.ReadAllText path
                 let fileName = Path.GetFileNameWithoutExtension path
+
                 let metadata =
                     { Name = fileName
                       Version = "1.0.0"
@@ -33,8 +33,9 @@ module TarsGrammarAdapter =
                       Created = DateTime.UtcNow
                       Modified = File.GetLastWriteTimeUtc path
                       Tags = []
-                      Hash = Some (content.GetHashCode().ToString("X")) }
-                Ok (content, metadata)
+                      Hash = Some(content.GetHashCode().ToString("X")) }
+
+                Ok(content, metadata)
         with ex ->
             Error $"Failed to load grammar: %s{ex.Message}"
 
@@ -43,11 +44,13 @@ module TarsGrammarAdapter =
         try
             let assembly = System.Reflection.Assembly.GetExecutingAssembly()
             use stream = assembly.GetManifestResourceStream(resourceName)
+
             if stream = null then
                 Error $"Embedded resource not found: %s{resourceName}"
             else
                 use reader = new StreamReader(stream)
                 let content = reader.ReadToEnd()
+
                 let metadata =
                     { Name = resourceName
                       Version = "1.0.0"
@@ -56,8 +59,9 @@ module TarsGrammarAdapter =
                       Created = DateTime.UtcNow
                       Modified = DateTime.UtcNow
                       Tags = []
-                      Hash = Some (content.GetHashCode().ToString("X")) }
-                Ok (content, metadata)
+                      Hash = Some(content.GetHashCode().ToString("X")) }
+
+                Ok(content, metadata)
         with ex ->
             Error $"Failed to load embedded resource: %s{ex.Message}"
 
@@ -71,14 +75,15 @@ module TarsGrammarAdapter =
               Created = DateTime.UtcNow
               Modified = DateTime.UtcNow
               Tags = []
-              Hash = Some (content.GetHashCode().ToString("X")) }
+              Hash = Some(content.GetHashCode().ToString("X")) }
+
         (content, metadata)
 
     /// Load a grammar from a GrammarSource
     let loadGrammar (source: GrammarSource) : Result<string * GrammarMetadata, string> =
         match source with
         | ExternalFile path -> loadFromFile path
-        | InlineDefinition content -> Ok (loadFromInline content "inline")
+        | InlineDefinition content -> Ok(loadFromInline content "inline")
         | EmbeddedResource resourceName -> loadFromResource resourceName
 
     // ============================================================================
@@ -138,7 +143,7 @@ module TarsGrammarAdapter =
     /// Update hash in metadata
     let updateHash (content: string) (metadata: GrammarMetadata) : GrammarMetadata =
         { metadata with
-            Hash = Some (calculateHash content)
+            Hash = Some(calculateHash content)
             Modified = DateTime.UtcNow }
 
     // ============================================================================
@@ -147,13 +152,11 @@ module TarsGrammarAdapter =
 
     /// Resolve a grammar by name from a directory
     let resolveGrammar (grammarDir: string) (grammarName: string) : Result<string * GrammarMetadata, string> =
-        let extensions = [".ebnf"; ".grammar"; ".tars"]
+        let extensions = [ ".ebnf"; ".grammar"; ".tars" ]
+
         let tryLoadWithExtension ext =
             let path = Path.Combine(grammarDir, grammarName + ext)
-            if File.Exists path then
-                Some (loadFromFile path)
-            else
-                None
+            if File.Exists path then Some(loadFromFile path) else None
 
         match List.tryPick tryLoadWithExtension extensions with
         | Some result -> result
@@ -164,7 +167,8 @@ module TarsGrammarAdapter =
         if not (Directory.Exists grammarDir) then
             []
         else
-            let extensions = [".ebnf"; ".grammar"; ".tars"]
+            let extensions = [ ".ebnf"; ".grammar"; ".tars" ]
+
             extensions
             |> List.collect (fun ext ->
                 Directory.GetFiles(grammarDir, "*" + ext)
@@ -188,18 +192,18 @@ module TarsGrammarAdapter =
         if not (Directory.Exists grammarDir) then
             []
         else
-            let extensions = [".ebnf"; ".grammar"; ".tars"]
+            let extensions = [ ".ebnf"; ".grammar"; ".tars" ]
+
             extensions
-            |> List.collect (fun ext ->
-                Directory.GetFiles(grammarDir, "*" + ext)
-                |> Array.toList)
+            |> List.collect (fun ext -> Directory.GetFiles(grammarDir, "*" + ext) |> Array.toList)
             |> List.choose (fun path ->
                 match loadFromFile path with
-                | Ok (_, metadata) ->
-                    Some { Name = Path.GetFileNameWithoutExtension path
-                           Path = path
-                           Metadata = metadata
-                           LastIndexed = DateTime.UtcNow }
+                | Ok(_, metadata) ->
+                    Some
+                        { Name = Path.GetFileNameWithoutExtension path
+                          Path = path
+                          Metadata = metadata
+                          LastIndexed = DateTime.UtcNow }
                 | Error _ -> None)
 
     /// Save grammar index to JSON file
@@ -209,7 +213,7 @@ module TarsGrammarAdapter =
             options.WriteIndented <- true
             let json = JsonSerializer.Serialize(index, options)
             File.WriteAllText(indexPath, json)
-            Ok ()
+            Ok()
         with ex ->
             Error $"Failed to save index: %s{ex.Message}"
 
@@ -220,7 +224,10 @@ module TarsGrammarAdapter =
                 Ok []
             else
                 let json = File.ReadAllText(indexPath)
-                let index = System.Text.Json.JsonSerializer.Deserialize<GrammarIndexEntry list>(json)
+
+                let index =
+                    System.Text.Json.JsonSerializer.Deserialize<GrammarIndexEntry list>(json)
+
                 Ok index
         with ex ->
             Error $"Failed to load index: %s{ex.Message}"
@@ -248,12 +255,13 @@ module TarsGrammarAdapter =
             | ']' -> bracketCount <- bracketCount - 1
             | _ -> ()
 
-        if parenCount <> 0 then errors.Add("Unbalanced parentheses")
-        if braceCount <> 0 then errors.Add("Unbalanced braces")
-        if bracketCount <> 0 then errors.Add("Unbalanced brackets")
+        if parenCount <> 0 then
+            errors.Add("Unbalanced parentheses")
 
-        if errors.Count = 0 then
-            Ok ()
-        else
-            Error (List.ofSeq errors)
+        if braceCount <> 0 then
+            errors.Add("Unbalanced braces")
 
+        if bracketCount <> 0 then
+            errors.Add("Unbalanced brackets")
+
+        if errors.Count = 0 then Ok() else Error(List.ofSeq errors)

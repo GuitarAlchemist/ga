@@ -1,14 +1,14 @@
-namespace GA.Domain.Core.Tests.Unified;
+namespace GA.Business.Core.Tests.Unified;
 
-using GA.Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Atonal;
 using Domain.Services.Unified;
 
 /// <summary>
-/// Tests for the enhanced UnifiedModeService features:
-/// - Messiaen Mode detection
-/// - Brightness calculation
-/// - Spectral Centroid
-/// - Voice Leading metrics (Common Tones, Voice Leading Distance)
+///     Tests for the enhanced UnifiedModeService features:
+///     - Messiaen Mode detection
+///     - Brightness calculation
+///     - Spectral Centroid
+///     - Voice Leading metrics (Common Tones, Voice Leading Distance)
 /// </summary>
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
@@ -16,8 +16,9 @@ public class UnifiedModeEnhancedTests
 {
     private static PitchClassSet Pcs(params int[] pcs)
         => new([.. pcs.Select(PitchClass.FromValue)]);
+
     private readonly UnifiedModeService _svc = new();
-    #region Messiaen Mode Detection
+
     [Test]
     public void Describe_WholeTone_Is_MessiaenMode1()
     {
@@ -28,9 +29,11 @@ public class UnifiedModeEnhancedTests
         // Act
         var desc = _svc.Describe(inst);
         // Assert
-        TestContext.WriteLine($"Mode: Whole Tone, Messiaen Mode Index: Expected=1, Actual={desc.MessiaenModeIndex} (Whole tone scale is the 1st mode of limited transposition)");
+        TestContext.WriteLine(
+            $"Mode: Whole Tone, Messiaen Mode Index: Expected=1, Actual={desc.MessiaenModeIndex} (Whole tone scale is the 1st mode of limited transposition)");
         Assert.That(desc.MessiaenModeIndex, Is.EqualTo(1), "Whole tone scale should be identified as Messiaen Mode 1.");
     }
+
     [Test]
     public void Describe_Octatonic_Is_MessiaenMode2()
     {
@@ -44,6 +47,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"Mode: Octatonic, Messiaen Mode Index: {desc.MessiaenModeIndex}");
         Assert.That(desc.MessiaenModeIndex, Is.EqualTo(2));
     }
+
     [Test]
     public void Describe_MajorScale_Is_Not_MessiaenMode()
     {
@@ -54,9 +58,11 @@ public class UnifiedModeEnhancedTests
         // Act
         var desc = _svc.Describe(inst);
         // Assert
-        TestContext.WriteLine($"Mode: Major Scale, Messiaen Mode Index: {desc.MessiaenModeIndex ?? -1} (Expected -1/Null)");
+        TestContext.WriteLine(
+            $"Mode: Major Scale, Messiaen Mode Index: {desc.MessiaenModeIndex ?? -1} (Expected -1/Null)");
         Assert.That(desc.MessiaenModeIndex, Is.Null);
     }
+
     [TestCaseSource(nameof(MessiaenModeTestCases))]
     public void Describe_MessiaenModes_AreDetectedCorrectly(int[] pitchClasses, int expectedMode)
     {
@@ -66,16 +72,17 @@ public class UnifiedModeEnhancedTests
         // Act
         var desc = _svc.Describe(inst);
         // Assert
-        TestContext.WriteLine($"Pitch Classes: [{string.Join(", ", pitchClasses)}], Expected Messiaen Mode: {expectedMode}, Actual: {desc.MessiaenModeIndex}");
+        TestContext.WriteLine(
+            $"Pitch Classes: [{string.Join(", ", pitchClasses)}], Expected Messiaen Mode: {expectedMode}, Actual: {desc.MessiaenModeIndex}");
         Assert.That(desc.MessiaenModeIndex, Is.EqualTo(expectedMode));
     }
+
     private static IEnumerable<TestCaseData> MessiaenModeTestCases()
     {
         yield return new TestCaseData(new[] { 0, 2, 4, 6, 8, 10 }, 1).SetName("Mode 1: Whole Tone");
         yield return new TestCaseData(new[] { 0, 1, 3, 4, 6, 7, 9, 10 }, 2).SetName("Mode 2: Octatonic");
     }
-    #endregion
-    #region Brightness
+
     [Test]
     public void Describe_Lydian_Is_Brighter_Than_Locrian()
     {
@@ -91,9 +98,11 @@ public class UnifiedModeEnhancedTests
         var lydianDesc = _svc.Describe(lydianInst);
         var locrianDesc = _svc.Describe(locrianInst);
         // Assert
-        TestContext.WriteLine($"Lydian Brightness: {lydianDesc.Brightness:F2}, Locrian Brightness: {locrianDesc.Brightness:F2}");
+        TestContext.WriteLine(
+            $"Lydian Brightness: {lydianDesc.Brightness:F2}, Locrian Brightness: {locrianDesc.Brightness:F2}");
         Assert.That(lydianDesc.Brightness, Is.GreaterThan(locrianDesc.Brightness));
     }
+
     [Test]
     public void Describe_Brightness_Is_Positive_For_NonEmptySet()
     {
@@ -107,8 +116,7 @@ public class UnifiedModeEnhancedTests
         // Sum of {0, 4, 7} = 11
         Assert.That(desc.Brightness, Is.GreaterThan(0));
     }
-    #endregion
-    #region Spectral Centroid
+
     [Test]
     public void Describe_SpectralCentroid_Is_NonNegative()
     {
@@ -121,12 +129,13 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"Major Scale Spectral Centroid: {desc.SpectralCentroid:F4}");
         Assert.That(desc.SpectralCentroid, Is.GreaterThanOrEqualTo(0.0));
     }
+
     [Test]
     public void SpectralCentroid_Differs_For_Different_SetClasses()
     {
         // Arrange
         // Different set classes should have different spectral centroids
-        var majorSet = Pcs(0, 2, 4, 5, 7, 9, 11);  // Major (7-35)
+        var majorSet = Pcs(0, 2, 4, 5, 7, 9, 11); // Major (7-35)
         var wholeToneSet = Pcs(0, 2, 4, 6, 8, 10); // Whole Tone (6-35)
         var majorInst = _svc.FromPitchClassSet(majorSet, PitchClass.C);
         var wholeToneInst = _svc.FromPitchClassSet(wholeToneSet, PitchClass.C);
@@ -141,8 +150,7 @@ public class UnifiedModeEnhancedTests
         Assert.That(majorDesc.SpectralCentroid, Is.Not.EqualTo(wholeToneDesc.SpectralCentroid).Within(0.01)
             .Or.GreaterThanOrEqualTo(0));
     }
-    #endregion
-    #region Voice Leading: Common Tones
+
     [Test]
     public void GetCommonToneCount_CMajor_And_AMinor_Have_SevenCommonTones()
     {
@@ -159,6 +167,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"C Major vs A Minor Common Tones: {commonTones}");
         Assert.That(commonTones, Is.EqualTo(7)); // All 7 tones are common
     }
+
     [Test]
     public void GetCommonToneCount_CMajor_And_CMinor_Have_FourCommonTones()
     {
@@ -176,13 +185,14 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"C Major vs C Minor Common Tones: {commonTones}");
         Assert.That(commonTones, Is.EqualTo(4));
     }
+
     [Test]
     public void GetCommonToneCount_DisjointSets_Have_ZeroCommonTones()
     {
         // Arrange
         // Two disjoint trichords
-        var set1 = Pcs(0, 4, 7);  // C Major triad
-        var set2 = Pcs(1, 5, 8);  // Db Major triad
+        var set1 = Pcs(0, 4, 7); // C Major triad
+        var set2 = Pcs(1, 5, 8); // Db Major triad
         var inst1 = _svc.FromPitchClassSet(set1, PitchClass.C);
         var inst2 = _svc.FromPitchClassSet(set2, PitchClass.FromValue(1));
         // Act
@@ -191,8 +201,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"C Major vs Db Major Common Tones: {commonTones}");
         Assert.That(commonTones, Is.EqualTo(0));
     }
-    #endregion
-    #region Voice Leading: Distance
+
     [Test]
     public void GetVoiceLeadingDistance_IdenticalSets_Is_Zero()
     {
@@ -206,6 +215,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"Identical Sets Voice Leading Distance: {distance}");
         Assert.That(distance, Is.EqualTo(0.0));
     }
+
     [Test]
     public void GetVoiceLeadingDistance_CMajor_To_CMinor_Is_Small()
     {
@@ -223,6 +233,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"C Major to C Minor Voice Leading Distance: {distance}");
         Assert.That(distance, Is.EqualTo(1.0));
     }
+
     [Test]
     public void GetVoiceLeadingDistance_DifferentCardinality_Is_Infinity()
     {
@@ -237,6 +248,7 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"Different Cardinality Voice Leading Distance: {distance}");
         Assert.That(distance, Is.EqualTo(double.PositiveInfinity));
     }
+
     [Test]
     public void GetVoiceLeadingDistance_CTriad_To_FTriad_Uses_ModularDistance()
     {
@@ -255,5 +267,4 @@ public class UnifiedModeEnhancedTests
         TestContext.WriteLine($"C Triad to F Triad Voice Leading Distance: {distance}");
         Assert.That(distance, Is.EqualTo(3.0));
     }
-    #endregion
 }

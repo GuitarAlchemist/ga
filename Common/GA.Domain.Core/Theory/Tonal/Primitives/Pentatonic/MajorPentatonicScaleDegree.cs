@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Pentatonic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A major pentatonic scale degree
@@ -24,10 +18,7 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
     private readonly int _value;
 
     // Constructor
-    public MajorPentatonicScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public MajorPentatonicScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<MajorPentatonicScaleDegree> All =>
         ValueObjectUtils<MajorPentatonicScaleDegree>.Items;
@@ -45,24 +36,15 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
     public static MajorPentatonicScaleDegree MinorPentatonic => new(5);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MajorPentatonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static MajorPentatonicScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static MajorPentatonicScaleDegree Min => FromValue(_minValue);
     public static MajorPentatonicScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator MajorPentatonicScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator MajorPentatonicScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(MajorPentatonicScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(MajorPentatonicScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -70,73 +52,49 @@ public readonly record struct MajorPentatonicScaleDegree : IRangeValueObject<Maj
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Major pentatonic",
-            2 => "Egyptian",
-            3 => "Blues minor",
-            4 => "Blues major",
-            5 => "Minor pentatonic",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Major pentatonic",
+        2 => "Egyptian",
+        3 => "Blues minor",
+        4 => "Blues major",
+        5 => "Minor pentatonic",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Maj5",
-            2 => "Egy",
-            3 => "Bm5",
-            4 => "BM5",
-            5 => "Min5",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Maj5",
+        2 => "Egy",
+        3 => "Bm5",
+        4 => "BM5",
+        5 => "Min5",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<MajorPentatonicScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<MajorPentatonicScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<MajorPentatonicScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<MajorPentatonicScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(MajorPentatonicScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(MajorPentatonicScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) =>
+        left.CompareTo(right) < 0;
 
-    public static bool operator >(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) =>
+        left.CompareTo(right) > 0;
 
-    public static bool operator <=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(MajorPentatonicScaleDegree left, MajorPentatonicScaleDegree right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

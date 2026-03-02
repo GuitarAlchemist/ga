@@ -47,34 +47,22 @@ public record PickingAnalysis(
     /// <summary>
     ///     Creates a standard picking analysis (pick only)
     /// </summary>
-    public static PickingAnalysis Standard(int stringCount, string reason = "All strings played with pick")
-    {
-        return new(PickingTechnique.Standard, stringCount, 0, 1.0, reason);
-    }
+    public static PickingAnalysis Standard(int stringCount, string reason = "All strings played with pick") => new(PickingTechnique.Standard, stringCount, 0, 1.0, reason);
 
     /// <summary>
     ///     Creates a fingerstyle analysis (fingers only)
     /// </summary>
-    public static PickingAnalysis Fingerstyle(int stringCount, string reason = "All strings played with fingers")
-    {
-        return new(PickingTechnique.Fingerstyle, 0, stringCount, 1.0, reason);
-    }
+    public static PickingAnalysis Fingerstyle(int stringCount, string reason = "All strings played with fingers") => new(PickingTechnique.Fingerstyle, 0, stringCount, 1.0, reason);
 
     /// <summary>
     ///     Creates a hybrid picking analysis (pick + fingers)
     /// </summary>
-    public static PickingAnalysis Hybrid(int pickedCount, int fingeredCount, double confidence, string reason)
-    {
-        return new(PickingTechnique.Hybrid, pickedCount, fingeredCount, confidence, reason);
-    }
+    public static PickingAnalysis Hybrid(int pickedCount, int fingeredCount, double confidence, string reason) => new(PickingTechnique.Hybrid, pickedCount, fingeredCount, confidence, reason);
 
     /// <summary>
     ///     Creates an unknown picking analysis
     /// </summary>
-    public static PickingAnalysis Unknown(string reason = "Unable to determine picking technique")
-    {
-        return new(PickingTechnique.Unknown, 0, 0, 0.0, reason);
-    }
+    public static PickingAnalysis Unknown(string reason = "Unable to determine picking technique") => new(PickingTechnique.Unknown, 0, 0, 0.0, reason);
 }
 
 /// <summary>

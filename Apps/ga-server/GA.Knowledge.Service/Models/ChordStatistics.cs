@@ -33,12 +33,12 @@ public class ChordStatistics
     /// <summary>
     /// Distribution of chord qualities
     /// </summary>
-    public Dictionary<string, int> QualityDistribution { get; set; } = new();
+    public Dictionary<string, int> QualityDistribution { get; set; } = [];
 
     /// <summary>
     /// Distribution of root notes
     /// </summary>
-    public Dictionary<string, int> RootDistribution { get; set; } = new();
+    public Dictionary<string, int> RootDistribution { get; set; } = [];
 
     /// <summary>
     /// Average number of notes per chord
@@ -53,17 +53,17 @@ public class ChordStatistics
     /// <summary>
     /// Distribution of chord extensions
     /// </summary>
-    public Dictionary<string, int> ExtensionDistribution { get; set; } = new();
+    public Dictionary<string, int> ExtensionDistribution { get; set; } = [];
 
     /// <summary>
     /// Distribution of chord stacking types
     /// </summary>
-    public Dictionary<string, int> StackingTypeDistribution { get; set; } = new();
+    public Dictionary<string, int> StackingTypeDistribution { get; set; } = [];
 
     /// <summary>
     /// Distribution of note counts
     /// </summary>
-    public Dictionary<int, int> NoteCountDistribution { get; set; } = new();
+    public Dictionary<int, int> NoteCountDistribution { get; set; } = [];
 
     /// <summary>
     /// When the statistics were calculated
@@ -99,5 +99,5 @@ public class ComplexityStats
     /// <summary>
     /// Distribution of complexity ranges
     /// </summary>
-    public Dictionary<string, int> ComplexityRanges { get; set; } = new();
+    public Dictionary<string, int> ComplexityRanges { get; set; } = [];
 }

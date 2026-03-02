@@ -14,20 +14,13 @@ public interface ICachingService
     Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory);
 }
 
-public class CachingService : ICachingService
+public class CachingService(IDistributedCache cache, ILogger<CachingService> logger) : ICachingService
 {
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<CachingService> _logger;
-
-    public CachingService(IDistributedCache cache, ILogger<CachingService> logger)
-    {
-        _cache = cache;
-        _logger = logger;
-    }
+    private readonly ILogger<CachingService> _logger = logger;
 
     public async Task<T?> GetAsync<T>(string key)
     {
-        var value = await _cache.GetStringAsync(key);
+        var value = await cache.GetStringAsync(key);
         if (value == null) return default;
         return JsonSerializer.Deserialize<T>(value);
     }
@@ -40,13 +33,10 @@ public class CachingService : ICachingService
             options.AbsoluteExpirationRelativeToNow = expiry;
         }
         var json = JsonSerializer.Serialize(value);
-        await _cache.SetStringAsync(key, json, options);
+        await cache.SetStringAsync(key, json, options);
     }
 
-    public async Task RemoveAsync(string key)
-    {
-        await _cache.RemoveAsync(key);
-    }
+    public async Task RemoveAsync(string key) => await cache.RemoveAsync(key);
 
     public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory)
     {

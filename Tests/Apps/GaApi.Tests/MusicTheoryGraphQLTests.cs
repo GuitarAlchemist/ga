@@ -3,17 +3,15 @@ namespace GaApi.Tests;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
-using NUnit.Framework;
 
 public class MusicTheoryGraphQLTests
 {
-    private readonly WebApplicationFactory<Program> _factory = new();
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private record GraphQlRequest(string Query, object? Variables = null, string? OperationName = null);
+    private readonly WebApplicationFactory<Program> _factory = new();
 
     private async Task<JsonDocument> PostGraphQlAsync(string query, object? variables = null)
     {
@@ -50,7 +48,7 @@ public class MusicTheoryGraphQLTests
 
         var doc = await PostGraphQlAsync(query);
         var root = doc.RootElement;
-        
+
         if (root.TryGetProperty("errors", out var errors))
         {
             Assert.Fail($"GraphQL returned errors: {errors}");
@@ -87,4 +85,6 @@ public class MusicTheoryGraphQLTests
         var data = root.GetProperty("data").GetProperty("note");
         Assert.That(data.GetProperty("pitchClass").GetProperty("value").GetInt32(), Is.EqualTo(1));
     }
+
+    private record GraphQlRequest(string Query, object? Variables = null, string? OperationName = null);
 }

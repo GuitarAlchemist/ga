@@ -59,7 +59,7 @@ public class GeneticAlgorithm(
                 return chord.Voicings[_random.Next(chord.Voicings.Count)];
             }).ToList();
 
-            population.Add(new Individual(voicings));
+            population.Add(new(voicings));
         }
 
         return population;
@@ -149,8 +149,8 @@ public class GeneticAlgorithm(
                 }
             }
 
-            offspring.Add(new Individual(childVoicings1));
-            offspring.Add(new Individual(childVoicings2));
+            offspring.Add(new(childVoicings1));
+            offspring.Add(new(childVoicings2));
         }
 
         return offspring;

@@ -1,12 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
-using JetBrains.Annotations;
 
 /// <summary>
 ///     A melodic minor scale degree
@@ -23,10 +17,7 @@ public readonly record struct MelodicMinorScaleDegree : IRangeValueObject<Melodi
     private readonly int _value;
 
     // Constructor
-    public MelodicMinorScaleDegree(int value)
-    {
-        _value = CheckRange(value);
-    }
+    public MelodicMinorScaleDegree(int value) => _value = CheckRange(value);
 
     public static IReadOnlyCollection<MelodicMinorScaleDegree> All => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
     public static IReadOnlyCollection<MelodicMinorScaleDegree> Items => ValueObjectUtils<MelodicMinorScaleDegree>.Items;
@@ -42,24 +33,15 @@ public readonly record struct MelodicMinorScaleDegree : IRangeValueObject<Melodi
     public static MelodicMinorScaleDegree Altered => new(7);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MelodicMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static MelodicMinorScaleDegree FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static MelodicMinorScaleDegree Min => FromValue(_minValue);
     public static MelodicMinorScaleDegree Max => FromValue(_maxValue);
 
-    public static implicit operator MelodicMinorScaleDegree(int value)
-    {
-        return FromValue(value);
-    }
+    public static implicit operator MelodicMinorScaleDegree(int value) => FromValue(value);
 
-    public static implicit operator int(MelodicMinorScaleDegree degree)
-    {
-        return degree.Value;
-    }
+    public static implicit operator int(MelodicMinorScaleDegree degree) => degree.Value;
 
     public int Value
     {
@@ -67,77 +49,53 @@ public readonly record struct MelodicMinorScaleDegree : IRangeValueObject<Melodi
         init => _value = CheckRange(value);
     }
 
-    public string ToName()
+    public string ToName() => Value switch
     {
-        return Value switch
-        {
-            1 => "Melodic minor",
-            2 => "Dorian \u266D2",
-            3 => "Lydian \u266F5",
-            4 => "Lydian dominant",
-            5 => "Mixolydian \u266D6",
-            6 => "Locrian \u266E2",
-            7 => "Altered",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "Melodic Minor",
+        2 => "Dorian b2",
+        3 => "Lydian Augmented",
+        4 => "Lydian Dominant",
+        5 => "Mixolydian b6",
+        6 => "Locrian Natural 2",
+        7 => "Altered",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public string ToShortName()
+    public string ToShortName() => Value switch
     {
-        return Value switch
-        {
-            1 => "i",
-            2 => "ii",
-            3 => "III+",
-            4 => "IV7",
-            5 => "V",
-            6 => "vi°",
-            7 => "vii°",
-            _ => throw new ArgumentOutOfRangeException(nameof(Value))
-        };
-    }
+        1 => "i",
+        2 => "ii",
+        3 => "III+",
+        4 => "IV7",
+        5 => "V",
+        6 => "vi°",
+        7 => "vii°",
+        _ => throw new ArgumentOutOfRangeException(nameof(Value))
+    };
 
-    public static int CheckRange(int value)
-    {
-        return IRangeValueObject<MelodicMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
-    }
+    public static int CheckRange(int value) =>
+        IRangeValueObject<MelodicMinorScaleDegree>.EnsureValueInRange(value, _minValue, _maxValue);
 
-    public static int CheckRange(int value, int minValue, int maxValue)
-    {
-        return IRangeValueObject<MelodicMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
-    }
+    public static int CheckRange(int value, int minValue, int maxValue) =>
+        IRangeValueObject<MelodicMinorScaleDegree>.EnsureValueInRange(value, minValue, maxValue);
 
-    public override string ToString()
-    {
-        return Value.ToString();
-    }
+    public override string ToString() => Value.ToString();
 
     #region Relational members
 
-    public int CompareTo(MelodicMinorScaleDegree other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(MelodicMinorScaleDegree other) => _value.CompareTo(other._value);
 
-    public static bool operator <(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) =>
+        left.CompareTo(right) < 0;
 
-    public static bool operator >(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) =>
+        left.CompareTo(right) > 0;
 
-    public static bool operator <=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) =>
+        left.CompareTo(right) <= 0;
 
-    public static bool operator >=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(MelodicMinorScaleDegree left, MelodicMinorScaleDegree right) =>
+        left.CompareTo(right) >= 0;
 
     #endregion
 }

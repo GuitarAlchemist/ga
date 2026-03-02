@@ -15,6 +15,23 @@ public class MongoDbService
         _settings = settings.Value;
         var client = new MongoClient(_settings.ConnectionString);
         Database = client.GetDatabase(_settings.DatabaseName);
+        // Fire and forget index creation or wait? In a microservice, usually better to wait or handle in background
+        CreateIndexesAsync().Wait();
+    }
+
+    private async Task CreateIndexesAsync()
+    {
+        var chordKeys = Builders<Chord>.IndexKeys;
+        var indexModels = new[]
+        {
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.Quality)),
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.Extension)),
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.StackingType)),
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.NoteCount)),
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.ParentScale)),
+            new CreateIndexModel<Chord>(chordKeys.Ascending(c => c.PitchClassSet))
+        };
+        await Chords.Indexes.CreateManyAsync(indexModels);
     }
 
     // Expose database for other services
@@ -84,12 +101,10 @@ public class MongoDbService
     }
 
 
-    public Task<List<Chord>> GetChordsByIntervalSemitonesAsync(List<int> semitones, int limit = 100)
-    {
+    public Task<List<Chord>> GetChordsByIntervalSemitonesAsync(List<int> semitones, int limit = 100) =>
         // This is a complex query - for now, we'll skip it or implement it differently
         // You would need to query by the Intervals.Semitones array
-        return Task.FromResult(new List<Chord>());
-    }
+        Task.FromResult(new List<Chord>());
 
     public async Task<List<Chord>> GetChordsByScaleAsync(string parentScale, int? scaleDegree = null, int limit = 100)
     {
@@ -111,6 +126,45 @@ public class MongoDbService
     }
 
     // Advanced queries
+    public async Task<List<Chord>> QueryChordsAsync(
+        string? root = null,
+        string? quality = null,
+        string? extension = null,
+        string? stackingType = null,
+        int? notes = null,
+        int limit = 100)
+    {
+        var builder = Builders<Chord>.Filter;
+        var filters = new List<FilterDefinition<Chord>>();
+
+        if (!string.IsNullOrWhiteSpace(root))
+        {
+            filters.Add(builder.Regex(c => c.Name, new BsonRegularExpression($"^{root}\\b", "i")));
+        }
+
+        if (!string.IsNullOrWhiteSpace(quality))
+        {
+            filters.Add(builder.Eq(c => c.Quality, quality));
+        }
+
+        if (!string.IsNullOrWhiteSpace(extension))
+        {
+            filters.Add(builder.Eq(c => c.Extension, extension));
+        }
+
+        if (!string.IsNullOrWhiteSpace(stackingType))
+        {
+            filters.Add(builder.Eq(c => c.StackingType, stackingType));
+        }
+
+        if (notes.HasValue)
+        {
+            filters.Add(builder.Eq(c => c.NoteCount, notes.Value));
+        }
+
+        var finalFilter = filters.Count > 0 ? builder.And(filters) : builder.Empty;
+        return await Chords.Find(finalFilter).Limit(limit).ToListAsync();
+    }
     public async Task<Dictionary<string, long>> GetChordCountsByQualityAsync()
     {
         var pipeline = new[]
@@ -149,25 +203,16 @@ public class MongoDbService
         );
     }
 
-    public async Task<long> GetTotalChordCountAsync()
-    {
-        return await Chords.CountDocumentsAsync(new BsonDocument());
-    }
+    public async Task<long> GetTotalChordCountAsync() => await Chords.CountDocumentsAsync(new BsonDocument());
 
-    public async Task<List<string>> GetDistinctQualitiesAsync()
-    {
-        return await Chords.Distinct<string>("Quality", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctQualitiesAsync() =>
+        await Chords.Distinct<string>("Quality", new BsonDocument()).ToListAsync();
 
-    public async Task<List<string>> GetDistinctExtensionsAsync()
-    {
-        return await Chords.Distinct<string>("Extension", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctExtensionsAsync() =>
+        await Chords.Distinct<string>("Extension", new BsonDocument()).ToListAsync();
 
-    public async Task<List<string>> GetDistinctStackingTypesAsync()
-    {
-        return await Chords.Distinct<string>("StackingType", new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<string>> GetDistinctStackingTypesAsync() =>
+        await Chords.Distinct<string>("StackingType", new BsonDocument()).ToListAsync();
 
     public async Task<Chord?> GetChordByIdAsync(string id)
     {
@@ -269,7 +314,7 @@ public class MongoDbService
             doc => doc["count"].AsInt32
         );
 
-        return new ChordStatistics
+        return new()
         {
             TotalChords = totalCount,
             QualityDistribution = qualityDistribution,
@@ -283,23 +328,17 @@ public class MongoDbService
     {
         // Create text search filter
         var filter = Builders<Chord>.Filter.Or(
-            Builders<Chord>.Filter.Regex(c => c.Name, new BsonRegularExpression(query, "i")),
-            Builders<Chord>.Filter.Regex(c => c.Quality, new BsonRegularExpression(query, "i")),
-            Builders<Chord>.Filter.Regex(c => c.Extension, new BsonRegularExpression(query, "i"))
+            Builders<Chord>.Filter.Regex(c => c.Name, new(query, "i")),
+            Builders<Chord>.Filter.Regex(c => c.Quality, new(query, "i")),
+            Builders<Chord>.Filter.Regex(c => c.Extension, new(query, "i"))
         );
 
         return await Chords.Find(filter).Limit(limit).ToListAsync();
     }
 
-    public string GetConnectionString()
-    {
-        return _settings.ConnectionString;
-    }
+    public string GetConnectionString() => _settings.ConnectionString;
 
-    public string GetDatabaseName()
-    {
-        return _settings.DatabaseName;
-    }
+    public string GetDatabaseName() => _settings.DatabaseName;
 
     // ========================================
     // STREAMING METHODS (IAsyncEnumerable)

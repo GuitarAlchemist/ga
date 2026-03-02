@@ -1,10 +1,5 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
-
 /// <summary>
 ///     Service for detecting and naming chord alterations (b9, #9, b5, #5, #11, b13)
 /// </summary>
@@ -28,7 +23,7 @@ public static class ChordAlterationService
     /// </summary>
     public static AlterationAnalysis AnalyzeAlterations(ChordTemplate template)
     {
-        var alterations = DetectAlterations(template.Intervals);
+        var alterations = DetectAlterations(template.Formula.Intervals);
         var alterationString = GenerateAlterationString(alterations);
         var isAlteredDominant = IsAlteredDominant(template, alterations);
         var suggestedNotation = GenerateSuggestedNotation(template, alterations, isAlteredDominant);
@@ -89,9 +84,8 @@ public static class ChordAlterationService
     /// <summary>
     ///     Detects alteration type from semitones and function
     /// </summary>
-    private static AlterationType? DetectAlterationFromSemitones(int semitones, ChordFunction function)
-    {
-        return (semitones, function) switch
+    private static AlterationType? DetectAlterationFromSemitones(int semitones, ChordFunction function) =>
+        (semitones, function) switch
         {
             (1, ChordFunction.Ninth) => AlterationType.FlatNinth,
             (3, ChordFunction.Ninth) => AlterationType.SharpNinth,
@@ -106,7 +100,6 @@ public static class ChordAlterationService
             (8, _) when function != ChordFunction.Fifth => AlterationType.SharpFifth,
             _ => null
         };
-    }
 
     /// <summary>
     ///     Generates alteration string notation
@@ -125,9 +118,8 @@ public static class ChordAlterationService
     /// <summary>
     ///     Gets the symbol for an alteration
     /// </summary>
-    private static string GetAlterationSymbol(AlterationType alteration)
-    {
-        return alteration switch
+    private static string GetAlterationSymbol(AlterationType alteration) =>
+        alteration switch
         {
             AlterationType.FlatNinth => "b9",
             AlterationType.SharpNinth => "#9",
@@ -137,7 +129,6 @@ public static class ChordAlterationService
             AlterationType.FlatThirteenth => "b13",
             _ => ""
         };
-    }
 
     /// <summary>
     ///     Determines if this is an altered dominant chord
@@ -177,9 +168,8 @@ public static class ChordAlterationService
     /// <summary>
     ///     Gets description for an alteration
     /// </summary>
-    private static string GetAlterationDescription(AlterationType alteration)
-    {
-        return alteration switch
+    private static string GetAlterationDescription(AlterationType alteration) =>
+        alteration switch
         {
             AlterationType.FlatNinth => "Flat ninth",
             AlterationType.SharpNinth => "Sharp ninth",
@@ -189,7 +179,6 @@ public static class ChordAlterationService
             AlterationType.FlatThirteenth => "Flat thirteenth",
             _ => "Unknown alteration"
         };
-    }
 
     /// <summary>
     ///     Gets common altered chord examples
@@ -219,8 +208,8 @@ public static class ChordAlterationService
     {
         // Can't have both flat and sharp of the same interval
         var hasConflict =
-            alterations.Contains(AlterationType.FlatNinth) && alterations.Contains(AlterationType.SharpNinth) ||
-            alterations.Contains(AlterationType.FlatFifth) && alterations.Contains(AlterationType.SharpFifth);
+            (alterations.Contains(AlterationType.FlatNinth) && alterations.Contains(AlterationType.SharpNinth)) ||
+            (alterations.Contains(AlterationType.FlatFifth) && alterations.Contains(AlterationType.SharpFifth));
 
         return !hasConflict;
     }
@@ -273,10 +262,8 @@ public static class ChordAlterationService
     /// <summary>
     ///     Gets the note name for a pitch class
     /// </summary>
-    private static string GetNoteName(PitchClass pitchClass)
-    {
-        return BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
-    }
+    private static string GetNoteName(PitchClass pitchClass) =>
+        BasicChordExtensionsService.GenerateChordName(pitchClass, ChordQuality.Major, ChordExtension.Triad);
 
     /// <summary>
     ///     Alteration analysis result

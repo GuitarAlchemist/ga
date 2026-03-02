@@ -1,7 +1,6 @@
 namespace GA.Fretboard.Service.Controllers;
 
 using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Theory.Tonal.Modes;
 using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
@@ -11,6 +10,7 @@ using GA.Domain.Services.Chords;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 using Services;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using ChordExtension = Models.ChordExtension;
 using ChordStackingType = Models.ChordStackingType;
 
@@ -304,7 +304,7 @@ public class ContextualChordsController(
             {
                 Id = Guid.NewGuid().ToString(),
                 ChordName = chordName,
-                Positions = new List<FretPosition>(),
+                Positions = [],
                 Fingering = "1-2-3-4", // Default fingering pattern
                 Analysis = new VoicingAnalysisDto
                 {
@@ -312,8 +312,8 @@ public class ContextualChordsController(
                     Consonance = 0.8,
                     Stretch = 1,
                     BarreCount = 0,
-                    MutedStrings = new List<int>(),
-                    OpenStrings = new List<int>(),
+                    MutedStrings = [],
+                    OpenStrings = [],
                     FretSpan = 3,
                     LowestFret = 1,
                     HighestFret = 4
@@ -368,11 +368,10 @@ public class ContextualChordsController(
         return null;
     }
 
-    private ScaleMode? ParseScaleName(string scaleName)
-    {
+    private ScaleMode? ParseScaleName(string scaleName) =>
         // Simple parsing - can be enhanced
         // Map common scale/mode names to ScaleMode instances
-        return scaleName.ToLower() switch
+        scaleName.ToLower() switch
         {
             "major" or "ionian" => MajorScaleMode.Get(MajorScaleDegree.Ionian),
             "dorian" => MajorScaleMode.Get(MajorScaleDegree.Dorian),
@@ -383,7 +382,6 @@ public class ContextualChordsController(
             "locrian" => MajorScaleMode.Get(MajorScaleDegree.Locrian),
             _ => null
         };
-    }
 
     private (ChordTemplate? template, PitchClass root) ParseChordName(string chordName)
     {

@@ -31,8 +31,7 @@ public static partial class TypeFormatterSourceExtensions
         });
     }
 
-    public static IEnumerable<HtmlFormatter<VexTabMarkDown>> CreateVexTabTypeFormatters(
-        this ITypeFormatterSource typeFormatterSource)
+    public static IEnumerable<HtmlFormatter<VexTabMarkDown>> CreateVexTabTypeFormatters(this ITypeFormatterSource typeFormatterSource)
     {
         yield return new((markDown, context) =>
         {
@@ -41,8 +40,7 @@ public static partial class TypeFormatterSourceExtensions
         });
     }
 
-    public static IEnumerable<HtmlFormatter<VexTabMarkDown>> CreateVexFlowTypeFormatters(
-        this ITypeFormatterSource typeFormatterSource)
+    public static IEnumerable<HtmlFormatter<VexTabMarkDown>> CreateVexFlowTypeFormatters(this ITypeFormatterSource typeFormatterSource)
     {
         yield return new((markDown, context) =>
         {
@@ -51,11 +49,7 @@ public static partial class TypeFormatterSourceExtensions
         });
     }
 
-    public static IEnumerable<HtmlFormatter<MermaidMarkdown>> CreateMermaidTypeFormatters(
-        this ITypeFormatterSource typeFormatterSource)
-    {
-        return CreateMarkdownLibTypeFormatters<MermaidMarkdown>(_mermaidConfigFactory, typeFormatterSource);
-    }
+    public static IEnumerable<HtmlFormatter<MermaidMarkdown>> CreateMermaidTypeFormatters(this ITypeFormatterSource typeFormatterSource) => CreateMarkdownLibTypeFormatters<MermaidMarkdown>(_mermaidConfigFactory, typeFormatterSource);
 
     public static IHtmlContent GenerateMarkdownHtml(
         MarkdownHtmlGeneratorConfig config,
@@ -63,7 +57,7 @@ public static partial class TypeFormatterSourceExtensions
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        var code = $$""" 
+        var code = $$"""
                      <script type="text/javascript">
                          const cacheBuster = 'cacheBuster={{config.CacheBusterGuid:N}}';
                          const id = '{{config.ElementId}}';
@@ -122,27 +116,39 @@ public static partial class TypeFormatterSourceExtensions
 
     private static IHtmlContent GenerateVexTabHtml(string markdown)
     {
+        var id = "vextab_" + Guid.NewGuid().ToString("N");
         var code = $$"""
-                     <div id="boo"></div>
+                     <div id="{{id}}"></div>
 
                      <script type="text/javascript" src="https://unpkg.com/vextab/releases/main.dev.js"></script>
 
                      <script type="text/javascript">
-                         let data = `
+                         (function() {
+                             let data = `
                      {{markdown}}
                      `;
-                         const VF = vextab.Vex.Flow;
-                         const renderer = new VF.Renderer($('#boo')[0], VF.Renderer.Backends.SVG);
-                         vextab.Artist.NOLOGO = true;
+                             if (typeof vextab === 'undefined') {
+                                 console.error('VexTab not loaded');
+                                 return;
+                             }
+                             const VF = vextab.Vex.Flow;
+                             const target = document.getElementById('{{id}}');
+                             const renderer = new VF.Renderer(target, VF.Renderer.Backends.SVG);
+                             vextab.Artist.NOLOGO = true;
 
-                         // Initialize VexTab artist and parser.
-                         const artist = new vextab.Artist(10, 10, 750, {
-                             scale: 0.8
-                         });
+                             const artist = new vextab.Artist(10, 10, 750, {
+                                 scale: 0.8
+                             });
 
-                         const tab = new vextab.VexTab(artist);
-                         tab.parse(data);
-                         artist.render(renderer);
+                             const tab = new vextab.VexTab(artist);
+                             try {
+                                 tab.parse(data);
+                                 artist.render(renderer);
+                             } catch (e) {
+                                 console.error(e);
+                                 target.innerHTML = "Error parsing VexTab: " + e.message;
+                             }
+                         })();
                      </script>
                      """;
 
@@ -151,39 +157,44 @@ public static partial class TypeFormatterSourceExtensions
 
     private static IHtmlContent GenerateVexFlowHtml(string markdown)
     {
-        var code = """
-                   <div id="output"></div>
+        var id = "vexflow_" + Guid.NewGuid().ToString("N");
+        var code = $$"""
+                   <div id="{{id}}"></div>
 
-                   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.0.3/build/cjs/vexflow.js"></script>
+                   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
                    <script>
-                       const {
-                           Factory,
-                           EasyScore,
-                           System
-                       } = Vex.Flow;
-                       const vf = new Factory({
-                           renderer: {
-                               elementId: 'output',
-                               width: 500,
-                               height: 200
-                           },
-                       });
-                       const score = vf.EasyScore();
-                       const system = vf.System();
-                       system
-                           .addStave({
-                               voices: [
-                                   score.voice(score.notes('Cm#5/q, B4, A4, Gm#4', {
-                                       stem: 'up'
-                                   })),
-                                   score.voice(score.notes('Cm#4/h, Cm#4', {
-                                       stem: 'down'
-                                   })),
-                               ],
-                           })
-                           .addClef('treble')
-                           .addTimeSignature('4/4');
-                       vf.draw();
+                       (function() {
+                           const {
+                               Factory,
+                               EasyScore,
+                               System
+                           } = Vex.Flow;
+                           const vf = new Factory({
+                               renderer: {
+                                   elementId: '{{id}}',
+                                   width: 500,
+                                   height: 200
+                               },
+                           });
+                           const score = vf.EasyScore();
+                           const system = vf.System();
+
+                           // Sample content if markdown is empty, otherwise parse (parsing VexFlow is harder than VexTab)
+                           system
+                               .addStave({
+                                   voices: [
+                                       score.voice(score.notes('Cm#5/q, B4, A4, Gm#4', {
+                                           stem: 'up'
+                                       })),
+                                       score.voice(score.notes('Cm#4/h, Cm#4', {
+                                           stem: 'down'
+                                       })),
+                                   ],
+                               })
+                               .addClef('treble')
+                               .addTimeSignature('4/4');
+                           vf.draw();
+                       })();
                    </script>
                    """;
         return new HtmlString(code);

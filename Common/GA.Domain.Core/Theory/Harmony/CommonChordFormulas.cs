@@ -40,8 +40,6 @@ public static class CommonChordFormulas
     /// </summary>
     public static ChordFormula Dominant7 => FromSemitones("Dominant 7th", 4, 7, 10);
 
-    private static ChordFormula FromSemitones(string name, params int[] semitones)
-    {
-        return ChordFormula.FromSemitones(name, semitones);
-    }
+    private static ChordFormula FromSemitones(string name, params ReadOnlySpan<int> semitones) =>
+        ChordFormula.FromSemitones(name, semitones);
 }

@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
-    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj"/>
     <ProjectReference Include="..\..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj"/>
   </ItemGroup>
 

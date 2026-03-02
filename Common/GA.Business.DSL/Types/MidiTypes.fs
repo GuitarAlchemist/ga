@@ -102,22 +102,20 @@ module MidiTypes =
         /// Standard 6-string tuning (E2, A2, D3, G3, B3, E4)
         let standard6String =
             { StringCount = 6
-              Tuning = [40; 45; 50; 55; 59; 64] } // E2, A2, D3, G3, B3, E4
+              Tuning = [ 40; 45; 50; 55; 59; 64 ] } // E2, A2, D3, G3, B3, E4
 
         /// Drop D tuning (D2, A2, D3, G3, B3, E4)
         let dropD =
             { StringCount = 6
-              Tuning = [38; 45; 50; 55; 59; 64] } // D2, A2, D3, G3, B3, E4
+              Tuning = [ 38; 45; 50; 55; 59; 64 ] } // D2, A2, D3, G3, B3, E4
 
         /// 7-string tuning (B1, E2, A2, D3, G3, B3, E4)
         let standard7String =
             { StringCount = 7
-              Tuning = [35; 40; 45; 50; 55; 59; 64] } // B1, E2, A2, D3, G3, B3, E4
+              Tuning = [ 35; 40; 45; 50; 55; 59; 64 ] } // B1, E2, A2, D3, G3, B3, E4
 
     /// Guitar position (string and fret)
-    type GuitarPosition =
-        { String: GuitarString
-          Fret: Fret }
+    type GuitarPosition = { String: GuitarString; Fret: Fret }
 
     /// MIDI note with guitar position
     type GuitarMidiNote =
@@ -171,8 +169,11 @@ module MidiTypes =
         tuning.Tuning
         |> List.mapi (fun stringIndex openNote ->
             let fret = noteNumber - openNote
+
             if fret >= 0 && fret <= maxFret then
-                Some { String = stringIndex + 1; Fret = fret }
+                Some
+                    { String = stringIndex + 1
+                      Fret = fret }
             else
                 None)
         |> List.choose id
@@ -183,14 +184,15 @@ module MidiTypes =
         (options: MidiToTabOptions)
         (noteNumber: MidiNoteNumber)
         : GuitarPosition option =
-        
+
         let positions = findPositions tuning options.MaxFret noteNumber
-        
+
         match positions with
         | [] -> None
         | _ ->
             // Prefer open strings if option is set
             let openStringPos = positions |> List.tryFind (fun p -> p.Fret = 0)
+
             if options.PreferOpenStrings && openStringPos.IsSome then
                 openStringPos
             else
@@ -199,7 +201,7 @@ module MidiTypes =
                 | Some preferredString ->
                     positions
                     |> List.tryFind (fun p -> p.String = preferredString)
-                    |> Option.orElse (Some (List.head positions))
+                    |> Option.orElse (Some(List.head positions))
                 | None ->
                     // Default: prefer lower frets on higher strings
                     positions
@@ -217,6 +219,7 @@ module MidiTypes =
     /// Convert guitar position to MIDI note number
     let positionToMidiNote (tuning: GuitarTuning) (position: GuitarPosition) : MidiNoteNumber =
         let stringIndex = position.String - 1
+
         if stringIndex >= 0 && stringIndex < tuning.Tuning.Length then
             tuning.Tuning.[stringIndex] + position.Fret
         else
@@ -228,7 +231,9 @@ module MidiTypes =
 
     /// Get note name from MIDI note number
     let noteNumberToName (noteNumber: MidiNoteNumber) : string =
-        let noteNames = [| "C"; "C#"; "D"; "D#"; "E"; "F"; "F#"; "G"; "G#"; "A"; "A#"; "B" |]
+        let noteNames =
+            [| "C"; "C#"; "D"; "D#"; "E"; "F"; "F#"; "G"; "G#"; "A"; "A#"; "B" |]
+
         let octave = noteNumber / 12 - 1
         let note = noteNames.[noteNumber % 12]
         $"%s{note}%d{octave}"
@@ -236,36 +241,40 @@ module MidiTypes =
     /// Get MIDI note number from note name
     let noteNameToNumber (noteName: string) : MidiNoteNumber option =
         let noteMap =
-            Map.ofList [
-                ("C", 0); ("C#", 1); ("Db", 1)
-                ("D", 2); ("D#", 3); ("Eb", 3)
-                ("E", 4)
-                ("F", 5); ("F#", 6); ("Gb", 6)
-                ("G", 7); ("G#", 8); ("Ab", 8)
-                ("A", 9); ("A#", 10); ("Bb", 10)
-                ("B", 11)
-            ]
-        
-        if noteName.Length < 2 then None
+            Map.ofList
+                [ ("C", 0)
+                  ("C#", 1)
+                  ("Db", 1)
+                  ("D", 2)
+                  ("D#", 3)
+                  ("Eb", 3)
+                  ("E", 4)
+                  ("F", 5)
+                  ("F#", 6)
+                  ("Gb", 6)
+                  ("G", 7)
+                  ("G#", 8)
+                  ("Ab", 8)
+                  ("A", 9)
+                  ("A#", 10)
+                  ("Bb", 10)
+                  ("B", 11) ]
+
+        if noteName.Length < 2 then
+            None
         else
             let note = noteName.Substring(0, noteName.Length - 1)
             let octaveStr = noteName.Substring(noteName.Length - 1)
+
             match System.Int32.TryParse(octaveStr) with
-            | true, octave ->
-                noteMap
-                |> Map.tryFind note
-                |> Option.map (fun n -> n + (octave + 1) * 12)
+            | true, octave -> noteMap |> Map.tryFind note |> Option.map (fun n -> n + (octave + 1) * 12)
             | false, _ -> None
 
     /// Check if MIDI note number is valid (0-127)
-    let isValidNoteNumber (noteNumber: MidiNoteNumber) : bool =
-        noteNumber >= 0 && noteNumber <= 127
+    let isValidNoteNumber (noteNumber: MidiNoteNumber) : bool = noteNumber >= 0 && noteNumber <= 127
 
     /// Check if velocity is valid (0-127)
-    let isValidVelocity (velocity: Velocity) : bool =
-        velocity >= 0 && velocity <= 127
+    let isValidVelocity (velocity: Velocity) : bool = velocity >= 0 && velocity <= 127
 
     /// Check if channel is valid (0-15)
-    let isValidChannel (channel: Channel) : bool =
-        channel >= 0 && channel <= 15
-
+    let isValidChannel (channel: Channel) : bool = channel >= 0 && channel <= 15

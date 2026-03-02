@@ -1,9 +1,5 @@
 namespace GA.Domain.Services;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -135,9 +131,12 @@ public static class GuitarTechniquesConfigLoader
                     .IgnoreUnmatchedProperties()
                     .Build();
 
-                var cfg = deserializer.Deserialize<GuitarTechniquesConfiguration>(yaml) ?? new GuitarTechniquesConfiguration();
+                var cfg = deserializer.Deserialize<GuitarTechniquesConfiguration>(yaml) ??
+                          new GuitarTechniquesConfiguration();
                 if (cfg.GuitarTechniques is { Count: > 0 })
+                {
                     return cfg;
+                }
             }
 
             // Fallback minimal dataset
@@ -166,17 +165,23 @@ public static class GuitarTechniquesConfigLoader
                                 Fretboard = "",
                                 Pattern = "",
                                 Shape = "",
-                                Strings = [1,2,3],
-                                Frets = [0,2,4],
+                                Strings = [1, 2, 3],
+                                Frets = [0, 2, 4],
                                 Direction = "Up",
-                                Notes = ["C","D","E"]
+                                Notes = ["C", "D", "E"]
                             }
                         ],
-                        Applications = [ new()
-                            { Name = "Speed", Description = "Increase tempo", Context = "Practice" } ],
+                        Applications =
+                        [
+                            new()
+                                { Name = "Speed", Description = "Increase tempo", Context = "Practice" }
+                        ],
                         Patterns = [],
-                        Variations = [ new()
-                            { Name = "Economy", Description = "Sweep on string change", Context = "Lead" } ],
+                        Variations =
+                        [
+                            new()
+                                { Name = "Economy", Description = "Sweep on string change", Context = "Lead" }
+                        ],
                         Artists = ["Various Jazz Artists"],
                         Songs = ["N/A"],
                         Benefits = ["Speed", "Consistency"],
@@ -226,82 +231,60 @@ public static class GuitarTechniquesConfigLoader
 /// </summary>
 public static class GuitarTechniquesService
 {
-    public static IEnumerable<GuitarTechniqueDefinition> GetAllTechniques()
-    {
-        return GuitarTechniquesConfigLoader.GetConfiguration().GuitarTechniques;
-    }
+    public static IEnumerable<GuitarTechniqueDefinition> GetAllTechniques() =>
+        GuitarTechniquesConfigLoader.GetConfiguration().GuitarTechniques;
 
-    public static GuitarTechniqueDefinition? FindTechniqueByName(string name)
-    {
-        return GetAllTechniques().FirstOrDefault(t =>
+    public static GuitarTechniqueDefinition? FindTechniqueByName(string name) =>
+        GetAllTechniques().FirstOrDefault(t =>
             string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByCategory(string category)
-    {
-        return GetAllTechniques().Where(t =>
+    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByCategory(string category) =>
+        GetAllTechniques().Where(t =>
             string.Equals(t.Category, category, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByDifficulty(string difficulty)
-    {
-        return GetAllTechniques().Where(t =>
+    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByDifficulty(string difficulty) =>
+        GetAllTechniques().Where(t =>
             string.Equals(t.Difficulty, difficulty, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByArtist(string artist)
-    {
-        return GetAllTechniques().Where(t =>
+    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByArtist(string artist) =>
+        GetAllTechniques().Where(t =>
             t.Artists.Any(a => a.Contains(artist, StringComparison.OrdinalIgnoreCase)));
-    }
 
-    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByInventor(string inventor)
-    {
-        return GetAllTechniques().Where(t =>
+    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesByInventor(string inventor) =>
+        GetAllTechniques().Where(t =>
             t.Inventor.Contains(inventor, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesBySong(string song)
-    {
-        return GetAllTechniques().Where(t =>
+    public static IEnumerable<GuitarTechniqueDefinition> FindTechniquesBySong(string song) =>
+        GetAllTechniques().Where(t =>
             t.Songs.Any(s => s.Contains(song, StringComparison.OrdinalIgnoreCase)));
-    }
 
-    public static IEnumerable<string> GetAllCategories()
-    {
-        return GetAllTechniques()
+    public static IEnumerable<string> GetAllCategories() =>
+        GetAllTechniques()
             .Select(t => t.Category)
             .Where(c => !string.IsNullOrEmpty(c))
             .Distinct()
             .OrderBy(c => c);
-    }
 
-    public static IEnumerable<string> GetAllDifficulties()
-    {
-        return GetAllTechniques()
+    public static IEnumerable<string> GetAllDifficulties() =>
+        GetAllTechniques()
             .Select(t => t.Difficulty)
             .Where(d => !string.IsNullOrEmpty(d))
             .Distinct()
             .OrderBy(d => d);
-    }
 
-    public static IEnumerable<string> GetAllArtists()
-    {
-        return GetAllTechniques()
+    public static IEnumerable<string> GetAllArtists() =>
+        GetAllTechniques()
             .SelectMany(t => t.Artists)
             .Where(a => !string.IsNullOrEmpty(a))
             .Distinct()
             .OrderBy(a => a);
-    }
 
-    public static IEnumerable<string> GetAllInventors()
-    {
-        return GetAllTechniques()
+    public static IEnumerable<string> GetAllInventors() =>
+        GetAllTechniques()
             .Select(t => t.Inventor)
             .Where(i => !string.IsNullOrEmpty(i))
             .Distinct()
             .OrderBy(i => i);
-    }
 
     public static (bool IsValid, List<string> Errors) ValidateConfiguration()
     {

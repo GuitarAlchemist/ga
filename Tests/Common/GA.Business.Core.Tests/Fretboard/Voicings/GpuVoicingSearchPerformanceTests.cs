@@ -1,13 +1,15 @@
-namespace GA.Domain.Core.Tests.Fretboard.Voicings;
+namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
-using System.Diagnostics;
-using Domain.Services.Fretboard.Voicings.Core;
-using Domain.Services.Fretboard.Voicings.Search;
-using NUnit.Framework;
+using GA.Business.ML.Search;
+using GA.Business.ML.Rag.Models;
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Domain.Services.Fretboard.Voicings.Core; // If needed for legacy Core types, otherwise remove or verify
+// Actually VoicingEmbedding is in Rag.Models now.
+// VoicingSearchFilters likely in filtering.
 
 /// <summary>
-/// Performance tests for GPU-accelerated voicing search
-/// Tests GPU kernel execution and compares with CPU baseline
+///     Performance tests for GPU-accelerated voicing search
+///     Tests GPU kernel execution and compares with CPU baseline
 /// </summary>
 [TestFixture]
 [NonParallelizable]
@@ -15,17 +17,14 @@ using NUnit.Framework;
 [Category("GPU")]
 public class GpuVoicingSearchPerformanceTests
 {
-    private GpuVoicingSearchStrategy? _searchStrategy;
     [SetUp]
-    public void Setup()
-    {
-        _searchStrategy = new GpuVoicingSearchStrategy();
-    }
+    public void Setup() => _searchStrategy = new();
+
     [TearDown]
-    public void TearDown()
-    {
-        _searchStrategy?.Dispose();
-    }
+    public void TearDown() => _searchStrategy?.Dispose();
+
+    private GpuVoicingSearchStrategy? _searchStrategy;
+
     [Test]
     public async Task InitializeAsync_WithLargeDataset_ShouldCompleteQuickly()
     {
@@ -42,6 +41,7 @@ public class GpuVoicingSearchPerformanceTests
         Console.WriteLine($"Initialization time for 10,000 voicings: {stopwatch.ElapsedMilliseconds}ms");
         Console.WriteLine($"GPU Memory Usage: {_searchStrategy.Performance.MemoryUsageMb:F2} MB");
     }
+
     [Test]
     public async Task SearchAsync_SingleQuery_ShouldBeFast()
     {
@@ -62,6 +62,7 @@ public class GpuVoicingSearchPerformanceTests
             $"Single search should complete within 100ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
         Console.WriteLine($"Search time (1000 voicings, top 10): {stopwatch.ElapsedMilliseconds}ms");
     }
+
     [Test]
     public async Task SearchAsync_LargeDataset_ShouldScaleWell()
     {
@@ -84,6 +85,7 @@ public class GpuVoicingSearchPerformanceTests
             results.Add((size, stopwatch.Elapsed.TotalMilliseconds));
             Console.WriteLine($"Search time ({size:N0} voicings): {stopwatch.Elapsed.TotalMilliseconds:F4}ms");
         }
+
         // Assert: Time should scale sub-linearly (GPU parallelism)
         // 50K voicings should not take 50x longer than 1K voicings
         // Relaxed to 100x to account for potential CPU fallback in CI environments
@@ -92,6 +94,7 @@ public class GpuVoicingSearchPerformanceTests
         Assert.That(ratio, Is.LessThan(100),
             $"50K search should not be more than 100x slower than 1K search (actual ratio: {ratio:F2}x)");
     }
+
     [Test]
     public async Task SearchAsync_MultipleQueries_ShouldMaintainPerformance()
     {
@@ -105,6 +108,7 @@ public class GpuVoicingSearchPerformanceTests
         {
             await _searchStrategy.SemanticSearchAsync(query);
         }
+
         stopwatch.Stop();
         // Assert
         var avgTimeMs = stopwatch.ElapsedMilliseconds / 100.0;
@@ -114,6 +118,7 @@ public class GpuVoicingSearchPerformanceTests
         Console.WriteLine($"Average time per query: {avgTimeMs:F2}ms");
         Console.WriteLine($"Throughput: {100_000.0 / stopwatch.ElapsedMilliseconds:F2} queries/second");
     }
+
     [Test]
     public async Task SearchAsync_WithFilters_ShouldStillBeFast()
     {
@@ -135,6 +140,7 @@ public class GpuVoicingSearchPerformanceTests
             $"Filtered search should complete within 1500ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
         Console.WriteLine($"Filtered search time (2000/10000 voicings): {stopwatch.ElapsedMilliseconds}ms");
     }
+
     [Test]
     public async Task SearchAsync_GPUMemoryUsage_ShouldBeReasonable()
     {
@@ -149,6 +155,7 @@ public class GpuVoicingSearchPerformanceTests
         Console.WriteLine($"GPU Memory for 50,000 voicings: {memoryMB:F2} MB");
         Console.WriteLine($"Memory per voicing: {memoryMB * 1024 / 50_000:F2} KB");
     }
+
     [Test]
     public async Task SearchAsync_Accuracy_ShouldMatchExpectedResults()
     {
@@ -164,7 +171,7 @@ public class GpuVoicingSearchPerformanceTests
         await _searchStrategy!.InitializeAsync(voicings);
         // Query similar to v1
         var query = new double[384];
-        query[0] = 1.0; 
+        query[0] = 1.0;
         // Act
         var results = await _searchStrategy.SemanticSearchAsync(query, 3);
         // Assert
@@ -178,6 +185,7 @@ public class GpuVoicingSearchPerformanceTests
             Console.WriteLine($"  {result.Document.Id}: {result.Score:F4}");
         }
     }
+
     [Test]
     public async Task Dispose_ShouldReleaseGPUResources()
     {
@@ -195,62 +203,65 @@ public class GpuVoicingSearchPerformanceTests
             // Log but don't fail if it's just a driver quirk
             Console.WriteLine($"Dispose warning: {ex.Message}");
         }
+
         // Assert - should not throw
         Assert.Pass("GPU resources released successfully");
     }
-    #region Helper Methods
+
     private List<VoicingEmbedding> GenerateTestVoicings(int count)
     {
         var random = new Random(42); // Fixed seed for reproducibility
         var voicings = new List<VoicingEmbedding>(count);
         for (var i = 0; i < count; i++)
         {
-            voicings.Add(new VoicingEmbedding(
-                Id: $"voicing_{i}",
-                ChordName: $"Chord_{i}",
-                VoicingType: "Test",
-                Position: "Open",
-                Difficulty: "Easy",
-                ModeName: null,
-                ModalFamily: null,
-                PossibleKeys: [],
-                SemanticTags: [],
-                PrimeFormId: "",
-                TranslationOffset: 0,
-                Diagram: "x-x-x-x-x-x",
-                MidiNotes: [40, 47, 52, 56, 59, 64],
-                PitchClassSet: "{0,4,7}",
-                IntervalClassVector: "000000",
-                MinFret: 0,
-                MaxFret: 4,
-                BarreRequired: false,
-                HandStretch: 4,
-                StackingType: "Tertian",
-                RootPitchClass: 0,
-                MidiBassNote: 40,
-                HarmonicFunction: "Tonic",
-                IsNaturallyOccurring: true,
-                ConsonanceScore: 1.0,
-                BrightnessScore: 0.5,
-                IsRootless: false,
-                HasGuideTones: true,
-                Inversion: 0,
-                TopPitchClass: null,
-                TexturalDescription: null, // Added for AI Agents
-                DoubledTones: null, // Added for AI Agents
-                AlternateNames: null, // Added for AI Agents
-                OmittedTones: [],
-                CagedShape: null,
-                Description: "Test Voicing",
-                Embedding: GenerateRandomEmbedding(random),
-                TextEmbedding: null
+            voicings.Add(new(
+                $"voicing_{i}",
+                $"Chord_{i}",
+                "Test",
+                "Open",
+                "Easy",
+                null,
+                null,
+                [],
+                [],
+                "",
+                0,
+                "x-x-x-x-x-x",
+                [40, 47, 52, 56, 59, 64],
+                "{0,4,7}",
+                "000000",
+                0,
+                4,
+                false,
+                4,
+                "Tertian",
+                0,
+                40,
+                "Tonic",
+                true,
+                1.0,
+                0.5,
+                false,
+                true,
+                0,
+                null,
+                null, // Added for AI Agents
+                null, // Added for AI Agents
+                null, // Added for AI Agents
+                [],
+                null,
+                "Test Voicing",
+                GenerateRandomEmbedding(random),
+                null
             ));
         }
+
         return voicings;
     }
+
     private double[] GenerateRandomEmbedding(Random? random = null)
     {
-        random ??= new Random();
+        random ??= new();
         var embedding = new double[384]; // Standard embedding dimension
         // Generate random normalized vector
         var sumSquares = 0.0;
@@ -259,14 +270,17 @@ public class GpuVoicingSearchPerformanceTests
             embedding[i] = random.NextDouble() * 2 - 1; // Range [-1, 1]
             sumSquares += embedding[i] * embedding[i];
         }
+
         // Normalize
         var magnitude = Math.Sqrt(sumSquares);
         for (var i = 0; i < embedding.Length; i++)
         {
             embedding[i] /= magnitude;
         }
+
         return embedding;
     }
+
     private VoicingEmbedding CreateVoicing(string id, double[] embedding)
     {
         // Pad to 384 dimensions if needed
@@ -282,46 +296,46 @@ public class GpuVoicingSearchPerformanceTests
                 paddedEmbedding[i] /= magnitude;
             }
         }
-        return new VoicingEmbedding(
-            Id: id,
-            ChordName: "Test",
-            VoicingType: "Test",
-            Position: "Open",
-            Difficulty: "Easy",
-            ModeName: null,
-            ModalFamily: null,
-            PossibleKeys: [],
-            SemanticTags: [],
-            PrimeFormId: "",
-            TranslationOffset: 0,
-            Diagram: "x-x-x-x-x-x",
-            MidiNotes: [],
-            PitchClassSet: "",
-            IntervalClassVector: "",
-            MinFret: 0,
-            MaxFret: 0,
-            BarreRequired: false,
-            HandStretch: 0,
-            StackingType: null, // Added
-            RootPitchClass: 0,  // Added
-            MidiBassNote: 0,    // Added
-            HarmonicFunction: null,
-            IsNaturallyOccurring: true,
-            ConsonanceScore: 1.0,
-            BrightnessScore: 0.5,
-            IsRootless: false,
-            HasGuideTones: true,
-            Inversion: 0,
-            TopPitchClass: null,
-            TexturalDescription: null, // Added for AI Agents
-            DoubledTones: null, // Added for AI Agents
-            AlternateNames: null, // Added for AI Agents
-            OmittedTones: [],
-            CagedShape: null,
-            Description: $"Test voicing {id}",
-            Embedding: paddedEmbedding,
-            TextEmbedding: null
+
+        return new(
+            id,
+            "Test",
+            "Test",
+            "Open",
+            "Easy",
+            null,
+            null,
+            [],
+            [],
+            "",
+            0,
+            "x-x-x-x-x-x",
+            [],
+            "",
+            "",
+            0,
+            0,
+            false,
+            0,
+            null, // Added
+            0, // Added
+            0, // Added
+            null,
+            true,
+            1.0,
+            0.5,
+            false,
+            true,
+            0,
+            null,
+            null, // Added for AI Agents
+            null, // Added for AI Agents
+            null, // Added for AI Agents
+            [],
+            null,
+            $"Test voicing {id}",
+            paddedEmbedding,
+            null
         );
     }
-    #endregion
 }

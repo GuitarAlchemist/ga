@@ -1,6 +1,6 @@
 using GA.Core.UI.Components.Grids;
 using GA.Domain.Core.Theory.Harmony;
-using GA.Domain.Core.Unified;
+using GA.Domain.Core.Theory.Tonal.Modes.Unified;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -48,3 +48,4 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+

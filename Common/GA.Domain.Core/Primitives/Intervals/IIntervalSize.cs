@@ -1,0 +1,32 @@
+namespace GA.Domain.Core.Primitives.Intervals;
+
+using GA.Core.Abstractions;
+using GA.Core.Collections.Abstractions;
+
+/// <summary>
+///     See https://Objects.utk.edu/theorycomp/courses/murphy/documents/Intervals.pdf
+/// </summary>
+public interface IIntervalSize : IValueObject
+{
+    /// <summary>
+    ///     Gets the <see cref="IntervalConsonance" />
+    /// </summary>
+    IntervalConsonance Consonance { get; }
+
+    Semitones Semitones { get; }
+}
+
+/// <summary>
+///     Interval size (Strongly typed)
+/// </summary>
+/// <remarks>
+///     Derives from <see cref="IStaticValueObjectList{TSelf}" />, <see cref="IIntervalSize" />
+/// </remarks>
+/// <typeparam name="TSelf"></typeparam>
+[PublicAPI]
+public interface IIntervalSize<TSelf> : IStaticValueObjectList<TSelf>,
+    IIntervalSize
+    where TSelf : struct,
+    IIntervalSize<TSelf>
+{
+}

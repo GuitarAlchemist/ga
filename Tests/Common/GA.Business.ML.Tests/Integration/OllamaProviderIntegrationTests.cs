@@ -1,31 +1,25 @@
 namespace GA.Business.ML.Tests.Integration;
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using GA.Business.ML.Providers;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
-using NUnit.Framework;
+using Providers;
 
 /// <summary>
-/// Integration tests for the Ollama provider.
-/// These tests require Ollama to be running locally.
+///     Integration tests for the Ollama provider.
+///     These tests require Ollama to be running locally.
 /// </summary>
 /// <remarks>
-/// To run these tests:
-/// 1. Install Ollama: https://ollama.ai
-/// 2. Start Ollama: ollama serve
-/// 3. Pull required models: ollama pull llama3.2:3b && ollama pull nomic-embed-text
+///     To run these tests:
+///     1. Install Ollama: https://ollama.ai
+///     2. Start Ollama: ollama serve
+///     3. Pull required models: ollama pull llama3.2:3b && ollama pull nomic-embed-text
 /// </remarks>
 [TestFixture]
 [Category("Integration")]
 [Category("RequiresOllama")]
+[Explicit]
 public class OllamaProviderIntegrationTests
 {
-    private IConfiguration _configuration = null!;
-    private bool _ollamaAvailable;
-
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
@@ -46,6 +40,9 @@ public class OllamaProviderIntegrationTests
             TestContext.WriteLine("⚠️  Ollama is not available. Integration tests will be skipped.");
         }
     }
+
+    private IConfiguration _configuration = null!;
+    private bool _ollamaAvailable;
 
     [Test]
     public void CreateChatClient_WhenOllamaRunning_ReturnsClient()
@@ -129,7 +126,7 @@ public class OllamaProviderIntegrationTests
         var generator = OllamaProvider.CreateEmbeddingGeneratorFromConfig(_configuration);
         var texts = new[]
         {
-            "C major chord on guitar",      // 0
+            "C major chord on guitar", // 0
             "C major triad guitar voicing", // 1 - similar to 0
             "Weather forecast for tomorrow" // 2 - unrelated
         };
@@ -149,7 +146,7 @@ public class OllamaProviderIntegrationTests
         TestContext.WriteLine($"Similarity (guitar chord vs weather): {sim02:F4}");
 
         // Similar texts should have higher cosine similarity
-        Assert.That(sim01, Is.GreaterThan(sim02), 
+        Assert.That(sim01, Is.GreaterThan(sim02),
             "Similar guitar texts should have higher similarity than unrelated text");
     }
 
@@ -176,12 +173,13 @@ public class OllamaProviderIntegrationTests
     private static double CosineSimilarity(float[] a, float[] b)
     {
         double dot = 0, magA = 0, magB = 0;
-        for (int i = 0; i < a.Length; i++)
+        for (var i = 0; i < a.Length; i++)
         {
             dot += a[i] * b[i];
             magA += a[i] * a[i];
             magB += b[i] * b[i];
         }
+
         return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
     }
 }

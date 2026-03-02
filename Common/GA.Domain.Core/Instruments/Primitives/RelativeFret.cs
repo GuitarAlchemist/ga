@@ -1,12 +1,7 @@
 namespace GA.Domain.Core.Instruments.Primitives;
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using GA.Core.Abstractions;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 
 /// <inheritdoc cref="IEquatable{T}" />
 /// <inheritdoc cref="IComparable{RelativeFret}" />
@@ -31,26 +26,16 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     public static RelativeFret Four { get; } = FromValue(4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static RelativeFret FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static RelativeFret FromValue([ValueRange(_minValue, _maxValue)] int value) =>
+        new() { Value = value };
 
     public static RelativeFret Min { get; } = FromValue(_minValue);
 
     public static RelativeFret Max { get; } = FromValue(_maxValue);
 
-    public static implicit operator RelativeFret(int value)
-    {
-        return new()
-            { Value = value };
-    }
+    public static implicit operator RelativeFret(int value) => new() { Value = value };
 
-    public static implicit operator int(RelativeFret relativeFret)
-    {
-        return relativeFret.Value;
-    }
+    public static implicit operator int(RelativeFret relativeFret) => relativeFret.Value;
 
     public static int CheckRange(int value) =>
         IRangeValueObject<RelativeFret>.EnsureValueInRange(value, _minValue, _maxValue);
@@ -61,35 +46,30 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
     public static IReadOnlyCollection<RelativeFret> Range(int start, int count) =>
         ValueObjectUtils<RelativeFret>.GetItems(start, count);
 
-    public void CheckMaxValue(int maxValue)
-    {
+    public void CheckMaxValue(int maxValue) =>
         ValueObjectUtils<RelativeFret>.EnsureValueRange(Value, _minValue, maxValue);
-    }
 
-    public override string ToString()
-    {
-        return _value.ToString();
-    }
+    public override string ToString() => _value.ToString();
 
     #region IStaticValueObjectList<RelativeFret> Members
 
     /// <summary>
-    /// Gets all RelativeFret instances (automatically memoized).
+    ///     Gets all RelativeFret instances (automatically memoized).
     /// </summary>
     public static IReadOnlyCollection<RelativeFret> Items => ValueObjectUtils<RelativeFret>.Items;
 
     /// <summary>
-    /// Gets all RelativeFret values (automatically memoized).
+    ///     Gets all RelativeFret values (automatically memoized).
     /// </summary>
     public static IReadOnlyList<int> Values => ValueObjectUtils<RelativeFret>.Values;
 
     /// <summary>
-    /// Gets the cached span representing the full relative fret range.
+    ///     Gets the cached span representing the full relative fret range.
     /// </summary>
     public static ReadOnlySpan<RelativeFret> ItemsSpan => ValueObjectUtils<RelativeFret>.ItemsSpan;
 
     /// <summary>
-    /// Gets the cached span representing the numeric values for each relative fret.
+    ///     Gets the cached span representing the numeric values for each relative fret.
     /// </summary>
     public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<RelativeFret>.ValuesSpan;
 
@@ -109,30 +89,15 @@ public readonly record struct RelativeFret : IStaticValueObjectList<RelativeFret
 
     #region Relational members
 
-    public int CompareTo(RelativeFret other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(RelativeFret other) => _value.CompareTo(other._value);
 
-    public static bool operator <(RelativeFret left, RelativeFret right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(RelativeFret left, RelativeFret right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(RelativeFret left, RelativeFret right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(RelativeFret left, RelativeFret right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(RelativeFret left, RelativeFret right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(RelativeFret left, RelativeFret right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(RelativeFret left, RelativeFret right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(RelativeFret left, RelativeFret right) => left.CompareTo(right) >= 0;
 
     #endregion
 }

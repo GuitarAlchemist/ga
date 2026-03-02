@@ -1,10 +1,6 @@
 namespace GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 
-using System;
-using System.Collections.Generic;
-using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using JetBrains.Annotations;
 using Primitives.Diatonic;
 using Scales;
 
@@ -30,17 +26,7 @@ public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorSc
     public static HarmonicMinorMode LydianSharpSecond => new(6);
     public static HarmonicMinorMode Alteredd7 => new(7);
 
-    public override string Name => ParentScaleDegree.Value switch
-    {
-        1 => "Harmonic minor",
-        2 => "locrian \u266E6",
-        3 => "Ionian augmented",
-        4 => "Dorian \u266F4",
-        5 => "Phrygian dominant",
-        6 => "Lydian \u266F2",
-        7 => "Altered bb7",
-        _ => throw new ArgumentOutOfRangeException(nameof(ParentScaleDegree))
-    };
+    public override string Name => ParentScaleDegree.ToName();
 
     public static IEnumerable<HarmonicMinorMode> Items
     {
@@ -53,15 +39,7 @@ public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorSc
         }
     }
 
-    public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static HarmonicMinorMode Get(HarmonicMinorScaleDegree degree) => _lazyModeByDegree.Value[degree];
 
-    public static HarmonicMinorMode Get(int degree)
-    {
-        return _lazyModeByDegree.Value[degree];
-    }
+    public static HarmonicMinorMode Get(int degree) => _lazyModeByDegree.Value[degree];
 }
-
-

@@ -1,10 +1,7 @@
 namespace GA.Domain.Services.Chords;
 
-using System.Collections.Generic;
-using System.Linq;
-using Core.Primitives;
-using Core.Theory.Atonal;
-using Core.Theory.Harmony;
+using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using Core.Theory.Tonal.Modes;
 using Core.Theory.Tonal.Modes.Diatonic;
 using Core.Theory.Tonal.Modes.Pentatonic;
@@ -18,7 +15,7 @@ using Core.Theory.Tonal.Primitives.Symmetric;
 // using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
 // using GA.Domain.Core.Theory.Tonal.Primitives.Pentatonic;
 // using GA.Domain.Core.Theory.Tonal.Primitives.Symmetric;
-using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
+using ChordTemplate = ChordTemplate;
 
 /// <summary>
 ///     Factory for creating chord templates with comprehensive programmatic chord generation capabilities.
@@ -28,8 +25,6 @@ using ChordTemplate = Core.Theory.Harmony.ChordTemplate;
 /// </summary>
 public static class ChordTemplateFactory
 {
-
-
     /// <summary>
     ///     Generates ALL possible chord templates by systematically iterating through:
     ///     1. All modal families (major, harmonic minor, melodic minor, symmetrical, etc.)
@@ -323,19 +318,15 @@ public static class ChordTemplateFactory
     ///     Creates chord templates for a specific scale mode (diatonic triads).
     ///     This method is kept for backward compatibility with existing tests.
     /// </summary>
-    public static IReadOnlyList<ChordTemplate> CreateDiatonicChords(ScaleMode parentMode)
-    {
-        return CreateModalChords(parentMode).ToList().AsReadOnly();
-    }
+    public static IReadOnlyList<ChordTemplate> CreateDiatonicChords(ScaleMode parentMode) =>
+        CreateModalChords(parentMode).ToList().AsReadOnly();
 
     /// <summary>
     ///     Creates diatonic seventh chord templates for a scale mode.
     ///     This method is kept for backward compatibility with existing tests.
     /// </summary>
-    public static IReadOnlyList<ChordTemplate> CreateDiatonicSevenths(ScaleMode parentMode)
-    {
-        return CreateModalChords(parentMode, ChordExtension.Seventh).ToList().AsReadOnly();
-    }
+    public static IReadOnlyList<ChordTemplate> CreateDiatonicSevenths(ScaleMode parentMode) =>
+        CreateModalChords(parentMode, ChordExtension.Seventh).ToList().AsReadOnly();
 
     private static ChordFormula CreateModalChordFormula(ScaleMode parentMode, int degree, ChordExtension extension,
         ChordStackingType stackingType)
@@ -458,7 +449,6 @@ public static class ChordTemplateFactory
     }
 
 
-
     /// <summary>
     ///     Gets chord templates by structural characteristics (quality, extension, stacking type).
     ///     This is the proper way to find chords - by their musical properties, not arbitrary names.
@@ -489,12 +479,12 @@ public static class ChordTemplateFactory
 
         return allChords.Where(chord =>
         {
-            var chordPattern = chord.Intervals
+            var chordPattern = chord.Formula.Intervals
                 .Select(i => i.Interval.Semitones.Value)
                 .OrderBy(s => s)
                 .ToArray();
 
-            return chordPattern.SequenceEqual(targetPattern);
+            return Enumerable.SequenceEqual(chordPattern, targetPattern);
         });
     }
 
@@ -502,26 +492,20 @@ public static class ChordTemplateFactory
     ///     Creates comprehensive chord libraries using systematic generation.
     ///     This replaces any hard-coded chord libraries with computed results.
     /// </summary>
-    public static IEnumerable<ChordTemplate> CreateTraditionalChordLibrary()
-    {
+    public static IEnumerable<ChordTemplate> CreateTraditionalChordLibrary() =>
         // Generate from traditional scales only (most commonly used)
-        return GenerateFromTraditionalScales();
-    }
+        GenerateFromTraditionalScales();
 
 
     /// <summary>
     ///     Creates a chord template from a pitch class set with theoretical analysis
     /// </summary>
-    public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, string name)
-    {
-        return ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, name);
-    }
-    
+    public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, string name) =>
+        ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, name);
+
     /// <summary>
     ///     Creates a chord template from a pitch class set with explicit root
     /// </summary>
-    public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name)
-    {
-        return ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, root, name);
-    }
+    public static ChordTemplate FromPitchClassSet(PitchClassSet pitchClassSet, PitchClass root, string name) =>
+        ChordTemplate.Analytical.FromPitchClassSet(pitchClassSet, root, name);
 }

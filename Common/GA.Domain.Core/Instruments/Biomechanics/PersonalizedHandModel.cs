@@ -25,32 +25,26 @@ public static class PersonalizedHandModel
     /// <summary>
     ///     Get the scale factor for a hand size
     /// </summary>
-    public static float GetScaleFactor(HandSize size)
+    public static float GetScaleFactor(HandSize size) => size switch
     {
-        return size switch
-        {
-            HandSize.Small => 0.85f,
-            HandSize.Medium => 1.00f,
-            HandSize.Large => 1.15f,
-            HandSize.ExtraLarge => 1.30f,
-            _ => 1.00f
-        };
-    }
+        HandSize.Small => 0.85f,
+        HandSize.Medium => 1.00f,
+        HandSize.Large => 1.15f,
+        HandSize.ExtraLarge => 1.30f,
+        _ => 1.00f
+    };
 
     /// <summary>
     ///     Get typical hand span in millimeters for a hand size
     /// </summary>
-    public static float GetTypicalHandSpanMm(HandSize size)
+    public static float GetTypicalHandSpanMm(HandSize size) => size switch
     {
-        return size switch
-        {
-            HandSize.Small => 190.0f, // ~7.5 inches
-            HandSize.Medium => 215.0f, // ~8.5 inches
-            HandSize.Large => 240.0f, // ~9.5 inches
-            HandSize.ExtraLarge => 265.0f, // ~10.5 inches
-            _ => 215.0f
-        };
-    }
+        HandSize.Small => 190.0f, // ~7.5 inches
+        HandSize.Medium => 215.0f, // ~8.5 inches
+        HandSize.Large => 240.0f, // ~9.5 inches
+        HandSize.ExtraLarge => 265.0f, // ~10.5 inches
+        _ => 215.0f
+    };
 
     /// <summary>
     ///     Scale a hand model by the specified factor
@@ -86,16 +80,13 @@ public static class PersonalizedHandModel
     /// <summary>
     ///     Determine recommended hand size based on hand span measurement
     /// </summary>
-    public static HandSize DetermineHandSize(float handSpanMm)
+    public static HandSize DetermineHandSize(float handSpanMm) => handSpanMm switch
     {
-        return handSpanMm switch
-        {
-            < 200.0f => HandSize.Small,
-            < 230.0f => HandSize.Medium,
-            < 255.0f => HandSize.Large,
-            _ => HandSize.ExtraLarge
-        };
-    }
+        < 200.0f => HandSize.Small,
+        < 230.0f => HandSize.Medium,
+        < 255.0f => HandSize.Large,
+        _ => HandSize.ExtraLarge
+    };
 
     /// <summary>
     ///     Get difficulty adjustment factor based on hand size and chord characteristics

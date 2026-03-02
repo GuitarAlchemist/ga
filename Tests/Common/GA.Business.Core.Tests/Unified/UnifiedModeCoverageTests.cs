@@ -1,8 +1,8 @@
-namespace GA.Domain.Core.Tests.Unified;
+namespace GA.Business.Core.Tests.Unified;
 
-using GA.Domain.Core.Theory.Atonal;
-using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
-using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Tonal.Modes.Diatonic;
+using Domain.Core.Theory.Tonal.Primitives.Diatonic;
 using Domain.Services.Unified;
 
 [TestFixture]
@@ -10,6 +10,7 @@ public class UnifiedModeCoverageTests
 {
     private static PitchClassSet Pcs(params int[] pcs)
         => new([.. pcs.Select(PitchClass.FromValue)]);
+
     [Test]
     public void FromScaleMode_RoundTrips_To_FromPitchClassSet_For_Major_Ionian()
     {
@@ -24,6 +25,7 @@ public class UnifiedModeCoverageTests
         Assert.That(unified.Class.IntervalClassVector, Is.EqualTo(viaSet.Class.IntervalClassVector));
         Assert.That(unified.Class.Cardinality, Is.EqualTo(7));
     }
+
     [Test]
     public void WholeTone_Set_Is_Symmetric_And_NonModal_Rotations_Single()
     {
@@ -37,6 +39,7 @@ public class UnifiedModeCoverageTests
         var rotations = svc.EnumerateRotations(inst.Class, PitchClass.C).ToList();
         Assert.That(rotations.Count, Is.EqualTo(1));
     }
+
     [Test]
     public void Diminished_Octatonic_Set_Is_Symmetric_And_Enumerates_Multiple_Rotations_WhenFamilyExists()
     {

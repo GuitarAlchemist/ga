@@ -14,12 +14,14 @@ A modern React application for visualizing guitar fretboard positions including 
 ## Features
 
 ### 1. Collapsible Navigation Drawer
+
 - Navy-themed sidebar navigation
 - Smooth collapse/expand animation
 - Placeholder menu items for future features
 - Powered by MUI Drawer component
 
 ### 2. Guitar Fretboard Component
+
 - SVG-based rendering for crisp visuals
 - Realistic fret spacing using logarithmic scale (12th root of 2)
 - Standard fret markers (dots at 3, 5, 7, 9, 15, 17, 19, 21 and double dots at 12, 24)
@@ -27,14 +29,18 @@ A modern React application for visualizing guitar fretboard positions including 
 - Interactive position markers with click handlers
 
 ### 3. Display Modes
+
 The fretboard supports four visualization modes:
+
 - **Chord** - Display chord voicings and finger positions
 - **Scale** - Show scale patterns across the fretboard
 - **Mode** - Visualize modal patterns
 - **Arpeggio** - Display arpeggio positions
 
 ### 4. Backend-Agnostic Architecture
+
 The fretboard component is designed to be presentation-only:
+
 - Accepts position data via props
 - No music theory calculations in the frontend
 - All chord voicings, scale patterns, etc. should come from backend API
@@ -67,17 +73,20 @@ ga-fretboard-app/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm (recommended) or npm
 
 ### Installation
 
 1. Navigate to the project directory:
+
 ```bash
 cd ga-fretboard-app
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 # or
@@ -87,6 +96,7 @@ npm install
 **Note:** We recommend using `pnpm` as it handles optional dependencies better and avoids issues with Rollup on Windows.
 
 3. Start the development server:
+
 ```bash
 pnpm run dev
 # or
@@ -150,10 +160,10 @@ To integrate with your backend API:
 1. Replace the mock data in `src/data/mockData.ts` with API calls
 2. Create a service layer to fetch position data from your backend
 3. The backend should calculate:
-   - Chord voicings and finger positions
-   - Scale patterns for all keys
-   - Mode positions across the fretboard
-   - Arpeggio positions
+    - Chord voicings and finger positions
+    - Scale patterns for all keys
+    - Mode positions across the fretboard
+    - Arpeggio positions
 4. Return data in the `FretboardPosition[]` format
 5. Pass the data to the `GuitarFretboard` component via props
 
@@ -179,6 +189,7 @@ return <GuitarFretboard positions={positions} displayMode="chord" />;
 ## Customization
 
 ### Theming
+
 The app uses MUI's theming system. Modify the theme in `src/App.tsx`:
 
 ```typescript
@@ -192,6 +203,7 @@ const darkTheme = createTheme({
 ```
 
 ### Navigation Menu
+
 Add or modify menu items in `src/components/NavigationDrawer.tsx`:
 
 ```typescript
@@ -204,6 +216,7 @@ const menuItems: MenuItem[] = [
 ## Future Enhancements
 
 Potential features to add:
+
 - Multiple fretboard views (horizontal/vertical)
 - Playback functionality (audio)
 - Export fretboard diagrams as images
@@ -220,6 +233,7 @@ This project is part of the Guitar Alchemist suite.
 ## Contributing
 
 This component is designed to be reusable and extensible. When contributing:
+
 - Keep music theory logic in the backend
 - Maintain TypeScript type safety
 - Follow the existing code style

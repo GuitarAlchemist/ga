@@ -6,10 +6,10 @@
 
 ## Overview
 
-| Technique | Domain | Primary Use |
-|-----------|--------|-------------|
-| **DFT** | Static | Per-voicing indexing, similarity search |
-| **DWT** | Dynamic | Progression analysis, real-time feedback |
+| Technique | Domain  | Primary Use                              |
+|-----------|---------|------------------------------------------|
+| **DFT**   | Static  | Per-voicing indexing, similarity search  |
+| **DWT**   | Dynamic | Progression analysis, real-time feedback |
 
 ---
 
@@ -20,11 +20,13 @@
 Each voicing in the database receives a 216-dimensional OPTIC-K embedding computed via DFT.
 
 **Pipeline**:
+
 ```
 Voicing → Pitch-class set → DFT → Phase Sphere coordinates → Embedding → MongoDB
 ```
 
 **Benefits**:
+
 - Transposition-invariant similarity (magnitudes)
 - Key-aware retrieval (phases)
 - Sub-50ms embedding generation
@@ -49,6 +51,7 @@ $$\text{Similarity}(A, B) = \cos(\theta) = \frac{\vec{A} \cdot \vec{B}}{|\vec{A}
 ### 1.4 Tension/Consonance Scoring
 
 DFT-derived features enable automatic scoring:
+
 - **Spectral entropy** → harmonic complexity
 - **$|F_5|$ magnitude** → diatonicity
 - **Consonance** → sensory roughness estimate
@@ -61,12 +64,12 @@ DFT-derived features enable automatic scoring:
 
 Train ML models to classify harmonic styles from wavelet features:
 
-| Style | Signature Pattern |
-|-------|-------------------|
-| Jazz | High fine-scale detail, frequent key changes |
-| Classical | Phrase-based structure, periodic patterns |
-| Rock | Repetitive, stable, low detail energy |
-| Neo-Soul | Rich extensions, smooth voice-leading |
+| Style     | Signature Pattern                            |
+|-----------|----------------------------------------------|
+| Jazz      | High fine-scale detail, frequent key changes |
+| Classical | Phrase-based structure, periodic patterns    |
+| Rock      | Repetitive, stable, low detail energy        |
+| Neo-Soul  | Rich extensions, smooth voice-leading        |
 
 **Feature vector**: `OPTIC-K aggregates + Wavelet coefficients`
 
@@ -87,6 +90,7 @@ Model musical tension as a function of time:
 $$\text{Tension}[t] = \alpha \cdot \text{Entropy}[t] + \beta \cdot \text{DetailEnergy}[t] + \gamma \cdot \text{KeyDistance}[t]$$
 
 **Applications**:
+
 - Visualization in UI (tension graph under tablature)
 - Composition assistance ("add tension here")
 - Practice recommendations ("focus on this transition")
@@ -95,21 +99,23 @@ $$\text{Tension}[t] = \alpha \cdot \text{Entropy}[t] + \beta \cdot \text{DetailE
 
 For AI-assisted composition, DWT provides multi-scale context:
 
-| Level | Information |
-|-------|-------------|
+| Level         | Information                      |
+|---------------|----------------------------------|
 | Approximation | Where the progression is heading |
-| Detail L1 | Current harmonic rhythm |
-| Detail L2 | Local voice-leading pattern |
+| Detail L1     | Current harmonic rhythm          |
+| Detail L2     | Local voice-leading pattern      |
 
 ### 2.5 Real-Time Chatbot Feedback
 
 **Interactive chat mode** (< 50ms latency):
+
 - Small windows (8-32 chords)
 - Ring buffer for streaming analysis
 - DWT on scalar signals only
 
 **Example chatbot response**:
-> *"This Dm7 acts as a fast transitional chord in a ii-V-I pattern, contributing to the slow trend toward G major resolution."*
+> *"This Dm7 acts as a fast transitional chord in a ii-V-I pattern, contributing to the slow trend toward G major
+resolution."*
 
 ---
 
@@ -126,6 +132,7 @@ Current progression context (DWT) + Query voicing (DFT) → Ranked recommendatio
 ### 3.2 Style-Matched Substitutions
 
 Find substitutions that match both:
+
 - **Harmonic function** (DFT spectral similarity)
 - **Stylistic fit** (DWT progression patterns)
 
@@ -141,15 +148,15 @@ Analyze student's playing (DWT) and recommend voicings to practice (DFT retrieva
 
 ## Implementation Status
 
-| Application | Status | Location |
-|-------------|--------|----------|
-| Voicing indexing (DFT) | ✅ Implemented | `MusicalEmbeddingGenerator.cs` |
-| Semantic search (DFT) | ✅ Implemented | `FileBasedVectorIndex.cs` |
-| MongoDB seeding | ✅ Implemented | `GaChatbot/Program.cs` |
-| Progression classification (DWT) | 📋 Proposed | `Spectral_RAG_Implementation_Plan.md` |
-| Phrase boundary detection (DWT) | 📋 Proposed | Future |
-| Tension curves (DWT) | 📋 Proposed | Future |
-| Real-time chatbot (DWT) | 📋 Proposed | Future |
+| Application                      | Status        | Location                              |
+|----------------------------------|---------------|---------------------------------------|
+| Voicing indexing (DFT)           | ✅ Implemented | `MusicalEmbeddingGenerator.cs`        |
+| Semantic search (DFT)            | ✅ Implemented | `FileBasedVectorIndex.cs`             |
+| MongoDB seeding                  | ✅ Implemented | `GaChatbot/Program.cs`                |
+| Progression classification (DWT) | 📋 Proposed   | `Spectral_RAG_Implementation_Plan.md` |
+| Phrase boundary detection (DWT)  | 📋 Proposed   | Future                                |
+| Tension curves (DWT)             | 📋 Proposed   | Future                                |
+| Real-time chatbot (DWT)          | 📋 Proposed   | Future                                |
 
 ---
 

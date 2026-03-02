@@ -1,9 +1,5 @@
 namespace GA.Domain.Services;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -127,7 +123,8 @@ public static class SpecializedTuningsConfigLoader
                     .IgnoreUnmatchedProperties()
                     .Build();
 
-                var cfg = deserializer.Deserialize<SpecializedTuningsConfiguration>(yaml) ?? new SpecializedTuningsConfiguration();
+                var cfg = deserializer.Deserialize<SpecializedTuningsConfiguration>(yaml) ??
+                          new SpecializedTuningsConfiguration();
                 // If any list has content, consider it valid
                 if ((cfg.AlternativeStringConfigurations?.Count ?? 0) > 0 ||
                     (cfg.SpecializedTuningSystems?.Count ?? 0) > 0 ||
@@ -152,7 +149,7 @@ public static class SpecializedTuningsConfigLoader
                         Category = "Guitar",
                         Configuration = new()
                             { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
-                        PitchClasses = [2,7,0,7,11,4],
+                        PitchClasses = [2, 7, 0, 7, 11, 4],
                         Applications = ["Rock"],
                         Artists = ["Various"]
                     }
@@ -173,7 +170,7 @@ public static class SpecializedTuningsConfigLoader
                         Category = "Guitar",
                         Configuration = new()
                             { { "Tuning", "D2,A2,D3,G3,B3,E4" } },
-                        PitchClasses = [2,7,0,7,11,4],
+                        PitchClasses = [2, 7, 0, 7, 11, 4],
                         Applications = ["Rock"],
                         Artists = ["Various"]
                     }
@@ -199,49 +196,33 @@ public static class SpecializedTuningsService
             .Concat(config.ExperimentalTunings);
     }
 
-    public static IEnumerable<SpecializedTuningDefinition> GetAlternativeStringConfigurations()
-    {
-        return SpecializedTuningsConfigLoader.GetConfiguration().AlternativeStringConfigurations;
-    }
+    public static IEnumerable<SpecializedTuningDefinition> GetAlternativeStringConfigurations() =>
+        SpecializedTuningsConfigLoader.GetConfiguration().AlternativeStringConfigurations;
 
-    public static IEnumerable<SpecializedTuningDefinition> GetSpecializedTuningSystems()
-    {
-        return SpecializedTuningsConfigLoader.GetConfiguration().SpecializedTuningSystems;
-    }
+    public static IEnumerable<SpecializedTuningDefinition> GetSpecializedTuningSystems() =>
+        SpecializedTuningsConfigLoader.GetConfiguration().SpecializedTuningSystems;
 
-    public static IEnumerable<SpecializedTuningDefinition> GetExtendedRangeInstruments()
-    {
-        return SpecializedTuningsConfigLoader.GetConfiguration().ExtendedRangeInstruments;
-    }
+    public static IEnumerable<SpecializedTuningDefinition> GetExtendedRangeInstruments() =>
+        SpecializedTuningsConfigLoader.GetConfiguration().ExtendedRangeInstruments;
 
-    public static IEnumerable<SpecializedTuningDefinition> GetRecordingTunings()
-    {
-        return SpecializedTuningsConfigLoader.GetConfiguration().RecordingTunings;
-    }
+    public static IEnumerable<SpecializedTuningDefinition> GetRecordingTunings() =>
+        SpecializedTuningsConfigLoader.GetConfiguration().RecordingTunings;
 
-    public static SpecializedTuningDefinition? FindTuningByName(string name)
-    {
-        return GetAllTunings().FirstOrDefault(t =>
+    public static SpecializedTuningDefinition? FindTuningByName(string name) =>
+        GetAllTunings().FirstOrDefault(t =>
             string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByCategory(string category)
-    {
-        return GetAllTunings().Where(t =>
+    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByCategory(string category) =>
+        GetAllTunings().Where(t =>
             string.Equals(t.Category, category, StringComparison.OrdinalIgnoreCase));
-    }
 
-    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByApplication(string application)
-    {
-        return GetAllTunings().Where(t =>
+    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByApplication(string application) =>
+        GetAllTunings().Where(t =>
             t.Applications.Any(a => a.Contains(application, StringComparison.OrdinalIgnoreCase)));
-    }
 
-    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByArtist(string artist)
-    {
-        return GetAllTunings().Where(t =>
+    public static IEnumerable<SpecializedTuningDefinition> FindTuningsByArtist(string artist) =>
+        GetAllTunings().Where(t =>
             t.Artists.Any(a => a.Contains(artist, StringComparison.OrdinalIgnoreCase)));
-    }
 
     public static IEnumerable<SpecializedTuningDefinition> FindTuningsByPitchClasses(IEnumerable<int> pitchClasses)
     {
@@ -250,32 +231,26 @@ public static class SpecializedTuningsService
             t.PitchClasses.SequenceEqual(targetClasses));
     }
 
-    public static IEnumerable<string> GetAllCategories()
-    {
-        return GetAllTunings()
+    public static IEnumerable<string> GetAllCategories() =>
+        GetAllTunings()
             .Select(t => t.Category)
             .Where(c => !string.IsNullOrEmpty(c))
             .Distinct()
             .OrderBy(c => c);
-    }
 
-    public static IEnumerable<string> GetAllApplications()
-    {
-        return GetAllTunings()
+    public static IEnumerable<string> GetAllApplications() =>
+        GetAllTunings()
             .SelectMany(t => t.Applications)
             .Where(a => !string.IsNullOrEmpty(a))
             .Distinct()
             .OrderBy(a => a);
-    }
 
-    public static IEnumerable<string> GetAllArtists()
-    {
-        return GetAllTunings()
+    public static IEnumerable<string> GetAllArtists() =>
+        GetAllTunings()
             .SelectMany(t => t.Artists)
             .Where(a => !string.IsNullOrEmpty(a))
             .Distinct()
             .OrderBy(a => a);
-    }
 
     public static (bool IsValid, List<string> Errors) ValidateConfiguration()
     {

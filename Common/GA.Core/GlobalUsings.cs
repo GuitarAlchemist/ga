@@ -10,4 +10,5 @@ global using System.Runtime.CompilerServices;
 global using System.Text;
 global using GA.Core.Abstractions;
 global using GA.Core.Collections.Abstractions;
+global using GA.Core.ValueObjects;
 global using JetBrains.Annotations;

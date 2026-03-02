@@ -15,8 +15,8 @@ module GuitarProTypes =
         | GP3
         | GP4
         | GP5
-        | GPX  // Guitar Pro 6+
-        | GP   // Guitar Pro 7+
+        | GPX // Guitar Pro 6+
+        | GP // Guitar Pro 7+
 
     /// Note duration
     type NoteDuration =
@@ -30,7 +30,7 @@ module GuitarProTypes =
 
     /// Note effect
     type NoteEffect =
-        | Bend of int  // Bend semitones
+        | Bend of int // Bend semitones
         | Slide of slideType: string
         | Vibrato
         | Hammer
@@ -57,13 +57,13 @@ module GuitarProTypes =
 
     /// Note on a string
     type GuitarProNote =
-        { String: int  // 1-based string number
+        { String: int // 1-based string number
           Fret: int
           Duration: NoteDuration
           IsTied: bool
           IsDead: bool
           IsGhost: bool
-          Velocity: int  // 0-127
+          Velocity: int // 0-127
           Effects: NoteEffect list }
 
     /// Beat (vertical slice of notes)
@@ -72,7 +72,7 @@ module GuitarProTypes =
           Duration: NoteDuration
           IsDotted: bool
           IsTuplet: bool
-          TupletRatio: (int * int) option  // e.g., (3, 2) for triplet
+          TupletRatio: (int * int) option // e.g., (3, 2) for triplet
           Effects: BeatEffect list
           Text: string option
           Chord: ChordDiagram option }
@@ -80,35 +80,35 @@ module GuitarProTypes =
     /// Chord diagram
     and ChordDiagram =
         { Name: string
-          Frets: int list  // -1 for muted, 0 for open
-          Fingers: int list option  // 0-4 (0=thumb, 1-4=fingers)
+          Frets: int list // -1 for muted, 0 for open
+          Fingers: int list option // 0-4 (0=thumb, 1-4=fingers)
           Barres: int list }
 
     /// Measure (bar)
     type Measure =
         { Beats: Beat list
-          TimeSignature: (int * int) option  // (numerator, denominator)
-          KeySignature: int option  // -7 to 7 (flats to sharps)
+          TimeSignature: (int * int) option // (numerator, denominator)
+          KeySignature: int option // -7 to 7 (flats to sharps)
           Tempo: int option
           Marker: string option
           RepeatOpen: bool
-          RepeatClose: int option  // Number of repeats
+          RepeatClose: int option // Number of repeats
           AlternateEnding: int option }
 
     /// Track (instrument/voice)
     type Track =
         { Name: string
-          Instrument: int  // MIDI instrument number
-          Strings: int  // Number of strings
-          Tuning: int list  // MIDI note numbers for each string
+          Instrument: int // MIDI instrument number
+          Strings: int // Number of strings
+          Tuning: int list // MIDI note numbers for each string
           Capo: int
-          Color: (int * int * int) option  // RGB
+          Color: (int * int * int) option // RGB
           Measures: Measure list
           IsMuted: bool
           IsSolo: bool
-          Volume: int  // 0-127
-          Pan: int  // 0-127 (64=center)
-          Channel: int }  // MIDI channel
+          Volume: int // 0-127
+          Pan: int // 0-127 (64=center)
+          Channel: int } // MIDI channel
 
     /// Song metadata
     type SongInfo =
@@ -116,9 +116,9 @@ module GuitarProTypes =
           Subtitle: string option
           Artist: string option
           Album: string option
-          Author: string option  // Tab author
+          Author: string option // Tab author
           Copyright: string option
-          Writer: string option  // Music writer
+          Writer: string option // Music writer
           Instructions: string option
           Comments: string list }
 
@@ -129,7 +129,7 @@ module GuitarProTypes =
           Tracks: Track list
           MasterVolume: int
           Tempo: int
-          Key: int  // -7 to 7
+          Key: int // -7 to 7
           Octave: int }
 
     // ============================================================================
@@ -146,7 +146,8 @@ module GuitarProTypes =
     // ============================================================================
 
     /// Convert version enum to string
-    let versionToString = function
+    let versionToString =
+        function
         | GP3 -> "Guitar Pro 3"
         | GP4 -> "Guitar Pro 4"
         | GP5 -> "Guitar Pro 5"
@@ -154,7 +155,8 @@ module GuitarProTypes =
         | GP -> "Guitar Pro 7+"
 
     /// Convert duration to string
-    let durationToString = function
+    let durationToString =
+        function
         | Whole -> "1"
         | Half -> "1/2"
         | Quarter -> "1/4"
@@ -165,20 +167,19 @@ module GuitarProTypes =
 
     /// Get MIDI note name from number
     let midiNoteToName (midiNote: int) =
-        let noteNames = [| "C"; "C#"; "D"; "D#"; "E"; "F"; "F#"; "G"; "G#"; "A"; "A#"; "B" |]
+        let noteNames =
+            [| "C"; "C#"; "D"; "D#"; "E"; "F"; "F#"; "G"; "G#"; "A"; "A#"; "B" |]
+
         let octave = (midiNote / 12) - 1
         let note = noteNames.[midiNote % 12]
         $"%s{note}%d{octave}"
 
     /// Convert tuning to string
     let tuningToString (tuning: int list) =
-        tuning
-        |> List.map midiNoteToName
-        |> String.concat ", "
+        tuning |> List.map midiNoteToName |> String.concat ", "
 
     /// Standard guitar tuning (E2, A2, D3, G3, B3, E4)
-    let standardGuitarTuning = [40; 45; 50; 55; 59; 64]
+    let standardGuitarTuning = [ 40; 45; 50; 55; 59; 64 ]
 
     /// Standard bass tuning (E1, A1, D2, G2)
-    let standardBassTuning = [28; 33; 38; 43]
-
+    let standardBassTuning = [ 28; 33; 38; 43 ]

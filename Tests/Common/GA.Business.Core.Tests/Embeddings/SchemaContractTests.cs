@@ -1,8 +1,8 @@
-namespace GA.Domain.Core.Tests.Embeddings;
+namespace GA.Business.Core.Tests.Embeddings;
 
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Search;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Embeddings.Services;
+using GA.Business.ML.Rag.Models;
 using NUnit.Framework;
 
 /// <summary>
@@ -28,17 +28,17 @@ public class SchemaContractTests
 {
     private MusicalEmbeddingGenerator _generator;
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() =>
         _generator = new MusicalEmbeddingGenerator(
             new IdentityVectorService(),
             new TheoryVectorService(),
             new MorphologyVectorService(),
             new ContextVectorService(),
             new SymbolicVectorService(),
+            new ModalVectorService(),
             new PhaseSphereService()
         );
-    }
+
     #region ICV Computation Tests
     /// <summary>
     /// Verifies ICV computation for C Major triad: {0, 4, 7}.
@@ -283,12 +283,12 @@ public class SchemaContractTests
     public async Task Clamp01_AllExtensions_InRange()
     {
         // Arrange
-        var doc = CreateVoicingDocument(midiNotes: new[] { 40, 88, 60, 72 });
+        var doc = CreateVoicingDocument(midiNotes: [40, 88, 60, 72]);
         // Act
         var embedding = await _generator.GenerateEmbeddingAsync(doc);
         // Assert
         TestContext.WriteLine($"Verifying derived dimensions (78-95) are in [0, 1] range.");
-        for (int i = EmbeddingSchema.ExtensionsOffset; i < EmbeddingSchema.ExtensionsEnd; i++)
+        for (var i = EmbeddingSchema.ExtensionsOffset; i < EmbeddingSchema.ExtensionsEnd; i++)
         {
             Assert.That(embedding[i], Is.InRange(0.0, 1.0),
                 $"Index {i} must be clamped to [0,1], was {embedding[i]}");
@@ -301,7 +301,7 @@ public class SchemaContractTests
     public async Task Clamp01_ExtremeValues_NoNanOrInfinity()
     {
         // Arrange
-        var doc = CreateVoicingDocument(midiNotes: new[] { 28, 96, 40, 88 });
+        var doc = CreateVoicingDocument(midiNotes: [28, 96, 40, 88]);
         // Act
         var embedding = await _generator.GenerateEmbeddingAsync(doc);
         // Assert
@@ -427,7 +427,7 @@ public class SchemaContractTests
         var vector = await _generator.GenerateEmbeddingAsync(doc);
         // Assert
         TestContext.WriteLine($"Verifying Single Note (MIDI 60) Fourier Magnitudes are normalized to 1/sqrt(6) ≈ {expected:F4}");
-        for (int k = 1; k <= 6; k++)
+        for (var k = 1; k <= 6; k++)
         {
             var magIdx = EmbeddingSchema.SpectralOffset + (k - 1);
             TestContext.WriteLine($"  k={k} Magnitude: {vector[magIdx]:F4}");
@@ -454,10 +454,10 @@ public class SchemaContractTests
     }
     #endregion
     #region Helper Methods
-    private static VoicingDocument CreateVoicingDoc(int[] midiNotes)
+    private static ChordVoicingRagDocument CreateVoicingDoc(int[] midiNotes)
     {
         var pcs = midiNotes.Select(n => n % 12).Distinct().OrderBy(p => p).ToArray();
-        return new VoicingDocument
+        return new ChordVoicingRagDocument
         {
             Id = "test",
             MidiNotes = midiNotes,
@@ -481,9 +481,9 @@ public class SchemaContractTests
     private static int[] ComputeIntervalClassVector(int[] pitchClasses)
     {
         var icv = new int[EmbeddingSchema.IntervalClassCount];
-        for (int i = 0; i < pitchClasses.Length; i++)
+        for (var i = 0; i < pitchClasses.Length; i++)
         {
-            for (int j = i + 1; j < pitchClasses.Length; j++)
+            for (var j = i + 1; j < pitchClasses.Length; j++)
             {
                 var diff = Math.Abs(pitchClasses[i] - pitchClasses[j]);
                 var intervalClass = Math.Min(diff, EmbeddingSchema.PitchClassCount - diff);
@@ -498,12 +498,8 @@ public class SchemaContractTests
     /// <summary>
     /// Computes the set complement: Comp(S) = {0..11} \ S
     /// </summary>
-    private static int[] ComputeComplement(int[] pitchClasses)
-    {
-        return Enumerable.Range(0, EmbeddingSchema.PitchClassCount)
-            .Except(pitchClasses)
-            .ToArray();
-    }
+    private static int[] ComputeComplement(int[] pitchClasses) => [.. Enumerable.Range(0, EmbeddingSchema.PitchClassCount).Except(pitchClasses)];
+
     /// <summary>
     /// Computes Complementarity K as cosine similarity between two ICVs.
     /// Returns 0.0 if either ICV is a zero-vector.
@@ -535,7 +531,7 @@ public class SchemaContractTests
             (EmbeddingSchema.ContextOffset, EmbeddingSchema.ContextEnd, EmbeddingSchema.ContextWeight),
             (EmbeddingSchema.SymbolicOffset, EmbeddingSchema.SymbolicEnd, EmbeddingSchema.SymbolicWeight)
         };
-        double totalSimilarity = 0.0;
+        var totalSimilarity = 0.0;
         foreach (var (start, end, weight) in partitions)
         {
             var slice1 = v1.Skip(start).Take(end - start).ToArray();
@@ -560,7 +556,7 @@ public class SchemaContractTests
     /// <summary>Helper to populate a partition range with identical values in two vectors.</summary>
     private static void PopulatePartition(double[] v1, double[] v2, int start, int end, double value)
     {
-        for (int i = start; i < end; i++)
+        for (var i = start; i < end; i++)
         {
             v1[i] = value;
             v2[i] = value;
@@ -569,22 +565,22 @@ public class SchemaContractTests
     /// <summary>Helper to fill a range in a vector with a constant value.</summary>
     private static void FillRange(double[] v, int start, int end, double value)
     {
-        for (int i = start; i < end; i++) v[i] = value;
+        for (var i = start; i < end; i++) v[i] = value;
     }
     #endregion
     #region Helper Methods - Test Document Factory
     /// <summary>
     /// Creates a test VoicingDocument with sensible defaults.
     /// </summary>
-    private static VoicingDocument CreateVoicingDocument(
+    private static ChordVoicingRagDocument CreateVoicingDocument(
         int[]? midiNotes = null,
         int[]? pitchClasses = null,
         int? rootPitchClass = null)
     {
-        midiNotes ??= new[] { 48, 52, 55, 60 }; // C, E, G, C
-        pitchClasses ??= midiNotes.Select(m => m % EmbeddingSchema.PitchClassCount).ToArray();
+        midiNotes ??= [48, 52, 55, 60]; // C, E, G, C
+        pitchClasses ??= [.. midiNotes.Select(m => m % EmbeddingSchema.PitchClassCount)];
         var pcsString = "{" + string.Join(",", pitchClasses.Distinct().OrderBy(p => p)) + "}";
-        return new VoicingDocument
+        return new ChordVoicingRagDocument
         {
             Id = "test-voicing",
             SearchableText = "Test voicing for contract tests",
@@ -605,13 +601,13 @@ public class SchemaContractTests
             HandStretch = 4,
             BarreRequired = false,
             IsRootless = false,
-            SemanticTags = Array.Empty<string>(),
-            PossibleKeys = Array.Empty<string>(),
+            SemanticTags = [],
+            PossibleKeys = [],
             YamlAnalysis = string.Empty,
             TuningId = "standard",
             AnalysisEngine = "test",
             AnalysisVersion = "1.0",
-            Jobs = Array.Empty<string>()
+            Jobs = []
         };
     }
     #endregion

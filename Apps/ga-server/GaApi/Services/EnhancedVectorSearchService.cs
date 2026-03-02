@@ -36,10 +36,7 @@ public class EnhancedVectorSearchService : IDisposable
         _database = client.GetDatabase(_settings.DatabaseName);
     }
 
-    public void Dispose()
-    {
-        _strategyManager?.Dispose();
-    }
+    public void Dispose() => _strategyManager?.Dispose();
 
     /// <summary>
     ///     Initialize the vector search service with the best available strategy
@@ -160,18 +157,13 @@ public class EnhancedVectorSearchService : IDisposable
     /// <summary>
     ///     Get available strategies and their performance characteristics
     /// </summary>
-    public Dictionary<string, VectorSearchPerformance> GetAvailableStrategies()
-    {
-        return _strategyManager.GetAvailableStrategies();
-    }
+    public Dictionary<string, VectorSearchPerformance> GetAvailableStrategies() =>
+        _strategyManager.GetAvailableStrategies();
 
     /// <summary>
     ///     Get performance statistics for all strategies
     /// </summary>
-    public Dictionary<string, VectorSearchStats> GetPerformanceStats()
-    {
-        return _strategyManager.GetAllStats();
-    }
+    public Dictionary<string, VectorSearchStats> GetPerformanceStats() => _strategyManager.GetAllStats();
 
     /// <summary>
     ///     Benchmark all available strategies
@@ -193,11 +185,11 @@ public class EnhancedVectorSearchService : IDisposable
         var activeStrategy = _strategyManager.ActiveStrategy;
         if (activeStrategy == null)
         {
-            return new VectorSearchStrategyInfo("None", false, null, null);
+            return new("None", false, null, null);
         }
 
         var stats = activeStrategy.GetStats();
-        return new VectorSearchStrategyInfo(
+        return new(
             activeStrategy.Name,
             activeStrategy.IsAvailable,
             activeStrategy.Performance,
@@ -276,12 +268,3 @@ public class EnhancedVectorSearchService : IDisposable
         }
     }
 }
-
-/// <summary>
-///     Information about the current vector search strategy
-/// </summary>
-public record VectorSearchStrategyInfo(
-    string Name,
-    bool IsAvailable,
-    VectorSearchPerformance? Performance,
-    VectorSearchStats? Stats);

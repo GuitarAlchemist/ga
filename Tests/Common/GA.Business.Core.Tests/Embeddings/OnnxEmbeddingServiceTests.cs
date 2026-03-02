@@ -1,11 +1,10 @@
-namespace GA.Domain.Core.Tests.Embeddings;
+namespace GA.Business.Core.Tests.Embeddings;
 
 using System.Collections;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using Business.ML.Text.Onnx;
-using NUnit.Framework;
+using ML.Text.Onnx;
 
 [TestFixture]
 public class OnnxEmbeddingServiceTests
@@ -24,6 +23,7 @@ public class OnnxEmbeddingServiceTests
             Assert.That(embedding[i], Is.EqualTo(expected[i]).Within(1e-5f));
         }
     }
+
     [Test]
     public async Task ShouldRespectClsPoolingStrategy()
     {
@@ -33,6 +33,7 @@ public class OnnxEmbeddingServiceTests
         Assert.That(embedding[0], Is.EqualTo(expected[0]).Within(1e-5f));
         Assert.That(embedding[1], Is.EqualTo(expected[1]).Within(1e-5f));
     }
+
     [Test]
     public async Task ShouldUseUnknownTokenWhenNotInVocabulary()
     {
@@ -42,6 +43,7 @@ public class OnnxEmbeddingServiceTests
         Assert.That(session.LastInputIds, Is.Not.Null, "Input IDs were not captured");
         Assert.That(session.LastInputIds![1], Is.EqualTo(harness.UnknownTokenId));
     }
+
     private static double[] ComputeMeanVector(long[] attentionMask, int hiddenSize)
     {
         var sums = new double[hiddenSize];
@@ -52,6 +54,7 @@ public class OnnxEmbeddingServiceTests
             {
                 continue;
             }
+
             count++;
             var baseValue = token + 1;
             for (var dim = 0; dim < hiddenSize; dim++)
@@ -59,16 +62,20 @@ public class OnnxEmbeddingServiceTests
                 sums[dim] += baseValue * (dim + 1);
             }
         }
+
         if (count == 0)
         {
             return sums;
         }
+
         for (var i = 0; i < hiddenSize; i++)
         {
             sums[i] /= count;
         }
+
         return sums;
     }
+
     private static double[] Normalize(double[] vector)
     {
         var magnitude = Math.Sqrt(vector.Sum(v => v * v));
@@ -76,22 +83,26 @@ public class OnnxEmbeddingServiceTests
         {
             return vector;
         }
+
         var normalized = new double[vector.Length];
         for (var i = 0; i < vector.Length; i++)
         {
             normalized[i] = vector[i] / magnitude;
         }
+
         return normalized;
     }
+
     private sealed class OnnxServiceTestHarness : IDisposable
     {
         private readonly string _tempDirectory;
+
         public OnnxServiceTestHarness(OnnxEmbeddingPoolingStrategy poolingStrategy = OnnxEmbeddingPoolingStrategy.Mean)
         {
             _tempDirectory = Path.Combine(Path.GetTempPath(), $"onnx-tests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(_tempDirectory);
             ModelPath = Path.Combine(_tempDirectory, "model.onnx");
-            File.WriteAllBytes(ModelPath, Array.Empty<byte>());
+            File.WriteAllBytes(ModelPath, []);
             VocabularyPath = Path.Combine(_tempDirectory, "vocab.txt");
             File.WriteAllLines(VocabularyPath, [
                 "[PAD]",
@@ -102,7 +113,7 @@ public class OnnxEmbeddingServiceTests
                 "beta",
                 "hello"
             ]);
-            SessionFactory = new FakeOnnxSessionFactory(hiddenSize: 2);
+            SessionFactory = new(2);
             var options = new OnnxEmbeddingOptions
             {
                 ModelPath = ModelPath,
@@ -111,13 +122,15 @@ public class OnnxEmbeddingServiceTests
                 PoolingStrategy = poolingStrategy,
                 NormalizeEmbeddings = true
             };
-            Service = new OnnxEmbeddingService(options, NullLogger<OnnxEmbeddingService>.Instance, SessionFactory);
+            Service = new(options, NullLogger<OnnxEmbeddingService>.Instance, SessionFactory);
         }
+
         public string ModelPath { get; }
         public string VocabularyPath { get; }
         public long UnknownTokenId => 3;
         public OnnxEmbeddingService Service { get; }
         public FakeOnnxSessionFactory SessionFactory { get; }
+
         public void Dispose()
         {
             Service.Dispose();
@@ -133,10 +146,12 @@ public class OnnxEmbeddingServiceTests
             }
         }
     }
+
     private sealed class FakeOnnxSessionFactory(int hiddenSize) : IOnnxSessionFactory
     {
         public int HiddenSize => hiddenSize;
         public FakeOnnxSession? LastSession { get; private set; }
+
         public IOnnxSession Create(string modelPath)
         {
             var session = new FakeOnnxSession(hiddenSize);
@@ -144,10 +159,12 @@ public class OnnxEmbeddingServiceTests
             return session;
         }
     }
+
     private sealed class FakeOnnxSession(int hiddenSize) : IOnnxSession
     {
         public long[]? LastInputIds { get; private set; }
         public long[]? LastAttentionMask { get; private set; }
+
         public IDisposableReadOnlyCollection<NamedOnnxValue> Run(IReadOnlyCollection<NamedOnnxValue> inputs)
         {
             var materialized = inputs.ToList();
@@ -159,9 +176,11 @@ public class OnnxEmbeddingServiceTests
             var value = NamedOnnxValue.CreateFromTensor("last_hidden_state", tensor);
             return new FakeResultCollection(value);
         }
+
         public void Dispose()
         {
         }
+
         private static DenseTensor<float> BuildTensor(long[] attentionMask, int hiddenSize)
         {
             var dims = new[] { 1, attentionMask.Length, hiddenSize };
@@ -174,14 +193,18 @@ public class OnnxEmbeddingServiceTests
                     data[token * hiddenSize + dim] = weight * (dim + 1);
                 }
             }
-            return new DenseTensor<float>(data, dims);
+
+            return new(data, dims);
         }
     }
-    private sealed class FakeResultCollection(params NamedOnnxValue[] values) : IDisposableReadOnlyCollection<NamedOnnxValue>
+
+    private sealed class FakeResultCollection(params NamedOnnxValue[] values)
+        : IDisposableReadOnlyCollection<NamedOnnxValue>
     {
         private readonly IReadOnlyList<NamedOnnxValue> _values = values;
         public int Count => _values.Count;
         public NamedOnnxValue this[int index] => _values[index];
+
         public void Dispose()
         {
             foreach (var value in _values)
@@ -192,6 +215,7 @@ public class OnnxEmbeddingServiceTests
                 }
             }
         }
+
         public IEnumerator<NamedOnnxValue> GetEnumerator() => _values.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }

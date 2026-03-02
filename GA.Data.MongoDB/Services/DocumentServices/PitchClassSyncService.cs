@@ -1,6 +1,6 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using GA.Domain.Core;
+using GA.Business.Assets;
 using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -38,3 +38,5 @@ public class PitchClassSyncService(ILogger<PitchClassSyncService> logger, MongoD
         return await mongoDb.PitchClasses.CountDocumentsAsync(Builders<PitchClassDocument>.Filter.Empty);
     }
 }
+
+

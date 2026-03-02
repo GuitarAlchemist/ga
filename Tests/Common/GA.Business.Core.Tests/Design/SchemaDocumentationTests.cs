@@ -1,9 +1,7 @@
-namespace GA.Domain.Core.Tests.Design;
+namespace GA.Business.Core.Tests.Design;
 
-using System.IO;
-using GA.Domain.Core.Design;
-using GA.Domain.Core.Theory.Atonal;
-using NUnit.Framework;
+using Domain.Core.Theory.Atonal;
+using GA.Infrastructure.Documentation;
 
 [TestFixture]
 public class SchemaDocumentationTests
@@ -13,7 +11,8 @@ public class SchemaDocumentationTests
     {
         var generator = new SchemaDocumentationGenerator();
         var markdown = generator.GenerateMarkdown(typeof(PitchClassSet).Assembly);
-        var outputPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../../../../docs/DOMAIN_SCHEMA.md");
+        var outputPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
+            "../../../../../../docs/DOMAIN_SCHEMA.md");
         File.WriteAllText(outputPath, markdown);
         TestContext.WriteLine($"Generated schema doc at: {Path.GetFullPath(outputPath)}");
     }

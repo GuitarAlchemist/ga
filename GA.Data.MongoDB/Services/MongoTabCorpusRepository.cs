@@ -1,7 +1,7 @@
 namespace GA.Data.MongoDB.Services;
 
 using GA.Domain.Repositories;
-using GA.Domain.Core.Tabs;
+using GA.Domain.Core.Theory.Tabs;
 using GA.Data.MongoDB.Models;
 using global::MongoDB.Bson;
 using global::MongoDB.Driver;
@@ -20,26 +20,32 @@ public class MongoTabCorpusRepository : ITabCorpusRepository
 
     public async Task SaveAsync(TabCorpusItem item)
     {
-        var entity = new TabEntity
+        var now = DateTime.UtcNow;
+        var id = string.IsNullOrWhiteSpace(item.Id) ? ObjectId.GenerateNewId().ToString() : item.Id;
+        var createdAt = item.CreatedAt == default ? now : item.CreatedAt;
+
+        var entity = new TabCorpusDocument
         {
-            Id = string.IsNullOrEmpty(item.Id) ? ObjectId.GenerateNewId().ToString() : item.Id,
+            Id = id,
             SourceId = item.SourceId,
             ExternalId = item.ExternalId,
             Content = item.Content,
             Format = item.Format,
+            CreatedAt = createdAt,
+            UpdatedAt = now,
             Metadata = item.Metadata.ToDictionary(k => k.Key, v => (object)v.Value)
         };
 
-        FilterDefinition<TabEntity> filter;
+        FilterDefinition<TabCorpusDocument> filter;
         if (!string.IsNullOrEmpty(item.Id))
         {
-            filter = Builders<TabEntity>.Filter.Eq(x => x.Id, item.Id);
+            filter = Builders<TabCorpusDocument>.Filter.Eq(x => x.Id, item.Id);
         }
         else
         {
-             filter = Builders<TabEntity>.Filter.And(
-                Builders<TabEntity>.Filter.Eq(x => x.SourceId, item.SourceId),
-                Builders<TabEntity>.Filter.Eq(x => x.ExternalId, item.ExternalId)
+             filter = Builders<TabCorpusDocument>.Filter.And(
+                Builders<TabCorpusDocument>.Filter.Eq(x => x.SourceId, item.SourceId),
+                Builders<TabCorpusDocument>.Filter.Eq(x => x.ExternalId, item.ExternalId)
             );
         }
 
@@ -70,11 +76,15 @@ public class MongoTabCorpusRepository : ITabCorpusRepository
         return await _db.Tabs.CountDocumentsAsync(_ => true);
     }
 
-    private TabCorpusItem MapToItem(TabEntity entity)
+    private TabCorpusItem MapToItem(TabCorpusDocument entity)
     {
+        var now = DateTime.UtcNow;
+
         return new TabCorpusItem
         {
             Id = entity.Id,
+            CreatedAt = entity.CreatedAt == default ? now : entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt == default ? now : entity.UpdatedAt,
             SourceId = entity.SourceId,
             ExternalId = entity.ExternalId,
             Content = entity.Content,

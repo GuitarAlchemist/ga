@@ -1,16 +1,12 @@
 namespace GA.Domain.Core.Theory.Tonal;
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Core.Primitives;
 using Core.Primitives.Extensions;
+using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using GA.Core.Abstractions;
 using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
-using KeyNote = Core.Primitives.Note.KeyNote;
+using KeyNote = Core.Primitives.Notes.Note.KeyNote;
 
 /// <summary>
 ///     Key signature (See https://en.wikipedia.org/wiki/Key_signature)
@@ -67,16 +63,10 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
     /// </summary>
     /// <param name="naturalNote">The <see cref="NaturalNote" /></param>
     /// <returns>True if accidented, false otherwise</returns>
-    public bool IsNoteAccidented(NaturalNote naturalNote)
-    {
-        return AccidentedNaturalNotesSet.Contains(naturalNote);
-    }
+    public bool IsNoteAccidented(NaturalNote naturalNote) => AccidentedNaturalNotesSet.Contains(naturalNote);
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return AccidentedNotes.ToString();
-    }
+    public override string ToString() => AccidentedNotes.ToString();
 
     private static ImmutableList<KeyNote> GetAccidentedNotes(int keySignatureValue)
     {
@@ -110,12 +100,12 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
             .ToImmutableList();
 
     /// <summary>
-    /// Gets the cached span representing the full key signature range.
+    ///     Gets the cached span representing the full key signature range.
     /// </summary>
     public static ReadOnlySpan<KeySignature> ItemsSpan => ValueObjectUtils<KeySignature>.ItemsSpan;
 
     /// <summary>
-    /// Gets the cached span representing the numeric values for each key signature.
+    ///     Gets the cached span representing the numeric values for each key signature.
     /// </summary>
     public static ReadOnlySpan<int> ValuesSpan => ValueObjectUtils<KeySignature>.ValuesSpan;
 
@@ -123,10 +113,7 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
     public static KeySignature Max => new(_maxValue);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value)
-    {
-        return new(value);
-    }
+    public static KeySignature FromValue([ValueRange(_minValue, _maxValue)] int value) => new(value);
 
     private readonly int _value;
 
@@ -136,15 +123,9 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
         init => _value = IRangeValueObject<KeySignature>.EnsureValueInRange(value, _minValue, _maxValue);
     }
 
-    public static implicit operator KeySignature(int value)
-    {
-        return new(value);
-    }
+    public static implicit operator KeySignature(int value) => new(value);
 
-    public static implicit operator int(KeySignature keySignature)
-    {
-        return keySignature.Value;
-    }
+    public static implicit operator int(KeySignature keySignature) => keySignature.Value;
 
     private const int _minValue = -7;
     private const int _maxValue = 7;
@@ -153,58 +134,31 @@ public readonly record struct KeySignature : IStaticReadonlyCollectionFromValues
 
     #region Relational members
 
-    public int CompareTo(KeySignature other)
-    {
-        return _value.CompareTo(other._value);
-    }
+    public int CompareTo(KeySignature other) => _value.CompareTo(other._value);
 
-    public static bool operator <(KeySignature left, KeySignature right)
-    {
-        return left.CompareTo(right) < 0;
-    }
+    public static bool operator <(KeySignature left, KeySignature right) => left.CompareTo(right) < 0;
 
-    public static bool operator >(KeySignature left, KeySignature right)
-    {
-        return left.CompareTo(right) > 0;
-    }
+    public static bool operator >(KeySignature left, KeySignature right) => left.CompareTo(right) > 0;
 
-    public static bool operator <=(KeySignature left, KeySignature right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
+    public static bool operator <=(KeySignature left, KeySignature right) => left.CompareTo(right) <= 0;
 
-    public static bool operator >=(KeySignature left, KeySignature right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
+    public static bool operator >=(KeySignature left, KeySignature right) => left.CompareTo(right) >= 0;
 
     #endregion
 
     #region Equality Members
 
-    public bool Equals(KeySignature other)
-    {
-        return _value == other._value;
-    }
+    public bool Equals(KeySignature other) => _value == other._value;
 
-    public override int GetHashCode()
-    {
-        return _value;
-    }
+    public override int GetHashCode() => _value;
 
     #endregion
 
     #region Static Helpers
 
-    public static KeySignature Sharp([ValueRange(0, 7)] int count)
-    {
-        return new(count);
-    }
+    public static KeySignature Sharp([ValueRange(0, 7)] int count) => new(count);
 
-    public static KeySignature Flat([ValueRange(1, 7)] int count)
-    {
-        return new(-count);
-    }
+    public static KeySignature Flat([ValueRange(1, 7)] int count) => new(-count);
 
     #endregion
 }

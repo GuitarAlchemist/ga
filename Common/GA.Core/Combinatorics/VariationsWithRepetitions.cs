@@ -148,13 +148,19 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         // index = idx(item0) * Base^(Length-1) + idx(item1) * Base^(Length-2) + ... + idx(item{L-1}) * Base^0
         var result = BigInteger.Zero;
         var weight = BigInteger.One;
-        for (int i = 1; i < Length; i++) weight *= Base; // weight = Base^(Length-1)
+        for (var i = 1; i < Length; i++)
+        {
+            weight *= Base; // weight = Base^(Length-1)
+        }
 
         for (var pos = 0; pos < Length; pos++)
         {
             var value = _indexByElement[variationArray[pos]];
             result += new BigInteger(value) * weight;
-            if (pos < Length - 1) weight /= Base;
+            if (pos < Length - 1)
+            {
+                weight /= Base;
+            }
         }
 
         return result;
@@ -176,7 +182,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
     /// <param name="index">The variation index.</param>
     /// <remarks>
     ///     Variations are produced in lexicographical order, with position 0 as the most significant digit
-    ///     of the base-<see cref="Base"/> number system. That is, for alphabet [a,b,c] and length 2, indices map to:
+    ///     of the base-<see cref="Base" /> number system. That is, for alphabet [a,b,c] and length 2, indices map to:
     ///     0 → [a,a], 1 → [a,b], 2 → [a,c], 3 → [b,a], etc.
     /// </remarks>
     private Variation<T> CreateVariation(BigInteger index)
@@ -194,7 +200,10 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
 
         var arrayBuilder = ImmutableArray.CreateBuilder<T>(Length);
         // Pre-fill to correct size
-        for (var i = 0; i < Length; i++) arrayBuilder.Add(default!);
+        for (var i = 0; i < Length; i++)
+        {
+            arrayBuilder.Add(default!);
+        }
 
         var dividend = index;
         // Fill from least significant digit into the last position, so index 0 is most significant position
@@ -219,10 +228,7 @@ public class VariationsWithRepetitions<T> : IEnumerable<Variation<T>>,
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     #endregion
 }

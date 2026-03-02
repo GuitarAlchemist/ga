@@ -1,7 +1,7 @@
 namespace GA.BSP.Service.Controllers;
-using Microsoft.AspNetCore.Mvc;
 
 using Core.Spatial;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 
@@ -28,7 +28,7 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
     {
         try
         {
-            @params ??= new DungeonGenerationParams();
+            @params ??= new();
 
             logger.LogInformation("Generating dungeon: {Width}x{Height}, depth={MaxDepth}, seed={Seed}",
                 @params.Width, @params.Height, @params.MaxDepth, @params.Seed);
@@ -51,24 +51,33 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
                 Height = dungeon.Height,
                 Seed = @params.Seed,
                 Params = @params,
-                Rooms = dungeon.Rooms.Select(r => new RoomDto
-                {
-                    X = r.X,
-                    Y = r.Y,
-                    Width = r.Width,
-                    Height = r.Height,
-                    CenterX = r.CenterX,
-                    CenterY = r.CenterY
-                }).ToList(),
-                Corridors = dungeon.Corridors.Select(c => new CorridorDto
-                {
-                    Width = c.Width,
-                    Points = c.Points.Select(p => new PointDto
+                Rooms =
+                [
+                    .. dungeon.Rooms.Select(r => new RoomDto
                     {
-                        X = p.X,
-                        Y = p.Y
-                    }).ToList()
-                }).ToList()
+                        X = r.X,
+                        Y = r.Y,
+                        Width = r.Width,
+                        Height = r.Height,
+                        CenterX = r.CenterX,
+                        CenterY = r.CenterY
+                    })
+                ],
+                Corridors =
+                [
+                    .. dungeon.Corridors.Select(c => new CorridorDto
+                    {
+                        Width = c.Width,
+                        Points =
+                        [
+                            .. c.Points.Select(p => new PointDto
+                            {
+                                X = p.X,
+                                Y = p.Y
+                            })
+                        ]
+                    })
+                ]
             };
 
             logger.LogInformation("Generated dungeon with {RoomCount} rooms and {CorridorCount} corridors",
@@ -170,30 +179,39 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
 
                 var dungeon = generator.GenerateDungeon(@params.Width, @params.Height, @params.MaxDepth);
 
-                dungeons.Add(new DungeonLayoutResponse
+                dungeons.Add(new()
                 {
                     Width = dungeon.Width,
                     Height = dungeon.Height,
                     Seed = @params.Seed,
                     Params = @params,
-                    Rooms = dungeon.Rooms.Select(r => new RoomDto
-                    {
-                        X = r.X,
-                        Y = r.Y,
-                        Width = r.Width,
-                        Height = r.Height,
-                        CenterX = r.CenterX,
-                        CenterY = r.CenterY
-                    }).ToList(),
-                    Corridors = dungeon.Corridors.Select(c => new CorridorDto
-                    {
-                        Width = c.Width,
-                        Points = c.Points.Select(p => new PointDto
+                    Rooms =
+                    [
+                        .. dungeon.Rooms.Select(r => new RoomDto
                         {
-                            X = p.X,
-                            Y = p.Y
-                        }).ToList()
-                    }).ToList()
+                            X = r.X,
+                            Y = r.Y,
+                            Width = r.Width,
+                            Height = r.Height,
+                            CenterX = r.CenterX,
+                            CenterY = r.CenterY
+                        })
+                    ],
+                    Corridors =
+                    [
+                        .. dungeon.Corridors.Select(c => new CorridorDto
+                        {
+                            Width = c.Width,
+                            Points =
+                            [
+                                .. c.Points.Select(p => new PointDto
+                                {
+                                    X = p.X,
+                                    Y = p.Y
+                                })
+                            ]
+                        })
+                    ]
                 });
             }
 

@@ -131,8 +131,8 @@ internal class Program
             analyzed => GenerateRecommendations(analyzed), options);
 
         // Link the pipeline
-        parseBlock.LinkTo(analyzeBlock, new DataflowLinkOptions { PropagateCompletion = true });
-        analyzeBlock.LinkTo(recommendBlock, new DataflowLinkOptions { PropagateCompletion = true });
+        parseBlock.LinkTo(analyzeBlock, new() { PropagateCompletion = true });
+        analyzeBlock.LinkTo(recommendBlock, new() { PropagateCompletion = true });
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -265,14 +265,14 @@ internal class Program
     {
         // Simulate musical processing work
         await Task.Delay(1);
-        return new ProcessedData(data.Name, data.PitchClass, data.Timestamp, "Processed");
+        return new(data.Name, data.PitchClass, data.Timestamp, "Processed");
     }
 
     private static MusicalData ParseMusicalInput(string input)
     {
         var parts = input.Split('_');
         var id = int.Parse(parts[1]);
-        return new MusicalData(input, id % 12, DateTime.UtcNow);
+        return new(input, id % 12, DateTime.UtcNow);
     }
 
     private static AnalyzedData AnalyzeHarmony(MusicalData data)
@@ -285,13 +285,13 @@ internal class Program
             7 => "G Major",
             _ => "Unknown"
         };
-        return new AnalyzedData(data, harmony, 0.8);
+        return new(data, harmony, 0.8);
     }
 
     private static RecommendationData GenerateRecommendations(AnalyzedData analyzed)
     {
         var recommendations = new[] { "Practice scales", "Work on chord progressions", "Study voice leading" };
-        return new RecommendationData(analyzed, recommendations);
+        return new(analyzed, recommendations);
     }
 
     private static async Task<IEnumerable<ProcessedEvent>> ProcessBatchAsync(IList<MusicalEvent> events)

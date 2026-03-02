@@ -2,13 +2,15 @@
 
 > **Date**: 2026-01-22  
 > **Status**: 🔄 In Progress  
-> **Reference**: [Jeremy Likness - Generative AI with LLMs in .NET and C#](https://devblogs.microsoft.com/dotnet/generative-ai-with-large-language-models-in-dotnet-and-csharp/)
+> **Reference
+**: [Jeremy Likness - Generative AI with LLMs in .NET and C#](https://devblogs.microsoft.com/dotnet/generative-ai-with-large-language-models-in-dotnet-and-csharp/)
 
 ---
 
 ## Executive Summary
 
-Guitar Alchemist will adopt **Microsoft's standard AI libraries** (MEAI) as the foundation for all LLM and RAG functionality. This provides:
+Guitar Alchemist will adopt **Microsoft's standard AI libraries** (MEAI) as the foundation for all LLM and RAG
+functionality. This provides:
 
 1. **Provider Independence** - Switch between Ollama (local), GitHub Models, or Azure Foundry without code changes
 2. **Standard Interfaces** - `IChatClient`, `IEmbeddingGenerator<T>`, `IVectorStore` from Microsoft.Extensions.*
@@ -21,16 +23,17 @@ Guitar Alchemist will adopt **Microsoft's standard AI libraries** (MEAI) as the 
 
 ### What We Have ✅
 
-| Component | Current Implementation | MEAI Alignment |
-|-----------|----------------------|----------------|
-| Chat Client | `OllamaChatClientAdapter` implements `IChatClient` | ✅ Already aligned |
-| Embeddings | Custom `IEmbeddingGenerator` (domain-specific) | ⚠️ Needs bridge |
-| Vector Index | `IVectorIndex` (file-based, Qdrant) | ⚠️ Custom interface |
-| Orchestration | `SpectralRagOrchestrator` | ⚠️ Manual orchestration |
+| Component     | Current Implementation                             | MEAI Alignment          |
+|---------------|----------------------------------------------------|-------------------------|
+| Chat Client   | `OllamaChatClientAdapter` implements `IChatClient` | ✅ Already aligned       |
+| Embeddings    | Custom `IEmbeddingGenerator` (domain-specific)     | ⚠️ Needs bridge         |
+| Vector Index  | `IVectorIndex` (file-based, Qdrant)                | ⚠️ Custom interface     |
+| Orchestration | `SpectralRagOrchestrator`                          | ⚠️ Manual orchestration |
 
 ### What Needs Migration 🔄
 
-1. **Embedding Generator Interface** - Bridge our `IEmbeddingGenerator` to MEAI's `IEmbeddingGenerator<string, Embedding<float>>`
+1. **Embedding Generator Interface** - Bridge our `IEmbeddingGenerator` to MEAI's
+   `IEmbeddingGenerator<string, Embedding<float>>`
 2. **Vector Store Abstraction** - Align `IVectorIndex` with `Microsoft.Extensions.VectorData`
 3. **DI Registration** - Use MEAI's `AddChatClient()`, `AddEmbeddingGenerator()` patterns
 
@@ -111,6 +114,7 @@ public class MusicalEmbeddingBridge : IEmbeddingGenerator<VoicingDocument, Embed
 ```
 
 **AC**:
+
 - [ ] Implements `IEmbeddingGenerator<VoicingDocument, Embedding<float>>`
 - [ ] Wraps existing `MusicalEmbeddingGenerator`
 - [ ] Returns MEAI `Embedding<float>` type
@@ -133,6 +137,7 @@ public class VectorStoreAdapter : IVectorStore
 ```
 
 **AC**:
+
 - [ ] Implements `IVectorStore` from Microsoft.Extensions.VectorData
 - [ ] Wraps existing `IVectorIndex` implementations
 - [ ] Supports metadata filtering
@@ -165,6 +170,7 @@ public static class AiServiceExtensions
 ```
 
 **AC**:
+
 - [ ] Single extension method configures all AI services
 - [ ] Respects configuration for provider selection
 - [ ] Logging and retry policies applied
@@ -179,6 +185,7 @@ public static class AiServiceExtensions
 **Already done**: `OllamaChatClientAdapter` implements `IChatClient`
 
 **To add**:
+
 - [ ] `OllamaEmbeddingClient` for text embeddings (fallback for non-musical content)
 - [ ] Configuration in `appsettings.Development.json`
 
@@ -199,6 +206,7 @@ public static IChatClient CreateGitHubModelsChatClient(string model = "gpt-4o-mi
 ```
 
 **AC**:
+
 - [ ] Works with `GITHUB_TOKEN` environment variable
 - [ ] Supports model selection via configuration
 - [ ] Falls back gracefully if unavailable
@@ -230,13 +238,13 @@ public abstract class GuitarAlchemistAgentBase
 
 #### 3.2 Implement Specialized Agents
 
-| Agent | Plugins | Tools |
-|-------|---------|-------|
-| `TabAgent` | `ParseAsciiTab`, `ExtractChords` | ASCII parser |
-| `TheoryAgent` | `AnalyzePitchClasses`, `IdentifyFunction` | OPTIC-K engine |
+| Agent            | Plugins                                        | Tools            |
+|------------------|------------------------------------------------|------------------|
+| `TabAgent`       | `ParseAsciiTab`, `ExtractChords`               | ASCII parser     |
+| `TheoryAgent`    | `AnalyzePitchClasses`, `IdentifyFunction`      | OPTIC-K engine   |
 | `TechniqueAgent` | `ValidateFingerPosition`, `SuggestAlternative` | Fretboard mapper |
-| `ComposerAgent` | `Reharmonize`, `GenerateVariation` | Phase sphere |
-| `CriticAgent` | `DetectContradiction`, `ScoreResponse` | Validator |
+| `ComposerAgent`  | `Reharmonize`, `GenerateVariation`             | Phase sphere     |
+| `CriticAgent`    | `DetectContradiction`, `ScoreResponse`         | Validator        |
 
 #### 3.3 Create Aggregator/Router
 
@@ -262,12 +270,12 @@ public class SemanticRouter
 
 #### 4.1 Define Knowledge Types
 
-| Type | Content | Partition |
-|------|---------|-----------|
-| `Theory` | Harmonic functions, substitutions | High semantic weight |
-| `Technique` | Voicings, ergonomics, doigtés | High morphology weight |
-| `Corpus` | Riffs, tabs, MIDI, GuitarPro | Searchable examples |
-| `Rules` | OPTIC-K invariants, heuristics | Hard constraints |
+| Type        | Content                           | Partition              |
+|-------------|-----------------------------------|------------------------|
+| `Theory`    | Harmonic functions, substitutions | High semantic weight   |
+| `Technique` | Voicings, ergonomics, doigtés     | High morphology weight |
+| `Corpus`    | Riffs, tabs, MIDI, GuitarPro      | Searchable examples    |
+| `Rules`     | OPTIC-K invariants, heuristics    | Hard constraints       |
 
 #### 4.2 Implement Partitioned RAG
 
@@ -283,7 +291,9 @@ public interface IPartitionedRagService
 ## Migration Checklist
 
 ### Phase 1 - Core ✅ (Completed 2026-01-22)
-- [x] Create `MusicalEmbeddingBridge.cs` - Bridges OPTIC-K generator to `IEmbeddingGenerator<VoicingDocument, Embedding<float>>`
+
+- [x] Create `MusicalEmbeddingBridge.cs` - Bridges OPTIC-K generator to
+  `IEmbeddingGenerator<VoicingDocument, Embedding<float>>`
 - [x] Create `InMemoryVectorIndex.cs` - Development/testing vector index with cosine similarity
 - [x] Create `AiServiceExtensions.cs` - DI registration for all AI services (`AddGuitarAlchemistAi()`)
 - [x] Add MEAI packages to `GA.Business.ML.csproj` (v9.4.0-preview)
@@ -292,6 +302,7 @@ public interface IPartitionedRagService
 - [x] Add unit tests for `MusicalEmbeddingBridge` (9 tests passing)
 
 ### Phase 2 - Providers (Completed - 2026-01-22)
+
 - [x] Create `OllamaProvider.cs` - Factory methods for Ollama chat and embedding clients
 - [x] Create `GitHubModelsProvider.cs` - Infrastructure ready (deferred due to SDK version mismatch)
 - [x] Create `HybridEmbeddingService` - Combines musical (OPTIC-K) and text embeddings
@@ -301,22 +312,24 @@ public interface IPartitionedRagService
 - ⏸️ OpenAI/GitHub Models integration deferred until Microsoft.Extensions.AI.OpenAI stabilizes
 
 ### Phase 3 - Agents (Completed - 2026-01-22)
+
 - [x] Create `GuitarAlchemistAgentBase.cs` - Base class with IChatClient, AgentRequest/Response models
 - [x] Implement 5 specialized agents:
-  - [x] TabAgent - ASCII tab parsing and chord extraction
-  - [x] TheoryAgent - Pitch class and harmonic analysis (OPTIC-K)
-  - [x] TechniqueAgent - Playability and ergonomic analysis
-  - [x] ComposerAgent - Reharmonization and variation generation
-  - [x] CriticAgent - Quality evaluation and consistency checking
+    - [x] TabAgent - ASCII tab parsing and chord extraction
+    - [x] TheoryAgent - Pitch class and harmonic analysis (OPTIC-K)
+    - [x] TechniqueAgent - Playability and ergonomic analysis
+    - [x] ComposerAgent - Reharmonization and variation generation
+    - [x] CriticAgent - Quality evaluation and consistency checking
 - [x] Create `SemanticRouter.cs` - Embedding-based request routing with multi-agent aggregation
 - [x] Add DI registration (`AddGuitarAlchemistAgents()`, `AddGuitarAlchemistFullStack()`)
 - [x] Validate OPTIC-K Schema via In-Memory RAG:
-  - [x] Created `PartitionAwareRagIndex.cs` for dimension-by-dimension testing
-  - [x] Verified Structure/Morphology separation (Similarity: 1.0 vs 0.63 for same chord)
-  - [x] Verified weighted balancing in semantic search
+    - [x] Created `PartitionAwareRagIndex.cs` for dimension-by-dimension testing
+    - [x] Verified Structure/Morphology separation (Similarity: 1.0 vs 0.63 for same chord)
+    - [x] Verified weighted balancing in semantic search
 - [ ] Add agent tests
 
 ### Phase 4 - RAG Partitioning
+
 - [x] Implement `IPartitionedRagService` (PartitionedRagService.cs) ✅
 - [x] Integrated specialized RAG services (Theory, Technique, Corpus, Rules) ✅
 - [x] Added `ParseStructuredQuery` for musical DSL/intent detection ✅
@@ -324,6 +337,7 @@ public interface IPartitionedRagService
 - [x] Validated with `PartitionedRagServiceTests.cs` ✅
 
 ### Phase 5 - Evaluation & Benchmarking
+
 - [x] Implement `RagEvaluationService` (Evaluation harness) ✅
 - [x] Create automated benchmark suites (`PartitionedRagServiceTests.cs`) ✅
 - [ ] Evaluate different LLM backends (Ollama vs GitHub Models)

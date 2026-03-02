@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests.Integration;
+namespace GA.Business.Core.Tests.Integration;
 
 // using GA.Domain.Core.Services; // Namespace does not exist
 // using GA.Domain.Core.Spatial; // Namespace does not exist

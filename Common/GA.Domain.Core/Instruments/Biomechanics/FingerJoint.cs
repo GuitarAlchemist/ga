@@ -35,20 +35,15 @@ public record FingerJoint
     /// <summary>
     ///     Check if joint angles are within biomechanical limits
     /// </summary>
-    public bool IsWithinLimits(float flexion, float abduction = 0)
-    {
-        return flexion >= MinFlexion && flexion <= MaxFlexion &&
-               abduction >= MinAbduction && abduction <= MaxAbduction;
-    }
+    public bool IsWithinLimits(float flexion, float abduction = 0) => flexion >= MinFlexion && flexion <= MaxFlexion &&
+                                                                      abduction >= MinAbduction &&
+                                                                      abduction <= MaxAbduction;
 
     /// <summary>
     ///     Clamp joint angles to biomechanical limits
     /// </summary>
-    public (float flexion, float abduction) ClampToLimits(float flexion, float abduction = 0)
-    {
-        return (
-            Math.Clamp(flexion, MinFlexion, MaxFlexion),
-            Math.Clamp(abduction, MinAbduction, MaxAbduction)
-        );
-    }
+    public (float flexion, float abduction) ClampToLimits(float flexion, float abduction = 0) => (
+        Math.Clamp(flexion, MinFlexion, MaxFlexion),
+        Math.Clamp(abduction, MinAbduction, MaxAbduction)
+    );
 }

@@ -1,10 +1,12 @@
 ﻿# GA.Core
 
-This project contains low-level utilities, functional patterns, and mathematical foundations for the Guitar Alchemist solution, following the modular architecture Layer 1 (Base/Infrastructure).
+This project contains low-level utilities, functional patterns, and mathematical foundations for the Guitar Alchemist
+solution, following the modular architecture Layer 1 (Base/Infrastructure).
 
 ## Overview
 
 This library provides:
+
 - **Functional Programming**: Monads, Option types, and functional extensions.
 - **Combinatorics**: Variations, combinations, and permutations utilities.
 - **Design Patterns**: Base implementations for common patterns (e.g., Singleton, Factory).
@@ -14,6 +16,7 @@ This library provides:
 ## Architecture
 
 This project follows the Guitar Alchemist modular architecture:
+
 - **Layer 1 (Base)**: `GA.Core` (this project)
 - **Dependencies**: None (External packages only)
 - **Consumers**: All projects in the solution (Layers 2-5).
@@ -21,17 +24,23 @@ This project follows the Guitar Alchemist modular architecture:
 ## Services/Features
 
 ### Functional Extensions
+
 Located in `Functional/`:
+
 - **Result/Option**: Functional error handling and optional value patterns.
 - **Pipe/Compose**: Functional composition utilities.
 
 ### Combinatorics
+
 Located in `Combinatorics/`:
+
 - **Variations**: Generating variations with and without repetitions.
 - **Combinations**: Standard combinatorial set generation.
 
 ### Design Patterns
+
 Located in `DesignPatterns/`:
+
 - **Observable**: Base classes for observable patterns.
 - **Repository**: Generic repository abstractions.
 

@@ -1,4 +1,4 @@
-namespace GA.Domain.Core.Tests.Fretboard.Biomechanics;
+namespace GA.Business.Core.Tests.Fretboard.Biomechanics;
 
 using Domain.Services.Fretboard.Biomechanics;
 
@@ -6,6 +6,7 @@ using Domain.Services.Fretboard.Biomechanics;
 public class DualQuaternionTests
 {
     private const float _tolerance = 0.001f;
+
     [Test]
     public void Identity_ShouldHaveNoTransformation()
     {
@@ -19,6 +20,7 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(point.Y).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(point.Z).Within(_tolerance));
     }
+
     [Test]
     public void FromTranslation_ShouldTranslatePoint()
     {
@@ -33,6 +35,7 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(12).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(18).Within(_tolerance));
     }
+
     [Test]
     public void FromRotation_ShouldRotatePoint()
     {
@@ -47,6 +50,7 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(1).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(0).Within(_tolerance));
     }
+
     [Test]
     public void FromRotationTranslation_ShouldRotateThenTranslate()
     {
@@ -62,12 +66,13 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(1).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(0).Within(_tolerance));
     }
+
     [Test]
     public void Multiplication_ShouldComposeTransformations()
     {
         // Arrange
-        var dq1 = DualQuaternion.FromTranslation(new Vector3(5, 0, 0));
-        var dq2 = DualQuaternion.FromTranslation(new Vector3(0, 10, 0));
+        var dq1 = DualQuaternion.FromTranslation(new(5, 0, 0));
+        var dq2 = DualQuaternion.FromTranslation(new(0, 10, 0));
         var point = new Vector3(0, 0, 0);
         // Act
         var composed = dq1 * dq2;
@@ -77,6 +82,7 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(10).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(0).Within(_tolerance));
     }
+
     [Test]
     public void GetTranslation_ShouldExtractTranslationVector()
     {
@@ -90,6 +96,7 @@ public class DualQuaternionTests
         Assert.That(extracted.Y, Is.EqualTo(8).Within(_tolerance));
         Assert.That(extracted.Z, Is.EqualTo(9).Within(_tolerance));
     }
+
     [Test]
     public void GetRotation_ShouldExtractRotationQuaternion()
     {
@@ -104,6 +111,7 @@ public class DualQuaternionTests
         Assert.That(extracted.Z, Is.EqualTo(rotation.Z).Within(_tolerance));
         Assert.That(extracted.W, Is.EqualTo(rotation.W).Within(_tolerance));
     }
+
     [Test]
     public void Normalize_ShouldMaintainTransformation()
     {
@@ -121,12 +129,13 @@ public class DualQuaternionTests
         Assert.That(normalizedResult.Y, Is.EqualTo(original.Y).Within(_tolerance));
         Assert.That(normalizedResult.Z, Is.EqualTo(original.Z).Within(_tolerance));
     }
+
     [Test]
     public void Slerp_ShouldInterpolateSmoothly()
     {
         // Arrange
-        var dq1 = DualQuaternion.FromTranslation(new Vector3(0, 0, 0));
-        var dq2 = DualQuaternion.FromTranslation(new Vector3(10, 0, 0));
+        var dq1 = DualQuaternion.FromTranslation(new(0, 0, 0));
+        var dq2 = DualQuaternion.FromTranslation(new(10, 0, 0));
         var point = new Vector3(0, 0, 0);
         // Act
         var halfway = DualQuaternion.Slerp(dq1, dq2, 0.5f);
@@ -136,6 +145,7 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(0).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(0).Within(_tolerance));
     }
+
     [Test]
     public void ToMatrix_ShouldProduceEquivalentTransformation()
     {
@@ -153,6 +163,7 @@ public class DualQuaternionTests
         Assert.That(matrixResult.Y, Is.EqualTo(dqResult.Y).Within(_tolerance));
         Assert.That(matrixResult.Z, Is.EqualTo(dqResult.Z).Within(_tolerance));
     }
+
     [Test]
     public void FromMatrix_ShouldRoundTrip()
     {
@@ -171,6 +182,7 @@ public class DualQuaternionTests
         Assert.That(reconstructedResult.Y, Is.EqualTo(originalResult.Y).Within(_tolerance));
         Assert.That(reconstructedResult.Z, Is.EqualTo(originalResult.Z).Within(_tolerance));
     }
+
     [Test]
     public void TransformVector_ShouldRotateWithoutTranslation()
     {
@@ -186,21 +198,22 @@ public class DualQuaternionTests
         Assert.That(transformed.Y, Is.EqualTo(1).Within(_tolerance));
         Assert.That(transformed.Z, Is.EqualTo(0).Within(_tolerance));
     }
+
     [Test]
     public void ChainedTransformations_ShouldMatchSequentialApplication()
     {
         // Arrange - Simulate a finger joint chain
         var joint1 = DualQuaternion.FromRotationTranslation(
             Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / 6),
-            new Vector3(0, 10, 0)
+            new(0, 10, 0)
         );
         var joint2 = DualQuaternion.FromRotationTranslation(
             Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / 4),
-            new Vector3(0, 15, 0)
+            new(0, 15, 0)
         );
         var joint3 = DualQuaternion.FromRotationTranslation(
             Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathF.PI / 3),
-            new Vector3(0, 10, 0)
+            new(0, 10, 0)
         );
         var point = new Vector3(0, 0, 0);
         // Act - Chained multiplication (A * B * C applies C, then B, then A)
