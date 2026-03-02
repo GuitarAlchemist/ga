@@ -21,5 +21,5 @@
 - [x] 4.3 Format analysis results for the user (Narrator).
 
 ## Phase 5: Verification
-- [ ] Manual test: Paste a "Smoke on the Water" riff and verify correct chord detection.
-- [ ] Manual test: Verify key detection for a simple progression.
+- [x] Manual test: Paste a "Smoke on the Water" riff and verify correct chord detection.
+- [x] Manual test: Verify key detection for a simple progression.

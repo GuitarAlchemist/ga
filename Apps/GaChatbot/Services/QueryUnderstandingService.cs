@@ -54,6 +54,7 @@ public class QueryUnderstandingService(DomainMetadataPrompter prompter)
 
 public class HybridSearchFilters
 {
+    public string? Intent { get; set; }
     public string? Quality { get; set; }
     public string? Extension { get; set; }
     public string? StackingType { get; set; }

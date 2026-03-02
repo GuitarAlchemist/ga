@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using MongoDB.Bson;
 using MongoDB.Driver;

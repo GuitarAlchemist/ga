@@ -1,4 +1,4 @@
-﻿namespace GaChatbot.Services;
+namespace GaChatbot.Services;
 
 using GA.Domain.Core.Instruments;
 using System;

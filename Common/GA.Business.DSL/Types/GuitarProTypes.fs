@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.Types
+namespace GA.Business.DSL.Types
 
 /// <summary>
 /// Type definitions for Guitar Pro file format (.gp3, .gp4, .gp5, .gpx, .gp)

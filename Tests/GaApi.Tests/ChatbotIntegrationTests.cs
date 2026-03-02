@@ -23,10 +23,7 @@ public class ChatbotIntegrationTests
     private TestOllamaEmbeddingService _testEmbeddingService = null!;
 
     [OneTimeSetUp]
-    public void OneTimeSetUp()
-    {
-        _mockChatService = new Mock<IOllamaChatService>();
-    }
+    public void OneTimeSetUp() => _mockChatService = new Mock<IOllamaChatService>();
 
     [SetUp]
     public void SetUp()
@@ -201,10 +198,7 @@ public class ChatbotIntegrationTests
             return mock.Object;
         }
 
-        public void SetExpectedQuery(string query)
-        {
-            _expectedQuery = query;
-        }
+        public void SetExpectedQuery(string query) => _expectedQuery = query;
 
         public override Task<float[]> GenerateEmbeddingAsync(string text)
         {

@@ -5,6 +5,7 @@
 ///     Unlike Result which fails fast, Validation collects all errors.
 /// </summary>
 /// <typeparam name="TValue">The type of the success value</typeparam>
+/// <typeparam name="TError">The type of the error</typeparam>
 /// <remarks>
 ///     This type is useful when you want to validate multiple fields and collect all errors
 ///     before returning to the user, rather than failing on the first error.

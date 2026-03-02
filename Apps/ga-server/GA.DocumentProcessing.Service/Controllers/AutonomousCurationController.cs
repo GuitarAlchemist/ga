@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Controllers;
+namespace GA.DocumentProcessing.Service.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
 using Models;

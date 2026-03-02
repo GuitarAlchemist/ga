@@ -3,13 +3,8 @@
 public class Tests
 {
     [SetUp]
-    public void Setup()
-    {
-    }
+    public void Setup() => _ = 0; // Empty setup fix
 
     [Test]
-    public void Test1()
-    {
-        Assert.Pass();
-    }
+    public void Test1() => Assert.Pass();
 }

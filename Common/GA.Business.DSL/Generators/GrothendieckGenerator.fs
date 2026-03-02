@@ -1,6 +1,6 @@
-namespace GA.MusicTheory.DSL.Generators
+namespace GA.Business.DSL.Generators
 
-open GA.MusicTheory.DSL.Types.GrammarTypes
+open GA.Business.DSL.Types.GrammarTypes
 
 /// <summary>
 /// Generator for Grothendieck Operations DSL from AST types

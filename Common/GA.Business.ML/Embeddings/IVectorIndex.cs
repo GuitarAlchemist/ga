@@ -26,4 +26,9 @@ public interface IVectorIndex
     /// <param name="currentSchemaVersion">The expected version from EmbeddingSchema.</param>
     /// <returns>True if the index is stale and needs reindexing.</returns>
     Task<bool> IsStaleAsync(string currentSchemaVersion);
+
+    /// <summary>
+    ///     Upserts a collection of documents into the vector index.
+    /// </summary>
+    Task IndexAsync(IEnumerable<ChordVoicingRagDocument> docs);
 }

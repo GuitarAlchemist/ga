@@ -55,7 +55,7 @@ public class DatasetExportTests
 
                 if (!_templateLookup.ContainsKey(key))
                 {
-                    _templateLookup[key] = new List<ChordTemplate>();
+                    _templateLookup[key] = [];
                 }
                 
                 _templateLookup[key].Add(template); 
@@ -107,7 +107,7 @@ public class DatasetExportTests
                         SearchableText = chordName,
                         ChordName = chordName,
                         RootPitchClass = rootOffset,
-                        MidiNotes = notes.Select(n => n.Value).ToArray(),
+                        MidiNotes = [.. notes.Select(n => n.Value)],
                         PitchClasses = pcsValues,
                         PitchClassSet = key,
                         IntervalClassVector = template.Formula.Intervals.ToString(), // Approximate

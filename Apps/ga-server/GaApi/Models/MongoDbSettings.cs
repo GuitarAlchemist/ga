@@ -1,4 +1,4 @@
-﻿namespace GaApi.Models;
+namespace GaApi.Models;
 
 public class MongoDbSettings
 {

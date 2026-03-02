@@ -12,7 +12,7 @@ public sealed record ProgressionDocument : RagDocumentBase
     public required string Category { get; init; } // e.g., "Jazz", "Blues", "Pop"
     public string? Description { get; init; }
 
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         var searchParts = new List<string>
         {
@@ -24,6 +24,6 @@ public sealed record ProgressionDocument : RagDocumentBase
             string.Join(" ", RomanNumerals)
         };
 
-        SearchText = string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
+        return string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
     }
 }

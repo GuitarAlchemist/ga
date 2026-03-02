@@ -1,4 +1,4 @@
-﻿namespace FloorManager.Services;
+namespace FloorManager.Services;
 
 using System.Text.Json;
 

@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.LSP
+namespace GA.Business.DSL.LSP
 
 open Newtonsoft.Json.Linq
 

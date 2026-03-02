@@ -1,7 +1,7 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
 open FParsec
-open GA.MusicTheory.DSL.Types.AsciiTabTypes
+open GA.Business.DSL.Types.AsciiTabTypes
 
 /// <summary>
 /// Parser for ASCII Tab notation

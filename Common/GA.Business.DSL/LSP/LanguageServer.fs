@@ -1,10 +1,10 @@
-namespace GA.MusicTheory.DSL.LSP
+namespace GA.Business.DSL.LSP
 
 open System
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open GA.MusicTheory.DSL.Parsers
-open GA.MusicTheory.DSL.LSP.LspTypes
+open GA.Business.DSL.Parsers
+open GA.Business.DSL.LSP.LspTypes
 
 /// <summary>
 /// Language Server Protocol implementation for Music Theory DSL

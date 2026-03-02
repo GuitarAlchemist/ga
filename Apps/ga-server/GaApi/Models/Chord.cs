@@ -1,4 +1,4 @@
-﻿namespace GaApi.Models;
+namespace GaApi.Models;
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -20,9 +20,9 @@ public class Chord
 
     [BsonElement("NoteCount")] public int NoteCount { get; set; }
 
-    [BsonElement("Intervals")] public BsonArray? Intervals { get; set; }
+    [BsonElement("Intervals")] public int[]? Intervals { get; set; }
 
-    [BsonElement("PitchClassSet")] public BsonArray? PitchClassSet { get; set; }
+    [BsonElement("PitchClassSet")] public int[]? PitchClassSet { get; set; }
 
     [BsonElement("ParentScale")] public string? ParentScale { get; set; }
 

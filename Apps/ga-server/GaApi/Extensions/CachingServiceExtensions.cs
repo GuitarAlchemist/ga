@@ -1,4 +1,4 @@
-﻿namespace GaApi.Extensions;
+namespace GaApi.Extensions;
 
 using Configuration;
 using Services;
@@ -29,8 +29,11 @@ public static class CachingServiceExtensions
         // 1. Configuration
         services.Configure<CachingOptions>(configuration.GetSection(CachingOptions.SectionName));
 
-        // 2. Add memory caching
+        // 2. Add memory caching & Hybrid Cache
         services.AddMemoryCache();
+#pragma warning disable EXTEXP0018
+        services.AddHybridCache();
+#pragma warning restore EXTEXP0018
 
         // Add cache metrics service for monitoring and performance tracking
         services.AddSingleton<ICacheMetricsService, CacheMetricsService>();

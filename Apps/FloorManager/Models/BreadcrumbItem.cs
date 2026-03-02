@@ -1,4 +1,4 @@
-﻿namespace FloorManager.Models;
+namespace FloorManager.Models;
 
 public class BreadcrumbItem
 {

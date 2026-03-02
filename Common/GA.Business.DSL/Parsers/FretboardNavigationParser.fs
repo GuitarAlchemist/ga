@@ -1,7 +1,7 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
 open FParsec
-open GA.MusicTheory.DSL.Types.GrammarTypes
+open GA.Business.DSL.Types.GrammarTypes
 
 /// <summary>
 /// Parser for Fretboard Navigation DSL using FParsec

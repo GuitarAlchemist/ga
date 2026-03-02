@@ -11,7 +11,7 @@ public class AdditionalScenariosTests
     public void Setup()
     {
         _generator = TestServices.CreateGenerator();
-        _tabAnalysisService = new(new(), new(), _generator);
+        _tabAnalysisService = new(new(), new(), _generator, new());
     }
 
     private MusicalEmbeddingGenerator _generator = null!;

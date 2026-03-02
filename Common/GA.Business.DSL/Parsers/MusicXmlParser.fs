@@ -1,6 +1,6 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
-open GA.MusicTheory.DSL.Types.MusicXmlTypes
+open GA.Business.DSL.Types.MusicXmlTypes
 open System
 open System.Xml
 open System.Xml.Linq

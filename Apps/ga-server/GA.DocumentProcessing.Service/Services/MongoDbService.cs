@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Services;
+namespace GA.DocumentProcessing.Service.Services;
 
 using GA.DocumentProcessing.Service.Models;
 using Microsoft.Extensions.Options;
@@ -43,5 +43,10 @@ public class MongoDbService
 
     public IMongoCollection<ProcessedDocument> Documents => _documents;
     public IMongoDatabase Database => _database;
+
+    public async Task<List<ProcessedDocument>> GetProcessedDocumentsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _documents.Find(_ => true).ToListAsync(cancellationToken);
+    }
 }
 

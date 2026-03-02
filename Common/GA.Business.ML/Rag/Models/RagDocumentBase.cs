@@ -15,4 +15,9 @@ public abstract record RagDocumentBase : DocumentBase
     /// </summary>
     public float[] Embedding { get; init; } = [];
     public string SearchText { get; protected set; } = string.Empty;
+
+    /// <summary>
+    /// Generates a robust text representation of the document for semantic embedding.
+    /// </summary>
+    public abstract string ToEmbeddingString();
 }

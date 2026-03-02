@@ -1,12 +1,8 @@
+namespace GaCLI;
 using GA.Domain.Core.Instruments;
-﻿namespace GaCLI;
-
 public class SomeStuff
 {
-    private static void RenderGuitarFretboard()
-    {
-        Console.WriteLine(Fretboard.Default);
-    }
+    private static void RenderGuitarFretboard() => Console.WriteLine(Fretboard.Default);
 
     // TODO: Fix to use new YamlDotNet-based API instead of old type provider
     /*

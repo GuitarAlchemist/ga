@@ -1,6 +1,5 @@
 namespace GA.Core.ValueObjects;
 
-using System;
 using System.Collections.Immutable;
 using GA.Core.Extensions;
 

@@ -1,4 +1,4 @@
-﻿namespace GA.AI.Service.Controllers;
+namespace GA.AI.Service.Controllers;
 
 using GA.Domain.Core.Instruments;
 
@@ -15,6 +15,7 @@ using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 
 using IShapeGraphBuilder = GA.Domain.Instruments.Shapes.IShapeGraphBuilder;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     API controller for Advanced AI Features

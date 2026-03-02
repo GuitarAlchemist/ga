@@ -1,9 +1,10 @@
-﻿namespace GA.DocumentProcessing.Service.Controllers;
+namespace GA.DocumentProcessing.Service.Controllers;
 
 using GA.DocumentProcessing.Service.Models;
 using GA.DocumentProcessing.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
+using AllProjects.ServiceDefaults;
 
 [ApiController]
 [Route("api/[controller]")]

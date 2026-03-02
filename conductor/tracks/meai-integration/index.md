@@ -4,7 +4,7 @@
 
 Adopt Microsoft Extensions for AI (MEAI) as the standard foundation for all LLM, embedding, and vector store functionality in Guitar Alchemist.
 
-## Status: 🔄 In Progress
+## Status: ⚠️ Needs Reconciliation
 
 ## Documents
 
@@ -21,14 +21,14 @@ Adopt Microsoft Extensions for AI (MEAI) as the standard foundation for all LLM,
 
 ## Current Focus
 
-**Phase 2**: Provider Implementations — GitHub Models, OpenAI integration
+Reconcile provider implementation status across this document and unblock deferred OpenAI/GitHub Models support.
 
 ## Progress
 
 | Phase | Status |
 |-------|--------|
 | 1. Core Abstractions | ✅ Complete |
-| 2. Provider Implementations | ✅ Complete |
+| 2. Provider Implementations | ⚠️ Partial (Ollama complete; OpenAI/GitHub deferred) |
 | 3. Semantic Kernel Agents | ✅ Complete (5 agents + router) |
 | 4. RAG Partitioning | ✅ Complete (4 domains + DSL) |
 | 5. Evaluation & Benchmarks | ✅ Complete (Harness + Metrics) |
@@ -63,7 +63,7 @@ services.AddVectorIndex("qdrant", configuration);
 services.AddGuitarAlchemistChatClient("ollama", configuration);
 ```
 
-## Phase 2 Deliverables (In Progress - 2026-01-22)
+## Phase 2 Deliverables (Partially Complete - 2026-01-22)
 
 ### New Files Created
 

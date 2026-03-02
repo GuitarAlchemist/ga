@@ -22,11 +22,11 @@ using Microsoft.Extensions.Logging;
 /// by a <see cref="SemanticRouter"/> for intelligent request routing.
 /// </para>
 /// </remarks>
-public abstract class GuitarAlchemistAgentBase : IDisposable
+public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger logger) : IDisposable
 {
-    protected readonly IChatClient ChatClient;
-    protected readonly ILogger Logger;
-    
+    protected readonly IChatClient ChatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
+    protected readonly ILogger Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     /// <summary>
     /// Gets the unique identifier for this agent type.
     /// </summary>
@@ -46,15 +46,6 @@ public abstract class GuitarAlchemistAgentBase : IDisposable
     /// Gets the domains/topics this agent handles (used for semantic routing).
     /// </summary>
     public abstract IReadOnlyList<string> Capabilities { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the agent.
-    /// </summary>
-    protected GuitarAlchemistAgentBase(IChatClient chatClient, ILogger logger)
-    {
-        ChatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
-        Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// Processes a user request and returns a structured response.

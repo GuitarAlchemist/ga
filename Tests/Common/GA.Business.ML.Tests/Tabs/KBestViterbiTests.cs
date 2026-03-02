@@ -43,7 +43,8 @@ public class KBestViterbiTests
             _mapper,
             _costService,
             _mockStyleService.Object,
-            _mockGenerator.Object
+            _mockGenerator.Object,
+            new Mock<IMlNaturalnessRanker>().Object
         );
     }
 

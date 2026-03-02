@@ -1,12 +1,12 @@
 namespace GA.Core.Functional;
 
-using System;
 using System.Threading.Tasks;
 
 /// <summary>
 ///     Represents a computation that may either result in a value of type T or throw an exception.
 /// </summary>
 /// <typeparam name="T">The type of the result</typeparam>
+[PublicAPI]
 public readonly record struct Try<T>
 {
     private readonly T? _value;

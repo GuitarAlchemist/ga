@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using Azure;
 using Azure.AI.OpenAI;
@@ -18,20 +18,30 @@ public class VectorSearchService
     private readonly bool _useLocal;
 
     public VectorSearchService(
-        IOptions<MongoDbSettings> settings,
-        IConfiguration configuration,
-        LocalEmbeddingService localEmbedding,
-        ILogger<VectorSearchService> logger)
+        IOptions<MongoDbSettings>? settings,
+        IConfiguration? configuration,
+        LocalEmbeddingService? localEmbedding,
+        ILogger<VectorSearchService>? logger)
     {
-        _settings = settings.Value;
-        var client = new MongoClient(_settings.ConnectionString);
-        _database = client.GetDatabase(_settings.DatabaseName);
-        _logger = logger;
+        if (settings?.Value != null)
+        {
+            _settings = settings.Value;
+            var client = new MongoClient(_settings.ConnectionString);
+            _database = client.GetDatabase(_settings.DatabaseName);
+        }
+        else
+        {
+            // Default/Empty for testing
+            _settings = new MongoDbSettings();
+            _database = null!; 
+        }
+
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<VectorSearchService>.Instance;
         _localEmbedding = localEmbedding;
 
         // Initialize OpenAI client if API key is configured
-        var apiKey = configuration["OpenAI:ApiKey"];
-        _embeddingModel = configuration["OpenAI:Model"] ?? "text-embedding-3-small";
+        var apiKey = configuration?["OpenAI:ApiKey"];
+        _embeddingModel = configuration?["OpenAI:Model"] ?? "text-embedding-3-small";
 
         if (!string.IsNullOrEmpty(apiKey))
         {
@@ -39,13 +49,15 @@ public class VectorSearchService
             _useLocal = false;
             _logger.LogInformation("Using OpenAI embeddings");
         }
-        else if (_localEmbedding.IsAvailable)
+        else if (_localEmbedding?.IsAvailable == true)
         {
             _useLocal = true;
             _logger.LogInformation("Using local embeddings");
         }
         else
         {
+            _useLocal = false;
+            _openAiClient = null;
             _logger.LogWarning("No embedding service available");
         }
     }
@@ -229,7 +241,7 @@ public class VectorSearchService
     /// <summary>
     ///     Hybrid search: combine vector search with keyword filters
     /// </summary>
-    public async Task<List<ChordSearchResult>> HybridSearchAsync(
+    public virtual async Task<List<ChordSearchResult>> HybridSearchAsync(
         string query,
         string? quality = null,
         string? extension = null,

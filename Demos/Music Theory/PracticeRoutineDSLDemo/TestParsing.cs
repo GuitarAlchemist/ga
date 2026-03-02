@@ -1,6 +1,6 @@
 namespace PracticeRoutineDSLDemo;
 
-using GA.MusicTheory.DSL.Parsers;
+using GA.Business.DSL.Parsers;
 
 /// <summary>
 ///     Simple test to validate Practice Routine DSL parsing

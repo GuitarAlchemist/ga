@@ -4,10 +4,14 @@ import { useTheme } from '@mui/material/styles';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   keyChordFiltersAtom,
-  selectedKeyNameAtom,
+  musicalContextAtom,
 } from '../../store/atoms';
 import type { KeyChordFilters } from '../../store/atoms';
-import { fetchChordsForKey } from '../../services/musicService';
+import { 
+  fetchChordsForKey, 
+  fetchChordsForScale, 
+  fetchChordsForMode 
+} from '../../services/musicService';
 import type { ChordInContext } from '../../types/music';
 import {
   highlightedRomanNumeralAtom,
@@ -101,7 +105,7 @@ const presetFilters: KeyChordFilters = {
 
 const ChordPalette: React.FC = () => {
   const theme = useTheme();
-  const keyName = useAtomValue(selectedKeyNameAtom);
+  const context = useAtomValue(musicalContextAtom);
   const { apiEndpoint } = useAtomValue(chatConfigAtom);
   const [filters, setFilters] = useAtom(keyChordFiltersAtom);
   const setSelectedChord = useSetAtom(selectedChordAtom);
@@ -125,12 +129,30 @@ const ChordPalette: React.FC = () => {
       setError(null);
 
       try {
-        const data = await fetchChordsForKey({
-          baseUrl: apiEndpoint,
-          keyName,
-          filters,
-          signal: controller.signal,
-        });
+        let data: ChordInContext[] = [];
+        
+        if (context.level === 'key') {
+          data = await fetchChordsForKey({
+            baseUrl: apiEndpoint,
+            keyName: context.keyName,
+            filters,
+            signal: controller.signal,
+          });
+        } else if (context.level === 'scale') {
+          data = await fetchChordsForScale(
+            apiEndpoint,
+            context.scale,
+            context.root,
+            controller.signal
+          );
+        } else if (context.level === 'mode') {
+          data = await fetchChordsForMode(
+            apiEndpoint,
+            context.mode,
+            context.root,
+            controller.signal
+          );
+        }
 
         if (!isMounted) {
           return;
@@ -159,7 +181,7 @@ const ChordPalette: React.FC = () => {
       isMounted = false;
       controller.abort();
     };
-  }, [apiEndpoint, keyName, filters]);
+  }, [apiEndpoint, context, filters]);
 
   const groupedChords = useMemo(() => {
     return chords.reduce<Record<string, ChordInContext[]>>((acc, chord) => {
@@ -202,7 +224,7 @@ const ChordPalette: React.FC = () => {
     const label = chord.romanNumeral
       ? `${chord.romanNumeral} (${chord.contextualName})`
       : chord.contextualName;
-    const prompt = `In ${keyName}, explain how to voice-lead into ${label}. The harmonic function is ${
+    const prompt = `In ${context.level === 'key' ? context.keyName : context.mode + ' ' + context.root}, explain how to voice-lead into ${label}. The harmonic function is ${
       chord.function
     }. Provide voice-leading tips and practice ideas.`;
     setChatInput(prompt);
@@ -213,56 +235,64 @@ const ChordPalette: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <h2 style={{ margin: 0 }}>Chord Palette</h2>
         <p style={{ margin: 0, color: theme.palette.text.secondary }}>
-          Curated from contextual-chords service · tuned to real harmonic usage
+          Context: {context.level.toUpperCase()} · {
+            context.level === 'key' ? context.keyName : 
+            context.level === 'scale' ? `${context.scale} (${context.root})` :
+            `${context.mode} (${context.root})`
+          }
         </p>
       </div>
 
-      <div style={controlRowStyle}>
-        {booleanFilters.map(([field, label]) => (
-          <label key={field} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={filters[field]}
-              onChange={(event) => handleCheckbox(field, event.target.checked)}
-            />
-            <span>{label}</span>
-          </label>
-        ))}
-      </div>
+      {context.level === 'key' && (
+        <>
+          <div style={controlRowStyle}>
+            {booleanFilters.map(([field, label]) => (
+              <label key={field} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={filters[field]}
+                  onChange={(event) => handleCheckbox(field, event.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>
-          Minimum commonality: {formatCommonality(filters.minCommonality)}
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.05}
-          value={filters.minCommonality}
-          onChange={(event) => handleCommonalityChange(Number(event.target.value))}
-          style={{ width: '100%' }}
-        />
-        <div style={chipRowStyle}>
-          {[12, 24, 48].map((limit) => (
-            <Chip
-              key={limit}
-              label={`${limit} chords`}
-              color={filters.limit === limit ? 'primary' : 'default'}
-              variant={filters.limit === limit ? 'filled' : 'outlined'}
-              onClick={() => handleLimitChange(limit)}
-              sx={{ cursor: 'pointer' }}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>
+              Minimum commonality: {formatCommonality(filters.minCommonality)}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={filters.minCommonality}
+              onChange={(event) => handleCommonalityChange(Number(event.target.value))}
+              style={{ width: '100%' }}
             />
-          ))}
-          <button
-            type="button"
-            onClick={() => setFilters({ ...presetFilters })}
-            style={secondaryButtonStyle}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
+            <div style={chipRowStyle}>
+              {[12, 24, 48].map((limit) => (
+                <Chip
+                  key={limit}
+                  label={`${limit} chords`}
+                  color={filters.limit === limit ? 'primary' : 'default'}
+                  variant={filters.limit === limit ? 'filled' : 'outlined'}
+                  onClick={() => handleLimitChange(limit)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() => setFilters({ ...presetFilters })}
+                style={secondaryButtonStyle}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
 

@@ -1,7 +1,7 @@
-namespace GA.MusicTheory.DSL.Parsers
+namespace GA.Business.DSL.Parsers
 
 open FParsec
-open GA.MusicTheory.DSL.Types.VexTabTypes
+open GA.Business.DSL.Types.VexTabTypes
 
 /// <summary>
 /// Parser for VexTab notation using FParsec

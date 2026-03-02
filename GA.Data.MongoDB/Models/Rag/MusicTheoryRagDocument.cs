@@ -26,7 +26,7 @@ public record MusicTheoryRagDocument : RagDocumentBase
     
     public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
 
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         // Combine all relevant fields for semantic search
         var searchParts = new List<string>
@@ -44,7 +44,7 @@ public record MusicTheoryRagDocument : RagDocumentBase
             string.Join(", ", KeyInsights)
         };
 
-        SearchText = string.Join(" | ", searchParts.Where(s => !string.IsNullOrWhiteSpace(s)));
+        return string.Join(" | ", searchParts.Where(s => !string.IsNullOrWhiteSpace(s)));
     }
 }
 

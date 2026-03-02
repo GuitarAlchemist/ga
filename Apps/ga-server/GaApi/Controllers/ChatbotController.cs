@@ -1,4 +1,4 @@
-﻿namespace GaApi.Controllers;
+namespace GaApi.Controllers;
 
 using System.Text.Json;
 using Services;
@@ -16,9 +16,16 @@ public class ChatbotController(
     : ControllerBase
 {
     /// <summary>
-    ///     Send a message to the chatbot (streaming via Server-Sent Events)
+    ///     Send a message to the chatbot and receive a streaming response via Server-Sent Events.
+    ///     The response Content-Type is <c>text/event-stream</c>; each <c>data:</c> line is a JSON chunk.
+    ///     The final event is <c>data: [DONE]</c>.
     /// </summary>
+    /// <param name="request">Chat message and optional conversation history.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("chat/stream")]
+    [ProducesResponseType(StatusCodes.Status200OK)]          // text/event-stream
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task ChatStream([FromBody] ChatRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -69,9 +76,11 @@ public class ChatbotController(
     }
 
     /// <summary>
-    ///     Check if Ollama service is available
+    ///     Check whether the Ollama service is reachable and the chatbot is ready to respond.
     /// </summary>
+    /// <returns>Availability flag, human-readable message, and timestamp.</returns>
     [HttpGet("status")]
+    [ProducesResponseType(typeof(ChatbotStatus), StatusCodes.Status200OK)]
     public async Task<ActionResult<ChatbotStatus>> GetStatus(CancellationToken cancellationToken)
     {
         var isAvailable = await chatService.IsAvailableAsync(cancellationToken);
@@ -86,9 +95,11 @@ public class ChatbotController(
     }
 
     /// <summary>
-    ///     Get example queries to help users get started
+    ///     Return a curated list of example queries to help users get started with the chatbot.
     /// </summary>
+    /// <returns>A list of example query strings.</returns>
     [HttpGet("examples")]
+    [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
     public ActionResult<List<string>> GetExamples() =>
         Ok(new List<string>
         {

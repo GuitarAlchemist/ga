@@ -1,8 +1,8 @@
-namespace GA.MusicTheory.DSL.LSP
+namespace GA.Business.DSL.LSP
 
 open System
 open Newtonsoft.Json.Linq
-open GA.MusicTheory.DSL.LSP.LspTypes
+open GA.Business.DSL.LSP.LspTypes
 
 /// <summary>
 /// Completion provider for Music Theory DSL

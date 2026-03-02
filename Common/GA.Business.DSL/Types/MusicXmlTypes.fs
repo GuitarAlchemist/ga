@@ -1,4 +1,4 @@
-namespace GA.MusicTheory.DSL.Types
+namespace GA.Business.DSL.Types
 
 /// MusicXML-specific types for guitar tab conversion
 module MusicXmlTypes =

@@ -1,8 +1,9 @@
-﻿using GA.DocumentProcessing.Service.Models;
+using GA.DocumentProcessing.Service.Models;
 using GA.DocumentProcessing.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
 using System.Reflection;
 using Hellang.Middleware.ProblemDetails;
+using AllProjects.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 

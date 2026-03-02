@@ -40,7 +40,9 @@ public class Program
                 .WithArtifactsPath(Path.Combine(Directory.GetCurrentDirectory(), "BenchmarkResults"))
                 .WithSummaryStyle(SummaryStyle.Default);
 
-            var summary = BenchmarkRunner.Run<DomainCoreBenchmarks>(config);
+            BenchmarkRunner.Run<DomainCoreBenchmarks>(config);
+            BenchmarkRunner.Run<GA.Benchmarks.MusicTheoryBenchmarks>(config);
+
             AnsiConsole.MarkupLine($"[green]Benchmarks completed! Results saved to {config.ArtifactsPath}[/]");
             return 0;
         }

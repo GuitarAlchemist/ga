@@ -15,10 +15,8 @@ public class AdvancedTabSolver(
     PhysicalCostService costService,
     StyleProfileService styleService,
     IEmbeddingGenerator generator,
-    PlayerProfile? playerProfile = null)
+    IMlNaturalnessRanker naturalnessRanker)
 {
-    private readonly PlayerProfile _playerProfile = playerProfile ?? new PlayerProfile();
-
     /// <summary>
     ///     Higher-level entry point that returns a formatted solution.
     /// </summary>
@@ -75,21 +73,38 @@ public class AdvancedTabSolver(
 
             foreach (var r in realizations)
             {
+                // Pruning: fast static physical cost check before expensive embedding.
+                // We'll calculate it fully later, but we can do a quick check if needed.
+                var staticPhys = costService.CalculateStaticCost(r).TotalCost;
+                
+                // Keep only reasonable shapes before generating embeddings to save time
+                if (staticPhys > 200.0) continue; 
+
                 var doc = CreateTempDoc(r);
                 var emb = await generator.GenerateEmbeddingAsync(doc);
-                doc = doc with { Embedding = emb }; // Ensure ranker sees it
 
                 var centroidNaturalness = styleCentroid != null
                     ? styleService.CalculateNaturalness(emb, styleCentroid)
                     : 1.0;
 
-                // Note: Transition-based ML naturalness is now applied in PhysicalCostService.CalculateTransitionCost
                 var naturalness = centroidNaturalness;
 
-                candidates.Add(new(r, emb, naturalness));
+                candidates.Add(new(r, naturalness, staticPhys));
             }
 
-            stepStates.Add(candidates);
+            // Pruning: Keep only top 40 candidates per step to prevent combinatorial explosion
+            var prunedCandidates = candidates
+                .OrderBy(c => c.StaticCost + (1.0 - c.Naturalness) * 10.0)
+                .Take(40)
+                .ToList();
+
+            if (prunedCandidates.Count == 0 && candidates.Count > 0)
+            {
+                // Fallback if all were pruned
+                prunedCandidates = [.. candidates.Take(40)];
+            }
+
+            stepStates.Add(prunedCandidates);
         }
 
         return PerformAdvancedViterbi(stepStates, k);
@@ -100,13 +115,16 @@ public class AdvancedTabSolver(
         var n = states.Count;
         // dp[step][stateIndex] -> List of Top-K (Cost, PrevStateIndex, PrevRank)
         var dp = new List<(double Cost, int PrevStateIndex, int PrevRank)>[n][];
+        
+        // Memoization cache for transition costs
+        var transitionCache = new Dictionary<(CandidateState, CandidateState), double>();
 
         // 1. Initialize first step
         dp[0] = new List<(double Cost, int PrevStateIndex, int PrevRank)>[states[0].Count];
         for (var j = 0; j < states[0].Count; j++)
         {
             var state = states[0][j];
-            var physical = costService.CalculateStaticCost(state.Shape).TotalCost;
+            var physical = state.StaticCost;
 
             // Modern Addition: Style Bias
             var stylePenalty = (1.0 - state.Naturalness) * 10.0;
@@ -124,33 +142,39 @@ public class AdvancedTabSolver(
                 var candidates = new List<(double TotalCost, int PrevState, int PrevRank)>();
 
                 var currState = states[i][curr];
-                var currStaticPhys = costService.CalculateStaticCost(currState.Shape).TotalCost;
+                var currStaticPhys = currState.StaticCost;
                 var stylePenalty = (1.0 - currState.Naturalness) * 10.0;
 
                 // Iterate over all previous states
                 for (var prev = 0; prev < states[i - 1].Count; prev++)
                 {
-                    // Iterate over all K best paths reaching that previous state
+                    var prevState = states[i - 1][prev];
                     var prevPaths = dp[i - 1][prev];
-                    if (prevPaths == null)
+
+                    // Calculate or get memoized transition cost
+                    if (!transitionCache.TryGetValue((prevState, currState), out var transCost))
                     {
-                        continue;
+                        transCost = costService.CalculateTransitionCost(prevState.Shape, currState.Shape);
+                        transitionCache[(prevState, currState)] = transCost;
                     }
 
                     for (var rank = 0; rank < prevPaths.Count; rank++)
                     {
                         var (prevCost, _, _) = prevPaths[rank];
-                        var prevStateShape = states[i - 1][prev].Shape;
-
-                        // Physical Transition Cost
-                        var transCost = costService.CalculateTransitionCost(prevStateShape, currState.Shape);
 
                         // --- POSITION INERTIA (Modern addition) ---
-                        var pos1 = GetHandPosition(prevStateShape);
+                        var pos1 = GetHandPosition(prevState.Shape);
                         var pos2 = GetHandPosition(currState.Shape);
                         var inertia = Math.Abs(pos1 - pos2) > 2 ? 2.0 : 0.0;
 
-                        var total = prevCost + transCost + currStaticPhys + stylePenalty + inertia;
+                        // --- ML NATURALNESS (Integration addition) ---
+                        var mlNaturalness = naturalnessRanker.PredictNaturalness(prevState.Shape, currState.Shape);
+                        
+                        // We use a small penalty modifier from naturalness to break ties, 
+                        // but not overwhelm pure physical transition cost
+                        var mlPenalty = (1.0 - mlNaturalness) * 2.0;
+
+                        var total = prevCost + transCost + currStaticPhys + stylePenalty + inertia + mlPenalty;
                         candidates.Add((total, prev, rank));
                     }
                 }
@@ -177,25 +201,17 @@ public class AdvancedTabSolver(
         for (var j = 0; j < states[n - 1].Count; j++)
         {
             var paths = dp[n - 1][j];
-            if (paths != null)
+            for (var r = 0; r < paths.Count; r++)
             {
-                for (var r = 0; r < paths.Count; r++)
-                {
-                    finalCandidates.Add((paths[r].Cost, j, r));
-                }
+                finalCandidates.Add((paths[r].Cost, j, r));
             }
         }
 
         // Take global Top-K best final states
         var bestFinals = finalCandidates.OrderBy(x => x.Cost).Take(k).ToList();
 
-        foreach (var (finalCost, lastStateIdx, lastRank) in bestFinals)
+        foreach (var (_, lastStateIdx, lastRank) in bestFinals)
         {
-            var path =
-                new List<FretboardPosition[]>(); // Use array for easier reconstruction? Keeping List for compatibility logic.
-            // Actually existing logic uses List<List<FretboardPosition>> which is List<Chord>. 
-            // My Backtrack return type is List<List<List<FretboardPosition>>> -> List<Path> -> Path=List<Chord>.
-
             var currentPath = new List<List<FretboardPosition>>();
             var currentStep = n - 1;
             var currentStateIdx = lastStateIdx;
@@ -241,7 +257,6 @@ public class AdvancedTabSolver(
 
         // Use physical distance for normalization if needed, or keep raw for internal doc
         var stretch = nonZeroFrets.Count > 1 ? maxFret - minFret : 0;
-        var physicalStretch = FretboardGeometry.CalculatePhysicalSpan(nonZeroFrets);
 
         return new ChordVoicingRagDocument
         {
@@ -268,5 +283,10 @@ public class AdvancedTabSolver(
 
     public record TabSolution(string TabContent, double TotalPhysicalCost);
 
-    private record CandidateState(List<FretboardPosition> Shape, float[] Embedding, double Naturalness);
+    private class CandidateState(List<FretboardPosition> shape, double naturalness, double staticCost)
+    {
+        public List<FretboardPosition> Shape { get; } = shape;
+        public double Naturalness { get; } = naturalness;
+        public double StaticCost { get; } = staticCost;
+    }
 }

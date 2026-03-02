@@ -30,6 +30,7 @@ public class ProductionOrchestrator
     private readonly AdvancedTabSolver _tabSolver;
     private readonly AlternativeFingeringService _altService;
     private readonly SemanticRouter _router;
+    private readonly QueryUnderstandingService _queryUnderstandingService;
 
     public ProductionOrchestrator(
         TabAwareOrchestrator tabOrchestrator,
@@ -40,7 +41,8 @@ public class ProductionOrchestrator
         MusicalEmbeddingGenerator embeddingGenerator,
         AdvancedTabSolver tabSolver,
         AlternativeFingeringService altService,
-        SemanticRouter router)
+        SemanticRouter router,
+        QueryUnderstandingService queryUnderstandingService)
     {
         _tabOrchestrator = tabOrchestrator;
         _tabAnalyzer = tabAnalyzer;
@@ -51,23 +53,27 @@ public class ProductionOrchestrator
         _tabSolver = tabSolver;
         _altService = altService;
         _router = router;
+        _queryUnderstandingService = queryUnderstandingService;
     }
 
     public async Task<ChatResponse> AnswerAsync(ChatRequest request)
     {
-        // 1. Use Semantic Router to determine intent (Phase 6 Integration)
+        // 1. Extract intents & filters
+        var filters = await _queryUnderstandingService.ExtractFiltersAsync(request.Message);
+        
+        // 2. Use Semantic Router to determine generic agent intent
         var routing = await _router.RouteAsync(request.Message);
         
-        if (routing.SelectedAgent.AgentId == AgentIds.Tab)
+        if (routing.SelectedAgent.AgentId == AgentIds.Tab || (filters != null && (filters.Intent == "OptimizePath" || filters.Intent == "AnalyzeTab")))
         {
-            if (IsAskingForOptimization(request.Message))
+            if (filters?.Intent == "OptimizePath" || IsAskingForOptimization(request.Message))
             {
                 return await HandlePathOptimizationAsync(request.Message);
             }
             return await HandleTabAnalysisAsync(request.Message);
         }
 
-        // 2. Delegate to standard TabAwareOrchestrator (which handles RAG/Knowledge queries)
+        // Delegate to standard TabAwareOrchestrator (which handles RAG/Knowledge queries)
         return await _tabOrchestrator.AnswerAsync(request);
     }
 
@@ -183,13 +189,16 @@ public class ProductionOrchestrator
         if (result.Events.Count == 0)
             return new ChatResponse("I detected tab but couldn't parse any chords.", new List<CandidateVoicing>(), null, new { Status = "Empty" });
 
-        // 2. Hydrate embeddings (Required for motion/suggestions)
+        // 2. Hydrate embeddings (Required for motion/suggestions) - Parallelized for performance
         var events = result.Events.ToList();
-        for (int i = 0; i < events.Count; i++)
+        var embeddingTasks = events.Select(async e => 
         {
-            var doc = events[i].Document;
-            events[i] = events[i] with { Document = doc with { Embedding = await _embeddingGenerator.GenerateEmbeddingAsync(doc) } };
-        }
+            var doc = e.Document;
+            var emb = await _embeddingGenerator.GenerateEmbeddingAsync(doc);
+            return e with { Document = doc with { Embedding = emb } };
+        }).ToList();
+        
+        events = (await Task.WhenAll(embeddingTasks)).ToList();
         var progression = events.Select(e => e.Document).ToList();
 
         // 3. High-level Intelligence

@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Services;
+namespace GA.DocumentProcessing.Service.Services;
 
 using System.Net.Http.Headers;
 using System.Text;

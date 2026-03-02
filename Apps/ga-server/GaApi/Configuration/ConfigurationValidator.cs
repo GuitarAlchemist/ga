@@ -1,4 +1,4 @@
-﻿namespace GaApi.Configuration;
+namespace GaApi.Configuration;
 
 using Microsoft.Extensions.Options;
 

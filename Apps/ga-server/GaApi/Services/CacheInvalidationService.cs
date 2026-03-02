@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;

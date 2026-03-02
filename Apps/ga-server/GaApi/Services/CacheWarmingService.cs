@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using GA.Domain.Core.Theory.Atonal;
 

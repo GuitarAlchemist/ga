@@ -2,9 +2,8 @@ namespace GA.AI.Service.Services;
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 public interface ICachingService
 {
@@ -14,40 +13,51 @@ public interface ICachingService
     Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory);
 }
 
-public class CachingService(IDistributedCache cache, ILogger<CachingService> logger) : ICachingService
+public class CachingService(
+    HybridCache cache, 
+    ILogger<CachingService> logger) : ICachingService
 {
     private readonly ILogger<CachingService> _logger = logger;
 
     public async Task<T?> GetAsync<T>(string key)
     {
-        var value = await cache.GetStringAsync(key);
-        if (value == null) return default;
-        return JsonSerializer.Deserialize<T>(value);
+        // HybridCache does not easily allow plain 'Get' without 'GetOrCreate'.
+        // We will try our best, but a missing fallback implies nullable semantic.
+        try
+        {
+            return await cache.GetOrCreateAsync<T?>(key, async cancel => default);
+        }
+        catch
+        {
+            return default;
+        }
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
     {
-        var options = new DistributedCacheEntryOptions();
-        if (expiry.HasValue)
-        {
-            options.AbsoluteExpirationRelativeToNow = expiry;
-        }
-        var json = JsonSerializer.Serialize(value);
-        await cache.SetStringAsync(key, json, options);
+        var options = expiry.HasValue 
+            ? new HybridCacheEntryOptions { Expiration = expiry }
+            : null;
+            
+        await cache.SetAsync(key, value, options);
     }
 
     public async Task RemoveAsync(string key) => await cache.RemoveAsync(key);
 
     public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory)
     {
-        var cached = await GetAsync<T>(key);
-        if (cached != null)
-        {
-            return cached;
-        }
-
-        var value = await factory();
-        await SetAsync(key, value);
-        return value;
+        return await cache.GetOrCreateAsync(
+            key, 
+            async cancel => 
+            {
+                _logger.LogDebug("Semantic cache MISS for key: {Key}", key);
+                return await factory();
+            },
+            options: new HybridCacheEntryOptions 
+            { 
+                Expiration = TimeSpan.FromMinutes(5),
+                LocalCacheExpiration = TimeSpan.FromMinutes(2)
+            }
+        );
     }
 }

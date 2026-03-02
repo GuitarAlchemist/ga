@@ -56,6 +56,10 @@ public static class VoicingSearchServiceExtensions
         services.AddSingleton<IVoicingEmbeddingCache, VoicingEmbeddingCache>();
         services.AddHostedService<VoicingIndexInitializationService>();
 
+        // Contextual Chord & Voicing Services
+        services.AddSingleton<ContextualChordService>();
+        services.AddSingleton<VoicingFilterService>();
+
         return services;
     }
 }

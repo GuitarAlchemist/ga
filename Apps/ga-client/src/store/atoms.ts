@@ -9,13 +9,35 @@ export interface MusicalKey {
 export type KeyMode = MusicalKey['mode'];
 
 export const selectedKeyAtom = atom<MusicalKey>({
-  root: 'C' as string,
+  root: 'C',
   mode: 'Major',
 });
 
 export const selectedKeyNameAtom = atom((get) => {
   const key = get(selectedKeyAtom);
   return `${key.root} ${key.mode}`;
+});
+
+export type NavigationLevel = 'key' | 'scale' | 'mode';
+
+export const navigationLevelAtom = atom<NavigationLevel>('key');
+
+export const selectedScaleAtom = atom<string | null>(null);
+export const selectedModeAtom = atom<string | null>(null);
+
+export const musicalContextAtom = atom((get) => {
+  const level = get(navigationLevelAtom);
+  const key = get(selectedKeyAtom);
+  const scale = get(selectedScaleAtom);
+  const mode = get(selectedModeAtom);
+
+  return {
+    level,
+    keyName: `${key.root} ${key.mode}`,
+    root: key.root,
+    scale: scale || (key.mode === 'Major' ? 'Major' : 'Minor'),
+    mode: mode || (key.mode === 'Major' ? 'Ionian' : 'Aeolian'),
+  };
 });
 
 // All available note roots (chromatic scale)

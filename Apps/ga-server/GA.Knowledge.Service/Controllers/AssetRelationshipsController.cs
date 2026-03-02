@@ -3,6 +3,7 @@ namespace GA.Knowledge.Service.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     Controller for managing asset relationships and hierarchical data structures
@@ -22,11 +23,11 @@ public class AssetRelationshipsController(
     /// <response code="200">Returns all asset relationships</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<AssetRelationship>>), StatusCodes.Status200OK)]
-    public ActionResult<ApiResponse<List<AssetRelationship>>> GetAllRelationships()
+    public async Task<ActionResult<ApiResponse<List<AssetRelationship>>>> GetAllRelationshipsAsync()
     {
         try
         {
-            var relationships = relationshipService.GetAllRelationships();
+            var relationships = await relationshipService.GetAllRelationshipsAsync();
 
             var metadata = new Dictionary<string, object>
             {
@@ -56,7 +57,7 @@ public class AssetRelationshipsController(
     [HttpGet("asset/{assetType}")]
     [ProducesResponseType(typeof(ApiResponse<List<AssetRelationship>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public ActionResult<ApiResponse<List<AssetRelationship>>> GetRelationshipsForAsset(string assetType)
+    public async Task<ActionResult<ApiResponse<List<AssetRelationship>>>> GetRelationshipsForAssetAsync(string assetType)
     {
         if (string.IsNullOrWhiteSpace(assetType))
         {
@@ -65,14 +66,14 @@ public class AssetRelationshipsController(
 
         try
         {
-            var relationships = relationshipService.GetRelationshipsForAsset(assetType);
+            var relationships = await relationshipService.GetRelationshipsForAssetAsync(assetType);
 
             var metadata = new Dictionary<string, object>
             {
                 ["assetType"] = assetType,
                 ["relationshipCount"] = relationships.Count,
-                ["childAssets"] = relationshipService.GetChildAssetTypes(assetType),
-                ["parentAssets"] = relationshipService.GetParentAssetTypes(assetType)
+                ["childAssets"] = await relationshipService.GetChildAssetTypesAsync(assetType),
+                ["parentAssets"] = await relationshipService.GetParentAssetTypesAsync(assetType)
             };
 
             return Ok(ApiResponse<List<AssetRelationship>>.Ok(relationships, metadata: metadata));
@@ -92,11 +93,11 @@ public class AssetRelationshipsController(
     /// <response code="200">Returns the asset hierarchy</response>
     [HttpGet("hierarchy")]
     [ProducesResponseType(typeof(ApiResponse<AssetHierarchyNode>), StatusCodes.Status200OK)]
-    public ActionResult<ApiResponse<AssetHierarchyNode>> GetAssetHierarchy()
+    public async Task<ActionResult<ApiResponse<AssetHierarchyNode>>> GetAssetHierarchyAsync()
     {
         try
         {
-            var hierarchy = relationshipService.BuildAssetHierarchy();
+            var hierarchy = await relationshipService.BuildAssetHierarchyAsync();
 
             var metadata = new Dictionary<string, object>
             {
@@ -124,7 +125,7 @@ public class AssetRelationshipsController(
     [HttpGet("children/{parentAssetType}")]
     [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public ActionResult<ApiResponse<List<string>>> GetChildAssetTypes(string parentAssetType)
+    public async Task<ActionResult<ApiResponse<List<string>>>> GetChildAssetTypesAsync(string parentAssetType)
     {
         if (string.IsNullOrWhiteSpace(parentAssetType))
         {
@@ -133,7 +134,7 @@ public class AssetRelationshipsController(
 
         try
         {
-            var childTypes = relationshipService.GetChildAssetTypes(parentAssetType);
+            var childTypes = await relationshipService.GetChildAssetTypesAsync(parentAssetType);
 
             var metadata = new Dictionary<string, object>
             {
@@ -160,7 +161,7 @@ public class AssetRelationshipsController(
     [HttpGet("parents/{childAssetType}")]
     [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public ActionResult<ApiResponse<List<string>>> GetParentAssetTypes(string childAssetType)
+    public async Task<ActionResult<ApiResponse<List<string>>>> GetParentAssetTypesAsync(string childAssetType)
     {
         if (string.IsNullOrWhiteSpace(childAssetType))
         {
@@ -169,7 +170,7 @@ public class AssetRelationshipsController(
 
         try
         {
-            var parentTypes = relationshipService.GetParentAssetTypes(childAssetType);
+            var parentTypes = await relationshipService.GetParentAssetTypesAsync(childAssetType);
 
             var metadata = new Dictionary<string, object>
             {
@@ -197,7 +198,7 @@ public class AssetRelationshipsController(
     [HttpGet("path/{fromAssetType}/to/{toAssetType}")]
     [ProducesResponseType(typeof(ApiResponse<List<AssetRelationship>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public ActionResult<ApiResponse<List<AssetRelationship>>> GetRelationshipPath(string fromAssetType,
+    public async Task<ActionResult<ApiResponse<List<AssetRelationship>>>> GetRelationshipPathAsync(string fromAssetType,
         string toAssetType)
     {
         if (string.IsNullOrWhiteSpace(fromAssetType) || string.IsNullOrWhiteSpace(toAssetType))
@@ -207,7 +208,7 @@ public class AssetRelationshipsController(
 
         try
         {
-            var path = relationshipService.GetRelationshipPath(fromAssetType, toAssetType);
+            var path = await relationshipService.GetRelationshipPathAsync(fromAssetType, toAssetType);
 
             var metadata = new Dictionary<string, object>
             {
@@ -235,12 +236,12 @@ public class AssetRelationshipsController(
     /// <response code="200">Returns asset type summary</response>
     [HttpGet("summary")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public ActionResult<ApiResponse<object>> GetAssetSummary()
+    public async Task<ActionResult<ApiResponse<object>>> GetAssetSummaryAsync()
     {
         try
         {
-            var hierarchy = relationshipService.BuildAssetHierarchy();
-            var allRelationships = relationshipService.GetAllRelationships();
+            var hierarchy = await relationshipService.BuildAssetHierarchyAsync();
+            var allRelationships = await relationshipService.GetAllRelationshipsAsync();
 
             var summary = new
             {

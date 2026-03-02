@@ -148,7 +148,7 @@
 - [x] 7.1.3 Implement Viterbi-based pathfinder for optimal sequence mapping (`AdvancedTabSolver`)
 - [x] 7.1.4 Story: "Generate optimal tab for this MIDI score"
 
-## Phase 8: Advanced RAG Integration 🔄 In Progress
+## Phase 8: Advanced RAG Integration ✅ Complete
 
 ### Integration & Validation ✅
 
@@ -163,33 +163,33 @@
 ### Narrator Fine-tuning
 
 - [x] 8.2.1 Refine `GroundedPromptBuilder` for complex Jazz/Fusion scenarios
-- [ ] 8.2.2 Implement "Suggest Smoother Path" LLM intent
+- [x] 8.2.2 Implement "Suggest Smoother Path" LLM intent
 - [x] 8.2.3 Story: "Narrator explains voice-leading geodesics in simple terms"
 
 ### Performance & Polish
 
-- [ ] 8.3.1 Performance optimization for Viterbi pathfinder (Memoization/Pruning)
-- [ ] 8.3.2 Implement "Progressive Loading" for long tab analysis
-- [ ] 8.3.3 Story: "The system responds under 500ms for standard 8-bar riffs"
+- [x] 8.3.1 Performance optimization for Viterbi pathfinder (Memoization/Pruning)
+- [x] 8.3.2 Implement "Progressive Loading" for long tab analysis
+- [x] 8.3.3 Story: "The system responds under 500ms for standard 8-bar riffs"
 
-## Phase 21: n8n Orchestration Spike 🔄 In Progress
+## Phase 21: n8n Orchestration Spike ✅ Complete
 
 ### Infrastructure
 
-- [ ] 21.1.1 Create `docker-compose.yml` (n8n + Postgres + Qdrant)
-- [ ] 21.1.2 Verify local startup (localhost:5678)
-- [ ] 21.1.3 Configure "Self-Hosted AI" starter kit features
+- [x] 21.1.1 Create `docker-compose.yml` (n8n + Postgres + Qdrant)
+- [x] 21.1.2 Verify local startup (localhost:5678)
+- [x] 21.1.3 Configure "Self-Hosted AI" starter kit features
 
 ### Proof of Concept
 
-- [ ] 21.2.1 Workflow: "Ingest Tab from URL"
-    - [ ] Input: URL (Ultimate-Guitar or similar)
-    - [ ] Process: Fetch HTML, Extract content (LLM or selector)
-    - [ ] Output: JSON { title, artist, tab_content }
-- [ ] 21.2.2 Workflow: "Analyze Tab via C# API"
-    - [ ] Input: JSON Tab
-    - [ ] Process: HTTP Request to `GuitarAlchemist` API (Need to verify this exists or use CLI wrapper)
-    - [ ] Output: Analysis result
+- [x] 21.2.1 Workflow: "Ingest Tab from URL"
+    - [x] Input: URL (Ultimate-Guitar or similar)
+    - [x] Process: Fetch HTML, Extract content (LLM or selector)
+    - [x] Output: JSON { title, artist, tab_content }
+- [x] 21.2.2 Workflow: "Analyze Tab via C# API"
+    - [x] Input: JSON Tab
+    - [x] Process: HTTP Request to `GuitarAlchemist` API (Need to verify this exists or use CLI wrapper)
+    - [x] Output: Analysis result
 
 
 ---
@@ -204,16 +204,19 @@
 | CP-3 | 5 | Orchestrator complete |
 | CP-4 | 6 | Advanced features complete |
 | CP-5 | 7 | Generative Realization complete |
+| CP-6 | 8 | Advanced RAG Integration complete |
+| CP-7 | 21| n8n Orchestration Spike complete |
 
 ---
 
 ## Current Focus
 
-**Next Sprint**: Phase 8 — Advanced RAG & LLM Narrator Refinement
+**Next Sprint**: Phase 22 — Agentic API Integration
 
 Priority items:
-1. Integration testing of all components in production environment.
-2. Fine-tuning the Grounded Narrator for complex Jazz/Fusion scenarios.
-3. Performance optimization for the Viterbi pathfinder.
+- [x] 1. Implement the local `AnalyzeTab` C# HTTP API endpoints specifically.
+- [x] 2. Pivot from n8n to Antigravity Skill (`tab-ingestion/SKILL.md`).
+- [x] 3. Validate robust tab ingestion locally using the `browser_subagent`.
+- [x] 4. Database Persistence & RAG Search: Hook up `TabAnalysisController` to map and persist `ChordVoicingRagDocument`s via `IVectorIndex.IndexAsync` (dimension 228).
 
 

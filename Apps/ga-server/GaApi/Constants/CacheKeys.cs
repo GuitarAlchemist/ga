@@ -1,4 +1,4 @@
-﻿namespace GaApi.Constants;
+namespace GaApi.Constants;
 
 /// <summary>
 ///     Centralized cache key definitions for consistent caching across the application

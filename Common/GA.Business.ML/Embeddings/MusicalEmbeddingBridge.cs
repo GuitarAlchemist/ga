@@ -16,28 +16,19 @@ using Microsoft.Extensions.AI;
 ///         rather than text-based, so this bridge wraps <see cref="ChordVoicingRagDocument" /> as the input type.
 ///     </para>
 /// </remarks>
-public sealed class MusicalEmbeddingBridge : IEmbeddingGenerator<ChordVoicingRagDocument, Embedding<float>>
+public sealed class MusicalEmbeddingBridge(MusicalEmbeddingGenerator generator)
+    : IEmbeddingGenerator<ChordVoicingRagDocument, Embedding<float>>
 {
-    private readonly MusicalEmbeddingGenerator _generator;
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="MusicalEmbeddingBridge" /> class.
-    /// </summary>
-    /// <param name="generator">The underlying OPTIC-K embedding generator.</param>
-    public MusicalEmbeddingBridge(MusicalEmbeddingGenerator generator)
-    {
-        _generator = generator ?? throw new ArgumentNullException(nameof(generator));
-        // EmbeddingGeneratorMetadata(providerName, providerUri, modelId)
-        Metadata = new(
-            "GuitarAlchemist",
-            null,
-            $"OPTIC-K-v{EmbeddingSchema.Version}");
-    }
+    private readonly MusicalEmbeddingGenerator _generator = generator ?? throw new ArgumentNullException(nameof(generator));
 
     /// <summary>
     ///     Gets metadata describing the embedding generator.
     /// </summary>
-    public EmbeddingGeneratorMetadata Metadata { get; }
+    public EmbeddingGeneratorMetadata Metadata { get; } = new(
+        "GuitarAlchemist",
+        null,
+        $"OPTIC-K-v{EmbeddingSchema.Version}");
+
 
     /// <summary>
     ///     Gets the embedding dimension.

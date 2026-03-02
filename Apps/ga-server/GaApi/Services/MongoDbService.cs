@@ -1,4 +1,4 @@
-﻿namespace GaApi.Services;
+namespace GaApi.Services;
 
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
@@ -69,8 +69,7 @@ public class MongoDbService
 
     public async Task<List<Chord>> GetChordsByPitchClassSetAsync(List<int> pitchClassSet, int limit = 100)
     {
-        var bsonArray = new BsonArray(pitchClassSet);
-        var filter = Builders<Chord>.Filter.Eq(c => c.PitchClassSet, bsonArray);
+        var filter = Builders<Chord>.Filter.Eq(c => c.PitchClassSet, [.. pitchClassSet]);
         return await Chords.Find(filter).Limit(limit).ToListAsync();
     }
 
@@ -108,15 +107,15 @@ public class MongoDbService
     // Advanced queries
     public async Task<Dictionary<string, long>> GetChordCountsByQualityAsync()
     {
-        var pipeline = new[]
-        {
+        BsonDocument[] pipeline =
+        [
             new BsonDocument("$group", new BsonDocument
             {
                 { "_id", "$Quality" },
                 { "count", new BsonDocument("$sum", 1) }
             }),
             new BsonDocument("$sort", new BsonDocument("count", -1))
-        };
+        ];
 
         var results = await Chords.Aggregate<BsonDocument>(pipeline).ToListAsync();
         return results.ToDictionary(
@@ -127,15 +126,15 @@ public class MongoDbService
 
     public async Task<Dictionary<string, long>> GetChordCountsByStackingTypeAsync()
     {
-        var pipeline = new[]
-        {
+        BsonDocument[] pipeline =
+        [
             new BsonDocument("$group", new BsonDocument
             {
                 { "_id", "$StackingType" },
                 { "count", new BsonDocument("$sum", 1) }
             }),
             new BsonDocument("$sort", new BsonDocument("count", -1))
-        };
+        ];
 
         var results = await Chords.Aggregate<BsonDocument>(pipeline).ToListAsync();
         return results.ToDictionary(
@@ -308,8 +307,7 @@ public class MongoDbService
         int limit,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var bsonArray = new BsonArray(pitchClassSet);
-        var filter = Builders<Chord>.Filter.Eq(c => c.PitchClassSet, bsonArray);
+        var filter = Builders<Chord>.Filter.Eq(c => c.PitchClassSet, [.. pitchClassSet]);
         using var cursor = await Chords.Find(filter).Limit(limit).ToCursorAsync(cancellationToken);
 
         while (await cursor.MoveNextAsync(cancellationToken))

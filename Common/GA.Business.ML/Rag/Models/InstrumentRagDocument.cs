@@ -13,5 +13,32 @@ public record InstrumentRagDocument : RagDocumentBase
     public string? Description { get; init; }
     public required string[] SemanticTags { get; init; }
 
-    public virtual void GenerateSearchText() => SearchText = $"{Name} {TuningName} {StringCount} strings {Description}";
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Follows rag-engineer semantic chunking principles:
+    ///     - All fields are labelled so the embedding model understands field boundaries.
+    ///     - String pitches included to support queries like "guitar tuned to drop-D".
+    ///     - Description is only added when non-null to avoid a literal "null" token.
+    ///     - SemanticTags appended last as soft classifiers.
+    /// </remarks>
+    public override string ToEmbeddingString()
+    {
+        var parts = new List<string>
+        {
+            $"Instrument: {Name}",
+            $"Strings: {StringCount}",
+            $"Tuning: {TuningName}",
+        };
+
+        if (StringPitches.Length > 0)
+            parts.Add($"Open string pitches: {string.Join(" ", StringPitches)}");
+
+        if (!string.IsNullOrWhiteSpace(Description))
+            parts.Add(Description);
+
+        if (SemanticTags.Length > 0)
+            parts.Add(string.Join(" ", SemanticTags));
+
+        return string.Join(". ", parts);
+    }
 }

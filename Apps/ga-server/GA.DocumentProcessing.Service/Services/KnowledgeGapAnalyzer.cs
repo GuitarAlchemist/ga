@@ -1,4 +1,4 @@
-﻿namespace GA.DocumentProcessing.Service.Services;
+namespace GA.DocumentProcessing.Service.Services;
 
 using Models;
 using MongoDB.Driver;

@@ -43,8 +43,9 @@ public static class TestServices
         var cost = new PhysicalCostService();
         var style = CreateStyleProfileService(index);
         var generator = CreateGenerator();
+        var ranker = new GA.Business.ML.Naturalness.MlNaturalnessRanker();
 
-        return new(mapper, cost, style, generator);
+        return new(mapper, cost, style, generator, ranker);
     }
 
     public static async Task<(MusicalEmbeddingGenerator Generator, FileBasedVectorIndex Index)> CreateAsync()

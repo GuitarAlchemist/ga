@@ -214,11 +214,38 @@ public static class VoicingHarmonicAnalyzer
     private static string[] GenerateSemanticTags(ChordIdentification chordId, int intervalSpread, double consonance)
     {
         var tags = new List<string>();
+        
+        // 1. Basic Harmonic Quality
         if (consonance > 0.7) tags.Add("consonant");
         else if (consonance < 0.3) tags.Add("dissonant");
+        
+        // 2. Spread/Register
         if (intervalSpread > 24) tags.Add("wide-voicing");
         else if (intervalSpread < 12) tags.Add("close-voicing");
-        if (!string.IsNullOrEmpty(chordId.Quality)) tags.Add(chordId.Quality.ToLowerInvariant());
-        return [.. tags];
+        
+        // 3. Quality Tags
+        string? quality = null;
+        if (!string.IsNullOrEmpty(chordId.Quality))
+        {
+            quality = chordId.Quality.ToLowerInvariant();
+            tags.Add(quality);
+            
+            // 4. Genre Mapping (Heuristic)
+            if (quality.Contains("maj7") || quality.Contains("maj9") || quality.Contains("13") || quality.Contains("dominant"))
+                tags.Add("jazz");
+            if (quality.Contains("sus2") || quality.Contains("sus4") || quality.Contains("add9"))
+                tags.Add("pop");
+            if (quality.Contains("minor") && consonance > 0.6)
+                tags.Add("melancholy");
+            if (quality.Contains("diminished") || quality.Contains("augmented") || quality.Contains("alt"))
+                tags.Add("tension");
+        }
+
+        // 5. Functional Moods
+        if (consonance > 0.8 && quality != null && quality.Contains("major")) tags.Add("bright");
+        if (consonance < 0.4) tags.Add("dark");
+        if (intervalSpread > 12 && intervalSpread < 24) tags.Add("balanced");
+
+        return [.. tags.Distinct()];
     }
 }

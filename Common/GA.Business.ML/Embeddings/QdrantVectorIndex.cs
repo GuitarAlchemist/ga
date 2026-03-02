@@ -13,7 +13,7 @@ public class QdrantVectorIndex : IVectorIndex
     private const string CollectionName = "voicings";
     private readonly ulong _dimension;
 
-    public QdrantVectorIndex(string host = "localhost", int port = 6334, ulong dimension = 216)
+    public QdrantVectorIndex(string host = "localhost", int port = 6334, ulong dimension = 228)
     {
         _client = new QdrantClient(host, port, https: false);
         _dimension = dimension;

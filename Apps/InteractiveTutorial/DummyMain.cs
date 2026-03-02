@@ -1,4 +1,4 @@
-﻿// Dummy Main method to satisfy compiler since Program.cs is excluded
+// Dummy Main method to satisfy compiler since Program.cs is excluded
 // Program.cs uses old Scale/PitchClass/Tuning API that doesn't exist
 
 namespace InteractiveTutorial;

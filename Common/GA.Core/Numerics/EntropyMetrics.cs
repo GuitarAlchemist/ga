@@ -18,11 +18,11 @@ public static class EntropyMetrics
         var entropy = 0.0;
         foreach (var val in p)
         {
-            if (val > 1e-15)
-            {
-                var normalized = val / sum;
-                entropy -= normalized * Math.Log2(normalized);
-            }
+            if (!(val > 1e-15)) continue; // Skip zero values
+
+            // Normalize and compute entropy
+            var normalized = val / sum;
+            entropy -= normalized * Math.Log2(normalized);
         }
         return entropy;
     }
@@ -49,13 +49,13 @@ public static class EntropyMetrics
         var dkl = 0.0;
         for (var i = 0; i < pList.Count; i++)
         {
-            if (pList[i] > 1e-15)
-            {
-                var pn = pList[i] / sumP;
-                var qn = qList[i] / sumQ;
-                if (qn <= 1e-15) return double.PositiveInfinity;
-                dkl += pn * Math.Log2(pn / qn);
-            }
+            if (!(pList[i] > 1e-15)) continue; // Skip zero values
+
+            // Normalize and compute divergence
+            var pn = pList[i] / sumP;
+            var qn = qList[i] / sumQ;
+            if (qn <= 1e-15) return double.PositiveInfinity;
+            dkl += pn * Math.Log2(pn / qn);
         }
         return dkl;
     }
@@ -72,11 +72,10 @@ public static class EntropyMetrics
         var h = 0.0;
         foreach (var val in joint)
         {
-            if (val > 1e-15)
-            {
-                var p = val / sum;
-                h -= p * Math.Log2(p);
-            }
+            if (!(val > 1e-15)) continue; // Skip zero values
+
+            var p = val / sum;
+            h -= p * Math.Log2(p);
         }
         return h;
     }

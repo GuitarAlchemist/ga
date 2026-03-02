@@ -23,7 +23,7 @@ public class EndToEndTabAnalysisTests
         _generator = TestInfrastructure.TestServices.CreateGenerator();
         _tokenizer = new();
         _converter = new();
-        _tabService = new(_tokenizer, _converter, _generator);
+        _tabService = new(_tokenizer, _converter, _generator, new());
         _signalService = new();
         _waveletService = new();
     }

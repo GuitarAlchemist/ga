@@ -1,9 +1,9 @@
-namespace GA.MusicTheory.DSL.Services
+namespace GA.Business.DSL.Services
 
 open System
 open System.Net.Http
 open System.Threading.Tasks
-open GA.MusicTheory.DSL.Types.PracticeRoutineTypes
+open GA.Business.DSL.Types.PracticeRoutineTypes
 
 /// <summary>
 /// Service for loading musical content from internet sources

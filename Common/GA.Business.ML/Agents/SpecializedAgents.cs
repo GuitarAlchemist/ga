@@ -15,8 +15,8 @@ public class TechniqueAgent(IChatClient chatClient, ILogger<TechniqueAgent> logg
         "Evaluates guitar fingerings, suggests ergonomic alternatives, validates playability, " +
         "and provides technique-focused advice for chord voicings and passages.";
 
-    public override IReadOnlyList<string> Capabilities => new[]
-    {
+    public override IReadOnlyList<string> Capabilities =>
+    [
         "Fingering validation",
         "Ergonomic analysis",
         "Alternative voicing suggestions",
@@ -24,7 +24,7 @@ public class TechniqueAgent(IChatClient chatClient, ILogger<TechniqueAgent> logg
         "Stretch assessment",
         "Hand position analysis",
         "Playability scoring"
-    };
+    ];
 
     public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,
@@ -77,15 +77,15 @@ public class ComposerAgent(IChatClient chatClient, ILogger<ComposerAgent> logger
         "Creates musical variations, reharmonizations, and generates chord progressions. " +
         "Uses phase sphere analysis for musically coherent transformations.";
 
-    public override IReadOnlyList<string> Capabilities => new[]
-    {
+    public override IReadOnlyList<string> Capabilities =>
+    [
         "Reharmonization",
         "Chord substitution",
         "Variation generation",
         "Progression creation",
         "Modal interchange",
         "Tritone substitution"
-    };
+    ];
 
     public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,
@@ -135,14 +135,14 @@ public class CriticAgent(IChatClient chatClient, ILogger<CriticAgent> logger)
         "Evaluates musical analyses for consistency, detects contradictions, " +
         "scores response quality, and suggests improvements.";
 
-    public override IReadOnlyList<string> Capabilities => new[]
-    {
+    public override IReadOnlyList<string> Capabilities =>
+    [
         "Contradiction detection",
         "Consistency checking",
         "Quality scoring",
         "Improvement suggestions",
         "Fact verification"
-    };
+    ];
 
     public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,

@@ -14,7 +14,7 @@ public sealed record InstrumentDocument : RagDocumentBase
     public string? Family { get; init; }
     public string? Range { get; init; }
 
-    public override void GenerateSearchText()
+    public override string ToEmbeddingString()
     {
         var searchParts = new List<string>
         {
@@ -27,6 +27,6 @@ public sealed record InstrumentDocument : RagDocumentBase
             string.Join(" ", Tunings.Select(t => t.Name))
         };
 
-        SearchText = string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
+        return string.Join(" ", searchParts.Where(s => !string.IsNullOrEmpty(s)));
     }
 }

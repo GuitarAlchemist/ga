@@ -1,4 +1,4 @@
-﻿namespace GaApi.Models;
+namespace GaApi.Models;
 
 using MongoDB.Bson.Serialization.Attributes;
 

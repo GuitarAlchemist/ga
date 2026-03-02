@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 using Services;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     API controller for managing AI Agent tasks using Proto.Actor

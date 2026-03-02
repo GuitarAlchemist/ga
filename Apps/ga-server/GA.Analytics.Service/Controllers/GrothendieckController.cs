@@ -1,4 +1,4 @@
-﻿namespace GA.Analytics.Service.Controllers;
+namespace GA.Analytics.Service.Controllers;
 
 using System.Buffers;
 using System.Runtime.CompilerServices;
@@ -148,7 +148,7 @@ public class GrothendieckController(
             return Ok(cached);
         }
 
-        var tuning = Tuning.Default; // TODO: Support multiple tunings
+        var tuning = GetTuningFromString(request.TuningId) ?? Tuning.Default;
         var pcs = PitchClassSet.Parse(string.Join("", request.PitchClasses.Select(pc => pc.ToString("X"))));
 
         var options = new ShapeGraphBuildOptions
@@ -218,7 +218,7 @@ public class GrothendieckController(
         );
 
         // Parse parameters
-        var tuning = Tuning.Default; // TODO: Support multiple tunings
+        var tuning = GetTuningFromString(tuningId) ?? Tuning.Default;
         var pcs = PitchClassSet.Parse(pitchClasses);
 
         var options = new ShapeGraphBuildOptions
@@ -285,7 +285,7 @@ public class GrothendieckController(
         }
 
         // Build shape graph (cached internally)
-        var tuning = Tuning.Default;
+        var tuning = GetTuningFromString(request.TuningId) ?? Tuning.Default;
         var pitchClassSets = PitchClassSet.Items.Where(pcs => pcs.Cardinality == request.Cardinality).ToList();
 
         var graphOptions = new ShapeGraphBuildOptions
@@ -335,7 +335,7 @@ public class GrothendieckController(
         using var _ = metrics.TrackRegularRequest();
 
         // Build shape graph
-        var tuning = Tuning.Default;
+        var tuning = GetTuningFromString(request.TuningId) ?? Tuning.Default;
         var pitchClassSets = PitchClassSet.Items.Where(pcs => pcs.Cardinality == request.Cardinality).ToList();
 
         var graphOptions = new ShapeGraphBuildOptions
@@ -965,7 +965,8 @@ public record HeatMapRequest(
     int Cardinality = 3,
     double Temperature = 1.0,
     bool? BoxPreference = null,
-    int? MaxSpan = null);
+    int? MaxSpan = null,
+    string TuningId = "standard");
 
 public record HeatMapResponse(double[][] Grid, int Strings, int Frets);
 
@@ -974,7 +975,8 @@ public record PracticePathRequest(
     int Cardinality = 3,
     int Steps = 10,
     double Temperature = 0.8,
-    int? MaxSpan = null);
+    int? MaxSpan = null,
+    string TuningId = "standard");
 
 public record PracticePathResponse(FretboardShapeResponse[] Shapes);
 

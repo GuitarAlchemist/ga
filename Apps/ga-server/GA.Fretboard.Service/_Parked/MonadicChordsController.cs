@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using GA.Fretboard.Service.Models;
 using GA.Fretboard.Service.Services;
+using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     Controller demonstrating monadic service integration with type-safe error handling
