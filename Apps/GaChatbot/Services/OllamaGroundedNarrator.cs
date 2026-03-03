@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GaChatbot.Abstractions;
 using GaChatbot.Models;
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// Narrator that uses a local Ollama LLM for natural language responses.
@@ -17,13 +18,16 @@ using GaChatbot.Models;
 /// </summary>
 public class OllamaGroundedNarrator(
     GroundedPromptBuilder promptBuilder,
-    ResponseValidator validator) : IGroundedNarrator
+    ResponseValidator validator,
+    IHttpClientFactory httpClientFactory,
+    IConfiguration configuration) : IGroundedNarrator
 {
-    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
-    private const string OllamaUrl = "http://localhost:11434/api/generate";
-    private const string DefaultModel = "llama3.2"; // Use a local model
+    private const string DefaultModel = "llama3.2";
 
-    public async Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates, bool simulateHallucination = false)
+    private string OllamaBaseUrl =>
+        configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
+
+    public async Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates)
     {
         // 1. Build the grounded prompt
         string prompt = promptBuilder.Build(query, candidates);
@@ -32,7 +36,7 @@ public class OllamaGroundedNarrator(
         try
         {
             var response = await CallOllamaAsync(prompt);
-            
+
             // 3. Validate response (remove any hallucinated content)
             var validation = validator.Validate(response, candidates);
             return validation.CleanedMessage;
@@ -49,25 +53,26 @@ public class OllamaGroundedNarrator(
     {
         var requestBody = new
         {
-            model = DefaultModel,
+            model = configuration["Ollama:Model"] ?? DefaultModel,
             prompt = prompt,
             stream = false,
             options = new
             {
                 temperature = 0.7,
-                num_predict = 256
+                num_predict = 512
             }
         };
 
         var json = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync(OllamaUrl, content);
+        var client = httpClientFactory.CreateClient("ollama");
+        var response = await client.PostAsync($"{OllamaBaseUrl}/api/generate", content);
         response.EnsureSuccessStatusCode();
 
         var responseJson = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(responseJson);
-        
+
         return doc.RootElement.GetProperty("response").GetString() ?? "No response generated.";
     }
 

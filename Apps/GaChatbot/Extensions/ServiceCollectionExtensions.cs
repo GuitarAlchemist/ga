@@ -1,5 +1,7 @@
 namespace GaChatbot.Extensions;
 
+using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Embeddings.Services;
@@ -29,6 +31,25 @@ public static class GaChatbotServiceCollectionExtensions
         /// </summary>
         public IServiceCollection AddGaChatbotServices()
         {
+            // ---- HTTP Client Factory (for Ollama calls — avoids static HttpClient anti-pattern) ----
+            services.AddHttpClient("ollama", (sp, client) =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                var endpointRaw = config["Ollama:Endpoint"] ?? "http://localhost:11434";
+
+                // Validate the endpoint is a well-formed absolute URI with http/https scheme
+                if (!Uri.TryCreate(endpointRaw, UriKind.Absolute, out var uri) ||
+                    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+                {
+                    throw new InvalidOperationException(
+                        $"Ollama:Endpoint '{endpointRaw}' is not a valid http/https URI. " +
+                        "Ensure appsettings.json or the OLLAMA_HOST environment variable is set correctly.");
+                }
+
+                client.BaseAddress = uri;
+                client.Timeout = TimeSpan.FromSeconds(60);
+            });
+
             // ---- Core AI/ML Services ----
             services.AddGuitarAlchemistAI();
             services.AddGuitarAlchemistAgents();

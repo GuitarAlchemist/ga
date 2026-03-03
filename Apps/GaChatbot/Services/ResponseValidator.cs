@@ -46,9 +46,16 @@ public class ResponseValidator
 
         if (hallucinated.Count > 0)
         {
-            return new ValidationResult(false, hallucinated, message + "\n\n[WARNING: This response mentioned chords not found in the verified database.]");
+            // Strip each hallucinated chord symbol from the message rather than appending a warning.
+            // Appending warnings leaks unverified data to the user; stripping keeps the response grounded.
+            var cleaned = message;
+            foreach (var symbol in hallucinated)
+            {
+                cleaned = Regex.Replace(cleaned, $@"\b{Regex.Escape(symbol)}\b", "[?]");
+            }
+            return new ValidationResult(false, hallucinated, cleaned);
         }
 
-        return new ValidationResult(true, new List<string>(), message);
+        return new ValidationResult(true, [], message);
     }
 }

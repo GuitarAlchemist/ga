@@ -37,10 +37,7 @@ public class ExtensionsAINarrator : IGroundedNarrator
         _logger = logger;
     }
 
-    public async Task<string> NarrateAsync(
-        string query, 
-        List<CandidateVoicing> candidates, 
-        bool simulateHallucination = false)
+    public async Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates)
     {
         // 1. Build the grounded prompt (system + user message)
         var systemPrompt = _promptBuilder.Build(query, candidates);

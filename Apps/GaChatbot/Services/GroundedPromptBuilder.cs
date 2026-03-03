@@ -1,8 +1,10 @@
 namespace GaChatbot.Services;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GaChatbot.Models;
 
 /// <summary>
@@ -11,15 +13,44 @@ using GaChatbot.Models;
 /// </summary>
 public class GroundedPromptBuilder
 {
+    // Maximum user query length to include in prompt; excess is truncated.
+    private const int MaxQueryLength = 500;
+
+    // Characters that carry prompt-injection risk (role override markers, delimiter escapes).
+    private static readonly Regex InjectionPattern = new(
+        @"(SYSTEM\s*:|USER\s*:|ASSISTANT\s*:|###\s+\w|```)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>
+    /// Sanitizes a user-provided query before embedding it in an LLM prompt.
+    /// Strips injection markers and limits length.
+    /// </summary>
+    private static string SanitizeQuery(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+
+        // Remove known injection patterns
+        var sanitized = InjectionPattern.Replace(raw, string.Empty);
+
+        // Collapse excessive whitespace that might be used to push content out of view
+        sanitized = Regex.Replace(sanitized, @"\s{3,}", " ").Trim();
+
+        // Hard length cap
+        if (sanitized.Length > MaxQueryLength)
+            sanitized = sanitized[..MaxQueryLength] + "…";
+
+        return sanitized;
+    }
+
     public string Build(string userQuery, List<CandidateVoicing> candidates)
     {
+        var safeQuery = SanitizeQuery(userQuery);
         var sb = new StringBuilder();
 
         // 1. System Role & Constraints
         sb.AppendLine("SYSTEM: You are the Guitar Alchemist Assistant, an expert in harmonic geometry.");
-        
+
         // 1a. Adaptive Persona Injection (Phase 8.2.1 Improvement)
-        var q = userQuery.ToLowerInvariant();
+        var q = safeQuery.ToLowerInvariant();
         if (q.Contains("jazz") || q.Contains("fusion") || q.Contains("neo-soul") || q.Contains("substitution") || q.Contains("shell") || q.Contains("extension"))
         {
             sb.AppendLine("PERSONA: Act as a Jazz Harmony Professor. Focus on voice leading, extensions (9ths, 13ths), and harmonic function. Use terms like 'ii-V-I', 'tritone sub', and 'guide tones'. Explain distances as 'harmonic tension' or 'extension gravity'.");
@@ -77,9 +108,9 @@ public class GroundedPromptBuilder
             }
         }
 
-        // 3. User Context
+        // 3. User Context (sanitized — injection markers removed, length capped)
         sb.AppendLine("### USER QUERY ###");
-        sb.AppendLine(userQuery);
+        sb.AppendLine(safeQuery);
         sb.AppendLine();
 
         // 4. Final Instruction

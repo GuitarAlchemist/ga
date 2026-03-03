@@ -105,28 +105,14 @@ public class SpectralRagOrchestrator(
         }
         else
         {
-            // FALLBACK: Return top voicings if no vector generated
-            debugMode = "Fallback(All)";
-            var zeroVector = new double[EmbeddingSchema.TotalDimension];
-            var results = retrievalService.Search(zeroVector, topK: 5, preset: preset);
-            
-            foreach (var (doc, score) in results)
-            {
-                var explanation = explainer.Explain(doc);
-                candidates.Add(new CandidateVoicing(
-                    Id: doc.Id,
-                    DisplayName: doc.ChordName ?? "Unknown",
-                    Shape: doc.Diagram,
-                    Score: score,
-                    ExplanationFacts: explanation,
-                    ExplanationText: explanation.Summary
-                ));
-            }
+            // FALLBACK: No meaningful query vector could be produced.
+            // A zero-vector produces arbitrary cosine similarity results, so we skip retrieval entirely
+            // and let the narrator respond with the empty-candidates fallback message.
+            debugMode = "Fallback(NoVector)";
         }
 
         // 7. NARRATION with Guardrails
-        bool forceHallucination = req.Message.Contains("hallucinate"); // For testing
-        var narratorText = await narrator.NarrateAsync(req.Message, candidates, forceHallucination);
+        var narratorText = await narrator.NarrateAsync(req.Message, candidates);
 
         // 8. PROGRESSION GENERATION (Heuristic)
         var progression = TryExtractProgression(req.Message, out var updatedNarratorText);
@@ -154,9 +140,13 @@ public class SpectralRagOrchestrator(
         {
             var c1 = foundChords[0];
             var c2 = foundChords[1];
-            
-            var v1 = await generator.GenerateEmbeddingAsync(CreateVirtualDoc(c1));
-            var v2 = await generator.GenerateEmbeddingAsync(CreateVirtualDoc(c2));
+
+            // Generate both embeddings concurrently — no data dependency between them
+            var embeddingResults = await Task.WhenAll(
+                generator.GenerateEmbeddingAsync(CreateVirtualDoc(c1)),
+                generator.GenerateEmbeddingAsync(CreateVirtualDoc(c2)));
+            var v1 = embeddingResults[0];
+            var v2 = embeddingResults[1];
             
             // Calculate Phase Sphere (Spectral) Similarity
             double spectralSim = SpectralRetrievalService.CalculateWeightedSimilarity(v1, v2, SpectralRetrievalService.SearchPreset.Spectral);
