@@ -9,7 +9,7 @@ using Interval = Primitives.Intervals.Interval;
 /// Example: Major third (M3) is essential, typically doubled, and stable in voice leading
 /// </remarks>
 [PublicAPI]
-public class ChordFormulaInterval(
+public sealed class ChordFormulaInterval(
     Interval interval,
     ChordFunction function,
     bool isEssential = true,

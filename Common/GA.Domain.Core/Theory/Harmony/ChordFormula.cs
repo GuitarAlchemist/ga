@@ -12,7 +12,7 @@ using Interval = Primitives.Intervals.Interval;
 /// Example: Major triad (1, 3, 5)
 /// </remarks>
 [PublicAPI]
-public class ChordFormula : IEquatable<ChordFormula>
+public sealed class ChordFormula : IEquatable<ChordFormula>
 {
     public static readonly ChordFormula Major =
         FromSemitones("Major", Semitones.MajorThird, Semitones.PerfectFifth);

@@ -1,6 +1,6 @@
 namespace GA.Domain.Core.Instruments.Positions;
 
-public class PositionLocationSet(IEnumerable<PositionLocation> positions) : IReadOnlySet<PositionLocation>
+public sealed class PositionLocationSet(IEnumerable<PositionLocation> positions) : IReadOnlySet<PositionLocation>
 {
     private readonly ImmutableSortedSet<PositionLocation> _set =
         positions.ToImmutableSortedSet(PositionLocation.StrComparer);
@@ -30,7 +30,7 @@ public class PositionLocationSet(IEnumerable<PositionLocation> positions) : IRea
         return obj.GetType() == GetType() && Equals((PositionLocationSet)obj);
     }
 
-    protected bool Equals(PositionLocationSet other) => _set.SetEquals(other);
+    private bool Equals(PositionLocationSet other) => _set.SetEquals(other);
 
     #endregion
 

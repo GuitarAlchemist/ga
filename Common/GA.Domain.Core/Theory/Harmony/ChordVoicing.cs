@@ -8,7 +8,7 @@ using Atonal;
 /// <remarks>
 ///     Initializes a new instance of the ChordVoicing class
 /// </remarks>
-public class ChordVoicing(ChordTemplate chordTemplate, IEnumerable<ChordTone> chordTones, PitchClass bass)
+public sealed class ChordVoicing(ChordTemplate chordTemplate, IEnumerable<ChordTone> chordTones, PitchClass bass)
 {
 
     /// <summary>Gets the chord template</summary>

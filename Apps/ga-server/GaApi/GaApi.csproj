@@ -40,37 +40,16 @@
     <PackageReference Include="Yarp.ReverseProxy" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Exclude CUDA folder from build -->
+    <!-- GPU/CUDA code requires CUDA runtime — excluded from standard builds -->
     <Compile Remove="CUDA/**/*.cs" />
-    <!-- Exclude files with missing service implementations -->
-    <Compile Remove="Controllers/AdvancedAnalyticsController.cs" />
-    <Compile Remove="Controllers/AdvancedAIController.cs" />
-    <Compile Remove="Controllers/EnhancedPersonalizationController.cs" />
-    <Compile Remove="Controllers/InvariantsController.cs" />
-    <!-- <Compile Remove="Controllers/HealthController.cs"/> -->
-    <Compile Remove="Controllers/IntelligentBSPController.cs" />
-    <!-- <Compile Remove="Controllers/GrothendieckController.cs"/> -->
-    <!-- <Compile Remove="Controllers/MonadicHealthController.cs"/> -->
-    <!-- <Compile Remove="Controllers/ChordProgressionsController.cs"/> -->
-    <Compile Remove="Controllers/BiomechanicsController.cs" />
-    <!-- <Compile Remove="Controllers/SemanticSearchController.cs"/> -->
-    <!-- <Compile Remove="Controllers\MonadicChordsController.cs"/> -->
+    <!-- Parked controllers/services live in _Parked/ — excluded wholesale -->
     <Compile Remove="_Parked\**" />
-    <Compile Remove="Controllers/GuitarAgentTasksController.cs" />
-    <Compile Remove="Controllers/AdaptiveAIController.cs" />
-    <Compile Remove="GraphQL/Queries/MusicHierarchyQuery.cs" />
-    <Compile Remove="Hubs/ConfigurationUpdateHub.cs" />
-    <!-- Re-enabled services for testing -->
-    <!-- <Compile Remove="Services/MonadicHealthCheckService.cs"/> -->
-    <!-- <Compile Remove="Services/MusicHierarchyService.cs"/> -->
-    <!-- <Compile Remove="Services/MonadicChordService.cs"/> -->
-    <!-- <Compile Remove="Services/MonadicServiceBase.cs"/> -->
-    <Compile Remove="Services/MongoVectorSearchIndexes.cs" />
-    <Compile Remove="Extensions/BSPServiceExtensions.cs" />
-    <Compile Remove="Extensions/HealthCheckServiceExtensions.cs" />
-    <Compile Remove="GraphQL/Types/FretboardChordAnalysisType.cs" />
-    <Compile Remove="GraphQL/Queries/FretboardQuery.cs" />
-    <Compile Remove="Controllers/Api/FretboardController.cs" />
+    <!-- These types are now in AllProjects.ServiceDefaults — exclude local duplicates -->
+    <Compile Remove="Models/ApiResponse.cs" />
+    <Compile Remove="Models/ErrorResponse.cs" />
+    <Compile Remove="Models/PaginationInfo.cs" />
+    <Compile Remove="Models/PaginationRequest.cs" />
+    <Compile Remove="Models/SearchRequest.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -78,16 +57,13 @@
     <ProjectReference Include="..\..\..\Common\GA.Business.Config\GA.Business.Config.fsproj" />
     <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
-    <!-- TODO: Create this project when needed -->
-    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
-    <!-- TODO: Create this project when needed -->
-    <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj"/> -->
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj" />
     <ProjectReference Include="..\..\..\GA.Data.SemanticKernel.Embeddings\GA.Data.SemanticKernel.Embeddings.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Infrastructure\GA.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Orchestration\GA.Business.Core.Orchestration.csproj" />
     <ProjectReference Include="..\GA.Fretboard.Service\GA.Fretboard.Service.csproj" />
   </ItemGroup>
 </Project>

@@ -54,6 +54,7 @@
     </Folder>
     <Folder Name="/4 - AI &amp; ML/">
         <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj"/>
+        <Project Path="Common/GA.Business.Core.Orchestration/GA.Business.Core.Orchestration.csproj"/>
     </Folder>
     <Folder Name="/5 - Infrastructure/">
         <Project Path="Common/GA.Infrastructure/GA.Infrastructure.csproj"/>
@@ -62,7 +63,6 @@
     <Folder Name="/F# Libraries/">
         <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj"/>
         <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj"/>
-        <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.TypeProviders.fsproj"/>
     </Folder>
     <Folder Name="/Interactive &amp; Tools/">
         <Project Path="Common/GA.Interactive/GA.Interactive.csproj"/>

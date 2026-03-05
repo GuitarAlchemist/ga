@@ -12,7 +12,7 @@ using Interval = Primitives.Intervals.Interval;
 ///     Implements <see cref="IReadOnlyList{T}" />, <see cref="IValueObject" />,
 ///     <see cref="IEquatable{T}" />
 /// </remarks>
-public class IntervalStructure : IParsable<IntervalStructure>,
+public sealed class IntervalStructure : IParsable<IntervalStructure>,
     IReadOnlyList<Semitones>,
     IValueObject,
     IEquatable<IntervalStructure>

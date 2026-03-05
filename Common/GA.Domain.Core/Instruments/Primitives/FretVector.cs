@@ -4,7 +4,7 @@ using GA.Core.Collections.Abstractions;
 using Positions;
 
 [PublicAPI]
-public class FretVector : IReadOnlyCollection<Fret>,
+public sealed class FretVector : IReadOnlyCollection<Fret>,
     IIndexer<Str, Fret>
 {
     private readonly ImmutableSortedDictionary<Str, Fret> _fretByStr;

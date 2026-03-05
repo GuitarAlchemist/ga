@@ -25,7 +25,7 @@ using Interval = Core.Primitives.Intervals.Interval;
 [DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf,
     "A scale is a tonal realization of a pitch class set")]
 [DomainRelationship(typeof(ScaleMode), RelationshipType.IsParentOf, "A scale can generate multiple modes via rotation")]
-public class Scale : IStaticReadonlyCollection<Scale>,
+public sealed class Scale : IStaticReadonlyCollection<Scale>,
     IReadOnlyCollection<Note>
 {
     private readonly PrintableReadOnlyCollection<Note> _notes;
