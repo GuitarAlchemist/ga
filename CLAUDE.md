@@ -175,6 +175,7 @@ Consult the skill files in `.agent/skills/` when performing relevant tasks:
 | Verification Before Completion | `.agent/skills/verification-before-completion/SKILL.md` | Before any success claim |
 | Annotations Guidance | `.agent/skills/annotations-guidance/SKILL.md` | Nullability annotations |
 | ROP Patterns | `.agent/skills/rop-patterns/SKILL.md` | Service-layer error handling (Result/Try/Option/Validation) |
+
 | Feature Implementor | `.agent/skills/feature-implementor/SKILL.md` | Running `/feature` for any new feature, fix, or multi-file refactor |
 | GA Chatbot Probe | `.agent/skills/ga-chatbot-probe/SKILL.md` | Talk to chatbot subagents, probe routing decisions, compare agent responses |
 
