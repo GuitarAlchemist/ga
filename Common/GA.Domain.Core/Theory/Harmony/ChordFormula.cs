@@ -6,10 +6,10 @@ using Interval = Primitives.Intervals.Interval;
 
 /// <summary>
 ///     Represents a chord formula defining the intervals that make up a chord type
+///     (<see href="https://en.wikipedia.org/wiki/Chord_(music)" />)
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IEquatable{ChordFormula}" />
-/// Example: Major triad (1, 3, 5)
+///     Example: Major triad (1, 3, 5) — root, major third (4 semitones), perfect fifth (7 semitones).
 /// </remarks>
 [PublicAPI]
 public sealed class ChordFormula : IEquatable<ChordFormula>

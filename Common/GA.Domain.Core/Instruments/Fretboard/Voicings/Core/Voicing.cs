@@ -6,6 +6,7 @@ using Primitives;
 /// <summary>
 ///     Represents a guitar voicing - a specific way to play notes on the fretboard.
 ///     Equality is based on the position diagram (e.g., "0-0-x-x-x-x").
+///     See <see href="https://en.wikipedia.org/wiki/Voicing_(music)" />.
 /// </summary>
 /// <param name="Positions">The positions on each string (played or muted)</param>
 /// <param name="Notes">The MIDI notes that are played</param>

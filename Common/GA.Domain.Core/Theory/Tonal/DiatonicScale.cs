@@ -2,6 +2,9 @@ namespace GA.Domain.Core.Theory.Tonal;
 
 using Interval = Core.Primitives.Intervals.Interval;
 
+/// <summary>
+///     Interval pattern definitions for diatonic scales (<see href="https://en.wikipedia.org/wiki/Diatonic_scale" />).
+/// </summary>
 [PublicAPI]
 public abstract record DiatonicScale
 {

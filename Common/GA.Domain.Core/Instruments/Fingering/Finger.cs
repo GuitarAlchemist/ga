@@ -8,6 +8,7 @@ using GA.Core.Collections.Abstractions;
 /// <inheritdoc cref="IComparable" />
 /// <summary>
 ///     An instrument Finger (Between <see cref="Min" /> and <see cref="Max" />)
+///     (<see href="https://en.wikipedia.org/wiki/Fingering_(music)" />)
 /// </summary>
 [PublicAPI]
 public readonly record struct Finger : IStaticValueObjectList<Finger>

@@ -5,11 +5,11 @@ using Primitives.Diatonic;
 using Scales;
 
 /// <summary>
-///     See https://en.wikipedia.org/wiki/Minor_scale
+///     A mode of the harmonic minor scale (<see href="https://en.wikipedia.org/wiki/Harmonic_minor_scale" />).
 /// </summary>
-/// <summary>
-///     A mode of the harmonic minor scale.
-/// </summary>
+/// <remarks>
+///     <see href="https://ianring.com/musictheory/scales/2477" />
+/// </remarks>
 [PublicAPI]
 public sealed class HarmonicMinorMode(HarmonicMinorScaleDegree degree) : MinorScaleMode<HarmonicMinorScaleDegree>(
         Scale.HarmonicMinor, degree),

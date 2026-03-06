@@ -3,7 +3,7 @@ namespace GA.Domain.Core.Primitives.Intervals;
 using Notes;
 
 /// <summary>
-///     Interval discriminated union
+///     Interval discriminated union (<see href="https://en.wikipedia.org/wiki/Interval_(music)" />).
 /// </summary>
 /// <remarks>
 ///     Subclasses: <see cref="Chromatic" /> | <see cref="Diatonic.Simple" /> | <see cref="Diatonic.Compound" />

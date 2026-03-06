@@ -10,6 +10,7 @@ using Interval = Primitives.Intervals.Interval;
 
 /// <summary>
 ///     Represents a musical chord with its notes, intervals, and harmonic properties
+///     (<see href="https://en.wikipedia.org/wiki/Chord_(music)" />)
 /// </summary>
 [PublicAPI]
 [DomainInvariant("A chord must have a root note and a pitch class set", "Root != null && PitchClassSet != null")]

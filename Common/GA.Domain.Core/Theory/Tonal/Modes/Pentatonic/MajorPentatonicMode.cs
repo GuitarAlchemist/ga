@@ -9,6 +9,8 @@ using Scales;
 /// </summary>
 /// <remarks>
 ///     Pentatonic scales are five-note scales widely used in various musical traditions.
+///     <see href="https://en.wikipedia.org/wiki/Pentatonic_scale" /><br/>
+///     <see href="https://ianring.com/musictheory/scales/1193" />
 /// </remarks>
 [PublicAPI]
 public sealed class MajorPentatonicMode(MajorPentatonicScaleDegree degree) : TonalScaleMode<MajorPentatonicScaleDegree>(

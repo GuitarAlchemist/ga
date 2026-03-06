@@ -2,7 +2,8 @@ namespace GA.Domain.Core.Theory.Harmony.Progressions;
 
 /// <summary>
 ///     Represents a named sequence of chords/voicings.
-///     Used for playback, analysis, and educational examples.
+///     Used for playback, analysis, and educational examples
+///     (<see href="https://en.wikipedia.org/wiki/Chord_progression" />).
 /// </summary>
 public sealed record Progression
 {

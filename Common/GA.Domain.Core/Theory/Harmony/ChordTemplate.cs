@@ -6,7 +6,8 @@ using Tonal.Modes;
 
 /// <summary>
 /// Represents a theoretical template for a chord, which can be scale-derived or analytical.
-/// A template defines the "shape" of a chord before it is realized as a specific Chord instance with a root.
+/// A template defines the "shape" of a chord before it is realized as a specific Chord instance with a root
+/// (<see href="https://en.wikipedia.org/wiki/Chord_(music)" />).
 /// </summary>
 /// <remarks>
 /// Example: Cmaj7 is a chord template. Cmaj7, Dmaj7, Emaj7 are all chords derived from that template.

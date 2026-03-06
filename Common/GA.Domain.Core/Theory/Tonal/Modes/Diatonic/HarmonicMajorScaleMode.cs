@@ -9,8 +9,9 @@ using Scales;
 /// </summary>
 /// <remarks>
 ///     The harmonic major scale is a major scale with a lowered sixth degree.
-///     It has seven distinct modes, each with unique characteristics.
-///     <see href="https://en.wikipedia.org/wiki/Harmonic_major_scale" />
+///     It has seven distinct modes, each with unique characteristics.<br/>
+///     <see href="https://en.wikipedia.org/wiki/Harmonic_major_scale" /><br/>
+///     <see href="https://ianring.com/musictheory/scales/2773" />
 /// </remarks>
 [PublicAPI]
 public sealed class HarmonicMajorScaleMode(HarmonicMajorScaleDegree degree)

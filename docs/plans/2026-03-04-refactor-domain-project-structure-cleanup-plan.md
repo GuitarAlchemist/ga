@@ -1,7 +1,7 @@
 ---
 title: "refactor: Domain project structure and GA.Domain.Core quality cleanup"
 type: refactor
-status: active
+status: completed
 date: 2026-03-04
 origin: docs/brainstorms/2026-03-04-domain-project-structure-cleanup-brainstorm.md
 ---

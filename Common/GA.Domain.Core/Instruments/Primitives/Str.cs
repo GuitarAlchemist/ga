@@ -5,6 +5,7 @@ using GA.Core.Functional;
 
 /// <summary>
 ///     An instrument string (Between <see cref="Min" /> and <see cref="Max" />)
+///     (<see href="https://en.wikipedia.org/wiki/String_(music)" />)
 /// </summary>
 /// <remarks>
 ///     String 1 is the string with the highest pitch.

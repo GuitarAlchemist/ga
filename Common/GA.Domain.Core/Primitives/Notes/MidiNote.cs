@@ -6,10 +6,11 @@ using Theory.Atonal;
 using Theory.Atonal.Abstractions;
 
 /// <summary>
-///     A MIDI note (0 to 127)
+///     A MIDI note (0 to 127) (<see href="https://en.wikipedia.org/wiki/MIDI#MIDI_notes" />).
 /// </summary>
 /// <remarks>
-///     Implements <see cref="IRangeValueObject{TSelf}" /> and <see cref="IPitchClass" />
+///     Implements <see cref="IRangeValueObject{TSelf}" /> and <see cref="IPitchClass" /><br/>
+///     <see href="https://midi.org/" />
 /// </remarks>
 [PublicAPI]
 public readonly record struct MidiNote : IRangeValueObject<MidiNote>, IPitchClass

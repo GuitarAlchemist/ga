@@ -7,10 +7,10 @@ public abstract partial record Interval
 {
     /// <inheritdoc cref="Interval" />
     /// <summary>
-    ///     A chromatic interval
+    ///     A chromatic interval (<see href="https://en.wikipedia.org/wiki/Chromatic_scale" />).
     /// </summary>
     /// <remarks>
-    ///     <see href="https://viva.pressbooks.pub/openmusictheory/chapter/intervals-in-integer-notation/" />
+    ///     <see href="https://viva.pressbooks.pub/openmusictheory/chapter/intervals-in-integer-notation/" /><br/>
     ///     <see href="http://musictheoryblog.blogspot.com/2007/01/intervals.html" />
     /// </remarks>
     [PublicAPI]

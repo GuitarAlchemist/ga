@@ -7,6 +7,7 @@ using GA.Core.Functional;
 
 /// <summary>
 ///     Cardinality is the count of unique pitch classes in a pitch class set
+///     (<see href="https://en.wikipedia.org/wiki/Cardinality" />).
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IStaticValueObjectList{TSelf}" />, <see cref="IName" />

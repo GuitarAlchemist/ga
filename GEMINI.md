@@ -1,33 +1,60 @@
-# Gemini CLI Configuration
+# Guitar Alchemist — Agent Configuration
 
-This repository uses Gemini CLI for AI-assisted development tasks.
+This repository uses a **hybrid workflow**:
+- **Conductor** (context layer) — product definition, tech stack, track registry, institutional memory
+- **Compound Engineering** (execution layer) — plan → work → review → compound cycle
 
-## Planning System
+---
 
-Active planning lives in two places:
+## Conductor Context Layer
 
-- **`BACKLOG.md`** at the repo root — future ideas, one bullet per idea; remove when a plan is created
-- **`docs/plans/`** — per-feature plans (authoritative, one file per feature, `status: active | completed`)
+Project context, architecture decisions, and track tracking.
 
-Historical planning artifacts (Conductor tracks, Nov 2025 Roadmap) are in `docs/archive/`. They are read-only reference.
+**[→ Conductor Index](conductor/index.md)**
 
-## Architecture Quick Reference
+### Quick Links
+- [Track Registry](conductor/tracks.md)
+- [Tech Stack](conductor/tech-stack.md)
+- [Product Definition](conductor/product.md)
+- [Dev Workflow & Commands](conductor/workflow.md)
 
-See `CLAUDE.md` for the full architecture guide, build commands, and coding standards.
+---
 
-| Layer | Projects |
+## Compound Engineering Execution Layer
+
+Day-to-day execution workflow. Use these commands to drive work on any track.
+
+**[→ Compound Engineering Config](compound-engineering.local.md)**
+
+### Workflow
+```
+/ce:plan → /ce:work → /ce:review → /ce:compound → repeat
+```
+
+### Commands
+| Command | What it does |
 |---|---|
-| Core | `GA.Core`, `GA.Domain.Core` |
-| Domain | `GA.Business.Core`, `GA.Business.Config`, `GA.BSP.Core` |
-| Analysis | `GA.Business.Core.Harmony`, `GA.Business.Core.Fretboard` |
-| AI/ML | `GA.Business.ML` |
-| Orchestration | `GA.Business.Core.Orchestration`, `GA.Business.Intelligence` |
+| `/ce:brainstorm <idea>` | Structured ideation before planning |
+| `/ce:plan <feature>` | Creates `docs/plans/YYYY-MM-DD-<type>-<name>-plan.md` |
+| `/ce:work <plan-file>` | Executes the plan with todo tracking + incremental commits |
+| `/ce:review` | Runs security, performance, architecture reviewer agents |
+| `/ce:compound` | Captures learnings into `docs/solutions/` |
 
-## Tech Stack
+### Working Artifacts
+- **Brainstorms:** `docs/brainstorms/` — raw exploration docs
+- **Plans:** `docs/plans/` — structured work plans (output of `/ce:plan`)
+- **Solutions:** `docs/solutions/` — captured learnings (output of `/ce:compound`)
 
-- **.NET 10 / C# 14** — all backend projects
-- **F#** — `GA.Business.DSL`, `GA.Business.Config`
-- **React 18 / Vite / TypeScript** — `Apps/ga-client`
-- **MongoDB + Qdrant** — vector search backends
-- **Ollama** — local LLM inference (chatbot + embeddings)
-- **Aspire** — local service orchestration
+---
+
+## Active Tracks → Plans
+
+Drive Conductor tracks through the Compound Engineering workflow:
+
+| Track | Status | Next Action |
+|---|---|---|
+| `spectral-rag-chatbot` | Active | `/ce:plan spectral RAG chatbot remaining work` |
+| `modernization` | Active | `/ce:plan modernization remaining items` |
+| `semantic-event-routing` | Proposed | `/ce:brainstorm semantic event routing` |
+| `core-schema-design` | Needs Reconciliation | `/ce:plan core schema reconciliation` |
+| `meai-integration` | Needs Reconciliation | `/ce:plan MEAI integration reconciliation` |

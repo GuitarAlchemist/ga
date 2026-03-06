@@ -8,9 +8,10 @@ using Theory.Atonal;
 
 /// <summary>
 ///     Represents a fretboard with a specific tuning and number of frets
+///     (<see href="https://en.wikipedia.org/wiki/Fingerboard" />)
 /// </summary>
 /// <remarks>
-///     Initializes a new fretboard with the specified tuning and fret count
+///     See also: <see href="https://www.justinguitar.com/guitar-lessons/anatomy-of-a-guitar" />.
 /// </remarks>
 [DomainInvariant("Fretboard must have at least one string", "StringCount > 0")]
 [DomainInvariant("Fretboard must have a valid number of frets", "FretCount >= 0")]

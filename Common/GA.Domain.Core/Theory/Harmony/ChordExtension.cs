@@ -2,6 +2,7 @@ namespace GA.Domain.Core.Theory.Harmony;
 
 /// <summary>
 ///     Represents the extension of a chord (7th, 9th, 11th, 13th, etc.)
+///     (<see href="https://en.wikipedia.org/wiki/Extended_chord" />)
 /// </summary>
 public enum ChordExtension
 {

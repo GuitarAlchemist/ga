@@ -6,7 +6,7 @@ using Theory.Atonal.Abstractions;
 public abstract partial record Interval
 {
     /// <summary>
-    ///     Diatonic interval discriminated union (e.g. M3, P11)
+    ///     Diatonic interval discriminated union (e.g. M3, P11) (<see href="https://en.wikipedia.org/wiki/Diatonic_scale" />).
     /// </summary>
     /// <remarks>
     ///     <see cref="Interval.Simple" /> | <see cref="Interval.Compound" /><br />

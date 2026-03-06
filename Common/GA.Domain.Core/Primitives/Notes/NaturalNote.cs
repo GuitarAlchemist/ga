@@ -8,8 +8,7 @@ using Theory.Atonal;
 using Theory.Atonal.Abstractions;
 
 /// <summary>
-///     A Musical natural note (See https://en.wikipedia.org/wiki/Musical_note,
-///     https://en.wikipedia.org/wiki/Natural_(Objects))
+///     A musical natural note (<see href="https://en.wikipedia.org/wiki/Musical_note" />).
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IStaticValueObjectList{TSelf}" />

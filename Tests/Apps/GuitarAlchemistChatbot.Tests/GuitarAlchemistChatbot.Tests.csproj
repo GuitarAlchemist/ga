@@ -30,9 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude test files with missing service implementations -->
+    <!-- Exclude test files with missing service implementations (GuitarAlchemistChatbot app removed) -->
     <Compile Remove="Services/ChatbotSessionOrchestratorTests.cs"/>
   </ItemGroup>
+
 
 </Project>
 

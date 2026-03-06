@@ -16,7 +16,7 @@ using GA.Business.ML.Embeddings;
 ///     NumPy load: np.fromfile("voicings.bin", dtype=np.float32, offset=16).reshape(-1, 228)
 ///
 ///     voicings-meta.bin format:
-///     [8-byte header] [N × VoicingMetaRecord (12 bytes each)]
+///     [12-byte header] [N × VoicingMetaRecord (14 bytes each)]
 /// </remarks>
 public static class BinaryVoicingWriter
 {
@@ -91,7 +91,7 @@ public static class BinaryVoicingWriter
         var bytes = MemoryMarshal.AsBytes(metas.AsSpan());
         await fs.WriteAsync(bytes.ToArray(), ct);
 
-        Console.WriteLine($"  voicings-meta.bin: {fs.Length:N0} bytes ({metas.Length:N0} × 12)");
+        Console.WriteLine($"  voicings-meta.bin: {fs.Length:N0} bytes ({metas.Length:N0} × {Marshal.SizeOf<VoicingMetaRecord>()})");
     }
 }
 
@@ -129,7 +129,7 @@ public struct VoicingMetaRecord
     /// <summary>Average fret of fretted (non-open) notes; 0 if all open.</summary>
     public float AverageFret;
 
-    // Total: 6 + 1 + 1 + 1 + 1 + 4 = 14 bytes ... but Pack=1 makes it exact
+    // Total: 6×sbyte + 4×byte + float = 14 bytes (Pack=1, verified via Marshal.SizeOf)
 
     public static VoicingMetaRecord FromFrets(ReadOnlySpan<sbyte> frets, byte startingFret, int stringCount)
     {

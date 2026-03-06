@@ -12,14 +12,13 @@ using Modes;
 using Interval = Core.Primitives.Intervals.Interval;
 
 /// <summary>
-///     A scale
+///     A scale (<see href="https://en.wikipedia.org/wiki/Scale_(music)" />).
 /// </summary>
 /// <remarks>
-///     See https://www.youtube.com/c/TheExcitingUniverseofmusictheory/videos
-///     http://allthescales.org/
-///     https://ianring.com/musictheory/
-///     https://ianring.com/musictheory/scales/
-///     https://chromatone.center/theory/scales/study.html
+///     <see href="https://ianring.com/musictheory/scales/" /><br/>
+///     <see href="https://www.youtube.com/c/TheExcitingUniverseofmusictheory/videos" /><br/>
+///     <see href="http://allthescales.org/" /><br/>
+///     <see href="https://chromatone.center/theory/scales/study.html" />
 /// </remarks>
 [DomainInvariant("A scale must have at least one note", "Count > 0")]
 [DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf,

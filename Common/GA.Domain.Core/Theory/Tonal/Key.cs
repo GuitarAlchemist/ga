@@ -8,7 +8,7 @@ using GA.Core.Collections.Abstractions;
 using Interval = Core.Primitives.Intervals.Interval;
 
 /// <summary>
-///     A musical key (<see cref="Major" /> | <see cref="Minor" />)
+///     A musical key (<see cref="Major" /> | <see cref="Minor" />) (<see href="https://en.wikipedia.org/wiki/Key_(music)" />).
 /// </summary>
 /// <param name="KeySignature"></param>
 [PublicAPI]
