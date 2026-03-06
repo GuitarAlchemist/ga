@@ -16,9 +16,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 public sealed class BatchEmbedder
 {
     private readonly ILogger<BatchEmbedder> _logger;
+    private readonly IOpticKKernel? _kernelOverride;
 
-    public BatchEmbedder(ILogger<BatchEmbedder>? logger = null)
-        => _logger = logger ?? NullLogger<BatchEmbedder>.Instance;
+    public BatchEmbedder(ILogger<BatchEmbedder>? logger = null, IOpticKKernel? kernelOverride = null)
+    {
+        _logger = logger ?? NullLogger<BatchEmbedder>.Instance;
+        _kernelOverride = kernelOverride;
+    }
 
     /// <summary>
     ///     Runs the full embedding pass from a scratch file and writes output files.
@@ -59,10 +63,18 @@ public sealed class BatchEmbedder
         float[] gpuOutput;
         try
         {
-            using var gpuKernel = new OpticKGpuKernel();
-            _logger.LogInformation("[Phase 2] GPU dispatch for dims 6-53 ...");
-            gpuOutput = gpuKernel.ComputeBatch(allFrets, EmbeddingComputer.StandardTuningMidi);
-            _logger.LogInformation("[Phase 2] GPU pass done in {Elapsed:F1}s", sw.Elapsed.TotalSeconds);
+            IOpticKKernel kernel = _kernelOverride ?? new OpticKGpuKernel(_logger as ILogger<OpticKGpuKernel>);
+            var ownKernel = _kernelOverride is null;
+            try
+            {
+                _logger.LogInformation("[Phase 2] GPU dispatch for dims 6-53 ...");
+                gpuOutput = kernel.ComputeBatch(allFrets, EmbeddingComputer.StandardTuningMidi);
+                _logger.LogInformation("[Phase 2] GPU pass done in {Elapsed:F1}s", sw.Elapsed.TotalSeconds);
+            }
+            finally
+            {
+                if (ownKernel) kernel.Dispose();
+            }
         }
         catch (Exception ex)
         {

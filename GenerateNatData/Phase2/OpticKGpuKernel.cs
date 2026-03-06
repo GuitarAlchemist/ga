@@ -16,11 +16,14 @@ using Microsoft.Extensions.Logging.Abstractions;
 ///     ILGPU compiles to PTX (real CUDA) on NVIDIA hardware and to OpenCL on AMD/Intel.
 ///     The same kernel code runs identically on all backends.
 /// </remarks>
-public sealed class OpticKGpuKernel : IDisposable
+public sealed class OpticKGpuKernel : IOpticKKernel
 {
     // ── Kernel constants ──────────────────────────────────────────────────────
     /// <summary>Output floats per voicing (24 STRUCTURE + 24 MORPHOLOGY).</summary>
     public const int OutputDimsPerVoicing = EmbeddingSchema.StructureDim + EmbeddingSchema.MorphologyDim; // 48
+
+    /// <inheritdoc />
+    int IOpticKKernel.OutputDimsPerVoicing => OutputDimsPerVoicing;
     private const int StringCount = 6;
 
     // ── ILGPU objects ─────────────────────────────────────────────────────────
