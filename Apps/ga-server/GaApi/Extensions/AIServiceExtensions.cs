@@ -1,6 +1,9 @@
 namespace GaApi.Extensions;
 
 using Configuration;
+using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Extensions;
+using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Providers;
 using GA.Domain.Repositories;
@@ -83,11 +86,16 @@ public static class AiServiceExtensions
 
         // Register batch embedding service (used by VoicingIndexInitializationService)
         services.AddTransient<GA.Data.SemanticKernel.Embeddings.IBatchEmbeddingService, GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService>(sp =>
-            new GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService(
-                sp.GetRequiredService<HttpClient>(),
+        {
+            var factory = sp.GetRequiredService<IHttpClientFactory>();
+            var client = factory.CreateClient("Ollama");
+            client.BaseAddress = new Uri(configuration["Ollama:BaseUrl"] ?? "http://localhost:11434");
+            return new GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService(
+                client,
                 configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text",
                 10,
-                sp.GetService<ILogger<GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService>>()));
+                sp.GetService<ILogger<GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService>>());
+        });
 
         return services;
     }
@@ -113,6 +121,12 @@ public static class AiServiceExtensions
 
         // Register chatbot session orchestrator (manages conversation flow)
         services.AddScoped<ChatbotSessionOrchestrator>();
+
+        // Register shared agentic orchestration stack (ProductionOrchestrator → SemanticRouter → agents)
+        services.AddChatbotOrchestration();
+
+        // GaApi narrator: OllamaGroundedNarrator (reads Ollama:Endpoint from config)
+        services.AddScoped<IGroundedNarrator, OllamaGroundedNarrator>();
 
         return services;
     }

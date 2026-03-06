@@ -1,12 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <!-- Services now in GA.Business.Core.Orchestration (shared library) -->
+    <Compile Remove="Services/InMemoryVectorIndex.cs" />
+    <Compile Remove="Services/DomainMetadataPrompter.cs" />
+    <Compile Remove="Services/QueryUnderstandingService.cs" />
+    <Compile Remove="Services/GroundedPromptBuilder.cs" />
+    <Compile Remove="Services/ResponseValidator.cs" />
+    <Compile Remove="Services/OllamaGroundedNarrator.cs" />
+    <Compile Remove="Services/SpectralRagOrchestrator.cs" />
+    <Compile Remove="Services/TabAwareOrchestrator.cs" />
+    <Compile Remove="Services/TabPresentationService.cs" />
+    <Compile Remove="Services/ProductionOrchestrator.cs" />
+    <!-- Infrastructure client uses old VoicingDocument type — parked until updated -->
+    <Compile Remove="Services/Infrastructure/GaApiClientVectorIndex.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
     <ProjectReference Include="..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
     <ProjectReference Include="..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj" />
     <ProjectReference Include="..\..\Common\GA.Infrastructure\GA.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.Core.Orchestration\GA.Business.Core.Orchestration.csproj" />
   </ItemGroup>
 
   <ItemGroup>

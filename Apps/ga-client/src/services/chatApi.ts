@@ -25,6 +25,12 @@ export interface ChatbotStatus {
   timestamp: string;
 }
 
+export interface AgentRouting {
+  agentId: string;
+  confidence: number;
+  routingMethod: string;
+}
+
 export class ChatApiService {
   private baseUrl: string;
   private abortController: AbortController | null = null;
@@ -61,11 +67,13 @@ export class ChatApiService {
   }
 
   /**
-   * Send a message and receive streaming response via Server-Sent Events
+   * Send a message and receive streaming response via Server-Sent Events.
+   * The first SSE event is a routing metadata object; subsequent events are text chunks.
    */
   async *streamChat(
     request: ChatRequest,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    onRouting?: (routing: AgentRouting) => void,
   ): AsyncGenerator<string, void, unknown> {
     // Cancel any existing stream
     this.cancelStream();
@@ -119,20 +127,31 @@ export class ChatApiService {
             if (line.startsWith('data: ')) {
               const data = line.slice(6); // Remove 'data: ' prefix
 
-              // Check for error
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.error) {
-                  throw new Error(parsed.error);
-                }
-              } catch {
-                // Not JSON, treat as text chunk
-                if (data && data !== '[DONE]') {
-                  if (onChunk) {
-                    onChunk(data);
+              if (!data || data === '[DONE]') continue;
+
+              // Discriminated SSE event handling
+              if (data.startsWith('{')) {
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.error) {
+                    throw new Error(parsed.error as string);
                   }
-                  yield data;
+                  // Routing metadata event (type: "routing")
+                  if (parsed.type === 'routing' && onRouting) {
+                    onRouting({
+                      agentId: parsed.agentId as string,
+                      confidence: parsed.confidence as number,
+                      routingMethod: parsed.routingMethod as string,
+                    });
+                  }
+                } catch (err) {
+                  if (err instanceof Error && err.message !== data) throw err;
+                  // Malformed JSON — skip silently
                 }
+              } else {
+                // Plain text chunk
+                if (onChunk) onChunk(data);
+                yield data;
               }
             }
           }

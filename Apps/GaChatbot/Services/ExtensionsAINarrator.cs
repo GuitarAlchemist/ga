@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using GaChatbot.Abstractions;
-using GaChatbot.Models;
+using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Services;
 
 /// <summary>
 /// Modern narrator implementation using Microsoft.Extensions.AI (2026 pattern).
@@ -37,7 +38,7 @@ public class ExtensionsAINarrator : IGroundedNarrator
         _logger = logger;
     }
 
-    public async Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates)
+    public async Task<string> NarrateAsync(string query, IReadOnlyList<CandidateVoicing> candidates)
     {
         // 1. Build the grounded prompt (system + user message)
         var systemPrompt = _promptBuilder.Build(query, candidates);
@@ -77,7 +78,7 @@ public class ExtensionsAINarrator : IGroundedNarrator
         }
     }
 
-    private static string FormatFallback(string query, List<CandidateVoicing> candidates)
+    private static string FormatFallback(string query, IReadOnlyList<CandidateVoicing> candidates)
     {
         if (candidates.Count == 0)
         {

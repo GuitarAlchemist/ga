@@ -3,6 +3,8 @@ namespace GaChatbot.Extensions;
 using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using GA.Business.Core.Orchestration.Extensions;
+using GA.Business.ML.Abstractions;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Embeddings.Services;
 using GA.Business.ML.Extensions;
@@ -11,10 +13,8 @@ using GA.Business.ML.Musical.Enrichment;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
 using GA.Domain.Core.Instruments;
-using GA.Domain.Services.Abstractions;
 using GA.Domain.Services.Fretboard.Analysis;
-using GA.Domain.Core.Design.Schema;
-using GaChatbot.Abstractions;
+using GA.Infrastructure.Documentation;
 using GaChatbot.Services;
 
 /// <summary>
@@ -31,29 +31,12 @@ public static class GaChatbotServiceCollectionExtensions
         /// </summary>
         public IServiceCollection AddGaChatbotServices()
         {
-            // ---- HTTP Client Factory (for Ollama calls — avoids static HttpClient anti-pattern) ----
-            services.AddHttpClient("ollama", (sp, client) =>
-            {
-                var config = sp.GetRequiredService<IConfiguration>();
-                var endpointRaw = config["Ollama:Endpoint"] ?? "http://localhost:11434";
-
-                // Validate the endpoint is a well-formed absolute URI with http/https scheme
-                if (!Uri.TryCreate(endpointRaw, UriKind.Absolute, out var uri) ||
-                    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-                {
-                    throw new InvalidOperationException(
-                        $"Ollama:Endpoint '{endpointRaw}' is not a valid http/https URI. " +
-                        "Ensure appsettings.json or the OLLAMA_HOST environment variable is set correctly.");
-                }
-
-                client.BaseAddress = uri;
-                client.Timeout = TimeSpan.FromSeconds(60);
-            });
+            // ---- Shared Orchestration Stack (GA.Business.Core.Orchestration) ----
+            services.AddChatbotOrchestration();
 
             // ---- Core AI/ML Services ----
             services.AddGuitarAlchemistAI();
             services.AddGuitarAlchemistAgents();
-            services.AddSingleton<IVectorIndex, GaChatbot.Services.InMemoryVectorIndex>();
 
             // ---- Phase Sphere & Modal Services ----
             services.AddSingleton<PhaseSphereService>();
@@ -64,12 +47,8 @@ public static class GaChatbotServiceCollectionExtensions
             services.AddScoped<ISpectralRetrievalService, SpectralRetrievalService>();
             services.AddScoped<SpectralRetrievalService>();
 
-            // ---- Anti-Hallucination Guardrails (Phase 5.2.5) ----
+            // ---- Domain Metadata (SchemaDiscoveryService is in GA.Infrastructure.Documentation) ----
             services.AddSingleton<SchemaDiscoveryService>();
-            services.AddSingleton<DomainMetadataPrompter>();
-            services.AddSingleton<QueryUnderstandingService>();
-            services.AddSingleton<GroundedPromptBuilder>();
-            services.AddSingleton<ResponseValidator>();
 
             // ---- LLM Provider (Microsoft.Extensions.AI - 2026 Pattern) ----
             // Configure via GA_AI_PROVIDER environment variable:
@@ -115,12 +94,8 @@ public static class GaChatbotServiceCollectionExtensions
             // ---- Tab Services ----
             services.AddSingleton<AdvancedTabSolver>();
             services.AddSingleton<AlternativeFingeringService>();
-            services.AddSingleton<TabPresentationService>();
-
-            // ---- Orchestrators ----
-            services.AddSingleton<SpectralRagOrchestrator>();
-            services.AddSingleton<TabAwareOrchestrator>();
-            services.AddSingleton<ProductionOrchestrator>();
+            // TabPresentationService, SpectralRagOrchestrator, TabAwareOrchestrator, and
+            // ProductionOrchestrator are registered by AddChatbotOrchestration() above.
 
             return services;
         }

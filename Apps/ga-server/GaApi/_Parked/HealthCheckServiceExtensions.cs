@@ -24,7 +24,7 @@ public static class HealthCheckServiceExtensions
             services.AddScoped<IHealthCheckService, HealthCheckService>();
 
             // Monadic health check service for functional programming patterns
-            services.AddScoped<MonadicHealthCheckService>();
+            services.AddScoped<IMonadicHealthCheckService, MonadicHealthCheckService>();
 
             // Configuration validation
             services.AddSingleton<ConfigurationValidator>();
