@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Apps\GuitarAlchemistChatbot\GuitarAlchemistChatbot.csproj"/>
+    <ProjectReference Include="..\..\..\Apps\GaChatbot\GaChatbot.csproj"/>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
   </ItemGroup>
 
