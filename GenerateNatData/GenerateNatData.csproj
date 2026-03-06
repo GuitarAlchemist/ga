@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>GenerateNatData</RootNamespace>
+    <AssemblyName>GenerateNatData</AssemblyName>
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ILGPU" Version="1.5.1" />
+    <PackageReference Include="ILGPU.Algorithms" Version="1.5.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25277.114" />
+  </ItemGroup>
+
+  <!-- GPU/CUDA native kernel code requires the CUDA runtime — excluded from standard builds -->
+  <ItemGroup>
+    <Compile Remove="Phase2/NativeCuda/**/*.cs" />
+  </ItemGroup>
+
+</Project>
