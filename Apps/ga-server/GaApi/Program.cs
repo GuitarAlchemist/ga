@@ -33,6 +33,14 @@ builder.Services.AddVoicingSearchServices(builder.Configuration);
 // Add caching services
 builder.Services.AddCachingServices(builder.Configuration);
 
+// Register monadic services (health check, chords)
+builder.Services.AddMonadicHealthCheckService();
+builder.Services.AddMonadicChordService();
+
+// Register contextual chord services
+builder.Services.AddSingleton<ContextualChordService>();
+builder.Services.AddSingleton<VoicingFilterService>();
+
 // Add session context provider (scoped = one per HTTP request)
 builder.Services.AddSessionContextScoped();
 
@@ -42,7 +50,17 @@ builder.Services.AddHttpClient();
 // Add SignalR for WebSocket support
 builder.Services.AddSignalR();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApplicationPartManager(manager =>
+    {
+        // GA.Fretboard.Service is referenced for shared types but runs as its own service.
+        // Exclude its assembly from controller discovery to prevent AmbiguousMatchException
+        // (e.g., both assemblies define ContextualChordsController on the same route prefix).
+        var fretboardPart = manager.ApplicationParts
+            .FirstOrDefault(p => p.Name == "GA.Fretboard.Service");
+        if (fretboardPart != null)
+            manager.ApplicationParts.Remove(fretboardPart);
+    });
 
 // Add Blazor Server and MudBlazor
 builder.Services.AddRazorComponents()
