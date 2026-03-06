@@ -1,7 +1,7 @@
 ---
 title: Functional Chatbot Agentic Routing
 type: feat
-status: active
+status: completed
 date: 2026-03-02
 origin: docs/brainstorms/2026-03-02-functional-chatbot-agentic-routing-brainstorm.md
 ---
