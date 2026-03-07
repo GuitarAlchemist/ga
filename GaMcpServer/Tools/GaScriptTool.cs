@@ -3,6 +3,7 @@ namespace GaMcpServer.Tools;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GA.Business.DSL.Parsers;
 using ModelContextProtocol.Server;
 
 /// <summary>
@@ -79,5 +80,26 @@ public sealed class GaScriptTool(IHttpClientFactory httpClientFactory)
             return $"Error listing closures: HTTP {(int)response.StatusCode}";
 
         return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    [McpServerTool]
+    [Description(
+        "Parse and desugar a GA surface-syntax script (pipeline/workflow/node/edge declarations) " +
+        "into the equivalent F# ga { } computation expression — without executing it. " +
+        "Use this to inspect or debug what a surface script will evaluate to before running it with EvalGaScript. " +
+        "Example input:\n" +
+        "  pipeline embed {\n" +
+        "    node \"rooms\" kind=io { closure = \"pipeline.pullBspRooms\" output = rooms }\n" +
+        "    node \"embed\"  kind=pipe { closure = \"pipeline.embedOpticK\" input = [rooms] output = vecs }\n" +
+        "    edge \"rooms\" -> \"embed\"\n" +
+        "  }")]
+    public static string TranspileGaScript(
+        [Description("GA surface syntax script containing pipeline/workflow/node/edge declarations")]
+        string source)
+    {
+        var result = GaSurfaceSyntaxParser.transpile(source);
+        if (result.IsOk)
+            return $"// Transpiled F# ga {{ }} block:\n{result.ResultValue}";
+        return $"Parse error: {result.ErrorValue}";
     }
 }

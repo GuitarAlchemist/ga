@@ -2,6 +2,7 @@ module GA.Business.DSL.Closures.BuiltinClosures.PipelineClosures
 
 open GA.Business.DSL.Closures.GaAsync
 open GA.Business.DSL.Closures.GaClosureRegistry
+open GA.Business.DSL.Parsers
 
 // ============================================================================
 // Pipeline closures — data pipeline steps (BSP → embed → store)
@@ -85,11 +86,33 @@ let reportFailures : GaClosure =
 // Registration
 // ============================================================================
 
+/// Transpile a GA surface-syntax script to an F# ga { } computation expression.
+let transpileSurface : GaClosure =
+    { Name        = "surface.transpile"
+      Category    = GaClosureCategory.Pipeline
+      Description =
+          "Parse and desugar a GA surface-syntax script (pipeline/workflow/node/edge declarations) " +
+          "into an F# ga { } computation expression string ready for evaluation by the FSI session pool."
+      Tags        = [ "surface"; "transpile"; "dsl"; "phase4" ]
+      InputSchema = Map.ofList [ "source", "string — GA surface syntax script" ]
+      OutputType  = "string (F# ga { } source)"
+      Exec        = fun inputs ->
+          async {
+              let source =
+                  inputs.TryFind "source"
+                  |> Option.bind (function :? string as s -> Some s | _ -> None)
+                  |> Option.defaultValue ""
+              match GaSurfaceSyntaxParser.transpile source with
+              | Result.Ok fsharp  -> return Ok (box fsharp)
+              | Result.Error msg  -> return Error (GaError.ParseError ("ga-surface", msg))
+          } }
+
 let register () =
     GaClosureRegistry.Global.RegisterAll
         [ pullBspRooms
           embedOpticK
           storeQdrant
-          reportFailures ]
+          reportFailures
+          transpileSurface ]
 
 do register ()
