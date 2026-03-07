@@ -8,27 +8,27 @@ public static class ScaleTool
 {
     [McpServerTool]
     [Description(
-        "Get all available scales with their Ian Ring IDs. " +
-        "Ian Ring IDs are 12-bit integers where each bit n represents pitch class n (C=0…B=11). " +
-        "Example: major scale → 2741 (bits 0,2,4,5,7,9,11 set).")]
+        "Get all available scales with their binary scale IDs. " +
+        "A binary scale ID is a 12-bit integer where bit n is set when pitch class n is present " +
+        "(C=0, C#=1, D=2 … B=11). Example: major scale → 2741.")]
     public static IEnumerable<string> GetAvailableScales()
     {
         return ScalesConfig.GetAllScales()
             .OrderBy(s => s.Name)
-            .Select(s => $"{s.Name} (id:{s.IanRingId})");
+            .Select(s => $"{s.Name} (id:{s.BinaryScaleId})");
     }
 
     [McpServerTool]
     [Description(
-        "Look up a scale by its Ian Ring ID (12-bit pitch-class set integer). " +
+        "Look up a scale by its binary scale ID (12-bit pitch-class bitmask). " +
         "Returns the scale name, notes, category, alternate names, and Forte number if available. " +
         "Common IDs: Major=2741, Natural Minor=1453, Whole Tone=1365, Diminished=1755.")]
     public static string GaScaleById(
-        [Description("Ian Ring scale ID, e.g. 2741 for the major scale")] int id)
+        [Description("Binary scale ID, e.g. 2741 for the major scale")] int id)
     {
-        var scale = ScalesConfig.TryGetScaleByIanRingId(id);
+        var scale = ScalesConfig.TryGetScaleByBinaryId(id);
         if (scale == null)
-            return $"No scale found for Ian Ring ID {id}.";
+            return $"No scale found for binary scale ID {id}.";
 
         var s = scale.Value;
         var alts = s.AlternateNames.Count > 0 ? string.Join(", ", s.AlternateNames) : "none";
@@ -37,7 +37,7 @@ public static class ScaleTool
         var usage = s.Usage ?? "";
         return $"""
                 Name: {s.Name}
-                Ian Ring ID: {s.IanRingId}
+                Binary Scale ID: {s.BinaryScaleId}
                 Notes: {s.Notes}
                 Category: {category}
                 Alternate Names: {alts}
@@ -50,7 +50,7 @@ public static class ScaleTool
     [McpServerTool]
     [Description(
         "Look up a scale by name or alternate name (case-insensitive). " +
-        "Returns the scale's Ian Ring ID, notes, category, and other metadata. " +
+        "Returns the scale's binary scale ID, notes, category, and other metadata. " +
         "Example: 'Ionian' resolves to the Major scale (id:2741).")]
     public static string GaScaleByName(
         [Description("Scale name or alternate name, e.g. 'Major', 'Ionian', 'Blues'")] string name)
@@ -66,7 +66,7 @@ public static class ScaleTool
         var usage = s.Usage ?? "";
         return $"""
                 Name: {s.Name}
-                Ian Ring ID: {s.IanRingId}
+                Binary Scale ID: {s.BinaryScaleId}
                 Notes: {s.Notes}
                 Category: {category}
                 Alternate Names: {alts}

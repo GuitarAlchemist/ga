@@ -45,10 +45,10 @@ module ScalesConfig =
             "B",  11; "Cb", 11
         ]
 
-    /// Compute the Ian Ring scale ID for a space-separated note string.
-    /// Each note's pitch class n contributes bit 2^n to the result.
-    /// See https://ianring.com/musictheory/scales/
-    let computeIanRingId (notes: string) : int =
+    /// Compute the binary scale ID for a space-separated note string.
+    /// Each note's pitch class n contributes bit 2^n to the result,
+    /// yielding a 12-bit integer that uniquely identifies the pitch-class set.
+    let computeBinaryScaleId (notes: string) : int =
         notes.Split([| ' ' |], StringSplitOptions.RemoveEmptyEntries)
         |> Array.fold
             (fun acc note ->
@@ -68,7 +68,8 @@ module ScalesConfig =
           Common: bool
           Usage: string option
           RelatedScales: IReadOnlyList<string>
-          IanRingId: int
+          /// 12-bit pitch-class bitmask (bit n = pitch class n present, C=0…B=11).
+          BinaryScaleId: int
           /// Forte set-class identifier (e.g. "7-35" for the major scale).
           /// Present only when explicitly set in Scales.yaml.
           ForteNumber: string option }
@@ -112,7 +113,7 @@ module ScalesConfig =
                       Common      = data.Common
                       Usage       = if isNull data.Usage then None else Some data.Usage
                       RelatedScales = related
-                      IanRingId   = computeIanRingId data.Notes
+                      BinaryScaleId = computeBinaryScaleId data.Notes
                       ForteNumber = forte })
         builder.ToImmutable()
 
@@ -120,7 +121,7 @@ module ScalesConfig =
         let byId  = Dictionary<int, ScaleInfo>(scales.Count)
         let byNm  = Dictionary<string, ScaleInfo>(scales.Count * 2, StringComparer.OrdinalIgnoreCase)
         for s in scales do
-            byId.TryAdd(s.IanRingId, s) |> ignore
+            byId.TryAdd(s.BinaryScaleId, s) |> ignore
             byNm.TryAdd(s.Name, s) |> ignore
             for alt in s.AlternateNames do
                 byNm.TryAdd(alt, s) |> ignore
@@ -171,8 +172,8 @@ module ScalesConfig =
         | None   -> Seq.empty
         | Some s -> s :> IEnumerable<ScaleInfo>
 
-    /// Look up a scale by its Ian Ring ID (e.g. 2741 for the major scale).
-    let TryGetScaleByIanRingId (id: int) : ScaleInfo option =
+    /// Look up a scale by its binary scale ID (e.g. 2741 for the major scale).
+    let TryGetScaleByBinaryId (id: int) : ScaleInfo option =
         ensureLoaded ()
         match byIanRingId.TryGetValue(id) with
         | true, s -> Some s
