@@ -1,5 +1,4 @@
 using AllProjects.ServiceDefaults;
-using GA.Business.Web;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,8 +28,14 @@ builder.Logging.AddConsole(consoleLogOptions =>
     consoleLogOptions.LogToStandardErrorThreshold = LogLevel.Trace;
 });
 
-// Register web integration services from shared library
-builder.Services.AddWebIntegrationServices();
+// Register HTTP client for GaApi chatbot tool
+builder.Services.AddHttpClient("gaapi", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = config["GaApi:BaseUrl"] ?? "https://localhost:7001";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 
 // Register MCP server with tools
 builder.Services
