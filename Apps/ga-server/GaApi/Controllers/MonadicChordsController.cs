@@ -49,8 +49,7 @@ public class MonadicChordsController : ControllerBase
                 return StatusCode(500, new ErrorResponse
                 {
                     Error = "InternalServerError",
-                    Message = "Failed to retrieve chord count",
-                    Details = ex.Message
+                    Message = "Failed to retrieve chord count"
                 });
             }
         );
@@ -220,8 +219,7 @@ public class MonadicChordsController : ControllerBase
                 return StatusCode(500, new ErrorResponse
                 {
                     Error = "InternalServerError",
-                    Message = "Failed to retrieve chord statistics",
-                    Details = ex.Message
+                    Message = "Failed to retrieve chord statistics"
                 });
             }
         );
@@ -240,12 +238,15 @@ public class MonadicChordsController : ControllerBase
 
         return tryQualities.Match<IActionResult>(
             onSuccess: qualities => Ok(qualities),
-            onFailure: ex => StatusCode(500, new ErrorResponse
+            onFailure: ex =>
             {
-                Error = "InternalServerError",
-                Message = "Failed to retrieve available qualities",
-                Details = ex.Message
-            })
+                _logger.LogError(ex, "Failed to get available chord qualities");
+                return StatusCode(500, new ErrorResponse
+                {
+                    Error = "InternalServerError",
+                    Message = "Failed to retrieve available qualities"
+                });
+            }
         );
     }
 

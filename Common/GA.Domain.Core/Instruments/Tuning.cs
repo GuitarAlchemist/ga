@@ -15,7 +15,7 @@ using Primitives;
 /// </remarks>
 [PublicAPI]
 [DomainInvariant("Tuning must have at least one string", "StringCount > 0")]
-public class Tuning : IIndexer<Str, Pitch>
+public sealed class Tuning : IIndexer<Str, Pitch>
 {
     /// <summary>
     ///     The default tuning (Guitar - E2 A2 D3 G3 B3 E4)

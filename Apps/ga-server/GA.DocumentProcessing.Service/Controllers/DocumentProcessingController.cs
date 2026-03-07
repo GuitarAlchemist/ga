@@ -5,7 +5,6 @@ using GA.DocumentProcessing.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Swashbuckle.AspNetCore.Annotations;
-using AllProjects.ServiceDefaults;
 
 /// <summary>
 /// API controller for NotebookLM-style document processing
@@ -31,8 +30,9 @@ public class DocumentProcessingController : ControllerBase
     /// </summary>
     [HttpPost("upload")]
     [SwaggerOperation(Summary = "Upload document", Description = "Upload a PDF, Markdown, or text file for processing")]
-    [ProducesResponseType(typeof(ApiResponse<DocumentUploadResponse>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<DocumentUploadResponse>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> UploadDocument([FromForm] IFormFile file, [FromForm] string? tags = null)
     {
         try
@@ -81,7 +81,9 @@ public class DocumentProcessingController : ControllerBase
     /// </summary>
     [HttpPost("process-url")]
     [SwaggerOperation(Summary = "Process URL", Description = "Process a document from a URL")]
-    [ProducesResponseType(typeof(ApiResponse<DocumentUploadResponse>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<DocumentUploadResponse>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> ProcessUrl([FromBody] ProcessUrlRequest request)
     {
         try
@@ -122,8 +124,9 @@ public class DocumentProcessingController : ControllerBase
     /// </summary>
     [HttpGet("{documentId}")]
     [SwaggerOperation(Summary = "Get document", Description = "Get document processing status and results")]
-    [ProducesResponseType(typeof(ApiResponse<DocumentProcessingResult>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<DocumentProcessingResult>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 404)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetDocument(string documentId)
     {
         try
@@ -159,7 +162,9 @@ public class DocumentProcessingController : ControllerBase
     /// </summary>
     [HttpPost("search")]
     [SwaggerOperation(Summary = "Search documents", Description = "Search documents using semantic similarity")]
-    [ProducesResponseType(typeof(ApiResponse<List<DocumentSearchResult>>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<List<DocumentSearchResult>>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> SearchDocuments([FromBody] DocumentSearchRequest request)
     {
         try
@@ -191,7 +196,8 @@ public class DocumentProcessingController : ControllerBase
     /// </summary>
     [HttpGet("statistics")]
     [SwaggerOperation(Summary = "Get statistics", Description = "Get document processing statistics")]
-    [ProducesResponseType(typeof(ApiResponse<DocumentStatistics>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<DocumentStatistics>), 200)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetStatistics()
     {
         try

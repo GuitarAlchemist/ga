@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GA.Business.Core.Orchestration</AssemblyName>
+    <RootNamespace>GA.Business.Core.Orchestration</RootNamespace>
+    <NoWarn>$(NoWarn);SKEXP0001;IDE0065</NoWarn>
+    <Title>Guitar Alchemist - Chatbot Orchestration (Layer 5)</Title>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj" />
+    <ProjectReference Include="..\GA.Business.DSL\GA.Business.DSL.fsproj" />
+    <ProjectReference Include="..\GA.Infrastructure\GA.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.4.0-preview.1.25207.5" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.4.0-preview.1.25207.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.2" />
+  </ItemGroup>
+
+</Project>

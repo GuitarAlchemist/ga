@@ -3,6 +3,10 @@ namespace GA.Domain.Core.Instruments.Primitives;
 using Core.Primitives.Notes;
 using Positions;
 
+/// <summary>
+///     Represents a fret position on a guitar string — either a fretted note or a muted string
+///     (<see href="https://en.wikipedia.org/wiki/Fret" />).
+/// </summary>
 [PublicAPI]
 public abstract record Position(PositionLocation Location)
 {

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 ///     Ollama-based chat service for conversational AI
 ///     Uses local Ollama instance with streaming support
 /// </summary>
-public class OllamaChatService : IOllamaChatService
+public class OllamaChatService : IChatService
 {
     private readonly ChatbotOptions _chatbotOptions;
     private readonly HttpClient _httpClient;
@@ -26,8 +26,8 @@ public class OllamaChatService : IOllamaChatService
         _httpClient = httpClientFactory.CreateClient("Ollama");
         _chatbotOptions = chatOptions.CurrentValue;
         _model = _chatbotOptions.Model ?? configuration["Ollama:ChatModel"] ?? "llama3.2:3b";
-        var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
-        _httpClient.BaseAddress = new(baseUrl);
+        // BaseAddress is configured on the named "Ollama" HttpClient in AddLlmServices —
+        // do not mutate it here to avoid singleton thread-safety issues.
         var timeoutSeconds = Math.Max(5, _chatbotOptions.StreamTimeoutSeconds);
         _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         _logger = logger;

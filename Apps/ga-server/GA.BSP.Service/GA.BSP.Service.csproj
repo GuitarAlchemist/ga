@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ApiResponse<T> is now in AllProjects.ServiceDefaults — exclude local duplicate -->
+    <Compile Remove="Models/ApiResponse.cs"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.BSP.Core\GA.BSP.Core.csproj"/>
     <!-- <ProjectReference Include="..\..\..\Common\GA.Business.Orchestration\GA.Business.Orchestration.csproj" /> -->

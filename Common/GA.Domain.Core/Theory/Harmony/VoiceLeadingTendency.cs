@@ -2,6 +2,7 @@
 
 /// <summary>
 ///     Represents the voice leading tendency of a chord tone
+///     (<see href="https://en.wikipedia.org/wiki/Voice_leading" />)
 /// </summary>
 public enum VoiceLeadingTendency
 {

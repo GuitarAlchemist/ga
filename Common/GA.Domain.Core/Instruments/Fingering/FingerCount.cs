@@ -8,7 +8,7 @@ using GA.Core.Collections.Abstractions;
 /// <inheritdoc cref="IComparable" />
 /// <summary>
 ///     Finger count needed for a position on left hand or right hand for lefties (Between <see cref="Min" /> and
-///     <see cref="Max" />)
+///     <see cref="Max" />) (<see href="https://en.wikipedia.org/wiki/Fingering_(music)" />)
 /// </summary>
 [PublicAPI]
 public readonly record struct FingerCount : IStaticValueObjectList<FingerCount>

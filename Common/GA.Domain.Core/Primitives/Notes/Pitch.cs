@@ -6,7 +6,7 @@ using Theory.Atonal;
 using Theory.Atonal.Abstractions;
 
 /// <summary>
-///     Pitch discriminated union
+///     Pitch discriminated union (<see href="https://en.wikipedia.org/wiki/Pitch_(music)" />).
 /// </summary>
 /// <remarks>
 ///     <see cref="Chromatic" /> | <see cref="Sharp" /> | <see cref="Flat" />

@@ -8,11 +8,12 @@ using Design.Schema;
 
 /// <summary>
 ///     Group of pitch class sets representing a scale that share the same interval vector
+///     (<see href="https://en.wikipedia.org/wiki/Mode_(music)" />).
 /// </summary>
 [DomainInvariant("A modal family groups pitch class sets with identical interval vectors", "Modes.All(m => m.IntervalClassVector == IntervalClassVector)")]
 [DomainRelationship(typeof(PitchClassSet), RelationshipType.Groups)]
 [DomainRelationship(typeof(IntervalClassVector), RelationshipType.IsChildOf)]
-public class ModalFamily : IStaticReadonlyCollection<ModalFamily>
+public sealed class ModalFamily : IStaticReadonlyCollection<ModalFamily>
 {
     private static readonly Lazy<FrozenDictionary<IntervalClassVector, ModalFamily>> _lazyModalFamilies;
     private static readonly Lazy<FrozenSet<IntervalClassVector>> _lazyModalIntervalVectors;

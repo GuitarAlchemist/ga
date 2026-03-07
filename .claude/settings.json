@@ -1,0 +1,48 @@
+{
+  "extraKnownMarketplaces": {
+    "guitar-alchemist": {
+      "source": {
+        "source": "directory",
+        "path": "."
+      }
+    }
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "coding-tutor@compound-engineering-plugin": true,
+    "compound-engineering@compound-engineering-plugin": true,
+    "ga@guitar-alchemist": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -Command \"$f = $env:CLAUDE_TOOL_INPUT_FILE_PATH; if ($f -match 'GA\\.Business\\.DSL|GaSurfaceSyntaxParser|GaClosureRegistry|PipelineClosures|GaComputationExpression') { Write-Host '🔍 DSL file changed — running fast DSL tests...'; dotnet test Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj --no-build -q 2>&1 | Select-Object -Last 5 }\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -Command \"$f = $env:CLAUDE_TOOL_INPUT_FILE_PATH; if ($f -match '\\.agent[/\\\\]skills|\\.agent[/\\\\]agents|\\.claude[/\\\\]settings') { Write-Host '🛡️  Agent config changed: ' + $f }\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -Command \"Write-Host ''; Write-Host '🎸 Guitar Alchemist — Session Context' -ForegroundColor Cyan; Write-Host ('  Branch : ' + (git branch --show-current)) -ForegroundColor Gray; Write-Host ('  Last 3 : ' + ((git log --oneline -3) -join ' | ')) -ForegroundColor Gray; $open = (git diff --stat HEAD 2>$null | Select-Object -Last 1); if ($open) { Write-Host ('  Dirty  : ' + $open) -ForegroundColor Yellow }; Write-Host '  Skills : /compound  /feature  /ga  /ce:review' -ForegroundColor DarkCyan; Write-Host ''\""
+          }
+        ]
+      }
+    ]
+  }
+}

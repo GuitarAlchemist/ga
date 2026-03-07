@@ -1,8 +1,11 @@
 namespace GA.Domain.Core.Primitives.Intervals;
 
 /// <summary>
-///     See https://en.wikibooks.org/wiki/Music_Theory/Consonance_and_Dissonance
+///     Consonance or dissonance classification of a musical interval (<see href="https://en.wikipedia.org/wiki/Consonance_and_dissonance" />).
 /// </summary>
+/// <remarks>
+///     <see href="https://en.wikibooks.org/wiki/Music_Theory/Consonance_and_Dissonance" />
+/// </remarks>
 public enum IntervalConsonance
 {
     /// <summary>

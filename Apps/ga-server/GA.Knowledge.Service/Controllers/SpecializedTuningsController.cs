@@ -18,6 +18,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of all specialized tunings</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetAll()
     {
         try
@@ -42,6 +43,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(SpecializedTuningDefinition), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<SpecializedTuningDefinition> GetByName(string name)
     {
         try
@@ -69,6 +71,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of alternative string configurations</returns>
     [HttpGet("alternative-configurations")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetAlternativeConfigurations()
     {
         try
@@ -91,6 +94,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of specialized tuning systems</returns>
     [HttpGet("tuning-systems")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetTuningSystems()
     {
         try
@@ -113,6 +117,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of extended range instrument tunings</returns>
     [HttpGet("extended-range")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetExtendedRange()
     {
         try
@@ -135,6 +140,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of recording and production tunings</returns>
     [HttpGet("recording")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetRecordingTunings()
     {
         try
@@ -158,6 +164,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of specialized tunings in the specified category</returns>
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetByCategory(string category)
     {
         try
@@ -182,6 +189,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of specialized tunings for the specified application</returns>
     [HttpGet("application/{application}")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetByApplication(string application)
     {
         try
@@ -206,6 +214,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of specialized tunings associated with the artist</returns>
     [HttpGet("artist/{artist}")]
     [ProducesResponseType(typeof(IEnumerable<SpecializedTuningDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<SpecializedTuningDefinition>> GetByArtist(string artist)
     {
         try
@@ -280,6 +289,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of all unique categories</returns>
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllCategories()
     {
         try
@@ -302,6 +312,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of all unique applications</returns>
     [HttpGet("applications")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllApplications()
     {
         try
@@ -324,6 +335,7 @@ public class SpecializedTuningsController(ILogger<SpecializedTuningsController> 
     /// <returns>List of all unique artists</returns>
     [HttpGet("artists")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllArtists()
     {
         try

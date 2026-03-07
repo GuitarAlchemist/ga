@@ -5,7 +5,7 @@ using Notes;
 
 // ReSharper disable GrammarMistakeInComment
 /// <summary>
-///     Interval quality class
+///     Interval quality class (<see href="https://en.wikipedia.org/wiki/Interval_(music)" />).
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IEquatable{T}" /> | <see cref="IComparable{String}" /> | <see cref="IComparable" />

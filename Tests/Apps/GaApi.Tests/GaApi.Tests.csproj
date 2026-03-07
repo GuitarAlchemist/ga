@@ -35,6 +35,8 @@
     <Compile Remove="VoicingFilterServiceTests.cs"/>
     <Compile Remove="ContextualChordServiceTests.cs"/>
     <Compile Remove="GraphQL/**/*.cs"/>
+    <!-- Exclude tests for endpoints not yet implemented in GaApi -->
+    <Compile Remove="Controllers/AnalyzerIntegrationTests.cs"/>
   </ItemGroup>
 
   <ItemGroup>

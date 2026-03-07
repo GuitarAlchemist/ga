@@ -1,3 +1,6 @@
+// Note: This module models physical hand/finger biomechanics for ergonomic analysis.
+// It is a pragmatic inclusion in GA.Domain.Core for proximity to instrument types,
+// but is not a music-theory primitive. Candidate for future move to GA.Domain.Services.
 namespace GA.Domain.Core.Instruments.Biomechanics;
 
 public record HandModel
@@ -23,73 +26,69 @@ public record HandModel
     /// <summary>
     ///     Create standard adult hand model
     /// </summary>
-    public static HandModel CreateStandardAdult()
-    {
-        var fingers = ImmutableList.CreateBuilder<Finger>();
-
-        // Thumb (3 joints: CMC, MCP, IP)
-        fingers.Add(new()
-        {
-            Type = FingerType.Thumb,
-            BasePosition = new(-30, 0, 0), // Left side of palm
-            Joints = ImmutableList.Create(
-                new FingerJoint
-                {
-                    Type = JointType.Cmc,
-                    BoneLength = 20.0f,
-                    MinFlexion = ToRadians(-15),
-                    MaxFlexion = ToRadians(15),
-                    MinAbduction = ToRadians(0),
-                    MaxAbduction = ToRadians(80),
-                    RestFlexion = ToRadians(0),
-                    RestAbduction = ToRadians(45)
-                },
-                new FingerJoint
-                {
-                    Type = JointType.Mcp,
-                    BoneLength = 20.0f,
-                    MinFlexion = ToRadians(0),
-                    MaxFlexion = ToRadians(60),
-                    MinAbduction = ToRadians(-10),
-                    MaxAbduction = ToRadians(10),
-                    RestFlexion = ToRadians(10),
-                    RestAbduction = ToRadians(0)
-                },
-                new FingerJoint
-                {
-                    Type = JointType.Ip,
-                    BoneLength = 20.0f,
-                    MinFlexion = ToRadians(0),
-                    MaxFlexion = ToRadians(80),
-                    MinAbduction = ToRadians(0),
-                    MaxAbduction = ToRadians(0),
-                    RestFlexion = ToRadians(15),
-                    RestAbduction = ToRadians(0)
-                }
-            )
-        });
-
-        // Index finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Index, new(-15, 100, 0), 40, 25, 10));
-
-        // Middle finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Middle, new(0, 100, 0), 45, 30, 10));
-
-        // Ring finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Ring, new(15, 100, 0), 42, 28, 10));
-
-        // Little finger (4 joints: CMC, MCP, PIP, DIP)
-        fingers.Add(CreateStandardFinger(FingerType.Little, new(30, 100, 0), 35, 20, 10));
-
-        return new()
+    public static HandModel CreateStandardAdult() =>
+        new()
         {
             PalmWidth = 85.0f,
             PalmLength = 100.0f,
-            Fingers = fingers.ToImmutable(),
+            Fingers =
+            [
+                new()
+                {
+                    Type = FingerType.Thumb,
+                    BasePosition = new(-30, 0, 0), // Left side of palm
+                    Joints =
+                    [
+                        new FingerJoint
+                        {
+                            Type = JointType.Cmc,
+                            BoneLength = 20.0f,
+                            MinFlexion = ToRadians(-15),
+                            MaxFlexion = ToRadians(15),
+                            MinAbduction = ToRadians(0),
+                            MaxAbduction = ToRadians(80),
+                            RestFlexion = ToRadians(0),
+                            RestAbduction = ToRadians(45)
+                        },
+                        new FingerJoint
+                        {
+                            Type = JointType.Mcp,
+                            BoneLength = 20.0f,
+                            MinFlexion = ToRadians(0),
+                            MaxFlexion = ToRadians(60),
+                            MinAbduction = ToRadians(-10),
+                            MaxAbduction = ToRadians(10),
+                            RestFlexion = ToRadians(10),
+                            RestAbduction = ToRadians(0)
+                        },
+                        new FingerJoint
+                        {
+                            Type = JointType.Ip,
+                            BoneLength = 20.0f,
+                            MinFlexion = ToRadians(0),
+                            MaxFlexion = ToRadians(80),
+                            MinAbduction = ToRadians(0),
+                            MaxAbduction = ToRadians(0),
+                            RestFlexion = ToRadians(15),
+                            RestAbduction = ToRadians(0)
+                        }
+                    ]
+                },
+                // Index finger (4 joints: CMC, MCP, PIP, DIP)
+                CreateStandardFinger(FingerType.Index, new(-15, 100, 0), 40, 25, 10),
+
+                // Middle finger (4 joints: CMC, MCP, PIP, DIP)
+                CreateStandardFinger(FingerType.Middle, new(0, 100, 0), 45, 30, 10),
+
+                // Ring finger (4 joints: CMC, MCP, PIP, DIP)
+                CreateStandardFinger(FingerType.Ring, new(15, 100, 0), 42, 28, 10),
+
+                // Little finger (4 joints: CMC, MCP, PIP, DIP)
+                CreateStandardFinger(FingerType.Little, new(30, 100, 0), 35, 20, 10)
+            ],
             FingerSpreadConstraints = CreateStandardFingerSpreadConstraints(),
             WristLimits = WristConstraint.Default
         };
-    }
 
     /// <summary>
     ///     Create a standard finger (index, middle, ring, little)
@@ -104,7 +103,8 @@ public record HandModel
         {
             Type = type,
             BasePosition = basePosition,
-            Joints = ImmutableList.Create(
+            Joints =
+            [
                 new FingerJoint
                 {
                     Type = JointType.Cmc,
@@ -149,7 +149,7 @@ public record HandModel
                     RestFlexion = ToRadians(15),
                     RestAbduction = ToRadians(0)
                 }
-            )
+            ]
         };
 
     /// <summary>
@@ -196,32 +196,32 @@ public record HandModel
     public Finger GetFinger(FingerType type) => Fingers[(int)type];
 
     private static ImmutableList<FingerSpreadConstraint> CreateStandardFingerSpreadConstraints() =>
-        ImmutableList.Create(
-            new FingerSpreadConstraint
-            {
-                Primary = FingerType.Index,
-                Secondary = FingerType.Middle,
-                PreferredSeparationMm = 18f,
-                MaxSeparationMm = 28f,
-                MinSeparationMm = 10f
-            },
-            new FingerSpreadConstraint
-            {
-                Primary = FingerType.Middle,
-                Secondary = FingerType.Ring,
-                PreferredSeparationMm = 20f,
-                MaxSeparationMm = 30f,
-                MinSeparationMm = 12f
-            },
-            new FingerSpreadConstraint
-            {
-                Primary = FingerType.Ring,
-                Secondary = FingerType.Little,
-                PreferredSeparationMm = 22f,
-                MaxSeparationMm = 34f,
-                MinSeparationMm = 12f
-            }
-        );
+    [
+        new FingerSpreadConstraint
+        {
+            Primary = FingerType.Index,
+            Secondary = FingerType.Middle,
+            PreferredSeparationMm = 18f,
+            MaxSeparationMm = 28f,
+            MinSeparationMm = 10f
+        },
+        new FingerSpreadConstraint
+        {
+            Primary = FingerType.Middle,
+            Secondary = FingerType.Ring,
+            PreferredSeparationMm = 20f,
+            MaxSeparationMm = 30f,
+            MinSeparationMm = 12f
+        },
+        new FingerSpreadConstraint
+        {
+            Primary = FingerType.Ring,
+            Secondary = FingerType.Little,
+            PreferredSeparationMm = 22f,
+            MaxSeparationMm = 34f,
+            MinSeparationMm = 12f
+        }
+    ];
 
     /// <summary>
     ///     Convert degrees to radians

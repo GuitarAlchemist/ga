@@ -4,11 +4,11 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 
 /// <summary>
-///     Adapter that exposes <see cref="IOllamaChatService" /> as an <see cref="IChatClient" /> for components
+///     Adapter that exposes <see cref="IChatService" /> as an <see cref="IChatClient" /> for components
 ///     (e.g. Microsoft Agent Framework) that rely on the new Extensions.AI abstractions.
 /// </summary>
 public sealed class OllamaChatClientAdapter(
-    IOllamaChatService chatService,
+    IChatService chatService,
     IConfiguration configuration,
     ILogger<OllamaChatClientAdapter> logger)
     : IChatClient

@@ -45,6 +45,50 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ============================================
+# ROP ENFORCEMENT CHECK
+# ============================================
+Write-Host "`n▶ Checking for naked throws in service files..." -ForegroundColor Blue
+
+$stagedServiceFiles = git diff --cached --name-only 2>/dev/null |
+    Where-Object { $_ -match "Services/[^/]+\.cs$" -and (Test-Path $_) }
+
+$ropViolations = @()
+foreach ($file in $stagedServiceFiles) {
+    $lines = Get-Content $file -ErrorAction SilentlyContinue
+    $lineNum = 0
+    $inCatch = $false
+    $braceDepth = 0
+    $catchDepth = 0
+    foreach ($line in $lines) {
+        $lineNum++
+        # Track brace depth to detect when we leave a catch block
+        $opens  = ([regex]::Matches($line, '\{')).Count
+        $closes = ([regex]::Matches($line, '\}')).Count
+        if ($inCatch) {
+            $catchDepth += $opens - $closes
+            if ($catchDepth -le 0) { $inCatch = $false }
+        }
+        if ($line -match '^\s*catch\b') { $inCatch = $true; $catchDepth = 0 }
+        # Flag throw new outside catch blocks (skip comments and re-throws)
+        if (-not $inCatch -and
+            $line -match '^\s+throw\s+new\s+' -and
+            $line -notmatch '^\s*//')
+        {
+            $ropViolations += "${file}:${lineNum}: $($line.Trim())"
+        }
+    }
+}
+
+if ($ropViolations.Count -gt 0) {
+    Write-Host "⚠  Naked throw detected in service layer (use Result/Try/Option instead):" -ForegroundColor Yellow
+    $ropViolations | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
+    Write-Host "   See .agent/skills/rop-patterns/SKILL.md for guidance." -ForegroundColor Yellow
+    # Warning only — does not block the commit
+} else {
+    Write-Host "✓ No naked throws in staged service files" -ForegroundColor Green
+}
+
+# ============================================
 # RESULT
 # ============================================
 Write-Host "`n========================================" -ForegroundColor Cyan

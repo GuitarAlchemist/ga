@@ -3,12 +3,10 @@
 using Atonal;
 
 /// <summary>
-///     Represents a specific voicing of a chord
+///     Represents a specific voicing of a chord — the assignment of chord tones to specific
+///     pitches, octaves, and strings (<see href="https://en.wikipedia.org/wiki/Voicing_(music)" />).
 /// </summary>
-/// <remarks>
-///     Initializes a new instance of the ChordVoicing class
-/// </remarks>
-public class ChordVoicing(ChordTemplate chordTemplate, IEnumerable<ChordTone> chordTones, PitchClass bass)
+public sealed class ChordVoicing(ChordTemplate chordTemplate, IEnumerable<ChordTone> chordTones, PitchClass bass)
 {
 
     /// <summary>Gets the chord template</summary>

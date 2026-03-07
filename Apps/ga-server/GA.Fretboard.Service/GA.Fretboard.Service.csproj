@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <Compile Remove="_Parked\**"/>
+    <!-- ApiResponse<T> is now in AllProjects.ServiceDefaults — exclude local duplicate -->
+    <Compile Remove="Models/ApiResponse.cs"/>
   </ItemGroup>
 
   <ItemGroup>

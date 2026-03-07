@@ -31,6 +31,7 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpGet("analyze-gaps")]
     [ProducesResponseType(typeof(KnowledgeGapAnalysis), 200)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> AnalyzeGaps(CancellationToken cancellationToken)
     {
         try
@@ -62,6 +63,8 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpGet("gaps/by-priority/{priority}")]
     [ProducesResponseType(typeof(List<KnowledgeGap>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetGapsByPriority(string priority, CancellationToken cancellationToken)
     {
         try
@@ -93,6 +96,8 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpGet("gaps/by-category/{category}")]
     [ProducesResponseType(typeof(List<KnowledgeGap>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetGapsByCategory(string category, CancellationToken cancellationToken)
     {
         try
@@ -130,6 +135,8 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpPost("start")]
     [ProducesResponseType(typeof(AutonomousCurationResult), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> StartCuration(
         [FromBody] StartAutonomousCurationRequest request,
         CancellationToken cancellationToken)
@@ -164,6 +171,7 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpPost("start/quick")]
     [ProducesResponseType(typeof(AutonomousCurationResult), 200)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> StartQuickCuration(CancellationToken cancellationToken)
     {
         try
@@ -203,6 +211,7 @@ public class AutonomousCurationController : ControllerBase
     /// </summary>
     [HttpGet("stats")]
     [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
     {
         try

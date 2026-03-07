@@ -12,5 +12,5 @@ public interface IGroundedNarrator
     /// <summary>
     /// Generates a natural language narrative for the given query and candidates.
     /// </summary>
-    Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates, bool simulateHallucination = false);
+    Task<string> NarrateAsync(string query, List<CandidateVoicing> candidates);
 }

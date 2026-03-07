@@ -11,7 +11,7 @@ public sealed class ChatbotOptions
     /// <summary>
     ///     Primary conversational model identifier registered in Ollama.
     /// </summary>
-    public string Model { get; set; } = "llama3.2:3b";
+    public string Model { get; set; } = "llama3.2:1b";
 
     /// <summary>
     ///     Maximum number of back-and-forth messages (user + assistant) to retain.

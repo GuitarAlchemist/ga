@@ -250,6 +250,12 @@ public class VectorSearchService
         int limit = 10,
         int numCandidates = 100)
     {
+        if (!_useLocal && _openAiClient == null)
+        {
+            _logger.LogWarning("No embedding service available — returning empty results for hybrid search");
+            return [];
+        }
+
         try
         {
             // Generate embedding for query

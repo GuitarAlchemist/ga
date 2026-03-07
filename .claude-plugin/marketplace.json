@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "guitar-alchemist",
+  "description": "Guitar Alchemist plugins for Claude Code — music theory tools, DSL commands, and agent integrations for the GA codebase",
+  "owner": {
+    "name": "Guitar Alchemist",
+    "url": "https://github.com/guitar-alchemist"
+  },
+  "plugins": [
+    {
+      "name": "ga",
+      "version": "1.0.0",
+      "description": "Guitar Alchemist DSL — in-process music theory tools (chord analysis, interval lookup, key inference, tab search) exposed as MCP tools, plus the /ga slash command for quick theory queries.",
+      "author": {
+        "name": "Guitar Alchemist Team"
+      },
+      "source": "./plugins/ga",
+      "category": "development",
+      "keywords": ["music-theory", "guitar", "chords", "intervals", "tabs", "dsl", "fsharp"]
+    }
+  ]
+}

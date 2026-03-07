@@ -317,6 +317,7 @@ public class GuitarPlayingController(
     /// </summary>
     [HttpPost("search-sounds")]
     [ProducesResponseType(typeof(SearchResponse), 200)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(500)]
     public async Task<IActionResult> SearchSounds(
         [FromBody] SearchRequest request,
@@ -339,6 +340,7 @@ public class GuitarPlayingController(
     /// </summary>
     [HttpGet("health")]
     [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> HealthCheck(CancellationToken cancellationToken)
     {
         var handPoseResult = await handPoseClient.HealthCheckAsync();

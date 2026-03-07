@@ -3,8 +3,12 @@ namespace GA.Domain.Core.Instruments.Primitives;
 using GA.Core.Collections.Abstractions;
 using Positions;
 
+/// <summary>
+///     A vector of fret positions, one per string, representing a chord shape on the fretboard
+///     (<see href="https://en.wikipedia.org/wiki/Chord_diagram" />).
+/// </summary>
 [PublicAPI]
-public class FretVector : IReadOnlyCollection<Fret>,
+public sealed class FretVector : IReadOnlyCollection<Fret>,
     IIndexer<Str, Fret>
 {
     private readonly ImmutableSortedDictionary<Str, Fret> _fretByStr;

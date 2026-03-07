@@ -4,7 +4,6 @@ using GA.DocumentProcessing.Service.Models;
 using GA.DocumentProcessing.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
-using AllProjects.ServiceDefaults;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -34,6 +33,9 @@ public class YouTubeController : ControllerBase
     /// Process a YouTube video: extract transcript and analyze
     /// </summary>
     [HttpPost("process")]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<ProcessYouTubeVideoResponse>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> ProcessYouTubeVideo(
         [FromBody] ProcessYouTubeVideoRequest request,
         CancellationToken cancellationToken)
@@ -102,6 +104,9 @@ public class YouTubeController : ControllerBase
     /// Start retroaction loop with YouTube video
     /// </summary>
     [HttpPost("retroaction-loop")]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> StartYouTubeRetroactionLoop(
         [FromBody] StartYouTubeRetroactionLoopRequest request,
         CancellationToken cancellationToken)
@@ -166,6 +171,9 @@ public class YouTubeController : ControllerBase
     /// Get YouTube video by ID
     /// </summary>
     [HttpGet("{videoId}")]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<YouTubeVideoDocument>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 404)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetYouTubeVideo(
         string videoId,
         CancellationToken cancellationToken)
@@ -194,6 +202,9 @@ public class YouTubeController : ControllerBase
     /// List all processed YouTube videos
     /// </summary>
     [HttpGet("list")]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<List<YouTubeVideoDocument>>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> ListYouTubeVideos(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -221,6 +232,9 @@ public class YouTubeController : ControllerBase
     /// Search YouTube videos by tags or category
     /// </summary>
     [HttpGet("search")]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<List<YouTubeVideoDocument>>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> SearchYouTubeVideos(
         [FromQuery] string? tag = null,
         [FromQuery] string? category = null,

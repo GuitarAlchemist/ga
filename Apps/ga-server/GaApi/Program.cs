@@ -1,9 +1,11 @@
+using System.Threading.RateLimiting;
 using AllProjects.ServiceDefaults;
 using GA.Business.Core.Session;
 using GaApi.Extensions;
 using GaApi.Hubs;
 using GaApi.Services;
 using GaApi.GraphQL.Queries;
+using Microsoft.AspNetCore.RateLimiting;
 using MudBlazor;
 using MudBlazor.Services;
 using Path = System.IO.Path;
@@ -33,6 +35,17 @@ builder.Services.AddVoicingSearchServices(builder.Configuration);
 // Add caching services
 builder.Services.AddCachingServices(builder.Configuration);
 
+// Register monadic services (health check, chords)
+builder.Services.AddMonadicHealthCheckService();
+builder.Services.AddMonadicChordService();
+
+// Register contextual chord services
+builder.Services.AddSingleton<ContextualChordService>();
+builder.Services.AddSingleton<VoicingFilterService>();
+
+// Shared LLM concurrency gate (3 parallel calls) — applied to both hub and REST controller
+builder.Services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
+
 // Add session context provider (scoped = one per HTTP request)
 builder.Services.AddSessionContextScoped();
 
@@ -42,7 +55,17 @@ builder.Services.AddHttpClient();
 // Add SignalR for WebSocket support
 builder.Services.AddSignalR();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApplicationPartManager(manager =>
+    {
+        // GA.Fretboard.Service is referenced for shared types but runs as its own service.
+        // Exclude its assembly from controller discovery to prevent AmbiguousMatchException
+        // (e.g., both assemblies define ContextualChordsController on the same route prefix).
+        var fretboardPart = manager.ApplicationParts
+            .FirstOrDefault(p => p.Name == "GA.Fretboard.Service");
+        if (fretboardPart != null)
+            manager.ApplicationParts.Remove(fretboardPart);
+    });
 
 // Add Blazor Server and MudBlazor
 builder.Services.AddRazorComponents()
@@ -104,6 +127,22 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddProblemDetails();
 
+// Per-IP rate limiting: 60 requests/minute, queue up to 5 overflow requests
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? ctx.Request.Headers.Host.ToString(),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 var app = builder.Build();
 
 
@@ -127,8 +166,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 
 // Use rate limiting (must be before UseAuthorization)
-// TODO: Fix rate limiting for .NET 9 - API changed
-// app.UseRateLimiter();
+app.UseRateLimiter();
 
 // Enable static files for Blazor
 app.UseStaticFiles();
@@ -139,6 +177,7 @@ app.MapControllers();
 app.MapGraphQL();
 
 app.MapGet("/api/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStats");
+// /stats (without /api prefix) kept for backwards compatibility with older clients
 app.MapGet("/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStatsRoot");
 
 // Map YARP Reverse Proxy routes (API Gateway)

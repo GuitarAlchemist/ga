@@ -9,7 +9,7 @@ using GA.Core.Collections.Abstractions;
 using KeyNote = Core.Primitives.Notes.Note.KeyNote;
 
 /// <summary>
-///     Key signature (See https://en.wikipedia.org/wiki/Key_signature)
+///     Key signature (<see href="https://en.wikipedia.org/wiki/Key_signature" />).
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IRangeValueObject{TSelf}" /> |
