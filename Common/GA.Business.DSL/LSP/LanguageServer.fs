@@ -5,6 +5,7 @@ open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open GA.Business.DSL.Parsers
 open GA.Business.DSL.LSP.LspTypes
+open GA.Business.DSL.LSP
 
 /// <summary>
 /// Language Server Protocol implementation for Music Theory DSL
@@ -131,6 +132,15 @@ module LanguageServer =
         // Hover provider
         capabilities.["hoverProvider"] <- JValue(true)
 
+        // Semantic tokens provider — for ```ga``` closure-name highlighting
+        let tokenLegend = JObject()
+        tokenLegend.["tokenTypes"]     <- JArray([| "function" |])
+        tokenLegend.["tokenModifiers"] <- JArray([| |])
+        let semanticTokensProvider = JObject()
+        semanticTokensProvider.["legend"] <- tokenLegend
+        semanticTokensProvider.["full"]   <- JValue(true)
+        capabilities.["semanticTokensProvider"] <- semanticTokensProvider
+
         let result = JObject()
         result.["capabilities"] <- capabilities
 
@@ -211,6 +221,35 @@ module LanguageServer =
         JsonConvert.SerializeObject(notification)
 
     // ============================================================================
+    // DOCUMENT VALIDATION (ga-block aware)
+    // ============================================================================
+
+    /// Validate a document, returning diagnostics with correct document-level line numbers.
+    /// For documents containing ```ga``` blocks: validate each block's content and offset
+    /// the resulting diagnostic line numbers to document coordinates.
+    /// For plain (non-markdown) documents: fall back to chord-progression validation.
+    let validateDocument (text: string) : Diagnostic list =
+        let blocks = GaBlockDetector.findGaFencedBlocks text
+        if blocks.IsEmpty then
+            // No ga blocks — plain DSL document; use existing validator
+            DiagnosticsProvider.validate text
+        else
+            // For each ga block, run validation on its content and offset line numbers
+            [ for block in blocks do
+                let content = GaBlockDetector.blockContent text block
+                if not (String.IsNullOrWhiteSpace content) then
+                    let innerDiags = DiagnosticsProvider.validate content
+                    for d in innerDiags do
+                        // Offset diagnostic line numbers to document coordinates
+                        let offsetStart =
+                            { d.Range.Start with
+                                Line = GaBlockDetector.toDocumentLine block d.Range.Start.Line }
+                        let offsetEnd =
+                            { d.Range.End with
+                                Line = GaBlockDetector.toDocumentLine block d.Range.End.Line }
+                        yield { d with Range = { Start = offsetStart; End = offsetEnd } } ]
+
+    // ============================================================================
     // MESSAGE HANDLING
     // ============================================================================
 
@@ -227,19 +266,20 @@ module LanguageServer =
 
         match state.Documents.Get(uri) with
         | Some doc ->
-            // Calculate absolute position in the document
-            let lines = doc.Text.Split([| '\n'; '\r' |], StringSplitOptions.None)
-
-            let absolutePosition =
-                let mutable pos = 0
-
-                for i in 0 .. (min line (lines.Length - 1)) - 1 do
-                    pos <- pos + lines.[i].Length + 1 // +1 for newline
-
-                pos + character
-
-            // Get completions from CompletionProvider
-            let completions = CompletionProvider.getCompletions doc.Text absolutePosition
+            let blocks = GaBlockDetector.findGaFencedBlocks doc.Text
+            let completions =
+                if GaBlockDetector.isInsideGaBlock blocks line then
+                    // Cursor is inside a ```ga``` block — return closure names
+                    CompletionProvider.closureCompletions ()
+                else
+                    // Outside ga blocks — existing chord/scale completions
+                    let lines = doc.Text.Split([| '\n'; '\r' |], StringSplitOptions.None)
+                    let absolutePosition =
+                        let mutable pos = 0
+                        for i in 0 .. (min line (lines.Length - 1)) - 1 do
+                            pos <- pos + lines.[i].Length + 1
+                        pos + character
+                    CompletionProvider.getCompletions doc.Text absolutePosition
             let result = JObject()
             result.["items"] <- CompletionProvider.toJson completions
             successResponse id result
@@ -288,7 +328,7 @@ module LanguageServer =
             let newState = handleTextDocumentOpen state (message.Params.Value)
             let uri = message.Params.Value.["textDocument"].["uri"].ToString()
             let text = message.Params.Value.["textDocument"].["text"].ToString()
-            let diagnostics = DiagnosticsProvider.validate text
+            let diagnostics = validateDocument text
             let notification = publishDiagnostics uri diagnostics
             (newState, Some notification)
 
@@ -298,7 +338,7 @@ module LanguageServer =
 
             match newState.Documents.Get(uri) with
             | Some doc ->
-                let diagnostics = DiagnosticsProvider.validate doc.Text
+                let diagnostics = validateDocument doc.Text
                 let notification = publishDiagnostics uri diagnostics
                 (newState, Some notification)
             | None -> (newState, None)
@@ -313,6 +353,22 @@ module LanguageServer =
 
         | "textDocument/hover" ->
             let response = handleHover state (message.Params.Value) (message.Id.Value)
+            (state, Some response)
+
+        | "textDocument/semanticTokens/full" ->
+            let uri = message.Params.Value.["textDocument"].["uri"].ToString()
+            let response =
+                match state.Documents.Get(uri) with
+                | Some doc ->
+                    let blocks = GaBlockDetector.findGaFencedBlocks doc.Text
+                    let data   = GaBlockDetector.buildSemanticTokens doc.Text blocks
+                    let tokens = JObject()
+                    tokens.["data"] <- JArray(data |> List.map box |> Array.ofList)
+                    successResponse (message.Id.Value) tokens
+                | None ->
+                    let tokens = JObject()
+                    tokens.["data"] <- JArray()
+                    successResponse (message.Id.Value) tokens
             (state, Some response)
 
         | "shutdown" -> (state, Some(successResponse (message.Id.Value) (JObject())))

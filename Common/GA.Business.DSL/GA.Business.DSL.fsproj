@@ -49,6 +49,7 @@
         <Compile Include="Parsers/GaSurfaceSyntaxParser.fs"/>
         <Compile Include="Interpreter/GaFsiSessionPool.fs"/>
         <Compile Include="LSP/LspTypes.fs"/>
+        <Compile Include="LSP/GaBlockDetector.fs"/>
         <Compile Include="LSP/CompletionProvider.fs"/>
         <Compile Include="LSP/DiagnosticsProvider.fs"/>
         <Compile Include="LSP/LanguageServer.fs"/>

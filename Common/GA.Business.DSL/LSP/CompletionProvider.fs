@@ -3,6 +3,7 @@ namespace GA.Business.DSL.LSP
 open System
 open Newtonsoft.Json.Linq
 open GA.Business.DSL.LSP.LspTypes
+open GA.Business.DSL.Closures.GaClosureRegistry
 
 /// <summary>
 /// Completion provider for Music Theory DSL
@@ -494,6 +495,17 @@ module CompletionProvider =
                 |> List.filter (fun item -> item.Label.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
             // If no matches, return all completions (user might be starting fresh)
             if filtered.IsEmpty then completions else filtered
+
+    /// Return all registered GA DSL closure names as completion items.
+    /// Used when the cursor is inside a ```ga``` fenced block.
+    let closureCompletions () : CompletionItem list =
+        GaClosureRegistry.Global.List()
+        |> List.map (fun c ->
+            { Label        = c.Name
+              Kind         = CompletionItemKind.Function
+              Detail       = Some $"[{c.Category}] {c.OutputType}"
+              Documentation = Some c.Description
+              InsertText   = Some c.Name })
 
     /// Convert completion items to JSON
     let toJson (items: CompletionItem list) : JArray =
