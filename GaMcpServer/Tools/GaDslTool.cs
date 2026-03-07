@@ -25,17 +25,24 @@ public static class GaDslTool
         string closureName,
         params (string Key, object Value)[] inputs)
     {
-        var map = MapModule.OfSeq(
-            inputs.Select(kv => Tuple.Create(kv.Key, kv.Value)));
+        try
+        {
+            var map = MapModule.OfSeq(
+                inputs.Select(kv => Tuple.Create(kv.Key, kv.Value)));
 
-        var result = await FSharpAsync.StartAsTask(
-            GaReg.Global.Invoke(closureName, map),
-            FSharpOption<TaskCreationOptions>.None,
-            FSharpOption<CancellationToken>.None);
+            var result = await FSharpAsync.StartAsTask(
+                GaReg.Global.Invoke(closureName, map),
+                FSharpOption<TaskCreationOptions>.None,
+                FSharpOption<CancellationToken>.None);
 
-        return result.IsOk
-            ? FormatResult(result.ResultValue)
-            : $"Error: {result.ErrorValue}";
+            return result.IsOk
+                ? FormatResult(result.ResultValue)
+                : $"Error: {result.ErrorValue}";
+        }
+        catch (Exception ex)
+        {
+            return $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+        }
     }
 
     private static async Task<string> InvokeJsonAsync(string closureName, string paramsJson)

@@ -101,3 +101,22 @@ module MusicTheoryDsl =
           "FretboardNavigation"
           "ScaleTransformation"
           "GrothendieckOperations" ]
+
+// ============================================================================
+// CLOSURE BOOTSTRAP
+// ============================================================================
+
+/// Ensures all builtin GA DSL closures are registered in GaClosureRegistry.Global.
+/// F# module do-bindings are lazy — call this once at application startup
+/// so Claude Code / MCP tools can find domain.*, tab.*, agent.*, io.* closures.
+/// Safe to call multiple times (RegisterAll is idempotent).
+module GaClosureBootstrap =
+
+    open GA.Business.DSL.Closures.BuiltinClosures
+
+    let init () =
+        DomainClosures.register ()
+        TabClosures.register ()
+        PipelineClosures.register ()
+        AgentClosures.register ()
+        IoClosures.register ()

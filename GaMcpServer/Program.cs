@@ -6,6 +6,10 @@ using Microsoft.Extensions.Logging;
 
 // Console.SetOut(new StreamWriter(Stream.Null) { AutoFlush = true });
 
+// Force F# closure module initializers to run before MCP tools are registered.
+// F# do-bindings are lazy — without this, GaClosureRegistry.Global is empty.
+GA.Business.DSL.GaClosureBootstrap.init();
+
 var builder = Host.CreateApplicationBuilder(args);
 
 // Add Aspire service defaults (telemetry, health checks, service discovery)
