@@ -179,6 +179,8 @@ Consult the skill files in `.agent/skills/` when performing relevant tasks:
 
 | Feature Implementor | `.agent/skills/feature-implementor/SKILL.md` | Running `/feature` for any new feature, fix, or multi-file refactor |
 | GA Chatbot Probe | `.agent/skills/ga-chatbot-probe/SKILL.md` | Talk to chatbot subagents, probe routing decisions, compare agent responses |
+| GA Language Evaluator | `.agent/skills/ga-eval/SKILL.md` | Run GAL scripts against the live FSI session; explore domain closures interactively |
+| GA Chord Theory Helper | `.agent/skills/ga-chords/SKILL.md` | Parse chords, transpose progressions, get diatonic sets via real GA services |
 
 ## Planning & Backlog
 
