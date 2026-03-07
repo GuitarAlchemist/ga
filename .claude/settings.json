@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"$f = $env:CLAUDE_TOOL_INPUT_FILE_PATH; if ($f -match '\\.agent[/\\\\]skills|\\.agent[/\\\\]agents|\\.claude[/\\\\]settings') { Write-Host '🛡️  Agent config changed: ' + $f }\""
+            "command": "pwsh -NoProfile -Command \"$f = $env:CLAUDE_TOOL_INPUT_FILE_PATH; if ($f -match '\\.agent/skills|\\.agent/agents|\\.claude/settings') { Write-Host '🛡️  Agent config changed: ' + $f }\""
           }
         ]
       }
