@@ -8,6 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Extensions/GaMarkdownHandler.fs"/>
+        <Compile Include="Extensions/GaSemanticTokensProvider.fs"/>
+        <Compile Include="Extensions/GaInlayHintProvider.fs"/>
         <Compile Include="Program.fs"/>
     </ItemGroup>
 

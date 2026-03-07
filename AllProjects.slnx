@@ -69,7 +69,10 @@
         <Project Path="Common/GA.Interactive.LocalNuGet/GA.Interactive.LocalNuGet.csproj" />
         <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     </Folder>
-    <Folder Name="/Common/" />
+    <Folder Name="/Common/">
+        <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.Generated.fsproj" />
+        <Project Path="Common/GA.Business.DSL.SourceGen/GA.Business.DSL.SourceGen.csproj" />
+    </Folder>
     <Folder Name="/Data &amp; Integration/">
         <Project Path="Common/GA.Testing.Semantic/GA.Testing.Semantic.csproj" />
         <Project Path="GA.Data.SemanticKernel.Embeddings/GA.Data.SemanticKernel.Embeddings.csproj" />

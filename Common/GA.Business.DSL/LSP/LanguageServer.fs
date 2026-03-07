@@ -69,13 +69,14 @@ module LanguageServer =
             let message =
                 { JsonRpc = obj.["jsonrpc"].ToString()
                   Id =
-                    if obj.ContainsKey("id") then
+                    // Bug fix: id may be int, string, or absent — don't cast to int directly
+                    if obj.ContainsKey("id") && obj.["id"].Type <> Newtonsoft.Json.Linq.JTokenType.Null then
                         Some(obj.["id"].ToObject<int>())
                     else
                         None
                   Method = obj.["method"].ToString()
                   Params =
-                    if obj.ContainsKey("params") then
+                    if obj.ContainsKey("params") && obj.["params"].Type = Newtonsoft.Json.Linq.JTokenType.Object then
                         Some(obj.["params"] :?> JObject)
                     else
                         None }
@@ -121,8 +122,11 @@ module LanguageServer =
         completionProvider.["triggerCharacters"] <- JArray([| "-"; ">"; ":"; " " |])
         capabilities.["completionProvider"] <- completionProvider
 
-        // Diagnostic provider
-        capabilities.["diagnosticProvider"] <- JValue(true)
+        // Diagnostic provider — must be an object, not a boolean (LSP 3.17 spec)
+        let diagnosticProvider = JObject()
+        diagnosticProvider.["interFileDependencies"] <- JValue(false)
+        diagnosticProvider.["workspaceDiagnostics"]  <- JValue(false)
+        capabilities.["diagnosticProvider"] <- diagnosticProvider
 
         // Hover provider
         capabilities.["hoverProvider"] <- JValue(true)
@@ -135,7 +139,12 @@ module LanguageServer =
                 Capabilities = capabilities
                 InitializeParams = Some parameters }
 
-        (newState, successResponse 1 result)
+        // Bug fix: read the actual request id from params instead of hard-coding 1
+        let requestId =
+            if parameters.ContainsKey("_requestId") then
+                parameters.["_requestId"].ToObject<int>()
+            else 1
+        (newState, successResponse requestId result)
 
     // ============================================================================
     // TEXT DOCUMENT SYNC
@@ -321,35 +330,55 @@ module LanguageServer =
         let mutable state = createServerState ()
         let mutable running = true
 
+        // Bug fix: use raw binary streams with explicit UTF-8 encoding
+        // Console.ReadLine / Console.WriteLine corrupt non-ASCII and add unwanted newlines.
+        let stdin  = new System.IO.StreamReader(Console.OpenStandardInput(),  System.Text.Encoding.UTF8)
+        let stdout = new System.IO.StreamWriter(Console.OpenStandardOutput(), System.Text.Encoding.UTF8)
+        stdout.AutoFlush <- false   // we flush explicitly after each complete message
+
         while running do
             try
-                // Read message from stdin
+                // Read headers — scan for Content-Length line
                 let contentLength =
-                    let mutable line = Console.ReadLine()
+                    let mutable cl = 0
+                    let mutable line = stdin.ReadLine()
+                    while line <> null && line <> "" do
+                        if line.StartsWith("Content-Length:") then
+                            cl <- int (line.Substring(15).Trim())
+                        line <- stdin.ReadLine()
+                    cl
 
-                    while not (line.StartsWith("Content-Length:")) do
-                        line <- Console.ReadLine()
+                // Read exactly contentLength UTF-8 bytes
+                let buffer = Array.zeroCreate<char> contentLength
+                let mutable totalRead = 0
+                while totalRead < contentLength do
+                    let n = stdin.Read(buffer, totalRead, contentLength - totalRead)
+                    if n = 0 then totalRead <- contentLength   // EOF
+                    else totalRead <- totalRead + n
+                let json = System.String(buffer, 0, totalRead)
 
-                    int (line.Substring(16).Trim())
-
-                // Skip blank line
-                Console.ReadLine() |> ignore
-
-                // Read message content
-                let buffer = Array.zeroCreate contentLength
-                Console.OpenStandardInput().Read(buffer, 0, contentLength) |> ignore
-                let json = System.Text.Encoding.UTF8.GetString(buffer)
+                // Attach the request id to initialize params so handleInitialize can read it
+                let enrichParams (msg: LspMessage) =
+                    match msg.Method, msg.Id, msg.Params with
+                    | "initialize", Some id, Some p ->
+                        let p' = p.DeepClone() :?> JObject
+                        p'.["_requestId"] <- JValue(id)
+                        { msg with Params = Some p' }
+                    | _ -> msg
 
                 // Parse and handle message
                 match parseMessage json with
                 | Ok message ->
-                    let (newState, response) = handleMessage state message
+                    let enriched = enrichParams message
+                    let (newState, response) = handleMessage state enriched
                     state <- newState
 
                     match response with
                     | Some resp ->
-                        let contentLength = System.Text.Encoding.UTF8.GetByteCount(resp)
-                        Console.WriteLine $"Content-Length: %d{contentLength}\r\n\r\n%s{resp}"
+                        // Bug fix: compute byte length, write header + body, flush once
+                        let bytes = System.Text.Encoding.UTF8.GetByteCount(resp)
+                        stdout.Write $"Content-Length: %d{bytes}\r\n\r\n%s{resp}"
+                        stdout.Flush()
                     | None -> ()
 
                     if message.Method = "exit" then
