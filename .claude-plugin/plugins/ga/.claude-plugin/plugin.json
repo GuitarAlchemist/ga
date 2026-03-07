@@ -1,0 +1,30 @@
+{
+  "name": "ga",
+  "version": "1.0.0",
+  "description": "Guitar Alchemist DSL — music theory tools, chord analysis, tab search, GA Language commands, and domain context skill for guitarist-first feature development.",
+  "author": {
+    "name": "Guitar Alchemist Team",
+    "url": "https://github.com/guitar-alchemist"
+  },
+  "license": "MIT",
+  "keywords": ["music-theory", "guitar", "chords", "intervals", "fsharp", "dsl", "mcp"],
+  "mcpServers": {
+    "ga-dsl": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "GaMcpServer/GaMcpServer.csproj",
+        "--no-build",
+        "--"
+      ]
+    }
+  },
+  "skills": [
+    {
+      "name": "ga-domain",
+      "source": "./skills/ga-domain/SKILL.md"
+    }
+  ]
+}

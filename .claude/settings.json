@@ -1,0 +1,16 @@
+{
+  "extraKnownMarketplaces": {
+    "guitar-alchemist": {
+      "source": {
+        "source": "directory",
+        "path": "."
+      }
+    }
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "coding-tutor@compound-engineering-plugin": true,
+    "compound-engineering@compound-engineering-plugin": true,
+    "ga@guitar-alchemist": true
+  }
+}
