@@ -13,7 +13,7 @@ public class ChatRequest
 
 /// <summary>Non-streaming JSON response returned by POST /api/chatbot/chat.</summary>
 public record ChatJsonResponse(
-    string Answer,
+    string NaturalLanguageAnswer,
     string AgentId,
     float Confidence,
     string RoutingMethod);

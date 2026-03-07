@@ -13,7 +13,11 @@ open GA.Business.DSL.Closures.GaClosureRegistry
 let private httpClient =
     let handler = new HttpClientHandler()
     // Bypass self-signed dev certs only in Development. Never active in staging/production.
-    if System.Environment.GetEnvironmentVariable "DOTNET_ENVIRONMENT" = "Development" then
+    // Check both ASPNETCORE_ENVIRONMENT (ASP.NET Core convention) and DOTNET_ENVIRONMENT (.NET host convention).
+    let isDev =
+        System.Environment.GetEnvironmentVariable "ASPNETCORE_ENVIRONMENT" = "Development" ||
+        System.Environment.GetEnvironmentVariable "DOTNET_ENVIRONMENT" = "Development"
+    if isDev then
         handler.ServerCertificateCustomValidationCallback <-
             HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     let c = new HttpClient(handler)

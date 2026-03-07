@@ -17,6 +17,10 @@ public class QueryUnderstandingService(
 {
     private const string DefaultModel = "llama3.2";
 
+    // Static to avoid expensive per-call reflection-cache allocation
+    private static readonly JsonSerializerOptions _caseInsensitiveOptions =
+        new() { PropertyNameCaseInsensitive = true };
+
     private string OllamaBaseUrl =>
         configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
 
@@ -51,10 +55,7 @@ public class QueryUnderstandingService(
             var llmOutput = doc.RootElement.GetProperty("response").GetString();
             if (string.IsNullOrWhiteSpace(llmOutput)) return null;
 
-            return JsonSerializer.Deserialize<QueryFilters>(llmOutput, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            return JsonSerializer.Deserialize<QueryFilters>(llmOutput, _caseInsensitiveOptions);
         }
         catch (Exception ex)
         {

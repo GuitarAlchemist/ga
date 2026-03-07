@@ -43,6 +43,9 @@ builder.Services.AddMonadicChordService();
 builder.Services.AddSingleton<ContextualChordService>();
 builder.Services.AddSingleton<VoicingFilterService>();
 
+// Shared LLM concurrency gate (3 parallel calls) — applied to both hub and REST controller
+builder.Services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
+
 // Add session context provider (scoped = one per HTTP request)
 builder.Services.AddSessionContextScoped();
 
@@ -174,6 +177,7 @@ app.MapControllers();
 app.MapGraphQL();
 
 app.MapGet("/api/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStats");
+// /stats (without /api prefix) kept for backwards compatibility with older clients
 app.MapGet("/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetStatsAsync())).WithName("GetStatsRoot");
 
 // Map YARP Reverse Proxy routes (API Gateway)

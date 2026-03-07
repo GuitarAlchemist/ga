@@ -15,7 +15,8 @@ using Services;
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     ProductionOrchestrator orchestrator,
-    IChatService chatService)
+    IChatService chatService,
+    ILlmConcurrencyGate concurrencyGate)
     : ControllerBase
 {
     private static readonly JsonSerializerOptions _jsonOptions =
@@ -58,6 +59,12 @@ public class ChatbotController(
         // the orchestrator finishes generating a response.
         await Response.StartAsync(cancellationToken);
 
+        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
+        {
+            await WriteSseErrorAsync("Service is busy. Please try again in a few seconds.", cancellationToken);
+            return;
+        }
+
         try
         {
             var response = await orchestrator.AnswerAsync(
@@ -77,10 +84,7 @@ public class ChatbotController(
             // 2. Stream the answer text in sentence-boundary chunks
             var answer = response.NaturalLanguageAnswer ?? string.Empty;
             foreach (var chunk in SplitIntoChunks(answer))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
                 await WriteSseLineAsync(chunk, cancellationToken);
-            }
 
             // 3. Signal completion
             await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
@@ -96,6 +100,10 @@ public class ChatbotController(
             // Headers already committed — cannot change status code.
             // Signal the error via an SSE error event so the client can react.
             await WriteSseErrorAsync("Failed to process message. Please try again.", cancellationToken);
+        }
+        finally
+        {
+            concurrencyGate.Release();
         }
     }
 
@@ -115,15 +123,26 @@ public class ChatbotController(
         if (string.IsNullOrWhiteSpace(message))
             return BadRequest(new { error = "Message cannot be empty." });
 
-        var response = await orchestrator.AnswerAsync(
-            new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { error = "Service is busy. Please try again in a few seconds." });
 
-        var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
-        return Ok(new ChatJsonResponse(
-            response.NaturalLanguageAnswer ?? string.Empty,
-            routing.AgentId,
-            routing.Confidence,
-            routing.RoutingMethod));
+        try
+        {
+            var response = await orchestrator.AnswerAsync(
+                new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+
+            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+            return Ok(new ChatJsonResponse(
+                NaturalLanguageAnswer: response.NaturalLanguageAnswer ?? string.Empty,
+                routing.AgentId,
+                routing.Confidence,
+                routing.RoutingMethod));
+        }
+        finally
+        {
+            concurrencyGate.Release();
+        }
     }
 
     /// <summary>
@@ -172,16 +191,12 @@ public class ChatbotController(
         await Response.Body.FlushAsync(ct);
     }
 
-    private async Task WriteSseErrorAsync(string errorMessage, CancellationToken ct)
-    {
-        var payload = JsonSerializer.Serialize(new { error = errorMessage });
-        await Response.WriteAsync($"data: {payload}\n\n", ct);
-        await Response.Body.FlushAsync(ct);
-    }
+    private Task WriteSseErrorAsync(string errorMessage, CancellationToken ct) =>
+        WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }), ct);
 
     /// <summary>
     /// Splits a response into sentence-boundary chunks for progressive rendering.
-    /// Keeps chunks ≤ 200 characters; never splits mid-word.
+    /// Splits on sentence-ending punctuation; long sentences are emitted as single chunks.
     /// </summary>
     private static IEnumerable<string> SplitIntoChunks(string text)
     {

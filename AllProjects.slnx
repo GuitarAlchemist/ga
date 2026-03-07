@@ -57,6 +57,8 @@
     </Folder>
     <Folder Name="/4 - AI &amp; ML/">
         <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj" />
+    </Folder>
+    <Folder Name="/5 - Orchestration/">
         <Project Path="Common/GA.Business.Core.Orchestration/GA.Business.Core.Orchestration.csproj" />
     </Folder>
     <Folder Name="/5 - Infrastructure/">

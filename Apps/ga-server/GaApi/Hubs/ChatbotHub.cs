@@ -14,11 +14,11 @@ public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
     ProductionOrchestrator orchestrator,
     ChatbotSessionOrchestrator sessionOrchestrator,
-    ISemanticKnowledgeSource semanticKnowledge)
+    ISemanticKnowledgeSource semanticKnowledge,
+    ILlmConcurrencyGate concurrencyGate)
     : Hub
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
-    private static readonly SemaphoreSlim _concurrencyGate = new(3, 3);
     private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
 
     public async Task SendMessage(string message, bool useSemanticSearch = true)
@@ -35,7 +35,7 @@ public sealed class ChatbotHub(
         var history = _conversations.GetOrAdd(connectionId, _ => []);
         var connectionAborted = Context.ConnectionAborted;
 
-        if (!await _concurrencyGate.WaitAsync(TimeSpan.Zero, connectionAborted))
+        if (!await concurrencyGate.TryEnterAsync(connectionAborted))
         {
             await Clients.Caller.SendAsync("Error", "Service is busy. Please try again in a few seconds.");
             return;
@@ -88,7 +88,7 @@ public sealed class ChatbotHub(
         }
         finally
         {
-            _concurrencyGate.Release();
+            concurrencyGate.Release();
         }
     }
 
@@ -105,7 +105,7 @@ public sealed class ChatbotHub(
         var connectionId = Context.ConnectionId;
         return _conversations.TryGetValue(connectionId, out var history)
             ? Task.FromResult(history.ToList())
-            : Task.FromResult(new List<ChatMessage>());
+            : Task.FromResult<List<ChatMessage>>([]);
     }
 
     public async Task<List<SemanticSearchResult>> SearchKnowledge(string query, int limit = 10)
@@ -133,7 +133,8 @@ public sealed class ChatbotHub(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error searching knowledge for query: {Query}", query);
+            logger.LogError(ex, "Error searching knowledge for query: {Query}",
+                query.Length > 100 ? query[..100] + "…" : query);
             throw;
         }
     }

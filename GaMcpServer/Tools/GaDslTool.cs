@@ -30,7 +30,8 @@ public static class GaDslTool
     private static bool IsPermittedForMcp(string name) =>
         !name.StartsWith("io.", StringComparison.OrdinalIgnoreCase) &&
         !name.StartsWith("agent.", StringComparison.OrdinalIgnoreCase) &&
-        !name.StartsWith("tab.", StringComparison.OrdinalIgnoreCase);
+        !name.StartsWith("tab.", StringComparison.OrdinalIgnoreCase) &&
+        !name.StartsWith("pipeline.", StringComparison.OrdinalIgnoreCase);
 
     // ── Bridge ────────────────────────────────────────────────────────────────
 
@@ -73,16 +74,23 @@ public static class GaDslTool
             return $"Error parsing params JSON: {ex.Message}";
         }
 
-        var map = MapModule.OfSeq(pairs);
+        try
+        {
+            var map = MapModule.OfSeq(pairs);
 
-        var result = await FSharpAsync.StartAsTask(
-            GaReg.Global.Invoke(closureName, map),
-            FSharpOption<TaskCreationOptions>.None,
-            FSharpOption<CancellationToken>.None);
+            var result = await FSharpAsync.StartAsTask(
+                GaReg.Global.Invoke(closureName, map),
+                FSharpOption<TaskCreationOptions>.None,
+                FSharpOption<CancellationToken>.None);
 
-        return result.IsOk
-            ? FormatResult(result.ResultValue)
-            : $"Error: {result.ErrorValue}";
+            return result.IsOk
+                ? FormatResult(result.ResultValue)
+                : $"Error: {result.ErrorValue}";
+        }
+        catch (Exception ex)
+        {
+            return $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+        }
     }
 
     private static string FormatResult(object? value) =>

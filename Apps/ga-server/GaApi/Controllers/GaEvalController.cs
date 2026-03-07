@@ -45,11 +45,15 @@ public sealed class GaEvalController(IWebHostEnvironment env) : ControllerBase
         return StatusCode(500, "Unknown evaluation result");
     }
 
-    /// <summary>List all registered GA DSL closures, optionally filtered by category.</summary>
+    /// <summary>List all registered GA DSL closures, optionally filtered by category. Development only.</summary>
     [HttpGet("closures")]
     [ProducesResponseType(typeof(GaClosureInfo[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult ListClosures([FromQuery] string? category = null)
     {
+        if (!env.IsDevelopment())
+            return StatusCode(StatusCodes.Status403Forbidden, "Closure introspection is only available in development mode.");
+
         var registry = GaClosureRegistry.Global;
         var closures = category is null
             ? registry.List(Microsoft.FSharp.Core.FSharpOption<GaClosureCategory>.None)

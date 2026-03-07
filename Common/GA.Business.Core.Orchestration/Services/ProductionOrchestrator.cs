@@ -27,8 +27,12 @@ public class ProductionOrchestrator(
 {
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
-        var filters = await queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
-        var routing = await router.RouteAsync(req.Message, ct);
+        // Parallelise — both calls consume req.Message with no mutual dependency
+        var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
+        var routingTask = router.RouteAsync(req.Message, ct);
+        await Task.WhenAll(filtersTask, routingTask);
+        var filters = filtersTask.Result;
+        var routing = routingTask.Result;
 
         var routingMetadata = new AgentRoutingMetadata(
             routing.SelectedAgent.AgentId,
@@ -137,8 +141,16 @@ public class ProductionOrchestrator(
         var events = result.Events.ToList();
         var embeddingTasks = events.Select(async e =>
         {
-            var emb = await embeddingGenerator.GenerateEmbeddingAsync(e.Document);
-            return e with { Document = e.Document with { Embedding = emb } };
+            try
+            {
+                var emb = await embeddingGenerator.GenerateEmbeddingAsync(e.Document);
+                return e with { Document = e.Document with { Embedding = emb } };
+            }
+            catch (Exception)
+            {
+                // Degrade gracefully — proceed without embedding for this event
+                return e;
+            }
         }).ToList();
 
         events = [.. await Task.WhenAll(embeddingTasks)];
