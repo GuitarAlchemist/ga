@@ -45,6 +45,7 @@
         <Compile Include="Closures/BuiltinClosures/PipelineClosures.fs"/>
         <Compile Include="Closures/BuiltinClosures/AgentClosures.fs"/>
         <Compile Include="Closures/BuiltinClosures/IoClosures.fs"/>
+        <Compile Include="Closures/BuiltinClosures/TabClosures.fs"/>
         <Compile Include="Parsers/GaSurfaceSyntaxParser.fs"/>
         <Compile Include="Interpreter/GaFsiSessionPool.fs"/>
         <Compile Include="LSP/LspTypes.fs"/>

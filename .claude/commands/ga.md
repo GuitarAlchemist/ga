@@ -4,48 +4,151 @@ Arguments: $ARGUMENTS
 
 ## What to do
 
-Parse the arguments and run the corresponding `ga` CLI command from the repo root using:
+### Step 1 — Resolve the command
 
-```
+Parse the arguments. If they look like a natural language question rather than a
+structured command, map them to the closest CLI command first:
+
+| Natural language | Command |
+|-----------------|---------|
+| "chords in G major" / "G major scale" / "key of G" | `diatonic G major` |
+| "chords in Bb minor" / "Bb minor key" | `diatonic Bb minor` |
+| "what notes are in Am7" / "Am7 intervals" / "Am7 structure" | `intervals Am7` |
+| "relative of A minor" / "relative key for C" | `relative A minor` / `relative C major` |
+| "Am7 up a fifth" / "transpose Am7 by 7" | `transpose Am7 7` |
+| "transpose Am F C G up 5" | `progression Am F C G --by 5` |
+| "parse Cmaj9" / "what is Cmaj9" | `chord Cmaj9` |
+| "list closures" / "available closures" | `closures` |
+| anything resembling a question | `ask <question>` |
+
+### Step 2 — Run the command
+
+Use the pre-built binary (0.1s) when it exists, fall back to `dotnet run` (3s):
+
+```bash
+# Fast path — use if binary exists
+Apps/GaCli/bin/Debug/net10.0/ga.exe <args>
+
+# Slow fallback — use if binary is missing
 dotnet run --project Apps/GaCli/GaCli.fsproj -- <args>
 ```
 
-### Argument routing
+### Command routing
 
-| Arguments | Command to run |
+| Arguments | CLI invocation |
 |-----------|---------------|
-| `chord <symbol>` | `-- chord <symbol>` |
-| `transpose <symbol> <n>` | `-- transpose <symbol> <n>` |
-| `diatonic <root> [major\|minor]` | `-- diatonic <root> [major\|minor]` |
-| `progression <chords…> --by <n>` | `-- progression <chords…> --by <n>` |
-| `closures [category]` | `-- closures [category]` |
-| `ask <question>` | `-- ask <question>` |
-| *(no args)* | `-- help` |
+| `chord <symbol>` | `ga chord <symbol>` |
+| `intervals <symbol>` | `ga intervals <symbol>` |
+| `transpose <symbol> <n>` | `ga transpose <symbol> <n>` |
+| `diatonic <root> [major\|minor]` | `ga diatonic <root> [major\|minor]` |
+| `relative <root> [major\|minor]` | `ga relative <root> [major\|minor]` |
+| `progression <chords…> --by <n>` | `ga progression <chords…> --by <n>` |
+| `closures [category]` | `ga closures [category]` |
+| `ask <question>` | `ga ask <question>` |
+| *(no args or "help")* | `ga help` |
 
-### Output formatting
+### Step 3 — Present the result
 
-After running the command, present the result clearly:
+#### `chord` — parse a chord symbol
 
-- **chord**: parse the JSON and describe it in plain language.
-  `{"root":"C","quality":"major","components":["ext:9"],"bass":null}` → **Cmaj9** = C major with added major 9th
-- **transpose**: show `<original> → <transposed>` with the interval name
-- **diatonic**: show as Roman numerals: `I=G  ii=Am  iii=Bm  IV=C  V=D  vi=Em  vii°=F#dim`
-- **progression**: show the before → after on one line
-- **closures**: show grouped by category as a compact table
-- **ask**: show the agent's response verbatim, then offer follow-up options
+Raw: `{"root":"A","quality":"minor","components":["ext:7"],"bass":null}`
 
-### If the server isn't running (agent closures)
+Present as:
+> **Am7** = A minor triad with a minor 7th (m7)
 
-`agent.*` closures need the GA API running. If `ga ask` fails with a connection error, say:
+Describe each component: quality gives the triad type, each extension adds an upper
+interval. Name any bass note as a slash chord.
+
+#### `intervals` — show interval content
+
+Raw: `Am7:  P1  m3  P5  m7`
+
+Present as:
+> **Am7** contains: P1 (root) · m3 (minor third) · P5 (perfect fifth) · m7 (minor seventh)
+>
+> This is the minor 7th chord — a minor triad with a stacked minor third on top.
+
+Add a one-sentence musical note about what makes this chord distinctive or how it's used.
+
+#### `transpose`
+
+Present as:
+> **Cmaj9** → **F#maj9** (transposed up 6 semitones — a tritone)
+
+Name the interval when possible: 1=m2, 2=M2, 3=m3, 4=M3, 5=P4, 6=TT, 7=P5, etc.
+
+#### `diatonic`
+
+Raw: array of 7 chord symbols
+
+Present as a Roman numeral table:
+
+> **Key of G major**
+> ```
+> I    ii   iii  IV   V    vi   vii°
+> G    Am   Bm   C    D    Em   F#dim
+> ```
+> Common progressions in this key: I–V–vi–IV (G–D–Em–C), ii–V–I (Am–D–G)
+
+#### `relative`
+
+Raw: `A minor → relative: C major`
+
+Present as:
+> **A minor** and **C major** share the same key signature (no sharps or flats).
+> Every chord in A minor's diatonic set is also found in C major.
+
+Suggest running `ga diatonic` on both keys to see the shared chords.
+
+#### `progression`
+
+Raw: `Am F C G  →  Em C G D`
+
+Present as:
+> **Am F C G** transposed up 7 semitones (a perfect fifth) → **Em C G D**
+
+#### `closures`
+
+Present grouped by category as a compact table:
+
+```
+[Domain]
+  domain.parseChord        Parse a chord symbol into its structure
+  domain.chordIntervals    Return interval names for a chord
+  domain.transposeChord    Transpose a chord by N semitones
+  domain.diatonicChords    Get the 7 diatonic triads for a key
+  domain.relativeKey       Get the relative major/minor key
+```
+
+#### `ask` — chatbot response
+
+Show the agent's response verbatim, then offer 2–3 follow-up options relevant to the answer.
+
+### Step 4 — Offer follow-ups
+
+After every command, offer 1–3 relevant next steps. Examples:
+
+- After `chord Am7`: "Try `intervals Am7` to see the full interval stack, or `transpose Am7 5` to move it up a fourth."
+- After `diatonic G major`: "Try `relative G major` to find the relative minor, or `progression G D Em C --by 2` to transpose a common progression."
+- After `intervals Cmaj9`: "Try `chord Cmaj9` to see the parsed structure, or `diatonic C major` to see all chords in this key."
+
+### If the server isn't running (ask command)
+
+`ga ask` requires the GA API. If it fails with a connection error, say:
 > The GA chatbot API isn't reachable. Start it with `pwsh Scripts/start-all.ps1` then retry.
+> For music theory questions without the server, try `diatonic`, `intervals`, or `chord` instead.
 
-### Examples
+## Examples
 
 ```
 /ga chord Am7
+/ga intervals Cmaj9
 /ga transpose Cmaj9 5
 /ga diatonic Bb minor
+/ga relative A minor
 /ga progression Am F C G --by 7
 /ga closures domain
 /ga ask what is a tritone substitution?
+/ga chords in G major
+/ga what notes are in Am7
 ```
