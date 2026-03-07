@@ -1,20 +1,62 @@
 module GA.Business.DSL.Closures.BuiltinClosures.AgentClosures
 
+open System.Net.Http
+open System.Text
+open System.Text.Json
 open GA.Business.DSL.Closures.GaAsync
 open GA.Business.DSL.Closures.GaClosureRegistry
 
-// ============================================================================
-// Agent closures — wrap GA chatbot agents as discoverable closures
-// ============================================================================
-// These route to the GA API chatbot endpoint which internally dispatches
-// to the SemanticRouter → specialized agents (TheoryAgent, TabAgent, etc.)
-// ============================================================================
+// ── Shared HTTP infrastructure ─────────────────────────────────────────────────
+// SSL cert validation is bypassed so closures work against the local Aspire stack
+// (which uses self-signed dev certs). Set GA_API_BASE_URL to override the target.
 
-/// Ask the TheoryAgent a music theory question.
+let private httpClient =
+    let handler = new HttpClientHandler()
+    handler.ServerCertificateCustomValidationCallback <-
+        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    let c = new HttpClient(handler)
+    c.Timeout <- System.TimeSpan.FromSeconds 30.0
+    c
+
+let private gaApiBase () =
+    let env = System.Environment.GetEnvironmentVariable "GA_API_BASE_URL"
+    if System.String.IsNullOrWhiteSpace env then "https://localhost:7001" else env
+
+/// POST a message to the GA chatbot endpoint; return the NaturalLanguageAnswer.
+let private chatbotPost (message: string) : GaAsync<string> =
+    async {
+        try
+            let url     = sprintf "%s/api/chatbot/chat" (gaApiBase ())
+            // JsonSerializer.Serialize handles escaping of special characters.
+            let msgJson = JsonSerializer.Serialize message
+            let body    = sprintf """{"message":%s,"useSemanticSearch":true}""" msgJson
+            let content = new StringContent(body, Encoding.UTF8, "application/json")
+            let! resp   = httpClient.PostAsync(url, content) |> Async.AwaitTask
+            let! json   = resp.Content.ReadAsStringAsync()   |> Async.AwaitTask
+            if not resp.IsSuccessStatusCode then
+                return Error (GaError.AgentError ("chatbot", sprintf "HTTP %d: %s" (int resp.StatusCode) json))
+            else
+                try
+                    let doc = JsonDocument.Parse json
+                    let mutable value = Unchecked.defaultof<JsonElement>
+                    let answer =
+                        if doc.RootElement.TryGetProperty("naturalLanguageAnswer", &value) then
+                            value.GetString()
+                        else json
+                    return Ok answer
+                with _ ->
+                    return Ok json
+        with ex ->
+            return Error (GaError.AgentError ("chatbot", ex.Message))
+    }
+
+// ── Closures ──────────────────────────────────────────────────────────────────
+
+/// Route a music theory question to the GA chatbot (SemanticRouter picks TheoryAgent).
 let askTheoryAgent : GaClosure =
     { Name        = "agent.theoryAgent"
       Category    = GaClosureCategory.Agent
-      Description = "Route a music theory question to the GA TheoryAgent via the chatbot API."
+      Description = "Route a music theory question to the GA chatbot API (SemanticRouter → TheoryAgent)."
       Tags        = [ "agent"; "theory"; "chatbot" ]
       InputSchema = Map.ofList [ "question", "string" ]
       OutputType  = "string (agent response)"
@@ -23,16 +65,15 @@ let askTheoryAgent : GaClosure =
               match inputs.TryFind "question" with
               | None -> return Error (GaError.DomainError "Missing 'question' input")
               | Some q ->
-                  let question = q :?> string
-                  // Real: POST /api/chatbot/chat with {message: question, agentHint: "theory"}
-                  return Ok (box $"[TheoryAgent] Response to: {question}")
+                  let! r = chatbotPost (q :?> string)
+                  return r |> Result.map box
           } }
 
-/// Ask the TabAgent to generate tablature for a given chord or passage.
+/// Route a tab generation request to the GA chatbot (SemanticRouter picks TabAgent).
 let askTabAgent : GaClosure =
     { Name        = "agent.tabAgent"
       Category    = GaClosureCategory.Agent
-      Description = "Route a tab generation request to the GA TabAgent."
+      Description = "Route a tab generation request to the GA chatbot API (SemanticRouter → TabAgent)."
       Tags        = [ "agent"; "tab"; "tablature"; "chatbot" ]
       InputSchema = Map.ofList [ "request", "string" ]
       OutputType  = "string (VexTab or ASCII tab)"
@@ -41,15 +82,15 @@ let askTabAgent : GaClosure =
               match inputs.TryFind "request" with
               | None -> return Error (GaError.DomainError "Missing 'request' input")
               | Some r ->
-                  let request = r :?> string
-                  return Ok (box $"[TabAgent] Tab for: {request}")
+                  let! res = chatbotPost (r :?> string)
+                  return res |> Result.map box
           } }
 
-/// Ask the CriticAgent to evaluate a chord progression.
+/// Route a harmonic critique request to the GA chatbot (SemanticRouter picks CriticAgent).
 let askCriticAgent : GaClosure =
     { Name        = "agent.criticAgent"
       Category    = GaClosureCategory.Agent
-      Description = "Route a harmonic critique request to the GA CriticAgent."
+      Description = "Route a harmonic critique request to the GA chatbot API (SemanticRouter → CriticAgent)."
       Tags        = [ "agent"; "critic"; "harmony"; "chatbot" ]
       InputSchema = Map.ofList [ "progression", "string (chord symbols, space-separated)" ]
       OutputType  = "string (harmonic critique)"
@@ -58,15 +99,15 @@ let askCriticAgent : GaClosure =
               match inputs.TryFind "progression" with
               | None -> return Error (GaError.DomainError "Missing 'progression' input")
               | Some p ->
-                  let progression = p :?> string
-                  return Ok (box $"[CriticAgent] Analysis of: {progression}")
+                  let! res = chatbotPost (p :?> string)
+                  return res |> Result.map box
           } }
 
-/// Fan-out to multiple agents simultaneously, collecting all responses.
+/// Fan-out: route the same question to multiple agent closures in parallel.
 let fanOutAgents : GaClosure =
     { Name        = "agent.fanOut"
       Category    = GaClosureCategory.Agent
-      Description = "Route the same question to multiple agents in parallel, collecting all responses."
+      Description = "Route the same question to multiple agent closures in parallel, collecting all responses."
       Tags        = [ "agent"; "fan-out"; "parallel"; "chatbot" ]
       InputSchema = Map.ofList
           [ "question",   "string"
@@ -75,10 +116,10 @@ let fanOutAgents : GaClosure =
       Exec        = fun inputs ->
           async {
               match inputs.TryFind "question", inputs.TryFind "agentNames" with
-              | None, _    -> return Error (GaError.DomainError "Missing 'question' input")
-              | _, None    -> return Error (GaError.DomainError "Missing 'agentNames' input")
+              | None, _ -> return Error (GaError.DomainError "Missing 'question' input")
+              | _, None -> return Error (GaError.DomainError "Missing 'agentNames' input")
               | Some q, Some ns ->
-                  let question   = q :?> string
+                  let question   = q  :?> string
                   let agentNames = ns :?> string[]
                   let registry   = GaClosureRegistry.Global
                   let tasks =
@@ -86,20 +127,21 @@ let fanOutAgents : GaClosure =
                       |> Array.toList
                       |> List.map (fun name ->
                           async {
-                              let inputs' = Map.ofList [ "question", box question; "request", box question; "progression", box question ]
+                              let inputs' =
+                                  Map.ofList [ "question",    box question
+                                               "request",     box question
+                                               "progression", box question ]
                               match! registry.Invoke(name, inputs') with
                               | Ok r    -> return Ok (name, r :?> string)
                               | Error e -> return Error e
                           })
                   let! results = fanOutAll tasks
                   match results with
-                  | Ok pairs  -> return Ok (box (pairs |> List.map (fun (k, v) -> k, v) |> Map.ofList))
-                  | Error e   -> return Error e
+                  | Ok pairs -> return Ok (box (pairs |> Map.ofList))
+                  | Error e  -> return Error e
           } }
 
-// ============================================================================
-// Registration
-// ============================================================================
+// ── Registration ──────────────────────────────────────────────────────────────
 
 let register () =
     GaClosureRegistry.Global.RegisterAll
