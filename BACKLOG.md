@@ -16,7 +16,6 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **"Is this a common substitution?"** — given two chords, tell the guitarist if there's a known substitution relationship (tritone sub, backdoor dominant, parallel minor, etc.)
 
 ### Chord & Voicing Discovery
-- **"What can I play instead of this chord?"** — given a chord in context (key + position in progression), suggest functionally equivalent substitutions with different colour
 - **"My hand hurts playing barre chords"** — suggest open-position or partial-barre voicings for any chord, ranked by fret-hand stretch
 - **"I play in DADGAD / open D / open G"** — generate correct chord shapes for any alternate tuning, with voicing diagrams
 
