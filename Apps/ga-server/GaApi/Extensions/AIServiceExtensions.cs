@@ -58,8 +58,16 @@ public static class AiServiceExtensions
     /// </summary>
     private static IServiceCollection AddLlmServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register Ollama chat service
-        services.AddSingleton<IOllamaChatService, OllamaChatService>();
+        var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
+
+        if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IOllamaChatService, ClaudeChatService>();
+        }
+        else
+        {
+            services.AddSingleton<IOllamaChatService, OllamaChatService>();
+        }
 
         // Register Adapter for IChatClient (used by Agents)
         services.AddSingleton<Microsoft.Extensions.AI.IChatClient, OllamaChatClientAdapter>();
