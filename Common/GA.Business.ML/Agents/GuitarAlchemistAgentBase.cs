@@ -100,6 +100,35 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     }
 
     /// <summary>
+    /// Sends a chat request through three passes: initial draft → self-critique → refined answer.
+    /// Use for complex theory questions where accuracy matters more than latency.
+    /// </summary>
+    protected async Task<string> ChatWithCritiqueAsync(
+        string userMessage,
+        string? systemPrompt = null,
+        CancellationToken cancellationToken = default)
+    {
+        var draft = await ChatAsync(userMessage, systemPrompt, cancellationToken);
+
+        var critiqueMessage = $"""
+            I gave this answer to a music theory question. Identify any errors, missing context, or improvements. Be concise.
+
+            QUESTION: {userMessage}
+            ANSWER: {draft}
+            """;
+        var critique = await ChatAsync(critiqueMessage, systemPrompt, cancellationToken);
+
+        var refineMessage = $"""
+            Rewrite the answer incorporating the critique. Return valid JSON in the same format as before.
+
+            QUESTION: {userMessage}
+            ORIGINAL ANSWER: {draft}
+            CRITIQUE: {critique}
+            """;
+        return await ChatAsync(refineMessage, systemPrompt, cancellationToken);
+    }
+
+    /// <summary>
     /// Parses a JSON response from the LLM into a structured agent response.
     /// </summary>
     protected AgentResponse ParseStructuredResponse(string responseText, string fallbackResult)
