@@ -21,10 +21,20 @@ module ChordParser =
     ]
 
     let pQuality = choice [
-        // Major (Check maj first because it contains 'm')
-        attempt (choice [ stringReturn "maj" Major; stringReturn "MAJ" Major; stringReturn "Maj" Major; stringReturn "M" Major; stringReturn "Δ" Major; stringReturn "ma" Major ])
-        // Minor
-        choice [ stringReturn "min" Minor; stringReturn "MIN" Minor; stringReturn "mi" Minor; stringReturn "-" Minor; stringReturn "m" Minor ]
+        // Major — "maj"/"ma" must NOT be followed by a digit so that "maj7", "maj9" etc.
+        // are left for pExtension to consume as a whole token.
+        attempt (choice [
+            // "maj"/"MAJ"/"Maj" must NOT be followed by a digit so "maj7", "maj9" etc.
+            // fall through to pExtension which handles them as whole tokens.
+            attempt (pstring "maj" .>> notFollowedBy digit >>% Major)
+            attempt (pstring "MAJ" .>> notFollowedBy digit >>% Major)
+            attempt (pstring "Maj" .>> notFollowedBy digit >>% Major)
+            stringReturn "M" Major; stringReturn "Δ" Major ])
+        // Minor — bare "m" must not be the start of "ma" (which belongs to the major family)
+        choice [
+            stringReturn "min" Minor; stringReturn "MIN" Minor; stringReturn "mi" Minor
+            stringReturn "-" Minor
+            attempt (pstring "m" .>> notFollowedBy (pstring "a") >>% Minor) ]
         // Dim
         choice [ stringReturn "dim" Diminished; stringReturn "DIM" Diminished; stringReturn "°" Diminished; stringReturn "o" Diminished ]
         // Aug
