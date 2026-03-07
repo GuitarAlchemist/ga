@@ -146,6 +146,22 @@ public static class GaDslTool
         [Description("Second chord symbol, e.g. 'Cmaj7'")] string chord2)
         => InvokeAsync("domain.commonTones", ("chord1", chord1), ("chord2", chord2));
 
+    [McpServerTool]
+    [Description(
+        "Suggest chord substitutions: diatonic swaps ranked by common tones, " +
+        "plus tritone sub for dominant 7th chords. " +
+        "Example: Am in key of C major → C (★★★, relative major), Em (★★, shared E/B), F (★, shared A).")]
+    public static Task<string> GaChordSubstitutions(
+        [Description("Chord symbol to find substitutions for, e.g. 'Am', 'G7', 'Cmaj7'")] string symbol,
+        [Description("Key root, e.g. 'C', 'G'. Defaults to chord root if omitted.")] string key = "",
+        [Description("Scale type: 'major' or 'minor'. Defaults to 'major'.")] string scale = "major")
+    {
+        var inputs = new List<(string, object)> { ("symbol", symbol) };
+        if (!string.IsNullOrEmpty(key)) inputs.Add(("key", key));
+        if (!string.IsNullOrEmpty(scale)) inputs.Add(("scale", scale));
+        return InvokeAsync("domain.chordSubstitutions", [.. inputs]);
+    }
+
     // ── Tab tools ─────────────────────────────────────────────────────────────
 
     [McpServerTool]

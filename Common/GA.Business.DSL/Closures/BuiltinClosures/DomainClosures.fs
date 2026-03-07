@@ -530,6 +530,96 @@ let commonTones : GaClosure =
                           return Ok (box result)
           } }
 
+/// Suggest diatonic substitutions for a chord in a key, ranked by common tones,
+/// plus tritone sub for dominant-7th chords.
+let chordSubstitutions : GaClosure =
+    { Name        = "domain.chordSubstitutions"
+      Category    = GaClosureCategory.Domain
+      Description = "Suggest chord substitutions: diatonic swaps ranked by common tones, plus tritone sub for dominant 7th chords."
+      Tags        = [ "substitution"; "harmony"; "voice-leading"; "pivot"; "music-theory" ]
+      InputSchema = Map.ofList
+          [ "symbol", "string — chord to substitute (e.g. 'Am', 'G7')"
+            "key",    "string? — key root (e.g. 'C', 'G'). Defaults to chord root."
+            "scale",  "string? — 'major' or 'minor'. Defaults to 'major'." ]
+      OutputType  = "string (ranked substitution suggestions)"
+      Exec        = fun inputs ->
+          async {
+              match inputs.TryFind "symbol" with
+              | None -> return Error (GaError.DomainError "Missing 'symbol' input")
+              | Some sym ->
+                  let symbol = sym :?> string
+                  let svc    = ChordDslService()
+                  match svc.Parse symbol with
+                  | Result.Error err -> return Error (GaError.ParseError ("chord", err))
+                  | Result.Ok targetAst ->
+                      let targetRootPc = (noteToSemitone targetAst.Root + accToSemitone targetAst.RootAccidental + 120) % 12
+                      let targetPcs    = chordPitchClasses targetAst
+                      // Determine key (default: chord root, major scale)
+                      let keyStr   = inputs.TryFind "key"   |> Option.map (fun v -> v :?> string) |> Option.defaultValue targetAst.Root
+                      let scaleStr = inputs.TryFind "scale" |> Option.map (fun v -> v :?> string) |> Option.defaultValue "major"
+                      let keyNote, keyAcc = splitNoteAcc (normalizeRoot keyStr)
+                      let keyPc    = (noteToSemitone keyNote + accToSemitone keyAcc + 120) % 12
+                      let pattern  =
+                          match scaleStr.ToLowerInvariant() with
+                          | "minor" | "aeolian" -> minorPattern
+                          | _                   -> majorPattern
+                      let naming   = spellingOf (preferFlat keyNote keyAcc)
+                      // Build diatonic chord symbols for this key
+                      let diatonicSymbols =
+                          pattern
+                          |> List.map (fun (offset, quality) ->
+                              let pc        = (keyPc + offset) % 12
+                              let note, acc = splitNoteAcc naming.[pc]
+                              sprintf "%s%s%s" note (accStr acc) (qualSuffix quality))
+                      // Extension semitones for a chord AST
+                      let extOf (ast: ChordAst) =
+                          ast.Components |> List.choose (function Extension e -> extensionSemitone e | _ -> None)
+                      let tIvals = qualityBaseIntervals targetAst.Quality @ extOf targetAst
+                      // Score each diatonic chord by common tones with the target
+                      let subs =
+                          diatonicSymbols
+                          |> List.choose (fun candidate ->
+                              match svc.Parse candidate with
+                              | Result.Error _ -> None
+                              | Result.Ok cAst ->
+                                  let cRootPc = (noteToSemitone cAst.Root + accToSemitone cAst.RootAccidental + 120) % 12
+                                  // Skip the chord itself
+                                  if cRootPc = targetRootPc && cAst.Quality = targetAst.Quality then None
+                                  else
+                                      let cIvals = qualityBaseIntervals cAst.Quality @ extOf cAst
+                                      let cPcs   = chordPitchClasses cAst
+                                      let shared = targetPcs |> List.filter (fun pc -> cPcs |> List.contains pc)
+                                      if shared.IsEmpty then None
+                                      else
+                                          let sharedDesc =
+                                              shared |> List.map (fun pc ->
+                                                  let name = conventionalKeyName pc
+                                                  let r1 = tIvals |> List.tryFind (fun i -> (targetRootPc + i) % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
+                                                  let r2 = cIvals |> List.tryFind (fun i -> (cRootPc + i)     % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
+                                                  sprintf "%s(%s/%s)" name r1 r2)
+                                              |> String.concat " "
+                                          Some (candidate, shared.Length, sharedDesc))
+                          |> List.sortByDescending (fun (_, n, _) -> n)
+                      // Tritone substitution — works for dominant-7th chords (M3 + m7)
+                      let tritoneSub =
+                          if tIvals |> List.contains 4 && tIvals |> List.contains 10 then
+                              let ttPc    = (targetRootPc + 6) % 12
+                              let ttChord = sprintf "%s7" (spellingOf true).[ttPc]
+                              Some (sprintf "  ◈  %-6s — tritone sub (shares guide tones enharmonically)" ttChord)
+                          else None
+                      // Format output
+                      let keyDesc = sprintf "%s %s" keyStr scaleStr
+                      let lines =
+                          subs |> List.map (fun (cand, n, desc) ->
+                              let stars = if n >= 3 then "★★★" elif n = 2 then "★★ " else "★  "
+                              sprintf "  %s %-6s — %d shared: %s" stars cand n desc)
+                      let header = sprintf "Substitutions for %s in key of %s:" symbol keyDesc
+                      let body   = if lines.IsEmpty then [ "  (no diatonic substitutions found)" ] else lines
+                      let ttLine = tritoneSub |> Option.toList
+                      let result = (header :: body @ ttLine) |> String.concat "\n"
+                      return Ok (box result)
+          } }
+
 // ── Registration ──────────────────────────────────────────────────────────────
 
 let register () =
@@ -542,6 +632,7 @@ let register () =
           analyzeProgression
           queryChords
           projectChord
-          commonTones ]
+          commonTones
+          chordSubstitutions ]
 
 do register ()
