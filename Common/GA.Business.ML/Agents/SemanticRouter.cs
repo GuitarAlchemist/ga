@@ -26,7 +26,8 @@ public class SemanticRouter(
 
     // Cached embeddings for agent descriptions
     private readonly Dictionary<string, float[]> _agentEmbeddings = [];
-    private bool _embeddingsInitialized;
+    private volatile bool _embeddingsInitialized;
+    private readonly SemaphoreSlim _initLock = new(1, 1);
 
     /// <summary>
     /// Gets the available agents.
@@ -131,7 +132,7 @@ public class SemanticRouter(
                     return new RoutingResult
                     {
                         SelectedAgent = agent,
-                        Confidence = result.Confidence,
+                        Confidence = Math.Clamp(result.Confidence, 0f, 1f),
                         AllScores = semanticContext?.AllScores ?? new List<(GuitarAlchemistAgentBase, float)>(),
                         RoutingMethod = "llm"
                     };
@@ -210,20 +211,32 @@ public class SemanticRouter(
 
     private async Task EnsureEmbeddingsInitializedAsync(CancellationToken cancellationToken)
     {
+        // Double-check locking: fast path avoids acquiring the semaphore after initialization
         if (_embeddingsInitialized || textEmbeddings == null) return;
 
-        _logger.LogDebug("Initializing agent embeddings...");
-
-        var descriptions = _agents.Select(a => $"{a.Name}: {a.Description}. Capabilities: {string.Join(", ", a.Capabilities)}").ToArray();
-        var embeddings = await textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
-
-        for (var i = 0; i < _agents.Count; i++)
+        await _initLock.WaitAsync(cancellationToken);
+        try
         {
-            _agentEmbeddings[_agents[i].AgentId] = embeddings[i].Vector.ToArray();
-        }
+            // Second check inside the lock to prevent duplicate initialization
+            if (_embeddingsInitialized) return;
 
-        _embeddingsInitialized = true;
-        _logger.LogDebug("Initialized embeddings for {Count} agents", _agents.Count);
+            _logger.LogDebug("Initializing agent embeddings...");
+
+            var descriptions = _agents.Select(a => $"{a.Name}: {a.Description}. Capabilities: {string.Join(", ", a.Capabilities)}").ToArray();
+            var embeddings = await textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
+
+            for (var i = 0; i < _agents.Count; i++)
+            {
+                _agentEmbeddings[_agents[i].AgentId] = embeddings[i].Vector.ToArray();
+            }
+
+            _embeddingsInitialized = true;
+            _logger.LogDebug("Initialized embeddings for {Count} agents", _agents.Count);
+        }
+        finally
+        {
+            _initLock.Release();
+        }
     }
 
     private async Task<RoutingResult> SemanticRouteAsync(string query, CancellationToken cancellationToken)
@@ -331,6 +344,7 @@ public class SemanticRouter(
 
     public void Dispose()
     {
+        _initLock.Dispose();
         foreach (var agent in _agents)
         {
             agent.Dispose();

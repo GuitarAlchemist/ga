@@ -2,6 +2,13 @@ import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import type { ChatApiMessage } from '../services/chatApi';
 
+// Agent routing metadata surfaced by the agentic pipeline
+export interface AgentRouting {
+  agentId: string;
+  confidence: number;
+  routingMethod: string;
+}
+
 // Message types
 export interface ChatMessage {
   id: string;
@@ -9,6 +16,7 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  routing?: AgentRouting;
 }
 
 // Chat configuration
@@ -130,6 +138,7 @@ export const sendMessageAtom = atom(
       // Create streaming message
       const streamingId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       let streamingContent = '';
+      let capturedRouting: AgentRouting | undefined;
 
       set(currentStreamingMessageAtom, {
         id: streamingId,
@@ -141,11 +150,11 @@ export const sendMessageAtom = atom(
 
       // Stream response from API
       try {
-        for await (const chunk of apiService.streamChat({
-          message: userMessage,
-          conversationHistory,
-          useSemanticSearch: true,
-        })) {
+        for await (const chunk of apiService.streamChat(
+          { message: userMessage, conversationHistory, useSemanticSearch: true },
+          undefined,
+          (routing) => { capturedRouting = routing; },
+        )) {
           streamingContent += chunk;
 
           // Update streaming message
@@ -158,11 +167,12 @@ export const sendMessageAtom = atom(
           });
         }
 
-        // Finalize message
+        // Finalize message (include routing if captured)
         if (streamingContent) {
           set(addMessageAtom, {
             role: 'assistant',
             content: streamingContent,
+            routing: capturedRouting,
           });
         }
       } catch (error) {

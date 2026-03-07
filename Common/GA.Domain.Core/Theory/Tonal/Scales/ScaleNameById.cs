@@ -3,7 +3,7 @@ namespace GA.Domain.Core.Theory.Tonal.Scales;
 using Atonal;
 using GA.Core.Collections;
 
-public class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScaleNameById())
+public sealed class ScaleNameById() : LazyIndexerBase<PitchClassSetId, string>(GetScaleNameById())
 {
     public static bool IsValidScaleNumber(PitchClassSetId id) => Instance.Dictionary.ContainsKey(id);
 

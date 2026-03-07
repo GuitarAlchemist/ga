@@ -8,7 +8,8 @@ using Scales;
 ///     A major scale mode
 /// </summary>
 /// <remarks>
-///     Mnemonic: I Don't Particularly Like Modes A Lot => Ionian, Dorian, etc...
+///     Mnemonic: I Don't Particularly Like Modes A Lot => Ionian, Dorian, etc...<br/>
+///     <see href="https://en.wikipedia.org/wiki/Major_scale" /><br/>
 ///     <see href="https://ianring.com/musictheory/scales/1709" />
 /// </remarks>
 [PublicAPI]

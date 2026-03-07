@@ -21,10 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj" />
-    <!-- TODO: Create these projects when needed -->
-    <!-- <ProjectReference Include="..\GA.Business.Analysis\GA.Business.Analysis.csproj"/> -->
-    <!-- <ProjectReference Include="..\GA.Business.Fretboard\GA.Business.Fretboard.csproj"/> -->
-    <!-- <ProjectReference Include="..\GA.Business.Harmony\GA.Business.Harmony.csproj"/> -->
     <ProjectReference Include="..\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 

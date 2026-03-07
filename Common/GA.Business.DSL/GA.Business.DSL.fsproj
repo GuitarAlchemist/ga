@@ -38,7 +38,18 @@
         <Compile Include="Services/ContentDiscovery.fs"/>
         <Compile Include="Generators/GrothendieckGenerator.fs"/>
         <Compile Include="Adapters/TarsGrammarAdapter.fs"/>
+        <Compile Include="Closures/GaAsync.fs"/>
+        <Compile Include="Closures/GaComputationExpression.fs"/>
+        <Compile Include="Closures/GaClosureRegistry.fs"/>
+        <Compile Include="Parsers/GaSurfaceSyntaxParser.fs"/>
+        <Compile Include="Closures/BuiltinClosures/DomainClosures.fs"/>
+        <Compile Include="Closures/BuiltinClosures/PipelineClosures.fs"/>
+        <Compile Include="Closures/BuiltinClosures/AgentClosures.fs"/>
+        <Compile Include="Closures/BuiltinClosures/IoClosures.fs"/>
+        <Compile Include="Closures/BuiltinClosures/TabClosures.fs"/>
+        <Compile Include="Interpreter/GaFsiSessionPool.fs"/>
         <Compile Include="LSP/LspTypes.fs"/>
+        <Compile Include="LSP/GaBlockDetector.fs"/>
         <Compile Include="LSP/CompletionProvider.fs"/>
         <Compile Include="LSP/DiagnosticsProvider.fs"/>
         <Compile Include="LSP/LanguageServer.fs"/>
@@ -47,6 +58,8 @@
 
     <ItemGroup>
         <PackageReference Include="FParsec" Version="1.1.1"/>
+        <PackageReference Include="FsToolkit.ErrorHandling" Version="4.16.0"/>
+        <PackageReference Include="FSharp.Compiler.Service" Version="43.9.300"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
     </ItemGroup>
 

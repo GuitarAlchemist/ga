@@ -10,7 +10,7 @@ using Theory.Tonal.Modes;
 /// </summary>
 /// <param name="mode">The <see cref="ScaleMode" /></param>
 [PublicAPI]
-public class ModeFormula(ScaleMode mode) : IReadOnlyCollection<ScaleModeSimpleInterval>
+public sealed class ModeFormula(ScaleMode mode) : IReadOnlyCollection<ScaleModeSimpleInterval>
 {
     public ScaleMode Mode { get; } = mode ?? throw new ArgumentNullException(nameof(mode));
     public PrintableReadOnlyCollection<ScaleModeSimpleInterval> Intervals { get; } = CreateModeIntervals(mode);

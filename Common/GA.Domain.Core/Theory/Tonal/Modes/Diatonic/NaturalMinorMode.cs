@@ -8,7 +8,9 @@ using Scales;
 ///     A natural minor scale mode
 /// </summary>
 /// <remarks>
-///     The natural minor scale is also known as the Aeolian mode.
+///     The natural minor scale is also known as the Aeolian mode.<br/>
+///     <see href="https://en.wikipedia.org/wiki/Aeolian_mode" /><br/>
+///     <see href="https://ianring.com/musictheory/scales/1453" />
 /// </remarks>
 [PublicAPI]
 public sealed class NaturalMinorMode(NaturalMinorScaleDegree degree) : MinorScaleMode<NaturalMinorScaleDegree>(

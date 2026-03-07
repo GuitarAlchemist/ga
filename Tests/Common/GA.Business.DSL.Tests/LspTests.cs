@@ -1,6 +1,7 @@
 namespace GA.Business.DSL.Tests;
 
 using GA.Business.DSL.LSP;
+using static GA.Business.DSL.Interpreter.GaFsiSessionPool;
 
 /// <summary>
 ///     Tests for LSP (Language Server Protocol) functionality
@@ -301,5 +302,115 @@ public class LspTests
 
         // Assert
         Assert.Pass("LSP workflow test completed");
+    }
+
+    // ============================================================================
+    // GA BLOCK DETECTOR TESTS
+    // ============================================================================
+
+    [Test]
+    public void GaBlockDetector_FindsNoBlocks_InPlainText()
+    {
+        var text = "Just some plain text\nNo fenced blocks here";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        Assert.That(blocks, Is.Empty);
+    }
+
+    [Test]
+    public void GaBlockDetector_FindsSingleBlock()
+    {
+        var text = "# Doc\n```ga\nlet! x = domain.parseChord\n```\nafter";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        Assert.That(blocks.Count, Is.EqualTo(1));
+        var block = blocks[0];
+        Assert.That(block.StartLine,  Is.EqualTo(1)); // 0-based: line 1 = "```ga"
+        Assert.That(block.EndLine,    Is.EqualTo(3)); // line 3 = closing "```"
+        Assert.That(block.InnerStart, Is.EqualTo(2)); // line 2 = first content line
+        Assert.That(block.InnerEnd,   Is.EqualTo(2)); // line 2 = last content line
+    }
+
+    [Test]
+    public void GaBlockDetector_FindsMultipleBlocks()
+    {
+        var text = "```ga\nblock1\n```\ntext\n```ga\nblock2\n```";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        Assert.That(blocks.Count, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void GaBlockDetector_IgnoresUnclosedBlock()
+    {
+        var text = "# Doc\n```ga\nno closing fence";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        Assert.That(blocks, Is.Empty);
+    }
+
+    [Test]
+    public void GaBlockDetector_IsInsideGaBlock_ReturnsTrueForContentLine()
+    {
+        var text = "# Doc\n```ga\ncontent line\n```";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        Assert.That(GaBlockDetector.isInsideGaBlock(blocks, 2), Is.True);  // content line
+        Assert.That(GaBlockDetector.isInsideGaBlock(blocks, 1), Is.False); // opening fence
+        Assert.That(GaBlockDetector.isInsideGaBlock(blocks, 3), Is.False); // closing fence
+        Assert.That(GaBlockDetector.isInsideGaBlock(blocks, 0), Is.False); // before block
+    }
+
+    [Test]
+    public void GaBlockDetector_CoordinateTranslation_RoundTrips()
+    {
+        var text = "prefix\n```ga\nline0\nline1\n```";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        var block = blocks[0]; // InnerStart = 2
+        Assert.That(GaBlockDetector.toDocumentLine(block, 0), Is.EqualTo(2));
+        Assert.That(GaBlockDetector.toDocumentLine(block, 1), Is.EqualTo(3));
+    }
+
+    [Test]
+    public void GaBlockDetector_BlockContent_ExtractsCorrectLines()
+    {
+        var text = "# Header\n```ga\nhello world\nbye\n```\nafter";
+        var blocks = GaBlockDetector.findGaFencedBlocks(text);
+        var content = GaBlockDetector.blockContent(text, blocks[0]);
+        Assert.That(content, Does.Contain("hello world"));
+        Assert.That(content, Does.Contain("bye"));
+        Assert.That(content, Does.Not.Contain("# Header"));
+        Assert.That(content, Does.Not.Contain("after"));
+    }
+
+    [Test]
+    public void CompletionProvider_ClosureCompletions_ReturnsItems()
+    {
+        GA.Business.DSL.GaClosureBootstrap.init();
+        var completions = CompletionProvider.closureCompletions();
+        Assert.That(completions, Is.Not.Empty);
+        Assert.That(completions.Any(c => c.Label.StartsWith("domain.")), Is.True,
+            "Should include domain.* closures");
+    }
+
+    // ============================================================================
+    // FSI SESSION POOL INTEGRATION TESTS
+    // ============================================================================
+
+    [Test]
+    public async Task GaFsiPool_EvalAsync_SimpleScript_Succeeds()
+    {
+        var result = await Microsoft.FSharp.Control.FSharpAsync.StartAsTask(
+            GaFsiPool.Instance.EvalAsync("printfn \"hello\"", Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None),
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.Tasks.TaskCreationOptions>.None,
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None);
+
+        Assert.That(result.IsGaScriptOk, Is.True, $"Expected success but got: {result}");
+    }
+
+    [Test]
+    public async Task GaFsiPool_EvalAsync_SyntaxError_ReturnsError()
+    {
+        var result = await Microsoft.FSharp.Control.FSharpAsync.StartAsTask(
+            GaFsiPool.Instance.EvalAsync("let x = @@@invalid@@@", Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None),
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.Tasks.TaskCreationOptions>.None,
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None);
+
+        Assert.That(result.IsGaScriptError, Is.True, "Syntax error should produce GaScriptError");
     }
 }

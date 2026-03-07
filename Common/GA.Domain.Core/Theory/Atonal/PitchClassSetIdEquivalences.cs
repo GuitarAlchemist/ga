@@ -3,7 +3,7 @@ namespace GA.Domain.Core.Theory.Atonal;
 using System.Diagnostics;
 using static PitchClassSetIdEquivalences.Relationship;
 
-public class PitchClassSetIdEquivalences
+public sealed class PitchClassSetIdEquivalences
 {
     public enum RelationshipKind
     {

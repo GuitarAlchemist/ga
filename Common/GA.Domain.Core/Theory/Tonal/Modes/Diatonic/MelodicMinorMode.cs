@@ -8,7 +8,9 @@ using Scales;
 ///     A melodic minor scale mode
 /// </summary>
 /// <remarks>
-///     The melodic minor scale is a minor scale with raised 6th and 7th degrees when ascending.
+///     The melodic minor scale is a minor scale with raised 6th and 7th degrees when ascending.<br/>
+///     <see href="https://en.wikipedia.org/wiki/Melodic_minor_scale" /><br/>
+///     <see href="https://ianring.com/musictheory/scales/2733" />
 /// </remarks>
 [PublicAPI]
 public sealed class MelodicMinorMode(MelodicMinorScaleDegree degree) : MinorScaleMode<MelodicMinorScaleDegree>(

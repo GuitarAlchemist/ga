@@ -10,8 +10,9 @@ using Scales;
 /// <remarks>
 ///     The double harmonic scale (also known as Byzantine or Arabic scale) has a flattened second and sixth degree.
 ///     It has seven distinct modes, each with unique characteristics.
-///     It's commonly used in Middle Eastern and Balkan music.
-///     <see href="https://en.wikipedia.org/wiki/Double_harmonic_scale" />
+///     It's commonly used in Middle Eastern and Balkan music.<br/>
+///     <see href="https://en.wikipedia.org/wiki/Double_harmonic_scale" /><br/>
+///     <see href="https://ianring.com/musictheory/scales/2731" />
 /// </remarks>
 [PublicAPI]
 public sealed class DoubleHarmonicScaleMode(DoubleHarmonicScaleDegree degree)

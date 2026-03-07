@@ -7,7 +7,7 @@ using Intervals;
 ///     Accidental record struct (𝄫♭ | 𝄫 | ♭ | ♮ | ♯ | 𝄪 | ♯𝄪)
 /// </summary>
 /// <remarks>
-///     <see href="http://en.wikipedia.org/wiki/Accidental_(Objects)" />
+///     <see href="https://en.wikipedia.org/wiki/Accidental_(music)" />
 /// </remarks>
 public readonly record struct Accidental : IRangeValueObject<Accidental>, IParsable<Accidental>
 {

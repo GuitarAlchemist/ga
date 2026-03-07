@@ -1,0 +1,148 @@
+{
+    "name": "ga_tab_ingestion",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "ingest-tab",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "webhook-ingest",
+            "name": "Webhook (Ingest)"
+        },
+        {
+            "parameters": {
+                "url": "={{ $json.url }}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "id": "http-fetch",
+            "name": "HTTP Request (Fetcher)"
+        },
+        {
+            "parameters": {
+                "operation": "extractHtmlContent",
+                "dataPropertyName": "data",
+                "extractionValues": {
+                    "values": [
+                        {
+                            "key": "tab_raw",
+                            "cssSelector": "pre"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.htmlExtract",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "id": "html-extract",
+            "name": "HTML Extract"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Deterministic Cleaner\nconst text = items[0].json.tab_raw || \"\";\nconst lines = text.split('\\n');\nconst cleanLines = lines.filter(line => \n   /^[eBGDAE]\\|/.test(line) || \n   /^[A-G][b#]?m?(aj|dim|aug|sus)?[0-9]*/.test(line) || \n   /^\\|/.test(line)\n);\n\nif (cleanLines.length < 6) throw new Error(\"PARSER_MISMATCH\");\n\nreturn { json: { tab_clean: cleanLines.join('\\n'), ...items[0].json } };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "id": "det-cleaner",
+            "name": "Deterministic Cleaner"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://localhost:5678/webhook/analyze-tab",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "tab_content",
+                            "value": "={{ $json.tab_clean }}"
+                        },
+                        {
+                            "name": "request_id",
+                            "value": "={{ $json.requestId || $execution.id }}" // Fallback
+                        },
+                        {
+                            "name": "attempt",
+                            "value": 1
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                300
+            ],
+            "id": "handoff-analysis",
+            "name": "Handoff to Analysis"
+        }
+    ],
+    "connections": {
+        "Webhook (Ingest)": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request (Fetcher)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request (Fetcher)": {
+            "main": [
+                [
+                    {
+                        "node": "HTML Extract",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTML Extract": {
+            "main": [
+                [
+                    {
+                        "node": "Deterministic Cleaner",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Deterministic Cleaner": {
+            "main": [
+                [
+                    {
+                        "node": "Handoff to Analysis",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

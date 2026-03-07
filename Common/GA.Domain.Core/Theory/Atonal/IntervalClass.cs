@@ -16,8 +16,8 @@ using Primitives.Intervals;
 ///     6    6                      Augmented 4th and Diminished 5th
 /// </summary>
 /// <remarks>
-///     See https://en.wikipedia.org/wiki/Interval_class
-///     http://www.jaytomlin.com/music/settheory/help.html
+///     <see href="https://en.wikipedia.org/wiki/Interval_class" /><br/>
+///     <see href="http://www.jaytomlin.com/music/settheory/help.html" /><br/>
 ///     Implements <see cref="IStaticValueObjectList{TSelf}" />
 /// </remarks>
 [PublicAPI]

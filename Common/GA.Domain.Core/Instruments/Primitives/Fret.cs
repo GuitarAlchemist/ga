@@ -7,6 +7,7 @@ using static ValueObjectUtils<Fret>;
 
 /// <summary>
 ///     An instrument fret (Between <see cref="Min" /> and <see cref="Max" />)
+///     (<see href="https://en.wikipedia.org/wiki/Fret" />)
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IStaticValueObjectList{TSelf}" />

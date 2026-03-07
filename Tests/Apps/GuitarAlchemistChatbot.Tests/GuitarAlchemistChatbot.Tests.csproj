@@ -25,14 +25,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Apps\GuitarAlchemistChatbot\GuitarAlchemistChatbot.csproj"/>
+    <ProjectReference Include="..\..\..\Apps\GaChatbot\GaChatbot.csproj"/>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude test files with missing service implementations -->
+    <!-- Exclude test files with missing service implementations (GuitarAlchemistChatbot app removed) -->
     <Compile Remove="Services/ChatbotSessionOrchestratorTests.cs"/>
   </ItemGroup>
+
 
 </Project>
 

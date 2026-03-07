@@ -2,7 +2,7 @@ namespace GA.Domain.Core.Theory.Tonal;
 
 /// <summary>
 ///     Represents the functional role of a chord within a key or mode.
-///     Standard 7-degree tonal functions.
+///     Standard 7-degree tonal functions (<see href="https://en.wikipedia.org/wiki/Function_(music)" />).
 /// </summary>
 public enum HarmonicFunction
 {

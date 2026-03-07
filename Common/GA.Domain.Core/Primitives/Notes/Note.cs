@@ -7,6 +7,10 @@ using GA.Core.Abstractions;
 using Theory.Atonal;
 using Theory.Atonal.Abstractions;
 
+/// <summary>
+///     Discriminated union of musical notes: chromatic (pitch-class only) and key notes (natural note + optional accidental)
+///     (<see href="https://en.wikipedia.org/wiki/Musical_note" />).
+/// </summary>
 [PublicAPI]
 [DomainRelationship(typeof(PitchClass), RelationshipType.IsParentOf,
     "A note contains a pitch class as one of its components")]
@@ -32,6 +36,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
 
     public Chromatic ToChromatic() => new(PitchClass);
 
+    /// <summary>
+    ///     A chromatic note identified by pitch-class value (0–11) only, without enharmonic spelling.
+    /// </summary>
     [PublicAPI]
     public sealed record Chromatic(int Value) : Note, IParsable<Chromatic>
     {
@@ -108,6 +115,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         }
     }
 
+    /// <summary>
+    ///     A key note with an optional sharp accidental (e.g., C, C#, D#).
+    /// </summary>
     [PublicAPI]
     public sealed record Sharp(NaturalNote NaturalNote, SharpAccidental? SharpAccidental = null)
         : KeyNote(NaturalNote), IParsable<Sharp>
@@ -176,6 +186,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static implicit operator Chromatic(Sharp s) => s.ToChromatic();
     }
 
+    /// <summary>
+    ///     A key note with an optional flat accidental (e.g., C, Db, Eb).
+    /// </summary>
     [PublicAPI]
     public sealed record Flat(NaturalNote NaturalNote, FlatAccidental? FlatAccidental = null)
         : KeyNote(NaturalNote), IParsable<Flat>
@@ -246,6 +259,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static implicit operator Chromatic(Flat s) => s.ToChromatic();
     }
 
+    /// <summary>
+    ///     A note with a natural note and any accidental (sharp, flat, double-sharp, double-flat, etc.).
+    /// </summary>
     [PublicAPI]
     public sealed record Accidented(NaturalNote NaturalNote, Accidental? Accidental = null)
         : Note, IParsable<Accidented>

@@ -88,7 +88,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="models\naturalness_ranker.onnx">
+    <Content Include="models\naturalness_ranker.onnx" Condition="Exists('models\naturalness_ranker.onnx')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

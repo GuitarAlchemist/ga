@@ -4,7 +4,6 @@ using GA.DocumentProcessing.Service.Models;
 using GA.DocumentProcessing.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
-using AllProjects.ServiceDefaults;
 
 /// <summary>
 /// API controller for NotebookLM + Ollama retroaction loop
@@ -31,8 +30,9 @@ public class RetroactionLoopController : ControllerBase
     /// Start a new retroaction loop
     /// </summary>
     [HttpPost("start")]
-    [ProducesResponseType(typeof(ApiResponse<RetroactionLoopStatusDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<RetroactionLoopStatusDto>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> StartRetroactionLoop(
         [FromBody] StartRetroactionLoopDto request,
         CancellationToken cancellationToken)
@@ -96,8 +96,9 @@ public class RetroactionLoopController : ControllerBase
     /// Get the status of a retroaction loop
     /// </summary>
     [HttpGet("{loopId}/status")]
-    [ProducesResponseType(typeof(ApiResponse<RetroactionLoopStatusDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<RetroactionLoopStatusDto>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 404)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetLoopStatus(
         string loopId,
         CancellationToken cancellationToken)
@@ -144,8 +145,9 @@ public class RetroactionLoopController : ControllerBase
     /// Get detailed results of a retroaction loop
     /// </summary>
     [HttpGet("{loopId}/results")]
-    [ProducesResponseType(typeof(ApiResponse<RetroactionLoopResult>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<RetroactionLoopResult>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 404)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetLoopResults(
         string loopId,
         CancellationToken cancellationToken)
@@ -174,7 +176,9 @@ public class RetroactionLoopController : ControllerBase
     /// List all retroaction loops
     /// </summary>
     [HttpGet("list")]
-    [ProducesResponseType(typeof(ApiResponse<List<RetroactionLoopStatusDto>>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<List<RetroactionLoopStatusDto>>), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> ListLoops(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
@@ -212,8 +216,9 @@ public class RetroactionLoopController : ControllerBase
     /// Get convergence metrics for a loop
     /// </summary>
     [HttpGet("{loopId}/convergence")]
-    [ProducesResponseType(typeof(ApiResponse<ConvergenceMetricsDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<ConvergenceMetricsDto>), 200)]
+    [ProducesResponseType(typeof(AllProjects.ServiceDefaults.ApiResponse<object>), 404)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetConvergenceMetrics(
         string loopId,
         CancellationToken cancellationToken)

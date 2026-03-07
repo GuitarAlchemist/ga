@@ -240,6 +240,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
     /// <returns>BSP tree structure information</returns>
     [HttpGet("tree-info")]
     [ProducesResponseType(typeof(ApiResponse<BspTreeInfoResponse>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 500)]
     public IActionResult GetTreeInfo()
     {
         try
@@ -275,6 +276,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
     /// <returns>Complete BSP tree structure with all nodes and partitions</returns>
     [HttpGet("tree-structure")]
     [ProducesResponseType(typeof(ApiResponse<BspTreeStructureResponse>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 500)]
     public IActionResult GetTreeStructure()
     {
         try

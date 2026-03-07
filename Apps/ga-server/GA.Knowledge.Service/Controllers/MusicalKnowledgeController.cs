@@ -47,6 +47,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>Comprehensive statistics about the musical knowledge base</returns>
     [HttpGet("statistics")]
     [ProducesResponseType(typeof(MusicalKnowledgeStatistics), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<MusicalKnowledgeStatistics> GetStatistics()
     {
         try
@@ -71,6 +72,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(MusicalKnowledgeByCategory), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<MusicalKnowledgeByCategory> GetByCategory(string category)
     {
         try
@@ -103,6 +105,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     [HttpGet("difficulty/{difficulty}")]
     [ProducesResponseType(typeof(MusicalKnowledgeByDifficulty), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<MusicalKnowledgeByDifficulty> GetByDifficulty(string difficulty)
     {
         try
@@ -134,6 +137,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     [HttpGet("artist/{artist}")]
     [ProducesResponseType(typeof(MusicalKnowledgeByArtist), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<MusicalKnowledgeByArtist> GetByArtist(string artist)
     {
         try
@@ -164,6 +168,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>Validation results for all configurations</returns>
     [HttpGet("validate")]
     [ProducesResponseType(typeof(MusicalKnowledgeValidationResult), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<MusicalKnowledgeValidationResult> ValidateConfigurations()
     {
         try
@@ -195,6 +200,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>List of all unique artists</returns>
     [HttpGet("artists")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllArtists()
     {
         try
@@ -217,6 +223,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>List of all unique categories</returns>
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllCategories()
     {
         try
@@ -239,6 +246,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>List of all unique difficulty levels</returns>
     [HttpGet("difficulties")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllDifficulties()
     {
         try
@@ -261,6 +269,7 @@ public class MusicalKnowledgeController(ILogger<MusicalKnowledgeController> logg
     /// <returns>Success message</returns>
     [HttpPost("reload")]
     [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(500)]
     public ActionResult ReloadConfigurations()
     {
         try

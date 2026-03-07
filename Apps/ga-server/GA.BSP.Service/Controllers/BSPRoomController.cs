@@ -148,6 +148,7 @@ public class BspRoomController(ILogger<BspRoomController> logger) : ControllerBa
     [HttpGet("generate-batch")]
     [ProducesResponseType(typeof(ApiResponse<List<DungeonLayoutResponse>>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 500)]
     public IActionResult GenerateBatch(
         [FromQuery] int count = 3,
         [FromQuery] int width = 80,

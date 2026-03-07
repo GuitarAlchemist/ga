@@ -17,6 +17,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of all guitar techniques</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetAll()
     {
         try
@@ -41,6 +42,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(GuitarTechniqueDefinition), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<GuitarTechniqueDefinition> GetByName(string name)
     {
         try
@@ -69,6 +71,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of guitar techniques in the specified category</returns>
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetByCategory(string category)
     {
         try
@@ -93,6 +96,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of guitar techniques at the specified difficulty level</returns>
     [HttpGet("difficulty/{difficulty}")]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetByDifficulty(string difficulty)
     {
         try
@@ -117,6 +121,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of guitar techniques associated with the artist</returns>
     [HttpGet("artist/{artist}")]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetByArtist(string artist)
     {
         try
@@ -141,6 +146,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of guitar techniques developed by the inventor</returns>
     [HttpGet("inventor/{inventor}")]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetByInventor(string inventor)
     {
         try
@@ -165,6 +171,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of guitar techniques used in songs matching the title</returns>
     [HttpGet("song/{song}")]
     [ProducesResponseType(typeof(IEnumerable<GuitarTechniqueDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<GuitarTechniqueDefinition>> GetBySong(string song)
     {
         try
@@ -187,6 +194,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of all unique categories</returns>
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllCategories()
     {
         try
@@ -209,6 +217,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of all unique difficulty levels</returns>
     [HttpGet("difficulties")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllDifficulties()
     {
         try
@@ -231,6 +240,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of all unique artists</returns>
     [HttpGet("artists")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllArtists()
     {
         try
@@ -253,6 +263,7 @@ public class GuitarTechniquesController(ILogger<GuitarTechniquesController> logg
     /// <returns>List of all unique inventors</returns>
     [HttpGet("inventors")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllInventors()
     {
         try

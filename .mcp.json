@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "ga-dsl": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "GaMcpServer/GaMcpServer.csproj",
+        "--no-build",
+        "--"
+      ]
+    }
+  }
+}

@@ -1,45 +1,61 @@
-# Backlog
+# Guitar Alchemist Backlog
 
-Future ideas not yet in active planning. One bullet per idea. When an idea is ready to build, run `/feature` — it gets a brainstorm + plan in `docs/plans/`, then remove it from here.
+Ideas waiting to become features. One bullet per idea. When ready to build, run `/feature <idea>` — this launches brainstorm → plan → PR.
 
-See `CLAUDE.md` Planning & Backlog section for the full workflow.
+See `docs/plans/` for active plans.
 
 ---
 
-## Chatbot & RAG
+## Guitarist Problems to Solve
 
-- **Chatbot orchestration extraction** — extract `ChatbotSessionOrchestrator` into `GA.Business.Core.Orchestration`; move all agent routing logic out of the API layer (plan: `docs/plans/2026-03-02-refactor-chatbot-orchestration-extraction-plan.md`)
-- **Spectral RAG spike** — complete Phase 5 (Chat Orchestrator intent pipeline + constraint extraction); next sprint is Phase 23 (Performance & Distributed Inference); see `docs/archive/conductor/tracks/spectral-rag-chatbot/`
-- **Chatbot streaming backpressure** — evaluate whether SSE chunking needs adaptive flushing under high concurrency (follow-on to the 3-slot concurrency gate added in March 2026)
+These are real problems guitarists hit. They're the North Star for every feature.
 
-## API Quality (from `.agent/api-team/BACKLOG.md`)
+### Ear Training & Recognition
+- **"What key am I in?"** — a guitarist plays a progression by ear and wants GA to identify the key, suggest the scale, and show the diatonic chord set
+- **"Why does this sound outside?"** — given a chord or note over a backing, explain which scale degrees are "outside" and why (tension vs. resolution)
+- **"Is this a common substitution?"** — given two chords, tell the guitarist if there's a known substitution relationship (tritone sub, backdoor dominant, parallel minor, etc.)
 
-- **API-003** (P1) — Integration tests for ChatbotController `status` and `examples` endpoints
-- **API-006** (P1) — Unify `ApiResponse<T>` — 8 services each have their own copy; consolidate to `AllProjects.ServiceDefaults`
-- **API-008** (P2) — Audit `GA.MusicTheory.Service` (8 controllers) for `[ProducesResponseType]` completeness
-- **API-009** (P2) — Audit `GA.Analytics.Service` (5 controllers) for `[ProducesResponseType]` completeness
-- **API-010** (P2) — Audit `GA.AI.Service` (7 controllers) for `[ProducesResponseType]` completeness
-- **API-011** (P2) — Integration tests for `GA.MusicTheory.Service` ChordsController
-- **API-014** (P2) — Verify `ErrorHandlingMiddleware` is registered in all microservices; add centralized exception handling where missing
-- **API-015 – API-018** (P3) — Audit `GA.Knowledge.Service`, `GA.Fretboard.Service`, `GA.BSP.Service`, `GA.DocumentProcessing.Service` for `[ProducesResponseType]` completeness
-- **API-019** (P3) — Integration tests for HealthController
-- **API-020** (P3) — API versioning strategy — document or implement `/api/v1/` prefix consistently
+### Chord & Voicing Discovery
+- **"My hand hurts playing barre chords"** — suggest open-position or partial-barre voicings for any chord, ranked by fret-hand stretch
+- **"I play in DADGAD / open D / open G"** — generate correct chord shapes for any alternate tuning, with voicing diagrams
 
-## Agent Infrastructure
+### Improvisation & Scale Choice
+- **"Which arpeggio fits this chord progression?"** — given Am F C G, suggest the arpeggios and scales that work over each chord with mode names
+- **"How do I solo over a ii-V-I?"** — step-by-step: target notes, guide tones, chromatic approaches, bebop scale options
+- **"Show me a lick in the style of [blues / jazz / country]"** — generate a 2-bar lick in ASCII tab + VexTab matching the stylistic vocabulary
 
-- **Semantic event routing** — pub/sub architecture for agent-to-agent communication; proposed in `docs/archive/conductor/tracks/semantic-event-routing/`; no plan yet — needs spike
-- **Agent marketplace MVP** — plugin marketplace where agents can be discovered and composed dynamically; spec was drafted but needs re-evaluation against current agent infrastructure
-- **Fast voicing indexing (ILGPU batch pipeline)** — GPU-accelerated batch embedding pipeline for the voicing index; plan: `docs/plans/2026-03-05-feat-fast-voicing-ilgpu-batch-pipeline-plan.md`
+### Practice & Learning
+- **"I want to practice this scale in all positions"** — generate all 5 CAGED positions for any scale, with tab + fretboard diagram
+- **"I keep forgetting chord tones"** — a drill: show a chord symbol → user names the intervals → GA verifies with GaChordIntervals
+- **"How long until I can play this song?"** — technique gap analysis: compare required techniques to user's known skills, suggest a practice sequence
 
-## Domain & Infrastructure
+### Songwriting & Composition
+- **"Help me finish this progression"** — given 2-3 chords, suggest 2-3 natural completions that cadence correctly, in the same key
+- **"Make this progression more interesting"** — apply passing chords, secondary dominants, or borrowed chords to a plain I-IV-V
+- **"What would this sound like in a minor key?"** — parallel minor / relative minor translation of an existing progression
 
-- **Domain project structure cleanup** — follow-on from the March 2026 domain refactor; check for any remaining misplaced types
-- **MEAI integration reconciliation** — Microsoft.Extensions.AI integration was "Needs Reconciliation" in conductor; check current state vs. `GA.Business.ML` ONNX/Ollama setup
-- **Core schema design reconciliation** — `core-schema-design` conductor track was "Needs Reconciliation"; evaluate if remaining items apply
+### Technical / Gear
+- **"How do I tune to drop-C?"** — fret-by-fret retuning guide with string tensions and chord shape adjustments
+- **"Why does my tab look wrong?"** — parse ASCII tab and flag common notation errors (string order, timing symbols, missing barlines)
 
-## Future / Not Started
+---
 
-- **Kubernetes deployment** — `k8s-deployment` conductor track; see `docs/archive/conductor/tracks/`; no active plan; needs re-evaluation (currently using Aspire for local orchestration)
-- **Voice input** — guitar voice-to-tab or voice commands; flagged in Nov 2025 roadmap; no 2026 activity; needs re-evaluation before planning
-- **Vision features** — image recognition for chord diagrams or notation; flagged in Nov 2025 roadmap; no 2026 activity; needs re-evaluation before planning
-- **Tab ingestion pipeline improvements** — `.agent/skills/tab-ingestion/` skill exists; production-scale tab parsing and indexing not yet planned
+## Infrastructure Ideas
+
+- **Live fretboard overlay** — show scale degrees on the React 3D fretboard in real time as the chatbot explains a concept
+- **Chatbot chord diagram rendering** — when TheoryAgent mentions a chord, auto-generate a VexTab diagram inline in the chat response
+- **BSP room chord assignment** — assign a diatonic chord function (I, ii, V…) to each BSP room and visualise harmonic flow through rooms
+- **OPTIC-K similarity search UI** — let guitarists search by playing a rhythm pattern, find songs with similar harmonic structure
+
+---
+
+## How to Start a Feature
+
+```bash
+/feature <idea from above>
+```
+
+The `/feature` skill will:
+1. Brainstorm with GA MCP tools to verify the music theory
+2. Produce a plan in `docs/plans/`
+3. Guide implementation grounded in the GA domain model

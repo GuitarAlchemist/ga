@@ -58,7 +58,7 @@ public class HealthController(
                     ["HealthCheck"] = new()
                     {
                         Status = "Unhealthy",
-                        Error = ex.Message
+                        Error = "Health check failed; see server logs for details."
                     }
                 }
             };
@@ -114,7 +114,7 @@ public class HealthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Database health check failed");
-            return StatusCode(500, new { error = "Database health check failed", details = ex.Message });
+            return StatusCode(500, new { error = "Database health check failed" });
         }
     }
 
@@ -137,7 +137,7 @@ public class HealthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Vector search health check failed");
-            return StatusCode(500, new { error = "Vector search health check failed", details = ex.Message });
+            return StatusCode(500, new { error = "Vector search health check failed" });
         }
     }
 
@@ -195,7 +195,7 @@ public class HealthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to get system information");
-            return StatusCode(500, new { error = "Failed to get system information", details = ex.Message });
+            return StatusCode(500, new { error = "Failed to get system information" });
         }
     }
 
@@ -233,7 +233,7 @@ public class HealthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to get version information");
-            return StatusCode(500, new { error = "Failed to get version information", details = ex.Message });
+            return StatusCode(500, new { error = "Failed to get version information" });
         }
     }
 

@@ -4,7 +4,7 @@ using GA.Core.Abstractions;
 
 /// <summary>
 ///     Octave (Double-contra | sub-contra | contra | great | small | 1 line | 2 lines | 3 lines | 4 lines | 5 lines | 6
-///     lines)
+///     lines) (<see href="https://en.wikipedia.org/wiki/Octave" />).
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IRangeValueObject{TSelf}" />, <see cref="IFormattable" />

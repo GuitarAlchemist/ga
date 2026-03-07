@@ -3,7 +3,8 @@ namespace GA.Domain.Core.Theory.Harmony.Progressions;
 using Instruments.Fretboard.Voicings.Core;
 
 /// <summary>
-///     A single step in a musical progression, containing the voicing to play and its duration.
+///     A single step in a musical progression, containing the voicing to play and its duration
+///     (<see href="https://en.wikipedia.org/wiki/Chord_progression" />).
 /// </summary>
 public sealed record ProgressionStep
 {

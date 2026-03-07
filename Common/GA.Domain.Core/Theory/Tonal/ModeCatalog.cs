@@ -7,7 +7,8 @@ using Core.Primitives.Notes;
 
 /// <summary>
 ///     Catalog of musical modes and scale families.
-///     Provides a generic way to access mode definitions and metadata.
+///     Provides a generic way to access mode definitions and metadata
+///     (<see href="https://en.wikipedia.org/wiki/Mode_(music)" />).
 /// </summary>
 public static class ModeCatalog
 {

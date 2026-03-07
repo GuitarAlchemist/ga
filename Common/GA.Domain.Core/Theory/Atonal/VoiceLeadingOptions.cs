@@ -1,7 +1,7 @@
 ﻿namespace GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
-///     Options for OPTIC-style voice-leading computations.
+///     Options for OPTIC-style voice-leading computations (<see href="https://en.wikipedia.org/wiki/Voice_leading" />).
 /// </summary>
 [PublicAPI]
 public sealed class VoiceLeadingOptions

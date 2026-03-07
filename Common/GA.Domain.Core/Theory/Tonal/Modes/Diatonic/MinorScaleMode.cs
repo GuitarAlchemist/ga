@@ -9,7 +9,8 @@ using Scales;
 /// <typeparam name="TScaleDegree">The type of scale degree.</typeparam>
 /// <remarks>
 ///     Minor scale modes are derived from a minor parent scale and have a clear tonal center.
-///     Examples include natural minor, harmonic minor, and melodic minor scale modes.
+///     Examples include natural minor, harmonic minor, and melodic minor scale modes.<br/>
+///     <see href="https://en.wikipedia.org/wiki/Minor_scale" />
 /// </remarks>
 [PublicAPI]
 public abstract class MinorScaleMode<TScaleDegree>(

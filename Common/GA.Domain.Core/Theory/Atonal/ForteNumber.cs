@@ -7,7 +7,8 @@ using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
 
 /// <summary>
-///     Represents a Forte number, which uniquely identifies a pitch class set in music set theory.
+///     Represents a Forte number, which uniquely identifies a pitch class set in music set theory
+///     (<see href="https://en.wikipedia.org/wiki/Forte_number" />).
 /// </summary>
 /// <remarks>
 ///     A Forte number consists of two parts:

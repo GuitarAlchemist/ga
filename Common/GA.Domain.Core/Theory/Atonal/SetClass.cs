@@ -6,7 +6,7 @@ using GA.Core.Collections;
 using GA.Core.Collections.Abstractions;
 
 /// <summary>
-///     Represents a set class in post-tonal music theory.
+///     Represents a set class in post-tonal music theory (<see href="https://en.wikipedia.org/wiki/Set_theory_(music)" />).
 /// </summary>
 /// <remarks>
 ///     A set class is an equivalence class of pitch class sets related by transposition or inversion.

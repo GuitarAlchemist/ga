@@ -2,6 +2,8 @@ namespace GaApi.Hubs;
 
 using System.Collections.Concurrent;
 using System.Text;
+using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Services;
 using Microsoft.AspNetCore.SignalR;
 using Services;
 
@@ -10,15 +12,15 @@ using Services;
 /// </summary>
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
+    ProductionOrchestrator orchestrator,
     ChatbotSessionOrchestrator sessionOrchestrator,
-    ISemanticKnowledgeSource semanticKnowledge)
+    ISemanticKnowledgeSource semanticKnowledge,
+    ILlmConcurrencyGate concurrencyGate)
     : Hub
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
-
-    private readonly ILogger<ChatbotHub> _logger = logger;
-    private readonly ISemanticKnowledgeSource _semanticKnowledge = semanticKnowledge;
-    private readonly ChatbotSessionOrchestrator _sessionOrchestrator = sessionOrchestrator;
+    private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
+    private const int MaxStoredMessages = 50;
 
     public async Task SendMessage(string message, bool useSemanticSearch = true)
     {
@@ -32,39 +34,64 @@ public sealed class ChatbotHub(
         }
 
         var history = _conversations.GetOrAdd(connectionId, _ => []);
-        var request = new ChatSessionRequest(trimmedMessage, history, useSemanticSearch);
-        var responseBuilder = new StringBuilder();
-        var cancellationToken = Context.ConnectionAborted;
+        var connectionAborted = Context.ConnectionAborted;
+
+        if (!await concurrencyGate.TryEnterAsync(connectionAborted))
+        {
+            await Clients.Caller.SendAsync("Error", "Service is busy. Please try again in a few seconds.");
+            return;
+        }
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
+        cts.CancelAfter(_pipelineBudget);
+        var cancellationToken = cts.Token;
 
         try
         {
-            await foreach (var chunk in _sessionOrchestrator.StreamResponseAsync(request, cancellationToken))
+            var response = await orchestrator.AnswerAsync(
+                new ChatRequest(trimmedMessage), cancellationToken);
+
+            // Emit routing metadata to client
+            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+            await Clients.Caller.SendAsync("MessageRoutingMetadata", new
             {
-                responseBuilder.Append(chunk);
+                agentId = routing.AgentId,
+                confidence = routing.Confidence,
+                routingMethod = routing.RoutingMethod
+            });
+
+            // Stream answer in chunks
+            var answer = response.NaturalLanguageAnswer ?? string.Empty;
+            foreach (var chunk in SplitIntoChunks(answer))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
                 await Clients.Caller.SendAsync("ReceiveMessageChunk", chunk);
             }
 
-            var fullResponse = responseBuilder.ToString();
-
-            var updatedHistory = _sessionOrchestrator.NormalizeHistory(
-                history.Concat(new[]
-                {
+            // Normalise and store history; cap at MaxStoredMessages to bound per-session memory
+            var updatedHistory = sessionOrchestrator.NormalizeHistory(
+                history.Concat([
                     new ChatMessage { Role = "user", Content = trimmedMessage },
-                    new ChatMessage { Role = "assistant", Content = fullResponse }
-                }));
+                    new ChatMessage { Role = "assistant", Content = answer }
+                ]));
+            _conversations[connectionId] = updatedHistory.Count > MaxStoredMessages
+                ? [.. updatedHistory.TakeLast(MaxStoredMessages)]
+                : updatedHistory;
 
-            _conversations[connectionId] = updatedHistory;
-
-            await Clients.Caller.SendAsync("MessageComplete", fullResponse);
+            await Clients.Caller.SendAsync("MessageComplete", answer);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Streaming cancelled for {ConnectionId}", connectionId);
+            logger.LogWarning("Streaming cancelled for {ConnectionId}", connectionId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing message from {ConnectionId}", connectionId);
+            logger.LogError(ex, "Error processing message from {ConnectionId}", connectionId);
             await Clients.Caller.SendAsync("Error", "Failed to process message. Please try again.");
+        }
+        finally
+        {
+            concurrencyGate.Release();
         }
     }
 
@@ -72,19 +99,16 @@ public sealed class ChatbotHub(
     {
         var connectionId = Context.ConnectionId;
         _conversations.TryRemove(connectionId, out _);
-        _logger.LogInformation("Cleared conversation history for {ConnectionId}", connectionId);
+        logger.LogInformation("Cleared conversation history for {ConnectionId}", connectionId);
         return Task.CompletedTask;
     }
 
     public Task<List<ChatMessage>> GetHistory()
     {
         var connectionId = Context.ConnectionId;
-        if (_conversations.TryGetValue(connectionId, out var history))
-        {
-            return Task.FromResult(history.ToList());
-        }
-
-        return Task.FromResult(new List<ChatMessage>());
+        return _conversations.TryGetValue(connectionId, out var history)
+            ? Task.FromResult(history.ToList())
+            : Task.FromResult<List<ChatMessage>>([]);
     }
 
     public async Task<List<SemanticSearchResult>> SearchKnowledge(string query, int limit = 10)
@@ -92,7 +116,7 @@ public sealed class ChatbotHub(
         try
         {
             var cancellationToken = Context.ConnectionAborted;
-            var results = await _semanticKnowledge.SearchAsync(query, limit, cancellationToken);
+            var results = await semanticKnowledge.SearchAsync(query, Math.Clamp(limit, 1, 50), cancellationToken);
 
             return
             [
@@ -112,14 +136,15 @@ public sealed class ChatbotHub(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching knowledge for query: {Query}", query);
+            logger.LogError(ex, "Error searching knowledge for query: {Query}",
+                query.Length > 100 ? query[..100] + "…" : query);
             throw;
         }
     }
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Client {ConnectionId} connected to chatbot hub", Context.ConnectionId);
+        logger.LogInformation("Client {ConnectionId} connected to chatbot hub", Context.ConnectionId);
         await Clients.Caller.SendAsync("Connected", "Welcome to Guitar Alchemist Chatbot!");
         await base.OnConnectedAsync();
     }
@@ -127,8 +152,11 @@ public sealed class ChatbotHub(
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var connectionId = Context.ConnectionId;
-        _logger.LogInformation("Client {ConnectionId} disconnected from chatbot hub", connectionId);
+        logger.LogInformation("Client {ConnectionId} disconnected from chatbot hub", connectionId);
         _conversations.TryRemove(connectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
+
+    private static IEnumerable<string> SplitIntoChunks(string text) =>
+        Helpers.SseChunker.SplitIntoChunks(text);
 }

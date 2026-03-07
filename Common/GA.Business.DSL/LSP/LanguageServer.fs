@@ -5,6 +5,7 @@ open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open GA.Business.DSL.Parsers
 open GA.Business.DSL.LSP.LspTypes
+open GA.Business.DSL.LSP
 
 /// <summary>
 /// Language Server Protocol implementation for Music Theory DSL
@@ -69,13 +70,14 @@ module LanguageServer =
             let message =
                 { JsonRpc = obj.["jsonrpc"].ToString()
                   Id =
-                    if obj.ContainsKey("id") then
+                    // Bug fix: id may be int, string, or absent — don't cast to int directly
+                    if obj.ContainsKey("id") && obj.["id"].Type <> Newtonsoft.Json.Linq.JTokenType.Null then
                         Some(obj.["id"].ToObject<int>())
                     else
                         None
                   Method = obj.["method"].ToString()
                   Params =
-                    if obj.ContainsKey("params") then
+                    if obj.ContainsKey("params") && obj.["params"].Type = Newtonsoft.Json.Linq.JTokenType.Object then
                         Some(obj.["params"] :?> JObject)
                     else
                         None }
@@ -121,11 +123,23 @@ module LanguageServer =
         completionProvider.["triggerCharacters"] <- JArray([| "-"; ">"; ":"; " " |])
         capabilities.["completionProvider"] <- completionProvider
 
-        // Diagnostic provider
-        capabilities.["diagnosticProvider"] <- JValue(true)
+        // Diagnostic provider — must be an object, not a boolean (LSP 3.17 spec)
+        let diagnosticProvider = JObject()
+        diagnosticProvider.["interFileDependencies"] <- JValue(false)
+        diagnosticProvider.["workspaceDiagnostics"]  <- JValue(false)
+        capabilities.["diagnosticProvider"] <- diagnosticProvider
 
         // Hover provider
         capabilities.["hoverProvider"] <- JValue(true)
+
+        // Semantic tokens provider — for ```ga``` closure-name highlighting
+        let tokenLegend = JObject()
+        tokenLegend.["tokenTypes"]     <- JArray([| "function" |])
+        tokenLegend.["tokenModifiers"] <- JArray([| |])
+        let semanticTokensProvider = JObject()
+        semanticTokensProvider.["legend"] <- tokenLegend
+        semanticTokensProvider.["full"]   <- JValue(true)
+        capabilities.["semanticTokensProvider"] <- semanticTokensProvider
 
         let result = JObject()
         result.["capabilities"] <- capabilities
@@ -135,7 +149,12 @@ module LanguageServer =
                 Capabilities = capabilities
                 InitializeParams = Some parameters }
 
-        (newState, successResponse 1 result)
+        // Bug fix: read the actual request id from params instead of hard-coding 1
+        let requestId =
+            if parameters.ContainsKey("_requestId") then
+                parameters.["_requestId"].ToObject<int>()
+            else 1
+        (newState, successResponse requestId result)
 
     // ============================================================================
     // TEXT DOCUMENT SYNC
@@ -165,26 +184,6 @@ module LanguageServer =
     // DIAGNOSTICS
     // ============================================================================
 
-    /// Get diagnostics for a document
-    let getDiagnostics (text: string) : Diagnostic list =
-        let diagnostics = ResizeArray<Diagnostic>()
-
-        // Try to parse as chord progression
-        match ChordProgressionParser.parse text with
-        | Error error ->
-            let diagnostic =
-                { Range =
-                    { Start = { Line = 0; Character = 0 }
-                      End = { Line = 0; Character = text.Length } }
-                  Severity = DiagnosticSeverity.Error
-                  Message = error
-                  Source = Some "chord-progression-parser" }
-
-            diagnostics.Add(diagnostic)
-        | Ok _ -> ()
-
-        List.ofSeq diagnostics
-
     /// Publish diagnostics for a document
     let publishDiagnostics (uri: string) (diagnostics: Diagnostic list) : string =
         let notification = JObject()
@@ -200,6 +199,35 @@ module LanguageServer =
         notification.["params"] <- parameters
 
         JsonConvert.SerializeObject(notification)
+
+    // ============================================================================
+    // DOCUMENT VALIDATION (ga-block aware)
+    // ============================================================================
+
+    /// Validate a document, returning diagnostics with correct document-level line numbers.
+    /// For documents containing ```ga``` blocks: validate each block's content and offset
+    /// the resulting diagnostic line numbers to document coordinates.
+    /// For plain (non-markdown) documents: fall back to chord-progression validation.
+    let validateDocument (text: string) : Diagnostic list =
+        let blocks = GaBlockDetector.findGaFencedBlocks text
+        if blocks.IsEmpty then
+            // No ga blocks — plain DSL document; use existing validator
+            DiagnosticsProvider.validate text
+        else
+            // For each ga block, run validation on its content and offset line numbers
+            [ for block in blocks do
+                let content = GaBlockDetector.blockContent text block
+                if not (String.IsNullOrWhiteSpace content) then
+                    let innerDiags = DiagnosticsProvider.validate content
+                    for d in innerDiags do
+                        // Offset diagnostic line numbers to document coordinates
+                        let offsetStart =
+                            { d.Range.Start with
+                                Line = GaBlockDetector.toDocumentLine block d.Range.Start.Line }
+                        let offsetEnd =
+                            { d.Range.End with
+                                Line = GaBlockDetector.toDocumentLine block d.Range.End.Line }
+                        yield { d with Range = { Start = offsetStart; End = offsetEnd } } ]
 
     // ============================================================================
     // MESSAGE HANDLING
@@ -218,19 +246,20 @@ module LanguageServer =
 
         match state.Documents.Get(uri) with
         | Some doc ->
-            // Calculate absolute position in the document
-            let lines = doc.Text.Split([| '\n'; '\r' |], StringSplitOptions.None)
-
-            let absolutePosition =
-                let mutable pos = 0
-
-                for i in 0 .. (min line (lines.Length - 1)) - 1 do
-                    pos <- pos + lines.[i].Length + 1 // +1 for newline
-
-                pos + character
-
-            // Get completions from CompletionProvider
-            let completions = CompletionProvider.getCompletions doc.Text absolutePosition
+            let blocks = GaBlockDetector.findGaFencedBlocks doc.Text
+            let completions =
+                if GaBlockDetector.isInsideGaBlock blocks line then
+                    // Cursor is inside a ```ga``` block — return closure names
+                    CompletionProvider.closureCompletions ()
+                else
+                    // Outside ga blocks — existing chord/scale completions
+                    let lines = doc.Text.Split([| '\n'; '\r' |], StringSplitOptions.None)
+                    let absolutePosition =
+                        let mutable pos = 0
+                        for i in 0 .. (min line (lines.Length - 1)) - 1 do
+                            pos <- pos + lines.[i].Length + 1
+                        pos + character
+                    CompletionProvider.getCompletions doc.Text absolutePosition
             let result = JObject()
             result.["items"] <- CompletionProvider.toJson completions
             successResponse id result
@@ -279,7 +308,7 @@ module LanguageServer =
             let newState = handleTextDocumentOpen state (message.Params.Value)
             let uri = message.Params.Value.["textDocument"].["uri"].ToString()
             let text = message.Params.Value.["textDocument"].["text"].ToString()
-            let diagnostics = DiagnosticsProvider.validate text
+            let diagnostics = validateDocument text
             let notification = publishDiagnostics uri diagnostics
             (newState, Some notification)
 
@@ -289,7 +318,7 @@ module LanguageServer =
 
             match newState.Documents.Get(uri) with
             | Some doc ->
-                let diagnostics = DiagnosticsProvider.validate doc.Text
+                let diagnostics = validateDocument doc.Text
                 let notification = publishDiagnostics uri diagnostics
                 (newState, Some notification)
             | None -> (newState, None)
@@ -304,6 +333,22 @@ module LanguageServer =
 
         | "textDocument/hover" ->
             let response = handleHover state (message.Params.Value) (message.Id.Value)
+            (state, Some response)
+
+        | "textDocument/semanticTokens/full" ->
+            let uri = message.Params.Value.["textDocument"].["uri"].ToString()
+            let response =
+                match state.Documents.Get(uri) with
+                | Some doc ->
+                    let blocks = GaBlockDetector.findGaFencedBlocks doc.Text
+                    let data   = GaBlockDetector.buildSemanticTokens doc.Text blocks
+                    let tokens = JObject()
+                    tokens.["data"] <- JArray(data |> List.map box |> Array.ofList)
+                    successResponse (message.Id.Value) tokens
+                | None ->
+                    let tokens = JObject()
+                    tokens.["data"] <- JArray()
+                    successResponse (message.Id.Value) tokens
             (state, Some response)
 
         | "shutdown" -> (state, Some(successResponse (message.Id.Value) (JObject())))
@@ -321,35 +366,55 @@ module LanguageServer =
         let mutable state = createServerState ()
         let mutable running = true
 
+        // Bug fix: use raw binary streams with explicit UTF-8 encoding
+        // Console.ReadLine / Console.WriteLine corrupt non-ASCII and add unwanted newlines.
+        let stdin  = new System.IO.StreamReader(Console.OpenStandardInput(),  System.Text.Encoding.UTF8)
+        let stdout = new System.IO.StreamWriter(Console.OpenStandardOutput(), System.Text.Encoding.UTF8)
+        stdout.AutoFlush <- false   // we flush explicitly after each complete message
+
         while running do
             try
-                // Read message from stdin
+                // Read headers — scan for Content-Length line
                 let contentLength =
-                    let mutable line = Console.ReadLine()
+                    let mutable cl = 0
+                    let mutable line = stdin.ReadLine()
+                    while line <> null && line <> "" do
+                        if line.StartsWith("Content-Length:") then
+                            cl <- int (line.Substring(15).Trim())
+                        line <- stdin.ReadLine()
+                    cl
 
-                    while not (line.StartsWith("Content-Length:")) do
-                        line <- Console.ReadLine()
+                // Read exactly contentLength UTF-8 bytes
+                let buffer = Array.zeroCreate<char> contentLength
+                let mutable totalRead = 0
+                while totalRead < contentLength do
+                    let n = stdin.Read(buffer, totalRead, contentLength - totalRead)
+                    if n = 0 then totalRead <- contentLength   // EOF
+                    else totalRead <- totalRead + n
+                let json = System.String(buffer, 0, totalRead)
 
-                    int (line.Substring(16).Trim())
-
-                // Skip blank line
-                Console.ReadLine() |> ignore
-
-                // Read message content
-                let buffer = Array.zeroCreate contentLength
-                Console.OpenStandardInput().Read(buffer, 0, contentLength) |> ignore
-                let json = System.Text.Encoding.UTF8.GetString(buffer)
+                // Attach the request id to initialize params so handleInitialize can read it
+                let enrichParams (msg: LspMessage) =
+                    match msg.Method, msg.Id, msg.Params with
+                    | "initialize", Some id, Some p ->
+                        let p' = p.DeepClone() :?> JObject
+                        p'.["_requestId"] <- JValue(id)
+                        { msg with Params = Some p' }
+                    | _ -> msg
 
                 // Parse and handle message
                 match parseMessage json with
                 | Ok message ->
-                    let (newState, response) = handleMessage state message
+                    let enriched = enrichParams message
+                    let (newState, response) = handleMessage state enriched
                     state <- newState
 
                     match response with
                     | Some resp ->
-                        let contentLength = System.Text.Encoding.UTF8.GetByteCount(resp)
-                        Console.WriteLine $"Content-Length: %d{contentLength}\r\n\r\n%s{resp}"
+                        // Bug fix: compute byte length, write header + body, flush once
+                        let bytes = System.Text.Encoding.UTF8.GetByteCount(resp)
+                        stdout.Write $"Content-Length: %d{bytes}\r\n\r\n%s{resp}"
+                        stdout.Flush()
                     | None -> ()
 
                     if message.Method = "exit" then

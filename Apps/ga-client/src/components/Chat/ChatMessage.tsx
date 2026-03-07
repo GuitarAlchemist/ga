@@ -1,10 +1,8 @@
 import React, { useMemo } from "react";
-import { Avatar } from "@mui/material";
+import { Avatar, Chip } from "@mui/material";
 import { Person, MusicNote, ContentCopy } from "@mui/icons-material";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { ChatMessage as ChatMessageType } from "../../store/chatAtoms";
 import MemoizedVexTab from "./MemoizedVexTab";
 import MemoizedCodeBlock from "./MemoizedCodeBlock";
@@ -43,7 +41,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ inline, className, children, ...props }: any) {
+          code({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
             const match = /language-(\w+)/.exec(className || "");
             const isVextab = className?.includes("language-vextab");
 
@@ -182,7 +180,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </button>
         )}
 
-        <div style={labelStyle}>{isUser ? 'You' : 'Guitar Alchemist'}</div>
+        <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isUser ? 'You' : 'Guitar Alchemist'}
+          {!isUser && message.routing && (
+            <Chip
+              label={message.routing.agentId}
+              size="small"
+              title={`Confidence: ${(message.routing.confidence * 100).toFixed(0)}% · ${message.routing.routingMethod}`}
+              sx={{ fontSize: '0.65rem', height: 18, bgcolor: 'rgba(255,255,255,0.12)', color: 'inherit' }}
+            />
+          )}
+        </div>
         <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{markdownContent}</div>
         <div style={footerStyle}>
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
