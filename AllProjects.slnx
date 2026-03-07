@@ -4,6 +4,9 @@
         <Platform Name="x64" />
         <Platform Name="x86" />
     </Configurations>
+    <Folder Name="/Apps/">
+        <Project Path="Apps/GaCli/GaCli.fsproj" />
+    </Folder>
     <Folder Name="/Backend/" />
     <Folder Name="/Backend/Applications/">
         <Project Path="Apps/ga-server/GaApi/GaApi.csproj" />

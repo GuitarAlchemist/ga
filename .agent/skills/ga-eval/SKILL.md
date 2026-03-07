@@ -1,6 +1,6 @@
 ---
 name: "GA Language Evaluator"
-description: "Run GA Language (GAL) scripts against the live GaApi FSI session. Use when you need to interactively explore domain closures, test pipelines, or compute music-theory results against real GA data."
+description: "Run GA Language (GAL) operations against the live domain services via the ga CLI. Use when you need to interactively explore domain closures, test pipelines, or compute music-theory results."
 ---
 
 # GA Language Evaluator
@@ -9,95 +9,43 @@ Use this skill when the user asks to **run a GAL script**, **test a closure**, o
 
 ## When to Use
 
-- "Run this GA script"
 - "What does `domain.diatonicChords` return for E minor?"
-- "Can you test this pipeline step?"
 - "List all available closures"
+- "Run this closure and show me the result"
+- "Test whether this chord symbol parses correctly"
 
-## Endpoint
+## CLI (primary — no server needed for domain closures)
 
-```
-POST https://localhost:7001/api/ga/eval
-Content-Type: application/json
-{"script": "<fsharp expression>"}
-
-GET  https://localhost:7001/api/ga/closures[?category=domain|pipeline|agent|io]
-```
-
-Override host with `GA_API_BASE_URL` env var if the server runs on a different port.
-
-## Script Syntax
-
-Scripts run inside a pre-loaded FSI session (`GaPrelude.fsx`). Everything in `GA.Business.DSL` is in scope.
-
-### Simple closure call (use `invoke` shorthand)
-```fsharp
-invoke "domain.parseChord" (Map.ofList ["symbol", box "Am7"])
-```
-
-### Multi-step pipeline (use `ga { }` computation expression)
-```fsharp
-ga {
-    let! parsed   = GaClosureRegistry.Global.Invoke("domain.parseChord",
-                        Map.ofList ["symbol", box "Cmaj9"])
-    let! diatonic = GaClosureRegistry.Global.Invoke("domain.diatonicChords",
-                        Map.ofList ["root", box "C"; "scale", box "major"])
-    return diatonic
-} |> run
-```
-
-### List all closures
-```fsharp
-listClosures ()
-```
-
-### Parallel fan-out
-```fsharp
-invoke "agent.fanOut" (Map.ofList [
-    "question",   box "What is a Neapolitan chord?"
-    "agentNames", box [| "agent.theoryAgent" |]
-])
-```
-
-## Running a Script via Bash
+The `GaCli` project (`Apps/GaCli`) calls domain closures directly in-process. No Aspire stack required.
 
 ```bash
-# Simple invocation (use -sk for localhost HTTPS with self-signed cert)
-curl -sk -X POST https://localhost:7001/api/ga/eval \
-  -H "Content-Type: application/json" \
-  -d '{"script": "invoke \"domain.diatonicChords\" (Map.ofList [\"root\", box \"G\"; \"scale\", box \"major\"])"}' \
-  | python -m json.tool
+# From repo root — build once, then use the binary directly
+dotnet build Apps/GaCli/GaCli.fsproj -c Debug -v q
+
+# Run any command
+dotnet run --project Apps/GaCli/GaCli.fsproj -- <command>
 ```
 
-For multi-line scripts, write the script to a temp file and use `jq` to build the payload:
+### Commands
+
+```
+ga closures [domain|pipeline|agent|io]   List closures (optionally filtered by category)
+ga chord <symbol>                         Parse a chord symbol → JSON structure
+ga transpose <symbol> <semitones>         Transpose a chord by N semitones
+ga diatonic <root> [major|minor]          Get the 7 diatonic triads for a key
+ga progression <sym...> --by <n>          Transpose every chord in a progression
+ga ask <question>                         Ask the GA chatbot (requires server running)
+```
+
+### Examples
 
 ```bash
-SCRIPT='ga {
-    let! chords = GaClosureRegistry.Global.Invoke("domain.diatonicChords",
-                      Map.ofList ["root", box "F"; "scale", box "major"])
-    return chords
-} |> run'
-
-curl -sk -X POST https://localhost:7001/api/ga/eval \
-  -H "Content-Type: application/json" \
-  -d "$(jq -n --arg s "$SCRIPT" '{script: $s}')"
+dotnet run --project Apps/GaCli/GaCli.fsproj -- closures
+dotnet run --project Apps/GaCli/GaCli.fsproj -- chord Am7
+dotnet run --project Apps/GaCli/GaCli.fsproj -- transpose Cmaj9 5
+dotnet run --project Apps/GaCli/GaCli.fsproj -- diatonic G major
+dotnet run --project Apps/GaCli/GaCli.fsproj -- progression Am F C G --by 7
 ```
-
-## Interpreting Results
-
-The endpoint returns:
-```json
-{
-  "success": true,
-  "output":  "(any stdout from the FSI session)",
-  "error":   null,
-  "value":   "(string representation of the return value)"
-}
-```
-
-- **`value`**: the result of the expression — may be a JSON string (from `domain.*` closures), an F# array repr, or a plain string from agent closures.
-- **`output`**: any `printfn` / `listClosures()` output.
-- **`error`**: compilation or runtime error message.
 
 ## Available Closures (quick reference)
 
@@ -115,10 +63,21 @@ The endpoint returns:
 | `io.httpGet` | `url: string` | response body |
 | `io.httpPost` | `url: string`, `body: string` | response body |
 
-Full list at runtime: `GET /api/ga/closures`
+Full list at runtime: `dotnet run --project Apps/GaCli/GaCli.fsproj -- closures`
+
+## When the Aspire Stack Is Running
+
+For agent closures (theory/tab/critic) and FSI scripts, the GaApi must be up.
+The eval endpoint accepts raw F# expressions:
+
+```bash
+curl -s -X POST http://localhost:5232/api/ga/eval \
+  -H "Content-Type: application/json" \
+  -d "$(jq -n --arg s 'invoke "domain.diatonicChords" (Map.ofList ["root", box "G"; "scale", box "major"])' '{script:$s}')"
+```
 
 ## Formatting Output
 
-- For chord arrays (`string[]`), display as a numbered list or a one-liner like `I=C  ii=Dm  iii=Em  IV=F  V=G  vi=Am  vii°=Bdim`
-- For JSON chord structures, parse and show root + quality + extensions in plain language
-- For agent responses, display the text verbatim then offer follow-up options
+- Chord JSON `{"root":"A","quality":"minor","components":["ext:7"],"bass":null}` → **Am7** = A minor, minor 7th extension
+- Diatonic arrays → display as Roman numeral table: `I=G  ii=Am  iii=Bm  IV=C  V=D  vi=Em  vii°=F#dim`
+- Agent responses → display verbatim, then offer follow-up
