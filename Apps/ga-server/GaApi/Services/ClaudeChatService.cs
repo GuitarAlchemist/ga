@@ -75,7 +75,7 @@ public class ClaudeChatService : IChatService
 
     private static List<MessageParam> BuildMessages(List<ChatMessage>? history, string userMessage)
     {
-        var messages = new List<MessageParam>();
+        List<MessageParam> messages = [];
 
         if (history != null)
         {

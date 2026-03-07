@@ -18,11 +18,7 @@ public sealed class ChatbotSessionOrchestrator(
     IOptionsSnapshot<ChatbotOptions> options,
     ILogger<ChatbotSessionOrchestrator> logger)
 {
-    private readonly IChatService _chatClient = chatClient;
-    private readonly ILogger<ChatbotSessionOrchestrator> _logger = logger;
     private readonly ChatbotOptions _options = options.Value;
-    private readonly ISemanticKnowledgeSource _semanticKnowledge = semanticKnowledge;
-    private readonly ISessionContextProvider _sessionContext = sessionContext;
 
     public List<ChatMessage> NormalizeHistory(IEnumerable<ChatMessage>? history)
     {
@@ -64,7 +60,7 @@ public sealed class ChatbotSessionOrchestrator(
         var normalizedHistory = NormalizeHistory(request.ConversationHistory);
         var systemPrompt = await BuildSystemPromptAsync(request.Message, request.UseSemanticSearch, cancellationToken);
 
-        await foreach (var chunk in _chatClient.ChatStreamAsync(
+        await foreach (var chunk in chatClient.ChatStreamAsync(
                            request.Message,
                            normalizedHistory,
                            systemPrompt,
@@ -98,7 +94,7 @@ public sealed class ChatbotSessionOrchestrator(
     {
         var systemPrompt = await BuildSystemPromptAsync(message, useSemanticSearch, cancellationToken);
 
-        return await _chatClient.ChatAsync(
+        return await chatClient.ChatAsync(
             message,
             history,
             systemPrompt,
@@ -109,7 +105,7 @@ public sealed class ChatbotSessionOrchestrator(
     {
         try
         {
-            var results = await _semanticKnowledge.SearchAsync(
+            var results = await semanticKnowledge.SearchAsync(
                 message,
                 Math.Max(1, _options.SemanticSearchLimit),
                 cancellationToken);
@@ -138,7 +134,7 @@ public sealed class ChatbotSessionOrchestrator(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Semantic enrichment failed. Continuing without additional context.");
+            logger.LogWarning(ex, "Semantic enrichment failed. Continuing without additional context.");
             return null;
         }
     }
@@ -153,7 +149,7 @@ public sealed class ChatbotSessionOrchestrator(
         prompt.AppendLine();
 
         // Add session context if available
-        var sessionCtx = _sessionContext.GetContext();
+        var sessionCtx = sessionContext.GetContext();
         if (sessionCtx != null)
         {
             prompt.AppendLine("CURRENT SESSION CONTEXT:");

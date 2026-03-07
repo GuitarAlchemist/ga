@@ -10,3 +10,10 @@ public class ChatRequest
     public List<ChatMessage>? ConversationHistory { get; set; }
     public bool UseSemanticSearch { get; set; } = true;
 }
+
+/// <summary>Non-streaming JSON response returned by POST /api/chatbot/chat.</summary>
+public record ChatJsonResponse(
+    string Answer,
+    string AgentId,
+    float Confidence,
+    string RoutingMethod);

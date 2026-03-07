@@ -124,16 +124,19 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddProblemDetails();
 
-// Global rate limiting: 60 requests/minute per IP; queue up to 5 overflow requests
+// Per-IP rate limiting: 60 requests/minute, queue up to 5 overflow requests
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("global", o =>
-    {
-        o.PermitLimit = 60;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        o.QueueLimit = 5;
-    });
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? ctx.Request.Headers.Host.ToString(),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            }));
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 

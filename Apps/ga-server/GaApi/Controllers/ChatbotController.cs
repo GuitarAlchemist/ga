@@ -100,6 +100,33 @@ public class ChatbotController(
     }
 
     /// <summary>
+    ///     Send a message to the chatbot and receive a complete JSON response.
+    ///     Intended for MCP tool callers and other non-streaming clients.
+    /// </summary>
+    [HttpPost("chat")]
+    [ProducesResponseType(typeof(ChatJsonResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ChatJsonResponse>> Chat(
+        [FromBody] ChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        var message = request.Message?.Trim();
+        if (string.IsNullOrWhiteSpace(message))
+            return BadRequest(new { error = "Message cannot be empty." });
+
+        var response = await orchestrator.AnswerAsync(
+            new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+
+        var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+        return Ok(new ChatJsonResponse(
+            response.NaturalLanguageAnswer ?? string.Empty,
+            routing.AgentId,
+            routing.Confidence,
+            routing.RoutingMethod));
+    }
+
+    /// <summary>
     ///     Check whether the Ollama service is reachable and the chatbot is ready to respond.
     /// </summary>
     [HttpGet("status")]
@@ -123,8 +150,8 @@ public class ChatbotController(
     [HttpGet("examples")]
     [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
     public ActionResult<List<string>> GetExamples() =>
-        Ok(new List<string>
-        {
+        Ok((List<string>)
+        [
             "Show me some easy beginner chords",
             "What are the modes of the major scale?",
             "Explain voice leading in jazz",
@@ -135,7 +162,7 @@ public class ChatbotController(
             "What's the difference between major and minor?",
             "How do I improve my fingerpicking?",
             "What are some common chord progressions?"
-        });
+        ]);
 
     // ── helpers ──────────────────────────────────────────────────────────────
 

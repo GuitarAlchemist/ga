@@ -26,8 +26,8 @@ public class OllamaChatService : IChatService
         _httpClient = httpClientFactory.CreateClient("Ollama");
         _chatbotOptions = chatOptions.CurrentValue;
         _model = _chatbotOptions.Model ?? configuration["Ollama:ChatModel"] ?? "llama3.2:3b";
-        var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
-        _httpClient.BaseAddress = new(baseUrl);
+        // BaseAddress is configured on the named "Ollama" HttpClient in AddLlmServices —
+        // do not mutate it here to avoid singleton thread-safety issues.
         var timeoutSeconds = Math.Max(5, _chatbotOptions.StreamTimeoutSeconds);
         _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         _logger = logger;

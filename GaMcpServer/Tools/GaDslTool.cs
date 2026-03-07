@@ -20,12 +20,17 @@ using GaCat = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
 public static class GaDslTool
 {
     // ── MCP closure allowlist ─────────────────────────────────────────────────
-    // io.* and agent.* closures have side-effects (file I/O, outbound HTTP) and
-    // must not be reachable from unauthenticated MCP clients.
+    // io.*, agent.*, and tab.* closures have side-effects (file I/O, outbound
+    // HTTP) and must not be reachable from unauthenticated MCP clients via the
+    // generic GaInvokeClosure escape hatch.
+    // tab.* is blocked here because tab.fetchUrl makes unchecked HTTP requests
+    // to caller-supplied URLs (SSRF). Use the dedicated GaSearchTabs tool for
+    // tab searching — it calls tab.fetch with a fixed query parameter only.
 
     private static bool IsPermittedForMcp(string name) =>
         !name.StartsWith("io.", StringComparison.OrdinalIgnoreCase) &&
-        !name.StartsWith("agent.", StringComparison.OrdinalIgnoreCase);
+        !name.StartsWith("agent.", StringComparison.OrdinalIgnoreCase) &&
+        !name.StartsWith("tab.", StringComparison.OrdinalIgnoreCase);
 
     // ── Bridge ────────────────────────────────────────────────────────────────
 

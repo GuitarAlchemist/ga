@@ -33,6 +33,10 @@ public class OllamaGroundedNarrator(
             var validation = validator.Validate(response, candidates);
             return validation.CleanedMessage;
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "[Ollama] Connection failed, using fallback formatting");
@@ -72,7 +76,7 @@ public class OllamaGroundedNarrator(
         if (candidates.Count == 0)
             return "No matching voicings found in the database.";
 
-        var lines = new List<string> { $"Found {candidates.Count} voicing(s) for '{query}':" };
+        List<string> lines = [$"Found {candidates.Count} voicing(s) for '{query}':"];
 
         foreach (var c in candidates.Take(5))
         {
