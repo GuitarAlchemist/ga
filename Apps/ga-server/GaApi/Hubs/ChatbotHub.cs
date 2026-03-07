@@ -20,6 +20,7 @@ public sealed class ChatbotHub(
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
     private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
+    private const int MaxStoredMessages = 50;
 
     public async Task SendMessage(string message, bool useSemanticSearch = true)
     {
@@ -67,13 +68,15 @@ public sealed class ChatbotHub(
                 await Clients.Caller.SendAsync("ReceiveMessageChunk", chunk);
             }
 
-            // Normalise and store history
+            // Normalise and store history; cap at MaxStoredMessages to bound per-session memory
             var updatedHistory = sessionOrchestrator.NormalizeHistory(
                 history.Concat([
                     new ChatMessage { Role = "user", Content = trimmedMessage },
                     new ChatMessage { Role = "assistant", Content = answer }
                 ]));
-            _conversations[connectionId] = updatedHistory;
+            _conversations[connectionId] = updatedHistory.Count > MaxStoredMessages
+                ? [.. updatedHistory.TakeLast(MaxStoredMessages)]
+                : updatedHistory;
 
             await Clients.Caller.SendAsync("MessageComplete", answer);
         }
@@ -154,15 +157,6 @@ public sealed class ChatbotHub(
         await base.OnDisconnectedAsync(exception);
     }
 
-    private static IEnumerable<string> SplitIntoChunks(string text)
-    {
-        if (string.IsNullOrEmpty(text)) yield break;
-
-        var sentences = System.Text.RegularExpressions.Regex
-            .Split(text, @"(?<=[.!?])\s+")
-            .Where(s => !string.IsNullOrWhiteSpace(s));
-
-        foreach (var sentence in sentences)
-            yield return sentence;
-    }
+    private static IEnumerable<string> SplitIntoChunks(string text) =>
+        Helpers.SseChunker.SplitIntoChunks(text);
 }

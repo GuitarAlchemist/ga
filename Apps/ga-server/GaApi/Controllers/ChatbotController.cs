@@ -194,20 +194,6 @@ public class ChatbotController(
     private Task WriteSseErrorAsync(string errorMessage, CancellationToken ct) =>
         WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }), ct);
 
-    /// <summary>
-    /// Splits a response into sentence-boundary chunks for progressive rendering.
-    /// Splits on sentence-ending punctuation; long sentences are emitted as single chunks.
-    /// </summary>
-    private static IEnumerable<string> SplitIntoChunks(string text)
-    {
-        if (string.IsNullOrEmpty(text)) yield break;
-
-        // Split on sentence boundaries (.  !  ?) keeping delimiter attached
-        var sentences = System.Text.RegularExpressions.Regex
-            .Split(text, @"(?<=[.!?])\s+")
-            .Where(s => !string.IsNullOrWhiteSpace(s));
-
-        foreach (var sentence in sentences)
-            yield return sentence;
-    }
+    private static IEnumerable<string> SplitIntoChunks(string text) =>
+        Helpers.SseChunker.SplitIntoChunks(text);
 }
