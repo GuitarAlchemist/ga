@@ -46,7 +46,7 @@ public class TabPresentationService(
                 DisplayName: displayName,
                 Shape: doc.Diagram,
                 Score: 1.0,
-                ExplanationFacts: explanation,
+                ExplanationFacts: new VoicingExplanationDto(explanation.Summary, [..explanation.Tags], [..explanation.Techniques], [..explanation.Styles], explanation.SpectralCentroid),
                 ExplanationText: explanation.Summary
             ));
         }

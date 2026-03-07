@@ -19,6 +19,14 @@ using GaCat = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
 [McpServerToolType]
 public static class GaDslTool
 {
+    // ── MCP closure allowlist ─────────────────────────────────────────────────
+    // io.* and agent.* closures have side-effects (file I/O, outbound HTTP) and
+    // must not be reachable from unauthenticated MCP clients.
+
+    private static bool IsPermittedForMcp(string name) =>
+        !name.StartsWith("io.", StringComparison.OrdinalIgnoreCase) &&
+        !name.StartsWith("agent.", StringComparison.OrdinalIgnoreCase);
+
     // ── Bridge ────────────────────────────────────────────────────────────────
 
     private static async Task<string> InvokeAsync(
@@ -183,7 +191,11 @@ public static class GaDslTool
         [Description("Closure name, e.g. 'domain.queryChords', 'tab.parseAscii', 'domain.projectChord'")] string name,
         [Description("JSON object of input parameters, e.g. '{\"key\":\"G\",\"scale\":\"major\"}'")]
         string paramsJson)
-        => InvokeJsonAsync(name, paramsJson);
+    {
+        if (!IsPermittedForMcp(name))
+            return Task.FromResult($"Error: closure '{name}' is not accessible via MCP (side-effect categories are restricted).");
+        return InvokeJsonAsync(name, paramsJson);
+    }
 
     [McpServerTool]
     [Description(

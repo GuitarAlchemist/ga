@@ -50,10 +50,6 @@ module GaBlockDetector =
     let isInsideGaBlock (blocks: GaFencedBlock list) (line: int) : bool =
         blocks |> List.exists (fun b -> line >= b.InnerStart && line <= b.InnerEnd)
 
-    /// Given a line inside a ga block, return the block-relative (0-based) line index.
-    let toBlockRelativeLine (block: GaFencedBlock) (docLine: int) : int =
-        docLine - block.InnerStart
-
     /// Given a block-relative line index, convert to document-level line index.
     let toDocumentLine (block: GaFencedBlock) (blockLine: int) : int =
         blockLine + block.InnerStart

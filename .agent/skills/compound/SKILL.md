@@ -16,12 +16,27 @@ The **compound engineering flywheel** for Guitar Alchemist. Run this after shipp
 
 ## What It Does
 
+Six-step loop — every completed feature feeds back into the language:
+
+```
+Work → Reflect → Compound → Promote → Encode → Govern
+```
+
+| Step | Who | What |
+|---|---|---|
+| **Work** | — | Feature is done; git diff is the input |
+| **Reflect** | compound-researcher | Mine changed files for repeated patterns |
+| **Compound** | compound-researcher | Rank patterns by recurrence + impact |
+| **Promote** | fsharp-architect | Decide tier (helper / DU / CE / DSL / MCP tool) per pattern |
+| **Encode** | fsharp-architect | Produce concrete F# design sketch with usage examples |
+| **Govern** | grammar-governor | Audit stability; block or clear each promotion |
+
 ```
 Recent work
-    └─► compound-researcher  (finds repeated patterns)
-            └─► fsharp-architect   (proposes F# promotions)
-                    └─► grammar-governor  (audits stability)
-                              └─► Compound Report  (actionable output)
+    └─► compound-researcher  (Reflect + Compound)
+            └─► fsharp-architect   (Promote + Encode)
+                    └─► grammar-governor  (Govern)
+                              └─► Compound Report
 ```
 
 ## How to Invoke

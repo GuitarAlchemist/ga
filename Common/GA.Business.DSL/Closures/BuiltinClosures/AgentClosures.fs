@@ -12,8 +12,10 @@ open GA.Business.DSL.Closures.GaClosureRegistry
 
 let private httpClient =
     let handler = new HttpClientHandler()
-    handler.ServerCertificateCustomValidationCallback <-
-        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    // Bypass self-signed dev certs only in Development. Never active in staging/production.
+    if System.Environment.GetEnvironmentVariable "DOTNET_ENVIRONMENT" = "Development" then
+        handler.ServerCertificateCustomValidationCallback <-
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     let c = new HttpClient(handler)
     c.Timeout <- System.TimeSpan.FromSeconds 30.0
     c

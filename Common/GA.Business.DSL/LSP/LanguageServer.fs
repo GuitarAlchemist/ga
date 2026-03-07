@@ -184,26 +184,6 @@ module LanguageServer =
     // DIAGNOSTICS
     // ============================================================================
 
-    /// Get diagnostics for a document
-    let getDiagnostics (text: string) : Diagnostic list =
-        let diagnostics = ResizeArray<Diagnostic>()
-
-        // Try to parse as chord progression
-        match ChordProgressionParser.parse text with
-        | Error error ->
-            let diagnostic =
-                { Range =
-                    { Start = { Line = 0; Character = 0 }
-                      End = { Line = 0; Character = text.Length } }
-                  Severity = DiagnosticSeverity.Error
-                  Message = error
-                  Source = Some "chord-progression-parser" }
-
-            diagnostics.Add(diagnostic)
-        | Ok _ -> ()
-
-        List.ofSeq diagnostics
-
     /// Publish diagnostics for a document
     let publishDiagnostics (uri: string) (diagnostics: Diagnostic list) : string =
         let notification = JObject()

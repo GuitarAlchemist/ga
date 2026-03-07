@@ -103,23 +103,6 @@ public class GaSurfaceSyntaxParserTests
     }
 
     // ============================================================================
-    // PARSE — workflow
-    // ============================================================================
-
-    [Test]
-    public void ParseScript_Workflow_Succeeds()
-    {
-        var src = """
-                  workflow my-flow {
-                    node step1 kind=domain { closure = "domain.parseChord" output = chord }
-                  }
-                  """;
-        var result = GaSurfaceSyntaxParser.parseScript(src);
-        Assert.That(result.IsOk, Is.True);
-        Assert.That(result.ResultValue.Statements.Head.IsWorkflowDecl, Is.True);
-    }
-
-    // ============================================================================
     // PARSE — let / do
     // ============================================================================
 

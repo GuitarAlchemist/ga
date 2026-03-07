@@ -46,7 +46,6 @@ type GaSurfaceStatement =
     | MetaDecl     of props: MetaProp list
     | PolicyDecl   of props: MetaProp list
     | PipelineDecl of name: string * steps: GaSurfaceStatement list
-    | WorkflowDecl of name: string * body:  GaSurfaceStatement list
     | NodeDecl     of name: string * kind: NodeKind * body: NodeBody
     | EdgeDecl     of from: string * ``to``: string
     | LetBind      of name: string * value: string
@@ -166,10 +165,6 @@ let private pipelineDecl : Parser<GaSurfaceStatement,unit> =
     pstring "pipeline" >>. ws1 >>. name .>> ws .>>. block
     |>> fun (n, steps) -> PipelineDecl (n, steps)
 
-let private workflowDecl : Parser<GaSurfaceStatement,unit> =
-    pstring "workflow" >>. ws1 >>. name .>> ws .>>. block
-    |>> fun (n, body) -> WorkflowDecl (n, body)
-
 let private nodeDecl : Parser<GaSurfaceStatement,unit> =
     pstring "node" >>. ws1 >>. name .>> ws1 .>>.
         (attempt (kindAttr .>> ws .>>. propBagBody    |>> fun (k, b) -> k, b)
@@ -192,7 +187,6 @@ do statementRef.Value <-
     choice
         [ attempt metaDecl
           attempt policyDecl
-          attempt workflowDecl
           attempt pipelineDecl
           attempt nodeDecl
           attempt edgeDecl
@@ -255,15 +249,6 @@ let rec private desugarStmt (indent: string) (edges: (string * string) list) (st
     | PolicyDecl props ->
         let lines = props |> List.map (fun p -> $"{indent}//   {p.Key} = {p.Value}")
         $"{indent}// ── policy ─────────────────────────────────────\n" + String.concat "\n" lines
-
-    | WorkflowDecl (name, body) ->
-        let innerEdges = collectEdges body
-        let inner =
-            body
-            |> List.filter (function EdgeDecl _ -> false | _ -> true)
-            |> List.map (desugarStmt (indent + "    ") innerEdges)
-            |> String.concat "\n"
-        $"{indent}// ── workflow \"{name}\" ──────────────────────────\n{inner}"
 
     | PipelineDecl (name, steps) ->
         let innerEdges = collectEdges steps

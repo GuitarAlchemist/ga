@@ -113,7 +113,7 @@ public sealed class ChatbotHub(
         try
         {
             var cancellationToken = Context.ConnectionAborted;
-            var results = await semanticKnowledge.SearchAsync(query, limit, cancellationToken);
+            var results = await semanticKnowledge.SearchAsync(query, Math.Clamp(limit, 1, 50), cancellationToken);
 
             return
             [

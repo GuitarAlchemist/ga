@@ -1,6 +1,5 @@
 namespace GA.Business.Core.Orchestration.Models;
 
-using GA.Business.ML.Musical.Explanation;
 using GA.Domain.Core.Theory.Harmony.Progressions;
 
 /// <summary>
@@ -38,6 +37,19 @@ public sealed class QueryFilters
 }
 
 /// <summary>
+/// Self-contained explanation of a voicing — mirrors VoicingExplanation from GA.Business.ML
+/// without taking a direct dependency on the ML layer.
+/// Map from VoicingExplanation at the Orchestration service boundary.
+/// </summary>
+public sealed record VoicingExplanationDto(
+    string Summary,
+    IReadOnlyList<string> Tags,
+    IReadOnlyList<string> Techniques,
+    IReadOnlyList<string> Styles,
+    double? SpectralCentroid
+);
+
+/// <summary>
 /// A single candidate voicing retrieved from OPTIC-K.
 /// </summary>
 public sealed record CandidateVoicing(
@@ -45,7 +57,7 @@ public sealed record CandidateVoicing(
     string DisplayName,
     string Shape,
     double Score,
-    VoicingExplanation ExplanationFacts,
+    VoicingExplanationDto ExplanationFacts,
     string ExplanationText
 );
 

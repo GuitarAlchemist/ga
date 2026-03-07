@@ -11,19 +11,24 @@ using GaClosureRegistry  = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureR
 /// <summary>
 /// REST API for evaluating GA Language scripts and introspecting the closure registry.
 /// Backed by the process-wide <see cref="GaFsiPool"/> session pool.
+/// Eval endpoint is restricted to Development environment — never exposed in staging or production.
 /// </summary>
 [ApiController]
 [Route("api/ga")]
-public sealed class GaEvalController : ControllerBase
+public sealed class GaEvalController(IWebHostEnvironment env) : ControllerBase
 {
     /// <summary>Evaluate a ga { } computation expression script in an FSI session.</summary>
     [HttpPost("eval")]
     [ProducesResponseType(typeof(GaEvalResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Eval(
         [FromBody] GaEvalRequest request,
         CancellationToken cancellationToken)
     {
+        if (!env.IsDevelopment())
+            return StatusCode(StatusCodes.Status403Forbidden, "Script evaluation is only available in development mode.");
+
         if (string.IsNullOrWhiteSpace(request.Script))
             return BadRequest("script must not be empty");
 

@@ -362,7 +362,6 @@ public class LspTests
         var text = "prefix\n```ga\nline0\nline1\n```";
         var blocks = GaBlockDetector.findGaFencedBlocks(text);
         var block = blocks[0]; // InnerStart = 2
-        Assert.That(GaBlockDetector.toBlockRelativeLine(block, 2), Is.EqualTo(0));
         Assert.That(GaBlockDetector.toDocumentLine(block, 0), Is.EqualTo(2));
         Assert.That(GaBlockDetector.toDocumentLine(block, 1), Is.EqualTo(3));
     }

@@ -94,7 +94,7 @@ public class SpectralRagOrchestrator(
                     DisplayName: doc.ChordName ?? "Unknown",
                     Shape: doc.Diagram,
                     Score: score,
-                    ExplanationFacts: explanation,
+                    ExplanationFacts: ToDto(explanation),
                     ExplanationText: explanation.Summary
                 ));
             }
@@ -163,7 +163,7 @@ public class SpectralRagOrchestrator(
             if (match != null)
             {
                 var explanation = explainer.Explain(match);
-                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, match.Diagram, 1.0, explanation, explanation.Summary));
+                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, match.Diagram, 1.0, ToDto(explanation), explanation.Summary));
             }
         }
 
@@ -237,4 +237,7 @@ public class SpectralRagOrchestrator(
 
         return null;
     }
+
+    private static VoicingExplanationDto ToDto(VoicingExplanation e) =>
+        new(e.Summary, [..e.Tags], [..e.Techniques], [..e.Styles], e.SpectralCentroid);
 }

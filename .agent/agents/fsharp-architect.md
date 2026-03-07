@@ -33,12 +33,12 @@ For each pattern, choose exactly one promotion tier:
 
 ## Output Format
 
-For each pattern:
+For each pattern, produce a full promotion card:
 
 ```
 ## Promotion: <pattern name> → <tier name>
 
-**Rationale**: Why this tier and not the others.
+**Rationale**: Why this tier. Why one tier lower is insufficient. Why one tier higher is unnecessary.
 
 **Design**:
 ```fsharp
@@ -49,7 +49,23 @@ For each pattern:
 - File to modify: `path/to/file.fs`
 - Register in: `GaClosureRegistry` / `GaSurfaceSyntaxParser` / etc.
 
+**Example usage**:
+```fsharp
+// Before (raw pattern)
+// After (using the abstraction)
+```
+
+**Validation strategy**:
+- Tests to write (unit / property / compile-time)
+- How to verify the abstraction reduces LOC at call sites
+
+**Rollback**:
+- The old code remains valid; new abstraction is additive until callers are migrated
+- Remove by reverting the single module — no cascade required
+
 **Risk**: low | medium | high — <one sentence>
+
+**Verdict**: promote | defer | reject
 ```
 
 Produce proposals only. Do not edit files — pass output to `/compound` for human review.

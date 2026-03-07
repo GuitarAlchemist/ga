@@ -142,6 +142,45 @@ Full report: `docs/compound/2026-03-07-phase-3-4-dsl.md`
 - Notebook URL from the browser address bar can be used directly with `add_notebook`.
 - Library file: `%LOCALAPPDATA%\notebooklm-mcp\Data\library.json`
 
+## Additions from Source Doc (2026-03-07)
+
+After reviewing the source ChatGPT brainstorm ("Compounding the Compounding"), three targeted additions were incorporated:
+
+### 1. Six-step loop terminology in `/compound` SKILL.md
+
+The pipeline was reframed as: **Work → Reflect → Compound → Promote → Encode → Govern**
+
+This makes the purpose of each agent explicit:
+- `compound-researcher` covers Reflect + Compound
+- `fsharp-architect` covers Promote + Encode
+- `grammar-governor` covers Govern
+
+### 2. Richer promotion cards in `fsharp-architect.md`
+
+Each proposal now requires:
+- **Why one tier lower is insufficient** — forces the architect to justify the chosen tier
+- **Example usage** (before/after)
+- **Validation strategy** — what tests to write, how to verify LOC reduction
+- **Rollback** — must be additive and removable without cascade
+- **Verdict**: `promote | defer | reject`
+
+### 3. Round-trip validation check in `grammar-governor.md`
+
+The governor now explicitly checks that each proposed abstraction:
+- Can **encode** all existing call sites (no upward semantic loss)
+- Can **desugar** back to the layer below (no downward semantic loss)
+- Can be **removed** without touching anything outside its own module
+
+`[NO ROUNDTRIP]` is a new blocking flag category.
+
+### Not incorporated (deferred)
+- **Phase 1–5 roadmap** (F# builders → grammar capture → controlled invention → external absorption → meta-compounding): GA is at Phase 1/2 boundary. Defer until Phase 5 LSP work ships.
+- **`import-external-grammar` skill**: relevant for absorbing OpenAPI/GraphQL schema patterns. Defer until external integrations expand.
+- **`evolve` CE custom operation**: the source doc's ProtoBuilder uses `[<CustomOperation("evolve")>]` to log compounding intent. Interesting but adds CE surface area for logging alone — defer.
+- **Memory engine (SQLite + vector + symbolic lineage)**: full automation of grammar history. Too early; manual Compound Reports work well for now.
+
+---
+
 ## Reuse
 
 Run `/ga evolve` (or `/compound`) after any feature branch to trigger the full loop.
