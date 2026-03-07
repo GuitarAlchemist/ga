@@ -18,6 +18,8 @@ public sealed class ChatbotHub(
     : Hub
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
+    private static readonly SemaphoreSlim _concurrencyGate = new(3, 3);
+    private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
 
     public async Task SendMessage(string message, bool useSemanticSearch = true)
     {
@@ -31,7 +33,17 @@ public sealed class ChatbotHub(
         }
 
         var history = _conversations.GetOrAdd(connectionId, _ => []);
-        var cancellationToken = Context.ConnectionAborted;
+        var connectionAborted = Context.ConnectionAborted;
+
+        if (!await _concurrencyGate.WaitAsync(TimeSpan.Zero, connectionAborted))
+        {
+            await Clients.Caller.SendAsync("Error", "Service is busy. Please try again in a few seconds.");
+            return;
+        }
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
+        cts.CancelAfter(_pipelineBudget);
+        var cancellationToken = cts.Token;
 
         try
         {
@@ -73,6 +85,10 @@ public sealed class ChatbotHub(
         {
             logger.LogError(ex, "Error processing message from {ConnectionId}", connectionId);
             await Clients.Caller.SendAsync("Error", "Failed to process message. Please try again.");
+        }
+        finally
+        {
+            _concurrencyGate.Release();
         }
     }
 

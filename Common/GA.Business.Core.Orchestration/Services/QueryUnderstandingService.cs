@@ -18,7 +18,7 @@ public class QueryUnderstandingService(
     private string OllamaBaseUrl =>
         configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
 
-    public async Task<QueryFilters?> ExtractFiltersAsync(string userQuery)
+    public async Task<QueryFilters?> ExtractFiltersAsync(string userQuery, CancellationToken ct = default)
     {
         try
         {
@@ -40,10 +40,10 @@ public class QueryUnderstandingService(
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var client = httpClientFactory.CreateClient("ollama");
-            var response = await client.PostAsync($"{OllamaBaseUrl}/api/generate", content);
+            var response = await client.PostAsync($"{OllamaBaseUrl}/api/generate", content, ct);
             response.EnsureSuccessStatusCode();
 
-            var responseJson = await response.Content.ReadAsStringAsync();
+            var responseJson = await response.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(responseJson);
 
             var llmOutput = doc.RootElement.GetProperty("response").GetString();

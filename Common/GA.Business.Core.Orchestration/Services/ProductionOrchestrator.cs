@@ -27,7 +27,7 @@ public class ProductionOrchestrator(
 {
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
-        var filters = await queryUnderstandingService.ExtractFiltersAsync(req.Message);
+        var filters = await queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
         var routing = await router.RouteAsync(req.Message, ct);
 
         var routingMetadata = new AgentRoutingMetadata(
