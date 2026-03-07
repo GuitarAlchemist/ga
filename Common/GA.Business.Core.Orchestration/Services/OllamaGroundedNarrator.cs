@@ -5,6 +5,7 @@ using System.Text.Json;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Narrator that uses a local Ollama LLM for natural language responses.
@@ -14,7 +15,8 @@ public class OllamaGroundedNarrator(
     GroundedPromptBuilder promptBuilder,
     ResponseValidator validator,
     IHttpClientFactory httpClientFactory,
-    IConfiguration configuration) : IGroundedNarrator
+    IConfiguration configuration,
+    ILogger<OllamaGroundedNarrator> logger) : IGroundedNarrator
 {
     private const string DefaultModel = "llama3.2";
 
@@ -33,7 +35,7 @@ public class OllamaGroundedNarrator(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Ollama] Connection failed ({ex.Message}), using fallback formatting.");
+            logger.LogWarning(ex, "[Ollama] Connection failed, using fallback formatting");
             return FormatFallback(query, candidates);
         }
     }

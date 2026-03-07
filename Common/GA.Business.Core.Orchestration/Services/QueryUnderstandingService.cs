@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Extracts structured search constraints from a natural language user query via LLM.
@@ -11,7 +12,8 @@ using Microsoft.Extensions.Configuration;
 public class QueryUnderstandingService(
     DomainMetadataPrompter prompter,
     IHttpClientFactory httpClientFactory,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ILogger<QueryUnderstandingService> logger)
 {
     private const string DefaultModel = "llama3.2";
 
@@ -56,7 +58,7 @@ public class QueryUnderstandingService(
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[QueryUnderstanding] Failed to extract filters: {ex.Message}");
+            logger.LogWarning(ex, "[QueryUnderstanding] Failed to extract filters");
             return null;
         }
     }

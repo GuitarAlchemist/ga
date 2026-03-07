@@ -1,9 +1,11 @@
+using System.Threading.RateLimiting;
 using AllProjects.ServiceDefaults;
 using GA.Business.Core.Session;
 using GaApi.Extensions;
 using GaApi.Hubs;
 using GaApi.Services;
 using GaApi.GraphQL.Queries;
+using Microsoft.AspNetCore.RateLimiting;
 using MudBlazor;
 using MudBlazor.Services;
 using Path = System.IO.Path;
@@ -122,6 +124,19 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddProblemDetails();
 
+// Global rate limiting: 60 requests/minute per IP; queue up to 5 overflow requests
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("global", o =>
+    {
+        o.PermitLimit = 60;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 5;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 var app = builder.Build();
 
 
@@ -145,8 +160,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 
 // Use rate limiting (must be before UseAuthorization)
-// TODO: Fix rate limiting for .NET 9 - API changed
-// app.UseRateLimiter();
+app.UseRateLimiter();
 
 // Enable static files for Blazor
 app.UseStaticFiles();

@@ -16,10 +16,10 @@ The **compound engineering flywheel** for Guitar Alchemist. Run this after shipp
 
 ## What It Does
 
-Six-step loop — every completed feature feeds back into the language:
+Seven-step loop — every completed feature feeds back into the language and the docs:
 
 ```
-Work → Reflect → Compound → Promote → Encode → Govern
+Work → Reflect → Compound → Promote → Encode → Govern → Document
 ```
 
 | Step | Who | What |
@@ -30,13 +30,15 @@ Work → Reflect → Compound → Promote → Encode → Govern
 | **Promote** | fsharp-architect | Decide tier (helper / DU / CE / DSL / MCP tool) per pattern |
 | **Encode** | fsharp-architect | Produce concrete F# design sketch with usage examples |
 | **Govern** | grammar-governor | Audit stability; block or clear each promotion |
+| **Document** | codebase-documenter | Snapshot current system state as `.md` files |
 
 ```
 Recent work
     └─► compound-researcher  (Reflect + Compound)
             └─► fsharp-architect   (Promote + Encode)
                     └─► grammar-governor  (Govern)
-                              └─► Compound Report
+                              └─► codebase-documenter  (Document)
+                                          └─► Compound Report + Snapshots
 ```
 
 ## How to Invoke
@@ -78,7 +80,18 @@ Delegate to `grammar-governor`:
 
 > "Audit the current GA Language grammar and closure registry for bloat or instability. Produce a stability verdict."
 
-### Step 5 — Produce Compound Report
+### Step 5 — Run codebase-documenter
+
+Delegate to `codebase-documenter`:
+
+> "Produce the end-of-cycle documentation snapshot for this cycle. Branch: [branch]. Feature: [feature name]. Use the governor verdict and architect proposals as inputs for the open questions section."
+
+The documenter writes three files:
+- `docs/snapshots/YYYY-MM-DD-system-snapshot.md` — point-in-time system state
+- `docs/architecture/service-inventory.md` — updated living service register
+- `docs/compound/YYYY-MM-DD-<feature>-cycle-summary.md` — narrative for future developers
+
+### Step 6 — Produce Compound Report
 
 Consolidate all subagent outputs into the report format below.
 
@@ -111,7 +124,7 @@ Consolidate all subagent outputs into the report format below.
 <patterns that are interesting but not ready — revisit in N cycles>
 ```
 
-Save the report to `docs/compound/<YYYY-MM-DD>-<feature>.md`.
+Save the report to `docs/compound/<YYYY-MM-DD>-<feature>.md`. The codebase-documenter will have already produced `docs/snapshots/` and `docs/architecture/service-inventory.md` — link to them from the report.
 
 ---
 

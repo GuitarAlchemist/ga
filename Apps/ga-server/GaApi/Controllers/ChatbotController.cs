@@ -15,7 +15,7 @@ using Services;
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     ProductionOrchestrator orchestrator,
-    IOllamaChatService chatService)
+    IChatService chatService)
     : ControllerBase
 {
     private static readonly JsonSerializerOptions _jsonOptions =

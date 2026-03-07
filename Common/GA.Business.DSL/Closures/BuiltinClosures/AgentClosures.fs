@@ -151,5 +151,3 @@ let register () =
           askTabAgent
           askCriticAgent
           fanOutAgents ]
-
-do register ()

@@ -1,6 +1,6 @@
 namespace GaApi.Services;
 
-public interface IOllamaChatService
+public interface IChatService
 {
     IAsyncEnumerable<string> ChatStreamAsync(
         string userMessage,

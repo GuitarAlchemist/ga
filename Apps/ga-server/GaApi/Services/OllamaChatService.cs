@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 ///     Ollama-based chat service for conversational AI
 ///     Uses local Ollama instance with streaming support
 /// </summary>
-public class OllamaChatService : IOllamaChatService
+public class OllamaChatService : IChatService
 {
     private readonly ChatbotOptions _chatbotOptions;
     private readonly HttpClient _httpClient;

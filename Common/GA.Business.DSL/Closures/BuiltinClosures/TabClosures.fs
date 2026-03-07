@@ -267,5 +267,3 @@ let register () =
           tabSources
           tabFetch
           tabFetchUrl ]
-
-do register ()

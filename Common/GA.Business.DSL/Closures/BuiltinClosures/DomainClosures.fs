@@ -634,5 +634,3 @@ let register () =
           projectChord
           commonTones
           chordSubstitutions ]
-
-do register ()

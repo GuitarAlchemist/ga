@@ -111,5 +111,3 @@ let register () =
           writeFile
           httpPost
           httpGet ]
-
-do register ()

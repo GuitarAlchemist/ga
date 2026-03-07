@@ -9,7 +9,7 @@ using Anthropic.Models.Messages;
 ///     Claude API-based chat service for conversational AI.
 ///     Uses the official Anthropic SDK with streaming support via SSE.
 /// </summary>
-public class ClaudeChatService : IOllamaChatService
+public class ClaudeChatService : IChatService
 {
     private readonly AnthropicClient _client;
     private readonly ILogger<ClaudeChatService> _logger;

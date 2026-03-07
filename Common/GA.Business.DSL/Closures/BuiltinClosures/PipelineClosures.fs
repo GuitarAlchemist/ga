@@ -114,5 +114,3 @@ let register () =
           storeQdrant
           reportFailures
           transpileSurface ]
-
-do register ()

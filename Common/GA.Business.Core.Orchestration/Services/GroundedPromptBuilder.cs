@@ -13,17 +13,24 @@ public class GroundedPromptBuilder
     private const int MaxQueryLength = 500;
 
     private static readonly Regex InjectionPattern = new(
-        @"(SYSTEM\s*:|USER\s*:|ASSISTANT\s*:|###\s+\w|```)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        @"(SYSTEM\s*:|USER\s*:|ASSISTANT\s*:|\nHuman\s*:|\nAssistant\s*:|###\s*\n?|```)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static string SanitizeQuery(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-        var sanitized = InjectionPattern.Replace(raw, string.Empty);
+        var normalized = raw.Normalize(System.Text.NormalizationForm.FormKD);
+        var sanitized = InjectionPattern.Replace(normalized, string.Empty);
         sanitized = Regex.Replace(sanitized, @"\s{3,}", " ").Trim();
         if (sanitized.Length > MaxQueryLength)
             sanitized = sanitized[..MaxQueryLength] + "…";
         return sanitized;
     }
+
+    private static string SanitizeField(string? raw) =>
+        string.IsNullOrWhiteSpace(raw)
+            ? string.Empty
+            : InjectionPattern.Replace(raw.Normalize(System.Text.NormalizationForm.FormKD), string.Empty).Trim();
 
     public string Build(string userQuery, IReadOnlyList<CandidateVoicing> candidates)
     {
@@ -62,10 +69,10 @@ public class GroundedPromptBuilder
             foreach (var c in candidates)
             {
                 sb.AppendLine($"- ID: {c.Id}");
-                sb.AppendLine($"  Name: {c.DisplayName}");
-                sb.AppendLine($"  Fingering: {c.Shape}");
-                sb.AppendLine($"  Theory: {c.ExplanationFacts.Summary}");
-                sb.AppendLine($"  Modal Colors: {string.Join(", ", c.ExplanationFacts.Tags.Where(t => t.StartsWith("Flavor:")))}");
+                sb.AppendLine($"  Name: {SanitizeField(c.DisplayName)}");
+                sb.AppendLine($"  Fingering: {SanitizeField(c.Shape)}");
+                sb.AppendLine($"  Theory: {SanitizeField(c.ExplanationFacts.Summary)}");
+                sb.AppendLine($"  Modal Colors: {string.Join(", ", c.ExplanationFacts.Tags.Select(SanitizeField).Where(t => t.StartsWith("Flavor:")))}");
                 if (c.ExplanationFacts.SpectralCentroid.HasValue)
                     sb.AppendLine($"  Spectral Position: {c.ExplanationFacts.SpectralCentroid.Value:F2} radians on Fifth Cycle");
                 sb.AppendLine();

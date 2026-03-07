@@ -12,13 +12,13 @@ using Microsoft.Extensions.Options;
 ///     Inspired by Spring Boot service orchestration patterns.
 /// </summary>
 public sealed class ChatbotSessionOrchestrator(
-    IOllamaChatService chatClient,
+    IChatService chatClient,
     ISemanticKnowledgeSource semanticKnowledge,
     ISessionContextProvider sessionContext,
     IOptionsSnapshot<ChatbotOptions> options,
     ILogger<ChatbotSessionOrchestrator> logger)
 {
-    private readonly IOllamaChatService _chatClient = chatClient;
+    private readonly IChatService _chatClient = chatClient;
     private readonly ILogger<ChatbotSessionOrchestrator> _logger = logger;
     private readonly ChatbotOptions _options = options.Value;
     private readonly ISemanticKnowledgeSource _semanticKnowledge = semanticKnowledge;
@@ -48,7 +48,8 @@ public sealed class ChatbotSessionOrchestrator(
 
     public Task<string> GetResponseAsync(ChatSessionRequest request, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        if (request is null || string.IsNullOrWhiteSpace(request.Message))
+            return Task.FromResult(string.Empty);
         var normalizedHistory = NormalizeHistory(request.ConversationHistory);
         return GetResponseInternalAsync(request.Message, normalizedHistory, request.UseSemanticSearch,
             cancellationToken);

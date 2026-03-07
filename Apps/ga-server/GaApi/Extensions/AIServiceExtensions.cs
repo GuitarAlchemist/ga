@@ -62,11 +62,11 @@ public static class AiServiceExtensions
 
         if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<IOllamaChatService, ClaudeChatService>();
+            services.AddSingleton<IChatService, ClaudeChatService>();
         }
         else
         {
-            services.AddSingleton<IOllamaChatService, OllamaChatService>();
+            services.AddSingleton<IChatService, OllamaChatService>();
         }
 
         // Register Adapter for IChatClient (used by Agents)
