@@ -20,6 +20,7 @@ structured command, map them to the closest CLI command first:
 | "parse Cmaj9" / "what is Cmaj9" | `chord Cmaj9` |
 | "list closures" / "available closures" | `closures` |
 | anything resembling a question | `ask <question>` |
+| "evolve" / "compound" / "improve the language" / "find patterns" | `evolve` |
 
 ### Step 2 — Run the command
 
@@ -45,6 +46,7 @@ dotnet run --project Apps/GaCli/GaCli.fsproj -- <args>
 | `progression <chords…> --by <n>` | `ga progression <chords…> --by <n>` |
 | `closures [category]` | `ga closures [category]` |
 | `ask <question>` | `ga ask <question>` |
+| `evolve` | Run the compound engineering flywheel (see below) |
 | *(no args or "help")* | `ga help` |
 
 ### Step 3 — Present the result
@@ -132,6 +134,23 @@ After every command, offer 1–3 relevant next steps. Examples:
 - After `diatonic G major`: "Try `relative G major` to find the relative minor, or `progression G D Em C --by 2` to transpose a common progression."
 - After `intervals Cmaj9`: "Try `chord Cmaj9` to see the parsed structure, or `diatonic C major` to see all chords in this key."
 
+#### `evolve` — compound engineering flywheel
+
+`/ga evolve` kicks off the full compound engineering loop against recent work:
+
+1. **Scope** — run `git log --oneline -10` and `git diff --stat HEAD~5..HEAD` to identify changed files
+2. **Mine** — delegate to the `compound-researcher` agent with the changed file list
+3. **Design** — delegate to the `fsharp-architect` agent with the researcher's top patterns
+4. **Audit** — delegate to the `grammar-governor` agent to check for bloat/instability
+5. **Report** — consolidate into a Compound Report and save to `docs/compound/<YYYY-MM-DD>-<branch>.md`
+
+The full skill is documented in `.agent/skills/compound/SKILL.md`. Run `/compound` directly for the same effect, or use `/ga evolve` as a shorthand.
+
+**Escalation rules**:
+- Grammar governor returns `BLOCK PROMOTION` → stop; list what must be resolved first
+- fsharp-architect proposes a Tier 3 DSL clause → require human sign-off before implementing
+- 5+ occurrences of the same pattern → treat as P0, promote immediately
+
 ### If the server isn't running (ask command)
 
 `ga ask` requires the GA API. If it fails with a connection error, say:
@@ -151,4 +170,5 @@ After every command, offer 1–3 relevant next steps. Examples:
 /ga ask what is a tritone substitution?
 /ga chords in G major
 /ga what notes are in Am7
+/ga evolve
 ```
