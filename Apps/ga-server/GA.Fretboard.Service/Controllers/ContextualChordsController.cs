@@ -418,6 +418,7 @@ public class ContextualChordsController(
     [HttpGet("modulation")]
     [ProducesResponseType(typeof(ModulationSuggestionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetModulationSuggestion(
         [FromQuery] string sourceKey,
         [FromQuery] string targetKey)
@@ -460,6 +461,7 @@ public class ContextualChordsController(
     [HttpGet("modulation/common")]
     [ProducesResponseType(typeof(IEnumerable<ModulationSuggestionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetCommonModulations([FromQuery] string sourceKey)
     {
         try

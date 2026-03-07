@@ -26,6 +26,7 @@ public class ChordProgressionsController(
     /// <returns>List of all chord progressions</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetAll()
     {
         try
@@ -50,6 +51,7 @@ public class ChordProgressionsController(
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(ChordProgressionDefinition), 200)]
     [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
     public ActionResult<ChordProgressionDefinition> GetByName(string name)
     {
         try
@@ -78,6 +80,7 @@ public class ChordProgressionsController(
     /// <returns>List of chord progressions in the specified category</returns>
     [HttpGet("category/{category}")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetByCategory(string category)
     {
         try
@@ -102,6 +105,7 @@ public class ChordProgressionsController(
     /// <returns>List of chord progressions at the specified difficulty level</returns>
     [HttpGet("difficulty/{difficulty}")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetByDifficulty(string difficulty)
     {
         try
@@ -126,6 +130,7 @@ public class ChordProgressionsController(
     /// <returns>List of chord progressions in the specified key</returns>
     [HttpGet("key/{key}")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetByKey(string key)
     {
         try
@@ -149,6 +154,7 @@ public class ChordProgressionsController(
     /// <returns>List of chord progressions associated with the artist</returns>
     [HttpGet("artist/{artist}")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetByArtist(string artist)
     {
         try
@@ -173,6 +179,7 @@ public class ChordProgressionsController(
     /// <returns>List of chord progressions used in songs matching the title</returns>
     [HttpGet("song/{song}")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetBySong(string song)
     {
         try
@@ -197,6 +204,7 @@ public class ChordProgressionsController(
     [HttpGet("roman-numerals")]
     [ProducesResponseType(typeof(IEnumerable<ChordProgressionDefinition>), 200)]
     [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<ChordProgressionDefinition>> GetByRomanNumerals(
         [FromQuery] [Required] string romanNumerals)
     {
@@ -236,6 +244,7 @@ public class ChordProgressionsController(
     /// <returns>List of all unique categories</returns>
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllCategories()
     {
         try
@@ -258,6 +267,7 @@ public class ChordProgressionsController(
     /// <returns>List of all unique difficulty levels</returns>
     [HttpGet("difficulties")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllDifficulties()
     {
         try
@@ -280,6 +290,7 @@ public class ChordProgressionsController(
     /// <returns>List of all unique keys</returns>
     [HttpGet("keys")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllKeys()
     {
         try
@@ -302,6 +313,7 @@ public class ChordProgressionsController(
     /// <returns>List of all unique artists</returns>
     [HttpGet("artists")]
     [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+    [ProducesResponseType(500)]
     public ActionResult<IEnumerable<string>> GetAllArtists()
     {
         try
@@ -326,6 +338,7 @@ public class ChordProgressionsController(
     [HttpPost("analyze")]
     [ProducesResponseType(typeof(InformationTheoryProgressionAnalysisResponse), 200)]
     [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<ActionResult<InformationTheoryProgressionAnalysisResponse>> AnalyzeProgression(
         [FromBody] AnalyzeProgressionRequest request)
     {
@@ -438,6 +451,9 @@ public class ChordProgressionsController(
     /// </summary>
     /// <param name="request">Progression analysis request</param>
     [HttpPost("analyze/stream")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task AnalyzeProgressionStream([FromBody] AnalyzeProgressionRequest request)
     {
         Response.Headers.Append("Content-Type", "text/event-stream");
