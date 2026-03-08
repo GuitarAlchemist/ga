@@ -15,7 +15,8 @@ public class SemanticRouter(
     IEnumerable<GuitarAlchemistAgentBase> agents,
     IChatClient? chatClient,
     IEmbeddingGenerator<string, Embedding<float>>? textEmbeddings,
-    ILogger<SemanticRouter> logger)
+    ILogger<SemanticRouter> logger,
+    IRoutingFeedback? routingFeedback = null)
     : IDisposable
 {
     private readonly IReadOnlyList<GuitarAlchemistAgentBase> _agents = agents.ToList() is { Count: > 0 } list
@@ -255,6 +256,12 @@ public class SemanticRouter(
             }
         }
 
+        // Apply learned routing bias from feedback corrections
+        if (routingFeedback != null)
+        {
+            scores = [.. scores.Select(s => (s.Agent, Score: Math.Clamp(s.Score + routingFeedback.GetBias(s.Agent.AgentId), 0f, 1f)))];
+        }
+
         var orderedScores = scores.OrderByDescending(s => s.Score).ToList();
         var best = orderedScores.First();
 
@@ -297,6 +304,12 @@ public class SemanticRouter(
             {
                 scores.Add((agent, 0.1f)); // Default low score
             }
+        }
+
+        // Apply learned routing bias from feedback corrections
+        if (routingFeedback != null)
+        {
+            scores = [.. scores.Select(s => (s.Agent, Score: Math.Clamp(s.Score + routingFeedback.GetBias(s.Agent.AgentId), 0f, 1f)))];
         }
 
         var orderedScores = scores.OrderByDescending(s => s.Score).ToList();
@@ -342,6 +355,122 @@ public class SemanticRouter(
         return Math.Clamp(avgConfidence * Math.Max(varianceMultiplier, 0.5f), 0f, 1f);
     }
 
+    /// <summary>
+    /// Routes to the top-2 agents, runs them in parallel, and — when they disagree —
+    /// invokes the <see cref="CriticAgent"/> to adjudicate the winner.
+    /// </summary>
+    /// <remarks>
+    /// Inspired by TARS "multi-agent debate" pattern: parallel drafts expose uncertainty;
+    /// a critic arbitrates rather than silently picking the first answer.
+    /// Falls back to highest-confidence answer when no CriticAgent is registered
+    /// or when the agents agree (consensus ≥ <paramref name="debateThreshold"/>).
+    /// </remarks>
+    public async Task<DebateResult> DebateAsync(
+        AgentRequest request,
+        float debateThreshold = 0.5f,
+        CancellationToken cancellationToken = default)
+    {
+        var routing = await RouteAsync(request.Query, cancellationToken);
+
+        // Pick top-2 agents; fall back to the single winner if only one exists
+        var topTwo = routing.AllScores
+            .OrderByDescending(s => s.Score)
+            .Take(2)
+            .Select(s => s.Agent)
+            .ToList();
+
+        if (topTwo.Count < 2)
+        {
+            var solo = await topTwo[0].ProcessAsync(request, cancellationToken);
+            return new DebateResult
+            {
+                Winner = solo,
+                AllResponses = [solo],
+                ConsensusConfidence = solo.Confidence,
+                WasDebated = false,
+                AdjudicationReason = "Only one candidate agent."
+            };
+        }
+
+        // Run top-2 in parallel
+        var responseTasks = topTwo.Select(a => a.ProcessAsync(request, cancellationToken));
+        var responses = await Task.WhenAll(responseTasks);
+
+        var consensus = CalculateConsensus(responses);
+
+        if (consensus >= debateThreshold)
+        {
+            // Agents broadly agree — take the higher-confidence answer
+            var winner = responses.MaxBy(r => r.Confidence)!;
+            _logger.LogInformation(
+                "Debate: consensus {Consensus:P0} ≥ threshold — winner {AgentId}",
+                consensus, winner.AgentId);
+
+            return new DebateResult
+            {
+                Winner = winner,
+                AllResponses = responses,
+                ConsensusConfidence = consensus,
+                WasDebated = false,
+                AdjudicationReason = $"Agents agreed (consensus {consensus:P0})."
+            };
+        }
+
+        // Agents disagree — invoke CriticAgent to adjudicate
+        var critic = _agents.FirstOrDefault(a => a.AgentId == AgentIds.Critic);
+        if (critic == null)
+        {
+            var fallback = responses.MaxBy(r => r.Confidence)!;
+            _logger.LogWarning(
+                "Debate: low consensus {Consensus:P0} but no CriticAgent registered — using highest confidence",
+                consensus);
+
+            return new DebateResult
+            {
+                Winner = fallback,
+                AllResponses = responses,
+                ConsensusConfidence = consensus,
+                WasDebated = false,
+                AdjudicationReason = "No CriticAgent available for adjudication."
+            };
+        }
+
+        _logger.LogInformation(
+            "Debate: low consensus {Consensus:P0} — invoking CriticAgent to adjudicate",
+            consensus);
+
+        var debateSummary = string.Join("\n\n", responses.Select((r, i) =>
+            $"=== Agent {i + 1}: {r.AgentId} (confidence {r.Confidence:P0}) ===\n{r.Result}"));
+
+        var adjudicationRequest = request with
+        {
+            Query = $"""
+                Two agents gave different answers to this question. Pick the more accurate one and explain why.
+
+                ORIGINAL QUESTION: {request.Query}
+
+                {debateSummary}
+                """,
+            Context = "You are adjudicating a debate between two music AI agents."
+        };
+
+        var adjudication = await critic.ProcessAsync(adjudicationRequest, cancellationToken);
+
+        // Determine which original agent the critic preferred (heuristic: name match in result)
+        var preferredResponse = responses.FirstOrDefault(r =>
+            adjudication.Result.Contains(r.AgentId, StringComparison.OrdinalIgnoreCase))
+            ?? responses.MaxBy(r => r.Confidence)!;
+
+        return new DebateResult
+        {
+            Winner = preferredResponse with { Confidence = Math.Max(preferredResponse.Confidence, adjudication.Confidence) },
+            AllResponses = [.. responses, adjudication],
+            ConsensusConfidence = consensus,
+            WasDebated = true,
+            AdjudicationReason = adjudication.Result
+        };
+    }
+
     public void Dispose()
     {
         _initLock.Dispose();
@@ -371,6 +500,27 @@ public record AggregatedResponse
     public required IReadOnlyList<AgentResponse> Responses { get; init; }
     public required AgentResponse TopResponse { get; init; }
     public required float ConsensusConfidence { get; init; }
+}
+
+/// <summary>
+/// Result of a <see cref="SemanticRouter.DebateAsync"/> invocation.
+/// </summary>
+public record DebateResult
+{
+    /// <summary>The winning agent response (adjudicated or highest-confidence).</summary>
+    public required AgentResponse Winner { get; init; }
+
+    /// <summary>All responses produced during the debate, including any critic adjudication.</summary>
+    public required IReadOnlyList<AgentResponse> AllResponses { get; init; }
+
+    /// <summary>Consensus score before adjudication (0 = total disagreement, 1 = full agreement).</summary>
+    public required float ConsensusConfidence { get; init; }
+
+    /// <summary>True when the CriticAgent was invoked to break a disagreement.</summary>
+    public required bool WasDebated { get; init; }
+
+    /// <summary>Human-readable explanation of how the winner was chosen.</summary>
+    public required string AdjudicationReason { get; init; }
 }
 
 /// <summary>
