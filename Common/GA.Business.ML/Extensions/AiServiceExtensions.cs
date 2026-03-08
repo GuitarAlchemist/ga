@@ -206,6 +206,7 @@ public static class AiServiceExtensions
         });
 
         services.TryAddSingleton<Agents.SemanticRouter>();
+        services.TryAddSingleton<Agents.IRoutingFeedback, Agents.MongoRoutingFeedback>();
 
         return services;
     }

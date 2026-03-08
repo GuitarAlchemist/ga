@@ -255,9 +255,6 @@
         <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
         <Project Path="Tests/Apps/GA.MusicTheory.Service.Tests/GA.MusicTheory.Service.Tests.csproj" />
     </Folder>
-    <Folder Name="/Tests/Apps/">
-        <Project Path="Tests/Apps/GenerateNatData.Tests/GenerateNatData.Tests.csproj" />
-    </Folder>
     <Folder Name="/Tests/Common/">
         <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj" />
     </Folder>

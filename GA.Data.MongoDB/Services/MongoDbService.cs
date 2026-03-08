@@ -53,6 +53,12 @@ public class MongoDbService
     public IMongoCollection<VoicingEntity> Voicings => _database.GetCollection<VoicingEntity>("voicings");
     public IMongoCollection<TabCorpusDocument> Tabs => _database.GetCollection<TabCorpusDocument>("tabs");
 
+    public IMongoCollection<YamlKnowledgeDocument> YamlKnowledge =>
+        _database.GetCollection<YamlKnowledgeDocument>("yaml_knowledge");
+
+    public IMongoCollection<RoutingFeedbackDocument> RoutingFeedback =>
+        _database.GetCollection<RoutingFeedbackDocument>("routing_feedback");
+
     /// <summary>
     ///     Deletes all documents from all collections in the database.
     /// </summary>

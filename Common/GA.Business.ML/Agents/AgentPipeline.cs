@@ -116,6 +116,31 @@ public sealed class AgentPipelineBuilder(AgentRequest request)
     }
 
     /// <summary>
+    /// Post-processes the current response by scanning <see cref="AgentResponse.Result"/> for chord
+    /// name mentions and appending a markdown "Chord Diagrams" section with
+    /// <c>[diagram: ChordName]</c> markers the React frontend can render as chord diagram components.
+    /// </summary>
+    /// <remarks>
+    /// No-ops silently when no response is present or no chords are detected.
+    /// </remarks>
+    public AgentPipelineBuilder WithChordDiagrams()
+    {
+        _steps.Add((ctx, _) =>
+        {
+            if (ctx.Response is null)
+                return Task.FromResult(ctx);
+
+            var chords = ChordDiagramRenderer.ExtractChordNames(ctx.Response.Result);
+            if (chords.Count == 0)
+                return Task.FromResult(ctx);
+
+            var updatedResult = ChordDiagramRenderer.AppendDiagrams(ctx.Response.Result, chords);
+            return Task.FromResult(ctx with { Response = ctx.Response with { Result = updatedResult } });
+        });
+        return this;
+    }
+
+    /// <summary>
     /// Adds a custom transformation step.
     /// </summary>
     public AgentPipelineBuilder Then(Func<AgentContext, CancellationToken, Task<AgentContext>> step)
