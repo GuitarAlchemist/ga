@@ -13,6 +13,9 @@ export default defineConfig({
             brotliSize: true,
         }),
     ],
+    resolve: {
+        dedupe: ['react', 'react-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+    },
     build: {
         chunkSizeWarningLimit: 1500,
         rollupOptions: {
