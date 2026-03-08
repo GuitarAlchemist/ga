@@ -44,9 +44,18 @@ public class DomainMetadataPrompter(SchemaDiscoveryService schemaService)
         sb.AppendLine("   - 'Search': User is just looking for a specific chord or voicing (default).");
         sb.AppendLine();
 
+        sb.AppendLine("5. KEY (Field: 'Key'):");
+        sb.AppendLine("   Extract the musical key when the user mentions a specific key or asks about chords in a key.");
+        sb.AppendLine("   Format: '<Root> <Mode>' where Root is a note name (A-G, with # or b) and Mode is 'major' or 'minor'.");
+        sb.AppendLine("   - Example: 'chords in G major' -> Key='G major'");
+        sb.AppendLine("   - Example: 'what are the diatonic chords of B minor' -> Key='B minor'");
+        sb.AppendLine("   - Example: 'show me the key of F#' -> Key='F# major' (default to major if mode not specified)");
+        sb.AppendLine("   - Example: 'jazz chords' -> omit Key (no specific key mentioned)");
+        sb.AppendLine();
+
         sb.AppendLine("### OUTPUT FORMAT ###");
         sb.AppendLine("Return a JSON object with the extracted filters. Omit fields if not specified.");
-        sb.AppendLine("Example Output: { \"Intent\": \"OptimizePath\", \"Quality\": \"Minor\", \"Extension\": \"7\" }");
+        sb.AppendLine("Example Output: { \"Intent\": \"OptimizePath\", \"Quality\": \"Minor\", \"Extension\": \"7\", \"Key\": \"G major\" }");
 
         return sb.ToString();
     }

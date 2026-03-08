@@ -34,6 +34,12 @@ public sealed class QueryFilters
     public string? Extension { get; set; }
     public string? StackingType { get; set; }
     public int? NoteCount { get; set; }
+
+    /// <summary>
+    /// Musical key identified in the query, e.g. "G major" or "B minor".
+    /// Populated when the user asks about diatonic chords or key-specific theory.
+    /// </summary>
+    public string? Key { get; set; }
 }
 
 /// <summary>

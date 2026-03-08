@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import type { ChatApiMessage } from '../services/chatApi';
+import type { ChordInContext } from 'ga-react-components/src/types/agent-state';
 
 // Agent routing metadata surfaced by the agentic pipeline
 export interface AgentRouting {
@@ -53,6 +53,12 @@ export const chatConfigAtom = atomWithStorage<ChatConfig>('ga-chat-config', defa
 
 export const currentStreamingMessageAtom = atom<ChatMessage | null>(null);
 
+/** Diatonic chords populated by the AG-UI ga:diatonic CUSTOM event. */
+export const diatonicChordsAtom = atom<readonly ChordInContext[]>([]);
+
+/** Current key identified by the agent (e.g. "G major"). */
+export const detectedKeyAtom = atom<string | null>(null);
+
 // Derived atoms
 export const visibleMessagesAtom = atom((get) => {
   const messages = get(chatMessagesAtom);
@@ -101,115 +107,58 @@ export const clearMessagesAtom = atom(
   }
 );
 
-// Send message atom with real API integration
+// Send message atom — uses AG-UI protocol (POST /api/chatbot/agui/stream).
 export const sendMessageAtom = atom(
   null,
   async (get, set, userMessage: string) => {
-    if (!userMessage.trim()) {
-      return;
-    }
+    if (!userMessage.trim()) return;
 
-    // Set loading state
     set(isLoadingAtom, true);
+    set(addMessageAtom, { role: 'user', content: userMessage });
+    set(chatInputAtom, '');
+    set(diatonicChordsAtom, []);
+    set(detectedKeyAtom, null);
 
-    // Add user message
-    set(addMessageAtom, {
-      role: 'user',
-      content: userMessage,
+    const config      = get(chatConfigAtom);
+    const streamingId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    let   accumulated = '';
+
+    set(currentStreamingMessageAtom, {
+      id: streamingId, role: 'assistant', content: '', timestamp: new Date(), isStreaming: true,
     });
 
-    // Clear input
-    set(chatInputAtom, '');
-
     try {
-      // Get configuration and conversation history
-      const config = get(chatConfigAtom);
-      const messages = get(chatMessagesAtom);
-      const conversationHistory: ChatApiMessage[] = messages
-        .filter(m => m.role !== 'system') // Exclude system messages
-        .map(m => ({
-          role: m.role,
-          content: m.content,
-        }));
+      const { streamAgUiChat } = await import('../services/agUiChatService');
 
-      // Create API service with configured endpoint
-      const apiService = new (await import('../services/chatApi')).ChatApiService(config.apiEndpoint);
-
-      // Create streaming message
-      const streamingId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      let streamingContent = '';
-      let capturedRouting: AgentRouting | undefined;
-
-      set(currentStreamingMessageAtom, {
-        id: streamingId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-        isStreaming: true,
-      });
-
-      // Stream response from API
-      try {
-        for await (const chunk of apiService.streamChat(
-          { message: userMessage, conversationHistory, useSemanticSearch: true },
-          undefined,
-          (routing) => { capturedRouting = routing; },
-        )) {
-          streamingContent += chunk;
-
-          // Update streaming message
+      await streamAgUiChat(config.apiEndpoint, userMessage, {
+        onChunk(delta) {
+          accumulated += delta;
           set(currentStreamingMessageAtom, {
-            id: streamingId,
-            role: 'assistant',
-            content: streamingContent,
-            timestamp: new Date(),
-            isStreaming: true,
+            id: streamingId, role: 'assistant', content: accumulated, timestamp: new Date(), isStreaming: true,
           });
-        }
-
-        // Finalize message (include routing if captured)
-        if (streamingContent) {
+        },
+        onDiatonicChords(chords) {
+          set(diatonicChordsAtom, chords);
+        },
+        onComplete() {
+          if (accumulated) {
+            set(addMessageAtom, { role: 'assistant', content: accumulated });
+          }
+        },
+        onError(msg) {
           set(addMessageAtom, {
             role: 'assistant',
-            content: streamingContent,
-            routing: capturedRouting,
+            content: `Sorry, the assistant encountered an error: ${msg}`,
           });
-        }
-      } catch (error) {
-        console.error('Streaming error:', error);
-
-        // Fallback to non-streaming if streaming fails
-        try {
-          const response = await apiService.sendMessage({
-            message: userMessage,
-            conversationHistory,
-            useSemanticSearch: true,
-          });
-
-          set(addMessageAtom, {
-            role: 'assistant',
-            content: response.message,
-          });
-        } catch (fallbackError) {
-          console.error('Fallback error:', fallbackError);
-
-          // Add error message
-          set(addMessageAtom, {
-            role: 'assistant',
-            content: 'Sorry, I encountered an error processing your request. Please make sure the GaApi backend is running (https://localhost:7184) and try again.',
-          });
-        }
-      }
+        },
+      });
     } catch (error) {
-      console.error('Error sending message:', error);
-
-      // Add error message
+      console.error('AG-UI stream error:', error);
       set(addMessageAtom, {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: 'Sorry, I encountered an error. Please make sure GaApi is running and try again.',
       });
     } finally {
-      // Clear streaming message and loading state
       set(currentStreamingMessageAtom, null);
       set(isLoadingAtom, false);
     }

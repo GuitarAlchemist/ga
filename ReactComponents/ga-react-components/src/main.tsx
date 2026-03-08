@@ -1,6 +1,9 @@
 ﻿import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
+import GAChatPanel from './components/GAChatPanel';
+import DiatonicChordTable from './components/DiatonicChordTable';
+import type { ChordInContext } from './types/agent-state';
 import App from './App';
 import GuitarFretboard, { FretboardPosition } from './components/GuitarFretboard';
 import RealisticFretboard from './components/RealisticFretboard';
@@ -337,6 +340,57 @@ const GraphitiDemoTest: React.FC = () => {
   );
 };
 
+// ── AG-UI pages ──────────────────────────────────────────────────────────────
+
+const GA_API_URL = import.meta.env.VITE_GA_API_URL ?? 'https://localhost:7001';
+
+/** Full GA chat panel — chat input + streaming text + diatonic chord table */
+const GAChatPanelPage: React.FC = () => (
+  <App>
+    <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="h6" sx={{ mb: 2, fontFamily: 'monospace', letterSpacing: 1 }}>
+        Guitar Alchemist · AG-UI Chat
+      </Typography>
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <GAChatPanel agentUrl={`${GA_API_URL}/api/chatbot/agui/stream`} />
+      </Box>
+    </Box>
+  </App>
+);
+
+/**
+ * Chrome-free diatonic panel for Streamlit iframe embedding.
+ * Reads chords from URL search params: ?key=G+major
+ * Supports both static (URL param) and live (SSE from ?listen=1) modes.
+ */
+const DiatonicPanel: React.FC = () => {
+  const [params]  = useSearchParams();
+  const keyParam  = params.get('key');
+  const [chords, setChords] = React.useState<ChordInContext[]>([]);
+
+  React.useEffect(() => {
+    if (!keyParam) return;
+    const encodedKey = encodeURIComponent(keyParam);
+    fetch(`${GA_API_URL}/api/contextual-chords/keys/${encodedKey}`)
+      .then(r => r.json())
+      .then((data: ChordInContext[]) => setChords(data))
+      .catch(console.error);
+  }, [keyParam]);
+
+  return (
+    <Box sx={{ p: 2 }}>
+      {keyParam && (
+        <Typography variant="subtitle2" sx={{ mb: 1.5, color: '#666', fontFamily: 'monospace', letterSpacing: 1 }}>
+          Key of {keyParam}
+        </Typography>
+      )}
+      <DiatonicChordTable chords={chords} />
+    </Box>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -373,6 +427,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/chord-progression-dsl" element={<App><ChordProgressionDSLTest /></App>} />
         <Route path="/test/fretboard-navigation-dsl" element={<App><FretboardNavigationDSLTest /></App>} />
         <Route path="/test/inverse-kinematics" element={<App><InverseKinematicsTest /></App>} />
+
+        {/* AG-UI chat panel — full GA chat with diatonic chord table */}
+        <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
+
+        {/* Chrome-free panels for Streamlit iframe embedding */}
+        <Route path="/panels/diatonic" element={<DiatonicPanel />} />
 
         {/* Demo page (original) */}
         <Route path="/demo" element={<DemoApp />} />
