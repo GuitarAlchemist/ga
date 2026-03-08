@@ -40,6 +40,8 @@ public static class ChatPluginHost
                      && typeof(IChatPlugin).IsAssignableFrom(t))
             .ToList();
 
+        var allMcpToolTypes = new List<Type>();
+
         foreach (var pluginType in pluginTypes)
         {
             IChatPlugin plugin;
@@ -60,6 +62,7 @@ public static class ChatPluginHost
                 plugin.Name, plugin.Version, pluginType.FullName);
 
             plugin.Register(services);
+            allMcpToolTypes.AddRange(plugin.McpToolTypes);
         }
 
         if (pluginTypes.Count == 0)
@@ -67,6 +70,15 @@ public static class ChatPluginHost
             logger?.LogWarning(
                 "ChatPluginHost: no [ChatPlugin] implementations found in loaded assemblies");
         }
+
+        // Register the in-process MCP tools provider as a singleton.
+        // SkillMdDrivenSkill instances resolve it lazily on first ExecuteAsync call.
+        var capturedToolTypes = allMcpToolTypes.Distinct().ToList().AsReadOnly();
+        services.AddSingleton<IMcpToolsProvider>(sp =>
+            new InProcessMcpToolsProvider(
+                capturedToolTypes,
+                sp,
+                sp.GetRequiredService<ILogger<InProcessMcpToolsProvider>>()));
 
         return services;
     }

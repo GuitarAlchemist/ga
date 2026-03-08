@@ -1,19 +1,20 @@
 namespace GA.Business.ML.Agents.Skills;
 
 using Anthropic;
+using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Skills;
 using Microsoft.Extensions.AI;
 
 /// <summary>
 /// <see cref="IOrchestratorSkill"/> backed by a SKILL.md file.
 /// Uses the Anthropic SDK + MEAI <see cref="IChatClient"/> for LLM calls,
-/// with injected <see cref="AIFunction"/> tools for GA domain operations.
+/// with GA domain tools supplied by <see cref="IMcpToolsProvider"/>.
 /// <see cref="FunctionInvokingChatClientBuilderExtensions.UseFunctionInvocation"/> handles the
 /// full multi-turn agentic tool-use loop automatically — no hand-coded loop required.
 /// </summary>
 public sealed class SkillMdDrivenSkill(
     SkillMd skillMd,
-    IReadOnlyList<AIFunction> tools,
+    IMcpToolsProvider toolsProvider,
     IConfiguration configuration,
     ILogger<SkillMdDrivenSkill> logger) : IOrchestratorSkill
 {
@@ -58,6 +59,7 @@ public sealed class SkillMdDrivenSkill(
             new(ChatRole.User, message),
         ];
 
+        var tools = await toolsProvider.GetToolsAsync(ct);
         var options = new ChatOptions { Tools = [.. tools] };
 
         try
