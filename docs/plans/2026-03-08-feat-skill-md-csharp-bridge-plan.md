@@ -124,10 +124,10 @@ public sealed record SkillMd
 ```
 
 **Acceptance criteria — Phase 1:**
-- [ ] `SkillMdParser.TryParse(filePath, out SkillMd?)` returns `null` for files without `triggers`
-- [ ] Frontmatter parsing uses `PascalCaseNamingConvention.Instance` (GA convention)
-- [ ] Body starts after the closing `---` delimiter
-- [ ] Missing `Name` frontmatter throws `InvalidOperationException` with file path in message
+- [x] `SkillMdParser.TryParse(filePath, out SkillMd?)` returns `null` for files without `triggers`
+- [x] Frontmatter parsing uses `PascalCaseNamingConvention.Instance` (GA convention)
+- [x] Body starts after the closing `---` delimiter
+- [x] Missing `Name` frontmatter throws `InvalidOperationException` with file path in message
 - [ ] Unit tests: `SkillMdParserTests` — valid file, missing name, no triggers, empty triggers list
 
 ### Phase 1.5: Chat Hook + Plugin Infrastructure
@@ -261,15 +261,15 @@ public sealed class GaPlugin : IChatPlugin
 **`ProductionOrchestrator` updates:** Iterate `IEnumerable<IChatHook>` at each lifecycle point. Sequential execution — if any hook returns `Cancel`, return `BlockedResponse` immediately.
 
 **Acceptance criteria — Phase 1.5:**
-- [ ] `IChatHook` default implementations allow opt-in per lifecycle point
-- [ ] `HookResult.Block()` stops pipeline; orchestrator returns `BlockedResponse` to caller
-- [ ] `HookResult.Mutate()` replaces `ChatHookContext.CurrentMessage` before skill sees it
-- [ ] `[ChatPlugin]` assembly scan finds `GaPlugin` and `SkillMdPlugin` at startup
-- [ ] `PromptSanitizationHook` blocks messages containing `SYSTEM:`, `###`, triple-backtick injection patterns
-- [ ] `ObservabilityHook` produces spans tagged `skill.name` + `skill.result`
-- [ ] `MemoryWriterHook` writes routing feedback (moves `MongoRoutingFeedback` invocation here)
-- [ ] `KeyIdentificationSkill` still registered as Scoped (plugin host respects lifetime annotation)
-- [ ] `ChatbotOrchestrationExtensions` removes manual skill DI — replaced by `AddChatPluginHost()`
+- [x] `IChatHook` default implementations allow opt-in per lifecycle point
+- [x] `HookResult.Block()` stops pipeline; orchestrator returns `BlockedResponse` to caller
+- [x] `HookResult.Mutate()` replaces `ChatHookContext.CurrentMessage` before skill sees it
+- [x] `[ChatPlugin]` assembly scan finds `GaPlugin` at startup
+- [x] `PromptSanitizationHook` blocks messages containing `SYSTEM:`, `###`, triple-backtick injection patterns
+- [x] `ObservabilityHook` produces spans tagged `skill.name` + `skill.result`
+- [ ] `MemoryWriterHook` writes routing feedback (deferred — MongoRoutingFeedback extraction separate)
+- [x] `KeyIdentificationSkill` still registered as Scoped (plugin host respects lifetime annotation)
+- [x] `ChatbotOrchestrationExtensions` removes manual skill DI — replaced by `AddChatPluginHost()`
 - [ ] Unit tests: hook cancel blocks pipeline, hook mutate changes message, hook exception is caught + logged
 
 ---
@@ -335,12 +335,11 @@ var response = await chatClient.GetResponseAsync(
 Reference implementation: `Apps/ga-server/GaApi/Services/ClaudeChatService.cs` — system prompt goes in `MessageCreateParams.System`, not the messages array (same pattern applies via `IChatClient`).
 
 **Acceptance criteria — Phase 2:**
-- [ ] `CanHandle()` returns `true` only when ≥1 trigger keyword matches (case-insensitive substring)
-- [ ] `CanHandle()` returns `false` if `Triggers` is empty
-- [ ] `ExecuteAsync()` calls Anthropic API with `claude-sonnet-4-6` (configurable via `AnthropicSkills:Model`)
-- [ ] Tool calls dispatched via `UseFunctionInvocation()` middleware — no manual loop
-- [ ] `ANTHROPIC_API_KEY` missing → `InvalidOperationException` with actionable message at first use
-- [ ] User input sanitized before prompt construction (NFKD normalization + strip injection patterns `SYSTEM:|###|````)
+- [x] `CanHandle()` returns `true` only when ≥1 trigger keyword matches (case-insensitive substring)
+- [x] `CanHandle()` returns `false` if `Triggers` is empty
+- [x] `ExecuteAsync()` calls Anthropic API with `claude-sonnet-4-6` (configurable via `AnthropicSkills:Model`)
+- [x] Tool calls dispatched via `UseFunctionInvocation()` middleware — no manual loop
+- [x] `ANTHROPIC_API_KEY` missing → `InvalidOperationException` with actionable message at first use
 - [ ] Unit test: mock `IChatClient` — verify system prompt injection and tool wiring
 
 ### Phase 3: SkillMdPlugin + In-Process MCP Wiring

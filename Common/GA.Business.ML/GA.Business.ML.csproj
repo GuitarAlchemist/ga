@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <!-- AI/ML packages -->
+    <PackageReference Include="Anthropic" Version="12.8.0" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.5.0" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.38.0" />
@@ -45,8 +46,8 @@
     <PackageReference Include="OpenAI" Version="2.2.0-beta.1" />
 
     <!-- MEAI - Microsoft Extensions for AI (Standard Abstractions) -->
-    <PackageReference Include="Microsoft.Extensions.AI" Version="9.4.0-preview.1.25207.5" />
-    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.4.0-preview.1.25207.5" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.2.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.2.0" />
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.4.0-preview.1.25207.5" />
     <!-- Microsoft.Extensions.AI.OpenAI deferred - SDK version mismatch, will re-add when stable -->
 
