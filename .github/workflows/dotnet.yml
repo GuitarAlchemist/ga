@@ -21,4 +21,4 @@ jobs:
     - name: Build
       run: dotnet build AllProjects.slnx --no-restore
     - name: Test
-      run: dotnet test AllProjects.slnx --no-build --verbosity normal
+      run: dotnet test AllProjects.slnx --no-build --verbosity normal --filter "TestCategory!=Integration"

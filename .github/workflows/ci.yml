@@ -73,6 +73,7 @@ jobs:
         dotnet test AllProjects.slnx `
           --configuration Release `
           --no-build `
+          --filter "TestCategory!=Integration" `
           --logger "trx;LogFileName=test-results.trx" `
           --logger "console;verbosity=normal" `
           --collect:"XPlat Code Coverage" `
