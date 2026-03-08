@@ -189,11 +189,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: Apps/ga-client/package.json
         
-    - name: Install component library dependencies
-      run: |
-        cd ReactComponents/ga-react-components
-        npm ci
-
     - name: Install dependencies
       run: |
         cd Apps/ga-client
