@@ -461,9 +461,9 @@ dotnet run --project Apps/GaChatbotCli -- "$MESSAGE"
 ```
 
 **Acceptance criteria — Phase 5:**
-- [ ] `dotnet run --project Apps/GaCli -- skill scaffold .agent/skills/ga/chords/SKILL.md` emits `ChordsSkill.cs`
-- [ ] Skeleton includes: class stub, `Name`/`Description`/`CanHandle()` from SKILL.md triggers, TODO body
-- [ ] Output path: `Common/GA.Business.ML/Agents/Skills/<PascalName>Skill.cs`
+- [x] `dotnet run --project Apps/GaCli -- skill scaffold .agent/skills/ga/chords/SKILL.md` emits `ChordsSkill.cs`
+- [x] Skeleton includes: class stub, `Name`/`Description`/`CanHandle()` from SKILL.md triggers, TODO body
+- [x] Output path: `Common/GA.Business.ML/Agents/Skills/<PascalName>Skill.cs`
 
 ## Dependencies to Add
 
