@@ -1,5 +1,6 @@
 namespace GA.Business.Core.Orchestration.Services;
 
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
@@ -27,6 +28,9 @@ public class ProductionOrchestrator(
 {
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
+        using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
+        var sw = Stopwatch.StartNew();
+
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
         var routingTask = router.RouteAsync(req.Message, ct);
@@ -39,21 +43,38 @@ public class ProductionOrchestrator(
             routing.Confidence,
             routing.RoutingMethod);
 
+        activity?.SetTag(ChatbotActivitySource.TagAgentId, routing.SelectedAgent.AgentId);
+        activity?.SetTag(ChatbotActivitySource.TagAgentName, routing.SelectedAgent.Name);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingMethod, routing.RoutingMethod);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, routing.Confidence);
+
+        ChatResponse result;
         if (routing.SelectedAgent.AgentId == AgentIds.Tab ||
             (filters?.Intent is "OptimizePath" or "AnalyzeTab"))
         {
             if (filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message))
             {
+                activity?.SetTag("orchestration.branch", "tab.path_optimization");
                 var optimized = await HandlePathOptimizationAsync(req.Message, ct);
-                return optimized with { Routing = routingMetadata, QueryFilters = filters };
+                result = optimized with { Routing = routingMetadata, QueryFilters = filters };
             }
-
-            var analyzed = await HandleTabAnalysisAsync(req.Message, ct);
-            return analyzed with { Routing = routingMetadata, QueryFilters = filters };
+            else
+            {
+                activity?.SetTag("orchestration.branch", "tab.analysis");
+                var analyzed = await HandleTabAnalysisAsync(req.Message, ct);
+                result = analyzed with { Routing = routingMetadata, QueryFilters = filters };
+            }
+        }
+        else
+        {
+            activity?.SetTag("orchestration.branch", "rag");
+            var response = await tabOrchestrator.AnswerAsync(req, ct);
+            result = response with { Routing = routingMetadata, QueryFilters = filters };
         }
 
-        var response = await tabOrchestrator.AnswerAsync(req, ct);
-        return response with { Routing = routingMetadata, QueryFilters = filters };
+        sw.Stop();
+        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+        return result;
     }
 
     private async Task<ChatResponse> HandlePathOptimizationAsync(string query, CancellationToken ct)

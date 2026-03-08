@@ -210,4 +210,109 @@ Invoke-RestMethod -Uri "http://localhost:$PORT/api/chatbot/chat" -Method POST -B
 | MongoDB | 27017 | Docker or local |
 | MongoExpress | 8081 | Browser UI |
 | Ollama | 11434 | LLM backend |
+| Jaeger Tracing | 16686 | OpenTelemetry spans |
 | React Frontend | 5173 | Vite dev server |
+
+---
+
+## Step 8 — OpenTelemetry Observability Sub-Agent
+
+When you need to understand chatbot performance, trace a slow request, or identify bottlenecks, run the observability sub-agent below. It connects to Jaeger, reads spans, and provides actionable recommendations.
+
+### Trigger Phrases
+- "the chatbot is slow"
+- "analyze chatbot performance"
+- "trace the last request"
+- "find bottlenecks in the pipeline"
+- "why is routing taking so long?"
+
+### What the Sub-Agent Does
+
+Launch a general-purpose sub-agent with this prompt:
+
+```
+You are an OpenTelemetry observability analyst for the Guitar Alchemist chatbot pipeline.
+
+The chatbot exposes spans via the "GA.Chatbot" ActivitySource, registered in ServiceDefaults.
+Spans flow: orchestration.answer → routing.route → [routing.semantic | routing.llm | routing.keyword] → agent.process → agent.chat
+
+Jaeger is available at http://localhost:16686.
+GaApi is available at http://localhost:5232.
+
+Steps:
+1. Fetch recent traces from Jaeger: GET http://localhost:16686/api/traces?service=GaApi&limit=20
+2. For each trace, extract span names, durations (microseconds), and tags.
+3. Build a breakdown table: span name | avg duration | p95 duration | % of total
+4. Identify bottlenecks: any span > 500ms average is a concern, > 2000ms is critical.
+5. Look for these specific tags on routing spans:
+   - routing.method (semantic | llm | keyword | none)
+   - routing.confidence (should be >= 0.85 for semantic; < 0.85 triggers LLM fallback)
+   - routing.scores (JSON list of all agent scores)
+6. Check agent.chat spans for llm.response_ms > 3000ms (Ollama slow).
+7. Check orchestration.answer spans for orchestration.branch to see which pipeline paths are used.
+8. Report findings in this structure:
+   ## Pipeline Health Summary
+   - Total traces analyzed: N
+   - Average end-to-end latency: Xms
+   - P95 end-to-end latency: Xms
+
+   ## Span Breakdown (sorted by avg duration desc)
+   | Span | Avg (ms) | P95 (ms) | % of total |
+
+   ## Bottlenecks Found
+   - [severity: critical/warning/info] description
+
+   ## Routing Analysis
+   - Semantic hits: N%  (confidence >= 0.85)
+   - LLM fallbacks: N%  (confidence < 0.85 — each costs ~1-2s extra)
+   - Keyword fallbacks: N%
+
+   ## Recommendations
+   1. [ranked by impact]
+```
+
+### Running the Sub-Agent
+
+```
+Agent tool: general-purpose
+Prompt: [the prompt above, with actual Jaeger data if available]
+```
+
+### Manual Jaeger Queries
+
+```bash
+# All recent GaApi traces
+curl -s "http://localhost:16686/api/traces?service=GaApi&limit=10" | jq '.data[].spans[] | {op: .operationName, dur: .duration}'
+
+# Only slow traces (> 3 seconds)
+curl -s "http://localhost:16686/api/traces?service=GaApi&limit=50&minDuration=3000000" | jq .
+
+# Check routing confidence distribution
+curl -s "http://localhost:16686/api/traces?service=GaApi&operation=routing.route&limit=50" \
+  | jq '[.data[].spans[].tags[] | select(.key == "routing.confidence") | .value | tonumber] | {min: min, max: max, avg: add/length}'
+```
+
+### Common Bottleneck Patterns
+
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| `routing.semantic` > 500ms | Embedding generation slow | Preload embeddings at startup; check Ollama health |
+| `routing.llm` spans present | Semantic confidence < 0.85 | Improve agent descriptions / add keyword synonyms |
+| `agent.chat` > 3000ms | Ollama model too large or cold | Use `llama3.2:1b` or `qwen:0.5b` for lower latency |
+| `orchestration.answer` > 5000ms | Multiple sequential LLM calls | Check if `ChatWithCritiqueAsync` is being triggered |
+| Many `routing.keyword` fallbacks | Embedding init failing | Check `EmbeddingProvider` config; ensure `nomic-embed-text` is pulled |
+
+### ChatJsonResponse Observability Fields
+
+Every non-streaming `/api/chatbot/chat` response now includes:
+```json
+{
+  "naturalLanguageAnswer": "...",
+  "agentId": "theory",
+  "confidence": 0.91,
+  "routingMethod": "semantic",
+  "elapsedMs": 1234,
+  "traceId": "abc123def456..."
+}
+```
+Use `traceId` to look up the exact trace in Jaeger: `http://localhost:16686/trace/{traceId}`

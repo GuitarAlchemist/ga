@@ -1,5 +1,6 @@
 namespace GaApi.Controllers;
 
+using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
@@ -129,15 +130,20 @@ public class ChatbotController(
 
         try
         {
+            var sw = Stopwatch.StartNew();
             var response = await orchestrator.AnswerAsync(
                 new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+            sw.Stop();
 
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+            var traceId = Activity.Current?.TraceId.ToString();
             return Ok(new ChatJsonResponse(
                 NaturalLanguageAnswer: response.NaturalLanguageAnswer ?? string.Empty,
                 routing.AgentId,
                 routing.Confidence,
-                routing.RoutingMethod));
+                routing.RoutingMethod,
+                ElapsedMs: sw.ElapsedMilliseconds,
+                TraceId: traceId));
         }
         finally
         {

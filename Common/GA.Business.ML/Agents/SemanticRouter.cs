@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,8 @@ public class SemanticRouter(
 
         _logger.LogDebug("Routing query: {Query}", query[..Math.Min(100, query.Length)]);
 
+        using var routeActivity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.RoutingRoute, query);
+
         // 1. Try semantic routing if embeddings are available
         RoutingResult? semanticResult = null;
         if (textEmbeddings != null)
@@ -62,6 +65,9 @@ public class SemanticRouter(
             // If confidence is high, we can trust it
             if (semanticResult.Confidence > 0.85f)
             {
+                routeActivity?.SetTag(ChatbotActivitySource.TagRoutingMethod, semanticResult.RoutingMethod);
+                routeActivity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, semanticResult.Confidence);
+                routeActivity?.SetTag(ChatbotActivitySource.TagAgentId, semanticResult.SelectedAgent.AgentId);
                 return semanticResult;
             }
         }
@@ -72,12 +78,19 @@ public class SemanticRouter(
             var llmResult = await LlmRouteAsync(query, semanticResult, cancellationToken);
             if (llmResult != null && llmResult.Confidence > 0.6f)
             {
+                routeActivity?.SetTag(ChatbotActivitySource.TagRoutingMethod, llmResult.RoutingMethod);
+                routeActivity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, llmResult.Confidence);
+                routeActivity?.SetTag(ChatbotActivitySource.TagAgentId, llmResult.SelectedAgent.AgentId);
                 return llmResult;
             }
         }
 
         // 3. Fallback to semantic or keyword
-        return semanticResult ?? KeywordRoute(query);
+        var finalResult = semanticResult ?? KeywordRoute(query);
+        routeActivity?.SetTag(ChatbotActivitySource.TagRoutingMethod, finalResult.RoutingMethod);
+        routeActivity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, finalResult.Confidence);
+        routeActivity?.SetTag(ChatbotActivitySource.TagAgentId, finalResult.SelectedAgent.AgentId);
+        return finalResult;
     }
 
     private async Task<RoutingResult?> LlmRouteAsync(
@@ -223,6 +236,10 @@ public class SemanticRouter(
 
             _logger.LogDebug("Initializing agent embeddings...");
 
+            using var initActivity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.EmbeddingInit);
+            initActivity?.SetTag(ChatbotActivitySource.TagAgentName, string.Join(",", _agents.Select(a => a.AgentId)));
+
+            var sw = Stopwatch.StartNew();
             var descriptions = _agents.Select(a => $"{a.Name}: {a.Description}. Capabilities: {string.Join(", ", a.Capabilities)}").ToArray();
             var embeddings = await textEmbeddings.GenerateAsync(descriptions, cancellationToken: cancellationToken);
 
@@ -232,7 +249,9 @@ public class SemanticRouter(
             }
 
             _embeddingsInitialized = true;
-            _logger.LogDebug("Initialized embeddings for {Count} agents", _agents.Count);
+            sw.Stop();
+            initActivity?.SetTag(ChatbotActivitySource.TagEmbeddingMs, sw.ElapsedMilliseconds);
+            _logger.LogInformation("Initialized embeddings for {Count} agents in {Ms}ms", _agents.Count, sw.ElapsedMilliseconds);
         }
         finally
         {
@@ -242,8 +261,12 @@ public class SemanticRouter(
 
     private async Task<RoutingResult> SemanticRouteAsync(string query, CancellationToken cancellationToken)
     {
+        using var activity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.RoutingSemantic);
+
+        var sw = Stopwatch.StartNew();
         var queryEmbedding = await textEmbeddings!.GenerateAsync([query], cancellationToken: cancellationToken);
         var queryVector = queryEmbedding[0].Vector.ToArray();
+        activity?.SetTag(ChatbotActivitySource.TagEmbeddingMs, sw.ElapsedMilliseconds);
 
         var scores = new List<(GuitarAlchemistAgentBase Agent, float Score)>();
 
@@ -265,9 +288,11 @@ public class SemanticRouter(
         var orderedScores = scores.OrderByDescending(s => s.Score).ToList();
         var best = orderedScores.First();
 
-        _logger.LogDebug(
-            "Semantic routing scores: {Scores}",
-            string.Join(", ", orderedScores.Select(s => $"{s.Agent.AgentId}={s.Score:F3}")));
+        var scoresText = string.Join(", ", orderedScores.Select(s => $"{s.Agent.AgentId}={s.Score:F3}"));
+        _logger.LogDebug("Semantic routing scores: {Scores}", scoresText);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingScores, scoresText);
+        activity?.SetTag(ChatbotActivitySource.TagAgentId, best.Agent.AgentId);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, best.Score);
 
         return new RoutingResult
         {
@@ -280,6 +305,7 @@ public class SemanticRouter(
 
     private RoutingResult KeywordRoute(string query)
     {
+        using var activity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.RoutingKeyword);
         var keywords = new Dictionary<string, string[]>
         {
             [AgentIds.Tab] = ["tab", "tablature", "fret", "string", "ascii", "parse", "e|", "a|", "d|"],
@@ -318,9 +344,11 @@ public class SemanticRouter(
         // Ensure minimum confidence
         var confidence = Math.Max(best.Score, 0.3f);
 
-        _logger.LogDebug(
-            "Keyword routing scores: {Scores}",
-            string.Join(", ", orderedScores.Select(s => $"{s.Agent.AgentId}={s.Score:F3}")));
+        var scoresText = string.Join(", ", orderedScores.Select(s => $"{s.Agent.AgentId}={s.Score:F3}"));
+        _logger.LogDebug("Keyword routing scores: {Scores}", scoresText);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingScores, scoresText);
+        activity?.SetTag(ChatbotActivitySource.TagAgentId, best.Agent.AgentId);
+        activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, confidence);
 
         return new RoutingResult
         {
