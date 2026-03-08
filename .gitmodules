@@ -1,0 +1,3 @@
+[submodule "mcp-servers/meshy-ai"]
+	path = mcp-servers/meshy-ai
+	url = https://github.com/pasie15/meshy-ai-mcp-server
