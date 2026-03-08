@@ -84,7 +84,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         CancellationToken cancellationToken = default)
     {
         var messages = new List<ChatMessage>();
-        
+
         var prompt = systemPrompt ?? BuildSystemPrompt();
         messages.Add(new ChatMessage(ChatRole.System, prompt));
         messages.Add(new ChatMessage(ChatRole.User, userMessage));
@@ -139,6 +139,34 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             CRITIQUE: {critique}
             """;
         return await ChatAsync(refineMessage, systemPrompt, cancellationToken);
+    }
+
+    /// <summary>
+    /// Streams a chat request to the LLM token-by-token using <see cref="IChatClient.GetStreamingResponseAsync"/>.
+    /// </summary>
+    /// <param name="userMessage">The user's message.</param>
+    /// <param name="systemPrompt">Optional system prompt override; defaults to <see cref="BuildSystemPrompt"/>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable that yields each text token as it arrives from the LLM.</returns>
+    public async IAsyncEnumerable<string> ProcessStreamingAsync(
+        string userMessage,
+        string? systemPrompt = null,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var messages = new List<ChatMessage>();
+
+        var prompt = systemPrompt ?? BuildSystemPrompt();
+        messages.Add(new ChatMessage(ChatRole.System, prompt));
+        messages.Add(new ChatMessage(ChatRole.User, userMessage));
+
+        Logger.LogDebug("Agent {AgentId} streaming request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
+
+        await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
+        {
+            var text = update.Text;
+            if (!string.IsNullOrEmpty(text))
+                yield return text;
+        }
     }
 
     /// <summary>

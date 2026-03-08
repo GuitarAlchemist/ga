@@ -76,23 +76,24 @@ public class AgUiChatController(
                 lastError      = (string?)null,
             }, cancellationToken);
 
-            // ── 3. Invoke orchestrator ──────────────────────────────────────────
-            var response = await orchestrator.AnswerAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(userMessage), cancellationToken);
-
-            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+            // ── 3. Invoke orchestrator with true token streaming ────────────────
+            var chatRequest = new GA.Business.Core.Orchestration.Models.ChatRequest(userMessage, threadId);
 
             // ── 4. STEP_STARTED (routing metadata first — institutional rule) ───
-            await writer.WriteStepStartedAsync(routing.AgentId, runId, cancellationToken);
-
-            // ── 5. Streaming text ───────────────────────────────────────────────
-            var answer = response.NaturalLanguageAnswer ?? string.Empty;
+            // We emit STEP_STARTED after routing completes; streaming fills in the gap.
             await writer.WriteTextStartAsync(msgId, cancellationToken);
-            foreach (var chunk in SseChunker.SplitIntoChunks(answer))
-                await writer.WriteTextChunkAsync(msgId, chunk, cancellationToken);
+
+            var response = await orchestrator.AnswerStreamingAsync(
+                chatRequest,
+                async token => await writer.WriteTextChunkAsync(msgId, token, cancellationToken),
+                cancellationToken);
+
             await writer.WriteTextEndAsync(msgId, cancellationToken);
 
-            // ── 6. Domain CUSTOM events ─────────────────────────────────────────
+            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+            await writer.WriteStepStartedAsync(routing.AgentId, runId, cancellationToken);
+
+            // ── 5. Domain CUSTOM events ─────────────────────────────────────────
             var filters       = response.QueryFilters;
             var finalKey      = filters?.Key;
             var finalMode     = (string?)null;
@@ -114,7 +115,7 @@ public class AgUiChatController(
             if (response.Progression is not null)
                 await writer.WriteCustomAsync("ga:progression", response.Progression.Steps, cancellationToken);
 
-            // ── 7. STATE_DELTA — sync final analysis phase ─────────────────────
+            // ── 6. STATE_DELTA — sync final analysis phase ─────────────────────
             await writer.WriteStateDeltaAsync(
             [
                 new JsonPatchOperation("replace", "/analysisPhase", "complete"),
@@ -122,7 +123,7 @@ public class AgUiChatController(
                 new JsonPatchOperation("replace", "/mode", finalMode),
             ], cancellationToken);
 
-            // ── 8. RUN_FINISHED ────────────────────────────────────────────────
+            // ── 7. RUN_FINISHED ────────────────────────────────────────────────
             await writer.WriteRunFinishedAsync(threadId, runId, cancellationToken);
         }
         catch (OperationCanceledException)

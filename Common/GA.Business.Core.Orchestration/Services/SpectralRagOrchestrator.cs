@@ -24,6 +24,22 @@ public class SpectralRagOrchestrator(
     IGroundedNarrator narrator,
     ILogger<SpectralRagOrchestrator> logger) : IHarmonicChatOrchestrator
 {
+    /// <inheritdoc />
+    /// <remarks>
+    /// TODO: Replace word-level simulation with true narrator streaming once
+    /// <see cref="IGroundedNarrator"/> exposes a streaming overload.
+    /// </remarks>
+    public async Task<ChatResponse> AnswerStreamingAsync(
+        ChatRequest req,
+        Func<string, Task> onToken,
+        CancellationToken ct = default)
+    {
+        var response = await AnswerAsync(req, ct);
+        foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            await onToken(word + " ");
+        return response;
+    }
+
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
         var candidates = new List<CandidateVoicing>();

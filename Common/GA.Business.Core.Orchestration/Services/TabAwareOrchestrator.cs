@@ -25,6 +25,25 @@ public class TabAwareOrchestrator(
         return await ragOrchestrator.AnswerAsync(req, ct);
     }
 
+    /// <inheritdoc />
+    public async Task<ChatResponse> AnswerStreamingAsync(
+        ChatRequest req,
+        Func<string, Task> onToken,
+        CancellationToken ct = default)
+    {
+        // Delegate to the RAG orchestrator's streaming path when possible;
+        // for tablature input we fall back to word-level simulation.
+        if (IsTablature(req.Message))
+        {
+            var tabResponse = await AnalyzeTabAsync(req.Message);
+            foreach (var word in tabResponse.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+            return tabResponse;
+        }
+
+        return await ragOrchestrator.AnswerStreamingAsync(req, onToken, ct);
+    }
+
     private bool IsTablature(string message)
     {
         var blocks = tabTokenizer.Tokenize(message);

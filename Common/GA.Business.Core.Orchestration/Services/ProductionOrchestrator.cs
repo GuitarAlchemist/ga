@@ -33,6 +33,116 @@ public class ProductionOrchestrator(
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
     private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
 
+    /// <summary>
+    /// Streams the LLM response token-by-token, calling <paramref name="onToken"/> for each token,
+    /// then returns the full <see cref="ChatResponse"/> with routing and filter metadata when done.
+    /// </summary>
+    /// <param name="req">The chat request.</param>
+    /// <param name="onToken">Callback invoked for each token as it arrives from the LLM.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The complete <see cref="ChatResponse"/> once the stream is finished.</returns>
+    public async Task<ChatResponse> AnswerStreamingAsync(
+        ChatRequest req,
+        Func<string, Task> onToken,
+        CancellationToken ct = default)
+    {
+        // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
+        var hookCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = req.Message,
+            Services        = services,
+        };
+
+        foreach (var hook in _hooks)
+        {
+            var hookResult = await hook.OnRequestReceived(hookCtx, ct);
+            if (hookResult.MutatedMessage is not null)
+                hookCtx.CurrentMessage = hookResult.MutatedMessage;
+            if (!hookResult.Cancel) continue;
+
+            return new ChatResponse(
+                NaturalLanguageAnswer: hookResult.BlockedResponse?.Result ?? "Request blocked.",
+                Candidates: [],
+                Routing: new AgentRoutingMetadata("hook", 1f, "hook-blocked"));
+        }
+
+        var message = hookCtx.CurrentMessage;
+
+        // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
+        foreach (var skill in _skills)
+        {
+            if (!skill.CanHandle(message)) continue;
+
+            var skillResp = await skill.ExecuteAsync(message, ct);
+
+            // Emit skill answer as word-level simulated tokens
+            foreach (var word in skillResp.Result.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            return new ChatResponse(
+                NaturalLanguageAnswer: skillResp.Result,
+                Candidates: [],
+                Routing: new AgentRoutingMetadata($"skill.{skill.Name}", skillResp.Confidence, "orchestrator-skill"));
+        }
+
+        // Route the request and extract filters in parallel (same as AnswerAsync)
+        var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
+        var routingTask = router.RouteAsync(req.Message, ct);
+        await Task.WhenAll(filtersTask, routingTask);
+        var filters = filtersTask.Result;
+        var routing = routingTask.Result;
+
+        var routingMetadata = new AgentRoutingMetadata(
+            routing.SelectedAgent.AgentId,
+            routing.Confidence,
+            routing.RoutingMethod);
+
+        // For tab/path-optimization intents fall back to non-streaming path
+        if (routing.SelectedAgent.AgentId == AgentIds.Tab ||
+            (filters?.Intent is "OptimizePath" or "AnalyzeTab"))
+        {
+            ChatResponse fallback;
+            if (filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message))
+                fallback = await HandlePathOptimizationAsync(req.Message, ct);
+            else
+                fallback = await HandleTabAnalysisAsync(req.Message, ct);
+
+            fallback = fallback with { Routing = routingMetadata, QueryFilters = filters };
+
+            // Emit the full answer as word-level simulated tokens
+            foreach (var word in fallback.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            return fallback;
+        }
+
+        // For all other agents: stream token-by-token if the selected agent supports it
+        if (routing.SelectedAgent is GuitarAlchemistAgentBase streamingAgent)
+        {
+            var fullText = new StringBuilder();
+            await foreach (var token in streamingAgent.ProcessStreamingAsync(req.Message, cancellationToken: ct))
+            {
+                await onToken(token);
+                fullText.Append(token);
+            }
+
+            // Build a minimal ChatResponse with the streamed text
+            return new ChatResponse(
+                fullText.ToString(),
+                [],
+                Routing: routingMetadata,
+                QueryFilters: filters);
+        }
+
+        // Fallback: non-streaming path with word-level simulation
+        var response = await tabOrchestrator.AnswerAsync(req, ct);
+        response = response with { Routing = routingMetadata, QueryFilters = filters };
+        foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            await onToken(word + " ");
+        return response;
+    }
+
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
