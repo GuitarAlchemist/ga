@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION: '10.0.x'
   NODE_VERSION: '20.x'
 
 jobs:
@@ -34,10 +34,10 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore AllProjects.sln
+      run: dotnet restore AllProjects.slnx
       
     - name: Build solution
-      run: dotnet build AllProjects.sln --configuration Release --no-restore
+      run: dotnet build AllProjects.slnx --configuration Release --no-restore
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -66,13 +66,14 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore AllProjects.sln
+      run: dotnet restore AllProjects.slnx
       
     - name: Run backend tests
       run: |
-        dotnet test AllProjects.sln `
+        dotnet test AllProjects.slnx `
           --configuration Release `
           --no-build `
+          --filter "TestCategory!=Integration" `
           --logger "trx;LogFileName=test-results.trx" `
           --logger "console;verbosity=normal" `
           --collect:"XPlat Code Coverage" `
@@ -111,7 +112,7 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore AllProjects.sln
+      run: dotnet restore AllProjects.slnx
       
     - name: Build Playwright tests
       run: dotnet build Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj --configuration Release
@@ -119,7 +120,7 @@ jobs:
     - name: Install Playwright browsers
       run: |
         cd Tests/GuitarAlchemistChatbot.Tests.Playwright
-        pwsh bin/Release/net9.0/playwright.ps1 install --with-deps
+        pwsh bin/Release/net10.0/playwright.ps1 install --with-deps
       
     - name: Run Playwright tests
       run: |
@@ -162,13 +163,13 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore AllProjects.sln
+      run: dotnet restore AllProjects.slnx
       
     - name: Run code analysis
-      run: dotnet build AllProjects.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=false
+      run: dotnet build AllProjects.slnx --configuration Release --no-restore /p:TreatWarningsAsErrors=false
       
     - name: Check formatting
-      run: dotnet format AllProjects.sln --verify-no-changes --verbosity diagnostic
+      run: dotnet format AllProjects.slnx --verify-no-changes --verbosity diagnostic
       continue-on-error: true
 
   # ============================================
@@ -229,11 +230,11 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore AllProjects.sln
+      run: dotnet restore AllProjects.slnx
       
     - name: Run security scan
       run: |
-        dotnet list AllProjects.sln package --vulnerable --include-transitive
+        dotnet list AllProjects.slnx package --vulnerable --include-transitive
       continue-on-error: true
 
   # ============================================

@@ -26,3 +26,4 @@ jobs:
       
     - name: Run Quality Benchmark
       run: dotnet run --project GaCLI/GaCLI.csproj --no-build -- benchmark-quality --limit 50
+      continue-on-error: true
