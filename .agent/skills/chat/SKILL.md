@@ -58,14 +58,20 @@ If warnings fire for files you touched, fix them (`IDE0305`, `IDE0022`, etc.) pe
 
 ## Step 3 — Start All Services via Aspire
 
+**Architecture contract (non-negotiable):**
+- **Aspire** orchestrates: MongoDB (Docker), Redis, all microservices
+- **GaApi** runs via `dotnet run` or via Aspire — never from a Docker image
+- **Ollama** runs natively at `localhost:11434` (not Docker)
+- Aspire auto-injects `ConnectionStrings__guitar-alchemist` into GaApi; no manual MongoDB URL needed
+
 ```powershell
 pwsh Scripts/start-all.ps1 -NoBuild -Dashboard
 ```
 
 This launches (via Aspire AppHost):
-- **MongoDB** on `localhost:27017`
+- **MongoDB** (Docker, dynamic port, data persists via `ga-mongodb-data` volume)
 - **MongoExpress** UI at `http://localhost:8081`
-- **GaApi** (REST + SignalR) — check Aspire dashboard for actual port
+- **GaApi** (REST + SignalR) — actual port shown in Aspire dashboard
 - **GaChatbot** — internal Ollama-backed chatbot service
 - **Aspire Dashboard** at `https://localhost:15001`
 
