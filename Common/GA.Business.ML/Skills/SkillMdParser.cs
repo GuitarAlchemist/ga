@@ -42,6 +42,9 @@ public static class SkillMdParser
     /// </summary>
     public static SkillMd? TryParseContent(string content, string filePath = "<memory>")
     {
+        // Trim leading newlines — raw string literals and some editors add them.
+        content = content.TrimStart('\r', '\n');
+
         // Frontmatter: content must start with "---\n" and contain a closing "---"
         if (!content.StartsWith("---", StringComparison.Ordinal))
             return null;
@@ -91,8 +94,8 @@ public static class SkillMdParser
 
     private sealed class SkillMdFrontmatter
     {
-        public string?              Name        { get; set; }
-        public string?              Description { get; set; }
-        public IReadOnlyList<string>? Triggers  { get; set; }
+        public string?       Name        { get; set; }
+        public string?       Description { get; set; }
+        public List<string>? Triggers    { get; set; }  // List<T> for YamlDotNet compatibility
     }
 }

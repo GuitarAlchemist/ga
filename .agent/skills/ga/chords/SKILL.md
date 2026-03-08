@@ -1,6 +1,14 @@
 ---
 name: "GA Chords"
 description: "Perform live chord operations — parsing, transposition, diatonic analysis — backed by the real GA domain services. Use when working with chord symbols, progressions, or key relationships in code."
+triggers:
+  - "parse chord"
+  - "transpose"
+  - "diatonic chords"
+  - "what chords are in"
+  - "chord substitut"
+  - "chord progression"
+  - "what notes are in"
 ---
 
 # /ga chords — GA Chord Theory Helper

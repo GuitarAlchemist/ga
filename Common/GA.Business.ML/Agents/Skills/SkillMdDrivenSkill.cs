@@ -20,6 +20,29 @@ public sealed class SkillMdDrivenSkill(
 {
     private const string DefaultModel = "claude-sonnet-4-6";
 
+    // ── Test seam ────────────────────────────────────────────────────────────
+    // Set by ForTesting() to bypass AnthropicClient creation in unit tests.
+    private IChatClient? _testChatClient;
+
+    /// <summary>
+    /// Creates a <see cref="SkillMdDrivenSkill"/> with an injected <see cref="IChatClient"/>
+    /// for unit testing — bypasses <c>AnthropicClient</c> creation and API-key validation.
+    /// </summary>
+    internal static SkillMdDrivenSkill ForTesting(
+        SkillMd skillMd,
+        IMcpToolsProvider toolsProvider,
+        ILogger<SkillMdDrivenSkill> logger,
+        IChatClient chatClient)
+    {
+        var skill = new SkillMdDrivenSkill(
+            skillMd,
+            toolsProvider,
+            new ConfigurationBuilder().Build(),
+            logger);
+        skill._testChatClient = chatClient;
+        return skill;
+    }
+
     public string Name        => skillMd.Name;
     public string Description => skillMd.Description;
 
@@ -34,24 +57,32 @@ public sealed class SkillMdDrivenSkill(
     {
         var model = configuration["AnthropicSkills:Model"] ?? DefaultModel;
 
-        var apiKey = configuration["Anthropic:ApiKey"]
-                     ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+        IChatClient chatClient;
+        if (_testChatClient is not null)
+        {
+            chatClient = _testChatClient;
+        }
+        else
+        {
+            var apiKey = configuration["Anthropic:ApiKey"]
+                         ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
 
-        if (string.IsNullOrWhiteSpace(apiKey))
-            throw new InvalidOperationException(
-                "ANTHROPIC_API_KEY environment variable or Anthropic:ApiKey configuration is required " +
-                "to run SKILL.md-driven skills. Set the environment variable and restart the service.");
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new InvalidOperationException(
+                    "ANTHROPIC_API_KEY environment variable or Anthropic:ApiKey configuration is required " +
+                    "to run SKILL.md-driven skills. Set the environment variable and restart the service.");
 
-        var anthropicClient = new AnthropicClient { ApiKey = apiKey };
+            var anthropicClient = new AnthropicClient { ApiKey = apiKey };
 
-        // AsIChatClient() from Microsoft.Extensions.AI.AnthropicClientExtensions
-        // UseFunctionInvocation() intercepts tool_use stops, dispatches AIFunction,
-        // feeds results back, and loops until a final text response.
-        IChatClient chatClient = anthropicClient
-            .AsIChatClient(model)
-            .AsBuilder()
-            .UseFunctionInvocation()
-            .Build();
+            // AsIChatClient() from Microsoft.Extensions.AI.AnthropicClientExtensions
+            // UseFunctionInvocation() intercepts tool_use stops, dispatches AIFunction,
+            // feeds results back, and loops until a final text response.
+            chatClient = anthropicClient
+                .AsIChatClient(model)
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+        }
 
         ChatMessage[] messages =
         [
