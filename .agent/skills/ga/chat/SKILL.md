@@ -3,9 +3,9 @@ name: "GA Chat"
 description: "Build, index data, and run the GA chatbot locally. Knows the full startup sequence: build solution → start Aspire services → seed MongoDB → probe the chat endpoint."
 ---
 
-# GA Chat Skill
+# /ga chat — GA Chat Skill
 
-Use this skill when you need to **start the Guitar Alchemist chatbot locally**, **verify it is responding**, or **diagnose why it is not working**.
+Use this sub-command when you need to **start the Guitar Alchemist chatbot locally**, **verify it is responding**, or **diagnose why it is not working**.
 
 ## When to Use
 

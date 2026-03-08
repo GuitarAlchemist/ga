@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Agents;
+using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
@@ -24,12 +25,106 @@ public class ProductionOrchestrator(
     AdvancedTabSolver tabSolver,
     AlternativeFingeringService altService,
     SemanticRouter router,
-    QueryUnderstandingService queryUnderstandingService) : IHarmonicChatOrchestrator
+    QueryUnderstandingService queryUnderstandingService,
+    IEnumerable<IOrchestratorSkill> orchestratorSkills,
+    IEnumerable<IChatHook> chatHooks,
+    IServiceProvider services) : IHarmonicChatOrchestrator
 {
+    private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
+    private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
+
     public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();
+
+        // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
+        var hookCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = req.Message,
+            Services        = services,
+        };
+
+        foreach (var hook in _hooks)
+        {
+            var hookResult = await hook.OnRequestReceived(hookCtx, ct);
+            if (hookResult.MutatedMessage is not null)
+                hookCtx.CurrentMessage = hookResult.MutatedMessage;
+            if (!hookResult.Cancel) continue;
+
+            sw.Stop();
+            return new ChatResponse(
+                NaturalLanguageAnswer: hookResult.BlockedResponse?.Result ?? "Request blocked.",
+                Candidates: [],
+                Routing: new AgentRoutingMetadata("hook", 1f, "hook-blocked"));
+        }
+
+        var message = hookCtx.CurrentMessage;
+
+        // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
+        foreach (var skill in _skills)
+        {
+            if (!skill.CanHandle(message)) continue;
+
+            // OnBeforeSkill hooks
+            var beforeCtx = new ChatHookContext
+            {
+                OriginalMessage  = req.Message,
+                CurrentMessage   = message,
+                MatchedSkillName = skill.Name,
+                Services         = services,
+            };
+            foreach (var hook in _hooks)
+            {
+                var r = await hook.OnBeforeSkill(beforeCtx, ct);
+                if (r.Cancel)
+                {
+                    sw.Stop();
+                    return new ChatResponse(
+                        NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Skill blocked.",
+                        Candidates: [],
+                        Routing: new AgentRoutingMetadata($"hook.{skill.Name}", 1f, "hook-blocked"));
+                }
+            }
+
+            var skillResp = await skill.ExecuteAsync(message, ct);
+
+            // OnAfterSkill hooks
+            var afterCtx = new ChatHookContext
+            {
+                OriginalMessage  = req.Message,
+                CurrentMessage   = message,
+                MatchedSkillName = skill.Name,
+                Response         = skillResp,
+                Services         = services,
+            };
+            foreach (var hook in _hooks)
+                await hook.OnAfterSkill(afterCtx, ct);
+
+            sw.Stop();
+            activity?.SetTag("orchestration.branch", $"skill.{skill.Name}");
+            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+            var chatResp = new ChatResponse(
+                NaturalLanguageAnswer: skillResp.Result,
+                Candidates: [],
+                Routing: new AgentRoutingMetadata($"skill.{skill.Name}", skillResp.Confidence, "orchestrator-skill"));
+
+            // OnResponseSent hooks (memory writing, analytics)
+            var sentCtx = new ChatHookContext
+            {
+                OriginalMessage  = req.Message,
+                CurrentMessage   = message,
+                MatchedSkillName = skill.Name,
+                Response         = skillResp,
+                Services         = services,
+            };
+            foreach (var hook in _hooks)
+                await hook.OnResponseSent(sentCtx, ct);
+
+            return chatResp;
+        }
 
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);

@@ -1,11 +1,11 @@
 ---
-name: "GA Chord Theory Helper"
+name: "GA Chords"
 description: "Perform live chord operations — parsing, transposition, diatonic analysis — backed by the real GA domain services. Use when working with chord symbols, progressions, or key relationships in code."
 ---
 
-# GA Chord Theory Helper
+# /ga chords — GA Chord Theory Helper
 
-Use this skill when a task involves **chord symbols, progressions, or key relationships** and you need ground-truth answers from the live GA domain services rather than reasoning from memory.
+Use this sub-command when a task involves **chord symbols, progressions, or key relationships** and you need ground-truth answers from the live GA domain services rather than reasoning from memory.
 
 ## When to Use
 

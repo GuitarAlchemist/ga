@@ -1,11 +1,11 @@
 ---
-name: "GA Language Evaluator"
+name: "GA Eval"
 description: "Run GA Language (GAL) operations against the live domain services via the ga CLI. Use when you need to interactively explore domain closures, test pipelines, or compute music-theory results."
 ---
 
-# GA Language Evaluator
+# /ga eval — GA Language Evaluator
 
-Use this skill when the user asks to **run a GAL script**, **test a closure**, or **explore the GA DSL** interactively.
+Use this sub-command when the user asks to **run a GAL script**, **test a closure**, or **explore the GA DSL** interactively.
 
 ## When to Use
 

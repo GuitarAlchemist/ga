@@ -1,11 +1,11 @@
 ---
-name: "GA Chatbot Probe"
+name: "GA Probe"
 description: "Talk to the GA chatbot agents, probe routing decisions, compare responses across TheoryAgent / TabAgent / CriticAgent. Use when testing agent behaviour, verifying routing, or exploring chatbot responses programmatically."
 ---
 
-# GA Chatbot Probe
+# /ga probe — GA Chatbot Probe
 
-Use this skill when you need to **test agent behaviour**, **compare routing decisions**, or **get music theory answers** from the live GA chatbot (Ollama-backed, SemanticRouter-dispatched).
+Use this sub-command when you need to **test agent behaviour**, **compare routing decisions**, or **get music theory answers** from the live GA chatbot (Ollama-backed, SemanticRouter-dispatched).
 
 ## When to Use
 
@@ -13,6 +13,7 @@ Use this skill when you need to **test agent behaviour**, **compare routing deci
 - Comparing how `TheoryAgent` vs `CriticAgent` answer the same question
 - Getting a real chatbot answer as context while writing code
 - Verifying a newly deployed agent change works end-to-end
+- Confirming orchestrator-level skills short-circuit routing (`routingMethod: "orchestrator-skill"`)
 
 ## Single Agent Query
 
@@ -67,7 +68,7 @@ Response shape:
 }
 ```
 
-Key fields: `routing.agentId`, `routing.confidence`, `routing.routingMethod` (`embedding` | `llm` | `keyword`).
+Key fields: `routing.agentId`, `routing.confidence`, `routing.routingMethod` (`embedding` | `llm` | `keyword` | `orchestrator-skill`).
 
 ## Probing Routing Decisions
 
@@ -84,6 +85,17 @@ let probe question =
 
 Then inspect `routing.agentId` to verify.
 
+### Verifying orchestrator-skill short-circuit
+
+For queries handled by `ScaleInfoSkill` or `KeyIdentificationSkill`, the response should show `routingMethod: "orchestrator-skill"` — meaning no LLM routing or embedding lookup was performed:
+
+```bash
+curl -sk -X POST https://localhost:7001/api/chatbot/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What notes are in C major?"}' | jq '.routing'
+# Expected: { "routingMethod": "orchestrator-skill", "agentId": "skill.ScaleInfo", ... }
+```
+
 ### Routing confidence regression test
 
 When changing `SemanticRouter` weights or embeddings, run these known queries and record confidence scores:
@@ -93,6 +105,8 @@ When changing `SemanticRouter` weights or embeddings, run these known queries an
 | "What is a tritone substitution?" | `theory-agent` | 0.80 |
 | "Show me tabs for an A minor pentatonic lick" | `tab-agent` | 0.75 |
 | "Critique this progression: I IV V vi" | `critic-agent` | 0.70 |
+| "What notes are in G major?" | `orchestrator-skill` | 1.0 (domain) |
+| "What key am I in if I play Am F C G?" | `orchestrator-skill` | varies |
 
 Compare before/after to detect regressions.
 
@@ -124,6 +138,8 @@ Returns whether Ollama is reachable and the model is loaded. Check this first if
 - **TabAgent**: VexTab or ASCII tab output, fingering instructions
 - **CriticAgent**: voice-leading critique, cadence analysis, harmonic function labels
 - **ComposerAgent**: melodic/progression suggestions
+- **ScaleInfoSkill** (orchestrator): zero-LLM scale note lookup, relative key, key signature
+- **KeyIdentificationSkill** (orchestrator): domain-scored key identification with LLM explanation
 
 If the routing is wrong (e.g. a tab question answered by TheoryAgent), check:
 1. `routing.routingMethod` — if `keyword`, the embedding fallback triggered
