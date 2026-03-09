@@ -321,6 +321,11 @@ let private cmdAnalyze (chords: string list) =
     | Error e -> eprintfn "Error: %O" e; exit 1
     | Ok v    -> printfn "%O" v
 
+let private cmdComplete (chords: string list) =
+    match invoke "domain.progressionCompletion" [ "chords", box (String.concat " " chords) ] with
+    | Error e -> eprintfn "Error: %O" e; exit 1
+    | Ok v    -> printfn "%O" v
+
 /// Extract the root note string from a parsed chord JSON, e.g. {"root":"Eb",...} -> "Eb".
 let private chordRoot chordSymbol =
     match invoke "domain.parseChord" [ "symbol", box chordSymbol ] with
@@ -492,6 +497,10 @@ let main argv =
     | "analyze" :: rest ->
         if rest.IsEmpty then eprintfn "Usage: ga analyze <chord1> <chord2> ..."; 1
         else cmdAnalyze rest; 0
+
+    | "complete" :: rest ->
+        if rest.IsEmpty then eprintfn "Usage: ga complete <chord1> <chord2> ..."; 1
+        else cmdComplete rest; 0
 
     | "query" :: rest ->
         cmdQuery rest; 0

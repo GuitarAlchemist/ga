@@ -1,7 +1,7 @@
 ---
 title: "feat: Progression Completion Skill (Help me finish this progression)"
 type: feat
-status: active
+status: completed
 date: 2026-03-08
 ---
 
@@ -9,105 +9,178 @@ date: 2026-03-08
 
 ## Overview
 
-A `SKILL.md`-driven skill that answers: **"Help me finish this progression"** — given a partial chord progression, suggest logical next chords using diatonic function, voice leading, and common harmonic idioms.
-
-The `GaProgressionCompletion` MCP tool in `GuitaristProblemTools.cs` already implements the core harmonic engine. It is not wired to any chatbot skill. This plan wires it up with a SKILL.md and zero new C# code.
+Given 2–3 chords from a guitarist, suggest 2–3 natural completions that cadence correctly in the same key. The feature is surfaced via the chatbot orchestrator (as an `IOrchestratorSkill`), via an AG-UI custom event for frontend clients, and via a new `ga complete` CLI command.
 
 ## Problem Statement
 
-A guitarist types: "Am F C — what comes next?" or "Help me finish this progression" or "I have G D Em, how do I end it?".
+A guitarist types: "Help me finish this progression — Am F C?" or "I have G D Em, what should come next?" or "Am F C — how do I end this?".
 
 Currently:
-- No skill handles completion/continuation queries
-- `GaProgressionCompletion` MCP tool exists and computes likely next chords — but is only accessible to external MCP clients, not the chatbot
-- The RAG/Ollama path produces non-deterministic, often incorrect chord suggestions
+- No `IOrchestratorSkill` handles progression continuation queries.
+- The RAG/Ollama path produces non-deterministic, harmonically ungrounded completions.
+- `ContextualChordService.GetChordsForKeyAsync()` and `KeyIdentificationService` are already in the codebase but are not wired together for this use case.
+- There is no AG-UI event for streaming completion suggestions to frontend clients.
+- The `ga` CLI has no `complete` command.
 
 ## Proposed Solution
 
-A `SKILL.md`-driven skill (`.agent/skills/progression-completion/SKILL.md`) that:
-1. Triggers on continuation/completion phrases
-2. Calls `GaProgressionCompletion(chords[])` → gets ranked next-chord candidates
-3. Calls `GaAnalyzeProgression(chords)` → confirms detected key and Roman numerals
-4. Returns 3–5 ranked suggestions with harmonic function explanation
+Implement a `ProgressionCompletionSkill` in `Common/GA.Business.ML/Agents/Skills/` that:
 
-The `SkillMdDrivenSkill` infrastructure handles everything else (Anthropic API, tool loop, MCP wiring).
+1. Triggers on continuation/completion phrases and a detected chord sequence.
+2. Calls `KeyIdentificationService.Identify(chords)` to detect the key deterministically.
+3. Calls `ContextualChordService.GetChordsForKeyAsync()` to retrieve the diatonic set for that key.
+4. Builds an LLM prompt grounded in the diatonic set, asking Claude to suggest 2–3 completions with cadence explanation.
+5. Emits an AG-UI `ga:completion-suggestions` custom event — an array of `{ chords: string[], explanation: string }` objects — for the frontend to render inline chord diagrams.
+6. Registers as a `domain.progressionCompletion` closure in `GaClosureRegistry` so the CLI can invoke it.
+
+The skill follows the same hybrid pattern as `KeyIdentificationSkill`: domain computation (key detection + diatonic set) is deterministic; the LLM is used only to select and explain the completion candidates from the pre-computed diatonic set.
 
 ## Technical Approach
 
-### SKILL.md Frontmatter
+### New Files
 
-```yaml
----
-Name: "Progression Completion"
-Description: "Suggests logical next chords to complete or extend a partial chord progression"
-Triggers:
-  - "finish this progression"
-  - "complete the progression"
-  - "what comes next"
-  - "next chord"
-  - "help me finish"
-  - "how to end"
-  - "what chord follows"
-  - "continue this progression"
-  - "extend this progression"
----
+| File | Purpose |
+|---|---|
+| `Common/GA.Business.ML/Agents/Skills/ProgressionCompletionSkill.cs` | `IOrchestratorSkill` implementation |
+
+### Files to Change
+
+| File | Change |
+|---|---|
+| `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs` | Register `ProgressionCompletionSkill` as scoped |
+| `Apps/GaCli/Program.fs` | Add `ga complete <chords...>` command wired to `domain.progressionCompletion` closure |
+
+### Skill Registration
+
+```csharp
+// In GaPlugin.cs — add alongside KeyIdentificationSkill registration
+services.AddScoped<ProgressionCompletionSkill>();
+services.AddScoped<IOrchestratorSkill>(sp => sp.GetRequiredService<ProgressionCompletionSkill>());
 ```
 
-### System Prompt (body)
+### CanHandle Triggers
 
-Instructs Claude to:
-1. Extract the partial chord progression from the user message
-2. Call `GaProgressionCompletion` with the chord array → ranked next-chord candidates
-3. Call `GaAnalyzeProgression` to confirm detected key and Roman numerals
-4. Optionally call `GaDiatonicChords` for diatonic context if needed
-5. Format the response as a ranked list:
-   ```
-   Progression: Am – F – C (in A minor / C major)
+```csharp
+private static readonly Regex CompletionTrigger = new(
+    @"\b(finish|complete|end|continue|extend|what comes next|next chord|help me finish|how do i end|what should follow)\b",
+    RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-   Suggested next chords:
-   1. G  (bVII → I resolution — open, unresolved)
-   2. E7 (V7 → i authentic cadence — strongest resolution to Am)
-   3. Dm (iv → common pre-dominant move)
-   4. Am (return to i — loop-friendly)
-   5. C/G (I6/4 → V setup — classical approach)
-   ```
-6. Add 1–2 sentence context tip (e.g., "E7 gives the most conclusive cadence if you want to resolve; G keeps it open for another pass")
+private static readonly Regex ChordSequencePattern = new(
+    @"\b[A-G][b#]?(?:m|maj|dim|aug|7|maj7|m7|m7b5|dim7)?\b",
+    RegexOptions.Compiled);
 
-### File to Create
+public bool CanHandle(string message) =>
+    CompletionTrigger.IsMatch(message) &&
+    ChordSequencePattern.Matches(message).Count >= 2;
+```
 
-- `.agent/skills/progression-completion/SKILL.md` — skill definition + system prompt
+### Domain Pipeline
 
-### MCP Tools Used
+```
+input: "Help me finish Am F C"
+  ↓
+KeyIdentificationService.ExtractChords(message)   → ["Am", "F", "C"]
+KeyIdentificationService.Identify(chords)          → [A minor (3/3), C major (3/3)]
+ContextualChordService.GetChordsForKeyAsync("Am")  → [Am, Bm7b5, C, Dm, Em, F, G]
+  ↓
+LLM prompt (diatonic set grounded) → 2–3 suggestions with cadence type
+  ↓
+AgentResponse + ga:completion-suggestions event
+```
 
-| Tool | Source | Purpose |
-|---|---|---|
-| `GaProgressionCompletion` | `GuitaristProblemTools.cs` | Ranked next-chord candidates |
-| `GaAnalyzeProgression` | `GaDslTool.cs` | Key detection + Roman numerals |
-| `GaDiatonicChords` | `GaDslTool.cs` | Diatonic context if needed |
+### LLM Prompt Structure
+
+The prompt provides:
+- The input chord sequence and detected key(s).
+- The full diatonic set (only chords in this set may appear in suggestions).
+- Instructions to suggest 2–3 completions, name the cadence type (authentic, half, deceptive, plagal), and give a one-sentence guitarist explanation.
+- JSON output schema matching `AgentResponse` format.
+
+### AG-UI Event
+
+The `ExecuteAsync` result includes an `AgentResponse.Data` payload serialized as:
+
+```json
+{
+  "event": "ga:completion-suggestions",
+  "suggestions": [
+    { "chords": ["E7"], "explanation": "Authentic cadence (V7–i) — strongest resolution back to Am." },
+    { "chords": ["G"], "explanation": "Half cadence (bVII–i loop) — open, floats back to the top." },
+    { "chords": ["Dm", "E7"], "explanation": "iv–V7–i turnaround — classic minor-key approach." }
+  ]
+}
+```
+
+Frontend clients subscribed to `ga:completion-suggestions` can render the `chords` arrays as inline VexTab chord diagrams.
+
+### CLI Command
+
+```
+ga complete Am F C
+```
+
+Output:
+
+```
+Progression: Am – F – C  (key: A minor / C major)
+
+Suggested completions:
+  1. E7         → authentic cadence (V7 → i)
+  2. G           → half cadence (bVII → i loop)
+  3. Dm E7       → iv–V7–i turnaround
+```
+
+Add to `Program.fs` entry-point dispatch alongside the existing `analyze` command.
+
+### Pattern Reference
+
+- `KeyIdentificationSkill.cs` — same hybrid domain+LLM pattern.
+- `ChordSubstitutionSkill.cs` — trigger regex design and `CanHandle` structure.
+- `AgentSkillBase.cs` — `ChatAsync` + `ParseStructuredResponse` helpers.
 
 ## Acceptance Criteria
 
-- [ ] `dotnet run --project Apps/GaChatbotCli -- "Am F C — what comes next?"` returns ranked next-chord suggestions
-- [ ] Response includes the detected key and Roman numeral analysis
-- [ ] Response lists ≥ 3 ranked next-chord options with brief harmonic explanation
-- [x] Skill fires on "finish this progression", "what comes next", "next chord", "help me finish" triggers
-- [x] `KeyIdentificationSkill` continues to fire on "what key am I in?" (no collision — different triggers)
-- [x] Build passes: `dotnet build AllProjects.slnx -c Debug`
+- [x] `"Help me finish Am F C"` → returns 2–3 completion options with cadence names.
+- [x] `"G D Em — what comes next?"` → detects G major, returns diatonic completions only.
+- [x] All suggestions are strictly diatonic to the detected key (no random chord names).
+- [x] Response includes the detected key and the Roman numeral of each suggested chord.
+- [x] AG-UI event `ga:completion-suggestions` is present in `AgentResponse.Data` as valid JSON.
+- [x] `ga complete Am F C` prints the ranked completion list to stdout.
+- [x] `KeyIdentificationSkill` continues to fire on "what key am I in?" (no trigger collision).
+- [x] `ChordSubstitutionSkill` is unaffected (different trigger keywords).
+- [x] `dotnet build AllProjects.slnx -c Debug` passes with zero warnings in touched files.
+- [x] Unit tests added in `Tests/Common/GA.Business.ML.Tests/Unit/` covering:
+  - [x] `CanHandle` returns `true` for completion phrases with 2+ chords.
+  - [x] `CanHandle` returns `false` for unrelated messages.
+  - [x] Key detection feeds correct diatonic set into the prompt.
 
-## System-Wide Impact
+## Dependencies & Prerequisites
 
-- **No C# changes** — pure SKILL.md addition, auto-loaded by `SkillMdPlugin`
-- **No skill registration changes** — `SkillMdPlugin` discovers it automatically via `triggers:`
-- **Dependency:** `ANTHROPIC_API_KEY` required (same as all `SkillMdDrivenSkill` instances)
-- **No collision** with `KeyIdentificationSkill` — different trigger keywords
-- **No collision** with `ChordSubstitutionSkill` — different trigger keywords
+| Dependency | Status |
+|---|---|
+| `KeyIdentificationService` | Exists — `Common/GA.Business.ML/Agents/KeyIdentificationService.cs` |
+| `ContextualChordService.GetChordsForKeyAsync()` | Exists — `Apps/ga-server/GaApi/Services/` |
+| `AgentSkillBase` | Exists — `Common/GA.Business.ML/Agents/AgentSkillBase.cs` |
+| `GaPlugin` (DI registration point) | Exists — `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs` |
+| `IChatClient` (Ollama / Anthropic) | Injected via DI — no change needed |
+| `ga complete` CLI command | New — F# dispatch case in `Program.fs` |
+
+## Implementation Tasks
+
+- [x] Create `ProgressionCompletionSkill.cs` in `Common/GA.Business.ML/Agents/Skills/`.
+  - [x] Implement `CanHandle(string message)` with `CompletionTrigger` + chord-count guard.
+  - [x] Implement `ExecuteAsync`: extract chords → detect key → fetch diatonic set → build prompt → call LLM → parse response.
+  - [x] Serialize `ga:completion-suggestions` into `AgentResponse.Data`.
+- [x] Register in `GaPlugin.cs` (scoped, `IOrchestratorSkill`).
+- [x] Add `ga complete <chords...>` case in `Apps/GaCli/Program.fs`.
+- [x] Write unit tests in `Tests/Common/GA.Business.ML.Tests/Unit/ProgressionCompletionSkillTests.cs`.
+- [x] Run `dotnet build AllProjects.slnx -c Debug` and `dotnet test AllProjects.slnx` — both must pass.
 
 ## Sources & References
 
-- `GaProgressionCompletion` tool: `GaMcpServer/Tools/GuitaristProblemTools.cs`
-- `GaAnalyzeProgression` tool: `GaMcpServer/Tools/GaDslTool.cs`
-- Existing SKILL.md with triggers: `.agent/skills/ga/chords/SKILL.md`
-- `SkillMdDrivenSkill`: `Common/GA.Business.ML/Agents/Skills/SkillMdDrivenSkill.cs`
-- `SkillMdPlugin` (auto-discovery): `Common/GA.Business.ML/Agents/Plugins/SkillMdPlugin.cs`
-- `KeyIdentificationSkill` (reference pattern): `Common/GA.Business.ML/Agents/Skills/KeyIdentificationSkill.cs`
-- Scale/Mode/Arpeggio Advisor (companion plan): `docs/plans/2026-03-08-feat-scale-mode-arpeggio-advisor-plan.md`
+- `KeyIdentificationSkill.cs`: `Common/GA.Business.ML/Agents/Skills/KeyIdentificationSkill.cs` — hybrid domain+LLM pattern to follow.
+- `ChordSubstitutionSkill.cs`: `Common/GA.Business.ML/Agents/Skills/ChordSubstitutionSkill.cs` — trigger regex design.
+- `KeyIdentificationService.cs`: `Common/GA.Business.ML/Agents/KeyIdentificationService.cs` — key detection + diatonic set.
+- `GaPlugin.cs`: `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs` — DI registration point.
+- `Program.fs`: `Apps/GaCli/Program.fs` — CLI command dispatch pattern.
+- Arpeggio Advisor companion plan: `docs/plans/2026-03-08-feat-arpeggio-advisor-plan.md`.

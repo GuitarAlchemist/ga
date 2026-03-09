@@ -29,8 +29,9 @@ public sealed class GaPlugin : IChatPlugin
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
 
-        // KeyIdentificationSkill uses IChatClient which is Scoped — register as Scoped.
+        // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddScoped<IOrchestratorSkill, KeyIdentificationSkill>();
+        services.AddScoped<IOrchestratorSkill, ProgressionCompletionSkill>();
 
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
