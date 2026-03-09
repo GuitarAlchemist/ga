@@ -25,6 +25,7 @@
         <Compile Include="ModesConfig.fs"/>
         <Compile Include="SemanticConfig.fs"/>
         <Compile Include="TabSourcesConfig.fs"/>
+        <Compile Include="YamlKnowledgeLoader.fs"/>
     </ItemGroup>
 
     <ItemGroup>
