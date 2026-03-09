@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Paper, Typography, IconButton, Tooltip, Chip } from '@mui/material';
+import { Box, Paper, Typography, IconButton, Tooltip, Chip } from '@mui/material';
 import {
   Delete,
   Settings,
@@ -15,7 +15,9 @@ import {
   chatConfigAtom,
   chatInputAtom,
   sendMessageAtom,
+  diatonicChordsAtom,
 } from '../../store/chatAtoms';
+import DiatonicChordTable from 'ga-react-components/src/components/DiatonicChordTable';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import {
@@ -32,6 +34,7 @@ const ChatInterface: React.FC = () => {
   const setChatInput = useSetAtom(chatInputAtom);
   const clearMessages = useSetAtom(clearMessagesAtom);
   const sendMessage = useSetAtom(sendMessageAtom);
+  const diatonicChords = useAtomValue(diatonicChordsAtom);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ChatbotStatusResponse | null>(null);
@@ -246,6 +249,13 @@ const ChatInterface: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Diatonic chord table — appears when agent identifies a key */}
+      {diatonicChords.length > 0 && (
+        <Box sx={{ px: 3, py: 1.5, borderTop: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper }}>
+          <DiatonicChordTable chords={diatonicChords} />
+        </Box>
+      )}
 
       {/* Input Area */}
       <ChatInput onSend={handleSendMessage} isLoading={isLoading} onClear={clearMessages} />

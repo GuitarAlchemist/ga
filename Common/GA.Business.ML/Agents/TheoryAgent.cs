@@ -46,7 +46,7 @@ public class TheoryAgent(IChatClient chatClient, ILogger<TheoryAgent> logger)
         Logger.LogInformation("TheoryAgent processing: {Query}", request.Query);
 
         var prompt = BuildTheoryPrompt(request);
-        var responseText = await ChatAsync(request.Query, prompt, cancellationToken);
+        var responseText = await ChatWithCritiqueAsync(request.Query, prompt, cancellationToken);
 
         return ParseStructuredResponse(responseText, "Analysis failed.");
     }

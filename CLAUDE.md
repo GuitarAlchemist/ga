@@ -176,11 +176,11 @@ Consult the skill files in `.agent/skills/` when performing relevant tasks:
 | Annotations Guidance | `.agent/skills/annotations-guidance/SKILL.md` | Nullability annotations |
 | ROP Patterns | `.agent/skills/rop-patterns/SKILL.md` | Service-layer error handling (Result/Try/Option/Validation) |
 | Feature Implementor | `.agent/skills/feature-implementor/SKILL.md` | Running `/feature` for any new feature, fix, or multi-file refactor |
-
-| Feature Implementor | `.agent/skills/feature-implementor/SKILL.md` | Running `/feature` for any new feature, fix, or multi-file refactor |
-| GA Chatbot Probe | `.agent/skills/ga-chatbot-probe/SKILL.md` | Talk to chatbot subagents, probe routing decisions, compare agent responses |
-| GA Language Evaluator | `.agent/skills/ga-eval/SKILL.md` | Run GAL scripts against the live FSI session; explore domain closures interactively |
-| GA Chord Theory Helper | `.agent/skills/ga-chords/SKILL.md` | Parse chords, transpose progressions, get diatonic sets via real GA services |
+| GA Developer Tools | `.agent/skills/ga/SKILL.md` | Dispatcher for all GA sub-commands: chords, eval, probe, chat |
+| GA Chords | `.agent/skills/ga/chords/SKILL.md` | Parse chords, transpose progressions, get diatonic sets via real GA services |
+| GA Eval | `.agent/skills/ga/eval/SKILL.md` | Run GAL scripts against the live FSI session; explore domain closures interactively |
+| GA Probe | `.agent/skills/ga/probe/SKILL.md` | Talk to chatbot subagents, probe routing decisions, compare agent responses |
+| GA Chat | `.agent/skills/ga/chat/SKILL.md` | Build, index data, and run the chatbot locally; diagnose chat endpoint issues |
 
 ## Planning & Backlog
 

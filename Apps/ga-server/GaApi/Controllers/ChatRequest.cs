@@ -16,4 +16,6 @@ public record ChatJsonResponse(
     string NaturalLanguageAnswer,
     string AgentId,
     float Confidence,
-    string RoutingMethod);
+    string RoutingMethod,
+    long ElapsedMs = 0,
+    string? TraceId = null);

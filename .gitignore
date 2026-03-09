@@ -138,3 +138,7 @@ jetbrains-plugin/.gradle/
 
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json
+
+# AI chat exports (ChatGPT, Gemini, etc. — personal notes, not repo artifacts)
+ChatGPT-*.md
+Gemini-*.md

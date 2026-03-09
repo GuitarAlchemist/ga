@@ -620,6 +620,79 @@ let chordSubstitutions : GaClosure =
                       return Ok (box result)
           } }
 
+/// Suggest 2–3 diatonic chord completions to cadence an in-progress progression.
+let progressionCompletion : GaClosure =
+    { Name        = "domain.progressionCompletion"
+      Category    = GaClosureCategory.Domain
+      Description = "Suggest 2–3 diatonic chord completions to cadence an in-progress progression."
+      Tags        = [ "progression"; "completion"; "cadence"; "harmony"; "music-theory" ]
+      InputSchema = Map.ofList [ "chords", "string — space-separated chord symbols" ]
+      OutputType  = "string (formatted completion suggestions)"
+      Exec        = fun inputs ->
+          async {
+              match inputs.TryFind "chords" with
+              | None -> return Error (GaError.DomainError "Missing 'chords' input")
+              | Some c ->
+                  let svc     = ChordDslService()
+                  let symbols =
+                      (c :?> string).Split([|' '; ','; '\t'|],
+                          System.StringSplitOptions.RemoveEmptyEntries)
+                  let parsed =
+                      symbols
+                      |> Array.map (fun sym ->
+                          match svc.Parse sym with
+                          | Result.Error _ -> None
+                          | Result.Ok ast  ->
+                              let pc = (noteToSemitone ast.Root + accToSemitone ast.RootAccidental + 120) % 12
+                              Some pc)
+                  let validPcs = parsed |> Array.choose id |> Array.toList
+                  if validPcs.IsEmpty then
+                      return Error (GaError.DomainError "Could not parse any chord symbols")
+                  else
+                      // Score every key; tiebreaker: prefer key whose root = first chord.
+                      let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
+                      let keyRootPc, scaleName =
+                          [ for rpc in 0..11 do
+                              yield rpc, "major", scoreKey rpc majorOffsets validPcs
+                              yield rpc, "minor", scoreKey rpc minorOffsets validPcs ]
+                          |> List.maxBy (fun (rpc, _, s) -> s * 2 + (if rpc = firstPc then 1 else 0))
+                          |> fun (rpc, scale, _) -> rpc, scale
+                      let keyName = conventionalKeyName keyRootPc
+                      // Diatonic chord name at a given scale degree index.
+                      let offsets   = if scaleName = "major" then majorOffsets else minorOffsets
+                      let qualities =
+                          if scaleName = "major"
+                          then [| ""; "m"; "m"; ""; ""; "m"; "dim" |]   // I ii iii IV V vi vii°
+                          else [| "m"; "dim"; ""; "m"; "m"; ""; "" |]   // i ii° III iv v VI VII
+                      let diatonicAt idx =
+                          let root = (keyRootPc + offsets.[idx]) % 12
+                          sprintf "%s%s" (conventionalKeyName root) qualities.[idx]
+                      // Build 2–3 cadence suggestions.
+                      let suggestions =
+                          if scaleName = "minor" then
+                              // V7 from harmonic minor (raised 7th → dominant 7th)
+                              let v7Name   = sprintf "%s7" (conventionalKeyName ((keyRootPc + 7) % 12))
+                              // ♭VII from natural minor
+                              let bviiName = conventionalKeyName ((keyRootPc + 10) % 12)
+                              // iv (minor subdominant)
+                              let ivName   = diatonicAt 3
+                              [ sprintf "  1. %-12s → authentic cadence (V7 → i)" v7Name
+                                sprintf "  2. %-12s → half cadence (♭VII → i loop)" bviiName
+                                sprintf "  3. %-12s → iv–V7–i turnaround" (sprintf "%s %s" ivName v7Name) ]
+                          else
+                              let vName  = diatonicAt 4   // V
+                              let ivName = diatonicAt 3   // IV
+                              let iiName = diatonicAt 1   // ii
+                              [ sprintf "  1. %-12s → authentic cadence (V → I)" vName
+                                sprintf "  2. %-12s → plagal cadence (IV → I)" ivName
+                                sprintf "  3. %-12s → ii–V–I approach" (sprintf "%s %s" iiName vName) ]
+                      let inputLine = String.concat " – " (Array.toList symbols)
+                      let result =
+                          sprintf "Progression: %s  (key: %s %s)\n\nSuggested completions:\n%s"
+                              inputLine keyName scaleName (String.concat "\n" suggestions)
+                      return Ok (box result)
+          } }
+
 // ── Registration ──────────────────────────────────────────────────────────────
 
 let register () =
@@ -630,6 +703,7 @@ let register () =
           chordIntervals
           relativeKey
           analyzeProgression
+          progressionCompletion
           queryChords
           projectChord
           commonTones

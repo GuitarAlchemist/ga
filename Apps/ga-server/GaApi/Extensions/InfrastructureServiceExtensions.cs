@@ -17,6 +17,14 @@ public static class InfrastructureServiceExtensions
     {
         // 1. Configuration
         services.Configure<MongoDbSettings>(configuration.GetSection("MongoDB"));
+        // When running under Aspire, override connection string from service discovery injection.
+        // Aspire sets ConnectionStrings__guitar-alchemist when GaApi has WithReference(mongoDatabase).
+        services.PostConfigure<MongoDbSettings>(settings =>
+        {
+            var aspireCs = configuration.GetConnectionString("guitar-alchemist");
+            if (!string.IsNullOrEmpty(aspireCs))
+                settings.ConnectionString = aspireCs;
+        });
         services.Configure<VectorSearchOptions>(configuration.GetSection("VectorSearch"));
 
         // 2. MongoDB
