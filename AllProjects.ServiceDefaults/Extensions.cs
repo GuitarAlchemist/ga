@@ -54,7 +54,9 @@ public static class Extensions
                 tracing.AddAspNetCoreInstrumentation()
                     // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
                     //.AddGrpcClientInstrumentation()
-                    .AddHttpClientInstrumentation();
+                    .AddHttpClientInstrumentation()
+                    // GA Chatbot pipeline: routing, agent processing, embedding generation
+                    .AddSource("GA.Chatbot");
             });
 
         builder.AddOpenTelemetryExporters();

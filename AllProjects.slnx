@@ -5,6 +5,7 @@
         <Platform Name="x86" />
     </Configurations>
     <Folder Name="/Apps/">
+        <Project Path="Apps/GaChatbotCli/GaChatbotCli.csproj" />
         <Project Path="Apps/GaCli/GaCli.fsproj" />
     </Folder>
     <Folder Name="/Backend/" />
@@ -75,6 +76,7 @@
         <Project Path="Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj" />
     </Folder>
     <Folder Name="/Common/">
+        <Project Path="Common/GA.Business.Assets/GA.Business.Assets.csproj" />
         <Project Path="Common/GA.Business.Core.Generated/GA.Business.Core.Generated.fsproj" />
         <Project Path="Common/GA.Business.DSL.SourceGen/GA.Business.DSL.SourceGen.csproj" />
     </Folder>
@@ -265,5 +267,6 @@
     </Folder>
     <Project Path="Demos/Advanced/AdvancedMathematicsDemo/AdvancedMathematicsDemo.csproj" />
     <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj" />
+    <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj" />
     <Project Path="GenerateNatData/GenerateNatData.csproj" />
 </Solution>

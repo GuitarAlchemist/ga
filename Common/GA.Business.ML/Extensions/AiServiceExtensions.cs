@@ -122,6 +122,11 @@ public static class AiServiceExtensions
                     Providers.OllamaProvider.CreateChatClientFromConfig(configuration));
                 break;
 
+            case "docker":
+                services.TryAddSingleton<IChatClient>(_ =>
+                    Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration));
+                break;
+
             case "github":
                 if (!Providers.GitHubModelsProvider.IsAvailable())
                 {
@@ -152,6 +157,11 @@ public static class AiServiceExtensions
             case "ollama":
                 services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
                     Providers.OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration));
+                break;
+
+            case "docker":
+                services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
+                    Providers.DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration));
                 break;
 
             case "github":
@@ -206,6 +216,7 @@ public static class AiServiceExtensions
         });
 
         services.TryAddSingleton<Agents.SemanticRouter>();
+        services.TryAddSingleton<Agents.IRoutingFeedback, Agents.MongoRoutingFeedback>();
 
         return services;
     }

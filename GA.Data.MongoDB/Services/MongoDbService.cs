@@ -56,6 +56,9 @@ public class MongoDbService
     public IMongoCollection<YamlKnowledgeDocument> YamlKnowledge =>
         _database.GetCollection<YamlKnowledgeDocument>("yaml_knowledge");
 
+    public IMongoCollection<RoutingFeedbackDocument> RoutingFeedback =>
+        _database.GetCollection<RoutingFeedbackDocument>("routing_feedback");
+
     /// <summary>
     ///     Deletes all documents from all collections in the database.
     /// </summary>

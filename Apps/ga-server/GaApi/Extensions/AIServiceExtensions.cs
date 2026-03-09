@@ -33,9 +33,12 @@ public static class AiServiceExtensions
             options.ModelName = configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
         });
 
-        // 3. Register MEAI Embedding Generator (used by SemanticRouter)
+        // 3. Register MEAI Embedding Generator (used by SemanticRouter) — respects AI:EmbeddingProvider
+        var embeddingProvider = configuration["AI:EmbeddingProvider"] ?? "ollama";
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
-            OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<OllamaEmbeddingGenerator>>()));
+            string.Equals(embeddingProvider, "docker", StringComparison.OrdinalIgnoreCase)
+                ? DockerModelRunnerProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<DockerModelRunnerChatService>>())
+                : OllamaProvider.CreateEmbeddingGeneratorFromConfig(configuration, sp.GetService<ILogger<OllamaEmbeddingGenerator>>()));
 
         // 4. Register Repository
         services.AddSingleton<ITabCorpusRepository, InMemoryTabCorpusRepository>();
@@ -66,16 +69,21 @@ public static class AiServiceExtensions
             client.BaseAddress = new Uri(ollamaBaseUrl);
         });
 
+        var dockerBaseUrl = configuration["DockerModelRunner:BaseUrl"] ?? "http://localhost:12434/v1";
+        services.AddHttpClient("DockerModelRunner", client =>
+        {
+            client.BaseAddress = new Uri(dockerBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+
         var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
 
         if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
-        {
             services.AddSingleton<IChatService, ClaudeChatService>();
-        }
+        else if (string.Equals(chatProvider, "docker", StringComparison.OrdinalIgnoreCase))
+            services.AddSingleton<IChatService, DockerModelRunnerChatService>();
         else
-        {
             services.AddSingleton<IChatService, OllamaChatService>();
-        }
 
         // Register Adapter for IChatClient (used by Agents)
         services.AddSingleton<Microsoft.Extensions.AI.IChatClient, OllamaChatClientAdapter>();

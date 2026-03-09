@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -90,13 +91,54 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
 
         Logger.LogDebug("Agent {AgentId} processing request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
 
+        using var chatActivity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.AgentChat);
+        chatActivity?.SetTag(ChatbotActivitySource.TagAgentId, AgentId);
+        chatActivity?.SetTag(ChatbotActivitySource.TagQueryLength, userMessage.Length);
+
+        var sw = Stopwatch.StartNew();
         var response = await ChatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
-        
+        sw.Stop();
+
         var responseText = response.Messages.LastOrDefault()?.Text ?? "";
-        
+        chatActivity?.SetTag("llm.response_ms", sw.ElapsedMilliseconds);
+        chatActivity?.SetTag("llm.response_length", responseText.Length);
+
+        Logger.LogDebug("Agent {AgentId} LLM call took {Ms}ms, response length {Len}", AgentId, sw.ElapsedMilliseconds, responseText.Length);
         Logger.LogDebug("Agent {AgentId} response: {Response}", AgentId, responseText[..Math.Min(100, responseText.Length)]);
-        
+
         return responseText;
+    }
+
+    /// <summary>
+    /// Sends a chat request through three passes: initial draft → self-critique → refined answer.
+    /// Use for complex theory questions where accuracy matters more than latency.
+    /// </summary>
+    protected async Task<string> ChatWithCritiqueAsync(
+        string userMessage,
+        string? systemPrompt = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var critiqueActivity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.AgentChatWithCritique);
+        critiqueActivity?.SetTag(ChatbotActivitySource.TagAgentId, AgentId);
+
+        var draft = await ChatAsync(userMessage, systemPrompt, cancellationToken);
+
+        var critiqueMessage = $"""
+            I gave this answer to a music theory question. Identify any errors, missing context, or improvements. Be concise.
+
+            QUESTION: {userMessage}
+            ANSWER: {draft}
+            """;
+        var critique = await ChatAsync(critiqueMessage, systemPrompt, cancellationToken);
+
+        var refineMessage = $"""
+            Rewrite the answer incorporating the critique. Return valid JSON in the same format as before.
+
+            QUESTION: {userMessage}
+            ORIGINAL ANSWER: {draft}
+            CRITIQUE: {critique}
+            """;
+        return await ChatAsync(refineMessage, systemPrompt, cancellationToken);
     }
 
     /// <summary>

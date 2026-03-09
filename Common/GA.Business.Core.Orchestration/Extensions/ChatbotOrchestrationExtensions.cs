@@ -2,6 +2,7 @@ namespace GA.Business.Core.Orchestration.Extensions;
 
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Services;
+using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,7 +15,8 @@ public static class ChatbotOrchestrationExtensions
 {
     /// <summary>
     /// Registers all chatbot orchestration services.
-    /// Reads <c>Ollama:Endpoint</c> and <c>Ollama:Model</c> lazily from the resolved <see cref="IConfiguration"/>.
+    /// Skills, hooks, and domain services are discovered automatically via
+    /// <see cref="ChatPluginHost.AddChatPluginHost"/> — no manual skill registration needed.
     /// </summary>
     public static IServiceCollection AddChatbotOrchestration(this IServiceCollection services)
     {
@@ -47,6 +49,13 @@ public static class ChatbotOrchestrationExtensions
         // Each consuming app must register its own narrator implementation:
         //   - GaApi: services.AddScoped<IGroundedNarrator, OllamaGroundedNarrator>();
         //   - GaChatbot: services.AddExtensionsAINarrator();
+
+        // Plugin host — discovers [ChatPlugin] implementations in loaded assemblies
+        // and registers their skills, hooks, and domain services automatically.
+        // GaPlugin (in GA.Business.Core.Orchestration) registers:
+        //   Skills: ScaleInfoSkill, FretSpanSkill, ChordSubstitutionSkill, KeyIdentificationSkill
+        //   Hooks:  PromptSanitizationHook, ObservabilityHook
+        services.AddChatPluginHost();
 
         // Orchestrators — Scoped because they transitively depend on
         // SemanticRouter (Scoped) and SpectralRetrievalService (Scoped).
