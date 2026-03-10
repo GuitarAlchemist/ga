@@ -12,17 +12,46 @@ using Microsoft.Extensions.AI;
 /// <see cref="FunctionInvokingChatClientBuilderExtensions.UseFunctionInvocation"/> handles the
 /// full multi-turn agentic tool-use loop automatically — no hand-coded loop required.
 /// </summary>
-public sealed class SkillMdDrivenSkill(
-    SkillMd skillMd,
-    IMcpToolsProvider toolsProvider,
-    IConfiguration configuration,
-    ILogger<SkillMdDrivenSkill> logger) : IOrchestratorSkill
+public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 {
     private const string DefaultModel = "claude-sonnet-4-6";
 
-    // ── Test seam ────────────────────────────────────────────────────────────
-    // Set by ForTesting() to bypass AnthropicClient creation in unit tests.
-    private IChatClient? _testChatClient;
+    private readonly SkillMd _skillMd;
+    private readonly IMcpToolsProvider _toolsProvider;
+    private readonly ILogger<SkillMdDrivenSkill> _logger;
+
+    // Built once (lazily) and reused for the lifetime of this singleton.
+    // LazyThreadSafetyMode.ExecutionAndPublication ensures only one thread builds the client.
+    private readonly Lazy<IChatClient> _chatClient;
+
+    public SkillMdDrivenSkill(
+        SkillMd skillMd,
+        IMcpToolsProvider toolsProvider,
+        IConfiguration configuration,
+        ILogger<SkillMdDrivenSkill> logger)
+    {
+        _skillMd = skillMd;
+        _toolsProvider = toolsProvider;
+        _logger = logger;
+
+        _chatClient = new Lazy<IChatClient>(() =>
+        {
+            var model = configuration["AnthropicSkills:Model"] ?? DefaultModel;
+            var apiKey = configuration["Anthropic:ApiKey"]
+                         ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new InvalidOperationException(
+                    "ANTHROPIC_API_KEY environment variable or Anthropic:ApiKey configuration is required " +
+                    "to run SKILL.md-driven skills. Set the environment variable and restart the service.");
+
+            return new AnthropicClient { ApiKey = apiKey }
+                .AsIChatClient(model)
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
+    }
 
     /// <summary>
     /// Creates a <see cref="SkillMdDrivenSkill"/> with an injected <see cref="IChatClient"/>
@@ -39,85 +68,64 @@ public sealed class SkillMdDrivenSkill(
             toolsProvider,
             new ConfigurationBuilder().Build(),
             logger);
-        skill._testChatClient = chatClient;
+        // Replace the lazy with one that always returns the test client.
+        typeof(SkillMdDrivenSkill)
+            .GetField("_chatClient", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(skill, new Lazy<IChatClient>(() => chatClient));
         return skill;
     }
 
-    public string Name        => skillMd.Name;
-    public string Description => skillMd.Description;
+    public string Name        => _skillMd.Name;
+    public string Description => _skillMd.Description;
 
     public bool CanHandle(string message)
     {
-        if (skillMd.Triggers.Count == 0) return false;
+        if (_skillMd.Triggers.Count == 0) return false;
         var lower = message.ToLowerInvariant();
-        return skillMd.Triggers.Any(t => lower.Contains(t.ToLowerInvariant()));
+        return _skillMd.Triggers.Any(t => lower.Contains(t.ToLowerInvariant()));
     }
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken ct = default)
     {
-        var model = configuration["AnthropicSkills:Model"] ?? DefaultModel;
-
-        IChatClient chatClient;
-        if (_testChatClient is not null)
-        {
-            chatClient = _testChatClient;
-        }
-        else
-        {
-            var apiKey = configuration["Anthropic:ApiKey"]
-                         ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-                throw new InvalidOperationException(
-                    "ANTHROPIC_API_KEY environment variable or Anthropic:ApiKey configuration is required " +
-                    "to run SKILL.md-driven skills. Set the environment variable and restart the service.");
-
-            var anthropicClient = new AnthropicClient { ApiKey = apiKey };
-
-            // AsIChatClient() from Microsoft.Extensions.AI.AnthropicClientExtensions
-            // UseFunctionInvocation() intercepts tool_use stops, dispatches AIFunction,
-            // feeds results back, and loops until a final text response.
-            chatClient = anthropicClient
-                .AsIChatClient(model)
-                .AsBuilder()
-                .UseFunctionInvocation()
-                .Build();
-        }
+        var tools = await _toolsProvider.GetToolsAsync(ct);
+        var options = new ChatOptions { Tools = [.. tools] };
 
         ChatMessage[] messages =
         [
-            new(ChatRole.System, skillMd.Body),
+            new(ChatRole.System, _skillMd.Body),
             new(ChatRole.User, message),
         ];
 
-        var tools = await toolsProvider.GetToolsAsync(ct);
-        var options = new ChatOptions { Tools = [.. tools] };
-
         try
         {
-            logger.LogDebug(
-                "SkillMdDrivenSkill [{Skill}] → Anthropic model={Model}, tools={ToolCount}",
-                skillMd.Name, model, tools.Count);
+            _logger.LogDebug(
+                "SkillMdDrivenSkill [{Skill}] → tools={ToolCount}",
+                _skillMd.Name, tools.Count);
 
-            var response = await chatClient.GetResponseAsync(messages, options, ct);
+            var response = await _chatClient.Value.GetResponseAsync(messages, options, ct);
             var text = response.Text ?? string.Empty;
 
-            logger.LogDebug("SkillMdDrivenSkill [{Skill}] response length={Len}", skillMd.Name, text.Length);
+            _logger.LogDebug("SkillMdDrivenSkill [{Skill}] response length={Len}", _skillMd.Name, text.Length);
 
             return new AgentResponse
             {
-                AgentId    = $"skill.md.{skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
+                AgentId    = $"skill.md.{_skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
                 Result     = text,
+                // Placeholder confidence: SKILL.md-driven skills do not emit a structured
+                // confidence value — the LLM response is free-form text. 0.9f is used as a
+                // reasonable default. Revisit if routing decisions start consuming this value.
                 Confidence = 0.9f,
             };
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "SkillMdDrivenSkill [{Skill}] failed", skillMd.Name);
+            _logger.LogError(ex, "SkillMdDrivenSkill [{Skill}] failed", _skillMd.Name);
             return new AgentResponse
             {
-                AgentId    = $"skill.md.{skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
-                Result     = $"I encountered an error processing your request: {ex.Message}",
+                AgentId    = $"skill.md.{_skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
+                // Return a generic message — never surface ex.Message to the caller
+                // (may contain API keys, endpoint URLs, or internal service details).
+                Result     = "I encountered an error processing your request. Please try again.",
                 Confidence = 0f,
             };
         }

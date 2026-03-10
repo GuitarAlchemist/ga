@@ -168,6 +168,24 @@ app.UseCors("AllowAll");
 // Use rate limiting (must be before UseAuthorization)
 app.UseRateLimiter();
 
+// Dev-only guard: block unauthenticated access to the chatbot API in non-Development environments.
+// CORS + rate limiting provide weak protection; this gate prevents accidental public exposure
+// while full bearer auth is designed. Replace with [Authorize] + AddAuthentication once a
+// token/key issuance strategy is in place (see todo 036).
+if (!app.Environment.IsDevelopment())
+{
+    app.Use(async (ctx, next) =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api/chatbot")
+            && !ctx.Request.Headers.ContainsKey("X-Api-Key"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+        await next(ctx);
+    });
+}
+
 // Enable static files for Blazor
 app.UseStaticFiles();
 app.UseAntiforgery();
