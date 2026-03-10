@@ -157,6 +157,11 @@ public class AgUiChatController(
                 var chordsResult = await contextualChordService.GetChordsForKeyAsync(finalKey);
                 if (chordsResult.IsSuccess)
                     await writer.WriteCustomAsync("ga:diatonic", chordsResult.GetValueOrThrow(), cancellationToken);
+
+                // ga:scale — 7 note descriptors for the live fretboard scale overlay
+                var scaleNotes = ScaleNoteService.GetNotes(finalKey);
+                if (scaleNotes is not null)
+                    await writer.WriteCustomAsync("ga:scale", scaleNotes, cancellationToken);
             }
 
             if (response.Candidates is { Count: > 0 })
