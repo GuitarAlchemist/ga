@@ -231,7 +231,7 @@ public record AgentRequest
 public record StructuredAgentResponse
 {
     public required string Result { get; init; }
-    public required float Confidence { get; init; }
+    public float Confidence { get; init; } = 0.85f;
     public List<string> Evidence { get; init; } = [];
     public List<string> Assumptions { get; init; } = [];
     public object? Data { get; init; }
