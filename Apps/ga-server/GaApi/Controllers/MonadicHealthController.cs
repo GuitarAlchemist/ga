@@ -58,7 +58,7 @@ public class MonadicHealthController : ControllerBase
                         ["HealthCheck"] = new()
                         {
                             Status = "Unhealthy",
-                            Error = ex.Message
+                            Error = "An internal error occurred."
                         }
                     }
                 });
@@ -89,7 +89,7 @@ public class MonadicHealthController : ControllerBase
                 return StatusCode(503, new ServiceHealth
                 {
                     Status = "Unhealthy",
-                    Error = ex.Message
+                    Error = "An internal error occurred."
                 });
             }
         );
@@ -118,7 +118,7 @@ public class MonadicHealthController : ControllerBase
                 return StatusCode(503, new ServiceHealth
                 {
                     Status = "Unhealthy",
-                    Error = ex.Message
+                    Error = "An internal error occurred."
                 });
             }
         );
@@ -147,7 +147,7 @@ public class MonadicHealthController : ControllerBase
                 return StatusCode(503, new ServiceHealth
                 {
                     Status = "Unhealthy",
-                    Error = ex.Message
+                    Error = "An internal error occurred."
                 });
             }
         );
@@ -195,10 +195,14 @@ public class MonadicHealthController : ControllerBase
     private ServiceHealth ExtractHealthOrError(Try<ServiceHealth> tryHealth) =>
         tryHealth.Match(
             onSuccess: health => health,
-            onFailure: ex => new ServiceHealth
+            onFailure: ex =>
             {
-                Status = "Unhealthy",
-                Error = ex.Message
+                _logger.LogError(ex, "Health sub-check failed");
+                return new ServiceHealth
+                {
+                    Status = "Unhealthy",
+                    Error = "An internal error occurred."
+                };
             }
         );
 }

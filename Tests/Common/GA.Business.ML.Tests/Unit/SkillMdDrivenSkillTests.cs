@@ -245,9 +245,11 @@ public class SkillMdDrivenSkillTests
     // ── Missing API key (no test client override) ─────────────────────────────
 
     [Test]
-    public void ExecuteAsync_MissingApiKey_ThrowsInvalidOperationException()
+    public async Task ExecuteAsync_MissingApiKey_ReturnsErrorResponse()
     {
-        // Ensure env var is not set for this test
+        // ExecuteAsync never throws (except OperationCanceledException) — configuration errors
+        // are caught and returned as a zero-confidence error response so the chatbot pipeline
+        // can degrade gracefully rather than crashing mid-stream.
         var original = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
         Environment.SetEnvironmentVariable("ANTHROPIC_API_KEY", null);
 
@@ -259,8 +261,10 @@ public class SkillMdDrivenSkillTests
                 new ConfigurationBuilder().Build(),
                 NullLogger<SkillMdDrivenSkill>.Instance);
 
-            Assert.ThrowsAsync<InvalidOperationException>(() =>
-                skill.ExecuteAsync("test"));
+            var response = await skill.ExecuteAsync("test");
+
+            Assert.That(response.Confidence, Is.EqualTo(0f));
+            Assert.That(response.Result, Contains.Substring("error"));
         }
         finally
         {

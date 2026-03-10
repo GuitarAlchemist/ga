@@ -1,7 +1,7 @@
 ---
 title: "feat: SKILL.md → C# Bridge (SkillMdDrivenSkill)"
 type: feat
-status: active
+status: completed
 date: 2026-03-08
 origin: docs/brainstorms/2026-03-08-skill-md-csharp-bridge-brainstorm.md
 ---

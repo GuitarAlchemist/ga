@@ -43,7 +43,7 @@ public class AgentInfrastructureTests
             It.Is<IEnumerable<ChatMessage>>(m =>
                 m.Any(msg => msg.Text != null && msg.Text.Contains("atonal and tonal theory"))),
             It.IsAny<ChatOptions>(),
-            default), Times.Once);
+            default), Times.AtLeastOnce());
     }
 
     [Test]

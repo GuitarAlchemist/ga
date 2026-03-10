@@ -39,9 +39,12 @@ public sealed class PromptSanitizationHook(ILogger<PromptSanitizationHook> logge
                 "Please rephrase your question."));
         }
 
-        // 3. Replace with normalized form so downstream sees clean text
-        ctx.CurrentMessage = normalized;
-        return Task.FromResult(HookResult.Continue);
+        // 3. Return normalized form via Mutate so the orchestrator propagation loop
+        //    applies the change — do not mutate ctx directly (side-effect bypasses the contract).
+        return Task.FromResult(
+            normalized == ctx.CurrentMessage
+                ? HookResult.Continue
+                : HookResult.Mutate(normalized));
     }
 
     private static string NormalizeUnicode(string input)
