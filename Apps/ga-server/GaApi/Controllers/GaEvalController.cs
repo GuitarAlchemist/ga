@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Microsoft.FSharp.Control;
+using Microsoft.FSharp.Core;
 using static GA.Business.DSL.Interpreter.GaFsiSessionPool;
 using GaClosureCategory = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
 using GaClosureRegistry  = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
+using GaClosure           = GA.Business.DSL.Closures.GaClosureRegistry.GaClosure;
 
 /// <summary>
 /// REST API for evaluating GA Language scripts and introspecting the closure registry.
@@ -37,10 +39,23 @@ public sealed class GaEvalController(IWebHostEnvironment env) : ControllerBase
         var result      = await FSharpAsync.StartAsTask(fsharpAsync, null, cancellationToken);
 
         if (result is GaScriptResult.GaScriptOk ok)
-            return Ok(new GaEvalResponse(true, ok.stdout, null, ok.value?.ToString()));
+            return Ok(new GaEvalResponse(
+                true,
+                ok.stdout,
+                null,
+                ok.value?.ToString(),
+                [],
+                ok.elapsedMs));
 
         if (result is GaScriptResult.GaScriptError err)
-            return Ok(new GaEvalResponse(false, err.stdout, err.message, null));
+            return Ok(new GaEvalResponse(
+                false,
+                err.stdout,
+                err.message,
+                null,
+                [.. err.diagnostics.Select(d => new GaScriptDiagnosticDto(
+                    d.Code, d.Message, d.Severity, d.Line, d.Column))],
+                err.elapsedMs));
 
         return StatusCode(500, "Unknown evaluation result");
     }
@@ -72,6 +87,34 @@ public sealed class GaEvalController(IWebHostEnvironment env) : ControllerBase
         return Ok(infos);
     }
 
+    /// <summary>Get the input/output schema for a named GA closure. Development only.</summary>
+    [HttpGet("closures/{name}")]
+    [ProducesResponseType(typeof(GaClosureInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetClosure(string name)
+    {
+        if (!env.IsDevelopment())
+            return StatusCode(StatusCodes.Status403Forbidden, "Closure introspection is only available in development mode.");
+
+        var registry = GaClosureRegistry.Global;
+        var closure  = registry.TryGet(name);
+
+        if (!FSharpOption<GaClosure>.get_IsSome(closure))
+            return NotFound($"Closure '{name}' not found.");
+
+        var c = closure.Value;
+        return Ok(new GaClosureInfo(
+            c.Name,
+            c.Category.ToString(),
+            c.Description,
+            [.. c.Tags],
+            c.InputSchema
+                .Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value))
+                .ToDictionary(x => x.Key, x => x.Value),
+            c.OutputType));
+    }
+
     private static GaClosureCategory ParseCategory(string category) =>
         category.ToLowerInvariant() switch
         {
@@ -84,11 +127,20 @@ public sealed class GaEvalController(IWebHostEnvironment env) : ControllerBase
 
 public sealed record GaEvalRequest(string Script);
 
+public sealed record GaScriptDiagnosticDto(
+    string Code,
+    string Message,
+    string Severity,
+    int    Line,
+    int    Column);
+
 public sealed record GaEvalResponse(
-    bool    Success,
-    string  Output,
-    string? Error,
-    string? Value);
+    bool                      Success,
+    string                    Output,
+    string?                   Error,
+    string?                   Value,
+    GaScriptDiagnosticDto[]   Diagnostics,
+    double                    ElapsedMs);
 
 public sealed record GaClosureInfo(
     string                      Name,
