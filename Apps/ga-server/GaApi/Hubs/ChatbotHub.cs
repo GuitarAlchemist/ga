@@ -4,12 +4,14 @@ using System.Collections.Concurrent;
 using System.Text;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Services;
 
 /// <summary>
 ///     SignalR hub for real-time chatbot interactions with shared orchestration pipeline.
 /// </summary>
+[Authorize]
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
     ProductionOrchestrator orchestrator,
