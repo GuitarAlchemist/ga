@@ -38,10 +38,4 @@ public sealed class GaPlugin : IChatPlugin
         services.AddSingleton<IChatHook, ObservabilityHook>();
     }
 
-    /// <summary>
-    /// MCP tool types from GaMcpServer that should be included in the in-process
-    /// MCP server assembled by <see cref="ChatPluginHost"/> (wired in Phase 3).
-    /// Referenced by type name to avoid a direct project dependency on GaMcpServer.
-    /// </summary>
-    public IReadOnlyList<Type> McpToolTypes => [];  // populated in Phase 3
 }

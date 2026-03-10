@@ -1,15 +1,17 @@
 namespace GaApi.Controllers;
 
 using AgUi;
+using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.AgUi;
 using GA.Business.Core.Orchestration.Models;
-using GA.Business.Core.Orchestration.Services;
+using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatRequest;
+using GA.Business.ML.Agents;
 using Helpers;
 using Services;
 
 /// <summary>
 /// AG-UI protocol endpoint for Guitar Alchemist.
-/// Wraps <see cref="ProductionOrchestrator"/> output in typed AG-UI SSE events
+/// Wraps <see cref="IHarmonicChatOrchestrator"/> output in typed AG-UI SSE events
 /// so that React components (DiatonicChordTable, VexTabViewer) receive structured
 /// domain data alongside the streaming text answer.
 /// </summary>
@@ -17,10 +19,59 @@ using Services;
 [Route("api/chatbot")]
 public class AgUiChatController(
     ILogger<AgUiChatController> logger,
-    ProductionOrchestrator orchestrator,
+    IHarmonicChatOrchestrator orchestrator,
     ContextualChordService contextualChordService,
     ILlmConcurrencyGate concurrencyGate) : ControllerBase
 {
+    /// <summary>
+    ///     Returns all registered orchestrator skills with their name and description.
+    ///     Agents and MCP clients can call this to discover what skills are active
+    ///     and what trigger phrases they match, without reading source files.
+    /// </summary>
+    [HttpGet("skills")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult ListSkills([FromServices] IEnumerable<IOrchestratorSkill> skills)
+        => Ok(skills.Select(s => new { s.Name, s.Description }));
+
+    /// <summary>
+    ///     Non-streaming sibling of <see cref="AgUiStream"/>.
+    ///     Runs the same orchestrator path and returns the final answer + domain metadata
+    ///     as a JSON object — suitable for agent frameworks that cannot consume SSE.
+    /// </summary>
+    [HttpPost("agui/json")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> AgUiJson([FromBody] RunAgentInput input, CancellationToken cancellationToken)
+    {
+        var userMessage = input.Messages
+            .LastOrDefault(m => m.Role == "user")?.Content?.Trim();
+
+        if (string.IsNullOrWhiteSpace(userMessage))
+            return BadRequest("No user message found in the request.");
+
+        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is busy. Please try again.");
+
+        try
+        {
+            var response = await orchestrator.AnswerAsync(new OrchestratorChatRequest(userMessage), cancellationToken);
+
+            return Ok(new
+            {
+                answer      = response.NaturalLanguageAnswer,
+                routing     = response.Routing,
+                candidates  = response.Candidates,
+                filters     = response.QueryFilters,
+                progression = response.Progression,
+            });
+        }
+        finally
+        {
+            concurrencyGate.Release();
+        }
+    }
+
     /// <summary>
     ///     Send a message to the GA agent and receive an AG-UI–compliant SSE stream.
     ///     Event sequence: RUN_STARTED → STATE_SNAPSHOT → STEP_STARTED → text events →
@@ -78,7 +129,7 @@ public class AgUiChatController(
 
             // ── 3. Invoke orchestrator ──────────────────────────────────────────
             var response = await orchestrator.AnswerAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(userMessage), cancellationToken);
+                new OrchestratorChatRequest(userMessage), cancellationToken);
 
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
 

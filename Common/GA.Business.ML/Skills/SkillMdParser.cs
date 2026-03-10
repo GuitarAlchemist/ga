@@ -84,7 +84,8 @@ public static class SkillMdParser
         {
             Name        = frontmatter.Name.Trim(),
             Description = frontmatter.Description?.Trim() ?? string.Empty,
-            Triggers    = frontmatter.Triggers ?? [],
+            // Pre-lowercased so CanHandle can compare without per-call allocation
+            Triggers    = frontmatter.Triggers?.Select(t => t.ToLowerInvariant()).ToList() ?? [],
             Body        = body,
             FilePath    = filePath,
         };

@@ -18,21 +18,10 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
     public override string Name        => "KeyIdentification";
     public override string Description => "Identifies the musical key of a chord progression using pitch-class arithmetic";
 
-    // ── IAgentSkill ───────────────────────────────────────────────────────────
-
-    public override bool CanHandle(AgentRequest request) => CanHandle(request.Query);
-
-    public override Task<AgentResponse> ExecuteAsync(
-        AgentRequest request,
-        CancellationToken cancellationToken = default) =>
-        ExecuteAsync(request.Query, cancellationToken);
-
-    // ── IOrchestratorSkill ────────────────────────────────────────────────────
-
-    public bool CanHandle(string message) =>
+    public override bool CanHandle(string message) =>
         KeyIdentificationService.IsKeyIdentificationQuery(message);
 
-    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public override async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var chords     = KeyIdentificationService.ExtractChords(message);
         var candidates = KeyIdentificationService.Identify(chords);
