@@ -60,7 +60,7 @@ public static class AiServiceExtensions
         /// <summary>
         ///     Add LLM (Large Language Model) services
         /// </summary>
-        private IServiceCollection AddLlmServices(IConfiguration configuration)
+        private void AddLlmServices(IConfiguration configuration)
         {
             // Configure the "Ollama" named HttpClient with BaseAddress and timeout here
             // so that OllamaChatService (singleton) does not mutate BaseAddress after construction.
@@ -87,14 +87,12 @@ public static class AiServiceExtensions
                 services.AddSingleton<IChatService, OllamaChatService>();
 
             // Register Adapter for IChatClient (used by Agents)
-            services.AddSingleton<Microsoft.Extensions.AI.IChatClient, OllamaChatClientAdapter>();
-
-            return services;
+            services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
         }
         /// <summary>
         ///     Add vector search application services
         /// </summary>
-        private IServiceCollection AddVectorSearchApplicationServices(IConfiguration configuration)
+        private void AddVectorSearchApplicationServices(IConfiguration configuration)
         {
             // Register local embedding service (used by vector search)
             services.AddSingleton<LocalEmbeddingService>();
@@ -120,8 +118,6 @@ public static class AiServiceExtensions
                     10,
                     sp.GetService<ILogger<GA.Data.SemanticKernel.Embeddings.BatchOllamaEmbeddingService>>());
             });
-
-            return services;
         }
         /// <summary>
         ///     Add chatbot services (orchestrator, knowledge source, embedding)

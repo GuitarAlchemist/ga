@@ -16,10 +16,8 @@ public sealed class GaApiPlugin : IChatPlugin
     public string Name    => "GaApi";
     public string Version => "1.0";
 
-    public void Register(IServiceCollection services)
-    {
+    public void Register(IServiceCollection services) =>
         // VoicingComfortService is Transient (depends on VoicingFilterService which may be Scoped);
         // use Scoped to be safe with any transitive Scoped dependencies.
         services.AddScoped<IOrchestratorSkill, VoicingComfortSkill>();
-    }
 }

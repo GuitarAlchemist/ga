@@ -42,12 +42,10 @@ public static class ScaleNoteService
 
         var offsets = isMinor ? Minor : Major;
 
-        return offsets
-            .Select((offset, i) => new ScaleNote(
-                Degree: i + 1,
-                Note:   NoteNames[(rootPc + offset) % 12],
-                PitchClass: (rootPc + offset) % 12))
-            .ToArray();
+        return [..offsets.Select((offset, i) => new ScaleNote(
+            Degree:     i + 1,
+            Note:       NoteNames[(rootPc + offset) % 12],
+            PitchClass: (rootPc + offset) % 12))];
     }
 }
 
