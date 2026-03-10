@@ -50,7 +50,6 @@ public class ProductionOrchestrator(
         {
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
-            Services        = services,
         };
 
         foreach (var hook in _hooks)
