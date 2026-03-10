@@ -17,8 +17,13 @@ public class ChatTool(IHttpClientFactory httpClientFactory)
     {
         var client = httpClientFactory.CreateClient("gaapi");
         var response = await client.PostAsJsonAsync(
-            "/api/chatbot/chat",
-            new { message = question },
+            "/api/chatbot/agui/json",
+            new
+            {
+                ThreadId = "mcp",
+                RunId = Guid.NewGuid().ToString(),
+                Messages = new[] { new { Role = "user", Content = question } }
+            },
             cancellationToken);
         response.EnsureSuccessStatusCode();
 
@@ -26,7 +31,7 @@ public class ChatTool(IHttpClientFactory httpClientFactory)
         try
         {
             using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("naturalLanguageAnswer", out var answerEl))
+            if (doc.RootElement.TryGetProperty("answer", out var answerEl))
             {
                 var answer = answerEl.GetString();
                 if (!string.IsNullOrWhiteSpace(answer)) return answer;
