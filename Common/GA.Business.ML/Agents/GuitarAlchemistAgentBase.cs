@@ -32,17 +32,17 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// Gets the unique identifier for this agent type.
     /// </summary>
     public abstract string AgentId { get; }
-    
+
     /// <summary>
     /// Gets a human-readable name for this agent.
     /// </summary>
     public abstract string Name { get; }
-    
+
     /// <summary>
     /// Gets a description of what this agent does (used for semantic routing).
     /// </summary>
     public abstract string Description { get; }
-    
+
     /// <summary>
     /// Gets the domains/topics this agent handles (used for semantic routing).
     /// </summary>
@@ -63,11 +63,11 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// </summary>
     protected virtual string BuildSystemPrompt() => $"""
             You are {Name}, a specialized AI agent for Guitar Alchemist.
-            
+
             Your role: {Description}
-            
+
             Capabilities: {string.Join(", ", Capabilities)}
-            
+
             Guidelines:
             - Provide accurate, evidence-based responses about guitar and music theory
             - When uncertain, express your confidence level honestly
@@ -84,7 +84,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
         CancellationToken cancellationToken = default)
     {
         var messages = new List<ChatMessage>();
-        
+
         var prompt = systemPrompt ?? BuildSystemPrompt();
         messages.Add(new ChatMessage(ChatRole.System, prompt));
         messages.Add(new ChatMessage(ChatRole.User, userMessage));
@@ -139,6 +139,34 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             CRITIQUE: {critique}
             """;
         return await ChatAsync(refineMessage, systemPrompt, cancellationToken);
+    }
+
+    /// <summary>
+    /// Streams a chat request to the LLM token-by-token using <see cref="IChatClient.GetStreamingResponseAsync"/>.
+    /// </summary>
+    /// <param name="userMessage">The user's message.</param>
+    /// <param name="systemPrompt">Optional system prompt override; defaults to <see cref="BuildSystemPrompt"/>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable that yields each text token as it arrives from the LLM.</returns>
+    public async IAsyncEnumerable<string> ProcessStreamingAsync(
+        string userMessage,
+        string? systemPrompt = null,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var messages = new List<ChatMessage>();
+
+        var prompt = systemPrompt ?? BuildSystemPrompt();
+        messages.Add(new ChatMessage(ChatRole.System, prompt));
+        messages.Add(new ChatMessage(ChatRole.User, userMessage));
+
+        Logger.LogDebug("Agent {AgentId} streaming request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
+
+        await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
+        {
+            var text = update.Text;
+            if (!string.IsNullOrEmpty(text))
+                yield return text;
+        }
     }
 
     /// <summary>
@@ -208,17 +236,17 @@ public record AgentRequest
     /// Gets or sets the user's query.
     /// </summary>
     public required string Query { get; init; }
-    
+
     /// <summary>
     /// Gets or sets optional context about the current musical situation.
     /// </summary>
     public string? Context { get; init; }
-    
+
     /// <summary>
     /// Gets or sets optional related voicing IDs for reference.
     /// </summary>
     public IReadOnlyList<string>? RelatedVoicingIds { get; init; }
-    
+
     /// <summary>
     /// Gets or sets any key/value metadata.
     /// </summary>
@@ -246,27 +274,27 @@ public record AgentResponse
     /// Gets or sets the main result/answer from the agent.
     /// </summary>
     public required string Result { get; init; }
-    
+
     /// <summary>
     /// Gets or sets the confidence score (0.0 to 1.0).
     /// </summary>
     public required float Confidence { get; init; }
-    
+
     /// <summary>
     /// Gets or sets evidence supporting the result.
     /// </summary>
     public IReadOnlyList<string> Evidence { get; init; } = [];
-    
+
     /// <summary>
     /// Gets or sets assumptions made by the agent.
     /// </summary>
     public IReadOnlyList<string> Assumptions { get; init; } = [];
-    
+
     /// <summary>
     /// Gets or sets the agent that produced this response.
     /// </summary>
     public required string AgentId { get; init; }
-    
+
     /// <summary>
     /// Gets or sets any structured data returned.
     /// </summary>

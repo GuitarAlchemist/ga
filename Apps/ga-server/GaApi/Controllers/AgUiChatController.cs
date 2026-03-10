@@ -127,21 +127,23 @@ public class AgUiChatController(
                 lastError      = (string?)null,
             }, cancellationToken);
 
-            // ── 3. Invoke orchestrator ──────────────────────────────────────────
-            var response = await orchestrator.AnswerAsync(
-                new OrchestratorChatRequest(userMessage), cancellationToken);
+            // ── 3. Invoke orchestrator with true token streaming ────────────────
+            var chatRequest = new OrchestratorChatRequest(userMessage, threadId);
+
+            // ── 4. Stream text tokens, emit STEP_STARTED after streaming completes
+            await writer.WriteTextStartAsync(msgId, cancellationToken);
+
+            var response = await orchestrator.AnswerStreamingAsync(
+                chatRequest,
+                async token => await writer.WriteTextChunkAsync(msgId, token, cancellationToken),
+                cancellationToken);
+
+            await writer.WriteTextEndAsync(msgId, cancellationToken);
 
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
 
-            // ── 4. STEP_STARTED (routing metadata first — institutional rule) ───
+            // ── 5. STEP_STARTED (routing metadata — institutional rule) ─────────
             await writer.WriteStepStartedAsync(routing.AgentId, runId, cancellationToken);
-
-            // ── 5. Streaming text ───────────────────────────────────────────────
-            var answer = response.NaturalLanguageAnswer ?? string.Empty;
-            await writer.WriteTextStartAsync(msgId, cancellationToken);
-            foreach (var chunk in SseChunker.SplitIntoChunks(answer))
-                await writer.WriteTextChunkAsync(msgId, chunk, cancellationToken);
-            await writer.WriteTextEndAsync(msgId, cancellationToken);
 
             // ── 6. Domain CUSTOM events ─────────────────────────────────────────
             var filters       = response.QueryFilters;

@@ -34,4 +34,10 @@ public sealed class ChatHookContext
     /// for different requests.
     /// </summary>
     public Guid CorrelationId { get; init; }
+
+    /// <summary>Optional session or user identifier for per-user policies.</summary>
+    public string? UserId { get; init; }
+
+    /// <summary>DI service locator — available to stateful hooks that need services.</summary>
+    public IServiceProvider? Services { get; init; }
 }
