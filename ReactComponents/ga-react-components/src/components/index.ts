@@ -33,3 +33,7 @@ export { default as Guitar3D } from './Guitar3D/Guitar3D';
 // Export FretboardHeatMap component
 export { FretboardHeatMap } from './FretboardHeatMap';
 export type { FretboardHeatMapProps } from './FretboardHeatMap';
+
+// Export AG-UI chat components
+export { DiatonicChordTable } from './DiatonicChordTable';
+export { GAChatPanel } from './GAChatPanel';

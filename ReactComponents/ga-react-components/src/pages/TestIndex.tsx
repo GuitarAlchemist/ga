@@ -286,6 +286,15 @@ const testPages: TestPageInfo[] = [
     features: ['Position Notation', 'CAGED Shapes', 'Movement Commands', 'Slide Commands', 'Live Parsing', 'AST Visualization'],
     status: 'complete',
   },
+  {
+    id: 'ga-chat',
+    title: 'GA Chat (AG-UI)',
+    description: 'AG-UI protocol chat panel with streaming text and diatonic chord table driven by domain events',
+    technology: 'React + AG-UI + SSE + GaApi',
+    path: '/test/ga-chat',
+    features: ['AG-UI Protocol', 'SSE Streaming', 'Diatonic Chords', 'Routing Metadata', 'Hook Pipeline'],
+    status: 'complete',
+  },
 ];
 
 const statusColors = {

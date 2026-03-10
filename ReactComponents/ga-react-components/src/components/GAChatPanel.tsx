@@ -33,6 +33,7 @@ const GAChatPanel: React.FC<GAChatPanelProps> = ({ agentUrl }) => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleChordClick = (_chord: ChordInContext) => {
     // Future: trigger lazy voicing fetch to VexTabViewer
   };
