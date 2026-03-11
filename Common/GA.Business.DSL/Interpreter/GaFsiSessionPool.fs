@@ -162,42 +162,6 @@ type GaFsiSessionPool(poolSize: int, preludePath: string) =
                 return GaScriptError ($"Unexpected error: {ex.Message}", "", [||], sw.Elapsed.TotalMilliseconds)
         }
 
-    /// Evaluate and attempt to return the last bound value from the FSI session.
-    member this.EvalWithResultAsync(script: string, ?cancellationToken: CancellationToken) : Async<GaScriptResult> =
-        let ct = defaultArg cancellationToken CancellationToken.None
-        async {
-            do! gate.WaitAsync(ct) |> Async.AwaitTask
-            let s = acquireSession ()
-            s.Stdout.Clear() |> ignore
-            s.Stderr.Clear() |> ignore
-            let sw = Diagnostics.Stopwatch.StartNew()
-            try
-                match s.Session.EvalExpressionNonThrowing script with
-                | Choice1Of2 (Some v), diags ->
-                    sw.Stop()
-                    let out = s.Stdout.ToString()
-                    releaseSession s
-                    gate.Release() |> ignore
-                    return GaScriptOk (Some v.ReflectionValue, out, sw.Elapsed.TotalMilliseconds)
-                | Choice1Of2 None, diags ->
-                    sw.Stop()
-                    let out = s.Stdout.ToString()
-                    releaseSession s
-                    gate.Release() |> ignore
-                    return GaScriptOk (None, out, sw.Elapsed.TotalMilliseconds)
-                | Choice2Of2 ex, diags ->
-                    sw.Stop()
-                    let out = s.Stdout.ToString()
-                    let fresh = createSession ()
-                    releaseSession fresh
-                    gate.Release() |> ignore
-                    return GaScriptError (ex.Message, out, toDiagnostics diags, sw.Elapsed.TotalMilliseconds)
-            with ex ->
-                sw.Stop()
-                gate.Release() |> ignore
-                return GaScriptError ($"Unexpected error: {ex.Message}", "", [||], sw.Elapsed.TotalMilliseconds)
-        }
-
     interface IDisposable with
         member _.Dispose() =
             gate.Dispose()

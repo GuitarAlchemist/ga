@@ -49,6 +49,27 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
     }
 
     [McpServerTool]
+    [Description("Get guitar voicings for a chord symbol, sorted by playability. Returns JSON array of {chordName, frets, difficulty} objects where frets is a 6-element array (low-E to high-e): -1=muted, 0=open, 1-12=fret number.")]
+    public async Task<string> GetChordVoicings(
+        [Description("The chord symbol, e.g. 'Am7', 'Cmaj7', 'G', 'F#m'")] string chord,
+        [Description("Optional max difficulty filter: 1=beginner, 2=intermediate, 3=advanced")] int? maxDifficulty = null,
+        [Description("Optional minimum fret position")] int? minFret = null,
+        [Description("Optional maximum fret position")] int? maxFret = null,
+        [Description("Exclude voicings with open strings (default false)")] bool noOpenStrings = false,
+        CancellationToken cancellationToken = default)
+    {
+        var client = httpClientFactory.CreateClient("gaapi");
+        var encoded = Uri.EscapeDataString(chord);
+        var query = new System.Text.StringBuilder($"/api/contextual-chords/voicings/{encoded}?noOpenStrings={noOpenStrings}");
+        if (maxDifficulty.HasValue) query.Append($"&maxDifficulty={maxDifficulty}");
+        if (minFret.HasValue)       query.Append($"&minFret={minFret}");
+        if (maxFret.HasValue)       query.Append($"&maxFret={maxFret}");
+        var response = await client.GetAsync(query.ToString(), cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    [McpServerTool]
     [Description("Get borrowed chords available for a given key (chords borrowed from parallel modes). Returns JSON with borrowed chord data.")]
     public async Task<string> GetBorrowedChords(
         [Description("The key to get borrowed chords for, e.g. 'C major'")] string key,

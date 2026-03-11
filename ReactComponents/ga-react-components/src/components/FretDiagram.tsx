@@ -58,7 +58,7 @@ const FretDiagram: React.FC<FretDiagramProps> = ({ chordName, frets }) => {
             key={`fret-${i}`}
             x1={sx(0)} y1={fy(i)}
             x2={sx(STRINGS - 1)} y2={fy(i)}
-            stroke="#999" strokeWidth={i === 0 && baseFret > 1 ? 1 : 1}
+            stroke="#999" strokeWidth={1}
           />
         ))}
 

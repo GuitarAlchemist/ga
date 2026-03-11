@@ -47,8 +47,10 @@ public class ProductionOrchestrator(
         CancellationToken ct = default)
     {
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
+        var correlationId = Guid.NewGuid();
         var hookCtx = new ChatHookContext
         {
+            CorrelationId   = correlationId,
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             Services        = services,
