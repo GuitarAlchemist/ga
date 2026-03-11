@@ -59,7 +59,8 @@ public class ContextualChordsController(
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            logger.LogWarning(ex, "Invalid argument for voicings request for chord {ChordName}", chordName);
+            return BadRequest("Invalid request.");
         }
         catch (Exception ex)
         {

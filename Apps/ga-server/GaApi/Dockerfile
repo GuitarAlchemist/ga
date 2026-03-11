@@ -29,6 +29,8 @@ RUN dotnet publish "GaApi.csproj" -c Release -o /app/publish \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
+# Explicitly pin to Production so the dev-only FSI eval endpoint is never reachable in containers.
+ENV ASPNETCORE_ENVIRONMENT=Production
 
 RUN useradd -m -u 1000 appuser
 COPY --from=build --chown=appuser:appuser /app/publish .

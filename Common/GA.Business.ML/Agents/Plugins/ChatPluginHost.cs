@@ -71,44 +71,18 @@ public static class ChatPluginHost
                 "ChatPluginHost: no [ChatPlugin] implementations found in loaded assemblies");
         }
 
-        // Register the in-process MCP tools provider as a singleton.
-        // SkillMdDrivenSkill instances resolve it lazily on first ExecuteAsync call.
+        // Only register the in-process MCP tools provider when there are actual tool types.
+        // Registering an empty provider adds startup cost for no benefit (Phase 3 work).
         var capturedToolTypes = allMcpToolTypes.Distinct().ToList().AsReadOnly();
-        services.AddSingleton<IMcpToolsProvider>(sp =>
-            new InProcessMcpToolsProvider(
-                capturedToolTypes,
-                sp,
-                sp.GetRequiredService<ILogger<InProcessMcpToolsProvider>>()));
+        if (capturedToolTypes.Count > 0)
+        {
+            services.AddSingleton<IMcpToolsProvider>(sp =>
+                new InProcessMcpToolsProvider(
+                    capturedToolTypes,
+                    sp,
+                    sp.GetRequiredService<ILogger<InProcessMcpToolsProvider>>()));
+        }
 
         return services;
     }
-
-    /// <summary>
-    /// Collects <see cref="IChatPlugin.McpToolTypes"/> from all discovered plugins.
-    /// Used by the in-process MCP server builder (Phase 3).
-    /// </summary>
-    public static IReadOnlyList<Type> CollectMcpToolTypes()
-        => AppDomain.CurrentDomain
-            .GetAssemblies()
-            .Where(a => !a.IsDynamic)
-            .SelectMany(a =>
-            {
-                try { return a.GetExportedTypes(); }
-                catch { return []; }
-            })
-            .Where(t => t is { IsClass: true, IsAbstract: false }
-                     && t.GetCustomAttributes(typeof(ChatPluginAttribute), inherit: false).Length > 0
-                     && typeof(IChatPlugin).IsAssignableFrom(t))
-            .SelectMany(pluginType =>
-            {
-                try
-                {
-                    var plugin = (IChatPlugin)Activator.CreateInstance(pluginType)!;
-                    return plugin.McpToolTypes;
-                }
-                catch { return []; }
-            })
-            .Distinct()
-            .ToList()
-            .AsReadOnly();
 }

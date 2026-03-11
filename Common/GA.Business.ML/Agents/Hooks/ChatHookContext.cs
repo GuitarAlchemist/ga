@@ -11,7 +11,7 @@ public sealed class ChatHookContext
 
     /// <summary>
     /// The message as seen by the current stage of the pipeline.
-    /// Hooks may replace this value via <see cref="HookResult.Mutate"/>;
+    /// Hooks may replace this value by returning <see cref="HookResult.Mutate"/>;
     /// the updated value propagates to subsequent hooks and the skill.
     /// </summary>
     public string CurrentMessage { get; set; } = string.Empty;
@@ -27,9 +27,17 @@ public sealed class ChatHookContext
     /// </summary>
     public AgentResponse? Response { get; set; }
 
+    /// <summary>
+    /// Per-request correlation ID set by the orchestrator at the start of each
+    /// <c>AnswerAsync</c> call. Hooks use this to correlate <c>OnBeforeSkill</c>
+    /// and <c>OnAfterSkill</c> without collisions when the same skill runs concurrently
+    /// for different requests.
+    /// </summary>
+    public Guid CorrelationId { get; init; }
+
     /// <summary>Optional session or user identifier for per-user policies.</summary>
     public string? UserId { get; init; }
 
     /// <summary>DI service locator — available to stateful hooks that need services.</summary>
-    public required IServiceProvider Services { get; init; }
+    public IServiceProvider? Services { get; init; }
 }

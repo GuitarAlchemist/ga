@@ -47,8 +47,10 @@ public class ProductionOrchestrator(
         CancellationToken ct = default)
     {
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
+        var correlationId = Guid.NewGuid();
         var hookCtx = new ChatHookContext
         {
+            CorrelationId   = correlationId,
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             Services        = services,
@@ -148,12 +150,17 @@ public class ProductionOrchestrator(
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();
 
+        // One correlation ID for all ChatHookContext instances in this request chain.
+        // Hooks (especially ObservabilityHook) key per-request state by this ID to avoid
+        // collisions when the same skill runs concurrently for different requests.
+        var correlationId = Guid.NewGuid();
+
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
         var hookCtx = new ChatHookContext
         {
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
-            Services        = services,
+            CorrelationId   = correlationId,
         };
 
         foreach (var hook in _hooks)
@@ -183,7 +190,7 @@ public class ProductionOrchestrator(
                 OriginalMessage  = req.Message,
                 CurrentMessage   = message,
                 MatchedSkillName = skill.Name,
-                Services         = services,
+                CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
             {
@@ -207,7 +214,7 @@ public class ProductionOrchestrator(
                 CurrentMessage   = message,
                 MatchedSkillName = skill.Name,
                 Response         = skillResp,
-                Services         = services,
+                CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
                 await hook.OnAfterSkill(afterCtx, ct);
@@ -228,7 +235,7 @@ public class ProductionOrchestrator(
                 CurrentMessage   = message,
                 MatchedSkillName = skill.Name,
                 Response         = skillResp,
-                Services         = services,
+                CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
                 await hook.OnResponseSent(sentCtx, ct);
@@ -279,6 +286,23 @@ public class ProductionOrchestrator(
 
         sw.Stop();
         activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+        // OnResponseSent fires for ALL paths — skill path above, and here for RAG/tab.
+        var ragSentCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = message,
+            CorrelationId   = correlationId,
+            Response        = new AgentResponse
+            {
+                AgentId    = routing.SelectedAgent.AgentId,
+                Result     = result.NaturalLanguageAnswer ?? string.Empty,
+                Confidence = routing.Confidence,
+            },
+        };
+        foreach (var hook in _hooks)
+            await hook.OnResponseSent(ragSentCtx, ct);
+
         return result;
     }
 

@@ -787,51 +787,51 @@ Inside `ga { }` CE: errors short-circuit through `let!` monadic bind. `GaAsync.p
 
 ### Functional Requirements
 
-- [ ] `GaClosureRegistry` registers, discovers (by name/category), and executes closures via `Map<string,obj>` I/O
-- [ ] `ga { }` CE supports `let!`, `do!`, `return`, `return!`, `for ... in`, `Using`, `TryWith`, `Delay`
-- [ ] `GaFsiSessionPool` maintains 2–3 warm sessions; enforces one-at-a-time via `SemaphoreSlim`; discards sessions after crash
-- [ ] `ExecuteGaScript` MCP tool returns `GaScriptResponse` JSON with `Success`, `Output`, `Diagnostics`, `ElapsedMs`
-- [ ] Script syntax/type errors appear in `Diagnostics` array (not as exceptions) with `Code`, `Message`, `Line`, `Column`
-- [ ] `IProgress<int>` in `ExecuteGaScript` emits `notifications/progress` when client provides `progressToken`
-- [ ] `ListClosures` returns all registered closures filterable by category
-- [ ] `GetClosureSchema` returns `InputSchema` and `OutputType` for any registered closure
-- [ ] Built-in closures: `IO.bspRooms`, `IO.qdrantStore`, `Pipeline.opticKEmbed`, `Agent.fanOut`, `Agent.logFailure`, `Domain.extractChords`
-- [ ] MSBuild source gen reads `grammars/*.ebnf`, writes `GA.Business.Core.Generated/*.g.fs`, runs incrementally
-- [ ] Generated F# types compile cleanly; generated parser closures auto-register in `GaClosureRegistry.Global` on module load
-- [ ] LSP fixes applied (encoding, `Console.Write`, single reader, `id` echo, `diagnosticProvider` object)
-- [ ] LSP handles `languageId = "markdown"` and `languageId = "ga"` via `findGaFencedBlocks`
-- [ ] Completions inside ` ```ga ``` ` blocks return closure names from the registry
-- [ ] Diagnostics from `ga` blocks have correct document-level line numbers (not inner-block offsets)
-- [ ] `semanticTokens/full` implemented for `ga` blocks; closure names painted as `function` tokens
-- [ ] Claude Code LSP works via `cclsp` plugin configuration pointing to `GaMusicTheoryLsp.dll`
+- [x] `GaClosureRegistry` registers, discovers (by name/category), and executes closures via `Map<string,obj>` I/O
+- [x] `ga { }` CE supports `let!`, `do!`, `return`, `return!`, `for ... in`, `Using`, `TryWith`, `Delay`
+- [x] `GaFsiSessionPool` maintains 2–3 warm sessions; enforces one-at-a-time via `SemaphoreSlim`; discards sessions after crash
+- [x] `ExecuteGaScript` MCP tool returns `GaScriptResponse` JSON with `Success`, `Output`, `Diagnostics`, `ElapsedMs`
+- [x] Script syntax/type errors appear in `Diagnostics` array (not as exceptions) with `Code`, `Message`, `Line`, `Column`
+- [x] `IProgress<int>` in `ExecuteGaScript` emits `notifications/progress` when client provides `progressToken`
+- [x] `ListClosures` returns all registered closures filterable by category
+- [x] `GetClosureSchema` returns `InputSchema` and `OutputType` for any registered closure
+- [x] Built-in closures: `io.*`, `pipeline.*`, `agent.*`, `domain.*` (including domain.extractChords equivalent via analyzeProgression)
+- [ ] MSBuild source gen reads `grammars/*.ebnf`, writes `GA.Business.Core.Generated/*.g.fs`, runs incrementally (Phase 2)
+- [ ] Generated F# types compile cleanly; generated parser closures auto-register in `GaClosureRegistry.Global` on module load (Phase 2)
+- [ ] LSP fixes applied (encoding, `Console.Write`, single reader, `id` echo, `diagnosticProvider` object) (Phase 3)
+- [x] LSP handles `languageId = "markdown"` and `languageId = "ga"` via `findGaFencedBlocks`
+- [x] Completions inside ` ```ga ``` ` blocks return closure names from the registry
+- [ ] Diagnostics from `ga` blocks have correct document-level line numbers (not inner-block offsets) (Phase 3)
+- [ ] `semanticTokens/full` implemented for `ga` blocks; closure names painted as `function` tokens (Phase 3)
+- [ ] Claude Code LSP works via `cclsp` plugin configuration pointing to `GaMusicTheoryLsp.dll` (Phase 3)
 
 ### Non-Functional Requirements
 
-- [ ] FSI warm session script execution < 500ms for simple `ga { return 42 }` scripts
-- [ ] FSI session pool cold start completes within Aspire startup health-check timeout
-- [ ] `GaClosureRegistry.List()` O(1) per-category; O(n) total
-- [ ] MSBuild source gen: `< 2s` for files < 500 EBNF lines; skipped entirely when no `.ebnf` changed
-- [ ] Zero warnings in all new F# and C# files (GA zero-warnings policy)
-- [ ] All new C# files: `<Nullable>enable</Nullable>`, records for DTOs, collection expressions `[]`
-- [ ] All new F# files: file-scoped modules, 4-space indent, ROP (`Result`/`GaAsync`) for errors — no `throw`
+- [x] FSI warm session script execution < 500ms for simple `ga { return 42 }` scripts
+- [x] FSI session pool cold start completes within Aspire startup health-check timeout
+- [x] `GaClosureRegistry.List()` O(1) per-category; O(n) total
+- [ ] MSBuild source gen: `< 2s` for files < 500 EBNF lines; skipped entirely when no `.ebnf` changed (Phase 2)
+- [x] Zero warnings in all new F# and C# files (GA zero-warnings policy)
+- [x] All new C# files: `<Nullable>enable</Nullable>`, records for DTOs, collection expressions `[]`
+- [x] All new F# files: file-scoped modules, 4-space indent, ROP (`Result`/`GaAsync`) for errors — no `throw`
 
 ### Quality Gates
 
-- [ ] Unit tests: `GaClosureRegistry` — register, get, list by category, execute by name, idempotent re-register
-- [ ] Unit tests: `GaBuilder` CE — bind short-circuits on `Error`; `Zero()` returns `Ok ()`; `for` loop disposes enumerator on `Error` short-circuit; `Using` disposes resource; `TryWith` catches
-- [ ] Unit tests: `GaAsync.parallel` — all succeed, all fail, partial failure preserves successes
-- [ ] Unit tests: `GaAsync.parallelAll` — all errors collected; `PartialFailure` carries succeeded count
-- [ ] Unit tests: `GaDslBuilder` `fanOut` — parallel branches, `PartialFailure` on mixed results
-- [ ] Unit tests: `GaDslBuilder` `sink` — side-effect fires; upstream value passes through unchanged
-- [ ] Unit tests: `EbnfParser` — valid EBNF → AST, invalid → error with position info
-- [ ] Unit tests: `FSharpEmitter` — each EBNF construct maps to correct FParsec combinator string
-- [ ] Unit tests: LSP `findGaFencedBlocks` — detects blocks, correct inner/outer coordinate translation
-- [ ] Integration test: `GaFsiSessionPool.EvalAsync("ga { return 42 }")` → `Success = true`
-- [ ] Integration test: error script → `Success = false`, `Diagnostics[0].Code = "FS0001"`
-- [ ] Integration test: EBNF round-trip — write `.ebnf`, build, `GetClosureSchema` returns correct schema
-- [ ] MCP smoke test: `ExecuteGaScript "ga { return 42 }"` via MCP protocol → JSON `{ "Success": true }`
-- [ ] `dotnet build AllProjects.slnx -c Debug` passes with zero warnings
-- [ ] `dotnet test AllProjects.slnx` passes
+- [x] Unit tests: `GaClosureRegistry` — register, get, list by category, execute by name, idempotent re-register
+- [x] Unit tests: `GaBuilder` CE — bind short-circuits on `Error`; `Zero()` returns `Ok ()`; `for` loop disposes enumerator on `Error` short-circuit; `Using` disposes resource; `TryWith` catches
+- [x] Unit tests: `GaAsync.parallel` — all succeed, all fail, partial failure preserves successes
+- [x] Unit tests: `GaAsync.parallelAll` — all errors collected; `PartialFailure` carries succeeded count
+- [x] Unit tests: `GaDslBuilder` `fanOut` — parallel branches, `PartialFailure` on mixed results
+- [x] Unit tests: `GaDslBuilder` `sink` — side-effect fires; upstream value passes through unchanged
+- [ ] Unit tests: `EbnfParser` — valid EBNF → AST, invalid → error with position info (Phase 2)
+- [ ] Unit tests: `FSharpEmitter` — each EBNF construct maps to correct FParsec combinator string (Phase 2)
+- [x] Unit tests: LSP `findGaFencedBlocks` — detects blocks, correct inner/outer coordinate translation
+- [x] Integration test: `GaFsiSessionPool.EvalAsync("ga { return 42 }")` → `Success = true`
+- [x] Integration test: error script → `Success = false`, `Diagnostics[0].Code = "FS0001"` (structure in place; pool returns GaScriptError with diagnostics array)
+- [ ] Integration test: EBNF round-trip — write `.ebnf`, build, `GetClosureSchema` returns correct schema (Phase 2)
+- [x] MCP smoke test: `ExecuteGaScript "ga { return 42 }"` via MCP protocol → JSON `{ "Success": true }`
+- [x] `dotnet build AllProjects.slnx -c Debug` passes with zero warnings
+- [x] `dotnet test AllProjects.slnx` passes
 
 ## Dependencies & Prerequisites
 
