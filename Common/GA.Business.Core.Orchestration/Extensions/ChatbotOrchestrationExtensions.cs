@@ -1,6 +1,7 @@
 namespace GA.Business.Core.Orchestration.Extensions;
 
 using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
@@ -38,6 +39,9 @@ public static class ChatbotOrchestrationExtensions
 
         // Vector store — TryAdd so GaApi's FileBasedVectorIndex takes precedence if already registered
         services.TryAddSingleton<GA.Business.ML.Embeddings.IVectorIndex, GA.Business.ML.Embeddings.InMemoryVectorIndex>();
+
+        // Shared Ollama HTTP client wrapper — single plumbing point for /api/generate calls
+        services.AddSingleton<OllamaGenerateClient>();
 
         // Core stateless services (Singleton — no scoped dependencies)
         services.AddSingleton<DomainMetadataPrompter>();

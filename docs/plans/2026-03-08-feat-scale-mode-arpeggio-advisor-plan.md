@@ -1,7 +1,7 @@
 ---
 title: "feat: Scale/Mode/Arpeggio Advisor Skill"
 type: feat
-status: active
+status: completed
 date: 2026-03-08
 ---
 
@@ -84,9 +84,9 @@ Instructs Claude to:
 
 ## Acceptance Criteria
 
-- [ ] `dotnet run --project Apps/GaChatbotCli -- "Am F C G — what arpeggio should I use?"` returns a per-chord breakdown
-- [ ] Response includes arpeggio name, mode name, and target notes for each chord
-- [ ] Response includes detected key
+- [x] `dotnet run --project Apps/GaChatbotCli -- "Am F C G — what arpeggio should I use?"` returns a per-chord breakdown
+- [x] Response includes arpeggio name, mode name, and target notes for each chord
+- [x] Response includes detected key
 - [x] Skill fires on "solo over", "what mode", "what arpeggio", "improvise over" triggers
 - [x] `KeyIdentificationSkill` continues to fire on "what key am I in?" (no collision — different triggers)
 - [x] Build passes: `dotnet build AllProjects.slnx -c Debug`

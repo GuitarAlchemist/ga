@@ -49,6 +49,38 @@ public static class ScaleTool
 
     [McpServerTool]
     [Description(
+        "Get the 7 scale notes for a key string such as 'G major' or 'A minor'. " +
+        "Returns a JSON array of {degree, note, pitchClass} objects suitable for fretboard overlays or theory analysis. " +
+        "pitchClass is 0-11 (C=0, C#=1 … B=11). Supports major and natural minor only.")]
+    public static string GetScaleNotes(
+        [Description("Key string in 'Root mode' format, e.g. 'G major', 'A minor', 'Bb major'")] string key)
+    {
+        var parts = key.Trim().Split(' ', 2);
+        if (parts.Length < 2)
+            return $"Invalid key format '{key}'. Expected 'Root mode', e.g. 'G major'.";
+
+        var root = parts[0];
+        var mode = parts[1].ToLowerInvariant();
+
+        string[] noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        int[] major = [0, 2, 4, 5, 7, 9, 11];
+        int[] minor = [0, 2, 3, 5, 7, 8, 10];
+
+        var rootIndex = Array.IndexOf(noteNames, root);
+        if (rootIndex < 0)
+            return $"Unknown root note '{root}'. Use sharps (e.g. C#, F#) not flats for black keys.";
+
+        var offsets = mode.StartsWith("minor") ? minor : major;
+        var notes = offsets.Select((offset, i) =>
+        {
+            var pc = (rootIndex + offset) % 12;
+            return $"{{\"degree\":{i + 1},\"note\":\"{noteNames[pc]}\",\"pitchClass\":{pc}}}";
+        });
+        return $"[{string.Join(",", notes)}]";
+    }
+
+    [McpServerTool]
+    [Description(
         "Look up a scale by name or alternate name (case-insensitive). " +
         "Returns the scale's binary scale ID, notes, category, and other metadata. " +
         "Example: 'Ionian' resolves to the Major scale (id:2741).")]

@@ -5,6 +5,7 @@ open System.IO
 open System.Threading
 open System.Threading.Channels
 open FSharp.Compiler.Interactive.Shell
+open FSharp.Compiler.Diagnostics
 
 // ============================================================================
 // GaFsiSessionPool — pooled, safe FSI session management
@@ -19,9 +20,18 @@ open FSharp.Compiler.Interactive.Shell
 //   · A session that throws ChoiceOf2 (crash) is discarded and replaced.
 // ============================================================================
 
+/// A structured diagnostic entry surfaced to MCP callers so they can self-correct.
+[<Struct>]
+type GaScriptDiagnostic =
+    { Code      : string
+      Message   : string
+      Severity  : string   // "error" | "warning" | "info"
+      Line      : int      // 1-based
+      Column    : int }    // 1-based
+
 type GaScriptResult =
-    | GaScriptOk    of value: obj option * stdout: string
-    | GaScriptError of message: string  * stdout: string
+    | GaScriptOk    of value: obj option * stdout: string * elapsedMs: float
+    | GaScriptError of message: string  * stdout: string * diagnostics: GaScriptDiagnostic[] * elapsedMs: float
 
 type private FsiSession =
     { Session  : FsiEvaluationSession
@@ -74,6 +84,23 @@ type GaFsiSessionPool(poolSize: int, preludePath: string) =
 
         { Session = session; Stdout = stdout; Stderr = stderr }
 
+    /// Map FSharpDiagnostic severity to lowercase string.
+    let severityStr (d: FSharpDiagnostic) =
+        match d.Severity with
+        | FSharpDiagnosticSeverity.Error   -> "error"
+        | FSharpDiagnosticSeverity.Warning -> "warning"
+        | FSharpDiagnosticSeverity.Info    -> "info"
+        | _                                -> "hidden"
+
+    /// Convert FSharpDiagnostic[] to GaScriptDiagnostic[].
+    let toDiagnostics (diags: FSharpDiagnostic[]) : GaScriptDiagnostic[] =
+        diags |> Array.map (fun d ->
+            { Code     = sprintf "FS%04d" d.ErrorNumber
+              Message  = d.Message
+              Severity = severityStr d
+              Line     = d.StartLine
+              Column   = d.StartColumn + 1 })  // FCS columns are 0-based; LSP uses 1-based
+
     /// Acquire an idle session from the pool, or create a new one up to poolSize.
     let acquireSession () : FsiSession =
         match pool.Reader.TryRead() with
@@ -98,6 +125,8 @@ type GaFsiSessionPool(poolSize: int, preludePath: string) =
 
     /// Evaluate a ga script string. Returns GaScriptOk or GaScriptError.
     /// Serialised through the global gate — safe for concurrent callers.
+    /// Script errors (type errors, syntax errors) are returned in GaScriptError.Diagnostics
+    /// rather than thrown, so MCP callers can read and self-correct without a round-trip.
     member _.EvalAsync(script: string, ?cancellationToken: CancellationToken) : Async<GaScriptResult> =
         let ct = defaultArg cancellationToken CancellationToken.None
         async {
@@ -105,54 +134,32 @@ type GaFsiSessionPool(poolSize: int, preludePath: string) =
             let s = acquireSession ()
             s.Stdout.Clear() |> ignore
             s.Stderr.Clear() |> ignore
+            let sw = Diagnostics.Stopwatch.StartNew()
             try
                 match s.Session.EvalInteractionNonThrowing script with
-                | Choice1Of2 _, _ ->
+                | Choice1Of2 _, diags ->
+                    sw.Stop()
                     let out = s.Stdout.ToString()
-                    releaseSession s
+                    let errors = diags |> Array.filter (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
                     gate.Release() |> ignore
-                    return GaScriptOk (None, out)
-                | Choice2Of2 ex, _ ->
+                    if errors.Length > 0 then
+                        releaseSession s
+                        return GaScriptError ("Compilation errors", out, toDiagnostics errors, sw.Elapsed.TotalMilliseconds)
+                    else
+                        releaseSession s
+                        return GaScriptOk (None, out, sw.Elapsed.TotalMilliseconds)
+                | Choice2Of2 ex, diags ->
+                    sw.Stop()
                     let out = s.Stdout.ToString()
                     // Crashed session — discard it, replace with a fresh one
                     let fresh = createSession ()
                     releaseSession fresh
                     gate.Release() |> ignore
-                    return GaScriptError (ex.Message, out)
+                    return GaScriptError (ex.Message, out, toDiagnostics diags, sw.Elapsed.TotalMilliseconds)
             with ex ->
+                sw.Stop()
                 gate.Release() |> ignore
-                return GaScriptError ($"Unexpected error: {ex.Message}", "")
-        }
-
-    /// Evaluate and attempt to return the last bound value from the FSI session.
-    member this.EvalWithResultAsync(script: string, ?cancellationToken: CancellationToken) : Async<GaScriptResult> =
-        let ct = defaultArg cancellationToken CancellationToken.None
-        async {
-            do! gate.WaitAsync(ct) |> Async.AwaitTask
-            let s = acquireSession ()
-            s.Stdout.Clear() |> ignore
-            s.Stderr.Clear() |> ignore
-            try
-                match s.Session.EvalExpressionNonThrowing script with
-                | Choice1Of2 (Some v), _ ->
-                    let out = s.Stdout.ToString()
-                    releaseSession s
-                    gate.Release() |> ignore
-                    return GaScriptOk (Some v.ReflectionValue, out)
-                | Choice1Of2 None, _ ->
-                    let out = s.Stdout.ToString()
-                    releaseSession s
-                    gate.Release() |> ignore
-                    return GaScriptOk (None, out)
-                | Choice2Of2 ex, _ ->
-                    let out = s.Stdout.ToString()
-                    let fresh = createSession ()
-                    releaseSession fresh
-                    gate.Release() |> ignore
-                    return GaScriptError (ex.Message, out)
-            with ex ->
-                gate.Release() |> ignore
-                return GaScriptError ($"Unexpected error: {ex.Message}", "")
+                return GaScriptError ($"Unexpected error: {ex.Message}", "", [||], sw.Elapsed.TotalMilliseconds)
         }
 
     interface IDisposable with

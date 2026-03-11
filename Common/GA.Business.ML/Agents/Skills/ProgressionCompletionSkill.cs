@@ -28,22 +28,11 @@ public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<P
         @"\b[A-G][b#]?(?:m|maj|dim|aug|7|maj7|m7|m7b5|dim7)?\b",
         RegexOptions.Compiled);
 
-    // ── IAgentSkill ───────────────────────────────────────────────────────────
-
-    public override bool CanHandle(AgentRequest request) => CanHandle(request.Query);
-
-    public override Task<AgentResponse> ExecuteAsync(
-        AgentRequest request,
-        CancellationToken cancellationToken = default) =>
-        ExecuteAsync(request.Query, cancellationToken);
-
-    // ── IOrchestratorSkill ────────────────────────────────────────────────────
-
-    public bool CanHandle(string message) =>
+    public override bool CanHandle(string message) =>
         CompletionTrigger.IsMatch(message) &&
         ChordSymbolPattern.Matches(message).Count >= 2;
 
-    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public override async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var chords     = KeyIdentificationService.ExtractChords(message);
         var candidates = KeyIdentificationService.Identify(chords);

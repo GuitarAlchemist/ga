@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { HttpAgent } from '@ag-ui/client';
 import type { Message } from '@ag-ui/client';
-import { EMPTY_GA_STATE, type ChordInContext, type GaAgentState } from '../types/agent-state';
+import { EMPTY_GA_STATE, type ChordInContext, type GaAgentState, type ScaleNote } from '../types/agent-state';
 
 // ── State management ────────────────────────────────────────────────────────
 
@@ -9,16 +9,18 @@ type GaAction =
   | { type: 'RESET' }
   | { type: 'SNAPSHOT'; payload: Partial<GaAgentState> }
   | { type: 'SET_DIATONIC'; chords: readonly ChordInContext[] }
+  | { type: 'SET_SCALE'; notes: readonly ScaleNote[] }
   | { type: 'SET_PHASE'; phase: GaAgentState['analysisPhase'] }
   | { type: 'SET_ERROR'; error: string | null };
 
 function gaReducer(state: GaAgentState, action: GaAction): GaAgentState {
   switch (action.type) {
-    case 'RESET':     return EMPTY_GA_STATE;
-    case 'SNAPSHOT':  return { ...state, ...action.payload };
+    case 'RESET':        return EMPTY_GA_STATE;
+    case 'SNAPSHOT':     return { ...state, ...action.payload };
     case 'SET_DIATONIC': return { ...state, diatonicChords: action.chords };
-    case 'SET_PHASE': return { ...state, analysisPhase: action.phase };
-    case 'SET_ERROR': return { ...state, lastError: action.error };
+    case 'SET_SCALE':    return { ...state, scaleNotes: action.notes };
+    case 'SET_PHASE':    return { ...state, analysisPhase: action.phase };
+    case 'SET_ERROR':    return { ...state, lastError: action.error };
     default: return state;
   }
 }
@@ -83,6 +85,8 @@ export function useGAAgent(endpointUrl: string): UseGAAgentReturn {
           const value = (event as { value?: unknown }).value;
           if (name === 'ga:diatonic' && Array.isArray(value)) {
             dispatch({ type: 'SET_DIATONIC', chords: value as ChordInContext[] });
+          } else if (name === 'ga:scale' && Array.isArray(value)) {
+            dispatch({ type: 'SET_SCALE', notes: value as ScaleNote[] });
           }
         },
 

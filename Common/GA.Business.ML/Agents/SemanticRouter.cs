@@ -4,9 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -24,12 +26,20 @@ public class SemanticRouter(
         ? list
         : throw new ArgumentException("At least one agent is required", nameof(agents));
 
+    private static readonly JsonSerializerOptions JsonOptions =
+        new() { PropertyNameCaseInsensitive = true };
+
     private readonly ILogger<SemanticRouter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Cached embeddings for agent descriptions
     private readonly Dictionary<string, float[]> _agentEmbeddings = [];
     private volatile bool _embeddingsInitialized;
     private readonly SemaphoreSlim _initLock = new(1, 1);
+
+    // Short-TTL cache for query embeddings: guitar users repeat similar queries in a session
+    // ("what key is this?", "what key does this sound like?") — avoids redundant ~30–80 ms
+    // remote embedding calls for identical strings. Bounded to 256 entries.
+    private readonly MemoryCache _queryEmbeddingCache = new(new MemoryCacheOptions { SizeLimit = 256 });
 
     /// <summary>
     /// Gets the available agents.
@@ -133,10 +143,7 @@ public class SemanticRouter(
             if (text.Contains("```json")) text = text.Split("```json")[1].Split("```")[0].Trim();
             else if (text.Contains("```")) text = text.Split("```")[1].Split("```")[0].Trim();
 
-            var result = JsonSerializer.Deserialize<LlmRoutingResponse>(text, new JsonSerializerOptions
-            {
-               PropertyNameCaseInsensitive = true
-            });
+            var result = JsonSerializer.Deserialize<LlmRoutingResponse>(text, JsonOptions);
 
             if (result != null)
             {
@@ -264,8 +271,7 @@ public class SemanticRouter(
         using var activity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.RoutingSemantic);
 
         var sw = Stopwatch.StartNew();
-        var queryEmbedding = await textEmbeddings!.GenerateAsync([query], cancellationToken: cancellationToken);
-        var queryVector = queryEmbedding[0].Vector.ToArray();
+        var queryVector = await GetQueryEmbeddingAsync(query, cancellationToken);
         activity?.SetTag(ChatbotActivitySource.TagEmbeddingMs, sw.ElapsedMilliseconds);
 
         var scores = new List<(GuitarAlchemistAgentBase Agent, float Score)>();
@@ -301,6 +307,21 @@ public class SemanticRouter(
             AllScores = orderedScores,
             RoutingMethod = "semantic"
         };
+    }
+
+    private async Task<float[]> GetQueryEmbeddingAsync(string query, CancellationToken cancellationToken)
+    {
+        var key = query.Trim().ToLowerInvariant();
+        if (_queryEmbeddingCache.TryGetValue(key, out float[]? cached))
+            return cached!;
+
+        var embedding = (await textEmbeddings!.GenerateAsync([query], cancellationToken: cancellationToken))[0].Vector.ToArray();
+        _queryEmbeddingCache.Set(key, embedding, new MemoryCacheEntryOptions
+        {
+            Size = 1,
+            SlidingExpiration = TimeSpan.FromMinutes(5),
+        });
+        return embedding;
     }
 
     private RoutingResult KeywordRoute(string query)
@@ -502,6 +523,7 @@ public class SemanticRouter(
     public void Dispose()
     {
         _initLock.Dispose();
+        _queryEmbeddingCache.Dispose();
         foreach (var agent in _agents)
         {
             agent.Dispose();

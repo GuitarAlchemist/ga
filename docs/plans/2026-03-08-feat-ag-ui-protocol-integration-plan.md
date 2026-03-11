@@ -1,7 +1,7 @@
 ---
 title: "feat: AG-UI Protocol Integration — Agent-Native UI for Guitar Alchemist"
 type: feat
-status: active
+status: completed
 date: 2026-03-08
 ---
 

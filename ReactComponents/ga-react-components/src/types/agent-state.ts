@@ -25,6 +25,13 @@ export interface CandidateVoicing {
   readonly score: number;
 }
 
+/** Scale degree descriptor from the ga:scale custom event. */
+export interface ScaleNote {
+  readonly degree: number;
+  readonly note: string;
+  readonly pitchClass: number;
+}
+
 /** Live agent state maintained by useGAAgent. */
 export interface GaAgentState {
   readonly key: string | null;
@@ -34,6 +41,8 @@ export interface GaAgentState {
   readonly progression: readonly unknown[];
   readonly analysisPhase: 'idle' | 'identifying' | 'complete';
   readonly lastError: string | null;
+  /** Scale notes from the ga:scale custom event — used for live fretboard overlay. */
+  readonly scaleNotes: readonly ScaleNote[];
 }
 
 export const EMPTY_GA_STATE: GaAgentState = {
@@ -44,4 +53,5 @@ export const EMPTY_GA_STATE: GaAgentState = {
   progression:    [],
   analysisPhase:  'idle',
   lastError:      null,
+  scaleNotes:     [],
 };

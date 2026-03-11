@@ -14,10 +14,8 @@
     <Compile Remove="Services/ProductionOrchestrator.cs" />
     <!-- Infrastructure client uses old VoicingDocument type — parked until updated -->
     <Compile Remove="Services/Infrastructure/GaApiClientVectorIndex.cs" />
-    <!-- Stale types superseded by GA.Business.Core.Orchestration equivalents -->
-    <Compile Remove="Models/ChatModels.cs" />
-    <Compile Remove="Abstractions/IGroundedNarrator.cs" />
-    <Compile Remove="Abstractions/IHarmonicChatOrchestrator.cs" />
+    <!-- Stale type files (IHarmonicChatOrchestrator, IGroundedNarrator, ChatModels) were deleted;
+         equivalents now live in GA.Business.Core.Orchestration. -->
   </ItemGroup>
 
   <ItemGroup>

@@ -32,17 +32,17 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// Gets the unique identifier for this agent type.
     /// </summary>
     public abstract string AgentId { get; }
-    
+
     /// <summary>
     /// Gets a human-readable name for this agent.
     /// </summary>
     public abstract string Name { get; }
-    
+
     /// <summary>
     /// Gets a description of what this agent does (used for semantic routing).
     /// </summary>
     public abstract string Description { get; }
-    
+
     /// <summary>
     /// Gets the domains/topics this agent handles (used for semantic routing).
     /// </summary>
@@ -63,11 +63,11 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// </summary>
     protected virtual string BuildSystemPrompt() => $"""
             You are {Name}, a specialized AI agent for Guitar Alchemist.
-            
+
             Your role: {Description}
-            
+
             Capabilities: {string.Join(", ", Capabilities)}
-            
+
             Guidelines:
             - Provide accurate, evidence-based responses about guitar and music theory
             - When uncertain, express your confidence level honestly
@@ -236,17 +236,17 @@ public record AgentRequest
     /// Gets or sets the user's query.
     /// </summary>
     public required string Query { get; init; }
-    
+
     /// <summary>
     /// Gets or sets optional context about the current musical situation.
     /// </summary>
     public string? Context { get; init; }
-    
+
     /// <summary>
     /// Gets or sets optional related voicing IDs for reference.
     /// </summary>
     public IReadOnlyList<string>? RelatedVoicingIds { get; init; }
-    
+
     /// <summary>
     /// Gets or sets any key/value metadata.
     /// </summary>
@@ -259,7 +259,7 @@ public record AgentRequest
 public record StructuredAgentResponse
 {
     public required string Result { get; init; }
-    public required float Confidence { get; init; }
+    public float Confidence { get; init; } = 0.85f;
     public List<string> Evidence { get; init; } = [];
     public List<string> Assumptions { get; init; } = [];
     public object? Data { get; init; }
@@ -274,27 +274,27 @@ public record AgentResponse
     /// Gets or sets the main result/answer from the agent.
     /// </summary>
     public required string Result { get; init; }
-    
+
     /// <summary>
     /// Gets or sets the confidence score (0.0 to 1.0).
     /// </summary>
     public required float Confidence { get; init; }
-    
+
     /// <summary>
     /// Gets or sets evidence supporting the result.
     /// </summary>
     public IReadOnlyList<string> Evidence { get; init; } = [];
-    
+
     /// <summary>
     /// Gets or sets assumptions made by the agent.
     /// </summary>
     public IReadOnlyList<string> Assumptions { get; init; } = [];
-    
+
     /// <summary>
     /// Gets or sets the agent that produced this response.
     /// </summary>
     public required string AgentId { get; init; }
-    
+
     /// <summary>
     /// Gets or sets any structured data returned.
     /// </summary>
