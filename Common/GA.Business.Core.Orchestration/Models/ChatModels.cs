@@ -11,8 +11,15 @@ using GA.Domain.Core.Theory.Harmony.Progressions;
 public sealed record ChatRequest(
     string Message,
     string? SessionId = null,
-    string? KeyContext = null
+    string? KeyContext = null,
+    IReadOnlyList<ConversationTurn>? History = null
 );
+
+/// <summary>
+/// Lightweight conversation turn record used to pass multi-turn history into the orchestrator.
+/// Defined here (not in ConversationHistoryStore) so the Models assembly stays self-contained.
+/// </summary>
+public sealed record ConversationTurn(string Role, string Content, DateTimeOffset Timestamp);
 
 /// <summary>
 /// Routing decision made by SemanticRouter for the current request.
