@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Extensions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.Services;
+using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,12 @@ public static class ChatbotOrchestrationExtensions
         //   Skills: ScaleInfoSkill, FretSpanSkill, ChordSubstitutionSkill, KeyIdentificationSkill
         //   Hooks:  PromptSanitizationHook, ObservabilityHook
         services.AddChatPluginHost();
+
+        // Conversation history — singleton in-memory store shared across scopes
+        services.AddSingleton<ConversationHistoryStore>();
+
+        // Cross-agent delegation coordinator
+        services.AddScoped<IAgentCoordinator, AgentCoordinator>();
 
         // Orchestrators — Scoped because they transitively depend on
         // SemanticRouter (Scoped) and SpectralRetrievalService (Scoped).

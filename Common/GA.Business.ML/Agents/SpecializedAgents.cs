@@ -93,10 +93,35 @@ public class ComposerAgent(IChatClient chatClient, ILogger<ComposerAgent> logger
     {
         Logger.LogInformation("ComposerAgent processing: {Query}", request.Query);
 
-        var prompt = BuildComposerPrompt(request);
-        var responseText = await ChatAsync(request.Query, prompt, cancellationToken);
+        // When composing over a specific key, delegate to TheoryAgent for scale analysis
+        if (Coordinator is not null && MentionsKey(request.Query))
+        {
+            Logger.LogInformation("ComposerAgent delegating key analysis to TheoryAgent");
+            var theoryResult = await DelegateToAsync(
+                $"Analyze the scales and modes available in this context: {request.Query}",
+                AgentIds.Theory, cancellationToken);
 
-        return ParseStructuredResponse(responseText, "Composition generation failed.");
+            if (theoryResult.Confidence > 0.5f)
+            {
+                var enrichedQuery = $"{request.Query}\n\n[Theory context]: {theoryResult.Result}";
+                var prompt = BuildComposerPrompt(request);
+                var responseText = await ChatAsync(enrichedQuery, prompt, cancellationToken: cancellationToken);
+                return ParseStructuredResponse(responseText, "Composition generation failed.");
+            }
+        }
+
+        var composerPrompt = BuildComposerPrompt(request);
+        var text = await ChatAsync(request.Query, composerPrompt, cancellationToken: cancellationToken);
+        return ParseStructuredResponse(text, "Composition generation failed.");
+    }
+
+    private static bool MentionsKey(string query)
+    {
+        var q = query.ToLowerInvariant();
+        return q.Contains(" key of ") || q.Contains(" in c ") || q.Contains(" in g ") ||
+               q.Contains(" in d ") || q.Contains(" in a ") || q.Contains(" in e ") ||
+               q.Contains(" in f ") || q.Contains(" in b ") || q.Contains("major") ||
+               q.Contains("minor");
     }
 
     private string BuildComposerPrompt(AgentRequest _) => BuildSystemPrompt() + """
