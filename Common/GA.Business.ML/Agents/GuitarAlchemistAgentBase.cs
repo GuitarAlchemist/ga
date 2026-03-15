@@ -29,6 +29,12 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     protected readonly ILogger Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
+    /// Registry for loading agent system prompts from <c>.agent/agents/*.md</c> files.
+    /// Set via DI or defaults to a shared singleton that discovers files at startup.
+    /// </summary>
+    public static AgentMdRegistry MdRegistry { get; set; } = new();
+
+    /// <summary>
     /// Gets the unique identifier for this agent type.
     /// </summary>
     public abstract string AgentId { get; }
@@ -65,8 +71,19 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
 
     /// <summary>
     /// Builds the system prompt for this agent.
+    /// Checks <see cref="MdRegistry"/> for a matching <c>.md</c> file first;
+    /// falls back to the generated template when no file exists.
     /// </summary>
-    protected virtual string BuildSystemPrompt() => $"""
+    protected virtual string BuildSystemPrompt()
+    {
+        var md = MdRegistry.TryGetByRole(AgentId);
+        if (md is not null && !string.IsNullOrWhiteSpace(md.Body))
+        {
+            Logger.LogDebug("Agent {AgentId}: using .md system prompt from {File}", AgentId, md.FilePath);
+            return md.Body;
+        }
+
+        return $"""
             You are {Name}, a specialized AI agent for Guitar Alchemist.
 
             Your role: {Description}
@@ -79,6 +96,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             - Cite specific music theory concepts or techniques when applicable
             - If a request falls outside your expertise, indicate this clearly
             """;
+    }
 
     /// <summary>
     /// Delegates a sub-query to another agent via the coordinator.

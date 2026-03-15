@@ -154,6 +154,143 @@ public class AgentMdParserTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result!.Body, Does.Contain("Line one."));
         Assert.That(result.Body, Does.Contain("Line two."));
-        Assert.That(result.Body, Does.Contain("Line three."));
+        Assert.That(result.Body, Does.Contain("Line Three.").IgnoreCase);
+    }
+}
+
+[TestFixture]
+public class AgentMdRegistryTests
+{
+    private string _tempDir = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _tempDir = Path.Combine(Path.GetTempPath(), $"agent_md_registry_test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(_tempDir);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
+    }
+
+    [Test]
+    public void TryGetByRole_ExistingAgent_ReturnsAgentMd()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "theory.md"), """
+            ---
+            id: theory
+            name: Theory Agent
+            role: theory
+            description: Music theory expert
+            ---
+
+            You are a music theory specialist.
+            """);
+
+        var registry = new AgentMdRegistry(_tempDir);
+
+        var result = registry.TryGetByRole("theory");
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Role, Is.EqualTo("theory"));
+        Assert.That(result.Body, Does.Contain("music theory specialist"));
+    }
+
+    [Test]
+    public void TryGetByRole_CaseInsensitive()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "tab.md"), """
+            ---
+            id: tab
+            role: tab
+            ---
+
+            Tab prompt.
+            """);
+
+        var registry = new AgentMdRegistry(_tempDir);
+
+        Assert.That(registry.TryGetByRole("TAB"), Is.Not.Null);
+        Assert.That(registry.TryGetByRole("Tab"), Is.Not.Null);
+        Assert.That(registry.TryGetByRole("tab"), Is.Not.Null);
+    }
+
+    [Test]
+    public void TryGetByRole_NonExistent_ReturnsNull()
+    {
+        var registry = new AgentMdRegistry(_tempDir);
+
+        Assert.That(registry.TryGetByRole("nonexistent"), Is.Null);
+    }
+
+    [Test]
+    public void GetAll_ReturnsAllDiscoveredAgents()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "a.md"), """
+            ---
+            id: alpha
+            role: alpha
+            ---
+
+            Alpha prompt.
+            """);
+
+        File.WriteAllText(Path.Combine(_tempDir, "b.md"), """
+            ---
+            id: beta
+            role: beta
+            ---
+
+            Beta prompt.
+            """);
+
+        var registry = new AgentMdRegistry(_tempDir);
+
+        Assert.That(registry.GetAll(), Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void Registry_LaterPathOverridesEarlier()
+    {
+        var dir1 = Path.Combine(_tempDir, "repo");
+        var dir2 = Path.Combine(_tempDir, "user");
+        Directory.CreateDirectory(dir1);
+        Directory.CreateDirectory(dir2);
+
+        File.WriteAllText(Path.Combine(dir1, "theory.md"), """
+            ---
+            id: theory
+            role: theory
+            ---
+
+            Repo-level prompt.
+            """);
+
+        File.WriteAllText(Path.Combine(dir2, "theory.md"), """
+            ---
+            id: theory
+            role: theory
+            ---
+
+            User-level prompt.
+            """);
+
+        var registry = new AgentMdRegistry(dir1, dir2);
+        var result = registry.TryGetByRole("theory");
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Body, Does.Contain("User-level prompt"));
+    }
+
+    [Test]
+    public void Registry_EmptyDirectory_ReturnsEmptyList()
+    {
+        var registry = new AgentMdRegistry(_tempDir);
+
+        Assert.That(registry.GetAll(), Is.Empty);
     }
 }

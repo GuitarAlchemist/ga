@@ -200,6 +200,9 @@ public static class AiServiceExtensions
     /// </summary>
     public static IServiceCollection AddGuitarAlchemistAgents(this IServiceCollection services)
     {
+        // Agent .md registry — discovers prompts from .agent/agents/ and ~/.ga/agents/
+        services.TryAddSingleton<Agents.AgentMdRegistry>();
+
         services.TryAddSingleton<Agents.TabAgent>();
         services.TryAddSingleton<Agents.TheoryAgent>();
         services.TryAddSingleton<Agents.TechniqueAgent>();
