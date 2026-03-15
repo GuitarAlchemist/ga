@@ -28,6 +28,7 @@ public class ProductionOrchestrator(
     QueryUnderstandingService queryUnderstandingService,
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
+    ConversationHistoryStore historyStore,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
@@ -46,6 +47,14 @@ public class ProductionOrchestrator(
         Func<string, Task> onToken,
         CancellationToken ct = default)
     {
+        // ── Session management ───────────────────────────────────────────────
+        var sessionId = req.SessionId ?? Guid.NewGuid().ToString("N");
+        var history = req.History ?? historyStore.GetHistory(sessionId);
+        var agentHistory = history
+            .Select(t => new ChatHistoryTurn(t.Role, t.Content))
+            .ToList();
+        historyStore.AddTurn(sessionId, "user", req.Message);
+
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
         var correlationId = Guid.NewGuid();
         var hookCtx = new ChatHookContext
@@ -82,6 +91,7 @@ public class ProductionOrchestrator(
             foreach (var word in skillResp.Result.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 await onToken(word + " ");
 
+            historyStore.AddTurn(sessionId, "assistant", skillResp.Result);
             return new ChatResponse(
                 NaturalLanguageAnswer: skillResp.Result,
                 Candidates: [],
@@ -116,6 +126,7 @@ public class ProductionOrchestrator(
             foreach (var word in fallback.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 await onToken(word + " ");
 
+            historyStore.AddTurn(sessionId, "assistant", fallback.NaturalLanguageAnswer);
             return fallback;
         }
 
@@ -123,15 +134,19 @@ public class ProductionOrchestrator(
         if (routing.SelectedAgent is GuitarAlchemistAgentBase streamingAgent)
         {
             var fullText = new StringBuilder();
-            await foreach (var token in streamingAgent.ProcessStreamingAsync(req.Message, cancellationToken: ct))
+            await foreach (var token in streamingAgent.ProcessStreamingAsync(
+                req.Message, conversationHistory: agentHistory, cancellationToken: ct))
             {
                 await onToken(token);
                 fullText.Append(token);
             }
 
+            var answer = fullText.ToString();
+            historyStore.AddTurn(sessionId, "assistant", answer);
+
             // Build a minimal ChatResponse with the streamed text
             return new ChatResponse(
-                fullText.ToString(),
+                answer,
                 [],
                 Routing: routingMetadata,
                 QueryFilters: filters);
@@ -142,6 +157,7 @@ public class ProductionOrchestrator(
         response = response with { Routing = routingMetadata, QueryFilters = filters };
         foreach (var word in response.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             await onToken(word + " ");
+        historyStore.AddTurn(sessionId, "assistant", response.NaturalLanguageAnswer);
         return response;
     }
 
@@ -149,6 +165,10 @@ public class ProductionOrchestrator(
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();
+
+        // ── Session management ───────────────────────────────────────────────
+        var sessionId = req.SessionId ?? Guid.NewGuid().ToString("N");
+        historyStore.AddTurn(sessionId, "user", req.Message);
 
         // One correlation ID for all ChatHookContext instances in this request chain.
         // Hooks (especially ObservabilityHook) key per-request state by this ID to avoid
@@ -286,6 +306,8 @@ public class ProductionOrchestrator(
 
         sw.Stop();
         activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+        historyStore.AddTurn(sessionId, "assistant", result.NaturalLanguageAnswer);
 
         // OnResponseSent fires for ALL paths — skill path above, and here for RAG/tab.
         var ragSentCtx = new ChatHookContext

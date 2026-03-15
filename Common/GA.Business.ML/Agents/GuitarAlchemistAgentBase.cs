@@ -49,6 +49,11 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     public abstract IReadOnlyList<string> Capabilities { get; }
 
     /// <summary>
+    /// Optional cross-agent delegation coordinator (property-injected to avoid circular DI).
+    /// </summary>
+    public IAgentCoordinator? Coordinator { get; set; }
+
+    /// <summary>
     /// Processes a user request and returns a structured response.
     /// </summary>
     /// <param name="request">The agent request containing the user's query.</param>
@@ -76,17 +81,39 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             """;
 
     /// <summary>
+    /// Delegates a sub-query to another agent via the coordinator.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if no coordinator is wired.</exception>
+    protected Task<AgentResponse> DelegateToAsync(string query, string? agentId = null, CancellationToken ct = default)
+        => Coordinator?.DelegateAsync(query, agentId, ct)
+           ?? throw new InvalidOperationException("No IAgentCoordinator wired — cannot delegate.");
+
+    /// <summary>
     /// Sends a chat request to the LLM.
     /// </summary>
     protected async Task<string> ChatAsync(
         string userMessage,
         string? systemPrompt = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<ChatHistoryTurn>? conversationHistory = null)
     {
         var messages = new List<ChatMessage>();
 
         var prompt = systemPrompt ?? BuildSystemPrompt();
         messages.Add(new ChatMessage(ChatRole.System, prompt));
+
+        // Inject conversation history between system and user message
+        if (conversationHistory is { Count: > 0 })
+        {
+            foreach (var turn in conversationHistory)
+            {
+                var role = turn.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase)
+                    ? ChatRole.Assistant
+                    : ChatRole.User;
+                messages.Add(new ChatMessage(role, turn.Content));
+            }
+        }
+
         messages.Add(new ChatMessage(ChatRole.User, userMessage));
 
         Logger.LogDebug("Agent {AgentId} processing request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
@@ -151,12 +178,25 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     public async IAsyncEnumerable<string> ProcessStreamingAsync(
         string userMessage,
         string? systemPrompt = null,
+        IReadOnlyList<ChatHistoryTurn>? conversationHistory = null,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var messages = new List<ChatMessage>();
 
         var prompt = systemPrompt ?? BuildSystemPrompt();
         messages.Add(new ChatMessage(ChatRole.System, prompt));
+
+        if (conversationHistory is { Count: > 0 })
+        {
+            foreach (var turn in conversationHistory)
+            {
+                var role = turn.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase)
+                    ? ChatRole.Assistant
+                    : ChatRole.User;
+                messages.Add(new ChatMessage(role, turn.Content));
+            }
+        }
+
         messages.Add(new ChatMessage(ChatRole.User, userMessage));
 
         Logger.LogDebug("Agent {AgentId} streaming request: {Message}", AgentId, userMessage[..Math.Min(100, userMessage.Length)]);
@@ -228,6 +268,11 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
 }
 
 /// <summary>
+/// A single turn in a multi-turn conversation, used for history injection into agents.
+/// </summary>
+public sealed record ChatHistoryTurn(string Role, string Content);
+
+/// <summary>
 /// Represents a request to an agent.
 /// </summary>
 public record AgentRequest
@@ -251,6 +296,11 @@ public record AgentRequest
     /// Gets or sets any key/value metadata.
     /// </summary>
     public IReadOnlyDictionary<string, object>? Metadata { get; init; }
+
+    /// <summary>
+    /// Optional multi-turn conversation history for context-aware responses.
+    /// </summary>
+    public IReadOnlyList<ChatHistoryTurn>? ConversationHistory { get; init; }
 }
 
 /// <summary>

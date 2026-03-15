@@ -2,6 +2,7 @@ namespace GA.Business.Core.Orchestration.Plugins;
 
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
+using GA.Business.ML.Agents.Memory;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Domain.Services.Atonal.Grothendieck;
@@ -33,8 +34,12 @@ public sealed class GaPlugin : IChatPlugin
         services.AddScoped<IOrchestratorSkill, KeyIdentificationSkill>();
         services.AddScoped<IOrchestratorSkill, ProgressionCompletionSkill>();
 
+        // ── Persistent memory ────────────────────────────────────────────────
+        services.TryAddSingleton<MemoryStore>();
+
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
+        services.AddSingleton<IChatHook, MemoryHook>();
         services.AddSingleton<IChatHook, ObservabilityHook>();
     }
 
@@ -43,5 +48,5 @@ public sealed class GaPlugin : IChatPlugin
     /// MCP server assembled by <see cref="ChatPluginHost"/> (wired in Phase 3).
     /// Referenced by type name to avoid a direct project dependency on GaMcpServer.
     /// </summary>
-    public IReadOnlyList<Type> McpToolTypes => [];  // populated in Phase 3
+    public IReadOnlyList<Type> McpToolTypes => [typeof(MemoryMcpTools)];
 }
