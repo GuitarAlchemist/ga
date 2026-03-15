@@ -2,7 +2,18 @@
 
 An AI-powered music theory and guitar learning platform built with .NET 9, React, and cutting-edge AI technologies.
 
-## 🚀 Quick Start
+## ix ML Integration
+
+GA is connected to [ix](https://github.com/GuitarAlchemist/ix) (39 Rust ML tools) via MCP federation. Key capabilities for music analysis:
+
+- **`ix_ml_pipeline`** — One-call ML pipeline: classify chord progressions, cluster voicings, analyze harmonic complexity
+- **`ix_fft`** — Spectral analysis of audio/harmonic data
+- **`ix_kmeans`** — Cluster chord voicings by timbral similarity
+- **Governance** — Operations governed by [Demerzel](https://github.com/GuitarAlchemist/Demerzel) constitution
+
+Use `/ix-ml-builder`, `/federation-music`, or `/federation-discover` to explore.
+
+## Quick Start
 
 See [AGENTS.md](./AGENTS.md) for complete setup and development guidelines.
 
