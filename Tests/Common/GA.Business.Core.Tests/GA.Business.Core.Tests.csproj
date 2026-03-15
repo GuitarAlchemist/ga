@@ -36,7 +36,6 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Exclude test files with missing service implementations -->
-    <Compile Remove="Fretboard/FretboardEquivalenceGroupsTests.cs"/>
     <Compile Remove="Integration/InvariantSystemIntegrationTests.cs"/>
     <Compile Remove="Atonal/Grothendieck/GpuGrothendieckServiceTests.cs"/>
     <Compile Remove="Performance/InvariantPerformanceBenchmarks.cs"/>

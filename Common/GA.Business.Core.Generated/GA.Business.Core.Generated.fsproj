@@ -3,19 +3,32 @@
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Point to the EBNF grammars in GA.Business.DSL -->
+        <EbnfGrammarsDir>$(MSBuildThisFileDirectory)..\GA.Business.DSL\Grammars</EbnfGrammarsDir>
+        <EbnfGeneratedDir>$(MSBuildProjectDirectory)\Generated</EbnfGeneratedDir>
+        <!-- Only process validated grammars until the emitter handles all EBNF constructs -->
+        <EbnfGrammarPattern>*.ebnf</EbnfGrammarPattern>
     </PropertyGroup>
 
-    <!-- Generated .g.fs files are produced by the EbnfGeneratorTask in GA.Business.DSL.SourceGen. -->
+    <!-- Import the EBNF source generator target -->
+    <Import Project="..\GA.Business.DSL.SourceGen\GA.Business.DSL.SourceGen.targets" />
+
+    <!--
+      Generated .g.fs files. Listed with Condition so the project builds even
+      before the generator has run (first build bootstraps the files).
+      The GenerateFromEbnf target also adds them dynamically.
+    -->
     <ItemGroup>
+        <Compile Include="Generated/ExtendedVoicings.g.fs" Condition="Exists('Generated/ExtendedVoicings.g.fs')" />
         <Compile Include="Generated/ChordSymbol.g.fs" Condition="Exists('Generated/ChordSymbol.g.fs')" />
-        <Compile Include="Generated/ChordProgression.g.fs" Condition="Exists('Generated/ChordProgression.g.fs')" />
-        <Compile Include="Generated/ScaleTransformation.g.fs" Condition="Exists('Generated/ScaleTransformation.g.fs')" />
         <Compile Include="Generated/FretboardNavigation.g.fs" Condition="Exists('Generated/FretboardNavigation.g.fs')" />
         <Compile Include="Generated/GrothendieckOperations.g.fs" Condition="Exists('Generated/GrothendieckOperations.g.fs')" />
+        <Compile Include="Generated/Midi.g.fs" Condition="Exists('Generated/Midi.g.fs')" />
         <Compile Include="Generated/PracticeRoutine.g.fs" Condition="Exists('Generated/PracticeRoutine.g.fs')" />
+        <Compile Include="Generated/ScaleTransformation.g.fs" Condition="Exists('Generated/ScaleTransformation.g.fs')" />
         <Compile Include="Generated/VexTab.g.fs" Condition="Exists('Generated/VexTab.g.fs')" />
         <Compile Include="Generated/AsciiTab.g.fs" Condition="Exists('Generated/AsciiTab.g.fs')" />
-        <Compile Include="Generated/Midi.g.fs" Condition="Exists('Generated/Midi.g.fs')" />
+        <Compile Include="Generated/ChordProgression.g.fs" Condition="Exists('Generated/ChordProgression.g.fs')" />
     </ItemGroup>
 
     <ItemGroup>

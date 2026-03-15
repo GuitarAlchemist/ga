@@ -69,6 +69,7 @@
     <Folder Name="/F# Libraries/">
         <Project Path="Common/GA.Business.Config/GA.Business.Config.fsproj" />
         <Project Path="Common/GA.Business.DSL/GA.Business.DSL.fsproj" />
+        <Project Path="Common/GA.Business.ProbabilisticGrammar/GA.Business.ProbabilisticGrammar.fsproj" />
     </Folder>
     <Folder Name="/Interactive &amp; Tools/">
         <Project Path="Common/GA.Interactive/GA.Interactive.csproj" />
@@ -259,6 +260,7 @@
     </Folder>
     <Folder Name="/Tests/Common/">
         <Project Path="Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj" />
+        <Project Path="Tests/Common/GA.Business.ProbabilisticGrammar.Tests/GA.Business.ProbabilisticGrammar.Tests.csproj" />
     </Folder>
     <Folder Name="/Notebooks/Local NuGet Tests/">
         <File Path="Notebooks/MusicTheory/_Local Ga.Interactive NuGet/Local NuGet smoke test.ipynb" />

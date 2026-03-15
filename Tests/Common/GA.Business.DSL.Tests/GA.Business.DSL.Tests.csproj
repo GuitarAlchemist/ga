@@ -22,6 +22,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.DSL.SourceGen\GA.Business.DSL.SourceGen.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Generated\GA.Business.Core.Generated.fsproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="10.0.104"/>
   </ItemGroup>
 
 </Project>

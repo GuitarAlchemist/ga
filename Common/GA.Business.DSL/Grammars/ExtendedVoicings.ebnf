@@ -1,0 +1,20 @@
+(*
+  Guitar Alchemist - Extended Voicings Grammar
+  Supports drop voicings, spread voicings, and altered intervals.
+
+  Examples:
+    - "drop2"
+    - "drop3#9"
+    - "spread b5 #11"
+    - "cluster"
+*)
+
+voicing = voicing_type, { alteration } ;
+
+voicing_type = "drop2-4" | "drop2" | "drop3" | "spread" | "cluster" ;
+
+alteration = accidental, interval ;
+
+accidental = "#" | "b" ;
+
+interval = "11" | "13" | "5" | "7" | "9" ;

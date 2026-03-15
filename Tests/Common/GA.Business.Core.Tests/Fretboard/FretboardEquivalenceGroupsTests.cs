@@ -1,11 +1,14 @@
 namespace GA.Domain.Core.Tests.Fretboard;
 
 using GA.Domain.Core.Instruments;
-using Core.Atonal;
-using Core.Fretboard.Analysis;
-using Core.Fretboard.Positions;
-using Core.Fretboard.Primitives;
-using FretboardClass = Core.Fretboard.Fretboard;
+using GA.Domain.Core.Instruments.Fretboard.Analysis;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Tonal;
+using GA.Domain.Services.Fretboard.Analysis;
+using FretboardClass = GA.Domain.Core.Instruments.Primitives.Fretboard;
 
 /// <summary>
 ///     Tests for fretboard indexing with 5-fret spans, equivalence groups decomposition,

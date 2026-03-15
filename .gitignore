@@ -136,6 +136,23 @@ paket-files/
 Apps/ga-server/GaApi/cache/
 jetbrains-plugin/.gradle/
 
+# Build/debug artifacts
+*.log
+*.trsx
+dumper.out
+response_real.json
+test_ollama.json
+test_tab.json
+tokenizer.json
+cclsp.json
+
+# Claude Code worktree leftovers
+.claude/worktrees/
+
+# Gitignore backups
+.gitignore.backup
+.gitignore.bak
+
 # Claude Code local settings (personal overrides, not shared)
 .claude/settings.local.json
 

@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Agents.Plugins;
 
+using Hooks;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>

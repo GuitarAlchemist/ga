@@ -5,10 +5,15 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Core.Instruments.Biomechanics;
+using Core.Instruments.Fretboard.Analysis;
+using Core.Instruments.Fretboard.Voicings.Core;
+using Core.Instruments.Positions;
 using Core.Instruments.Primitives;
 using Core.Primitives.Intervals;
+using Core.Primitives.Notes;
 using Core.Theory.Atonal;
 using Core.Theory.Harmony;
+using Voicings.Generation;
 using ServicesChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
@@ -16,6 +21,131 @@ using ServicesChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 /// </summary>
 public static class FretboardChordAnalyzer
 {
+    /// <summary>
+    ///     Generates all chord voicings within 5-fret spans across the entire fretboard.
+    /// </summary>
+    public static IEnumerable<FiveFretSpanChord> GenerateAllFiveFretSpanChords(Fretboard fretboard) =>
+        GenerateAllFiveFretSpanChords(fretboard, fretboard.FretCount);
+
+    /// <summary>
+    ///     Generates all chord voicings within 5-fret spans up to the specified maximum fret.
+    /// </summary>
+    public static IEnumerable<FiveFretSpanChord> GenerateAllFiveFretSpanChords(
+        Fretboard fretboard,
+        int maxFret = 24,
+        int minPlayedNotes = 3)
+    {
+        const int windowSize = 5;
+        var stringCount = fretboard.StringCount;
+        var maxStartFret = Math.Max(0, maxFret - windowSize);
+
+        // Pre-cache instances for VoicingGenerator
+        var cachedFrets = Fret.ItemsSpan.ToArray();
+        var cachedStrings = Str.Range(stringCount).ToArray();
+        var cachedMutedPositions = cachedStrings.Select(s => new Position.Muted(s)).ToArray();
+        var fretMin = Fret.Min.Value;
+        var maxFretCount = Math.Min(fretboard.FretCount, maxFret);
+        var cachedLocations = new PositionLocation[stringCount, maxFretCount + 1];
+        for (var s = 0; s < stringCount; s++)
+        {
+            for (var f = 0; f <= maxFretCount; f++)
+            {
+                cachedLocations[s, f] = new(cachedStrings[s], cachedFrets[f - fretMin]);
+            }
+        }
+
+        var seenDiagrams = new HashSet<string>();
+
+        for (var startFret = 0; startFret <= maxStartFret; startFret++)
+        {
+            var endFret = Math.Min(startFret + windowSize, maxFretCount);
+            var voicings = VoicingGenerator.GenerateAllVoicingsInWindowOptimized(
+                fretboard, startFret, endFret,
+                cachedFrets, cachedStrings, cachedMutedPositions, cachedLocations,
+                minPlayedNotes, windowSize);
+
+            foreach (var voicing in voicings)
+            {
+                var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+                if (!seenDiagrams.Add(diagram)) continue;
+
+                // Compute fret bounds
+                var lowestFret = int.MaxValue;
+                var highestFret = 0;
+                var frets = new int[stringCount];
+
+                for (var i = 0; i < stringCount; i++)
+                {
+                    switch (voicing.Positions[i])
+                    {
+                        case Position.Played played:
+                            var fretVal = played.Location.Fret.Value;
+                            frets[i] = fretVal;
+                            if (fretVal > 0 && fretVal < lowestFret) lowestFret = fretVal;
+                            if (fretVal > highestFret) highestFret = fretVal;
+                            break;
+                        default:
+                            frets[i] = -1; // Muted
+                            break;
+                    }
+                }
+
+                if (lowestFret == int.MaxValue) lowestFret = 0;
+
+                var invariant = ChordInvariant.FromFrets(frets, fretboard.Tuning);
+
+                // Derive chord name from pitch classes
+                var chordName = DeriveChordName(voicing.Notes, fretboard);
+
+                yield return new(
+                    [..voicing.Positions],
+                    invariant,
+                    lowestFret,
+                    highestFret,
+                    chordName);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Derives a simple chord name from a set of MIDI notes.
+    /// </summary>
+    private static string DeriveChordName(MidiNote[] notes, Fretboard fretboard)
+    {
+        if (notes.Length == 0) return "N/C";
+
+        var pitchClasses = notes
+            .Select(n => (int)n.Value % 12)
+            .Distinct()
+            .OrderBy(pc => pc)
+            .ToArray();
+
+        // Map pitch class to note name
+        var root = pitchClasses[0];
+        var rootName = root switch
+        {
+            0 => "C", 1 => "C#", 2 => "D", 3 => "D#", 4 => "E", 5 => "F",
+            6 => "F#", 7 => "G", 8 => "G#", 9 => "A", 10 => "A#", 11 => "B",
+            _ => "?"
+        };
+
+        if (pitchClasses.Length < 3) return rootName;
+
+        // Check intervals from root to identify quality
+        var intervals = pitchClasses.Skip(1).Select(pc => (pc - root + 12) % 12).OrderBy(i => i).ToArray();
+
+        return intervals switch
+        {
+            [4, 7] => rootName,          // Major triad
+            [3, 7] => rootName + "m",    // Minor triad
+            [3, 6] => rootName + "dim",  // Diminished
+            [4, 8] => rootName + "aug",  // Augmented
+            [5, 7] => rootName + "sus4", // sus4
+            [2, 7] => rootName + "sus2", // sus2
+            _ => rootName + "?"
+        };
+    }
+
     /// <summary>
     ///     Analyzes a chord voicing on the fretboard
     /// </summary>
@@ -86,6 +216,7 @@ public static class FretboardChordAnalyzer
     private static HarmonicAnalysis AnalyzeHarmonics(ImmutableArray<Position> voicing, Fretboard fretboard)
     {
         var pitchClasses = voicing
+            .OfType<Position.Played>()
             .Select(pos => fretboard.GetNote(pos.Location.Str.Value - 1, pos.Location.Fret.Value).PitchClass)
             .ToHashSet();
 
@@ -191,7 +322,33 @@ public static class FretboardChordAnalyzer
         HarmonicAnalysis Harmonics,
         VoiceLeadingAnalysis VoiceLeading,
         double OverallScore,
-        ImmutableArray<string> Recommendations);
+        ImmutableArray<string> Recommendations)
+    {
+        /// <summary>Chord template from harmonic analysis.</summary>
+        public ServicesChordTemplate ChordTemplate => Harmonics.ChordTemplate;
+
+        /// <summary>Chord symbol from harmonic analysis.</summary>
+        public string ChordName => Harmonics.ChordSymbol;
+
+        /// <summary>Root note (bass note of the voicing).</summary>
+        public Note? Root
+        {
+            get
+            {
+                var playedPositions = Voicing
+                    .OfType<Position.Played>()
+                    .OrderBy(p => p.MidiNote.Value)
+                    .ToList();
+
+                if (playedPositions.Count == 0) return null;
+
+                var bassNote = playedPositions[0];
+                var stringIndex = bassNote.Location.Str.Value - 1;
+                var fret = bassNote.Location.Fret.Value;
+                return Fretboard.GetNote(stringIndex, fret);
+            }
+        }
+    }
 
     /// <summary>
     ///     Ergonomic analysis of finger positioning and hand biomechanics

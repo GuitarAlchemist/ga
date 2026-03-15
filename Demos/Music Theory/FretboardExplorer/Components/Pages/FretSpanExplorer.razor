@@ -1,7 +1,7 @@
-﻿@page "/fret-span-explorer"
-@using GA.Business.Core.Fretboard.Analysis
-@using GA.Business.Core.Fretboard.Primitives
-@inject IHttpClientFactory HttpClientFactory
+@page "/fret-span-explorer"
+@using GA.Domain.Core.Instruments.Fretboard.Analysis
+@using GA.Domain.Core.Instruments.Primitives
+@using GA.Domain.Services.Fretboard.Analysis
 
 <PageTitle>Fret Span Explorer</PageTitle>
 
@@ -30,14 +30,14 @@
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
 }
 
-@if (_chordAnalyses != null && _chordAnalyses.Any())
+@if (_chordResults != null && _chordResults.Any())
 {
     <MudText Typo="Typo.h5" Class="mb-3">
-        Found @_chordAnalyses.Count chords in frets @_startFret - @(_startFret + 5)
+        Found @_chordResults.Count chords in frets @_startFret - @(_startFret + 5)
     </MudText>
 
-    <MudTable Items="_chordAnalyses" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true"
-              Filter="new Func<FretboardChordAnalysis, bool>(FilterFunc)">
+    <MudTable Items="_chordResults" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true"
+              Filter="new Func<FiveFretSpanChord, bool>(FilterFunc)">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Chord Positions</MudText>
             <MudSpacer/>
@@ -48,28 +48,14 @@
         <HeaderContent>
             <MudTh>Chord Name</MudTh>
             <MudTh>Fret Span</MudTh>
-            <MudTh>Difficulty</MudTh>
-            <MudTh>Notes</MudTh>
-            <MudTh>CAGED</MudTh>
-            <MudTh>Voicing</MudTh>
+            <MudTh>Pattern</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Chord Name">
                 <MudText Typo="Typo.body2"><strong>@context.ChordName</strong></MudText>
-                @if (!string.IsNullOrEmpty(context.IconicName))
-                {
-                    <MudChip Size="Size.Small" Color="Color.Warning">@context.IconicName</MudChip>
-                }
             </MudTd>
-            <MudTd DataLabel="Fret Span">@context.LowestFret - @context.HighestFret (@context.FretSpan)</MudTd>
-            <MudTd DataLabel="Difficulty">
-                <MudChip Size="Size.Small" Color="@GetDifficultyColor(context.Difficulty)">
-                    @context.Difficulty
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="Notes">@string.Join(", ", context.Notes.Select(n => n.ToString()))</MudTd>
-            <MudTd DataLabel="CAGED">@(context.CagedAnalysis?.ClosestShape?.ToString() ?? "N/A")</MudTd>
-            <MudTd DataLabel="Voicing">@context.VoicingDescription</MudTd>
+            <MudTd DataLabel="Fret Span">@context.LowestFret - @context.HighestFret</MudTd>
+            <MudTd DataLabel="Pattern">@context.Invariant.PatternId.ToPatternString()</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager/>
@@ -87,31 +73,27 @@ else if (!_isLoading && _hasAnalyzed)
     private bool _isLoading;
     private bool _hasAnalyzed;
     private string _searchString = "";
-    private List<FretboardChordAnalysis>? _chordAnalyses;
+    private List<FiveFretSpanChord>? _chordResults;
 
     private async Task AnalyzeFretSpan()
     {
         _isLoading = true;
         _hasAnalyzed = true;
-        _chordAnalyses = null;
+        _chordResults = null;
         StateHasChanged();
 
         try
         {
-            // Create fretboard with standard tuning
-            var fretboard = Fretboard.StandardGuitar;
-
-            // Generate chord analyses for the 5-fret span
+            var fretboard = Fretboard.Default;
             var allChords = FretboardChordAnalyzer.GenerateAllFiveFretSpanChords(fretboard, _startFret + 5)
                 .Where(c => c.LowestFret >= _startFret && c.HighestFret <= _startFret + 5)
                 .Take(_maxChords)
                 .ToList();
 
-            _chordAnalyses = allChords;
+            _chordResults = allChords;
         }
         catch (Exception ex)
         {
-            // Handle error
             Console.WriteLine($"Error analyzing fret span: {ex.Message}");
         }
         finally
@@ -119,33 +101,15 @@ else if (!_isLoading && _hasAnalyzed)
             _isLoading = false;
             StateHasChanged();
         }
+
+        await Task.CompletedTask;
     }
 
-    private bool FilterFunc(FretboardChordAnalysis chord)
+    private bool FilterFunc(FiveFretSpanChord chord)
     {
         if (string.IsNullOrWhiteSpace(_searchString))
             return true;
 
-        if (chord.ChordName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (chord.IconicName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-
-        return false;
+        return chord.ChordName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
-
-    private Color GetDifficultyColor(ChordDifficulty difficulty)
-    {
-        return difficulty switch
-        {
-            ChordDifficulty.Beginner => Color.Success,
-            ChordDifficulty.Intermediate => Color.Info,
-            ChordDifficulty.Advanced => Color.Warning,
-            ChordDifficulty.Expert => Color.Error,
-            _ => Color.Default
-        };
-    }
-
 }
-

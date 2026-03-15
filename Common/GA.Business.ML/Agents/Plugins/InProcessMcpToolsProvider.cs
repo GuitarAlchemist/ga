@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Microsoft.Extensions.DependencyInjection;
+using Skills;
 
 /// <summary>
 /// Assembles an in-process MCP server from registered <see cref="IChatPlugin.McpToolTypes"/>

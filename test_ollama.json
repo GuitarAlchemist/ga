@@ -1,5 +1,0 @@
-{
-    "model": "llama3.2",
-    "prompt": "Hi, are you working?",
-    "stream": false
-}

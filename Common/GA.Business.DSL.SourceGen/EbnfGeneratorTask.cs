@@ -73,8 +73,9 @@ public sealed class EbnfGeneratorTask : Task
             }
             catch (Exception ex)
             {
-                Log.LogError($"Error processing {inputPath}: {ex.Message}");
-                success = false;
+                // Warn and skip grammars the parser can't handle yet (e.g. set difference).
+                // Missing files are still hard errors (above), but parse failures are not.
+                Log.LogWarning($"Skipping {Path.GetFileName(inputPath)}: {ex.Message}");
             }
         }
 

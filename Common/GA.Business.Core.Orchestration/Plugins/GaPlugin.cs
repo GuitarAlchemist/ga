@@ -41,6 +41,7 @@ public sealed class GaPlugin : IChatPlugin
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
         services.AddSingleton<IChatHook, MemoryHook>();
         services.AddSingleton<IChatHook, ObservabilityHook>();
+        services.AddSingleton<IChatHook, TraceBridgeHook>();
     }
 
     /// <summary>

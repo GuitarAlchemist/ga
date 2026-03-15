@@ -2,43 +2,50 @@
 
   <!--
     GA.Business.DSL.SourceGen.targets
-    Import this file in GA.Business.DSL.fsproj to run the EBNF source generator
-    before compilation.
+    MSBuild target that reads *.ebnf grammars and generates *.g.fs F# source files.
 
-    Usage:
-      <Import Project="$(MSBuildThisFileDirectory)GA.Business.DSL.SourceGen.targets" />
+    Properties (set before import):
+      EbnfGrammarsDir      — Directory containing *.ebnf files (required)
+      EbnfGeneratedDir     — Directory for generated *.g.fs output (defaults to $(MSBuildProjectDirectory)\Generated)
+      EbnfGrammarPattern   — Glob pattern for which .ebnf files to include (defaults to *.ebnf)
 
-    The task:
-      1. Reads Grammars/*.ebnf
-      2. Writes Generated/*.g.fs
-      3. Adds the generated .g.fs files to the Compile item group
+    The SourceGen DLL is resolved relative to this .targets file.
   -->
 
   <PropertyGroup>
     <EbnfGeneratedDir Condition="'$(EbnfGeneratedDir)' == ''">$(MSBuildProjectDirectory)\Generated</EbnfGeneratedDir>
-    <EbnfSourceGenAssembly>$(MSBuildThisFileDirectory)GA.Business.DSL.SourceGen.dll</EbnfSourceGenAssembly>
+    <EbnfGrammarPattern Condition="'$(EbnfGrammarPattern)' == ''">*.ebnf</EbnfGrammarPattern>
+    <EbnfSourceGenAssembly>$(MSBuildThisFileDirectory)bin\Debug\net10.0\GA.Business.DSL.SourceGen.dll</EbnfSourceGenAssembly>
   </PropertyGroup>
 
   <UsingTask
     TaskName="GA.Business.DSL.SourceGen.EbnfGeneratorTask"
     AssemblyFile="$(EbnfSourceGenAssembly)" />
 
-  <Target Name="GenerateFromEbnf" BeforeTargets="BeforeBuild;CoreCompile">
+  <Target Name="GenerateFromEbnf"
+          BeforeTargets="BeforeBuild;CoreCompile"
+          Condition="'$(EbnfGrammarsDir)' != '' AND Exists('$(EbnfGrammarsDir)')">
 
     <ItemGroup>
-      <_EbnfInputs Include="$(MSBuildProjectDirectory)\Grammars\*.ebnf" />
+      <_EbnfInputs Include="$(EbnfGrammarsDir)\$(EbnfGrammarPattern)" />
     </ItemGroup>
+
+    <Message Text="EBNF SourceGen: Processing @(_EbnfInputs->Count()) grammar(s) from $(EbnfGrammarsDir)"
+             Importance="normal"
+             Condition="'@(_EbnfInputs)' != ''" />
 
     <EbnfGeneratorTask
       EbnfFiles="@(_EbnfInputs)"
-      OutputDirectory="$(EbnfGeneratedDir)">
+      OutputDirectory="$(EbnfGeneratedDir)"
+      Condition="'@(_EbnfInputs)' != ''">
       <Output TaskParameter="GeneratedFiles" ItemName="_EbnfGeneratedFs" />
     </EbnfGeneratorTask>
 
-    <!-- Add generated .g.fs files to compilation — they appear before all other Compile items -->
-    <ItemGroup>
-      <Compile Include="@(_EbnfGeneratedFs)" Condition="'@(_EbnfGeneratedFs)' != ''" />
-    </ItemGroup>
+    <!--
+      Generated files are listed explicitly in the consuming .fsproj with
+      Condition="Exists(...)" so they compile even before first generation.
+      The target only generates; the .fsproj owns Compile inclusion.
+    -->
 
   </Target>
 

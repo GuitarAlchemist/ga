@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.ML.Agents;
 using GaApi.Services;
+using Plugins;
 
 /// <summary>
 /// Suggests low-stretch, beginner-friendly voicings when a user mentions hand pain, barre chords,
