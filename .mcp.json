@@ -10,6 +10,11 @@
         "--no-build",
         "--"
       ]
+    },
+    "ix": {
+      "command": "cargo",
+      "args": ["run", "--release", "-p", "ix-agent"],
+      "cwd": "C:/Users/spare/source/repos/ix"
     }
   }
 }
