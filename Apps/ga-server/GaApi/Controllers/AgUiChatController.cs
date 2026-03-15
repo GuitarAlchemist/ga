@@ -55,7 +55,15 @@ public class AgUiChatController(
 
         try
         {
-            var response = await orchestrator.AnswerAsync(new OrchestratorChatRequest(userMessage), cancellationToken);
+            var history = input.Messages
+                .Where(m => m.Content is not null)
+                .Select(m => new GA.Business.Core.Orchestration.Models.ConversationTurn(
+                    m.Role, m.Content!, DateTimeOffset.UtcNow))
+                .ToList();
+
+            var response = await orchestrator.AnswerAsync(
+                new OrchestratorChatRequest(userMessage, input.ThreadId, History: history),
+                cancellationToken);
 
             return Ok(new
             {

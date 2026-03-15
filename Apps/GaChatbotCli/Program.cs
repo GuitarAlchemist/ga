@@ -4,6 +4,7 @@
 /// Usage:
 ///   dotnet run --project Apps/GaChatbotCli -- "parse Am7 for me"
 ///   dotnet run --project Apps/GaChatbotCli -- --json "what scale is in Am7?"
+///   dotnet run --project Apps/GaChatbotCli -- -i              (interactive mode)
 ///
 /// Prints routing metadata + response to stdout.
 /// Set ANTHROPIC_API_KEY to enable SKILL.md-driven skills.
@@ -25,19 +26,22 @@ using Microsoft.Extensions.Logging;
 
 // ── Parse CLI arguments ────────────────────────────────────────────────────
 bool jsonOutput = false;
+bool interactive = false;
 string? message = null;
 
 for (int i = 0; i < args.Length; i++)
 {
-    if (args[i] == "--json") { jsonOutput = true; continue; }
+    if (args[i] is "--json") { jsonOutput = true; continue; }
+    if (args[i] is "--interactive" or "-i") { interactive = true; continue; }
     if (args[i].StartsWith("--")) continue;
     message ??= args[i];
 }
 
-if (string.IsNullOrWhiteSpace(message))
+if (!interactive && string.IsNullOrWhiteSpace(message))
 {
-    Console.Error.WriteLine("Usage: GaChatbotCli [--json] \"<message>\"");
-    Console.Error.WriteLine("  --json   Output structured JSON instead of plain text");
+    Console.Error.WriteLine("Usage: GaChatbotCli [--json] [--interactive|-i] \"<message>\"");
+    Console.Error.WriteLine("  --json          Output structured JSON instead of plain text");
+    Console.Error.WriteLine("  --interactive   Start interactive multi-turn session");
     return 1;
 }
 
@@ -88,10 +92,29 @@ var orchestrator = scope.ServiceProvider.GetRequiredService<IHarmonicChatOrchest
 
 try
 {
-    var response = await orchestrator.AnswerAsync(new ChatRequest(message));
+    if (interactive)
+        return await RunInteractiveAsync(orchestrator);
 
-    if (jsonOutput)
+    return await RunSingleShotAsync(orchestrator, message!, jsonOutput);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    return 2;
+}
+
+// ── Single-shot mode (with streaming) ─────────────────────────────────────
+static async Task<int> RunSingleShotAsync(IHarmonicChatOrchestrator orchestrator, string msg, bool json)
+{
+    if (json)
     {
+        // JSON mode: stream AG-UI events to stderr, full JSON to stdout
+        Console.Error.Write("[GA]: ");
+        var response = await orchestrator.AnswerStreamingAsync(
+            new ChatRequest(msg),
+            async token => { Console.Error.Write(token); await Task.CompletedTask; });
+        Console.Error.WriteLine();
+
         Console.WriteLine(JsonSerializer.Serialize(new
         {
             answer   = response.NaturalLanguageAnswer,
@@ -111,8 +134,13 @@ try
     }
     else
     {
+        // Plain text mode: stream tokens to stdout
         Console.WriteLine();
-        Console.WriteLine("[GA]: " + response.NaturalLanguageAnswer);
+        Console.Write("[GA]: ");
+        var response = await orchestrator.AnswerStreamingAsync(
+            new ChatRequest(msg),
+            async token => { Console.Write(token); await Task.CompletedTask; });
+        Console.WriteLine();
 
         if (response.Routing is { } r)
             Console.WriteLine($"\n[routing: {r.AgentId} via {r.RoutingMethod} (conf={r.Confidence:F2})]");
@@ -127,10 +155,45 @@ try
 
     return 0;
 }
-catch (Exception ex)
+
+// ── Interactive mode ──────────────────────────────────────────────────────
+static async Task<int> RunInteractiveAsync(IHarmonicChatOrchestrator orchestrator)
 {
-    Console.Error.WriteLine($"Error: {ex.Message}");
-    return 2;
+    var sessionId = Guid.NewGuid().ToString("N");
+    var history = new List<ConversationTurn>();
+
+    Console.WriteLine("Guitar Alchemist — interactive mode (type 'exit' or 'quit' to leave)");
+    Console.WriteLine();
+
+    while (true)
+    {
+        Console.Write("[You]: ");
+        var input = Console.ReadLine();
+        if (input is null or "exit" or "quit") break;
+        if (string.IsNullOrWhiteSpace(input)) continue;
+
+        history.Add(new ConversationTurn("user", input, DateTimeOffset.UtcNow));
+
+        Console.Write("[GA]: ");
+        var response = await orchestrator.AnswerStreamingAsync(
+            new ChatRequest(input, sessionId, History: history),
+            async token => { Console.Write(token); await Task.CompletedTask; });
+        Console.WriteLine();
+
+        history.Add(new ConversationTurn("assistant", response.NaturalLanguageAnswer, DateTimeOffset.UtcNow));
+
+        // Keep history bounded
+        if (history.Count > 20)
+            history.RemoveRange(0, history.Count - 20);
+
+        if (response.Routing is { } r)
+            Console.WriteLine($"[routing: {r.AgentId} via {r.RoutingMethod} (conf={r.Confidence:F2})]");
+
+        Console.WriteLine();
+    }
+
+    Console.WriteLine("Goodbye!");
+    return 0;
 }
 
 // ── CLI-only stubs ────────────────────────────────────────────────────────
