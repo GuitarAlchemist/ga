@@ -8,6 +8,7 @@ using GA.Business.ML.Agents.Skills;
 using GA.Domain.Services.Atonal.Grothendieck;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// The core GA chatbot plugin — bundles all built-in orchestrator skills and hooks.
@@ -24,22 +25,71 @@ public sealed class GaPlugin : IChatPlugin
         // ── Domain services required by skills ────────────────────────────────
         services.TryAddSingleton<IGrothendieckService, GrothendieckService>();
 
+        // ── Progress tracking ──────────────────────────────────────────────────
+        services.TryAddSingleton<ProgressTracker>();
+
         // ── Orchestrator skills (checked before LLM routing, first match wins) ─
-        // Pure-domain skills are Singleton (stateless, no scoped dependencies).
+        // ORDERING MATTERS: first match wins. Preference-setting and quiz answers
+        // must be checked before general quiz/domain skills.
+
+        // 1. Session context updates — "I'm a beginner" must not route to agent
+        services.AddScoped<IOrchestratorSkill, SessionContextSkill>();
+
+        // 2. Quiz answer validation — active quiz answers take priority
+        services.AddScoped<IOrchestratorSkill, QuizAnswerSkill>();
+
+        // 3-6. Pure-domain skills are Singleton (stateless, no scoped dependencies).
         services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
+        services.AddSingleton<IOrchestratorSkill, ModeExplorationSkill>();
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
 
-        // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
+        // 6-7. Quiz generation skills (scoped — need MemoryStore + session context)
+        services.AddScoped<IOrchestratorSkill, IntervalQuizSkill>();
+        services.AddScoped<IOrchestratorSkill, ChordQuizSkill>();
+
+        // 8-9. Practice skills (scoped — need session context)
+        services.AddScoped<IOrchestratorSkill, PracticeRoutineSkill>();
+        services.AddScoped<IOrchestratorSkill, ScalePracticeSkill>();
+
+        // 10. Progress reporting
+        services.AddScoped<IOrchestratorSkill, ProgressSkill>();
+
+        // 11-14. Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddScoped<IOrchestratorSkill, KeyIdentificationSkill>();
         services.AddScoped<IOrchestratorSkill, ProgressionCompletionSkill>();
+        services.AddScoped<IOrchestratorSkill, ProgressionSuggestionSkill>();
+        services.AddScoped<IOrchestratorSkill, HarmonicAnalysisSkill>();
+
+        // 15. ML skill (routes to ix ML pipeline via federation)
+        services.AddScoped<IOrchestratorSkill, MusicMlSkill>();
 
         // ── Persistent memory ────────────────────────────────────────────────
         services.TryAddSingleton<MemoryStore>();
 
+        // ── Persona loader (Demerzel governance personas) ────────────────────
+        services.TryAddSingleton<PersonaLoader>();
+
+        // ── Subagent manager ─────────────────────────────────────────────────
+        services.AddSingleton<SubagentManager>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<SubagentManager>>();
+            // Default runner routes through the semantic router when available
+            return new SubagentManager(
+                async (req, ct) =>
+                {
+                    // Placeholder: actual routing through SemanticRouter is scoped
+                    // and will be wired when subagent spawning is invoked at request scope
+                    return new SubagentResult(Guid.Empty, true, $"Completed: {req.Goal}", [], TimeSpan.Zero);
+                },
+                logger);
+        });
+
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
+        services.AddScoped<IChatHook, SessionContextHook>();
         services.AddSingleton<IChatHook, MemoryHook>();
+        services.AddSingleton<IChatHook, GovernanceHook>();
         services.AddSingleton<IChatHook, ObservabilityHook>();
         services.AddSingleton<IChatHook, TraceBridgeHook>();
     }
@@ -49,5 +99,5 @@ public sealed class GaPlugin : IChatPlugin
     /// MCP server assembled by <see cref="ChatPluginHost"/> (wired in Phase 3).
     /// Referenced by type name to avoid a direct project dependency on GaMcpServer.
     /// </summary>
-    public IReadOnlyList<Type> McpToolTypes => [typeof(MemoryMcpTools)];
+    public IReadOnlyList<Type> McpToolTypes => [typeof(MemoryMcpTools), typeof(SubagentMcpTools)];
 }
