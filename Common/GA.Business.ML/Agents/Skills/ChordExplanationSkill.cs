@@ -172,7 +172,9 @@ public sealed class ChordExplanationSkill(ILogger<ChordExplanationSkill> logger)
         sb.AppendLine($"- **Root position:** {string.Join(" – ", notes)}");
         if (notes.Count > 2)
         {
-            var firstInversion = new List<string> { ..notes.Skip(1), notes[0] };
+            var firstInversion = new List<string>();
+            firstInversion.AddRange(notes.Skip(1));
+            firstInversion.Add(notes[0]);
             sb.AppendLine($"- **First inversion:** {string.Join(" – ", firstInversion)}");
         }
 
