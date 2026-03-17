@@ -1,5 +1,7 @@
 namespace GA.Business.ML.Agents.Hooks;
 
+using GA.Business.Core.Context;
+
 /// <summary>
 /// Mutable context object passed to every <see cref="IChatHook"/> invocation.
 /// Hooks may read and mutate <see cref="CurrentMessage"/> and <see cref="Response"/>.
@@ -40,4 +42,11 @@ public sealed class ChatHookContext
 
     /// <summary>DI service locator — available to stateful hooks that need services.</summary>
     public IServiceProvider? Services { get; init; }
+
+    /// <summary>
+    /// The musical session context for the current request, populated by the orchestrator
+    /// when an <see cref="GA.Business.Core.Session.ISessionContextProvider"/> is available.
+    /// Null when no session context provider is registered.
+    /// </summary>
+    public MusicalSessionContext? SessionContext { get; init; }
 }

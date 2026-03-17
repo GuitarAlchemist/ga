@@ -38,30 +38,32 @@ public sealed class GaPlugin : IChatPlugin
         // 2. Quiz answer validation — active quiz answers take priority
         services.AddScoped<IOrchestratorSkill, QuizAnswerSkill>();
 
-        // 3-6. Pure-domain skills are Singleton (stateless, no scoped dependencies).
+        // 3-9. Pure-domain skills are Singleton (stateless, no scoped dependencies).
         services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, ModeExplorationSkill>();
+        services.AddSingleton<IOrchestratorSkill, IntervalInfoSkill>();
+        services.AddSingleton<IOrchestratorSkill, ChordExplanationSkill>();
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
 
-        // 6-7. Quiz generation skills (scoped — need MemoryStore + session context)
+        // 10-11. Quiz generation skills (scoped — need MemoryStore + session context)
         services.AddScoped<IOrchestratorSkill, IntervalQuizSkill>();
         services.AddScoped<IOrchestratorSkill, ChordQuizSkill>();
 
-        // 8-9. Practice skills (scoped — need session context)
+        // 12-13. Practice skills (scoped — need session context)
         services.AddScoped<IOrchestratorSkill, PracticeRoutineSkill>();
         services.AddScoped<IOrchestratorSkill, ScalePracticeSkill>();
 
-        // 10. Progress reporting
+        // 14. Progress reporting
         services.AddScoped<IOrchestratorSkill, ProgressSkill>();
 
-        // 11-14. Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
+        // 15-18. Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddScoped<IOrchestratorSkill, KeyIdentificationSkill>();
         services.AddScoped<IOrchestratorSkill, ProgressionCompletionSkill>();
         services.AddScoped<IOrchestratorSkill, ProgressionSuggestionSkill>();
         services.AddScoped<IOrchestratorSkill, HarmonicAnalysisSkill>();
 
-        // 15. ML skill (routes to ix ML pipeline via federation)
+        // 19. ML skill (routes to ix ML pipeline via federation)
         services.AddScoped<IOrchestratorSkill, MusicMlSkill>();
 
         // ── Persistent memory ────────────────────────────────────────────────

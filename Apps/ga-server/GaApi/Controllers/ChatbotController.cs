@@ -177,15 +177,15 @@ public class ChatbotController(
     public ActionResult<List<string>> GetExamples() =>
         Ok((List<string>)
         [
-            "Show me some easy beginner chords",
+            "I'm a beginner who likes blues",
             "What are the modes of the major scale?",
+            "Give me a 15-minute practice routine",
+            "Start an interval quiz",
+            "Help me practice the A minor pentatonic scale",
             "Explain voice leading in jazz",
-            "How do I play a barre chord?",
             "What makes a chord sound jazzy?",
-            "Show me some dark, moody chords",
-            "Explain the circle of fifths",
+            "Show my progress",
             "What's the difference between major and minor?",
-            "How do I improve my fingerpicking?",
             "What are some common chord progressions?"
         ]);
 

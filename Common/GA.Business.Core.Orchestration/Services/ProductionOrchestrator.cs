@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Session;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Embeddings;
@@ -29,7 +30,8 @@ public class ProductionOrchestrator(
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
-    IServiceProvider services) : IHarmonicChatOrchestrator
+    IServiceProvider services,
+    ISessionContextProvider? sessionContextProvider = null) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
     private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
@@ -57,12 +59,14 @@ public class ProductionOrchestrator(
 
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
         var correlationId = Guid.NewGuid();
+        var sessionCtx = sessionContextProvider?.GetContext();
         var hookCtx = new ChatHookContext
         {
             CorrelationId   = correlationId,
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             Services        = services,
+            SessionContext  = sessionCtx,
         };
 
         foreach (var hook in _hooks)
@@ -176,11 +180,14 @@ public class ProductionOrchestrator(
         var correlationId = Guid.NewGuid();
 
         // ── OnRequestReceived hooks (sanitization, rate-limiting, auth) ───────
+        var sessionCtx = sessionContextProvider?.GetContext();
         var hookCtx = new ChatHookContext
         {
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             CorrelationId   = correlationId,
+            Services        = services,
+            SessionContext  = sessionCtx,
         };
 
         foreach (var hook in _hooks)
@@ -310,17 +317,26 @@ public class ProductionOrchestrator(
         historyStore.AddTurn(sessionId, "assistant", result.NaturalLanguageAnswer);
 
         // OnResponseSent fires for ALL paths — skill path above, and here for RAG/tab.
+        var ragResponse = new AgentResponse
+        {
+            AgentId    = routing.SelectedAgent.AgentId,
+            Result     = result.NaturalLanguageAnswer ?? string.Empty,
+            Confidence = routing.Confidence,
+        };
+
+        // Tetravalent belief state annotation
+        var belief = BeliefState.FromAgentResponse(ragResponse);
+        if (belief.Value == BeliefValue.Unknown)
+            result = result with { NaturalLanguageAnswer = result.NaturalLanguageAnswer + "\n\n*[Note: Low confidence. Could you provide more context?]*" };
+        else if (belief.Value == BeliefValue.Contradictory)
+            result = result with { NaturalLanguageAnswer = result.NaturalLanguageAnswer + "\n\n*[Note: Contradictory evidence detected.]*" };
+
         var ragSentCtx = new ChatHookContext
         {
             OriginalMessage = req.Message,
             CurrentMessage  = message,
             CorrelationId   = correlationId,
-            Response        = new AgentResponse
-            {
-                AgentId    = routing.SelectedAgent.AgentId,
-                Result     = result.NaturalLanguageAnswer ?? string.Empty,
-                Confidence = routing.Confidence,
-            },
+            Response        = ragResponse,
         };
         foreach (var hook in _hooks)
             await hook.OnResponseSent(ragSentCtx, ct);

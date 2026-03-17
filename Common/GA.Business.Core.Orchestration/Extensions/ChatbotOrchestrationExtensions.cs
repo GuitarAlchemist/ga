@@ -8,6 +8,7 @@ using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// DI registration for the chatbot orchestration stack.
@@ -59,8 +60,14 @@ public static class ChatbotOrchestrationExtensions
         // and registers their skills, hooks, and domain services automatically.
         // GaPlugin (in GA.Business.Core.Orchestration) registers:
         //   Skills: ScaleInfoSkill, FretSpanSkill, ChordSubstitutionSkill, KeyIdentificationSkill
-        //   Hooks:  PromptSanitizationHook, ObservabilityHook
+        //   Hooks:  PromptSanitizationHook, ObservabilityHook, GovernanceHook
         services.AddChatPluginHost();
+
+        // MCP federation client — connects to TARS/ix MCP servers via stdio
+        services.AddSingleton<FederationClient>();
+
+        // PersonaLoader wired to base class (same pattern as MdRegistry in ChatPluginHost)
+        services.AddSingleton<PersonaLoader>();
 
         // Conversation history — singleton in-memory store shared across scopes
         services.AddSingleton<ConversationHistoryStore>();

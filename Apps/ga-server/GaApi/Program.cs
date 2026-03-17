@@ -43,6 +43,9 @@ builder.Services.AddMonadicChordService();
 builder.Services.AddSingleton<ContextualChordService>();
 builder.Services.AddSingleton<VoicingFilterService>();
 
+// Register practice, ear training, and fretboard services
+builder.Services.AddPracticeServices();
+
 // Shared LLM concurrency gate (3 parallel calls) — applied to both hub and REST controller
 builder.Services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
 

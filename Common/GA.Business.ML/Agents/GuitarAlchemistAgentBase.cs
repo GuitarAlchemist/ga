@@ -35,6 +35,12 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     public static AgentMdRegistry MdRegistry { get; set; } = new();
 
     /// <summary>
+    /// Optional persona loader for Demerzel governance personas.
+    /// Set via DI post-build action (same pattern as <see cref="MdRegistry"/>).
+    /// </summary>
+    public static PersonaLoader? Personas { get; set; }
+
+    /// <summary>
     /// Gets the unique identifier for this agent type.
     /// </summary>
     public abstract string AgentId { get; }
@@ -77,25 +83,31 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     protected virtual string BuildSystemPrompt()
     {
         var md = MdRegistry.TryGetByRole(AgentId);
+        string basePrompt;
         if (md is not null && !string.IsNullOrWhiteSpace(md.Body))
         {
             Logger.LogDebug("Agent {AgentId}: using .md system prompt from {File}", AgentId, md.FilePath);
-            return md.Body;
+            basePrompt = md.Body;
+        }
+        else
+        {
+            basePrompt = $"""
+                You are {Name}, a specialized AI agent for Guitar Alchemist.
+
+                Your role: {Description}
+
+                Capabilities: {string.Join(", ", Capabilities)}
+
+                Guidelines:
+                - Provide accurate, evidence-based responses about guitar and music theory
+                - When uncertain, express your confidence level honestly
+                - Cite specific music theory concepts or techniques when applicable
+                - If a request falls outside your expertise, indicate this clearly
+                """;
         }
 
-        return $"""
-            You are {Name}, a specialized AI agent for Guitar Alchemist.
-
-            Your role: {Description}
-
-            Capabilities: {string.Join(", ", Capabilities)}
-
-            Guidelines:
-            - Provide accurate, evidence-based responses about guitar and music theory
-            - When uncertain, express your confidence level honestly
-            - Cite specific music theory concepts or techniques when applicable
-            - If a request falls outside your expertise, indicate this clearly
-            """;
+        var personaContext = Personas?.BuildPersonaContext(AgentId);
+        return personaContext is not null ? $"{basePrompt}\n\n{personaContext}" : basePrompt;
     }
 
     /// <summary>
@@ -367,6 +379,11 @@ public record AgentResponse
     /// Gets or sets any structured data returned.
     /// </summary>
     public object? Data { get; init; }
+
+    /// <summary>
+    /// Optional tetravalent belief state inferred from confidence and evidence.
+    /// </summary>
+    public BeliefState? Belief { get; init; }
 
     /// <summary>
     /// Creates a low-confidence response indicating the agent cannot help.
