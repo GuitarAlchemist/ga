@@ -91,6 +91,9 @@ public static class GaChatbotServiceCollectionExtensions
             services.AddSingleton<NextChordSuggestionService>();
             services.AddSingleton<ModulationAnalyzer>();
 
+            // ---- Chord Progression & Harmonic Analysis Services ----
+            services.AddSingleton<ChordProgressionService>();
+
             // ---- Tab Services ----
             services.AddSingleton<AdvancedTabSolver>();
             services.AddSingleton<AlternativeFingeringService>();
