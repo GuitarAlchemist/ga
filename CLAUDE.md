@@ -219,20 +219,30 @@ All agents in this repo are governed by the Demerzel constitutional hierarchy:
 
 - **Root constitution:** governance/demerzel/constitutions/asimov.constitution.md (Articles 0-5: Laws of Robotics + LawZero principles)
 - **Governance coordinator:** Demerzel (see governance/demerzel/constitutions/demerzel-mandate.md)
-- **Operational ethics:** governance/demerzel/constitutions/default.constitution.md (Articles 1-7)
+- **Operational ethics:** governance/demerzel/constitutions/default.constitution.md (Articles 1-11)
 - **Harm taxonomy:** governance/demerzel/constitutions/harm-taxonomy.md
 
 ## Policy Compliance
 
-Agents must comply with all Demerzel policies:
+Agents must comply with all Demerzel policies (17 policies):
 
 - **Alignment:** Verify actions serve user intent (confidence thresholds: 0.9 autonomous, 0.7 with note, 0.5 confirm, 0.3 escalate)
 - **Rollback:** Revert failed changes automatically; pause autonomous changes after automatic rollback
 - **Self-modification:** Never modify constitutional articles, disable audit logging, or remove safety checks
 - **Kaizen:** Follow PDCA cycle for improvements; classify as reactive/proactive/innovative before acting
-- **Reconnaissance:** Respond to Demerzel reconnaissance requests with belief snapshots and compliance reports
+- **Reconnaissance:** Respond to Demerzel's reconnaissance requests with belief snapshots and compliance reports
 - **Scientific objectivity:** Tag evidence as empirical/inferential/subjective; generator/estimator accountability
 - **Streeling:** Accept knowledge transfers from Seldon; report comprehension via belief state assessment
+- **Governance audit:** Support three-level validation (schema, cross-reference, full governance)
+- **Autonomous loop:** Follow Ralph Loop governance with graduated oversight
+- **Multi-model orchestration:** Coordinate with external models (ChatGPT, NotebookLM, Gemini, Codex, Jules) per policy
+- **Context management:** Know when to stay, split, clear, or delegate context
+- **Auto-remediation:** Demerzel auto-fixes low-risk gaps, escalates high-risk to human
+- **ML feedback:** ix ML pipelines provide calibration recommendations to Demerzel
+- **Belief currency:** Staleness detection, decay rules, and refresh triggers for all belief states
+- **Proto-conscience:** Self-aware governance with discomfort signals, regret tracking, and anticipatory ethics
+- **Conscience observability:** Trend tracking, weekly reports, growth milestones for conscience evolution
+- **Intuition:** Compressed experience as fast pattern recognition — candidate→tested→trusted lifecycle
 
 ## Galactic Protocol
 
@@ -244,12 +254,12 @@ This repo communicates with Demerzel via the Galactic Protocol:
 
 ## Belief State Persistence
 
-This repo maintains a `state/` directory for belief persistence:
+This repo maintains a `governance/state/` directory for belief persistence:
 
-- `state/beliefs/` — Tetravalent belief states (*.belief.json)
-- `state/pdca/` — PDCA cycle tracking (*.pdca.json)
-- `state/knowledge/` — Knowledge transfer records (*.knowledge.json)
-- `state/snapshots/` — Belief snapshots for reconnaissance (*.snapshot.json)
+- `governance/state/beliefs/` — Tetravalent belief states (*.belief.json)
+- `governance/state/pdca/` — PDCA cycle tracking (*.pdca.json)
+- `governance/state/knowledge/` — Knowledge transfer records (*.knowledge.json)
+- `governance/state/snapshots/` — Belief snapshots for reconnaissance (*.snapshot.json)
 
 File naming: `{date}-{short-description}.{type}.json`
 
@@ -261,4 +271,8 @@ Every persona in this repo must include:
 - `goal_directedness` — One of: none, task-scoped, session-scoped
 - `estimator_pairing` — Neutral evaluator persona (typically skeptical-auditor)
 - All fields required by governance/demerzel/schemas/persona.schema.json
+
+## Agent Personas
+
+See `governance/personas/` for governed agent persona definitions.
 <!-- END DEMERZEL GOVERNANCE -->
