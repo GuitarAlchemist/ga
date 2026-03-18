@@ -1,0 +1,20 @@
+{
+  "id": "cr-integration-ga-2026-03-17",
+  "repo": "ga",
+  "agent": "guitar-alchemist",
+  "reporting_period": {
+    "from": "2026-03-17T00:00:00Z",
+    "to": "2026-03-17T23:59:59Z"
+  },
+  "constitutional_compliance": [
+    { "article": "demerzel-mandate.md", "status": "compliant" }
+  ],
+  "policy_compliance": [
+    { "policy": "reconnaissance-policy.yaml", "status": "compliant" },
+    { "policy": "streeling-policy.yaml", "status": "compliant" }
+  ],
+  "violations": [],
+  "overall_status": "compliant",
+  "reported_at": "2026-03-17T23:59:59Z",
+  "channel": "crisp"
+}
