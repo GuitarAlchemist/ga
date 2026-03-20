@@ -142,3 +142,28 @@ jetbrains-plugin/.gradle/
 # AI chat exports (ChatGPT, Gemini, etc. — personal notes, not repo artifacts)
 ChatGPT-*.md
 Gemini-*.md
+
+# =============================================================================
+# Agent skills and generated content
+# =============================================================================
+# Codex/Gemini agent skills (generated per-machine, not shared)
+.agent/
+
+# GA local settings and plugins
+.ga/
+
+# ML model binaries (too large for git, use LFS or artifact store)
+**/models/*.onnx
+**/models/*.bin
+**/models/*.pt
+**/models/*.pkl
+
+# Debug/scratch files
+dumper/
+dumper.out
+cclsp.json
+tab.json
+test_tab.json
+
+# Completed code review todos (ephemeral tracking)
+todos/
