@@ -200,14 +200,14 @@ public class FretboardContextService
         var notes = new[] { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
         var intervals = GetScaleIntervals(scaleName);
 
-        var fretboard = new List<List<Note>>();
+        var fretboard = new List<List<FretboardNote>>();
 
         // Generate 6 strings (standard tuning: E-A-D-G-B-E)
         var strings = new[] { "E", "A", "D", "G", "B", "E" };
 
         foreach (var openString in strings)
         {
-            var stringNotes = new List<Note>();
+            var stringNotes = new List<FretboardNote>();
             var startIndex = Array.IndexOf(notes, openString);
 
             for (int fret = 0; fret <= 24; fret++)
@@ -217,7 +217,7 @@ public class FretboardContextService
                 var isInScale = IsNoteInScale(noteName, rootNote, intervals);
                 var isRoot = noteName == rootNote;
 
-                stringNotes.Add(new Note(
+                stringNotes.Add(new FretboardNote(
                     Name: noteName,
                     Fret: fret,
                     IsInScale: isInScale,
@@ -375,9 +375,9 @@ public class FretboardContextService
 }
 
 /// <summary>
-/// Single note on fretboard.
+/// Single note on fretboard (DTO — not to be confused with GA.Domain.Core.Primitives.Notes.Note).
 /// </summary>
-public record Note(
+public record FretboardNote(
     string Name,
     int Fret,
     bool IsInScale,
@@ -389,7 +389,7 @@ public record Note(
 /// </summary>
 public record FretboardMap(
     string ScaleName,
-    List<List<Note>> Fretboard,
+    List<List<FretboardNote>> Fretboard,
     string Legend,
     List<string> IntervalInfo);
 

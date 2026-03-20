@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using AIChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 /// <summary>
 /// Generates practice routines for specific techniques, difficulty levels, and time constraints.
@@ -83,7 +84,7 @@ public class PracticeRoutineService
         {
             var systemPrompt = BuildPracticePrompt(focusArea, difficulty, durationMinutes, userBackground);
 
-            var messages = new List<ChatMessage>
+            var messages = new List<AIChatMessage>
             {
                 new(ChatRole.System, systemPrompt),
                 new(ChatRole.User, $"Generate a {durationMinutes}-minute {difficulty} practice routine for {focusArea}.")
