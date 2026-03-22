@@ -42,6 +42,7 @@ import ChordProgressionDSLTest from './pages/ChordProgressionDSLTest';
 import FretboardNavigationDSLTest from './pages/FretboardNavigationDSLTest';
 import InverseKinematicsTest from './pages/InverseKinematicsTest';
 import MusicHierarchyDemo from './pages/MusicHierarchyDemo';
+import EcosystemRoadmapTest from './pages/EcosystemRoadmapTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -427,6 +428,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/chord-progression-dsl" element={<App><ChordProgressionDSLTest /></App>} />
         <Route path="/test/fretboard-navigation-dsl" element={<App><FretboardNavigationDSLTest /></App>} />
         <Route path="/test/inverse-kinematics" element={<App><InverseKinematicsTest /></App>} />
+        <Route path="/test/ecosystem-roadmap" element={<App><EcosystemRoadmapTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
