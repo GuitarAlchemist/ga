@@ -44,3 +44,7 @@ export type { GAChatPanelProps } from './GAChatPanel';
 // Export EcosystemRoadmap components
 export { EcosystemRoadmapExplorer } from './EcosystemRoadmap';
 export type { RoadmapNode, ViewMode, Domain } from './EcosystemRoadmap';
+
+// Export IxQL Pipeline Viewer
+export { IxqlViewer } from './IxqlViewer';
+export type { IxqlBinding, IxqlGraph, LolliReport, AmdahlReport } from './IxqlViewer';
