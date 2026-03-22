@@ -287,6 +287,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'ecosystem-roadmap',
+    title: 'Ecosystem Roadmap Explorer',
+    description: 'Three-mode roadmap: icicle, Poincaré disk, Poincaré ball (WebGPU)',
+    technology: 'Three.js WebGPU, D3, MUI TreeView, Jotai',
+    path: '/test/ecosystem-roadmap',
+    features: ['WebGPU rendering', 'Hyperbolic geometry', 'Master-detail layout', 'Bidirectional sync'],
+    status: 'complete',
+  },
+  {
     id: 'ga-chat',
     title: 'GA Chat (AG-UI)',
     description: 'AG-UI protocol chat panel with streaming text and diatonic chord table driven by domain events',
