@@ -40,3 +40,7 @@ export { default as FretDiagram } from './FretDiagram';
 export type { FretDiagramProps } from './FretDiagram';
 export { default as GAChatPanel } from './GAChatPanel';
 export type { GAChatPanelProps } from './GAChatPanel';
+
+// Export EcosystemRoadmap components
+export { EcosystemRoadmapExplorer } from './EcosystemRoadmap';
+export type { RoadmapNode, ViewMode, Domain } from './EcosystemRoadmap';
