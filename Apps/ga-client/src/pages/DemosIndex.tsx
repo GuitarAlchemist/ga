@@ -28,6 +28,7 @@ import {
   Assessment as AssessmentIcon,
   LibraryMusic as LibraryMusicIcon,
   Tune as TuneIcon,
+  AccountTree as AccountTreeIcon,
 } from '@mui/icons-material';
 
 const DemosIndex = () => {
@@ -168,6 +169,15 @@ const DemosIndex = () => {
       tags: ['Knowledge Graph', 'AI', 'Learning'],
       status: 'Available',
       color: '#ffc53d',
+    },
+    {
+      title: 'Ecosystem Roadmap',
+      description: 'Interactive roadmap with icicle, Poincaré disk, and 3D Poincaré ball views. WebGPU-accelerated.',
+      icon: <AccountTreeIcon sx={{ fontSize: 48 }} />,
+      link: '/demos/ecosystem-roadmap',
+      tags: ['Three.js', 'WebGPU', 'Hyperbolic', 'D3'],
+      status: 'Available',
+      color: '#f0883e',
     },
   ];
 

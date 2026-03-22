@@ -16,6 +16,7 @@ import AllDemosTable from './pages/AllDemosTable';
 import HarmonicStudio from './pages/HarmonicStudio';
 import MusicGenerationDemo from './components/dashboard/MusicGenerationDemo';
 import HandPoseDemo from './pages/demos/HandPoseDemo';
+import EcosystemRoadmapDemo from './pages/demos/EcosystemRoadmapDemo';
 
 const ChatInterface = lazy(() => import('./components/Chat/ChatInterface'));
 
@@ -67,6 +68,7 @@ const App = () => {
                 <Route path="/demos" element={<DemosIndex />} />
                 <Route path="/demos/all" element={<AllDemosTable />} />
                 <Route path="/demos/hand-pose" element={<HandPoseDemo />} />
+                <Route path="/demos/ecosystem-roadmap" element={<EcosystemRoadmapDemo />} />
                 <Route path="/demos/bsp" element={
                   <Container maxWidth="lg" sx={{ py: 4 }}>
                     <Typography variant="h4">BSP Explorer</Typography>
