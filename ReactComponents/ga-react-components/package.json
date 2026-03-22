@@ -32,6 +32,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^5.15.12",
     "@mui/material": "^5.15.12",
+    "@mui/x-tree-view": "^8.27.2",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
     "@types/three": "^0.180.0",
