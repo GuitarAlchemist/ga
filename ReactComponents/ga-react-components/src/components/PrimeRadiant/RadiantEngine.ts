@@ -132,40 +132,67 @@ export class RadiantEngine {
 
   // ─── Initialize ───
   init(graph: GovernanceGraph): void {
+    console.log('[RadiantEngine] init() called with', graph.nodes.length, 'nodes,', graph.edges.length, 'edges');
     this.graph = graph;
     this.graphIndex = buildGraphIndex(graph);
 
-    this.initRenderer();
-    this.initScene();
-    this.initCamera();
-    this.initControls();
-    this.initPostProcessing();
-    this.buildGraph();
-    this.runForceLayout();
+    try {
+      console.log('[RadiantEngine] initRenderer...');
+      this.initRenderer();
+      console.log('[RadiantEngine] initScene...');
+      this.initScene();
+      console.log('[RadiantEngine] initCamera...');
+      this.initCamera();
+      console.log('[RadiantEngine] initControls...');
+      this.initControls();
+      console.log('[RadiantEngine] initPostProcessing...');
+      this.initPostProcessing();
+      console.log('[RadiantEngine] buildGraph...');
+      this.buildGraph();
+      console.log('[RadiantEngine] runForceLayout...');
+      this.runForceLayout();
 
-    this.interactionHandler = new InteractionHandler(
-      this.camera,
-      this.canvas,
-      this.sceneNodes,
-      this.sceneEdges,
-      this.graphIndex,
-      this.onNodeSelect,
-    );
+      console.log('[RadiantEngine] creating InteractionHandler...');
+      this.interactionHandler = new InteractionHandler(
+        this.camera,
+        this.canvas,
+        this.sceneNodes,
+        this.sceneEdges,
+        this.graphIndex,
+        this.onNodeSelect,
+      );
 
-    this.animate();
+      console.log('[RadiantEngine] starting animation loop');
+      this.animate();
+    } catch (err) {
+      console.error('[RadiantEngine] init() failed:', err);
+      throw err;
+    }
   }
 
   // ─── Renderer ───
   private initRenderer(): void {
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: false,
-    });
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.canvas,
+        antialias: true,
+        alpha: false,
+      });
+    } catch (err) {
+      console.error('[RadiantEngine] WebGLRenderer creation failed:', err);
+      // Fallback: try without antialias
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.canvas,
+        antialias: false,
+        alpha: false,
+      });
+      console.warn('[RadiantEngine] Fell back to WebGLRenderer without antialias');
+    }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.2;
+    console.log('[RadiantEngine] Renderer initialized:', this.renderer.getSize(new THREE.Vector2()));
   }
 
   // ─── Scene ───
