@@ -48,3 +48,15 @@ export type { RoadmapNode, ViewMode, Domain } from './EcosystemRoadmap';
 // Export IxQL Pipeline Viewer
 export { IxqlViewer } from './IxqlViewer';
 export type { IxqlBinding, IxqlGraph, LolliReport, AmdahlReport } from './IxqlViewer';
+
+// Export Prime Radiant governance visualization
+export { PrimeRadiant } from './PrimeRadiant';
+export type {
+  GovernanceNode,
+  GovernanceEdge,
+  GovernanceGraph,
+  GovernanceNodeType,
+  GovernanceEdgeType,
+  HealthMetrics,
+  PrimeRadiantProps,
+} from './PrimeRadiant';

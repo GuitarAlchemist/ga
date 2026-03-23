@@ -1,0 +1,347 @@
+/* src/components/PrimeRadiant/styles.css */
+/* Prime Radiant — Governance Visualization Engine */
+
+.prime-radiant {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  background: #0d1117;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  color: #e6edf3;
+}
+
+.prime-radiant__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.prime-radiant__canvas:active {
+  cursor: grabbing;
+}
+
+/* ─── Search bar ─── */
+.prime-radiant__search {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.prime-radiant__search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e6edf3;
+  font-family: inherit;
+  font-size: 13px;
+  width: 220px;
+}
+
+.prime-radiant__search input::placeholder {
+  color: #484f58;
+}
+
+.prime-radiant__search-icon {
+  color: #484f58;
+  font-size: 14px;
+}
+
+/* ─── Health indicator (top-right) ─── */
+.prime-radiant__health {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 16px;
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+}
+
+.prime-radiant__health-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.prime-radiant__health-dot--healthy {
+  background: #4CB050;
+  box-shadow: 0 0 8px #4CB050;
+}
+
+.prime-radiant__health-dot--watch {
+  background: #E5C07B;
+  box-shadow: 0 0 8px #E5C07B;
+}
+
+.prime-radiant__health-dot--freeze {
+  background: #E06C75;
+  box-shadow: 0 0 8px #E06C75;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* ─── Legend (bottom-left) ─── */
+.prime-radiant__legend {
+  position: absolute;
+  bottom: 60px;
+  left: 16px;
+  z-index: 10;
+  background: rgba(22, 27, 34, 0.85);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prime-radiant__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prime-radiant__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.prime-radiant__legend-label {
+  color: #8b949e;
+  white-space: nowrap;
+}
+
+/* ─── Time slider (bottom) ─── */
+.prime-radiant__timeline {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 16px;
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+}
+
+.prime-radiant__timeline-label {
+  color: #484f58;
+  white-space: nowrap;
+}
+
+.prime-radiant__timeline input[type="range"] {
+  width: 200px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #30363d;
+  border-radius: 2px;
+  outline: none;
+}
+
+.prime-radiant__timeline input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #58A6FF;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(88, 166, 255, 0.4);
+}
+
+/* ─── Detail panel (right side) ─── */
+.prime-radiant__detail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100%;
+  background: rgba(22, 27, 34, 0.95);
+  border-left: 1px solid #30363d;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(12px);
+  overflow-y: auto;
+}
+
+.prime-radiant__detail--open {
+  transform: translateX(0);
+}
+
+.prime-radiant__detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #30363d;
+}
+
+.prime-radiant__detail-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.prime-radiant__detail-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.prime-radiant__detail-close:hover {
+  background: #30363d;
+  color: #e6edf3;
+}
+
+.prime-radiant__detail-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prime-radiant__detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prime-radiant__detail-label {
+  font-size: 11px;
+  color: #484f58;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prime-radiant__detail-value {
+  font-size: 13px;
+  color: #e6edf3;
+}
+
+.prime-radiant__detail-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.prime-radiant__detail-health-bar {
+  width: 100%;
+  height: 6px;
+  background: #21262d;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.prime-radiant__detail-health-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.prime-radiant__detail-connections {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prime-radiant__detail-connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #8b949e;
+}
+
+.prime-radiant__detail-connection:hover {
+  background: #161b22;
+  color: #e6edf3;
+}
+
+.prime-radiant__detail-connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ─── Tooltip ─── */
+.prime-radiant__tooltip {
+  position: absolute;
+  z-index: 30;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  pointer-events: none;
+  max-width: 280px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.prime-radiant__tooltip-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.prime-radiant__tooltip-type {
+  color: #8b949e;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prime-radiant__tooltip-desc {
+  color: #8b949e;
+  margin-top: 4px;
+}

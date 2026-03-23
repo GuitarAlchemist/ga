@@ -304,6 +304,15 @@ const testPages: TestPageInfo[] = [
     features: ['AG-UI Protocol', 'SSE Streaming', 'Diatonic Chords', 'Routing Metadata', 'Hook Pipeline'],
     status: 'complete',
   },
+  {
+    id: 'prime-radiant',
+    title: 'Prime Radiant',
+    description: '3D governance visualization engine — Demerzel ecosystem as explorable force-directed graph',
+    technology: 'Three.js + WebGL + Bloom',
+    path: '/test/prime-radiant',
+    features: ['Force-Directed Graph', '3D Node Types', 'Particle Streams', 'Health Overlay', 'Search', 'Detail Panel'],
+    status: 'complete',
+  },
 ];
 
 const statusColors = {
