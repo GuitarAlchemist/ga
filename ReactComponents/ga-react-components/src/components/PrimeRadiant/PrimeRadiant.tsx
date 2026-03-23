@@ -1,7 +1,7 @@
 // src/components/PrimeRadiant/PrimeRadiant.tsx
 // Main React component — canvas + controls + detail panel + search + overlays
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Component, useCallback, useEffect, useRef, useState } from 'react';
 import type { GovernanceGraph, GovernanceNode, PrimeRadiantProps } from './types';
 import { NODE_COLORS, HEALTH_COLORS } from './types';
 import { loadGovernanceData, buildGraphIndex, searchNodes, getHealthStatus } from './DataLoader';
@@ -9,6 +9,78 @@ import type { GraphIndex } from './DataLoader';
 import { RadiantEngine } from './RadiantEngine';
 import { DetailPanel } from './DetailPanel';
 import './styles.css';
+
+// ---------------------------------------------------------------------------
+// Error Boundary
+// ---------------------------------------------------------------------------
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class PrimeRadiantErrorBoundary extends Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[PrimeRadiant] Error boundary caught:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          width: '100%',
+          height: '100%',
+          minHeight: 600,
+          background: '#0d1117',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#e6edf3',
+          fontFamily: 'monospace',
+          gap: 16,
+        }}>
+          <div style={{ color: '#E06C75', fontSize: 18, fontWeight: 600 }}>
+            Prime Radiant — Render Error
+          </div>
+          <div style={{ color: '#8b949e', fontSize: 13, maxWidth: 500, textAlign: 'center' }}>
+            {this.state.error?.message ?? 'Unknown error during Three.js initialization'}
+          </div>
+          <div style={{ color: '#484f58', fontSize: 11 }}>
+            Check browser console for details (F12)
+          </div>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            style={{
+              marginTop: 8,
+              padding: '8px 16px',
+              background: '#21262d',
+              color: '#58A6FF',
+              border: '1px solid #30363d',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Legend items
@@ -48,41 +120,59 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
   const [timeValue, setTimeValue] = useState(100);
+  const [isLoading, setIsLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
   // ─── Load data and initialize engine ───
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container) return;
+    if (!canvas || !container) {
+      console.error('[PrimeRadiant] Canvas or container ref is null');
+      return;
+    }
 
-    const graph = loadGovernanceData(data);
-    setGraphData(graph);
-    setGraphIndex(buildGraphIndex(graph));
+    console.log('[PrimeRadiant] Initializing...');
+    setIsLoading(true);
+    setInitError(null);
 
-    const handleNodeSelect = (node: GovernanceNode | null) => {
-      setSelectedNode(node);
-      onNodeSelect?.(node);
-    };
+    try {
+      const graph = loadGovernanceData(data);
+      setGraphData(graph);
+      setGraphIndex(buildGraphIndex(graph));
 
-    const handleHoverChange = (nodeId: string | null) => {
-      setHoveredNodeId(nodeId);
-    };
+      const handleNodeSelect = (node: GovernanceNode | null) => {
+        setSelectedNode(node);
+        onNodeSelect?.(node);
+      };
 
-    const engine = new RadiantEngine(canvas, container, handleNodeSelect, handleHoverChange);
-    engine.init(graph);
-    engineRef.current = engine;
+      const handleHoverChange = (nodeId: string | null) => {
+        setHoveredNodeId(nodeId);
+      };
 
-    // Resize observer
-    const resizeObserver = new ResizeObserver(() => {
-      engine.resize();
-    });
-    resizeObserver.observe(container);
+      const engine = new RadiantEngine(canvas, container, handleNodeSelect, handleHoverChange);
+      engine.init(graph);
+      engineRef.current = engine;
+      setIsLoading(false);
+      console.log('[PrimeRadiant] Initialization complete');
 
-    return () => {
-      resizeObserver.disconnect();
-      engine.dispose();
-      engineRef.current = null;
-    };
+      // Resize observer
+      const resizeObserver = new ResizeObserver(() => {
+        engine.resize();
+      });
+      resizeObserver.observe(container);
+
+      return () => {
+        resizeObserver.disconnect();
+        engine.dispose();
+        engineRef.current = null;
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[PrimeRadiant] Initialization failed:', err);
+      setInitError(message);
+      setIsLoading(false);
+    }
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Search ───
@@ -126,6 +216,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
     : null;
 
   return (
+    <PrimeRadiantErrorBoundary>
     <div
       ref={containerRef}
       className={`prime-radiant ${className}`}
@@ -133,6 +224,53 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
     >
       {/* 3D Canvas */}
       <canvas ref={canvasRef} className="prime-radiant__canvas" />
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0d1117',
+          zIndex: 50,
+          gap: 12,
+        }}>
+          <div style={{ color: '#FFD700', fontSize: 18, fontWeight: 600 }}>
+            Initializing Prime Radiant...
+          </div>
+          <div style={{ color: '#484f58', fontSize: 12 }}>
+            Building governance visualization
+          </div>
+        </div>
+      )}
+
+      {/* Error overlay */}
+      {initError && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0d1117',
+          zIndex: 50,
+          gap: 12,
+        }}>
+          <div style={{ color: '#E06C75', fontSize: 18, fontWeight: 600 }}>
+            Prime Radiant — Init Error
+          </div>
+          <div style={{ color: '#8b949e', fontSize: 13, maxWidth: 500, textAlign: 'center' }}>
+            {initError}
+          </div>
+          <div style={{ color: '#484f58', fontSize: 11 }}>
+            Check browser console for details (F12)
+          </div>
+        </div>
+      )}
 
       {/* Search bar */}
       {showSearchBar && (
@@ -293,5 +431,6 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
         />
       )}
     </div>
+    </PrimeRadiantErrorBoundary>
   );
 };
