@@ -579,6 +579,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         }
       });
+
+      // ─── Ambient dust drift ───
+      const dPos = ambientDust.geometry.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < dustCount; i++) {
+        let x = dPos.getX(i) + dustVelocities[i*3] * 0.016;
+        let y = dPos.getY(i) + dustVelocities[i*3+1] * 0.016;
+        let z = dPos.getZ(i) + dustVelocities[i*3+2] * 0.016;
+        const halfR = dustRange / 2;
+        if (Math.abs(x) > halfR) x *= -0.9;
+        if (Math.abs(y) > halfR) y *= -0.9;
+        if (Math.abs(z) > halfR) z *= -0.9;
+        dPos.setXYZ(i, x, y, z);
+      }
+      dPos.needsUpdate = true;
+
+      // ─── Orbital rings track their nodes ───
+      for (const ring of ringMeshes) {
+        const nodeId = ring.userData.trackNodeId as string;
+        const rNode = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === nodeId) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
+        if (rNode?.x !== undefined) {
+          ring.position.set(rNode.x, rNode.y ?? 0, rNode.z ?? 0);
+          ring.rotation.x = ring.userData.ringTilt + t * 0.2;
+          ring.rotation.z = t * 0.15;
+        }
+      }
+
+      // ─── God ray animation ───
+      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
+      const gr2Mat = godRay2.material as THREE.ShaderMaterial;
+      if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
     });
 
     // Slow auto-rotate
@@ -588,25 +618,114 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controls.autoRotateSpeed = 0.3;
     }
 
-    // Starfield background
-    const starCount = 2000;
+    // ─── AMBIENT PARTICLE FIELD ───
+    // 5000 tiny particles drifting through the graph volume — cosmic dust
+    const dustCount = 5000;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustVelocities = new Float32Array(dustCount * 3);
+    const dustColors = new Float32Array(dustCount * 3);
+    const dustRange = 400;
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i*3] = (Math.random() - 0.5) * dustRange;
+      dustPositions[i*3+1] = (Math.random() - 0.5) * dustRange;
+      dustPositions[i*3+2] = (Math.random() - 0.5) * dustRange;
+      dustVelocities[i*3] = (Math.random() - 0.5) * 0.3;
+      dustVelocities[i*3+1] = (Math.random() - 0.5) * 0.3;
+      dustVelocities[i*3+2] = (Math.random() - 0.5) * 0.3;
+      // Mix of warm and cool dust
+      const hue = Math.random();
+      if (hue < 0.3) { dustColors[i*3] = 0.4; dustColors[i*3+1] = 0.35; dustColors[i*3+2] = 0.15; }     // warm gold
+      else if (hue < 0.6) { dustColors[i*3] = 0.1; dustColors[i*3+1] = 0.3; dustColors[i*3+2] = 0.35; }  // cool cyan
+      else { dustColors[i*3] = 0.2; dustColors[i*3+1] = 0.15; dustColors[i*3+2] = 0.35; }                 // violet
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    dustGeo.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+    const dustMat = new THREE.PointsMaterial({
+      size: 0.3, vertexColors: true, transparent: true, opacity: 0.35,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+    });
+    const ambientDust = new THREE.Points(dustGeo, dustMat);
+    ambientDust.name = 'ambient-dust';
+    fg.scene().add(ambientDust);
+
+    // ─── STARFIELD (deeper, more distant) ───
+    const starCount = 3000;
     const starPositions = new Float32Array(starCount * 3);
     const starColors = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
-      const r = 800 + Math.random() * 1200;
+      const r = 600 + Math.random() * 1400;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       starPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i*3+2] = r * Math.cos(phi);
-      const b = 0.3 + Math.random() * 0.5;
-      starColors[i*3] = b * 0.85; starColors[i*3+1] = b * 0.9; starColors[i*3+2] = b;
+      const b = 0.15 + Math.random() * 0.5;
+      starColors[i*3] = b * 0.85; starColors[i*3+1] = b * 0.92; starColors[i*3+2] = b;
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    const starMat = new THREE.PointsMaterial({ size: 0.5, vertexColors: true, transparent: true, opacity: 0.6, sizeAttenuation: true });
+    const starMat = new THREE.PointsMaterial({ size: 0.4, vertexColors: true, transparent: true, opacity: 0.5, sizeAttenuation: true });
     fg.scene().add(new THREE.Points(starGeo, starMat));
+
+    // ─── ORBITAL RINGS on constitution/department nodes ───
+    // Golden torus rings that orbit around the most important nodes
+    const ringNodes = forceData.nodes.filter((n) => n.type === 'constitution' || n.type === 'department');
+    const ringMeshes: THREE.Mesh[] = [];
+    for (const rn of ringNodes) {
+      const ringRadius = Math.pow(TYPE_SIZE[rn.type] ?? 5, 0.5) * 1.2;
+      const torusGeo = new THREE.TorusGeometry(ringRadius, ringRadius * 0.03, 8, 64);
+      const torusMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(rn.color),
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const ring = new THREE.Mesh(torusGeo, torusMat);
+      ring.userData = { trackNodeId: rn.id, ringTilt: Math.random() * Math.PI * 0.5 };
+      fg.scene().add(ring);
+      ringMeshes.push(ring);
+    }
+
+    // ─── GOD RAY LIGHT SHAFTS from center ───
+    // Volumetric light cone pointing outward from the graph center
+    const godRayGeo = new THREE.ConeGeometry(80, 300, 32, 1, true);
+    const godRayMat = new THREE.ShaderMaterial({
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color('#FF6B35') } },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float fade = smoothstep(0.0, 0.5, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
+          float rays = sin(vUv.x * 40.0 + uTime * 0.5) * 0.5 + 0.5;
+          rays *= sin(vUv.x * 17.0 - uTime * 0.3) * 0.5 + 0.5;
+          float alpha = fade * rays * 0.03;
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
+    });
+    const godRay = new THREE.Mesh(godRayGeo, godRayMat);
+    godRay.rotation.x = Math.PI; // point upward
+    fg.scene().add(godRay);
+
+    // Second god ray at different angle
+    const godRay2 = godRay.clone();
+    (godRay2.material as THREE.ShaderMaterial).uniforms = {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#00CED1') },
+    };
+    godRay2.rotation.set(Math.PI * 0.7, 0, Math.PI * 0.3);
+    fg.scene().add(godRay2);
+
+    // Effects are animated in the main onEngineTick (merged below)
 
     graphRef.current = fg;
 
