@@ -70,21 +70,21 @@ const TYPE_PARTICLES: Record<GovernanceNodeType, number> = {
   ixql: 8,
 };
 
-// Edge colors by type
+// Edge colors — thinner, subtler, distinct per relationship type
 const EDGE_COLORS: Record<string, string> = {
-  'constitutional-hierarchy': '#FFD700',
-  'policy-persona': '#FFA50088',
-  'pipeline-flow': '#00CED1AA',
-  'cross-repo': '#008B8B88',
-  'lolli': '#FF444488',
+  'constitutional-hierarchy': '#FF6B3566',   // coral, semi-transparent
+  'policy-persona': '#DAA52044',             // golden rod, very subtle
+  'pipeline-flow': '#00FFAA55',              // spring green, moderate
+  'cross-repo': '#1E90FF44',                 // dodger blue, subtle
+  'lolli': '#FF000066',                      // red — dead references stand out
 };
 
 const EDGE_WIDTH: Record<string, number> = {
-  'constitutional-hierarchy': 2.5,
-  'policy-persona': 0.8,
-  'pipeline-flow': 1.2,
-  'cross-repo': 0.6,
-  'lolli': 1.5,
+  'constitutional-hierarchy': 1.2,
+  'policy-persona': 0.4,
+  'pipeline-flow': 0.6,
+  'cross-repo': 0.3,
+  'lolli': 0.8,
 };
 
 // ---------------------------------------------------------------------------
@@ -469,9 +469,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Edge rendering
       .linkColor((link: object) => (link as GraphLink).color)
       .linkWidth((link: object) => (link as GraphLink).width)
-      .linkOpacity(0.4)
-      .linkDirectionalParticles(3)
-      .linkDirectionalParticleWidth(1.5)
+      .linkOpacity(0.25)
+      .linkDirectionalParticles(2)
+      .linkDirectionalParticleWidth(1.0)
       .linkDirectionalParticleSpeed(0.005)
       .linkDirectionalParticleColor((link: object) => (link as GraphLink).color)
       .linkCurvature(0.15)
@@ -528,7 +528,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const chromaticShader = {
       uniforms: {
         tDiffuse: { value: null },
-        uOffset: { value: new THREE.Vector2(0.002, 0.002) },
+        uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
       },
       vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;

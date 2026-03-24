@@ -132,16 +132,17 @@ export interface NodeTypeConfig {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-// Foundation TV holographic palette — everything amber/gold with type-coded accents
+// Holographic palette — distinct per type, warm→cool hierarchy gradient
+// Cross-model validated (Claude + GPT-4o), tuned for additive blending + bloom on black
 export const NODE_COLORS: Record<GovernanceNodeType, string> = {
-  constitution: '#FFD700',   // bright gold — core
-  policy: '#FFA500',         // amber
-  persona: '#FFB347',        // soft gold
-  pipeline: '#00CED1',       // teal accent
-  department: '#FFCC33',     // warm gold
-  schema: '#008B8B',         // dark teal
-  test: '#FF8C00',           // dark orange
-  ixql: '#DAA520',           // goldenrod
+  constitution: '#FF6B35',   // warm coral — the burning core
+  department: '#FFC300',     // sunburst gold — organizational presence
+  policy: '#FFD700',         // bright gold — guiding light
+  persona: '#33FF88',        // neon mint — living agents
+  pipeline: '#00FFAA',       // spring green — data flow
+  schema: '#00CED1',         // aqua cyan — structural validation
+  test: '#4A90D9',           // ocean blue — verification
+  ixql: '#9B72FF',           // electric violet — deep query
 };
 
 export const NODE_SCALES: Record<GovernanceNodeType, number> = {
