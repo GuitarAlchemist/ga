@@ -230,8 +230,8 @@ export class RadiantEngine {
     this.healthAura = createHealthAura(this.graph.globalHealth);
     this.scene.add(this.healthAura);
 
-    // Floating equations — Foundation TV signature aesthetic
-    this.equationField = new EquationField(this.scene, 40);
+    // Floating equations — real governance math from live data
+    this.equationField = new EquationField(this.scene, this.graph);
   }
 
   // ─── Camera — zoomed out to see full sphere ───
@@ -244,7 +244,7 @@ export class RadiantEngine {
 
   // ─── Controls ───
   private initControls(): void {
-    this.controls = new OrbitControls(this.camera, this.canvas);
+    this.controls = new OrbitControls(this.camera, this.container);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
     this.controls.minDistance = 8;
