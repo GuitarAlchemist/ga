@@ -32,14 +32,14 @@ const TYPE_LABELS: Record<GovernanceNodeType, string> = {
 };
 
 const TYPE_SHAPES: Record<GovernanceNodeType, string> = {
-  constitution: 'Icosahedron',
-  policy: 'Octahedron',
-  persona: 'Sphere',
-  pipeline: 'Torus',
-  department: 'Nebula',
-  schema: 'Cube',
-  test: 'Tetrahedron',
-  ixql: 'Cylinder',
+  constitution: 'Core Cluster',
+  policy: 'Diamond Cloud',
+  persona: 'Sphere Cloud',
+  pipeline: 'Ring Stream',
+  department: 'Nebula Cluster',
+  schema: 'Cube Matrix',
+  test: 'Diamond Cloud',
+  ixql: 'Helix Stream',
 };
 
 // ---------------------------------------------------------------------------
@@ -183,7 +183,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                 <div style={{ display: 'flex', gap: '16px' }}>
                   <div className="prime-radiant__detail-section" style={{ flex: 1 }}>
                     <span className="prime-radiant__detail-label">ERGOL</span>
-                    <span className="prime-radiant__detail-value" style={{ color: '#4CB050' }}>
+                    <span className="prime-radiant__detail-value" style={{ color: '#FFD700' }}>
                       {health.ergolCount}
                     </span>
                   </div>
@@ -191,7 +191,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                     <span className="prime-radiant__detail-label">LOLLI</span>
                     <span
                       className="prime-radiant__detail-value"
-                      style={{ color: health.lolliCount > 0 ? '#E06C75' : '#8b949e' }}
+                      style={{ color: health.lolliCount > 0 ? '#FF4444' : '#8b949e' }}
                     >
                       {health.lolliCount}
                     </span>

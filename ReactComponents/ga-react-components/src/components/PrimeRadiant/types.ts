@@ -132,15 +132,16 @@ export interface NodeTypeConfig {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+// Foundation TV holographic palette — everything amber/gold with type-coded accents
 export const NODE_COLORS: Record<GovernanceNodeType, string> = {
-  constitution: '#FFD700',
-  policy: '#4CB050',
-  persona: '#C678DD',
-  pipeline: '#58A6FF',
-  department: '#E5C07B',
-  schema: '#7289DA',
-  test: '#E06C75',
-  ixql: '#F0883E',
+  constitution: '#FFD700',   // bright gold — core
+  policy: '#FFA500',         // amber
+  persona: '#FFB347',        // soft gold
+  pipeline: '#00CED1',       // teal accent
+  department: '#FFCC33',     // warm gold
+  schema: '#008B8B',         // dark teal
+  test: '#FF8C00',           // dark orange
+  ixql: '#DAA520',           // goldenrod
 };
 
 export const NODE_SCALES: Record<GovernanceNodeType, number> = {
@@ -155,15 +156,26 @@ export const NODE_SCALES: Record<GovernanceNodeType, number> = {
 };
 
 export const HEALTH_COLORS: Record<HealthStatus, string> = {
-  healthy: '#4CB050',
-  watch: '#E5C07B',
-  freeze: '#E06C75',
+  healthy: '#FFD700',
+  watch: '#FFA500',
+  freeze: '#FF4444',
 };
 
-export const BACKGROUND_COLOR = 0x0d1117;
-export const FOG_COLOR = 0x0d1117;
-export const FOG_NEAR = 50;
-export const FOG_FAR = 200;
-export const BLOOM_STRENGTH = 0.6;
-export const BLOOM_RADIUS = 0.5;
-export const BLOOM_THRESHOLD = 0.2;
+export const BACKGROUND_COLOR = 0x000010;
+export const FOG_COLOR = 0x000010;
+export const FOG_NEAR = 80;
+export const FOG_FAR = 300;
+export const BLOOM_STRENGTH = 1.8;
+export const BLOOM_RADIUS = 0.6;
+export const BLOOM_THRESHOLD = 0.08;
+
+// Spherical shell radii — hierarchy maps to depth within the sphere
+export const SPHERE_RADIUS_CORE = 6;        // constitution
+export const SPHERE_RADIUS_MID = 14;        // policy, persona, pipeline, department
+export const SPHERE_RADIUS_OUTER = 22;      // schema, test, ixql
+
+// Particles per node cluster (scaled by NODE_SCALES)
+export const NODE_PARTICLE_BASE = 120;
+
+// Fresnel sphere
+export const CONTAINMENT_SPHERE_RADIUS = 30;

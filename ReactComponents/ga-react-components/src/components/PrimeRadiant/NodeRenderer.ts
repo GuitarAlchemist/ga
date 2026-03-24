@@ -1,317 +1,244 @@
 // src/components/PrimeRadiant/NodeRenderer.ts
-// Renders governance nodes as distinct 3D shapes based on type
+// Foundation TV aesthetic — each node is a CLUSTER of golden particles, not a solid mesh
 
 import * as THREE from 'three';
 import type { GovernanceNode, GovernanceNodeType } from './types';
-import { NODE_SCALES } from './types';
+import { NODE_SCALES, NODE_PARTICLE_BASE } from './types';
 
 // ---------------------------------------------------------------------------
-// Geometry factories — one per node type (high subdivision for smooth look)
+// Particle cluster for a single governance node
+// Uses THREE.Points with additive blending for holographic look
 // ---------------------------------------------------------------------------
-function createConstitutionGeometry(): THREE.BufferGeometry {
-  return new THREE.IcosahedronGeometry(1, 3);
+
+function particleCount(type: GovernanceNodeType): number {
+  return Math.floor(NODE_PARTICLE_BASE * NODE_SCALES[type]);
 }
 
-function createPolicyGeometry(): THREE.BufferGeometry {
-  return new THREE.OctahedronGeometry(1, 2);
-}
-
-function createPersonaGeometry(): THREE.BufferGeometry {
-  return new THREE.SphereGeometry(1, 64, 64);
-}
-
-function createPipelineGeometry(): THREE.BufferGeometry {
-  return new THREE.TorusGeometry(1, 0.3, 32, 64);
-}
-
-function createDepartmentGeometry(): THREE.BufferGeometry {
-  return new THREE.DodecahedronGeometry(1, 2);
-}
-
-function createSchemaGeometry(): THREE.BufferGeometry {
-  // Beveled cube effect via rounded box approximation
-  const geo = new THREE.BoxGeometry(1, 1, 1, 4, 4, 4);
-  return geo;
-}
-
-function createTestGeometry(): THREE.BufferGeometry {
-  return new THREE.TetrahedronGeometry(1, 2);
-}
-
-function createIxqlGeometry(): THREE.BufferGeometry {
-  return new THREE.CylinderGeometry(0.6, 0.6, 1.4, 32);
-}
-
-const GEOMETRY_FACTORIES: Record<GovernanceNodeType, () => THREE.BufferGeometry> = {
-  constitution: createConstitutionGeometry,
-  policy: createPolicyGeometry,
-  persona: createPersonaGeometry,
-  pipeline: createPipelineGeometry,
-  department: createDepartmentGeometry,
-  schema: createSchemaGeometry,
-  test: createTestGeometry,
-  ixql: createIxqlGeometry,
-};
-
-// ---------------------------------------------------------------------------
-// Cached geometries to avoid re-creation
-// ---------------------------------------------------------------------------
-const geometryCache = new Map<GovernanceNodeType, THREE.BufferGeometry>();
-
-function getGeometry(type: GovernanceNodeType): THREE.BufferGeometry {
-  let geo = geometryCache.get(type);
-  if (!geo) {
-    geo = GEOMETRY_FACTORIES[type]();
-    geometryCache.set(type, geo);
-  }
-  return geo;
+function clusterRadius(type: GovernanceNodeType): number {
+  return NODE_SCALES[type] * 1.2;
 }
 
 // ---------------------------------------------------------------------------
-// Emissive intensity per node type
+// Create node as a particle cluster (THREE.Points wrapped in a Group)
+// The Group carries userData for raycasting; an invisible sphere inside
+// handles the actual raycasting hit-test.
 // ---------------------------------------------------------------------------
-const EMISSIVE_INTENSITY: Record<GovernanceNodeType, number> = {
-  constitution: 0.8,
-  policy: 0.4,
-  persona: 0.6,
-  pipeline: 0.5,
-  department: 0.3,
-  schema: 0.3,
-  test: 0.4,
-  ixql: 0.4,
-};
+export function createNodeMesh(node: GovernanceNode): THREE.Group {
+  const group = new THREE.Group();
+  group.userData = { nodeId: node.id, nodeType: node.type };
+  group.name = `node-${node.id}`;
 
-// ---------------------------------------------------------------------------
-// PBR material factory — each node type gets distinct physical properties
-// ---------------------------------------------------------------------------
-function createNodeMaterial(node: GovernanceNode): THREE.Material {
-  const color = new THREE.Color(node.color);
-  const emissive = EMISSIVE_INTENSITY[node.type];
-
-  switch (node.type) {
-    case 'constitution':
-      // Golden radiant — clearcoated metallic
-      return new THREE.MeshPhysicalMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.3,
-        roughness: 0.15,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.05,
-        reflectivity: 1.0,
-        transparent: true,
-        opacity: 0.95,
-      });
-
-    case 'persona':
-      // Iridescent organic feel
-      return new THREE.MeshPhysicalMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.1,
-        roughness: 0.2,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.1,
-        sheen: 1.0,
-        sheenRoughness: 0.3,
-        sheenColor: new THREE.Color('#E0A0FF'),
-        iridescence: 0.8,
-        iridescenceIOR: 1.5,
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    case 'schema':
-      // Translucent glass-like
-      return new THREE.MeshPhysicalMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.0,
-        roughness: 0.05,
-        transmission: 0.3,
-        thickness: 1.0,
-        ior: 1.5,
-        transparent: true,
-        opacity: 0.85,
-      });
-
-    case 'policy':
-      // Semi-metallic green
-      return new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.5,
-        roughness: 0.25,
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    case 'test':
-      // Matte red with slight roughness
-      return new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.2,
-        roughness: 0.55,
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    case 'department':
-      // Warm metallic orange
-      return new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.4,
-        roughness: 0.3,
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    case 'pipeline':
-      // Cool blue with clearcoat
-      return new THREE.MeshPhysicalMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.3,
-        roughness: 0.2,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.15,
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    case 'ixql':
-      // Warm orange with subtle sheen
-      return new THREE.MeshPhysicalMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.35,
-        roughness: 0.3,
-        sheen: 0.5,
-        sheenRoughness: 0.4,
-        sheenColor: new THREE.Color('#FFB070'),
-        transparent: true,
-        opacity: 0.92,
-      });
-
-    default:
-      return new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: emissive,
-        metalness: 0.3,
-        roughness: 0.4,
-        transparent: true,
-        opacity: 0.9,
-      });
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Create a single node mesh
-// ---------------------------------------------------------------------------
-export function createNodeMesh(node: GovernanceNode): THREE.Mesh {
-  const geometry = getGeometry(node.type);
-  const scale = NODE_SCALES[node.type];
-
-  const material = createNodeMaterial(node);
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.scale.setScalar(scale);
-  mesh.userData = { nodeId: node.id, nodeType: node.type };
-  mesh.name = `node-${node.id}`;
-
-  return mesh;
-}
-
-// ---------------------------------------------------------------------------
-// Department particle cloud (extra decoration for department nodes)
-// ---------------------------------------------------------------------------
-export function createDepartmentParticles(node: GovernanceNode): THREE.Points {
-  const count = 60;
+  const count = particleCount(node.type);
+  const radius = clusterRadius(node.type);
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const phases = new Float32Array(count); // for Brownian drift
+
   const baseColor = new THREE.Color(node.color);
-  const radius = NODE_SCALES.department * 2;
+
+  // Unhealthy nodes get red tint
+  const isUnhealthy = node.health && node.health.lolliCount > 0;
+  const unhealthyColor = new THREE.Color('#FF4444');
 
   for (let i = 0; i < count; i++) {
+    // Distribute in a sphere with slight concentration at center
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = radius * (0.5 + Math.random() * 0.5);
+    const r = radius * Math.pow(Math.random(), 0.6); // bias toward center
 
     positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
 
-    const fade = 0.5 + Math.random() * 0.5;
-    colors[i * 3] = baseColor.r * fade;
-    colors[i * 3 + 1] = baseColor.g * fade;
-    colors[i * 3 + 2] = baseColor.b * fade;
+    // Color variation — gold with slight randomness
+    const variation = 0.7 + Math.random() * 0.3;
+    const c = isUnhealthy
+      ? baseColor.clone().lerp(unhealthyColor, 0.4 + Math.random() * 0.3)
+      : baseColor.clone();
+    colors[i * 3] = c.r * variation;
+    colors[i * 3 + 1] = c.g * variation;
+    colors[i * 3 + 2] = c.b * variation;
+
+    sizes[i] = 0.08 + Math.random() * 0.12;
+    phases[i] = Math.random() * Math.PI * 2;
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
 
   const material = new THREE.PointsMaterial({
-    size: 0.15,
+    size: 0.12,
     vertexColors: true,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.85,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
+    sizeAttenuation: true,
   });
 
   const points = new THREE.Points(geometry, material);
-  points.userData = { nodeId: node.id, isDepartmentCloud: true };
-  return points;
+  group.add(points);
+
+  // Invisible sphere for raycasting
+  const hitGeo = new THREE.SphereGeometry(radius * 1.2, 8, 8);
+  const hitMat = new THREE.MeshBasicMaterial({
+    visible: false,
+    transparent: true,
+    opacity: 0,
+  });
+  const hitSphere = new THREE.Mesh(hitGeo, hitMat);
+  hitSphere.userData = { nodeId: node.id, nodeType: node.type };
+  group.add(hitSphere);
+
+  return group;
 }
 
 // ---------------------------------------------------------------------------
-// Highlight / unhighlight
+// Text sprite — canvas-based label that floats near a node
+// Returns sprite or null for very small node types
 // ---------------------------------------------------------------------------
-export function setNodeHighlight(mesh: THREE.Mesh, highlighted: boolean): void {
-  const mat = mesh.material as THREE.MeshStandardMaterial;
-  if (highlighted) {
-    mat.emissiveIntensity = 1.0;
-    mat.opacity = 1.0;
+export function createTextSprite(text: string, color: string): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  const fontSize = 48;
+  canvas.width = 512;
+  canvas.height = 64;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `${fontSize}px "JetBrains Mono", "Fira Code", monospace`;
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+  });
+
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(5, 0.6, 1);
+  sprite.userData = { isTextLabel: true, targetOpacity: 0 };
+  return sprite;
+}
+
+// ---------------------------------------------------------------------------
+// Animate node particles — gentle Brownian drift
+// ---------------------------------------------------------------------------
+export function animateNodeParticles(group: THREE.Group, time: number, dt: number): void {
+  const points = group.children[0] as THREE.Points;
+  if (!points || !(points instanceof THREE.Points)) return;
+
+  const pos = points.geometry.attributes.position as THREE.BufferAttribute;
+  const phases = points.geometry.attributes.phase as THREE.BufferAttribute;
+  if (!phases) return;
+
+  const type = group.userData.nodeType as GovernanceNodeType;
+  const radius = clusterRadius(type);
+  const drift = 0.15;
+
+  for (let i = 0; i < pos.count; i++) {
+    const phase = phases.getX(i);
+    const dx = Math.sin(time * 0.5 + phase) * drift * dt;
+    const dy = Math.cos(time * 0.7 + phase * 1.3) * drift * dt;
+    const dz = Math.sin(time * 0.3 + phase * 0.7) * drift * dt;
+
+    let x = pos.getX(i) + dx;
+    let y = pos.getY(i) + dy;
+    let z = pos.getZ(i) + dz;
+
+    // Keep within cluster radius
+    const dist = Math.sqrt(x * x + y * y + z * z);
+    if (dist > radius) {
+      const scale = radius / dist;
+      x *= scale;
+      y *= scale;
+      z *= scale;
+    }
+
+    pos.setXYZ(i, x, y, z);
+  }
+  pos.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------------------
+// Animate text labels — fade in/out based on camera distance
+// ---------------------------------------------------------------------------
+export function animateTextSprite(
+  sprite: THREE.Sprite,
+  cameraPosition: THREE.Vector3,
+  fadeInDist: number,
+  fadeOutDist: number,
+): void {
+  const dist = sprite.getWorldPosition(new THREE.Vector3()).distanceTo(cameraPosition);
+  const mat = sprite.material as THREE.SpriteMaterial;
+
+  if (dist < fadeInDist) {
+    mat.opacity = Math.min(mat.opacity + 0.05, 0.9);
+    const scaleT = Math.max(0.3, dist / fadeInDist);
+    sprite.scale.set(5 * scaleT, 0.6 * scaleT, 1);
+  } else if (dist > fadeOutDist) {
+    mat.opacity = Math.max(mat.opacity - 0.05, 0);
   } else {
-    const type = mesh.userData.nodeType as GovernanceNodeType;
-    mat.emissiveIntensity = EMISSIVE_INTENSITY[type] ?? 0.3;
-    mat.opacity = 0.9;
+    const t = 1 - (dist - fadeInDist) / (fadeOutDist - fadeInDist);
+    mat.opacity = t * 0.7;
   }
 }
 
-export function setNodeDimmed(mesh: THREE.Mesh, dimmed: boolean): void {
-  const mat = mesh.material as THREE.MeshStandardMaterial;
-  mat.opacity = dimmed ? 0.15 : 0.9;
+// ---------------------------------------------------------------------------
+// Highlight / unhighlight — changes particle opacity
+// ---------------------------------------------------------------------------
+export function setNodeHighlight(obj: THREE.Object3D, highlighted: boolean): void {
+  const group = obj as THREE.Group;
+  for (const child of group.children) {
+    if (child instanceof THREE.Points) {
+      const mat = child.material as THREE.PointsMaterial;
+      mat.opacity = highlighted ? 1.0 : 0.85;
+      mat.size = highlighted ? 0.16 : 0.12;
+    }
+  }
+}
+
+export function setNodeDimmed(obj: THREE.Object3D, dimmed: boolean): void {
+  const group = obj as THREE.Group;
+  for (const child of group.children) {
+    if (child instanceof THREE.Points) {
+      const mat = child.material as THREE.PointsMaterial;
+      mat.opacity = dimmed ? 0.08 : 0.85;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
 // LOLLI decay effect — red particles emanating from unhealthy nodes
 // ---------------------------------------------------------------------------
 export function createLolliParticles(position: THREE.Vector3): THREE.Points {
-  const count = 20;
+  const count = 30;
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
 
   for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 2;
-    positions[i * 3 + 1] = Math.random() * 3;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 2;
+    positions[i * 3] = (Math.random() - 0.5) * 3;
+    positions[i * 3 + 1] = Math.random() * 4;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
 
-    colors[i * 3] = 0.88;
-    colors[i * 3 + 1] = 0.2 + Math.random() * 0.15;
-    colors[i * 3 + 2] = 0.2 + Math.random() * 0.15;
+    colors[i * 3] = 1.0;
+    colors[i * 3 + 1] = 0.15 + Math.random() * 0.15;
+    colors[i * 3 + 2] = 0.1 + Math.random() * 0.1;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -322,7 +249,7 @@ export function createLolliParticles(position: THREE.Vector3): THREE.Points {
     size: 0.1,
     vertexColors: true,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.8,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -333,26 +260,26 @@ export function createLolliParticles(position: THREE.Vector3): THREE.Points {
   return points;
 }
 
-// ---------------------------------------------------------------------------
-// Animate LOLLI particles (call each frame)
-// ---------------------------------------------------------------------------
 export function animateLolliParticles(points: THREE.Points, dt: number): void {
   const pos = points.geometry.attributes.position as THREE.BufferAttribute;
   for (let i = 0; i < pos.count; i++) {
     let y = pos.getY(i);
-    y += dt * 0.5;
-    if (y > 3) y = 0;
+    y += dt * 0.6;
+    if (y > 4) y = 0;
     pos.setY(i, y);
   }
   pos.needsUpdate = true;
 }
 
-// ---------------------------------------------------------------------------
-// Dispose cached geometries
-// ---------------------------------------------------------------------------
+// No geometry cache needed — we use BufferGeometry per node now
+export function createDepartmentParticles(_node: GovernanceNode): THREE.Points {
+  // Department particles are now integrated into the main node cluster
+  // Return empty points to maintain API compatibility
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({ visible: false }));
+}
+
 export function disposeNodeGeometries(): void {
-  for (const geo of geometryCache.values()) {
-    geo.dispose();
-  }
-  geometryCache.clear();
+  // No shared geometry cache to dispose in particle mode
 }

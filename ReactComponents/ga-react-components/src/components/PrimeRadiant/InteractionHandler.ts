@@ -86,15 +86,25 @@ export class InteractionHandler {
     }
   };
 
-  // ─── Raycasting ───
+  // ─── Raycasting — checks invisible hit spheres inside node Groups ───
   private raycast(): THREE.Object3D | null {
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const meshes: THREE.Object3D[] = [];
+    const hitTargets: THREE.Object3D[] = [];
     for (const sn of this.sceneNodes.values()) {
-      meshes.push(sn.mesh);
+      // Node is a Group containing [Points, Mesh(hitSphere)]
+      // Collect all children for recursive intersection
+      hitTargets.push(sn.mesh);
     }
-    const intersects = this.raycaster.intersectObjects(meshes, false);
-    return intersects.length > 0 ? intersects[0].object : null;
+    const intersects = this.raycaster.intersectObjects(hitTargets, true);
+    if (intersects.length === 0) return null;
+
+    // Walk up to find the object with nodeId
+    let obj: THREE.Object3D | null = intersects[0].object;
+    while (obj) {
+      if (obj.userData.nodeId) return obj;
+      obj = obj.parent;
+    }
+    return null;
   }
 
   // ─── Hover check (call each frame) ───
@@ -132,10 +142,10 @@ export class InteractionHandler {
     // Dim all non-connected nodes
     for (const sn of this.sceneNodes.values()) {
       if (sn.id === nodeId || connected.has(sn.id)) {
-        setNodeHighlight(sn.mesh as THREE.Mesh, true);
-        setNodeDimmed(sn.mesh as THREE.Mesh, false);
+        setNodeHighlight(sn.mesh, true);
+        setNodeDimmed(sn.mesh, false);
       } else {
-        setNodeDimmed(sn.mesh as THREE.Mesh, true);
+        setNodeDimmed(sn.mesh, true);
       }
     }
 
@@ -162,18 +172,18 @@ export class InteractionHandler {
 
   private highlightNode(nodeId: string): void {
     const sn = this.sceneNodes.get(nodeId);
-    if (sn) setNodeHighlight(sn.mesh as THREE.Mesh, true);
+    if (sn) setNodeHighlight(sn.mesh, true);
   }
 
   private unhighlightNode(nodeId: string): void {
     const sn = this.sceneNodes.get(nodeId);
-    if (sn) setNodeHighlight(sn.mesh as THREE.Mesh, false);
+    if (sn) setNodeHighlight(sn.mesh, false);
   }
 
   private restoreAllOpacity(): void {
     for (const sn of this.sceneNodes.values()) {
-      setNodeHighlight(sn.mesh as THREE.Mesh, false);
-      setNodeDimmed(sn.mesh as THREE.Mesh, false);
+      setNodeHighlight(sn.mesh, false);
+      setNodeDimmed(sn.mesh, false);
     }
     for (const se of this.sceneEdges.values()) {
       setEdgeDimmed(se.line, false);
