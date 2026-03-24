@@ -15,4 +15,5 @@ export type {
   SelectionState,
 } from './types';
 export { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
+export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, buildGraphIndex } from './DataLoader';

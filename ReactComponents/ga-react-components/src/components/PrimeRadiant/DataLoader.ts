@@ -2,6 +2,7 @@
 // Loads governance data and builds the graph structure for 3D rendering
 
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge } from './types';
+import { LIVE_GOVERNANCE_GRAPH } from './liveData';
 import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 
 // ---------------------------------------------------------------------------
@@ -48,10 +49,15 @@ export function buildGraphIndex(graph: GovernanceGraph): GraphIndex {
 }
 
 // ---------------------------------------------------------------------------
-// Load data — currently returns sample data, extensible for remote loading
+// Load data — uses live Demerzel state by default, falls back to sample data
 // ---------------------------------------------------------------------------
 export function loadGovernanceData(data?: GovernanceGraph): GovernanceGraph {
-  return data ?? SAMPLE_GOVERNANCE_GRAPH;
+  if (data) return data;
+  // Prefer live data generated from Demerzel state/ directory scan
+  if (LIVE_GOVERNANCE_GRAPH && LIVE_GOVERNANCE_GRAPH.nodes.length > 0) {
+    return LIVE_GOVERNANCE_GRAPH;
+  }
+  return SAMPLE_GOVERNANCE_GRAPH;
 }
 
 // ---------------------------------------------------------------------------
