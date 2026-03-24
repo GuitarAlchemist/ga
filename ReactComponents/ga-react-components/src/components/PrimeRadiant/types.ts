@@ -165,9 +165,9 @@ export const BACKGROUND_COLOR = 0x000010;
 export const FOG_COLOR = 0x000010;
 export const FOG_NEAR = 80;
 export const FOG_FAR = 300;
-export const BLOOM_STRENGTH = 1.8;
-export const BLOOM_RADIUS = 0.6;
-export const BLOOM_THRESHOLD = 0.08;
+export const BLOOM_STRENGTH = 0.7;
+export const BLOOM_RADIUS = 0.35;
+export const BLOOM_THRESHOLD = 0.4;
 
 // Spherical shell radii — hierarchy maps to depth within the sphere
 export const SPHERE_RADIUS_CORE = 6;        // constitution

@@ -7,72 +7,20 @@ import { getHealthStatus } from './DataLoader';
 import type { HealthMetrics } from './types';
 
 // ---------------------------------------------------------------------------
-// Fresnel containment sphere — the translucent outer globe
-// Blue-teal with rim glow, slowly rotates, contains the entire visualization
+// Containment grid — wireframe latitude/longitude rings (Foundation TV style)
+// Thin teal lines forming a spherical cage, not a solid surface
 // ---------------------------------------------------------------------------
 export function createContainmentSphere(): THREE.Mesh {
-  const geometry = new THREE.SphereGeometry(CONTAINMENT_SPHERE_RADIUS, 128, 128);
+  // Use a low-segment sphere with wireframe — gives clean lat/lon lines
+  const geometry = new THREE.SphereGeometry(CONTAINMENT_SPHERE_RADIUS, 32, 16);
 
-  const material = new THREE.ShaderMaterial({
+  const material = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#006666'),
+    wireframe: true,
     transparent: true,
-    side: THREE.DoubleSide,
+    opacity: 0.08,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#008B8B') },
-      uRimColor: { value: new THREE.Color('#00CED1') },
-      uFresnelPower: { value: 3.0 },
-      uOpacity: { value: 0.12 },
-      uPulse: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPosition.xyz);
-        vUv = uv;
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      uniform vec3 uColor;
-      uniform vec3 uRimColor;
-      uniform float uFresnelPower;
-      uniform float uOpacity;
-      uniform float uPulse;
-
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-
-      void main() {
-        float fresnel = 1.0 - dot(vNormal, vViewDir);
-        fresnel = pow(fresnel, uFresnelPower);
-
-        // Subtle grid pattern for sci-fi feel
-        float gridLat = abs(sin(vUv.y * 60.0));
-        float gridLon = abs(sin(vUv.x * 120.0));
-        float grid = smoothstep(0.95, 1.0, max(gridLat, gridLon)) * 0.15;
-
-        // Traveling wave
-        float wave = sin(vUv.y * 20.0 - uTime * 0.5) * 0.5 + 0.5;
-        wave *= 0.05;
-
-        vec3 color = mix(uColor, uRimColor, fresnel);
-        float alpha = fresnel * uOpacity + grid + wave;
-
-        // Breathing pulse
-        alpha *= 1.0 + uPulse * 0.3;
-
-        gl_FragColor = vec4(color, alpha);
-      }
-    `,
+    // Normal blending — no additive, so bloom doesn't blow it out
   });
 
   const mesh = new THREE.Mesh(geometry, material);
@@ -82,22 +30,16 @@ export function createContainmentSphere(): THREE.Mesh {
 }
 
 // ---------------------------------------------------------------------------
-// Animate containment sphere (slow rotation + breathing)
+// Animate containment sphere (slow rotation + subtle breathing)
 // ---------------------------------------------------------------------------
 export function animateContainmentSphere(mesh: THREE.Mesh, time: number): void {
-  mesh.rotation.y += 0.001;
-  mesh.rotation.x += 0.0003;
+  mesh.rotation.y += 0.0008;
+  mesh.rotation.x += 0.0002;
 
-  const mat = mesh.material as THREE.ShaderMaterial;
-  mat.uniforms.uTime.value = time;
-
-  // Breathing pulse
+  // Subtle opacity breathing
+  const mat = mesh.material as THREE.MeshBasicMaterial;
   const pulse = Math.sin(time * 0.3) * 0.5 + 0.5;
-  mat.uniforms.uPulse.value = pulse;
-
-  // Subtle scale oscillation
-  const scale = 1.0 + Math.sin(time * 0.2) * 0.005;
-  mesh.scale.setScalar(scale);
+  mat.opacity = 0.06 + pulse * 0.04;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,10 +53,10 @@ export function createHealthAura(health: HealthMetrics): THREE.Mesh {
   const material = new THREE.MeshBasicMaterial({
     color,
     transparent: true,
-    opacity: 0.02,
+    opacity: 0.012,
     side: THREE.BackSide,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    // Normal blending — additive was causing bloom white-out
   });
 
   const mesh = new THREE.Mesh(geometry, material);
@@ -138,7 +80,7 @@ export function animateHealthAura(
 
   const pulseSpeed = status === 'healthy' ? 0.4 : status === 'watch' ? 1.0 : 2.0;
   const pulse = Math.sin(time * pulseSpeed) * 0.5 + 0.5;
-  mat.opacity = 0.015 + pulse * 0.025;
+  mat.opacity = 0.008 + pulse * 0.012;
 }
 
 // ---------------------------------------------------------------------------
