@@ -53,6 +53,7 @@ import {
 } from './HealthOverlay';
 import { InteractionHandler } from './InteractionHandler';
 import { EquationField } from './EquationField';
+import { euclideanToHyperbolic, moebiusTranslation } from './HyperbolicProjection';
 
 // ---------------------------------------------------------------------------
 // Spherical layout — hierarchy maps to depth within the sphere
@@ -131,6 +132,12 @@ export class RadiantEngine {
   // Interaction
   private interactionHandler!: InteractionHandler;
 
+  // Hyperbolic (Poincaré ball) state
+  private hyperbolicPositions = new Map<string, THREE.Vector3>(); // default positions
+  private moebiusFocusId: string | null = null;
+  private moebiusBlend = 0;         // 0 = resting, 1 = fully focused
+  private moebiusTarget = 0;        // blend target (animate toward this)
+
   // State
   private animationId: number | null = null;
   private canvas: HTMLCanvasElement;
@@ -171,7 +178,17 @@ export class RadiantEngine {
         this.sceneNodes,
         this.sceneEdges,
         this.graphIndex,
-        this.onNodeSelect,
+        (node) => {
+          this.onNodeSelect?.(node);
+          // Trigger Möbius focus on selection
+          if (node) {
+            this.moebiusFocusId = node.id;
+            this.moebiusTarget = 1;
+          } else {
+            this.moebiusFocusId = null;
+            this.moebiusTarget = 0;
+          }
+        },
       );
 
       this.animate();
@@ -244,7 +261,7 @@ export class RadiantEngine {
 
   // ─── Controls ───
   private initControls(): void {
-    this.controls = new OrbitControls(this.camera, this.container);
+    this.controls = new OrbitControls(this.camera, this.canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
     this.controls.minDistance = 8;
@@ -287,16 +304,20 @@ export class RadiantEngine {
       typeIndices.set(n.type, 0);
     }
 
-    // Create nodes
+    // Create nodes — positions projected into Poincaré ball
     for (const nodeData of this.graph.nodes) {
       const idx = typeIndices.get(nodeData.type) ?? 0;
       const total = typeCounts.get(nodeData.type) ?? 1;
       typeIndices.set(nodeData.type, idx + 1);
 
       const mesh = createNodeMesh(nodeData);
-      const position = seedSphericalPosition(nodeData, idx, total);
+      const euclidean = seedSphericalPosition(nodeData, idx, total);
+      const position = euclideanToHyperbolic(euclidean);
       mesh.position.copy(position);
       this.scene.add(mesh);
+
+      // Store hyperbolic rest position for Möbius transforms
+      this.hyperbolicPositions.set(nodeData.id, position.clone());
 
       // Text label
       const label = createTextSprite(nodeData.name, nodeData.color);
@@ -370,6 +391,45 @@ export class RadiantEngine {
       }
     }
 
+    // ─── Möbius focus animation (Poincaré ball) ───
+    const blendSpeed = 2.5; // seconds to full transition
+    if (Math.abs(this.moebiusBlend - this.moebiusTarget) > 0.001) {
+      this.moebiusBlend += (this.moebiusTarget - this.moebiusBlend) * Math.min(dt * blendSpeed, 1);
+
+      const focusPos = this.moebiusFocusId
+        ? this.hyperbolicPositions.get(this.moebiusFocusId) ?? null
+        : null;
+
+      for (const [nodeId, sn] of this.sceneNodes) {
+        const restPos = this.hyperbolicPositions.get(nodeId);
+        if (!restPos) continue;
+
+        let targetPos: THREE.Vector3;
+        if (focusPos && this.moebiusBlend > 0.001) {
+          const transformed = moebiusTranslation(restPos, focusPos);
+          targetPos = new THREE.Vector3().lerpVectors(restPos, transformed, this.moebiusBlend);
+        } else {
+          targetPos = restPos;
+        }
+
+        // Smoothly move mesh and update position reference
+        sn.mesh.position.lerp(targetPos, 0.12);
+        sn.position.copy(sn.mesh.position);
+
+        // Update label
+        const label = this.textSprites.get(nodeId);
+        if (label) {
+          label.position.copy(sn.mesh.position);
+          label.position.y += 2.0;
+        }
+      }
+
+      // Update edge lines
+      for (const se of this.sceneEdges.values()) {
+        updateEdgeLine(se.line, se.sourceNode.position, se.targetNode.position, se.data.type);
+      }
+    }
+
     // Hover check
     const hoveredId = this.interactionHandler.checkHover();
     this.onHoverChange?.(hoveredId);
@@ -380,7 +440,7 @@ export class RadiantEngine {
     }
 
     // Animate text labels (fade with distance)
-    for (const [nodeId, sprite] of this.textSprites) {
+    for (const [, sprite] of this.textSprites) {
       animateTextSprite(sprite, this.camera.position, 30, 55);
     }
 

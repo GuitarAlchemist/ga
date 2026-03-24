@@ -106,11 +106,20 @@ export function createTextSprite(text: string, color: string): THREE.Sprite {
   const ctx = canvas.getContext('2d')!;
 
   const fontSize = 48;
-  canvas.width = 512;
-  canvas.height = 64;
+  const padding = 32;
+  const font = `${fontSize}px "JetBrains Mono", "Fira Code", monospace`;
 
+  // Measure text width to auto-size canvas
+  ctx.font = font;
+  const measured = ctx.measureText(text);
+  const textWidth = Math.ceil(measured.width);
+
+  canvas.width = textWidth + padding * 2;
+  canvas.height = fontSize + padding;
+
+  // Re-set after resize (canvas resize clears state)
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = `${fontSize}px "JetBrains Mono", "Fira Code", monospace`;
+  ctx.font = font;
   ctx.fillStyle = color;
   ctx.shadowColor = color;
   ctx.shadowBlur = 8;
@@ -131,8 +140,10 @@ export function createTextSprite(text: string, color: string): THREE.Sprite {
   });
 
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(5, 0.6, 1);
-  sprite.userData = { isTextLabel: true, targetOpacity: 0 };
+  const aspect = canvas.width / canvas.height;
+  const height = 1.2;
+  sprite.scale.set(height * aspect, height, 1);
+  sprite.userData = { isTextLabel: true, targetOpacity: 0, baseScaleX: height * aspect, baseScaleY: height };
   return sprite;
 }
 
@@ -187,10 +198,13 @@ export function animateTextSprite(
   const dist = sprite.getWorldPosition(new THREE.Vector3()).distanceTo(cameraPosition);
   const mat = sprite.material as THREE.SpriteMaterial;
 
+  const baseX = sprite.userData.baseScaleX ?? 5;
+  const baseY = sprite.userData.baseScaleY ?? 0.6;
+
   if (dist < fadeInDist) {
     mat.opacity = Math.min(mat.opacity + 0.05, 0.9);
     const scaleT = Math.max(0.3, dist / fadeInDist);
-    sprite.scale.set(5 * scaleT, 0.6 * scaleT, 1);
+    sprite.scale.set(baseX * scaleT, baseY * scaleT, 1);
   } else if (dist > fadeOutDist) {
     mat.opacity = Math.max(mat.opacity - 0.05, 0);
   } else {
