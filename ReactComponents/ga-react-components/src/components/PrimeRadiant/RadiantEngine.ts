@@ -18,7 +18,6 @@ import type {
   GovernanceNodeType,
 } from './types';
 import {
-  BACKGROUND_COLOR,
   FOG_COLOR,
   FOG_NEAR,
   FOG_FAR,
@@ -203,11 +202,10 @@ export class RadiantEngine {
   // ─── Scene ───
   private initScene(): void {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(BACKGROUND_COLOR);
     this.scene.fog = new THREE.Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
 
-    // Generate procedural environment map for PBR reflections
-    this.generateEnvironmentMap();
+    // Generate nebula skybox — serves as both background AND PBR reflection source
+    this.generateNebulaSkybox();
 
     // Hemisphere light for subtle ambient fill (sky blue + ground dark)
     const hemiLight = new THREE.HemisphereLight(0x1a2040, 0x080810, 0.6);
@@ -247,8 +245,8 @@ export class RadiantEngine {
     accentLight.position.set(15, -10, -20);
     this.scene.add(accentLight);
 
-    // Starfield
-    this.starfield = createStarfield();
+    // Starfield (additional foreground stars for parallax depth)
+    this.starfield = createStarfield(800);
     this.scene.add(this.starfield);
 
     // Health aura
@@ -256,50 +254,216 @@ export class RadiantEngine {
     this.scene.add(this.healthAura);
   }
 
-  // ─── Procedural environment map for PBR reflections ───
-  private generateEnvironmentMap(): void {
+  // ─── Procedural nebula skybox — background + PBR environment ───
+  private generateNebulaSkybox(): void {
     const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
     pmremGenerator.compileEquirectangularShader();
 
-    // Create a simple gradient environment scene
+    // Build a full nebula environment scene with procedural shader
     const envScene = new THREE.Scene();
-    const envGeo = new THREE.SphereGeometry(100, 32, 32);
+    const envGeo = new THREE.SphereGeometry(200, 64, 64);
     const envMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
+      depthWrite: false,
       uniforms: {
-        topColor: { value: new THREE.Color(0x0a1628) },
-        bottomColor: { value: new THREE.Color(0x040810) },
-        midColor: { value: new THREE.Color(0x162040) },
+        // Base space colors — deep dark with subtle blue shift
+        uDeepSpace:    { value: new THREE.Color(0x020408) },
+        uMidSpace:     { value: new THREE.Color(0x0a1020) },
+        // Nebula cloud colors — Asimov/Foundation aesthetic
+        uNebulaPurple: { value: new THREE.Color(0x2a1040) },
+        uNebulaBlue:   { value: new THREE.Color(0x0c1835) },
+        uNebulaTeal:   { value: new THREE.Color(0x082828) },
+        // Intensity controls — keep dim so graph stays focal
+        uNebulaIntensity: { value: 0.35 },
+        uStarDensity:     { value: 0.997 },
+        uStarBrightness:  { value: 0.8 },
       },
-      vertexShader: `
-        varying vec3 vWorldPosition;
+      vertexShader: /* glsl */ `
+        varying vec3 vDirection;
         void main() {
-          vec4 worldPos = modelMatrix * vec4(position, 1.0);
-          vWorldPosition = worldPos.xyz;
+          vDirection = normalize(position);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-      fragmentShader: `
-        uniform vec3 topColor;
-        uniform vec3 bottomColor;
-        uniform vec3 midColor;
-        varying vec3 vWorldPosition;
+      fragmentShader: /* glsl */ `
+        uniform vec3 uDeepSpace;
+        uniform vec3 uMidSpace;
+        uniform vec3 uNebulaPurple;
+        uniform vec3 uNebulaBlue;
+        uniform vec3 uNebulaTeal;
+        uniform float uNebulaIntensity;
+        uniform float uStarDensity;
+        uniform float uStarBrightness;
+
+        varying vec3 vDirection;
+
+        // ── Noise functions for nebula generation ──
+        // Hash for pseudo-random (fast, GPU-friendly)
+        float hash(vec3 p) {
+          p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+          p += dot(p, p.yxz + 19.19);
+          return fract((p.x + p.y) * p.z);
+        }
+
+        float hash2(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+
+        // 3D value noise
+        float noise3d(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f); // smoothstep
+
+          return mix(
+            mix(
+              mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
+              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x),
+              f.y
+            ),
+            mix(
+              mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x),
+              f.y
+            ),
+            f.z
+          );
+        }
+
+        // Fractal Brownian Motion — layered noise for cloud-like structure
+        float fbm(vec3 p, int octaves) {
+          float value = 0.0;
+          float amplitude = 0.5;
+          float frequency = 1.0;
+          for (int i = 0; i < 6; i++) {
+            if (i >= octaves) break;
+            value += amplitude * noise3d(p * frequency);
+            frequency *= 2.0;
+            amplitude *= 0.5;
+          }
+          return value;
+        }
+
+        // ── Star layer ──
+        float stars(vec3 dir, float density, float size) {
+          // Project direction onto a grid for star placement
+          vec3 p = dir * 300.0;
+          vec3 cell = floor(p);
+          vec3 local = fract(p) - 0.5;
+
+          float star = 0.0;
+          // Check neighboring cells for star centers
+          for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+              for (int z = -1; z <= 1; z++) {
+                vec3 offset = vec3(float(x), float(y), float(z));
+                vec3 neighbor = cell + offset;
+                float h = hash(neighbor);
+                if (h < (1.0 - density)) continue;
+
+                // Star position within cell
+                vec3 starPos = offset + vec3(
+                  hash(neighbor + 100.0) - 0.5,
+                  hash(neighbor + 200.0) - 0.5,
+                  hash(neighbor + 300.0) - 0.5
+                );
+
+                float d = length(local - starPos);
+                float brightness = smoothstep(size, 0.0, d);
+                // Color variation — blue-white to warm-white
+                float temp = hash(neighbor + 400.0);
+                star += brightness * (0.5 + 0.5 * temp);
+              }
+            }
+          }
+          return star;
+        }
+
         void main() {
-          float h = normalize(vWorldPosition).y;
-          vec3 color = mix(bottomColor, midColor, smoothstep(-1.0, 0.0, h));
-          color = mix(color, topColor, smoothstep(0.0, 1.0, h));
-          // Add subtle star-like speckles for reflections
-          float sparkle = fract(sin(dot(vWorldPosition.xz * 0.1, vec2(12.9898, 78.233))) * 43758.5453);
-          color += vec3(0.15, 0.18, 0.25) * step(0.995, sparkle);
+          vec3 dir = normalize(vDirection);
+
+          // ── Base space gradient ──
+          float horizon = dir.y;
+          vec3 base = mix(uMidSpace, uDeepSpace, smoothstep(-0.3, 0.6, horizon));
+
+          // ── Nebula clouds — multiple FBM layers at different scales ──
+          // Large-scale nebula structure
+          float n1 = fbm(dir * 2.5 + vec3(42.0, 17.0, 88.0), 5);
+          // Medium detail
+          float n2 = fbm(dir * 5.0 + vec3(13.0, 77.0, 31.0), 4);
+          // Fine wispy detail
+          float n3 = fbm(dir * 12.0 + vec3(91.0, 23.0, 67.0), 3);
+
+          // Shape the nebula into cloud-like regions (not uniform)
+          float nebulaMask1 = smoothstep(0.35, 0.7, n1);
+          float nebulaMask2 = smoothstep(0.4, 0.75, n2);
+          float wispMask = smoothstep(0.45, 0.8, n3) * 0.3;
+
+          // Directional bias — nebula concentrated in certain regions
+          float regionBias1 = smoothstep(-0.2, 0.5, dot(dir, normalize(vec3(0.6, 0.3, -0.5))));
+          float regionBias2 = smoothstep(-0.1, 0.6, dot(dir, normalize(vec3(-0.4, -0.2, 0.7))));
+          float regionBias3 = smoothstep(0.0, 0.7, dot(dir, normalize(vec3(0.1, 0.8, 0.3))));
+
+          // Compose colored nebula layers
+          vec3 nebula = vec3(0.0);
+          nebula += uNebulaPurple * nebulaMask1 * regionBias1 * 1.2;
+          nebula += uNebulaBlue * nebulaMask2 * regionBias2 * 1.0;
+          nebula += uNebulaTeal * wispMask * regionBias3 * 0.8;
+
+          // Add wispy edge glow where nebula density changes sharply
+          float edgeGlow = abs(n1 - 0.5) * 2.0;
+          edgeGlow = pow(1.0 - edgeGlow, 4.0) * 0.15;
+          nebula += vec3(0.15, 0.1, 0.25) * edgeGlow * nebulaMask1;
+
+          // ── Combine base + nebula ──
+          vec3 color = base + nebula * uNebulaIntensity;
+
+          // ── Stars — two layers for depth ──
+          // Bright sparse stars
+          float brightStars = stars(dir, uStarDensity, 0.08);
+          // Dim dense background stars
+          float dimStars = stars(dir + vec3(500.0), uStarDensity * 0.998, 0.04);
+
+          // Star color — slight blue-white tint with warm variations
+          vec3 starColor1 = mix(
+            vec3(0.85, 0.9, 1.0),
+            vec3(1.0, 0.95, 0.8),
+            hash2(dir.xz * 50.0)
+          );
+          vec3 starColor2 = vec3(0.7, 0.75, 0.9);
+
+          color += starColor1 * brightStars * uStarBrightness;
+          color += starColor2 * dimStars * uStarBrightness * 0.3;
+
+          // Star twinkle in nebula regions (stars behind nebula are dimmed)
+          float nebulaDensity = (nebulaMask1 + nebulaMask2) * 0.5;
+          color = mix(color, base + nebula * uNebulaIntensity, nebulaDensity * 0.4);
+
+          // ── Final adjustments ──
+          // Subtle vignette toward edges for depth
+          float vignette = 1.0 - 0.15 * pow(abs(horizon), 2.0);
+          color *= vignette;
+
+          // Clamp to prevent blowout
+          color = clamp(color, 0.0, 1.0);
+
           gl_FragColor = vec4(color, 1.0);
         }
       `,
     });
     envScene.add(new THREE.Mesh(envGeo, envMat));
 
-    const envCamera = new THREE.PerspectiveCamera(90, 1, 0.1, 200);
+    // Generate PMREM from the nebula scene — this creates both the
+    // environment map (for PBR reflections) and the background
     const renderTarget = pmremGenerator.fromScene(envScene, 0);
+
+    // Use as both background and environment (PBR reflection source)
+    this.scene.background = renderTarget.texture;
     this.scene.environment = renderTarget.texture;
+
+    // Slightly reduce background intensity so graph stays focal
+    // (environment intensity for reflections stays at full)
+    this.scene.backgroundIntensity = 0.8;
 
     envGeo.dispose();
     envMat.dispose();
