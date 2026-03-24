@@ -87,58 +87,167 @@ const EDGE_WIDTH: Record<string, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Create custom Three.js node object — particle cluster with glow
+// Fractal sprite texture — generates a nebula-like glow per node type
+// Uses iterative fractal noise on canvas for unique organic shapes
+// ---------------------------------------------------------------------------
+const fractalTextureCache = new Map<string, THREE.Texture>();
+
+function generateFractalTexture(baseColor: THREE.Color, complexity: number): THREE.Texture {
+  const key = `${baseColor.getHexString()}-${complexity}`;
+  if (fractalTextureCache.has(key)) return fractalTextureCache.get(key)!;
+
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  // Start with transparent black
+  ctx.clearRect(0, 0, size, size);
+
+  const cx = size / 2;
+  const cy = size / 2;
+
+  // Layer fractal circles — self-similar at multiple scales
+  const layers = 3 + Math.floor(complexity * 2);
+  for (let layer = 0; layer < layers; layer++) {
+    const scale = 1 - (layer / layers) * 0.7;
+    const branches = 3 + Math.floor(Math.random() * 4);
+    const alpha = (0.15 + layer * 0.05) * scale;
+
+    // Radial gradient base
+    const r = (size / 2) * scale;
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    gradient.addColorStop(0, `rgba(${Math.floor(baseColor.r * 255)}, ${Math.floor(baseColor.g * 255)}, ${Math.floor(baseColor.b * 255)}, ${alpha})`);
+    gradient.addColorStop(0.4, `rgba(${Math.floor(baseColor.r * 200)}, ${Math.floor(baseColor.g * 200)}, ${Math.floor(baseColor.b * 200)}, ${alpha * 0.5})`);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fractal tendrils — branches radiating from center
+    for (let b = 0; b < branches; b++) {
+      const angle = (b / branches) * Math.PI * 2 + layer * 0.5;
+      const length = r * (0.6 + Math.random() * 0.4);
+
+      ctx.strokeStyle = `rgba(${Math.floor(baseColor.r * 255)}, ${Math.floor(baseColor.g * 255)}, ${Math.floor(baseColor.b * 255)}, ${alpha * 0.8})`;
+      ctx.lineWidth = Math.max(1, 3 - layer);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+
+      // Fractal curve — recursive displacement
+      let px = cx, py = cy;
+      const steps = 8;
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps;
+        const jitter = (1 - t) * length * 0.15;
+        const nx = cx + Math.cos(angle + Math.sin(t * 5) * 0.3) * length * t + (Math.random() - 0.5) * jitter;
+        const ny = cy + Math.sin(angle + Math.cos(t * 5) * 0.3) * length * t + (Math.random() - 0.5) * jitter;
+        ctx.quadraticCurveTo(px + (nx - px) * 0.5, py + (ny - py) * 0.5 + jitter * 0.5, nx, ny);
+        px = nx;
+        py = ny;
+      }
+      ctx.stroke();
+
+      // Sub-branches (self-similar at smaller scale)
+      if (layer < 2) {
+        const subBranches = 2 + Math.floor(Math.random() * 2);
+        for (let sb = 0; sb < subBranches; sb++) {
+          const st = 0.4 + Math.random() * 0.4;
+          const sx = cx + Math.cos(angle) * length * st;
+          const sy = cy + Math.sin(angle) * length * st;
+          const subAngle = angle + (Math.random() - 0.5) * 1.2;
+          const subLen = length * 0.3 * (1 - st);
+
+          ctx.strokeStyle = `rgba(${Math.floor(baseColor.r * 255)}, ${Math.floor(baseColor.g * 255)}, ${Math.floor(baseColor.b * 255)}, ${alpha * 0.4})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx + Math.cos(subAngle) * subLen, sy + Math.sin(subAngle) * subLen);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  fractalTextureCache.set(key, texture);
+  return texture;
+}
+
+// ---------------------------------------------------------------------------
+// Create custom Three.js node — fractal sprite + core + particle dust
 // ---------------------------------------------------------------------------
 function createNodeObject(node: GraphNode): THREE.Object3D {
   const group = new THREE.Group();
-  const count = TYPE_PARTICLES[node.type] ?? 12;
   const radius = Math.pow(TYPE_SIZE[node.type] ?? 5, 0.5) * 0.8;
   const color = new THREE.Color(node.color);
   const isUnhealthy = node.health && node.health.lolliCount > 0;
+  const nodeColor = isUnhealthy ? new THREE.Color('#FF4444') : color;
 
-  // Core sphere — small, bright, solid
-  const coreGeo = new THREE.SphereGeometry(radius * 0.3, 16, 16);
-  const coreMat = new THREE.MeshBasicMaterial({
-    color: isUnhealthy ? new THREE.Color('#FF4444') : color,
+  // Complexity scales with hierarchy importance
+  const complexity = {
+    constitution: 4, department: 3, policy: 2, persona: 2,
+    pipeline: 2, schema: 1, test: 1, ixql: 1,
+  }[node.type] ?? 1;
+
+  // 1. Fractal nebula sprite — the main visual
+  const fractalTex = generateFractalTexture(nodeColor, complexity);
+  const spriteMat = new THREE.SpriteMaterial({
+    map: fractalTex,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
   });
-  const core = new THREE.Mesh(coreGeo, coreMat);
-  group.add(core);
+  const sprite = new THREE.Sprite(spriteMat);
+  const spriteScale = radius * 2.5;
+  sprite.scale.set(spriteScale, spriteScale, 1);
+  group.add(sprite);
 
-  // Particle halo — additive glow around the core
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
+  // 2. Core point — bright center
+  const coreGeo = new THREE.SphereGeometry(radius * 0.2, 12, 12);
+  const coreMat = new THREE.MeshBasicMaterial({
+    color: nodeColor,
+    transparent: true,
+    opacity: 1.0,
+  });
+  group.add(new THREE.Mesh(coreGeo, coreMat));
+
+  // 3. Orbiting particle dust (fewer, larger particles for clarity)
+  const dustCount = Math.floor(complexity * 6);
+  const positions = new Float32Array(dustCount * 3);
+  const dustColors = new Float32Array(dustCount * 3);
+  for (let i = 0; i < dustCount; i++) {
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = radius * (0.4 + Math.random() * 0.6);
+    const r = radius * (0.5 + Math.random() * 1.0);
     positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
 
-    const v = 0.6 + Math.random() * 0.4;
-    const c = isUnhealthy ? new THREE.Color('#FF4444') : color.clone();
-    colors[i * 3] = c.r * v;
-    colors[i * 3 + 1] = c.g * v;
-    colors[i * 3 + 2] = c.b * v;
+    const v = 0.7 + Math.random() * 0.3;
+    dustColors[i * 3] = nodeColor.r * v;
+    dustColors[i * 3 + 1] = nodeColor.g * v;
+    dustColors[i * 3 + 2] = nodeColor.b * v;
   }
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  const mat = new THREE.PointsMaterial({
-    size: radius * 0.15,
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  dustGeo.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+  const dustMat = new THREE.PointsMaterial({
+    size: radius * 0.12,
     vertexColors: true,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.6,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
   });
-
-  group.add(new THREE.Points(geo, mat));
+  group.add(new THREE.Points(dustGeo, dustMat));
 
   return group;
 }
