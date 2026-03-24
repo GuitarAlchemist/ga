@@ -1,23 +1,117 @@
 // src/components/PrimeRadiant/HealthOverlay.ts
-// Resilience score visualization — pulsing aura and health indicators
+// Foundation TV aesthetic — Fresnel containment sphere + golden health aura
 
 import * as THREE from 'three';
-import { HEALTH_COLORS } from './types';
+import { HEALTH_COLORS, CONTAINMENT_SPHERE_RADIUS } from './types';
 import { getHealthStatus } from './DataLoader';
 import type { HealthMetrics } from './types';
 
 // ---------------------------------------------------------------------------
-// Global health aura — a large transparent sphere surrounding the scene
+// Fresnel containment sphere — the translucent outer globe
+// Blue-teal with rim glow, slowly rotates, contains the entire visualization
+// ---------------------------------------------------------------------------
+export function createContainmentSphere(): THREE.Mesh {
+  const geometry = new THREE.SphereGeometry(CONTAINMENT_SPHERE_RADIUS, 128, 128);
+
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#008B8B') },
+      uRimColor: { value: new THREE.Color('#00CED1') },
+      uFresnelPower: { value: 3.0 },
+      uOpacity: { value: 0.12 },
+      uPulse: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewDir = normalize(-mvPosition.xyz);
+        vUv = uv;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform vec3 uColor;
+      uniform vec3 uRimColor;
+      uniform float uFresnelPower;
+      uniform float uOpacity;
+      uniform float uPulse;
+
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+
+      void main() {
+        float fresnel = 1.0 - dot(vNormal, vViewDir);
+        fresnel = pow(fresnel, uFresnelPower);
+
+        // Subtle grid pattern for sci-fi feel
+        float gridLat = abs(sin(vUv.y * 60.0));
+        float gridLon = abs(sin(vUv.x * 120.0));
+        float grid = smoothstep(0.95, 1.0, max(gridLat, gridLon)) * 0.15;
+
+        // Traveling wave
+        float wave = sin(vUv.y * 20.0 - uTime * 0.5) * 0.5 + 0.5;
+        wave *= 0.05;
+
+        vec3 color = mix(uColor, uRimColor, fresnel);
+        float alpha = fresnel * uOpacity + grid + wave;
+
+        // Breathing pulse
+        alpha *= 1.0 + uPulse * 0.3;
+
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'containment-sphere';
+  mesh.userData = { isContainmentSphere: true };
+  return mesh;
+}
+
+// ---------------------------------------------------------------------------
+// Animate containment sphere (slow rotation + breathing)
+// ---------------------------------------------------------------------------
+export function animateContainmentSphere(mesh: THREE.Mesh, time: number): void {
+  mesh.rotation.y += 0.001;
+  mesh.rotation.x += 0.0003;
+
+  const mat = mesh.material as THREE.ShaderMaterial;
+  mat.uniforms.uTime.value = time;
+
+  // Breathing pulse
+  const pulse = Math.sin(time * 0.3) * 0.5 + 0.5;
+  mat.uniforms.uPulse.value = pulse;
+
+  // Subtle scale oscillation
+  const scale = 1.0 + Math.sin(time * 0.2) * 0.005;
+  mesh.scale.setScalar(scale);
+}
+
+// ---------------------------------------------------------------------------
+// Health aura — inner glow that reflects governance health
 // ---------------------------------------------------------------------------
 export function createHealthAura(health: HealthMetrics): THREE.Mesh {
-  const geometry = new THREE.SphereGeometry(60, 64, 64);
+  const geometry = new THREE.SphereGeometry(CONTAINMENT_SPHERE_RADIUS * 0.95, 64, 64);
   const status = getHealthStatus(health.resilienceScore);
   const color = new THREE.Color(HEALTH_COLORS[status]);
 
   const material = new THREE.MeshBasicMaterial({
     color,
     transparent: true,
-    opacity: 0.03,
+    opacity: 0.02,
     side: THREE.BackSide,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -30,7 +124,7 @@ export function createHealthAura(health: HealthMetrics): THREE.Mesh {
 }
 
 // ---------------------------------------------------------------------------
-// Animate health aura (breathing pulse)
+// Animate health aura
 // ---------------------------------------------------------------------------
 export function animateHealthAura(
   aura: THREE.Mesh,
@@ -42,53 +136,43 @@ export function animateHealthAura(
   const mat = aura.material as THREE.MeshBasicMaterial;
   mat.color.copy(color);
 
-  // Pulse speed varies by health: healthy=slow, freeze=fast
-  const pulseSpeed = status === 'healthy' ? 0.5 : status === 'watch' ? 1.0 : 2.0;
+  const pulseSpeed = status === 'healthy' ? 0.4 : status === 'watch' ? 1.0 : 2.0;
   const pulse = Math.sin(time * pulseSpeed) * 0.5 + 0.5;
-  mat.opacity = 0.02 + pulse * 0.03;
-
-  // Slight scale breathing
-  const scale = 1.0 + pulse * 0.02;
-  aura.scale.setScalar(scale);
+  mat.opacity = 0.015 + pulse * 0.025;
 }
 
 // ---------------------------------------------------------------------------
-// Starfield background particles
+// Starfield — sparse points for deep space background
 // ---------------------------------------------------------------------------
-export function createStarfield(count: number = 2000): THREE.Points {
+export function createStarfield(count: number = 1500): THREE.Points {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
-    // Distribute in a large sphere
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = 80 + Math.random() * 120;
+    const r = 100 + Math.random() * 150;
 
     positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
 
-    // Subtle blue-white tints
-    const brightness = 0.3 + Math.random() * 0.7;
-    colors[i * 3] = brightness * (0.8 + Math.random() * 0.2);
-    colors[i * 3 + 1] = brightness * (0.8 + Math.random() * 0.2);
+    // Dim blue-white stars
+    const brightness = 0.2 + Math.random() * 0.4;
+    colors[i * 3] = brightness * 0.9;
+    colors[i * 3 + 1] = brightness * 0.95;
     colors[i * 3 + 2] = brightness;
-
-    sizes[i] = 0.05 + Math.random() * 0.15;
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
   const material = new THREE.PointsMaterial({
-    size: 0.1,
+    size: 0.08,
     vertexColors: true,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.5,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
@@ -100,17 +184,12 @@ export function createStarfield(count: number = 2000): THREE.Points {
   return points;
 }
 
-// ---------------------------------------------------------------------------
-// Animate starfield (slow rotation)
-// ---------------------------------------------------------------------------
 export function animateStarfield(starfield: THREE.Points, dt: number): void {
-  starfield.rotation.y += dt * 0.005;
-  starfield.rotation.x += dt * 0.002;
+  starfield.rotation.y += dt * 0.003;
+  starfield.rotation.x += dt * 0.001;
 }
 
-// ---------------------------------------------------------------------------
-// Markov prediction cloud — probability distribution visualization
-// ---------------------------------------------------------------------------
+// Keep API compatible
 export function createMarkovCloud(
   position: THREE.Vector3,
   probabilities: number[],
@@ -120,10 +199,10 @@ export function createMarkovCloud(
   group.name = 'markov-cloud';
 
   const stateColors = [
-    new THREE.Color('#4CB050'), // healthy
-    new THREE.Color('#E5C07B'), // watch
-    new THREE.Color('#E06C75'), // freeze
-    new THREE.Color('#8b949e'), // unknown
+    new THREE.Color('#FFD700'),
+    new THREE.Color('#FFA500'),
+    new THREE.Color('#FF4444'),
+    new THREE.Color('#008B8B'),
   ];
 
   probabilities.forEach((prob, idx) => {

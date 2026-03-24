@@ -6,7 +6,7 @@
   width: 100%;
   height: 100%;
   min-height: 600px;
-  background: #0d1117;
+  background: #000010;
   overflow: hidden;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   color: #e6edf3;
@@ -52,8 +52,8 @@
 }
 
 .prime-radiant__search:focus-within {
-  border-color: #58A6FF;
-  box-shadow: 0 0 8px rgba(88, 166, 255, 0.3);
+  border-color: #FFD700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
 .prime-radiant__search input::placeholder {
@@ -90,18 +90,18 @@
 }
 
 .prime-radiant__health-dot--healthy {
-  background: #4CB050;
-  box-shadow: 0 0 8px #4CB050;
+  background: #FFD700;
+  box-shadow: 0 0 8px #FFD700;
 }
 
 .prime-radiant__health-dot--watch {
-  background: #E5C07B;
-  box-shadow: 0 0 8px #E5C07B;
+  background: #FFA500;
+  box-shadow: 0 0 8px #FFA500;
 }
 
 .prime-radiant__health-dot--freeze {
-  background: #E06C75;
-  box-shadow: 0 0 8px #E06C75;
+  background: #FF4444;
+  box-shadow: 0 0 8px #FF4444;
 }
 
 @keyframes pulse {
@@ -182,9 +182,9 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #58A6FF;
+  background: #FFD700;
   cursor: pointer;
-  box-shadow: 0 0 6px rgba(88, 166, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
 }
 
 /* ─── Detail panel (right side) ─── */

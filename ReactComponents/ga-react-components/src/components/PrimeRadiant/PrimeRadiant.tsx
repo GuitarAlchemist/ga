@@ -42,7 +42,7 @@ class PrimeRadiantErrorBoundary extends Component<
           width: '100%',
           height: '100%',
           minHeight: 600,
-          background: '#0d1117',
+          background: '#000010',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -234,7 +234,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0d1117',
+          background: '#000010',
           zIndex: 50,
           gap: 12,
         }}>
@@ -256,7 +256,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0d1117',
+          background: '#000010',
           zIndex: 50,
           gap: 12,
         }}>
@@ -361,11 +361,11 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
           <>
             <span style={{ color: '#30363d' }}>|</span>
             <span>
-              ERGOL: <span style={{ color: '#4CB050' }}>{graphData.globalHealth.ergolCount}</span>
+              ERGOL: <span style={{ color: '#FFD700' }}>{graphData.globalHealth.ergolCount}</span>
             </span>
             <span style={{ color: '#30363d' }}>|</span>
             <span>
-              LOLLI: <span style={{ color: graphData.globalHealth.lolliCount > 0 ? '#E06C75' : '#8b949e' }}>
+              LOLLI: <span style={{ color: graphData.globalHealth.lolliCount > 0 ? '#FF4444' : '#8b949e' }}>
                 {graphData.globalHealth.lolliCount}
               </span>
             </span>
