@@ -6,6 +6,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 import type {
   GovernanceGraph,
@@ -177,10 +180,10 @@ export class RadiantEngine {
         canvas: this.canvas,
         antialias: true,
         alpha: false,
+        powerPreference: 'high-performance',
       });
     } catch (err) {
       console.error('[RadiantEngine] WebGLRenderer creation failed:', err);
-      // Fallback: try without antialias
       this.renderer = new THREE.WebGLRenderer({
         canvas: this.canvas,
         antialias: false,
@@ -191,7 +194,9 @@ export class RadiantEngine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     console.log('[RadiantEngine] Renderer initialized:', this.renderer.getSize(new THREE.Vector2()));
   }
 
@@ -201,21 +206,46 @@ export class RadiantEngine {
     this.scene.background = new THREE.Color(BACKGROUND_COLOR);
     this.scene.fog = new THREE.Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
 
-    // Lights
-    const ambient = new THREE.AmbientLight(0x404060, 0.5);
+    // Generate procedural environment map for PBR reflections
+    this.generateEnvironmentMap();
+
+    // Hemisphere light for subtle ambient fill (sky blue + ground dark)
+    const hemiLight = new THREE.HemisphereLight(0x1a2040, 0x080810, 0.6);
+    this.scene.add(hemiLight);
+
+    // Ambient for baseline illumination
+    const ambient = new THREE.AmbientLight(0x404060, 0.3);
     this.scene.add(ambient);
 
-    const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-    directional.position.set(20, 30, 20);
-    this.scene.add(directional);
+    // Key light — directional with shadows
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    keyLight.position.set(20, 30, 20);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 100;
+    keyLight.shadow.camera.left = -40;
+    keyLight.shadow.camera.right = 40;
+    keyLight.shadow.camera.top = 40;
+    keyLight.shadow.camera.bottom = -40;
+    keyLight.shadow.bias = -0.001;
+    this.scene.add(keyLight);
 
-    const point1 = new THREE.PointLight(0x58A6FF, 0.5, 100);
-    point1.position.set(-20, 15, -20);
-    this.scene.add(point1);
+    // Fill light — cool blue from opposite side
+    const fillLight = new THREE.PointLight(0x58A6FF, 0.8, 120);
+    fillLight.position.set(-25, 15, -25);
+    this.scene.add(fillLight);
 
-    const point2 = new THREE.PointLight(0xFFD700, 0.3, 80);
-    point2.position.set(0, 0, 0);
-    this.scene.add(point2);
+    // Rim/accent light — warm gold from center
+    const rimLight = new THREE.PointLight(0xFFD700, 0.5, 100);
+    rimLight.position.set(0, -5, 0);
+    this.scene.add(rimLight);
+
+    // Third accent — subtle purple for persona highlighting
+    const accentLight = new THREE.PointLight(0xC678DD, 0.3, 80);
+    accentLight.position.set(15, -10, -20);
+    this.scene.add(accentLight);
 
     // Starfield
     this.starfield = createStarfield();
@@ -224,6 +254,56 @@ export class RadiantEngine {
     // Health aura
     this.healthAura = createHealthAura(this.graph.globalHealth);
     this.scene.add(this.healthAura);
+  }
+
+  // ─── Procedural environment map for PBR reflections ───
+  private generateEnvironmentMap(): void {
+    const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+    pmremGenerator.compileEquirectangularShader();
+
+    // Create a simple gradient environment scene
+    const envScene = new THREE.Scene();
+    const envGeo = new THREE.SphereGeometry(100, 32, 32);
+    const envMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        topColor: { value: new THREE.Color(0x0a1628) },
+        bottomColor: { value: new THREE.Color(0x040810) },
+        midColor: { value: new THREE.Color(0x162040) },
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPos.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform vec3 midColor;
+        varying vec3 vWorldPosition;
+        void main() {
+          float h = normalize(vWorldPosition).y;
+          vec3 color = mix(bottomColor, midColor, smoothstep(-1.0, 0.0, h));
+          color = mix(color, topColor, smoothstep(0.0, 1.0, h));
+          // Add subtle star-like speckles for reflections
+          float sparkle = fract(sin(dot(vWorldPosition.xz * 0.1, vec2(12.9898, 78.233))) * 43758.5453);
+          color += vec3(0.15, 0.18, 0.25) * step(0.995, sparkle);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+    });
+    envScene.add(new THREE.Mesh(envGeo, envMat));
+
+    const envCamera = new THREE.PerspectiveCamera(90, 1, 0.1, 200);
+    const renderTarget = pmremGenerator.fromScene(envScene, 0);
+    this.scene.environment = renderTarget.texture;
+
+    envGeo.dispose();
+    envMat.dispose();
+    pmremGenerator.dispose();
   }
 
   // ─── Camera ───
@@ -245,19 +325,41 @@ export class RadiantEngine {
     this.controls.autoRotateSpeed = 0.2;
   }
 
-  // ─── Post-processing (bloom) ───
+  // ─── Post-processing (SSAO + Bloom + SMAA + OutputPass) ───
   private initPostProcessing(): void {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+
     this.composer = new EffectComposer(this.renderer);
+
+    // 1. Render pass
     const renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(renderPass);
 
+    // 2. SSAO — screen-space ambient occlusion for depth
+    const ssaoPass = new SSAOPass(this.scene, this.camera, w, h);
+    ssaoPass.kernelRadius = 12;
+    ssaoPass.minDistance = 0.001;
+    ssaoPass.maxDistance = 0.15;
+    ssaoPass.output = SSAOPass.OUTPUT.Default;
+    this.composer.addPass(ssaoPass);
+
+    // 3. Bloom — tuned for PBR glow
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
+      new THREE.Vector2(w, h),
       BLOOM_STRENGTH,
       BLOOM_RADIUS,
       BLOOM_THRESHOLD,
     );
     this.composer.addPass(bloomPass);
+
+    // 4. SMAA — subpixel morphological anti-aliasing
+    const smaaPass = new SMAAPass(w * this.renderer.getPixelRatio(), h * this.renderer.getPixelRatio());
+    this.composer.addPass(smaaPass);
+
+    // 5. Output pass — handles tone mapping for post-processing pipeline
+    const outputPass = new OutputPass();
+    this.composer.addPass(outputPass);
   }
 
   // ─── Build graph objects ───
@@ -379,7 +481,7 @@ export class RadiantEngine {
     // Update edges to final positions
     for (const se of this.sceneEdges.values()) {
       updateEdgeLine(
-        se.line as THREE.Line,
+        se.line,
         se.sourceNode.position,
         se.targetNode.position,
         se.data.type,
