@@ -10,7 +10,7 @@ import type { HealthMetrics } from './types';
 // Global health aura — a large transparent sphere surrounding the scene
 // ---------------------------------------------------------------------------
 export function createHealthAura(health: HealthMetrics): THREE.Mesh {
-  const geometry = new THREE.SphereGeometry(60, 32, 32);
+  const geometry = new THREE.SphereGeometry(60, 64, 64);
   const status = getHealthStatus(health.resilienceScore);
   const color = new THREE.Color(HEALTH_COLORS[status]);
 

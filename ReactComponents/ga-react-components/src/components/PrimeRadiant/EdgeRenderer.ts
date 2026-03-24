@@ -66,33 +66,51 @@ const EDGE_STYLES: Record<GovernanceEdgeType, EdgeStyle> = {
 };
 
 // ---------------------------------------------------------------------------
-// Create edge line between two scene nodes
+// Build a curve for an edge (arc for cross-repo, straight for others)
 // ---------------------------------------------------------------------------
-export function createEdgeLine(
-  edge: GovernanceEdge,
+function buildEdgeCurve(
   sourcePos: THREE.Vector3,
   targetPos: THREE.Vector3,
-): THREE.Line {
-  const style = EDGE_STYLES[edge.type];
-  const points = [sourcePos.clone(), targetPos.clone()];
-
-  // For cross-repo edges, add a slight arc
-  if (edge.type === 'cross-repo') {
+  edgeType: GovernanceEdgeType,
+): THREE.Curve<THREE.Vector3> {
+  if (edgeType === 'cross-repo') {
     const mid = new THREE.Vector3()
       .addVectors(sourcePos, targetPos)
       .multiplyScalar(0.5);
     const dist = sourcePos.distanceTo(targetPos);
     mid.y += dist * 0.3;
-    const curve = new THREE.QuadraticBezierCurve3(sourcePos.clone(), mid, targetPos.clone());
-    points.length = 0;
-    points.push(...curve.getPoints(20));
+    return new THREE.QuadraticBezierCurve3(sourcePos.clone(), mid, targetPos.clone());
   }
+  return new THREE.LineCurve3(sourcePos.clone(), targetPos.clone());
+}
 
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  let material: THREE.LineBasicMaterial | THREE.LineDashedMaterial;
+// ---------------------------------------------------------------------------
+// Tube radius per edge type (constitutional-hierarchy gets thick golden beams)
+// ---------------------------------------------------------------------------
+const TUBE_RADIUS: Record<GovernanceEdgeType, number> = {
+  'constitutional-hierarchy': 0.08,
+  'policy-persona': 0.025,
+  'pipeline-flow': 0.04,
+  'cross-repo': 0.025,
+  'lolli': 0.04,
+};
 
+// ---------------------------------------------------------------------------
+// Create edge — TubeGeometry for depth, fallback to Line for dashed
+// ---------------------------------------------------------------------------
+export function createEdgeLine(
+  edge: GovernanceEdge,
+  sourcePos: THREE.Vector3,
+  targetPos: THREE.Vector3,
+): THREE.Object3D {
+  const style = EDGE_STYLES[edge.type];
+  const curve = buildEdgeCurve(sourcePos, targetPos, edge.type);
+
+  // Dashed edges still use Line (tubes can't dash)
   if (style.dashed) {
-    material = new THREE.LineDashedMaterial({
+    const points = curve.getPoints(20);
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineDashedMaterial({
       color: style.color,
       transparent: true,
       opacity: style.opacity * (edge.weight ?? 1.0),
@@ -100,50 +118,78 @@ export function createEdgeLine(
       gapSize: style.gapSize ?? 0.3,
       depthWrite: false,
     });
-  } else {
-    material = new THREE.LineBasicMaterial({
-      color: style.color,
-      transparent: true,
-      opacity: style.opacity * (edge.weight ?? 1.0),
-      depthWrite: false,
-    });
+    const line = new THREE.Line(geometry, material);
+    line.computeLineDistances();
+    line.userData = { edgeId: edge.id, edgeType: edge.type, isTube: false };
+    line.name = `edge-${edge.id}`;
+    line.renderOrder = -1;
+    return line;
   }
 
-  const line = new THREE.Line(geometry, material);
-  line.computeLineDistances(); // needed for dashed lines
-  line.userData = { edgeId: edge.id, edgeType: edge.type };
-  line.name = `edge-${edge.id}`;
-  line.renderOrder = -1;
+  // Solid edges use TubeGeometry for real 3D depth
+  const segments = edge.type === 'cross-repo' ? 24 : 8;
+  const radius = TUBE_RADIUS[edge.type] ?? 0.03;
+  const tubeGeo = new THREE.TubeGeometry(curve, segments, radius, 6, false);
+  const tubeMat = new THREE.MeshStandardMaterial({
+    color: style.color,
+    emissive: style.color,
+    emissiveIntensity: 0.3,
+    metalness: 0.2,
+    roughness: 0.6,
+    transparent: true,
+    opacity: style.opacity * (edge.weight ?? 1.0),
+    depthWrite: false,
+  });
 
-  return line;
+  const mesh = new THREE.Mesh(tubeGeo, tubeMat);
+  mesh.userData = { edgeId: edge.id, edgeType: edge.type, isTube: true };
+  mesh.name = `edge-${edge.id}`;
+  mesh.renderOrder = -1;
+
+  return mesh;
 }
 
 // ---------------------------------------------------------------------------
-// Update edge line positions when nodes move
+// Update edge positions when nodes move (handles both Tube and Line)
 // ---------------------------------------------------------------------------
 export function updateEdgeLine(
-  line: THREE.Line,
+  obj: THREE.Object3D,
   sourcePos: THREE.Vector3,
   targetPos: THREE.Vector3,
   edgeType: GovernanceEdgeType,
 ): void {
-  const geometry = line.geometry;
+  const isTube = obj.userData.isTube === true;
 
-  if (edgeType === 'cross-repo') {
-    const mid = new THREE.Vector3()
-      .addVectors(sourcePos, targetPos)
-      .multiplyScalar(0.5);
-    const dist = sourcePos.distanceTo(targetPos);
-    mid.y += dist * 0.3;
-    const curve = new THREE.QuadraticBezierCurve3(sourcePos.clone(), mid, targetPos.clone());
-    const points = curve.getPoints(20);
-    geometry.setFromPoints(points);
+  if (isTube) {
+    // Rebuild tube geometry from new curve
+    const mesh = obj as THREE.Mesh;
+    const oldGeo = mesh.geometry;
+    const curve = buildEdgeCurve(sourcePos, targetPos, edgeType);
+    const segments = edgeType === 'cross-repo' ? 24 : 8;
+    const radius = TUBE_RADIUS[edgeType] ?? 0.03;
+    mesh.geometry = new THREE.TubeGeometry(curve, segments, radius, 6, false);
+    oldGeo.dispose();
   } else {
-    geometry.setFromPoints([sourcePos.clone(), targetPos.clone()]);
-  }
+    // Line-based edge
+    const line = obj as THREE.Line;
+    const geometry = line.geometry;
 
-  line.computeLineDistances();
-  geometry.computeBoundingSphere();
+    if (edgeType === 'cross-repo') {
+      const mid = new THREE.Vector3()
+        .addVectors(sourcePos, targetPos)
+        .multiplyScalar(0.5);
+      const dist = sourcePos.distanceTo(targetPos);
+      mid.y += dist * 0.3;
+      const curve = new THREE.QuadraticBezierCurve3(sourcePos.clone(), mid, targetPos.clone());
+      const points = curve.getPoints(20);
+      geometry.setFromPoints(points);
+    } else {
+      geometry.setFromPoints([sourcePos.clone(), targetPos.clone()]);
+    }
+
+    line.computeLineDistances();
+    geometry.computeBoundingSphere();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -247,15 +293,15 @@ export function animateEdgeParticles(
 }
 
 // ---------------------------------------------------------------------------
-// Highlight / dim edges
+// Highlight / dim edges (works with both Line and Mesh/Tube)
 // ---------------------------------------------------------------------------
-export function setEdgeHighlight(line: THREE.Line, highlighted: boolean): void {
-  const mat = line.material as THREE.LineBasicMaterial;
+export function setEdgeHighlight(obj: THREE.Object3D, highlighted: boolean): void {
+  const mat = (obj as THREE.Mesh | THREE.Line).material as THREE.Material & { opacity: number };
   mat.opacity = highlighted ? 0.9 : (mat as unknown as { _baseOpacity?: number })._baseOpacity ?? 0.4;
 }
 
-export function setEdgeDimmed(line: THREE.Line, dimmed: boolean): void {
-  const mat = line.material as THREE.LineBasicMaterial;
+export function setEdgeDimmed(obj: THREE.Object3D, dimmed: boolean): void {
+  const mat = (obj as THREE.Mesh | THREE.Line).material as THREE.Material & { opacity: number };
   if (dimmed) {
     (mat as unknown as Record<string, number>)._baseOpacity = mat.opacity;
     mat.opacity = 0.05;

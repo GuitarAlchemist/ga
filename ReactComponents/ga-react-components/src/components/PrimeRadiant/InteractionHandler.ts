@@ -142,9 +142,9 @@ export class InteractionHandler {
     // Dim all non-connected edges
     for (const se of this.sceneEdges.values()) {
       if (connEdges.has(se.id)) {
-        setEdgeDimmed(se.line as THREE.Line, false);
+        setEdgeDimmed(se.line, false);
       } else {
-        setEdgeDimmed(se.line as THREE.Line, true);
+        setEdgeDimmed(se.line, true);
       }
     }
 
@@ -176,7 +176,7 @@ export class InteractionHandler {
       setNodeDimmed(sn.mesh as THREE.Mesh, false);
     }
     for (const se of this.sceneEdges.values()) {
-      setEdgeDimmed(se.line as THREE.Line, false);
+      setEdgeDimmed(se.line, false);
     }
   }
 
