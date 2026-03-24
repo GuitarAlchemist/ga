@@ -7,6 +7,9 @@ export default defineConfig({
     plugins: [react(), dts()],
     server: {
         port: 5176,
+        hmr: {
+            overlay: false,
+        },
     },
     optimizeDeps: {
         include: ['prop-types'],
