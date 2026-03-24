@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
 import { NODE_COLORS, HEALTH_COLORS } from './types';
 import { loadGovernanceData, getHealthStatus } from './DataLoader';
@@ -366,6 +367,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         setSelectedNode(null);
         onNodeSelect?.(null);
       })
+      .onNodeHover((node: object | null) => {
+        if (node) {
+          const n = node as GraphNode & { __threeObj?: THREE.Object3D };
+          if (n.__threeObj) {
+            n.__threeObj.scale.setScalar(1.3); // pop on hover
+          }
+        }
+        // Container cursor
+        if (containerRef.current) {
+          containerRef.current.style.cursor = node ? 'pointer' : 'grab';
+        }
+      })
 
       // Force configuration — cluster by hierarchy
       .d3AlphaDecay(0.02)
@@ -380,12 +393,64 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     );
     fg.postProcessingComposer().addPass(bloomPass);
 
+    // Chromatic aberration post-processing
+    const chromaticShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        uOffset: { value: new THREE.Vector2(0.002, 0.002) },
+      },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
+    void main() {
+      float r = texture2D(tDiffuse, vUv + uOffset).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv - uOffset).b;
+      float a = texture2D(tDiffuse, vUv).a;
+      gl_FragColor = vec4(r, g, b, a);
+    }`,
+    };
+    fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
+
+    // Breathing animation — nodes pulse gently
+    fg.onEngineTick(() => {
+      const t = Date.now() * 0.001;
+      fg.graphData().nodes.forEach((node: object) => {
+        const n = node as GraphNode & { __threeObj?: THREE.Object3D };
+        if (n.__threeObj) {
+          // Gentle breathing: scale oscillates ±5% based on node type phase
+          const phase = n.id.length * 0.7; // deterministic phase per node
+          const breathe = 1 + Math.sin(t * 0.8 + phase) * 0.05;
+          n.__threeObj.scale.setScalar(breathe);
+        }
+      });
+    });
+
     // Slow auto-rotate
     const controls = fg.controls() as { autoRotate?: boolean; autoRotateSpeed?: number };
     if (controls) {
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.3;
     }
+
+    // Starfield background
+    const starCount = 2000;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const r = 800 + Math.random() * 1200;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      starPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      starPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      starPositions[i*3+2] = r * Math.cos(phi);
+      const b = 0.3 + Math.random() * 0.5;
+      starColors[i*3] = b * 0.85; starColors[i*3+1] = b * 0.9; starColors[i*3+2] = b;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    const starMat = new THREE.PointsMaterial({ size: 0.5, vertexColors: true, transparent: true, opacity: 0.6, sizeAttenuation: true });
+    fg.scene().add(new THREE.Points(starGeo, starMat));
 
     graphRef.current = fg;
 
