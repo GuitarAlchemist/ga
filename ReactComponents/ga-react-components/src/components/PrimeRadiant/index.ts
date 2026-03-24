@@ -2,6 +2,7 @@
 // Public exports for the Prime Radiant governance visualization engine
 
 export { PrimeRadiant } from './PrimeRadiant';
+export { ForceRadiant } from './ForceRadiant';
 export { DetailPanel } from './DetailPanel';
 export type {
   GovernanceNode,
