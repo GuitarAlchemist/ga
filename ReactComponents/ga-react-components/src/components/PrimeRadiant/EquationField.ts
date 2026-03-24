@@ -203,12 +203,12 @@ export class EquationField {
       // Fade in / fade out
       const mat = eq.sprite.material as THREE.SpriteMaterial;
       if (eq.lifetime < eq.fadeIn) {
-        mat.opacity = (eq.lifetime / eq.fadeIn) * 0.35;
+        mat.opacity = (eq.lifetime / eq.fadeIn) * 0.5;
       } else if (eq.lifetime > eq.maxLifetime - eq.fadeOut) {
         const remaining = eq.maxLifetime - eq.lifetime;
-        mat.opacity = (remaining / eq.fadeOut) * 0.35;
+        mat.opacity = (remaining / eq.fadeOut) * 0.5;
       } else {
-        mat.opacity = 0.35;
+        mat.opacity = 0.5;
       }
     }
 
