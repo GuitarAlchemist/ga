@@ -180,7 +180,127 @@ function generateFractalTexture(baseColor: THREE.Color, complexity: number): THR
 }
 
 // ---------------------------------------------------------------------------
-// Create custom Three.js node — fractal sprite + core + particle dust
+// Raymarched volumetric sphere shader — fractal noise inside each node
+// Each node looks like a glowing plasma orb with swirling internal structure
+// ---------------------------------------------------------------------------
+const volumetricVertexShader = /* glsl */ `
+  varying vec3 vWorldPos;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPos = worldPos.xyz;
+    vViewDir = normalize(cameraPosition - worldPos.xyz);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const volumetricFragmentShader = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uTime;
+  uniform float uComplexity;
+  uniform float uIntensity;
+
+  varying vec3 vWorldPos;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  varying vec2 vUv;
+
+  // Simplex-like 3D noise (compact hash-based)
+  vec3 hash33(vec3 p) {
+    p = fract(p * vec3(443.897, 441.423, 437.195));
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.xxy + p.yxx) * p.zyx);
+  }
+
+  float noise3d(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float n = mix(
+      mix(mix(dot(hash33(i), f), dot(hash33(i + vec3(1,0,0)), f - vec3(1,0,0)), f.x),
+          mix(dot(hash33(i + vec3(0,1,0)), f - vec3(0,1,0)), dot(hash33(i + vec3(1,1,0)), f - vec3(1,1,0)), f.x), f.y),
+      mix(mix(dot(hash33(i + vec3(0,0,1)), f - vec3(0,0,1)), dot(hash33(i + vec3(1,0,1)), f - vec3(1,0,1)), f.x),
+          mix(dot(hash33(i + vec3(0,1,1)), f - vec3(0,1,1)), dot(hash33(i + vec3(1,1,1)), f - vec3(1,1,1)), f.x), f.y), f.z);
+    return n * 0.5 + 0.5;
+  }
+
+  // Fractal Brownian motion — self-similar at multiple scales
+  float fbm(vec3 p, int octaves) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    for (int i = 0; i < 6; i++) {
+      if (i >= octaves) break;
+      value += amplitude * noise3d(p * frequency);
+      frequency *= 2.0;
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+
+  void main() {
+    // Fresnel rim glow
+    float fresnel = 1.0 - dot(vNormal, vViewDir);
+    fresnel = pow(fresnel, 2.5);
+
+    // Fractal noise in object space (animated)
+    vec3 noiseCoord = vWorldPos * 0.3 + uTime * 0.15;
+    int octaves = int(uComplexity) + 2;
+    float fractalNoise = fbm(noiseCoord, octaves);
+
+    // Second noise layer at different frequency (creates swirling)
+    float swirl = fbm(noiseCoord * 2.3 + vec3(uTime * 0.1, 0.0, uTime * -0.08), octaves);
+
+    // Combine: core brightness + fractal pattern + Fresnel rim
+    float coreBright = smoothstep(0.6, 0.0, length(vUv - 0.5) * 2.0);
+    float pattern = mix(fractalNoise, swirl, 0.4) * coreBright;
+
+    // Color: base color modulated by fractal, brighter at center
+    vec3 col = uColor * (0.3 + pattern * 1.5);
+    col += uColor * fresnel * 0.8; // rim glow in node color
+    col += vec3(1.0) * coreBright * 0.15; // white-hot center
+
+    // Alpha: solid at center, fractal fade at edges, Fresnel rim
+    float alpha = coreBright * 0.8 + fresnel * 0.6 + pattern * 0.3;
+    alpha = clamp(alpha * uIntensity, 0.0, 1.0);
+
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+// Cache shader materials per color+complexity
+const shaderMaterialCache = new Map<string, THREE.ShaderMaterial>();
+
+function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.ShaderMaterial {
+  const key = `${color.getHexString()}-${complexity}-${intensity}`;
+  if (shaderMaterialCache.has(key)) return shaderMaterialCache.get(key)!.clone();
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: color },
+      uTime: { value: 0 },
+      uComplexity: { value: complexity },
+      uIntensity: { value: intensity },
+    },
+    vertexShader: volumetricVertexShader,
+    fragmentShader: volumetricFragmentShader,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.FrontSide,
+  });
+
+  shaderMaterialCache.set(key, mat);
+  return mat.clone();
+}
+
+// ---------------------------------------------------------------------------
+// Create custom Three.js node — raymarched core + fractal sprite + dust
 // ---------------------------------------------------------------------------
 function createNodeObject(node: GraphNode): THREE.Object3D {
   const group = new THREE.Group();
@@ -189,48 +309,51 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   const isUnhealthy = node.health && node.health.lolliCount > 0;
   const nodeColor = isUnhealthy ? new THREE.Color('#FF4444') : color;
 
-  // Complexity scales with hierarchy importance
   const complexity = {
     constitution: 4, department: 3, policy: 2, persona: 2,
     pipeline: 2, schema: 1, test: 1, ixql: 1,
   }[node.type] ?? 1;
 
-  // 1. Fractal nebula sprite — the main visual
+  const intensity = {
+    constitution: 1.4, department: 1.2, policy: 1.0, persona: 1.0,
+    pipeline: 0.9, schema: 0.8, test: 0.8, ixql: 0.7,
+  }[node.type] ?? 0.8;
+
+  // 1. Raymarched volumetric core — the star of the show
+  const coreGeo = new THREE.SphereGeometry(radius * 0.5, 32, 32);
+  const coreMat = createVolumetricMaterial(nodeColor, complexity, intensity);
+  const core = new THREE.Mesh(coreGeo, coreMat);
+  core.userData = { isVolumetricCore: true };
+  group.add(core);
+
+  // 2. Fractal nebula sprite — outer halo with branching tendrils
   const fractalTex = generateFractalTexture(nodeColor, complexity);
   const spriteMat = new THREE.SpriteMaterial({
     map: fractalTex,
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.5,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const sprite = new THREE.Sprite(spriteMat);
-  const spriteScale = radius * 2.5;
+  const spriteScale = radius * 3.0;
   sprite.scale.set(spriteScale, spriteScale, 1);
   group.add(sprite);
 
-  // 2. Core point — bright center
-  const coreGeo = new THREE.SphereGeometry(radius * 0.2, 12, 12);
-  const coreMat = new THREE.MeshBasicMaterial({
-    color: nodeColor,
-    transparent: true,
-    opacity: 1.0,
-  });
-  group.add(new THREE.Mesh(coreGeo, coreMat));
-
-  // 3. Orbiting particle dust (fewer, larger particles for clarity)
-  const dustCount = Math.floor(complexity * 6);
+  // 3. Orbiting particle dust — more particles, orbital distribution
+  const dustCount = Math.floor(complexity * 10);
   const positions = new Float32Array(dustCount * 3);
   const dustColors = new Float32Array(dustCount * 3);
   for (let i = 0; i < dustCount; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    const r = radius * (0.5 + Math.random() * 1.0);
-    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-    positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-    positions[i * 3 + 2] = r * Math.cos(phi);
+    // Orbital ring distribution (not uniform sphere)
+    const ringAngle = Math.random() * Math.PI * 2;
+    const ringTilt = (Math.random() - 0.5) * 0.4;
+    const r = radius * (0.6 + Math.random() * 1.2);
+    positions[i * 3] = r * Math.cos(ringAngle);
+    positions[i * 3 + 1] = r * Math.sin(ringAngle) * Math.cos(ringTilt);
+    positions[i * 3 + 2] = r * Math.sin(ringAngle) * Math.sin(ringTilt) + (Math.random() - 0.5) * radius * 0.3;
 
-    const v = 0.7 + Math.random() * 0.3;
+    const v = 0.5 + Math.random() * 0.5;
     dustColors[i * 3] = nodeColor.r * v;
     dustColors[i * 3 + 1] = nodeColor.g * v;
     dustColors[i * 3 + 2] = nodeColor.b * v;
@@ -240,10 +363,10 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   dustGeo.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
   const dustMat = new THREE.PointsMaterial({
-    size: radius * 0.12,
+    size: radius * 0.08,
     vertexColors: true,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.5,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
@@ -332,7 +455,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .nodeThreeObjectExtend(false)
       .nodeLabel((node: object) => {
         const n = node as GraphNode;
-        return `<div style="color:${n.color};font-family:monospace;font-size:12px;text-shadow:0 0 6px ${n.color}">${n.name}</div>`;
+        const typeLabel = n.type.charAt(0).toUpperCase() + n.type.slice(1);
+        const healthInfo = n.health
+          ? `<div style="font-size:9px;color:#8b949e;margin-top:2px">R: ${(n.health.resilienceScore * 100).toFixed(0)}% · E: ${n.health.ergolCount} · L: ${n.health.lolliCount}</div>`
+          : '';
+        return `<div style="font-family:'JetBrains Mono',monospace;padding:4px 8px;background:rgba(0,0,8,0.85);border:1px solid ${n.color}44;border-radius:4px;backdrop-filter:blur(4px)">
+          <div style="color:${n.color};font-size:11px;font-weight:600">${n.name}</div>
+          <div style="color:#8b949e;font-size:9px;text-transform:uppercase;letter-spacing:0.5px">${typeLabel}${n.repo ? ' · ' + n.repo : ''}</div>
+          ${healthInfo}
+        </div>`;
       })
 
       // Edge rendering
@@ -411,16 +542,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
     fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
 
-    // Breathing animation — nodes pulse gently
+    // Jellyfish pulse animation — connected to real governance facts
+    // Pulse rate = health (healthy = slow calm pulse, unhealthy = fast anxious pulse)
+    // Pulse amplitude = ERGOL count (more bindings = bigger presence)
+    // Shader time drives fractal noise swirl
     fg.onEngineTick(() => {
       const t = Date.now() * 0.001;
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
-        if (n.__threeObj) {
-          // Gentle breathing: scale oscillates ±5% based on node type phase
-          const phase = n.id.length * 0.7; // deterministic phase per node
-          const breathe = 1 + Math.sin(t * 0.8 + phase) * 0.05;
-          n.__threeObj.scale.setScalar(breathe);
+        if (!n.__threeObj) return;
+
+        const group = n.__threeObj as THREE.Group;
+        const phase = (n.id?.length ?? 3) * 0.7;
+
+        // Pulse rate derived from health: healthy=0.6Hz, watch=1.2Hz, freeze=2.5Hz
+        const healthScore = n.health?.resilienceScore ?? 0.8;
+        const pulseRate = healthScore > 0.7 ? 0.6 : healthScore > 0.4 ? 1.2 : 2.5;
+
+        // Pulse amplitude from ERGOL (more governance = more presence)
+        const ergol = n.health?.ergolCount ?? 1;
+        const pulseAmp = 0.03 + Math.min(ergol, 10) * 0.008;
+
+        // Jellyfish contraction: sharp in, slow out (asymmetric sine)
+        const raw = Math.sin(t * pulseRate + phase);
+        const jellyfish = raw > 0 ? Math.pow(raw, 0.6) : raw * 0.3; // fast expand, slow contract
+        const breathe = 1 + jellyfish * pulseAmp;
+        group.scale.setScalar(breathe);
+
+        // Update volumetric shader time for fractal swirl
+        for (const child of group.children) {
+          if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
+            const mat = child.material as THREE.ShaderMaterial;
+            if (mat.uniforms?.uTime) {
+              mat.uniforms.uTime.value = t;
+            }
+          }
         }
       });
     });
