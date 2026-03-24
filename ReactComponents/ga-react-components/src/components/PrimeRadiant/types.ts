@@ -145,14 +145,14 @@ export const NODE_COLORS: Record<GovernanceNodeType, string> = {
 };
 
 export const NODE_SCALES: Record<GovernanceNodeType, number> = {
-  constitution: 2.0,
-  policy: 1.2,
-  persona: 1.2,
-  pipeline: 1.2,
-  department: 1.8,
-  schema: 0.8,
-  test: 0.8,
-  ixql: 0.8,
+  constitution: 4.0,
+  policy: 1.6,
+  persona: 1.6,
+  pipeline: 1.4,
+  department: 3.0,
+  schema: 1.0,
+  test: 1.0,
+  ixql: 0.9,
 };
 
 export const HEALTH_COLORS: Record<HealthStatus, string> = {

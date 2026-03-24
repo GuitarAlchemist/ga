@@ -189,14 +189,14 @@ export class EquationField {
   private spawnInterval: number;
   private fragments: string[];
 
-  constructor(scene: THREE.Scene, graph: GovernanceGraph, maxEquations: number = 35) {
+  constructor(scene: THREE.Scene, graph: GovernanceGraph, maxEquations: number = 12) {
     this.scene = scene;
     this.maxEquations = maxEquations;
-    this.spawnInterval = 1.0;
+    this.spawnInterval = 3.0;
     this.fragments = buildEquations(graph);
 
     // Seed initial batch with staggered lifetimes
-    const initialCount = Math.floor(maxEquations * 0.5);
+    const initialCount = Math.floor(maxEquations * 0.4);
     for (let i = 0; i < initialCount; i++) {
       const text = this.fragments[Math.floor(Math.random() * this.fragments.length)];
       const pos = randomSpherePosition();
@@ -234,12 +234,12 @@ export class EquationField {
 
       const mat = eq.sprite.material as THREE.SpriteMaterial;
       if (eq.lifetime < eq.fadeIn) {
-        mat.opacity = (eq.lifetime / eq.fadeIn) * 0.55;
+        mat.opacity = (eq.lifetime / eq.fadeIn) * 0.25;
       } else if (eq.lifetime > eq.maxLifetime - eq.fadeOut) {
         const remaining = eq.maxLifetime - eq.lifetime;
-        mat.opacity = (remaining / eq.fadeOut) * 0.55;
+        mat.opacity = (remaining / eq.fadeOut) * 0.25;
       } else {
-        mat.opacity = 0.55;
+        mat.opacity = 0.25;
       }
     }
 
