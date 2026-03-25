@@ -16,7 +16,7 @@ import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
-import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
+// TrantorGlobe removed — replaced by real Earth + nebulae
 import { createEarthGlobe, updateEarthGlobe } from './EarthGlobe';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
@@ -660,7 +660,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           ambientDust.visible = false;
           starField.visible = false;
           demerzelFace.visible = false;
-          trantorGlobe.visible = false;
           bloomPass.strength = 0.2;
         } else if (currentFps < 35 && qualityLevel === 'high') {
           qualityLevel = 'medium';
@@ -671,7 +670,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           ambientDust.visible = true;
           starField.visible = true;
           demerzelFace.visible = true;
-          trantorGlobe.visible = true;
           bloomPass.strength = 0.6;
         }
       }
@@ -802,13 +800,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       demerzelFace.position.copy(cam.position).add(faceOffset);
       demerzelFace.quaternion.copy(cam.quaternion);
 
-      // ─── Trantor globe — top-right of view ───
-      if (trantorGlobe.visible) {
-        updateTrantorGlobe(trantorGlobe, t);
-        const trantorOffset = new THREE.Vector3(35, 25, -50);
-        trantorOffset.applyQuaternion(cam.quaternion);
-        trantorGlobe.position.copy(cam.position).add(trantorOffset);
-      }
+      // (Trantor removed — replaced by Earth + nebulae)
 
       // ─── Earth globe — top-right, below Trantor ───
       updateEarthGlobe(earthGlobe, t);
@@ -873,17 +865,77 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `
         varying vec3 vWorldPos;
+
+        vec3 hash33(vec3 p) {
+          p = fract(p * vec3(443.897, 441.423, 437.195));
+          p += dot(p, p.yzx + 19.19);
+          return fract((p.xxy + p.yxx) * p.zyx);
+        }
+        float noise3d(vec3 p) {
+          vec3 i = floor(p); vec3 f = fract(p);
+          f = f*f*(3.0-2.0*f);
+          return mix(mix(mix(dot(hash33(i),f), dot(hash33(i+vec3(1,0,0)),f-vec3(1,0,0)), f.x),
+            mix(dot(hash33(i+vec3(0,1,0)),f-vec3(0,1,0)), dot(hash33(i+vec3(1,1,0)),f-vec3(1,1,0)), f.x), f.y),
+            mix(mix(dot(hash33(i+vec3(0,0,1)),f-vec3(0,0,1)), dot(hash33(i+vec3(1,0,1)),f-vec3(1,0,1)), f.x),
+            mix(dot(hash33(i+vec3(0,1,1)),f-vec3(0,1,1)), dot(hash33(i+vec3(1,1,1)),f-vec3(1,1,1)), f.x), f.y), f.z)*0.5+0.5;
+        }
+        float fbm(vec3 p) {
+          float v=0.0, a=0.5;
+          for(int i=0;i<4;i++) { v+=a*noise3d(p); p*=2.1; a*=0.5; }
+          return v;
+        }
+
         void main() {
-          float y = normalize(vWorldPos).y;
-          // Vertical gradient: deep blue bottom → dark purple middle → near-black top
-          vec3 bottom = vec3(0.02, 0.01, 0.06);   // deep indigo
-          vec3 mid    = vec3(0.015, 0.005, 0.04);  // dark violet
-          vec3 top    = vec3(0.005, 0.005, 0.015); // near black
-          vec3 col = mix(bottom, mid, smoothstep(-1.0, 0.0, y));
-          col = mix(col, top, smoothstep(0.0, 1.0, y));
-          // Subtle nebula wisps
-          float n = sin(vWorldPos.x * 0.005 + vWorldPos.z * 0.003) * sin(vWorldPos.y * 0.004) * 0.5 + 0.5;
-          col += vec3(0.02, 0.005, 0.03) * n * 0.5;
+          vec3 dir = normalize(vWorldPos);
+          float y = dir.y;
+
+          // Base gradient — deep space
+          vec3 col = mix(vec3(0.01, 0.005, 0.04), vec3(0.003, 0.003, 0.012), smoothstep(-0.5, 0.8, y));
+
+          // Orion-like nebula — reddish-pink cloud region
+          float neb1 = fbm(dir * 3.0 + vec3(1.5, 0.0, 2.3));
+          neb1 = smoothstep(0.4, 0.7, neb1);
+          float neb1Mask = smoothstep(0.3, 0.0, length(dir - vec3(0.5, 0.2, -0.8)));
+          col += vec3(0.12, 0.02, 0.04) * neb1 * neb1Mask;
+
+          // Carina-like nebula — blue-teal cloud
+          float neb2 = fbm(dir * 4.0 + vec3(-2.0, 1.0, 0.5));
+          neb2 = smoothstep(0.45, 0.7, neb2);
+          float neb2Mask = smoothstep(0.35, 0.0, length(dir - vec3(-0.6, -0.3, 0.7)));
+          col += vec3(0.02, 0.06, 0.1) * neb2 * neb2Mask;
+
+          // Pillars of creation — golden dust cloud
+          float neb3 = fbm(dir * 5.0 + vec3(0.0, 3.0, -1.0));
+          neb3 = smoothstep(0.5, 0.75, neb3);
+          float neb3Mask = smoothstep(0.25, 0.0, length(dir - vec3(-0.3, 0.7, 0.4)));
+          col += vec3(0.08, 0.05, 0.01) * neb3 * neb3Mask;
+
+          // Milky Way band — bright horizontal band
+          float milkyWay = exp(-8.0 * y * y);
+          float mwNoise = fbm(dir * 6.0);
+          col += vec3(0.03, 0.025, 0.04) * milkyWay * mwNoise;
+
+          // Nearby bright stars (fixed positions, glowing)
+          vec3 stars[5];
+          vec3 starColors[5];
+          stars[0] = normalize(vec3(0.8, 0.1, -0.5));  // Sirius — blue-white
+          stars[1] = normalize(vec3(-0.3, 0.6, 0.7));  // Betelgeuse — orange
+          stars[2] = normalize(vec3(0.1, -0.8, 0.5));  // Rigel — blue
+          stars[3] = normalize(vec3(-0.7, 0.2, -0.6)); // Aldebaran — orange-red
+          stars[4] = normalize(vec3(0.4, 0.7, 0.5));   // Vega — white
+          starColors[0] = vec3(0.7, 0.8, 1.0);
+          starColors[1] = vec3(1.0, 0.5, 0.2);
+          starColors[2] = vec3(0.5, 0.6, 1.0);
+          starColors[3] = vec3(1.0, 0.4, 0.15);
+          starColors[4] = vec3(0.9, 0.92, 1.0);
+
+          for (int i = 0; i < 5; i++) {
+            float d = length(dir - stars[i]);
+            float glow = exp(-200.0 * d * d);       // tight core
+            float halo = exp(-20.0 * d * d) * 0.15;  // soft halo
+            col += starColors[i] * (glow + halo);
+          }
+
           gl_FragColor = vec4(col, 1.0);
         }
       `,
@@ -1030,8 +1082,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── TRANTOR GLOBE ───
     // Holographic ecumenopolis — the capital world, top-right HUD position
-    const trantorGlobe = createTrantorGlobe(1.5);
-    fg.scene().add(trantorGlobe);
+    // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── EARTH GLOBE — realistic procedural planet ───
     const earthGlobe = createEarthGlobe(1.0);
