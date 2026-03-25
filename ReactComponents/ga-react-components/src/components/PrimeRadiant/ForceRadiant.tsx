@@ -782,37 +782,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
-      // ─── TARS animation — fixed bottom-left HUD position ───
-      updateTarsRobot(tarsRobot, t);
-      // Position TARS in bottom-left of camera view
+      // ─── HUD companions — bottom-left, facing user (Interstellar cockpit style) ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
-      const tarsOffset = new THREE.Vector3(-0.35, -0.25, -1);
+
+      // TARS — bottom-left, lower
+      updateTarsRobot(tarsRobot, t);
+      const tarsOffset = new THREE.Vector3(-0.45, -0.3, -1);
       tarsOffset.applyQuaternion(cam.quaternion);
       tarsRobot.position.copy(cam.position).add(tarsOffset);
+      tarsRobot.quaternion.copy(cam.quaternion); // always face user
 
-      // ─── Trantor globe animation — fixed top-right HUD position ───
+      // Demerzel face — bottom-left, above TARS
+      updateDemerzelFace(demerzelFace, t, cam.position, false);
+      const faceOffset = new THREE.Vector3(-0.35, -0.1, -0.8);
+      faceOffset.applyQuaternion(cam.quaternion);
+      demerzelFace.position.copy(cam.position).add(faceOffset);
+      demerzelFace.quaternion.copy(cam.quaternion); // always face user
+
+      // ─── Trantor globe — top-right HUD ───
       if (trantorGlobe.visible) {
         updateTrantorGlobe(trantorGlobe, t);
         const trantorOffset = new THREE.Vector3(0.4, 0.3, -1.2);
         trantorOffset.applyQuaternion(cam.quaternion);
         trantorGlobe.position.copy(cam.position).add(trantorOffset);
-      }
-
-      // ─── Demerzel face animation ───
-      // TODO: connect `speaking` to ChatWidget TTS state
-      updateDemerzelFace(demerzelFace, t, fg.camera().position, false);
-      // Position face above the most connected node
-      const centralForceNode = (fg.graphData() as { nodes: GraphNode[] }).nodes
-        .reduce<GraphNode | null>((best, n) => {
-          const bestCount = best ? (edgeCounts.get(best.id) ?? 0) : -1;
-          return (edgeCounts.get(n.id) ?? 0) > bestCount ? n : best;
-        }, null) as (GraphNode & { x?: number; y?: number; z?: number }) | null;
-      if (centralForceNode?.x !== undefined) {
-        demerzelFace.position.set(
-          centralForceNode.x,
-          (centralForceNode.y ?? 0) + 15,
-          centralForceNode.z ?? 0,
-        );
       }
     });
 
