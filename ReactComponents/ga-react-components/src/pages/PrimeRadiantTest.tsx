@@ -9,7 +9,7 @@ const ForceRadiant = React.lazy(() =>
 const PrimeRadiantTest: React.FC = () => {
   console.log('[PrimeRadiantTest] Rendering ForceRadiant...');
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 50px)', overflow: 'hidden' }}>
+    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 28px)', overflow: 'hidden' }}>
       <Suspense fallback={
         <div style={{
           width: '100%',
