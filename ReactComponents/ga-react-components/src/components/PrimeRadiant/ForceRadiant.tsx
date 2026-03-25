@@ -237,7 +237,7 @@ const volumetricFragmentShader = /* glsl */ `
     float value = 0.0;
     float amplitude = 0.5;
     float frequency = 1.0;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 3; i++) {
       if (i >= octaves) break;
       value += amplitude * noise3d(p * frequency);
       frequency *= 2.0;
@@ -623,12 +623,49 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
     fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
 
-    // Jellyfish pulse animation — connected to real governance facts
-    // Pulse rate = health (healthy = slow calm pulse, unhealthy = fast anxious pulse)
-    // Pulse amplitude = ERGOL count (more bindings = bigger presence)
-    // Shader time drives fractal noise swirl
+    // ─── ADAPTIVE QUALITY — auto-downgrade on crappy GPUs ───
+    let frameCount = 0;
+    let lastFpsCheck = Date.now();
+    let currentFps = 60;
+    let qualityLevel: 'high' | 'medium' | 'low' = 'high';
+    // FPS counter element
+    const fpsEl = document.createElement('div');
+    fpsEl.style.cssText = 'position:absolute;top:8px;left:8px;color:#8b949e;font:11px/1 "JetBrains Mono",monospace;z-index:20;pointer-events:none;';
+    container.style.position = 'relative';
+    container.appendChild(fpsEl);
+
     fg.onEngineTick(() => {
       const t = Date.now() * 0.001;
+
+      // ─── FPS measurement + adaptive quality ───
+      frameCount++;
+      const now = Date.now();
+      if (now - lastFpsCheck >= 1000) {
+        currentFps = frameCount;
+        frameCount = 0;
+        lastFpsCheck = now;
+        fpsEl.textContent = `${currentFps} FPS${qualityLevel !== 'high' ? ' [' + qualityLevel + ']' : ''}`;
+        fpsEl.style.color = currentFps >= 45 ? '#33CC66' : currentFps >= 25 ? '#FFB300' : '#FF4444';
+
+        // Auto-downgrade
+        if (currentFps < 20 && qualityLevel !== 'low') {
+          qualityLevel = 'low';
+          ambientDust.visible = false;
+          starField.visible = false;
+          demerzelFace.visible = false;
+          bloomPass.strength = 0.2;
+        } else if (currentFps < 35 && qualityLevel === 'high') {
+          qualityLevel = 'medium';
+          ambientDust.visible = false;
+          bloomPass.strength = 0.4;
+        } else if (currentFps >= 50 && qualityLevel !== 'high') {
+          qualityLevel = 'high';
+          ambientDust.visible = true;
+          starField.visible = true;
+          demerzelFace.visible = true;
+          bloomPass.strength = 0.6;
+        }
+      }
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (!n.__threeObj) return;
@@ -689,7 +726,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       starField.position.copy(cam.position);
 
       // ─── Edge undulation — sinusoidal curvature on active edges ───
-      // Creates a living, breathing energy flow between collaborating nodes
+      // Skip on low quality for performance
+      if (qualityLevel === 'low') { /* skip undulation */ } else {
       const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
       links.forEach((link, idx: number) => {
         const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
@@ -707,6 +745,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           link._curvature = 0.15;
         }
       });
+      } // end quality gate
 
       // ─── Ambient dust drift ───
       const dPos = ambientDust.geometry.attributes.position as THREE.BufferAttribute;
@@ -764,8 +803,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     // ─── AMBIENT PARTICLE FIELD ───
-    // 5000 tiny particles drifting through the graph volume — cosmic dust
-    const dustCount = 5000;
+    // Reduced from 5000 for performance
+    const dustCount = 1500;
     const dustPositions = new Float32Array(dustCount * 3);
     const dustVelocities = new Float32Array(dustCount * 3);
     const dustColors = new Float32Array(dustCount * 3);
@@ -795,7 +834,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(ambientDust);
 
     // ─── STARFIELD — locked to camera (true skybox, no parallax) ───
-    const starCount = 3000;
+    const starCount = 1500;
     const starPositions = new Float32Array(starCount * 3);
     const starColors = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
