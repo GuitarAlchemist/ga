@@ -85,7 +85,7 @@ export const ActivityPanel: React.FC = () => {
           {activities.map((a) => (
             <div key={a.id} className="prime-radiant__activity-item">
               <span
-                className="prime-radiant__activity-cat"
+                className={`prime-radiant__activity-cat${a.status === 'active' ? ' prime-radiant__activity-cat--active' : ''}`}
                 style={{ color: STATUS_COLOR[a.status] }}
               >
                 {CATEGORY_ICON[a.category]}
