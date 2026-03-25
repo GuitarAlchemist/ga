@@ -30,6 +30,7 @@ export type GovernanceEdgeType =
 // Health status
 // ---------------------------------------------------------------------------
 export type HealthStatus = 'healthy' | 'watch' | 'freeze';
+export type GovernanceHealthStatus = 'error' | 'warning' | 'healthy' | 'unknown' | 'contradictory';
 
 export interface HealthMetrics {
   resilienceScore: number;       // 0.0 – 1.0
@@ -52,6 +53,7 @@ export interface GovernanceNode {
   domain?: string;               // grouping domain
   version?: string;
   health?: HealthMetrics;
+  healthStatus?: GovernanceHealthStatus;
   children?: string[];           // child node IDs
   metadata?: Record<string, unknown>;
 }
@@ -132,17 +134,26 @@ export interface NodeTypeConfig {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-// Holographic palette — distinct per type, warm→cool hierarchy gradient
-// Cross-model validated (Claude + GPT-4o), tuned for additive blending + bloom on black
+// Semantic governance health colors — the PRIMARY visual signal
+// Maps governance health state to color, cross-model validated for additive blending + bloom on black
+export const HEALTH_STATUS_COLORS: Record<GovernanceHealthStatus, string> = {
+  error: '#FF4444',          // red — something broken
+  warning: '#FFB300',        // amber — needs attention
+  healthy: '#33CC66',        // green — going well
+  unknown: '#888888',        // gray — no data
+  contradictory: '#FF44FF',  // magenta — conflicting signals
+};
+
+// Subtle type palette — used for shape/icon differentiation only, NOT the primary visual signal
 export const NODE_COLORS: Record<GovernanceNodeType, string> = {
-  constitution: '#FF6B35',   // warm coral — the burning core
-  department: '#FFC300',     // sunburst gold — organizational presence
-  policy: '#FFD700',         // bright gold — guiding light
-  persona: '#33FF88',        // neon mint — living agents
-  pipeline: '#00FFAA',       // spring green — data flow
-  schema: '#00CED1',         // aqua cyan — structural validation
-  test: '#4A90D9',           // ocean blue — verification
-  ixql: '#9B72FF',           // electric violet — deep query
+  constitution: '#8A8A9A',   // warm gray — structural anchor
+  department: '#7A7A8A',     // cool gray — organizational
+  policy: '#9090A0',         // light gray — governance
+  persona: '#7A8A7A',        // sage gray — agents
+  pipeline: '#7A8A90',       // teal gray — data flow
+  schema: '#808090',         // blue gray — structural
+  test: '#8A8090',           // purple gray — verification
+  ixql: '#908080',           // rose gray — query
 };
 
 export const NODE_SCALES: Record<GovernanceNodeType, number> = {
@@ -157,8 +168,8 @@ export const NODE_SCALES: Record<GovernanceNodeType, number> = {
 };
 
 export const HEALTH_COLORS: Record<HealthStatus, string> = {
-  healthy: '#FFD700',
-  watch: '#FFA500',
+  healthy: '#33CC66',
+  watch: '#FFB300',
   freeze: '#FF4444',
 };
 
