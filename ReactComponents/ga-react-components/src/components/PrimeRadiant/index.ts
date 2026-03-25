@@ -22,3 +22,4 @@ export { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
+export { createTarsRobot, updateTarsRobot } from './TarsRobot';
