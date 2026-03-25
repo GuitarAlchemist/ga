@@ -885,8 +885,8 @@
 .prime-radiant__activity-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 2px 6px;
   font-size: 10px;
 }
 .prime-radiant__activity-cat {
@@ -979,8 +979,8 @@
 .prime-radiant__llm-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 2px 6px;
 }
 .prime-radiant__llm-icon {
   font-size: 11px;
