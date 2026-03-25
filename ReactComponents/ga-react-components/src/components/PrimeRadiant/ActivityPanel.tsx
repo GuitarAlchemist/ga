@@ -1,5 +1,5 @@
 // src/components/PrimeRadiant/ActivityPanel.tsx
-// Top-left activity feed showing main tasks, progress, and ETAs
+// Top-left accordion panel — Activities, Commits, and more
 
 import React, { useEffect, useState } from 'react';
 
@@ -10,13 +10,20 @@ export interface Activity {
   id: string;
   name: string;
   status: 'active' | 'pending' | 'completed' | 'blocked';
-  progress: number;    // 0-100
-  eta?: string;        // e.g. "~5m", "~2h", "done"
+  progress: number;
+  eta?: string;
   category: 'governance' | 'research' | 'build' | 'test' | 'deploy';
 }
 
+interface CommitInfo {
+  hash: string;
+  message: string;
+  repo: string;
+  time: string;
+}
+
 // ---------------------------------------------------------------------------
-// Mock activities — TODO: connect to real task system (GitHub Projects, ix)
+// Mock data — TODO: connect to real sources (GitHub API, git log)
 // ---------------------------------------------------------------------------
 function getMockActivities(): Activity[] {
   return [
@@ -29,8 +36,21 @@ function getMockActivities(): Activity[] {
   ];
 }
 
+function getMockCommits(): CommitInfo[] {
+  return [
+    { hash: '642e8cd', message: 'LLM panel expanded, denser padding', repo: 'ga', time: '2m ago' },
+    { hash: '754e5cb', message: 'Gentle spin on active activity icons', repo: 'ga', time: '5m ago' },
+    { hash: '10df84e', message: 'Activity Panel — progress bars + ETAs', repo: 'ga', time: '12m ago' },
+    { hash: '863b94b', message: 'LLM Status panel — providers, tokens', repo: 'ga', time: '15m ago' },
+    { hash: 'c4b81fe', message: 'Responsive — phone, tablet, touch', repo: 'ga', time: '20m ago' },
+    { hash: '250b8b7', message: 'cloudflare-tunnel skill', repo: 'Demerzel', time: '45m ago' },
+    { hash: 'd8e6705', message: 'Hexavalent logic (T/P/U/D/F/C)', repo: 'Demerzel', time: '1h ago' },
+    { hash: '6d8ffe7', message: 'Prime Radiant v3 — health colors', repo: 'ga', time: '2h ago' },
+  ];
+}
+
 // ---------------------------------------------------------------------------
-// Status colors
+// Constants
 // ---------------------------------------------------------------------------
 const STATUS_COLOR: Record<Activity['status'], string> = {
   active: '#33CC66',
@@ -47,76 +67,136 @@ const CATEGORY_ICON: Record<Activity['category'], string> = {
   deploy: 'D',
 };
 
+const REPO_COLOR: Record<string, string> = {
+  ga: '#FFB300',
+  Demerzel: '#FFD700',
+  ix: '#4FC3F7',
+};
+
+// ---------------------------------------------------------------------------
+// Accordion Section
+// ---------------------------------------------------------------------------
+const AccordionSection: React.FC<{
+  title: string;
+  badge?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}> = ({ title, badge, defaultOpen = false, children }) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="prime-radiant__accordion-section">
+      <div
+        className="prime-radiant__accordion-header"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="prime-radiant__accordion-title">
+          {title}
+          {badge && <span className="prime-radiant__accordion-badge">{badge}</span>}
+        </span>
+        <span className="prime-radiant__accordion-arrow">{open ? '▼' : '▶'}</span>
+      </div>
+      {open && <div className="prime-radiant__accordion-body">{children}</div>}
+    </div>
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export const ActivityPanel: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [collapsed, setCollapsed] = useState(false);
+  const [commits, setCommits] = useState<CommitInfo[]>([]);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
 
   useEffect(() => {
     setActivities(getMockActivities());
-    // TODO: poll real task source every 30s
+    setCommits(getMockCommits());
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');
   const pending = activities.filter((a) => a.status === 'pending' || a.status === 'blocked');
-  const completed = activities.filter((a) => a.status === 'completed');
 
   return (
     <div className="prime-radiant__activity">
       <div
         className="prime-radiant__activity-header"
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={() => setPanelCollapsed(!panelCollapsed)}
       >
         <span className="prime-radiant__activity-title">
-          Activities
+          Command
           <span className="prime-radiant__activity-count">
-            {active.length} active · {pending.length} queued
+            {active.length} active · {commits.length} commits
           </span>
         </span>
         <span className="prime-radiant__activity-toggle">
-          {collapsed ? '▶' : '▼'}
+          {panelCollapsed ? '▶' : '▼'}
         </span>
       </div>
 
-      {!collapsed && (
-        <div className="prime-radiant__activity-list">
-          {activities.map((a) => (
-            <div key={a.id} className="prime-radiant__activity-item">
-              <span
-                className={`prime-radiant__activity-cat${a.status === 'active' ? ' prime-radiant__activity-cat--active' : ''}`}
-                style={{ color: STATUS_COLOR[a.status] }}
-              >
-                {CATEGORY_ICON[a.category]}
-              </span>
-              <div className="prime-radiant__activity-info">
-                <div className="prime-radiant__activity-name" style={{
-                  color: a.status === 'completed' ? '#6b7280' : '#c9d1d9',
-                  textDecoration: a.status === 'completed' ? 'line-through' : 'none',
-                }}>
-                  {a.name}
-                </div>
-                {a.status !== 'completed' && (
-                  <div className="prime-radiant__activity-bar">
-                    <div
-                      className="prime-radiant__activity-fill"
-                      style={{
-                        width: `${a.progress}%`,
-                        backgroundColor: STATUS_COLOR[a.status],
-                      }}
-                    />
+      {!panelCollapsed && (
+        <>
+          {/* Activities accordion */}
+          <AccordionSection
+            title="Activities"
+            badge={`${active.length}`}
+            defaultOpen={true}
+          >
+            {activities.map((a) => (
+              <div key={a.id} className="prime-radiant__activity-item">
+                <span
+                  className={`prime-radiant__activity-cat${a.status === 'active' ? ' prime-radiant__activity-cat--active' : ''}`}
+                  style={{ color: STATUS_COLOR[a.status] }}
+                >
+                  {CATEGORY_ICON[a.category]}
+                </span>
+                <div className="prime-radiant__activity-info">
+                  <div className="prime-radiant__activity-name" style={{
+                    color: a.status === 'completed' ? '#6b7280' : '#c9d1d9',
+                    textDecoration: a.status === 'completed' ? 'line-through' : 'none',
+                  }}>
+                    {a.name}
                   </div>
-                )}
+                  {a.status !== 'completed' && (
+                    <div className="prime-radiant__activity-bar">
+                      <div
+                        className="prime-radiant__activity-fill"
+                        style={{
+                          width: `${a.progress}%`,
+                          backgroundColor: STATUS_COLOR[a.status],
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <span className="prime-radiant__activity-eta" style={{
+                  color: a.status === 'blocked' ? '#FF4444' : '#6b7280',
+                }}>
+                  {a.eta}
+                </span>
               </div>
-              <span className="prime-radiant__activity-eta" style={{
-                color: a.status === 'blocked' ? '#FF4444' : '#6b7280',
-              }}>
-                {a.eta}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </AccordionSection>
+
+          {/* Commits accordion */}
+          <AccordionSection
+            title="Commits"
+            badge={`${commits.length}`}
+            defaultOpen={false}
+          >
+            {commits.map((c) => (
+              <div key={c.hash} className="prime-radiant__commit-item">
+                <span className="prime-radiant__commit-hash" style={{
+                  color: REPO_COLOR[c.repo] ?? '#8b949e',
+                }}>
+                  {c.hash.slice(0, 7)}
+                </span>
+                <span className="prime-radiant__commit-msg">{c.message}</span>
+                <span className="prime-radiant__commit-time">{c.time}</span>
+              </div>
+            ))}
+          </AccordionSection>
+        </>
       )}
     </div>
   );
