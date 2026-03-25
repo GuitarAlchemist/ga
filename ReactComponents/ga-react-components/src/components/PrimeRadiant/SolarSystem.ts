@@ -25,68 +25,79 @@ interface PlanetDef {
   fragment: string;
 }
 
+// Realistic proportions: log-scaled distances, sqrt-scaled radii, Kepler periods
+// Real AU: Mer 0.39, Ven 0.72, Ear 1.0, Mar 1.52, Jup 5.2, Sat 9.5, Ura 19.2, Nep 30.1
+// Log-scaled to fit in ~35 units; speed ∝ distance^-1.5 (Kepler's 3rd law)
+const NOISE_LIB = `
+float h(vec3 p){return fract(sin(dot(p,vec3(1.3,1.7,1.9)))*43758.5);}
+float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++,p*=2.){v+=a*n(p);a*=0.5;}return v;}
+`;
+
 const PLANETS: PlanetDef[] = [
   {
-    name: 'mercury', radius: 0.15, distance: 4, speed: 4.7,
-    fragment: `
+    name: 'mercury', radius: 0.12, distance: 4.5, speed: 8.3,
+    fragment: NOISE_LIB + `
       varying vec3 vPos;
-      vec3 h(vec3 p){p=fract(p*vec3(443.8,441.4,437.2));p+=dot(p,p.yzx+19.19);return fract((p.xxy+p.yxx)*p.zyx);}
-      float n(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(dot(h(i),f),dot(h(i+vec3(1,0,0)),f-vec3(1,0,0)),f.x),mix(dot(h(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(h(i+vec3(1,1,0)),f-vec3(1,1,0)),f.x),f.y)*.5+.5;}
-      void main(){float c=n(vPos*15.)*.5+n(vPos*30.)*.3;gl_FragColor=vec4(vec3(.45,.42,.4)*(.5+c),1.);}`,
+      void main(){float c=n(vPos*15.)*.5+n(vPos*30.)*.3+n(vPos*60.)*.1;gl_FragColor=vec4(vec3(.5,.48,.45)*(.4+c*.6),1.);}`,
   },
   {
-    name: 'venus', radius: 0.35, distance: 6.5, speed: 3.5,
-    fragment: `
+    name: 'venus', radius: 0.3, distance: 6.5, speed: 4.5,
+    fragment: NOISE_LIB + `
       uniform float uTime;varying vec3 vPos;
-      void main(){float swirl=sin(vPos.y*8.+vPos.x*3.+uTime*.5)*.5+.5;vec3 col=mix(vec3(.9,.7,.2),vec3(.95,.85,.4),swirl);float haze=.7+.3*sin(uTime*.3);gl_FragColor=vec4(col*haze,1.);}`,
+      void main(){float sw=fbm(vPos*3.+vec3(uTime*.02,0,uTime*.01));vec3 col=mix(vec3(.85,.65,.2),vec3(.95,.85,.5),sw);float haze=.75+.25*sin(vPos.y*4.+uTime*.3);gl_FragColor=vec4(col*haze,1.);}`,
   },
   {
-    name: 'earth', radius: 0.4, distance: 9, speed: 2.98,
-    fragment: `
+    name: 'earth', radius: 0.35, distance: 9, speed: 3.0,
+    fragment: NOISE_LIB + `
       uniform float uTime;varying vec3 vPos;varying vec3 vNormal;
-      vec3 h(vec3 p){p=fract(p*vec3(443.8,441.4,437.2));p+=dot(p,p.yzx+19.19);return fract((p.xxy+p.yxx)*p.zyx);}
-      float n(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(dot(h(i),f),dot(h(i+vec3(1,0,0)),f-vec3(1,0,0)),f.x),mix(dot(h(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(h(i+vec3(1,1,0)),f-vec3(1,1,0)),f.x),f.y)*.5+.5;}
-      float fbm(vec3 p){float v=0.,a=.5;for(int i=0;i<3;i++){v+=a*n(p);p*=2.1;a*=.5;}return v;}
       void main(){
         vec3 sun=normalize(vec3(1.,.3,.5));float day=smoothstep(-.1,.3,dot(vNormal,sun));
         float land=smoothstep(.48,.52,fbm(vPos*2.5));float lat=abs(vPos.y/length(vPos));
-        vec3 ocean=vec3(.01,.04,.15);vec3 green=mix(vec3(.04,.12,.03),vec3(.7,.72,.75),smoothstep(.7,.85,lat));
-        vec3 surf=mix(ocean,green,land);vec3 lit=surf*(.06+.94*day);
+        vec3 ocean=vec3(.01,.04,.15+.2*smoothstep(.3,.7,-vPos.y));
+        vec3 biome=land<.25?vec3(.72,.52,.24):land<.5?vec3(.1,.3,.1):lat<.5?vec3(.9,.9,.85):vec3(.7,.7,.75);
+        vec3 surf=mix(ocean,biome,land),lit=surf*(.06+.94*day);
         float city=land*(1.-day)*smoothstep(.55,.7,n(vPos*20.))*.7;lit+=vec3(1.,.85,.4)*city;
         float cl=smoothstep(.5,.65,fbm(vPos*3.+uTime*.01))*.35*day;lit+=vec3(.8)*cl;
+        float aurora=exp(-10.*(lat-.8*lat*(1.-day)))*(1.-day)*smoothstep(.9,.95,fbm(vPos*10.));
+        lit+=vec3(.4,.9,1.)*aurora;
         gl_FragColor=vec4(lit,1.);}`,
   },
   {
-    name: 'mars', radius: 0.25, distance: 12, speed: 2.4,
+    name: 'mars', radius: 0.18, distance: 11.5, speed: 2.0,
+    fragment: NOISE_LIB + `
+      varying vec3 vPos;
+      void main(){float lat=abs(vPos.y/length(vPos));float caps=smoothstep(.82,.92,lat);float t=fbm(vPos*4.);vec3 col=mix(vec3(.65,.22,.05),vec3(.8,.35,.12),t);col=mix(col,vec3(.92,.9,.88),caps);gl_FragColor=vec4(col,1.);}`,
+  },
+  {
+    name: 'jupiter', radius: 0.9, distance: 17, speed: 0.85,
+    fragment: NOISE_LIB + `
+      uniform float uTime;varying vec3 vPos;
+      void main(){
+        float y=vPos.y/length(vPos),layers=(sin(y*25.)+sin(y*50.+uTime)*.1)*.5+.5;
+        vec3 base=vec3(.85,.6,.3)*layers,band=vec3(fbm(vPos*vec3(20,4,1)+.5*uTime),.5,.3);
+        vec3 col=mix(base,band,0.5);float zb=n(vPos*vec3(4,20,1)+uTime*.1);col=mix(col,vec3(.95,.85,.6),zb);
+        float spot=1.-smoothstep(.0,.18,length(vec2(vPos.x/length(vPos)-.3,y+.2)));
+        vec3 sc=vec3(.8,.2,.1)*fbm(vPos*vec3(4,1,4)+uTime);col=mix(col,sc,spot);
+        gl_FragColor=vec4(col,1.);}`,
+  },
+  {
+    name: 'saturn', radius: 0.75, distance: 22, speed: 0.55,
+    fragment: NOISE_LIB + `
+      uniform float uTime;varying vec3 vPos;
+      void main(){float y=vPos.y/length(vPos);float b=sin(y*18.+sin(y*5.)*.3)*.5+.5;float t=n(vPos*vec3(10,3,10));vec3 col=mix(vec3(.85,.75,.45),vec3(.7,.6,.35),b+t*.2);gl_FragColor=vec4(col,1.);}`,
+  },
+  {
+    name: 'uranus', radius: 0.45, distance: 27, speed: 0.3, tilt: 1.71,
     fragment: `
       varying vec3 vPos;
-      vec3 h(vec3 p){p=fract(p*vec3(443.8,441.4,437.2));p+=dot(p,p.yzx+19.19);return fract((p.xxy+p.yxx)*p.zyx);}
-      float n(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(dot(h(i),f),dot(h(i+vec3(1,0,0)),f-vec3(1,0,0)),f.x),mix(dot(h(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(h(i+vec3(1,1,0)),f-vec3(1,1,0)),f.x),f.y)*.5+.5;}
-      void main(){float caps=smoothstep(.85,.95,abs(vPos.y/length(vPos)));float t=n(vPos*8.);vec3 col=mix(vec3(.7,.25,.05),vec3(.85,.4,.15),t);col=mix(col,vec3(.9),caps);gl_FragColor=vec4(col,1.);}`,
+      void main(){float y=vPos.y/length(vPos);float b=sin(y*12.)*.08;vec3 col=vec3(.52+b,.78+b,.83+b);gl_FragColor=vec4(col*.75,1.);}`,
   },
   {
-    name: 'jupiter', radius: 1.2, distance: 17, speed: 1.3,
+    name: 'neptune', radius: 0.42, distance: 32, speed: 0.2,
     fragment: `
       uniform float uTime;varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float bands=sin(y*25.+sin(y*7.)*.5)*.5+.5;float spot=1.-smoothstep(.0,.15,length(vec2(vPos.x/length(vPos)-.3,y+.2)));vec3 col=mix(vec3(.85,.6,.3),vec3(.95,.85,.6),bands);col=mix(col,vec3(.8,.2,.1),spot*.6);gl_FragColor=vec4(col,1.);}`,
-  },
-  {
-    name: 'saturn', radius: 1.0, distance: 22, speed: 0.97,
-    fragment: `
-      uniform float uTime;varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float bands=sin(y*15.)*.5+.5;vec3 col=mix(vec3(.9,.8,.5),vec3(.75,.65,.4),bands);gl_FragColor=vec4(col,1.);}`,
-  },
-  {
-    name: 'uranus', radius: 0.6, distance: 27, speed: 0.68, tilt: 1.71,
-    fragment: `
-      varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float b=sin(y*12.)*.1;vec3 col=vec3(.55+b,.8+b,.85+b);gl_FragColor=vec4(col*.7,1.);}`,
-  },
-  {
-    name: 'neptune', radius: 0.55, distance: 32, speed: 0.54,
-    fragment: `
-      uniform float uTime;varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float b=sin(y*10.+uTime*.2)*.15;vec3 col=vec3(.1,.15+b,.6+b);gl_FragColor=vec4(col,1.);}`,
+      void main(){float y=vPos.y/length(vPos);float b=sin(y*14.+uTime*.15)*.12;vec3 col=vec3(.08,.12+b,.55+b);gl_FragColor=vec4(col,1.);}`,
   },
 ];
 
