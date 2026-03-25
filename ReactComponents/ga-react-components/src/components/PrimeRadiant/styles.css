@@ -838,6 +838,92 @@
   text-decoration: underline;
 }
 
+/* ─── Activity Panel (top-left, under GST clock) ─── */
+.prime-radiant__activity {
+  position: absolute;
+  top: 40px;
+  left: 8px;
+  z-index: 20;
+  width: 220px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+}
+.prime-radiant__activity-title {
+  font-size: 10px;
+  color: #FFD700;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.prime-radiant__activity-count {
+  margin-left: 6px;
+  font-weight: 400;
+  color: #6b7280;
+  text-transform: none;
+}
+.prime-radiant__activity-toggle {
+  font-size: 8px;
+  color: #6b7280;
+}
+.prime-radiant__activity-list {
+  padding: 4px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.prime-radiant__activity-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+}
+.prime-radiant__activity-cat {
+  font-size: 9px;
+  font-weight: 700;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.prime-radiant__activity-info {
+  flex: 1;
+  min-width: 0;
+}
+.prime-radiant__activity-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.prime-radiant__activity-bar {
+  height: 2px;
+  background: #21262d;
+  border-radius: 1px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+.prime-radiant__activity-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.5s ease;
+}
+.prime-radiant__activity-eta {
+  font-size: 9px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
   .prime-radiant__health { font-size: 10px; padding: 4px 8px; }

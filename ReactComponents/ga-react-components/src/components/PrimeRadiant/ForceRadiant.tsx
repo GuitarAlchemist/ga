@@ -19,6 +19,7 @@ import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
+import { ActivityPanel } from './ActivityPanel';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1058,6 +1059,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Galactic Standard Time */}
       <GalacticClock />
+
+      {/* Activity feed — top-left under clock */}
+      <ActivityPanel />
 
       {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />
