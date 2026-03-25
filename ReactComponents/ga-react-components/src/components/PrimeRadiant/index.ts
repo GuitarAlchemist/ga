@@ -28,3 +28,4 @@ export { GalacticClock } from './GalacticClock';
 export { TutorialOverlay } from './TutorialOverlay';
 export { ActivityPanel } from './ActivityPanel';
 export { LLMStatus } from './LLMStatus';
+export { createEarthGlobe, updateEarthGlobe } from './EarthGlobe';
