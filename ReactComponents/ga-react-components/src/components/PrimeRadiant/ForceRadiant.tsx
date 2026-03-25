@@ -682,6 +682,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       });
 
+      // ─── Starfield follows camera (skybox behavior) ───
+      const cam = fg.camera();
+      starField.position.copy(cam.position);
+
       // ─── Edge undulation — sinusoidal curvature on active edges ───
       // Creates a living, breathing energy flow between collaborating nodes
       const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
@@ -771,12 +775,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     ambientDust.name = 'ambient-dust';
     fg.scene().add(ambientDust);
 
-    // ─── STARFIELD (deeper, more distant) ───
+    // ─── STARFIELD — locked to camera (true skybox, no parallax) ───
     const starCount = 3000;
     const starPositions = new Float32Array(starCount * 3);
     const starColors = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
-      const r = 600 + Math.random() * 1400;
+      const r = 800;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       starPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
@@ -789,7 +793,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
     const starMat = new THREE.PointsMaterial({ size: 1.5, vertexColors: true, transparent: true, opacity: 0.6, sizeAttenuation: false });
-    fg.scene().add(new THREE.Points(starGeo, starMat));
+    const starField = new THREE.Points(starGeo, starMat);
+    starField.name = 'starfield';
+    starField.renderOrder = -1; // render behind everything
+    fg.scene().add(starField);
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
     // Rings colored by health state — problems visible even at distance
@@ -849,6 +856,33 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(godRay2);
 
     // Effects are animated in the main onEngineTick (merged below)
+
+    // ─── Auto-select the most connected (central) node on load ───
+    // Find the node with the most edges — that's the true hub
+    const edgeCounts = new Map<string, number>();
+    for (const e of graph.edges) {
+      edgeCounts.set(e.source, (edgeCounts.get(e.source) ?? 0) + 1);
+      edgeCounts.set(e.target, (edgeCounts.get(e.target) ?? 0) + 1);
+    }
+    const centralNode = graph.nodes.reduce((best, n) =>
+      (edgeCounts.get(n.id) ?? 0) > (edgeCounts.get(best.id) ?? 0) ? n : best,
+      graph.nodes[0],
+    );
+    if (centralNode) {
+      setSelectedNode(centralNode);
+      onNodeSelect?.(centralNode);
+      // Zoom to it after force layout settles
+      setTimeout(() => {
+        const fNode = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === centralNode.id) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
+        if (fNode?.x !== undefined) {
+          fg.cameraPosition(
+            { x: fNode.x, y: (fNode.y ?? 0) + 30, z: (fNode.z ?? 0) + 80 },
+            { x: fNode.x, y: fNode.y ?? 0, z: fNode.z ?? 0 },
+            1500,
+          );
+        }
+      }, 2000);
+    }
 
     graphRef.current = fg;
 

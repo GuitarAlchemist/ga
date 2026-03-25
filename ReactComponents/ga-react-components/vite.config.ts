@@ -7,6 +7,7 @@ export default defineConfig({
     plugins: [react(), dts()],
     server: {
         port: 5176,
+        allowedHosts: true,
         hmr: {
             overlay: false,
         },
