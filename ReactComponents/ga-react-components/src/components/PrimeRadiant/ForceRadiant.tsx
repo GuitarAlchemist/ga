@@ -20,6 +20,7 @@ import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
+import { LLMStatus } from './LLMStatus';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1062,6 +1063,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Activity feed — top-left under clock */}
       <ActivityPanel />
+
+      {/* LLM provider status — top-right */}
+      <LLMStatus />
 
       {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />

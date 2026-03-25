@@ -924,6 +924,87 @@
   white-space: nowrap;
 }
 
+/* ─── LLM Status Panel ─── */
+.prime-radiant__llm-status {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  z-index: 20;
+  width: 200px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__llm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+}
+.prime-radiant__llm-title {
+  font-size: 10px;
+  color: #8b949e;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.prime-radiant__llm-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.prime-radiant__llm-toggle {
+  font-size: 8px;
+  color: #6b7280;
+}
+.prime-radiant__llm-list {
+  padding: 4px 0;
+}
+.prime-radiant__llm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+}
+.prime-radiant__llm-icon {
+  font-size: 11px;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.prime-radiant__llm-info {
+  flex: 1;
+  min-width: 0;
+}
+.prime-radiant__llm-model {
+  font-size: 10px;
+  color: #c9d1d9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prime-radiant__llm-meta {
+  font-size: 9px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prime-radiant__llm-badge {
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
   .prime-radiant__health { font-size: 10px; padding: 4px 8px; }
