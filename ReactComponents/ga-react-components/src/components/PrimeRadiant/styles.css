@@ -837,3 +837,102 @@
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   text-decoration: underline;
 }
+
+/* ─── RESPONSIVE — tablet ─── */
+@media (max-width: 1024px) {
+  .prime-radiant__health { font-size: 10px; padding: 4px 8px; }
+  .prime-radiant__detail { width: 280px; }
+  .prime-radiant__gst-clock { font-size: 9px; }
+  .chat-widget__panel { width: 300px; height: 400px; }
+  .prime-radiant__tutorial-card { max-width: 90vw; padding: 20px; }
+}
+
+/* ─── RESPONSIVE — phone ─── */
+@media (max-width: 640px) {
+  /* Health bar — compact */
+  .prime-radiant__health {
+    font-size: 9px;
+    padding: 3px 6px;
+    top: 4px;
+    right: 4px;
+    gap: 4px;
+  }
+
+  /* Detail panel — full width bottom sheet */
+  .prime-radiant__detail {
+    width: 100%;
+    max-width: 100%;
+    height: 45vh;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    border-radius: 12px 12px 0 0;
+    border-right: none;
+    border-bottom: none;
+    border-top: 1px solid #30363d;
+  }
+  .prime-radiant__detail--open { transform: translateY(0); }
+  .prime-radiant__detail:not(.prime-radiant__detail--open) { transform: translateY(100%); }
+
+  /* Buttons — smaller, tighter */
+  .chat-widget__trigger,
+  .prime-radiant__tutorial-btn {
+    width: 34px;
+    height: 34px;
+    left: 10px;
+  }
+  .chat-widget__trigger { bottom: 10px; font-size: 14px; }
+  .prime-radiant__tutorial-btn { bottom: 52px; font-size: 13px; }
+
+  /* Chat panel — full width bottom sheet */
+  .chat-widget__panel {
+    width: calc(100vw - 20px);
+    height: 50vh;
+    left: 10px;
+    bottom: 52px;
+    border-radius: 12px;
+  }
+
+  /* GST clock — smaller */
+  .prime-radiant__gst-clock { font-size: 8px; top: 4px; left: 4px; }
+
+  /* Tutorial overlay — full screen on mobile */
+  .prime-radiant__tutorial-card {
+    max-width: 95vw;
+    max-height: 85vh;
+    padding: 16px;
+    margin: 10px;
+    border-radius: 8px;
+  }
+  .prime-radiant__tutorial-section h4 { font-size: 12px; }
+  .prime-radiant__tutorial-section p,
+  .prime-radiant__tutorial-section li { font-size: 11px; }
+
+  /* File tree — compact */
+  .prime-radiant__file-tree-item { padding: 3px 4px; font-size: 10px; }
+
+  /* Connection list — compact */
+  .prime-radiant__detail-connection { padding: 4px 6px; font-size: 10px; }
+}
+
+/* ─── Touch-friendly tap targets ─── */
+@media (pointer: coarse) {
+  .chat-widget__trigger,
+  .prime-radiant__tutorial-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .prime-radiant__detail-connection {
+    padding: 8px 10px;
+    min-height: 44px;
+  }
+  .prime-radiant__file-tree-item {
+    padding: 6px 8px;
+    min-height: 40px;
+  }
+  .chat-widget__send-btn,
+  .chat-widget__mic-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
