@@ -804,7 +804,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Solar system — top-right of view ───
       updateSolarSystem(solarSystem, t);
-      const solarOffset = new THREE.Vector3(30, 15, -45);
+      const solarOffset = new THREE.Vector3(18, 12, -30);
       solarOffset.applyQuaternion(cam.quaternion);
       solarSystem.position.copy(cam.position).add(solarOffset);
     });
@@ -1085,7 +1085,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + Moon + Saturn rings ───
-    const solarSystem = createSolarSystem(0.4);
+    const solarSystem = createSolarSystem(0.08);
     fg.scene().add(solarSystem);
 
     // ─── Auto-select the most connected (central) node on load ───
