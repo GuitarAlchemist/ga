@@ -661,8 +661,8 @@
 /* ─── Tutorial Overlay ─── */
 .prime-radiant__tutorial-btn {
   position: absolute;
-  bottom: 24px;
-  right: 24px;
+  bottom: 76px;
+  left: 20px;
   z-index: 30;
   width: 36px;
   height: 36px;

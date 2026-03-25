@@ -785,16 +785,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
 
-      // TARS — bottom-left of view, 50 units from camera
+      // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
-      const tarsOffset = new THREE.Vector3(-35, -25, -50);
+      const tarsOffset = new THREE.Vector3(-50, -28, -50);
       tarsOffset.applyQuaternion(cam.quaternion);
       tarsRobot.position.copy(cam.position).add(tarsOffset);
       tarsRobot.quaternion.copy(cam.quaternion);
 
-      // Demerzel face — bottom-left, above TARS, 40 units from camera
+      // Demerzel face — far left, above TARS
       updateDemerzelFace(demerzelFace, t, cam.position, false);
-      const faceOffset = new THREE.Vector3(-30, -5, -40);
+      const faceOffset = new THREE.Vector3(-50, -8, -40);
       faceOffset.applyQuaternion(cam.quaternion);
       demerzelFace.position.copy(cam.position).add(faceOffset);
       demerzelFace.quaternion.copy(cam.quaternion);
