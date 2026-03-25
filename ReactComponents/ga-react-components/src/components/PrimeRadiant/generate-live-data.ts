@@ -45,6 +45,65 @@ function kebabToTitle(kebab: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// File tree builder
+// ---------------------------------------------------------------------------
+interface FileTreeNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  children?: FileTreeNode[];
+  extension?: string;
+}
+
+function getExtension(fileName: string): string | undefined {
+  const parts = fileName.split('.');
+  return parts.length > 1 ? parts[parts.length - 1] : undefined;
+}
+
+function buildFileTree(dirPath: string, relativeTo: string): FileTreeNode[] {
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    return entries
+      .sort((a, b) => {
+        // directories first, then alphabetical
+        if (a.isDirectory() && !b.isDirectory()) return -1;
+        if (!a.isDirectory() && b.isDirectory()) return 1;
+        return a.name.localeCompare(b.name);
+      })
+      .map(entry => {
+        const fullPath = path.join(dirPath, entry.name);
+        const relPath = path.relative(relativeTo, fullPath).replace(/\\/g, '/');
+        if (entry.isDirectory()) {
+          return {
+            name: entry.name,
+            path: relPath,
+            type: 'directory' as const,
+            children: buildFileTree(fullPath, relativeTo),
+          };
+        }
+        return {
+          name: entry.name,
+          path: relPath,
+          type: 'file' as const,
+          extension: getExtension(entry.name),
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+function singleFileTree(fileName: string, dirRelative: string): FileTreeNode[] {
+  const relPath = `${dirRelative}/${fileName}`;
+  return [{
+    name: fileName,
+    path: relPath,
+    type: 'file' as const,
+    extension: getExtension(fileName),
+  }];
+}
+
+// ---------------------------------------------------------------------------
 // Scan artifacts
 // ---------------------------------------------------------------------------
 interface ArtifactInfo {
@@ -53,6 +112,7 @@ interface ArtifactInfo {
   fileName: string;
   version?: string;
   description?: string;
+  fileTree?: FileTreeNode[];
 }
 
 function scanYamlVersion(filePath: string): string | undefined {
@@ -83,6 +143,7 @@ function scanConstitutions(): ArtifactInfo[] {
       id: `const-${base}`,
       name: kebabToTitle(base) + (f.includes('constitution') ? ' Constitution' : ''),
       fileName: f,
+      fileTree: buildFileTree(dir, DEMERZEL_ROOT),
     };
   });
 }
@@ -98,6 +159,7 @@ function scanPolicies(): ArtifactInfo[] {
       fileName: f,
       version: scanYamlVersion(filePath),
       description: scanYamlDescription(filePath),
+      fileTree: singleFileTree(f, 'policies'),
     };
   });
 }
@@ -113,6 +175,7 @@ function scanPersonas(): ArtifactInfo[] {
       fileName: f,
       version: scanYamlVersion(filePath),
       description: scanYamlDescription(filePath),
+      fileTree: singleFileTree(f, 'personas'),
     };
   });
 }
@@ -127,6 +190,7 @@ function scanSchemas(): ArtifactInfo[] {
         id: `sch-${base}`,
         name: kebabToTitle(base) + ' Schema',
         fileName: f,
+        fileTree: singleFileTree(f, 'schemas'),
       };
     });
 }
@@ -141,6 +205,7 @@ function scanTests(): ArtifactInfo[] {
         id: `test-${base}`,
         name: kebabToTitle(base) + ' Tests',
         fileName: f,
+        fileTree: singleFileTree(f, 'tests/behavioral'),
       };
     });
 }
@@ -152,11 +217,18 @@ function scanDepartments(): ArtifactInfo[] {
     .map(f => {
       const base = f.replace(/\.department\.json$/, '');
       const data = readJsonSafe(path.join(dir, f));
+      // Check if a department subdirectory exists for recursive tree
+      const deptDir = path.join(dir, base);
+      const hasDeptDir = fs.existsSync(deptDir) && fs.statSync(deptDir).isDirectory();
+      const fileTree: FileTreeNode[] = hasDeptDir
+        ? buildFileTree(deptDir, DEMERZEL_ROOT)
+        : singleFileTree(f, 'state/streeling/departments');
       return {
         id: `dept-${base}`,
         name: (data?.full_name as string) || kebabToTitle(base) + ' Department',
         fileName: f,
         description: typeof data?.domain === 'string' ? data.domain.slice(0, 200) : undefined,
+        fileTree,
       };
     });
 }
@@ -215,6 +287,7 @@ interface NodeOut {
   domain?: string;
   version?: string;
   health?: { resilienceScore: number; lolliCount: number; ergolCount: number };
+  fileTree?: FileTreeNode[];
 }
 
 interface EdgeOut {
@@ -316,6 +389,7 @@ function main() {
         lolliCount: 0,
         ergolCount: evo?.citationCount ?? 5,
       },
+      fileTree: c.fileTree,
     });
   }
 
@@ -336,6 +410,7 @@ function main() {
         lolliCount: isLolli ? 1 : 0,
         ergolCount: evo?.citationCount ?? 1,
       },
+      fileTree: p.fileTree,
     });
   }
 
@@ -354,6 +429,7 @@ function main() {
         lolliCount: 0,
         ergolCount: 3,
       },
+      fileTree: p.fileTree,
     });
   }
 
@@ -372,6 +448,7 @@ function main() {
         lolliCount: 0,
         ergolCount: 2,
       },
+      fileTree: s.fileTree,
     });
   }
 
@@ -403,6 +480,7 @@ function main() {
         lolliCount: 0,
         ergolCount: 5,
       },
+      fileTree: t.fileTree,
     });
   }
 
@@ -421,6 +499,7 @@ function main() {
         lolliCount: 0,
         ergolCount: 4,
       },
+      fileTree: d.fileTree,
     });
   }
 

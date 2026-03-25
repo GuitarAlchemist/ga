@@ -319,6 +319,54 @@
   flex-shrink: 0;
 }
 
+/* ─── File tree (detail panel drill-down) ─── */
+.prime-radiant__file-tree {
+  display: flex;
+  flex-direction: column;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.prime-radiant__file-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #c9d1d9;
+  user-select: none;
+}
+
+.prime-radiant__file-tree-item--dir {
+  cursor: pointer;
+}
+
+.prime-radiant__file-tree-item:hover {
+  background: rgba(48, 54, 61, 0.6);
+}
+
+.prime-radiant__file-tree-toggle {
+  font-size: 9px;
+  width: 14px;
+  text-align: center;
+  color: #484f58;
+  flex-shrink: 0;
+}
+
+.prime-radiant__file-tree-icon {
+  width: 14px;
+  text-align: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.prime-radiant__file-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ─── Tooltip ─── */
 .prime-radiant__tooltip {
   position: absolute;
@@ -349,4 +397,250 @@
 .prime-radiant__tooltip-desc {
   color: #8b949e;
   margin-top: 4px;
+}
+
+/* ─── Chat Widget ─── */
+.chat-widget__trigger {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 25;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid #30363d;
+  background: rgba(22, 27, 34, 0.9);
+  color: #FFD700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.chat-widget__trigger:hover {
+  transform: scale(1.1);
+  border-color: #FFD700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+}
+
+.chat-widget__panel {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  z-index: 25;
+  width: 350px;
+  height: 500px;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(16px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.chat-widget__panel--open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.chat-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.chat-widget__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFD700;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.chat-widget__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-widget__close-btn,
+.chat-widget__tts-btn {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-widget__close-btn:hover,
+.chat-widget__tts-btn:hover {
+  background: #30363d;
+  color: #e6edf3;
+}
+
+.chat-widget__tts-btn--active {
+  color: #FFD700;
+}
+
+.chat-widget__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+
+.chat-widget__messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-widget__messages::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 2px;
+}
+
+.chat-widget__msg {
+  display: flex;
+}
+
+.chat-widget__msg--user {
+  justify-content: flex-end;
+}
+
+.chat-widget__msg--assistant {
+  justify-content: flex-start;
+}
+
+.chat-widget__msg-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.chat-widget__msg--user .chat-widget__msg-bubble {
+  background: #1f6feb;
+  color: #e6edf3;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-widget__msg--assistant .chat-widget__msg-bubble {
+  background: #161b22;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-bottom-left-radius: 2px;
+}
+
+.chat-widget__msg-bubble--loading {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.chat-widget__typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8b949e;
+  animation: chat-typing 1.2s infinite;
+}
+
+.chat-widget__typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.chat-widget__typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes chat-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.chat-widget__input-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.chat-widget__input {
+  flex: 1;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.chat-widget__input:focus {
+  border-color: #FFD700;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
+}
+
+.chat-widget__input::placeholder {
+  color: #484f58;
+}
+
+.chat-widget__mic-btn,
+.chat-widget__send-btn {
+  background: none;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.chat-widget__mic-btn:hover,
+.chat-widget__send-btn:hover {
+  background: #30363d;
+  color: #e6edf3;
+}
+
+.chat-widget__send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.chat-widget__mic-btn--active {
+  color: #FF4444;
+  border-color: #FF4444;
+  animation: mic-pulse 1.5s infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 68, 68, 0); }
 }

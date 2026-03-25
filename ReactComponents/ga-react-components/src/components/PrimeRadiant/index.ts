@@ -4,6 +4,7 @@
 export { PrimeRadiant } from './PrimeRadiant';
 export { ForceRadiant } from './ForceRadiant';
 export { DetailPanel } from './DetailPanel';
+export { ChatWidget } from './ChatWidget';
 export type {
   GovernanceNode,
   GovernanceEdge,
@@ -13,6 +14,7 @@ export type {
   HealthMetrics,
   HealthStatus,
   GovernanceHealthStatus,
+  FileTreeNode,
   PrimeRadiantProps,
   SelectionState,
 } from './types';
