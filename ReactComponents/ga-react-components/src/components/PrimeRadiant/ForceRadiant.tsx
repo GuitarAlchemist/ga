@@ -802,9 +802,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Earth globe — top-right, below Trantor ───
+      // ─── Earth globe — small, top-right corner ───
       updateEarthGlobe(earthGlobe, t);
-      const earthOffset = new THREE.Vector3(40, 10, -55);
+      const earthOffset = new THREE.Vector3(25, 18, -40);
       earthOffset.applyQuaternion(cam.quaternion);
       earthGlobe.position.copy(cam.position).add(earthOffset);
     });
@@ -857,7 +857,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── SKYBOX — nebula background sphere + multi-layer starfield ───
 
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
-    const skyGeo = new THREE.SphereGeometry(900, 32, 32);
+    const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       depthWrite: false,
@@ -931,8 +931,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
           for (int i = 0; i < 5; i++) {
             float d = length(dir - stars[i]);
-            float glow = exp(-200.0 * d * d);       // tight core
-            float halo = exp(-20.0 * d * d) * 0.15;  // soft halo
+            float glow = exp(-500.0 * d * d) * 0.5;   // tight small core
+            float halo = exp(-40.0 * d * d) * 0.08;   // subtle halo
             col += starColors[i] * (glow + halo);
           }
 
@@ -943,7 +943,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
-    fg.scene().add(skySphere);
+    // Added to starField group below (follows camera — no parallax)
 
     // Layer 1: Bright prominent stars (few, large, colorful)
     const brightCount = 200;
@@ -951,7 +951,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const brightCol = new Float32Array(brightCount * 3);
     const brightSizes = new Float32Array(brightCount);
     for (let i = 0; i < brightCount; i++) {
-      const r = 800;
+      const r = 4500;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       brightPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
@@ -981,7 +981,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dimPos = new Float32Array(dimCount * 3);
     const dimCol = new Float32Array(dimCount * 3);
     for (let i = 0; i < dimCount; i++) {
-      const r = 800;
+      const r = 4500;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       dimPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
@@ -1085,7 +1085,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── EARTH GLOBE — realistic procedural planet ───
-    const earthGlobe = createEarthGlobe(1.0);
+    const earthGlobe = createEarthGlobe(0.3);
     fg.scene().add(earthGlobe);
 
     // ─── Auto-select the most connected (central) node on load ───
