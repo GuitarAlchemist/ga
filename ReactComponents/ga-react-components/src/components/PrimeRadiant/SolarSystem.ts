@@ -52,15 +52,42 @@ const PLANETS: PlanetDef[] = [
     fragment: NOISE_LIB + `
       uniform float uTime;varying vec3 vPos;varying vec3 vNormal;
       void main(){
-        vec3 sun=normalize(vec3(1.,.3,.5));float day=smoothstep(-.1,.3,dot(vNormal,sun));
-        float land=smoothstep(.48,.52,fbm(vPos*2.5));float lat=abs(vPos.y/length(vPos));
-        vec3 ocean=vec3(.01,.04,.15+.2*smoothstep(.3,.7,-vPos.y));
-        vec3 biome=land<.25?vec3(.72,.52,.24):land<.5?vec3(.1,.3,.1):lat<.5?vec3(.9,.9,.85):vec3(.7,.7,.75);
-        vec3 surf=mix(ocean,biome,land),lit=surf*(.06+.94*day);
-        float city=land*(1.-day)*smoothstep(.55,.7,n(vPos*20.))*.7;lit+=vec3(1.,.85,.4)*city;
-        float cl=smoothstep(.5,.65,fbm(vPos*3.+uTime*.01))*.35*day;lit+=vec3(.8)*cl;
-        float aurora=exp(-10.*(lat-.8*lat*(1.-day)))*(1.-day)*smoothstep(.9,.95,fbm(vPos*10.));
-        lit+=vec3(.4,.9,1.)*aurora;
+        vec3 sun=normalize(vec3(1.,.3,.5));
+        float day=smoothstep(-.1,.3,dot(vNormal,sun));
+        float rawNoise=fbm(vPos*2.5);
+        float land=smoothstep(.46,.54,rawNoise);
+        float lat=abs(vPos.y/length(vPos));
+        float biomeNoise=n(vPos*5.);
+
+        // Ocean — deeper blue in deep areas
+        vec3 ocean=mix(vec3(.005,.02,.12),vec3(.02,.08,.2),rawNoise);
+        float spec=pow(max(dot(reflect(-sun,vNormal),normalize(-vPos)),0.),32.)*.4*day;
+        ocean+=vec3(.3,.4,.5)*spec;
+
+        // Land biomes based on latitude + noise
+        vec3 tropical=vec3(.06,.15,.03);
+        vec3 temperate=vec3(.08,.12,.04);
+        vec3 desert=vec3(.6,.45,.2);
+        vec3 polar=vec3(.8,.82,.85);
+        vec3 landCol=mix(tropical,temperate,smoothstep(.0,.3,lat));
+        landCol=mix(landCol,desert,biomeNoise*.4);
+        landCol=mix(landCol,polar,smoothstep(.65,.8,lat));
+
+        vec3 surf=mix(ocean,landCol,land);
+        vec3 lit=surf*(.05+.95*day);
+
+        // City lights on dark side
+        float city=land*(1.-day)*smoothstep(.6,.75,n(vPos*25.))*.8;
+        lit+=vec3(1.,.85,.4)*city;
+
+        // Clouds
+        float cl=smoothstep(.48,.62,fbm(vPos*3.5+uTime*.008))*.3*day;
+        lit+=vec3(.85)*cl;
+
+        // Atmosphere rim
+        float fresnel=pow(1.-abs(dot(vNormal,normalize(-vPos))),3.);
+        lit+=vec3(.3,.5,1.)*fresnel*.3;
+
         gl_FragColor=vec4(lit,1.);}`,
   },
   {
