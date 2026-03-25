@@ -62,7 +62,7 @@ const STATUS_DOT: Record<LLMProvider['status'], string> = {
 
 export const LLMStatus: React.FC = () => {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setProviders(getLLMProviders());
