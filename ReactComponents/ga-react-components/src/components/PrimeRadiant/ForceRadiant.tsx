@@ -18,6 +18,7 @@ import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
 import { GalacticClock } from './GalacticClock';
+import { TutorialOverlay } from './TutorialOverlay';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -727,8 +728,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
 
       // ─── Starfield follows camera (skybox behavior) ───
-      const cam = fg.camera();
-      starField.position.copy(cam.position);
+      starField.position.copy(fg.camera().position);
 
       // ─── Edge undulation — sinusoidal curvature on active edges ───
       // Skip on low quality for performance
@@ -1061,6 +1061,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />
+
+      {/* Tutorial overlay + help button */}
+      <TutorialOverlay />
     </div>
   );
 };
