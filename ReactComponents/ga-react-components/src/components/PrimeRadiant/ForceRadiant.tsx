@@ -778,8 +778,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
-      // ─── TARS animation ───
+      // ─── TARS animation — fixed bottom-left HUD position ───
       updateTarsRobot(tarsRobot, t);
+      // Position TARS in bottom-left of camera view
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      const tarsOffset = new THREE.Vector3(-0.35, -0.25, -1);
+      tarsOffset.applyQuaternion(cam.quaternion);
+      tarsRobot.position.copy(cam.position).add(tarsOffset);
 
       // ─── Demerzel face animation ───
       // TODO: connect `speaking` to ChatWidget TTS state
