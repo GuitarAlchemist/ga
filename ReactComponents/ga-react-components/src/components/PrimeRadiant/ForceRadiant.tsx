@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
-import { NODE_COLORS, HEALTH_COLORS } from './types';
+import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, getHealthStatus } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
@@ -28,6 +28,7 @@ interface GraphNode extends NodeObject {
   repo?: string;
   version?: string;
   health?: GovernanceNode['health'];
+  healthStatus?: GovernanceHealthStatus;
   children?: string[];
   metadata?: Record<string, unknown>;
   // force-graph adds these at runtime:
@@ -70,13 +71,13 @@ const TYPE_PARTICLES: Record<GovernanceNodeType, number> = {
   ixql: 8,
 };
 
-// Edge colors — thinner, subtler, distinct per relationship type
+// Edge colors — very subtle so they don't compete with node health colors
 const EDGE_COLORS: Record<string, string> = {
-  'constitutional-hierarchy': '#FF6B3566',   // coral, semi-transparent
-  'policy-persona': '#DAA52044',             // golden rod, very subtle
-  'pipeline-flow': '#00FFAA55',              // spring green, moderate
-  'cross-repo': '#1E90FF44',                 // dodger blue, subtle
-  'lolli': '#FF000066',                      // red — dead references stand out
+  'constitutional-hierarchy': '#FFFFFF30',   // white, subtle structural
+  'policy-persona': '#FFFFFF18',             // near-invisible governance links
+  'pipeline-flow': '#FFFFFF22',              // faint flow lines
+  'cross-repo': '#FFFFFF15',                 // barely visible cross-repo
+  'lolli': '#FF444466',                      // red tint — dead refs still notable
 };
 
 const EDGE_WIDTH: Record<string, number> = {
@@ -302,25 +303,57 @@ function createVolumetricMaterial(color: THREE.Color, complexity: number, intens
 // ---------------------------------------------------------------------------
 // Create custom Three.js node — raymarched core + fractal sprite + dust
 // ---------------------------------------------------------------------------
+// Shape by type — each governance artifact type gets a distinct geometry
+const TYPE_GEOMETRY: Record<GovernanceNodeType, (r: number) => THREE.BufferGeometry> = {
+  constitution: (r) => new THREE.DodecahedronGeometry(r, 0),
+  department: (r) => new THREE.OctahedronGeometry(r, 0),
+  policy: (r) => new THREE.BoxGeometry(r * 1.4, r * 1.4, r * 1.4),
+  persona: (r) => new THREE.ConeGeometry(r, r * 2, 8),
+  pipeline: (r) => new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 2, 8),
+  schema: (r) => new THREE.TetrahedronGeometry(r, 0),
+  test: (r) => new THREE.IcosahedronGeometry(r, 1),
+  ixql: (r) => new THREE.TorusKnotGeometry(r * 0.6, r * 0.2, 32, 8),
+};
+
+// Visual prominence config per health state — problems JUMP OUT
+const HEALTH_PROMINENCE: Record<GovernanceHealthStatus, {
+  sizeMult: number; particleMult: number; opacity: number; glowIntensity: number;
+  spinSpeed: number;  // radians/sec — 0 = static, >0 = active
+}> = {
+  error:         { sizeMult: 1.5, particleMult: 2.0, opacity: 1.0, glowIntensity: 1.8, spinSpeed: 2.0 },
+  warning:       { sizeMult: 1.3, particleMult: 1.5, opacity: 1.0, glowIntensity: 1.4, spinSpeed: 0.6 },
+  healthy:       { sizeMult: 1.0, particleMult: 1.0, opacity: 1.0, glowIntensity: 1.0, spinSpeed: 0.1 },
+  unknown:       { sizeMult: 0.7, particleMult: 0.5, opacity: 0.4, glowIntensity: 0.5, spinSpeed: 0.0 },
+  contradictory: { sizeMult: 1.5, particleMult: 2.0, opacity: 1.0, glowIntensity: 1.8, spinSpeed: 1.5 },
+};
+
 function createNodeObject(node: GraphNode): THREE.Object3D {
   const group = new THREE.Group();
-  const radius = Math.pow(TYPE_SIZE[node.type] ?? 5, 0.5) * 0.8;
-  const color = new THREE.Color(node.color);
-  const isUnhealthy = node.health && node.health.lolliCount > 0;
-  const nodeColor = isUnhealthy ? new THREE.Color('#FF4444') : color;
+  const hs = node.healthStatus ?? 'unknown';
+  const prominence = HEALTH_PROMINENCE[hs];
+
+  const baseRadius = Math.pow(TYPE_SIZE[node.type] ?? 5, 0.5) * 0.8;
+  const radius = baseRadius * prominence.sizeMult;
+  // Node color comes from the data layer (already set to health status color)
+  const nodeColor = new THREE.Color(node.color);
 
   const complexity = {
     constitution: 4, department: 3, policy: 2, persona: 2,
     pipeline: 2, schema: 1, test: 1, ixql: 1,
   }[node.type] ?? 1;
 
-  const intensity = {
+  const intensity = ({
     constitution: 1.4, department: 1.2, policy: 1.0, persona: 1.0,
     pipeline: 0.9, schema: 0.8, test: 0.8, ixql: 0.7,
-  }[node.type] ?? 0.8;
+  }[node.type] ?? 0.8) * prominence.glowIntensity;
 
-  // 1. Raymarched volumetric core — the star of the show
-  const coreGeo = new THREE.SphereGeometry(radius * 0.5, 32, 32);
+  // Store health state on group for animation tick
+  group.userData.healthStatus = hs;
+
+  // 1. Raymarched volumetric core — shape encodes artifact type
+  const geoFactory = TYPE_GEOMETRY[node.type] ?? ((r: number) => new THREE.SphereGeometry(r, 32, 32));
+  const coreGeo = geoFactory(radius * 0.5);
+  if (!coreGeo.attributes.normal) coreGeo.computeVertexNormals();
   const coreMat = createVolumetricMaterial(nodeColor, complexity, intensity);
   const core = new THREE.Mesh(coreGeo, coreMat);
   core.userData = { isVolumetricCore: true };
@@ -331,7 +364,7 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   const spriteMat = new THREE.SpriteMaterial({
     map: fractalTex,
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.5 * prominence.opacity,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -340,8 +373,8 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   sprite.scale.set(spriteScale, spriteScale, 1);
   group.add(sprite);
 
-  // 3. Orbiting particle dust — more particles, orbital distribution
-  const dustCount = Math.floor(complexity * 10);
+  // 3. Orbiting particle dust — count scaled by health prominence
+  const dustCount = Math.floor(complexity * 10 * prominence.particleMult);
   const positions = new Float32Array(dustCount * 3);
   const dustColors = new Float32Array(dustCount * 3);
   for (let i = 0; i < dustCount; i++) {
@@ -366,7 +399,7 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
     size: radius * 0.08,
     vertexColors: true,
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.5 * prominence.opacity,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
@@ -390,6 +423,7 @@ function toForceData(graph: GovernanceGraph): { nodes: GraphNode[]; links: Graph
     repo: n.repo,
     version: n.version,
     health: n.health,
+    healthStatus: n.healthStatus,
     children: n.children,
     metadata: n.metadata,
   }));
@@ -456,25 +490,70 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .nodeLabel((node: object) => {
         const n = node as GraphNode;
         const typeLabel = n.type.charAt(0).toUpperCase() + n.type.slice(1);
+        const hs = n.healthStatus ?? 'unknown';
+        const hsColor = HEALTH_STATUS_COLORS[hs] ?? '#888888';
+        const hsLabel = hs.charAt(0).toUpperCase() + hs.slice(1);
         const healthInfo = n.health
           ? `<div style="font-size:9px;color:#8b949e;margin-top:2px">R: ${(n.health.resilienceScore * 100).toFixed(0)}% · E: ${n.health.ergolCount} · L: ${n.health.lolliCount}</div>`
           : '';
-        return `<div style="font-family:'JetBrains Mono',monospace;padding:4px 8px;background:rgba(0,0,8,0.85);border:1px solid ${n.color}44;border-radius:4px;backdrop-filter:blur(4px)">
-          <div style="color:${n.color};font-size:11px;font-weight:600">${n.name}</div>
-          <div style="color:#8b949e;font-size:9px;text-transform:uppercase;letter-spacing:0.5px">${typeLabel}${n.repo ? ' · ' + n.repo : ''}</div>
+        return `<div style="font-family:'JetBrains Mono',monospace;padding:4px 8px;background:rgba(0,0,8,0.85);border:1px solid ${hsColor}44;border-radius:4px;backdrop-filter:blur(4px)">
+          <div style="color:${hsColor};font-size:11px;font-weight:600">${n.name}</div>
+          <div style="color:#8b949e;font-size:9px;text-transform:uppercase;letter-spacing:0.5px">${typeLabel}${n.repo ? ' · ' + n.repo : ''} · <span style="color:${hsColor}">${hsLabel}</span></div>
           ${healthInfo}
         </div>`;
       })
 
-      // Edge rendering
+      // Edge rendering — undulating energy flow between collaborating nodes
       .linkColor((link: object) => (link as GraphLink).color)
-      .linkWidth((link: object) => (link as GraphLink).width)
+      .linkWidth((link: object) => {
+        const l = link as GraphLink;
+        // Edges between active (non-unknown) nodes get thicker — collaboration visible
+        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
+        const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
+        return (srcActive && tgtActive) ? l.width * 2.0 : l.width;
+      })
       .linkOpacity(0.25)
-      .linkDirectionalParticles(2)
-      .linkDirectionalParticleWidth(1.0)
-      .linkDirectionalParticleSpeed(0.005)
-      .linkDirectionalParticleColor((link: object) => (link as GraphLink).color)
-      .linkCurvature(0.15)
+      .linkDirectionalParticles((link: object) => {
+        // More particles on edges between active nodes — energy flow
+        const l = link as GraphLink;
+        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
+        const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
+        return (srcActive && tgtActive) ? 6 : 2;
+      })
+      .linkDirectionalParticleWidth((link: object) => {
+        const l = link as GraphLink;
+        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const bothError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
+        return bothError ? 2.5 : 1.0;
+      })
+      .linkDirectionalParticleSpeed((link: object) => {
+        // Faster particles on urgent edges
+        const l = link as GraphLink;
+        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const anyError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
+        const anyWarning = src?.healthStatus === 'warning' || tgt?.healthStatus === 'warning';
+        return anyError ? 0.015 : anyWarning ? 0.008 : 0.005;
+      })
+      .linkDirectionalParticleColor((link: object) => {
+        // Particle color matches the most urgent connected node
+        const l = link as GraphLink;
+        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const urgentNode = [src, tgt].find((n) => n?.healthStatus === 'error')
+          ?? [src, tgt].find((n) => n?.healthStatus === 'contradictory')
+          ?? [src, tgt].find((n) => n?.healthStatus === 'warning');
+        return urgentNode ? urgentNode.color : (link as GraphLink).color;
+      })
+      .linkCurvature((link: object) => {
+        // Dynamic curvature — stored on link object, animated per tick
+        return (link as GraphLink & { _curvature?: number })._curvature ?? 0.15;
+      })
 
       // Interaction
       .onNodeClick((node: object) => {
@@ -515,12 +594,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // Add bloom post-processing (belief: strength 0.4, radius 0.5, threshold 0.7)
+    // Add bloom post-processing — increased strength so red/magenta health nodes pop
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(container.clientWidth, container.clientHeight),
-      0.4,   // strength
-      0.5,   // radius
-      0.7,   // threshold
+      0.6,   // strength (up from 0.4 — health colors need to glow)
+      0.6,   // radius
+      0.5,   // threshold (lower = more bloom on bright health nodes)
     );
     fg.postProcessingComposer().addPass(bloomPass);
 
@@ -554,20 +633,43 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         const group = n.__threeObj as THREE.Group;
         const phase = (n.id?.length ?? 3) * 0.7;
+        const hs = group.userData.healthStatus as GovernanceHealthStatus | undefined ?? 'unknown';
 
-        // Pulse rate derived from health: healthy=0.6Hz, watch=1.2Hz, freeze=2.5Hz
-        const healthScore = n.health?.resilienceScore ?? 0.8;
-        const pulseRate = healthScore > 0.7 ? 0.6 : healthScore > 0.4 ? 1.2 : 2.5;
-
-        // Pulse amplitude from ERGOL (more governance = more presence)
-        const ergol = n.health?.ergolCount ?? 1;
-        const pulseAmp = 0.03 + Math.min(ergol, 10) * 0.008;
-
-        // Jellyfish contraction: sharp in, slow out (asymmetric sine)
-        const raw = Math.sin(t * pulseRate + phase);
-        const jellyfish = raw > 0 ? Math.pow(raw, 0.6) : raw * 0.3; // fast expand, slow contract
-        const breathe = 1 + jellyfish * pulseAmp;
+        // Pulse behavior driven by health state
+        let breathe = 1.0;
+        if (hs === 'error') {
+          // Fast urgent pulse — something is broken
+          const raw = Math.sin(t * 3.0 + phase);
+          breathe = 1 + raw * 0.08;
+        } else if (hs === 'warning') {
+          // Slow gentle pulse — needs attention
+          const raw = Math.sin(t * 1.2 + phase);
+          breathe = 1 + raw * 0.05;
+        } else if (hs === 'contradictory') {
+          // Erratic flicker — conflicting signals
+          const raw = Math.sin(t * 4.0 + phase) * Math.sin(t * 2.7 + phase * 1.3);
+          breathe = 1 + raw * 0.1;
+        } else if (hs === 'unknown') {
+          // No pulse — dim and static
+          breathe = 1.0;
+        } else {
+          // Healthy — very calm, barely noticeable breathing
+          const raw = Math.sin(t * 0.5 + phase);
+          breathe = 1 + raw * 0.02;
+        }
         group.scale.setScalar(breathe);
+
+        // Spin — active nodes rotate, faster = more urgent
+        const prom = HEALTH_PROMINENCE[hs];
+        if (prom.spinSpeed > 0) {
+          // Contradictory gets direction wobble (oscillating axis)
+          if (hs === 'contradictory') {
+            group.rotation.y = t * prom.spinSpeed * Math.sin(t * 0.7 + phase);
+            group.rotation.x = Math.sin(t * 1.3 + phase) * 0.3;
+          } else {
+            group.rotation.y = t * prom.spinSpeed;
+          }
+        }
 
         // Update volumetric shader time for fractal swirl
         for (const child of group.children) {
@@ -577,6 +679,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               mat.uniforms.uTime.value = t;
             }
           }
+        }
+      });
+
+      // ─── Edge undulation — sinusoidal curvature on active edges ───
+      // Creates a living, breathing energy flow between collaborating nodes
+      const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
+      links.forEach((link, idx: number) => {
+        const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+        const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+        const src = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === srcId);
+        const tgt = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === tgtId);
+        const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
+        const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
+
+        if (srcActive && tgtActive) {
+          // Undulating curvature — sine wave with per-edge phase offset
+          const wave = Math.sin(t * 1.5 + idx * 0.8) * 0.12;
+          link._curvature = 0.15 + wave;
+        } else {
+          link._curvature = 0.15;
         }
       });
 
@@ -670,11 +792,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(new THREE.Points(starGeo, starMat));
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
-    // Golden torus rings that orbit around the most important nodes
+    // Rings colored by health state — problems visible even at distance
     const ringNodes = forceData.nodes.filter((n) => n.type === 'constitution' || n.type === 'department');
     const ringMeshes: THREE.Mesh[] = [];
     for (const rn of ringNodes) {
-      const ringRadius = Math.pow(TYPE_SIZE[rn.type] ?? 5, 0.5) * 1.2;
+      const rnProminence = HEALTH_PROMINENCE[rn.healthStatus ?? 'unknown'];
+      const ringRadius = Math.pow(TYPE_SIZE[rn.type] ?? 5, 0.5) * 1.2 * rnProminence.sizeMult;
       const torusGeo = new THREE.TorusGeometry(ringRadius, ringRadius * 0.03, 8, 64);
       const torusMat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(rn.color),

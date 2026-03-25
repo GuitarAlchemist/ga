@@ -12,9 +12,10 @@ export type {
   GovernanceEdgeType,
   HealthMetrics,
   HealthStatus,
+  GovernanceHealthStatus,
   PrimeRadiantProps,
   SelectionState,
 } from './types';
 export { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 export { LIVE_GOVERNANCE_GRAPH } from './liveData';
-export { searchNodes, getHealthStatus, buildGraphIndex } from './DataLoader';
+export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';

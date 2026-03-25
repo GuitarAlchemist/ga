@@ -1,7 +1,8 @@
 // src/components/PrimeRadiant/DataLoader.ts
 // Loads governance data and builds the graph structure for 3D rendering
 
-import type { GovernanceGraph, GovernanceNode, GovernanceEdge } from './types';
+import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthStatus } from './types';
+import { HEALTH_STATUS_COLORS } from './types';
 import { LIVE_GOVERNANCE_GRAPH } from './liveData';
 import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 
@@ -52,21 +53,53 @@ export function buildGraphIndex(graph: GovernanceGraph): GraphIndex {
 // Load data — uses live Demerzel state by default, falls back to sample data
 // ---------------------------------------------------------------------------
 export function loadGovernanceData(data?: GovernanceGraph): GovernanceGraph {
-  if (data) return data;
-  // Prefer live data generated from Demerzel state/ directory scan
-  if (LIVE_GOVERNANCE_GRAPH && LIVE_GOVERNANCE_GRAPH.nodes.length > 0) {
-    return LIVE_GOVERNANCE_GRAPH;
+  let graph: GovernanceGraph;
+  if (data) {
+    graph = data;
+  } else if (LIVE_GOVERNANCE_GRAPH && LIVE_GOVERNANCE_GRAPH.nodes.length > 0) {
+    graph = LIVE_GOVERNANCE_GRAPH;
+  } else {
+    graph = SAMPLE_GOVERNANCE_GRAPH;
   }
-  return SAMPLE_GOVERNANCE_GRAPH;
+  // Apply semantic health-based colors to all nodes
+  return applyHealthColors(graph);
 }
 
 // ---------------------------------------------------------------------------
-// Get health status from resilience score
+// Get health status from resilience score (legacy 3-state)
 // ---------------------------------------------------------------------------
 export function getHealthStatus(score: number): 'healthy' | 'watch' | 'freeze' {
   if (score >= 0.8) return 'healthy';
   if (score >= 0.5) return 'watch';
   return 'freeze';
+}
+
+// ---------------------------------------------------------------------------
+// Derive governance health status from node health metrics
+// ---------------------------------------------------------------------------
+export function deriveGovernanceHealthStatus(node: GovernanceNode): GovernanceHealthStatus {
+  const health = node.health;
+  if (!health) return 'unknown';
+  if (health.lolliCount > 0) return 'error';
+  if (health.resilienceScore < 0.5) return 'warning';
+  if (health.resilienceScore >= 0.8 && health.ergolCount > 0) return 'healthy';
+  if (health.resilienceScore >= 0.5) return 'healthy';
+  return 'unknown';
+}
+
+// ---------------------------------------------------------------------------
+// Apply health-based colors to graph nodes
+// ---------------------------------------------------------------------------
+export function applyHealthColors(graph: GovernanceGraph): GovernanceGraph {
+  const coloredNodes = graph.nodes.map(node => {
+    const healthStatus = deriveGovernanceHealthStatus(node);
+    return {
+      ...node,
+      healthStatus,
+      color: HEALTH_STATUS_COLORS[healthStatus],
+    };
+  });
+  return { ...graph, nodes: coloredNodes };
 }
 
 // ---------------------------------------------------------------------------
