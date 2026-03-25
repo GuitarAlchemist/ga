@@ -103,7 +103,7 @@ export const TutorialOverlay: React.FC = () => {
             <div className="prime-radiant__tutorial-section">
               <h3>HUD</h3>
               <ul>
-                <li><strong>Trantor</strong> — holographic globe (top-right), capital of the Galactic Empire.</li>
+                <li><strong>Earth</strong> — realistic globe (top-right) with continents, city lights, and atmosphere.</li>
                 <li><strong>GST</strong> — Galactic Standard Time (top-left), Foundation Era calendar.</li>
                 <li><strong>FPS</strong> — frame rate (top-left). Quality auto-adjusts for your GPU.</li>
               </ul>
