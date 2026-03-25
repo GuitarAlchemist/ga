@@ -855,27 +855,99 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     ambientDust.name = 'ambient-dust';
     fg.scene().add(ambientDust);
 
-    // ─── STARFIELD — locked to camera (true skybox, no parallax) ───
-    const starCount = 1500;
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
+    // ─── SKYBOX — nebula background sphere + multi-layer starfield ───
+
+    // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
+    const skyGeo = new THREE.SphereGeometry(900, 32, 32);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {},
+      vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        varying vec3 vWorldPos;
+        void main() {
+          float y = normalize(vWorldPos).y;
+          // Vertical gradient: deep blue bottom → dark purple middle → near-black top
+          vec3 bottom = vec3(0.02, 0.01, 0.06);   // deep indigo
+          vec3 mid    = vec3(0.015, 0.005, 0.04);  // dark violet
+          vec3 top    = vec3(0.005, 0.005, 0.015); // near black
+          vec3 col = mix(bottom, mid, smoothstep(-1.0, 0.0, y));
+          col = mix(col, top, smoothstep(0.0, 1.0, y));
+          // Subtle nebula wisps
+          float n = sin(vWorldPos.x * 0.005 + vWorldPos.z * 0.003) * sin(vWorldPos.y * 0.004) * 0.5 + 0.5;
+          col += vec3(0.02, 0.005, 0.03) * n * 0.5;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+    const skySphere = new THREE.Mesh(skyGeo, skyMat);
+    skySphere.name = 'sky-nebula';
+    skySphere.renderOrder = -2;
+    fg.scene().add(skySphere);
+
+    // Layer 1: Bright prominent stars (few, large, colorful)
+    const brightCount = 200;
+    const brightPos = new Float32Array(brightCount * 3);
+    const brightCol = new Float32Array(brightCount * 3);
+    const brightSizes = new Float32Array(brightCount);
+    for (let i = 0; i < brightCount; i++) {
       const r = 800;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      starPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
-      starPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      starPositions[i*3+2] = r * Math.cos(phi);
-      const b = 0.15 + Math.random() * 0.5;
-      starColors[i*3] = b * 0.85; starColors[i*3+1] = b * 0.92; starColors[i*3+2] = b;
+      brightPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      brightPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      brightPos[i*3+2] = r * Math.cos(phi);
+      // Varied star colors: white, blue-white, gold, orange
+      const hue = Math.random();
+      if (hue < 0.4) { brightCol[i*3] = 0.9; brightCol[i*3+1] = 0.92; brightCol[i*3+2] = 1.0; }       // blue-white
+      else if (hue < 0.6) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.95; brightCol[i*3+2] = 0.8; }   // warm white
+      else if (hue < 0.8) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.85; brightCol[i*3+2] = 0.4; }   // gold
+      else { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.6; brightCol[i*3+2] = 0.3; }                    // orange
+      brightSizes[i] = 1.5 + Math.random() * 3.0; // varied sizes
     }
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    const starMat = new THREE.PointsMaterial({ size: 1.5, vertexColors: true, transparent: true, opacity: 0.6, sizeAttenuation: false });
-    const starField = new THREE.Points(starGeo, starMat);
+    const brightGeo = new THREE.BufferGeometry();
+    brightGeo.setAttribute('position', new THREE.BufferAttribute(brightPos, 3));
+    brightGeo.setAttribute('color', new THREE.BufferAttribute(brightCol, 3));
+    brightGeo.setAttribute('size', new THREE.BufferAttribute(brightSizes, 1));
+    const brightMat = new THREE.PointsMaterial({
+      size: 2.5, vertexColors: true, transparent: true, opacity: 0.9,
+      sizeAttenuation: false, blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const brightStars = new THREE.Points(brightGeo, brightMat);
+    brightStars.name = 'stars-bright';
+
+    // Layer 2: Dim background stars (many, tiny)
+    const dimCount = 1200;
+    const dimPos = new Float32Array(dimCount * 3);
+    const dimCol = new Float32Array(dimCount * 3);
+    for (let i = 0; i < dimCount; i++) {
+      const r = 800;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      dimPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      dimPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      dimPos[i*3+2] = r * Math.cos(phi);
+      const b = 0.3 + Math.random() * 0.4;
+      dimCol[i*3] = b; dimCol[i*3+1] = b * 0.95; dimCol[i*3+2] = b * 1.05;
+    }
+    const dimGeo = new THREE.BufferGeometry();
+    dimGeo.setAttribute('position', new THREE.BufferAttribute(dimPos, 3));
+    dimGeo.setAttribute('color', new THREE.BufferAttribute(dimCol, 3));
+    const dimMat = new THREE.PointsMaterial({
+      size: 1.0, vertexColors: true, transparent: true, opacity: 0.5,
+      sizeAttenuation: false, depthWrite: false,
+    });
+    const dimStars = new THREE.Points(dimGeo, dimMat);
+    dimStars.name = 'stars-dim';
+
+    // Group all sky layers — follows camera together
+    const starField = new THREE.Group();
     starField.name = 'starfield';
-    starField.renderOrder = -1; // render behind everything
+    starField.add(skySphere);
+    starField.add(brightStars);
+    starField.add(dimStars);
+    starField.renderOrder = -1;
     fg.scene().add(starField);
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
