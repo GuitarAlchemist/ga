@@ -782,27 +782,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
-      // ─── HUD companions — bottom-left, facing user (Interstellar cockpit style) ───
+      // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
 
-      // TARS — bottom-left, lower
+      // TARS — bottom-left of view, 50 units from camera
       updateTarsRobot(tarsRobot, t);
-      const tarsOffset = new THREE.Vector3(-0.45, -0.3, -1);
+      const tarsOffset = new THREE.Vector3(-35, -25, -50);
       tarsOffset.applyQuaternion(cam.quaternion);
       tarsRobot.position.copy(cam.position).add(tarsOffset);
-      tarsRobot.quaternion.copy(cam.quaternion); // always face user
+      tarsRobot.quaternion.copy(cam.quaternion);
 
-      // Demerzel face — bottom-left, above TARS
+      // Demerzel face — bottom-left, above TARS, 40 units from camera
       updateDemerzelFace(demerzelFace, t, cam.position, false);
-      const faceOffset = new THREE.Vector3(-0.35, -0.1, -0.8);
+      const faceOffset = new THREE.Vector3(-30, -5, -40);
       faceOffset.applyQuaternion(cam.quaternion);
       demerzelFace.position.copy(cam.position).add(faceOffset);
-      demerzelFace.quaternion.copy(cam.quaternion); // always face user
+      demerzelFace.quaternion.copy(cam.quaternion);
 
-      // ─── Trantor globe — top-right HUD ───
+      // ─── Trantor globe — top-right of view ───
       if (trantorGlobe.visible) {
         updateTrantorGlobe(trantorGlobe, t);
-        const trantorOffset = new THREE.Vector3(0.4, 0.3, -1.2);
+        const trantorOffset = new THREE.Vector3(35, 25, -50);
         trantorOffset.applyQuaternion(cam.quaternion);
         trantorGlobe.position.copy(cam.position).add(trantorOffset);
       }
@@ -930,7 +930,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── DEMERZEL HOLOGRAPHIC FACE ───
     // Floating wireframe head — Demerzel's presence in the Prime Radiant
-    const demerzelFace = createDemerzelFace(0.8);
+    const demerzelFace = createDemerzelFace(0.5); // TODO: replace with rigged Blender GLTF model
     demerzelFace.position.set(0, 25, 0); // floating above center, repositioned per tick
     fg.scene().add(demerzelFace);
 
