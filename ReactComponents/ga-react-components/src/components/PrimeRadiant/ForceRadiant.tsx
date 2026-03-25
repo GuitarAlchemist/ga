@@ -17,7 +17,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createEarthGlobe, updateEarthGlobe } from './EarthGlobe';
+import { createSolarSystem, updateSolarSystem } from './SolarSystem';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
@@ -802,11 +802,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Earth globe — small, top-right corner ───
-      updateEarthGlobe(earthGlobe, t);
-      const earthOffset = new THREE.Vector3(25, 18, -40);
-      earthOffset.applyQuaternion(cam.quaternion);
-      earthGlobe.position.copy(cam.position).add(earthOffset);
+      // ─── Solar system — top-right of view ───
+      updateSolarSystem(solarSystem, t);
+      const solarOffset = new THREE.Vector3(30, 15, -45);
+      solarOffset.applyQuaternion(cam.quaternion);
+      solarSystem.position.copy(cam.position).add(solarOffset);
     });
 
     // Slow auto-rotate
@@ -889,8 +889,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           vec3 dir = normalize(vWorldPos);
           float y = dir.y;
 
-          // Base gradient — deep space
-          vec3 col = mix(vec3(0.01, 0.005, 0.04), vec3(0.003, 0.003, 0.012), smoothstep(-0.5, 0.8, y));
+          // Base gradient — near black space
+          vec3 col = mix(vec3(0.003, 0.002, 0.008), vec3(0.001, 0.001, 0.004), smoothstep(-0.5, 0.8, y));
 
           // Orion-like nebula — reddish-pink cloud region
           float neb1 = fbm(dir * 3.0 + vec3(1.5, 0.0, 2.3));
@@ -1084,9 +1084,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Holographic ecumenopolis — the capital world, top-right HUD position
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
-    // ─── EARTH GLOBE — realistic procedural planet ───
-    const earthGlobe = createEarthGlobe(0.3);
-    fg.scene().add(earthGlobe);
+    // ─── SOLAR SYSTEM — Sun + 8 planets + Moon + Saturn rings ───
+    const solarSystem = createSolarSystem(0.4);
+    fg.scene().add(solarSystem);
 
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
