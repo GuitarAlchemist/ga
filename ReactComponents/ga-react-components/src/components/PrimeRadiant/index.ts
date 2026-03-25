@@ -23,7 +23,7 @@ export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
-export { createEarthGlobe, updateEarthGlobe } from './EarthGlobe';
+export { createSolarSystem, updateSolarSystem } from './SolarSystem';
 export { GalacticClock } from './GalacticClock';
 export { TutorialOverlay } from './TutorialOverlay';
 export { ActivityPanel } from './ActivityPanel';
