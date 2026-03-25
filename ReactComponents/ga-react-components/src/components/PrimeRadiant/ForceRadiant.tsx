@@ -1213,6 +1213,44 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Tutorial overlay + help button */}
       <TutorialOverlay />
+
+      {/* Planet quick-nav bar — bottom center */}
+      <div className="prime-radiant__planet-bar">
+        {[
+          { icon: '☀', name: 'Sun', color: '#FFD700' },
+          { icon: '⚫', name: 'Mercury', color: '#9e9e9e' },
+          { icon: '🟡', name: 'Venus', color: '#e3d500' },
+          { icon: '🌍', name: 'Earth', color: '#4d88ff' },
+          { icon: '🔴', name: 'Mars', color: '#ff4422' },
+          { icon: '🟠', name: 'Jupiter', color: '#ffaa77' },
+          { icon: '💛', name: 'Saturn', color: '#ffeecc' },
+          { icon: '🔵', name: 'Uranus', color: '#88ccdd' },
+          { icon: '🔵', name: 'Neptune', color: '#4444cc' },
+        ].map((p) => (
+          <button
+            key={p.name}
+            className="prime-radiant__planet-btn"
+            title={p.name}
+            onClick={() => {
+              const fg = graphRef.current;
+              if (!fg) return;
+              const planet = fg.scene().getObjectByName(p.name.toLowerCase());
+              if (planet) {
+                const wp = new THREE.Vector3();
+                planet.getWorldPosition(wp);
+                fg.cameraPosition(
+                  { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
+                  { x: wp.x, y: wp.y, z: wp.z },
+                  1200,
+                );
+              }
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>{p.icon}</span>
+            <span className="prime-radiant__planet-label">{p.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

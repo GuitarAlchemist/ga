@@ -1088,6 +1088,46 @@
   flex-shrink: 0;
 }
 
+/* ─── Planet quick-nav bar ─── */
+.prime-radiant__planet-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 2px;
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid #21262d;
+  border-radius: 20px;
+  padding: 3px 6px;
+  backdrop-filter: blur(6px);
+}
+.prime-radiant__planet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.prime-radiant__planet-btn:hover {
+  background: rgba(255, 215, 0, 0.1);
+}
+.prime-radiant__planet-label {
+  font-size: 7px;
+  color: #6b7280;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.3px;
+}
+.prime-radiant__planet-btn:hover .prime-radiant__planet-label {
+  color: #FFD700;
+}
+
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
   .prime-radiant__health { font-size: 10px; padding: 4px 8px; }
