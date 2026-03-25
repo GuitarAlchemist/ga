@@ -16,6 +16,8 @@ interface ChatMessage {
 
 export interface ChatWidgetProps {
   selectedNode?: GovernanceNode | null;
+  onNavigateToNode?: (nodeId: string) => void;
+  onNavigateToPlanet?: (planetName: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -42,25 +44,67 @@ const GOVERNANCE_RESPONSES: Record<string, string> = {
   schema: 'There are 37 JSON schemas validating persona definitions, belief states, reconnaissance data, conscience records, contracts, and context engine artifacts.',
 };
 
-async function askDemerzel(question: string, context?: GovernanceNode | null): Promise<string> {
-  // Simulate network latency
-  await new Promise((r) => setTimeout(r, 400 + Math.random() * 600));
+// Navigation command result
+interface DemerzelResponse {
+  text: string;
+  action?: { type: 'navigate-planet'; planet: string } | { type: 'navigate-node'; query: string };
+}
 
+const PLANET_NAMES = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'moon'];
+const PLANET_FACTS: Record<string, string> = {
+  sun: 'Our star — a G-type main-sequence star, 4.6 billion years old. The corona reaches millions of degrees.',
+  mercury: 'Closest to the Sun. No atmosphere, extreme temperature swings. Cratered like our Moon.',
+  venus: 'Earth\'s toxic twin. Thick sulfuric acid clouds, 470°C surface. Rotates backwards.',
+  earth: 'Home. The only known planet with life. 71% ocean, one moon, perfect distance from the Sun.',
+  mars: 'The red planet. Thin CO₂ atmosphere, polar ice caps, Olympus Mons — tallest volcano in the solar system.',
+  jupiter: 'Gas giant king. The Great Red Spot is a storm larger than Earth. 95 known moons.',
+  saturn: 'The ringed wonder. Rings are 99.9% ice. Less dense than water — it would float.',
+  uranus: 'The sideways planet. Tilted 98°, rolls around the Sun. Pale cyan methane atmosphere.',
+  neptune: 'The windiest planet. Supersonic winds at 2,100 km/h. Deep blue from methane.',
+  moon: 'Earth\'s companion. Tidally locked — same face always toward us. 384,400 km away.',
+};
+
+async function askDemerzel(question: string, context?: GovernanceNode | null): Promise<DemerzelResponse> {
+  await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
   const q = question.toLowerCase();
 
-  // Context-aware response if user is viewing a specific node
+  // Navigation commands — "find X", "go to X", "show X", "zoom to X"
+  const navMatch = q.match(/(?:find|go to|show|zoom to|navigate to|fly to|take me to)\s+(.+)/);
+  if (navMatch) {
+    const target = navMatch[1].trim();
+    const planet = PLANET_NAMES.find((p) => target.includes(p));
+    if (planet) {
+      return {
+        text: `Navigating to ${planet.charAt(0).toUpperCase() + planet.slice(1)}. ${PLANET_FACTS[planet] ?? ''}`,
+        action: { type: 'navigate-planet', planet },
+      };
+    }
+    // Try as governance node
+    return {
+      text: `Searching for "${target}" in the governance graph...`,
+      action: { type: 'navigate-node', query: target },
+    };
+  }
+
+  // Planet info — just asking about a planet
+  for (const name of PLANET_NAMES) {
+    if (q.includes(name)) {
+      return { text: PLANET_FACTS[name] ?? `${name} is part of our solar system.` };
+    }
+  }
+
+  // Context-aware
   if (context) {
     const typeInfo = GOVERNANCE_RESPONSES[context.type] ?? '';
-    return `You are viewing "${context.name}" (${context.type}). ${context.description}${typeInfo ? ' ' + typeInfo : ''}`;
+    return { text: `You are viewing "${context.name}" (${context.type}). ${context.description}${typeInfo ? ' ' + typeInfo : ''}` };
   }
 
-  // Keyword matching
+  // Governance keyword matching
   for (const [key, response] of Object.entries(GOVERNANCE_RESPONSES)) {
-    if (q.includes(key)) return response;
+    if (q.includes(key)) return { text: response };
   }
 
-  // Default
-  return 'The Demerzel governance framework ensures all AI agent actions align with the constitutional hierarchy. The Asimov constitution (Articles 0-5) provides the root authority, with the Zeroth Law — protect humanity — overriding everything. Ask me about policies, personas, constitutions, logic, health, tests, or schemas.';
+  return { text: 'I am Demerzel. Ask me about governance (policies, constitutions, personas, logic) or say "find Earth" to navigate the solar system. Try "go to Jupiter" or "show Mars".' };
 }
 
 // ---------------------------------------------------------------------------
@@ -121,8 +165,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode }) => {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = navigator.language;
-    utterance.rate = 0.95;
-    utterance.pitch = 0.9;
+    utterance.rate = 0.9;
+    utterance.pitch = 0.85;
+    // Pick a good voice — prefer Google UK English or similar natural voice
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find((v) => v.name.includes('Google UK English Female'))
+      ?? voices.find((v) => v.name.includes('Google') && v.lang.startsWith('en'))
+      ?? voices.find((v) => v.name.includes('Samantha'))
+      ?? voices.find((v) => v.lang.startsWith('en') && v.localService === false)
+      ?? voices[0];
+    if (preferred) utterance.voice = preferred;
     speechSynthesis.speak(utterance);
   }, [ttsEnabled]);
 
@@ -148,15 +200,24 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode }) => {
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         role: 'assistant',
-        content: response,
+        content: response.text,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, botMsg]);
-      speakText(response);
+      speakText(response.text);
+
+      // Execute navigation action if present
+      if (response.action) {
+        if (response.action.type === 'navigate-planet' && onNavigateToPlanet) {
+          onNavigateToPlanet(response.action.planet);
+        } else if (response.action.type === 'navigate-node' && onNavigateToNode) {
+          onNavigateToNode(response.action.query);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, selectedNode, speakText]);
+  }, [isLoading, selectedNode, speakText, onNavigateToNode, onNavigateToPlanet]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
