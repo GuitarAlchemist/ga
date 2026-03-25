@@ -788,7 +788,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    const starMat = new THREE.PointsMaterial({ size: 0.4, vertexColors: true, transparent: true, opacity: 0.5, sizeAttenuation: true });
+    const starMat = new THREE.PointsMaterial({ size: 1.5, vertexColors: true, transparent: true, opacity: 0.6, sizeAttenuation: false });
     fg.scene().add(new THREE.Points(starGeo, starMat));
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
