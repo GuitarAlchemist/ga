@@ -25,3 +25,4 @@ export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
 export { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
 export { GalacticClock } from './GalacticClock';
+export { TutorialOverlay } from './TutorialOverlay';
