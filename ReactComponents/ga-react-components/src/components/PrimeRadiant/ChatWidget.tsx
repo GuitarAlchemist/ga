@@ -84,6 +84,19 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -207,7 +220,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode }) => {
       </button>
 
       {/* Chat panel */}
-      <div className={`chat-widget__panel ${isOpen ? 'chat-widget__panel--open' : ''}`}>
+      <div ref={panelRef} className={`chat-widget__panel ${isOpen ? 'chat-widget__panel--open' : ''}`}>
         {/* Header */}
         <div className="chat-widget__header">
           <span className="chat-widget__title">Ask Demerzel</span>
