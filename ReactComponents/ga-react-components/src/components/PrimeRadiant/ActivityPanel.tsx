@@ -22,6 +22,13 @@ interface CommitInfo {
   time: string;
 }
 
+interface IssueInfo {
+  number: number;
+  title: string;
+  repo: string;
+  url: string;
+}
+
 // ---------------------------------------------------------------------------
 // Mock data — TODO: connect to real sources (GitHub API, git log)
 // ---------------------------------------------------------------------------
@@ -33,6 +40,17 @@ function getMockActivities(): Activity[] {
     { id: '4', name: 'Red team cycle 004', status: 'pending', progress: 0, eta: '~1h', category: 'test' },
     { id: '5', name: 'Seldon research — 6-valued logic', status: 'active', progress: 45, eta: '~45m', category: 'research' },
     { id: '6', name: 'DNS propagation', status: 'blocked', progress: 0, eta: 'waiting', category: 'deploy' },
+  ];
+}
+
+function getMockIssues(): IssueInfo[] {
+  return [
+    { number: 23, title: 'Multi-model design loop — Claude + GPT + Codex', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/23' },
+    { number: 22, title: 'Procedural solar system — all planets', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/22' },
+    { number: 21, title: 'Bottom drawer — icicle navigator + file viewer', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/21' },
+    { number: 20, title: 'Breadcrumb file navigator with icons', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/20' },
+    { number: 19, title: 'Blender GLTF head for Demerzel', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/19' },
+    { number: 18, title: 'Clickable activities + accordion sections', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/18' },
   ];
 }
 
@@ -107,11 +125,13 @@ const AccordionSection: React.FC<{
 export const ActivityPanel: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [commits, setCommits] = useState<CommitInfo[]>([]);
+  const [issues, setIssues] = useState<IssueInfo[]>([]);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
 
   useEffect(() => {
     setActivities(getMockActivities());
     setCommits(getMockCommits());
+    setIssues(getMockIssues());
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');
@@ -193,6 +213,29 @@ export const ActivityPanel: React.FC = () => {
                 </span>
                 <span className="prime-radiant__commit-msg">{c.message}</span>
                 <span className="prime-radiant__commit-time">{c.time}</span>
+              </div>
+            ))}
+          </AccordionSection>
+
+          {/* Issues accordion */}
+          <AccordionSection
+            title="Issues"
+            badge={`${issues.length}`}
+            defaultOpen={false}
+          >
+            {issues.map((issue) => (
+              <div
+                key={issue.number}
+                className="prime-radiant__commit-item"
+                style={{ cursor: 'pointer' }}
+                onClick={() => window.open(issue.url, '_blank')}
+              >
+                <span className="prime-radiant__commit-hash" style={{
+                  color: '#33CC66',
+                }}>
+                  #{issue.number}
+                </span>
+                <span className="prime-radiant__commit-msg">{issue.title}</span>
               </div>
             ))}
           </AccordionSection>
