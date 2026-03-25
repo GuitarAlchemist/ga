@@ -14,6 +14,7 @@ import { loadGovernanceData, getHealthStatus } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
+import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -539,7 +540,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
         const anyError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
         const anyWarning = src?.healthStatus === 'warning' || tgt?.healthStatus === 'warning';
-        return anyError ? 0.015 : anyWarning ? 0.008 : 0.005;
+        return anyError ? 0.006 : anyWarning ? 0.003 : 0.002;
       })
       .linkDirectionalParticleColor((link: object) => {
         // Particle color matches the most urgent connected node
@@ -736,6 +737,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
+
+      // ─── Demerzel face animation ───
+      // TODO: connect `speaking` to ChatWidget TTS state
+      updateDemerzelFace(demerzelFace, t, fg.camera().position, false);
+      // Position face above the most connected node
+      const centralForceNode = (fg.graphData() as { nodes: GraphNode[] }).nodes
+        .reduce<GraphNode | null>((best, n) => {
+          const bestCount = best ? (edgeCounts.get(best.id) ?? 0) : -1;
+          return (edgeCounts.get(n.id) ?? 0) > bestCount ? n : best;
+        }, null) as (GraphNode & { x?: number; y?: number; z?: number }) | null;
+      if (centralForceNode?.x !== undefined) {
+        demerzelFace.position.set(
+          centralForceNode.x,
+          (centralForceNode.y ?? 0) + 15,
+          centralForceNode.z ?? 0,
+        );
+      }
     });
 
     // Slow auto-rotate
@@ -857,6 +875,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(godRay2);
 
     // Effects are animated in the main onEngineTick (merged below)
+
+    // ─── DEMERZEL HOLOGRAPHIC FACE ───
+    // Floating wireframe head — Demerzel's presence in the Prime Radiant
+    const demerzelFace = createDemerzelFace(0.8);
+    demerzelFace.position.set(0, 25, 0); // floating above center, repositioned per tick
+    fg.scene().add(demerzelFace);
 
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
