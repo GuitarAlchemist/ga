@@ -17,6 +17,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
+import { createEarthGlobe, updateEarthGlobe } from './EarthGlobe';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
@@ -808,6 +809,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         trantorOffset.applyQuaternion(cam.quaternion);
         trantorGlobe.position.copy(cam.position).add(trantorOffset);
       }
+
+      // ─── Earth globe — top-right, below Trantor ───
+      updateEarthGlobe(earthGlobe, t);
+      const earthOffset = new THREE.Vector3(40, 10, -55);
+      earthOffset.applyQuaternion(cam.quaternion);
+      earthGlobe.position.copy(cam.position).add(earthOffset);
     });
 
     // Slow auto-rotate
@@ -1025,6 +1032,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Holographic ecumenopolis — the capital world, top-right HUD position
     const trantorGlobe = createTrantorGlobe(1.5);
     fg.scene().add(trantorGlobe);
+
+    // ─── EARTH GLOBE — realistic procedural planet ───
+    const earthGlobe = createEarthGlobe(1.0);
+    fg.scene().add(earthGlobe);
 
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
