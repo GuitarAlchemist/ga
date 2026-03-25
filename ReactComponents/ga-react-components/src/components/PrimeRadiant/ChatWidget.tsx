@@ -110,7 +110,7 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode }) => {
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigateToNode, onNavigateToPlanet }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
