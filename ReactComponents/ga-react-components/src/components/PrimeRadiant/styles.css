@@ -405,8 +405,8 @@
   bottom: 20px;
   left: 20px;
   z-index: 25;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid #30363d;
   background: rgba(22, 27, 34, 0.9);
@@ -661,11 +661,11 @@
 /* ─── Tutorial Overlay ─── */
 .prime-radiant__tutorial-btn {
   position: absolute;
-  bottom: 76px;
+  bottom: 68px;
   left: 20px;
   z-index: 30;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid #FFD700;
   background: rgba(22, 27, 34, 0.9);
