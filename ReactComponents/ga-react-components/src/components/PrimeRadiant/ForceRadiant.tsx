@@ -12,6 +12,7 @@ import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeTyp
 import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, getHealthStatus } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
+import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import './styles.css';
 
@@ -967,6 +968,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           onNavigate={handleNavigate}
         />
       )}
+
+      {/* Demerzel chat widget */}
+      <ChatWidget selectedNode={selectedNode} />
     </div>
   );
 };

@@ -41,6 +41,17 @@ export interface HealthMetrics {
 }
 
 // ---------------------------------------------------------------------------
+// File tree (drill-down in DetailPanel)
+// ---------------------------------------------------------------------------
+export interface FileTreeNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  children?: FileTreeNode[];
+  extension?: string;  // e.g. 'yaml', 'md', 'json'
+}
+
+// ---------------------------------------------------------------------------
 // Graph data structures
 // ---------------------------------------------------------------------------
 export interface GovernanceNode {
@@ -56,6 +67,7 @@ export interface GovernanceNode {
   healthStatus?: GovernanceHealthStatus;
   children?: string[];           // child node IDs
   metadata?: Record<string, unknown>;
+  fileTree?: FileTreeNode[];
 }
 
 export interface GovernanceEdge {

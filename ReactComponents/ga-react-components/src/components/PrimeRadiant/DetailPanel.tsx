@@ -1,8 +1,8 @@
 // src/components/PrimeRadiant/DetailPanel.tsx
 // React side panel showing selected governance node details
 
-import React from 'react';
-import type { GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
+import React, { useState, useCallback } from 'react';
+import type { GovernanceNode, GovernanceEdge, GovernanceNodeType, FileTreeNode } from './types';
 import { NODE_COLORS, HEALTH_COLORS } from './types';
 import { getHealthStatus } from './DataLoader';
 import type { GraphIndex } from './DataLoader';
@@ -40,6 +40,67 @@ const TYPE_SHAPES: Record<GovernanceNodeType, string> = {
   schema: 'Cube Matrix',
   test: 'Diamond Cloud',
   ixql: 'Helix Stream',
+};
+
+// ---------------------------------------------------------------------------
+// File extension icons
+// ---------------------------------------------------------------------------
+const EXT_ICONS: Record<string, string> = {
+  md: '\u{1F4C4}',
+  yaml: '\u2699\uFE0F',
+  yml: '\u2699\uFE0F',
+  json: '\u{1F4CB}',
+  ts: '\u{1F4C4}',
+  js: '\u{1F4C4}',
+};
+
+function fileIcon(node: FileTreeNode): string {
+  if (node.type === 'directory') return '';
+  // Special case for test files
+  if (node.name.endsWith('.test.md') || node.name.includes('-cases.md')) return '\u{1F9EA}';
+  return (node.extension && EXT_ICONS[node.extension]) || '\u{1F4C4}';
+}
+
+// ---------------------------------------------------------------------------
+// FileTreeItem — recursive collapsible tree node
+// ---------------------------------------------------------------------------
+const FileTreeItem: React.FC<{
+  node: FileTreeNode;
+  depth: number;
+  expanded: Set<string>;
+  onToggle: (path: string) => void;
+}> = ({ node, depth, expanded, onToggle }) => {
+  const isDir = node.type === 'directory';
+  const isOpen = expanded.has(node.path);
+  const indent = depth * 16;
+
+  return (
+    <>
+      <div
+        className={`prime-radiant__file-tree-item ${isDir ? 'prime-radiant__file-tree-item--dir' : ''}`}
+        style={{ paddingLeft: `${indent}px` }}
+        onClick={isDir ? () => onToggle(node.path) : undefined}
+      >
+        {isDir ? (
+          <span className="prime-radiant__file-tree-toggle">
+            {isOpen ? '\u25BC' : '\u25B6'}
+          </span>
+        ) : (
+          <span className="prime-radiant__file-tree-icon">{fileIcon(node)}</span>
+        )}
+        <span className="prime-radiant__file-tree-name">{node.name}</span>
+      </div>
+      {isDir && isOpen && node.children?.map(child => (
+        <FileTreeItem
+          key={child.path}
+          node={child}
+          depth={depth + 1}
+          expanded={expanded}
+          onToggle={onToggle}
+        />
+      ))}
+    </>
+  );
 };
 
 // ---------------------------------------------------------------------------
@@ -95,6 +156,31 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
       }
     }
   }
+
+  // File tree expansion state — first-level directories expanded by default
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [treeInitialized, setTreeInitialized] = useState<string | null>(null);
+
+  // Reset expanded state when node changes, expand first-level dirs
+  if (node && node.id !== treeInitialized) {
+    const initial = new Set<string>();
+    if (node.fileTree) {
+      for (const item of node.fileTree) {
+        if (item.type === 'directory') initial.add(item.path);
+      }
+    }
+    setExpandedPaths(initial);
+    setTreeInitialized(node.id);
+  }
+
+  const handleToggle = useCallback((path: string) => {
+    setExpandedPaths(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  }, []);
 
   const health = node?.health;
   const healthStatus = health ? getHealthStatus(health.resilienceScore) : null;
@@ -227,6 +313,26 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* File tree / Contents */}
+            {node.fileTree && node.fileTree.length > 0 && (
+              <div className="prime-radiant__detail-section">
+                <span className="prime-radiant__detail-label">
+                  Contents ({node.fileTree.length} {node.fileTree.length === 1 ? 'item' : 'items'})
+                </span>
+                <div className="prime-radiant__file-tree">
+                  {node.fileTree.map(item => (
+                    <FileTreeItem
+                      key={item.path}
+                      node={item}
+                      depth={0}
+                      expanded={expandedPaths}
+                      onToggle={handleToggle}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
