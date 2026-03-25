@@ -1149,10 +1149,12 @@
   /* Tutorial overlay — full screen on mobile */
   .prime-radiant__tutorial-card {
     max-width: 95vw;
-    max-height: 85vh;
-    padding: 16px;
-    margin: 10px;
+    max-height: 60vh;
+    padding: 12px;
+    margin: 8px;
     border-radius: 8px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .prime-radiant__tutorial-section h4 { font-size: 12px; }
   .prime-radiant__tutorial-section p,
