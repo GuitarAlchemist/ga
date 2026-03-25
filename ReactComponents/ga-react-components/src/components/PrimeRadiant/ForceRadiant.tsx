@@ -811,10 +811,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     });
 
     // Slow auto-rotate
-    const controls = fg.controls() as { autoRotate?: boolean; autoRotateSpeed?: number };
+    const controls = fg.controls() as {
+      autoRotate?: boolean; autoRotateSpeed?: number;
+      enableDamping?: boolean; dampingFactor?: number;
+      zoomSpeed?: number;
+    };
     if (controls) {
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.3;
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.zoomSpeed = 0.8;
     }
 
     // ─── AMBIENT PARTICLE FIELD ───
