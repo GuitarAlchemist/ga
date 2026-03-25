@@ -896,6 +896,13 @@
   text-align: center;
   flex-shrink: 0;
 }
+.prime-radiant__activity-cat--active {
+  animation: spin-gentle 3s linear infinite;
+}
+@keyframes spin-gentle {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .prime-radiant__activity-info {
   flex: 1;
   min-width: 0;
