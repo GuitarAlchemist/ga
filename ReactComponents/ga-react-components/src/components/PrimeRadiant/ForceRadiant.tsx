@@ -16,6 +16,8 @@ import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
+import { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
+import { GalacticClock } from './GalacticClock';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -654,6 +656,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           ambientDust.visible = false;
           starField.visible = false;
           demerzelFace.visible = false;
+          trantorGlobe.visible = false;
           bloomPass.strength = 0.2;
         } else if (currentFps < 35 && qualityLevel === 'high') {
           qualityLevel = 'medium';
@@ -664,6 +667,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           ambientDust.visible = true;
           starField.visible = true;
           demerzelFace.visible = true;
+          trantorGlobe.visible = true;
           bloomPass.strength = 0.6;
         }
       }
@@ -785,6 +789,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const tarsOffset = new THREE.Vector3(-0.35, -0.25, -1);
       tarsOffset.applyQuaternion(cam.quaternion);
       tarsRobot.position.copy(cam.position).add(tarsOffset);
+
+      // ─── Trantor globe animation — fixed top-right HUD position ───
+      if (trantorGlobe.visible) {
+        updateTrantorGlobe(trantorGlobe, t);
+        const trantorOffset = new THREE.Vector3(0.4, 0.3, -1.2);
+        trantorOffset.applyQuaternion(cam.quaternion);
+        trantorGlobe.position.copy(cam.position).add(trantorOffset);
+      }
 
       // ─── Demerzel face animation ───
       // TODO: connect `speaking` to ChatWidget TTS state
@@ -936,6 +948,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     tarsRobot.position.set(20, 0, 20); // offset from center
     fg.scene().add(tarsRobot);
 
+    // ─── TRANTOR GLOBE ───
+    // Holographic ecumenopolis — the capital world, top-right HUD position
+    const trantorGlobe = createTrantorGlobe(1.5);
+    fg.scene().add(trantorGlobe);
+
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
     const edgeCounts = new Map<string, number>();
@@ -1046,6 +1063,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           onNavigate={handleNavigate}
         />
       )}
+
+      {/* Galactic Standard Time */}
+      <GalacticClock />
 
       {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />

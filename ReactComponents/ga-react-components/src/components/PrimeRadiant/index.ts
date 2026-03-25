@@ -23,3 +23,5 @@ export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
+export { createTrantorGlobe, updateTrantorGlobe } from './TrantorGlobe';
+export { GalacticClock } from './GalacticClock';
