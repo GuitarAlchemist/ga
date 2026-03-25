@@ -15,6 +15,7 @@ import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
+import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -777,6 +778,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
+      // ─── TARS animation ───
+      updateTarsRobot(tarsRobot, t);
+
       // ─── Demerzel face animation ───
       // TODO: connect `speaking` to ChatWidget TTS state
       updateDemerzelFace(demerzelFace, t, fg.camera().position, false);
@@ -920,6 +924,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const demerzelFace = createDemerzelFace(0.8);
     demerzelFace.position.set(0, 25, 0); // floating above center, repositioned per tick
     fg.scene().add(demerzelFace);
+
+    // ─── TARS ROBOT ───
+    // Articulated monolith — patrols the graph, cycles through modes
+    const tarsRobot = createTarsRobot(0.4);
+    tarsRobot.position.set(20, 0, 20); // offset from center
+    fg.scene().add(tarsRobot);
 
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
