@@ -22,6 +22,8 @@ import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
+import { IxqlCommandInput } from './IxqlCommandInput';
+import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -475,6 +477,38 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
 
+  // Phase 3: IXql command handler — applies visual overrides to graph nodes
+  const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
+    const fg = graphRef.current;
+    if (!fg || !result.ok || !result.command) return;
+
+    if (result.command.type === 'reset') {
+      // Clear all IXql overrides
+      fg.graphData().nodes.forEach((node: object) => {
+        const n = node as GraphNode & { __threeObj?: THREE.Object3D };
+        if (n.__threeObj) {
+          n.__threeObj.userData.ixqlOverrides = undefined;
+        }
+      });
+      return;
+    }
+
+    const cmd = result.command;
+    if (cmd.target === 'nodes' && cmd.predicates && cmd.assignments) {
+      fg.graphData().nodes.forEach((node: object) => {
+        const n = node as GraphNode & { __threeObj?: THREE.Object3D };
+        const matches = cmd.predicates!.every(p =>
+          evaluatePredicate(p, n as unknown as Record<string, unknown>),
+        );
+        if (matches && n.__threeObj) {
+          const overrides: Record<string, unknown> = {};
+          cmd.assignments!.forEach(a => { overrides[a.property] = a.value; });
+          n.__threeObj.userData.ixqlOverrides = overrides;
+        }
+      });
+    }
+  }, []);
+
   // ─── Initialize ───
   useEffect(() => {
     const container = containerRef.current;
@@ -486,6 +520,45 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     const forceData = toForceData(graph);
     const healthStatus = getHealthStatus(graph.globalHealth.resilienceScore);
+
+    // ─── Phase 1.1: Node lookup map — O(1) instead of O(n) per link callback ───
+    const nodeMap = new Map<string, GraphNode>();
+    forceData.nodes.forEach((n: object) => {
+      const gn = n as GraphNode;
+      nodeMap.set(gn.id, gn);
+    });
+    const getLinkNodeId = (endpoint: string | object): string =>
+      typeof endpoint === 'string' ? endpoint : (endpoint as GraphNode).id;
+    const getLinkNodes = (l: GraphLink) => ({
+      src: nodeMap.get(getLinkNodeId(l.source)),
+      tgt: nodeMap.get(getLinkNodeId(l.target)),
+    });
+
+    // ─── Phase 2.1: Importance scores for adaptive node sizing ───
+    const edgeCountMap = new Map<string, number>();
+    forceData.links.forEach((l: object) => {
+      const link = l as GraphLink;
+      const srcId = getLinkNodeId(link.source);
+      const tgtId = getLinkNodeId(link.target);
+      edgeCountMap.set(srcId, (edgeCountMap.get(srcId) ?? 0) + 1);
+      edgeCountMap.set(tgtId, (edgeCountMap.get(tgtId) ?? 0) + 1);
+    });
+    const maxEdges = Math.max(...edgeCountMap.values(), 1);
+    const maxErgol = Math.max(...graph.nodes.map(n => n.health?.ergolCount ?? 0), 1);
+
+    const importanceMap = new Map<string, number>();
+    graph.nodes.forEach(n => {
+      const normEdge = (edgeCountMap.get(n.id) ?? 0) / maxEdges;
+      const normErgol = (n.health?.ergolCount ?? 0) / maxErgol;
+      const resilience = n.health?.resilienceScore ?? 0.5;
+      const staleness = n.health?.staleness ?? 0;
+      const importance = 0.4 * normEdge + 0.3 * normErgol + 0.2 * resilience + 0.1 * (1 - staleness);
+      importanceMap.set(n.id, importance);
+    });
+
+    // ─── Phase 1.4: Cancellable auto-zoom timeout ───
+    let autoZoomTimeout: ReturnType<typeof setTimeout> | null = null;
+    let userInteracted = false;
 
     // Create force graph
     const fg = ForceGraph3D({ controlType: 'orbit' })(container)
@@ -516,44 +589,31 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .linkColor((link: object) => (link as GraphLink).color)
       .linkWidth((link: object) => {
         const l = link as GraphLink;
-        // Edges between active (non-unknown) nodes get thicker — collaboration visible
-        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
-        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const { src, tgt } = getLinkNodes(l);
         const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
         const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
         return (srcActive && tgtActive) ? l.width * 2.0 : l.width;
       })
       .linkOpacity(0.25)
       .linkDirectionalParticles((link: object) => {
-        // More particles on edges between active nodes — energy flow
-        const l = link as GraphLink;
-        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
-        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const { src, tgt } = getLinkNodes(link as GraphLink);
         const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
         const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
         return (srcActive && tgtActive) ? 6 : 2;
       })
       .linkDirectionalParticleWidth((link: object) => {
-        const l = link as GraphLink;
-        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
-        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
+        const { src, tgt } = getLinkNodes(link as GraphLink);
         const bothError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
         return bothError ? 2.5 : 1.0;
       })
       .linkDirectionalParticleSpeed((link: object) => {
-        // Faster particles on urgent edges
-        const l = link as GraphLink;
-        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
-        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const { src, tgt } = getLinkNodes(link as GraphLink);
         const anyError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
         const anyWarning = src?.healthStatus === 'warning' || tgt?.healthStatus === 'warning';
         return anyError ? 0.006 : anyWarning ? 0.003 : 0.002;
       })
       .linkDirectionalParticleColor((link: object) => {
-        // Particle color matches the most urgent connected node
-        const l = link as GraphLink;
-        const src = forceData.nodes.find((nd) => nd.id === (typeof l.source === 'string' ? l.source : (l.source as GraphNode).id));
-        const tgt = forceData.nodes.find((nd) => nd.id === (typeof l.target === 'string' ? l.target : (l.target as GraphNode).id));
+        const { src, tgt } = getLinkNodes(link as GraphLink);
         const urgentNode = [src, tgt].find((n) => n?.healthStatus === 'error')
           ?? [src, tgt].find((n) => n?.healthStatus === 'contradictory')
           ?? [src, tgt].find((n) => n?.healthStatus === 'warning');
@@ -567,9 +627,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Interaction
       .onNodeClick((node: object) => {
         const n = node as GraphNode;
-        const govNode = graph.nodes.find((gn) => gn.id === n.id) ?? null;
+        const govNode = nodeMap.get(n.id) ? graph.nodes.find((gn) => gn.id === n.id) ?? null : null;
         setSelectedNode(govNode);
         onNodeSelect?.(govNode);
+        // Phase 1.4: Cancel auto-zoom on user interaction
+        userInteracted = true;
+        if (autoZoomTimeout) { clearTimeout(autoZoomTimeout); autoZoomTimeout = null; }
 
         // Zoom to clicked node
         const distance = 60;
@@ -585,15 +648,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .onBackgroundClick(() => {
         setSelectedNode(null);
         onNodeSelect?.(null);
+        // Phase 1.4: Cancel auto-zoom on user interaction
+        userInteracted = true;
+        if (autoZoomTimeout) { clearTimeout(autoZoomTimeout); autoZoomTimeout = null; }
       })
-      .onNodeHover((node: object | null) => {
+      .onNodeHover((node: object | null, prevNode: object | null) => {
+        // Phase 1.3: Store hover state so breathing animation doesn't override
+        if (prevNode) {
+          const prev = prevNode as GraphNode & { __threeObj?: THREE.Object3D };
+          if (prev.__threeObj) prev.__threeObj.userData.isHovered = false;
+        }
         if (node) {
           const n = node as GraphNode & { __threeObj?: THREE.Object3D };
           if (n.__threeObj) {
-            n.__threeObj.scale.setScalar(1.3); // pop on hover
+            n.__threeObj.userData.isHovered = true;
+            n.__threeObj.scale.setScalar(1.3);
           }
         }
-        // Container cursor
         if (containerRef.current) {
           containerRef.current.style.cursor = node ? 'pointer' : 'grab';
         }
@@ -703,10 +774,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           const raw = Math.sin(t * 0.5 + phase);
           breathe = 1 + raw * 0.02;
         }
-        group.scale.setScalar(breathe);
+        // Spin + prominence — must come before adaptive sizing which uses prom
+        const prom = HEALTH_PROMINENCE[hs];
+
+        // Phase 2.1: Adaptive sizing — scale by importance
+        const importance = importanceMap.get(n.id) ?? 0.5;
+        const importanceScale = 0.7 + importance * 0.6; // range: 0.7 – 1.3
+
+        // Phase 2.2: Activity effects — stale nodes dim
+        const staleness = n.health?.staleness ?? 0;
+        const stalenessDim = staleness > 0.5 ? 1 - (staleness - 0.5) * 0.6 : 1.0;
+
+        // Phase 1.3: Skip breathing scale when hovered — let hover pop (1.3x) persist
+        if (!group.userData.isHovered) {
+          const targetScale = breathe * importanceScale;
+          const currentScale = group.userData.currentScale ?? targetScale;
+          const newScale = currentScale + (targetScale - currentScale) * 0.05;
+          group.userData.currentScale = newScale;
+          group.scale.setScalar(newScale);
+        }
+
+        // Phase 2.2: Activity effects — dim stale nodes
+        if (staleness > 0.5) {
+          group.traverse((child: THREE.Object3D) => {
+            if (child instanceof THREE.Mesh && child.material instanceof THREE.ShaderMaterial) {
+              if (child.material.uniforms?.uOpacity) {
+                child.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
+              }
+            }
+            if (child instanceof THREE.Sprite) {
+              (child.material as THREE.SpriteMaterial).opacity = 0.5 * prom.opacity * stalenessDim;
+            }
+          });
+        }
 
         // Spin — active nodes rotate, faster = more urgent
-        const prom = HEALTH_PROMINENCE[hs];
         if (prom.spinSpeed > 0) {
           // Contradictory gets direction wobble (oscillating axis)
           if (hs === 'contradictory') {
@@ -724,6 +826,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             if (mat.uniforms?.uTime) {
               mat.uniforms.uTime.value = t;
             }
+            // Phase 3: Apply IXql glow/color overrides
+            const overrides = group.userData.ixqlOverrides as Record<string, unknown> | undefined;
+            if (overrides) {
+              if (overrides.glow && mat.uniforms?.uColor) {
+                mat.uniforms.uColor.value = new THREE.Color(overrides.glow as string);
+              }
+              if (overrides.opacity !== undefined && mat.uniforms?.uOpacity) {
+                mat.uniforms.uOpacity.value = Number(overrides.opacity);
+              }
+            }
           }
         }
       });
@@ -734,21 +846,37 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Edge undulation — sinusoidal curvature on active edges ───
       // Skip on low quality for performance
       if (qualityLevel === 'low') { /* skip undulation */ } else {
+      // Phase 2.3: Type-specific edge undulation (R3)
       const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
       links.forEach((link, idx: number) => {
-        const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
-        const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
-        const src = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === srcId);
-        const tgt = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === tgtId);
+        const { src, tgt } = getLinkNodes(link);
         const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
         const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
 
+        // Type-specific undulation parameters
+        const edgeType = link.type ?? 'policy-persona';
+        let amplitude = 0.1;
+        let frequency = 0.4;
+
+        if (edgeType === 'pipeline-flow') {
+          amplitude = 0.3; frequency = 0.5; // Smooth sine, source→target
+        } else if (edgeType === 'constitutional-hierarchy') {
+          amplitude = 0.15; frequency = 0.2; // Stately golden wave
+        } else if (edgeType === 'cross-repo') {
+          amplitude = 0.05; frequency = 2.0; // Shimmer
+        } else if (edgeType === 'lolli') {
+          // Erratic jitter for dead references
+          const jitter = (Math.random() - 0.5) * 0.2;
+          link._curvature = 0.15 + jitter;
+          return;
+        }
+
         if (srcActive && tgtActive) {
-          // Undulating curvature — sine wave with per-edge phase offset
-          const wave = Math.sin(t * 1.5 + idx * 0.8) * 0.12;
+          const wave = Math.sin(t * frequency * Math.PI * 2 + idx * 0.8) * amplitude;
           link._curvature = 0.15 + wave;
         } else {
-          link._curvature = 0.15;
+          // Inactive edges: very subtle breathing
+          link._curvature = 0.15 + Math.sin(t * 0.3 + idx) * 0.02;
         }
       });
       } // end quality gate
@@ -802,9 +930,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — top-right of view ───
-      updateSolarSystem(solarSystem, t);
-      const solarOffset = new THREE.Vector3(18, 12, -30);
+      // ─── Solar system — compact orrery, top-right of view ───
+      // Phase 1.2: Quality-gate solar system updates
+      if (qualityLevel !== 'low') {
+        if (qualityLevel === 'high' || frameCount % 3 === 0) {
+          updateSolarSystem(solarSystem, t);
+        }
+      }
+      const solarOffset = new THREE.Vector3(6, 4, -12);
       solarOffset.applyQuaternion(cam.quaternion);
       solarSystem.position.copy(cam.position).add(solarOffset);
     });
@@ -1085,7 +1218,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + Moon + Saturn rings ───
-    const solarSystem = createSolarSystem(0.08);
+    const solarSystem = createSolarSystem(0.03);
     fg.scene().add(solarSystem);
 
     // ─── Auto-select the most connected (central) node on load ───
@@ -1102,9 +1235,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (centralNode) {
       setSelectedNode(centralNode);
       onNodeSelect?.(centralNode);
-      // Zoom to it after force layout settles
-      setTimeout(() => {
-        const fNode = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === centralNode.id) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
+      // Zoom to it after force layout settles (Phase 1.4: cancellable)
+      autoZoomTimeout = setTimeout(() => {
+        if (userInteracted) return; // User already clicked something — don't override
+        const fNode = nodeMap.get(centralNode.id) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
         if (fNode?.x !== undefined) {
           fg.cameraPosition(
             { x: fNode.x, y: (fNode.y ?? 0) + 30, z: (fNode.z ?? 0) + 80 },
@@ -1118,6 +1252,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     graphRef.current = fg;
 
     return () => {
+      if (autoZoomTimeout) clearTimeout(autoZoomTimeout);
       fg._destructor();
       graphRef.current = null;
     };
@@ -1214,42 +1349,89 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Tutorial overlay + help button */}
       <TutorialOverlay />
 
+      {/* IXql command input — above planet bar */}
+      <IxqlCommandInput onCommand={handleIxqlCommand} />
+
       {/* Planet quick-nav bar — bottom center */}
       <div className="prime-radiant__planet-bar">
         {[
-          { icon: '☀', name: 'Sun', color: '#FFD700' },
-          { icon: '⚫', name: 'Mercury', color: '#9e9e9e' },
-          { icon: '🟡', name: 'Venus', color: '#e3d500' },
-          { icon: '🌍', name: 'Earth', color: '#4d88ff' },
-          { icon: '🔴', name: 'Mars', color: '#ff4422' },
-          { icon: '🟠', name: 'Jupiter', color: '#ffaa77' },
-          { icon: '💛', name: 'Saturn', color: '#ffeecc' },
-          { icon: '🔵', name: 'Uranus', color: '#88ccdd' },
-          { icon: '🔵', name: 'Neptune', color: '#4444cc' },
-        ].map((p) => (
-          <button
-            key={p.name}
-            className="prime-radiant__planet-btn"
-            title={p.name}
-            onClick={() => {
-              const fg = graphRef.current;
-              if (!fg) return;
-              const planet = fg.scene().getObjectByName(p.name.toLowerCase());
-              if (planet) {
-                const wp = new THREE.Vector3();
-                planet.getWorldPosition(wp);
-                fg.cameraPosition(
-                  { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
-                  { x: wp.x, y: wp.y, z: wp.z },
-                  1200,
-                );
-              }
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>{p.icon}</span>
-            <span className="prime-radiant__planet-label">{p.name}</span>
-          </button>
-        ))}
+          { icon: '🤖', name: 'Demerzel', color: '#FFD700', target: 'demerzel-head' },
+          { icon: '📐', name: 'Seldon', color: '#c4b5fd', target: 'governance-center' },
+          { icon: '─', name: '', color: '#333', separator: true },
+          { icon: '☀', name: 'Sun', color: '#FFD700', target: 'sun' },
+          { icon: '⚫', name: 'Mercury', color: '#9e9e9e', target: 'mercury' },
+          { icon: '🟡', name: 'Venus', color: '#e3d500', target: 'venus' },
+          { icon: '🌍', name: 'Earth', color: '#4d88ff', target: 'earth' },
+          { icon: '🔴', name: 'Mars', color: '#ff4422', target: 'mars' },
+          { icon: '🟠', name: 'Jupiter', color: '#ffaa77', target: 'jupiter' },
+          { icon: '💛', name: 'Saturn', color: '#ffeecc', target: 'saturn' },
+          { icon: '🔵', name: 'Uranus', color: '#88ccdd', target: 'uranus' },
+          { icon: '🔵', name: 'Neptune', color: '#4444cc', target: 'neptune' },
+        ].map((p) => {
+          if (p.separator) {
+            return <span key="sep" className="prime-radiant__planet-sep" />;
+          }
+          return (
+            <button
+              key={p.name}
+              className="prime-radiant__planet-btn"
+              title={p.name}
+              onClick={() => {
+                const fg = graphRef.current;
+                if (!fg) return;
+
+                // Demerzel & Seldon are HUD-attached — zoom to governance center node
+                if (p.target === 'governance-center') {
+                  // Navigate to the constitution node (center of the graph)
+                  const scene = fg.scene();
+                  const constitutionNode = scene.getObjectByName('asimov-constitution');
+                  if (constitutionNode) {
+                    const wp = new THREE.Vector3();
+                    constitutionNode.getWorldPosition(wp);
+                    fg.cameraPosition(
+                      { x: wp.x, y: wp.y + 5, z: wp.z + 15 },
+                      { x: wp.x, y: wp.y, z: wp.z },
+                      1500,
+                    );
+                  } else {
+                    // Fallback: zoom to origin (center of governance sphere)
+                    fg.cameraPosition({ x: 0, y: 5, z: 20 }, { x: 0, y: 0, z: 0 }, 1500);
+                  }
+                  return;
+                }
+
+                if (p.target === 'demerzel-head') {
+                  // Demerzel follows camera — zoom to face offset position
+                  const cam = fg.camera() as THREE.PerspectiveCamera;
+                  const faceOffset = new THREE.Vector3(-50, -8, -40);
+                  faceOffset.applyQuaternion(cam.quaternion);
+                  const facePos = cam.position.clone().add(faceOffset);
+                  fg.cameraPosition(
+                    { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
+                    { x: facePos.x, y: facePos.y, z: facePos.z },
+                    1200,
+                  );
+                  return;
+                }
+
+                // Planet navigation
+                const obj = fg.scene().getObjectByName(p.target);
+                if (obj) {
+                  const wp = new THREE.Vector3();
+                  obj.getWorldPosition(wp);
+                  fg.cameraPosition(
+                    { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
+                    { x: wp.x, y: wp.y, z: wp.z },
+                    1200,
+                  );
+                }
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>{p.icon}</span>
+              <span className="prime-radiant__planet-label">{p.name}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -1127,6 +1127,29 @@
 .prime-radiant__planet-btn:hover .prime-radiant__planet-label {
   color: #FFD700;
 }
+/* ─── IXql command input ─── */
+.prime-radiant__ixql-input {
+  position: absolute;
+  bottom: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  width: min(500px, calc(100vw - 40px));
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid #FFD70033;
+  border-radius: 8px;
+  padding: 6px 10px;
+  backdrop-filter: blur(8px);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.prime-radiant__planet-sep {
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, #FFD70044, transparent);
+  margin: 0 4px;
+  align-self: center;
+}
 
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
@@ -1205,6 +1228,22 @@
 
   /* Connection list — compact */
   .prime-radiant__detail-connection { padding: 4px 6px; font-size: 10px; }
+
+  /* Planet bar — scrollable on phone */
+  .prime-radiant__planet-bar {
+    max-width: calc(100vw - 20px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .prime-radiant__planet-bar::-webkit-scrollbar { display: none; }
+  .prime-radiant__planet-label { display: none; }
+
+  /* Activity panel — hide on phone to prevent overlap */
+  .prime-radiant__activity { display: none; }
+
+  /* LLM status — compact */
+  .prime-radiant__llm-status { font-size: 9px; max-width: 120px; }
 }
 
 /* ─── Touch-friendly tap targets ─── */
@@ -1227,4 +1266,77 @@
     min-width: 44px;
     min-height: 44px;
   }
+}
+
+/* ─── Seldon Psychohistory Dashboard ─── */
+.seldon-dashboard {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  background: rgba(10, 12, 18, 0.96);
+  border-left: 1px solid #30363d;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  color: #e6edf3;
+}
+.seldon-dashboard--open { transform: translateX(0); }
+.seldon-dashboard__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid #FFD70030;
+}
+.seldon-dashboard__title {
+  font-size: 16px; font-weight: 700; margin: 0;
+  color: #FFD700; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.seldon-dashboard__close {
+  background: none; border: none; color: #8b949e;
+  font-size: 22px; cursor: pointer; padding: 4px 8px; border-radius: 4px; line-height: 1;
+}
+.seldon-dashboard__close:hover { background: #30363d; color: #FFD700; }
+.seldon-dashboard__body { padding: 12px 20px; display: flex; flex-direction: column; gap: 20px; }
+.seldon-dashboard__section { display: flex; flex-direction: column; gap: 8px; }
+.seldon-dashboard__section-title {
+  font-size: 11px; font-weight: 600; color: #FFD700;
+  text-transform: uppercase; letter-spacing: 1px; margin: 0;
+  padding-bottom: 4px; border-bottom: 1px solid #FFD70020;
+}
+.seldon-dashboard__sparkline-row { display: flex; align-items: center; gap: 12px; }
+.seldon-dashboard__sparkline-label { font-size: 11px; color: #8b949e; white-space: nowrap; }
+.seldon-dashboard__stat-row { display: flex; justify-content: space-between; font-size: 12px; color: #8b949e; padding: 2px 0; }
+.seldon-dashboard__stat-value { color: #33CC66; font-weight: 600; }
+.seldon-dashboard__stat-value--warn { color: #FF4444; }
+.seldon-dashboard__empty { font-size: 11px; color: #484f58; font-style: italic; margin: 0; }
+.seldon-dashboard__risk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.seldon-dashboard__risk-item { background: rgba(255, 215, 0, 0.04); border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; }
+.seldon-dashboard__risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.seldon-dashboard__risk-name { font-size: 12px; color: #e6edf3; font-weight: 500; }
+.seldon-dashboard__risk-score { font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.seldon-dashboard__risk-bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; background: #21262d; }
+.seldon-dashboard__risk-segment { height: 100%; transition: width 0.3s ease; }
+.seldon-dashboard__markov-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.seldon-dashboard__markov-table th { padding: 6px 4px; text-align: center; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; }
+.seldon-dashboard__markov-table td { padding: 8px 4px; text-align: center; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* ─── Planet tooltip ─── */
+.prime-radiant__planet-tooltip {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  background: rgba(10, 12, 18, 0.92);
+  border: 1px solid #FFD70033;
+  border-radius: 6px;
+  padding: 6px 10px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #e6edf3;
+  white-space: nowrap;
 }

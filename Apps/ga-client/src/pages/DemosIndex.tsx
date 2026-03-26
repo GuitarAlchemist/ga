@@ -29,6 +29,7 @@ import {
   LibraryMusic as LibraryMusicIcon,
   Tune as TuneIcon,
   AccountTree as AccountTreeIcon,
+  Hub as HubIcon,
 } from '@mui/icons-material';
 
 const DemosIndex = () => {
@@ -178,6 +179,15 @@ const DemosIndex = () => {
       tags: ['Three.js', 'WebGPU', 'Hyperbolic', 'D3'],
       status: 'Available',
       color: '#f0883e',
+    },
+    {
+      title: 'Prime Radiant',
+      description: 'Demerzel governance visualization — explore the constitutional hierarchy, policies, and agent personas in an interactive 3D force-directed graph.',
+      icon: <HubIcon sx={{ fontSize: 48 }} />,
+      link: '/demos/prime-radiant',
+      tags: ['3D', 'Governance', 'Visualization'],
+      status: 'Available',
+      color: '#c4b5fd',
     },
   ];
 

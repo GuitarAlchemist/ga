@@ -1,9 +1,21 @@
 // src/components/PrimeRadiant/SolarSystem.ts
-// Procedural mini solar system — Sun + 8 planets + Moon + Saturn rings
-// Co-designed with GPT-4o, enhanced shaders by Claude Opus
+// Procedural mini solar system — Sun + 8 planets + all major natural satellites
+// NASA/Solar System Scope 2K textures (CC BY 4.0) with procedural fallbacks
+// Orbit trails, Kepler speeds, realistic proportions
 
 import * as THREE from 'three';
 
+// ── Texture paths (served from public/textures/planets/) ──
+const TEX_BASE = '/textures/planets/';
+const loader = new THREE.TextureLoader();
+
+function loadTex(file: string): THREE.Texture {
+  const tex = loader.load(TEX_BASE + file);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// ── Shared vertex shader for procedural moons ──
 const VERT = /* glsl */ `
   varying vec3 vPos;
   varying vec3 vNormal;
@@ -16,6 +28,38 @@ const VERT = /* glsl */ `
   }
 `;
 
+// ── Astronomical data for planet tooltips ──
+export interface PlanetAstroData {
+  name: string;
+  distanceAU: number;
+  orbitalPeriodYears: number;
+  diameterKm: number;
+  type: string;
+}
+
+export const PLANET_ASTRO_DATA: Record<string, PlanetAstroData> = {
+  sun: { name: 'Sun', distanceAU: 0, orbitalPeriodYears: 0, diameterKm: 1_392_700, type: 'Star (G2V)' },
+  mercury: { name: 'Mercury', distanceAU: 0.39, orbitalPeriodYears: 0.24, diameterKm: 4_879, type: 'Terrestrial' },
+  venus: { name: 'Venus', distanceAU: 0.72, orbitalPeriodYears: 0.62, diameterKm: 12_104, type: 'Terrestrial' },
+  earth: { name: 'Earth', distanceAU: 1.0, orbitalPeriodYears: 1.0, diameterKm: 12_742, type: 'Terrestrial' },
+  moon: { name: 'Moon', distanceAU: 1.0, orbitalPeriodYears: 0.075, diameterKm: 3_474, type: 'Satellite' },
+  mars: { name: 'Mars', distanceAU: 1.52, orbitalPeriodYears: 1.88, diameterKm: 6_779, type: 'Terrestrial' },
+  jupiter: { name: 'Jupiter', distanceAU: 5.2, orbitalPeriodYears: 11.86, diameterKm: 139_820, type: 'Gas giant' },
+  saturn: { name: 'Saturn', distanceAU: 9.54, orbitalPeriodYears: 29.46, diameterKm: 116_460, type: 'Gas giant' },
+  uranus: { name: 'Uranus', distanceAU: 19.2, orbitalPeriodYears: 84.01, diameterKm: 50_724, type: 'Ice giant' },
+  neptune: { name: 'Neptune', distanceAU: 30.06, orbitalPeriodYears: 164.8, diameterKm: 49_244, type: 'Ice giant' },
+};
+
+interface MoonDef {
+  name: string;
+  radius: number;
+  distance: number;
+  speed: number;
+  inclination?: number;
+  fragment: string;
+  texture?: string;  // optional texture file
+}
+
 interface PlanetDef {
   name: string;
   radius: number;
@@ -23,131 +67,448 @@ interface PlanetDef {
   speed: number;
   tilt?: number;
   fragment: string;
+  texture?: string;        // main color map
+  textureNight?: string;   // night-side emission
+  textureClouds?: string;  // cloud layer
+  textureSpecular?: string;
+  moons?: MoonDef[];
 }
 
-// Realistic proportions: log-scaled distances, sqrt-scaled radii, Kepler periods
-// Real AU: Mer 0.39, Ven 0.72, Ear 1.0, Mar 1.52, Jup 5.2, Sat 9.5, Ura 19.2, Nep 30.1
-// Log-scaled to fit in ~35 units; speed ∝ distance^-1.5 (Kepler's 3rd law)
+// ── Noise library for procedural moon shaders ──
 const NOISE_LIB = `
 float h(vec3 p){return fract(sin(dot(p,vec3(1.3,1.7,1.9)))*43758.5);}
 float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
 float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++,p*=2.){v+=a*n(p);a*=0.5;}return v;}
 `;
 
+// ── Procedural moon shader fragments ──
+const ROCKY_GREY = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*40.,vec3(12.99,78.23,45.16)))*43758.55);gl_FragColor=vec4(vec3(.55,.53,.5)*(.4+c*.6),1.);}`;
+const ROCKY_DARK = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*50.,vec3(9.1,37.2,71.8)))*43758.5);gl_FragColor=vec4(vec3(.3,.28,.26)*(.5+c*.5),1.);}`;
+const ROCKY_REDDISH = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*35.,vec3(15.7,42.3,8.9)))*43758.5);gl_FragColor=vec4(vec3(.5,.35,.25)*(.4+c*.6),1.);}`;
+const ICY_WHITE = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*30.,vec3(11.3,47.9,23.1)))*43758.5);gl_FragColor=vec4(vec3(.85,.87,.9)*(.7+c*.3),1.);}`;
+const ICY_BLUE = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*25.,vec3(7.3,31.7,59.1)))*43758.5);gl_FragColor=vec4(vec3(.6,.65,.75)*(.6+c*.4),1.);}`;
+
+// Io — volcanic sulfur
+const IO_FRAG = NOISE_LIB + `
+  uniform float uTime;varying vec3 vPos;
+  void main(){
+    float v=fbm(vPos*4.);float spots=smoothstep(.55,.65,n(vPos*8.+uTime*.01));
+    vec3 sulfur=mix(vec3(.9,.85,.2),vec3(.95,.6,.1),v);
+    vec3 lava=vec3(.1,.05,.02);vec3 col=mix(sulfur,lava,spots);
+    float hotspot=smoothstep(.7,.9,n(vPos*12.))*spots;
+    col+=vec3(1.,.3,.05)*hotspot*.6;
+    gl_FragColor=vec4(col,1.);}`;
+
+// Europa — ice cracks
+const EUROPA_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    vec3 ice=vec3(.82,.85,.9);
+    float crack1=abs(sin(vPos.x*15.+vPos.z*8.))*abs(cos(vPos.y*12.+vPos.x*6.));
+    float crack2=abs(sin(vPos.z*18.+vPos.y*10.))*abs(cos(vPos.x*14.+vPos.z*7.));
+    float cracks=smoothstep(.85,.95,max(crack1,crack2));
+    vec3 col=mix(ice,vec3(.55,.3,.15),cracks*.7);
+    col+=vec3(.05,.08,.12)*n(vPos*20.)*.3;
+    gl_FragColor=vec4(col,1.);}`;
+
+// Ganymede — grooved terrain
+const GANYMEDE_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    float t=fbm(vPos*3.);
+    vec3 dark=vec3(.3,.28,.25);vec3 light=vec3(.7,.72,.75);
+    vec3 col=mix(dark,light,smoothstep(.4,.6,t));
+    float grooves=sin(vPos.y*30.+vPos.x*5.)*.5+.5;
+    col*=.85+grooves*.15;
+    gl_FragColor=vec4(col,1.);}`;
+
+// Callisto — heavily cratered
+const CALLISTO_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    float t=fbm(vPos*5.);float craters=smoothstep(.6,.7,n(vPos*10.));
+    vec3 col=vec3(.35,.32,.3)*(0.6+t*.4);
+    col=mix(col,vec3(.55,.52,.5),craters*.4);
+    gl_FragColor=vec4(col,1.);}`;
+
+// Titan — orange haze
+const TITAN_FRAG = NOISE_LIB + `
+  uniform float uTime;varying vec3 vPos;
+  void main(){
+    float haze=fbm(vPos*2.5+vec3(uTime*.005,0,uTime*.003));
+    vec3 col=mix(vec3(.7,.5,.15),vec3(.85,.65,.25),haze);
+    float bands=sin(vPos.y*8.)*.5+.5;col*=.8+bands*.2;
+    gl_FragColor=vec4(col,1.);}`;
+
+// Enceladus — tiger stripes
+const ENCELADUS_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    vec3 ice=vec3(.92,.94,.97);
+    float lat=vPos.y/length(vPos);
+    float stripes=abs(sin(vPos.x*20.+vPos.z*15.))*smoothstep(-.8,-.5,lat);
+    stripes=smoothstep(.85,.95,stripes);
+    vec3 col=mix(ice,vec3(.4,.6,.85),stripes*.5);
+    gl_FragColor=vec4(col,1.);}`;
+
+// Mimas — Herschel crater
+const MIMAS_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    float c=n(vPos*20.)*.3;vec3 col=vec3(.6,.58,.55)*(.6+c);
+    float crater=1.-smoothstep(.0,.25,length(vec2(vPos.x/length(vPos)-.7,vPos.y/length(vPos))));
+    col=mix(col,vec3(.45,.42,.4),crater*.5);
+    gl_FragColor=vec4(col,1.);}`;
+
+// Iapetus — two-tone
+const IAPETUS_FRAG = `
+  varying vec3 vPos;
+  void main(){
+    float side=step(0.,vPos.z);
+    vec3 dark=vec3(.12,.1,.08);vec3 bright=vec3(.75,.73,.7);
+    gl_FragColor=vec4(mix(dark,bright,side),1.);}`;
+
+// Triton — nitrogen ice
+const TRITON_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    float t=fbm(vPos*4.);
+    vec3 ice=mix(vec3(.78,.7,.72),vec3(.85,.75,.78),t);
+    float streaks=smoothstep(.6,.8,n(vPos*vec3(3,15,3)));
+    vec3 col=mix(ice,vec3(.2,.15,.12),streaks*.4);
+    gl_FragColor=vec4(col,1.);}`;
+
+// Miranda — chaotic terrain
+const MIRANDA_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  void main(){
+    float t=fbm(vPos*6.);float chaos=n(vPos*15.);
+    vec3 col=vec3(.55,.53,.5)*(.5+t*.5);
+    float chevron=smoothstep(.5,.7,abs(sin(vPos.x*10.+vPos.y*8.)));
+    col=mix(col,vec3(.7,.68,.65),chevron*.3*chaos);
+    gl_FragColor=vec4(col,1.);}`;
+
+// ── Unused placeholder for procedural planet fallback ──
+const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
+
+// ── Planet definitions with realistic proportional distances ──
+// Distances: inner planets clustered (3.8–8.5), gap, outer planets spread (16–48)
+// Speeds: Kepler's 3rd law (∝ distance^-1.5), Earth = 3.0 at d=6.5
+
 const PLANETS: PlanetDef[] = [
   {
-    name: 'mercury', radius: 0.12, distance: 4.5, speed: 8.3,
-    fragment: NOISE_LIB + `
-      varying vec3 vPos;
-      void main(){float c=n(vPos*15.)*.5+n(vPos*30.)*.3+n(vPos*60.)*.1;gl_FragColor=vec4(vec3(.5,.48,.45)*(.4+c*.6),1.);}`,
+    name: 'mercury', radius: 0.12, distance: 3.8, speed: 6.7,
+    texture: '2k_mercury.jpg',
+    fragment: PROC_PLACEHOLDER,
   },
   {
-    name: 'venus', radius: 0.3, distance: 6.5, speed: 4.5,
-    fragment: NOISE_LIB + `
-      uniform float uTime;varying vec3 vPos;
-      void main(){float sw=fbm(vPos*3.+vec3(uTime*.02,0,uTime*.01));vec3 col=mix(vec3(.85,.65,.2),vec3(.95,.85,.5),sw);float haze=.75+.25*sin(vPos.y*4.+uTime*.3);gl_FragColor=vec4(col*haze,1.);}`,
+    name: 'venus', radius: 0.3, distance: 5.0, speed: 4.4,
+    texture: '2k_venus_surface.jpg',
+    fragment: PROC_PLACEHOLDER,
   },
   {
-    name: 'earth', radius: 0.35, distance: 9, speed: 3.0,
-    fragment: NOISE_LIB + `
-      uniform float uTime;varying vec3 vPos;varying vec3 vNormal;
-      void main(){
-        vec3 sun=normalize(vec3(1.,.3,.5));
-        float day=smoothstep(-.1,.3,dot(vNormal,sun));
-        float rawNoise=fbm(vPos*2.5);
-        float land=smoothstep(.46,.54,rawNoise);
-        float lat=abs(vPos.y/length(vPos));
-        float biomeNoise=n(vPos*5.);
-
-        // Ocean — deeper blue in deep areas
-        vec3 ocean=mix(vec3(.005,.02,.12),vec3(.02,.08,.2),rawNoise);
-        float spec=pow(max(dot(reflect(-sun,vNormal),normalize(-vPos)),0.),32.)*.4*day;
-        ocean+=vec3(.3,.4,.5)*spec;
-
-        // Land biomes based on latitude + noise
-        vec3 tropical=vec3(.06,.15,.03);
-        vec3 temperate=vec3(.08,.12,.04);
-        vec3 desert=vec3(.6,.45,.2);
-        vec3 polar=vec3(.8,.82,.85);
-        vec3 landCol=mix(tropical,temperate,smoothstep(.0,.3,lat));
-        landCol=mix(landCol,desert,biomeNoise*.4);
-        landCol=mix(landCol,polar,smoothstep(.65,.8,lat));
-
-        vec3 surf=mix(ocean,landCol,land);
-        vec3 lit=surf*(.05+.95*day);
-
-        // City lights on dark side
-        float city=land*(1.-day)*smoothstep(.6,.75,n(vPos*25.))*.8;
-        lit+=vec3(1.,.85,.4)*city;
-
-        // Clouds
-        float cl=smoothstep(.48,.62,fbm(vPos*3.5+uTime*.008))*.3*day;
-        lit+=vec3(.85)*cl;
-
-        // Atmosphere rim
-        float fresnel=pow(1.-abs(dot(vNormal,normalize(-vPos))),3.);
-        lit+=vec3(.3,.5,1.)*fresnel*.3;
-
-        gl_FragColor=vec4(lit,1.);}`,
+    name: 'earth', radius: 0.35, distance: 6.5, speed: 3.0,
+    texture: '2k_earth_daymap.jpg',
+    textureNight: '2k_earth_nightmap.jpg',
+    textureClouds: '2k_earth_clouds.jpg',
+    textureSpecular: '2k_earth_specular.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', fragment: ROCKY_GREY },
+    ],
   },
   {
-    name: 'mars', radius: 0.18, distance: 11.5, speed: 2.0,
-    fragment: NOISE_LIB + `
-      varying vec3 vPos;
-      void main(){float lat=abs(vPos.y/length(vPos));float caps=smoothstep(.82,.92,lat);float t=fbm(vPos*4.);vec3 col=mix(vec3(.65,.22,.05),vec3(.8,.35,.12),t);col=mix(col,vec3(.92,.9,.88),caps);gl_FragColor=vec4(col,1.);}`,
+    name: 'mars', radius: 0.18, distance: 8.5, speed: 2.0,
+    texture: '2k_mars.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'phobos', radius: 0.03, distance: 0.5, speed: 4.0, fragment: ROCKY_DARK },
+      { name: 'deimos', radius: 0.02, distance: 0.75, speed: 2.5, fragment: ROCKY_DARK },
+    ],
   },
   {
-    name: 'jupiter', radius: 0.9, distance: 17, speed: 0.85,
-    fragment: NOISE_LIB + `
-      uniform float uTime;varying vec3 vPos;
-      void main(){
-        float y=vPos.y/length(vPos),layers=(sin(y*25.)+sin(y*50.+uTime)*.1)*.5+.5;
-        vec3 base=vec3(.85,.6,.3)*layers,band=vec3(fbm(vPos*vec3(20,4,1)+.5*uTime),.5,.3);
-        vec3 col=mix(base,band,0.5);float zb=n(vPos*vec3(4,20,1)+uTime*.1);col=mix(col,vec3(.95,.85,.6),zb);
-        float spot=1.-smoothstep(.0,.18,length(vec2(vPos.x/length(vPos)-.3,y+.2)));
-        vec3 sc=vec3(.8,.2,.1)*fbm(vPos*vec3(4,1,4)+uTime);col=mix(col,sc,spot);
-        gl_FragColor=vec4(col,1.);}`,
+    name: 'jupiter', radius: 0.9, distance: 16, speed: 0.78,
+    texture: '2k_jupiter.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'io', radius: 0.09, distance: 1.8, speed: 3.5, fragment: IO_FRAG },
+      { name: 'europa', radius: 0.08, distance: 2.3, speed: 2.8, fragment: EUROPA_FRAG },
+      { name: 'ganymede', radius: 0.12, distance: 2.9, speed: 2.0, fragment: GANYMEDE_FRAG },
+      { name: 'callisto', radius: 0.11, distance: 3.6, speed: 1.4, fragment: CALLISTO_FRAG },
+      { name: 'amalthea', radius: 0.025, distance: 1.4, speed: 4.5, fragment: ROCKY_REDDISH },
+      { name: 'thebe', radius: 0.015, distance: 1.55, speed: 4.2, fragment: ROCKY_DARK },
+      { name: 'metis', radius: 0.01, distance: 1.25, speed: 5.0, fragment: ROCKY_DARK },
+      { name: 'adrastea', radius: 0.008, distance: 1.28, speed: 4.9, fragment: ROCKY_DARK },
+      { name: 'himalia', radius: 0.02, distance: 5.0, speed: 0.5, inclination: 0.5, fragment: ROCKY_DARK },
+    ],
   },
   {
-    name: 'saturn', radius: 0.75, distance: 22, speed: 0.55,
-    fragment: NOISE_LIB + `
-      uniform float uTime;varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float b=sin(y*18.+sin(y*5.)*.3)*.5+.5;float t=n(vPos*vec3(10,3,10));vec3 col=mix(vec3(.85,.75,.45),vec3(.7,.6,.35),b+t*.2);gl_FragColor=vec4(col,1.);}`,
+    name: 'saturn', radius: 0.75, distance: 24, speed: 0.42,
+    texture: '2k_saturn.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'mimas', radius: 0.04, distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
+      { name: 'enceladus', radius: 0.045, distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG },
+      { name: 'tethys', radius: 0.06, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },
+      { name: 'dione', radius: 0.065, distance: 2.6, speed: 2.5, fragment: ICY_WHITE },
+      { name: 'rhea', radius: 0.08, distance: 3.1, speed: 2.0, fragment: ICY_WHITE },
+      { name: 'titan', radius: 0.14, distance: 3.8, speed: 1.3, fragment: TITAN_FRAG },
+      { name: 'hyperion', radius: 0.025, distance: 4.3, speed: 1.1, fragment: ROCKY_GREY },
+      { name: 'iapetus', radius: 0.07, distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG },
+      { name: 'phoebe', radius: 0.02, distance: 5.8, speed: 0.3, inclination: 2.7, fragment: ROCKY_DARK },
+      { name: 'pan', radius: 0.006, distance: 1.15, speed: 5.5, fragment: ICY_WHITE },
+      { name: 'atlas', radius: 0.006, distance: 1.18, speed: 5.4, fragment: ICY_WHITE },
+      { name: 'prometheus', radius: 0.01, distance: 1.22, speed: 5.2, fragment: ICY_WHITE },
+      { name: 'pandora', radius: 0.009, distance: 1.24, speed: 5.1, fragment: ICY_WHITE },
+      { name: 'epimetheus', radius: 0.01, distance: 1.35, speed: 4.6, fragment: ICY_WHITE },
+      { name: 'janus', radius: 0.012, distance: 1.36, speed: 4.5, fragment: ICY_WHITE },
+    ],
   },
   {
-    name: 'uranus', radius: 0.45, distance: 27, speed: 0.3, tilt: 1.71,
-    fragment: `
-      varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float b=sin(y*12.)*.08;vec3 col=vec3(.52+b,.78+b,.83+b);gl_FragColor=vec4(col*.75,1.);}`,
+    name: 'uranus', radius: 0.45, distance: 36, speed: 0.23, tilt: 1.71,
+    texture: '2k_uranus.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'miranda', radius: 0.03, distance: 1.0, speed: 3.5, fragment: MIRANDA_FRAG },
+      { name: 'ariel', radius: 0.055, distance: 1.4, speed: 2.8, fragment: ICY_BLUE },
+      { name: 'umbriel', radius: 0.055, distance: 1.8, speed: 2.2, fragment: ROCKY_DARK },
+      { name: 'titania', radius: 0.07, distance: 2.3, speed: 1.6, fragment: ICY_BLUE },
+      { name: 'oberon', radius: 0.068, distance: 2.8, speed: 1.2, fragment: ICY_BLUE },
+      { name: 'puck', radius: 0.012, distance: 0.8, speed: 4.2, fragment: ROCKY_DARK },
+      { name: 'portia', radius: 0.01, distance: 0.7, speed: 4.5, fragment: ROCKY_DARK },
+    ],
   },
   {
-    name: 'neptune', radius: 0.42, distance: 32, speed: 0.2,
-    fragment: `
-      uniform float uTime;varying vec3 vPos;
-      void main(){float y=vPos.y/length(vPos);float b=sin(y*14.+uTime*.15)*.12;vec3 col=vec3(.08,.12+b,.55+b);gl_FragColor=vec4(col,1.);}`,
+    name: 'neptune', radius: 0.42, distance: 48, speed: 0.15,
+    texture: '2k_neptune.jpg',
+    fragment: PROC_PLACEHOLDER,
+    moons: [
+      { name: 'triton', radius: 0.09, distance: 1.5, speed: -1.8, fragment: TRITON_FRAG },
+      { name: 'proteus', radius: 0.03, distance: 0.9, speed: 3.0, fragment: ROCKY_DARK },
+      { name: 'nereid', radius: 0.02, distance: 3.0, speed: 0.4, inclination: 0.5, fragment: ROCKY_GREY },
+      { name: 'larissa', radius: 0.012, distance: 0.7, speed: 3.8, fragment: ROCKY_DARK },
+      { name: 'despina', radius: 0.01, distance: 0.6, speed: 4.2, fragment: ROCKY_DARK },
+      { name: 'galatea', radius: 0.01, distance: 0.65, speed: 4.0, fragment: ROCKY_DARK },
+    ],
   },
 ];
 
+// ── Moon tracking ──
+interface MoonInstance {
+  mesh: THREE.Mesh;
+  def: MoonDef;
+  planetMesh: THREE.Mesh;
+  orbitGroup: THREE.Group;
+}
+
+// ── Planet shader: day/night terminator, bump mapping, specular, atmosphere ──
+const PLANET_VERT = /* glsl */ `
+  varying vec3 vWorldPos;
+  varying vec3 vWorldNormal;
+  varying vec2 vUv;
+  varying vec3 vViewDir;
+
+  void main() {
+    vUv = uv;
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPos = worldPos.xyz;
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+    vViewDir = normalize(cameraPosition - worldPos.xyz);
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+// Day/night with smooth terminator, bump-derived shading, specular, atmosphere rim
+const PLANET_FRAG = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform sampler2D uNightMap;
+  uniform sampler2D uSpecMap;
+  uniform vec3 uSunPos;
+  uniform float uHasNight;
+  uniform float uHasSpec;
+  uniform float uAtmoColor;   // 0=none, 1=blue(earth), 2=orange(venus/titan)
+  uniform float uRoughness;
+  uniform vec2 uTexelSize;    // 1/textureWidth, 1/textureHeight for bump
+
+  varying vec3 vWorldPos;
+  varying vec3 vWorldNormal;
+  varying vec2 vUv;
+  varying vec3 vViewDir;
+
+  vec3 getBumpNormal() {
+    // Derive bump from luminance differences in texture
+    float tl = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+    float t  = dot(texture2D(uMap, vUv + vec2(0.0, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+    float tr = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+    float l  = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
+    float r  = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
+    float bl = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+    float b  = dot(texture2D(uMap, vUv + vec2(0.0, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+    float br = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+
+    float dX = (tr + 2.0*r + br) - (tl + 2.0*l + bl);
+    float dY = (bl + 2.0*b + br) - (tl + 2.0*t + tr);
+
+    // Perturb normal (strength factor controls bump intensity)
+    float bumpStrength = 1.5;
+    vec3 N = normalize(vWorldNormal);
+    vec3 T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
+    vec3 B = cross(N, T);
+    return normalize(N + (T * dX + B * dY) * bumpStrength);
+  }
+
+  void main() {
+    vec3 sunDir = normalize(uSunPos - vWorldPos);
+    vec3 N = getBumpNormal();
+    float NdotL = dot(N, sunDir);
+
+    // Smooth terminator — gradual transition from day to night
+    float dayFactor = smoothstep(-0.15, 0.2, NdotL);
+
+    // Day color from texture
+    vec3 dayColor = texture2D(uMap, vUv).rgb;
+
+    // Diffuse shading (Lambert with slight ambient)
+    float diffuse = max(NdotL, 0.0);
+    vec3 litDay = dayColor * (0.03 + 0.97 * diffuse);
+
+    // Specular (Blinn-Phong)
+    vec3 halfDir = normalize(sunDir + vViewDir);
+    float specAngle = max(dot(N, halfDir), 0.0);
+    float specPower = mix(16.0, 64.0, 1.0 - uRoughness);
+    float spec = pow(specAngle, specPower) * (1.0 - uRoughness) * 0.6;
+    if (uHasSpec > 0.5) {
+      float specMask = texture2D(uSpecMap, vUv).r;
+      spec *= specMask;
+    }
+    litDay += vec3(1.0, 0.95, 0.9) * spec * dayFactor;
+
+    // Night side
+    vec3 nightColor = vec3(0.0);
+    if (uHasNight > 0.5) {
+      nightColor = texture2D(uNightMap, vUv).rgb * 0.8;
+    }
+
+    // Blend day/night across terminator
+    vec3 surfaceColor = mix(nightColor, litDay, dayFactor);
+
+    // Atmosphere rim glow
+    float fresnel = pow(1.0 - abs(dot(normalize(vWorldNormal), vViewDir)), 3.0);
+    if (uAtmoColor > 0.5 && uAtmoColor < 1.5) {
+      // Earth — blue atmosphere
+      surfaceColor += vec3(0.25, 0.45, 1.0) * fresnel * 0.35 * dayFactor;
+      surfaceColor += vec3(0.05, 0.1, 0.3) * fresnel * 0.2 * (1.0 - dayFactor); // faint blue on night side
+    } else if (uAtmoColor > 1.5) {
+      // Venus — orange haze
+      surfaceColor += vec3(1.0, 0.7, 0.2) * fresnel * 0.3;
+    }
+
+    gl_FragColor = vec4(surfaceColor, 1.0);
+  }
+`;
+
+// ── Create a textured planet mesh with realistic shading ──
+function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
+  const segments = def.radius > 0.5 ? 48 : def.radius > 0.2 ? 32 : 24;
+  const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
+
+  if (def.texture) {
+    const map = loadTex(def.texture);
+    const texSize = 2048; // 2K textures
+
+    const uniforms: Record<string, THREE.IUniform> = {
+      uMap: { value: map },
+      uNightMap: { value: def.textureNight ? loadTex(def.textureNight) : null },
+      uSpecMap: { value: def.textureSpecular ? loadTex(def.textureSpecular) : null },
+      uSunPos: { value: new THREE.Vector3(0, 0, 0) }, // updated per frame
+      uHasNight: { value: def.textureNight ? 1.0 : 0.0 },
+      uHasSpec: { value: def.textureSpecular ? 1.0 : 0.0 },
+      uAtmoColor: { value: def.name === 'earth' ? 1.0 : def.name === 'venus' ? 2.0 : 0.0 },
+      uRoughness: { value: def.name === 'earth' ? 0.6 : 0.85 },
+      uTexelSize: { value: new THREE.Vector2(1 / texSize, 1 / texSize) },
+    };
+
+    const mat = new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader: PLANET_VERT,
+      fragmentShader: PLANET_FRAG,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData.isPlanetShader = true;
+    return mesh;
+  }
+
+  // Procedural fallback
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: VERT,
+    fragmentShader: def.fragment,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
+// ── Create a textured moon mesh, or fall back to procedural shader ──
+function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
+  const segments = def.radius * scale > 0.02 ? 16 : 8;
+  const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
+
+  if (def.texture) {
+    const map = loadTex(def.texture);
+    const mat = new THREE.MeshStandardMaterial({ map, roughness: 0.95, metalness: 0 });
+    return new THREE.Mesh(geo, mat);
+  }
+
+  const hasTime = def.fragment.includes('uTime');
+  const mat = new THREE.ShaderMaterial({
+    uniforms: hasTime ? { uTime: { value: 0 } } : {},
+    vertexShader: VERT,
+    fragmentShader: def.fragment,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
+// ── Create orbit trail ring (barely visible dashed line) ──
+function createOrbitTrail(distance: number, scale: number, color: number = 0x334466): THREE.Line {
+  const points: THREE.Vector3[] = [];
+  const segments = 128;
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    points.push(new THREE.Vector3(
+      Math.cos(angle) * distance * scale,
+      0,
+      Math.sin(angle) * distance * scale,
+    ));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.08,
+    depthWrite: false,
+  });
+  return new THREE.Line(geo, mat);
+}
+
+// ─────────────────────────────────────────────────────────────
+// CREATE
+// ─────────────────────────────────────────────────────────────
 export function createSolarSystem(scale: number): THREE.Group {
   const group = new THREE.Group();
   group.userData.isSolarSystem = true;
 
-  // ── Sun ──
-  const sunGeo = new THREE.SphereGeometry(2 * scale, 32, 32);
-  const sunMat = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: VERT,
-    fragmentShader: `
-      uniform float uTime;varying vec3 vPos;varying vec3 vNormal;
-      void main(){
-        float pulse=.85+.15*sin(uTime*2.);
-        float fresnel=pow(1.-abs(dot(vNormal,vec3(0,0,1))),.8);
-        vec3 col=vec3(1.,.9,.6)*pulse+vec3(1.,.5,.1)*fresnel*.5;
-        gl_FragColor=vec4(col,1.);
-      }`,
-    blending: THREE.AdditiveBlending,
-    transparent: true,
-  });
+  // ── Lighting for textured planets ──
+  const sunLight = new THREE.PointLight(0xffffff, 1.5, 80 * scale);
+  sunLight.position.set(0, 0, 0);
+  group.add(sunLight);
+
+  // Faint ambient so dark sides aren't pure black
+  const ambient = new THREE.AmbientLight(0x111122, 0.15);
+  group.add(ambient);
+
+  // ── Sun (emissive — not affected by lighting) ──
+  const sunGeo = new THREE.SphereGeometry(2 * scale, 48, 48);
+  const sunTex = loadTex('2k_sun.jpg');
+  const sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -162,64 +523,63 @@ export function createSolarSystem(scale: number): THREE.Group {
   });
   group.add(new THREE.Mesh(coronaGeo, coronaMat));
 
-  // ── Planets ──
-  const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] = [];
+  // ── Planets + Moons ──
+  const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh }[] = [];
+  const moonInstances: MoonInstance[] = [];
 
   for (const def of PLANETS) {
     const orbit = new THREE.Group();
     orbit.name = `orbit-${def.name}`;
 
-    const geo = new THREE.SphereGeometry(def.radius * scale, 24, 24);
-    const mat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: VERT,
-      fragmentShader: def.fragment,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
+    // Orbit trail
+    const trail = createOrbitTrail(def.distance, scale);
+    group.add(trail); // add to group root, not orbit (orbit rotates)
+
+    const mesh = createPlanetMesh(def, scale);
     mesh.name = def.name;
     mesh.position.x = def.distance * scale;
     if (def.tilt) mesh.rotation.z = def.tilt;
     orbit.add(mesh);
 
-    // Atmosphere rim for Earth and Venus
-    if (def.name === 'earth' || def.name === 'venus') {
-      const atmoGeo = new THREE.SphereGeometry((def.radius + 0.05) * scale, 16, 16);
-      const atmoCol = def.name === 'earth' ? '0.3,0.5,1.0' : '1.0,0.8,0.3';
-      const atmoMat = new THREE.ShaderMaterial({
-        uniforms: {},
-        vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 w=modelMatrix*vec4(position,1.);vV=normalize(cameraPosition-w.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-        fragmentShader: `varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.-abs(dot(vN,vV)),3.);gl_FragColor=vec4(${atmoCol},f*.4);}`,
-        transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
+    let cloudsMesh: THREE.Mesh | undefined;
+
+    // Earth clouds — separate mesh for independent rotation
+    if (def.name === 'earth' && def.textureClouds) {
+      const cloudsTex = loadTex(def.textureClouds);
+      const cloudsMat = new THREE.MeshStandardMaterial({
+        map: cloudsTex,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
       });
-      const atmo = new THREE.Mesh(atmoGeo, atmoMat);
-      atmo.position.copy(mesh.position);
-      orbit.add(atmo);
+      cloudsMesh = new THREE.Mesh(
+        new THREE.SphereGeometry((def.radius + 0.015) * scale, 32, 32),
+        cloudsMat,
+      );
+      cloudsMesh.name = 'earth-clouds';
+      cloudsMesh.position.copy(mesh.position);
+      orbit.add(cloudsMesh);
     }
 
-    // Moon for Earth
-    if (def.name === 'earth') {
-      const moonGeo = new THREE.SphereGeometry(0.1 * scale, 12, 12);
-      const moonMat = new THREE.ShaderMaterial({
-        uniforms: {},
-        vertexShader: VERT,
-        fragmentShader: `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*40.,vec3(12.99,78.23,45.16)))*43758.55);gl_FragColor=vec4(vec3(.55,.53,.5)*(.4+c*.6),1.);}`,
-      });
-      const moon = new THREE.Mesh(moonGeo, moonMat);
-      moon.name = 'moon';
-      moon.position.set(def.distance * scale + 1.0 * scale, 0, 0);
-      orbit.add(moon);
-      orbit.userData.moonRef = moon;
-      orbit.userData.earthRef = mesh;
-    }
-
-    // Saturn ring
+    // Saturn rings (textured)
     if (def.name === 'saturn') {
-      const ringGeo = new THREE.RingGeometry(1.3 * scale, 2.0 * scale, 64);
-      const ringMat = new THREE.ShaderMaterial({
-        uniforms: {},
-        vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-        fragmentShader: `varying vec2 vUv;void main(){float r=length(vUv-.5)*2.;float bands=sin(r*40.)*.5+.5;float alpha=smoothstep(0.,.1,r)*smoothstep(1.,.8,r)*.5;gl_FragColor=vec4(.9,.8,.5,alpha*bands);}`,
-        transparent: true, side: THREE.DoubleSide, depthWrite: false,
+      const ringGeo = new THREE.RingGeometry(1.3 * scale, 2.0 * scale, 128);
+      // Adjust UVs so texture maps radially
+      const pos = ringGeo.attributes.position;
+      const uv = ringGeo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const r = Math.sqrt(x * x + z * z);
+        const rNorm = (r - 1.3 * scale) / ((2.0 - 1.3) * scale);
+        uv.setXY(i, rNorm, 0.5);
+      }
+      const ringTex = loadTex('2k_saturn_ring_alpha.png');
+      const ringMat = new THREE.MeshBasicMaterial({
+        map: ringTex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.6,
+        depthWrite: false,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = Math.PI / 2.2;
@@ -227,46 +587,130 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(ring);
     }
 
+    // Uranus faint ring
+    if (def.name === 'uranus') {
+      const ringGeo = new THREE.RingGeometry(0.7 * scale, 0.9 * scale, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x99aabb, side: THREE.DoubleSide,
+        transparent: true, opacity: 0.1, depthWrite: false,
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.rotation.z = 1.71;
+      ring.position.copy(mesh.position);
+      orbit.add(ring);
+    }
+
+    // Neptune faint ring
+    if (def.name === 'neptune') {
+      const ringGeo = new THREE.RingGeometry(0.65 * scale, 0.8 * scale, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x667799, side: THREE.DoubleSide,
+        transparent: true, opacity: 0.06, depthWrite: false,
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2.05;
+      ring.position.copy(mesh.position);
+      orbit.add(ring);
+    }
+
+    // ── Create moons ──
+    if (def.moons) {
+      for (const moonDef of def.moons) {
+        const moonOrbit = new THREE.Group();
+        moonOrbit.name = `orbit-${moonDef.name}`;
+        moonOrbit.position.copy(mesh.position);
+        if (moonDef.inclination) moonOrbit.rotation.x = moonDef.inclination;
+
+        const moonMesh = createMoonMesh(moonDef, scale);
+        moonMesh.name = moonDef.name;
+        moonMesh.position.x = moonDef.distance * scale;
+        moonOrbit.add(moonMesh);
+
+        // Titan atmosphere
+        if (moonDef.name === 'titan') {
+          const titanAtmoGeo = new THREE.SphereGeometry((moonDef.radius + 0.03) * scale, 12, 12);
+          const titanAtmoMat = new THREE.ShaderMaterial({
+            uniforms: {},
+            vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 w=modelMatrix*vec4(position,1.);vV=normalize(cameraPosition-w.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+            fragmentShader: `varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.-abs(dot(vN,vV)),3.);gl_FragColor=vec4(0.85,0.6,0.2,f*.35);}`,
+            transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
+          });
+          const titanAtmo = new THREE.Mesh(titanAtmoGeo, titanAtmoMat);
+          titanAtmo.position.copy(moonMesh.position);
+          moonOrbit.add(titanAtmo);
+        }
+
+        // Enceladus geyser glow
+        if (moonDef.name === 'enceladus') {
+          const geyserGeo = new THREE.ConeGeometry(0.015 * scale, 0.08 * scale, 8);
+          const geyserMat = new THREE.MeshBasicMaterial({
+            color: 0xaaddff, transparent: true, opacity: 0.25,
+            blending: THREE.AdditiveBlending, depthWrite: false,
+          });
+          const geyser = new THREE.Mesh(geyserGeo, geyserMat);
+          geyser.position.copy(moonMesh.position);
+          geyser.position.y -= moonDef.radius * scale * 1.2;
+          geyser.rotation.x = Math.PI;
+          moonOrbit.add(geyser);
+        }
+
+        orbit.add(moonOrbit);
+        moonInstances.push({ mesh: moonMesh, def: moonDef, planetMesh: mesh, orbitGroup: moonOrbit });
+      }
+    }
+
     group.add(orbit);
-    planetMeshes.push({ mesh, orbit, def });
+    planetMeshes.push({ mesh, orbit, def, clouds: cloudsMesh });
   }
 
   group.userData.planets = planetMeshes;
+  group.userData.moonInstances = moonInstances;
   return group;
 }
 
+// ─────────────────────────────────────────────────────────────
+// UPDATE
+// ─────────────────────────────────────────────────────────────
+const _sunWorldPos = new THREE.Vector3();
+
 export function updateSolarSystem(group: THREE.Group, time: number): void {
-  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
-  // Sun shader time
-  const sun = group.getObjectByName('sun') as THREE.Mesh | undefined;
-  if (sun) {
-    const mat = sun.material as THREE.ShaderMaterial;
-    if (mat.uniforms?.uTime) mat.uniforms.uTime.value = time;
-  }
+  // Sun world position (group origin)
+  group.getWorldPosition(_sunWorldPos);
 
-  for (const { mesh, orbit, def } of planets) {
+  for (const { mesh, orbit, def, clouds } of planets) {
     // Orbit rotation
     orbit.rotation.y = time * def.speed * 0.1;
 
     // Planet self-rotation
     mesh.rotation.y = time * 0.5;
 
-    // Shader time
-    const mat = mesh.material as THREE.ShaderMaterial;
-    if (mat.uniforms?.uTime) mat.uniforms.uTime.value = time;
+    // Clouds rotate slightly faster than the planet
+    if (clouds) {
+      clouds.rotation.y = time * 0.55;
+    }
 
-    // Moon orbit around Earth
-    if (orbit.userData.moonRef) {
-      const moon = orbit.userData.moonRef as THREE.Mesh;
-      const earth = orbit.userData.earthRef as THREE.Mesh;
-      const moonDist = 1.0;
-      moon.position.set(
-        earth.position.x + Math.cos(time * 2) * moonDist,
-        0,
-        earth.position.z + Math.sin(time * 2) * moonDist,
-      );
+    // Update planet shader uniforms — sun position for day/night + bump
+    if (mesh.material instanceof THREE.ShaderMaterial) {
+      const u = mesh.material.uniforms;
+      if (u.uSunPos) u.uSunPos.value.copy(_sunWorldPos);
+      if (u.uTime) u.uTime.value = time;
+    }
+  }
+
+  // ── Animate all moons ──
+  const moons = group.userData.moonInstances as MoonInstance[] | undefined;
+  if (!moons) return;
+
+  for (const { mesh, def, orbitGroup } of moons) {
+    orbitGroup.rotation.y = time * def.speed * 0.3;
+    mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
+
+    if (mesh.material instanceof THREE.ShaderMaterial) {
+      if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
     }
   }
 }
