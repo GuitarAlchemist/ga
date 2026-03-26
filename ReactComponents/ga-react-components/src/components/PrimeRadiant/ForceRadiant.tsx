@@ -18,6 +18,7 @@ import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
 import { createSolarSystem, updateSolarSystem } from './SolarSystem';
+import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
@@ -967,6 +968,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const solarOffset = new THREE.Vector3(6, 4, -12);
       solarOffset.applyQuaternion(cam.quaternion);
       solarSystem.position.copy(cam.position).add(solarOffset);
+
+      // ─── Jarvis Space Station — top-left of view ───
+      if (qualityLevel !== 'low') {
+        updateSpaceStation(spaceStation, t);
+      }
+      const stationOffset = new THREE.Vector3(-8, 8, -20);
+      stationOffset.applyQuaternion(cam.quaternion);
+      spaceStation.position.copy(cam.position).add(stationOffset);
     });
 
     // Slow auto-rotate
@@ -1244,9 +1253,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Holographic ecumenopolis — the capital world, top-right HUD position
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
-    // ─── SOLAR SYSTEM — Sun + 8 planets + Moon + Saturn rings ───
+    // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     const solarSystem = createSolarSystem(0.03);
     fg.scene().add(solarSystem);
+
+    // ─── JARVIS SPACE STATION — modular station with docking animation ───
+    const spaceStation = createSpaceStation(0.6);
+    fg.scene().add(spaceStation);
 
     // ─── Auto-select the most connected (central) node on load ───
     // Find the node with the most edges — that's the true hub
