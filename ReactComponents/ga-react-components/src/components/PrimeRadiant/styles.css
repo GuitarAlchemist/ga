@@ -1491,3 +1491,52 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .prime-radiant__agents-member-time { color: #484f58; font-size: 8px; flex-shrink: 0; }
+
+/* ─── Commit Detail Tooltip ─── */
+.prime-radiant__commit-tooltip {
+  width: 300px;
+  background: rgba(13, 17, 23, 0.96);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  backdrop-filter: blur(12px);
+  font-family: 'JetBrains Mono', monospace;
+  color: #e6edf3;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  pointer-events: auto;
+}
+.prime-radiant__commit-tooltip-loading {
+  font-size: 10px; color: #484f58; text-align: center; padding: 8px;
+}
+.prime-radiant__commit-tooltip-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.prime-radiant__commit-tooltip-avatar {
+  width: 24px; height: 24px; border-radius: 50%; border: 1px solid #30363d;
+}
+.prime-radiant__commit-tooltip-author {
+  font-size: 11px; font-weight: 600; color: #e6edf3;
+}
+.prime-radiant__commit-tooltip-sha {
+  font-size: 9px; color: #484f58;
+}
+.prime-radiant__commit-tooltip-message {
+  font-size: 10px; color: #9ca3af; margin-bottom: 8px;
+  line-height: 1.4; word-break: break-word;
+}
+.prime-radiant__commit-tooltip-stats {
+  display: flex; gap: 8px; font-size: 10px; font-weight: 600;
+  margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #21262d;
+}
+.prime-radiant__commit-tooltip-files {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.prime-radiant__commit-tooltip-file {
+  display: flex; align-items: center; gap: 4px; font-size: 9px;
+}
+.prime-radiant__commit-tooltip-file-status {
+  font-weight: 700; width: 10px; text-align: center; flex-shrink: 0;
+}
+.prime-radiant__commit-tooltip-file-name {
+  flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

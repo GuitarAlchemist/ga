@@ -41,3 +41,4 @@ export type { PlanetAstroData } from './SolarSystem';
 export { BacklogPanel } from './BacklogPanel';
 export { AgentPanel } from './AgentPanel';
 export type { AgentInfo, AgentTeam } from './AgentPanel';
+export { CommitTooltip } from './CommitTooltip';
