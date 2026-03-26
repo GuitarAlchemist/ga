@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 public sealed class GovernanceWatcherService(
     IConfiguration configuration,
     IHubContext<GovernanceHub> hubContext,
+    BeliefStateService beliefStateService,
     ILogger<GovernanceWatcherService> logger)
     : BackgroundService
 {
@@ -55,13 +56,20 @@ public sealed class GovernanceWatcherService(
 
                 // Force refresh the controller cache
                 var controller = new GovernanceController(configuration, logger as ILogger<GovernanceController>
-                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance, hubContext);
+                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance, hubContext, beliefStateService);
                 controller.Refresh();
                 var result = controller.GetGraph();
 
                 if (result.Value != null)
                 {
                     await GovernanceHub.BroadcastGraphUpdate(hubContext, result.Value);
+                }
+
+                // Also broadcast updated belief states
+                var beliefs = beliefStateService.GetBeliefs();
+                if (beliefs.Count > 0)
+                {
+                    await GovernanceHub.BroadcastBeliefsSnapshot(hubContext, beliefs);
                 }
             }
             catch (Exception ex)

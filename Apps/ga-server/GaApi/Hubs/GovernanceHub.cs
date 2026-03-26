@@ -2,6 +2,7 @@ namespace GaApi.Hubs;
 
 using Microsoft.AspNetCore.SignalR;
 using Controllers;
+using Services;
 
 /// <summary>
 ///     SignalR hub for real-time governance graph updates.
@@ -11,10 +12,13 @@ using Controllers;
 ///       "GraphUpdate"    — full governance graph JSON
 ///       "HealthUpdate"   — partial update with changed node health metrics
 ///       "NodeChanged"    — single node update (id, health, color)
+///       "BeliefUpdate"   — pushed when a belief state changes (tetravalent T/F/U/C)
+///       "BeliefsSnapshot"— full list of current belief states
 ///       "Connected"      — welcome message with current node count
 ///
 ///     Client → Server methods:
 ///       Subscribe()      — register for updates
+///       SubscribeBeliefs() — register for belief state updates
 ///       RequestRefresh() — request immediate full graph push
 /// </summary>
 public sealed class GovernanceHub(
@@ -102,6 +106,37 @@ public sealed class GovernanceHub(
             color,
             timestamp = DateTime.UtcNow,
         });
+
+    /// <summary>
+    ///     Client subscribes to belief state updates.
+    ///     Sends the full current belief snapshot immediately.
+    /// </summary>
+    public async Task SubscribeBeliefs()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "beliefs");
+        logger.LogInformation("Client {ConnectionId} subscribed to belief updates", Context.ConnectionId);
+
+        // Push current beliefs immediately
+        var beliefService = Context.GetHttpContext()?.RequestServices.GetService<BeliefStateService>();
+        if (beliefService != null)
+        {
+            var beliefs = beliefService.GetBeliefs();
+            await Clients.Caller.SendAsync("BeliefsSnapshot", beliefs);
+        }
+    }
+
+    /// <summary>
+    ///     Broadcast a belief state update to all subscribed clients.
+    ///     Called from backend services when a belief state changes.
+    /// </summary>
+    public static async Task BroadcastBeliefUpdate(IHubContext<GovernanceHub> hubContext, BeliefState belief) =>
+        await hubContext.Clients.Group("beliefs").SendAsync("BeliefUpdate", belief);
+
+    /// <summary>
+    ///     Broadcast a full beliefs snapshot to all subscribed clients.
+    /// </summary>
+    public static async Task BroadcastBeliefsSnapshot(IHubContext<GovernanceHub> hubContext, List<BeliefState> beliefs) =>
+        await hubContext.Clients.Group("beliefs").SendAsync("BeliefsSnapshot", beliefs);
 
     // ─── Screenshot capture ───
 

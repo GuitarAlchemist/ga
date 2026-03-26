@@ -56,6 +56,9 @@ builder.Services.AddHttpClient();
 // Add SignalR for WebSocket support
 builder.Services.AddSignalR();
 
+// Belief state service — reads/updates tetravalent belief files
+builder.Services.AddSingleton<BeliefStateService>();
+
 // Governance file watcher — pushes updates via SignalR when governance files change
 builder.Services.AddHostedService<GovernanceWatcherService>();
 

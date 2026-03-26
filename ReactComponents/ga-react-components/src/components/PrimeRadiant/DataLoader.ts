@@ -8,6 +8,34 @@ import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 import * as signalR from '@microsoft/signalr';
 
 // ---------------------------------------------------------------------------
+// Belief state types (tetravalent: T/F/U/C)
+// ---------------------------------------------------------------------------
+export type TetravalentStatus = 'T' | 'F' | 'U' | 'C';
+
+export interface EvidenceItem {
+  source: string;
+  claim: string;
+  timestamp?: string;
+  reliability: number;
+}
+
+export interface BeliefEvidence {
+  supporting: EvidenceItem[];
+  contradicting: EvidenceItem[];
+}
+
+export interface BeliefState {
+  id: string;
+  proposition: string;
+  truth_value: TetravalentStatus;
+  confidence: number;
+  evidence?: BeliefEvidence;
+  last_updated?: string;
+  evaluated_by?: string;
+  source_file?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Adjacency index for fast lookups
 // ---------------------------------------------------------------------------
 export interface GraphIndex {
@@ -155,6 +183,10 @@ export interface LiveDataConfig {
   onStatusChange?: (status: 'connected' | 'polling' | 'disconnected') => void;
   /** Called when the backend requests a screenshot capture */
   onScreenshotRequest?: (reason: string) => void;
+  /** Called when a single belief state is updated */
+  onBeliefUpdate?: (belief: BeliefState) => void;
+  /** Called when a full beliefs snapshot is received */
+  onBeliefsSnapshot?: (beliefs: BeliefState[]) => void;
 }
 
 export interface LivePollingHandle {
@@ -165,7 +197,7 @@ export interface LivePollingHandle {
 }
 
 export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -206,6 +238,17 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         onScreenshotRequest?.(data.reason ?? 'Backend request');
       });
 
+      // Belief state updates — tetravalent T/F/U/C
+      connection.on('BeliefUpdate', (data: BeliefState) => {
+        console.log('[Governance] Belief updated:', data.id, data.truth_value);
+        onBeliefUpdate?.(data);
+      });
+
+      connection.on('BeliefsSnapshot', (data: BeliefState[]) => {
+        console.log(`[Governance] Beliefs snapshot: ${data.length} beliefs`);
+        onBeliefsSnapshot?.(data);
+      });
+
       connection.onreconnecting(() => {
         onStatusChange?.('disconnected');
         // Start polling as fallback while reconnecting
@@ -234,6 +277,11 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
 
       // Subscribe to governance group and get initial data
       await connection.invoke('Subscribe');
+
+      // Subscribe to belief updates
+      if (onBeliefUpdate || onBeliefsSnapshot) {
+        await connection.invoke('SubscribeBeliefs');
+      }
 
     } catch (err) {
       onError?.(new Error(`SignalR connection failed: ${(err as Error).message}`));

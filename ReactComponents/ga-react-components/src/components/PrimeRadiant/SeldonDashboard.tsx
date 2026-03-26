@@ -6,6 +6,7 @@
 
 import React, { useMemo } from 'react';
 import type { GovernanceGraph, GovernanceNode, HealthMetrics } from './types';
+import type { BeliefState, TetravalentStatus } from './DataLoader';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -15,6 +16,7 @@ export interface SeldonDashboardProps {
   onClose: () => void;
   graph: GovernanceGraph | null;
   selectedNode: GovernanceNode | null;
+  beliefs?: BeliefState[];
 }
 
 // ---------------------------------------------------------------------------
@@ -131,6 +133,68 @@ function AggregateSparkline({ graph }: { graph: GovernanceGraph }) {
 }
 
 // ---------------------------------------------------------------------------
+// Tetravalent belief status rendering
+// ---------------------------------------------------------------------------
+const TETRAVALENT_COLORS: Record<TetravalentStatus, string> = {
+  T: '#33CC66',   // green — verified true
+  F: '#FF4444',   // red — verified false
+  U: '#888888',   // gray — unknown
+  C: '#FF44FF',   // magenta — contradictory
+};
+
+const TETRAVALENT_LABELS: Record<TetravalentStatus, string> = {
+  T: 'True',
+  F: 'False',
+  U: 'Unknown',
+  C: 'Contradictory',
+};
+
+function BeliefPanel({ beliefs }: { beliefs: BeliefState[] }) {
+  if (beliefs.length === 0) {
+    return <p className="seldon-dashboard__empty">No belief states available</p>;
+  }
+
+  return (
+    <ul className="seldon-dashboard__risk-list">
+      {beliefs.map((belief) => {
+        const status = belief.truth_value as TetravalentStatus;
+        const color = TETRAVALENT_COLORS[status] ?? '#888888';
+        const label = TETRAVALENT_LABELS[status] ?? status;
+        return (
+          <li key={belief.id} className="seldon-dashboard__risk-item">
+            <div className="seldon-dashboard__risk-header">
+              <span
+                className="seldon-dashboard__risk-name"
+                title={belief.proposition}
+                style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {belief.proposition}
+              </span>
+              <span
+                className="seldon-dashboard__risk-score"
+                style={{ color, fontWeight: 'bold', marginLeft: 8, flexShrink: 0 }}
+                title={`Status: ${label}, Confidence: ${(belief.confidence * 100).toFixed(0)}%`}
+              >
+                {status} {(belief.confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="seldon-dashboard__risk-bar">
+              <div
+                className="seldon-dashboard__risk-segment"
+                style={{
+                  width: `${belief.confidence * 100}%`,
+                  backgroundColor: color,
+                }}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export const SeldonDashboard: React.FC<SeldonDashboardProps> = ({
@@ -138,6 +202,7 @@ export const SeldonDashboard: React.FC<SeldonDashboardProps> = ({
   onClose,
   graph,
   selectedNode,
+  beliefs = [],
 }) => {
   const atRiskNodes = useMemo(
     () => (graph ? getTopAtRisk(graph.nodes, 5) : []),
@@ -176,6 +241,12 @@ export const SeldonDashboard: React.FC<SeldonDashboardProps> = ({
             </div>
           </section>
         )}
+
+        {/* Belief States */}
+        <section className="seldon-dashboard__section">
+          <h3 className="seldon-dashboard__section-title">Belief States</h3>
+          <BeliefPanel beliefs={beliefs} />
+        </section>
 
         {/* Top 5 at-risk nodes */}
         <section className="seldon-dashboard__section">
