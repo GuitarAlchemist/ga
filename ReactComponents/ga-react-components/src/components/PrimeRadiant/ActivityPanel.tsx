@@ -37,6 +37,36 @@ const GITHUB_OWNER = 'GuitarAlchemist';
 const GITHUB_REPOS = ['ga', 'Demerzel', 'hari', 'tars', 'ix', 'demerzel-bot', 'guitar-singularity'];
 const GITHUB_API = 'https://api.github.com';
 
+// Resolve GitHub token once at module level (priority: env var > localStorage > none)
+const githubToken: string | null =
+  (typeof import.meta !== 'undefined' && (import.meta as Record<string, unknown>).env
+    ? (((import.meta as Record<string, unknown>).env) as Record<string, string | undefined>)['VITE_GITHUB_TOKEN'] ?? null
+    : null)
+  ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('ga-github-token') : null);
+
+const GITHUB_HEADERS: HeadersInit = {
+  'Accept': 'application/vnd.github.v3+json',
+  ...(githubToken ? { 'Authorization': `Bearer ${githubToken}` } : {}),
+};
+
+const DEFAULT_REFRESH_MS = 60_000;
+const THROTTLED_REFRESH_MS = 300_000; // 5 minutes when rate-limited
+const RATE_LIMIT_THRESHOLD = 10;
+
+// Shared mutable rate-limit state (updated by every GitHub fetch)
+let rateLimitRemaining: number | null = null;
+
+function updateRateLimit(res: Response): void {
+  const header = res.headers.get('X-RateLimit-Remaining');
+  if (header !== null) {
+    rateLimitRemaining = parseInt(header, 10);
+  }
+}
+
+function isRateLimited(): boolean {
+  return rateLimitRemaining !== null && rateLimitRemaining < RATE_LIMIT_THRESHOLD;
+}
+
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
@@ -54,8 +84,9 @@ async function fetchCommits(): Promise<CommitInfo[]> {
     const allCommits: CommitInfo[] = [];
     for (const repo of GITHUB_REPOS) {
       const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/commits?per_page=8`, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' },
+        headers: GITHUB_HEADERS,
       });
+      updateRateLimit(res);
       if (!res.ok) continue;
       const data = await res.json();
       for (const commit of data) {
@@ -81,8 +112,9 @@ async function fetchIssues(): Promise<IssueInfo[]> {
     const allIssues: IssueInfo[] = [];
     for (const repo of GITHUB_REPOS) {
       const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/issues?state=open&per_page=10&sort=updated`, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' },
+        headers: GITHUB_HEADERS,
       });
+      updateRateLimit(res);
       if (!res.ok) continue;
       const data = await res.json();
       for (const issue of data) {
@@ -116,7 +148,7 @@ function categoryForRepo(repo: string): Activity['category'] {
 
 // ─── Derive activities from GitHub PRs and milestones ───
 async function fetchActivities(): Promise<Activity[]> {
-  const headers = { 'Accept': 'application/vnd.github.v3+json' };
+  const headers = GITHUB_HEADERS;
   const activities: Activity[] = [];
 
   // 1. Fetch open milestones from all repos
@@ -126,6 +158,7 @@ async function fetchActivities(): Promise<Activity[]> {
         `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/milestones?state=open&per_page=5`,
         { headers },
       );
+      updateRateLimit(res);
       if (!res.ok) return [];
       const data: Array<{
         id: number;
@@ -162,6 +195,7 @@ async function fetchActivities(): Promise<Activity[]> {
         `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=open&per_page=5&sort=updated&direction=desc`,
         { headers },
       );
+      updateRateLimit(res);
       if (!res.ok) return [];
       const data: Array<{
         id: number;
@@ -195,6 +229,7 @@ async function fetchActivities(): Promise<Activity[]> {
         `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=closed&per_page=3&sort=updated&direction=desc`,
         { headers },
       );
+      updateRateLimit(res);
       if (!res.ok) return [];
       const data: Array<{
         id: number;
@@ -304,20 +339,37 @@ export const ActivityPanel: React.FC = () => {
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [issues, setIssues] = useState<IssueInfo[]>([]);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
 
   useEffect(() => {
-    // Fetch real data from GitHub API
-    fetchActivities().then(setActivities);
-    fetchCommits().then(setCommits);
-    fetchIssues().then(setIssues);
-
-    // Refresh every 60 seconds
-    const interval = setInterval(() => {
+    function refreshAll(): void {
       fetchActivities().then(setActivities);
       fetchCommits().then(setCommits);
       fetchIssues().then(setIssues);
-    }, 60000);
-    return () => clearInterval(interval);
+      // Update rate-limit UI state after fetches settle
+      setTimeout(() => setRateLimited(isRateLimited()), 2000);
+    }
+
+    // Initial fetch
+    refreshAll();
+
+    // Adaptive refresh: slow down when rate-limited
+    let intervalId: ReturnType<typeof setInterval>;
+    function scheduleRefresh(): void {
+      const ms = isRateLimited() ? THROTTLED_REFRESH_MS : DEFAULT_REFRESH_MS;
+      intervalId = setInterval(() => {
+        refreshAll();
+        // Re-schedule if rate-limit state changed
+        const newMs = isRateLimited() ? THROTTLED_REFRESH_MS : DEFAULT_REFRESH_MS;
+        if (newMs !== ms) {
+          clearInterval(intervalId);
+          scheduleRefresh();
+        }
+      }, ms);
+    }
+    scheduleRefresh();
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');
@@ -334,6 +386,11 @@ export const ActivityPanel: React.FC = () => {
           <span className="prime-radiant__activity-count">
             {active.length} active · {commits.length} commits
           </span>
+          {rateLimited && (
+            <span style={{ color: '#FF4444', fontSize: '0.75em', marginLeft: 8 }}>
+              Rate limited — refreshing every 5m
+            </span>
+          )}
         </span>
         <span className="prime-radiant__activity-toggle">
           {panelCollapsed ? '▶' : '▼'}
