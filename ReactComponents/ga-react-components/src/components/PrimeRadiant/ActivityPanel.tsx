@@ -61,7 +61,7 @@ async function fetchCommits(): Promise<CommitInfo[]> {
       for (const commit of data) {
         const dateStr = commit.commit?.committer?.date ?? new Date().toISOString();
         allCommits.push({
-          hash: commit.sha?.substring(0, 7) ?? '?',
+          hash: commit.sha ?? '?',
           message: commit.commit?.message?.split('\n')[0] ?? '',
           repo,
           time: timeAgo(dateStr),
@@ -281,7 +281,19 @@ export const ActivityPanel: React.FC = () => {
             defaultOpen={false}
           >
             {commits.map((c) => (
-              <div key={c.hash} className="prime-radiant__commit-item">
+              <div
+                key={c.hash}
+                className="prime-radiant__commit-item"
+                title={`${c.repo}/${c.hash} — ${c.message}`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => window.open(`https://github.com/${GITHUB_OWNER}/${c.repo}/commit/${c.hash}`, '_blank')}
+              >
+                <span className="prime-radiant__repo-badge" style={{
+                  color: REPO_COLOR[c.repo] ?? '#8b949e',
+                  borderColor: `${REPO_COLOR[c.repo] ?? '#8b949e'}44`,
+                }}>
+                  {c.repo}
+                </span>
                 <span className="prime-radiant__commit-hash" style={{
                   color: REPO_COLOR[c.repo] ?? '#8b949e',
                 }}>
@@ -301,13 +313,20 @@ export const ActivityPanel: React.FC = () => {
           >
             {issues.map((issue) => (
               <div
-                key={issue.number}
+                key={`${issue.repo}-${issue.number}`}
                 className="prime-radiant__commit-item"
                 style={{ cursor: 'pointer' }}
                 onClick={() => window.open(issue.url, '_blank')}
+                title={`${issue.repo}#${issue.number} — ${issue.title}`}
               >
+                <span className="prime-radiant__repo-badge" style={{
+                  color: REPO_COLOR[issue.repo] ?? '#8b949e',
+                  borderColor: `${REPO_COLOR[issue.repo] ?? '#8b949e'}44`,
+                }}>
+                  {issue.repo}
+                </span>
                 <span className="prime-radiant__commit-hash" style={{
-                  color: '#33CC66',
+                  color: REPO_COLOR[issue.repo] ?? '#33CC66',
                 }}>
                   #{issue.number}
                 </span>
