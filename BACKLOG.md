@@ -54,6 +54,7 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **Auto-spawn Claude Code teams** — Demerzel detects workload (open issues, failing tests, stale nodes) and auto-spawns Claude Code agent teams to address them
 - **Activities from real sources** — wire Activities accordion to actual task tracking (GitHub Projects, Linear, or internal PDCA cycles from governance state)
 - **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
+- **Terminal node filaments** — leaf/terminal nodes (departments, tests, schemas with no children) emit thin glowing filaments with lit dots at the end, representing their output/products
 
 ## Infrastructure Ideas
 

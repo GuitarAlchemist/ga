@@ -26,6 +26,7 @@ import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
+import { SeldonDashboard } from './SeldonDashboard';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -486,6 +487,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
+  const [seldonOpen, setSeldonOpen] = useState(false);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
@@ -1446,6 +1448,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Agent teams panel — bottom right */}
       <AgentPanel />
 
+      {/* Seldon psychohistory dashboard — slide-over from right */}
+      {graphData && (
+        <SeldonDashboard
+          open={seldonOpen}
+          onClose={() => setSeldonOpen(false)}
+          graph={graphData}
+          selectedNode={selectedNode}
+        />
+      )}
+
       {/* IXql command input — above planet bar */}
       <IxqlCommandInput onCommand={handleIxqlCommand} />
 
@@ -1477,23 +1489,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 const fg = graphRef.current;
                 if (!fg) return;
 
-                // Demerzel & Seldon are HUD-attached — zoom to governance center node
+                // Seldon → toggle psychohistory dashboard
                 if (p.target === 'governance-center') {
-                  // Navigate to the constitution node (center of the graph)
-                  const scene = fg.scene();
-                  const constitutionNode = scene.getObjectByName('asimov-constitution');
-                  if (constitutionNode) {
-                    const wp = new THREE.Vector3();
-                    constitutionNode.getWorldPosition(wp);
-                    fg.cameraPosition(
-                      { x: wp.x, y: wp.y + 5, z: wp.z + 15 },
-                      { x: wp.x, y: wp.y, z: wp.z },
-                      1500,
-                    );
-                  } else {
-                    // Fallback: zoom to origin (center of governance sphere)
-                    fg.cameraPosition({ x: 0, y: 5, z: 20 }, { x: 0, y: 0, z: 0 }, 1500);
-                  }
+                  setSeldonOpen(prev => !prev);
                   return;
                 }
 
