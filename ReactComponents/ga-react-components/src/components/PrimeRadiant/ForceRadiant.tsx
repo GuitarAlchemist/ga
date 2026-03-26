@@ -10,7 +10,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
 import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth } from './DataLoader';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
@@ -525,7 +525,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     let disposed = false;
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
-    let stopPollingOuter: (() => void) | undefined;
+    let pollingHandleOuter: LivePollingHandle | undefined;
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
@@ -1275,12 +1275,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     graphRef.current = fg;
 
     // ─── Live data polling — update nodes in-place without graph rebuild ───
-    let stopPolling: (() => void) | undefined;
+    let pollingHandle: LivePollingHandle | undefined;
     if (liveDataUrl || liveHubUrl) {
-      stopPolling = startLivePolling({
+      pollingHandle = startLivePolling({
         url: liveDataUrl ?? '',
         hubUrl: liveHubUrl,
         intervalMs: pollIntervalMs,
+        onScreenshotRequest: (reason: string) => {
+          console.log('[PrimeRadiant] Screenshot requested:', reason);
+          const canvas = containerRef.current?.querySelector('canvas');
+          if (canvas) {
+            const dataUrl = canvas.toDataURL('image/png');
+            pollingHandle?.submitScreenshot(dataUrl, 'image/png').catch(err =>
+              console.warn('[PrimeRadiant] Screenshot submit failed:', err),
+            );
+          } else {
+            console.warn('[PrimeRadiant] No canvas found for screenshot');
+          }
+        },
         onUpdate: (freshGraph) => {
           const currentNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
           const { updated, changed } = updateNodeHealth(
@@ -1317,7 +1329,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Expose cleanup handles to outer scope
     autoZoomTimeoutOuter = autoZoomTimeout;
-    stopPollingOuter = stopPolling;
+    pollingHandleOuter = pollingHandle;
     }; // end initScene
 
     // Kick off async init
@@ -1326,7 +1338,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => {
       disposed = true;
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
-      stopPollingOuter?.();
+      pollingHandleOuter?.stop();
       if (graphRef.current) {
         (graphRef.current as ReturnType<typeof ForceGraph3D> & { _destructor: () => void })._destructor();
         graphRef.current = null;

@@ -1,6 +1,8 @@
 namespace GaApi.Controllers;
 
 using System.Text.Json;
+using GaApi.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Path = System.IO.Path;
 
 /// <summary>
@@ -12,7 +14,8 @@ using Path = System.IO.Path;
 [Produces("application/json")]
 public class GovernanceController(
     IConfiguration configuration,
-    ILogger<GovernanceController> logger)
+    ILogger<GovernanceController> logger,
+    IHubContext<GovernanceHub> hubContext)
     : ControllerBase
 {
     // Cache the governance graph (regenerated on demand or every 5 minutes)
@@ -81,6 +84,41 @@ public class GovernanceController(
 
         var json = System.IO.File.ReadAllText(predictionsFile);
         return Content(json, "application/json");
+    }
+
+    /// <summary>
+    ///     Request a screenshot from all connected Prime Radiant clients.
+    /// </summary>
+    [HttpPost("screenshot")]
+    public async Task<ActionResult> RequestScreenshot([FromBody] ScreenshotRequest? request = null)
+    {
+        var reason = request?.Reason ?? "Manual screenshot request";
+        await GovernanceHub.RequestScreenshotFromClients(hubContext, reason);
+        return Ok(new { message = "Screenshot requested", reason });
+    }
+
+    /// <summary>
+    ///     Get the most recently captured screenshot as a PNG image.
+    /// </summary>
+    [HttpGet("screenshot/latest")]
+    public ActionResult GetLatestScreenshot()
+    {
+        var (base64, format, capturedAt) = GovernanceHub.GetLatestScreenshot();
+        if (base64 == null || capturedAt == null)
+            return NotFound(new { error = "No screenshot available yet" });
+
+        // Strip data URL prefix if present (e.g., "data:image/png;base64,")
+        var rawBase64 = base64.Contains(',') ? base64[(base64.IndexOf(',') + 1)..] : base64;
+        var bytes = Convert.FromBase64String(rawBase64);
+        var contentType = format switch
+        {
+            "image/jpeg" => "image/jpeg",
+            "image/webp" => "image/webp",
+            _ => "image/png",
+        };
+
+        Response.Headers.Append("X-Screenshot-Captured-At", capturedAt.Value.ToString("O"));
+        return File(bytes, contentType);
     }
 
     // ─── Find Demerzel root relative to solution ───
@@ -314,4 +352,9 @@ public record HealthMetrics
     public int ErgolCount { get; init; }
     public double Staleness { get; init; }
     public double[]? MarkovPrediction { get; init; }
+}
+
+public record ScreenshotRequest
+{
+    public string? Reason { get; init; }
 }

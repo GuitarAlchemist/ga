@@ -55,7 +55,7 @@ public sealed class GovernanceWatcherService(
 
                 // Force refresh the controller cache
                 var controller = new GovernanceController(configuration, logger as ILogger<GovernanceController>
-                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance);
+                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance, hubContext);
                 controller.Refresh();
                 var result = controller.GetGraph();
 

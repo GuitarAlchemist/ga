@@ -153,10 +153,19 @@ export interface LiveDataConfig {
   onError?: (error: Error) => void;
   /** Called when connection status changes */
   onStatusChange?: (status: 'connected' | 'polling' | 'disconnected') => void;
+  /** Called when the backend requests a screenshot capture */
+  onScreenshotRequest?: (reason: string) => void;
 }
 
-export function startLivePolling(config: LiveDataConfig): () => void {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange } = config;
+export interface LivePollingHandle {
+  /** Stop polling and disconnect SignalR */
+  stop: () => void;
+  /** Submit a screenshot back to the server via SignalR */
+  submitScreenshot: (base64Image: string, format: string) => Promise<void>;
+}
+
+export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -189,6 +198,12 @@ export function startLivePolling(config: LiveDataConfig): () => void {
 
       connection.on('Connected', (data: { connections: number }) => {
         console.log(`[Governance] Connected (${data.connections} clients)`);
+      });
+
+      // Screenshot capture — backend requests a screenshot from connected clients
+      connection.on('RequestScreenshot', (data: { reason?: string }) => {
+        console.log('[Governance] Screenshot requested:', data.reason);
+        onScreenshotRequest?.(data.reason ?? 'Backend request');
       });
 
       connection.onreconnecting(() => {
@@ -256,12 +271,21 @@ export function startLivePolling(config: LiveDataConfig): () => void {
     startPolling();
   }
 
-  // Return cleanup function
-  return () => {
-    active = false;
-    connection?.stop();
-    connection = null;
-    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  // Return handle with cleanup and screenshot submission
+  return {
+    stop: () => {
+      active = false;
+      connection?.stop();
+      connection = null;
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    },
+    submitScreenshot: async (base64Image: string, format: string) => {
+      if (connection?.state === signalR.HubConnectionState.Connected) {
+        await connection.invoke('SubmitScreenshot', base64Image, format);
+      } else {
+        console.warn('[Governance] Cannot submit screenshot — SignalR not connected');
+      }
+    },
   };
 }
 

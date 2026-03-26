@@ -82,10 +82,8 @@ public sealed class GovernanceHub(
     ///     Broadcast a governance graph update to all subscribed clients.
     ///     Called from backend services when governance state changes.
     /// </summary>
-    public static async Task BroadcastGraphUpdate(IHubContext<GovernanceHub> hubContext, GovernanceGraph graph)
-    {
+    public static async Task BroadcastGraphUpdate(IHubContext<GovernanceHub> hubContext, GovernanceGraph graph) =>
         await hubContext.Clients.Group("governance").SendAsync("GraphUpdate", graph);
-    }
 
     /// <summary>
     ///     Broadcast a single node health change to all subscribed clients.
@@ -95,8 +93,7 @@ public sealed class GovernanceHub(
         string nodeId,
         HealthMetrics health,
         string healthStatus,
-        string color)
-    {
+        string color) =>
         await hubContext.Clients.Group("governance").SendAsync("NodeChanged", new
         {
             nodeId,
@@ -105,6 +102,53 @@ public sealed class GovernanceHub(
             color,
             timestamp = DateTime.UtcNow,
         });
+
+    // ─── Screenshot capture ───
+
+    private static string? _latestScreenshotBase64;
+    private static string? _latestScreenshotFormat;
+    private static DateTime? _latestScreenshotTime;
+    private static readonly Lock ScreenshotLock = new();
+
+    /// <summary>
+    ///     Client submits a captured screenshot (base64-encoded image data).
+    ///     Called by Prime Radiant frontend after capturing the Three.js canvas.
+    /// </summary>
+    public Task SubmitScreenshot(string base64Image, string format)
+    {
+        logger.LogInformation("Screenshot received from {ConnectionId} ({Format}, {Length} chars)",
+            Context.ConnectionId, format, base64Image.Length);
+
+        lock (ScreenshotLock)
+        {
+            _latestScreenshotBase64 = base64Image;
+            _latestScreenshotFormat = format;
+            _latestScreenshotTime = DateTime.UtcNow;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    ///     Request a screenshot from all connected Prime Radiant clients.
+    ///     Called from backend services or the REST API.
+    /// </summary>
+    public static async Task RequestScreenshotFromClients(IHubContext<GovernanceHub> hubContext, string reason = "") =>
+        await hubContext.Clients.Group("governance").SendAsync("RequestScreenshot", new
+        {
+            reason,
+            timestamp = DateTime.UtcNow,
+        });
+
+    /// <summary>
+    ///     Get the latest captured screenshot data.
+    /// </summary>
+    public static (string? Base64, string? Format, DateTime? CapturedAt) GetLatestScreenshot()
+    {
+        lock (ScreenshotLock)
+        {
+            return (_latestScreenshotBase64, _latestScreenshotFormat, _latestScreenshotTime);
+        }
     }
 
     public static int ConnectionCount => _connectionCount;
