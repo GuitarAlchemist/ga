@@ -101,34 +101,143 @@ async function fetchIssues(): Promise<IssueInfo[]> {
   }
 }
 
-// ─── Derive activities from GitHub milestones or plan files ───
+// ─── Category inference from repo name ───
+function categoryForRepo(repo: string): Activity['category'] {
+  switch (repo) {
+    case 'Demerzel':
+    case 'demerzel-bot':
+      return 'governance';
+    case 'hari':
+      return 'research';
+    default:
+      return 'build';
+  }
+}
+
+// ─── Derive activities from GitHub PRs and milestones ───
 async function fetchActivities(): Promise<Activity[]> {
-  try {
-    // Try fetching from backend activity endpoint
-    const res = await fetch('/api/activities');
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch { /* fall through */ }
+  const headers = { 'Accept': 'application/vnd.github.v3+json' };
+  const activities: Activity[] = [];
 
-  // Fallback: derive from open issues labels
-  try {
-    const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/ga/issues?state=open&per_page=10&labels=active`, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.map((issue: { number: number; title: string; labels: { name: string }[] }, i: number) => ({
-        id: String(issue.number),
-        name: issue.title,
-        status: 'active' as const,
-        progress: 50,
-        category: (issue.labels?.find((l: { name: string }) => ['governance', 'research', 'build', 'test', 'deploy'].includes(l.name))?.name ?? 'build') as Activity['category'],
-      }));
+  // 1. Fetch open milestones from all repos
+  const milestonePromises = GITHUB_REPOS.map(async (repo) => {
+    try {
+      const res = await fetch(
+        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/milestones?state=open&per_page=5`,
+        { headers },
+      );
+      if (!res.ok) return [];
+      const data: Array<{
+        id: number;
+        title: string;
+        open_issues: number;
+        closed_issues: number;
+        due_on: string | null;
+      }> = await res.json();
+      return data.map((ms) => {
+        const total = ms.open_issues + ms.closed_issues;
+        const progress = total > 0 ? Math.round((ms.closed_issues / total) * 100) : 0;
+        const now = Date.now();
+        const dueSoon = ms.due_on && new Date(ms.due_on).getTime() - now < 7 * 24 * 3600 * 1000;
+        const overdue = ms.due_on && new Date(ms.due_on).getTime() < now;
+        const status: Activity['status'] = overdue ? 'blocked' : dueSoon ? 'active' : 'pending';
+        return {
+          id: `ms-${repo}-${ms.id}`,
+          name: `[${repo}] ${ms.title}`,
+          status,
+          progress,
+          eta: ms.due_on ? new Date(ms.due_on).toLocaleDateString() : undefined,
+          category: categoryForRepo(repo),
+        } satisfies Activity;
+      });
+    } catch {
+      return [];
     }
-  } catch { /* fall through */ }
+  });
 
-  return []; // empty — no mock fallback
+  // 2. Fetch open PRs from all repos
+  const prPromises = GITHUB_REPOS.map(async (repo) => {
+    try {
+      const res = await fetch(
+        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=open&per_page=5&sort=updated&direction=desc`,
+        { headers },
+      );
+      if (!res.ok) return [];
+      const data: Array<{
+        id: number;
+        number: number;
+        title: string;
+        draft: boolean;
+        requested_reviewers: unknown[];
+        created_at: string;
+      }> = await res.json();
+      return data.map((pr) => {
+        // Progress heuristic: draft=25%, awaiting review=50%, has reviewers=75%
+        const progress = pr.draft ? 25 : (pr.requested_reviewers?.length > 0 ? 50 : 75);
+        return {
+          id: `pr-${repo}-${pr.number}`,
+          name: `PR #${pr.number} [${repo}] ${pr.title}`,
+          status: 'active' as const,
+          progress,
+          eta: timeAgo(pr.created_at),
+          category: categoryForRepo(repo),
+        } satisfies Activity;
+      });
+    } catch {
+      return [];
+    }
+  });
+
+  // 3. Fetch recently closed/merged PRs from all repos
+  const closedPrPromises = GITHUB_REPOS.map(async (repo) => {
+    try {
+      const res = await fetch(
+        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=closed&per_page=3&sort=updated&direction=desc`,
+        { headers },
+      );
+      if (!res.ok) return [];
+      const data: Array<{
+        id: number;
+        number: number;
+        title: string;
+        merged_at: string | null;
+        closed_at: string | null;
+      }> = await res.json();
+      // Only include PRs closed within the last 7 days
+      const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+      return data
+        .filter((pr) => {
+          const closedTime = pr.merged_at ?? pr.closed_at;
+          return closedTime && new Date(closedTime).getTime() > cutoff;
+        })
+        .map((pr) => ({
+          id: `pr-closed-${repo}-${pr.number}`,
+          name: `PR #${pr.number} [${repo}] ${pr.title}`,
+          status: 'completed' as const,
+          progress: 100,
+          eta: pr.merged_at ? `merged ${timeAgo(pr.merged_at)}` : `closed ${timeAgo(pr.closed_at!)}`,
+          category: categoryForRepo(repo),
+        } satisfies Activity));
+    } catch {
+      return [];
+    }
+  });
+
+  // Await all in parallel
+  const [milestoneResults, prResults, closedPrResults] = await Promise.all([
+    Promise.all(milestonePromises),
+    Promise.all(prPromises),
+    Promise.all(closedPrPromises),
+  ]);
+
+  // Flatten and combine: open PRs first, then milestones, then recent closed
+  activities.push(
+    ...prResults.flat(),
+    ...milestoneResults.flat(),
+    ...closedPrResults.flat(),
+  );
+
+  return activities;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,6 +313,7 @@ export const ActivityPanel: React.FC = () => {
 
     // Refresh every 60 seconds
     const interval = setInterval(() => {
+      fetchActivities().then(setActivities);
       fetchCommits().then(setCommits);
       fetchIssues().then(setIssues);
     }, 60000);
