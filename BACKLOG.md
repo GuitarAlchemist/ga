@@ -40,6 +40,15 @@ These are real problems guitarists hit. They're the North Star for every feature
 
 ---
 
+## Prime Radiant / Living Cosmos Ideas
+
+- **3D animated IX pipeline flow** — click IXql node → expands into animated pipeline with particles flowing through stages (source → preprocess → model → governance_gate → evaluate → deploy). Uses IxqlParser.
+- **FE screenshot capture via Demerzel** — backend sends SignalR command, FE captures canvas, returns image for reports/dashboards
+- **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
+- **Commit detail hover** — hover a commit in ActivityPanel shows diff stats, files changed, author
+- **GitHub token for API rate limits** — authenticated requests (5,000/hr vs 60/hr) for the multi-repo ActivityPanel
+- **Progressive pipeline zoom** — far = IXql node, medium = orbiting sub-nodes, close = full animated flow diagram
+
 ## Infrastructure Ideas
 
 - **Live fretboard overlay** — show scale degrees on the React 3D fretboard in real time as the chatbot explains a concept
