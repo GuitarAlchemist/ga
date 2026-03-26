@@ -460,7 +460,7 @@ export interface ForceRadiantProps {
   onNodeSelect?: (node: GovernanceNode | null) => void;
   showDetailPanel?: boolean;
   className?: string;
-  /** URL to fetch governance data (e.g., /api/governance). Used for initial load and polling fallback. */
+  /** URL to fetch governance data. Defaults to '/api/governance'. Set to '' to use bundled static data. */
   liveDataUrl?: string;
   /** WebSocket URL for real-time push updates (e.g., ws://localhost:7001/ws/governance). Preferred over polling. */
   liveWsUrl?: string;
