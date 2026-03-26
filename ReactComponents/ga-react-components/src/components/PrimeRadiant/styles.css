@@ -1428,3 +1428,66 @@
   display: block; font-size: 8px; color: #6b7280; margin-top: 1px;
   line-height: 1.3;
 }
+
+/* ─── Agent Teams Panel ─── */
+.prime-radiant__agents {
+  position: absolute;
+  bottom: 50px;
+  right: 8px;
+  z-index: 20;
+  width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__agents::-webkit-scrollbar { width: 4px; }
+.prime-radiant__agents::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.prime-radiant__agents-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px; cursor: pointer; user-select: none;
+  border-bottom: 1px solid #21262d;
+}
+.prime-radiant__agents-header:hover { background: rgba(255, 255, 255, 0.03); }
+.prime-radiant__agents-title {
+  font-size: 10px; font-weight: 600; color: #4FC3F7;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.prime-radiant__agents-count {
+  font-size: 8px; color: #484f58; margin-left: 4px;
+}
+.prime-radiant__agents-count--active {
+  color: #33CC66; background: rgba(51, 204, 102, 0.1);
+  padding: 1px 3px; border-radius: 3px;
+}
+.prime-radiant__agents-toggle { font-size: 8px; color: #484f58; }
+.prime-radiant__agents-body { padding: 4px 0; }
+.prime-radiant__agents-team { border-bottom: 1px solid #21262d22; }
+.prime-radiant__agents-team-header {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 8px; cursor: pointer; font-size: 10px;
+}
+.prime-radiant__agents-team-header:hover { background: rgba(79, 195, 247, 0.06); }
+.prime-radiant__agents-team-name { flex: 1; color: #e6edf3; font-weight: 500; }
+.prime-radiant__agents-team-count {
+  font-size: 8px; color: #484f58; background: rgba(255,255,255,0.05);
+  padding: 0 3px; border-radius: 2px;
+}
+.prime-radiant__agents-team-status { font-size: 12px; flex-shrink: 0; }
+.prime-radiant__agents-members { padding: 2px 8px 6px 16px; }
+.prime-radiant__agents-member {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 0; font-size: 9px;
+}
+.prime-radiant__agents-member-name { color: #9ca3af; flex-shrink: 0; }
+.prime-radiant__agents-member-task {
+  color: #6b7280; font-size: 8px; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.prime-radiant__agents-member-time { color: #484f58; font-size: 8px; flex-shrink: 0; }

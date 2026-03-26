@@ -24,6 +24,8 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
+import { BacklogPanel } from './BacklogPanel';
+import { AgentPanel } from './AgentPanel';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1436,6 +1438,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Tutorial overlay + help button */}
       <TutorialOverlay />
+
+      {/* IXql command input — above planet bar */}
+      {/* Backlog panel — bottom left */}
+      <BacklogPanel />
+
+      {/* Agent teams panel — bottom right */}
+      <AgentPanel />
 
       {/* IXql command input — above planet bar */}
       <IxqlCommandInput onCommand={handleIxqlCommand} />

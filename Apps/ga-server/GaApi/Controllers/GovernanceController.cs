@@ -15,7 +15,8 @@ using Path = System.IO.Path;
 public class GovernanceController(
     IConfiguration configuration,
     ILogger<GovernanceController> logger,
-    IHubContext<GovernanceHub> hubContext)
+    IHubContext<GovernanceHub> hubContext,
+    Services.BeliefStateService beliefStateService)
     : ControllerBase
 {
     // Cache the governance graph (regenerated on demand or every 5 minutes)
@@ -119,6 +120,156 @@ public class GovernanceController(
 
         Response.Headers.Append("X-Screenshot-Captured-At", capturedAt.Value.ToString("O"));
         return File(bytes, contentType);
+    }
+
+    /// <summary>
+    ///     Get all belief states from the Demerzel governance directory.
+    ///     Each belief uses tetravalent logic: T (true), F (false), U (unknown), C (contradictory).
+    /// </summary>
+    [HttpGet("beliefs")]
+    public ActionResult<List<Services.BeliefState>> GetBeliefs()
+    {
+        try
+        {
+            var beliefs = beliefStateService.GetBeliefs();
+            return Ok(beliefs);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to read belief states");
+            return StatusCode(500, new { error = "Failed to read belief states" });
+        }
+    }
+
+    /// <summary>
+    ///     Update a belief state and broadcast the change to connected clients.
+    /// </summary>
+    [HttpPut("beliefs/{id}")]
+    public async Task<ActionResult<Services.BeliefState>> UpdateBelief(
+        string id,
+        [FromBody] BeliefUpdateRequest request)
+    {
+        try
+        {
+            var updated = beliefStateService.UpdateBelief(id, request.Status, request.Evidence);
+            if (updated == null)
+                return NotFound(new { error = $"Belief '{id}' not found" });
+
+            // Broadcast to connected clients
+            await GovernanceHub.BroadcastBeliefUpdate(hubContext, updated);
+
+            return Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to update belief {Id}", id);
+            return StatusCode(500, new { error = "Failed to update belief state" });
+        }
+    }
+
+    /// <summary>
+    ///     Get the project backlog parsed from BACKLOG.md.
+    /// </summary>
+    [HttpGet("backlog")]
+    [ResponseCache(Duration = 300)]
+    public ActionResult GetBacklog()
+    {
+        var repoRoot = FindRepoRoot();
+        if (repoRoot == null)
+            return Ok(new { sections = Array.Empty<object>() });
+
+        var backlogFile = Path.Combine(repoRoot, "BACKLOG.md");
+        if (!System.IO.File.Exists(backlogFile))
+            return Ok(new { sections = Array.Empty<object>() });
+
+        var lines = System.IO.File.ReadAllLines(backlogFile);
+        var sections = new List<object>();
+        string? currentSection = null;
+        string? currentSubsection = null;
+        var items = new List<string>();
+
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("## "))
+            {
+                if (currentSection != null && items.Count > 0)
+                    sections.Add(new { section = currentSection, subsection = currentSubsection, items = items.ToArray() });
+                currentSection = line[3..].Trim();
+                currentSubsection = null;
+                items = [];
+            }
+            else if (line.StartsWith("### "))
+            {
+                if (items.Count > 0 && currentSection != null)
+                    sections.Add(new { section = currentSection, subsection = currentSubsection, items = items.ToArray() });
+                currentSubsection = line[4..].Trim();
+                items = [];
+            }
+            else if (line.StartsWith("- **"))
+            {
+                var boldEnd = line.IndexOf("**", 4);
+                if (boldEnd > 4)
+                {
+                    var title = line[4..boldEnd];
+                    var desc = boldEnd + 2 < line.Length ? line[(boldEnd + 2)..].TrimStart(' ', '\u2014', '-', ' ') : "";
+                    items.Add($"{title}: {desc}");
+                }
+                else
+                {
+                    items.Add(line[2..].Trim());
+                }
+            }
+        }
+        if (currentSection != null && items.Count > 0)
+            sections.Add(new { section = currentSection, subsection = currentSubsection, items = items.ToArray() });
+
+        return Ok(new { sections, lastModified = System.IO.File.GetLastWriteTimeUtc(backlogFile) });
+    }
+
+    /// <summary>
+    ///     Get active agent teams and their members (for AgentPanel).
+    /// </summary>
+    [HttpGet("agents")]
+    public ActionResult GetAgents()
+    {
+        // Check for Claude Code agent state files
+        var repoRoot = FindRepoRoot();
+        var teams = new List<object>();
+
+        if (repoRoot != null)
+        {
+            var worktreeDir = Path.Combine(repoRoot, ".claude", "worktrees");
+            if (Directory.Exists(worktreeDir))
+            {
+                foreach (var dir in Directory.GetDirectories(worktreeDir))
+                {
+                    var name = Path.GetFileName(dir);
+                    teams.Add(new
+                    {
+                        id = name,
+                        name = name.Replace("agent-", "Agent "),
+                        status = "active",
+                        agents = new[]
+                        {
+                            new { id = name, name, type = "worktree", status = "running", task = "Working in isolated worktree" },
+                        },
+                    });
+                }
+            }
+        }
+
+        return Ok(new { teams });
+    }
+
+    private static string? FindRepoRoot()
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."),
+            Directory.GetCurrentDirectory(),
+            @"C:\Users\spare\source\repos\ga",
+        };
+        return candidates.FirstOrDefault(d => System.IO.File.Exists(Path.Combine(d, "BACKLOG.md")));
     }
 
     // ─── Find Demerzel root relative to solution ───
@@ -357,4 +508,10 @@ public record HealthMetrics
 public record ScreenshotRequest
 {
     public string? Reason { get; init; }
+}
+
+public record BeliefUpdateRequest
+{
+    public string Status { get; init; } = "U";
+    public string Evidence { get; init; } = "";
 }

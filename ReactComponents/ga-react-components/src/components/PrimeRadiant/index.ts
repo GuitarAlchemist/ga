@@ -21,6 +21,7 @@ export type {
 export { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
 export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';
+export type { BeliefState, TetravalentStatus, BeliefEvidence, EvidenceItem } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
 export { createSolarSystem, updateSolarSystem } from './SolarSystem';
@@ -37,3 +38,6 @@ export { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
 export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult } from './IxqlControlParser';
 export { PLANET_ASTRO_DATA } from './SolarSystem';
 export type { PlanetAstroData } from './SolarSystem';
+export { BacklogPanel } from './BacklogPanel';
+export { AgentPanel } from './AgentPanel';
+export type { AgentInfo, AgentTeam } from './AgentPanel';
