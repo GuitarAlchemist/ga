@@ -118,3 +118,156 @@ export function searchNodes(
       n.type.toLowerCase().includes(lower),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Live data fetching — polls a backend endpoint for fresh governance state
+// ---------------------------------------------------------------------------
+
+export interface LiveDataConfig {
+  /** URL to fetch governance graph JSON (e.g., /api/governance or /governance-data.json) */
+  url: string;
+  /** WebSocket URL for real-time push updates (e.g., ws://localhost:7001/ws/governance). Preferred over polling when available. */
+  wsUrl?: string;
+  /** Poll interval in ms (default: 30000 = 30s). Only used when WebSocket is unavailable. */
+  intervalMs?: number;
+  /** Called when new data arrives — update graph in-place, don't rebuild */
+  onUpdate: (graph: GovernanceGraph) => void;
+  /** Called on fetch/connection error */
+  onError?: (error: Error) => void;
+  /** Called when connection status changes */
+  onStatusChange?: (status: 'connected' | 'polling' | 'disconnected') => void;
+}
+
+export function startLivePolling(config: LiveDataConfig): () => void {
+  const { url, wsUrl, intervalMs = 30000, onUpdate, onError, onStatusChange } = config;
+  let active = true;
+  let ws: WebSocket | null = null;
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  let reconnectDelay = 1000; // exponential backoff starting at 1s
+
+  const processGraph = (rawGraph: GovernanceGraph) => {
+    const graph = applyHealthColors(rawGraph);
+    onUpdate(graph);
+  };
+
+  // ─── WebSocket connection (preferred) ───
+  const connectWs = () => {
+    if (!active || !wsUrl) return;
+
+    try {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        reconnectDelay = 1000; // reset backoff
+        onStatusChange?.('connected');
+        // Stop polling if it was running as fallback
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // Support both full graph and partial update messages
+          if (data.type === 'health-update' && data.nodes) {
+            // Partial update — just health data for specific nodes
+            processGraph({ ...data, nodes: data.nodes, edges: data.edges ?? [] });
+          } else if (data.nodes && data.edges) {
+            // Full graph
+            processGraph(data as GovernanceGraph);
+          }
+        } catch (err) {
+          onError?.(new Error(`WS parse error: ${(err as Error).message}`));
+        }
+      };
+
+      ws.onclose = () => {
+        ws = null;
+        if (!active) return;
+        onStatusChange?.('disconnected');
+        // Reconnect with exponential backoff, fall back to polling
+        reconnectTimeout = setTimeout(() => {
+          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+          connectWs();
+        }, reconnectDelay);
+        // Start polling as fallback while disconnected
+        if (!pollInterval) startPolling();
+      };
+
+      ws.onerror = () => {
+        onError?.(new Error('WebSocket connection error'));
+        ws?.close();
+      };
+    } catch (err) {
+      onError?.(err as Error);
+      // WebSocket not available — fall back to polling
+      if (!pollInterval) startPolling();
+    }
+  };
+
+  // ─── HTTP polling (fallback) ───
+  const poll = async () => {
+    if (!active) return;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const rawGraph = await response.json() as GovernanceGraph;
+      processGraph(rawGraph);
+      onStatusChange?.('polling');
+    } catch (err) {
+      onError?.(err as Error);
+    }
+  };
+
+  const startPolling = () => {
+    if (pollInterval) return;
+    onStatusChange?.('polling');
+    poll(); // initial fetch
+    pollInterval = setInterval(poll, intervalMs);
+  };
+
+  // ─── Start: WebSocket first, poll as fallback ───
+  if (wsUrl) {
+    connectWs();
+  } else {
+    startPolling();
+  }
+
+  // Return cleanup function
+  return () => {
+    active = false;
+    if (ws) { ws.close(); ws = null; }
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// In-place node health update — mutates existing nodes without graph rebuild
+// ---------------------------------------------------------------------------
+export function updateNodeHealth(
+  existingNodes: GovernanceNode[],
+  freshNodes: GovernanceNode[],
+): { updated: string[]; changed: boolean } {
+  const freshMap = new Map(freshNodes.map(n => [n.id, n]));
+  const updated: string[] = [];
+  let changed = false;
+
+  for (const node of existingNodes) {
+    const fresh = freshMap.get(node.id);
+    if (!fresh?.health) continue;
+
+    const oldScore = node.health?.resilienceScore;
+    const newScore = fresh.health.resilienceScore;
+
+    if (oldScore !== newScore || node.health?.ergolCount !== fresh.health.ergolCount || node.health?.lolliCount !== fresh.health.lolliCount) {
+      node.health = fresh.health;
+      node.healthStatus = deriveGovernanceHealthStatus(node);
+      node.color = HEALTH_STATUS_COLORS[node.healthStatus];
+      updated.push(node.id);
+      changed = true;
+    }
+  }
+
+  return { updated, changed };
+}

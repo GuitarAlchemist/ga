@@ -10,7 +10,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
 import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, getHealthStatus } from './DataLoader';
+import { loadGovernanceData, getHealthStatus, startLivePolling, updateNodeHealth } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
@@ -460,6 +460,12 @@ export interface ForceRadiantProps {
   onNodeSelect?: (node: GovernanceNode | null) => void;
   showDetailPanel?: boolean;
   className?: string;
+  /** URL to fetch governance data (e.g., /api/governance). Used for initial load and polling fallback. */
+  liveDataUrl?: string;
+  /** WebSocket URL for real-time push updates (e.g., ws://localhost:7001/ws/governance). Preferred over polling. */
+  liveWsUrl?: string;
+  /** Poll interval in ms when WebSocket unavailable (default 30000) */
+  pollIntervalMs?: number;
 }
 
 export const ForceRadiant: React.FC<ForceRadiantProps> = ({
@@ -469,6 +475,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   onNodeSelect,
   showDetailPanel = true,
   className = '',
+  liveDataUrl,
+  liveWsUrl,
+  pollIntervalMs = 30000,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<ReturnType<typeof ForceGraph3D> | null>(null);
@@ -1251,8 +1260,50 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     graphRef.current = fg;
 
+    // ─── Live data polling — update nodes in-place without graph rebuild ───
+    let stopPolling: (() => void) | undefined;
+    if (liveDataUrl || liveWsUrl) {
+      stopPolling = startLivePolling({
+        url: liveDataUrl ?? '',
+        wsUrl: liveWsUrl,
+        intervalMs: pollIntervalMs,
+        onUpdate: (freshGraph) => {
+          const currentNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
+          const { updated, changed } = updateNodeHealth(
+            currentNodes as unknown as GovernanceNode[],
+            freshGraph.nodes,
+          );
+          if (changed) {
+            // Update Three.js objects for changed nodes
+            for (const nodeId of updated) {
+              const gn = currentNodes.find(n => n.id === nodeId);
+              if (!gn) continue;
+              const threeObj = (gn as GraphNode & { __threeObj?: THREE.Object3D }).__threeObj;
+              if (threeObj) {
+                threeObj.userData.healthStatus = (gn as unknown as GovernanceNode).healthStatus;
+              }
+              // Update node map
+              nodeMap.set(nodeId, gn);
+              // Recompute importance for this node
+              const normEdge = (edgeCountMap.get(nodeId) ?? 0) / maxEdges;
+              const health = (gn as unknown as GovernanceNode).health;
+              const normErgol = (health?.ergolCount ?? 0) / maxErgol;
+              const resilience = health?.resilienceScore ?? 0.5;
+              const staleness = health?.staleness ?? 0;
+              importanceMap.set(nodeId, 0.4 * normEdge + 0.3 * normErgol + 0.2 * resilience + 0.1 * (1 - staleness));
+            }
+            // Update graph data reference to keep React state in sync
+            setGraphData(freshGraph);
+            setGraphIndex(buildGraphIndex(freshGraph));
+          }
+        },
+        onError: (err) => console.warn('[PrimeRadiant] Live poll error:', err.message),
+      });
+    }
+
     return () => {
       if (autoZoomTimeout) clearTimeout(autoZoomTimeout);
+      stopPolling?.();
       fg._destructor();
       graphRef.current = null;
     };
