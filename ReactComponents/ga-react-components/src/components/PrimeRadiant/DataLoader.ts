@@ -65,6 +65,22 @@ export function loadGovernanceData(data?: GovernanceGraph): GovernanceGraph {
   return applyHealthColors(graph);
 }
 
+// Async version — fetches from API first, falls back to static data
+export async function loadGovernanceDataAsync(apiUrl?: string): Promise<GovernanceGraph> {
+  if (apiUrl) {
+    try {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const rawGraph = await response.json() as GovernanceGraph;
+        return applyHealthColors(rawGraph);
+      }
+    } catch {
+      console.warn('[DataLoader] API fetch failed, falling back to static data');
+    }
+  }
+  return loadGovernanceData();
+}
+
 // ---------------------------------------------------------------------------
 // Get health status from resilience score (legacy 3-state)
 // ---------------------------------------------------------------------------

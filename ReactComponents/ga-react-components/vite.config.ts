@@ -11,6 +11,19 @@ export default defineConfig({
         hmr: {
             overlay: false,
         },
+        proxy: {
+            '/api': {
+                target: 'https://localhost:7001',
+                changeOrigin: true,
+                secure: false,
+            },
+            '/hubs': {
+                target: 'https://localhost:7001',
+                changeOrigin: true,
+                secure: false,
+                ws: true,
+            },
+        },
     },
     optimizeDeps: {
         include: ['prop-types'],

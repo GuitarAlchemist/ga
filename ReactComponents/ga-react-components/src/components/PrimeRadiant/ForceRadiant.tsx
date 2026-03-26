@@ -10,7 +10,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
 import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, getHealthStatus, startLivePolling, updateNodeHealth } from './DataLoader';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
@@ -523,7 +523,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const graph = loadGovernanceData(data);
+    let disposed = false;
+    let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
+    let stopPollingOuter: (() => void) | undefined;
+
+    // Load data — try API first, fall back to static
+    const initGraph = async () => {
+      const graph = liveDataUrl
+        ? await loadGovernanceDataAsync(liveDataUrl)
+        : loadGovernanceData(data);
+      if (disposed) return;
+      initScene(graph);
+    };
+
+    const initScene = (graph: ReturnType<typeof loadGovernanceData>) => {
+
     setGraphData(graph);
     setGraphIndex(buildGraphIndex(graph));
 
@@ -1301,13 +1315,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
     }
 
+    // Expose cleanup handles to outer scope
+    autoZoomTimeoutOuter = autoZoomTimeout;
+    stopPollingOuter = stopPolling;
+    }; // end initScene
+
+    // Kick off async init
+    initGraph();
+
     return () => {
-      if (autoZoomTimeout) clearTimeout(autoZoomTimeout);
-      stopPolling?.();
-      fg._destructor();
-      graphRef.current = null;
+      disposed = true;
+      if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
+      stopPollingOuter?.();
+      if (graphRef.current) {
+        (graphRef.current as ReturnType<typeof ForceGraph3D> & { _destructor: () => void })._destructor();
+        graphRef.current = null;
+      }
     };
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, liveDataUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Resize ───
   useEffect(() => {

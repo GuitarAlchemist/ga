@@ -13,6 +13,21 @@ export default defineConfig({
             brotliSize: true,
         }),
     ],
+    server: {
+        proxy: {
+            '/api': {
+                target: 'https://localhost:7001',
+                changeOrigin: true,
+                secure: false,
+            },
+            '/hubs': {
+                target: 'https://localhost:7001',
+                changeOrigin: true,
+                secure: false,
+                ws: true,
+            },
+        },
+    },
     resolve: {
         dedupe: ['react', 'react-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
     },

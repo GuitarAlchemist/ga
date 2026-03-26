@@ -26,6 +26,7 @@ const PrimeRadiantTest: React.FC = () => {
         </div>
       }>
         <ForceRadiant
+          liveDataUrl="/api/governance"
           onNodeSelect={(node) => {
             if (node) {
               console.log('[PrimeRadiant] Selected:', node.name, node.type);
