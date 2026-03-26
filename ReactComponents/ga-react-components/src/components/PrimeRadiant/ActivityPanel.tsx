@@ -77,7 +77,7 @@ async function fetchIssues(): Promise<IssueInfo[]> {
   try {
     const allIssues: IssueInfo[] = [];
     for (const repo of GITHUB_REPOS) {
-      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/issues?state=open&per_page=6&sort=updated`, {
+      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/issues?state=open&per_page=10&sort=updated`, {
         headers: { 'Accept': 'application/vnd.github.v3+json' },
       });
       if (!res.ok) continue;
@@ -92,7 +92,7 @@ async function fetchIssues(): Promise<IssueInfo[]> {
         });
       }
     }
-    return allIssues.slice(0, 6);
+    return allIssues.slice(0, 10);
   } catch {
     return [];
   }
