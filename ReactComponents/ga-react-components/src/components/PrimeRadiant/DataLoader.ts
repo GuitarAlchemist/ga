@@ -5,6 +5,7 @@ import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthS
 import { HEALTH_STATUS_COLORS } from './types';
 import { LIVE_GOVERNANCE_GRAPH } from './liveData';
 import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
+import * as signalR from '@microsoft/signalr';
 
 // ---------------------------------------------------------------------------
 // Adjacency index for fast lookups
@@ -140,11 +141,11 @@ export function searchNodes(
 // ---------------------------------------------------------------------------
 
 export interface LiveDataConfig {
-  /** URL to fetch governance graph JSON (e.g., /api/governance or /governance-data.json) */
+  /** URL to fetch governance graph JSON (e.g., /api/governance) */
   url: string;
-  /** WebSocket URL for real-time push updates (e.g., ws://localhost:7001/ws/governance). Preferred over polling when available. */
-  wsUrl?: string;
-  /** Poll interval in ms (default: 30000 = 30s). Only used when WebSocket is unavailable. */
+  /** SignalR hub URL for real-time push updates (e.g., /hubs/governance). Preferred over polling. */
+  hubUrl?: string;
+  /** Poll interval in ms (default: 30000 = 30s). Only used when SignalR is unavailable. */
   intervalMs?: number;
   /** Called when new data arrives — update graph in-place, don't rebuild */
   onUpdate: (graph: GovernanceGraph) => void;
@@ -155,68 +156,74 @@ export interface LiveDataConfig {
 }
 
 export function startLivePolling(config: LiveDataConfig): () => void {
-  const { url, wsUrl, intervalMs = 30000, onUpdate, onError, onStatusChange } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange } = config;
   let active = true;
-  let ws: WebSocket | null = null;
+  let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
-  let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-  let reconnectDelay = 1000; // exponential backoff starting at 1s
 
   const processGraph = (rawGraph: GovernanceGraph) => {
     const graph = applyHealthColors(rawGraph);
     onUpdate(graph);
   };
 
-  // ─── WebSocket connection (preferred) ───
-  const connectWs = () => {
-    if (!active || !wsUrl) return;
+  // ─── SignalR connection (preferred) ───
+  const connectSignalR = async () => {
+    if (!active || !hubUrl) return;
 
     try {
-      ws = new WebSocket(wsUrl);
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 30000]) // exponential backoff
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
 
-      ws.onopen = () => {
-        reconnectDelay = 1000; // reset backoff
+      // Handle server-pushed events
+      connection.on('GraphUpdate', (data: GovernanceGraph) => {
+        processGraph(data);
+      });
+
+      connection.on('NodeChanged', (data: { nodeId: string; health: unknown; healthStatus: string; color: string }) => {
+        // Partial update — single node
+        onUpdate({ nodes: [data as unknown as GovernanceNode], edges: [], globalHealth: { resilienceScore: 0, lolliCount: 0, ergolCount: 0 }, timestamp: new Date().toISOString() } as GovernanceGraph);
+      });
+
+      connection.on('Connected', (data: { connections: number }) => {
+        console.log(`[Governance] Connected (${data.connections} clients)`);
+      });
+
+      connection.onreconnecting(() => {
+        onStatusChange?.('disconnected');
+        // Start polling as fallback while reconnecting
+        if (!pollInterval) startPolling();
+      });
+
+      connection.onreconnected(() => {
         onStatusChange?.('connected');
-        // Stop polling if it was running as fallback
+        // Stop polling fallback
         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-      };
+        // Request fresh data
+        connection?.invoke('Subscribe').catch(() => {});
+      });
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          // Support both full graph and partial update messages
-          if (data.type === 'health-update' && data.nodes) {
-            // Partial update — just health data for specific nodes
-            processGraph({ ...data, nodes: data.nodes, edges: data.edges ?? [] });
-          } else if (data.nodes && data.edges) {
-            // Full graph
-            processGraph(data as GovernanceGraph);
-          }
-        } catch (err) {
-          onError?.(new Error(`WS parse error: ${(err as Error).message}`));
-        }
-      };
-
-      ws.onclose = () => {
-        ws = null;
+      connection.onclose(() => {
         if (!active) return;
         onStatusChange?.('disconnected');
-        // Reconnect with exponential backoff, fall back to polling
-        reconnectTimeout = setTimeout(() => {
-          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-          connectWs();
-        }, reconnectDelay);
-        // Start polling as fallback while disconnected
         if (!pollInterval) startPolling();
-      };
+      });
 
-      ws.onerror = () => {
-        onError?.(new Error('WebSocket connection error'));
-        ws?.close();
-      };
+      await connection.start();
+      onStatusChange?.('connected');
+
+      // Stop polling if it was running
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+
+      // Subscribe to governance group and get initial data
+      await connection.invoke('Subscribe');
+
     } catch (err) {
-      onError?.(err as Error);
-      // WebSocket not available — fall back to polling
+      onError?.(new Error(`SignalR connection failed: ${(err as Error).message}`));
+      connection = null;
+      // Fall back to polling
       if (!pollInterval) startPolling();
     }
   };
@@ -229,7 +236,7 @@ export function startLivePolling(config: LiveDataConfig): () => void {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const rawGraph = await response.json() as GovernanceGraph;
       processGraph(rawGraph);
-      onStatusChange?.('polling');
+      if (!connection) onStatusChange?.('polling');
     } catch (err) {
       onError?.(err as Error);
     }
@@ -238,13 +245,13 @@ export function startLivePolling(config: LiveDataConfig): () => void {
   const startPolling = () => {
     if (pollInterval) return;
     onStatusChange?.('polling');
-    poll(); // initial fetch
+    poll();
     pollInterval = setInterval(poll, intervalMs);
   };
 
-  // ─── Start: WebSocket first, poll as fallback ───
-  if (wsUrl) {
-    connectWs();
+  // ─── Start: SignalR first, poll as fallback ───
+  if (hubUrl) {
+    connectSignalR();
   } else {
     startPolling();
   }
@@ -252,9 +259,9 @@ export function startLivePolling(config: LiveDataConfig): () => void {
   // Return cleanup function
   return () => {
     active = false;
-    if (ws) { ws.close(); ws = null; }
+    connection?.stop();
+    connection = null;
     if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
   };
 }
 

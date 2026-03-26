@@ -3,6 +3,7 @@ using AllProjects.ServiceDefaults;
 using GA.Business.Core.Session;
 using GaApi.Extensions;
 using GaApi.Hubs;
+using GaApi.Controllers;
 using GaApi.Services;
 using GaApi.GraphQL.Queries;
 using Microsoft.AspNetCore.RateLimiting;
@@ -54,6 +55,12 @@ builder.Services.AddHttpClient();
 
 // Add SignalR for WebSocket support
 builder.Services.AddSignalR();
+
+// Governance file watcher — pushes updates via SignalR when governance files change
+builder.Services.AddHostedService<GovernanceWatcherService>();
+
+// Register GovernanceController for DI (used by GovernanceHub)
+builder.Services.AddTransient<GovernanceController>();
 
 builder.Services.AddControllers()
     .ConfigureApplicationPartManager(manager =>
@@ -203,6 +210,7 @@ app.MapReverseProxy();
 
 // Map SignalR hubs
 app.MapHub<ChatbotHub>("/hubs/chatbot");
+app.MapHub<GovernanceHub>("/hubs/governance");
 
 // Map Aspire default endpoints (health checks, liveness)
 app.MapDefaultEndpoints();

@@ -462,8 +462,8 @@ export interface ForceRadiantProps {
   className?: string;
   /** URL to fetch governance data. Defaults to '/api/governance'. Set to '' to use bundled static data. */
   liveDataUrl?: string;
-  /** WebSocket URL for real-time push updates (e.g., ws://localhost:7001/ws/governance). Preferred over polling. */
-  liveWsUrl?: string;
+  /** SignalR hub URL for real-time push updates (e.g., /hubs/governance). Preferred over polling. */
+  liveHubUrl?: string;
   /** Poll interval in ms when WebSocket unavailable (default 30000) */
   pollIntervalMs?: number;
 }
@@ -476,7 +476,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   showDetailPanel = true,
   className = '',
   liveDataUrl,
-  liveWsUrl,
+  liveHubUrl,
   pollIntervalMs = 30000,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1276,10 +1276,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── Live data polling — update nodes in-place without graph rebuild ───
     let stopPolling: (() => void) | undefined;
-    if (liveDataUrl || liveWsUrl) {
+    if (liveDataUrl || liveHubUrl) {
       stopPolling = startLivePolling({
         url: liveDataUrl ?? '',
-        wsUrl: liveWsUrl,
+        hubUrl: liveHubUrl,
         intervalMs: pollIntervalMs,
         onUpdate: (freshGraph) => {
           const currentNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
