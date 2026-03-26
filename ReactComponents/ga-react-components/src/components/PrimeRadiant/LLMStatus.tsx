@@ -15,6 +15,48 @@ interface LLMProvider {
   tokensLimit?: string;
   creditsLeft?: string;
   status: 'active' | 'limited' | 'depleted';
+  usage?: {
+    today: number;       // tokens used today
+    thisWeek: number;    // tokens used this week
+    dailyLimit?: number; // daily token limit (if known)
+    weeklyLimit?: number;
+    percentUsed?: number; // 0-100
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Claude usage tracking — reads from localStorage, updated by ChatWidget
+// ---------------------------------------------------------------------------
+function getClaudeUsage(): NonNullable<LLMProvider['usage']> {
+  try {
+    const raw = localStorage.getItem('ga-claude-usage');
+    if (raw) {
+      const data = JSON.parse(raw);
+      const today = new Date().toISOString().slice(0, 10);
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekKey = weekStart.toISOString().slice(0, 10);
+
+      const todayTokens = data.daily?.[today] ?? 0;
+      const weekTokens = Object.entries(data.daily ?? {})
+        .filter(([d]) => d >= weekKey)
+        .reduce((sum, [, v]) => sum + (v as number), 0);
+
+      // Max plan: ~45M tokens/month ≈ 1.5M/day, ~10M/week
+      const dailyLimit = 1_500_000;
+      const weeklyLimit = 10_000_000;
+
+      return {
+        today: todayTokens,
+        thisWeek: weekTokens,
+        dailyLimit,
+        weeklyLimit,
+        percentUsed: Math.round((todayTokens / dailyLimit) * 100),
+      };
+    }
+  } catch { /* ignore */ }
+
+  return { today: 0, thisWeek: 0, percentUsed: 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -31,12 +73,15 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
   const providers: LLMProvider[] = [];
 
   // Anthropic — always available (we run on Claude)
+  // Read usage from localStorage (tracked by ChatWidget proxy calls)
+  const claudeUsage = getClaudeUsage();
   providers.push({
     name: 'Anthropic',
     icon: 'A',
     model: 'Claude Opus 4.6',
     plan: 'Max (1M ctx)',
-    status: 'active',
+    status: claudeUsage.percentUsed > 90 ? 'limited' : 'active',
+    usage: claudeUsage,
   });
 
   // Check if Claude proxy is configured (indicates active usage)
@@ -76,6 +121,12 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
+
 const STATUS_DOT: Record<LLMProvider['status'], string> = {
   active: '#33CC66',
   limited: '#FFB300',
@@ -127,6 +178,7 @@ export const LLMStatus: React.FC = () => {
                 <div className="prime-radiant__llm-meta">
                   {p.plan}
                   {p.tokensUsed && ` · ${p.tokensUsed}/${p.tokensLimit}`}
+                  {p.usage && p.usage.today > 0 && ` · ${formatTokens(p.usage.today)} today`}
                   {p.creditsLeft && ` · ${p.creditsLeft}`}
                 </div>
               </div>
@@ -136,6 +188,23 @@ export const LLMStatus: React.FC = () => {
               }}>
                 {p.status === 'active' ? '●' : p.status === 'limited' ? '◐' : '○'}
               </span>
+              {p.usage && p.usage.dailyLimit && (
+                <div className="prime-radiant__llm-usage">
+                  <div className="prime-radiant__llm-usage-bar">
+                    <div
+                      className="prime-radiant__llm-usage-fill"
+                      style={{
+                        width: `${Math.min(p.usage.percentUsed ?? 0, 100)}%`,
+                        backgroundColor: (p.usage.percentUsed ?? 0) > 80 ? '#FF4444' : (p.usage.percentUsed ?? 0) > 50 ? '#FFB300' : '#33CC66',
+                      }}
+                    />
+                  </div>
+                  <div className="prime-radiant__llm-usage-label">
+                    {formatTokens(p.usage.today)}/{formatTokens(p.usage.dailyLimit)} daily
+                    {p.usage.thisWeek > 0 && ` · ${formatTokens(p.usage.thisWeek)} this week`}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
