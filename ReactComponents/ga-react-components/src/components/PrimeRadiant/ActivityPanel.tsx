@@ -30,41 +30,102 @@ interface IssueInfo {
 }
 
 // ---------------------------------------------------------------------------
-// Mock data — TODO: connect to real sources (GitHub API, git log)
+// GitHub API configuration
 // ---------------------------------------------------------------------------
-function getMockActivities(): Activity[] {
-  return [
-    { id: '1', name: 'Hexavalent logic schemas', status: 'completed', progress: 100, eta: 'done', category: 'governance' },
-    { id: '2', name: 'Prime Radiant v4', status: 'active', progress: 78, eta: '~30m', category: 'build' },
-    { id: '3', name: 'ix GPU lattice ops', status: 'pending', progress: 0, eta: '~2h', category: 'build' },
-    { id: '4', name: 'Red team cycle 004', status: 'pending', progress: 0, eta: '~1h', category: 'test' },
-    { id: '5', name: 'Seldon research — 6-valued logic', status: 'active', progress: 45, eta: '~45m', category: 'research' },
-    { id: '6', name: 'DNS propagation', status: 'blocked', progress: 0, eta: 'waiting', category: 'deploy' },
-  ];
+const GITHUB_OWNER = 'GuitarAlchemist';
+const GITHUB_REPOS = ['ga'];
+const GITHUB_API = 'https://api.github.com';
+
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
-function getMockIssues(): IssueInfo[] {
-  return [
-    { number: 23, title: 'Multi-model design loop — Claude + GPT + Codex', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/23' },
-    { number: 22, title: 'Procedural solar system — all planets', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/22' },
-    { number: 21, title: 'Bottom drawer — icicle navigator + file viewer', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/21' },
-    { number: 20, title: 'Breadcrumb file navigator with icons', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/20' },
-    { number: 19, title: 'Blender GLTF head for Demerzel', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/19' },
-    { number: 18, title: 'Clickable activities + accordion sections', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/18' },
-  ];
+// ─── Fetch real commits from GitHub API ───
+async function fetchCommits(): Promise<CommitInfo[]> {
+  try {
+    const allCommits: CommitInfo[] = [];
+    for (const repo of GITHUB_REPOS) {
+      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/commits?per_page=8`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const commit of data) {
+        allCommits.push({
+          hash: commit.sha?.substring(0, 7) ?? '?',
+          message: commit.commit?.message?.split('\n')[0] ?? '',
+          repo,
+          time: timeAgo(commit.commit?.committer?.date ?? new Date().toISOString()),
+        });
+      }
+    }
+    return allCommits.sort((a, b) => a.time.localeCompare(b.time)).slice(0, 10);
+  } catch {
+    return []; // silent fail — panel shows empty
+  }
 }
 
-function getMockCommits(): CommitInfo[] {
-  return [
-    { hash: '642e8cd', message: 'LLM panel expanded, denser padding', repo: 'ga', time: '2m ago' },
-    { hash: '754e5cb', message: 'Gentle spin on active activity icons', repo: 'ga', time: '5m ago' },
-    { hash: '10df84e', message: 'Activity Panel — progress bars + ETAs', repo: 'ga', time: '12m ago' },
-    { hash: '863b94b', message: 'LLM Status panel — providers, tokens', repo: 'ga', time: '15m ago' },
-    { hash: 'c4b81fe', message: 'Responsive — phone, tablet, touch', repo: 'ga', time: '20m ago' },
-    { hash: '250b8b7', message: 'cloudflare-tunnel skill', repo: 'Demerzel', time: '45m ago' },
-    { hash: 'd8e6705', message: 'Hexavalent logic (T/P/U/D/F/C)', repo: 'Demerzel', time: '1h ago' },
-    { hash: '6d8ffe7', message: 'Prime Radiant v3 — health colors', repo: 'ga', time: '2h ago' },
-  ];
+// ─── Fetch real issues from GitHub API ───
+async function fetchIssues(): Promise<IssueInfo[]> {
+  try {
+    const allIssues: IssueInfo[] = [];
+    for (const repo of GITHUB_REPOS) {
+      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/issues?state=open&per_page=6&sort=updated`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const issue of data) {
+        if (issue.pull_request) continue; // skip PRs
+        allIssues.push({
+          number: issue.number,
+          title: issue.title,
+          repo,
+          url: issue.html_url,
+        });
+      }
+    }
+    return allIssues.slice(0, 6);
+  } catch {
+    return [];
+  }
+}
+
+// ─── Derive activities from GitHub milestones or plan files ───
+async function fetchActivities(): Promise<Activity[]> {
+  try {
+    // Try fetching from backend activity endpoint
+    const res = await fetch('/api/activities');
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch { /* fall through */ }
+
+  // Fallback: derive from open issues labels
+  try {
+    const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/ga/issues?state=open&per_page=10&labels=active`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.map((issue: { number: number; title: string; labels: { name: string }[] }, i: number) => ({
+        id: String(issue.number),
+        name: issue.title,
+        status: 'active' as const,
+        progress: 50,
+        category: (issue.labels?.find((l: { name: string }) => ['governance', 'research', 'build', 'test', 'deploy'].includes(l.name))?.name ?? 'build') as Activity['category'],
+      }));
+    }
+  } catch { /* fall through */ }
+
+  return []; // empty — no mock fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -129,9 +190,17 @@ export const ActivityPanel: React.FC = () => {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
 
   useEffect(() => {
-    setActivities(getMockActivities());
-    setCommits(getMockCommits());
-    setIssues(getMockIssues());
+    // Fetch real data from GitHub API
+    fetchActivities().then(setActivities);
+    fetchCommits().then(setCommits);
+    fetchIssues().then(setIssues);
+
+    // Refresh every 60 seconds
+    const interval = setInterval(() => {
+      fetchCommits().then(setCommits);
+      fetchIssues().then(setIssues);
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');

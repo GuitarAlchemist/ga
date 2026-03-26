@@ -18,37 +18,59 @@ interface LLMProvider {
 }
 
 // ---------------------------------------------------------------------------
-// Mock data — TODO: connect to real API usage endpoints
+// Dynamic LLM status — fetches from backend, falls back to detection
 // ---------------------------------------------------------------------------
-function getLLMProviders(): LLMProvider[] {
-  return [
-    {
-      name: 'Anthropic',
-      icon: 'A',
-      model: 'Claude Opus 4.6',
-      plan: 'Max (1M ctx)',
-      tokensUsed: '847K',
-      tokensLimit: '1M',
-      status: 'active',
-    },
-    {
-      name: 'OpenAI',
-      icon: 'O',
-      model: 'GPT-4o',
-      plan: 'Plus',
-      creditsLeft: '$12.40',
-      status: 'active',
-    },
-    {
-      name: 'Google',
-      icon: 'G',
-      model: 'Gemini 2.5 Pro',
-      plan: 'Free tier',
-      tokensUsed: '45K',
-      tokensLimit: '50K/day',
-      status: 'limited',
-    },
-  ];
+async function fetchLLMProviders(): Promise<LLMProvider[]> {
+  // Try backend endpoint first
+  try {
+    const res = await fetch('/api/llm/status');
+    if (res.ok) return await res.json();
+  } catch { /* fall through */ }
+
+  // Detect from environment / available config
+  const providers: LLMProvider[] = [];
+
+  // Anthropic — always available (we run on Claude)
+  providers.push({
+    name: 'Anthropic',
+    icon: 'A',
+    model: 'Claude Opus 4.6',
+    plan: 'Max (1M ctx)',
+    status: 'active',
+  });
+
+  // Check if Claude proxy is configured (indicates active usage)
+  const proxyUrl = typeof import.meta !== 'undefined'
+    ? (import.meta as { env?: Record<string, string> }).env?.VITE_CLAUDE_PROXY_URL
+    : undefined;
+  if (proxyUrl) {
+    try {
+      const res = await fetch(proxyUrl, { method: 'OPTIONS' });
+      if (res.ok) providers[0].status = 'active';
+    } catch {
+      providers[0].status = 'limited';
+    }
+  }
+
+  // Check Ollama local
+  try {
+    const res = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) });
+    if (res.ok) {
+      const data = await res.json();
+      const models = data.models ?? [];
+      if (models.length > 0) {
+        providers.push({
+          name: 'Ollama',
+          icon: 'L',
+          model: models[0].name ?? 'local',
+          plan: `${models.length} model${models.length > 1 ? 's' : ''}`,
+          status: 'active',
+        });
+      }
+    }
+  } catch { /* Ollama not running */ }
+
+  return providers;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,8 +87,12 @@ export const LLMStatus: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    setProviders(getLLMProviders());
-    // TODO: poll real usage every 60s
+    fetchLLMProviders().then(setProviders);
+    // Refresh every 60 seconds
+    const interval = setInterval(() => {
+      fetchLLMProviders().then(setProviders);
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
