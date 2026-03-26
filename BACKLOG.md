@@ -48,6 +48,12 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **Commit detail hover** — hover a commit in ActivityPanel shows diff stats, files changed, author
 - **GitHub token for API rate limits** — authenticated requests (5,000/hr vs 60/hr) for the multi-repo ActivityPanel
 - **Progressive pipeline zoom** — far = IXql node, medium = orbiting sub-nodes, close = full animated flow diagram
+- **Algedonic channels** — Demerzel builds real-time pleasure/pain signal channels from governance health, updates belief states live via SignalR
+- **Real-time belief updates** — beliefs in governance/state/beliefs/ updated and pushed to FE as nodes change health status
+- **Octopus PR review queue** — industrial-scale PR review using /octo:security + /octo:debate across multiple LLMs, results surfaced in ActivityPanel
+- **Auto-spawn Claude Code teams** — Demerzel detects workload (open issues, failing tests, stale nodes) and auto-spawns Claude Code agent teams to address them
+- **Activities from real sources** — wire Activities accordion to actual task tracking (GitHub Projects, Linear, or internal PDCA cycles from governance state)
+- **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
 
 ## Infrastructure Ideas
 
