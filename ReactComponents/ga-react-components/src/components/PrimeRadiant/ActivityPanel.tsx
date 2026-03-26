@@ -20,6 +20,7 @@ interface CommitInfo {
   message: string;
   repo: string;
   time: string;
+  timestamp: number; // epoch ms for sorting
 }
 
 interface IssueInfo {
@@ -33,7 +34,7 @@ interface IssueInfo {
 // GitHub API configuration
 // ---------------------------------------------------------------------------
 const GITHUB_OWNER = 'GuitarAlchemist';
-const GITHUB_REPOS = ['ga'];
+const GITHUB_REPOS = ['ga', 'Demerzel', 'hari', 'tars', 'ix', 'demerzel-bot', 'guitar-singularity'];
 const GITHUB_API = 'https://api.github.com';
 
 function timeAgo(dateStr: string): string {
@@ -58,15 +59,17 @@ async function fetchCommits(): Promise<CommitInfo[]> {
       if (!res.ok) continue;
       const data = await res.json();
       for (const commit of data) {
+        const dateStr = commit.commit?.committer?.date ?? new Date().toISOString();
         allCommits.push({
           hash: commit.sha?.substring(0, 7) ?? '?',
           message: commit.commit?.message?.split('\n')[0] ?? '',
           repo,
-          time: timeAgo(commit.commit?.committer?.date ?? new Date().toISOString()),
+          time: timeAgo(dateStr),
+          timestamp: new Date(dateStr).getTime(),
         });
       }
     }
-    return allCommits.sort((a, b) => a.time.localeCompare(b.time)).slice(0, 10);
+    return allCommits.sort((a, b) => b.timestamp - a.timestamp).slice(0, 15);
   } catch {
     return []; // silent fail — panel shows empty
   }
@@ -149,7 +152,11 @@ const CATEGORY_ICON: Record<Activity['category'], string> = {
 const REPO_COLOR: Record<string, string> = {
   ga: '#FFB300',
   Demerzel: '#FFD700',
-  ix: '#4FC3F7',
+  hari: '#c4b5fd',
+  tars: '#4FC3F7',
+  ix: '#73d13d',
+  'demerzel-bot': '#ff85c0',
+  'guitar-singularity': '#ff7a45',
 };
 
 // ---------------------------------------------------------------------------
