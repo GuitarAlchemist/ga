@@ -71,6 +71,7 @@ interface PlanetDef {
   textureNight?: string;   // night-side emission
   textureClouds?: string;  // cloud layer
   textureSpecular?: string;
+  atmosphere?: { color: string; intensity: number; power: number };
   moons?: MoonDef[];
 }
 
@@ -204,6 +205,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'venus', radius: 0.3, distance: 5.0, speed: 4.4,
     texture: '2k_venus_surface.jpg',
+    atmosphere: { color: '0.95, 0.75, 0.25', intensity: 0.45, power: 2.5 },
     fragment: PROC_PLACEHOLDER,
   },
   {
@@ -212,6 +214,7 @@ const PLANETS: PlanetDef[] = [
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
     textureSpecular: '2k_earth_specular.jpg',
+    atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', fragment: ROCKY_GREY },
@@ -220,6 +223,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'mars', radius: 0.18, distance: 8.5, speed: 2.0,
     texture: '2k_mars.jpg',
+    atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.2, power: 4.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'phobos', radius: 0.03, distance: 0.5, speed: 4.0, fragment: ROCKY_DARK },
@@ -229,6 +233,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'jupiter', radius: 0.9, distance: 16, speed: 0.78,
     texture: '2k_jupiter.jpg',
+    atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'io', radius: 0.09, distance: 1.8, speed: 3.5, fragment: IO_FRAG },
@@ -245,6 +250,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'saturn', radius: 0.75, distance: 24, speed: 0.42,
     texture: '2k_saturn.jpg',
+    atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'mimas', radius: 0.04, distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
@@ -267,6 +273,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'uranus', radius: 0.45, distance: 36, speed: 0.23, tilt: 1.71,
     texture: '2k_uranus.jpg',
+    atmosphere: { color: '0.4, 0.85, 0.75', intensity: 0.3, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'miranda', radius: 0.03, distance: 1.0, speed: 3.5, fragment: MIRANDA_FRAG },
@@ -281,6 +288,7 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'neptune', radius: 0.42, distance: 48, speed: 0.15,
     texture: '2k_neptune.jpg',
+    atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'triton', radius: 0.09, distance: 1.5, speed: -1.8, fragment: TRITON_FRAG },
@@ -512,43 +520,65 @@ function createOrbitTrail(distance: number, scale: number, color: number = 0x334
   return line;
 }
 
-// ── Create planet name label as a canvas-based sprite ──
+// ── Create planet name label as a canvas-based sprite — minimalist sci-fi ──
 function createPlanetLabel(name: string, scale: number): THREE.Sprite {
   const canvas = document.createElement('canvas');
-  const size = 256;
-  canvas.width = size;
-  canvas.height = 96;
+  const W = 512;
+  const H = 128;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
   const text = name.toUpperCase();
-  ctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
+  ctx.font = '200 28px "Courier New", "SF Mono", "Fira Code", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.letterSpacing = '6px';
 
-  // Extrusion effect: draw text multiple times with offsets
-  // Shadow layers (dark behind for depth)
-  for (let i = 4; i >= 1; i--) {
-    ctx.fillStyle = `rgba(0, 20, 40, ${0.15 * i})`;
-    ctx.fillText(text, size / 2 + i * 0.6, 48 + i * 0.8);
-  }
+  const cx = W / 2;
+  const cy = H / 2 - 6;
 
-  // Outer glow — cyan
-  ctx.shadowColor = '#00ccff';
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = 'rgba(0, 200, 255, 0.4)';
-  ctx.fillText(text, size / 2, 48);
+  // Subtle cyan glow pass
+  ctx.shadowColor = 'rgba(100, 200, 255, 0.6)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = 'rgba(100, 200, 255, 0.15)';
+  ctx.fillText(text, cx, cy);
+  ctx.fillText(text, cx, cy); // double pass for glow buildup
 
-  // Inner glow — gold
-  ctx.shadowColor = '#ffd700';
-  ctx.shadowBlur = 6;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(text, size / 2, 48);
+  // Main text — blue-white, thin
+  ctx.shadowColor = 'rgba(100, 200, 255, 0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = 'rgba(220, 235, 255, 0.9)';
+  ctx.fillText(text, cx, cy);
 
-  // Crisp top layer
+  // Clear shadows for crisp elements
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(text, size / 2, 48);
+
+  // Measure text width for scan-line and dot placement
+  const metrics = ctx.measureText(text);
+  const textW = metrics.width;
+  const lineY = cy + 18;
+
+  // Thin scan-line underneath
+  const grad = ctx.createLinearGradient(cx - textW / 2 - 10, 0, cx + textW / 2 + 10, 0);
+  grad.addColorStop(0, 'rgba(100, 200, 255, 0)');
+  grad.addColorStop(0.2, 'rgba(100, 200, 255, 0.35)');
+  grad.addColorStop(0.5, 'rgba(180, 220, 255, 0.5)');
+  grad.addColorStop(0.8, 'rgba(100, 200, 255, 0.35)');
+  grad.addColorStop(1, 'rgba(100, 200, 255, 0)');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - textW / 2 - 10, lineY);
+  ctx.lineTo(cx + textW / 2 + 10, lineY);
+  ctx.stroke();
+
+  // Small dot accent before the name
+  ctx.fillStyle = 'rgba(100, 220, 255, 0.7)';
+  ctx.beginPath();
+  ctx.arc(cx - textW / 2 - 18, cy, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
@@ -559,9 +589,9 @@ function createPlanetLabel(name: string, scale: number): THREE.Sprite {
     depthTest: false,
   });
   const sprite = new THREE.Sprite(mat);
-  // Scale proportional to planet size but clamped for readability
-  const labelScale = Math.max(scale * 8, 0.06);
-  sprite.scale.set(labelScale, labelScale * 0.375, 1);
+  // Smaller, delicate scale matching 512x128 canvas aspect ratio
+  const labelScale = Math.max(scale * 5, 0.04);
+  sprite.scale.set(labelScale, labelScale * 0.25, 1);
   sprite.visible = false;
   sprite.name = `label-${name}`;
   return sprite;
@@ -583,10 +613,100 @@ export function createSolarSystem(scale: number): THREE.Group {
   const ambient = new THREE.AmbientLight(0x111122, 0.15);
   group.add(ambient);
 
-  // ── Sun (emissive — not affected by lighting) ──
+  // ── Sun (animated shader — roiling plasma with limb darkening) ──
   const sunGeo = new THREE.SphereGeometry(2 * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
-  const sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
+  const sunMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uSunTex: { value: sunTex },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+      varying vec3 vPos;
+      void main() {
+        vUv = uv;
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vViewDir = normalize(cameraPosition - wp.xyz);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform sampler2D uSunTex;
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+      varying vec3 vPos;
+
+      // Hash and noise functions
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(1.3, 1.7, 1.9))) * 43758.5); }
+      float noise(vec3 x) {
+        vec3 i = floor(x), f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+      }
+      float fbm(vec3 p) {
+        float v = 0.0, a = 0.5;
+        for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.1; a *= 0.48; }
+        return v;
+      }
+
+      void main() {
+        float t = uTime * 0.08;
+
+        // Base texture color
+        vec3 baseTex = texture2D(uSunTex, vUv).rgb;
+
+        // Granulation — high-frequency convection cells
+        float granulation = fbm(vPos * 12.0 + vec3(t * 0.3, t * 0.2, t * 0.25));
+
+        // Large-scale turbulence — slow-rolling plasma currents
+        float turbulence = fbm(vPos * 3.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
+
+        // Sunspots — darker regions that drift slowly
+        float spots = smoothstep(0.58, 0.65, fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01)));
+
+        // Build surface color
+        vec3 deepOrange = vec3(0.85, 0.35, 0.05);
+        vec3 brightYellow = vec3(1.0, 0.92, 0.7);
+        vec3 hotWhite = vec3(1.0, 0.98, 0.95);
+
+        // Blend texture with procedural plasma
+        vec3 plasma = mix(deepOrange, brightYellow, turbulence);
+        plasma = mix(plasma, hotWhite, granulation * 0.3);
+        vec3 col = mix(baseTex * 1.1, plasma, 0.55);
+
+        // Apply sunspots (darker cooler regions)
+        col = mix(col, vec3(0.4, 0.15, 0.02), spots * 0.6);
+
+        // Flare hotspots — occasional bright blue-white flares
+        float flare = smoothstep(0.72, 0.85, noise(vPos * 8.0 + vec3(t * 0.5, -t * 0.3, t * 0.4)));
+        col += vec3(0.6, 0.7, 1.0) * flare * 0.35;
+
+        // Limb darkening — edges darker than center
+        float limbFactor = pow(max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 0.4);
+        col *= mix(0.3, 1.0, limbFactor);
+
+        // Pulsing emissive brightness
+        float pulse = 1.0 + 0.04 * sin(uTime * 0.5) + 0.02 * sin(uTime * 1.3);
+        col *= pulse;
+
+        // Slight boost to overall brightness
+        col *= 1.15;
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+  });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -596,13 +716,13 @@ export function createSolarSystem(scale: number): THREE.Group {
   const coronaMat = new THREE.ShaderMaterial({
     uniforms: {},
     vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 wp=modelMatrix*vec4(position,1.);vViewDir=normalize(cameraPosition-wp.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,2.5);gl_FragColor=vec4(1.,.7,.2,f*.3);}`,
+    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,2.5);gl_FragColor=vec4(1.,.7,.2,f*.4);}`,
     transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
   });
   group.add(new THREE.Mesh(coronaGeo, coronaMat));
 
   // ── Planets + Moons ──
-  const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh }[] = [];
+  const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] = [];
   const moonInstances: MoonInstance[] = [];
   const planetLabels: Map<string, THREE.Sprite> = new Map();
   const orbitTrails: Map<string, THREE.Line> = new Map();
@@ -624,6 +744,49 @@ export function createSolarSystem(scale: number): THREE.Group {
     if (def.tilt) mesh.rotation.z = def.tilt;
     orbit.add(mesh);
 
+    // Atmosphere shell — Fresnel glow on limb, transparent at center
+    if (def.atmosphere) {
+      const atmoSegs = def.radius > 0.5 ? 32 : 24;
+      const atmoGeo = new THREE.SphereGeometry(def.radius * 1.05 * scale, atmoSegs, atmoSegs);
+      const atmoMat = new THREE.ShaderMaterial({
+        uniforms: {
+          uColor: { value: new THREE.Vector3(...def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number]) },
+          uIntensity: { value: def.atmosphere.intensity },
+          uPower: { value: def.atmosphere.power },
+        },
+        vertexShader: /* glsl */ `
+          varying vec3 vNormal;
+          varying vec3 vViewDir;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vViewDir = normalize(cameraPosition - wp.xyz);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform vec3 uColor;
+          uniform float uIntensity;
+          uniform float uPower;
+          varying vec3 vNormal;
+          varying vec3 vViewDir;
+          void main() {
+            float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
+            float atmo = pow(fresnel, uPower) * uIntensity;
+            gl_FragColor = vec4(uColor, atmo);
+          }
+        `,
+        transparent: true,
+        side: THREE.BackSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
+      atmoMesh.name = `atmo-${def.name}`;
+      atmoMesh.position.copy(mesh.position);
+      orbit.add(atmoMesh);
+    }
+
     // Planet name label (initially hidden)
     const label = createPlanetLabel(def.name, scale);
     label.position.copy(mesh.position);
@@ -632,14 +795,18 @@ export function createSolarSystem(scale: number): THREE.Group {
     planetLabels.set(def.name, label);
 
     let cloudsMesh: THREE.Mesh | undefined;
+    let cloudsHighMesh: THREE.Mesh | undefined;
 
-    // Earth clouds — separate mesh for independent rotation
+    // Earth clouds — two layers for depth parallax
     if (def.name === 'earth' && def.textureClouds) {
       const cloudsTex = loadTex(def.textureClouds);
+
+      // Primary cloud layer — alphaMap for defined cloud gaps
       const cloudsMat = new THREE.MeshStandardMaterial({
         map: cloudsTex,
+        alphaMap: cloudsTex,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.55,
         depthWrite: false,
       });
       cloudsMesh = new THREE.Mesh(
@@ -649,6 +816,23 @@ export function createSolarSystem(scale: number): THREE.Group {
       cloudsMesh.name = 'earth-clouds';
       cloudsMesh.position.copy(mesh.position);
       orbit.add(cloudsMesh);
+
+      // High-altitude thin cloud layer — parallax depth
+      const cloudsHighTex = loadTex(def.textureClouds);
+      const cloudsHighMat = new THREE.MeshStandardMaterial({
+        map: cloudsHighTex,
+        alphaMap: cloudsHighTex,
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+      });
+      cloudsHighMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(def.radius * 1.08 * scale, 32, 32),
+        cloudsHighMat,
+      );
+      cloudsHighMesh.name = 'earth-clouds-high';
+      cloudsHighMesh.position.copy(mesh.position);
+      orbit.add(cloudsHighMesh);
     }
 
     // Saturn rings (textured)
@@ -751,7 +935,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     }
 
     group.add(orbit);
-    planetMeshes.push({ mesh, orbit, def, clouds: cloudsMesh });
+    planetMeshes.push({ mesh, orbit, def, clouds: cloudsMesh, cloudsHigh: cloudsHighMesh });
   }
 
   group.userData.planets = planetMeshes;
@@ -791,24 +975,35 @@ export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
 const _sunWorldPos = new THREE.Vector3();
 
 export function updateSolarSystem(group: THREE.Group, time: number): void {
-  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh }[] | undefined;
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
   // Sun world position (group origin)
   group.getWorldPosition(_sunWorldPos);
 
+  // Animate sun shader
+  const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
+  if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial && sunMesh.material.uniforms.uTime) {
+    sunMesh.material.uniforms.uTime.value = time;
+  }
+
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
-  for (const { mesh, orbit, def, clouds } of planets) {
+  for (const { mesh, orbit, def, clouds, cloudsHigh } of planets) {
     // Orbit rotation
     orbit.rotation.y = time * def.speed * 0.1;
 
     // Planet self-rotation
     mesh.rotation.y = time * 0.5;
 
-    // Clouds rotate slightly faster than the planet
+    // Primary clouds rotate noticeably faster than the planet
     if (clouds) {
-      clouds.rotation.y = time * 0.55;
+      clouds.rotation.y = time * 0.62;
+    }
+
+    // High-altitude clouds rotate slower, opposite tilt for parallax
+    if (cloudsHigh) {
+      cloudsHigh.rotation.y = time * 0.45;
     }
 
     // Update planet shader uniforms — sun position for day/night + bump

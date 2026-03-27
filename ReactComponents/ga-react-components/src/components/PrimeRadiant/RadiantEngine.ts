@@ -264,8 +264,8 @@ export class RadiantEngine {
     this.controls = new OrbitControls(this.camera, this.canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
-    this.controls.minDistance = 8;
-    this.controls.maxDistance = 120;
+    this.controls.minDistance = 0.05;
+    this.controls.maxDistance = 500;
     this.controls.autoRotate = true;
     this.controls.autoRotateSpeed = 0.15;
   }
