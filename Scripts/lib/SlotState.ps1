@@ -1,7 +1,7 @@
 # Scripts/lib/SlotState.ps1
 # Shared functions for blue/green slot management
 
-$Script:SolutionRoot = (Resolve-Path "$PSScriptRoot\..").Path
+$Script:SolutionRoot = (Resolve-Path "$PSScriptRoot\..\..").Path
 $Script:SlotTargetPath = Join-Path $SolutionRoot ".slot-target"
 $Script:SlotStatePath = Join-Path $SolutionRoot ".slot-state.json"
 

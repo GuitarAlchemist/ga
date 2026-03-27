@@ -18,12 +18,6 @@
     <NoWarn>$(NoWarn);CS0649;NUnit1033</NoWarn>
   </PropertyGroup>
 
-  <!-- Blue/Green build slot support (opt-in per project via UseBlueGreenSlots) -->
-  <PropertyGroup Condition="'$(UseBlueGreenSlots)' == 'true' AND Exists('$(MSBuildThisFileDirectory).slot-target')">
-    <_SlotTarget>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory).slot-target').Trim())</_SlotTarget>
-    <OutputPath>bin\$(_SlotTarget)\</OutputPath>
-  </PropertyGroup>
-
   <!-- Centralized package version alignment and vulnerability remediation -->
   <ItemGroup>
     <!-- Security fixes -->
