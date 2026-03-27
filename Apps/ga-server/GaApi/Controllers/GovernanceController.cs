@@ -88,6 +88,44 @@ public class GovernanceController(
     }
 
     /// <summary>
+    ///     Get the content of a governance file by its relative path.
+    ///     Path must be relative to the demerzel root (e.g., "constitutions/asimov.constitution.md").
+    /// </summary>
+    [HttpGet("file-content")]
+    public async Task<ActionResult> GetFileContent([FromQuery] string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return BadRequest(new { error = "filePath query parameter is required" });
+
+        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? FindDemerzelRoot();
+        if (demerzelRoot == null || !Directory.Exists(demerzelRoot))
+            return NotFound(new { error = "Governance root not found" });
+
+        var resolvedPath = Path.GetFullPath(Path.Combine(demerzelRoot, filePath));
+        var normalizedRoot = Path.GetFullPath(demerzelRoot);
+
+        // Prevent directory traversal
+        if (!resolvedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { error = "Invalid file path" });
+
+        if (!System.IO.File.Exists(resolvedPath))
+            return NotFound(new { error = $"File not found: {filePath}" });
+
+        var content = await System.IO.File.ReadAllTextAsync(resolvedPath);
+        var extension = Path.GetExtension(resolvedPath).ToLowerInvariant();
+        var mediaType = extension switch
+        {
+            ".md" => "text/markdown",
+            ".yaml" or ".yml" => "text/yaml",
+            ".json" => "application/json",
+            ".ixql" => "text/plain",
+            _ => "text/plain",
+        };
+
+        return Ok(new { content, filePath, mediaType });
+    }
+
+    /// <summary>
     ///     Request a screenshot from all connected Prime Radiant clients.
     /// </summary>
     [HttpPost("screenshot")]
@@ -292,30 +330,30 @@ public class GovernanceController(
         var edges = new List<GovernanceEdge>();
 
         // Scan constitutions
-        ScanDirectory(root, "constitutions", "constitution", "*.md", nodes);
+        ScanDirectory(root, "constitutions", "constitution", "*.md", nodes, demerzelRoot: root);
 
         // Scan policies
-        ScanDirectory(root, "policies", "policy", "*.yaml", nodes);
+        ScanDirectory(root, "policies", "policy", "*.yaml", nodes, demerzelRoot: root);
 
         // Scan personas
-        ScanDirectory(root, "personas", "persona", "*.yaml", nodes);
+        ScanDirectory(root, "personas", "persona", "*.yaml", nodes, demerzelRoot: root);
 
         // Scan pipelines
-        ScanDirectory(root, "pipelines", "pipeline", "*.ixql", nodes);
+        ScanDirectory(root, "pipelines", "pipeline", "*.ixql", nodes, demerzelRoot: root);
 
         // Scan schemas
-        ScanDirectory(root, "schemas", "schema", "*.json", nodes);
-        ScanDirectory(Path.Combine(root, "schemas"), "contracts", "schema", "*.json", nodes);
+        ScanDirectory(root, "schemas", "schema", "*.json", nodes, demerzelRoot: root);
+        ScanDirectory(Path.Combine(root, "schemas"), "contracts", "schema", "*.json", nodes, demerzelRoot: root);
 
         // Scan tests
-        ScanDirectory(root, "tests", "test", "*.test.md", nodes);
+        ScanDirectory(root, "tests", "test", "*.test.md", nodes, demerzelRoot: root);
 
         // Scan departments
         var streelingDir = Path.Combine(root, "state", "streeling", "departments");
-        ScanDirectory(streelingDir, "", "department", "*.json", nodes, "dept-");
+        ScanDirectory(streelingDir, "", "department", "*.json", nodes, "dept-", demerzelRoot: root);
 
         // Scan IXql examples
-        ScanDirectory(Path.Combine(root, "examples"), "ixql", "ixql", "*.ixql", nodes);
+        ScanDirectory(Path.Combine(root, "examples"), "ixql", "ixql", "*.ixql", nodes, demerzelRoot: root);
 
         // Build edges based on naming conventions and references
         BuildEdges(nodes, edges);
@@ -332,10 +370,12 @@ public class GovernanceController(
         };
     }
 
-    private static void ScanDirectory(string root, string subDir, string nodeType, string pattern, List<GovernanceNode> nodes, string idPrefix = "")
+    private static void ScanDirectory(string root, string subDir, string nodeType, string pattern, List<GovernanceNode> nodes, string idPrefix = "", string? demerzelRoot = null)
     {
         var dir = string.IsNullOrEmpty(subDir) ? root : Path.Combine(root, subDir);
         if (!Directory.Exists(dir)) return;
+
+        var effectiveRoot = demerzelRoot ?? root;
 
         foreach (var file in Directory.EnumerateFiles(dir, pattern))
         {
@@ -345,12 +385,16 @@ public class GovernanceController(
             // Avoid duplicates
             if (nodes.Any(n => n.Id == id)) continue;
 
+            // Compute relative path from demerzel root (forward slashes for consistency)
+            var relativePath = Path.GetRelativePath(effectiveRoot, file).Replace('\\', '/');
+
             nodes.Add(new GovernanceNode
             {
                 Id = id,
                 Name = ToTitle(name),
                 Type = nodeType,
                 Description = $"{ToTitle(nodeType)}: {ToTitle(name)}",
+                FilePath = relativePath,
                 Color = "#888888",
                 Health = new HealthMetrics
                 {
@@ -481,6 +525,7 @@ public record GovernanceNode
     public string? Domain { get; init; }
     public string? Version { get; init; }
     public HealthMetrics? Health { get; init; }
+    public string? FilePath { get; init; }
     public string? HealthStatus { get; init; }
     public string[]? Children { get; init; }
     public Dictionary<string, object>? Metadata { get; init; }

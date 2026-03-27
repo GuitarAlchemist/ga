@@ -13,12 +13,12 @@ export default defineConfig({
         },
         proxy: {
             '/api': {
-                target: 'https://localhost:7001',
+                target: 'http://localhost:5232',
                 changeOrigin: true,
                 secure: false,
             },
             '/hubs': {
-                target: 'https://localhost:7001',
+                target: 'http://localhost:5232',
                 changeOrigin: true,
                 secure: false,
                 ws: true,
