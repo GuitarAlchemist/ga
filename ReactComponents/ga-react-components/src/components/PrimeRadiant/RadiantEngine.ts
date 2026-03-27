@@ -463,8 +463,8 @@ export class RadiantEngine {
     // Health aura
     animateHealthAura(this.healthAura, time, this.graph.globalHealth);
 
-    // Starfield
-    animateStarfield(this.starfield, dt);
+    // Starfield — follow camera so stars always surround the viewer
+    animateStarfield(this.starfield, dt, this.camera);
 
     // Floating equations
     this.equationField?.update(dt);
