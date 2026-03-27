@@ -121,3 +121,74 @@ function New-SlotState {
         }
     }
 }
+
+# --- Governance Integration ---
+
+function Update-SlotBelief {
+    param(
+        [ValidateSet("blue","green")][string]$Slot,
+        [ValidateSet("T","P","U","D","F","C")][string]$TruthValue,
+        [double]$Confidence,
+        [string]$EvidenceClaim,
+        [string]$EvidenceSource = "ga-build-system"
+    )
+
+    $beliefDir = Join-Path $Script:SolutionRoot "governance\demerzel\state\beliefs"
+    $beliefFile = Join-Path $beliefDir "slot-$Slot-health.belief.json"
+
+    if (-not (Test-Path $beliefFile)) { return }
+
+    $belief = Get-Content $beliefFile -Raw | ConvertFrom-Json
+    $belief.truth_value = $TruthValue
+    $belief.confidence = $Confidence
+    $belief.last_updated = (Get-Date).ToUniversalTime().ToString("o")
+
+    $evidence = [PSCustomObject]@{
+        source    = $EvidenceSource
+        claim     = $EvidenceClaim
+        timestamp = $belief.last_updated
+        reliability = $Confidence
+    }
+
+    if ($TruthValue -in @("T","P")) {
+        if (-not $belief.evidence.supporting) { $belief.evidence.supporting = @() }
+        $belief.evidence.supporting += $evidence
+    } else {
+        if (-not $belief.evidence.contradicting) { $belief.evidence.contradicting = @() }
+        $belief.evidence.contradicting += $evidence
+    }
+
+    $belief | ConvertTo-Json -Depth 5 | Set-Content $beliefFile
+}
+
+function Emit-AlgedonicSignal {
+    param(
+        [ValidateSet("pain","pleasure")][string]$Type,
+        [ValidateSet("info","warning","emergency","critical")][string]$Severity,
+        [string]$Description,
+        [string]$NodeId
+    )
+
+    $signalDir = Join-Path $Script:SolutionRoot "governance\demerzel\state\algedonic"
+    if (-not (Test-Path $signalDir)) { New-Item -ItemType Directory -Path $signalDir -Force | Out-Null }
+
+    $timestamp = (Get-Date).ToUniversalTime().ToString("o")
+    $guid = [guid]::NewGuid().ToString().Substring(0, 8)
+    $signal = [PSCustomObject]@{
+        id          = "sig-build_slot_health-$((Get-Date).ToString('yyyyMMddHHmmss'))-$guid"
+        timestamp   = $timestamp
+        signal      = "build_slot_health"
+        type        = $Type
+        severity    = $Severity
+        status      = "active"
+        source      = "ga"
+        description = $Description
+        node_id     = $NodeId
+    }
+
+    $fileName = "sig-build_slot_health-$((Get-Date).ToString('yyyy-MM-dd'))-$guid.signal.json"
+    $signal | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $signalDir $fileName)
+
+    $color = if ($Type -eq "pain") { "Red" } else { "Green" }
+    Write-Host "  [Algedonic] $Type/$Severity - $Description" -ForegroundColor $color
+}

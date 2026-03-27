@@ -63,6 +63,8 @@ $healthy = Test-ServerHealth -TimeoutSeconds $HealthTimeout
 if ($healthy) {
     Write-Host "`n=== Swap Complete ===" -ForegroundColor Green
     Write-Host "  Active: $newActive | Build target: $oldActive"
+    Update-SlotBelief -Slot $newActive -TruthValue "T" -Confidence 0.9 -EvidenceClaim "Swap succeeded, server healthy"
+    Emit-AlgedonicSignal -Type "pleasure" -Severity "info" -Description "Swapped to '$newActive' slot successfully" -NodeId "build-slot-$newActive"
 } elseif (-not $Force) {
     Write-Host "`n[Rollback] Health check failed. Rolling back to $oldActive..." -ForegroundColor Red
     & "$PSScriptRoot\ga-rollback.ps1"
