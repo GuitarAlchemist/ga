@@ -1878,9 +1878,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     const checkBackend = async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/chatbot/status`, { signal: AbortSignal.timeout(5000) });
+        const url = `${baseUrl}/api/chatbot/status`;
+        console.log('[PrimeRadiant] Checking backend at:', url);
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        console.log('[PrimeRadiant] Backend status:', res.status);
         setBackendStatus(res.ok ? 'connected' : 'disconnected');
-      } catch {
+      } catch (err) {
+        console.warn('[PrimeRadiant] Backend check failed:', err);
         setBackendStatus('disconnected');
       }
     };
