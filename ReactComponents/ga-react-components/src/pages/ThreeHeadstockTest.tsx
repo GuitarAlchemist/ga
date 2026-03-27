@@ -16,6 +16,7 @@ import {
 import { ThreeHeadstock } from '../components/ThreeHeadstock';
 import type { HeadstockStyle } from '../components/GuitarModels';
 import { GUITAR_MODELS } from '../components/GuitarModels';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 export const ThreeHeadstockTest: React.FC = () => {
   const [guitarModel, setGuitarModel] = useState('electric_fender_strat');
@@ -38,6 +39,7 @@ export const ThreeHeadstockTest: React.FC = () => {
   };
 
   return (
+    <DemoErrorBoundary demoName="Three Headstock">
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" gutterBottom>
@@ -236,6 +238,7 @@ export const ThreeHeadstockTest: React.FC = () => {
         </Paper>
       </Box>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

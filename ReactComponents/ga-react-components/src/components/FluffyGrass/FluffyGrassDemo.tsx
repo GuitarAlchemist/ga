@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import { Box, Typography, Paper, Stack, Slider } from '@mui/material';
-import * as THREE from 'three';
 import { FluffyGrass } from './FluffyGrass';
 
 export const FluffyGrassDemo: React.FC = () => {

@@ -43,7 +43,7 @@ export class InstrumentGeometryFactory {
    * Calculate string spacing based on instrument type and string count
    */
   static calculateStringSpacing(instrument: InstrumentConfig): StringSpacing {
-    const { tuning, nutWidth, bodyStyle } = instrument;
+    const { tuning, nutWidth } = instrument;
     const stringCount = tuning.length;
 
     // Calculate string positions (X coordinates from center, evenly spaced)
@@ -195,7 +195,7 @@ export class InstrumentGeometryFactory {
    * Creates a small body section after the fretboard, truncated at the pickup position
    */
   static createTruncatedBody(instrument: InstrumentConfig): THREE.BufferGeometry {
-    const { scaleLength, nutWidth, bridgeWidth, fretCount, bodyStyle } = instrument;
+    const { scaleLength, nutWidth, bridgeWidth, fretCount } = instrument;
 
     // Calculate fretboard end position (around fret 19-20)
     const fretboardEndFret = Math.min(20, fretCount);
@@ -600,7 +600,7 @@ export class InstrumentGeometryFactory {
    * Create tuning peg geometries
    */
   static createTuningPegs(instrument: InstrumentConfig): THREE.BufferGeometry[] {
-    const { tuning, bodyStyle } = instrument;
+    const { tuning } = instrument;
     const stringCount = tuning.length;
     const pegs: THREE.BufferGeometry[] = [];
     

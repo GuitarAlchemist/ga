@@ -4,7 +4,7 @@
 import { WebGPURenderer } from 'pixi.js';
 
 export async function createRenderer(canvas: HTMLCanvasElement): Promise<WebGPURenderer> {
-  // @ts-ignore - Pixi.js v8 API compatibility issue
+  // @ts-expect-error - Pixi.js v8 API compatibility issue
   const renderer = new WebGPURenderer({
     canvas,
     backgroundAlpha: 0,

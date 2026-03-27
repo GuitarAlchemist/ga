@@ -497,8 +497,8 @@ export class InstrumentMaterialFactory {
    * Add wood texture to material (placeholder for future texture loading)
    */
   private static addWoodTexture(
-    material: THREE.MeshPhysicalMaterial,
-    bodyStyle: InstrumentBodyStyle
+    _material: THREE.MeshPhysicalMaterial,
+    _bodyStyle: InstrumentBodyStyle
   ): void {
     // TODO: Load and apply wood grain textures
     // This would load appropriate wood textures based on body style

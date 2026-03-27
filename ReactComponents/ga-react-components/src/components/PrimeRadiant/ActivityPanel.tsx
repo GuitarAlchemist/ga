@@ -373,7 +373,7 @@ export const ActivityPanel: React.FC = () => {
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');
-  const pending = activities.filter((a) => a.status === 'pending' || a.status === 'blocked');
+  const _pending = activities.filter((a) => a.status === 'pending' || a.status === 'blocked');
 
   return (
     <div className="prime-radiant__activity">

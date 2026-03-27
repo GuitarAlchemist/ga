@@ -107,6 +107,24 @@ const getNextLevel = (current: MusicHierarchyLevel): MusicHierarchyLevel | undef
   return levelOrder[index + 1];
 };
 
+// Static fallback data for preview mode
+const PREVIEW_SET_CLASSES: MusicHierarchyItem[] = [
+  { id: 'sc-3-11', name: '[0,3,7]', level: 'SetClass', category: 'Trichord', description: 'Major/Minor triad', tags: ['triad'], metadata: { Cardinality: '3', IntervalVector: '001110' } },
+  { id: 'sc-4-26', name: '[0,3,5,8]', level: 'SetClass', category: 'Tetrachord', description: 'Minor seventh chord', tags: ['seventh'], metadata: { Cardinality: '4', IntervalVector: '012120' } },
+  { id: 'sc-4-20', name: '[0,1,5,8]', level: 'SetClass', category: 'Tetrachord', description: 'Major seventh chord', tags: ['seventh'], metadata: { Cardinality: '4', IntervalVector: '101220' } },
+  { id: 'sc-3-9', name: '[0,2,7]', level: 'SetClass', category: 'Trichord', description: 'Sus4 / Power chord', tags: ['sus'], metadata: { Cardinality: '3', IntervalVector: '010020' } },
+  { id: 'sc-5-35', name: '[0,2,4,7,9]', level: 'SetClass', category: 'Pentachord', description: 'Pentatonic scale', tags: ['pentatonic'], metadata: { Cardinality: '5', IntervalVector: '032140' } },
+];
+
+const PREVIEW_LEVELS_INFO: MusicHierarchyLevelInfo[] = [
+  { level: 'SetClass', displayName: 'Set Classes', description: 'Pitch class sets', totalItems: 224, primaryMetric: 'Cardinality', highlights: ['Trichords', 'Tetrachords', 'Pentachords'] },
+  { level: 'ForteNumber', displayName: 'Forte Numbers', description: 'Allen Forte classification', totalItems: 224, primaryMetric: 'Cardinality', highlights: [] },
+  { level: 'PrimeForm', displayName: 'Prime Forms', description: 'Normal form representatives', totalItems: 224, primaryMetric: 'Cardinality', highlights: [] },
+  { level: 'Chord', displayName: 'Chords', description: 'Named chord types', totalItems: 500, primaryMetric: 'NoteCount', highlights: ['Major', 'Minor', 'Seventh'] },
+  { level: 'ChordVoicing', displayName: 'Voicings', description: 'Guitar voicings', totalItems: 5000, primaryMetric: 'Frets', highlights: [] },
+  { level: 'Scale', displayName: 'Scales', description: 'Scales and modes', totalItems: 400, primaryMetric: 'NoteCount', highlights: ['Major', 'Minor', 'Pentatonic'] },
+] as MusicHierarchyLevelInfo[];
+
 const MusicHierarchyDemo: React.FC = () => {
   const [levelsInfo, setLevelsInfo] = useState<MusicHierarchyLevelInfo[]>([]);
   const [itemsByLevel, setItemsByLevel] = useState(initialItemsState);
@@ -116,6 +134,7 @@ const MusicHierarchyDemo: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [tableFilter, setTableFilter] = useState('');
   const [initializing, setInitializing] = useState(true);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const loadLevelItems = useCallback(async (level: MusicHierarchyLevel, parentId?: string) => {
     setLoadingByLevel(prev => ({ ...prev, [level]: true }));
@@ -123,8 +142,8 @@ const MusicHierarchyDemo: React.FC = () => {
       const data = await fetchHierarchyItems({ level, parentId, take: level === 'SetClass' ? 120 : 80 });
       setItemsByLevel(prev => ({ ...prev, [level]: data }));
       return data;
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load hierarchy data.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) ?? 'Failed to load hierarchy data.');
       return [];
     } finally {
       setLoadingByLevel(prev => ({ ...prev, [level]: false }));
@@ -176,8 +195,13 @@ const MusicHierarchyDemo: React.FC = () => {
         if (rootItems.length) {
           await handleSelectionChange('SetClass', rootItems[0], true);
         }
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to initialize hierarchy data.');
+      } catch {
+        // Fall back to preview mode with static data
+        console.debug('MusicHierarchy: Backend unavailable, using preview mode');
+        setPreviewMode(true);
+        setLevelsInfo(PREVIEW_LEVELS_INFO);
+        setItemsByLevel(prev => ({ ...prev, SetClass: PREVIEW_SET_CLASSES }));
+        setError(null);
       } finally {
         setInitializing(false);
       }
@@ -212,6 +236,11 @@ const MusicHierarchyDemo: React.FC = () => {
           </Typography>
         </Box>
 
+        {previewMode && (
+          <Alert severity="info">
+            Backend unavailable — showing preview mode with sample set classes. Start the Guitar Alchemist backend for the full hierarchy with 200+ set classes, chords, voicings, and scales.
+          </Alert>
+        )}
         {error && <Alert severity="error">{error}</Alert>}
 
         {initializing && (
@@ -326,7 +355,7 @@ const MusicHierarchyDemo: React.FC = () => {
                     >
                       {tableColumns[activeLevel].map(column => (
                         <TableCell key={`${row.id}-${column.key}`}>
-                          {column.render ? column.render(row) : (row as any)[column.key.split('.').at(-1) ?? column.key] ?? '—'}
+                          {column.render ? column.render(row) : (row as Record<string, unknown>)[column.key.split('.').at(-1) ?? column.key] as string ?? '—'}
                         </TableCell>
                       ))}
                     </TableRow>

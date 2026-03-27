@@ -1,6 +1,7 @@
 import React from 'react';
-import { Container, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { ThreeFretboard, ThreeFretboardPosition } from '../components/ThreeFretboard';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 type FretboardPosition = ThreeFretboardPosition;
 
@@ -16,6 +17,7 @@ const cMajorChord: FretboardPosition[] = [
 
 export const ThreeFretboardTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="Three Fretboard">
     <Box sx={{ width: '100vw', minHeight: '100vh', p: 2 }}>
       <Box sx={{ mb: 3, maxWidth: '1200px', mx: 'auto' }}>
         <Typography variant="h3" gutterBottom>
@@ -59,6 +61,7 @@ export const ThreeFretboardTest: React.FC = () => {
         </ul>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

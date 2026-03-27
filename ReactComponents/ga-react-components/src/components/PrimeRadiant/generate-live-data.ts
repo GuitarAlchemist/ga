@@ -334,7 +334,7 @@ function main() {
   policies.forEach(p => allArtifactPaths.add(`policies/${p.fileName}`));
   constitutions.forEach(c => allArtifactPaths.add(`constitutions/${c.fileName}`));
 
-  const evolvedPaths = new Set(evolution.keys());
+  const _evolvedPaths = new Set(evolution.keys());
 
   // Compute ERGOL: artifacts with evolution tracking + positive citations
   let totalErgol = 0;
@@ -574,7 +574,7 @@ function main() {
   }
 
   // Policy -> matching persona (by name heuristic)
-  const personaMap = new Map(personas.map(p => [p.id.replace('per-', ''), p.id]));
+  const _personaMap = new Map(personas.map(p => [p.id.replace('per-', ''), p.id]));
   const policyPersonaLinks: Array<[string, string]> = [
     ['alignment', 'demerzel'],
     ['alignment', 'skeptical-auditor'],

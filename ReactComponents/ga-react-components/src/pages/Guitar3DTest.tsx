@@ -6,9 +6,10 @@
  */
 
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Switch, FormControlLabel, TextField, Button, Alert, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Switch, FormControlLabel, Alert, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import Guitar3D from '../components/Guitar3D/Guitar3D';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const Guitar3DTest: React.FC = () => {
   const [autoRotate, setAutoRotate] = useState(true);
@@ -21,7 +22,7 @@ const Guitar3DTest: React.FC = () => {
   const [modelInfo3, setModelInfo3] = useState<string | null>(null);
 
   // Helper function to create model load handler
-  const createModelLoadHandler = (setModelInfo: (info: string) => void) => (gltf: any) => {
+  const createModelLoadHandler = (setModelInfo: (info: string) => void) => (gltf: { scene: { traverse: (fn: (child: unknown) => void) => void } }) => {
     console.log('Model loaded:', gltf);
 
     // Extract model information
@@ -29,16 +30,17 @@ const Guitar3DTest: React.FC = () => {
     let vertexCount = 0;
     let triangleCount = 0;
 
-    gltf.scene.traverse((child: any) => {
-      if (child.isMesh) {
+    gltf.scene.traverse((child: unknown) => {
+      const mesh = child as { isMesh?: boolean; geometry?: { attributes: { position?: { count: number } }; index?: { count: number } | null } };
+      if (mesh.isMesh) {
         meshCount++;
-        if (child.geometry) {
-          const positions = child.geometry.attributes.position;
+        if (mesh.geometry) {
+          const positions = mesh.geometry.attributes.position;
           if (positions) {
             vertexCount += positions.count;
           }
-          if (child.geometry.index) {
-            triangleCount += child.geometry.index.count / 3;
+          if (mesh.geometry.index) {
+            triangleCount += mesh.geometry.index.count / 3;
           }
         }
       }
@@ -98,6 +100,7 @@ const Guitar3DTest: React.FC = () => {
   };
 
   return (
+    <DemoErrorBoundary demoName="Guitar 3D Viewer">
     <Box sx={{
       width: '100%',
       minHeight: '100vh',
@@ -383,6 +386,7 @@ const Guitar3DTest: React.FC = () => {
         </Paper>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

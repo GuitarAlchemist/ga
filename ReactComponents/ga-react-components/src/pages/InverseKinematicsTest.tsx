@@ -225,6 +225,7 @@ export const InverseKinematicsTest: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [populationSize, setPopulationSize] = useState(120);
   const [generations, setGenerations] = useState(160);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const selectedChord = useMemo(
     () => CHORD_PRESETS.find((preset) => preset.name === selectedChordName) ?? CHORD_PRESETS[0],
@@ -315,9 +316,24 @@ export const InverseKinematicsTest: React.FC = () => {
         throw new Error(apiResponse.message || 'Failed to analyze chord.');
       }
     } catch (err) {
-      console.error('IK solve error:', err);
-      setSolution(null);
-      setError(err instanceof Error ? err.message : 'Failed to solve IK.');
+      const message = err instanceof Error ? err.message : 'Failed to solve IK.';
+      if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('ERR_CONNECTION')) {
+        // Provide a static preview solution
+        setPreviewMode(true);
+        const positions = parsedCustomPositions ?? selectedChord.positions;
+        const fretSpan = Math.max(...positions.map(p => p.fret)) - Math.min(...positions.filter(p => p.fret > 0).map(p => p.fret), 0);
+        setSolution({
+          playabilityScore: 7500,
+          fingerStretch: { maxStretch: 65.0 + fretSpan * 8, maxFretSpan: fretSpan || 3, description: 'Preview estimate' },
+          fingeringEfficiency: { efficiencyScore: 72.0, fingerSpan: fretSpan || 3, pinkyUsagePercentage: 25, hasBarreChord: false, usesThumb: false, reason: 'Preview mode — static estimate', recommendations: ['Connect backend for accurate biomechanical analysis'] },
+          wristPosture: { angle: 15.0, postureType: 'Neutral', isErgonomic: true },
+        });
+        setError(null);
+      } else {
+        console.error('IK solve error:', err);
+        setSolution(null);
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -340,6 +356,11 @@ export const InverseKinematicsTest: React.FC = () => {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           Biomechanical solver for chord shapes
         </Typography>
+        {previewMode && (
+          <Alert severity="info" sx={{ mt: 1 }}>
+            Backend unavailable — showing preview mode with estimated biomechanical data. Start the GA Biomechanics API for live genetic algorithm solving.
+          </Alert>
+        )}
       </Box>
 
       <Grid container spacing={2} sx={{ flex: 1, p: 2 }}>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useRef, useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import * as THREE from 'three';
@@ -616,8 +615,8 @@ function addGuitarStrings(
   nutWidth: number,
   headstockLength: number,
   stringCount: number,
-  tuning: string[],
-  leftHanded: boolean
+  _tuning: string[],
+  _leftHanded: boolean
 ): void {
   // Strings should follow the same path as the tuning pegs
   const pegSpacing = 1.59; // Match the peg spacing exactly

@@ -33,7 +33,7 @@ export interface LODObject {
   rotation?: THREE.Euler;
   scale?: THREE.Vector3;
   levels: LODLevel[];
-  userData?: any;
+  userData?: unknown;
 }
 
 export interface LODManagerOptions {

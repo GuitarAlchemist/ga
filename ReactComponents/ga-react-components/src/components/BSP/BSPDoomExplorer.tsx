@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BSPDoomExplorer - DOOM-like First-Person BSP Tree Explorer
  * 
@@ -136,7 +135,7 @@ const FLOOR_ATMOSPHERES = [
 ];
 
 // Tonal family hue mapping (for color harmonics)
-const TONAL_FAMILY_HUES: Record<string, number> = {
+const _TONAL_FAMILY_HUES: Record<string, number> = {
   'G-Family': 0.50,  // Cyan/Teal (deep teal for major-like simplicity)
   'C-Family': 0.55,  // Cyan
   'D-Family': 0.33,  // Green
@@ -629,7 +628,7 @@ const createProceduralMarbleMaterial = (): THREE.MeshStandardMaterial => {
 /**
  * Create realistic paved stone floor material with procedural canvas texture
  */
-const createPavedStoneMaterial = (): THREE.MeshStandardMaterial => {
+const _createPavedStoneMaterial = (): THREE.MeshStandardMaterial => {
   // Create canvas for procedural stone texture
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -1065,7 +1064,7 @@ export const BSPDoomExplorer: React.FC<BSPDoomExplorerProps> = ({
     consonance: number = 0.7,
     complexity: number = 0.5
   ): THREE.Color => {
-    const baseHue = TONAL_FAMILY_HUES[tonalFamily] || 0.5;
+    const baseHue = _TONAL_FAMILY_HUES[tonalFamily] || 0.5;
     const lightness = 0.3 + consonance * 0.5;
     const saturation = 0.4 + complexity * 0.6;
     return new THREE.Color().setHSL(baseHue, saturation, lightness);

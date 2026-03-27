@@ -255,7 +255,7 @@ export const Sunburst3D: React.FC<Sunburst3DProps> = ({
   /**
    * Create RADIAL text label for a segment (follows the curve)
    */
-  const createTextLabel = (text: string, segment: SunburstSegment, elevation: number): THREE.Sprite | null => {
+  const createTextLabel = (text: string, segment: SunburstSegment, _elevation: number): THREE.Sprite | null => {
     const { startAngle, endAngle, innerRadius, outerRadius } = segment;
 
     // Create canvas for text
@@ -315,7 +315,7 @@ export const Sunburst3D: React.FC<Sunburst3DProps> = ({
   /**
    * Create a 3D segment (ring slice) with slope effect
    */
-  const createSegment = (segment: SunburstSegment, slopeRadians: number): THREE.Mesh => {
+  const createSegment = (segment: SunburstSegment, _slopeRadians: number): THREE.Mesh => {
     const { startAngle, endAngle, innerRadius, outerRadius, depth, node } = segment;
 
     // Create ring geometry with slope applied to vertices
@@ -613,7 +613,7 @@ export const Sunburst3D: React.FC<Sunburst3DProps> = ({
         if (portalIntersects.length > 0) {
           // Find the portal that was clicked
           for (const portal of portalsRef.current) {
-            if (portalIntersects[0].object === portal.mesh || portal.mesh.children.includes(portalIntersects[0].object as any)) {
+            if (portalIntersects[0].object === portal.mesh || portal.mesh.children.includes(portalIntersects[0].object as THREE.Object3D)) {
               console.log(`🌀 Portal activated: ${portal.label} → ${portal.targetUrl}`);
               window.location.href = portal.targetUrl;
               return;

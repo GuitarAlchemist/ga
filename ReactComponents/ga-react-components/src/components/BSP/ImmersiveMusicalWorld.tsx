@@ -67,8 +67,8 @@ export const ImmersiveMusicalWorld: React.FC<ImmersiveMusicalWorldProps> = ({
   const isPointerLocked = useRef(false);
   
   // Navigation state
-  const [currentNode, setCurrentNode] = useState<string>('Root');
-  const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Root']);
+  const [currentNode, _setCurrentNode] = useState<string>('Root');
+  const [breadcrumbs, _setBreadcrumbs] = useState<string[]>(['Root']);
   const [fps, setFps] = useState(60);
   
   // Flatten hierarchy for rendering

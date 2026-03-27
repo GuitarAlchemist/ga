@@ -6,8 +6,7 @@ import {
   Typography,
   FormControlLabel,
   Switch,
-  Chip,
-  Tooltip
+  Chip
 } from '@mui/material';
 import { BSPTreeInfoResponse } from './BSPApiService';
 

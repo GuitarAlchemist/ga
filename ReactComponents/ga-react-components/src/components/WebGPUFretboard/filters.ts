@@ -46,7 +46,7 @@ export function makeLightingFilter(): Filter {
 
   return new Filter({
     glProgram: undefined,
-    // @ts-ignore - Pixi.js v8 API compatibility issue
+    // @ts-expect-error - Pixi.js v8 API compatibility issue
     gpuProgram: {
       vertex: {
         source: /*wgsl*/`

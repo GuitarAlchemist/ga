@@ -25,7 +25,7 @@ export interface IntelligentBSPLevel {
   challengePaths: BSPChallengePath[];
   learningPath: string[];
   difficulty: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface BSPFloor {
@@ -159,8 +159,8 @@ export class AIApiService {
       bridgeChordCount?: number;
       learningPathLength?: number;
     }
-  ): Promise<any> {
-    const response = await this.client.post<ApiResponse<any>>(
+  ): Promise<unknown> {
+    const response = await this.client.post<ApiResponse<unknown>>(
       '/api/intelligent-bsp/level-stats',
       {
         pitchClassSets,
@@ -234,8 +234,8 @@ export class AIApiService {
     currentProgression: string[],
     tuning?: string,
     topK?: number
-  ): Promise<any[]> {
-    const response = await this.client.post<ApiResponse<any[]>>(
+  ): Promise<unknown[]> {
+    const response = await this.client.post<ApiResponse<unknown[]>>(
       '/api/adaptive-ai/suggest-shapes',
       {
         playerId,
@@ -266,7 +266,7 @@ export class AIApiService {
   }
 
   async resetSession(playerId: string): Promise<void> {
-    const response = await this.client.post<ApiResponse<any>>(
+    const response = await this.client.post<ApiResponse<unknown>>(
       `/api/adaptive-ai/reset-session/${playerId}`
     );
 
@@ -308,7 +308,7 @@ export class AIApiService {
     tuning?: string,
     targetLength?: number
   ): Promise<{ shapeIds: string[]; matchScore: number }> {
-    const response = await this.client.post<ApiResponse<any>>(
+    const response = await this.client.post<ApiResponse<unknown>>(
       '/api/advanced-ai/generate-style-matched',
       {
         playerId,

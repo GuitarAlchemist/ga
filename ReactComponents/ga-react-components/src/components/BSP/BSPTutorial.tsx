@@ -31,8 +31,7 @@ import {
   PlayArrow,
   CheckCircle,
   Lightbulb,
-  Speed,
-  Share
+  Speed
 } from '@mui/icons-material';
 
 interface BSPTutorialProps {

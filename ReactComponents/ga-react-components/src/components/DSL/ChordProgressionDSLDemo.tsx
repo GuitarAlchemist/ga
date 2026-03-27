@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
   Select,
   MenuItem,
@@ -24,7 +23,7 @@ import Editor from '@monaco-editor/react';
 
 interface ParseResult {
   success: boolean;
-  ast?: any;
+  ast?: { Chords?: Array<{ Chord?: string; Type?: string }>; Key?: string; [key: string]: unknown };
   error?: string;
 }
 
@@ -32,6 +31,7 @@ const ChordProgressionDSLDemo: React.FC = () => {
   const [input, setInput] = useState('');
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [selectedExample, setSelectedExample] = useState('');
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
 
   // Example chord progressions
   const examples = {
@@ -91,15 +91,33 @@ const ChordProgressionDSLDemo: React.FC = () => {
       const data = await response.json();
       setParseResult(data);
     } catch (error) {
-      setParseResult({
-        success: false,
-        error: `Failed to parse: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('ERR_CONNECTION')) {
+        setBackendUnavailable(true);
+        const chords = input.trim().split(/\s+/).filter(c => !c.startsWith('|') && !c.includes(':'));
+        setParseResult({
+          success: true,
+          ast: {
+            Chords: chords.map(c => ({ Chord: c, Type: 'AbsoluteChord' })),
+            _preview: 'Static preview — connect backend for live parsing',
+          },
+        });
+      } else {
+        setParseResult({
+          success: false,
+          error: `Failed to parse: ${message}`,
+        });
+      }
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
+      {backendUnavailable && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Backend unavailable — showing preview mode with static chord parsing. Start the Guitar Alchemist backend for live F# parsing.
+        </Alert>
+      )}
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <CodeIcon color="primary" fontSize="large" />
@@ -224,7 +242,7 @@ const ChordProgressionDSLDemo: React.FC = () => {
                               Progression Details:
                             </Typography>
                             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                              {parseResult.ast.Chords?.map((chord: any, idx: number) => (
+                              {parseResult.ast.Chords?.map((chord, idx: number) => (
                                 <Chip
                                   key={idx}
                                   label={chord.Chord || chord.Type}

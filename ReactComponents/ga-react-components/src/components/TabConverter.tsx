@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -54,6 +53,7 @@ const TabConverter: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<ConversionResponse['metadata']>();
+  const [previewMode, setPreviewMode] = useState(false);
 
   const API_BASE_URL = 'https://localhost:7003/api/TabConversion';
 
@@ -130,7 +130,15 @@ notes :q 0/1 3/1 5/1 7/1`,
         setError(data.errors?.join(', ') || 'Conversion failed');
       }
     } catch (err) {
-      setError(`Failed to convert: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('ERR_CONNECTION')) {
+        setPreviewMode(true);
+        // Show a static preview conversion
+        setTargetContent(`tabstave notation=true tablature=true\nnotes :q ${sourceContent.split('\n')[0].replace(/[^0-9/\s]/g, '').trim() || '0/1 3/1 5/1'}`);
+        setWarnings(['Preview mode: This is an approximate conversion. Start the backend for accurate format conversion.']);
+      } else {
+        setError(`Failed to convert: ${message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -179,6 +187,11 @@ notes :q 0/1 3/1 5/1 7/1`,
 
   return (
     <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
+      {previewMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Backend unavailable — showing preview mode with approximate conversion. Start the Guitar Alchemist backend for accurate tab format conversion.
+        </Alert>
+      )}
       <Typography variant="h4" gutterBottom>
         Guitar Tab Format Converter
       </Typography>

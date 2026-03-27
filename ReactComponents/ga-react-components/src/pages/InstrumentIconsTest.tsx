@@ -6,6 +6,18 @@ import { Instrument } from '../types/instrument';
 /**
  * Test page for Instrument Icons
  */
+// Static fallback instruments for preview mode when backend is unavailable
+const PREVIEW_INSTRUMENTS: Instrument[] = [
+  { name: 'Acoustic Guitar', icon: 'acoustic-guitar', tunings: [{ name: 'Standard', tuning: 'E A D G B E' }] },
+  { name: 'Electric Guitar', icon: 'electric-guitar', tunings: [{ name: 'Standard', tuning: 'E A D G B E' }, { name: 'Drop D', tuning: 'D A D G B E' }] },
+  { name: 'Bass Guitar', icon: 'bass-guitar', tunings: [{ name: 'Standard', tuning: 'E A D G' }] },
+  { name: 'Ukulele', icon: 'ukulele', tunings: [{ name: 'Standard', tuning: 'G C E A' }] },
+  { name: 'Banjo', icon: 'banjo', tunings: [{ name: 'Standard', tuning: 'G D G B D' }] },
+  { name: 'Mandolin', icon: 'mandolin', tunings: [{ name: 'Standard', tuning: 'G D A E' }] },
+  { name: 'Classical Guitar', icon: 'classical-guitar', tunings: [{ name: 'Standard', tuning: 'E A D G B E' }] },
+  { name: '12-String Guitar', icon: '12-string-guitar', tunings: [{ name: 'Standard', tuning: 'E A D G B E (doubled)' }] },
+] as Instrument[];
+
 const InstrumentIconsTest: React.FC = () => {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +25,7 @@ const InstrumentIconsTest: React.FC = () => {
   const [filter, setFilter] = useState('');
   const [iconSize, setIconSize] = useState(32);
   const [iconColor, setIconColor] = useState('#1976d2');
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     fetchInstruments();
@@ -22,17 +35,20 @@ const InstrumentIconsTest: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetch('https://localhost:7001/Instruments');
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setInstruments(data);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch instruments:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch instruments');
+      // Fall back to preview mode with static data
+      setPreviewMode(true);
+      setInstruments(PREVIEW_INSTRUMENTS);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -66,6 +82,11 @@ const InstrumentIconsTest: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      {previewMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Backend unavailable — showing preview mode with sample instruments. Start the Guitar Alchemist backend for the full 60+ instrument catalog.
+        </Alert>
+      )}
       <Typography variant="h4" gutterBottom>
         🎸 Instrument Icons Gallery
       </Typography>

@@ -8,8 +8,8 @@ import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceNodeType } from './types';
-import { NODE_COLORS, HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
+import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
+import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
@@ -28,6 +28,8 @@ import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
+import { AlgedonicPanel } from './AlgedonicPanel';
+import { BeliefHeatmap } from './BeliefHeatmap';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +77,7 @@ const TYPE_SIZE: Record<GovernanceNodeType, number> = {
 };
 
 // Particle count per node type (more = more important)
-const TYPE_PARTICLES: Record<GovernanceNodeType, number> = {
+const _TYPE_PARTICLES: Record<GovernanceNodeType, number> = {
   constitution: 60,
   department: 35,
   policy: 18,
@@ -547,7 +549,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     setGraphIndex(buildGraphIndex(graph));
 
     const forceData = toForceData(graph);
-    const healthStatus = getHealthStatus(graph.globalHealth.resilienceScore);
+    const _healthStatus = getHealthStatus(graph.globalHealth.resilienceScore);
 
     // ─── Phase 1.1: Node lookup map — O(1) instead of O(n) per link callback ───
     const nodeMap = new Map<string, GraphNode>();
@@ -1445,8 +1447,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Activity feed — top-left under clock */}
       <ActivityPanel />
 
+      {/* Algedonic signal panel — mid-left under activity */}
+      <AlgedonicPanel />
+
       {/* LLM provider status — top-right */}
       <LLMStatus />
+
+      {/* Belief confidence heatmap — mid-right under LLM status */}
+      <BeliefHeatmap />
 
       {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />

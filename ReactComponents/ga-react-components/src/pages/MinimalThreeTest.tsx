@@ -6,11 +6,13 @@
  */
 
 import React from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { InstrumentShowcase } from '../components/MinimalThree';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const MinimalThreeTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="Minimal Three Instrument">
     <Box sx={{ width: '100vw', minHeight: '100vh', p: 2 }}>
       <Box sx={{ mb: 3, maxWidth: '1200px', mx: 'auto' }}>
         <Typography variant="h3" gutterBottom>
@@ -35,6 +37,7 @@ const MinimalThreeTest: React.FC = () => {
 
       <InstrumentShowcase />
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

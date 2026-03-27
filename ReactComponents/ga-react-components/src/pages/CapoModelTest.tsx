@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { ThreeFretboard } from '../components/ThreeFretboard';
 import { StringedInstrumentFretboard } from '../components/StringedInstrumentFretboard';
-import { PRESET_INSTRUMENTS } from '../utils/instrumentLoader';
 import type { InstrumentConfig } from '../types/InstrumentConfig';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 // Simple guitar instruments array for testing
 const GUITAR_INSTRUMENTS: InstrumentConfig[] = [
@@ -58,6 +58,7 @@ export const CapoModelTest: React.FC = () => {
   const [guitarModel, setGuitarModel] = useState('electric_fender_strat');
 
   return (
+    <DemoErrorBoundary demoName="3D Capo Model">
     <Box sx={{ width: '100vw', minHeight: '100vh', p: 2, bgcolor: '#f5f5f5' }}>
       <Box sx={{ mb: 3, maxWidth: '1200px', mx: 'auto' }}>
         <Typography variant="h3" gutterBottom>
@@ -246,5 +247,6 @@ export const CapoModelTest: React.FC = () => {
         </Typography>
       </Paper>
     </Box>
+    </DemoErrorBoundary>
   );
 };

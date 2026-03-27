@@ -9,7 +9,7 @@ import { analyzeLolli } from './LolliAnalyzer';
 import { analyzeAmdahl } from './AmdahlAnalyzer';
 import { IxqlGraphView } from './IxqlGraph';
 import { DetailPanel } from './DetailPanel';
-import type { IxqlBinding, IxqlGraph, LolliReport, AmdahlReport, ViewMode } from './types';
+import type { IxqlBinding, ViewMode } from './types';
 import './styles.css';
 
 // --- Sample pipelines for demo ---

@@ -63,7 +63,7 @@ export const AnkhReticle3D: React.FC<AnkhReticle3DProps> = ({
     const loader = new GLTFLoader();
     loader.load(
       '/models/ankh.glb',
-      (gltf: any) => {
+      (gltf: { scene: THREE.Group }) => {
         const ankh = gltf.scene;
         ankhRef.current = ankh;
 

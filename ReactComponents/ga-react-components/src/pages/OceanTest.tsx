@@ -7,9 +7,11 @@
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { Ocean } from '../components/Ocean';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const OceanTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="Ocean Shader">
     <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#1a1a1a' }}>
       {/* Header */}
       <Paper
@@ -154,6 +156,7 @@ const OceanTest: React.FC = () => {
         </Box>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import WebGPUFretboard from '../components/WebGPUFretboard';
 import { FretboardPosition } from '../components/WebGPUFretboard/types';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 // C Major chord positions
 const cMajorChord: FretboardPosition[] = [
@@ -15,6 +16,7 @@ const cMajorChord: FretboardPosition[] = [
 
 export const WebGPUFretboardTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="WebGPU Fretboard">
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" gutterBottom>
@@ -62,6 +64,7 @@ export const WebGPUFretboardTest: React.FC = () => {
         </ul>
       </Box>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

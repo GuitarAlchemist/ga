@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Generic Stringed Instrument Fretboard Component
  * 
@@ -8,7 +7,7 @@
  * It replaces the need for separate GuitarFretboard, ThreeFretboard, RealisticFretboard, etc.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   Stack,
@@ -19,8 +18,6 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  ToggleButtonGroup,
-  ToggleButton,
   Paper,
   Chip,
 } from '@mui/material';
@@ -31,7 +28,6 @@ import type {
 } from '../types/InstrumentConfig';
 import { getStringCount } from '../types/InstrumentConfig';
 import { MinimalThreeInstrument } from './MinimalThree';
-import { WebGPUFretboard } from './WebGPUFretboard';
 import GuitarFretboard from './GuitarFretboard';
 import { RealisticFretboard } from './RealisticFretboard';
 
@@ -110,7 +106,7 @@ export const StringedInstrumentFretboard: React.FC<StringedInstrumentFretboardPr
             config={{
               capoFret,
               leftHanded,
-              guitarModel: instrument.bodyStyle as any,
+              guitarModel: instrument.bodyStyle as string,
               ...commonProps,
             }}
           />
@@ -124,7 +120,7 @@ export const StringedInstrumentFretboard: React.FC<StringedInstrumentFretboardPr
             onPositionClick={(pos) => {
               onPositionClick?.(pos.string, pos.fret);
             }}
-            onPositionHover={(pos: any) => {
+            onPositionHover={(pos: { string: number; fret: number } | null) => {
               if (pos) {
                 onPositionHover?.(pos.string, pos.fret);
               } else {
@@ -305,7 +301,7 @@ export const StringedInstrumentFretboard: React.FC<StringedInstrumentFretboardPr
 /**
  * Backward compatibility wrapper for ThreeFretboard
  */
-export const ThreeFretboardCompat: React.FC<any> = (props) => {
+export const ThreeFretboardCompat: React.FC<Record<string, unknown>> = (props) => {
   // Convert old props to new InstrumentConfig format
   const instrument: InstrumentConfig = {
     family: 'Guitar',
@@ -335,7 +331,7 @@ export const ThreeFretboardCompat: React.FC<any> = (props) => {
 /**
  * Backward compatibility wrapper for RealisticFretboard
  */
-export const RealisticFretboardCompat: React.FC<any> = (props) => {
+export const RealisticFretboardCompat: React.FC<Record<string, unknown>> = (props) => {
   const instrument: InstrumentConfig = {
     family: 'Guitar',
     variant: 'Standard',

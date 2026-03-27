@@ -81,7 +81,7 @@ export const GraphitiKnowledgeGraph: React.FC<GraphitiKnowledgeGraphProps> = ({
   };
 
   // Generate mock graph data for demonstration
-  const generateMockGraphData = (userId: string, searchResult?: any): GraphData => {
+  const generateMockGraphData = (userId: string, _searchResult?: unknown): GraphData => {
     const nodes: GraphNode[] = [
       { id: userId, name: 'You', type: 'user', group: 0 },
       { id: 'C', name: 'C Major', type: 'chord', group: 1 },

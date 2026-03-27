@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { RoadmapNode, RoadmapView, ViewCallbacks } from './types';
 import { LOD_THRESHOLDS } from './types';
-import { depthToRadius, mobiusTransform2D, tileScale, layoutChildren2D } from './hyperbolicMath';
+import { depthToRadius, mobiusTransform2D, tileScale } from './hyperbolicMath';
 import { createTextTexture } from './textureUtils';
 import { parentMap } from './roadmapData';
 
@@ -67,7 +67,7 @@ export function createPoincareDiskView(
 ): RoadmapView {
   const KAPPA = 0.6;
   const BASE_NODE_SIZE = 0.04;
-  const MAX_VISIBLE_DEPTH = 3;
+  const _MAX_VISIBLE_DEPTH = 3;
 
   // Scene groups
   const bgGroup = new THREE.Group();
@@ -98,7 +98,7 @@ export function createPoincareDiskView(
   // Hover state
   let hoveredMesh: THREE.Mesh | null = null;
   let hoveredOriginalColor: string | null = null;
-  let hoveredOriginalScale: number = 1;
+  let _hoveredOriginalScale: number = 1;
 
   // Animation state
   let plungeAnim: PlungeAnimation | null = null;
@@ -642,7 +642,7 @@ export function createPoincareDiskView(
 
     hoveredMesh = hit;
     hoveredOriginalColor = hit.userData.originalColor as string;
-    hoveredOriginalScale = hit.scale.x;
+    _hoveredOriginalScale = hit.scale.x;
     (hit.material as THREE.MeshBasicMaterial).color.set(
       brightenColor(hoveredOriginalColor),
     );

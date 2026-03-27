@@ -1,12 +1,10 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, Typography, Stack, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, IconButton } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-import { GuitarModelStyle, getGuitarModel, getAllModels, GUITAR_CATEGORIES } from './GuitarModels';
+import { getGuitarModel, GUITAR_CATEGORIES } from './GuitarModels';
 import { loadCapoModel, createFallbackCapo } from '../utils/capoModelLoader';
 
 // Import WebGPU renderer - available in Three.js r163+
@@ -59,7 +57,7 @@ export const ThreeFretboard: React.FC<ThreeFretboardProps> = ({
   title = '3D Fretboard (Three.js + WebGPU)',
   positions = [],
   config = {},
-  onPositionClick,
+  onPositionClick: _onPositionClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<WebGPURenderer | THREE.WebGLRenderer | null>(null);
@@ -74,8 +72,8 @@ export const ThreeFretboard: React.FC<ThreeFretboardProps> = ({
   const [isLeftHanded, setIsLeftHanded] = useState(config.leftHanded || DEFAULT_CONFIG.leftHanded);
   const [isWebGPU, setIsWebGPU] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [needsUpdate, setNeedsUpdate] = useState(0);
+  const [_isTransitioning, _setIsTransitioning] = useState(false);
+  const [_needsUpdate, _setNeedsUpdate] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -734,7 +732,7 @@ function createWindingNormalMap(): THREE.CanvasTexture {
 function createWoundStringMaterial(
   normalMap: THREE.Texture,
   microNormalMap: THREE.Texture,
-  renderer?: any // THREE.WebGLRenderer or WebGPURenderer
+  renderer?: THREE.WebGLRenderer | WebGPURenderer
 ): THREE.Material {
   // Set maximum anisotropy for better quality when viewing at grazing angles
   // This reduces moiré and banding artifacts
@@ -744,7 +742,7 @@ function createWoundStringMaterial(
 
       // Try to get max anisotropy from renderer capabilities
       if ('capabilities' in renderer) {
-        const capabilities = (renderer as any).capabilities;
+        const capabilities = (renderer as THREE.WebGLRenderer).capabilities;
         if (capabilities && typeof capabilities.getMaxAnisotropy === 'function') {
           maxAniso = capabilities.getMaxAnisotropy();
         }
@@ -784,7 +782,7 @@ function createFretboard(
   stringCount: number,
   leftHanded: boolean,
   capoFret: number = 0,
-  isWebGPU: boolean = false
+  _isWebGPU: boolean = false
 ): THREE.Mesh[] {
   // Fretboard dimensions (in Three.js units, 1 unit ≈ 10mm)
   const scaleLength = (guitarStyle.scaleLength || 650) / 10; // Convert mm to units

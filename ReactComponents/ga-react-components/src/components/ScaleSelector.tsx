@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import NotesSelector from "./NotesSelector";

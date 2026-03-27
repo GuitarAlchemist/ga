@@ -100,7 +100,7 @@ export const BSPInterface: React.FC = () => {
       } else if (error?.includes('connect')) {
         setError(null); // Clear connection-related errors
       }
-    } catch (err) {
+    } catch {
       setConnectionStatus('disconnected');
       setLastConnectionCheck(new Date());
       setError('Failed to check BSP API connection');

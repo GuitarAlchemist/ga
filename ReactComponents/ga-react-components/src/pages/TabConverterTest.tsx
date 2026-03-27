@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Paper } from '@mui/material';
+import { Container, Typography, Paper } from '@mui/material';
 import TabConverter from '../components/TabConverter';
 
 const TabConverterTest: React.FC = () => {

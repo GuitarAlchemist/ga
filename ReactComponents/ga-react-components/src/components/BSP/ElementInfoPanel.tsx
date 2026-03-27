@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Stack, Chip, CircularProgress, Divider, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Typography, Stack, Chip, CircularProgress, Divider } from '@mui/material';
 import { BSPApiService, VoicingWithAnalysis, ChordInContext } from './BSPApiService';
 import { RealisticFretboard } from '../RealisticFretboard';
 import type { FretboardPosition } from '../RealisticFretboard';
@@ -12,7 +11,7 @@ export interface ElementInfo {
   strategy?: string;
   depth?: number;
   distance?: number;
-  object?: any;
+  object?: unknown;
 }
 
 interface ElementInfoPanelProps {
