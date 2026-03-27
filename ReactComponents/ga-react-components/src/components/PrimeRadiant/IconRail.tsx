@@ -139,10 +139,10 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
         key={item.id}
         className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
         onClick={() => onPanelToggle(item.id)}
-        title={item.label}
         aria-label={`Toggle ${item.label} panel`}
       >
         {item.icon}
+        <span className="icon-rail__tooltip">{item.label}</span>
         {status && (
           <span
             className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
