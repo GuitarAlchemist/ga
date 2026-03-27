@@ -77,6 +77,15 @@ public static class AiServiceExtensions
                 client.Timeout = TimeSpan.FromSeconds(60);
             });
 
+            // Configure the "MistralTts" named HttpClient for Voxtral TTS
+            var ttsBaseUrl = configuration["VoxtralTts:BaseUrl"] ?? "https://api.mistral.ai";
+            services.AddHttpClient("MistralTts", client =>
+            {
+                client.BaseAddress = new Uri(ttsBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+            services.AddSingleton<IVoxtralTtsService, VoxtralTtsService>();
+
             var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
 
             if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
@@ -129,6 +138,8 @@ public static class AiServiceExtensions
                 configuration.GetSection(ChatbotOptions.SectionName));
             services.Configure<GuitarAgentOptions>(
                 configuration.GetSection(GuitarAgentOptions.SectionName));
+            services.Configure<VoxtralTtsOptions>(
+                configuration.GetSection(VoxtralTtsOptions.SectionName));
 
             // Register Ollama embedding service (used by knowledge source)
             services.AddSingleton<OllamaEmbeddingService>();
