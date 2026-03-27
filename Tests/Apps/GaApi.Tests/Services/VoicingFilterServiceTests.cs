@@ -78,9 +78,7 @@ public class VoicingFilterServiceTests
     // ── Invalid chord parsing ────────────────────────────────────────────────
 
     [Test]
-    public void GetVoicingsForChordAsync_Throws_WhenChordSymbolIsGibberish()
-    {
+    public void GetVoicingsForChordAsync_Throws_WhenChordSymbolIsGibberish() =>
         Assert.ThrowsAsync<ArgumentException>(() =>
             _sut.GetVoicingsForChordAsync("NotAChord!!!"));
-    }
 }

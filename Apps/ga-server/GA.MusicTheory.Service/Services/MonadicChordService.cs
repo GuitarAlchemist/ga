@@ -241,32 +241,26 @@ public class MonadicChordService(
         );
     }
 
-    public async Task<Try<List<string>>> GetAvailableQualitiesAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableQualitiesAsync() =>
+        await ExecuteAsync(async () =>
         {
             var qualities = await mongoDb.GetDistinctQualitiesAsync();
             return qualities.OrderBy(q => q).ToList();
         }, "GetAvailableQualities");
-    }
 
-    public async Task<Try<List<string>>> GetAvailableExtensionsAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableExtensionsAsync() =>
+        await ExecuteAsync(async () =>
         {
             var extensions = await mongoDb.GetDistinctExtensionsAsync();
             return extensions.OrderBy(e => e).ToList();
         }, "GetAvailableExtensions");
-    }
 
-    public async Task<Try<List<string>>> GetAvailableStackingTypesAsync()
-    {
-        return await ExecuteAsync(async () =>
+    public async Task<Try<List<string>>> GetAvailableStackingTypesAsync() =>
+        await ExecuteAsync(async () =>
         {
             var stackingTypes = await mongoDb.GetDistinctStackingTypesAsync();
             return stackingTypes.OrderBy(s => s).ToList();
         }, "GetAvailableStackingTypes");
-    }
 
     // Validation helpers
     private Validation<(string, int), ValidationError> ValidateQualityParameter(
@@ -285,7 +279,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([..errors])
             : Validation.Success<(string, int), ValidationError>((quality, limit));
     }
 
@@ -305,7 +299,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([..errors])
             : Validation.Success<(string, int), ValidationError>((extension, limit));
     }
 
@@ -326,7 +320,7 @@ public class MonadicChordService(
         }
 
         return errors.Any()
-            ? Validation.Fail<(string, int), ValidationError>(errors.ToArray())
+            ? Validation.Fail<(string, int), ValidationError>([..errors])
             : Validation.Success<(string, int), ValidationError>((stackingType, limit));
     }
 }
