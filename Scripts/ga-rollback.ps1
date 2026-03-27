@@ -47,6 +47,7 @@ if ($healthy) {
     Write-Host "`n=== Rollback Complete ===" -ForegroundColor Green
     Write-Host "  Active: $target"
 } else {
+    Emit-AlgedonicSignal -Type "pain" -Severity "emergency" -Description "Both build slots unhealthy - manual intervention required" -NodeId "build-junction"
     Write-Host "`n=== BOTH SLOTS UNHEALTHY ===" -ForegroundColor Red
     Write-Host "  Recovery options:"
     Write-Host "    1. Build from Visual Studio (SAC-whitelisted)"

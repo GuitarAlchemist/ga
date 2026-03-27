@@ -81,6 +81,15 @@ if (-not $SkipHealthCheck) {
             }
         }
         Set-SlotState -State $state
+
+        # Update belief state
+        if ($state.slots.$inactive.healthy -eq $true) {
+            Update-SlotBelief -Slot $inactive -TruthValue "P" -Confidence 0.7 -EvidenceClaim "Health check passed: /api/health/ping returned 200"
+            Emit-AlgedonicSignal -Type "pleasure" -Severity "info" -Description "Build slot '$inactive' passed health check" -NodeId "build-slot-$inactive"
+        } elseif ($state.slots.$inactive.healthy -eq $false) {
+            Update-SlotBelief -Slot $inactive -TruthValue "D" -Confidence 0.3 -EvidenceClaim "Health check failed: server did not respond"
+            Emit-AlgedonicSignal -Type "pain" -Severity "warning" -Description "Build slot '$inactive' failed health check" -NodeId "build-slot-$inactive"
+        }
     }
 } else {
     Write-Host "`n[Health] Skipped" -ForegroundColor Yellow
