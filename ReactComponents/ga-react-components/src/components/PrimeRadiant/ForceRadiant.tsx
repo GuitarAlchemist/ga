@@ -29,6 +29,7 @@ import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
 import { IconRail, type PanelId } from './IconRail';
+import { CourseViewer } from './CourseViewer';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -490,6 +491,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
+  const [showCourseViewer, setShowCourseViewer] = useState(false);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
@@ -1438,6 +1440,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
+      {/* University button — opens Streeling course viewer */}
+      <button
+        className="prime-radiant__university-btn"
+        onClick={() => setShowCourseViewer(true)}
+        title="Streeling University — Course Browser"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5" />
+        </svg>
+        University
+      </button>
+
       <GalacticClock />
       <ChatWidget selectedNode={selectedNode} />
       <TutorialOverlay />
@@ -1501,6 +1516,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Icon rail — right edge (desktop/tablet) or bottom tab bar (phone) */}
       <IconRail activePanel={activePanel} onPanelToggle={handlePanelToggle} />
 
+      {/* Tap-outside-to-close backdrop (phone only) */}
+      {activePanel && (
+        <div
+          className="prime-radiant__side-panel-backdrop"
+          onClick={() => setActivePanel(null)}
+        />
+      )}
+
       {/* Side panel area — one panel at a time */}
       <div className={`prime-radiant__side-panel ${activePanel ? 'prime-radiant__side-panel--open' : ''}`}>
         {/* Close button for mobile overlay */}
@@ -1509,7 +1532,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           onClick={() => setActivePanel(null)}
           aria-label="Close panel"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -1536,6 +1559,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         )}
         {activePanel === 'llm' && <LLMStatus />}
       </div>
+
+      {/* Streeling University course viewer modal */}
+      <CourseViewer open={showCourseViewer} onClose={() => setShowCourseViewer(false)} />
     </div>
   );
 };
