@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, Chip, Stack } from '@mui/material';
 import BraceletNotation from '../Atonal/BraceletNotation';
-import IntervalClassVector from '../IntervalClassVector';
 import VexChordDiagram from '../Chords/VexChordDiagram';
 import VexTabViewer from '../VexTabViewer';
 import { ChordData } from '../Chords/ChordData';

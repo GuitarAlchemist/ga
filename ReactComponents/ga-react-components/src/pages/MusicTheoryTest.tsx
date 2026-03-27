@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Alert } from '@mui/material';
+import { Typography, Box, Paper, Alert } from '@mui/material';
 import { MusicTheorySelector, MusicTheoryContext } from '../components/MusicTheorySelector';
 import { MinimalThreeInstrument } from '../components/MinimalThree';
 import { InstrumentConfig, FretboardPosition } from '../types/InstrumentConfig';

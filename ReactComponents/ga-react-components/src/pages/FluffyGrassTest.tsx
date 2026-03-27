@@ -5,14 +5,17 @@
  */
 
 import React from 'react';
-import { Container, Box } from '@mui/material';
+import { Container } from '@mui/material';
 import { FluffyGrassDemo } from '../components/FluffyGrass';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const FluffyGrassTest: React.FC = () => {
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: '100vh', overflow: 'hidden' }}>
-      <FluffyGrassDemo />
-    </Container>
+    <DemoErrorBoundary demoName="Fluffy Grass">
+      <Container maxWidth={false} disableGutters sx={{ height: '100vh', overflow: 'hidden' }}>
+        <FluffyGrassDemo />
+      </Container>
+    </DemoErrorBoundary>
   );
 };
 

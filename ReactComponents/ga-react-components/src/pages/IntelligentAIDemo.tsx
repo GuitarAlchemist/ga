@@ -74,7 +74,7 @@ export const IntelligentAIDemo: React.FC = () => {
 
   // BSP Level State
   const [bspLevel, setBspLevel] = useState<IntelligentBSPLevel | null>(null);
-  const [pitchClassSets, setPitchClassSets] = useState<string[]>([
+  const [pitchClassSets, _setPitchClassSets] = useState<string[]>([
     '047', '037', '048', '0258', '0268', '0369', '0148', '0158',
   ]);
 
@@ -123,7 +123,7 @@ export const IntelligentAIDemo: React.FC = () => {
       setPlayerStats(stats);
       setStyleProfile(profile);
       setPatterns(patternsData);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading player data:', err);
     } finally {
       setLoading(false);
@@ -144,8 +144,8 @@ export const IntelligentAIDemo: React.FC = () => {
       
       setBspLevel(level);
       setSuccess('✅ Intelligent BSP level generated successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to generate level');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || 'Failed to generate level');
     } finally {
       setLoading(false);
     }
@@ -184,8 +184,8 @@ export const IntelligentAIDemo: React.FC = () => {
       ]);
       
       setSuccess(`✅ Performance recorded: ${success ? 'Success' : 'Failure'} in ${timeMs.toFixed(0)}ms`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to record performance');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || 'Failed to record performance');
     } finally {
       setLoading(false);
     }
@@ -204,8 +204,8 @@ export const IntelligentAIDemo: React.FC = () => {
       );
       
       setSuccess(`✅ Adaptive challenge generated: ${challenge.shapeIds.length} shapes, quality=${challenge.quality.toFixed(2)}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to generate challenge');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || 'Failed to generate challenge');
     } finally {
       setLoading(false);
     }
@@ -230,8 +230,8 @@ export const IntelligentAIDemo: React.FC = () => {
       setPatterns(patternsData);
       
       setSuccess('✅ Style learned successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to learn style');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || 'Failed to learn style');
     } finally {
       setLoading(false);
     }
@@ -247,8 +247,8 @@ export const IntelligentAIDemo: React.FC = () => {
       setPerformanceHistory([]);
       
       setSuccess('✅ Session reset successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset session');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || 'Failed to reset session');
     } finally {
       setLoading(false);
     }

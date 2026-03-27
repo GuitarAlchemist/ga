@@ -415,7 +415,7 @@ class BSPApiServiceClass {
 
       const apiResponse: ApiResponse<VoicingWithAnalysis[]> = await response.json();
       return apiResponse.data || [];
-    } catch (error) {
+    } catch {
       // Silently fail - API is optional, return empty array for demo mode
       if (import.meta.env.DEV) {
         console.debug('Voicings API not available (using demo mode)');
@@ -460,7 +460,7 @@ class BSPApiServiceClass {
 
       const apiResponse: ApiResponse<ChordInContext[]> = await response.json();
       return apiResponse.data || [];
-    } catch (error) {
+    } catch {
       // Silently fail - API is optional, return empty array for demo mode
       if (import.meta.env.DEV) {
         console.debug('Chords for key API not available (using demo mode)');
@@ -499,7 +499,7 @@ class BSPApiServiceClass {
 
       const apiResponse: ApiResponse<ChordInContext[]> = await response.json();
       return apiResponse.data || [];
-    } catch (error) {
+    } catch {
       // Silently fail - API is optional, return empty array for demo mode
       if (import.meta.env.DEV) {
         console.debug('Chords for scale API not available (using demo mode)');
@@ -538,7 +538,7 @@ class BSPApiServiceClass {
 
       const apiResponse: ApiResponse<ChordInContext[]> = await response.json();
       return apiResponse.data || [];
-    } catch (error) {
+    } catch {
       // Silently fail - API is optional, return empty array for demo mode
       if (import.meta.env.DEV) {
         console.debug('Chords for mode API not available (using demo mode)');

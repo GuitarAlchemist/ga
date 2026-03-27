@@ -5,7 +5,7 @@ import './GraphitiDemo.css';
 interface Episode {
   user_id: string;
   episode_type: string;
-  content: Record<string, any>;
+  content: Record<string, unknown>;
   timestamp?: string;
 }
 

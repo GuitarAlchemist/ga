@@ -59,12 +59,12 @@ interface PlungeAnimation3D {
 export function createPoincareBallView(
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  renderer: THREE.WebGLRenderer | any,
+  renderer: THREE.WebGLRenderer,
   root: RoadmapNode,
   callbacks: ViewCallbacks,
 ): RoadmapView & { controls: OrbitControls } {
   const BASE_NODE_SIZE = 0.04;
-  const MAX_VISIBLE_DEPTH = 3;
+  const _MAX_VISIBLE_DEPTH = 3;
 
   // OrbitControls
   const controls = new OrbitControls(camera, renderer.domElement);

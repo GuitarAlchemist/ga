@@ -2,8 +2,8 @@
 // React side panel showing selected governance node details
 
 import React, { useState, useCallback } from 'react';
-import type { GovernanceNode, GovernanceEdge, GovernanceNodeType, FileTreeNode } from './types';
-import { NODE_COLORS, HEALTH_COLORS } from './types';
+import type { GovernanceNode, GovernanceNodeType, FileTreeNode } from './types';
+import { HEALTH_COLORS } from './types';
 import { getHealthStatus } from './DataLoader';
 import type { GraphIndex } from './DataLoader';
 

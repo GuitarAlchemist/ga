@@ -27,7 +27,7 @@ const InstrumentSelector: React.FC = () => {
                 const response = await axios.get<InstrumentInfo[]>('/api/instruments');
                 setInstruments(response.data);
                 setLoading(false);
-            } catch (err) {
+            } catch {
                 setError('Failed to load instruments');
                 setLoading(false);
             }

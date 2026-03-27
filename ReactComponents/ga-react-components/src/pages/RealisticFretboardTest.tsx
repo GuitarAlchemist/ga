@@ -1,6 +1,7 @@
 import React from 'react';
-import { Container, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import RealisticFretboard, { FretboardPosition } from '../components/RealisticFretboard';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 // C Major chord positions
 const cMajorChord: FretboardPosition[] = [
@@ -14,6 +15,7 @@ const cMajorChord: FretboardPosition[] = [
 
 export const RealisticFretboardTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="Realistic Fretboard">
     <Box sx={{ width: '100vw', minHeight: '100vh', p: 2 }}>
       <Box sx={{ mb: 3, maxWidth: '1200px', mx: 'auto' }}>
         <Typography variant="h3" gutterBottom>
@@ -63,6 +65,7 @@ export const RealisticFretboardTest: React.FC = () => {
         </ul>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

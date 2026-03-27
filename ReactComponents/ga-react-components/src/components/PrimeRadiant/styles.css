@@ -1566,3 +1566,283 @@
 .prime-radiant__llm-item {
   flex-wrap: wrap;
 }
+
+/* ─── Algedonic Panel ─── */
+.prime-radiant__algedonic {
+  position: absolute;
+  top: 340px;
+  left: 8px;
+  z-index: 20;
+  width: 260px;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+  background: rgba(13, 17, 23, 0.88);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__algedonic::-webkit-scrollbar { width: 4px; }
+.prime-radiant__algedonic::-webkit-scrollbar-track { background: transparent; }
+.prime-radiant__algedonic::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.prime-radiant__algedonic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+  user-select: none;
+}
+.prime-radiant__algedonic-header:hover { background: rgba(255, 255, 255, 0.03); }
+.prime-radiant__algedonic-title {
+  font-size: 10px;
+  color: #FF6B6B;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.prime-radiant__algedonic-counts {
+  margin-left: 6px;
+  font-weight: 400;
+  font-size: 9px;
+  text-transform: none;
+}
+.prime-radiant__algedonic-active {
+  margin-left: 4px;
+  font-size: 8px;
+  color: #FF4444;
+  background: rgba(255, 68, 68, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  animation: algedonic-blink 1.5s ease-in-out infinite;
+}
+@keyframes algedonic-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.prime-radiant__algedonic-toggle {
+  font-size: 8px;
+  color: #484f58;
+}
+.prime-radiant__algedonic-filters {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #161b22;
+}
+.prime-radiant__algedonic-filter {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.prime-radiant__algedonic-filter:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.prime-radiant__algedonic-filter--active {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.05);
+}
+.prime-radiant__algedonic-timeline {
+  padding: 4px 0;
+}
+.prime-radiant__algedonic-signal {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background 0.15s;
+}
+.prime-radiant__algedonic-signal:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.prime-radiant__algedonic-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  margin-top: 3px;
+  transition: box-shadow 0.3s;
+}
+.prime-radiant__algedonic-dot--pulse {
+  animation: algedonic-pulse 2s ease-in-out infinite;
+}
+@keyframes algedonic-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+.prime-radiant__algedonic-info {
+  flex: 1;
+  min-width: 0;
+}
+.prime-radiant__algedonic-signal-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+}
+.prime-radiant__algedonic-source {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.prime-radiant__algedonic-desc {
+  font-size: 8px;
+  color: #6b7280;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.prime-radiant__algedonic-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 8px;
+}
+.prime-radiant__algedonic-time {
+  color: #484f58;
+}
+.prime-radiant__algedonic-status {
+  font-weight: 500;
+}
+.prime-radiant__algedonic-severity {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+/* ─── Belief Heatmap ─── */
+.prime-radiant__belief-heatmap {
+  position: absolute;
+  top: 340px;
+  right: 8px;
+  z-index: 20;
+  width: 240px;
+  background: rgba(13, 17, 23, 0.88);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__belief-heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+  user-select: none;
+}
+.prime-radiant__belief-heatmap-header:hover { background: rgba(255, 255, 255, 0.03); }
+.prime-radiant__belief-heatmap-title {
+  font-size: 10px;
+  color: #c4b5fd;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.prime-radiant__belief-heatmap-badge {
+  margin-left: 6px;
+  font-size: 8px;
+  font-weight: 400;
+  color: #c4b5fd;
+  background: rgba(196, 181, 253, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: none;
+}
+.prime-radiant__belief-heatmap-toggle {
+  font-size: 8px;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-body {
+  padding: 6px 8px;
+}
+.prime-radiant__belief-heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.prime-radiant__belief-heatmap-row--header {
+  margin-bottom: 4px;
+}
+.prime-radiant__belief-heatmap-label {
+  width: 28px;
+  min-width: 28px;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 4px;
+}
+.prime-radiant__belief-heatmap-time {
+  flex: 1;
+  text-align: center;
+  font-size: 7px;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-cell {
+  flex: 1;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  cursor: default;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.prime-radiant__belief-heatmap-cell:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 6px currentColor;
+  z-index: 1;
+}
+.prime-radiant__belief-heatmap-tooltip {
+  margin-top: 6px;
+  padding: 4px 6px;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  text-align: center;
+}
+.prime-radiant__belief-heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #161b22;
+  font-size: 8px;
+  font-weight: 600;
+}
+.prime-radiant__belief-heatmap-legend-label {
+  font-size: 7px;
+  font-weight: 400;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-gradient {
+  width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #33CC66, #DDBB33, #FF4444);
+}
+
+/* ─── Responsive: hide new panels on small screens ─── */
+@media (max-width: 768px) {
+  .prime-radiant__algedonic { display: none; }
+  .prime-radiant__belief-heatmap { display: none; }
+}

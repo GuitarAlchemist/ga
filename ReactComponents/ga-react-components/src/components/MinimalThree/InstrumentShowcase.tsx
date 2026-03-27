@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Instrument Showcase Component
  * 
@@ -24,12 +23,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import type { InstrumentConfig, FretboardPosition } from '../../types/InstrumentConfig';
-import { loadInstruments, getInstrument, getAllInstrumentFamilies } from '../../utils/instrumentLoader';
+import { loadInstruments, getInstrument } from '../../utils/instrumentLoader';
 import { MinimalThreeInstrument } from './MinimalThreeInstrument';
 import { MusicTheorySelector, MusicTheoryContext } from '../MusicTheorySelector';
 
 // Sample chord positions for demonstration
-const SAMPLE_POSITIONS: FretboardPosition[] = [
+const _SAMPLE_POSITIONS: FretboardPosition[] = [
   { string: 0, fret: 0, label: 'E', color: '#4DABF7' },
   { string: 1, fret: 2, label: 'B', color: '#4DABF7' },
   { string: 2, fret: 2, label: 'G', color: '#4DABF7' },
@@ -116,7 +115,7 @@ export const InstrumentShowcase: React.FC = () => {
   const families = Array.from(instruments.keys()).sort();
   
   // Get available variants for selected family
-  const variants = instruments.get(selectedFamily)?.map(i => i.variant) || [];
+  const _variants = instruments.get(selectedFamily)?.map(i => i.variant) || [];
 
   // Generate appropriate positions for the current instrument
   const getPositionsForInstrument = (instrument: InstrumentConfig): FretboardPosition[] => {
@@ -273,7 +272,7 @@ export const InstrumentShowcase: React.FC = () => {
                 <Select
                   value={renderMode}
                   label="Render Mode"
-                  onChange={(e) => setRenderMode(e.target.value as any)}
+                  onChange={(e) => setRenderMode(e.target.value as '3d-webgl' | '3d-webgpu')}
                 >
                   <MenuItem value="3d-webgpu">WebGPU (Preferred)</MenuItem>
                   <MenuItem value="3d-webgl">WebGL (Fallback)</MenuItem>

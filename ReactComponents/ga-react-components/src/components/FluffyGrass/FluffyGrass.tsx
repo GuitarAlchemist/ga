@@ -15,7 +15,7 @@
  *   - Lighting and shadows
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Box } from '@mui/material';
 
@@ -328,7 +328,7 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     let lastTime = performance.now();
     const animate = () => {
       const currentTime = performance.now();
-      const delta = (currentTime - lastTime) / 1000;
+      const _delta = (currentTime - lastTime) / 1000;
       lastTime = currentTime;
 
       // Update shader time

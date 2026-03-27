@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
   Select,
   MenuItem,
@@ -24,7 +23,7 @@ import Editor from '@monaco-editor/react';
 
 interface ParseResult {
   success: boolean;
-  ast?: any;
+  ast?: Record<string, unknown>;
   error?: string;
 }
 
@@ -32,6 +31,7 @@ const FretboardNavigationDSLDemo: React.FC = () => {
   const [input, setInput] = useState('');
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [selectedExample, setSelectedExample] = useState('');
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
 
   // Example fretboard navigation commands
   const examples = {
@@ -91,15 +91,37 @@ const FretboardNavigationDSLDemo: React.FC = () => {
       const data = await response.json();
       setParseResult(data);
     } catch (error) {
-      setParseResult({
-        success: false,
-        error: `Failed to parse: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('ERR_CONNECTION')) {
+        setBackendUnavailable(true);
+        // Generate a static preview AST from the input
+        const trimmed = input.trim();
+        const colonMatch = trimmed.match(/^(\d+):(\d+)$/);
+        const cagedMatch = trimmed.match(/CAGED shape (\w) at fret (\d+)/i);
+        let previewAst: Record<string, unknown> = { Type: 'Unknown', Raw: trimmed };
+        if (colonMatch) {
+          previewAst = { Type: 'Position', String: Number(colonMatch[1]), Fret: Number(colonMatch[2]) };
+        } else if (cagedMatch) {
+          previewAst = { Type: 'CAGEDShape', Shape: cagedMatch[1], Fret: Number(cagedMatch[2]) };
+        }
+        previewAst._preview = 'Static preview — connect backend for live parsing';
+        setParseResult({ success: true, ast: previewAst });
+      } else {
+        setParseResult({
+          success: false,
+          error: `Failed to parse: ${message}`,
+        });
+      }
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
+      {backendUnavailable && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Backend unavailable — showing preview mode with static command parsing. Start the Guitar Alchemist backend for live F# parsing.
+        </Alert>
+      )}
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <CodeIcon color="primary" fontSize="large" />

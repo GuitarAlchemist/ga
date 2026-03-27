@@ -1,17 +1,7 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
-import { Application, Graphics, Text, Container, Sprite, Texture, Filter, WebGPURenderer } from 'pixi.js';
+import { Application, Graphics, Text, Container, WebGPURenderer } from 'pixi.js';
 import { Box, Typography, Stack, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch } from '@mui/material';
-import { GuitarModelStyle, getGuitarModel, getAllModels, GUITAR_CATEGORIES } from './GuitarModels';
-import { hexToRgb } from './FretboardShaders';
-import {
-  fretPositionMM,
-  stringX,
-  getStringGauge,
-  isStringWound,
-  SCALES,
-  Scale
-} from './FretboardMath';
+import { getGuitarModel, GUITAR_CATEGORIES } from './GuitarModels';
 
 export interface FretboardPosition {
   string: number;
@@ -173,7 +163,7 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
       const bottomMargin = 30;
 
       // Helper function to draw guitar body portion
-      const drawGuitarBody = (
+      const _drawGuitarBody = (
         bodyX: number,
         bodyY: number,
         bodyWidth: number,
@@ -185,11 +175,11 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
         if (category === 'classical') {
           // Classical guitar body with rosette
           const bodyWoodColor = guitarStyle.woodColor;
-          const lighterWood = Math.min(0xffffff, bodyWoodColor + 0x1a1410);
+          const _lighterWood = Math.min(0xffffff, bodyWoodColor + 0x1a1410);
 
           // Main body curve (partial circle)
           const bodyGraphic = new Graphics();
-          const bodyRadius = bodyHeight * 0.6;
+          const _bodyRadius = bodyHeight * 0.6;
 
           // Draw curved body edge
           bodyGraphic.moveTo(bodyX, bodyY - bodyHeight / 2);
@@ -399,15 +389,15 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
 
       // Helper function to draw headstock and tuning pegs
       // Returns array of peg positions for string routing
-      const drawHeadstock = (
+      const _drawHeadstock = (
         headstockX: number,
         headstockY: number,
         headstockWidth: number,
         headstockHeight: number,
         style: string,
         woodColor: number,
-        stringCount: number,
-        stringPositions: number[] // Y positions of strings at nut
+        _stringCount: number,
+        _stringPositions: number[] // Y positions of strings at nut
       ): { x: number; y: number }[] => {
         const headstockContainer = new Container();
         const pegColor = 0x2a2a2a; // Dark metal
@@ -622,7 +612,7 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
       const scaledHeight = availableHeight * 0.85; // Use 85% of available height for neck
 
       // Base string spacing at the nut
-      const baseStringSpacing = scaledHeight / (stringCount + 1);
+      const _baseStringSpacing = scaledHeight / (stringCount + 1);
 
       const calculateFretPosition = (fretNumber: number): number => {
         const playableWidth = width - labelWidth - rightMargin;
@@ -1166,8 +1156,8 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
 
         // Determine string material and properties based on guitar type
         const isClassical = guitarStyle.category === 'classical';
-        const isAcoustic = guitarStyle.category === 'acoustic';
-        const isElectric = guitarStyle.category === 'electric';
+        const _isAcoustic = guitarStyle.category === 'acoustic';
+        const _isElectric = guitarStyle.category === 'electric';
 
         // String winding and material properties
         // Classical: strings 1-3 are nylon (unwound), 4-6 are nylon core with metal wrap
@@ -1221,7 +1211,7 @@ export const RealisticFretboard: React.FC<RealisticFretboardProps> = ({
           }
           // After bridge: straight line into body
           else if (currentX > rightX) {
-            const bodyT = (currentX - rightX) / (stringEndX - rightX);
+            const _bodyT = (currentX - rightX) / (stringEndX - rightX);
             // String continues at bridge height into body
             const bridgeStringY = centerY - bridgeVisualHeight / 2 + (i / (stringCount - 1)) * bridgeVisualHeight;
             by = bridgeStringY; // Maintain bridge height into body

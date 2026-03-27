@@ -4,9 +4,8 @@
  * Demonstrates realistic ocean water with interactive controls
  */
 
-import React, { useState } from 'react';
-import { Box, Typography, Paper, Stack, Slider } from '@mui/material';
-import * as THREE from 'three';
+import React from 'react';
+import { Box, Typography, Paper, Stack } from '@mui/material';
 import { Ocean } from './Ocean';
 
 export const OceanDemo: React.FC = () => {

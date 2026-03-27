@@ -56,7 +56,7 @@ export class BSPAssetManager {
       const url = URL.createObjectURL(blob);
 
       // Load GLB
-      const gltf = await new Promise<any>((resolve, reject) => {
+      const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) => {
         this.loader.load(
           url,
           (gltf) => resolve(gltf),

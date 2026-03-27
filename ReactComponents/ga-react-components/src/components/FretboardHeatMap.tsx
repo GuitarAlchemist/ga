@@ -7,7 +7,6 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 import { getGrothendieckService, HeatMapEntry } from '../services/GrothendieckService';
 
 export interface FretboardHeatMapProps {
@@ -233,12 +232,13 @@ export const FretboardHeatMap: React.FC<FretboardHeatMapProps> = ({
           return `rgb(${r}, ${g}, ${b})`;
         }
 
-      case 'viridis':
+      case 'viridis': {
         // Viridis color scheme approximation
         const r = Math.floor(68 + v * (253 - 68));
         const g = Math.floor(1 + v * (231 - 1));
         const b = Math.floor(84 + v * (37 - 84));
         return `rgb(${r}, ${g}, ${b})`;
+      }
 
       default:
         return `rgb(${Math.floor(v * 255)}, 0, 0)`;

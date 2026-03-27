@@ -45,7 +45,7 @@ export function stringX(
  * Get string gauge in mm for standard tuning
  * E-B-G-D-A-E (inches converted to mm)
  */
-export function getStringGauge(stringNumber: number, isWound: boolean = false): number {
+export function getStringGauge(stringNumber: number, _isWound: boolean = false): number {
   const gaugesInches = [0.046, 0.036, 0.026, 0.017, 0.013, 0.010];
   const mmPerInch = 25.4;
   
@@ -69,7 +69,7 @@ export function isStringWound(stringNumber: number): boolean {
 export function calculateFretboardDimensions(
   scale: Scale,
   dpi: number = 4,
-  fretCount: number = 22
+  _fretCount: number = 22
 ): { width: number; height: number; visibleLength: number } {
   // Visible fretboard length (chevalet hors cadre)
   const visibleLength = scale.scaleLengthMM * 0.71;

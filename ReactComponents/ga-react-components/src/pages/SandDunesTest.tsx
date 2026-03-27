@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { SandDunes } from '../components/SandDunes';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 /**
  * Sand Dunes Test Page
@@ -16,6 +17,7 @@ import { SandDunes } from '../components/SandDunes';
  */
 const SandDunesTest: React.FC = () => {
   return (
+    <DemoErrorBoundary demoName="Sand Dunes">
     <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#1a1a1a' }}>
       {/* Header */}
       <Paper
@@ -224,6 +226,7 @@ const SandDunesTest: React.FC = () => {
         </Box>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

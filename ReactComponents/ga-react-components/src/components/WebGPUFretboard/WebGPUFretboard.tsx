@@ -1,10 +1,9 @@
-// @ts-nocheck
 /**
  * WebGPU Fretboard Component
  * Following Pixi.js v8 WebGPU best practices
  */
 import React, { useEffect, useRef } from 'react';
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics, Text, WebGPURenderer } from 'pixi.js';
 import { Box, Typography } from '@mui/material';
 import { WebGPUFretboardProps, DEFAULT_CONFIG } from './types';
 import { createRenderer } from './renderer';
@@ -41,7 +40,7 @@ export const WebGPUFretboard: React.FC<WebGPUFretboardProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    let renderer: any;
+    let renderer: WebGPURenderer;
     let stage: Container;
 
     const init = async () => {

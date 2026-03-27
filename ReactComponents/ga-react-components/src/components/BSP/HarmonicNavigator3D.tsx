@@ -124,11 +124,11 @@ function pitchClassToNumber(pc: string): number {
 // ==================
 export const HarmonicNavigator3D: React.FC<Props> = ({
   regions: regionsProp,
-  bsp,
-  tunings,
+  bsp: _bsp,
+  tunings: _tunings,
   chordPaths,
   spatialResult,
-  dataUrls,
+  dataUrls: _dataUrls,
   initialRotor,
   onSelectRegion,
   className,

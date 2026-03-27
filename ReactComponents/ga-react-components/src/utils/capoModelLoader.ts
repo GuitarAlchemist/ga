@@ -42,7 +42,7 @@ export const loadCapoModel = async (config: CapoModelConfig): Promise<THREE.Grou
         // Center and scale the model
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        const _size = box.getSize(new THREE.Vector3());
 
         // Center the model
         model.position.sub(center);

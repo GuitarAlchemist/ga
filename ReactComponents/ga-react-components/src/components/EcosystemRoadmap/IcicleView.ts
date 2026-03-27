@@ -5,7 +5,6 @@ import * as d3 from 'd3';
 import type { RoadmapNode, RoadmapView, ViewCallbacks } from './types';
 import { LOD_THRESHOLDS } from './types';
 import { createTextTexture } from './textureUtils';
-import { flattenTree } from './roadmapData';
 
 // ---------------------------------------------------------------------------
 // Types for d3 partition layout nodes

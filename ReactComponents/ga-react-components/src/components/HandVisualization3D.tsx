@@ -1,4 +1,4 @@
-﻿import React, { useRef } from 'react';
+﻿import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Line } from '@react-three/drei';
 import * as THREE from 'three';
@@ -150,7 +150,7 @@ const ArcTrajectory: React.FC<{ points: Vector3[]; color: string }> = ({ points,
 };
 
 // Single finger component
-const Finger: React.FC<{ name: string; data: FingertipVisualization; color: string }> = ({ name, data, color }) => {
+const Finger: React.FC<{ name: string; data: FingertipVisualization; color: string }> = ({ data, color }) => {
   const joints = data.jointPositions;
 
   return (

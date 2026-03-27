@@ -5,7 +5,7 @@
  */
 
 import * as THREE from 'three';
-import { Room, RoomType } from './RoomGenerator';
+import { Room } from './RoomGenerator';
 
 // ==================
 // Room Rendering

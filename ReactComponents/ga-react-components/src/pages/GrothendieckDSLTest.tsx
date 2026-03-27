@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Paper } from '@mui/material';
+import { Container, Typography, Paper } from '@mui/material';
 import GrothendieckDSLDemo from '../components/DSL/GrothendieckDSLDemo';
 
 const GrothendieckDSLTest: React.FC = () => {

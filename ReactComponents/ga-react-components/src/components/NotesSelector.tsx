@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { TextField, FormControlLabel, Checkbox, Box, Button } from '@mui/material';
 

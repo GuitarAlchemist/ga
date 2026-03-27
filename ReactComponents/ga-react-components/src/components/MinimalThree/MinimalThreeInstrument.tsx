@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Minimal Three.js Instrument Component
  * 
@@ -14,7 +13,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { InstrumentConfig, FretboardPosition } from '../../types/InstrumentConfig';
 import { InstrumentGeometryFactory } from './InstrumentGeometryFactory';
 import { InstrumentMaterialFactory } from './InstrumentMaterialFactory';
-import { loadCapoModel, createFallbackCapo } from '../../utils/capoModelLoader';
+import { loadCapoModel } from '../../utils/capoModelLoader';
 
 export interface MinimalThreeInstrumentProps {
   // Core configuration
@@ -113,7 +112,7 @@ export const MinimalThreeInstrument: React.FC<MinimalThreeInstrumentProps> = ({
           if (object.geometry && typeof object.geometry.dispose === 'function') {
             try {
               object.geometry.dispose();
-            } catch (e) {
+            } catch {
               // Ignore disposal errors
             }
           }
@@ -129,7 +128,7 @@ export const MinimalThreeInstrument: React.FC<MinimalThreeInstrumentProps> = ({
               } else if (typeof object.material.dispose === 'function') {
                 object.material.dispose();
               }
-            } catch (e) {
+            } catch {
               // Ignore disposal errors
             }
           }
@@ -537,7 +536,7 @@ export const MinimalThreeInstrument: React.FC<MinimalThreeInstrumentProps> = ({
   const createCapo = (scene: THREE.Scene, instrument: InstrumentConfig, fretNumber: number) => {
     if (fretNumber <= 0) return;
 
-    const { scaleLength, nutWidth } = instrument;
+    const { scaleLength } = instrument;
     const fretPositions = InstrumentGeometryFactory.calculateFretPositions(scaleLength, instrument.fretCount);
     const position = fretPositions[fretNumber] * InstrumentGeometryFactory.MM_TO_UNITS;
 

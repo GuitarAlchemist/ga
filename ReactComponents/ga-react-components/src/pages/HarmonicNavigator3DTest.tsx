@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Paper, 
-  Box, 
-  Button, 
-  TextField,
+import {
+  Container,
+  Typography,
+  Paper,
+  Box,
+  Button,
   Grid,
   Chip,
   Alert,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import * as THREE from 'three';
 import { HarmonicNavigator3D, HarmonicRegion, PluckerLine } from '../components/BSP';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 /**
  * HarmonicNavigator3DTest
@@ -162,6 +162,7 @@ export const HarmonicNavigator3DTest: React.FC = () => {
   const selectedRegionData = regions.find(r => r.id === selectedRegion);
 
   return (
+    <DemoErrorBoundary demoName="Harmonic Navigator 3D">
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h3" gutterBottom>
         🎸 Harmonic Navigator 3D Test
@@ -364,6 +365,7 @@ export const HarmonicNavigator3DTest: React.FC = () => {
         </Grid>
       </Paper>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

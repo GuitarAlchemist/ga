@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
   Select,
   MenuItem,
@@ -24,7 +23,7 @@ import Editor from '@monaco-editor/react';
 
 interface ParseResult {
   success: boolean;
-  ast?: any;
+  ast?: Record<string, unknown>;
   error?: string;
 }
 
@@ -32,6 +31,7 @@ const GrothendieckDSLDemo: React.FC = () => {
   const [input, setInput] = useState('');
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [selectedExample, setSelectedExample] = useState('');
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
 
   // Example Grothendieck operations - organized by category
   // Note: Some operations use simplified syntax that works with current parser
@@ -124,14 +124,30 @@ const GrothendieckDSLDemo: React.FC = () => {
         });
       }
     } catch (error) {
-      setParseResult({
-        success: false,
-        error: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
+      // Detect backend unavailability and show preview mode
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('ERR_CONNECTION')) {
+        setBackendUnavailable(true);
+        setParseResult({
+          success: true,
+          ast: {
+            type: 'BinaryOperation',
+            operator: 'TensorProduct',
+            left: { type: 'MusicalObject', name: input.split(/\s+/)[0] || 'C' },
+            right: { type: 'MusicalObject', name: input.split(/\s+/).pop() || 'G' },
+            _preview: 'Static preview — connect backend for live parsing',
+          },
+        });
+      } else {
+        setParseResult({
+          success: false,
+          error: `Error: ${message}`,
+        });
+      }
     }
   };
 
-  const renderAST = (ast: any, depth = 0): React.ReactNode => {
+  const renderAST = (ast: unknown, depth = 0): React.ReactNode => {
     if (!ast) return null;
 
     const indent = depth * 20;
@@ -157,10 +173,10 @@ const GrothendieckDSLDemo: React.FC = () => {
       );
     }
 
-    if (typeof ast === 'object') {
+    if (typeof ast === 'object' && ast !== null) {
       return (
         <Box sx={{ ml: `${indent}px`, my: 1 }}>
-          {Object.entries(ast).map(([key, value]) => (
+          {Object.entries(ast as Record<string, unknown>).map(([key, value]) => (
             <Box key={key} sx={{ my: 0.5 }}>
               <Typography variant="body2" component="span" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                 {key}:
@@ -177,6 +193,11 @@ const GrothendieckDSLDemo: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
+      {backendUnavailable && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Backend unavailable — showing preview mode with static AST examples. Start the Guitar Alchemist backend for live F# parsing.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         {/* Left Panel - Input & Examples */}
         <Grid item xs={12} md={6}>

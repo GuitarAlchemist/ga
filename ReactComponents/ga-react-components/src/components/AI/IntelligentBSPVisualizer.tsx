@@ -30,7 +30,7 @@ export interface IntelligentBSPLevel {
   challengePaths: BSPChallengePath[];
   learningPath: string[];
   difficulty: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface BSPFloor {
@@ -190,8 +190,8 @@ const SafeZone: React.FC<{ safeZone: BSPSafeZone; position: THREE.Vector3 }> = (
   );
 };
 
-const ChallengePath: React.FC<{ path: BSPChallengePath; positions: THREE.Vector3[] }> = ({ path, positions }) => {
-  const lineRef = useRef<any>(null);
+const ChallengePath: React.FC<{ path: BSPChallengePath; positions: THREE.Vector3[] }> = ({ positions }) => {
+  const lineRef = useRef<THREE.Line>(null);
   
   useFrame((state) => {
     if (lineRef.current) {
@@ -316,13 +316,6 @@ export const IntelligentBSPVisualizer: React.FC<IntelligentBSPVisualizerProps> =
     level,
     width = 800,
     height = 600,
-    showFloors = true,
-    showLandmarks = true,
-    showPortals = true,
-    showSafeZones = true,
-    showChallengePaths = true,
-    showLearningPath = true,
-    animateLearningPath = false,
   } = props;
   
   return (

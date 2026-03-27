@@ -2,9 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import './FretboardWithHand.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { WebGPURenderer } from 'three/webgpu';
-import { BSPApiService, VoicingWithAnalysis } from './BSP/BSPApiService';
+import { BSPApiService } from './BSP/BSPApiService';
 
 export interface FingerPosition {
   finger: number; // 1=index, 2=middle, 3=ring, 4=pinky, 0=thumb
@@ -27,7 +26,7 @@ interface FretboardWithHandProps {
 
 export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
   chordName = 'G',
-  apiBaseUrl = 'https://localhost:7001',
+  apiBaseUrl: _apiBaseUrl = 'https://localhost:7001',
   width = 1200,
   height = 600,
 }) => {
@@ -36,7 +35,7 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
-  const handModelRef = useRef<THREE.Group | null>(null);
+  const _handModelRef = useRef<THREE.Group | null>(null);
   const fretboardGroupRef = useRef<THREE.Group | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -287,7 +286,7 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
 
     const fretboardWidth = 6;
     const fretboardLength = 20;
-    const numStrings = 6;
+    const _numStrings = 6;
     const numFrets = 5;
 
     const fingerColors = [

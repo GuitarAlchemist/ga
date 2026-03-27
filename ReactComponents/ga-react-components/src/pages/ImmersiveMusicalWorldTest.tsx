@@ -5,14 +5,17 @@
  */
 
 import React from 'react';
-import { Container, Box } from '@mui/material';
+import { Container } from '@mui/material';
 import { ImmersiveMusicalWorldDemo } from '../components/BSP';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const ImmersiveMusicalWorldTest: React.FC = () => {
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 48px)', overflow: 'hidden' }}>
-      <ImmersiveMusicalWorldDemo />
-    </Container>
+    <DemoErrorBoundary demoName="Immersive Musical World">
+      <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 48px)', overflow: 'hidden' }}>
+        <ImmersiveMusicalWorldDemo />
+      </Container>
+    </DemoErrorBoundary>
   );
 };
 

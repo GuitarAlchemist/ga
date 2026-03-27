@@ -27,7 +27,7 @@ interface Guitar3DProps {
   backgroundColor?: string;
   cameraPosition?: [number, number, number];
   preferWebGPU?: boolean; // Prefer WebGPU if available (default: true)
-  onLoad?: (gltf: any) => void;
+  onLoad?: (gltf: { scene: THREE.Group }) => void;
   onProgress?: (progress: number) => void;
   onError?: (error: Error) => void;
 }
@@ -279,11 +279,11 @@ const Guitar3D: React.FC<Guitar3DProps> = ({
 
         // Dispose Three.js resources
         scene.traverse((object) => {
-          if ((object as any).geometry) {
-            (object as any).geometry.dispose();
+          if ((object as THREE.Mesh).geometry) {
+            (object as THREE.Mesh).geometry.dispose();
           }
-          if ((object as any).material) {
-            const material = (object as any).material;
+          if ((object as THREE.Mesh).material) {
+            const material = (object as THREE.Mesh).material;
             if (Array.isArray(material)) {
               material.forEach((m) => m.dispose());
             } else {

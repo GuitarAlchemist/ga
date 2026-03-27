@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, Container, Typography, Paper, Button, Stack, Slider, FormControlLabel, Switch, Alert } from '@mui/material';
+import { Box, Container, Typography, Paper, Button, Stack, Slider, FormControlLabel, Switch } from '@mui/material';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 interface FingerJoint {
   bone: THREE.Bone;
@@ -27,7 +28,7 @@ interface HandPose {
 }
 
 // Predefined hand poses
-const HAND_POSES: HandPose[] = [
+const _HAND_POSES: HandPose[] = [
   { name: 'open', fingerFlexions: [0, 0, 0, 0, 0], description: 'Open hand' },
   { name: 'fist', fingerFlexions: [1, 1, 1, 1, 1], description: 'Closed fist' },
   { name: 'point', fingerFlexions: [0.3, 0, 1, 1, 1], description: 'Pointing gesture' },
@@ -55,10 +56,10 @@ export const HandAnimationTest: React.FC = () => {
   const [useRiggedModel, setUseRiggedModel] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(1.0);
   const [autoAnimate, setAutoAnimate] = useState(false);
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const [useQuaternions, setUseQuaternions] = useState(true);
-  const [transitionDuration, setTransitionDuration] = useState(0.5);
-  const [boneCount, setBoneCount] = useState(0);
+  const [showSkeleton, _setShowSkeleton] = useState(false);
+  const [_useQuaternions, _setUseQuaternions] = useState(true);
+  const [_transitionDuration, _setTransitionDuration] = useState(0.5);
+  const [_boneCount, setBoneCount] = useState(0);
 
   // Finger flexion controls (0 = open, 1 = closed)
   const [thumbFlex, setThumbFlex] = useState(0);
@@ -68,8 +69,8 @@ export const HandAnimationTest: React.FC = () => {
   const [pinkyFlex, setPinkyFlex] = useState(0);
 
   // Target flexions for smooth interpolation
-  const targetFlexRef = useRef<number[]>([0, 0, 0, 0, 0]);
-  const currentFlexRef = useRef<number[]>([0, 0, 0, 0, 0]);
+  const _targetFlexRef = useRef<number[]>([0, 0, 0, 0, 0]);
+  const _currentFlexRef = useRef<number[]>([0, 0, 0, 0, 0]);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -352,7 +353,7 @@ export const HandAnimationTest: React.FC = () => {
       { x: 0.075, name: 'pinky', length: 0.30 },
     ];
     
-    fingerPositions.forEach(({ x, name, length }) => {
+    fingerPositions.forEach(({ x, name: _name, length }) => {
       const fingerGroup = new THREE.Group();
       fingerGroup.position.set(x, 0.5, 0.3);
       
@@ -381,7 +382,7 @@ export const HandAnimationTest: React.FC = () => {
     fingersRef.current.forEach((finger, fingerIndex) => {
       const flex = flexValues[fingerIndex];
       
-      finger.joints.forEach((joint, jointIndex) => {
+      finger.joints.forEach((joint, _jointIndex) => {
         if (joint.bone) {
           // Apply rotation based on flex value
           const targetRotation = joint.minRotation + (joint.maxRotation - joint.minRotation) * flex;
@@ -439,6 +440,7 @@ export const HandAnimationTest: React.FC = () => {
   };
 
   return (
+    <DemoErrorBoundary demoName="Hand Animation">
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" gutterBottom>
@@ -548,6 +550,7 @@ export const HandAnimationTest: React.FC = () => {
         )}
       </Paper>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

@@ -10,8 +10,7 @@ import {
   MenuItem,
   Slider,
   Switch,
-  FormControlLabel,
-  Tooltip
+  FormControlLabel
 } from '@mui/material';
 import { BSPSpatialQueryResponse, BSPElement } from './BSPApiService';
 
@@ -257,7 +256,7 @@ export const BSPSpatialVisualization: React.FC<BSPSpatialVisualizationProps> = (
         </Typography>
 
         {/* Controls */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' } as any}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>View Mode</InputLabel>
             <Select

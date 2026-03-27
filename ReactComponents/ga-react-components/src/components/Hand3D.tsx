@@ -277,16 +277,16 @@ export const Hand3D: React.FC<Hand3DProps> = ({ positions, playabilityScore }) =
         const fretX = calculateFretPosition(pressedPos.fret) - SCALE_LENGTH / 2;
 
         // Segment 1: Nut to pressed fret (angled down)
-        points.push(new THREE.Vector3(-SCALE_LENGTH / 2, stringHeight, stringZ) as any);
-        points.push(new THREE.Vector3(fretX, pressedHeight, stringZ) as any);
+        points.push(new THREE.Vector3(-SCALE_LENGTH / 2, stringHeight, stringZ));
+        points.push(new THREE.Vector3(fretX, pressedHeight, stringZ));
 
         // Segment 2: Pressed fret to bridge (continues at lower angle)
-        points.push(new THREE.Vector3(fretX, pressedHeight, stringZ) as any);
-        points.push(new THREE.Vector3(bridgeX, stringHeight * 0.8, stringZ) as any);
+        points.push(new THREE.Vector3(fretX, pressedHeight, stringZ));
+        points.push(new THREE.Vector3(bridgeX, stringHeight * 0.8, stringZ));
       } else {
         // Open string - straight line from nut to bridge
-        points.push(new THREE.Vector3(-SCALE_LENGTH / 2, stringHeight, stringZ) as any);
-        points.push(new THREE.Vector3(bridgeX, stringHeight, stringZ) as any);
+        points.push(new THREE.Vector3(-SCALE_LENGTH / 2, stringHeight, stringZ));
+        points.push(new THREE.Vector3(bridgeX, stringHeight, stringZ));
       }
 
       const stringGeometry = new THREE.BufferGeometry().setFromPoints(points);

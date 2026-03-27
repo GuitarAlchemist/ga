@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { BSPDoomExplorer } from '../components/BSP';
 import type { BSPRegion } from '../components/BSP/BSPApiService';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const BSPDoomExplorerTest: React.FC = () => {
   const [showHUD, setShowHUD] = useState(true);
@@ -46,6 +47,7 @@ const BSPDoomExplorerTest: React.FC = () => {
   };
 
   return (
+    <DemoErrorBoundary demoName="BSP DOOM Explorer">
     <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 48px)', overflow: 'hidden' }}>
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
@@ -328,6 +330,7 @@ const BSPDoomExplorerTest: React.FC = () => {
         </Box>
       </Box>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

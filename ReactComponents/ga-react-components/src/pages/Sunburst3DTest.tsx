@@ -5,14 +5,17 @@
  */
 
 import React from 'react';
-import { Container, Box } from '@mui/material';
+import { Container } from '@mui/material';
 import { Sunburst3DDemo } from '../components/BSP';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const Sunburst3DTest: React.FC = () => {
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: '100vh', overflow: 'hidden' }}>
-      <Sunburst3DDemo />
-    </Container>
+    <DemoErrorBoundary demoName="Sunburst 3D">
+      <Container maxWidth={false} disableGutters sx={{ height: '100vh', overflow: 'hidden' }}>
+        <Sunburst3DDemo />
+      </Container>
+    </DemoErrorBoundary>
   );
 };
 

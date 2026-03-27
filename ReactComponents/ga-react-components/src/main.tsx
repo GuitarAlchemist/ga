@@ -8,7 +8,7 @@ import App from './App';
 import GuitarFretboard, { FretboardPosition } from './components/GuitarFretboard';
 import RealisticFretboard from './components/RealisticFretboard';
 import { ThreeFretboard } from './components/ThreeFretboard';
-import { Container, Box, Typography, Button, Stack } from '@mui/material';
+import { Container, Box, Typography, Stack } from '@mui/material';
 
 // Test pages
 import TestIndex from './pages/TestIndex';
@@ -47,7 +47,7 @@ import PrimeRadiantTest from './pages/PrimeRadiantTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
-  const [selectedPositions, setSelectedPositions] = useState<FretboardPosition[]>([]);
+  const [_selectedPositions, _setSelectedPositions] = useState<FretboardPosition[]>([]);
 
   // Example: C Major chord positions (CORRECT - open position)
   // String numbering: 0 = high E (thinnest), 5 = low E (thickest)

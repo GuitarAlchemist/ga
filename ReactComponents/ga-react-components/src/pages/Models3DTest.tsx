@@ -3,6 +3,7 @@ import { Box, Typography, Button, Stack, Paper, Chip } from '@mui/material';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 interface ModelMetadata {
   name: string;
@@ -335,6 +336,7 @@ const Models3DTest: React.FC = () => {
   };
 
   return (
+    <DemoErrorBoundary demoName="3D Models Gallery">
     <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#0a0a0a' }}>
       {/* Header */}
       <Box sx={{ p: 2, bgcolor: '#1a1a1a', borderBottom: '1px solid #333' }}>
@@ -452,6 +454,7 @@ const Models3DTest: React.FC = () => {
         </Paper>
       </Box>
     </Box>
+    </DemoErrorBoundary>
   );
 };
 

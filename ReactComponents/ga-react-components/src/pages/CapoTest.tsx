@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Box, Typography, Grid, Paper, Slider, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { ThreeFretboard, ThreeFretboardPosition } from '../components/ThreeFretboard';
 import RealisticFretboard from '../components/RealisticFretboard';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 type FretboardPosition = ThreeFretboardPosition;
 
@@ -20,6 +21,7 @@ export const CapoTest: React.FC = () => {
   const [guitarModel, setGuitarModel] = useState('electric_fender_strat');
 
   return (
+    <DemoErrorBoundary demoName="Capo Test">
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" gutterBottom>
@@ -184,6 +186,7 @@ export const CapoTest: React.FC = () => {
         </ol>
       </Box>
     </Container>
+    </DemoErrorBoundary>
   );
 };
 

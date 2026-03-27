@@ -11,7 +11,7 @@
  * Uses Material-UI for UI components and Recharts for graphs
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Paper,
@@ -20,7 +20,6 @@ import {
   Card,
   CardContent,
   LinearProgress,
-  Chip,
   Stack,
   Table,
   TableBody,
@@ -32,8 +31,6 @@ import {
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
