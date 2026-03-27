@@ -1152,24 +1152,35 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
 }
 
 // ─────────────────────────────────────────────────────────────
-// LIVE WEATHER CLOUDS — fetches OWM cloud tiles onto Earth
+// LIVE SATELLITE IMAGERY — NASA GIBS (free, no API key)
 // ─────────────────────────────────────────────────────────────
 
+function getYesterdayDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1); // yesterday — GIBS needs ~hours for latest
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function fetchTile(url: string): Promise<HTMLImageElement | null> {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
 /**
- * Fetch OpenWeatherMap cloud tiles at zoom 3 (8x8 = 64 tiles),
- * stitch into a 2048x1024 equirectangular canvas, and update
- * the Earth cloud meshes with the live texture.
+ * Fetch real satellite cloud imagery and overlay on Earth.
  *
- * Call once after createSolarSystem. It sets up a 15-min refresh loop
- * and returns a cleanup function to stop it.
+ * Primary: NASA GIBS VIIRS true-color satellite tiles (free, no API key).
+ * Fallback: OpenWeatherMap cloud tiles (needs VITE_OWM_API_KEY).
+ * Final fallback: static 2k_earth_clouds.jpg (already loaded).
+ *
+ * Call once after createSolarSystem. Returns a cleanup function.
  */
 export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () => void {
-  const key = apiKey || (typeof import.meta !== 'undefined' && (import.meta as Record<string, Record<string, string>>).env?.VITE_OWM_API_KEY);
-  if (!key) {
-    console.info('[SolarSystem] No OWM API key — using static cloud texture');
-    return () => {};
-  }
-
   const planets = group.userData.planets as { mesh: THREE.Mesh; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return () => {};
 
@@ -1183,65 +1194,104 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
   const canvasTexture = new THREE.CanvasTexture(canvas);
   canvasTexture.colorSpace = THREE.SRGBColorSpace;
 
-  async function fetchAndStitch() {
+  // Try NASA GIBS first (VIIRS true-color satellite, EPSG:3857 web Mercator)
+  async function fetchGIBS(): Promise<boolean> {
+    const date = getYesterdayDate();
+    const layer = 'VIIRS_SNPP_CorrectedReflectance_TrueColor';
+    const matrixSet = 'GoogleMapsCompatible_Level9';
     const ZOOM = 3;
     const TILES = 1 << ZOOM; // 8
-    const TILE_SIZE = 256;
 
-    // Fetch all 64 tiles concurrently (with concurrency limit)
-    const fetches: Promise<{ x: number; y: number; img: HTMLImageElement } | null>[] = [];
-
+    const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
     for (let y = 0; y < TILES; y++) {
       for (let x = 0; x < TILES; x++) {
-        const url = `https://tile.openweathermap.org/map/clouds_new/${ZOOM}/${x}/${y}.png?appid=${key}`;
-        fetches.push(
-          new Promise(resolve => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => resolve({ x, y, img });
-            img.onerror = () => resolve(null);
-            img.src = url;
-          })
-        );
+        // GIBS uses {z}/{y}/{x} (TileMatrix/TileRow/TileCol)
+        const url = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/${matrixSet}/${ZOOM}/${y}/${x}.jpg`;
+        fetches.push(fetchTile(url).then(img => ({ x, y, img })));
       }
     }
 
     const results = await Promise.all(fetches);
+    const loaded = results.filter(r => r.img);
+    if (loaded.length < TILES * TILES * 0.5) return false; // too many failures
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const tileW = canvas.width / TILES;
+    const tileH = canvas.height / TILES;
 
-    // Draw tiles onto canvas
-    const tileW = canvas.width / TILES;   // 256
-    const tileH = canvas.height / TILES;  // 128
-
-    for (const result of results) {
-      if (!result) continue;
-      ctx.drawImage(result.img, result.x * tileW, result.y * tileH, tileW, tileH);
+    for (const { x, y, img } of results) {
+      if (!img) continue;
+      ctx.drawImage(img, x * tileW, y * tileH, tileW, tileH);
     }
 
-    // Alpha processing: make non-cloud areas transparent
-    // OWM cloud tiles have colored backgrounds — extract brightness as alpha
+    // Extract clouds: GIBS tiles are true-color satellite imagery (land + ocean + clouds).
+    // Clouds are bright white; extract brightness and use as cloud alpha overlay.
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i], g = data[i + 1], b = data[i + 2];
-      // Cloud brightness → alpha; dark areas (clear sky) → transparent
       const brightness = (r + g + b) / 3;
-      data[i] = 255;     // white clouds
+      // Only treat bright pixels as clouds (threshold: > 160 brightness)
+      // Below threshold = land/ocean = transparent
+      const cloudAlpha = Math.max(0, (brightness - 140) / 115) * 255;
+      data[i] = 255;
       data[i + 1] = 255;
       data[i + 2] = 255;
-      data[i + 3] = Math.min(255, brightness * 1.5); // boost contrast
+      data[i + 3] = Math.min(255, cloudAlpha * 1.3);
     }
     ctx.putImageData(imageData, 0, 0);
 
-    // Update texture
     canvasTexture.needsUpdate = true;
-
-    console.info(`[SolarSystem] Live cloud texture updated (${results.filter(Boolean).length}/64 tiles)`);
+    console.info(`[SolarSystem] NASA GIBS cloud texture loaded (${loaded.length}/${TILES * TILES} tiles, date: ${date})`);
+    return true;
   }
 
-  // Apply live texture to cloud meshes
+  // Fallback: OWM cloud tiles (needs API key)
+  async function fetchOWM(): Promise<boolean> {
+    const key = apiKey || (typeof import.meta !== 'undefined' && (import.meta as Record<string, Record<string, string>>).env?.VITE_OWM_API_KEY);
+    if (!key) return false;
+
+    const ZOOM = 3;
+    const TILES = 1 << ZOOM;
+
+    const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
+    for (let y = 0; y < TILES; y++) {
+      for (let x = 0; x < TILES; x++) {
+        const url = `https://tile.openweathermap.org/map/clouds_new/${ZOOM}/${x}/${y}.png?appid=${key}`;
+        fetches.push(fetchTile(url).then(img => ({ x, y, img })));
+      }
+    }
+
+    const results = await Promise.all(fetches);
+    const loaded = results.filter(r => r.img);
+    if (loaded.length < TILES * TILES * 0.5) return false;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const tileW = canvas.width / TILES;
+    const tileH = canvas.height / TILES;
+
+    for (const { x, y, img } of results) {
+      if (!img) continue;
+      ctx.drawImage(img, x * tileW, y * tileH, tileW, tileH);
+    }
+
+    // OWM alpha processing
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = Math.min(255, brightness * 1.5);
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    canvasTexture.needsUpdate = true;
+    console.info(`[SolarSystem] OWM cloud texture loaded (${loaded.length}/${TILES * TILES} tiles)`);
+    return true;
+  }
+
   function applyTexture() {
     if (earthEntry!.clouds) {
       const mat = earthEntry!.clouds.material as THREE.MeshStandardMaterial;
@@ -1257,16 +1307,21 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
     }
   }
 
+  async function refresh() {
+    // Try GIBS first (no key needed), then OWM
+    const ok = await fetchGIBS() || await fetchOWM();
+    if (ok) applyTexture();
+    else console.warn('[SolarSystem] All cloud sources failed — keeping current texture');
+  }
+
   // Initial fetch
-  fetchAndStitch().then(applyTexture).catch(err => {
-    console.warn('[SolarSystem] Live cloud fetch failed, keeping static texture:', err);
+  refresh().catch(err => {
+    console.warn('[SolarSystem] Live cloud fetch failed:', err);
   });
 
-  // Refresh loop
+  // Refresh every 15 minutes
   const interval = setInterval(() => {
-    fetchAndStitch().then(applyTexture).catch(err => {
-      console.warn('[SolarSystem] Live cloud refresh failed:', err);
-    });
+    refresh().catch(err => console.warn('[SolarSystem] Cloud refresh failed:', err));
   }, CLOUD_REFRESH_MS);
 
   return () => clearInterval(interval);
