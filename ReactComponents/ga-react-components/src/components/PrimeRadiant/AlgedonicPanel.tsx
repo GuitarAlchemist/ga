@@ -144,17 +144,24 @@ function timeAgo(dateStr: string): string {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const AlgedonicPanel: React.FC = () => {
+export interface AlgedonicPanelProps {
+  /** Live signals from SignalR. If provided, used instead of mock data. */
+  signals?: AlgedonicSignal[];
+}
+
+export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signalsProp }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pain' | 'pleasure'>('all');
 
-  const signals = mockAlgedonicSignals.filter(
+  const allSignals = signalsProp && signalsProp.length > 0 ? signalsProp : mockAlgedonicSignals;
+
+  const signals = allSignals.filter(
     (s) => filter === 'all' || s.type === filter,
   );
 
-  const painCount = mockAlgedonicSignals.filter((s) => s.type === 'pain').length;
-  const pleasureCount = mockAlgedonicSignals.filter((s) => s.type === 'pleasure').length;
-  const activeCount = mockAlgedonicSignals.filter((s) => s.status === 'active').length;
+  const painCount = allSignals.filter((s) => s.type === 'pain').length;
+  const pleasureCount = allSignals.filter((s) => s.type === 'pleasure').length;
+  const activeCount = allSignals.filter((s) => s.status === 'active').length;
 
   return (
     <div className="prime-radiant__algedonic">

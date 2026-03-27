@@ -187,6 +187,23 @@ export interface LiveDataConfig {
   onBeliefUpdate?: (belief: BeliefState) => void;
   /** Called when a full beliefs snapshot is received */
   onBeliefsSnapshot?: (beliefs: BeliefState[]) => void;
+  /** Called when an algedonic signal arrives via SignalR */
+  onAlgedonicSignal?: (signal: AlgedonicSignalEvent) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Algedonic signal event (matches backend AlgedonicSignalDto)
+// ---------------------------------------------------------------------------
+export interface AlgedonicSignalEvent {
+  id: string;
+  timestamp: string;
+  signal: string;
+  type: 'pain' | 'pleasure';
+  source: string;
+  severity: 'emergency' | 'warning' | 'info';
+  status: 'active' | 'acknowledged' | 'resolved';
+  description?: string;
+  nodeId?: string;
 }
 
 export interface LivePollingHandle {
@@ -197,7 +214,7 @@ export interface LivePollingHandle {
 }
 
 export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -249,6 +266,12 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         onBeliefsSnapshot?.(data);
       });
 
+      // Algedonic signal events — pain/pleasure governance alerts
+      connection.on('AlgedonicSignal', (data: AlgedonicSignalEvent) => {
+        console.log('[Governance] Algedonic signal:', data.signal, data.type);
+        onAlgedonicSignal?.(data);
+      });
+
       connection.onreconnecting(() => {
         onStatusChange?.('disconnected');
         // Start polling as fallback while reconnecting
@@ -281,6 +304,22 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
       // Subscribe to belief updates
       if (onBeliefUpdate || onBeliefsSnapshot) {
         await connection.invoke('SubscribeBeliefs');
+      }
+
+      // Fetch recent algedonic signals on initial connect
+      if (onAlgedonicSignal) {
+        try {
+          const baseUrl = hubUrl?.replace(/\/hubs\/.*$/, '') ?? '';
+          const recentResponse = await fetch(`${baseUrl}/api/algedonic/recent`);
+          if (recentResponse.ok) {
+            const recentSignals = await recentResponse.json() as AlgedonicSignalEvent[];
+            for (const sig of recentSignals) {
+              onAlgedonicSignal(sig);
+            }
+          }
+        } catch {
+          console.warn('[Governance] Failed to fetch recent algedonic signals');
+        }
       }
 
     } catch (err) {

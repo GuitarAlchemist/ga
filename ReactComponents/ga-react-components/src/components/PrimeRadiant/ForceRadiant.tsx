@@ -29,8 +29,39 @@ import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
 import { IconRail, type PanelId } from './IconRail';
+import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
+import type { AlgedonicSignalEvent } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import './styles.css';
+
+// ---------------------------------------------------------------------------
+// Algedonic ripple types
+// ---------------------------------------------------------------------------
+interface ActiveRipple {
+  mesh: THREE.Mesh;
+  startTime: number;
+  color: string;
+  duration: number;   // seconds
+  maxScale: number;
+}
+
+interface EdgePropagation {
+  startTime: number;
+  color: string;
+  hop: number;
+}
+
+const MAX_CONCURRENT_RIPPLES = 10;
+const RIPPLE_DURATION = 2.0;         // seconds
+const RIPPLE_MAX_SCALE = 8;
+const SURGE_RIPPLE_DURATION = 3.0;
+const SURGE_RIPPLE_MAX_SCALE = 15;
+const PROPAGATION_HOP_DURATION = 0.5; // seconds per hop
+const MAX_PROPAGATION_HOPS = 3;
+const COMPOUNDING_WINDOW_SEC = 10;
+const COMPOUNDING_THRESHOLD = 3;
+const SURGE_BLOOM_STRENGTH = 1.2;
+const SURGE_BLOOM_DURATION = 3.0;     // seconds
 
 // ---------------------------------------------------------------------------
 // Node/Link types for 3d-force-graph
@@ -493,6 +524,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
   const [showCourseViewer, setShowCourseViewer] = useState(false);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
+  const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
+
+  // Algedonic effect refs — mutable state for animation loop (no re-render needed)
+  const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
+  const edgePropagationsRef = useRef<Map<string, EdgePropagation>>(new Map());
+  const pleasureWindowRef = useRef<number[]>([]);
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
+  const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -525,6 +564,224 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
     }
   }, []);
+
+  // ─── Create a ripple ring mesh at a world position ───
+  const createRippleAtPosition = useCallback((
+    fg: ReturnType<typeof ForceGraph3D>,
+    x: number, y: number, z: number,
+    color: string, startTime: number,
+    duration: number, maxScale: number,
+    id: string,
+  ) => {
+    // Cap concurrent ripples
+    if (activeRipplesRef.current.size >= MAX_CONCURRENT_RIPPLES) {
+      // Remove the oldest ripple
+      const oldest = [...activeRipplesRef.current.entries()].sort((a, b) => a[1].startTime - b[1].startTime)[0];
+      if (oldest) {
+        fg.scene().remove(oldest[1].mesh);
+        oldest[1].mesh.geometry.dispose();
+        (oldest[1].mesh.material as THREE.Material).dispose();
+        activeRipplesRef.current.delete(oldest[0]);
+      }
+    }
+
+    const ringGeo = new THREE.RingGeometry(1.5, 2.5, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color),
+      transparent: true,
+      opacity: 0.8,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.position.set(x, y, z);
+    // Face camera by looking up (billboard effect happens in tick via lookAt)
+    ringMesh.userData.isBillboard = true;
+    fg.scene().add(ringMesh);
+
+    activeRipplesRef.current.set(id, {
+      mesh: ringMesh,
+      startTime,
+      color,
+      duration,
+      maxScale,
+    });
+  }, []);
+
+  // ─── Start edge propagation from a source node ───
+  const startEdgePropagation = useCallback((
+    fg: ReturnType<typeof ForceGraph3D>,
+    sourceNodeId: string,
+    color: string,
+    startTime: number,
+  ) => {
+    const graphDataObj = fg.graphData() as { nodes: GraphNode[]; links: GraphLink[] };
+    const links = graphDataObj.links;
+
+    // BFS to find edges up to MAX_PROPAGATION_HOPS hops away
+    const visited = new Set<string>([sourceNodeId]);
+    let frontier = [sourceNodeId];
+
+    for (let hop = 0; hop < MAX_PROPAGATION_HOPS; hop++) {
+      const nextFrontier: string[] = [];
+      for (const nodeId of frontier) {
+        for (const link of links) {
+          const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+          const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+          const linkId = `${srcId}-${tgtId}`;
+
+          if (srcId === nodeId || tgtId === nodeId) {
+            const neighborId = srcId === nodeId ? tgtId : srcId;
+            if (!visited.has(neighborId)) {
+              edgePropagationsRef.current.set(linkId, {
+                startTime: startTime + hop * PROPAGATION_HOP_DURATION,
+                color,
+                hop,
+              });
+              nextFrontier.push(neighborId);
+            }
+          }
+        }
+      }
+      for (const nid of nextFrontier) visited.add(nid);
+      frontier = nextFrontier;
+    }
+  }, []);
+
+  // ─── Trigger compounding surge ───
+  const triggerCompoundingSurge = useCallback((
+    fg: ReturnType<typeof ForceGraph3D>,
+    sourceNodeId: string | undefined,
+    now: number,
+  ) => {
+    // Emit frontend-generated compounding_surge signal
+    const surgeSignal: AlgedonicSignal = {
+      id: `surge-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      signal: 'compounding_surge',
+      type: 'pleasure',
+      source: 'frontend',
+      severity: 'info',
+      status: 'active',
+      description: 'Compounding surge detected — multiple positive signals in rapid succession',
+    };
+    setAlgedonicSignals(prev => [surgeSignal, ...prev].slice(0, 100));
+
+    const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
+
+    // Find connected cluster via BFS from source node (or all nodes if no source)
+    let clusterNodes: (GraphNode & { x?: number; y?: number; z?: number })[];
+    if (sourceNodeId) {
+      const links = (fg.graphData() as { links: GraphLink[] }).links;
+      const visited = new Set<string>([sourceNodeId]);
+      const queue = [sourceNodeId];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        for (const link of links) {
+          const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+          const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+          if (srcId === current && !visited.has(tgtId)) { visited.add(tgtId); queue.push(tgtId); }
+          if (tgtId === current && !visited.has(srcId)) { visited.add(srcId); queue.push(srcId); }
+        }
+      }
+      clusterNodes = graphNodes.filter(n => visited.has(n.id)) as (GraphNode & { x?: number; y?: number; z?: number })[];
+    } else {
+      clusterNodes = graphNodes as (GraphNode & { x?: number; y?: number; z?: number })[];
+    }
+
+    // Create oversized ripple on all cluster nodes
+    for (const node of clusterNodes) {
+      if (node.x !== undefined) {
+        createRippleAtPosition(
+          fg, node.x, node.y ?? 0, node.z ?? 0,
+          '#FFFFAA', now, SURGE_RIPPLE_DURATION, SURGE_RIPPLE_MAX_SCALE,
+          `surge-${node.id}-${Date.now()}`,
+        );
+      }
+    }
+
+    // Boost bloom
+    const bloomPass = bloomPassRef.current;
+    if (bloomPass) {
+      surgeBloomRef.current = {
+        startTime: now,
+        originalStrength: bloomPass.strength,
+      };
+      bloomPass.strength = SURGE_BLOOM_STRENGTH;
+    }
+
+    // Edge propagation from source with unlimited hops (use all edges)
+    if (sourceNodeId) {
+      const links = (fg.graphData() as { links: GraphLink[] }).links;
+      for (const link of links) {
+        const srcId = typeof link.source === 'string' ? link.source : (link.source as GraphNode).id;
+        const tgtId = typeof link.target === 'string' ? link.target : (link.target as GraphNode).id;
+        const linkId = `${srcId}-${tgtId}`;
+        if (!edgePropagationsRef.current.has(linkId)) {
+          edgePropagationsRef.current.set(linkId, {
+            startTime: now,
+            color: '#FFFFAA',
+            hop: 0,
+          });
+        }
+      }
+    }
+  }, [createRippleAtPosition]);
+
+  // ─── Algedonic signal handler — creates ripples, propagation, checks compounding ───
+  const handleAlgedonicSignal = useCallback((signal: AlgedonicSignalEvent) => {
+    // Append to panel state
+    const panelSignal: AlgedonicSignal = {
+      id: signal.id,
+      timestamp: signal.timestamp,
+      signal: signal.signal,
+      type: signal.type,
+      source: signal.source,
+      severity: signal.severity,
+      status: signal.status,
+      description: signal.description,
+    };
+    setAlgedonicSignals(prev => [panelSignal, ...prev].slice(0, 100));
+
+    const fg = graphRef.current;
+    if (!fg) return;
+
+    const now = Date.now() * 0.001;
+    const signalColor = signal.type === 'pain' ? '#FF4444' : '#FFD700';
+
+    // ─── Unit 4: Node ripple ───
+    if (signal.nodeId) {
+      const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
+      const targetNode = graphNodes.find(n => n.id === signal.nodeId) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
+
+      if (targetNode?.x !== undefined) {
+        createRippleAtPosition(
+          fg, targetNode.x, targetNode.y ?? 0, targetNode.z ?? 0,
+          signalColor, now, RIPPLE_DURATION, RIPPLE_MAX_SCALE, signal.id,
+        );
+
+        // ─── Unit 5: Edge propagation ───
+        startEdgePropagation(fg, signal.nodeId, signalColor, now);
+      }
+    }
+
+    // ─── Unit 6: Compounding surge — track pleasure signals ───
+    if (signal.type === 'pleasure') {
+      const nowMs = Date.now();
+      const window = pleasureWindowRef.current;
+      window.push(nowMs);
+      // Filter entries older than the compounding window
+      const cutoff = nowMs - COMPOUNDING_WINDOW_SEC * 1000;
+      pleasureWindowRef.current = window.filter(ts => ts > cutoff);
+
+      if (pleasureWindowRef.current.length >= COMPOUNDING_THRESHOLD) {
+        triggerCompoundingSurge(fg, signal.nodeId, now);
+        // Reset window to prevent immediate re-trigger
+        pleasureWindowRef.current = [];
+      }
+    }
+  }, [createRippleAtPosition, startEdgePropagation, triggerCompoundingSurge]);
 
   // ─── Initialize ───
   useEffect(() => {
@@ -617,7 +874,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       })
 
       // Edge rendering — undulating energy flow between collaborating nodes
-      .linkColor((link: object) => (link as GraphLink).color)
+      .linkColor((link: object) => {
+        const l = link as GraphLink;
+        // Check for active algedonic propagation
+        const srcId = getLinkNodeId(l.source);
+        const tgtId = getLinkNodeId(l.target);
+        const linkId = `${srcId}-${tgtId}`;
+        const prop = edgePropagationsRef.current.get(linkId);
+        if (prop) {
+          const elapsed = Date.now() * 0.001 - prop.startTime;
+          const window = PROPAGATION_HOP_DURATION * 2;
+          if (elapsed >= 0 && elapsed < window) {
+            // Fade the propagation color over the window
+            const fade = 1 - elapsed / window;
+            const c = new THREE.Color(prop.color);
+            // Mix with original color based on fade
+            const orig = new THREE.Color(l.color);
+            orig.lerp(c, fade);
+            return '#' + orig.getHexString();
+          }
+        }
+        return l.color;
+      })
       .linkWidth((link: object) => {
         const l = link as GraphLink;
         const { src, tgt } = getLinkNodes(l);
@@ -714,6 +992,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       0.5,   // threshold (lower = more bloom on bright health nodes)
     );
     fg.postProcessingComposer().addPass(bloomPass);
+    bloomPassRef.current = bloomPass;
 
     // Chromatic aberration post-processing
     const chromaticShader = {
@@ -980,6 +1259,62 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const stationOffset = new THREE.Vector3(-8, 8, -20);
       stationOffset.applyQuaternion(cam.quaternion);
       spaceStation.position.copy(cam.position).add(stationOffset);
+
+      // ─── Algedonic ripple animation ───
+      const ripples = activeRipplesRef.current;
+      for (const [rippleId, ripple] of ripples.entries()) {
+        const elapsed = t - ripple.startTime;
+        if (elapsed >= ripple.duration) {
+          // Animation complete — remove and dispose
+          fg.scene().remove(ripple.mesh);
+          ripple.mesh.geometry.dispose();
+          (ripple.mesh.material as THREE.Material).dispose();
+          ripples.delete(rippleId);
+          continue;
+        }
+
+        const progress = elapsed / ripple.duration;
+        // Ease-out: fast start, slow end
+        const eased = 1 - Math.pow(1 - progress, 2);
+
+        // Scale from 1 to maxScale
+        const scale = 1 + eased * (ripple.maxScale - 1);
+        ripple.mesh.scale.setScalar(scale);
+
+        // Opacity from 0.8 to 0
+        const opacity = 0.8 * (1 - progress);
+        (ripple.mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
+
+        // Billboard: face camera
+        if (ripple.mesh.userData.isBillboard) {
+          ripple.mesh.lookAt(cam.position);
+        }
+      }
+
+      // ─── Algedonic edge propagation color ───
+      const propagations = edgePropagationsRef.current;
+      for (const [propId, prop] of propagations.entries()) {
+        const elapsed = t - prop.startTime;
+        const window = PROPAGATION_HOP_DURATION * 2; // visible duration per link
+        if (elapsed > window) {
+          propagations.delete(propId);
+        }
+      }
+
+      // ─── Compounding surge bloom ease-back ───
+      const surgeBloom = surgeBloomRef.current;
+      if (surgeBloom && bloomPass) {
+        const elapsed = t - surgeBloom.startTime;
+        if (elapsed >= SURGE_BLOOM_DURATION) {
+          bloomPass.strength = surgeBloom.originalStrength;
+          surgeBloomRef.current = null;
+        } else {
+          // Ease back from SURGE_BLOOM_STRENGTH to original
+          const progress = elapsed / SURGE_BLOOM_DURATION;
+          const eased = progress * progress; // ease-in (slow start)
+          bloomPass.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
+        }
+      }
     });
 
     // Slow auto-rotate
@@ -1344,6 +1679,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             setGraphIndex(buildGraphIndex(freshGraph));
           }
         },
+        onAlgedonicSignal: handleAlgedonicSignal,
         onError: (err) => console.warn('[PrimeRadiant] Live poll error:', err.message),
       });
     }
@@ -1558,6 +1894,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           />
         )}
         {activePanel === 'llm' && <LLMStatus />}
+        {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
       </div>
 
       {/* Streeling University course viewer modal */}
