@@ -2,6 +2,7 @@ namespace GaApi.Hubs;
 
 using Microsoft.AspNetCore.SignalR;
 using Controllers;
+using Models;
 using Services;
 
 /// <summary>
@@ -9,12 +10,13 @@ using Services;
 ///     Unauthenticated — Prime Radiant clients connect without tokens.
 ///
 ///     Server → Client events:
-///       "GraphUpdate"    — full governance graph JSON
-///       "HealthUpdate"   — partial update with changed node health metrics
-///       "NodeChanged"    — single node update (id, health, color)
-///       "BeliefUpdate"   — pushed when a belief state changes (tetravalent T/F/U/C)
-///       "BeliefsSnapshot"— full list of current belief states
-///       "Connected"      — welcome message with current node count
+///       "GraphUpdate"       — full governance graph JSON
+///       "HealthUpdate"      — partial update with changed node health metrics
+///       "NodeChanged"       — single node update (id, health, color)
+///       "BeliefUpdate"      — pushed when a belief state changes (tetravalent T/F/U/C)
+///       "BeliefsSnapshot"   — full list of current belief states
+///       "AlgedonicSignal"   — pain/pleasure signal from belief state transitions
+///       "Connected"         — welcome message with current node count
 ///
 ///     Client → Server methods:
 ///       Subscribe()      — register for updates
@@ -137,6 +139,13 @@ public sealed class GovernanceHub(
     /// </summary>
     public static async Task BroadcastBeliefsSnapshot(IHubContext<GovernanceHub> hubContext, List<BeliefState> beliefs) =>
         await hubContext.Clients.Group("beliefs").SendAsync("BeliefsSnapshot", beliefs);
+
+    /// <summary>
+    ///     Broadcast an algedonic signal (pain/pleasure) to all subscribed governance clients.
+    ///     Called from backend services when a belief state transition triggers a signal.
+    /// </summary>
+    public static async Task BroadcastAlgedonicSignal(IHubContext<GovernanceHub> hubContext, AlgedonicSignalDto signal) =>
+        await hubContext.Clients.Group("governance").SendAsync("AlgedonicSignal", signal);
 
     // ─── Screenshot capture ───
 

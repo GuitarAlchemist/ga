@@ -2,6 +2,8 @@ namespace GaApi.Services;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Path = System.IO.Path;
 
 /// <summary>
@@ -10,7 +12,9 @@ using Path = System.IO.Path;
 /// </summary>
 public sealed class BeliefStateService(
     IConfiguration configuration,
-    ILogger<BeliefStateService> logger)
+    ILogger<BeliefStateService> logger,
+    AlgedonicSignalService algedonicSignalService,
+    IHubContext<GovernanceHub> hubContext)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -134,12 +138,39 @@ public sealed class BeliefStateService(
             File.WriteAllText(matchingFile, updatedJson);
 
             logger.LogInformation("Belief {Id} updated to {Status}", id, newStatus);
+
+            // Evaluate algedonic signal — never block belief updates
+            _ = EvaluateAndBroadcastSignalAsync(belief, updatedBelief);
+
             return updatedBelief;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to update belief {Id}", id);
             return null;
+        }
+    }
+
+    /// <summary>
+    ///     Evaluate a belief state transition for algedonic signals and broadcast if one is detected.
+    ///     Runs asynchronously and never throws — signal evaluation must not block belief updates.
+    /// </summary>
+    private async Task EvaluateAndBroadcastSignalAsync(BeliefState oldState, BeliefState newState)
+    {
+        try
+        {
+            var signal = algedonicSignalService.EvaluateTransition(oldState, newState);
+            if (signal is null) return;
+
+            await algedonicSignalService.PersistSignalAsync(signal);
+            await GovernanceHub.BroadcastAlgedonicSignal(hubContext, signal);
+
+            logger.LogInformation("Algedonic signal {Signal} broadcast for belief {Id}",
+                signal.Signal, newState.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to evaluate/broadcast algedonic signal for belief {Id}", newState.Id);
         }
     }
 

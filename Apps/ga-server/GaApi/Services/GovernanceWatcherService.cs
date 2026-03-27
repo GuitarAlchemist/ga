@@ -51,7 +51,8 @@ public sealed class GovernanceWatcherService(
                     return;
                 }
 
-                logger.LogInformation("Governance files changed, broadcasting to {Count} clients",
+                logger.LogInformation("Governance files changed, broadcasting to {Count} clients. " +
+                    "Algedonic signal evaluation pending for governance file changes.",
                     GovernanceHub.ConnectionCount);
 
                 // Force refresh the controller cache
