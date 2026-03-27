@@ -45,3 +45,5 @@ export { CommitTooltip } from './CommitTooltip';
 export { AlgedonicPanel } from './AlgedonicPanel';
 export type { AlgedonicSignal, AlgedonicSignalType, AlgedonicSeverity, AlgedonicStatus } from './AlgedonicPanel';
 export { BeliefHeatmap } from './BeliefHeatmap';
+export { IconRail } from './IconRail';
+export type { PanelId } from './IconRail';

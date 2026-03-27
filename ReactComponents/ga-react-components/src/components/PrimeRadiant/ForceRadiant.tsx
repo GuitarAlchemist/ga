@@ -28,8 +28,7 @@ import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
-import { AlgedonicPanel } from './AlgedonicPanel';
-import { BeliefHeatmap } from './BeliefHeatmap';
+import { IconRail, type PanelId } from './IconRail';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -490,7 +489,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
-  const [seldonOpen, setSeldonOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<PanelId | null>(null);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
@@ -659,6 +658,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const n = node as GraphNode;
         const govNode = nodeMap.get(n.id) ? graph.nodes.find((gn) => gn.id === n.id) ?? null : null;
         setSelectedNode(govNode);
+        if (govNode) setActivePanel('detail');
         onNodeSelect?.(govNode);
         // Phase 1.4: Cancel auto-zoom on user interaction
         userInteracted = true;
@@ -1397,8 +1397,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   const handleCloseDetail = useCallback(() => {
     setSelectedNode(null);
+    setActivePanel(null);
     onNodeSelect?.(null);
   }, [onNodeSelect]);
+
+  const handlePanelToggle = useCallback((panelId: PanelId) => {
+    setActivePanel(prev => prev === panelId ? null : panelId);
+  }, []);
 
   const healthStatus = graphData
     ? getHealthStatus(graphData.globalHealth.resilienceScore)
@@ -1406,9 +1411,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   return (
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      {/* Canvas area — fills remaining space */}
+      <div className="prime-radiant__canvas-area">
+        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Health indicator */}
+      {/* HUD overlays on the canvas — floating, small */}
       {graphData && (
         <div className="prime-radiant__health">
           <span className={`prime-radiant__health-dot prime-radiant__health-dot--${healthStatus}`} />
@@ -1431,63 +1438,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
-      {/* Detail panel */}
-      {showDetailPanel && (
-        <DetailPanel
-          node={selectedNode}
-          graphIndex={graphIndex}
-          onClose={handleCloseDetail}
-          onNavigate={handleNavigate}
-        />
-      )}
-
-      {/* Galactic Standard Time */}
       <GalacticClock />
-
-      {/* Activity feed — top-left under clock */}
-      <ActivityPanel />
-
-      {/* Algedonic signal panel — mid-left under activity */}
-      <AlgedonicPanel />
-
-      {/* LLM provider status — top-right */}
-      <LLMStatus />
-
-      {/* Belief confidence heatmap — mid-right under LLM status */}
-      <BeliefHeatmap />
-
-      {/* Demerzel chat widget */}
       <ChatWidget selectedNode={selectedNode} />
-
-      {/* Tutorial overlay + help button */}
       <TutorialOverlay />
-
-      {/* IXql command input — above planet bar */}
-      {/* Backlog panel — bottom left */}
-      <BacklogPanel />
-
-      {/* Agent teams panel — bottom right */}
-      <AgentPanel />
-
-      {/* Seldon psychohistory dashboard — slide-over from right */}
-      {graphData && (
-        <SeldonDashboard
-          open={seldonOpen}
-          onClose={() => setSeldonOpen(false)}
-          graph={graphData}
-          selectedNode={selectedNode}
-        />
-      )}
-
-      {/* IXql command input — above planet bar */}
       <IxqlCommandInput onCommand={handleIxqlCommand} />
 
       {/* Planet quick-nav bar — bottom center */}
       <div className="prime-radiant__planet-bar">
         {[
           { icon: '🤖', name: 'Demerzel', color: '#FFD700', target: 'demerzel-head' },
-          { icon: '📐', name: 'Seldon', color: '#c4b5fd', target: 'governance-center' },
-          { icon: '─', name: '', color: '#333', separator: true },
           { icon: '☀', name: 'Sun', color: '#FFD700', target: 'sun' },
           { icon: '⚫', name: 'Mercury', color: '#9e9e9e', target: 'mercury' },
           { icon: '🟡', name: 'Venus', color: '#e3d500', target: 'venus' },
@@ -1497,57 +1456,85 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           { icon: '💛', name: 'Saturn', color: '#ffeecc', target: 'saturn' },
           { icon: '🔵', name: 'Uranus', color: '#88ccdd', target: 'uranus' },
           { icon: '🔵', name: 'Neptune', color: '#4444cc', target: 'neptune' },
-        ].map((p) => {
-          if (p.separator) {
-            return <span key="sep" className="prime-radiant__planet-sep" />;
-          }
-          return (
-            <button
-              key={p.name}
-              className="prime-radiant__planet-btn"
-              title={p.name}
-              onClick={() => {
-                const fg = graphRef.current;
-                if (!fg) return;
+        ].map((p) => (
+          <button
+            key={p.name}
+            className="prime-radiant__planet-btn"
+            title={p.name}
+            onClick={() => {
+              const fg = graphRef.current;
+              if (!fg) return;
 
-                // Seldon → toggle psychohistory dashboard
-                if (p.target === 'governance-center') {
-                  setSeldonOpen(prev => !prev);
-                  return;
-                }
+              if (p.target === 'demerzel-head') {
+                const cam = fg.camera() as THREE.PerspectiveCamera;
+                const faceOffset = new THREE.Vector3(-50, -8, -40);
+                faceOffset.applyQuaternion(cam.quaternion);
+                const facePos = cam.position.clone().add(faceOffset);
+                fg.cameraPosition(
+                  { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
+                  { x: facePos.x, y: facePos.y, z: facePos.z },
+                  1200,
+                );
+                return;
+              }
 
-                if (p.target === 'demerzel-head') {
-                  // Demerzel follows camera — zoom to face offset position
-                  const cam = fg.camera() as THREE.PerspectiveCamera;
-                  const faceOffset = new THREE.Vector3(-50, -8, -40);
-                  faceOffset.applyQuaternion(cam.quaternion);
-                  const facePos = cam.position.clone().add(faceOffset);
-                  fg.cameraPosition(
-                    { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
-                    { x: facePos.x, y: facePos.y, z: facePos.z },
-                    1200,
-                  );
-                  return;
-                }
+              const obj = fg.scene().getObjectByName(p.target);
+              if (obj) {
+                const wp = new THREE.Vector3();
+                obj.getWorldPosition(wp);
+                fg.cameraPosition(
+                  { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
+                  { x: wp.x, y: wp.y, z: wp.z },
+                  1200,
+                );
+              }
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>{p.icon}</span>
+            <span className="prime-radiant__planet-label">{p.name}</span>
+          </button>
+        ))}
+      </div>
 
-                // Planet navigation
-                const obj = fg.scene().getObjectByName(p.target);
-                if (obj) {
-                  const wp = new THREE.Vector3();
-                  obj.getWorldPosition(wp);
-                  fg.cameraPosition(
-                    { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
-                    { x: wp.x, y: wp.y, z: wp.z },
-                    1200,
-                  );
-                }
-              }}
-            >
-              <span style={{ fontSize: '14px' }}>{p.icon}</span>
-              <span className="prime-radiant__planet-label">{p.name}</span>
-            </button>
-          );
-        })}
+      </div>{/* end canvas-area */}
+
+      {/* Icon rail — right edge (desktop/tablet) or bottom tab bar (phone) */}
+      <IconRail activePanel={activePanel} onPanelToggle={handlePanelToggle} />
+
+      {/* Side panel area — one panel at a time */}
+      <div className={`prime-radiant__side-panel ${activePanel ? 'prime-radiant__side-panel--open' : ''}`}>
+        {/* Close button for mobile overlay */}
+        <button
+          className="prime-radiant__side-panel-close"
+          onClick={() => setActivePanel(null)}
+          aria-label="Close panel"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {activePanel === 'detail' && showDetailPanel && (
+          <DetailPanel
+            node={selectedNode}
+            graphIndex={graphIndex}
+            onClose={handleCloseDetail}
+            onNavigate={handleNavigate}
+          />
+        )}
+        {activePanel === 'activity' && <ActivityPanel />}
+        {activePanel === 'backlog' && <BacklogPanel />}
+        {activePanel === 'agent' && <AgentPanel />}
+        {activePanel === 'seldon' && graphData && (
+          <SeldonDashboard
+            open={true}
+            onClose={() => setActivePanel(null)}
+            graph={graphData}
+            selectedNode={selectedNode}
+          />
+        )}
+        {activePanel === 'llm' && <LLMStatus />}
       </div>
     </div>
   );

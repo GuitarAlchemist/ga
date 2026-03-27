@@ -3,6 +3,7 @@
 
 .prime-radiant {
   position: relative;
+  display: flex;
   width: 100%;
   height: 100%;
   min-height: 600px;
@@ -10,6 +11,125 @@
   overflow: hidden;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   color: #e6edf3;
+}
+
+/* Canvas area — fills remaining horizontal space */
+.prime-radiant__canvas-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─── Icon Rail — right edge ─── */
+.icon-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+  flex-shrink: 0;
+  background: rgba(13, 17, 23, 0.9);
+  border-left: 1px solid #30363d;
+  padding: 8px 0;
+  gap: 4px;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+}
+
+.icon-rail__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.icon-rail__btn:hover {
+  background: rgba(48, 54, 61, 0.6);
+  color: #e6edf3;
+}
+
+.icon-rail__btn--active {
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.icon-rail__btn--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: #FFD700;
+  border-radius: 0 3px 3px 0;
+}
+
+/* ─── Side Panel — one at a time ─── */
+.prime-radiant__side-panel {
+  width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(13, 17, 23, 0.95);
+  border-left: 1px solid #30363d;
+  backdrop-filter: blur(12px);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 20;
+}
+
+.prime-radiant__side-panel--open {
+  width: 360px;
+  overflow-y: auto;
+}
+
+.prime-radiant__side-panel-close {
+  display: none; /* Only visible on phone */
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  background: rgba(48, 54, 61, 0.8);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reset panel internal absolute positioning when inside rail */
+.prime-radiant__side-panel .prime-radiant__detail,
+.prime-radiant__side-panel .prime-radiant__activity,
+.prime-radiant__side-panel .prime-radiant__backlog,
+.prime-radiant__side-panel .prime-radiant__agents,
+.prime-radiant__side-panel .seldon-dashboard,
+.prime-radiant__side-panel .prime-radiant__llm-status {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  transform: none;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  background: transparent;
+  z-index: auto;
 }
 
 .prime-radiant__canvas {
@@ -1184,14 +1304,44 @@
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
   .prime-radiant__health { font-size: 10px; padding: 4px 8px; }
-  .prime-radiant__detail { width: 280px; }
   .prime-radiant__gst-clock { font-size: 9px; }
   .chat-widget__panel { width: 300px; height: 400px; }
   .prime-radiant__tutorial-card { max-width: 90vw; padding: 20px; }
+
+  /* Side panel overlays canvas edge instead of pushing it */
+  .prime-radiant__side-panel {
+    position: absolute;
+    right: 48px; /* next to rail */
+    top: 0;
+    height: 100%;
+    width: 0;
+    z-index: 22;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
+  }
+  .prime-radiant__side-panel--open {
+    width: 280px;
+  }
+
+  /* Ensure rail icons meet 44px touch targets */
+  .icon-rail__btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 /* ─── RESPONSIVE — phone ─── */
 @media (max-width: 640px) {
+  /* Switch to vertical stack: canvas + bottom tab bar */
+  .prime-radiant {
+    flex-direction: column;
+  }
+
+  /* Canvas area fills available space above tab bar */
+  .prime-radiant__canvas-area {
+    flex: 1;
+    padding-bottom: 0;
+  }
+
   /* Health bar — compact */
   .prime-radiant__health {
     font-size: 9px;
@@ -1201,21 +1351,53 @@
     gap: 4px;
   }
 
-  /* Detail panel — full width bottom sheet */
-  .prime-radiant__detail {
+  /* Icon rail → bottom tab bar */
+  .icon-rail {
+    flex-direction: row;
     width: 100%;
-    max-width: 100%;
-    height: 45vh;
-    top: auto;
-    bottom: 0;
-    right: 0;
-    border-radius: 12px 12px 0 0;
-    border-right: none;
-    border-bottom: none;
+    height: 48px;
+    border-left: none;
     border-top: 1px solid #30363d;
+    padding: 0 4px;
+    justify-content: space-around;
+    flex-shrink: 0;
+    order: 2; /* after canvas area */
   }
-  .prime-radiant__detail--open { transform: translateY(0); }
-  .prime-radiant__detail:not(.prime-radiant__detail--open) { transform: translateY(100%); }
+
+  .icon-rail__btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .icon-rail__btn--active::before {
+    /* Indicator on top instead of left for horizontal layout */
+    left: 8px;
+    right: 8px;
+    top: 0;
+    bottom: auto;
+    width: auto;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* Side panel → full-screen overlay */
+  .prime-radiant__side-panel {
+    position: fixed;
+    inset: 0;
+    width: 0;
+    height: 100%;
+    z-index: 35;
+    border-left: none;
+    box-shadow: none;
+  }
+  .prime-radiant__side-panel--open {
+    width: 100%;
+  }
+
+  /* Show close button on phone */
+  .prime-radiant__side-panel-close {
+    display: flex;
+  }
 
   /* Buttons — smaller, tighter */
   .chat-widget__trigger,
@@ -1259,21 +1441,16 @@
   /* Connection list — compact */
   .prime-radiant__detail-connection { padding: 4px 6px; font-size: 10px; }
 
-  /* Planet bar — scrollable on phone */
+  /* Planet bar — scrollable, above tab bar */
   .prime-radiant__planet-bar {
     max-width: calc(100vw - 20px);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    bottom: 4px;
   }
   .prime-radiant__planet-bar::-webkit-scrollbar { display: none; }
   .prime-radiant__planet-label { display: none; }
-
-  /* Activity panel — hide on phone to prevent overlap */
-  .prime-radiant__activity { display: none; }
-
-  /* LLM status — compact */
-  .prime-radiant__llm-status { font-size: 9px; max-width: 120px; }
 }
 
 /* ─── Touch-friendly tap targets ─── */
