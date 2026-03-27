@@ -526,6 +526,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [showCourseViewer, setShowCourseViewer] = useState(false);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   // Algedonic effect refs — mutable state for animation loop (no re-render needed)
   const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
@@ -1726,6 +1727,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => ro.disconnect();
   }, []);
 
+  // ─── Backend connectivity check ───
+  useEffect(() => {
+    const baseUrl = typeof import.meta !== 'undefined'
+      ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL ?? 'http://localhost:5232'
+      : 'http://localhost:5232';
+
+    const checkBackend = async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/chatbot/status`, { signal: AbortSignal.timeout(5000) });
+        setBackendStatus(res.ok ? 'connected' : 'disconnected');
+      } catch {
+        setBackendStatus('disconnected');
+      }
+    };
+
+    void checkBackend();
+    const interval = setInterval(() => void checkBackend(), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // ─── Detail panel handlers ───
   const handleNavigate = useCallback((nodeId: string) => {
     const fg = graphRef.current;
@@ -1762,6 +1783,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
         <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+
+      {/* Backend connection status badge */}
+      <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
+        <span className="prime-radiant__backend-dot" />
+        <span>{backendStatus === 'connected' ? 'API' : backendStatus === 'checking' ? '...' : 'Offline'}</span>
+      </div>
 
       {/* HUD overlays on the canvas — floating, small */}
       {graphData && (
