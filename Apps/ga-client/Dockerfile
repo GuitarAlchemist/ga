@@ -1,15 +1,18 @@
-# Build stage
+# Build stage — context must be the repo root (see docker-compose.yml)
 FROM node:20-alpine AS build
-WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Replicate the monorepo directory structure so relative imports resolve
+WORKDIR /repo/Apps/ga-client
 
-# Install dependencies
+# Copy ga-react-components first (needed as file: dependency and for source imports)
+COPY ReactComponents/ga-react-components /repo/ReactComponents/ga-react-components
+
+# Copy ga-client package files and install dependencies
+COPY Apps/ga-client/package*.json ./
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy ga-client source code
+COPY Apps/ga-client/ .
 
 # Build the application
 RUN npm run build
@@ -25,10 +28,10 @@ RUN addgroup -g 1001 -S nginx_user && adduser -S -D -H -u 1001 -h /var/cache/ngi
 RUN rm -rf ./*
 
 # Copy built assets from build stage
-COPY --from=build /app/dist .
+COPY --from=build /repo/Apps/ga-client/dist .
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY Apps/ga-client/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Set proper permissions
 RUN chown -R nginx_user:nginx_user /usr/share/nginx/html && \

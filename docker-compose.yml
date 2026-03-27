@@ -137,8 +137,8 @@ services:
   # ============================================
   ga-client:
     build:
-      context: ./Apps/ga-client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Apps/ga-client/Dockerfile
     container_name: ga-client
     restart: unless-stopped
     ports:

@@ -29,7 +29,7 @@ export default defineConfig({
         },
     },
     resolve: {
-        dedupe: ['react', 'react-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        dedupe: ['react', 'react-dom', 'react-router-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
     },
     build: {
         chunkSizeWarningLimit: 1500,
