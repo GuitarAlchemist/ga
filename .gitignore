@@ -168,3 +168,8 @@ test_tab.json
 
 # Completed code review todos (ephemeral tracking)
 todos/
+
+# Blue/Green deployment state files
+.slot-target
+.slot-state.json
+.slot-lock
