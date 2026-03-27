@@ -9,6 +9,9 @@ import * as THREE from 'three';
 const TEX_BASE = '/textures/planets/';
 const loader = new THREE.TextureLoader();
 
+// ── Live weather cloud refresh interval (ms) ──
+const CLOUD_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
+
 function loadTex(file: string): THREE.Texture {
   const tex = loader.load(TEX_BASE + file);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -1045,4 +1048,125 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIVE WEATHER CLOUDS — fetches OWM cloud tiles onto Earth
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Fetch OpenWeatherMap cloud tiles at zoom 3 (8x8 = 64 tiles),
+ * stitch into a 2048x1024 equirectangular canvas, and update
+ * the Earth cloud meshes with the live texture.
+ *
+ * Call once after createSolarSystem. It sets up a 15-min refresh loop
+ * and returns a cleanup function to stop it.
+ */
+export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () => void {
+  const key = apiKey || (typeof import.meta !== 'undefined' && (import.meta as Record<string, Record<string, string>>).env?.VITE_OWM_API_KEY);
+  if (!key) {
+    console.info('[SolarSystem] No OWM API key — using static cloud texture');
+    return () => {};
+  }
+
+  const planets = group.userData.planets as { mesh: THREE.Mesh; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
+  if (!planets) return () => {};
+
+  const earthEntry = planets.find(p => p.def.name === 'earth');
+  if (!earthEntry?.clouds) return () => {};
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d')!;
+  const canvasTexture = new THREE.CanvasTexture(canvas);
+  canvasTexture.colorSpace = THREE.SRGBColorSpace;
+
+  async function fetchAndStitch() {
+    const ZOOM = 3;
+    const TILES = 1 << ZOOM; // 8
+    const TILE_SIZE = 256;
+
+    // Fetch all 64 tiles concurrently (with concurrency limit)
+    const fetches: Promise<{ x: number; y: number; img: HTMLImageElement } | null>[] = [];
+
+    for (let y = 0; y < TILES; y++) {
+      for (let x = 0; x < TILES; x++) {
+        const url = `https://tile.openweathermap.org/map/clouds_new/${ZOOM}/${x}/${y}.png?appid=${key}`;
+        fetches.push(
+          new Promise(resolve => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve({ x, y, img });
+            img.onerror = () => resolve(null);
+            img.src = url;
+          })
+        );
+      }
+    }
+
+    const results = await Promise.all(fetches);
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw tiles onto canvas
+    const tileW = canvas.width / TILES;   // 256
+    const tileH = canvas.height / TILES;  // 128
+
+    for (const result of results) {
+      if (!result) continue;
+      ctx.drawImage(result.img, result.x * tileW, result.y * tileH, tileW, tileH);
+    }
+
+    // Alpha processing: make non-cloud areas transparent
+    // OWM cloud tiles have colored backgrounds — extract brightness as alpha
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      // Cloud brightness → alpha; dark areas (clear sky) → transparent
+      const brightness = (r + g + b) / 3;
+      data[i] = 255;     // white clouds
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = Math.min(255, brightness * 1.5); // boost contrast
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    // Update texture
+    canvasTexture.needsUpdate = true;
+
+    console.info(`[SolarSystem] Live cloud texture updated (${results.filter(Boolean).length}/64 tiles)`);
+  }
+
+  // Apply live texture to cloud meshes
+  function applyTexture() {
+    if (earthEntry!.clouds) {
+      const mat = earthEntry!.clouds.material as THREE.MeshStandardMaterial;
+      mat.map = canvasTexture;
+      mat.alphaMap = canvasTexture;
+      mat.needsUpdate = true;
+    }
+    if (earthEntry!.cloudsHigh) {
+      const mat = earthEntry!.cloudsHigh.material as THREE.MeshStandardMaterial;
+      mat.map = canvasTexture;
+      mat.alphaMap = canvasTexture;
+      mat.needsUpdate = true;
+    }
+  }
+
+  // Initial fetch
+  fetchAndStitch().then(applyTexture).catch(err => {
+    console.warn('[SolarSystem] Live cloud fetch failed, keeping static texture:', err);
+  });
+
+  // Refresh loop
+  const interval = setInterval(() => {
+    fetchAndStitch().then(applyTexture).catch(err => {
+      console.warn('[SolarSystem] Live cloud refresh failed:', err);
+    });
+  }, CLOUD_REFRESH_MS);
+
+  return () => clearInterval(interval);
 }
