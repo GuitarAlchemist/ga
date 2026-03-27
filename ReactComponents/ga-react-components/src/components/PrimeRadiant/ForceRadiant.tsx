@@ -523,7 +523,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
-  const [showCourseViewer, setShowCourseViewer] = useState(false);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
@@ -1813,19 +1812,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
-      {/* University button — opens Streeling course viewer */}
-      <button
-        className="prime-radiant__university-btn"
-        onClick={() => setShowCourseViewer(true)}
-        title="Streeling University — Course Browser"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-          <path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5" />
-        </svg>
-        University
-      </button>
-
       <GalacticClock />
       <ChatWidget selectedNode={selectedNode} />
       <TutorialOverlay />
@@ -1968,8 +1954,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         )}
       </div>
 
-      {/* Streeling University course viewer modal (also accessible via floating button) */}
-      <CourseViewer open={showCourseViewer} onClose={() => setShowCourseViewer(false)} />
     </div>
   );
 };
