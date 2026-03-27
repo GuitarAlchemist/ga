@@ -35,6 +35,7 @@ import { CICDPanel } from './CICDPanel';
 import { ClaudeCodePanel } from './ClaudeCodePanel';
 import type { AlgedonicSignalEvent } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
+import { LiveNotebook } from './LiveNotebook';
 import { IcicleDrawer } from './IcicleDrawer';
 import './styles.css';
 
@@ -529,6 +530,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
 
   // Algedonic effect refs — mutable state for animation loop (no re-render needed)
   const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
@@ -1858,10 +1860,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // ─── Escape key to close active panel ───
+  // ─── Escape key to close active panel + click-outside to close health tooltip ───
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        setActiveHealthTip(null);
         setActivePanel(prev => {
           if (prev) return null;
           return prev;
@@ -1869,8 +1872,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         setSelectedNode(null);
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const clickHandler = () => { setActiveHealthTip(null); };
+    window.addEventListener('keydown', keyHandler);
+    window.addEventListener('click', clickHandler);
+    return () => {
+      window.removeEventListener('keydown', keyHandler);
+      window.removeEventListener('click', clickHandler);
+    };
   }, []);
 
   // ─── Detail panel handlers ───
@@ -1918,25 +1926,113 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         <span>{backendStatus === 'connected' ? 'API Connected' : backendStatus === 'checking' ? 'Checking...' : 'API Offline'}</span>
       </div>
 
-      {/* HUD overlays on the canvas — floating, small */}
+      {/* HUD overlays on the canvas — floating, center-top */}
       {graphData && (
-        <div className="prime-radiant__health" title="R: Resilience Score | ERGOL: Live Executed Governance Bindings | LOLLI: Dead/Orphan References">
-          <span className={`prime-radiant__health-dot prime-radiant__health-dot--${healthStatus}`} />
-          <span>
-            R:{' '}
-            <span style={{ color: HEALTH_COLORS[healthStatus], fontWeight: 600 }}>
-              {(graphData.globalHealth.resilienceScore * 100).toFixed(0)}%
-            </span>
+        <div className="prime-radiant__health">
+          {/* API status */}
+          <span
+            className={`prime-radiant__health-metric ${activeHealthTip === 'api' ? 'prime-radiant__health-metric--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setActiveHealthTip(prev => prev === 'api' ? null : 'api'); }}
+          >
+            <span className={`prime-radiant__health-dot prime-radiant__health-dot--${backendStatus === 'connected' ? 'healthy' : 'freeze'}`} />
+            <span>API</span>
+            {activeHealthTip === 'api' && (
+              <div className="prime-radiant__health-tooltip" onClick={e => e.stopPropagation()}>
+                <div className="prime-radiant__health-tooltip-title">Backend API Status</div>
+                <div className="prime-radiant__health-tooltip-desc">
+                  {backendStatus === 'connected'
+                    ? 'Connected to ga-server. Live governance data, SignalR hub, and belief state updates are active.'
+                    : 'Backend API is unreachable. Displaying cached/sample data. Some features (live beliefs, algedonic signals) are unavailable.'}
+                </div>
+                <div className="prime-radiant__health-tooltip-link" onClick={() => { setActiveHealthTip(null); handlePanelToggle('cicd'); }}>
+                  View CI/CD status →
+                </div>
+              </div>
+            )}
           </span>
+
           <span style={{ color: '#30363d' }}>|</span>
-          <span>
-            ERGOL: <span style={{ color: '#FFD700' }}>{graphData.globalHealth.ergolCount}</span>
-          </span>
-          <span style={{ color: '#30363d' }}>|</span>
-          <span>
-            LOLLI: <span style={{ color: graphData.globalHealth.lolliCount > 0 ? '#FF4444' : '#8b949e' }}>
-              {graphData.globalHealth.lolliCount}
+
+          {/* Resilience */}
+          <span
+            className={`prime-radiant__health-metric ${activeHealthTip === 'resilience' ? 'prime-radiant__health-metric--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setActiveHealthTip(prev => prev === 'resilience' ? null : 'resilience'); }}
+          >
+            <span>
+              R:{' '}
+              <span style={{ color: HEALTH_COLORS[healthStatus], fontWeight: 600 }}>
+                {(graphData.globalHealth.resilienceScore * 100).toFixed(0)}%
+              </span>
             </span>
+            {activeHealthTip === 'resilience' && (
+              <div className="prime-radiant__health-tooltip" onClick={e => e.stopPropagation()}>
+                <div className="prime-radiant__health-tooltip-title">Resilience Score</div>
+                <div className="prime-radiant__health-tooltip-desc">
+                  Aggregate health of the governance ecosystem. Computed from node staleness, test coverage, policy compliance, and Markov state predictions across all {graphData.nodes.length} artifacts.
+                </div>
+                <div className="prime-radiant__health-tooltip-thresholds">
+                  <span style={{ color: '#33CC66' }}>≥90% Healthy</span>
+                  <span style={{ color: '#FFB300' }}>70-89% Watch</span>
+                  <span style={{ color: '#FF4444' }}>&lt;70% Freeze</span>
+                </div>
+                <div className="prime-radiant__health-tooltip-link" onClick={() => { setActiveHealthTip(null); handlePanelToggle('seldon'); }}>
+                  Open Seldon Dashboard →
+                </div>
+              </div>
+            )}
+          </span>
+
+          <span style={{ color: '#30363d' }}>|</span>
+
+          {/* ERGOL */}
+          <span
+            className={`prime-radiant__health-metric ${activeHealthTip === 'ergol' ? 'prime-radiant__health-metric--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setActiveHealthTip(prev => prev === 'ergol' ? null : 'ergol'); }}
+          >
+            <span>
+              ERGOL: <span style={{ color: '#FFD700' }}>{graphData.globalHealth.ergolCount}</span>
+            </span>
+            {activeHealthTip === 'ergol' && (
+              <div className="prime-radiant__health-tooltip" onClick={e => e.stopPropagation()}>
+                <div className="prime-radiant__health-tooltip-title">ERGOL — Executed References (Governance Operational Links)</div>
+                <div className="prime-radiant__health-tooltip-desc">
+                  Live, actively consumed governance bindings. Each ERGOL represents a policy, persona, or constitution that is actively referenced by a consumer repo (ix, tars, ga). Higher is better — it means governance artifacts are being used.
+                </div>
+                <div className="prime-radiant__health-tooltip-value" style={{ color: '#FFD700' }}>
+                  {graphData.globalHealth.ergolCount} active bindings across {graphData.edges.length} edges
+                </div>
+              </div>
+            )}
+          </span>
+
+          <span style={{ color: '#30363d' }}>|</span>
+
+          {/* LOLLI */}
+          <span
+            className={`prime-radiant__health-metric ${activeHealthTip === 'lolli' ? 'prime-radiant__health-metric--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setActiveHealthTip(prev => prev === 'lolli' ? null : 'lolli'); }}
+          >
+            <span>
+              LOLLI: <span style={{ color: graphData.globalHealth.lolliCount > 0 ? '#FF4444' : '#8b949e' }}>
+                {graphData.globalHealth.lolliCount}
+              </span>
+            </span>
+            {activeHealthTip === 'lolli' && (
+              <div className="prime-radiant__health-tooltip" onClick={e => e.stopPropagation()}>
+                <div className="prime-radiant__health-tooltip-title">LOLLI — Lapsed/Orphan Links (Inflation Indicator)</div>
+                <div className="prime-radiant__health-tooltip-desc">
+                  Dead or orphaned governance references — artifacts that exist but have no active consumer. LOLLI inflation means we're creating governance artifacts nobody uses. Target: 0. Any LOLLI should be either adopted or deleted.
+                </div>
+                {graphData.globalHealth.lolliCount > 0 && (
+                  <div className="prime-radiant__health-tooltip-value" style={{ color: '#FF4444' }}>
+                    {graphData.globalHealth.lolliCount} orphan reference{graphData.globalHealth.lolliCount > 1 ? 's' : ''} — consider remediation
+                  </div>
+                )}
+                <div className="prime-radiant__health-tooltip-link" onClick={() => { setActiveHealthTip(null); handlePanelToggle('backlog'); }}>
+                  View backlog for cleanup →
+                </div>
+              </div>
+            )}
           </span>
         </div>
       )}
@@ -2079,13 +2175,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }}
       />
 
-      {/* Tap-outside-to-close backdrop (phone only) */}
-      {activePanel && (
-        <div
-          className="prime-radiant__side-panel-backdrop"
-          onClick={() => setActivePanel(null)}
-        />
-      )}
+      {/* Click-outside-to-close backdrop */}
+      <div
+        className={`prime-radiant__side-panel-backdrop ${activePanel ? 'prime-radiant__side-panel-backdrop--active' : ''}`}
+        onClick={() => { if (activePanel) setActivePanel(null); }}
+      />
 
       {/* Side panel area — one panel at a time */}
       <div className={`prime-radiant__side-panel ${activePanel ? 'prime-radiant__side-panel--open' : ''}`}>
@@ -2129,6 +2223,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* CourseViewer renders as full-screen overlay, outside side panel */}
       {activePanel === 'university' && (
         <CourseViewer open={true} onClose={() => setActivePanel(null)} />
+      )}
+
+      {/* LiveNotebook renders as full-screen overlay, outside side panel */}
+      {activePanel === 'notebook' && (
+        <LiveNotebook open={true} onClose={() => setActivePanel(null)} />
       )}
 
     </div>

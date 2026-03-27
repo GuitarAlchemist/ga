@@ -63,7 +63,10 @@ export const GalacticClock: React.FC = () => {
   }, []);
 
   return (
-    <div className="prime-radiant__gst-clock">
+    <div
+      className="prime-radiant__gst-clock"
+      title="Galactic Standard Time — Foundation Era calendar inspired by Asimov's Foundation series. F.E. Year = Earth year − 2023. 400 days/year, 10 months of 40 days each. GST tracks governance lifecycle in Foundation time."
+    >
       <span style={{ marginRight: 4 }}>{'\u25CF'}</span>
       {gst}
     </div>

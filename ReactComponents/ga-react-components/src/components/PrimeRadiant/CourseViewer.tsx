@@ -1,7 +1,7 @@
 // src/components/PrimeRadiant/CourseViewer.tsx
 // Streeling University course browser — embedded in Prime Radiant as a full-screen modal
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import { departments, totalCourses, totalDepartments, type Course } from './courseData';
 
@@ -19,6 +19,9 @@ interface CourseRequest {
   level: 'introductory' | 'intermediate' | 'advanced' | 'phd';
   requestedAt: string;
   status: 'queued' | 'generating' | 'completed';
+  assignedTo?: string;   // agent/model handling it
+  eta?: string;          // estimated completion
+  progress?: number;     // 0-100
 }
 
 interface ResearchRequest {
@@ -29,6 +32,9 @@ interface ResearchRequest {
   sources: string[];
   requestedAt: string;
   status: 'queued' | 'researching' | 'completed';
+  assignedTo?: string;
+  eta?: string;
+  progress?: number;
 }
 
 interface TranslationRequest {
@@ -37,6 +43,9 @@ interface TranslationRequest {
   targetLanguage: string;
   requestedAt: string;
   status: 'queued' | 'in_progress' | 'completed';
+  assignedTo?: string;
+  eta?: string;
+  progress?: number;
 }
 
 type DialogKind = 'generate-course' | 'deep-research' | null;
@@ -161,18 +170,71 @@ const LANGUAGE_LABELS: Record<string, string> = {
   it: 'Italiano',
 };
 
+function estimateEta(type: 'course' | 'research' | 'translation', detail?: string): string {
+  if (type === 'course') {
+    const mins = detail === 'phd' ? 15 : detail === 'advanced' ? 10 : 5;
+    return `~${mins} min`;
+  }
+  if (type === 'research') {
+    const mins = detail === 'frontier' ? 30 : detail === 'deep-dive' ? 20 : detail === 'systematic-review' ? 15 : 8;
+    return `~${mins} min`;
+  }
+  return '~5 min';
+}
+
+const AGENT_MODELS = ['Claude Opus', 'Seldon-Plan', 'ChatGPT-4o'] as const;
+
+function pickRandomModel(): string {
+  return AGENT_MODELS[Math.floor(Math.random() * AGENT_MODELS.length)];
+}
+
+function timeAgo(isoDate: string): string {
+  const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
+  if (seconds < 5) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => {
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set());
-  const [activeLang, setActiveLang] = useState<string>('en');
+  const [activeLang, setActiveLang] = useState<string>(() => {
+    try { return localStorage.getItem('streeling-preferred-language') ?? 'en'; }
+    catch { return 'en'; }
+  });
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+
+  // Escape to close
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
 
   /* --- Queue state --- */
   const [courseQueue, setCourseQueue] = useState<CourseRequest[]>(() => loadQueue(COURSE_QUEUE_KEY));
   const [researchQueue, setResearchQueue] = useState<ResearchRequest[]>(() => loadQueue(RESEARCH_QUEUE_KEY));
   const [translationQueue, setTranslationQueue] = useState<TranslationRequest[]>(() => loadQueue(TRANSLATION_QUEUE_KEY));
-  const [queueExpanded, setQueueExpanded] = useState(false);
+  const [, setTick] = useState(0); // force re-render for timeAgo updates
+
+  // Auto-expand queue when pending items exist on mount
+  const [queueExpanded, setQueueExpanded] = useState(() => {
+    const cq: CourseRequest[] = loadQueue(COURSE_QUEUE_KEY);
+    const rq: ResearchRequest[] = loadQueue(RESEARCH_QUEUE_KEY);
+    const tq: TranslationRequest[] = loadQueue(TRANSLATION_QUEUE_KEY);
+    return cq.some(r => r.status !== 'completed')
+      || rq.some(r => r.status !== 'completed')
+      || tq.some(r => r.status !== 'completed');
+  });
 
   /* --- Dialog state --- */
   const [dialogKind, setDialogKind] = useState<DialogKind>(null);
@@ -192,8 +254,102 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
   useEffect(() => { saveQueue(RESEARCH_QUEUE_KEY, researchQueue); }, [researchQueue]);
   useEffect(() => { saveQueue(TRANSLATION_QUEUE_KEY, translationQueue); }, [translationQueue]);
 
-  // Reset language when course changes
-  useEffect(() => { setActiveLang('en'); }, [selectedCourse?.id]);
+  // Tick every 10s to keep timeAgo displays fresh
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 10_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Status simulation: advance queued items through stages
+  const simTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  useEffect(() => {
+    return () => { simTimers.current.forEach(clearTimeout); };
+  }, []);
+
+  const scheduleSimulation = useCallback((type: 'course' | 'research' | 'translation', id: string) => {
+    // Phase 1: after 2s, assign agent and set in-progress status
+    const t1 = setTimeout(() => {
+      const model = pickRandomModel();
+      if (type === 'course') {
+        setCourseQueue(prev => prev.map(r => r.id === id && r.status === 'queued'
+          ? { ...r, status: 'generating', assignedTo: model, progress: 5 } : r));
+      } else if (type === 'research') {
+        setResearchQueue(prev => prev.map(r => r.id === id && r.status === 'queued'
+          ? { ...r, status: 'researching', assignedTo: model, progress: 5 } : r));
+      } else {
+        const [, cid, lang] = id.split('::');
+        setTranslationQueue(prev => prev.map(r => r.courseId === cid && r.targetLanguage === lang && r.status === 'queued'
+          ? { ...r, status: 'in_progress', assignedTo: model, progress: 5 } : r));
+      }
+    }, 2000);
+    simTimers.current.add(t1);
+
+    // Phase 2: progress ticks every 3s
+    const progressTicks = [20, 38, 55, 72, 88, 100];
+    progressTicks.forEach((pct, i) => {
+      const t = setTimeout(() => {
+        const advance = <T extends { status: string; progress?: number }>(r: T, activeStatuses: string[]): T => {
+          if (r.status === 'completed' || !activeStatuses.includes(r.status)) return r;
+          const next = { ...r, progress: pct };
+          if (pct >= 100) (next as any).status = 'completed';
+          return next;
+        };
+        if (type === 'course') {
+          setCourseQueue(prev => prev.map(r => r.id === id ? advance(r, ['generating', 'queued']) : r));
+        } else if (type === 'research') {
+          setResearchQueue(prev => prev.map(r => r.id === id ? advance(r, ['researching', 'queued']) : r));
+        } else {
+          const [, cid, lang] = id.split('::');
+          setTranslationQueue(prev => prev.map(r =>
+            r.courseId === cid && r.targetLanguage === lang ? advance(r, ['in_progress', 'queued']) : r
+          ));
+        }
+      }, 2000 + 3000 * (i + 1));
+      simTimers.current.add(t);
+    });
+  }, []);
+
+  // Rescue stuck items: on mount, re-schedule simulation for any items still 'queued'
+  const simRescuedRef = useRef(false);
+  useEffect(() => {
+    if (simRescuedRef.current) return;
+    simRescuedRef.current = true;
+    courseQueue.filter(r => r.status === 'queued').forEach(r => scheduleSimulation('course', r.id));
+    researchQueue.filter(r => r.status === 'queued').forEach(r => scheduleSimulation('research', r.id));
+    translationQueue.filter(r => r.status === 'queued').forEach(r =>
+      scheduleSimulation('translation', `tq::${r.courseId}::${r.targetLanguage}`)
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cancel helpers
+  const cancelCourseItem = useCallback((id: string) => {
+    setCourseQueue(prev => prev.filter(r => r.id !== id));
+  }, []);
+  const cancelResearchItem = useCallback((id: string) => {
+    setResearchQueue(prev => prev.filter(r => r.id !== id));
+  }, []);
+  const cancelTranslationItem = useCallback((courseId: string, lang: string) => {
+    setTranslationQueue(prev => prev.filter(r => !(r.courseId === courseId && r.targetLanguage === lang)));
+  }, []);
+
+  // Persist preferred language globally
+  useEffect(() => {
+    try { localStorage.setItem('streeling-preferred-language', activeLang); }
+    catch { /* ignore */ }
+  }, [activeLang]);
+
+  // Close language dropdown on outside click
+  useEffect(() => {
+    if (!langDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.course-viewer__global-lang')) {
+        setLangDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, [langDropdownOpen]);
 
   const openDialog = useCallback((kind: DialogKind, deptName: string) => {
     setDialogKind(kind);
@@ -216,10 +372,15 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
       level: gcLevel,
       requestedAt: new Date().toISOString(),
       status: 'queued',
+      assignedTo: undefined,
+      eta: estimateEta('course', gcLevel),
+      progress: 0,
     };
     setCourseQueue(prev => [...prev, req]);
+    setQueueExpanded(true);
+    scheduleSimulation('course', req.id);
     closeDialog();
-  }, [gcTopic, gcLevel, dialogDept, closeDialog]);
+  }, [gcTopic, gcLevel, dialogDept, closeDialog, scheduleSimulation]);
 
   const submitResearchRequest = useCallback(() => {
     if (!drTopic.trim()) return;
@@ -231,6 +392,9 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
       sources: Array.from(drSources),
       requestedAt: new Date().toISOString(),
       status: 'queued',
+      assignedTo: undefined,
+      eta: estimateEta('research', drDepth),
+      progress: 0,
     };
     setResearchQueue(prev => [...prev, req]);
     closeDialog();
@@ -306,16 +470,22 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
       .filter(dept => dept.courses.length > 0 || dept.name.toLowerCase().includes(q));
   }, [searchQuery]);
 
+  // Strip YAML frontmatter (---...\n---) from markdown content
+  const stripFrontmatter = useCallback((text: string): string => {
+    const match = text.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/);
+    return match ? text.slice(match[0].length) : text;
+  }, []);
+
   // Resolve displayed content based on active language
   const displayedContent = useMemo(() => {
     if (!selectedCourse) return null;
     if (activeLang === 'en') {
-      return { title: selectedCourse.title, content: selectedCourse.content };
+      return { title: selectedCourse.title, content: stripFrontmatter(selectedCourse.content) };
     }
     const t = selectedCourse.translations[activeLang];
-    if (t) return { title: t.title, content: t.content };
-    return { title: selectedCourse.title, content: selectedCourse.content };
-  }, [selectedCourse, activeLang]);
+    if (t) return { title: t.title, content: stripFrontmatter(t.content) };
+    return { title: selectedCourse.title, content: stripFrontmatter(selectedCourse.content) };
+  }, [selectedCourse, activeLang, stripFrontmatter]);
 
   if (!open) return null;
 
@@ -336,12 +506,114 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
               </span>
             </div>
           </div>
-          <button className="course-viewer__close" onClick={onClose} aria-label="Close course viewer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {totalPending > 0 && (
+              <button
+                onClick={() => setQueueExpanded(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 10px',
+                  background: 'rgba(255, 179, 0, 0.1)',
+                  border: '1px solid rgba(255, 179, 0, 0.3)',
+                  borderRadius: 6,
+                  color: '#FFB300',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                title="View pending queue"
+              >
+                <span style={{ fontSize: 13 }}>⏳</span>
+                {totalPending} queued
+              </button>
+            )}
+            {/* Global language selector */}
+            <div className="course-viewer__global-lang" style={{ position: 'relative' }}>
+              <button
+                onClick={() => setLangDropdownOpen(prev => !prev)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '4px 10px',
+                  background: langDropdownOpen ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 215, 0, 0.06)',
+                  border: '1px solid rgba(255, 215, 0, 0.25)',
+                  borderRadius: 6,
+                  color: '#FFD700',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                title="Change preferred language"
+                aria-label="Change preferred language"
+                aria-expanded={langDropdownOpen}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                {activeLang.toUpperCase()}
+              </button>
+              {langDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    right: 0,
+                    background: '#1a1a2e',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: 8,
+                    padding: '4px 0',
+                    minWidth: 140,
+                    zIndex: 100,
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  {ALL_LANGUAGES.map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => { setActiveLang(lang); setLangDropdownOpen(false); }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                        padding: '6px 12px',
+                        background: activeLang === lang ? 'rgba(255, 215, 0, 0.12)' : 'transparent',
+                        border: 'none',
+                        color: activeLang === lang ? '#FFD700' : '#c9d1d9',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: '11px',
+                        fontWeight: activeLang === lang ? 700 : 400,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 215, 0, 0.08)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = activeLang === lang ? 'rgba(255, 215, 0, 0.12)' : 'transparent'; }}
+                    >
+                      <span style={{ width: 22, fontWeight: 700 }}>{lang.toUpperCase()}</span>
+                      <span>{LANGUAGE_LABELS[lang]}</span>
+                      {activeLang === lang && <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.7 }}>&#10003;</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button className="course-viewer__close" onClick={onClose} aria-label="Close course viewer">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -468,6 +740,15 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                           <div className="course-viewer__queue-item-info">
                             <span className="course-viewer__queue-item-topic">{req.topic}</span>
                             <span className="course-viewer__queue-item-meta">{req.department} &middot; {req.level}</span>
+                            <span className="course-viewer__queue-item-agent">
+                              {req.assignedTo ? `Agent: ${req.assignedTo}` : 'Awaiting assignment'}
+                              {req.eta && <> &middot; ETA: {req.eta}</>}
+                            </span>
+                            {req.progress != null && req.progress > 0 && (
+                              <div className="course-viewer__queue-progress">
+                                <div className="course-viewer__queue-progress-bar" style={{ width: `${req.progress}%` }} />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -482,6 +763,15 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                           <div className="course-viewer__queue-item-info">
                             <span className="course-viewer__queue-item-topic">{req.topic}</span>
                             <span className="course-viewer__queue-item-meta">{req.department} &middot; {req.depth}</span>
+                            <span className="course-viewer__queue-item-agent">
+                              {req.assignedTo ? `Agent: ${req.assignedTo}` : 'Awaiting assignment'}
+                              {req.eta && <> &middot; ETA: {req.eta}</>}
+                            </span>
+                            {req.progress != null && req.progress > 0 && (
+                              <div className="course-viewer__queue-progress">
+                                <div className="course-viewer__queue-progress-bar" style={{ width: `${req.progress}%` }} />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -498,6 +788,15 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                             <span className="course-viewer__queue-item-meta">
                               {req.department} &middot; {LANGUAGE_LABELS[req.targetLanguage] ?? req.targetLanguage}
                             </span>
+                            <span className="course-viewer__queue-item-agent">
+                              {req.assignedTo ? `Agent: ${req.assignedTo}` : 'Awaiting assignment'}
+                              {req.eta && <> &middot; ETA: {req.eta}</>}
+                            </span>
+                            {req.progress != null && req.progress > 0 && (
+                              <div className="course-viewer__queue-progress">
+                                <div className="course-viewer__queue-progress-bar" style={{ width: `${req.progress}%` }} />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
