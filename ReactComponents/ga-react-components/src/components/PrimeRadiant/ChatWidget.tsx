@@ -206,6 +206,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioBlobUrlRef = useRef<string | null>(null);
 
   // Close on click outside
   useEffect(() => {
@@ -233,18 +235,30 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
+      stopAudio();
       speechSynthesis.cancel();
     };
   }, []);
 
-  const speakText = useCallback((text: string) => {
-    if (!ttsEnabled) return;
+  /** Stop any currently playing audio and revoke blob URL */
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (audioBlobUrlRef.current) {
+      URL.revokeObjectURL(audioBlobUrlRef.current);
+      audioBlobUrlRef.current = null;
+    }
+  }, []);
+
+  /** Fallback: use browser Web Speech API */
+  const speakWithBrowserTts = useCallback((text: string) => {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = navigator.language;
     utterance.rate = 0.9;
     utterance.pitch = 0.85;
-    // Pick a good voice — prefer Google UK English or similar natural voice
     const voices = speechSynthesis.getVoices();
     const preferred = voices.find((v) => v.name.includes('Google UK English Female'))
       ?? voices.find((v) => v.name.includes('Google') && v.lang.startsWith('en'))
@@ -253,13 +267,55 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       ?? voices[0];
     if (preferred) utterance.voice = preferred;
     speechSynthesis.speak(utterance);
-  }, [ttsEnabled]);
+  }, []);
+
+  /** Speak text via Voxtral backend, falling back to browser TTS on failure */
+  const speakText = useCallback(async (text: string) => {
+    if (!ttsEnabled) return;
+    stopAudio();
+    speechSynthesis.cancel();
+
+    try {
+      const baseUrl = typeof import.meta !== 'undefined'
+        ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL ?? 'https://localhost:7001'
+        : 'https://localhost:7001';
+
+      const response = await fetch(`${baseUrl}/api/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        // Server returned 503 (not configured) or other error — fallback
+        speakWithBrowserTts(text);
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      audioBlobUrlRef.current = url;
+
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        audioBlobUrlRef.current = null;
+        audioRef.current = null;
+      };
+      await audio.play();
+    } catch {
+      // Network error or other failure — fallback to browser TTS
+      speakWithBrowserTts(text);
+    }
+  }, [ttsEnabled, stopAudio, speakWithBrowserTts]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isLoading) return;
 
-    // Stop any ongoing speech
+    // Stop any ongoing speech (both Voxtral audio and browser TTS)
+    stopAudio();
     speechSynthesis.cancel();
 
     const userMsg: ChatMessage = {
@@ -313,14 +369,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         } catch { /* ignore parse errors */ }
       }
 
-      speakText(fullText);
-    } catch (err) {
+      void speakText(fullText);
+    } catch {
       // Fallback to mock if Claude API unavailable
       const response = await askDemerzel(trimmed, selectedNode);
       setMessages((prev) => prev.map(m =>
         m.id === botMsgId ? { ...m, content: response.text } : m,
       ));
-      speakText(response.text);
+      void speakText(response.text);
 
       if (response.action) {
         if (response.action.type === 'navigate-planet' && onNavigateToPlanet) {
@@ -332,7 +388,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, selectedNode, speakText, onNavigateToNode, onNavigateToPlanet]);
+  }, [isLoading, messages, selectedNode, speakText, stopAudio, onNavigateToNode, onNavigateToPlanet]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -403,7 +459,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
           <div className="chat-widget__header-actions">
             <button
               className={`chat-widget__tts-btn ${ttsEnabled ? 'chat-widget__tts-btn--active' : ''}`}
-              onClick={() => { setTtsEnabled((v) => !v); if (ttsEnabled) speechSynthesis.cancel(); }}
+              onClick={() => { setTtsEnabled((v) => !v); if (ttsEnabled) { stopAudio(); speechSynthesis.cancel(); } }}
               title={ttsEnabled ? 'Disable voice output' : 'Enable voice output'}
               aria-label="Toggle text-to-speech"
             >
