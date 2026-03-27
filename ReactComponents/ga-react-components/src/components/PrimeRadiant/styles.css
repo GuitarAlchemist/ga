@@ -2032,6 +2032,8 @@
     border-left: none;
     box-shadow: none;
     overflow: hidden;
+    backdrop-filter: none;       /* remove blur — it breaks fixed stacking context on mobile */
+    background: #0d1117;        /* solid bg instead of blur */
   }
   .prime-radiant__side-panel--open {
     width: 100%;
