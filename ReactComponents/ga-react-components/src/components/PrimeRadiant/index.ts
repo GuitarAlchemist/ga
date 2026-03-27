@@ -24,7 +24,7 @@ export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealth
 export type { BeliefState, TetravalentStatus, BeliefEvidence, EvidenceItem } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
-export { createSolarSystem, updateSolarSystem } from './SolarSystem';
+export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates } from './SolarSystem';
 export { GalacticClock } from './GalacticClock';
 export { TutorialOverlay } from './TutorialOverlay';
 export { ActivityPanel } from './ActivityPanel';

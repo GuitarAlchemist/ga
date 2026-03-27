@@ -17,7 +17,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
@@ -800,6 +800,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let disposed = false;
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
     let pollingHandleOuter: LivePollingHandle | undefined;
+    let cloudCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
@@ -1662,6 +1663,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const solarSystem = createSolarSystem(0.03);
     fg.scene().add(solarSystem);
 
+    // Start live weather cloud updates on Earth (requires VITE_OWM_API_KEY)
+    const stopCloudUpdates = startLiveCloudUpdates(solarSystem);
+
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
     solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
@@ -1802,6 +1806,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Expose cleanup handles to outer scope
     autoZoomTimeoutOuter = autoZoomTimeout;
     pollingHandleOuter = pollingHandle;
+    cloudCleanupOuter = stopCloudUpdates;
     }; // end initScene
 
     // Kick off async init
@@ -1812,6 +1817,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
+      cloudCleanupOuter?.();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
       }
@@ -1872,7 +1878,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         setSelectedNode(null);
       }
     };
-    const clickHandler = () => { setActiveHealthTip(null); };
+    const clickHandler = (e: MouseEvent) => {
+      // Don't close if click is inside the health bar
+      const healthBar = document.querySelector('.prime-radiant__health');
+      if (healthBar && healthBar.contains(e.target as Node)) return;
+      setActiveHealthTip(null);
+    };
     window.addEventListener('keydown', keyHandler);
     window.addEventListener('click', clickHandler);
     return () => {
