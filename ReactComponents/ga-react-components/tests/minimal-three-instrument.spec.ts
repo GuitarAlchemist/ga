@@ -4,7 +4,7 @@
  * Tests the universal 3D instrument renderer that supports all instruments from YAML database
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('MinimalThreeInstrument Component', () => {
   test.beforeEach(async ({ page }) => {
@@ -339,7 +339,7 @@ test.describe('MinimalThreeInstrument Error Handling', () => {
     // Mock WebGPU as unavailable
     await page.addInitScript(() => {
       // Remove WebGPU support
-      delete (window.navigator as any).gpu;
+      delete (window.navigator as unknown as Record<string, unknown>).gpu;
     });
     
     await page.goto('/test/minimal-three');
