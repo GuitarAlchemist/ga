@@ -340,6 +340,8 @@ const PLANET_FRAG = /* glsl */ `
   uniform float uAtmoColor;   // 0=none, 1=blue(earth), 2=orange(venus/titan)
   uniform float uRoughness;
   uniform vec2 uTexelSize;    // 1/textureWidth, 1/textureHeight for bump
+  uniform float uMonth;       // 1-12, current month (for seasonal snow on Earth)
+  uniform float uIsEarth;     // 1.0 for Earth, 0.0 otherwise
 
   varying vec3 vWorldPos;
   varying vec3 vWorldNormal;
@@ -378,6 +380,43 @@ const PLANET_FRAG = /* glsl */ `
 
     // Day color from texture
     vec3 dayColor = texture2D(uMap, vUv).rgb;
+
+    // Seasonal snow/ice coverage (Earth only)
+    if (uIsEarth > 0.5) {
+      // Latitude from UV: 0.0 = south pole, 0.5 = equator, 1.0 = north pole
+      float lat = (vUv.y - 0.5) * 2.0; // -1 (south) to +1 (north)
+      float absLat = abs(lat);
+
+      // Seasonal offset: northern winter = months 11,12,1,2 → snow pushes south
+      // uMonth 1-12; convert to seasonal factor where 0 = summer solstice, 1 = winter solstice
+      // For northern hemisphere: winter peak at month ~1 (Jan), summer at ~7 (Jul)
+      float monthRad = (uMonth - 1.0) / 12.0 * 6.28318;
+      float winterFactorN = (1.0 + cos(monthRad)) * 0.5;          // 1.0 in Jan, 0.0 in Jul
+      float winterFactorS = (1.0 + cos(monthRad + 3.14159)) * 0.5; // opposite
+
+      // Snow line: how far from pole snow extends (0.5 = 60deg, 0.7 = 45deg, 0.9 = near equator)
+      // Permanent ice caps above ~75deg (absLat > 0.83)
+      // Seasonal snow extends further in winter
+      float snowLineN = 0.55 + winterFactorN * 0.25; // 0.55 (summer) to 0.80 (winter)
+      float snowLineS = 0.55 + winterFactorS * 0.25;
+
+      float snowAmount = 0.0;
+      if (lat > 0.0) {
+        // Northern hemisphere
+        snowAmount = smoothstep(snowLineN - 0.15, snowLineN + 0.05, absLat);
+      } else {
+        // Southern hemisphere
+        snowAmount = smoothstep(snowLineS - 0.15, snowLineS + 0.05, absLat);
+      }
+
+      // Permanent polar ice caps (always white above ~80deg)
+      float iceCap = smoothstep(0.78, 0.88, absLat);
+      snowAmount = max(snowAmount, iceCap);
+
+      // Blend: snow is bright white with slight blue tint
+      vec3 snowColor = vec3(0.92, 0.95, 1.0);
+      dayColor = mix(dayColor, snowColor, snowAmount * 0.7);
+    }
 
     // Diffuse shading (Lambert with slight ambient)
     float diffuse = max(NdotL, 0.0);
@@ -437,6 +476,8 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
       uAtmoColor: { value: def.name === 'earth' ? 1.0 : def.name === 'venus' ? 2.0 : 0.0 },
       uRoughness: { value: def.name === 'earth' ? 0.6 : 0.85 },
       uTexelSize: { value: new THREE.Vector2(1 / texSize, 1 / texSize) },
+      uMonth: { value: new Date().getMonth() + 1 }, // 1-12
+      uIsEarth: { value: def.name === 'earth' ? 1.0 : 0.0 },
     };
 
     const mat = new THREE.ShaderMaterial({
