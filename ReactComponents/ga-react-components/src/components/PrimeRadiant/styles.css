@@ -202,6 +202,53 @@
 }
 
 /* ─── Health indicator (top-right) ─── */
+/* ─── Backend connection status ─── */
+.prime-radiant__backend-status {
+  position: absolute;
+  top: 16px;
+  right: 220px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 6px 12px;
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  transition: border-color 0.3s ease;
+}
+
+.prime-radiant__backend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.prime-radiant__backend-status--connected {
+  border-color: #33CC66;
+}
+.prime-radiant__backend-status--connected .prime-radiant__backend-dot {
+  background: #33CC66;
+  box-shadow: 0 0 6px #33CC66;
+}
+
+.prime-radiant__backend-status--disconnected {
+  border-color: #FF4444;
+}
+.prime-radiant__backend-status--disconnected .prime-radiant__backend-dot {
+  background: #FF4444;
+  box-shadow: 0 0 6px #FF4444;
+  animation: pulse 2s infinite;
+}
+
+.prime-radiant__backend-status--checking .prime-radiant__backend-dot {
+  background: #FFB300;
+  box-shadow: 0 0 4px #FFB300;
+}
+
 .prime-radiant__health {
   position: absolute;
   top: 16px;
