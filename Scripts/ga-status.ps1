@@ -30,19 +30,19 @@ foreach ($slot in @("blue", "green")) {
     Write-Host "  $($slot.ToUpper())$marker" -ForegroundColor $color
 
     if ($info.builtAt) {
-        $age = [math]::Round(((Get-Date) - [DateTimeOffset]::Parse($info.builtAt)).TotalHours, 1)
+        $age = [math]::Round(((Get-Date) - [DateTime]::Parse($info.builtAt)).TotalHours, 1)
         Write-Host "    Built:  $($info.builtAt) (${age}h ago)" -ForegroundColor Gray
     } else {
         Write-Host "    Built:  never" -ForegroundColor DarkGray
     }
 
-    Write-Host "    Commit: $($info.commitHash ?? 'unknown')" -ForegroundColor Gray
-    Write-Host "    Health: $($info.healthy ?? 'untested')" -ForegroundColor Gray
+    Write-Host "    Commit: $(if ($info.commitHash) { $info.commitHash } else { 'unknown' })" -ForegroundColor Gray
+    Write-Host "    Health: $(if ($null -ne $info.healthy) { $info.healthy } else { 'untested' })" -ForegroundColor Gray
 
     # Check DLL count
     $slotBin = Join-Path (Get-SlotBinPath -Slot $slot) "net10.0"
     if (Test-Path $slotBin) {
-        $dlls = (Get-ChildItem $slotBin -Filter "*.dll" -ErrorAction SilentlyContinue).Count
+        $dlls = @(Get-ChildItem $slotBin -Filter "*.dll" -ErrorAction SilentlyContinue).Count
         Write-Host "    DLLs:   $dlls files" -ForegroundColor Gray
     } else {
         Write-Host "    DLLs:   (empty)" -ForegroundColor DarkGray
@@ -69,7 +69,7 @@ if ($proc) {
 
 # Last swap
 if ($state.lastSwap) {
-    $swapAge = [math]::Round(((Get-Date) - [DateTimeOffset]::Parse($state.lastSwap)).TotalMinutes, 0)
+    $swapAge = [math]::Round(((Get-Date) - [DateTime]::Parse($state.lastSwap)).TotalMinutes, 0)
     Write-Host "  Last swap: $($state.lastSwap) (${swapAge}m ago)" -ForegroundColor Gray
 }
 
