@@ -12,6 +12,7 @@
 
     <!-- Suppress duplicate TargetFrameworkAttribute error and experimental API warnings -->
     <NoWarn>$(NoWarn);CS0579;SKEXP0001</NoWarn>
+    <UseBlueGreenSlots>true</UseBlueGreenSlots>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
