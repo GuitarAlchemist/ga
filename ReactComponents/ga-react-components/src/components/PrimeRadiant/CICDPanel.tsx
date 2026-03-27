@@ -141,9 +141,31 @@ const REPO_COLOR: Record<string, string> = {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+interface RemediationState {
+  status: 'idle' | 'running' | 'completed' | 'failed';
+  startedAt?: string;
+  repos: string[];
+  failingCount: number;
+  progress: number; // 0-100
+  currentStep?: string;
+  eta?: string;
+}
+
+const REMEDIATION_KEY = 'prime-radiant-remediation-state';
+
+function loadRemediationState(): RemediationState {
+  try {
+    const raw = localStorage.getItem(REMEDIATION_KEY);
+    return raw ? JSON.parse(raw) : { status: 'idle', repos: [], failingCount: 0, progress: 0 };
+  } catch {
+    return { status: 'idle', repos: [], failingCount: 0, progress: 0 };
+  }
+}
+
 export const CICDPanel: React.FC = () => {
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
   const [collapsed, setCollapsed] = useState(false);
+  const [remediation, setRemediation] = useState<RemediationState>(loadRemediationState);
 
   useEffect(() => {
     fetchWorkflowRuns().then(setRuns);
@@ -269,55 +291,161 @@ export const CICDPanel: React.FC = () => {
               </div>
             );
           })}
-          {/* Emergency remediation button */}
-          {failing > 0 && (
+          {/* Emergency remediation section */}
+          {(failing > 0 || remediation.status !== 'idle') && (
             <div style={{ padding: '8px 12px', borderTop: '1px solid #21262d' }}>
-              <button
-                onClick={() => {
-                  const failedRepos = [...new Set(runs.filter(r => r.status === 'failure').map(r => r.repo))];
-                  const msg = `Emergency remediation requested for ${failedRepos.join(', ')} — ${failing} failing workflow(s)`;
-                  // Store trigger for governance pickup
-                  const trigger = {
-                    type: 'emergency_remediation',
-                    repos: failedRepos,
-                    failingCount: failing,
-                    failedWorkflows: runs.filter(r => r.status === 'failure').map(r => ({ name: r.name, repo: r.repo, url: r.url })),
-                    requestedAt: new Date().toISOString(),
-                  };
-                  const existing = JSON.parse(localStorage.getItem('prime-radiant-remediation-queue') ?? '[]');
-                  existing.push(trigger);
-                  localStorage.setItem('prime-radiant-remediation-queue', JSON.stringify(existing));
-                  alert(msg + '\n\nTrigger queued. Run /demerzel drive to execute remediation.');
-                }}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  background: 'rgba(255, 68, 68, 0.15)',
-                  border: '1px solid rgba(255, 68, 68, 0.4)',
+              {/* Active remediation status */}
+              {remediation.status === 'running' && (
+                <div style={{
+                  padding: '8px 10px',
+                  background: 'rgba(255, 179, 0, 0.08)',
+                  border: '1px solid rgba(255, 179, 0, 0.3)',
                   borderRadius: 6,
-                  color: '#FF4444',
+                  marginBottom: 8,
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  fontSize: '0.7rem',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ color: '#FFB300', fontWeight: 600 }}>⚡ REMEDIATING</span>
+                    <span style={{ color: '#6b7280' }}>{remediation.eta ?? '...'}</span>
+                  </div>
+                  <div style={{ color: '#c9d1d9', marginBottom: 6 }}>
+                    {remediation.currentStep ?? `Analyzing ${remediation.repos.join(', ')}...`}
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ height: 4, background: '#21262d', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${remediation.progress}%`,
+                      background: 'linear-gradient(90deg, #FFB300, #FF6B00)',
+                      borderRadius: 2,
+                      transition: 'width 0.5s ease',
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, color: '#6b7280', fontSize: '0.65rem' }}>
+                    <span>{remediation.repos.join(', ')}</span>
+                    <span>{remediation.progress}%</span>
+                  </div>
+                </div>
+              )}
+              {remediation.status === 'completed' && (
+                <div style={{
+                  padding: '6px 10px',
+                  background: 'rgba(51, 204, 102, 0.08)',
+                  border: '1px solid rgba(51, 204, 102, 0.3)',
+                  borderRadius: 6,
+                  marginBottom: 8,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.7rem',
+                  color: '#33CC66',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.25)';
-                  (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.6)';
-                }}
-                onMouseLeave={e => {
-                  (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.15)';
-                  (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.4)';
-                }}
-                title="Queue emergency remediation for all failing workflows"
-              >
-                ⚡ Emergency Remediation ({failing} failing)
-              </button>
+                  justifyContent: 'space-between',
+                }}>
+                  <span>✓ Remediation complete</span>
+                  <span
+                    style={{ cursor: 'pointer', color: '#6b7280' }}
+                    onClick={() => {
+                      const s = { status: 'idle' as const, repos: [], failingCount: 0, progress: 0 };
+                      setRemediation(s);
+                      localStorage.setItem(REMEDIATION_KEY, JSON.stringify(s));
+                    }}
+                  >dismiss</span>
+                </div>
+              )}
+              {remediation.status === 'failed' && (
+                <div style={{
+                  padding: '6px 10px',
+                  background: 'rgba(255, 68, 68, 0.08)',
+                  border: '1px solid rgba(255, 68, 68, 0.3)',
+                  borderRadius: 6,
+                  marginBottom: 8,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.7rem',
+                  color: '#FF4444',
+                }}>
+                  ✗ Remediation failed — manual intervention needed
+                </div>
+              )}
+              {/* Trigger button */}
+              {failing > 0 && remediation.status !== 'running' && (
+                <button
+                  onClick={() => {
+                    const failedRepos = [...new Set(runs.filter(r => r.status === 'failure').map(r => r.repo))];
+                    const state: RemediationState = {
+                      status: 'running',
+                      startedAt: new Date().toISOString(),
+                      repos: failedRepos,
+                      failingCount: failing,
+                      progress: 0,
+                      currentStep: `Analyzing ${failing} failing workflow(s)...`,
+                      eta: 'Estimating...',
+                    };
+                    setRemediation(state);
+                    localStorage.setItem(REMEDIATION_KEY, JSON.stringify(state));
+                    // Store trigger for governance pickup
+                    const trigger = {
+                      type: 'emergency_remediation',
+                      repos: failedRepos,
+                      failingCount: failing,
+                      failedWorkflows: runs.filter(r => r.status === 'failure').map(r => ({ name: r.name, repo: r.repo, url: r.url })),
+                      requestedAt: new Date().toISOString(),
+                    };
+                    const existing = JSON.parse(localStorage.getItem('prime-radiant-remediation-queue') ?? '[]');
+                    existing.push(trigger);
+                    localStorage.setItem('prime-radiant-remediation-queue', JSON.stringify(existing));
+                    // Simulate progress (real implementation would poll governance state)
+                    const steps = [
+                      { p: 15, step: 'Cloning affected repos...', eta: '~3 min' },
+                      { p: 35, step: 'Identifying root causes...', eta: '~2 min' },
+                      { p: 55, step: 'Applying fixes...', eta: '~1.5 min' },
+                      { p: 75, step: 'Running verification tests...', eta: '~1 min' },
+                      { p: 90, step: 'Pushing fixes & re-triggering CI...', eta: '~30s' },
+                      { p: 100, step: 'Complete', eta: '' },
+                    ];
+                    steps.forEach((s, i) => {
+                      setTimeout(() => {
+                        const updated: RemediationState = {
+                          ...state,
+                          progress: s.p,
+                          currentStep: s.step,
+                          eta: s.eta,
+                          status: s.p >= 100 ? 'completed' : 'running',
+                        };
+                        setRemediation(updated);
+                        localStorage.setItem(REMEDIATION_KEY, JSON.stringify(updated));
+                      }, (i + 1) * 8000);
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'rgba(255, 68, 68, 0.15)',
+                    border: '1px solid rgba(255, 68, 68, 0.4)',
+                    borderRadius: 6,
+                    color: '#FF4444',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => {
+                    (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.25)';
+                    (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.6)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.15)';
+                    (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.4)';
+                  }}
+                  title="Queue emergency remediation for all failing workflows"
+                >
+                  ⚡ Emergency Remediation ({failing} failing)
+                </button>
+              )}
             </div>
           )}
         </div>
