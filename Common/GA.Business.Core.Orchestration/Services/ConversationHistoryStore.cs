@@ -17,7 +17,7 @@ public sealed class ConversationHistoryStore
     /// </summary>
     public void AddTurn(string sessionId, string role, string content)
     {
-        var turns = _sessions.GetOrAdd(sessionId, _ => new List<ConversationTurn>());
+        var turns = _sessions.GetOrAdd(sessionId, _ => []);
         lock (turns)
         {
             turns.Add(new ConversationTurn(role, content, DateTimeOffset.UtcNow));
