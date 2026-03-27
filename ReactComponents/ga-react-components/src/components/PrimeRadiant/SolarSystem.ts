@@ -60,7 +60,8 @@ interface MoonDef {
   speed: number;
   inclination?: number;
   fragment: string;
-  texture?: string;  // optional texture file
+  texture?: string;              // optional texture file
+  textureDisplacement?: string;  // height map for terrain displacement
 }
 
 interface PlanetDef {
@@ -70,10 +71,11 @@ interface PlanetDef {
   speed: number;
   tilt?: number;
   fragment: string;
-  texture?: string;        // main color map
-  textureNight?: string;   // night-side emission
-  textureClouds?: string;  // cloud layer
+  texture?: string;           // main color map
+  textureNight?: string;      // night-side emission
+  textureClouds?: string;     // cloud layer
   textureSpecular?: string;
+  textureDisplacement?: string; // height/bump map for terrain displacement
   atmosphere?: { color: string; intensity: number; power: number };
   moons?: MoonDef[];
 }
@@ -203,11 +205,13 @@ const PLANETS: PlanetDef[] = [
   {
     name: 'mercury', radius: 0.12, distance: 3.8, speed: 6.7,
     texture: '2k_mercury.jpg',
+    textureDisplacement: '2k_mercury_displacement.jpg',
     fragment: PROC_PLACEHOLDER,
   },
   {
     name: 'venus', radius: 0.3, distance: 5.0, speed: 4.4,
     texture: '2k_venus_surface.jpg',
+    textureDisplacement: '2k_venus_displacement.jpg',
     atmosphere: { color: '0.95, 0.75, 0.25', intensity: 0.45, power: 2.5 },
     fragment: PROC_PLACEHOLDER,
   },
@@ -217,15 +221,17 @@ const PLANETS: PlanetDef[] = [
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
     textureSpecular: '2k_earth_specular.jpg',
+    textureDisplacement: '2k_earth_displacement.jpg',
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', fragment: ROCKY_GREY },
+      { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
     ],
   },
   {
     name: 'mars', radius: 0.18, distance: 8.5, speed: 2.0,
     texture: '2k_mars.jpg',
+    textureDisplacement: '2k_mars_displacement.jpg',
     atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.2, power: 4.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
@@ -312,8 +318,12 @@ interface MoonInstance {
   orbitGroup: THREE.Group;
 }
 
-// ── Planet shader: day/night terminator, bump mapping, specular, atmosphere ──
+// ── Planet shader: day/night terminator, bump mapping, specular, atmosphere, displacement ──
 const PLANET_VERT = /* glsl */ `
+  uniform sampler2D uDisplacementMap;
+  uniform float uDisplacementScale;  // 0 = no displacement
+  uniform float uHasDisplacement;
+
   varying vec3 vWorldPos;
   varying vec3 vWorldNormal;
   varying vec2 vUv;
@@ -321,7 +331,16 @@ const PLANET_VERT = /* glsl */ `
 
   void main() {
     vUv = uv;
-    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+
+    // Displace vertex along normal based on height map
+    vec3 displacedPos = position;
+    if (uHasDisplacement > 0.5) {
+      float height = texture2D(uDisplacementMap, uv).r;
+      // Offset from 0.5 so mid-grey = no displacement, white = peak, black = valley
+      displacedPos += normal * (height - 0.3) * uDisplacementScale;
+    }
+
+    vec4 worldPos = modelMatrix * vec4(displacedPos, 1.0);
     vWorldPos = worldPos.xyz;
     vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     vViewDir = normalize(cameraPosition - worldPos.xyz);
@@ -459,7 +478,9 @@ const PLANET_FRAG = /* glsl */ `
 
 // ── Create a textured planet mesh with realistic shading ──
 function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
-  const segments = def.radius > 0.5 ? 48 : def.radius > 0.2 ? 32 : 24;
+  // More segments when displacement is active for smoother terrain
+  const baseSegments = def.radius > 0.5 ? 48 : def.radius > 0.2 ? 32 : 24;
+  const segments = def.textureDisplacement ? Math.max(baseSegments, 64) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
 
   if (def.texture) {
@@ -478,6 +499,10 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
       uTexelSize: { value: new THREE.Vector2(1 / texSize, 1 / texSize) },
       uMonth: { value: new Date().getMonth() + 1 }, // 1-12
       uIsEarth: { value: def.name === 'earth' ? 1.0 : 0.0 },
+      uDisplacementMap: { value: def.textureDisplacement ? loadTex(def.textureDisplacement) : null },
+      uHasDisplacement: { value: def.textureDisplacement ? 1.0 : 0.0 },
+      // Scale displacement relative to planet radius — Mars gets more (Olympus Mons!)
+      uDisplacementScale: { value: def.textureDisplacement ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05) : 0.0 },
     };
 
     const mat = new THREE.ShaderMaterial({
@@ -501,12 +526,19 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
 
 // ── Create a textured moon mesh, or fall back to procedural shader ──
 function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
-  const segments = def.radius * scale > 0.02 ? 16 : 8;
+  const baseSegments = def.radius * scale > 0.02 ? 16 : 8;
+  const segments = def.textureDisplacement ? Math.max(baseSegments, 48) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
 
   if (def.texture) {
     const map = loadTex(def.texture);
-    const mat = new THREE.MeshStandardMaterial({ map, roughness: 0.95, metalness: 0 });
+    const matOpts: THREE.MeshStandardMaterialParameters = { map, roughness: 0.95, metalness: 0 };
+    if (def.textureDisplacement) {
+      matOpts.displacementMap = loadTex(def.textureDisplacement);
+      matOpts.displacementScale = def.radius * scale * 0.06;
+      matOpts.displacementBias = -def.radius * scale * 0.02;
+    }
+    const mat = new THREE.MeshStandardMaterial(matOpts);
     return new THREE.Mesh(geo, mat);
   }
 
