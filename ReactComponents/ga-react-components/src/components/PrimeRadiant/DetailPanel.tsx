@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback } from 'react';
 import type { GovernanceNode, GovernanceNodeType, FileTreeNode } from './types';
-import { HEALTH_COLORS } from './types';
+import { HEALTH_COLORS, NODE_COLORS } from './types';
 import { getHealthStatus } from './DataLoader';
 import type { GraphIndex } from './DataLoader';
 
@@ -40,6 +40,91 @@ const TYPE_SHAPES: Record<GovernanceNodeType, string> = {
   schema: 'Cube Matrix',
   test: 'Diamond Cloud',
   ixql: 'Helix Stream',
+};
+
+// ---------------------------------------------------------------------------
+// Governance shortcut definitions
+// ---------------------------------------------------------------------------
+const GOVERNANCE_SHORTCUTS: Array<{
+  label: string;
+  type: GovernanceNodeType;
+  color: string;
+}> = [
+  { label: 'Constitutions', type: 'constitution', color: NODE_COLORS.constitution },
+  { label: 'Policies', type: 'policy', color: NODE_COLORS.policy },
+  { label: 'Personas', type: 'persona', color: NODE_COLORS.persona },
+  { label: 'Schemas', type: 'schema', color: NODE_COLORS.schema },
+];
+
+// ---------------------------------------------------------------------------
+// Breadcrumb — shows Root > Type > Node Name
+// ---------------------------------------------------------------------------
+const Breadcrumb: React.FC<{
+  node: GovernanceNode;
+  onClose: () => void;
+}> = ({ node, onClose }) => {
+  const typeLabel = TYPE_LABELS[node.type];
+
+  return (
+    <nav className="prime-radiant__breadcrumb" aria-label="Breadcrumb">
+      <span
+        className="prime-radiant__breadcrumb-item"
+        onClick={onClose}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') onClose(); }}
+      >
+        Governance
+      </span>
+      <span className="prime-radiant__breadcrumb-separator">&gt;</span>
+      <span className="prime-radiant__breadcrumb-item">
+        {typeLabel}
+      </span>
+      <span className="prime-radiant__breadcrumb-separator">&gt;</span>
+      <span className="prime-radiant__breadcrumb-item prime-radiant__breadcrumb-item--active">
+        {node.name}
+      </span>
+    </nav>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// ShortcutChips — quick-jump to governance node types
+// ---------------------------------------------------------------------------
+const ShortcutChips: React.FC<{
+  graphIndex: GraphIndex | null;
+  onNavigate: (nodeId: string) => void;
+  activeType: GovernanceNodeType;
+}> = ({ graphIndex, onNavigate, activeType }) => {
+  const handleClick = useCallback((type: GovernanceNodeType) => {
+    if (!graphIndex) return;
+    // Find the first node of the given type
+    for (const [id, node] of graphIndex.nodeMap) {
+      if (node.type === type) {
+        onNavigate(id);
+        return;
+      }
+    }
+  }, [graphIndex, onNavigate]);
+
+  return (
+    <div className="prime-radiant__shortcuts">
+      {GOVERNANCE_SHORTCUTS.map((shortcut) => (
+        <button
+          key={shortcut.type}
+          className={`prime-radiant__shortcut-chip${shortcut.type === activeType ? ' prime-radiant__shortcut-chip--active' : ''}`}
+          onClick={() => handleClick(shortcut.type)}
+          title={`Jump to ${shortcut.label}`}
+        >
+          <span
+            className="prime-radiant__shortcut-dot"
+            style={{ backgroundColor: shortcut.color }}
+          />
+          {shortcut.label}
+        </button>
+      ))}
+    </div>
+  );
 };
 
 // ---------------------------------------------------------------------------
@@ -205,6 +290,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
               x
             </button>
           </div>
+
+          {/* Breadcrumb navigation */}
+          <Breadcrumb node={node} onClose={onClose} />
+
+          {/* Governance shortcut chips */}
+          <ShortcutChips
+            graphIndex={graphIndex}
+            onNavigate={onNavigate}
+            activeType={node.type}
+          />
 
           {/* Body */}
           <div className="prime-radiant__detail-body">
