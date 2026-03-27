@@ -1,7 +1,7 @@
 ---
 title: "feat: Add Voxtral TTS backend proxy for Demerzel chat"
 type: feat
-status: active
+status: completed
 date: 2026-03-26
 origin: docs/brainstorms/2026-03-26-voxtral-tts-backend-requirements.md
 ---

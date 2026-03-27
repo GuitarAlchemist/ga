@@ -492,7 +492,7 @@ test.describe('BSP DOOM Explorer', () => {
       await page.reload();
 
       // Check for loading indicator (might be brief)
-      const loadingText = page.locator('text=LOADING BSP TREE');
+      const _loadingText = page.locator('text=LOADING BSP TREE');
 
       // Loading might be too fast to catch, so we just verify page loads
       await page.waitForSelector('canvas', { timeout: 10000 });

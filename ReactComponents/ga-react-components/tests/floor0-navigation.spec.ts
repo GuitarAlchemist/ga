@@ -189,7 +189,7 @@ test.describe('Floor 0 Navigation E2E', () => {
     // Get initial memory (if available)
     const initialMetrics = await page.evaluate(() => {
       if ('memory' in performance) {
-        return (performance as any).memory.usedJSHeapSize;
+        return (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize;
       }
       return null;
     });
@@ -211,7 +211,7 @@ test.describe('Floor 0 Navigation E2E', () => {
     // Get final memory
     const finalMetrics = await page.evaluate(() => {
       if ('memory' in performance) {
-        return (performance as any).memory.usedJSHeapSize;
+        return (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize;
       }
       return null;
     });
