@@ -1034,6 +1034,34 @@ export function showPlanetLabel(group: THREE.Group, name: string | null): void {
   }
 }
 
+/**
+ * Toggle a planet's atmosphere visibility.
+ * When stripped, the planet shader's atmosphere rim is also disabled,
+ * revealing the bare surface underneath.
+ * Returns the new state (true = atmosphere visible).
+ */
+export function togglePlanetAtmosphere(group: THREE.Group, planetName: string): boolean {
+  const atmoMesh = group.getObjectByName(`atmo-${planetName}`) as THREE.Mesh | undefined;
+  if (atmoMesh) {
+    atmoMesh.visible = !atmoMesh.visible;
+  }
+
+  // Also toggle the shader's atmosphere rim on the planet surface
+  const planets = group.userData.planets as { mesh: THREE.Mesh; def: PlanetDef }[] | undefined;
+  if (planets) {
+    const entry = planets.find(p => p.def.name === planetName);
+    if (entry?.mesh.material instanceof THREE.ShaderMaterial) {
+      const u = entry.mesh.material.uniforms;
+      if (u.uAtmoColor) {
+        u.uAtmoColor.value = u.uAtmoColor.value > 0 ? 0.0 :
+          planetName === 'earth' ? 1.0 : planetName === 'venus' ? 2.0 : 0.0;
+      }
+    }
+  }
+
+  return atmoMesh?.visible ?? false;
+}
+
 /** Get all planet mesh names (for raycasting targets). */
 export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
   const planets = group.userData.planets as { mesh: THREE.Mesh }[] | undefined;
