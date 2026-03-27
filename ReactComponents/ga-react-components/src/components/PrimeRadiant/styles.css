@@ -3045,6 +3045,51 @@
   cursor: not-allowed;
 }
 
+/* ─── AI Suggestion chips ─── */
+.course-viewer__suggestions {
+  margin: -4px 0 8px;
+}
+.course-viewer__suggestions-label {
+  display: block;
+  font-size: 10px;
+  color: #FFD700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.course-viewer__suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.course-viewer__suggestion-chip {
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #c4b5fd;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.course-viewer__suggestion-chip:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #FFD700;
+}
+.course-viewer__suggestion-chip--research {
+  background: rgba(88, 166, 255, 0.06);
+  border-color: rgba(88, 166, 255, 0.2);
+  color: #58a6ff;
+}
+.course-viewer__suggestion-chip--research:hover {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: rgba(88, 166, 255, 0.4);
+  color: #79c0ff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .course-viewer {

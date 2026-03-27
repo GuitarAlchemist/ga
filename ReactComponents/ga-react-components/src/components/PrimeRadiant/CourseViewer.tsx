@@ -63,6 +63,82 @@ const DEPTH_OPTIONS: { value: ResearchRequest['depth']; label: string }[] = [
 
 const SOURCE_OPTIONS = ['arXiv', 'Semantic Scholar', 'Google Scholar', 'Cross-model validation'];
 
+/* --- AI topic suggestions per department --- */
+const AI_SUGGESTIONS: Record<string, { topics: string[]; research: string[] }> = {
+  'Guitar Studies': {
+    topics: ['CAGED System Deep Dive', 'Sweep Picking Biomechanics', 'Jazz Comping Voicings', 'Fingerstyle Independence Exercises', 'Modes of Melodic Minor'],
+    research: ['Biomechanical Optimization of Left-Hand Fretting Postures', 'Neural Correlates of Guitar Improvisation vs Composed Performance'],
+  },
+  'Music': {
+    topics: ['Negative Harmony and Ernst Levy', 'Neo-Riemannian Transformations', 'Spectral Music Composition', 'Microtonality and 31-TET', 'Polyrhythmic Structures in West African Music'],
+    research: ['Algebraic Structures in Post-Tonal Music Theory', 'Category-Theoretic Foundations of Harmonic Analysis'],
+  },
+  'Mathematics': {
+    topics: ['Lie Groups in Music Theory', 'Topological Data Analysis for Chord Spaces', 'Sheaf Theory for Harmonic Progressions', 'Clifford Algebras and Pitch-Class Sets'],
+    research: ['Homotopy Type Theory Applied to Musical Transformations', 'Persistent Homology of Voice Leading Spaces'],
+  },
+  'Computer Science': {
+    topics: ['Transformer Architectures for Music Generation', 'Reinforcement Learning for Composition', 'WebGPU Compute Shaders for Audio DSP', 'Graph Neural Networks for Chord Prediction'],
+    research: ['Self-Supervised Learning of Musical Structure from Raw Audio', 'Differentiable Digital Signal Processing for Instrument Synthesis'],
+  },
+  'Physics': {
+    topics: ['Psychoacoustics of Guitar Timbre', 'Coupled Oscillator Models of String Vibration', 'Room Acoustics Simulation with FEM', 'Nonlinear Dynamics in Feedback Systems'],
+    research: ['Quantum-Inspired Optimization for Audio Source Separation', 'Chaotic Dynamics in Guitar Feedback Loops'],
+  },
+  'Cognitive Science': {
+    topics: ['Music Cognition and Working Memory', 'Motor Learning in Instrument Practice', 'Absolute vs Relative Pitch Processing', 'Flow States in Musical Performance'],
+    research: ['Neural Entrainment to Complex Rhythmic Patterns', 'Predictive Processing Models of Musical Expectation'],
+  },
+  'Philosophy': {
+    topics: ['Aesthetics of Dissonance', 'Ethics of AI-Generated Music', 'Phenomenology of Listening', 'Music and Consciousness'],
+    research: ['Computational Aesthetics: Can Machines Judge Musical Beauty?', 'The Hard Problem of Musical Qualia'],
+  },
+  'Cybernetics': {
+    topics: ['Ashby\'s Law of Requisite Variety in Software', 'Second-Order Cybernetics for AI Agents', 'Autopoiesis in Self-Governing Systems', 'Feedback Control in Multi-Agent Orchestration'],
+    research: ['VSM-Based Governance for Autonomous AI Agent Swarms', 'Algedonic Signal Processing in Neural-Symbolic Hybrid Systems'],
+  },
+  'Musicology': {
+    topics: ['Ethnomusicology of Flamenco Guitar', 'Historical Temperaments and Their Effects', 'Analysis of Bach\'s Counterpoint Techniques', 'Blues Scale Evolution in American Music'],
+    research: ['Computational Ethnomusicology: ML Classification of World Guitar Traditions'],
+  },
+  'Product Management': {
+    topics: ['AI-First Product Strategy', 'Developer Experience as Product', 'Metrics That Matter for Open Source', 'Community-Driven Roadmapping'],
+    research: ['Measuring Developer Productivity in AI-Augmented Workflows'],
+  },
+  'Futurology': {
+    topics: ['AGI Timeline Analysis', 'Post-Scarcity Music Creation', 'Brain-Computer Interfaces for Music', 'Digital Twins for Musicians'],
+    research: ['Forecasting AI Music Generation Quality: When Will AI Compose Better Than Humans?'],
+  },
+  'Psychohistory': {
+    topics: ['Seldon Plan for Software Ecosystems', 'Crisis Prediction in Open Source Projects', 'Mathematical Sociology of Developer Communities'],
+    research: ['Statistical Mechanics of Code Repository Evolution'],
+  },
+  'Guitar Alchemist Academy': {
+    topics: ['Your First Barre Chord', 'Reading Standard Notation for Guitar', 'Basic Ear Training', 'Introduction to Music Theory for Guitarists'],
+    research: ['Optimal Sequencing of Guitar Pedagogy: A Cognitive Load Theory Approach'],
+  },
+  'World Music & Languages': {
+    topics: ['Bossa Nova Guitar Patterns', 'Celtic Fingerpicking DADGAD', 'Flamenco Rasgueados', 'Turkish Maqam on Guitar', 'Hindustani Raga Adaptation'],
+    research: ['Cross-Cultural Transfer Learning for Musical Style Classification'],
+  },
+  'Audio Engineering': {
+    topics: ['Mastering for Streaming Platforms', 'Mid-Side Processing Techniques', 'Convolution Reverb Design', 'Loudness Normalization Standards'],
+    research: ['Perceptual Audio Coding: Neural vs Traditional Compression at Ultra-Low Bitrates'],
+  },
+  'Information Theory': {
+    topics: ['Shannon Entropy of Musical Sequences', 'Kolmogorov Complexity of Compositions', 'Mutual Information in Harmonic Progressions'],
+    research: ['Information-Theoretic Measures of Musical Creativity and Novelty'],
+  },
+  'Network Science': {
+    topics: ['Scale-Free Networks in Music Collaboration', 'Community Detection in Genre Networks', 'Influence Propagation in Musical Trends'],
+    research: ['Temporal Network Analysis of Music Style Evolution Across Decades'],
+  },
+  'Semiotics': {
+    topics: ['Musical Signs and Meaning', 'Icon, Index, Symbol in Music', 'Semiotics of Guitar Tone'],
+    research: ['Computational Semiotics: Extracting Meaning from Musical Structure'],
+  },
+};
+
 function loadQueue<T>(key: string): T[] {
   try {
     const raw = localStorage.getItem(key);
@@ -540,6 +616,23 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                   autoFocus
                 />
               </label>
+              {/* AI topic suggestions */}
+              {AI_SUGGESTIONS[dialogDept]?.topics && (
+                <div className="course-viewer__suggestions">
+                  <span className="course-viewer__suggestions-label">AI Suggestions</span>
+                  <div className="course-viewer__suggestions-list">
+                    {AI_SUGGESTIONS[dialogDept].topics.map(topic => (
+                      <button
+                        key={topic}
+                        className="course-viewer__suggestion-chip"
+                        onClick={() => setGcTopic(topic)}
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <label className="course-viewer__field">
                 <span className="course-viewer__field-label">Level</span>
                 <select
@@ -586,6 +679,23 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                   autoFocus
                 />
               </label>
+              {/* AI research suggestions */}
+              {AI_SUGGESTIONS[dialogDept]?.research && (
+                <div className="course-viewer__suggestions">
+                  <span className="course-viewer__suggestions-label">AI Suggestions (PhD-level)</span>
+                  <div className="course-viewer__suggestions-list">
+                    {AI_SUGGESTIONS[dialogDept].research.map(topic => (
+                      <button
+                        key={topic}
+                        className="course-viewer__suggestion-chip course-viewer__suggestion-chip--research"
+                        onClick={() => setDrTopic(topic)}
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <label className="course-viewer__field">
                 <span className="course-viewer__field-label">Depth</span>
                 <select
