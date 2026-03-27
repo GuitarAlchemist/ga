@@ -40,6 +40,9 @@ builder.Services.AddCachingServices(builder.Configuration);
 builder.Services.AddMonadicHealthCheckService();
 builder.Services.AddMonadicChordService();
 
+// Register standard health check service (used by HealthController)
+builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
+
 // Register contextual chord services
 builder.Services.AddSingleton<ContextualChordService>();
 builder.Services.AddSingleton<VoicingFilterService>();
