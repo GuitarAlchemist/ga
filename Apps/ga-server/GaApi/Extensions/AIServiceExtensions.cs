@@ -158,6 +158,9 @@ public static class AiServiceExtensions
             // GaApi narrator: OllamaGroundedNarrator (reads Ollama:Endpoint from config)
             services.AddScoped<IGroundedNarrator, OllamaGroundedNarrator>();
 
+            // Algedonic signal service (evaluates belief transitions → pain/pleasure signals)
+            services.AddSingleton<AlgedonicSignalService>();
+
         }
     }
 
