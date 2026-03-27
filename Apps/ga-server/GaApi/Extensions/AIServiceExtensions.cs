@@ -161,6 +161,26 @@ public static class AiServiceExtensions
             // Algedonic signal service (evaluates belief transitions → pain/pleasure signals)
             services.AddSingleton<AlgedonicSignalService>();
 
+            // YouTube-to-tab pipeline services
+            services.AddSingleton<VideoFrameExtractor>();
+            services.AddSingleton<HandPosePipeline>();
+            services.AddSingleton<PositionToTabGenerator>();
+
+            // HandPoseClient (GA.Business.AI) — used by HandPosePipeline
+            var handPoseBaseUrl = configuration["HandPoseService:BaseUrl"] ?? "http://localhost:8080";
+            services.AddHttpClient("HandPose", client =>
+            {
+                client.BaseAddress = new Uri(handPoseBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+            services.AddSingleton<GA.Business.AI.HandPose.HandPoseClient>(sp =>
+            {
+                var factory = sp.GetRequiredService<IHttpClientFactory>();
+                var client = factory.CreateClient("HandPose");
+                var hpLogger = sp.GetRequiredService<ILogger<GA.Business.AI.HandPose.HandPoseClient>>();
+                return new GA.Business.AI.HandPose.HandPoseClient(client, hpLogger);
+            });
+
         }
     }
 

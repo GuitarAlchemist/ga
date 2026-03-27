@@ -66,6 +66,7 @@
     <ProjectReference Include="..\..\..\Common\GA.Infrastructure\GA.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.Core.Orchestration\GA.Business.Core.Orchestration.csproj" />
     <ProjectReference Include="..\GA.Fretboard.Service\GA.Fretboard.Service.csproj" />
+    <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj" />
   </ItemGroup>
 </Project>
 
