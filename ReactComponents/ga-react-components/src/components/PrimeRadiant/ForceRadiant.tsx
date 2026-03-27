@@ -17,8 +17,9 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
+import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
@@ -534,6 +535,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
+  const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
+  const [trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -793,6 +796,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let disposed = false;
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
     let pollingHandleOuter: LivePollingHandle | undefined;
+    let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+    let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
+    let solarClickHandler: (() => void) | null = null;
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
@@ -945,6 +951,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Phase 1.4: Cancel auto-zoom on user interaction
         userInteracted = true;
         if (autoZoomTimeout) { clearTimeout(autoZoomTimeout); autoZoomTimeout = null; }
+        // Stop planet tracking when clicking governance graph
+        trackedPlanetRef.current = null;
+        setTrackedPlanetName(null);
+        solarFollowCameraRef.current = true;
 
         // Zoom to clicked node
         const distance = 60;
@@ -963,6 +973,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Phase 1.4: Cancel auto-zoom on user interaction
         userInteracted = true;
         if (autoZoomTimeout) { clearTimeout(autoZoomTimeout); autoZoomTimeout = null; }
+        // Stop planet tracking
+        trackedPlanetRef.current = null;
+        setTrackedPlanetName(null);
+        solarFollowCameraRef.current = true;
       })
       .onNodeHover((node: object | null, prevNode: object | null) => {
         // Phase 1.3: Store hover state so breathing animation doesn't override
@@ -1255,10 +1269,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         solarOffset.applyQuaternion(cam.quaternion);
         solarSystem.position.copy(cam.position).add(solarOffset);
       } else {
-        // Auto-resume follow when camera moves far from the solar system
-        const distToSolar = cam.position.distanceTo(solarSystem.position);
-        if (distToSolar > 20) {
-          solarFollowCameraRef.current = true;
+        // ─── Planet tracking mode — camera follows orbiting planet ───
+        const tracked = trackedPlanetRef.current;
+        if (tracked) {
+          const trackedObj = solarSystem.getObjectByName(tracked);
+          if (trackedObj) {
+            const wp = new THREE.Vector3();
+            trackedObj.getWorldPosition(wp);
+            // Smooth lerp — offset slightly above and behind the planet
+            const offset = new THREE.Vector3(0, 0.15, 0.5);
+            const targetCamPos = wp.clone().add(offset);
+            cam.position.lerp(targetCamPos, 0.04);
+            // Smoothly update lookAt by lerping the controls target
+            const controls = fg.controls() as { target?: THREE.Vector3 };
+            if (controls.target) {
+              controls.target.lerp(wp, 0.06);
+            }
+          }
+        } else {
+          // Auto-resume follow when camera moves far from the solar system
+          const distToSolar = cam.position.distanceTo(solarSystem.position);
+          if (distToSolar > 20) {
+            solarFollowCameraRef.current = true;
+          }
         }
       }
 
@@ -1518,14 +1551,31 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dimStars = new THREE.Points(dimGeo, dimMat);
     dimStars.name = 'stars-dim';
 
+    // Milky Way band — large sphere behind everything, additive blended
+    const milkyWayMesh = createMilkyWay(8000);
+    const milkyWayPref = (() => { try { return localStorage.getItem('prime-radiant-milky-way'); } catch { return null; } })();
+    milkyWayMesh.visible = milkyWayPref !== 'false'; // default ON
+
     // Group all sky layers — follows camera together
     const starField = new THREE.Group();
     starField.name = 'starfield';
+    starField.add(milkyWayMesh); // behind everything (renderOrder -3)
     starField.add(skySphere);
     starField.add(brightStars);
     starField.add(dimStars);
     starField.renderOrder = -1;
     fg.scene().add(starField);
+
+    // M key toggles Milky Way visibility
+    milkyWayToggleHandler = (e: KeyboardEvent) => {
+      if (e.key === 'm' || e.key === 'M') {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        milkyWayMesh.visible = !milkyWayMesh.visible;
+        try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
+      }
+    };
+    window.addEventListener('keydown', milkyWayToggleHandler);
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
     // Rings colored by health state — problems visible even at distance
@@ -1606,6 +1656,49 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const solarSystem = createSolarSystem(0.03);
     fg.scene().add(solarSystem);
 
+    // ─── Solar system planet hover detection (raycasting) ───
+    const solarRaycaster = new THREE.Raycaster();
+    solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
+    const solarMouse = new THREE.Vector2();
+    let currentHoveredPlanet: string | null = null;
+
+    const onSolarMouseMove = (event: MouseEvent) => {
+      const canvas = containerRef.current?.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      solarMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      solarMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      solarRaycaster.setFromCamera(solarMouse, cam);
+
+      const planetMeshes = getPlanetMeshes(solarSystem);
+      const hits = solarRaycaster.intersectObjects(planetMeshes, false);
+
+      const hitName = hits.length > 0 ? (hits[0].object.name || null) : null;
+      if (hitName !== currentHoveredPlanet) {
+        currentHoveredPlanet = hitName;
+        showPlanetLabel(solarSystem, hitName);
+        if (canvas) {
+          canvas.style.cursor = hitName ? 'pointer' : '';
+        }
+      }
+    };
+
+    const onSolarClick = () => {
+      // If hovering a planet, start tracking it
+      if (currentHoveredPlanet) {
+        solarFollowCameraRef.current = false;
+        trackedPlanetRef.current = currentHoveredPlanet;
+        setTrackedPlanetName(currentHoveredPlanet.charAt(0).toUpperCase() + currentHoveredPlanet.slice(1));
+      }
+    };
+
+    solarMouseMoveHandler = onSolarMouseMove;
+    solarClickHandler = onSolarClick;
+    container.addEventListener('mousemove', onSolarMouseMove);
+    container.addEventListener('click', onSolarClick);
+
     // ─── JARVIS SPACE STATION — modular station with docking animation ───
     const spaceStation = createSpaceStation(0.6);
     fg.scene().add(spaceStation);
@@ -1639,6 +1732,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     graphRef.current = fg;
+
+    // ─── Fix camera near plane for solar system zoom ───
+    const fgCam = fg.camera() as THREE.PerspectiveCamera;
+    fgCam.near = 0.001;
+    fgCam.far = 5000;
+    fgCam.updateProjectionMatrix();
 
     // ─── Live data polling — update nodes in-place without graph rebuild ───
     let pollingHandle: LivePollingHandle | undefined;
@@ -1704,8 +1803,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     return () => {
       disposed = true;
+      if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
+      if (solarMouseMoveHandler) {
+        container.removeEventListener('mousemove', solarMouseMoveHandler);
+      }
+      if (solarClickHandler) {
+        container.removeEventListener('click', solarClickHandler);
+      }
       if (graphRef.current) {
         (graphRef.current as ReturnType<typeof ForceGraph3D> & { _destructor: () => void })._destructor();
         graphRef.current = null;
@@ -1851,11 +1957,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 );
                 // Resume solar system follow when navigating elsewhere
                 solarFollowCameraRef.current = true;
+                trackedPlanetRef.current = null;
+                setTrackedPlanetName(null);
                 return;
               }
 
               // Stop solar system from following the camera so we can zoom into it
               solarFollowCameraRef.current = false;
+              // Start tracking this planet
+              trackedPlanetRef.current = p.target;
+              setTrackedPlanetName(p.name);
 
               const solarSystemGroup = fg.scene().getObjectByName('sun')?.parent;
               if (!solarSystemGroup) return;
@@ -1898,12 +2009,49 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             <span className="prime-radiant__planet-label">{p.name}</span>
           </button>
         ))}
+        {trackedPlanetName && (
+          <div
+            className="prime-radiant__tracking-indicator"
+            style={{
+              position: 'absolute',
+              bottom: '48px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0, 20, 40, 0.85)',
+              border: '1px solid rgba(0, 200, 255, 0.4)',
+              borderRadius: '4px',
+              padding: '2px 10px',
+              fontSize: '11px',
+              color: '#00ccff',
+              fontFamily: 'monospace',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+            title="Click to stop tracking"
+            onClick={() => {
+              trackedPlanetRef.current = null;
+              setTrackedPlanetName(null);
+              solarFollowCameraRef.current = true;
+            }}
+          >
+            Tracking: {trackedPlanetName} <span style={{ opacity: 0.5 }}>[x]</span>
+          </div>
+        )}
       </div>
 
       </div>{/* end canvas-area */}
 
       {/* Icon rail — right edge (desktop/tablet) or bottom tab bar (phone) */}
-      <IconRail activePanel={activePanel} onPanelToggle={handlePanelToggle} />
+      <IconRail
+        activePanel={activePanel}
+        onPanelToggle={handlePanelToggle}
+        panelStatuses={{
+          cicd: 'error',
+          algedonic: 'warn',
+          activity: 'ok',
+        }}
+      />
 
       {/* Tap-outside-to-close backdrop (phone only) */}
       {activePanel && (

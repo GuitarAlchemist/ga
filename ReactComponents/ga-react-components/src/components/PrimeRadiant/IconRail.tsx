@@ -5,9 +5,12 @@ import React from 'react';
 
 export type PanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd';
 
+export type PanelStatus = 'ok' | 'warn' | 'error' | 'critical' | null;
+
 interface IconRailProps {
   activePanel: PanelId | null;
   onPanelToggle: (panelId: PanelId) => void;
+  panelStatuses?: Partial<Record<PanelId, PanelStatus>>;
 }
 
 interface RailItem {
@@ -120,9 +123,18 @@ const RAIL_ITEMS: RailItem[] = [
   },
 ];
 
-export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle }) => (
+const STATUS_COLORS: Record<NonNullable<PanelStatus>, string> = {
+  ok: '#33CC66',
+  warn: '#FFB300',
+  error: '#FF4444',
+  critical: '#FF0000',
+};
+
+export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, panelStatuses = {} }) => (
   <div className="icon-rail">
-    {RAIL_ITEMS.map((item) => (
+    {RAIL_ITEMS.map((item) => {
+      const status = panelStatuses[item.id] ?? null;
+      return (
       <button
         key={item.id}
         className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
@@ -131,7 +143,14 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle }
         aria-label={`Toggle ${item.label} panel`}
       >
         {item.icon}
+        {status && (
+          <span
+            className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+            style={{ backgroundColor: STATUS_COLORS[status] }}
+          />
+        )}
       </button>
-    ))}
+      );
+    })}
   </div>
 );

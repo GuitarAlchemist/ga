@@ -254,7 +254,7 @@ export class RadiantEngine {
   // ─── Camera — zoomed out to see full sphere ───
   private initCamera(): void {
     const aspect = this.container.clientWidth / this.container.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(55, aspect, 0.1, 500);
+    this.camera = new THREE.PerspectiveCamera(55, aspect, 0.001, 2000);
     this.camera.position.set(0, 15, 55);
     this.camera.lookAt(0, 0, 0);
   }

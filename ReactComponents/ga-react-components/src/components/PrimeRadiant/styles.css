@@ -71,6 +71,25 @@
   border-radius: 0 3px 3px 0;
 }
 
+/* Status indicator dot on rail icons */
+.icon-rail__status-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(13, 17, 23, 0.9);
+  pointer-events: none;
+}
+.icon-rail__status-dot--pulse {
+  animation: rail-dot-pulse 1.5s ease-in-out infinite;
+}
+@keyframes rail-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
 /* ─── Side Panel — one at a time ─── */
 .prime-radiant__side-panel {
   width: 0;
@@ -82,12 +101,19 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 20;
+  height: 100%;
 }
 
 .prime-radiant__side-panel--open {
   width: 360px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
 }
+.prime-radiant__side-panel--open::-webkit-scrollbar { width: 6px; }
+.prime-radiant__side-panel--open::-webkit-scrollbar-track { background: transparent; }
+.prime-radiant__side-panel--open::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.prime-radiant__side-panel--open::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
 .prime-radiant__side-panel-close {
   display: none; /* Only visible on phone */

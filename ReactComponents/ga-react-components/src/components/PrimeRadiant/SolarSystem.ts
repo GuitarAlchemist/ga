@@ -467,26 +467,104 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
   return new THREE.Mesh(geo, mat);
 }
 
-// ── Create orbit trail ring (barely visible dashed line) ──
+// ── Create orbit trail with per-vertex fading ──
 function createOrbitTrail(distance: number, scale: number, color: number = 0x334466): THREE.Line {
-  const points: THREE.Vector3[] = [];
   const segments = 128;
+  const positions = new Float32Array((segments + 1) * 3);
+  const alphas = new Float32Array(segments + 1);
   for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
-    points.push(new THREE.Vector3(
-      Math.cos(angle) * distance * scale,
-      0,
-      Math.sin(angle) * distance * scale,
-    ));
+    positions[i * 3] = Math.cos(angle) * distance * scale;
+    positions[i * 3 + 1] = 0;
+    positions[i * 3 + 2] = Math.sin(angle) * distance * scale;
+    alphas[i] = 0.08; // initial uniform alpha
   }
-  const geo = new THREE.BufferGeometry().setFromPoints(points);
-  const mat = new THREE.LineBasicMaterial({
-    color,
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
+
+  const col = new THREE.Color(color);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: col },
+    },
+    vertexShader: /* glsl */ `
+      attribute float aAlpha;
+      varying float vAlpha;
+      void main() {
+        vAlpha = aAlpha;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor;
+      varying float vAlpha;
+      void main() {
+        gl_FragColor = vec4(uColor, vAlpha);
+      }
+    `,
     transparent: true,
-    opacity: 0.08,
     depthWrite: false,
   });
-  return new THREE.Line(geo, mat);
+  const line = new THREE.Line(geo, mat);
+  line.userData.trailSegments = segments;
+  line.userData.trailDistance = distance;
+  return line;
+}
+
+// ── Create planet name label as a canvas-based sprite ──
+function createPlanetLabel(name: string, scale: number): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  const size = 256;
+  canvas.width = size;
+  canvas.height = 96;
+  const ctx = canvas.getContext('2d')!;
+
+  const text = name.toUpperCase();
+  ctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Extrusion effect: draw text multiple times with offsets
+  // Shadow layers (dark behind for depth)
+  for (let i = 4; i >= 1; i--) {
+    ctx.fillStyle = `rgba(0, 20, 40, ${0.15 * i})`;
+    ctx.fillText(text, size / 2 + i * 0.6, 48 + i * 0.8);
+  }
+
+  // Outer glow — cyan
+  ctx.shadowColor = '#00ccff';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = 'rgba(0, 200, 255, 0.4)';
+  ctx.fillText(text, size / 2, 48);
+
+  // Inner glow — gold
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, size / 2, 48);
+
+  // Crisp top layer
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, size / 2, 48);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+  });
+  const sprite = new THREE.Sprite(mat);
+  // Scale proportional to planet size but clamped for readability
+  const labelScale = Math.max(scale * 8, 0.06);
+  sprite.scale.set(labelScale, labelScale * 0.375, 1);
+  sprite.visible = false;
+  sprite.name = `label-${name}`;
+  return sprite;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -526,20 +604,32 @@ export function createSolarSystem(scale: number): THREE.Group {
   // ── Planets + Moons ──
   const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh }[] = [];
   const moonInstances: MoonInstance[] = [];
+  const planetLabels: Map<string, THREE.Sprite> = new Map();
+  const orbitTrails: Map<string, THREE.Line> = new Map();
 
   for (const def of PLANETS) {
     const orbit = new THREE.Group();
     orbit.name = `orbit-${def.name}`;
 
-    // Orbit trail
+    // Orbit trail (with per-vertex alpha for fading)
     const trail = createOrbitTrail(def.distance, scale);
+    trail.name = `trail-${def.name}`;
     group.add(trail); // add to group root, not orbit (orbit rotates)
+    orbitTrails.set(def.name, trail);
 
     const mesh = createPlanetMesh(def, scale);
     mesh.name = def.name;
+    mesh.frustumCulled = false; // prevent disappearing on close zoom
     mesh.position.x = def.distance * scale;
     if (def.tilt) mesh.rotation.z = def.tilt;
     orbit.add(mesh);
+
+    // Planet name label (initially hidden)
+    const label = createPlanetLabel(def.name, scale);
+    label.position.copy(mesh.position);
+    label.position.y += def.radius * scale + 0.03; // above the planet
+    orbit.add(label);
+    planetLabels.set(def.name, label);
 
     let cloudsMesh: THREE.Mesh | undefined;
 
@@ -666,7 +756,33 @@ export function createSolarSystem(scale: number): THREE.Group {
 
   group.userData.planets = planetMeshes;
   group.userData.moonInstances = moonInstances;
+  group.userData.planetLabels = planetLabels;
+  group.userData.orbitTrails = orbitTrails;
   return group;
+}
+
+// ─────────────────────────────────────────────────────────────
+// LABEL CONTROL
+// ─────────────────────────────────────────────────────────────
+
+/** Show a planet label by name, hide all others. Pass null to hide all. */
+export function showPlanetLabel(group: THREE.Group, name: string | null): void {
+  const labels = group.userData.planetLabels as Map<string, THREE.Sprite> | undefined;
+  if (!labels) return;
+  for (const [key, sprite] of labels) {
+    sprite.visible = key === name;
+  }
+}
+
+/** Get all planet mesh names (for raycasting targets). */
+export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
+  const planets = group.userData.planets as { mesh: THREE.Mesh }[] | undefined;
+  if (!planets) return [];
+  // Include the sun mesh as well
+  const sun = group.getObjectByName('sun');
+  const meshes = planets.map(p => p.mesh);
+  if (sun instanceof THREE.Mesh) meshes.unshift(sun);
+  return meshes;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -680,6 +796,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
 
   // Sun world position (group origin)
   group.getWorldPosition(_sunWorldPos);
+
+  const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
   for (const { mesh, orbit, def, clouds } of planets) {
     // Orbit rotation
@@ -698,6 +816,25 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       const u = mesh.material.uniforms;
       if (u.uSunPos) u.uSunPos.value.copy(_sunWorldPos);
       if (u.uTime) u.uTime.value = time;
+    }
+
+    // ── Fading orbit trail — bright near planet, fades 180° behind ──
+    const trail = trails?.get(def.name);
+    if (trail) {
+      const segments = trail.userData.trailSegments as number;
+      const alphaAttr = trail.geometry.getAttribute('aAlpha') as THREE.BufferAttribute;
+      // Current planet angle in its orbit
+      const planetAngle = time * def.speed * 0.1; // matches orbit.rotation.y
+      for (let i = 0; i <= segments; i++) {
+        const vertAngle = (i / segments) * Math.PI * 2;
+        // Angular distance from planet (0 to PI)
+        let diff = Math.abs(vertAngle - (planetAngle % (Math.PI * 2)));
+        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+        // Bright (0.35) at planet, fades to dim (0.03) at 180° behind
+        const alpha = 0.03 + 0.32 * Math.pow(1 - diff / Math.PI, 2.5);
+        alphaAttr.setX(i, alpha);
+      }
+      alphaAttr.needsUpdate = true;
     }
   }
 

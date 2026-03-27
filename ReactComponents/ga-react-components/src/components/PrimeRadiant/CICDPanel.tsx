@@ -269,6 +269,57 @@ export const CICDPanel: React.FC = () => {
               </div>
             );
           })}
+          {/* Emergency remediation button */}
+          {failing > 0 && (
+            <div style={{ padding: '8px 12px', borderTop: '1px solid #21262d' }}>
+              <button
+                onClick={() => {
+                  const failedRepos = [...new Set(runs.filter(r => r.status === 'failure').map(r => r.repo))];
+                  const msg = `Emergency remediation requested for ${failedRepos.join(', ')} — ${failing} failing workflow(s)`;
+                  // Store trigger for governance pickup
+                  const trigger = {
+                    type: 'emergency_remediation',
+                    repos: failedRepos,
+                    failingCount: failing,
+                    failedWorkflows: runs.filter(r => r.status === 'failure').map(r => ({ name: r.name, repo: r.repo, url: r.url })),
+                    requestedAt: new Date().toISOString(),
+                  };
+                  const existing = JSON.parse(localStorage.getItem('prime-radiant-remediation-queue') ?? '[]');
+                  existing.push(trigger);
+                  localStorage.setItem('prime-radiant-remediation-queue', JSON.stringify(existing));
+                  alert(msg + '\n\nTrigger queued. Run /demerzel drive to execute remediation.');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 68, 68, 0.15)',
+                  border: '1px solid rgba(255, 68, 68, 0.4)',
+                  borderRadius: 6,
+                  color: '#FF4444',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.25)';
+                  (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.6)';
+                }}
+                onMouseLeave={e => {
+                  (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.15)';
+                  (e.target as HTMLElement).style.borderColor = 'rgba(255, 68, 68, 0.4)';
+                }}
+                title="Queue emergency remediation for all failing workflows"
+              >
+                ⚡ Emergency Remediation ({failing} failing)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
