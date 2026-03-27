@@ -47,3 +47,4 @@ export type { AlgedonicSignal, AlgedonicSignalType, AlgedonicSeverity, Algedonic
 export { BeliefHeatmap } from './BeliefHeatmap';
 export { IconRail } from './IconRail';
 export type { PanelId } from './IconRail';
+export { CICDPanel } from './CICDPanel';

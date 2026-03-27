@@ -126,9 +126,13 @@ export function createStarfield(count: number = 1500): THREE.Points {
   return points;
 }
 
-export function animateStarfield(starfield: THREE.Points, dt: number): void {
+export function animateStarfield(starfield: THREE.Points, dt: number, camera?: THREE.Camera): void {
   starfield.rotation.y += dt * 0.003;
   starfield.rotation.x += dt * 0.001;
+  // Follow camera so stars always surround the viewer (skybox behavior)
+  if (camera) {
+    starfield.position.copy(camera.position);
+  }
 }
 
 // Keep API compatible

@@ -30,6 +30,7 @@ import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
 import { IconRail, type PanelId } from './IconRail';
 import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
+import { CICDPanel } from './CICDPanel';
 import type { AlgedonicSignalEvent } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import './styles.css';
@@ -532,6 +533,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const pleasureWindowRef = useRef<number[]>([]);
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
+  const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -1248,9 +1250,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           updateSolarSystem(solarSystem, t);
         }
       }
-      const solarOffset = new THREE.Vector3(6, 4, -12);
-      solarOffset.applyQuaternion(cam.quaternion);
-      solarSystem.position.copy(cam.position).add(solarOffset);
+      if (solarFollowCameraRef.current) {
+        const solarOffset = new THREE.Vector3(6, 4, -12);
+        solarOffset.applyQuaternion(cam.quaternion);
+        solarSystem.position.copy(cam.position).add(solarOffset);
+      } else {
+        // Auto-resume follow when camera moves far from the solar system
+        const distToSolar = cam.position.distanceTo(solarSystem.position);
+        if (distToSolar > 20) {
+          solarFollowCameraRef.current = true;
+        }
+      }
 
       // ─── Jarvis Space Station — top-left of view ───
       if (qualityLevel !== 'low') {
@@ -1826,18 +1836,48 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                   { x: facePos.x, y: facePos.y, z: facePos.z },
                   1200,
                 );
+                // Resume solar system follow when navigating elsewhere
+                solarFollowCameraRef.current = true;
                 return;
               }
 
-              const obj = fg.scene().getObjectByName(p.target);
-              if (obj) {
-                const wp = new THREE.Vector3();
-                obj.getWorldPosition(wp);
+              // Stop solar system from following the camera so we can zoom into it
+              solarFollowCameraRef.current = false;
+
+              const solarSystemGroup = fg.scene().getObjectByName('sun')?.parent;
+              if (!solarSystemGroup) return;
+
+              // Get the solar system's current world position (where it's pinned now)
+              const solarCenter = new THREE.Vector3();
+              solarSystemGroup.getWorldPosition(solarCenter);
+
+              if (p.target === 'sun') {
+                // Zoom to solar system center — close enough to see the Sun
                 fg.cameraPosition(
-                  { x: wp.x, y: wp.y + 3, z: wp.z + 8 },
-                  { x: wp.x, y: wp.y, z: wp.z },
+                  { x: solarCenter.x, y: solarCenter.y + 0.8, z: solarCenter.z + 2.5 },
+                  { x: solarCenter.x, y: solarCenter.y, z: solarCenter.z },
                   1200,
                 );
+              } else {
+                // Find the planet mesh by name within the solar system
+                const obj = solarSystemGroup.getObjectByName(p.target);
+                if (obj) {
+                  const wp = new THREE.Vector3();
+                  obj.getWorldPosition(wp);
+                  // Zoom close — solar system is at 0.03 scale, so planets are very small
+                  fg.cameraPosition(
+                    { x: wp.x, y: wp.y + 0.3, z: wp.z + 1.0 },
+                    { x: wp.x, y: wp.y, z: wp.z },
+                    1200,
+                  );
+                } else {
+                  // Fallback: zoom to solar system center
+                  fg.cameraPosition(
+                    { x: solarCenter.x, y: solarCenter.y + 0.8, z: solarCenter.z + 2.5 },
+                    { x: solarCenter.x, y: solarCenter.y, z: solarCenter.z },
+                    1200,
+                  );
+                }
               }
             }}
           >
@@ -1895,9 +1935,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         )}
         {activePanel === 'llm' && <LLMStatus />}
         {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
+        {activePanel === 'cicd' && <CICDPanel />}
+        {activePanel === 'university' && (
+          <CourseViewer open={true} onClose={() => setActivePanel(null)} />
+        )}
       </div>
 
-      {/* Streeling University course viewer modal */}
+      {/* Streeling University course viewer modal (also accessible via floating button) */}
       <CourseViewer open={showCourseViewer} onClose={() => setShowCourseViewer(false)} />
     </div>
   );
