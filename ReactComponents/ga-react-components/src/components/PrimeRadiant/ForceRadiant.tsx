@@ -1044,8 +1044,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     container.style.position = 'relative';
     container.appendChild(fpsEl);
 
+    let lastCameraSave = 0;
     fg.onEngineTick(() => {
       const t = Date.now() * 0.001;
+
+      // ─── Save camera state every 2 seconds ───
+      const now2 = Date.now();
+      if (now2 - lastCameraSave > 2000) {
+        lastCameraSave = now2;
+        try {
+          const cp = fgCam.position;
+          const ct = fg.scene().position; // lookAt target approximation
+          localStorage.setItem('prime-radiant-camera', JSON.stringify({
+            px: cp.x, py: cp.y, pz: cp.z,
+            lx: ct.x, ly: ct.y, lz: ct.z,
+          }));
+        } catch { /* quota exceeded or private browsing */ }
+      }
 
       // ─── FPS measurement + adaptive quality ───
       frameCount++;
@@ -1748,6 +1763,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fgCam.near = 0.001;
     fgCam.far = 5000;
     fgCam.updateProjectionMatrix();
+
+    // ─── Restore camera state from localStorage ───
+    try {
+      const saved = localStorage.getItem('prime-radiant-camera');
+      if (saved) {
+        const cam = JSON.parse(saved) as { px: number; py: number; pz: number; lx: number; ly: number; lz: number };
+        fg.cameraPosition({ x: cam.px, y: cam.py, z: cam.pz }, { x: cam.lx, y: cam.ly, z: cam.lz }, 0);
+      }
+    } catch { /* ignore corrupt/missing state */ }
 
     // ─── Live data polling — update nodes in-place without graph rebuild ───
     let pollingHandle: LivePollingHandle | undefined;
