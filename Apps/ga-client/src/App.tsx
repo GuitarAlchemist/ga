@@ -24,6 +24,40 @@ const PrimeRadiantDemo = lazy(() =>
 
 const ChatInterface = lazy(() => import('./components/Chat/ChatInterface'));
 
+// ── Test pages from ga-react-components ──────────────────────────────────────
+const TestIndex = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/TestIndex'));
+const MinimalThreeTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/MinimalThreeTest'));
+const MusicTheoryTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/MusicTheoryTest'));
+const ThreeFretboardTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/ThreeFretboardTest'));
+const ThreeHeadstockTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/ThreeHeadstockTest'));
+const RealisticFretboardTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/RealisticFretboardTest'));
+const GuitarFretboardTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/GuitarFretboardTest'));
+const WebGPUFretboardTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/WebGPUFretboardTest'));
+const CapoTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/CapoTest'));
+const CapoModelTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/CapoModelTest').then(mod => ({ default: mod.CapoModelTest })));
+const BSPTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/BSPTest'));
+const MusicHierarchyDemo = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/MusicHierarchyDemo'));
+const HarmonicNavigator3DTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/HarmonicNavigator3DTest'));
+const InstrumentIconsTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/InstrumentIconsTest'));
+const BSPDoomExplorerTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/BSPDoomExplorerTest'));
+const FretboardWithHandTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/FretboardWithHandTest'));
+const Sunburst3DTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/Sunburst3DTest'));
+const ImmersiveMusicalWorldTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/ImmersiveMusicalWorldTest'));
+const FluffyGrassTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/FluffyGrassTest'));
+const OceanTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/OceanTest'));
+const SandDunesTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/SandDunesTest'));
+const Guitar3DTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/Guitar3DTest'));
+const HandAnimationTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/HandAnimationTest'));
+const Models3DTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/Models3DTest'));
+const Floor0NavigationTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/Floor0NavigationTest'));
+const TabConverterTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/TabConverterTest'));
+const GrothendieckDSLTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/GrothendieckDSLTest'));
+const ChordProgressionDSLTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/ChordProgressionDSLTest'));
+const FretboardNavigationDSLTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/FretboardNavigationDSLTest'));
+const InverseKinematicsTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/InverseKinematicsTest'));
+const EcosystemRoadmapTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/EcosystemRoadmapTest'));
+const PrimeRadiantTest = lazy(() => import('../../../ReactComponents/ga-react-components/src/pages/PrimeRadiantTest'));
+
 const defaultTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -162,6 +196,40 @@ const App = () => {
                     <PrimeRadiantDemo />
                   </Container>
                 } />
+
+                {/* ── Test pages (from ga-react-components) ──────────────── */}
+                <Route path="/test" element={<TestIndex />} />
+                <Route path="/test/minimal-three" element={<MinimalThreeTest />} />
+                <Route path="/test/music-theory" element={<MusicTheoryTest />} />
+                <Route path="/test/three-fretboard" element={<ThreeFretboardTest />} />
+                <Route path="/test/three-headstock" element={<ThreeHeadstockTest />} />
+                <Route path="/test/realistic-fretboard" element={<RealisticFretboardTest />} />
+                <Route path="/test/guitar-fretboard" element={<GuitarFretboardTest />} />
+                <Route path="/test/webgpu-fretboard" element={<WebGPUFretboardTest />} />
+                <Route path="/test/capo" element={<CapoTest />} />
+                <Route path="/test/capo-model" element={<CapoModelTest />} />
+                <Route path="/test/bsp" element={<BSPTest />} />
+                <Route path="/test/music-hierarchy" element={<MusicHierarchyDemo />} />
+                <Route path="/test/harmonic-navigator-3d" element={<HarmonicNavigator3DTest />} />
+                <Route path="/test/instrument-icons" element={<InstrumentIconsTest />} />
+                <Route path="/test/bsp-doom-explorer" element={<BSPDoomExplorerTest />} />
+                <Route path="/test/fretboard-with-hand" element={<FretboardWithHandTest />} />
+                <Route path="/test/sunburst-3d" element={<Sunburst3DTest />} />
+                <Route path="/test/immersive-musical-world" element={<ImmersiveMusicalWorldTest />} />
+                <Route path="/test/fluffy-grass" element={<FluffyGrassTest />} />
+                <Route path="/test/ocean" element={<OceanTest />} />
+                <Route path="/test/sand-dunes" element={<SandDunesTest />} />
+                <Route path="/test/guitar-3d" element={<Guitar3DTest />} />
+                <Route path="/test/hand-animation" element={<HandAnimationTest />} />
+                <Route path="/test/models-3d" element={<Models3DTest />} />
+                <Route path="/test/floor0-navigation" element={<Floor0NavigationTest />} />
+                <Route path="/test/tab-converter" element={<TabConverterTest />} />
+                <Route path="/test/grothendieck-dsl" element={<GrothendieckDSLTest />} />
+                <Route path="/test/chord-progression-dsl" element={<ChordProgressionDSLTest />} />
+                <Route path="/test/fretboard-navigation-dsl" element={<FretboardNavigationDSLTest />} />
+                <Route path="/test/inverse-kinematics" element={<InverseKinematicsTest />} />
+                <Route path="/test/ecosystem-roadmap" element={<EcosystemRoadmapTest />} />
+                <Route path="/test/prime-radiant" element={<PrimeRadiantTest />} />
               </Routes>
             </Suspense>
           </Layout>
