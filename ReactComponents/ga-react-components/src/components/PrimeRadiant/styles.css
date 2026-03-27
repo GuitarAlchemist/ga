@@ -60,6 +60,31 @@
   background: rgba(255, 215, 0, 0.1);
 }
 
+/* Tooltip — shows on hover, positioned to the left of the rail */
+.icon-rail__tooltip {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 8px;
+  padding: 4px 10px;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(8px);
+  z-index: 30;
+}
+
+.icon-rail__btn:hover .icon-rail__tooltip {
+  opacity: 1;
+}
+
 .icon-rail__btn--active::before {
   content: '';
   position: absolute;
@@ -1468,6 +1493,20 @@
     height: 3px;
     border-radius: 0 0 3px 3px;
   }
+
+  /* Tooltips show above the tab bar on phone */
+  .icon-rail__tooltip {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 100%;
+    transform: translateX(-50%);
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  /* Hide backend status badge on phone (too cramped) */
+  .prime-radiant__backend-status { display: none; }
 
   /* Side panel → full-screen overlay */
   .prime-radiant__side-panel {

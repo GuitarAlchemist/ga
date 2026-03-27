@@ -1372,6 +1372,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       controls.zoomSpeed = 0.8;
+      (controls as Record<string, unknown>).minDistance = 0.05;
+      (controls as Record<string, unknown>).maxDistance = 500;
     }
 
     // ─── AMBIENT PARTICLE FIELD ───
@@ -1834,9 +1836,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   // ─── Backend connectivity check ───
   useEffect(() => {
-    const baseUrl = typeof import.meta !== 'undefined'
-      ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL ?? 'http://localhost:5232'
-      : 'http://localhost:5232';
+    // Use VITE env var, or same origin as the page (works for deployed demo), or localhost fallback
+    const envBase = typeof import.meta !== 'undefined'
+      ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL
+      : undefined;
+    const baseUrl = envBase || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5232');
 
     const checkBackend = async () => {
       try {
@@ -1890,14 +1894,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 
       {/* Backend connection status badge */}
-      <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
+      <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}
+        title={backendStatus === 'connected' ? 'Backend API is connected and responding' : backendStatus === 'checking' ? 'Checking backend connection...' : 'Backend API is unreachable — some features may be unavailable'}
+      >
         <span className="prime-radiant__backend-dot" />
-        <span>{backendStatus === 'connected' ? 'API' : backendStatus === 'checking' ? '...' : 'Offline'}</span>
+        <span>{backendStatus === 'connected' ? 'API Connected' : backendStatus === 'checking' ? 'Checking...' : 'API Offline'}</span>
       </div>
 
       {/* HUD overlays on the canvas — floating, small */}
       {graphData && (
-        <div className="prime-radiant__health">
+        <div className="prime-radiant__health" title="R: Resilience Score | ERGOL: Live Executed Governance Bindings | LOLLI: Dead/Orphan References">
           <span className={`prime-radiant__health-dot prime-radiant__health-dot--${healthStatus}`} />
           <span>
             R:{' '}
