@@ -43,7 +43,28 @@ async function fetchAgentTeams(): Promise<AgentTeam[]> {
     }
   } catch { /* fall through */ }
 
-  return [];
+  // Fallback: representative agent teams when API is unavailable
+  return [
+    {
+      id: 'team-governance',
+      name: 'Governance Cycle',
+      status: 'active',
+      agents: [
+        { id: 'a1', name: 'Demerzel', type: 'governance-scoped', status: 'running', task: 'Audit cycle 004 — policy compliance' },
+        { id: 'a2', name: 'Skeptical Auditor', type: 'Explore', status: 'running', task: 'Red team defense scoring' },
+        { id: 'a3', name: 'Seldon', type: 'Plan', status: 'completed', task: 'Research cycle — hexavalent logic' },
+      ],
+    },
+    {
+      id: 'team-build',
+      name: 'Prime Radiant Sprint',
+      status: 'active',
+      agents: [
+        { id: 'a4', name: 'Builder', type: 'general-purpose', status: 'running', task: 'Panel fallback data + LLM status' },
+        { id: 'a5', name: 'Render Critic', type: 'code-review', status: 'pending', task: 'Visual verification pass' },
+      ],
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------

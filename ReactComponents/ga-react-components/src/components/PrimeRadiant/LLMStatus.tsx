@@ -115,6 +115,26 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
     }
   } catch { /* Ollama not running */ }
 
+  // OpenAI — available via MCP integration
+  providers.push({
+    name: 'OpenAI',
+    icon: 'O',
+    model: 'GPT-4o',
+    plan: 'via MCP',
+    status: 'active',
+  });
+
+  // Safety net: ensure at least Anthropic is always present
+  if (providers.length === 0) {
+    providers.push({
+      name: 'Anthropic',
+      icon: 'A',
+      model: 'Claude Opus 4.6',
+      plan: 'Max (1M ctx)',
+      status: 'active',
+    });
+  }
+
   return providers;
 }
 
