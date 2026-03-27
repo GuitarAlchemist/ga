@@ -1,13 +1,79 @@
 // src/components/PrimeRadiant/CourseViewer.tsx
 // Streeling University course browser — embedded in Prime Radiant as a full-screen modal
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import Markdown from 'react-markdown';
-import { departments, totalCourses, totalDepartments, type Course, type Department } from './courseData';
+import { departments, totalCourses, totalDepartments, type Course } from './courseData';
 
 interface CourseViewerProps {
   open: boolean;
   onClose: () => void;
+}
+
+/* ---------- Queue types ---------- */
+
+interface CourseRequest {
+  id: string;
+  department: string;
+  topic: string;
+  level: 'introductory' | 'intermediate' | 'advanced' | 'phd';
+  requestedAt: string;
+  status: 'queued' | 'generating' | 'completed';
+}
+
+interface ResearchRequest {
+  id: string;
+  department: string;
+  topic: string;
+  depth: 'survey' | 'systematic-review' | 'deep-dive' | 'frontier';
+  sources: string[];
+  requestedAt: string;
+  status: 'queued' | 'researching' | 'completed';
+}
+
+interface TranslationRequest {
+  courseId: string;
+  department: string;
+  targetLanguage: string;
+  requestedAt: string;
+  status: 'queued' | 'in_progress' | 'completed';
+}
+
+type DialogKind = 'generate-course' | 'deep-research' | null;
+
+const COURSE_QUEUE_KEY = 'streeling-course-queue';
+const RESEARCH_QUEUE_KEY = 'streeling-research-queue';
+const TRANSLATION_QUEUE_KEY = 'streeling-translation-queue';
+
+const ALL_LANGUAGES = ['en', 'es', 'fr', 'pt', 'de', 'it'] as const;
+
+const LEVEL_OPTIONS: { value: CourseRequest['level']; label: string }[] = [
+  { value: 'introductory', label: 'Introductory' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+  { value: 'phd', label: 'PhD / Research' },
+];
+
+const DEPTH_OPTIONS: { value: ResearchRequest['depth']; label: string }[] = [
+  { value: 'survey', label: 'Survey' },
+  { value: 'systematic-review', label: 'Systematic Review' },
+  { value: 'deep-dive', label: 'Deep Dive' },
+  { value: 'frontier', label: 'Frontier Research' },
+];
+
+const SOURCE_OPTIONS = ['arXiv', 'Semantic Scholar', 'Google Scholar', 'Cross-model validation'];
+
+function loadQueue<T>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveQueue<T>(key: string, items: T[]) {
+  localStorage.setItem(key, JSON.stringify(items));
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -24,6 +90,115 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set());
+  const [activeLang, setActiveLang] = useState<string>('en');
+
+  /* --- Queue state --- */
+  const [courseQueue, setCourseQueue] = useState<CourseRequest[]>(() => loadQueue(COURSE_QUEUE_KEY));
+  const [researchQueue, setResearchQueue] = useState<ResearchRequest[]>(() => loadQueue(RESEARCH_QUEUE_KEY));
+  const [translationQueue, setTranslationQueue] = useState<TranslationRequest[]>(() => loadQueue(TRANSLATION_QUEUE_KEY));
+  const [queueExpanded, setQueueExpanded] = useState(false);
+
+  /* --- Dialog state --- */
+  const [dialogKind, setDialogKind] = useState<DialogKind>(null);
+  const [dialogDept, setDialogDept] = useState('');
+
+  // Generate Course form
+  const [gcTopic, setGcTopic] = useState('');
+  const [gcLevel, setGcLevel] = useState<CourseRequest['level']>('introductory');
+
+  // Deep Research form
+  const [drTopic, setDrTopic] = useState('');
+  const [drDepth, setDrDepth] = useState<ResearchRequest['depth']>('survey');
+  const [drSources, setDrSources] = useState<Set<string>>(new Set());
+
+  // Persist queues
+  useEffect(() => { saveQueue(COURSE_QUEUE_KEY, courseQueue); }, [courseQueue]);
+  useEffect(() => { saveQueue(RESEARCH_QUEUE_KEY, researchQueue); }, [researchQueue]);
+  useEffect(() => { saveQueue(TRANSLATION_QUEUE_KEY, translationQueue); }, [translationQueue]);
+
+  // Reset language when course changes
+  useEffect(() => { setActiveLang('en'); }, [selectedCourse?.id]);
+
+  const openDialog = useCallback((kind: DialogKind, deptName: string) => {
+    setDialogKind(kind);
+    setDialogDept(deptName);
+    setGcTopic('');
+    setGcLevel('introductory');
+    setDrTopic('');
+    setDrDepth('survey');
+    setDrSources(new Set());
+  }, []);
+
+  const closeDialog = useCallback(() => setDialogKind(null), []);
+
+  const submitCourseRequest = useCallback(() => {
+    if (!gcTopic.trim()) return;
+    const req: CourseRequest = {
+      id: `cq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      department: dialogDept,
+      topic: gcTopic.trim(),
+      level: gcLevel,
+      requestedAt: new Date().toISOString(),
+      status: 'queued',
+    };
+    setCourseQueue(prev => [...prev, req]);
+    closeDialog();
+  }, [gcTopic, gcLevel, dialogDept, closeDialog]);
+
+  const submitResearchRequest = useCallback(() => {
+    if (!drTopic.trim()) return;
+    const req: ResearchRequest = {
+      id: `rq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      department: dialogDept,
+      topic: drTopic.trim(),
+      depth: drDepth,
+      sources: Array.from(drSources),
+      requestedAt: new Date().toISOString(),
+      status: 'queued',
+    };
+    setResearchQueue(prev => [...prev, req]);
+    closeDialog();
+  }, [drTopic, drDepth, drSources, dialogDept, closeDialog]);
+
+  const toggleSource = useCallback((src: string) => {
+    setDrSources(prev => {
+      const next = new Set(prev);
+      if (next.has(src)) next.delete(src); else next.add(src);
+      return next;
+    });
+  }, []);
+
+  const queueTranslation = useCallback((course: Course, lang: string) => {
+    const already = translationQueue.some(
+      t => t.courseId === course.id && t.targetLanguage === lang
+    );
+    if (already) return;
+    const req: TranslationRequest = {
+      courseId: course.id,
+      department: course.department,
+      targetLanguage: lang,
+      requestedAt: new Date().toISOString(),
+      status: 'queued',
+    };
+    setTranslationQueue(prev => [...prev, req]);
+  }, [translationQueue]);
+
+  const isTranslationQueued = useCallback((courseId: string, lang: string) => {
+    return translationQueue.some(t => t.courseId === courseId && t.targetLanguage === lang);
+  }, [translationQueue]);
+
+  const totalPending = courseQueue.filter(r => r.status !== 'completed').length
+    + researchQueue.filter(r => r.status !== 'completed').length
+    + translationQueue.filter(r => r.status !== 'completed').length;
+
+  const pendingByDept = useMemo(() => {
+    const map: Record<string, CourseRequest[]> = {};
+    for (const r of courseQueue) {
+      if (r.status === 'completed') continue;
+      (map[r.department] ??= []).push(r);
+    }
+    return map;
+  }, [courseQueue]);
 
   const toggleDept = useCallback((deptId: string) => {
     setExpandedDepts(prev => {
@@ -54,6 +229,17 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
       }))
       .filter(dept => dept.courses.length > 0 || dept.name.toLowerCase().includes(q));
   }, [searchQuery]);
+
+  // Resolve displayed content based on active language
+  const displayedContent = useMemo(() => {
+    if (!selectedCourse) return null;
+    if (activeLang === 'en') {
+      return { title: selectedCourse.title, content: selectedCourse.content };
+    }
+    const t = selectedCourse.translations[activeLang];
+    if (t) return { title: t.title, content: t.content };
+    return { title: selectedCourse.title, content: selectedCourse.content };
+  }, [selectedCourse, activeLang]);
 
   if (!open) return null;
 
@@ -110,21 +296,57 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
           <nav className="course-viewer__sidebar">
             {filteredDepartments.map(dept => (
               <div key={dept.id} className="course-viewer__dept">
-                <button
-                  className={`course-viewer__dept-btn ${selectedDept === dept.id ? 'course-viewer__dept-btn--active' : ''}`}
-                  onClick={() => toggleDept(dept.id)}
-                >
-                  <svg
-                    className={`course-viewer__dept-chevron ${expandedDepts.has(dept.id) ? 'course-viewer__dept-chevron--open' : ''}`}
-                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                <div className="course-viewer__dept-header">
+                  <button
+                    className={`course-viewer__dept-btn ${selectedDept === dept.id ? 'course-viewer__dept-btn--active' : ''}`}
+                    onClick={() => toggleDept(dept.id)}
                   >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                  <span className="course-viewer__dept-name">{dept.name}</span>
-                  <span className="course-viewer__dept-badge">{dept.courses.length}</span>
-                </button>
-                {expandedDepts.has(dept.id) && dept.courses.length > 0 && (
+                    <svg
+                      className={`course-viewer__dept-chevron ${expandedDepts.has(dept.id) ? 'course-viewer__dept-chevron--open' : ''}`}
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    <span className="course-viewer__dept-name">{dept.name}</span>
+                    <span className="course-viewer__dept-badge">{dept.courses.length}</span>
+                  </button>
+                  {expandedDepts.has(dept.id) && (
+                    <div className="course-viewer__dept-actions">
+                      <button
+                        className="course-viewer__action-btn course-viewer__action-btn--generate"
+                        title="Generate Course"
+                        onClick={e => { e.stopPropagation(); openDialog('generate-course', dept.name); }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Course
+                      </button>
+                      <button
+                        className="course-viewer__action-btn course-viewer__action-btn--research"
+                        title="Deep Research"
+                        onClick={e => { e.stopPropagation(); openDialog('deep-research', dept.name); }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        Research
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {expandedDepts.has(dept.id) && (
                   <div className="course-viewer__course-list">
+                    {/* Pending course requests */}
+                    {(pendingByDept[dept.name] ?? []).map(req => (
+                      <div key={req.id} className="course-viewer__pending-item">
+                        <span className={`course-viewer__status-dot course-viewer__status-dot--${req.status === 'queued' ? 'amber' : req.status === 'generating' ? 'blue' : 'green'}`} />
+                        <span className="course-viewer__pending-label">{req.topic}</span>
+                        <span className="course-viewer__pending-status">
+                          {req.status === 'queued' ? 'Queued' : req.status === 'generating' ? 'Generating...' : 'Done'}
+                        </span>
+                      </div>
+                    ))}
                     {dept.courses.map(course => (
                       <button
                         key={course.id}
@@ -138,6 +360,60 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                 )}
               </div>
             ))}
+
+            {/* Queue dashboard */}
+            <div className="course-viewer__queue-section">
+              <button
+                className="course-viewer__queue-header"
+                onClick={() => setQueueExpanded(prev => !prev)}
+              >
+                <svg
+                  className={`course-viewer__dept-chevron ${queueExpanded ? 'course-viewer__dept-chevron--open' : ''}`}
+                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span className="course-viewer__dept-name">Queue</span>
+                {totalPending > 0 && (
+                  <span className="course-viewer__queue-badge">{totalPending}</span>
+                )}
+              </button>
+              {queueExpanded && (
+                <div className="course-viewer__queue-list">
+                  {courseQueue.length === 0 && researchQueue.length === 0 && (
+                    <div className="course-viewer__queue-empty">No pending requests</div>
+                  )}
+                  {courseQueue.length > 0 && (
+                    <>
+                      <div className="course-viewer__queue-group-title">Course Generation</div>
+                      {courseQueue.map(req => (
+                        <div key={req.id} className="course-viewer__queue-item">
+                          <span className={`course-viewer__status-dot course-viewer__status-dot--${req.status === 'queued' ? 'amber' : req.status === 'generating' ? 'blue' : 'green'}`} />
+                          <div className="course-viewer__queue-item-info">
+                            <span className="course-viewer__queue-item-topic">{req.topic}</span>
+                            <span className="course-viewer__queue-item-meta">{req.department} &middot; {req.level}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {researchQueue.length > 0 && (
+                    <>
+                      <div className="course-viewer__queue-group-title">Research</div>
+                      {researchQueue.map(req => (
+                        <div key={req.id} className="course-viewer__queue-item">
+                          <span className={`course-viewer__status-dot course-viewer__status-dot--${req.status === 'queued' ? 'amber' : req.status === 'researching' ? 'blue' : 'green'}`} />
+                          <div className="course-viewer__queue-item-info">
+                            <span className="course-viewer__queue-item-topic">{req.topic}</span>
+                            <span className="course-viewer__queue-item-meta">{req.department} &middot; {req.depth}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Content area */}
@@ -184,6 +460,113 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
             )}
           </div>
         </div>
+        {/* Generate Course dialog */}
+        {dialogKind === 'generate-course' && (
+          <div className="course-viewer__dialog-overlay" onClick={closeDialog}>
+            <div className="course-viewer__dialog" onClick={e => e.stopPropagation()}>
+              <h3 className="course-viewer__dialog-title">Generate Course</h3>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Department</span>
+                <input className="course-viewer__field-input" type="text" value={dialogDept} readOnly />
+              </label>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Topic</span>
+                <input
+                  className="course-viewer__field-input"
+                  type="text"
+                  placeholder="e.g. Advanced Harmonic Analysis"
+                  value={gcTopic}
+                  onChange={e => setGcTopic(e.target.value)}
+                  autoFocus
+                />
+              </label>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Level</span>
+                <select
+                  className="course-viewer__field-select"
+                  value={gcLevel}
+                  onChange={e => setGcLevel(e.target.value as CourseRequest['level'])}
+                >
+                  {LEVEL_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="course-viewer__dialog-actions">
+                <button className="course-viewer__dialog-cancel" onClick={closeDialog}>Cancel</button>
+                <button
+                  className="course-viewer__dialog-submit"
+                  onClick={submitCourseRequest}
+                  disabled={!gcTopic.trim()}
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Deep Research dialog */}
+        {dialogKind === 'deep-research' && (
+          <div className="course-viewer__dialog-overlay" onClick={closeDialog}>
+            <div className="course-viewer__dialog course-viewer__dialog--wide" onClick={e => e.stopPropagation()}>
+              <h3 className="course-viewer__dialog-title">Deep Research</h3>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Department</span>
+                <input className="course-viewer__field-input" type="text" value={dialogDept} readOnly />
+              </label>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Research Question / Topic</span>
+                <textarea
+                  className="course-viewer__field-textarea"
+                  placeholder="e.g. What are the latest advances in neural audio synthesis for guitar timbres?"
+                  value={drTopic}
+                  onChange={e => setDrTopic(e.target.value)}
+                  rows={4}
+                  autoFocus
+                />
+              </label>
+              <label className="course-viewer__field">
+                <span className="course-viewer__field-label">Depth</span>
+                <select
+                  className="course-viewer__field-select"
+                  value={drDepth}
+                  onChange={e => setDrDepth(e.target.value as ResearchRequest['depth'])}
+                >
+                  {DEPTH_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+              <fieldset className="course-viewer__field course-viewer__fieldset">
+                <legend className="course-viewer__field-label">Sources</legend>
+                <div className="course-viewer__checkbox-group">
+                  {SOURCE_OPTIONS.map(src => (
+                    <label key={src} className="course-viewer__checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={drSources.has(src)}
+                        onChange={() => toggleSource(src)}
+                        className="course-viewer__checkbox"
+                      />
+                      {src}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div className="course-viewer__dialog-actions">
+                <button className="course-viewer__dialog-cancel" onClick={closeDialog}>Cancel</button>
+                <button
+                  className="course-viewer__dialog-submit"
+                  onClick={submitResearchRequest}
+                  disabled={!drTopic.trim()}
+                >
+                  Start Research
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

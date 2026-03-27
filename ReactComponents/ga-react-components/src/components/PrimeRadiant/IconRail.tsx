@@ -3,7 +3,7 @@
 
 import React from 'react';
 
-export type PanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail';
+export type PanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic';
 
 interface IconRailProps {
   activePanel: PanelId | null;
@@ -85,6 +85,16 @@ const RAIL_ITEMS: RailItem[] = [
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
         <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+  },
+  {
+    id: 'algedonic',
+    label: 'Signals',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        <path d="M3 12h4l3-9 4 18 3-9h4" opacity="0.6" />
       </svg>
     ),
   },
