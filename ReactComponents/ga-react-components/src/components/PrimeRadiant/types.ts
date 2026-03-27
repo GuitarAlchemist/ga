@@ -65,6 +65,7 @@ export interface GovernanceNode {
   version?: string;
   health?: HealthMetrics;
   healthStatus?: GovernanceHealthStatus;
+  filePath?: string;             // relative path to governance file
   children?: string[];           // child node IDs
   metadata?: Record<string, unknown>;
   fileTree?: FileTreeNode[];

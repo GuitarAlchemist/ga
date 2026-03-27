@@ -164,17 +164,22 @@
   touch-action: manipulation;
 }
 
-/* Tap-outside-to-close backdrop on phone */
+/* Click-outside-to-close backdrop — transparent on desktop, tinted on phone */
 .prime-radiant__side-panel-backdrop {
   display: none;
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 21;
-  background: rgba(0, 0, 0, 0.4);
+  z-index: 19;
+  background: transparent;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Show backdrop whenever there's an active panel */
+.prime-radiant__side-panel-backdrop--active {
+  display: block;
 }
 
 /* Reset panel internal absolute positioning when inside rail */
@@ -305,7 +310,8 @@
 .prime-radiant__health {
   position: absolute;
   top: 16px;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -343,6 +349,121 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* ─── Health metric hover tooltips ─── */
+.prime-radiant__health-metric {
+  position: relative;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prime-radiant__health-tooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  background: rgba(13, 17, 23, 0.97);
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  /* Extra top padding to account for the bridge zone */
+  padding-top: 26px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+/* Invisible bridge zone so mouse can travel from metric to tooltip */
+.prime-radiant__health-tooltip::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+
+.prime-radiant__health-metric:hover .prime-radiant__health-tooltip {
+  display: block;
+}
+
+/* Arrow pointing up */
+.prime-radiant__health-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: rgba(13, 17, 23, 0.97);
+  border-left: 1px solid #30363d;
+  border-top: 1px solid #30363d;
+  z-index: 1;
+}
+
+.prime-radiant__health-tooltip-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.prime-radiant__health-tooltip-desc {
+  font-size: 11px;
+  color: #c9d1d9;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.prime-radiant__health-tooltip-thresholds {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.prime-radiant__health-tooltip-value {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.prime-radiant__health-tooltip-link {
+  font-size: 10px;
+  color: #58A6FF;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color 0.15s;
+}
+
+.prime-radiant__health-tooltip-link:hover {
+  color: #79c0ff;
+  text-decoration: underline;
+}
+
+/* Phone: tooltips need to fit smaller screens */
+@media (max-width: 480px) {
+  .prime-radiant__health-tooltip {
+    width: 260px;
+    left: 0;
+    transform: none;
+  }
+  .prime-radiant__health-tooltip::before {
+    left: 24px;
+  }
 }
 
 /* ─── Legend (bottom-left) ─── */
@@ -1489,24 +1610,10 @@
 .icicle-drawer__icicle {
   flex: 3;
   border-right: 1px solid #30363d;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b949e;
-  font-size: 13px;
-}
-
-.icicle-drawer__content {
-  flex: 2;
   overflow-y: auto;
-  padding: 16px;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  overflow-x: hidden;
   color: #8b949e;
   font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .icicle-drawer__close-btn {
@@ -1528,6 +1635,206 @@
 
 .icicle-drawer__close-btn:hover {
   background: rgba(48, 54, 61, 1);
+}
+
+/* ─── Nav tree (left pane) ─── */
+
+.icicle-drawer__nav-tree {
+  width: 100%;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.icicle-drawer__nav-group {
+  margin-bottom: 2px;
+}
+
+.icicle-drawer__nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: rgba(48, 54, 61, 0.3);
+  color: #e6edf3;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.icicle-drawer__nav-group-header:hover {
+  background: rgba(48, 54, 61, 0.6);
+}
+
+.icicle-drawer__nav-chevron {
+  font-size: 8px;
+  transition: transform 0.15s;
+  color: #8b949e;
+  flex-shrink: 0;
+}
+
+.icicle-drawer__nav-group-label {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+
+.icicle-drawer__nav-group-count {
+  font-size: 10px;
+  color: #8b949e;
+  background: rgba(48, 54, 61, 0.6);
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.icicle-drawer__nav-group-items {
+  padding: 2px 0;
+}
+
+.icicle-drawer__nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 4px 10px 4px 24px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: none;
+  color: #c9d1d9;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, border-left-color 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icicle-drawer__nav-item:hover {
+  background: rgba(48, 54, 61, 0.4);
+}
+
+.icicle-drawer__nav-item--selected {
+  border-left-color: #FFD700;
+  background: rgba(255, 215, 0, 0.08);
+  color: #e6edf3;
+}
+
+.icicle-drawer__nav-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Placeholder / loading / error ─── */
+
+.icicle-drawer__placeholder {
+  color: #8b949e;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.icicle-drawer__error {
+  color: #FF6B6B;
+}
+
+/* ─── Content viewer (right pane) ─── */
+
+.icicle-drawer__content {
+  flex: 2;
+  overflow-y: auto;
+  padding: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  color: #c9d1d9;
+  font-size: 13px;
+}
+
+.icicle-drawer__markdown {
+  padding: 16px;
+  line-height: 1.7;
+}
+
+.icicle-drawer__content-h1 {
+  font-size: 20px;
+  color: #e6edf3;
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #30363d;
+}
+
+.icicle-drawer__content-h2 {
+  font-size: 16px;
+  color: #e6edf3;
+  margin: 14px 0 6px;
+}
+
+.icicle-drawer__content-h3 {
+  font-size: 14px;
+  color: #e6edf3;
+  margin: 12px 0 4px;
+}
+
+.icicle-drawer__content-h4 {
+  font-size: 13px;
+  color: #d2d8de;
+  margin: 10px 0 4px;
+}
+
+.icicle-drawer__code-block {
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 12px;
+  color: #c9d1d9;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.icicle-drawer__inline-code {
+  background: rgba(48, 54, 61, 0.6);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  color: #e6edf3;
+}
+
+.icicle-drawer__table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+  font-size: 12px;
+}
+
+.icicle-drawer__th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 2px solid #30363d;
+  color: #e6edf3;
+  font-weight: 600;
+}
+
+.icicle-drawer__td {
+  padding: 4px 10px;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+}
+
+.icicle-drawer__blockquote {
+  border-left: 3px solid #30363d;
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: #8b949e;
 }
 
 /* ─── RESPONSIVE — phone ─── */
@@ -1570,12 +1877,13 @@
     padding-bottom: 0;
   }
 
-  /* Health bar — compact */
+  /* Health bar — compact, left-aligned on phone */
   .prime-radiant__health {
     font-size: 9px;
     padding: 3px 6px;
     top: 4px;
-    right: 4px;
+    left: 50%;
+    transform: translateX(-50%);
     gap: 4px;
   }
 
@@ -1636,12 +1944,14 @@
     width: 100%;
   }
 
-  /* Show close button + backdrop on phone */
+  /* Show close button on phone + tinted backdrop */
   .prime-radiant__side-panel-close {
     display: flex;
   }
-  .prime-radiant__side-panel--open ~ .prime-radiant__side-panel-backdrop {
-    display: block;
+  .prime-radiant__side-panel-backdrop--active {
+    background: rgba(0, 0, 0, 0.4);
+    position: fixed;
+    z-index: 21;
   }
 
   /* Compact detail panel on phone */
