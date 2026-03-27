@@ -18,6 +18,10 @@ import MusicGenerationDemo from './components/dashboard/MusicGenerationDemo';
 import HandPoseDemo from './pages/demos/HandPoseDemo';
 import EcosystemRoadmapDemo from './pages/demos/EcosystemRoadmapDemo';
 
+const PrimeRadiantDemo = lazy(() =>
+  import('../../../ReactComponents/ga-react-components/src/components/PrimeRadiant').then(mod => ({ default: mod.ForceRadiant }))
+);
+
 const ChatInterface = lazy(() => import('./components/Chat/ChatInterface'));
 
 const defaultTheme = createTheme({
@@ -151,6 +155,11 @@ const App = () => {
                   <Container maxWidth="lg" sx={{ py: 4 }}>
                     <Typography variant="h4">Graphiti Knowledge Graph</Typography>
                     <Typography color="text.secondary">Coming soon...</Typography>
+                  </Container>
+                } />
+                <Route path="/demos/prime-radiant" element={
+                  <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+                    <PrimeRadiantDemo />
                   </Container>
                 } />
               </Routes>

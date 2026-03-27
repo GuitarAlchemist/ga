@@ -1,6 +1,11 @@
 # Guitar Alchemist
 
-An AI-powered music theory and guitar learning platform built with .NET 9, React, and cutting-edge AI technologies.
+An AI-powered music theory and guitar learning platform built with .NET 10, React, and cutting-edge AI technologies.
+
+## Live Demos
+
+- [**Prime Radiant**](https://demos.guitaralchemist.com/test/prime-radiant) — 3D governance visualization with Demerzel AI, solar system, Seldon analytics
+- [**All Demos**](https://demos.guitaralchemist.com/test) — Component test pages: fretboard, solar system, nature simulations, music theory
 
 ## ix ML Integration
 

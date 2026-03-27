@@ -31,8 +31,85 @@ declare global {
 }
 
 // ---------------------------------------------------------------------------
-// Mock backend — TODO: Connect to real Demerzel backend
+// Claude API proxy + fallback mock backend
 // ---------------------------------------------------------------------------
+
+// Claude proxy URL — set via env var or defaults to Cloudflare Worker
+const CLAUDE_PROXY_URL = typeof import.meta !== 'undefined'
+  ? (import.meta as { env?: Record<string, string> }).env?.VITE_CLAUDE_PROXY_URL ?? ''
+  : '';
+
+// User-provided API key (stored in localStorage for persistence)
+function getUserApiKey(): string | null {
+  try { return localStorage.getItem('ga-anthropic-key'); } catch { return null; }
+}
+
+async function askClaudeStreaming(
+  messages: { role: string; content: string }[],
+  onChunk: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<string> {
+  const proxyUrl = CLAUDE_PROXY_URL;
+  const userKey = getUserApiKey();
+
+  if (!proxyUrl && !userKey) {
+    throw new Error('no-api'); // triggers fallback to mock
+  }
+
+  const url = proxyUrl || 'https://api.anthropic.com/v1/messages';
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (userKey && !proxyUrl) {
+    headers['Authorization'] = `Bearer ${userKey}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ messages, stream: true }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6);
+      if (data === '[DONE]') continue;
+
+      try {
+        const parsed = JSON.parse(data);
+        // Handle Anthropic SSE format
+        if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+          fullText += parsed.delta.text;
+          onChunk(parsed.delta.text);
+        }
+      } catch {
+        // Skip unparseable chunks
+      }
+    }
+  }
+
+  return fullText;
+}
+
+// Mock fallback responses
 const GOVERNANCE_RESPONSES: Record<string, string> = {
   policy: 'Our governance framework encompasses 39 policies covering alignment, rollback, self-modification, kaizen, reconnaissance, and more. Each policy includes versioning with explicit rationale.',
   constitution: 'The constitution hierarchy flows from the Asimov root (Articles 0-5) through the Demerzel mandate to the operational ethics (Articles 1-11). The Zeroth Law always takes precedence.',
@@ -195,18 +272,56 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     setInput('');
     setIsLoading(true);
 
+    // Create placeholder assistant message for streaming
+    const botMsgId = `bot-${Date.now()}`;
+    const botMsg: ChatMessage = {
+      id: botMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, botMsg]);
+
     try {
+      // Build conversation history for Claude
+      const apiMessages = messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .slice(-10) // Last 10 messages for context
+        .map(m => ({ role: m.role, content: m.content }));
+      apiMessages.push({ role: 'user', content: trimmed + (selectedNode ? ` [Context: viewing "${selectedNode.name}" (${selectedNode.type})]` : '') });
+
+      const fullText = await askClaudeStreaming(
+        apiMessages,
+        (chunk) => {
+          // Stream chunks into the placeholder message
+          setMessages((prev) => prev.map(m =>
+            m.id === botMsgId ? { ...m, content: m.content + chunk } : m,
+          ));
+        },
+      );
+
+      // Parse navigation actions from Claude's response
+      const actionMatch = fullText.match(/\{"action":"navigate[^}]+\}/);
+      if (actionMatch) {
+        try {
+          const action = JSON.parse(actionMatch[0]);
+          if (action.action === 'navigate-planet' && action.planet && onNavigateToPlanet) {
+            onNavigateToPlanet(action.planet);
+          } else if (action.target && onNavigateToNode) {
+            onNavigateToNode(action.target);
+          }
+        } catch { /* ignore parse errors */ }
+      }
+
+      speakText(fullText);
+    } catch (err) {
+      // Fallback to mock if Claude API unavailable
       const response = await askDemerzel(trimmed, selectedNode);
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        role: 'assistant',
-        content: response.text,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, botMsg]);
+      setMessages((prev) => prev.map(m =>
+        m.id === botMsgId ? { ...m, content: response.text } : m,
+      ));
       speakText(response.text);
 
-      // Execute navigation action if present
       if (response.action) {
         if (response.action.type === 'navigate-planet' && onNavigateToPlanet) {
           onNavigateToPlanet(response.action.planet);
