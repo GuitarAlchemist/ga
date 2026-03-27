@@ -380,7 +380,7 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
               </button>
               {queueExpanded && (
                 <div className="course-viewer__queue-list">
-                  {courseQueue.length === 0 && researchQueue.length === 0 && (
+                  {courseQueue.length === 0 && researchQueue.length === 0 && translationQueue.length === 0 && (
                     <div className="course-viewer__queue-empty">No pending requests</div>
                   )}
                   {courseQueue.length > 0 && (
@@ -411,6 +411,22 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
                       ))}
                     </>
                   )}
+                  {translationQueue.length > 0 && (
+                    <>
+                      <div className="course-viewer__queue-group-title">Translations</div>
+                      {translationQueue.map((req, i) => (
+                        <div key={`tq-${i}`} className="course-viewer__queue-item">
+                          <span className={`course-viewer__status-dot course-viewer__status-dot--${req.status === 'queued' ? 'amber' : req.status === 'in_progress' ? 'blue' : 'green'}`} />
+                          <div className="course-viewer__queue-item-info">
+                            <span className="course-viewer__queue-item-topic">{req.courseId}</span>
+                            <span className="course-viewer__queue-item-meta">
+                              {req.department} &middot; {LANGUAGE_LABELS[req.targetLanguage] ?? req.targetLanguage}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -418,32 +434,76 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
 
           {/* Content area */}
           <div className="course-viewer__content">
-            {selectedCourse ? (
+            {selectedCourse && displayedContent ? (
               <div className="course-viewer__reader">
                 <div className="course-viewer__reader-meta">
                   <span className="course-viewer__reader-dept">
                     {departments.find(d => d.id === selectedCourse.department)?.name}
                   </span>
-                  {(() => {
-                    const dept = departments.find(d => d.id === selectedCourse.department);
-                    if (!dept || dept.languages.length <= 1) return null;
+                </div>
+                {/* Language switcher bar */}
+                <div className="course-viewer__lang-bar">
+                  {ALL_LANGUAGES.map(lang => {
+                    const available = selectedCourse.availableLanguages.includes(lang);
+                    const queued = isTranslationQueued(selectedCourse.id, lang);
+                    const isActive = activeLang === lang;
                     return (
-                      <span className="course-viewer__reader-langs">
-                        {dept.languages.map(lang => (
-                          <span
-                            key={lang}
-                            className={`course-viewer__lang-tag ${lang === 'en' ? 'course-viewer__lang-tag--active' : ''}`}
-                            title={LANGUAGE_LABELS[lang] ?? lang}
-                          >
-                            {lang.toUpperCase()}
-                          </span>
-                        ))}
-                      </span>
+                      <button
+                        key={lang}
+                        className={[
+                          'course-viewer__lang-btn',
+                          isActive ? 'course-viewer__lang-btn--active' : '',
+                          !available ? 'course-viewer__lang-btn--disabled' : '',
+                        ].join(' ')}
+                        onClick={() => { if (available) setActiveLang(lang); }}
+                        disabled={!available}
+                        title={
+                          available
+                            ? LANGUAGE_LABELS[lang] ?? lang
+                            : queued
+                              ? `${LANGUAGE_LABELS[lang]} — Queued`
+                              : `${LANGUAGE_LABELS[lang]} — Not available`
+                        }
+                      >
+                        {lang.toUpperCase()}
+                        {queued && !available && (
+                          <span className="course-viewer__lang-queued-dot" />
+                        )}
+                      </button>
+                    );
+                  })}
+                  {/* Request Translation dropdown for missing languages */}
+                  {(() => {
+                    const missingLangs = ALL_LANGUAGES.filter(
+                      l => !selectedCourse.availableLanguages.includes(l) && !isTranslationQueued(selectedCourse.id, l)
+                    );
+                    if (missingLangs.length === 0) return null;
+                    return (
+                      <div className="course-viewer__translate-menu">
+                        <button className="course-viewer__translate-btn">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M5 8l6 6" /><path d="M4 14l6-6 2-3" /><path d="M2 5h12" /><path d="M7 2v3" />
+                            <path d="M22 22l-5-10-5 10" /><path d="M14 18h6" />
+                          </svg>
+                          Translate
+                        </button>
+                        <div className="course-viewer__translate-dropdown">
+                          {missingLangs.map(lang => (
+                            <button
+                              key={lang}
+                              className="course-viewer__translate-option"
+                              onClick={() => queueTranslation(selectedCourse, lang)}
+                            >
+                              {lang.toUpperCase()} &mdash; {LANGUAGE_LABELS[lang]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     );
                   })()}
                 </div>
                 <article className="course-viewer__markdown">
-                  <Markdown>{selectedCourse.content}</Markdown>
+                  <Markdown>{displayedContent.content}</Markdown>
                 </article>
               </div>
             ) : (

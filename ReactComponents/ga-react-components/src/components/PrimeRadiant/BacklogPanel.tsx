@@ -14,7 +14,7 @@ interface BacklogData {
   lastModified?: string;
 }
 
-export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: initialCollapsed = true }) => {
+export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: initialCollapsed = false }) => {
   const [data, setData] = useState<BacklogData | null>(null);
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
@@ -62,9 +62,8 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
     });
   };
 
-  if (!data || data.sections.length === 0) return null;
-
-  const totalItems = data.sections.reduce((sum, s) => sum + s.items.length, 0);
+  // Always render — never return null (causes empty panel)
+  const totalItems = data ? data.sections.reduce((sum, s) => sum + s.items.length, 0) : 0;
 
   return (
     <div className="prime-radiant__backlog">

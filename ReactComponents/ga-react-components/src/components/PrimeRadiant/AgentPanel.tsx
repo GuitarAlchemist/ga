@@ -86,7 +86,7 @@ const STATUS_ICON: Record<AgentInfo['status'], string> = {
 
 export const AgentPanel: React.FC = () => {
   const [teams, setTeams] = useState<AgentTeam[]>([]);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export const AgentPanel: React.FC = () => {
   const activeAgents = teams.reduce((sum, t) =>
     sum + t.agents.filter(a => a.status === 'running').length, 0);
 
-  if (teams.length === 0 && activeAgents === 0) return null;
+  // Always render — never return null (causes empty panel)
 
   return (
     <div className="prime-radiant__agents">
