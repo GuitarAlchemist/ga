@@ -351,19 +351,29 @@
   50% { opacity: 0.6; transform: scale(1.2); }
 }
 
-/* ─── Health metric hover tooltips ─── */
+/* ─── Health metric click tooltips ─── */
 .prime-radiant__health-metric {
   position: relative;
-  cursor: help;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.prime-radiant__health-metric:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prime-radiant__health-metric--active {
+  background: rgba(255, 215, 0, 0.1);
 }
 
 .prime-radiant__health-tooltip {
-  display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
   width: 300px;
@@ -371,33 +381,16 @@
   border: 1px solid #30363d;
   border-radius: 10px;
   padding: 14px 16px;
-  /* Extra top padding to account for the bridge zone */
-  padding-top: 26px;
   z-index: 100;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  pointer-events: auto;
-}
-
-/* Invisible bridge zone so mouse can travel from metric to tooltip */
-.prime-radiant__health-tooltip::after {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: 0;
-  right: 0;
-  height: 12px;
-}
-
-.prime-radiant__health-metric:hover .prime-radiant__health-tooltip {
-  display: block;
 }
 
 /* Arrow pointing up */
 .prime-radiant__health-tooltip::before {
   content: '';
   position: absolute;
-  top: 6px;
+  top: -6px;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
   width: 10px;

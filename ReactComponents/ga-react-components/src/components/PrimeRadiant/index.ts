@@ -48,3 +48,8 @@ export { BeliefHeatmap } from './BeliefHeatmap';
 export { IconRail } from './IconRail';
 export type { PanelId } from './IconRail';
 export { CICDPanel } from './CICDPanel';
+export { ClaudeCodePanel } from './ClaudeCodePanel';
+export { BeliefWidget, AlgedonicWidget, HexavalentWidget, StateWidget, IxqlPreview } from './GovernanceWidgets';
+export type { BeliefWidgetProps, AlgedonicWidgetProps, HexavalentWidgetProps, StateWidgetProps, IxqlPreviewProps } from './GovernanceWidgets';
+export { LiveNotebook } from './LiveNotebook';
+export type { LiveNotebookProps } from './LiveNotebook';

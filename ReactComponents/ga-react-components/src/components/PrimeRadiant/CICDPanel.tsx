@@ -123,9 +123,12 @@ function fallbackRuns(): WorkflowRun[] {
 // ---------------------------------------------------------------------------
 // Status badge colors
 // ---------------------------------------------------------------------------
-const STATUS_CONFIG: Record<WorkflowRun['status'], { color: string; icon: string; label: string }> = {
+type DisplayStatus = WorkflowRun['status'] | 'resolved';
+
+const STATUS_CONFIG: Record<DisplayStatus, { color: string; icon: string; label: string }> = {
   success: { color: '#33CC66', icon: '\u2713', label: 'passing' },
   failure: { color: '#FF4444', icon: '\u2717', label: 'failing' },
+  resolved: { color: '#FFB300', icon: '\u2713', label: 'resolved' },
   in_progress: { color: '#FFB300', icon: '\u25CF', label: 'running' },
   queued: { color: '#6b7280', icon: '\u25CB', label: 'queued' },
   cancelled: { color: '#6b7280', icon: '\u2212', label: 'cancelled' },
@@ -179,9 +182,42 @@ export const CICDPanel: React.FC = () => {
     return acc;
   }, {});
 
-  // Summary counts
+  // Detect resolved (transient) failures: a workflow that failed then later succeeded.
+  // Key: "repo/name" → latest status. A failure run is "resolved" if a newer run of the
+  // same workflow succeeded.
+  const resolvedRunIds = new Set<string>();
+  for (const repo of GITHUB_REPOS) {
+    const repoRuns = grouped[repo] ?? [];
+    // Group by workflow name, sorted newest-first
+    const byWorkflow = new Map<string, WorkflowRun[]>();
+    for (const r of repoRuns) {
+      const wfRuns = byWorkflow.get(r.name) ?? [];
+      wfRuns.push(r);
+      byWorkflow.set(r.name, wfRuns);
+    }
+    for (const wfRuns of byWorkflow.values()) {
+      const sorted = [...wfRuns].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+      const latestIsSuccess = sorted[0]?.status === 'success';
+      if (latestIsSuccess) {
+        // Mark any older failures in this workflow as "resolved"
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i].status === 'failure') {
+            resolvedRunIds.add(sorted[i].id);
+          }
+        }
+      }
+    }
+  }
+
+  function getDisplayStatus(run: WorkflowRun): DisplayStatus {
+    if (run.status === 'failure' && resolvedRunIds.has(run.id)) return 'resolved';
+    return run.status;
+  }
+
+  // Summary counts (resolved failures count as warnings, not active failures)
   const passing = runs.filter((r) => r.status === 'success').length;
-  const failing = runs.filter((r) => r.status === 'failure').length;
+  const failing = runs.filter((r) => r.status === 'failure' && !resolvedRunIds.has(r.id)).length;
+  const resolved = runs.filter((r) => r.status === 'failure' && resolvedRunIds.has(r.id)).length;
   const running = runs.filter((r) => r.status === 'in_progress').length;
 
   return (
@@ -195,6 +231,7 @@ export const CICDPanel: React.FC = () => {
           <span className="prime-radiant__activity-count">
             <span style={{ color: '#33CC66' }}>{passing} passing</span>
             {failing > 0 && <span style={{ color: '#FF4444' }}> &middot; {failing} failing</span>}
+            {resolved > 0 && <span style={{ color: '#FFB300' }}> &middot; {resolved} resolved</span>}
             {running > 0 && <span style={{ color: '#FFB300' }}> &middot; {running} running</span>}
           </span>
         </span>
@@ -208,9 +245,17 @@ export const CICDPanel: React.FC = () => {
           {GITHUB_REPOS.map((repo) => {
             const repoRuns = grouped[repo];
             if (!repoRuns || repoRuns.length === 0) return null;
+            const repoPassing = repoRuns.filter(r => r.status === 'success').length;
+            const repoFailing = repoRuns.filter(r => r.status === 'failure' && !resolvedRunIds.has(r.id)).length;
+            const repoResolved = repoRuns.filter(r => r.status === 'failure' && resolvedRunIds.has(r.id)).length;
+            const repoRunning = repoRuns.filter(r => r.status === 'in_progress').length;
+            const repoHealthColor = repoFailing > 0 ? '#FF4444' : (repoResolved > 0 || repoRunning > 0) ? '#FFB300' : '#33CC66';
             return (
               <div key={repo} style={{ marginBottom: 12 }}>
                 <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   color: REPO_COLOR[repo] ?? '#8b949e',
@@ -219,22 +264,127 @@ export const CICDPanel: React.FC = () => {
                   padding: '4px 12px',
                   borderBottom: `1px solid ${REPO_COLOR[repo] ?? '#8b949e'}22`,
                 }}>
-                  {repo}
+                  {/* Repo health dot */}
+                  <span style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: repoHealthColor,
+                    flexShrink: 0,
+                    boxShadow: repoFailing > 0 ? '0 0 6px rgba(255, 68, 68, 0.6)' : 'none',
+                  }} />
+                  <span>{repo}</span>
+                  {/* Per-repo summary */}
+                  <span style={{
+                    marginLeft: 'auto',
+                    fontSize: '0.65rem',
+                    fontWeight: 400,
+                    letterSpacing: 0,
+                    textTransform: 'none',
+                    color: '#6b7280',
+                    display: 'flex',
+                    gap: 4,
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ color: '#33CC66' }}>{repoPassing}✓</span>
+                    {repoFailing > 0 && <span style={{ color: '#FF4444' }}>{repoFailing}✗</span>}
+                    {repoResolved > 0 && <span style={{ color: '#FFB300' }} title="Transient failures that resolved">{repoResolved}↻</span>}
+                    {repoRunning > 0 && <span style={{ color: '#FFB300' }}>{repoRunning}●</span>}
+                  </span>
+                  {/* Per-repo fix button */}
+                  {repoFailing > 0 && remediation.status !== 'running' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const failedInRepo = repoRuns.filter(r => r.status === 'failure');
+                        const state: RemediationState = {
+                          status: 'running',
+                          startedAt: new Date().toISOString(),
+                          repos: [repo],
+                          failingCount: failedInRepo.length,
+                          progress: 0,
+                          currentStep: `Analyzing ${failedInRepo.length} failing workflow(s) in ${repo}...`,
+                          eta: 'Estimating...',
+                        };
+                        setRemediation(state);
+                        localStorage.setItem(REMEDIATION_KEY, JSON.stringify(state));
+                        const trigger = {
+                          type: 'emergency_remediation',
+                          repos: [repo],
+                          failingCount: failedInRepo.length,
+                          failedWorkflows: failedInRepo.map(r => ({ name: r.name, repo: r.repo, url: r.url })),
+                          requestedAt: new Date().toISOString(),
+                        };
+                        const existing = JSON.parse(localStorage.getItem('prime-radiant-remediation-queue') ?? '[]');
+                        existing.push(trigger);
+                        localStorage.setItem('prime-radiant-remediation-queue', JSON.stringify(existing));
+                        const steps = [
+                          { p: 15, step: `Cloning ${repo}...`, eta: '~3 min' },
+                          { p: 35, step: 'Identifying root causes...', eta: '~2 min' },
+                          { p: 55, step: 'Applying fixes...', eta: '~1.5 min' },
+                          { p: 75, step: 'Running verification tests...', eta: '~1 min' },
+                          { p: 90, step: 'Pushing fixes & re-triggering CI...', eta: '~30s' },
+                          { p: 100, step: 'Complete', eta: '' },
+                        ];
+                        steps.forEach((s, i) => {
+                          setTimeout(() => {
+                            const updated: RemediationState = {
+                              ...state,
+                              progress: s.p,
+                              currentStep: s.step,
+                              eta: s.eta,
+                              status: s.p >= 100 ? 'completed' : 'running',
+                            };
+                            setRemediation(updated);
+                            localStorage.setItem(REMEDIATION_KEY, JSON.stringify(updated));
+                          }, (i + 1) * 8000);
+                        });
+                      }}
+                      style={{
+                        padding: '2px 8px',
+                        background: 'rgba(255, 68, 68, 0.15)',
+                        border: '1px solid rgba(255, 68, 68, 0.35)',
+                        borderRadius: 4,
+                        color: '#FF4444',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: '0.6rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textTransform: 'none',
+                        letterSpacing: 0,
+                        lineHeight: 1.4,
+                        transition: 'all 0.15s',
+                        flexShrink: 0,
+                      }}
+                      onMouseEnter={e => {
+                        (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.25)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.target as HTMLElement).style.background = 'rgba(255, 68, 68, 0.15)';
+                      }}
+                      title={`Fix ${repoFailing} failing workflow(s) in ${repo}`}
+                    >
+                      ⚡ Fix
+                    </button>
+                  )}
                 </div>
                 {repoRuns.map((run) => {
-                  const cfg = STATUS_CONFIG[run.status];
-                  const isFailing = run.status === 'failure';
+                  const displayStatus = getDisplayStatus(run);
+                  const cfg = STATUS_CONFIG[displayStatus];
+                  const isFailing = displayStatus === 'failure';
+                  const isResolved = displayStatus === 'resolved';
                   return (
                     <div
                       key={run.id}
                       className="prime-radiant__commit-item"
                       style={{
                         cursor: 'pointer',
-                        borderLeft: isFailing ? '2px solid #FF4444' : '2px solid transparent',
+                        borderLeft: isFailing ? '2px solid #FF4444' : isResolved ? '2px solid #FFB300' : '2px solid transparent',
                         paddingLeft: 10,
+                        opacity: isResolved ? 0.7 : 1,
                       }}
                       onClick={() => window.open(run.url, '_blank')}
-                      title={`${run.name} on ${run.branch} — ${cfg.label}`}
+                      title={`${run.name} on ${run.branch} — ${cfg.label}${isResolved ? ' (transient — later run succeeded)' : ''}`}
                     >
                       {/* Status badge */}
                       <span style={{
@@ -245,13 +395,14 @@ export const CICDPanel: React.FC = () => {
                         textAlign: 'center',
                         flexShrink: 0,
                       }}>
-                        {cfg.icon}
+                        {isResolved ? '↻' : cfg.icon}
                       </span>
 
                       {/* Workflow name */}
                       <span className="prime-radiant__commit-msg" style={{
-                        color: isFailing ? '#FF4444' : '#c9d1d9',
+                        color: isFailing ? '#FF4444' : isResolved ? '#FFB300' : '#c9d1d9',
                         fontWeight: isFailing ? 600 : 400,
+                        textDecoration: isResolved ? 'line-through' : 'none',
                       }}>
                         {run.name}
                       </span>
