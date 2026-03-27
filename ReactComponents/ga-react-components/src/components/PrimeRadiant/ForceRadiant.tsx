@@ -32,8 +32,10 @@ import { SeldonDashboard } from './SeldonDashboard';
 import { IconRail, type PanelId } from './IconRail';
 import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
 import { CICDPanel } from './CICDPanel';
+import { ClaudeCodePanel } from './ClaudeCodePanel';
 import type { AlgedonicSignalEvent } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
+import { IcicleDrawer } from './IcicleDrawer';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1856,6 +1858,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // ─── Escape key to close active panel ───
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActivePanel(prev => {
+          if (prev) return null;
+          return prev;
+        });
+        setSelectedNode(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // ─── Detail panel handlers ───
   const handleNavigate = useCallback((nodeId: string) => {
     const fg = graphRef.current;
@@ -1891,7 +1908,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+        <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
 
       {/* Backend connection status badge */}
       <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}
@@ -2046,6 +2063,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         )}
       </div>
 
+      {/* Bottom drawer — icicle navigator + file viewer */}
+      <IcicleDrawer graphData={graphData} />
+
       </div>{/* end canvas-area */}
 
       {/* Icon rail — right edge (desktop/tablet) or bottom tab bar (phone) */}
@@ -2103,10 +2123,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         {activePanel === 'llm' && <LLMStatus />}
         {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
         {activePanel === 'cicd' && <CICDPanel />}
-        {activePanel === 'university' && (
-          <CourseViewer open={true} onClose={() => setActivePanel(null)} />
-        )}
+        {activePanel === 'claude' && <ClaudeCodePanel />}
       </div>
+
+      {/* CourseViewer renders as full-screen overlay, outside side panel */}
+      {activePanel === 'university' && (
+        <CourseViewer open={true} onClose={() => setActivePanel(null)} />
+      )}
 
     </div>
   );
