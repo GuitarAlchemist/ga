@@ -388,25 +388,145 @@ function highlightJsx(code: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Cell output simulator
+// API base URL helper
 // ---------------------------------------------------------------------------
 
-function simulateRun(cell: NotebookCell): string {
+function getApiBaseUrl(): string {
+  return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5232';
+}
+
+// ---------------------------------------------------------------------------
+// Live data fetchers for executable cells
+// ---------------------------------------------------------------------------
+
+interface CellExecutionResult {
+  content?: string;  // Updated cell content (JSON) if data was fetched
+  output: string;    // Output message
+}
+
+async function fetchBeliefData(): Promise<CellExecutionResult> {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/governance/beliefs`, {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    throw new Error(`Belief API returned ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  const beliefs = Array.isArray(data) ? data : [data];
+
+  // Map backend BeliefState[] to the cell display format
+  const mapped = beliefs.map((b: { proposition?: string; claim?: string; truthValue?: string; status?: string; confidence?: number; evidence?: string }) => ({
+    claim: b.proposition ?? b.claim ?? 'Unknown',
+    status: b.truthValue ?? b.status ?? 'U',
+    confidence: typeof b.confidence === 'number' ? b.confidence : 0.5,
+    evidence: b.evidence,
+  }));
+
+  return {
+    content: JSON.stringify(mapped, null, 2),
+    output: `[Belief] Fetched ${mapped.length} belief(s) from backend.`,
+  };
+}
+
+async function fetchAlgedonicData(): Promise<CellExecutionResult> {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/algedonic/recent`, {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    throw new Error(`Algedonic API returned ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  const signals = Array.isArray(data) ? data : [data];
+
+  // Map to cell display format (API returns AlgedonicSignalDto[])
+  const mapped = signals.map((s: { signal?: string; type?: string; severity?: string; source?: string; description?: string }) => ({
+    signal: s.signal ?? 'unknown',
+    type: s.type ?? 'pain',
+    severity: s.severity ?? 'info',
+    source: s.source ?? 'unknown',
+    description: s.description,
+  }));
+
+  return {
+    content: JSON.stringify(mapped, null, 2),
+    output: `[Algedonic] Fetched ${mapped.length} signal(s) from backend.`,
+  };
+}
+
+async function fetchChartData(): Promise<CellExecutionResult> {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/governance`, {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    throw new Error(`Governance API returned ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  const health = data?.globalHealth;
+  const resilienceScore = typeof health?.resilienceScore === 'number' ? health.resilienceScore : null;
+
+  if (resilienceScore !== null) {
+    // Build a chart from the governance health data
+    const chartData = {
+      type: 'sparkline' as const,
+      title: `Resilience Score: ${(resilienceScore * 100).toFixed(0)}%`,
+      values: [resilienceScore],
+      labels: ['current'],
+    };
+
+    // If there are historical values or sub-scores, include them
+    const scores: number[] = [];
+    const labels: string[] = [];
+    if (typeof health?.beliefHealth === 'number') { scores.push(health.beliefHealth); labels.push('belief'); }
+    if (typeof health?.policyHealth === 'number') { scores.push(health.policyHealth); labels.push('policy'); }
+    if (typeof health?.personaHealth === 'number') { scores.push(health.personaHealth); labels.push('persona'); }
+    if (typeof health?.auditHealth === 'number') { scores.push(health.auditHealth); labels.push('audit'); }
+    scores.push(resilienceScore); labels.push('resilience');
+
+    if (scores.length > 1) {
+      chartData.type = 'bar';
+      chartData.title = 'Governance Health Breakdown';
+      chartData.values = scores;
+      chartData.labels = labels;
+    }
+
+    return {
+      content: JSON.stringify(chartData, null, 2),
+      output: `[Chart] Governance health data loaded. Resilience: ${(resilienceScore * 100).toFixed(0)}%`,
+    };
+  }
+
+  return {
+    output: '[Chart] Governance API returned no health data. Using existing cell content.',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Cell executor — fetches live data for belief/algedonic/chart, simulates others
+// ---------------------------------------------------------------------------
+
+async function executeCell(cell: NotebookCell): Promise<CellExecutionResult> {
   switch (cell.type) {
-    case 'ixql':
-      return `[IXQL] Pipeline executed successfully.\n  Rows processed: ${Math.floor(Math.random() * 500) + 50}\n  Duration: ${(Math.random() * 2 + 0.1).toFixed(2)}s\n  Status: OK`;
-    case 'react':
-      return `[React] Component compiled. No errors.\n  Bundle: ${(Math.random() * 50 + 5).toFixed(1)}KB`;
     case 'belief':
-      return `[Belief] ${Math.floor(Math.random() * 5) + 1} beliefs evaluated.`;
+      return await fetchBeliefData();
     case 'algedonic':
-      return `[Algedonic] Signal scan complete. Active: ${Math.floor(Math.random() * 3)}, Resolved: ${Math.floor(Math.random() * 8) + 1}`;
+      return await fetchAlgedonicData();
     case 'chart':
-      return `[Chart] Rendered ${Math.floor(Math.random() * 20) + 5} data points.`;
+      return await fetchChartData();
+    case 'ixql':
+      return {
+        output: `[IXQL] Pipeline executed successfully.\n  Rows processed: ${Math.floor(Math.random() * 500) + 50}\n  Duration: ${(Math.random() * 2 + 0.1).toFixed(2)}s\n  Status: OK`,
+      };
+    case 'react':
+      return {
+        output: `[React] Component compiled. No errors.\n  Bundle: ${(Math.random() * 50 + 5).toFixed(1)}KB`,
+      };
     case 'state':
-      return `[PDCA] State snapshot captured.`;
+      return { output: '[PDCA] State snapshot captured.' };
     default:
-      return '';
+      return { output: '' };
   }
 }
 
@@ -630,10 +750,24 @@ const CellView: React.FC<{
   const isExecutable = cell.type !== 'markdown';
 
   const handleRun = useCallback(() => {
-    onUpdate(cell.id, { status: 'running' });
-    setTimeout(() => {
-      onUpdate(cell.id, { status: 'complete', output: simulateRun(cell) });
-    }, 600 + Math.random() * 800);
+    onUpdate(cell.id, { status: 'running', output: undefined });
+
+    executeCell(cell).then(result => {
+      const patch: Partial<NotebookCell> = {
+        status: 'complete',
+        output: result.output,
+      };
+      if (result.content) {
+        patch.content = result.content;
+      }
+      onUpdate(cell.id, patch);
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      onUpdate(cell.id, {
+        status: 'error',
+        output: `[Error] ${message}`,
+      });
+    });
   }, [cell, onUpdate]);
 
   const renderContent = useCallback(() => {
