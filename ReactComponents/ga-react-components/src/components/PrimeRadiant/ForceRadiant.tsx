@@ -26,6 +26,7 @@ import { TutorialOverlay } from './TutorialOverlay';
 import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
+import { IxqlDemoButton } from './IxqlDemoButton';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
@@ -46,7 +47,7 @@ import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
 import { CICDPanel } from './CICDPanel';
 import { ClaudeCodePanel } from './ClaudeCodePanel';
 import { LibraryPanel } from './LibraryPanel';
-import type { AlgedonicSignalEvent } from './DataLoader';
+import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LiveNotebook } from './LiveNotebook';
 import { IcicleDrawer } from './IcicleDrawer';
@@ -545,6 +546,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
   const [graphIndex, setGraphIndex] = useState<GraphIndex | null>(null);
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
+  const [beliefs, setBeliefs] = useState<BeliefState[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
   const [viewers, setViewers] = useState<ViewerInfo[]>([]);
@@ -578,13 +580,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     recordInvocation(cmd.type, true);
 
     if (cmd.type === 'reset') {
-      // Clear all IXql overrides
+      // Clear all IXql overrides (nodes + edges)
       if (!fg) return;
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (n.__threeObj) {
           n.__threeObj.userData.ixqlOverrides = undefined;
         }
+      });
+      fg.graphData().links.forEach((link: object) => {
+        (link as GraphLink & { ixqlOverrides?: Record<string, unknown> }).ixqlOverrides = undefined;
       });
       return;
     }
@@ -600,6 +605,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           const overrides: Record<string, unknown> = {};
           cmd.assignments.forEach(a => { overrides[a.property] = a.value; });
           n.__threeObj.userData.ixqlOverrides = overrides;
+        }
+      });
+      return;
+    }
+
+    // SELECT edges — apply visual overrides to graph edges (color, width, opacity, particles)
+    if (cmd.type === 'select' && cmd.target === 'edges' && cmd.assignments.length > 0) {
+      if (!fg) return;
+      fg.graphData().links.forEach((link: object) => {
+        const l = link as GraphLink & { ixqlOverrides?: Record<string, unknown> };
+        const matchObj: Record<string, unknown> = {
+          source: typeof l.source === 'string' ? l.source : (l.source as GraphNode).id,
+          target: typeof l.target === 'string' ? l.target : (l.target as GraphNode).id,
+          type: l.type,
+          color: l.color,
+          width: l.width,
+        };
+        const matches = cmd.predicates.length === 0 ||
+          cmd.predicates.every(p => evaluatePredicate(p, matchObj));
+        if (matches) {
+          const overrides: Record<string, unknown> = {};
+          cmd.assignments.forEach(a => { overrides[a.property] = a.value; });
+          l.ixqlOverrides = overrides;
         }
       });
       return;
@@ -973,7 +1001,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // Edge rendering — undulating energy flow between collaborating nodes
       .linkColor((link: object) => {
-        const l = link as GraphLink;
+        const l = link as GraphLink & { ixqlOverrides?: Record<string, unknown> };
+        // IXQL edge override takes priority
+        if (l.ixqlOverrides?.color) return String(l.ixqlOverrides.color);
         // Check for active algedonic propagation
         const srcId = getLinkNodeId(l.source);
         const tgtId = getLinkNodeId(l.target);
@@ -995,7 +1025,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         return l.color;
       })
       .linkWidth((link: object) => {
-        const l = link as GraphLink;
+        const l = link as GraphLink & { ixqlOverrides?: Record<string, unknown> };
+        if (l.ixqlOverrides?.width) return Number(l.ixqlOverrides.width);
         const { src, tgt } = getLinkNodes(l);
         const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
         const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
@@ -2073,6 +2104,22 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => ro.disconnect();
   }, []);
 
+  // ─── Fetch belief states for Seldon panel ───
+  useEffect(() => {
+    const fetchBeliefs = async () => {
+      try {
+        const res = await fetch('/api/governance/file-content?path=governance/state/beliefs/core-beliefs.belief.json');
+        if (res.ok) {
+          const data = await res.json();
+          setBeliefs(Array.isArray(data) ? data : []);
+        }
+      } catch { /* fallback: empty */ }
+    };
+    fetchBeliefs();
+    const interval = setInterval(fetchBeliefs, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   // ─── Backend connectivity check ───
   useEffect(() => {
     // Use VITE env var, or same origin as the page (works for deployed demo), or localhost fallback
@@ -2398,6 +2445,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       />
       <TutorialOverlay />
       <IxqlCommandInput onCommand={handleIxqlCommand} />
+      <IxqlDemoButton onCommand={handleIxqlCommand} />
 
       {/* Demerzel visual critic overlay — shows self-improvement process */}
       {/* DemerzelCriticOverlay disabled — re-enable when driver is stable */}
@@ -2623,6 +2671,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             onClose={() => setActivePanel(null)}
             graph={graphData}
             selectedNode={selectedNode}
+            beliefs={beliefs}
           />
         )}
         {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}

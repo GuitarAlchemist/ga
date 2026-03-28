@@ -1,0 +1,72 @@
+[
+  {
+    "id": "belief-asimov-compliance",
+    "proposition": "All agent actions comply with Asimov constitutional articles",
+    "truth_value": "true",
+    "confidence": 0.92,
+    "evidence": { "supporting": 47, "contradicting": 2, "last_test": "2026-03-28T18:00:00Z" },
+    "last_updated": "2026-03-28T18:00:00Z",
+    "evaluated_by": "governance-audit",
+    "source_file": "constitutions/asimov.constitution.md"
+  },
+  {
+    "id": "belief-kaizen-active",
+    "proposition": "PDCA improvement cycles are executing within SLA",
+    "truth_value": "true",
+    "confidence": 0.85,
+    "evidence": { "supporting": 12, "contradicting": 1, "last_test": "2026-03-28T17:30:00Z" },
+    "last_updated": "2026-03-28T17:30:00Z",
+    "evaluated_by": "kaizen-policy",
+    "source_file": "policies/kaizen-policy.yaml"
+  },
+  {
+    "id": "belief-proto-conscience",
+    "proposition": "Proto-conscience discomfort signals are being processed within 72h",
+    "truth_value": "both",
+    "confidence": 0.61,
+    "evidence": { "supporting": 8, "contradicting": 5, "last_test": "2026-03-28T16:00:00Z" },
+    "last_updated": "2026-03-28T16:00:00Z",
+    "evaluated_by": "conscience-observability",
+    "source_file": "policies/proto-conscience-policy.yaml"
+  },
+  {
+    "id": "belief-ml-calibration",
+    "proposition": "ML feedback pipeline calibration recommendations are acted upon",
+    "truth_value": "unknown",
+    "confidence": 0.35,
+    "evidence": { "supporting": 3, "contradicting": 3, "last_test": "2026-03-27T12:00:00Z" },
+    "last_updated": "2026-03-27T12:00:00Z",
+    "evaluated_by": "ml-feedback-policy",
+    "source_file": "policies/ml-feedback-policy.yaml"
+  },
+  {
+    "id": "belief-ergol-coverage",
+    "proposition": "ERGOL operational links cover all active governance artifacts",
+    "truth_value": "true",
+    "confidence": 0.88,
+    "evidence": { "supporting": 173, "contradicting": 8, "last_test": "2026-03-28T19:00:00Z" },
+    "last_updated": "2026-03-28T19:00:00Z",
+    "evaluated_by": "ergol-scanner",
+    "source_file": "governance/demerzel/schemas/ergol.schema.json"
+  },
+  {
+    "id": "belief-streeling-active",
+    "proposition": "Streeling knowledge transfers are being absorbed by target repos",
+    "truth_value": "false",
+    "confidence": 0.72,
+    "evidence": { "supporting": 2, "contradicting": 7, "last_test": "2026-03-28T15:00:00Z" },
+    "last_updated": "2026-03-28T15:00:00Z",
+    "evaluated_by": "streeling-policy",
+    "source_file": "policies/streeling-policy.yaml"
+  },
+  {
+    "id": "belief-rollback-ready",
+    "proposition": "Automatic rollback mechanisms are tested and operational",
+    "truth_value": "true",
+    "confidence": 0.95,
+    "evidence": { "supporting": 22, "contradicting": 0, "last_test": "2026-03-28T18:30:00Z" },
+    "last_updated": "2026-03-28T18:30:00Z",
+    "evaluated_by": "rollback-policy",
+    "source_file": "policies/rollback-policy.yaml"
+  }
+]
