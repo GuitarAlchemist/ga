@@ -287,6 +287,26 @@ const PLANETS: PlanetDef[] = [
       { name: 'paaliaq', radius: 0.007, distance: 7.0, speed: 0.18, inclination: 0.7, fragment: ROCKY_DARK },
       { name: 'ymir', radius: 0.006, distance: 8.0, speed: -0.1, inclination: 2.8, fragment: ROCKY_DARK },   // retrograde
       { name: 'tarvos', radius: 0.005, distance: 7.5, speed: 0.15, inclination: 0.6, fragment: ROCKY_DARK },
+      // Ring shepherds and inner small moons
+      { name: 'daphnis', radius: 0.004, distance: 1.13, speed: 5.6, fragment: ICY_WHITE },   // Keeler gap shepherd
+      { name: 'methone', radius: 0.003, distance: 1.7, speed: 3.8, fragment: ICY_WHITE },    // egg-shaped
+      { name: 'anthe', radius: 0.002, distance: 1.75, speed: 3.7, fragment: ICY_WHITE },
+      { name: 'pallene', radius: 0.003, distance: 1.8, speed: 3.6, fragment: ICY_WHITE },
+      // Norse group (retrograde irregulars, >5km)
+      { name: 'skathi', radius: 0.004, distance: 7.8, speed: -0.12, inclination: 2.6, fragment: ROCKY_DARK },
+      { name: 'mundilfari', radius: 0.004, distance: 8.2, speed: -0.1, inclination: 2.7, fragment: ROCKY_DARK },
+      { name: 'thrymr', radius: 0.004, distance: 8.5, speed: -0.09, inclination: 2.8, fragment: ROCKY_DARK },
+      { name: 'narvi', radius: 0.004, distance: 8.8, speed: -0.08, inclination: 2.5, fragment: ROCKY_DARK },
+      { name: 'suttungr', radius: 0.004, distance: 8.0, speed: -0.11, inclination: 2.9, fragment: ROCKY_DARK },
+      { name: 'bergelmir', radius: 0.003, distance: 9.0, speed: -0.07, inclination: 2.7, fragment: ROCKY_DARK },
+      { name: 'fornjot', radius: 0.003, distance: 9.5, speed: -0.06, inclination: 2.8, fragment: ROCKY_DARK },
+      // Inuit group (prograde irregulars)
+      { name: 'ijiraq', radius: 0.005, distance: 6.8, speed: 0.2, inclination: 0.8, fragment: ROCKY_DARK },
+      { name: 'kiviuq', radius: 0.005, distance: 6.6, speed: 0.22, inclination: 0.8, fragment: ROCKY_DARK },
+      // Gallic group
+      { name: 'albiorix', radius: 0.008, distance: 7.2, speed: 0.16, inclination: 0.6, fragment: ROCKY_GREY },
+      { name: 'erriapus', radius: 0.004, distance: 7.3, speed: 0.15, inclination: 0.6, fragment: ROCKY_DARK },
+      { name: 'bebhionn', radius: 0.003, distance: 7.4, speed: 0.14, inclination: 0.6, fragment: ROCKY_DARK },
     ],
   },
   {
