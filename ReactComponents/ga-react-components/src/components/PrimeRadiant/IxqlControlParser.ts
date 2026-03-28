@@ -1,6 +1,6 @@
 // src/components/PrimeRadiant/IxqlControlParser.ts
 // IXQL parser for Prime Radiant visualization control and declarative UI
-// Grammar: SELECT | RESET | CREATE PANEL | CREATE NODE | BIND HEALTH | DROP | LINK | GROUP | SAVE
+// Active grammar: SELECT | RESET | CREATE PANEL | BIND HEALTH
 
 export interface IxqlPredicate {
   field: string;       // dotted path: "health.staleness", "type", "name"
@@ -47,12 +47,14 @@ export interface BindHealthCommand {
   fallback: string;
 }
 
+// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface DropCommand {
   type: 'drop';
   targetKind: 'panel';
   id: string;
 }
 
+// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface CreateNodeCommand {
   type: 'create-node';
   id: string;
@@ -60,6 +62,7 @@ export interface CreateNodeCommand {
   parent: string | null;
 }
 
+// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface LinkCommand {
   type: 'link';
   from: string;
@@ -67,12 +70,14 @@ export interface LinkCommand {
   edgeType: string | null;
 }
 
+// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface GroupCommand {
   type: 'group';
   predicates: IxqlPredicate[];
   byField: string;
 }
 
+// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface SaveCommand {
   type: 'save';
   targetKind: 'panel' | 'graph';
@@ -307,23 +312,6 @@ function parseCreatePanel(ctx: ParserContext): CreatePanelCommand {
   return { type: 'create-panel', id, source, wherePredicates, layout, icon, showFields, filter };
 }
 
-// ── CREATE NODE parser ──
-
-function parseCreateNode(ctx: ParserContext): CreateNodeCommand {
-  const id = nextRaw(ctx);
-
-  expect(ctx, 'TYPE');
-  const nodeType = nextRaw(ctx);
-
-  let parent: string | null = null;
-  if (peek(ctx) === 'IN') {
-    next(ctx);
-    parent = nextRaw(ctx);
-  }
-
-  return { type: 'create-node', id, nodeType, parent };
-}
-
 // ── BIND HEALTH parser ──
 
 function parseBindHealth(ctx: ParserContext): BindHealthCommand {
@@ -375,65 +363,6 @@ function parseBindHealth(ctx: ParserContext): BindHealthCommand {
   return { type: 'bind-health', targetKind, targetId, targetSelector, source, conditions, fallback };
 }
 
-// ── DROP parser ──
-
-function parseDrop(ctx: ParserContext): DropCommand {
-  expect(ctx, 'PANEL');
-  const id = nextRaw(ctx);
-  return { type: 'drop', targetKind: 'panel', id };
-}
-
-// ── LINK parser ──
-
-function parseLink(ctx: ParserContext): LinkCommand {
-  const from = nextRaw(ctx);
-  expect(ctx, 'TO');
-  const to = nextRaw(ctx);
-
-  let edgeType: string | null = null;
-  if (peek(ctx) === 'TYPE') {
-    next(ctx);
-    edgeType = nextRaw(ctx);
-  }
-
-  return { type: 'link', from, to, edgeType };
-}
-
-// ── GROUP parser ──
-
-function parseGroup(ctx: ParserContext): GroupCommand {
-  // GROUP <target> WHERE <predicates> BY <field>
-  // <target> is consumed but the semantics are in the WHERE predicates
-  nextRaw(ctx); // consume target (e.g. "nodes")
-
-  const predicates: IxqlPredicate[] = [];
-  if (peek(ctx) === 'WHERE') {
-    next(ctx);
-    predicates.push(...parsePredicates(ctx));
-  }
-
-  expect(ctx, 'BY');
-  const byField = nextRaw(ctx);
-
-  return { type: 'group', predicates, byField };
-}
-
-// ── SAVE parser ──
-
-function parseSave(ctx: ParserContext): SaveCommand {
-  const kindToken = peek(ctx);
-  if (kindToken === 'PANEL') {
-    next(ctx);
-    const id = nextRaw(ctx);
-    return { type: 'save', targetKind: 'panel', id };
-  }
-  if (kindToken === 'GRAPH') {
-    next(ctx);
-    return { type: 'save', targetKind: 'graph', id: null };
-  }
-  throw new Error(`Expected 'PANEL' or 'GRAPH' after SAVE, got '${peekRaw(ctx) ?? 'end of input'}'`);
-}
-
 // ── Main entry point ──
 
 export function parseIxqlCommand(input: string): IxqlParseResult {
@@ -464,11 +393,7 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
           next(ctx);
           return { ok: true, command: parseCreatePanel(ctx) };
         }
-        if (subKeyword === 'NODE') {
-          next(ctx);
-          return { ok: true, command: parseCreateNode(ctx) };
-        }
-        throw new Error(`Expected 'PANEL' or 'NODE' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
+        throw new Error(`Expected 'PANEL' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
       }
 
       case 'BIND': {
@@ -476,28 +401,8 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
         return { ok: true, command: parseBindHealth(ctx) };
       }
 
-      case 'DROP': {
-        next(ctx);
-        return { ok: true, command: parseDrop(ctx) };
-      }
-
-      case 'LINK': {
-        next(ctx);
-        return { ok: true, command: parseLink(ctx) };
-      }
-
-      case 'GROUP': {
-        next(ctx);
-        return { ok: true, command: parseGroup(ctx) };
-      }
-
-      case 'SAVE': {
-        next(ctx);
-        return { ok: true, command: parseSave(ctx) };
-      }
-
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, DROP, LINK, GROUP, or SAVE` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, or BIND` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
