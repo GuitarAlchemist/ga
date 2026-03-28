@@ -461,15 +461,35 @@ const PLANET_FRAG = /* glsl */ `
     // Blend day/night across terminator
     vec3 surfaceColor = mix(nightColor, litDay, dayFactor);
 
+    // ── Sunrise/sunset glow at the terminator ──
+    // Warm orange-red band where NdotL is near zero (the golden hour zone)
+    if (uAtmoColor > 0.5) {
+      // Terminator band: strongest glow where sun is right at the horizon
+      float terminatorBand = exp(-NdotL * NdotL / 0.008); // narrow Gaussian at NdotL=0
+      // Warm gradient: deep red at the darkest edge, golden at the bright edge
+      vec3 sunriseColorDeep = vec3(0.8, 0.2, 0.05);   // deep red/orange
+      vec3 sunriseColorWarm = vec3(1.0, 0.6, 0.2);    // golden orange
+      float warmBlend = smoothstep(-0.08, 0.08, NdotL); // red→gold across terminator
+      vec3 sunriseColor = mix(sunriseColorDeep, sunriseColorWarm, warmBlend);
+      // Intensity scales with atmosphere (Earth gets more, Mars gets less)
+      float atmoStrength = uAtmoColor < 1.5 ? 0.35 : uAtmoColor < 2.5 ? 0.2 : 0.1;
+      surfaceColor += sunriseColor * terminatorBand * atmoStrength;
+    }
+
     // Atmosphere rim glow
     float fresnel = pow(1.0 - abs(dot(normalize(vWorldNormal), vViewDir)), 3.0);
     if (uAtmoColor > 0.5 && uAtmoColor < 1.5) {
-      // Earth — blue atmosphere
+      // Earth — blue atmosphere on day side, warm orange at terminator rim
       surfaceColor += vec3(0.25, 0.45, 1.0) * fresnel * 0.35 * dayFactor;
       surfaceColor += vec3(0.05, 0.1, 0.3) * fresnel * 0.2 * (1.0 - dayFactor); // faint blue on night side
+      // Warm terminator rim — the atmosphere scatters orange light at the edge
+      float terminatorFresnel = fresnel * exp(-NdotL * NdotL / 0.02);
+      surfaceColor += vec3(1.0, 0.5, 0.15) * terminatorFresnel * 0.4;
     } else if (uAtmoColor > 1.5) {
-      // Venus — orange haze
+      // Venus — orange haze (intensified at terminator)
       surfaceColor += vec3(1.0, 0.7, 0.2) * fresnel * 0.3;
+      float venusTerminator = fresnel * exp(-NdotL * NdotL / 0.02);
+      surfaceColor += vec3(1.0, 0.5, 0.1) * venusTerminator * 0.25;
     }
 
     gl_FragColor = vec4(surfaceColor, 1.0);
