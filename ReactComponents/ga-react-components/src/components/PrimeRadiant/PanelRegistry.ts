@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis';
 export type PanelId = BuiltInPanelId | (string & {});
 
 export interface PanelDefinition {
@@ -95,6 +95,16 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('path', { key: 'p1', d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }),
     h('path', { key: 'p2', d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' }),
   ]),
+  godot: svg([
+    h('path', { key: 'p1', d: 'M12 2L2 7l10 5 10-5-10-5z' }),
+    h('path', { key: 'p2', d: 'M2 17l10 5 10-5' }),
+    h('path', { key: 'p3', d: 'M2 12l10 5 10-5' }),
+  ]),
+  gis: svg([
+    h('circle', { key: 'c', cx: 12, cy: 12, r: 10 }),
+    h('path', { key: 'p1', d: 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' }),
+    h('line', { key: 'l1', x1: 2, y1: 12, x2: 22, y2: 12 }),
+  ]),
 };
 
 // ---------------------------------------------------------------------------
@@ -175,6 +185,8 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'claude',     label: 'Claude Code',    icon: 'claude',     renderMode: 'side' },
   { id: 'notebook',   label: 'Live Notebook',  icon: 'notebook',   renderMode: 'overlay' },
   { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side' },
+  { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side' },
+  { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side' },
 ];
 
 for (const def of BUILTIN_PANELS) {

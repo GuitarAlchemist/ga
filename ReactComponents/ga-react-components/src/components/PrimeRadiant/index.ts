@@ -62,3 +62,14 @@ export { BeliefWidget, AlgedonicWidget, HexavalentWidget, StateWidget, IxqlPrevi
 export type { BeliefWidgetProps, AlgedonicWidgetProps, HexavalentWidgetProps, StateWidgetProps, IxqlPreviewProps } from './GovernanceWidgets';
 export { LiveNotebook } from './LiveNotebook';
 export type { LiveNotebookProps } from './LiveNotebook';
+export { GodotScene } from './GodotScene';
+export type { GodotSceneProps, GodotInboundMessage, GodotOutboundMessage } from './GodotScene';
+export { GodotSceneBuilder } from './GodotSceneBuilder';
+export { godotMcp } from './GodotMcpClient';
+export type { ConnectionStatus as GodotConnectionStatus } from './GodotMcpClient';
+export { GisPanel } from './GisPanel';
+export type { GisPanelProps } from './GisPanel';
+export { GisLayerManager, createGisLayer } from './GisLayer';
+export type { GisPin, GisPath, GisCluster, GisHeatPoint } from './GisLayer';
+export { usePrControl } from './usePrControl';
+export type { PrCommand, PrResult, PrControlHandlers } from './usePrControl';
