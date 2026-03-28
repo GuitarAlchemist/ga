@@ -77,6 +77,10 @@ interface EdgePropagation {
   hop: number;
 }
 
+// Module-level mobile detection for node creation (before component mounts)
+const _isMobileDevice = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+const _isLowEndDevice = _isMobileDevice || (typeof navigator !== 'undefined' && navigator.hardwareConcurrency <= 4);
+
 const MAX_CONCURRENT_RIPPLES = 10;
 const RIPPLE_DURATION = 2.0;         // seconds
 const RIPPLE_MAX_SCALE = 8;
@@ -408,8 +412,20 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
 
   const baseRadius = Math.pow(TYPE_SIZE[node.type] ?? 5, 0.5) * 0.8;
   const radius = baseRadius * prominence.sizeMult;
-  // Node color comes from the data layer (already set to health status color)
   const nodeColor = new THREE.Color(node.color);
+
+  // ── Mobile fast path: simple emissive sphere, no shaders/dust/sprites ──
+  if (_isLowEndDevice) {
+    const geo = new THREE.SphereGeometry(radius * 0.5, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({
+      color: nodeColor,
+      transparent: true,
+      opacity: prominence.opacity,
+    });
+    group.add(new THREE.Mesh(geo, mat));
+    group.userData.healthStatus = hs;
+    return group;
+  }
 
   const complexity = {
     constitution: 4, department: 3, policy: 2, persona: 2,
@@ -949,6 +965,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
+    // ── Mobile/low-end detection — skip heavy resources upfront ──
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4 || window.innerWidth < 768;
+    const pixelBudget = isLowEnd ? 0.5 : 1.0; // render at half resolution on mobile
+    if (isLowEnd) {
+      console.info(`[PrimeRadiant] Low-end mode: mobile=${isMobile}, cores=${navigator.hardwareConcurrency}, width=${window.innerWidth}`);
+    }
+
     let disposed = false;
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
     let pollingHandleOuter: LivePollingHandle | undefined;
@@ -1167,39 +1191,49 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // Add bloom post-processing — increased strength so red/magenta health nodes pop
+    // Add bloom post-processing — reduced on mobile to save GPU fill rate
+    const bloomSize = isLowEnd
+      ? new THREE.Vector2(container.clientWidth * 0.5, container.clientHeight * 0.5)
+      : new THREE.Vector2(container.clientWidth, container.clientHeight);
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(container.clientWidth, container.clientHeight),
-      0.6,   // strength (up from 0.4 — health colors need to glow)
-      0.6,   // radius
-      0.5,   // threshold (lower = more bloom on bright health nodes)
+      bloomSize,
+      isLowEnd ? 0.3 : 0.6,   // strength
+      isLowEnd ? 0.3 : 0.6,   // radius
+      isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
     );
     fg.postProcessingComposer().addPass(bloomPass);
     bloomPassRef.current = bloomPass;
 
-    // Chromatic aberration post-processing
-    const chromaticShader = {
-      uniforms: {
-        tDiffuse: { value: null },
-        uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
-      },
-      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
-    void main() {
-      float r = texture2D(tDiffuse, vUv + uOffset).r;
-      float g = texture2D(tDiffuse, vUv).g;
-      float b = texture2D(tDiffuse, vUv - uOffset).b;
-      float a = texture2D(tDiffuse, vUv).a;
-      gl_FragColor = vec4(r, g, b, a);
-    }`,
-    };
-    fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
+    // Set renderer pixel ratio — cap at 1.5 on mobile to save fill rate
+    if (isLowEnd) {
+      fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    }
+
+    // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
+    if (!isLowEnd) {
+      const chromaticShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
+        },
+        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
+      void main() {
+        float r = texture2D(tDiffuse, vUv + uOffset).r;
+        float g = texture2D(tDiffuse, vUv).g;
+        float b = texture2D(tDiffuse, vUv - uOffset).b;
+        float a = texture2D(tDiffuse, vUv).a;
+        gl_FragColor = vec4(r, g, b, a);
+      }`,
+      };
+      fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
+    }
 
     // ─── ADAPTIVE QUALITY — auto-downgrade on crappy GPUs ───
     let frameCount = 0;
     let lastFpsCheck = Date.now();
     let currentFps = 60;
-    let qualityLevel: 'high' | 'medium' | 'low' = 'high';
+    let qualityLevel: 'high' | 'medium' | 'low' = isLowEnd ? 'low' : 'high';
     // ─── Performance info panel (FPS + GPU + memory) ───
     // Detect GPU name from WebGL context
     let gpuName = 'Unknown GPU';
@@ -1796,8 +1830,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dimStars = new THREE.Points(dimGeo, dimMat);
     dimStars.name = 'stars-dim';
 
-    // Milky Way band — large sphere behind everything, additive blended
-    const milkyWayMesh = createMilkyWay(8000);
+    // Milky Way band — skip on mobile (8000-unit sphere is expensive)
+    const milkyWayMesh = isLowEnd ? new THREE.Group() : createMilkyWay(8000);
     const milkyWayPref = (() => { try { return localStorage.getItem('prime-radiant-milky-way'); } catch { return null; } })();
     milkyWayMesh.visible = milkyWayPref !== 'false'; // default ON
 
@@ -1883,7 +1917,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── DEMERZEL HOLOGRAPHIC FACE ───
     // Floating wireframe head — Demerzel's presence in the Prime Radiant
-    const demerzelFace = createDemerzelFace(0.5); // TODO: replace with rigged Blender GLTF model
+    const demerzelFace = isLowEnd ? new THREE.Group() : createDemerzelFace(0.5);
     demerzelFace.position.set(0, 25, 0); // floating above center, repositioned per tick
     fg.scene().add(demerzelFace);
 
@@ -1909,11 +1943,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const removeLocationMarker = addLocationMarker(solarSystem);
 
     // Auto-LOD: load high-res satellite imagery when camera is close to Earth
-    const stopEarthLOD = enableEarthAutoLOD(solarSystem, () => fg.camera());
+    // Disabled on mobile — fetches large tile textures that blow the memory budget
+    const stopEarthLOD = isLowEnd ? (() => {}) : enableEarthAutoLOD(solarSystem, () => fg.camera());
 
-    // GIS layers — create managers for planets with surfaces
+    // GIS layers — on mobile, only Earth to save memory
     const gisMgrs = new Map<string, GisLayerManager>();
-    for (const name of ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury']) {
+    const gisPlanets = isLowEnd ? ['earth'] : ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury'];
+    for (const name of gisPlanets) {
       const mgr = createGisLayer(solarSystem, name);
       if (mgr) gisMgrs.set(name, mgr);
     }
@@ -2004,7 +2040,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     container.addEventListener('dblclick', onSolarDblClick);
 
     // ─── JARVIS SPACE STATION — modular station with docking animation ───
-    const spaceStation = createSpaceStation(0.12);
+    const spaceStation = isLowEnd ? new THREE.Group() : createSpaceStation(0.12);
     fg.scene().add(spaceStation);
 
     // ─── Auto-select the most connected (central) node on load ───
