@@ -18,9 +18,9 @@ interface DemoStep {
 const DEMOS: DemoStep[] = [
   {
     variant: 'SELECT nodes',
-    label: 'Highlight stale nodes',
-    description: 'Finds governance nodes with high staleness and makes them glow red with a pulse effect.',
-    cmd: 'SELECT nodes WHERE health.staleness > 0.5 SET glow = true, color = #FF4444, pulse = true',
+    label: 'Pulse all nodes red',
+    description: 'Makes every node in the graph glow red and pulse — demonstrates IXQL visual overrides on the 3D force graph.',
+    cmd: 'SELECT nodes WHERE type != none SET glow = true, color = #FF4444, pulse = true',
   },
   {
     variant: 'SELECT edges',
@@ -32,13 +32,13 @@ const DEMOS: DemoStep[] = [
     variant: 'CREATE PANEL',
     label: 'Create beliefs panel',
     description: 'Spawns a new side panel from live governance data — no React code needed, just one IXQL command.',
-    cmd: 'CREATE PANEL demo-beliefs FROM /api/governance/file-content?path=governance/state/beliefs/core-beliefs.belief.json LAYOUT list-detail SHOW proposition, truth_value, confidence',
+    cmd: "CREATE PANEL demo-beliefs FROM '/api/governance/file-content?path=governance/state/beliefs/core-beliefs.belief.json' LAYOUT list-detail SHOW proposition, truth_value, confidence",
   },
   {
     variant: 'BIND HEALTH',
     label: 'Bind health rules',
     description: 'Attaches declarative health monitoring to the beliefs panel — status dot turns warn/error based on staleness.',
-    cmd: 'BIND PANEL demo-beliefs HEALTH FROM /api/governance/file-content?path=governance/state/beliefs/core-beliefs.belief.json WHEN confidence < 0.5 SET error WHEN confidence < 0.7 SET warn ELSE SET ok',
+    cmd: "BIND PANEL demo-beliefs HEALTH FROM '/api/governance/file-content?path=governance/state/beliefs/core-beliefs.belief.json' WHEN confidence < 0.5 SET error WHEN confidence < 0.7 SET warn ELSE SET ok",
   },
   {
     variant: 'ON...THEN',
@@ -76,22 +76,25 @@ const CheckIcon: React.FC = () => (
 
 interface IxqlDemoButtonProps {
   onCommand: (result: IxqlParseResult) => void;
+  onCameraReset?: () => void;  // zoom to fit the graph
 }
 
-export const IxqlDemoButton: React.FC<IxqlDemoButtonProps> = ({ onCommand }) => {
+export const IxqlDemoButton: React.FC<IxqlDemoButtonProps> = ({ onCommand, onCameraReset }) => {
   const [step, setStep] = useState(0);
   const [lastResult, setLastResult] = useState<'idle' | 'ok' | 'error'>('idle');
   const [expanded, setExpanded] = useState(false);
 
   const handleClick = useCallback(() => {
     const demo = DEMOS[step];
+    // On first step, reset camera to show the full graph
+    if (step === 0 && onCameraReset) onCameraReset();
     const result = parseIxqlCommand(demo.cmd);
     onCommand(result);
     setLastResult(result.ok ? 'ok' : 'error');
     setStep((prev) => (prev + 1) % DEMOS.length);
     // Auto-collapse after reset (full cycle)
     if (step === DEMOS.length - 1) setExpanded(false);
-  }, [step, onCommand]);
+  }, [step, onCommand, onCameraReset]);
 
   const current = DEMOS[step];
   const progress = ((step) / DEMOS.length) * 100;
