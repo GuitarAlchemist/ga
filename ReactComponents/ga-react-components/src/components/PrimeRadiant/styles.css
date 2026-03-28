@@ -1171,6 +1171,19 @@
 }
 
 .chat-widget__mic-btn,
+.chat-widget__always-listen-btn {
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.chat-widget__always-listen-btn:hover { color: #e6edf3; }
+.chat-widget__always-listen-btn--active {
+  color: #33CC66;
+}
+
 .chat-widget__send-btn {
   background: none;
   border: 1px solid #30363d;
@@ -2602,6 +2615,53 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .prime-radiant__agents-member-time { color: #484f58; font-size: 8px; flex-shrink: 0; }
+
+/* ─── Claude Code Sessions ─── */
+.prime-radiant__agents-sessions {
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+}
+.prime-radiant__agents-sessions-title {
+  font-size: 8px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #8b949e; margin-bottom: 4px;
+}
+.prime-radiant__agents-session {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 4px; border-radius: 4px; font-size: 9px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 2px;
+}
+.prime-radiant__agents-session:hover {
+  background: rgba(79, 195, 247, 0.06);
+}
+.prime-radiant__agents-session-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.prime-radiant__agents-session-icon {
+  color: #8b949e; font-size: 9px; font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+}
+.prime-radiant__agents-session-model {
+  color: #e6edf3; font-weight: 500; flex-shrink: 0;
+}
+.prime-radiant__agents-session-branch {
+  color: #4FC3F7; font-size: 8px; flex-shrink: 0;
+  background: rgba(79, 195, 247, 0.1); padding: 0 4px; border-radius: 3px;
+}
+.prime-radiant__agents-session-cwd {
+  color: #6b7280; font-size: 8px; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.prime-radiant__agents-session-badge {
+  color: #33CC66; font-size: 7px; font-weight: 600;
+  background: rgba(51, 204, 102, 0.12); padding: 0 4px; border-radius: 3px;
+  flex-shrink: 0;
+}
+.prime-radiant__agents-session-time {
+  color: #8b949e; font-size: 8px; flex-shrink: 0;
+}
+.prime-radiant__agents-session-size {
+  color: #484f58; font-size: 7px; flex-shrink: 0;
+}
 
 /* ─── Commit Detail Tooltip ─── */
 .prime-radiant__commit-tooltip {
