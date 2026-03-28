@@ -62,6 +62,7 @@ public class VisualCriticService
     {
         _logger = logger;
         _http = httpFactory.CreateClient();
+        _http.Timeout = TimeSpan.FromMinutes(3); // vision models are slow on first inference
         _model = configuration["Anthropic:VisionModel"] ?? "claude-haiku-4-5-20251001";
         _apiKey = configuration["Anthropic:ApiKey"]
             ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");

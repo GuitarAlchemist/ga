@@ -27,6 +27,7 @@ import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
+import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
@@ -1852,35 +1853,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     pollingHandleOuter = pollingHandle;
     cloudCleanupOuter = stopCloudUpdates;
 
-    // ─── DEMERZEL VISUAL CRITIC — autonomous self-healing loop ───
-    // Captures canvas → Claude vision → IXQL fixes → algedonic signals
-    const criticCanvas = containerRef.current?.querySelector('canvas');
-    if (criticCanvas) {
-      criticCleanupOuter = startVisualCriticLoop(criticCanvas as HTMLCanvasElement, {
-        enabled: true,           // Demerzel drives
-        intervalMs: 90_000,      // analyze every 90 seconds
-        autoFix: true,           // auto-execute IXQL commands
-        onPhaseChange: (phase: CriticPhase) => {
-          setCriticState(prev => ({ ...prev, phase }));
-        },
-        onResult: (result) => {
-          // Update overlay state
-          setCriticState(prev => ({
-            ...prev,
-            result,
-            history: [...prev.history.slice(-19), result],
-            lastAnalysis: new Date(),
-          }));
-          // Log to console
-          const bar = '█'.repeat(result.quality) + '░'.repeat(10 - result.quality);
-          console.info(`[Demerzel] Visual Quality: [${bar}] ${result.quality}/10`);
-          if (result.signal_type === 'pain') {
-            console.warn(`[Demerzel] Pain signal: ${result.signal_description}`);
-          }
-        },
-        onIxqlCommand: handleIxqlCommand,
-      });
-    }
+    // ─── DEMERZEL AUTONOMOUS DRIVER — rule-based IXQL self-healing ───
+    // Evaluates governance graph health → emits IXQL commands → no LLM needed
+    criticCleanupOuter = startDemerzelDriver({
+      enabled: true,
+      intervalMs: 30_000,        // evaluate every 30 seconds
+      getGraphData: () => fg.graphData() as { nodes: unknown[]; links: unknown[] },
+      onPhaseChange: (phase: CriticPhase) => {
+        setCriticState(prev => ({ ...prev, phase }));
+      },
+      onResult: (result) => {
+        setCriticState(prev => ({
+          ...prev,
+          result,
+          history: [...prev.history.slice(-19), result],
+          lastAnalysis: new Date(),
+        }));
+      },
+      onIxqlCommand: handleIxqlCommand,
+    });
 
     }; // end initScene
 
