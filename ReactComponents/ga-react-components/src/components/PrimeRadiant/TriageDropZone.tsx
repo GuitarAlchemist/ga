@@ -77,6 +77,23 @@ function loadItems(): TriageItem[] {
   } catch { return []; }
 }
 
+/** Push an item into the triage inbox from outside the component */
+export function pushToTriage(type: TriageItem['type'], content: string, category?: TriageCategory): void {
+  const items = loadItems();
+  const item: TriageItem = {
+    id: generateId(),
+    type,
+    content,
+    preview: truncate(content, 80),
+    category: category ?? autoClassify(content, type),
+    timestamp: new Date().toISOString(),
+  };
+  items.unshift(item);
+  saveItems(items);
+  // Notify the component via custom event
+  window.dispatchEvent(new CustomEvent('triage-updated'));
+}
+
 function saveItems(items: TriageItem[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 50))); // keep last 50
 }
@@ -98,6 +115,13 @@ export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPane
 
   // Persist on change
   useEffect(() => { saveItems(items); }, [items]);
+
+  // Listen for external pushToTriage calls
+  useEffect(() => {
+    const handler = () => { setItems(loadItems()); setExpanded(true); };
+    window.addEventListener('triage-updated', handler);
+    return () => window.removeEventListener('triage-updated', handler);
+  }, []);
 
   const addItem = useCallback((type: TriageItem['type'], content: string) => {
     const category = autoClassify(content, type);
