@@ -152,10 +152,11 @@ export function startDemerzelDriver(config: DriverConfig = {}): () => void {
   function evaluate() {
     if (!running) return;
 
+    try {
     onPhaseChange?.('capturing');
 
     const data = getGraphData?.();
-    if (!data || !data.nodes.length) {
+    if (!data || !data.nodes?.length) {
       onPhaseChange?.('idle');
       return;
     }
@@ -169,10 +170,12 @@ export function startDemerzelDriver(config: DriverConfig = {}): () => void {
     // Execute IXQL commands
     if (result.ixql_commands?.length && onIxqlCommand) {
       for (const cmd of result.ixql_commands) {
-        const parsed = parseIxqlCommand(cmd);
-        if (parsed.ok) {
-          onIxqlCommand(parsed);
-        }
+        try {
+          const parsed = parseIxqlCommand(cmd);
+          if (parsed.ok) {
+            onIxqlCommand(parsed);
+          }
+        } catch { /* skip bad command */ }
       }
     }
 
@@ -183,6 +186,10 @@ export function startDemerzelDriver(config: DriverConfig = {}): () => void {
 
     onPhaseChange?.('complete');
     setTimeout(() => { if (running) onPhaseChange?.('idle'); }, 5000);
+    } catch (err) {
+      console.warn('[Demerzel] Driver evaluation error:', err);
+      onPhaseChange?.('idle');
+    }
   }
 
   // First evaluation after scene settles
