@@ -1351,7 +1351,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
     orbit.rotation.y = time * def.speed * 0.1;
 
     // Planet self-rotation
-    mesh.rotation.y = time * 0.5;
+    // Realistic self-rotation: Earth ~24h, scale to visible but not dizzying
+    mesh.rotation.y = time * 0.08;
 
     // Primary clouds rotate noticeably faster than the planet
     if (clouds) {
