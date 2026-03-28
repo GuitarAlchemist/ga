@@ -931,34 +931,35 @@ export function createSolarSystem(scale: number): THREE.Group {
     return t;
   }
 
-  // Primary glow (large, warm)
+  // Primary glow (subtle warm halo — bloom will amplify this)
   const mainGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: createFlareTexture(256, 'rgba(255,220,150,0.4)', 0.5),
+    map: createFlareTexture(256, 'rgba(255,220,150,0.08)', 0.4),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  mainGlow.scale.set(8 * scale, 8 * scale, 1);
+  mainGlow.scale.set(4 * scale, 4 * scale, 1);
   flareGroup.add(mainGlow);
 
-  // Inner hot core (small, white)
+  // Inner hot core (tiny, white)
   const hotCore = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: createFlareTexture(128, 'rgba(255,255,240,0.6)', 0.3),
+    map: createFlareTexture(128, 'rgba(255,255,240,0.12)', 0.3),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  hotCore.scale.set(4 * scale, 4 * scale, 1);
+  hotCore.scale.set(2.5 * scale, 2.5 * scale, 1);
   flareGroup.add(hotCore);
 
-  // Anamorphic horizontal streak
+  // Anamorphic horizontal streak (thin, subtle)
   const streak = new THREE.Sprite(new THREE.SpriteMaterial({
     map: createStreakTexture(512, 32),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    opacity: 0.3,
   }));
-  streak.scale.set(20 * scale, 0.8 * scale, 1);
+  streak.scale.set(8 * scale, 0.3 * scale, 1);
   flareGroup.add(streak);
 
-  // Secondary rainbow ghosts (displaced along view axis)
-  const ghostColors = ['rgba(100,180,255,0.12)', 'rgba(255,150,100,0.08)', 'rgba(150,255,150,0.06)'];
-  const ghostScales = [2.5, 1.5, 3.0];
-  const ghostOffsets = [5, 8, 12];
+  // Secondary rainbow ghosts (very subtle)
+  const ghostColors = ['rgba(100,180,255,0.04)', 'rgba(255,150,100,0.03)', 'rgba(150,255,150,0.02)'];
+  const ghostScales = [1.2, 0.8, 1.5];
+  const ghostOffsets = [3, 5, 7];
   for (let i = 0; i < ghostColors.length; i++) {
     const ghost = new THREE.Sprite(new THREE.SpriteMaterial({
       map: createFlareTexture(128, ghostColors[i], 0.6),
@@ -973,12 +974,12 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(flareGroup);
   group.userData.flareGroup = flareGroup;
 
-  // Sun corona glow
-  const coronaGeo = new THREE.SphereGeometry(3 * scale, 16, 16);
+  // Sun corona glow (subtle — bloom post-process amplifies this)
+  const coronaGeo = new THREE.SphereGeometry(2.5 * scale, 16, 16);
   const coronaMat = new THREE.ShaderMaterial({
     uniforms: {},
     vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 wp=modelMatrix*vec4(position,1.);vViewDir=normalize(cameraPosition-wp.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,2.5);gl_FragColor=vec4(1.,.7,.2,f*.4);}`,
+    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,3.5);gl_FragColor=vec4(1.,.7,.2,f*.15);}`,
     transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
   });
   group.add(new THREE.Mesh(coronaGeo, coronaMat));
@@ -1346,26 +1347,26 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       const pulse = 1.0 + 0.15 * Math.sin(time * 0.3) + 0.08 * Math.sin(time * 0.7);
       const shimmer = 1.0 + 0.03 * Math.sin(time * 2.1) + 0.02 * Math.sin(time * 3.7); // fast shimmer
 
-      // Main glow — pulsing with shimmer
+      // Main glow — subtle pulsing
       const mainGlow = flareGroup.children[0];
       if (mainGlow) {
-        const s = 8 * 0.03 * pulse * shimmer;
+        const s = 4 * 0.03 * pulse * shimmer;
         mainGlow.scale.set(s, s, 1);
       }
 
       // Hot core — inverse shimmer for contrast
       const hotCore = flareGroup.children[1];
       if (hotCore) {
-        const s = 4 * 0.03 * (2.0 - shimmer);
+        const s = 2.5 * 0.03 * (2.0 - shimmer);
         hotCore.scale.set(s, s, 1);
       }
 
-      // Anamorphic streak — slow rotation + breathing width
+      // Anamorphic streak — slow rotation + subtle breathing
       const streak = flareGroup.children[2];
       if (streak) {
         (streak as THREE.Sprite).material.rotation = time * 0.02;
-        const breathe = 1.0 + 0.2 * Math.sin(time * 0.5);
-        streak.scale.set(20 * 0.03 * breathe, 0.8 * 0.03 * pulse, 1);
+        const breathe = 1.0 + 0.1 * Math.sin(time * 0.5);
+        streak.scale.set(8 * 0.03 * breathe, 0.3 * 0.03 * pulse, 1);
       }
 
       // Ghost elements — drift along a line, color-shift
