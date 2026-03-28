@@ -1066,9 +1066,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     } catch { /* some browsers block GPU detection */ }
 
-    // Build perf info DOM
+    // Build perf info DOM (hidden by default — visible via CSS hover on container)
     const perfEl = document.createElement('div');
     perfEl.className = 'prime-radiant__perf-info';
+    perfEl.style.display = 'none';
     const badgeEl = document.createElement('div');
     badgeEl.className = 'prime-radiant__perf-badge';
     badgeEl.textContent = '-- FPS';
@@ -2221,7 +2222,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
-      <GalacticClock />
+      {/* GalacticClock removed — declutter top-left */}
 
       {/* Viewer presence indicator */}
       {viewers.length > 0 && (
