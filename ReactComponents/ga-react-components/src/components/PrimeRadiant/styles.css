@@ -1195,14 +1195,17 @@
 /* ─── Galactic Standard Time clock ─── */
 .prime-radiant__gst-clock {
   position: absolute;
-  top: 24px;
+  bottom: 32px;
   left: 8px;
-  color: #FFD700;
-  font: 11px/1 'JetBrains Mono', monospace;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  color: #8b949e;
+  font: 9px/1 'JetBrains Mono', monospace;
   z-index: 20;
   pointer-events: none;
-  opacity: 0.8;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+.prime-radiant:hover .prime-radiant__gst-clock {
+  opacity: 0.7;
 }
 
 /* ─── Tutorial Overlay ─── */
