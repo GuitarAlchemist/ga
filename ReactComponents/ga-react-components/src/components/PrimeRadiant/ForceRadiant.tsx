@@ -1307,10 +1307,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         if (tracked) {
           const trackedObj = solarSystem.getObjectByName(tracked);
           if (trackedObj) {
-            // Disable orbit controls during tracking to prevent jitter
-            // (touch/mouse input fights the lerp, causing oscillation)
-            const controls = fg.controls() as { enabled?: boolean; target?: THREE.Vector3 };
+            // Fully disable controls during tracking — prevents ALL jitter from touch/mouse
+            const controls = fg.controls() as { enabled?: boolean; autoRotate?: boolean; target?: THREE.Vector3 };
             if (controls.enabled !== undefined) controls.enabled = false;
+            if (controls.autoRotate !== undefined) controls.autoRotate = false;
 
             const wp = new THREE.Vector3();
             trackedObj.getWorldPosition(wp);
@@ -1319,16 +1319,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             const viewDist = planetRadius * 1.8;
             const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist);
             const targetCamPos = wp.clone().add(offset);
-            // Strong lerp for smooth, jitter-free tracking
-            cam.position.lerp(targetCamPos, 0.12);
+
+            // Direct copy (no lerp) — eliminates ALL jitter on phone
+            // The orbit itself provides smooth motion
+            cam.position.copy(targetCamPos);
             if (controls.target) {
-              controls.target.lerp(wp, 0.12);
+              controls.target.copy(wp);
             }
           }
         } else {
           // Re-enable orbit controls when not tracking
-          const controls = fg.controls() as { enabled?: boolean };
+          const controls = fg.controls() as { enabled?: boolean; autoRotate?: boolean };
           if (controls.enabled !== undefined) controls.enabled = true;
+          if (controls.autoRotate !== undefined) controls.autoRotate = true;
           // Auto-resume follow when camera moves far from the solar system
           const distToSolar = cam.position.distanceTo(solarSystem.position);
           if (distToSolar > 20) {
