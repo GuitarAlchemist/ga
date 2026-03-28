@@ -729,7 +729,35 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     startListening();
   }, [isListening, startListening]);
 
-  const toggleOpen = useCallback(() => setIsOpen((o) => !o), []);
+  // Debounced click/double-click on trigger button
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quickListenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTriggerClick = useCallback(() => {
+    // Delay single-click to allow double-click detection
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      setIsOpen((o) => !o);
+      clickTimerRef.current = null;
+    }, 250);
+  }, []);
+
+  const handleTriggerDblClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    // Cancel the pending single-click
+    if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
+    if (isOpen) return; // only when collapsed
+
+    // Start listening
+    if (!isListening) startListening();
+
+    // Auto-stop after 5 seconds if still listening
+    if (quickListenTimeoutRef.current) clearTimeout(quickListenTimeoutRef.current);
+    quickListenTimeoutRef.current = setTimeout(() => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      quickListenTimeoutRef.current = null;
+    }, 5000);
+  }, [isOpen, isListening, startListening]);
 
   // Global hotkey: hold V to voice input (works even when collapsed)
   useEffect(() => {
@@ -768,8 +796,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       {/* Floating trigger button */}
       <button
         className={triggerClasses}
-        onClick={toggleOpen}
-        title="Ask Demerzel (hold V for voice)"
+        onClick={handleTriggerClick}
+        onDoubleClick={handleTriggerDblClick}
+        title="Click: open chat | Double-click: quick voice (5s) | Hold V: voice"
         aria-label="Open Demerzel chat"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
