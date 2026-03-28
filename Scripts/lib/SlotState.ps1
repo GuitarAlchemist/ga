@@ -108,6 +108,22 @@ function Stop-GaApiServer {
     }
 }
 
+$Script:GaApiPort = 5232
+
+function Ensure-SlotRuntimeFiles {
+    param([ValidateSet("blue","green")][string]$Slot)
+    $slotDir = Join-Path (Get-SlotBinPath -Slot $Slot) "net10.0"
+    $debugDir = Join-Path (Get-GaApiBinPath) "Debug\net10.0"
+    foreach ($f in @("GaApi.runtimeconfig.json", "GaApi.deps.json")) {
+        $target = Join-Path $slotDir $f
+        $source = Join-Path $debugDir $f
+        if (-not (Test-Path $target) -and (Test-Path $source)) {
+            Copy-Item $source $target
+            Write-Host "  Copied missing $f from Debug" -ForegroundColor Gray
+        }
+    }
+}
+
 function New-SlotState {
     return [PSCustomObject]@{
         activeSlot      = "blue"
