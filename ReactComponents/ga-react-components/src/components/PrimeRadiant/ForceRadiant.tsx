@@ -1310,38 +1310,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         _solarOffset.applyQuaternion(cam.quaternion);
         solarSystem.position.copy(cam.position).add(_solarOffset);
       } else {
-        // ─── Planet tracking mode — camera follows orbiting planet ───
-        const tracked = trackedPlanetRef.current;
-        if (tracked) {
-          const trackedObj = solarSystem.getObjectByName(tracked);
-          if (trackedObj) {
-            // Fully disable controls during tracking — prevents ALL jitter from touch/mouse
-            const controls = fg.controls() as { enabled?: boolean; autoRotate?: boolean; target?: THREE.Vector3 };
-            if (controls.enabled !== undefined) controls.enabled = false;
-            if (controls.autoRotate !== undefined) controls.autoRotate = false;
-
-            trackedObj.getWorldPosition(_trackWp);
-            const geo = (trackedObj as THREE.Mesh).geometry;
-            const planetRadius = geo?.boundingSphere?.radius ?? 0.02;
-            const viewDist = planetRadius * 1.8;
-            _trackOffset.set(0, planetRadius * 0.05, viewDist);
-            // Direct set — zero allocations, zero jitter
-            cam.position.copy(_trackWp).add(_trackOffset);
-            if (controls.target) {
-              controls.target.copy(_trackWp);
-            }
-          }
-        } else {
-          // Re-enable orbit controls when not tracking
-          const controls = fg.controls() as { enabled?: boolean; autoRotate?: boolean };
-          if (controls.enabled !== undefined) controls.enabled = true;
-          if (controls.autoRotate !== undefined) controls.autoRotate = true;
-          // Auto-resume follow when camera moves far from the solar system
-          const distToSolar = cam.position.distanceTo(solarSystem.position);
-          if (distToSolar > 20) {
-            solarFollowCameraRef.current = true;
-          }
-        }
+        // Planet tracking disabled — was causing freezes and jitter on phone
+        // Auto-resume follow mode
+        solarFollowCameraRef.current = true;
       }
 
       // ─── Jarvis Space Station — top-left of view ───
@@ -1744,12 +1715,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
 
     const onSolarClick = () => {
-      // If hovering a planet, start tracking it
-      if (currentHoveredPlanet) {
-        solarFollowCameraRef.current = false;
-        trackedPlanetRef.current = currentHoveredPlanet;
-        setTrackedPlanetName(currentHoveredPlanet.charAt(0).toUpperCase() + currentHoveredPlanet.slice(1));
-      }
+      // Planet tracking disabled — was causing freezes and jitter
+      // Click just shows/hides the label for now
     };
 
     solarMouseMoveHandler = onSolarMouseMove;
