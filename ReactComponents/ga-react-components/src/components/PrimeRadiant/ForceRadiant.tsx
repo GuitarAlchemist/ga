@@ -2172,11 +2172,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 return;
               }
 
-              // Stop solar system from following the camera so we can zoom into it
+              // Stop solar system from following camera so zoom target stays put
               solarFollowCameraRef.current = false;
-              // Start tracking this planet
-              trackedPlanetRef.current = p.target;
-              setTrackedPlanetName(p.name);
 
               const solarSystemGroup = fg.scene().getObjectByName('sun')?.parent;
               if (!solarSystemGroup) return;
@@ -2211,8 +2208,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                       planetWorldRadius = (mesh.geometry.boundingSphere?.radius ?? 0.35) * worldScale;
                     }
                   }
-                  // Camera distance: ~2.5x radius fills ~75% of screen
-                  const camDist = Math.max(planetWorldRadius * 2.5, 0.02);
+                  // Camera distance: 5x radius — enough to see planet clearly
+                  const camDist = Math.max(planetWorldRadius * 5, 0.05);
                   // Approach from slightly above and to the side for a nice angle
                   fg.cameraPosition(
                     { x: wp.x + camDist * 0.3, y: wp.y + camDist * 0.4, z: wp.z + camDist * 0.85 },
@@ -2234,35 +2231,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             <span className="prime-radiant__planet-label">{p.name}</span>
           </button>
         ))}
-        {trackedPlanetName && (
-          <div
-            className="prime-radiant__tracking-indicator"
-            style={{
-              position: 'absolute',
-              bottom: '48px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0, 20, 40, 0.85)',
-              border: '1px solid rgba(0, 200, 255, 0.4)',
-              borderRadius: '4px',
-              padding: '2px 10px',
-              fontSize: '11px',
-              color: '#00ccff',
-              fontFamily: 'monospace',
-              pointerEvents: 'auto',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-            title="Click to stop tracking"
-            onClick={() => {
-              trackedPlanetRef.current = null;
-              setTrackedPlanetName(null);
-              solarFollowCameraRef.current = true;
-            }}
-          >
-            Tracking: {trackedPlanetName} <span style={{ opacity: 0.5 }}>[x]</span>
-          </div>
-        )}
+        {/* Tracking indicator removed — tracking disabled */}
       </div>
 
       {/* Bottom drawer — icicle navigator + file viewer */}
