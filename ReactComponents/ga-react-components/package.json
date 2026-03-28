@@ -53,6 +53,7 @@
     "react-router-dom": "^6.26.0",
     "reactflow": "^11.11.4",
     "recharts": "^2.12.7",
+    "remark-gfm": "^4.0.1",
     "three": "^0.180.0",
     "vexchords": "^1.2.0",
     "vexflow": "^4.2.5",
