@@ -1682,8 +1682,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const solarSystem = createSolarSystem(0.03);
     fg.scene().add(solarSystem);
 
-    // Start live weather cloud updates on Earth (requires VITE_OWM_API_KEY)
-    const stopCloudUpdates = startLiveCloudUpdates(solarSystem);
+    // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
+    // Static 2k_earth_clouds.jpg looks better until proper reprojection is implemented
+    const stopCloudUpdates = () => {}; // no-op
 
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
