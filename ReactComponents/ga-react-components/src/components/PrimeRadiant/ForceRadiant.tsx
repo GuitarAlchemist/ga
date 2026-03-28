@@ -2172,59 +2172,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 return;
               }
 
-              // Stop solar system from following camera so zoom target stays put
+              // Pin solar system in place, find planet, fly camera to it
               solarFollowCameraRef.current = false;
 
-              const solarSystemGroup = fg.scene().getObjectByName('sun')?.parent;
-              if (!solarSystemGroup) return;
+              const group = fg.scene().getObjectByName('sun')?.parent;
+              if (!group) return;
 
-              // Get the solar system's current world position (where it's pinned now)
-              const solarCenter = new THREE.Vector3();
-              solarSystemGroup.getWorldPosition(solarCenter);
+              const target = group.getObjectByName(p.target);
+              if (!target) return;
 
-              if (p.target === 'sun') {
-                // Zoom to solar system center — close enough to see the Sun
-                fg.cameraPosition(
-                  { x: solarCenter.x, y: solarCenter.y + 0.8, z: solarCenter.z + 2.5 },
-                  { x: solarCenter.x, y: solarCenter.y, z: solarCenter.z },
-                  1200,
-                );
-              } else {
-                // Find the planet mesh by name within the solar system
-                const obj = solarSystemGroup.getObjectByName(p.target);
-                if (obj) {
-                  const wp = new THREE.Vector3();
-                  obj.getWorldPosition(wp);
-                  // Solar system is at 0.03 scale — planets are tiny in world space
-                  // Get the planet's world-space radius to compute proper zoom distance
-                  const worldScale = obj.getWorldScale(new THREE.Vector3()).x;
-                  // Planet radius in local coords varies (earth=0.35, jupiter=0.7, etc.)
-                  // Use bounding sphere if available, otherwise estimate from scale
-                  let planetWorldRadius = worldScale * 0.35; // fallback estimate
-                  if (obj.children.length > 0) {
-                    const mesh = obj.children[0] as THREE.Mesh;
-                    if (mesh.geometry) {
-                      mesh.geometry.computeBoundingSphere();
-                      planetWorldRadius = (mesh.geometry.boundingSphere?.radius ?? 0.35) * worldScale;
-                    }
-                  }
-                  // Camera distance: 4x radius at new 0.15 scale — fills screen nicely
-                  const camDist = Math.max(planetWorldRadius * 4, 0.3);
-                  // Approach from slightly above and to the side for a nice angle
-                  fg.cameraPosition(
-                    { x: wp.x + camDist * 0.3, y: wp.y + camDist * 0.4, z: wp.z + camDist * 0.85 },
-                    { x: wp.x, y: wp.y, z: wp.z },
-                    1500,
-                  );
-                } else {
-                  // Fallback: zoom to solar system center
-                  fg.cameraPosition(
-                    { x: solarCenter.x, y: solarCenter.y + 0.8, z: solarCenter.z + 2.5 },
-                    { x: solarCenter.x, y: solarCenter.y, z: solarCenter.z },
-                    1200,
-                  );
-                }
-              }
+              const wp = new THREE.Vector3();
+              target.getWorldPosition(wp);
+
+              // Simple: fly to 0.5 units away from planet, look at it
+              fg.cameraPosition(
+                { x: wp.x + 0.2, y: wp.y + 0.15, z: wp.z + 0.4 },
+                { x: wp.x, y: wp.y, z: wp.z },
+                1200,
+              );
             }}
           >
             <span style={{ fontSize: '14px' }}>{p.icon}</span>
