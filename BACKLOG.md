@@ -42,19 +42,40 @@ These are real problems guitarists hit. They're the North Star for every feature
 
 ## Prime Radiant / Living Cosmos Ideas
 
-- **3D animated IX pipeline flow** — click IXql node → expands into animated pipeline with particles flowing through stages (source → preprocess → model → governance_gate → evaluate → deploy). Uses IxqlParser.
+### Shipped (2026-03-28 mega session)
+- ~~IXQL data pipeline (DataFetcher + DynamicPanel)~~ → Phase 2
+- ~~Declarative health bindings (HealthBindingEngine)~~ → Phase 3
+- ~~Reactive triggers (ON...THEN + ReactiveEngine)~~ → Phase 5 MVP
+- ~~Demo tour button (yellow lightning, 6-step walkthrough)~~
+- ~~Edge highlighting (SELECT edges SET color/width)~~
+- ~~Triage Drop Zone (drag/paste for AI classification + dispatch)~~
+- ~~Algedonic → triage wiring (📥 on recommended actions)~~
+- ~~JPP comics inline PDF reader (16 comics, Public Domain)~~
+- ~~Seldon beliefs + Markov predictions populated~~
+- ~~/devfix skill + session-start health check~~
+
+### Active Ideas
+- **3D animated IX pipeline flow** — click IXql node → expands into animated pipeline with particles flowing through stages. Uses IxqlParser.
 - **FE screenshot capture via Demerzel** — backend sends SignalR command, FE captures canvas, returns image for reports/dashboards
 - **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
 - **Commit detail hover** — hover a commit in ActivityPanel shows diff stats, files changed, author
 - **GitHub token for API rate limits** — authenticated requests (5,000/hr vs 60/hr) for the multi-repo ActivityPanel
 - **Progressive pipeline zoom** — far = IXql node, medium = orbiting sub-nodes, close = full animated flow diagram
 - **Algedonic channels** — Demerzel builds real-time pleasure/pain signal channels from governance health, updates belief states live via SignalR
-- **Real-time belief updates** — beliefs in governance/state/beliefs/ updated and pushed to FE as nodes change health status
 - **Octopus PR review queue** — industrial-scale PR review using /octo:security + /octo:debate across multiple LLMs, results surfaced in ActivityPanel
 - **Auto-spawn Claude Code teams** — Demerzel detects workload (open issues, failing tests, stale nodes) and auto-spawns Claude Code agent teams to address them
 - **Activities from real sources** — wire Activities accordion to actual task tracking (GitHub Projects, Linear, or internal PDCA cycles from governance state)
-- **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
-- **Terminal node filaments** — leaf/terminal nodes (departments, tests, schemas with no children) emit thin glowing filaments with lit dots at the end, representing their output/products
+- **Terminal node filaments** — leaf/terminal nodes emit thin glowing filaments with lit dots at the end
+
+### New Ideas (from 2026-03-28 session)
+- **Admin inbox panel** — dedicated panel for triaged items awaiting human review, with approve/reject/defer actions
+- **Weak signal interactions graph** — algedonic signals shown as a network, not flat list (per JPP article: "analyze interactions, not isolated lists")
+- **IXQL Phase 6: FALLBACK + BACKOFF** — chaos resilience: `CREATE PANEL ... FALLBACK source2 BACKOFF exponential 5s..300s TOLERANCE 3`
+- **IXQL meta-combination** — `panel://` cross-references so panels can read from other panels' data
+- **Grammar telemetry dashboard** — visualize IXQL variant adoption rates from localStorage telemetry
+- **Triage → IXQL auto-generation** — when an item is dispatched, generate the IXQL command to create it (e.g. task → CREATE PANEL with the task data)
+- **Godot MCP bridge** — DataFetcher already has `godot://` protocol, wire it to 3D scene management
+- **Octopus plugin reinstall** — `/octo:*` skills not loading, needs `claude plugin install octo@nyldn-plugins`
 
 ## Infrastructure Ideas
 
