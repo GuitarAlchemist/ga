@@ -11,6 +11,7 @@ export interface PlanetNavProps {
   onLoadArcGIS?: (layer: string) => void;
   onRemoveArcGIS?: (layer: string) => void;
   onResetView?: () => void;
+  onLaunchGodot?: () => void;
 }
 
 const PLANETS = [
@@ -37,7 +38,7 @@ const GIS_LAYERS = [
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoadArcGIS, onRemoveArcGIS, onResetView }) => {
+export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoadArcGIS, onRemoveArcGIS, onResetView, onLaunchGodot }) => {
   const [expanded, setExpanded] = useState(false);
   const [showGIS, setShowGIS] = useState(false);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
@@ -144,6 +145,22 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
                 </button>
               ))}
             </>
+          )}
+
+          {/* Launch Godot 3D governance engine */}
+          {onLaunchGodot && (
+            <button
+              className="planet-nav__item planet-nav__godot-btn"
+              onClick={onLaunchGodot}
+              title="Launch Godot 3D Governance Engine"
+            >
+              <span className="planet-nav__dot" style={{ color: '#478cbf' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </span>
+              <span className="planet-nav__name">3D Engine</span>
+            </button>
           )}
         </div>
       )}
