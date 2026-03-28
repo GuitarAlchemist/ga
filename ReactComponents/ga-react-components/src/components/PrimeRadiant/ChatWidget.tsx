@@ -154,10 +154,39 @@ const PLANET_FACTS: Record<string, string> = {
   moon: 'Earth\'s companion. Tidally locked — same face always toward us. 384,400 km away.',
 };
 
-// Detect if text is in French (for mock fallback)
+// Auto-detect language from text — returns language code or null if unclear
+function detectLanguage(text: string): string | null {
+  const t = text.toLowerCase();
+  // French
+  if (/[àâéèêëïîôùûüÿçœæ]/.test(t) || /\b(bonjour|salut|merci|oui|non|je|nous|vous|les|des|est|une?|dans|pour|sur|avec|qui|que|quoi|comment|pourquoi|montre|aller|voir)\b/i.test(t))
+    return 'fr';
+  // Spanish
+  if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|sí|por favor|qué|cómo|dónde|cuándo|buenas|buenos|muestra|ir a)\b/i.test(t))
+    return 'es';
+  // German
+  if (/[äöüß]/.test(t) || /\b(hallo|danke|bitte|ja|nein|wie|warum|zeige|gehe zu|der|die|das|ist|und|ein|eine)\b/i.test(t))
+    return 'de';
+  // Italian
+  if (/\b(ciao|grazie|sì|per favore|come|perché|mostra|vai a|buongiorno|sono|della|degli)\b/i.test(t))
+    return 'it';
+  // Portuguese
+  if (/\b(olá|obrigado|sim|por favor|como|onde|quando|mostra|ir para|bom dia)\b/i.test(t))
+    return 'pt';
+  // Dutch
+  if (/\b(hallo|dank|ja|nee|hoe|waarom|toon|ga naar|goedemorgen)\b/i.test(t))
+    return 'nl';
+  // Hindi (Devanagari script)
+  if (/[\u0900-\u097F]/.test(t))
+    return 'hi';
+  // Arabic script
+  if (/[\u0600-\u06FF]/.test(t))
+    return 'ar';
+  return null; // Can't determine — default to current locale
+}
+
+// Backward compat wrapper
 function detectFrench(text: string): boolean {
-  return /[àâéèêëïîôùûüÿçœæ]/.test(text)
-    || /\b(bonjour|salut|merci|oui|non|je|nous|vous|les|des|est|une?|dans|pour|sur|avec|qui|que|quoi|comment|pourquoi|montre|aller|voir)\b/i.test(text);
+  return detectLanguage(text) === 'fr';
 }
 
 // ── Artifact / Skill viewer ──
@@ -222,9 +251,11 @@ function renderMarkdown(md: string): string {
     .replace(/\n/g, '<br/>');
 }
 
-async function askDemerzel(question: string, context?: GovernanceNode | null): Promise<DemerzelResponse> {
+async function askDemerzel(question: string, context?: GovernanceNode | null, onLanguageDetected?: (lang: string) => void): Promise<DemerzelResponse> {
   const q = question.toLowerCase();
-  const isFr = detectFrench(q);
+  const detectedLang = detectLanguage(q);
+  if (detectedLang && onLanguageDetected) onLanguageDetected(detectedLang);
+  const isFr = detectedLang === 'fr';
 
   // ── List artifacts: "list skills", "list policies", "show all personas" ──
   const listMatch = q.match(/\b(?:list|show all|ls|all)\s+(skills?|policies|personas?|constitutions?|schemas?)\b/);
@@ -280,47 +311,31 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
     return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
   }
 
-  // Map / overlay intent — natural language: "show countries", "show weather", "satellite view"
-  // No need to say "arcgis" or "earth" — inferred from context
-  const layerKeywords: [RegExp, string, string, string][] = [
-    [/\b(countr|border|frontier|nation|frontière|pays|boundary)\b/i, 'borders', 'Country borders & labels', 'Frontières et noms de pays'],
-    [/\b(satellite|imagery|imagerie|sat view|vue sat)\b/i, 'imagery', 'Satellite imagery', 'Imagerie satellite'],
-    [/\b(street|road|rue|route|city|cities|ville)\b/i, 'streets', 'Street map', 'Plan des rues'],
-    [/\b(topo|terrain|elevation|relief|mountain|montagne|altitude)\b/i, 'topo', 'Topographic map', 'Carte topographique'],
-    [/\b(weather|cloud|météo|nuage|wind|vent|temperature|rain|pluie)\b/i, 'imagery', 'Satellite view (weather visible)', 'Vue satellite (météo visible)'],
-    [/\b(dark|night|nuit|sombre|noir)\b/i, 'darkgray', 'Dark base map', 'Fond sombre'],
-    [/\b(map|carte|gis|arcgis|overlay|couche|layer)\b/i, 'borders', 'Map overlay', 'Couche cartographique'],
-  ];
+  // ArcGIS / map overlay intent
+  const arcgisMatch = q.match(/\b(?:arcgis|gis|map|satellite|topo|borders|streets|imagery|carte|frontières)\b/i);
+  if (arcgisMatch && (q.includes('earth') || q.includes('terre') || mentionedPlanet === 'earth')) {
+    // Detect which layer
+    let layer = 'borders';
+    if (/\b(satellite|imagery|imagerie)\b/i.test(q)) layer = 'imagery';
+    else if (/\b(street|rue|road|route)\b/i.test(q)) layer = 'streets';
+    else if (/\b(topo|terrain|relief)\b/i.test(q)) layer = 'topo';
+    else if (/\b(dark|sombre|noir)\b/i.test(q)) layer = 'darkgray';
+    else if (/\b(border|frontier|frontière|country|pays)\b/i.test(q)) layer = 'borders';
 
-  // Check if any layer keyword matches AND there's a "show" intent or earth context
-  const showIntent = /\b(show|display|overlay|put|add|enable|activate|load|open|montre|affiche|ajoute|active|charge|ouvre)\b/i.test(q);
-  const earthContext = q.includes('earth') || q.includes('terre') || q.includes('globe') || q.includes('world') || q.includes('monde') || mentionedPlanet === 'earth';
-
-  for (const [pattern, layer, descEn, descFr] of layerKeywords) {
-    if (pattern.test(q) && (showIntent || earthContext)) {
-      // Navigate to Earth first if not already there, then load overlay
-      const actions: DemerzelResponse = {
-        text: isFr
-          ? `Chargement : ${descFr} sur la Terre...`
-          : `Loading: ${descEn} on Earth...`,
-        action: { type: 'arcgis', layer },
-      };
-      // Also fly to Earth if mentioned or implied
-      if (earthContext || mentionedPlanet === 'earth') {
-        actions.text = isFr
-          ? `Navigation vers la Terre + ${descFr}...`
-          : `Flying to Earth + ${descEn}...`;
-      }
-      return actions;
-    }
-  }
-
-  // List available overlays
-  if (/\b(list|what).*(map|layer|overlay|show on earth|carte|couche)\b/i.test(q) || /\bwhat can (you|i) (show|see|display)\b/i.test(q)) {
     return {
       text: isFr
-        ? '**Couches disponibles sur la Terre :**\n\n• « montre les pays » — Frontières\n• « vue satellite » — Imagerie satellite\n• « montre les rues » — Plan des rues\n• « montre le relief » — Carte topographique\n• « vue météo » — Nuages satellite\n• « fond sombre » — Carte sombre\n\n_Dites simplement ce que vous voulez voir !_'
-        : '**Available Earth overlays:**\n\n• "show countries" — Country borders\n• "satellite view" — Satellite imagery\n• "show streets" — Street map\n• "show terrain" — Topographic map\n• "show weather" — Cloud satellite view\n• "dark map" — Dark base map\n\n_Just say what you want to see!_',
+        ? `Chargement de la couche ArcGIS "${layer}" sur la Terre... Les tuiles vont apparaître sur le globe.`
+        : `Loading ArcGIS "${layer}" layer on Earth... Tiles will appear on the globe.`,
+      action: { type: 'arcgis', layer },
+    };
+  }
+
+  // List available map layers
+  if (/\b(list|show).*(map|layer|gis|carte|couche)\b/i.test(q)) {
+    return {
+      text: isFr
+        ? '**Couches ArcGIS disponibles:**\n\n• imagery — Imagerie satellite\n• streets — Plan des rues\n• topo — Carte topographique\n• borders — Frontières et noms de lieux\n• darkgray — Fond sombre\n\n_Dites "arcgis borders on earth" pour charger._'
+        : '**Available ArcGIS layers:**\n\n• imagery — Satellite imagery\n• streets — Street map\n• topo — Topographic map\n• borders — Country borders & labels\n• darkgray — Dark gray base\n\n_Say "arcgis borders on earth" to load._',
       markdown: true,
     };
   }
@@ -635,7 +650,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       void speakText(fullText);
     } catch {
       // Fallback to mock if Claude API unavailable
-      const response = await askDemerzel(trimmed, selectedNode);
+      const response = await askDemerzel(trimmed, selectedNode, (lang) => {
+        // Auto-switch locale when Demerzel detects a different language
+        if (lang !== locale) setLocale(lang);
+      });
       setMessages((prev) => prev.map(m =>
         m.id === botMsgId ? { ...m, content: response.text, markdown: response.markdown, raw: response.raw } : m,
       ));
@@ -729,35 +747,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     startListening();
   }, [isListening, startListening]);
 
-  // Debounced click/double-click on trigger button
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const quickListenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleTriggerClick = useCallback(() => {
-    // Delay single-click to allow double-click detection
-    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-    clickTimerRef.current = setTimeout(() => {
-      setIsOpen((o) => !o);
-      clickTimerRef.current = null;
-    }, 250);
-  }, []);
-
-  const handleTriggerDblClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    // Cancel the pending single-click
-    if (clickTimerRef.current) { clearTimeout(clickTimerRef.current); clickTimerRef.current = null; }
-    if (isOpen) return; // only when collapsed
-
-    // Start listening
-    if (!isListening) startListening();
-
-    // Auto-stop after 5 seconds if still listening
-    if (quickListenTimeoutRef.current) clearTimeout(quickListenTimeoutRef.current);
-    quickListenTimeoutRef.current = setTimeout(() => {
-      if (recognitionRef.current) recognitionRef.current.stop();
-      quickListenTimeoutRef.current = null;
-    }, 5000);
-  }, [isOpen, isListening, startListening]);
+  const toggleOpen = useCallback(() => setIsOpen((o) => !o), []);
 
   // Global hotkey: hold V to voice input (works even when collapsed)
   useEffect(() => {
@@ -796,9 +786,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       {/* Floating trigger button */}
       <button
         className={triggerClasses}
-        onClick={handleTriggerClick}
-        onDoubleClick={handleTriggerDblClick}
-        title="Click: open chat | Double-click: quick voice (5s) | Hold V: voice"
+        onClick={toggleOpen}
+        title="Ask Demerzel (hold V for voice)"
         aria-label="Open Demerzel chat"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
