@@ -280,31 +280,47 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
     return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
   }
 
-  // ArcGIS / map overlay intent
-  const arcgisMatch = q.match(/\b(?:arcgis|gis|map|satellite|topo|borders|streets|imagery|carte|frontières)\b/i);
-  if (arcgisMatch && (q.includes('earth') || q.includes('terre') || mentionedPlanet === 'earth')) {
-    // Detect which layer
-    let layer = 'borders';
-    if (/\b(satellite|imagery|imagerie)\b/i.test(q)) layer = 'imagery';
-    else if (/\b(street|rue|road|route)\b/i.test(q)) layer = 'streets';
-    else if (/\b(topo|terrain|relief)\b/i.test(q)) layer = 'topo';
-    else if (/\b(dark|sombre|noir)\b/i.test(q)) layer = 'darkgray';
-    else if (/\b(border|frontier|frontière|country|pays)\b/i.test(q)) layer = 'borders';
+  // Map / overlay intent — natural language: "show countries", "show weather", "satellite view"
+  // No need to say "arcgis" or "earth" — inferred from context
+  const layerKeywords: [RegExp, string, string, string][] = [
+    [/\b(countr|border|frontier|nation|frontière|pays|boundary)\b/i, 'borders', 'Country borders & labels', 'Frontières et noms de pays'],
+    [/\b(satellite|imagery|imagerie|sat view|vue sat)\b/i, 'imagery', 'Satellite imagery', 'Imagerie satellite'],
+    [/\b(street|road|rue|route|city|cities|ville)\b/i, 'streets', 'Street map', 'Plan des rues'],
+    [/\b(topo|terrain|elevation|relief|mountain|montagne|altitude)\b/i, 'topo', 'Topographic map', 'Carte topographique'],
+    [/\b(weather|cloud|météo|nuage|wind|vent|temperature|rain|pluie)\b/i, 'imagery', 'Satellite view (weather visible)', 'Vue satellite (météo visible)'],
+    [/\b(dark|night|nuit|sombre|noir)\b/i, 'darkgray', 'Dark base map', 'Fond sombre'],
+    [/\b(map|carte|gis|arcgis|overlay|couche|layer)\b/i, 'borders', 'Map overlay', 'Couche cartographique'],
+  ];
 
-    return {
-      text: isFr
-        ? `Chargement de la couche ArcGIS "${layer}" sur la Terre... Les tuiles vont apparaître sur le globe.`
-        : `Loading ArcGIS "${layer}" layer on Earth... Tiles will appear on the globe.`,
-      action: { type: 'arcgis', layer },
-    };
+  // Check if any layer keyword matches AND there's a "show" intent or earth context
+  const showIntent = /\b(show|display|overlay|put|add|enable|activate|load|open|montre|affiche|ajoute|active|charge|ouvre)\b/i.test(q);
+  const earthContext = q.includes('earth') || q.includes('terre') || q.includes('globe') || q.includes('world') || q.includes('monde') || mentionedPlanet === 'earth';
+
+  for (const [pattern, layer, descEn, descFr] of layerKeywords) {
+    if (pattern.test(q) && (showIntent || earthContext)) {
+      // Navigate to Earth first if not already there, then load overlay
+      const actions: DemerzelResponse = {
+        text: isFr
+          ? `Chargement : ${descFr} sur la Terre...`
+          : `Loading: ${descEn} on Earth...`,
+        action: { type: 'arcgis', layer },
+      };
+      // Also fly to Earth if mentioned or implied
+      if (earthContext || mentionedPlanet === 'earth') {
+        actions.text = isFr
+          ? `Navigation vers la Terre + ${descFr}...`
+          : `Flying to Earth + ${descEn}...`;
+      }
+      return actions;
+    }
   }
 
-  // List available map layers
-  if (/\b(list|show).*(map|layer|gis|carte|couche)\b/i.test(q)) {
+  // List available overlays
+  if (/\b(list|what).*(map|layer|overlay|show on earth|carte|couche)\b/i.test(q) || /\bwhat can (you|i) (show|see|display)\b/i.test(q)) {
     return {
       text: isFr
-        ? '**Couches ArcGIS disponibles:**\n\n• imagery — Imagerie satellite\n• streets — Plan des rues\n• topo — Carte topographique\n• borders — Frontières et noms de lieux\n• darkgray — Fond sombre\n\n_Dites "arcgis borders on earth" pour charger._'
-        : '**Available ArcGIS layers:**\n\n• imagery — Satellite imagery\n• streets — Street map\n• topo — Topographic map\n• borders — Country borders & labels\n• darkgray — Dark gray base\n\n_Say "arcgis borders on earth" to load._',
+        ? '**Couches disponibles sur la Terre :**\n\n• « montre les pays » — Frontières\n• « vue satellite » — Imagerie satellite\n• « montre les rues » — Plan des rues\n• « montre le relief » — Carte topographique\n• « vue météo » — Nuages satellite\n• « fond sombre » — Carte sombre\n\n_Dites simplement ce que vous voulez voir !_'
+        : '**Available Earth overlays:**\n\n• "show countries" — Country borders\n• "satellite view" — Satellite imagery\n• "show streets" — Street map\n• "show terrain" — Topographic map\n• "show weather" — Cloud satellite view\n• "dark map" — Dark base map\n\n_Just say what you want to see!_',
       markdown: true,
     };
   }
