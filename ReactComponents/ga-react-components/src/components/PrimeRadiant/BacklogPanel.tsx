@@ -78,7 +78,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
         <span className="prime-radiant__backlog-toggle">{collapsed ? '>' : 'v'}</span>
       </div>
 
-      {!collapsed && (
+      {!collapsed && data && (
         <div className="prime-radiant__backlog-body">
           {data.sections.map((section, i) => {
             const key = `${section.section}-${section.subsection ?? i}`;
