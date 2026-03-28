@@ -134,6 +134,8 @@
 .prime-radiant__side-panel--open {
   width: 360px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 8px;
   scrollbar-width: thin;
   scrollbar-color: #30363d transparent;
 }
