@@ -977,7 +977,8 @@
 }
 
 .chat-widget__close-btn,
-.chat-widget__tts-btn {
+.chat-widget__tts-btn,
+.chat-widget__clear-btn {
   background: none;
   border: none;
   color: #8b949e;
@@ -990,7 +991,8 @@
 }
 
 .chat-widget__close-btn:hover,
-.chat-widget__tts-btn:hover {
+.chat-widget__tts-btn:hover,
+.chat-widget__clear-btn:hover {
   background: #30363d;
   color: #e6edf3;
 }
