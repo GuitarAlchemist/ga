@@ -18,7 +18,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, removeArcGISOverlay, getArcGISLayers, addLocationMarker, enableEarthAutoLOD } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, removeArcGISOverlay, getArcGISLayers, addLocationMarker, enableEarthAutoLOD, getCameraEarthTarget, loadFocusedPatch } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
@@ -27,6 +27,8 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
+import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
+import type { GraphContext } from './DataFetcher';
 import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
@@ -554,15 +556,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     phase: 'idle', result: null, history: [], lastAnalysis: null,
   });
 
-  // Phase 3: IXql command handler — applies visual overrides to graph nodes
+  // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
+  const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
+
+  // IXql command handler — dispatches visual overrides, panel CRUD, and more
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
     const fg = graphRef.current;
-    if (!fg || !result.ok) return;
+    if (!result.ok) return;
 
     const cmd = result.command;
 
     if (cmd.type === 'reset') {
       // Clear all IXql overrides
+      if (!fg) return;
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (n.__threeObj) {
@@ -573,6 +579,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     if (cmd.type === 'select' && cmd.target === 'nodes' && cmd.predicates.length > 0 && cmd.assignments.length > 0) {
+      if (!fg) return;
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         const matches = cmd.predicates.every(p =>
@@ -584,6 +591,42 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           n.__threeObj.userData.ixqlOverrides = overrides;
         }
       });
+      return;
+    }
+
+    // Phase 2: CREATE PANEL — register in PanelRegistry and auto-open
+    if (cmd.type === 'create-panel') {
+      panelRegistry.register({
+        definition: {
+          id: cmd.id,
+          label: cmd.id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          icon: cmd.icon || 'detail',
+          renderMode: 'side',
+          layout: cmd.layout,
+          source: cmd.source,
+          showFields: cmd.showFields,
+        },
+      });
+      // Store the full command for DynamicPanel rendering
+      dynamicPanelDefsRef.current.set(cmd.id, {
+        id: cmd.id,
+        label: cmd.id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        source: cmd.source,
+        layout: cmd.layout,
+        wherePredicates: cmd.wherePredicates,
+        showFields: cmd.showFields,
+        filter: cmd.filter,
+      });
+      setActivePanel(cmd.id);
+      return;
+    }
+
+    // Phase 2: DROP PANEL — unregister and close if active
+    if (cmd.type === 'drop') {
+      panelRegistry.unregister(cmd.id);
+      dynamicPanelDefsRef.current.delete(cmd.id);
+      setActivePanel(prev => prev === cmd.id ? null : prev);
+      return;
     }
   }, []);
 
@@ -815,6 +858,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let pollingHandleOuter: LivePollingHandle | undefined;
     let cloudCleanupOuter: (() => void) | undefined;
     let markerCleanupOuter: (() => void) | undefined;
+    let lodCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -1937,6 +1981,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     pollingHandleOuter = pollingHandle;
     cloudCleanupOuter = stopCloudUpdates;
     markerCleanupOuter = removeLocationMarker;
+    lodCleanupOuter = stopEarthLOD;
 
     // ─── DEMERZEL AUTONOMOUS DRIVER — rule-based IXQL self-healing ───
     // Evaluates governance graph health → emits IXQL commands → no LLM needed
@@ -2558,7 +2603,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           // Dynamic panel from registry (IXQL CREATE PANEL)
           const reg = panelRegistry.get(activePanel);
           if (reg?.component) return React.createElement(reg.component);
-          if (reg) return React.createElement('div', { style: { padding: '1rem', color: '#ccc' } }, `Dynamic panel: ${activePanel}`);
+          // Phase 2: Render DynamicPanel for IXQL-created panels
+          const dynDef = dynamicPanelDefsRef.current.get(activePanel);
+          if (dynDef) {
+            const graphCtx: GraphContext | undefined = graphRef.current
+              ? {
+                  nodes: (graphRef.current.graphData().nodes as Record<string, unknown>[]),
+                  edges: (graphRef.current.graphData().links as Record<string, unknown>[]),
+                }
+              : undefined;
+            return React.createElement(DynamicPanel, { definition: dynDef, graphContext: graphCtx });
+          }
+          if (reg) return React.createElement('div', { style: { padding: '1rem', color: '#ccc' } }, `Panel: ${activePanel}`);
           return null;
         })()}
       </div>
