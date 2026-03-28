@@ -25,8 +25,73 @@ export interface AgentTeam {
 }
 
 // ---------------------------------------------------------------------------
-// Data fetching — polls /api/agents or reads from local state
+// Claude Code session types
 // ---------------------------------------------------------------------------
+export interface ClaudeSession {
+  sessionId: string;
+  model: string;
+  branch: string;
+  cwd: string;
+  subagentCount: number;
+  lastActiveAt: string;
+  sizeBytes: number;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function formatRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
+
+function shortenPath(p: string): string {
+  if (!p) return '';
+  const segments = p.replace(/\\/g, '/').split('/').filter(Boolean);
+  return segments.slice(-2).join('/');
+}
+
+function shortenModel(model: string): string {
+  if (!model || model === 'unknown') return 'Claude';
+  // e.g. "claude-opus-4-6[1m]" → "Opus 4.6"
+  const m = model.match(/claude[- ]?(opus|sonnet|haiku)[- ]?(\d+)[- .]?(\d+)?/i);
+  if (m) {
+    const name = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+    return m[3] ? `${name} ${m[2]}.${m[3]}` : `${name} ${m[2]}`;
+  }
+  return model;
+}
+
+function isActiveRecent(iso: string): 'green' | 'amber' {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  return diffMs < 5 * 60000 ? 'green' : 'amber';
+}
+
+// ---------------------------------------------------------------------------
+// Data fetching
+// ---------------------------------------------------------------------------
+async function fetchClaudeSessions(): Promise<ClaudeSession[]> {
+  try {
+    const res = await fetch('/api/governance/claude-sessions');
+    if (res.ok) {
+      const data = await res.json();
+      return data.sessions ?? [];
+    }
+  } catch { /* fall through */ }
+  return [];
+}
+
 async function fetchAgentTeams(): Promise<AgentTeam[]> {
   // Try backend endpoint
   try {
@@ -86,13 +151,16 @@ const STATUS_ICON: Record<AgentInfo['status'], string> = {
 
 export const AgentPanel: React.FC = () => {
   const [teams, setTeams] = useState<AgentTeam[]>([]);
+  const [sessions, setSessions] = useState<ClaudeSession[]>([]);
   const [collapsed, setCollapsed] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAgentTeams().then(setTeams);
-    const interval = setInterval(() => fetchAgentTeams().then(setTeams), 10000); // 10s refresh
-    return () => clearInterval(interval);
+    fetchClaudeSessions().then(setSessions);
+    const teamInterval = setInterval(() => fetchAgentTeams().then(setTeams), 10000);
+    const sessionInterval = setInterval(() => fetchClaudeSessions().then(setSessions), 30000);
+    return () => { clearInterval(teamInterval); clearInterval(sessionInterval); };
   }, []);
 
   const toggleTeam = useCallback((teamId: string) => {
@@ -131,6 +199,39 @@ export const AgentPanel: React.FC = () => {
 
       {!collapsed && (
         <div className="prime-radiant__agents-body">
+          {/* Claude Code Sessions */}
+          {sessions.length > 0 && (
+            <div className="prime-radiant__agents-sessions">
+              <div className="prime-radiant__agents-sessions-title">Claude Code Sessions</div>
+              {sessions.map(s => {
+                const activity = isActiveRecent(s.lastActiveAt);
+                return (
+                  <div key={s.sessionId} className="prime-radiant__agents-session">
+                    <span
+                      className="prime-radiant__agents-session-dot"
+                      style={{ background: activity === 'green' ? '#33CC66' : '#F5A623' }}
+                    />
+                    <span className="prime-radiant__agents-session-icon">{'>_'}</span>
+                    <span className="prime-radiant__agents-session-model">{shortenModel(s.model)}</span>
+                    {s.branch && (
+                      <span className="prime-radiant__agents-session-branch">{s.branch}</span>
+                    )}
+                    {s.cwd && (
+                      <span className="prime-radiant__agents-session-cwd">{shortenPath(s.cwd)}</span>
+                    )}
+                    {s.subagentCount > 0 && (
+                      <span className="prime-radiant__agents-session-badge">
+                        {s.subagentCount} agent{s.subagentCount !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    <span className="prime-radiant__agents-session-time">{formatRelativeTime(s.lastActiveAt)}</span>
+                    <span className="prime-radiant__agents-session-size">{formatBytes(s.sizeBytes)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {teams.map(team => (
             <div key={team.id} className="prime-radiant__agents-team">
               <div

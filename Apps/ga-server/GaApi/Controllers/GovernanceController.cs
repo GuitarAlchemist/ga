@@ -304,6 +304,73 @@ public class GovernanceController(
     }
 
     /// <summary>
+    ///     Detect active Claude Code sessions by scanning ~/.claude/projects/ for recently modified .jsonl files.
+    /// </summary>
+    [HttpGet("claude-sessions")]
+    public ActionResult GetClaudeSessions()
+    {
+        try
+        {
+            var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var projectsDir = Path.Combine(userHome, ".claude", "projects");
+
+            if (!Directory.Exists(projectsDir))
+                return Ok(new { sessions = Array.Empty<object>() });
+
+            var cutoff = DateTime.UtcNow.AddMinutes(-30);
+            var sessions = new List<object>();
+
+            foreach (var projectDir in Directory.GetDirectories(projectsDir))
+            {
+                // Each project directory may contain .jsonl session files
+                foreach (var jsonlFile in Directory.EnumerateFiles(projectDir, "*.jsonl"))
+                {
+                    var fileInfo = new FileInfo(jsonlFile);
+                    if (fileInfo.LastWriteTimeUtc < cutoff) continue;
+
+                    // Read the last line to extract session metadata
+                    var (sessionId, model, gitBranch, cwd) = ExtractSessionMetadata(jsonlFile, fileInfo.Name);
+
+                    // Count subagents: look for a subagents/ subdirectory with recently modified files
+                    var subagentCount = 0;
+                    var subagentsDir = Path.Combine(projectDir, "subagents");
+                    if (Directory.Exists(subagentsDir))
+                    {
+                        subagentCount = Directory.EnumerateFiles(subagentsDir, "*", SearchOption.AllDirectories)
+                            .Count(f => new FileInfo(f).LastWriteTimeUtc > cutoff);
+                    }
+
+                    sessions.Add(new
+                    {
+                        sessionId,
+                        model,
+                        branch = gitBranch,
+                        cwd,
+                        subagentCount,
+                        lastActiveAt = fileInfo.LastWriteTimeUtc.ToString("O"),
+                        sizeBytes = fileInfo.Length,
+                    });
+                }
+            }
+
+            // Sort by most recently active first
+            sessions.Sort((a, b) =>
+            {
+                var aTime = ((dynamic)a).lastActiveAt as string ?? "";
+                var bTime = ((dynamic)b).lastActiveAt as string ?? "";
+                return string.Compare(bTime, aTime, StringComparison.Ordinal);
+            });
+
+            return Ok(new { sessions });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to scan Claude Code sessions");
+            return Ok(new { sessions = Array.Empty<object>() });
+        }
+    }
+
+    /// <summary>
     ///     Get active agent teams and their members (for AgentPanel).
     /// </summary>
     [HttpGet("agents")]
@@ -336,6 +403,59 @@ public class GovernanceController(
         }
 
         return Ok(new { teams });
+    }
+
+    private static (string sessionId, string model, string gitBranch, string cwd) ExtractSessionMetadata(string filePath, string fileName)
+    {
+        var sessionId = Path.GetFileNameWithoutExtension(fileName);
+        var model = "unknown";
+        var gitBranch = "";
+        var cwd = "";
+
+        try
+        {
+            // Read the last non-empty line from the JSONL file
+            string? lastLine = null;
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+
+            while (reader.ReadLine() is { } line)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                    lastLine = line;
+            }
+
+            if (lastLine != null)
+            {
+                using var doc = JsonDocument.Parse(lastLine);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("sessionId", out var sid))
+                    sessionId = sid.GetString() ?? sessionId;
+                if (root.TryGetProperty("model", out var m))
+                    model = m.GetString() ?? model;
+                if (root.TryGetProperty("gitBranch", out var gb))
+                    gitBranch = gb.GetString() ?? "";
+                if (root.TryGetProperty("cwd", out var c))
+                    cwd = c.GetString() ?? "";
+
+                // Some session formats nest these differently — try message-level metadata
+                if (string.IsNullOrEmpty(model) || model == "unknown")
+                {
+                    if (root.TryGetProperty("message", out var msg) && msg.ValueKind == JsonValueKind.Object)
+                    {
+                        if (msg.TryGetProperty("model", out var mm))
+                            model = mm.GetString() ?? model;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Gracefully degrade — return what we have
+        }
+
+        return (sessionId, model, gitBranch, cwd);
     }
 
     private static string? FindRepoRoot()
