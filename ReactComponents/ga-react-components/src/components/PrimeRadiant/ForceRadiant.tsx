@@ -2162,7 +2162,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <IxqlCommandInput onCommand={handleIxqlCommand} />
 
       {/* Demerzel visual critic overlay — shows self-improvement process */}
-      <DemerzelCriticOverlay state={criticState} />
+      {/* DemerzelCriticOverlay disabled — re-enable when driver is stable */}
+      {/* <DemerzelCriticOverlay state={criticState} /> */}
 
       {/* Planet quick-nav bar — bottom center */}
       <div className="prime-radiant__planet-bar">
