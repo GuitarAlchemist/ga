@@ -187,16 +187,45 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+// Supported languages with display names
+const SUPPORTED_LANGS = [
+  { code: 'en', label: 'EN', name: 'English' },
+  { code: 'fr', label: 'FR', name: 'Français' },
+  { code: 'es', label: 'ES', name: 'Español' },
+  { code: 'pt', label: 'PT', name: 'Português' },
+  { code: 'de', label: 'DE', name: 'Deutsch' },
+  { code: 'it', label: 'IT', name: 'Italiano' },
+  { code: 'nl', label: 'NL', name: 'Nederlands' },
+  { code: 'hi', label: 'HI', name: 'हिन्दी' },
+  { code: 'ar', label: 'AR', name: 'العربية' },
+] as const;
+
+const WELCOME_MESSAGES: Record<string, string> = {
+  en: 'I am Demerzel. Ask me about governance policies, constitutions, personas, or any artifact in the Prime Radiant.',
+  fr: 'Je suis Demerzel. Posez-moi des questions sur les politiques de gouvernance, les constitutions, les personas ou tout artefact du Prime Radiant.',
+  es: 'Soy Demerzel. Pregúntame sobre políticas de gobernanza, constituciones, personas o cualquier artefacto en el Prime Radiant.',
+  pt: 'Eu sou Demerzel. Pergunte-me sobre políticas de governança, constituições, personas ou qualquer artefato no Prime Radiant.',
+  de: 'Ich bin Demerzel. Fragen Sie mich zu Governance-Richtlinien, Verfassungen, Personas oder anderen Artefakten im Prime Radiant.',
+  it: 'Sono Demerzel. Chiedimi delle politiche di governance, costituzioni, personas o qualsiasi artefatto nel Prime Radiant.',
+  nl: 'Ik ben Demerzel. Vraag me over governance-beleid, grondwetten, persona\'s of artefacten in de Prime Radiant.',
+  hi: 'मैं डेमरज़ेल हूँ। मुझसे गवर्नेंस नीतियों, संविधानों, पर्सोना या प्राइम रेडिएंट के किसी भी आर्टिफैक्ट के बारे में पूछें।',
+  ar: 'أنا ديميرزيل. اسألني عن سياسات الحوكمة أو الدساتير أو الشخصيات أو أي عنصر في برايم راديانت.',
+};
+
+function detectLocale(): string {
+  const lang = navigator.language?.split('-')[0]?.toLowerCase() ?? 'en';
+  return SUPPORTED_LANGS.some(l => l.code === lang) ? lang : 'en';
+}
+
 export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigateToNode, onNavigateToPlanet }) => {
+  const [locale, setLocale] = useState(detectLocale);
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: 'I am Demerzel. Ask me about governance policies, constitutions, personas, or any artifact in the Prime Radiant.',
-      timestamp: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [{
+    id: 'welcome',
+    role: 'assistant',
+    content: WELCOME_MESSAGES[detectLocale()] ?? WELCOME_MESSAGES.en,
+    timestamp: Date.now(),
+  }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -344,7 +373,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         .filter(m => m.role === 'user' || m.role === 'assistant')
         .slice(-10) // Last 10 messages for context
         .map(m => ({ role: m.role, content: m.content }));
-      apiMessages.push({ role: 'user', content: trimmed + (selectedNode ? ` [Context: viewing "${selectedNode.name}" (${selectedNode.type})]` : '') });
+      const langHint = locale !== 'en' ? ` [Respond in ${SUPPORTED_LANGS.find(l => l.code === locale)?.name ?? locale}]` : '';
+      const ctxHint = selectedNode ? ` [Context: viewing "${selectedNode.name}" (${selectedNode.type})]` : '';
+      apiMessages.push({ role: 'user', content: trimmed + ctxHint + langHint });
 
       const fullText = await askClaudeStreaming(
         apiMessages,
@@ -473,6 +504,27 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
                 )}
               </svg>
             </button>
+            <select
+              className="chat-widget__lang-select"
+              value={locale}
+              onChange={(e) => {
+                const newLang = e.target.value;
+                setLocale(newLang);
+                // Update welcome message if it's the only message
+                setMessages(prev => {
+                  if (prev.length === 1 && prev[0].id === 'welcome') {
+                    return [{ ...prev[0], content: WELCOME_MESSAGES[newLang] ?? WELCOME_MESSAGES.en }];
+                  }
+                  return prev;
+                });
+              }}
+              title="Response language"
+              aria-label="Select response language"
+            >
+              {SUPPORTED_LANGS.map(l => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
+            </select>
             <button className="chat-widget__close-btn" onClick={toggleOpen} aria-label="Close chat">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -486,7 +538,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         <div className="chat-widget__messages">
           {messages.map((msg) => (
             <div key={msg.id} className={`chat-widget__msg chat-widget__msg--${msg.role}`}>
-              <div className="chat-widget__msg-bubble">{msg.content}</div>
+              <div className="chat-widget__msg-bubble">
+                {msg.content}
+                {msg.role === 'assistant' && msg.content && (
+                  <button
+                    className="chat-widget__replay-btn"
+                    onClick={() => void speakText(msg.content)}
+                    title="Replay this message"
+                    aria-label="Replay message"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
           ))}
           {isLoading && (
