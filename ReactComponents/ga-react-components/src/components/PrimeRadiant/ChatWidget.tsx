@@ -209,19 +209,25 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-// Supported languages with display names
+// Supported languages — full BCP-47 locale for better speech recognition accuracy
 const SUPPORTED_LANGS = [
-  { code: 'auto', label: 'Auto', name: '' },
-  { code: 'en', label: 'EN', name: 'English' },
-  { code: 'fr', label: 'FR', name: 'Français' },
-  { code: 'es', label: 'ES', name: 'Español' },
-  { code: 'pt', label: 'PT', name: 'Português' },
-  { code: 'de', label: 'DE', name: 'Deutsch' },
-  { code: 'it', label: 'IT', name: 'Italiano' },
-  { code: 'nl', label: 'NL', name: 'Nederlands' },
-  { code: 'hi', label: 'HI', name: 'हिन्दी' },
-  { code: 'ar', label: 'AR', name: 'العربية' },
+  { code: 'auto', locale: '', label: 'Auto', name: '' },
+  { code: 'en', locale: 'en-US', label: 'EN', name: 'English' },
+  { code: 'fr', locale: 'fr-FR', label: 'FR', name: 'Français' },
+  { code: 'es', locale: 'es-ES', label: 'ES', name: 'Español' },
+  { code: 'pt', locale: 'pt-BR', label: 'PT', name: 'Português' },
+  { code: 'de', locale: 'de-DE', label: 'DE', name: 'Deutsch' },
+  { code: 'it', locale: 'it-IT', label: 'IT', name: 'Italiano' },
+  { code: 'nl', locale: 'nl-NL', label: 'NL', name: 'Nederlands' },
+  { code: 'hi', locale: 'hi-IN', label: 'HI', name: 'हिन्दी' },
+  { code: 'ar', locale: 'ar-SA', label: 'AR', name: 'العربية' },
 ] as const;
+
+/** Get the full BCP-47 locale for the selected language code */
+function getLocaleForCode(code: string): string {
+  const lang = SUPPORTED_LANGS.find(l => l.code === code);
+  return lang?.locale || navigator.language || 'en-US';
+}
 
 const WELCOME_MESSAGES: Record<string, string> = {
   en: 'I am Demerzel. Ask me about governance policies, constitutions, personas, or any artifact in the Prime Radiant.',
@@ -322,7 +328,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       else lang = 'en';
     }
 
-    utterance.lang = lang;
+    utterance.lang = getLocaleForCode(lang);
     // Pick a voice matching detected/selected language
     const findVoice = (prefix: string) =>
       voices.find((v) => v.name.includes('Google') && v.lang.startsWith(prefix))
@@ -481,7 +487,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = locale === 'auto' ? navigator.language : locale;
+    recognition.lang = getLocaleForCode(locale);
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
