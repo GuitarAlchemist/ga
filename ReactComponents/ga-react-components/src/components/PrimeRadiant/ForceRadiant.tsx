@@ -1863,8 +1863,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── DEMERZEL AUTONOMOUS DRIVER — rule-based IXQL self-healing ───
     // Evaluates governance graph health → emits IXQL commands → no LLM needed
+    // Disabled until stability is confirmed — was causing freezes
     criticCleanupOuter = startDemerzelDriver({
-      enabled: true,
+      enabled: false,
       intervalMs: 30_000,        // evaluate every 30 seconds
       getGraphData: () => fg.graphData() as { nodes: unknown[]; links: unknown[] },
       onPhaseChange: (phase: CriticPhase) => {
