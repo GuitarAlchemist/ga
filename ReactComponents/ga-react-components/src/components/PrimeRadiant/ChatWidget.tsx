@@ -406,6 +406,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const [rawViewIds, setRawViewIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'processing' | 'understood'>('idle');
   const [ttsEnabled, setTtsEnabled] = useState(true); // Demerzel speaks by default
   const [alwaysListen, setAlwaysListen] = useState(false); // Continuous listening mode
 
@@ -626,13 +627,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     }
   }, [input, sendMessage]);
 
-  const toggleListening = useCallback(() => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
+  const startListening = useCallback(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
 
@@ -647,20 +642,45 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         .join('');
       setInput(transcript);
 
-      // Auto-send on final result
       if (event.results[event.results.length - 1].isFinal) {
-        setIsListening(false);
         sendMessage(transcript);
+        // In always-listen mode, restart after a short pause (wait for TTS to finish)
+        if (alwaysListen) {
+          setTimeout(() => startListening(), 2000);
+        } else {
+          setIsListening(false);
+        }
       }
     };
 
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => {
+      setIsListening(false);
+      // Retry in always-listen mode
+      if (alwaysListen) setTimeout(() => startListening(), 1000);
+    };
+    recognition.onend = () => {
+      // In always-listen mode, restart if not manually stopped
+      if (alwaysListen) {
+        setTimeout(() => startListening(), 500);
+      } else {
+        setIsListening(false);
+      }
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening, sendMessage]);
+    setVoiceState('listening');
+  }, [sendMessage, alwaysListen, locale]);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    startListening();
+  }, [isListening, startListening]);
 
   const toggleOpen = useCallback(() => setIsOpen((o) => !o), []);
 
@@ -830,6 +850,24 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
               <rect x="9" y="2" width="6" height="11" rx="3" />
               <path d="M5 10a7 7 0 0 0 14 0" />
               <line x1="12" y1="19" x2="12" y2="22" />
+            </svg>
+          </button>
+          <button
+            className={`chat-widget__always-listen-btn ${alwaysListen ? 'chat-widget__always-listen-btn--active' : ''}`}
+            onClick={() => {
+              const next = !alwaysListen;
+              setAlwaysListen(next);
+              if (next && !isListening) startListening();
+              if (!next && isListening) { recognitionRef.current?.stop(); setIsListening(false); }
+            }}
+            title={alwaysListen ? 'Disable always-listen mode' : 'Enable always-listen mode (continuous conversation)'}
+            aria-label="Toggle always-listen mode"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12h16" />
+              <path d="M4 6h16" />
+              <path d="M4 18h16" />
+              {alwaysListen && <circle cx="20" cy="4" r="3" fill="#33CC66" stroke="none" />}
             </svg>
           </button>
           <button
