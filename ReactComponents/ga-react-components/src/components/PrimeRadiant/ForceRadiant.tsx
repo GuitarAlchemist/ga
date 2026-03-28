@@ -26,7 +26,8 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
-import { startVisualCriticLoop } from './VisualCriticLoop';
+import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
+import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
@@ -542,6 +543,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
   const [trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
+  const [criticState, setCriticState] = useState<CriticState>({
+    phase: 'idle', result: null, history: [], lastAnalysis: null,
+  });
 
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -1310,11 +1314,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             const viewDist = planetRadius * 1.8; // close enough to nearly fill screen
             const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist); // nearly centered, slight upward tilt
             const targetCamPos = wp.clone().add(offset);
-            cam.position.lerp(targetCamPos, 0.04);
-            // Smoothly update lookAt by lerping the controls target
+            // Use matched lerp speeds to prevent jitter from speed mismatch
+            const lerpSpeed = 0.08;
+            cam.position.lerp(targetCamPos, lerpSpeed);
             const controls = fg.controls() as { target?: THREE.Vector3 };
             if (controls.target) {
-              controls.target.lerp(wp, 0.06);
+              controls.target.lerp(wp, lerpSpeed);
             }
           }
         } else {
@@ -1851,8 +1856,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         enabled: true,           // Demerzel drives
         intervalMs: 90_000,      // analyze every 90 seconds
         autoFix: true,           // auto-execute IXQL commands
+        onPhaseChange: (phase: CriticPhase) => {
+          setCriticState(prev => ({ ...prev, phase }));
+        },
         onResult: (result) => {
-          // Log to console with quality indicator
+          // Update overlay state
+          setCriticState(prev => ({
+            ...prev,
+            result,
+            history: [...prev.history.slice(-19), result],
+            lastAnalysis: new Date(),
+          }));
+          // Log to console
           const bar = '█'.repeat(result.quality) + '░'.repeat(10 - result.quality);
           console.info(`[Demerzel] Visual Quality: [${bar}] ${result.quality}/10`);
           if (result.signal_type === 'pain') {
@@ -2137,6 +2152,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <ChatWidget selectedNode={selectedNode} />
       <TutorialOverlay />
       <IxqlCommandInput onCommand={handleIxqlCommand} />
+
+      {/* Demerzel visual critic overlay — shows self-improvement process */}
+      <DemerzelCriticOverlay state={criticState} />
 
       {/* Planet quick-nav bar — bottom center */}
       <div className="prime-radiant__planet-bar">

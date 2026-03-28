@@ -1682,6 +1682,93 @@
   align-self: center;
 }
 
+/* ─── DEMERZEL VISUAL CRITIC OVERLAY ─── */
+.demerzel-critic {
+  position: absolute;
+  bottom: 56px;
+  left: 8px;
+  z-index: 25;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #c9d1d9;
+  pointer-events: auto;
+  max-width: 380px;
+}
+.demerzel-critic__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.demerzel-critic__header:hover { border-color: #58a6ff; }
+.demerzel-critic__pulse { font-size: 12px; color: #8b949e; }
+.demerzel-critic__pulse--active { color: #58a6ff; animation: critic-pulse 1.5s ease-in-out infinite; }
+@keyframes critic-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.demerzel-critic__title { color: #58a6ff; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.demerzel-critic__quality-bar {
+  position: relative;
+  width: 60px;
+  height: 6px;
+  background: #21262d;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.demerzel-critic__quality-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.demerzel-critic__quality-label { position: absolute; top: -1px; right: -28px; font-size: 9px; color: #8b949e; }
+.demerzel-critic__trend { font-size: 10px; font-weight: 600; margin-left: 20px; }
+.demerzel-critic__phase { color: #8b949e; font-size: 10px; margin-left: auto; }
+
+/* Expanded body */
+.demerzel-critic__body {
+  margin-top: 4px;
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+.demerzel-critic__section { margin-bottom: 8px; }
+.demerzel-critic__section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #58a6ff; margin-bottom: 4px; }
+
+/* Methodology steps */
+.demerzel-critic__methodology { display: flex; flex-direction: column; gap: 2px; }
+.demerzel-critic__step { color: #484f58; font-size: 10px; padding: 2px 0; }
+.demerzel-critic__step--active { color: #58a6ff; font-weight: 600; }
+.demerzel-critic__step--active::before { content: '▸ '; }
+.demerzel-critic__step--done { color: #33CC66; }
+.demerzel-critic__step--done::before { content: '✓ '; }
+
+/* Signal badge */
+.demerzel-critic__signal-badge { font-size: 10px; border: 1px solid; border-radius: 4px; padding: 1px 6px; margin-right: 6px; }
+.demerzel-critic__signal-desc { color: #8b949e; font-size: 10px; }
+
+/* Issues */
+.demerzel-critic__issues { margin: 0; padding-left: 14px; }
+.demerzel-critic__issues li { color: #f0883e; font-size: 10px; margin-bottom: 2px; }
+
+/* IXQL commands */
+.demerzel-critic__ixql { display: flex; flex-direction: column; gap: 2px; }
+.demerzel-critic__ixql-cmd { font-size: 9px; color: #7ee787; background: rgba(35, 134, 54, 0.1); padding: 2px 6px; border-radius: 3px; display: block; word-break: break-all; }
+
+/* Thoughts/suggestions */
+.demerzel-critic__thoughts { margin: 0; padding-left: 14px; }
+.demerzel-critic__thoughts li { color: #c9d1d9; font-size: 10px; margin-bottom: 2px; font-style: italic; }
+
+/* Quality trend chart */
+.demerzel-critic__trend-chart { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
+.demerzel-critic__trend-bar { width: 8px; border-radius: 2px 2px 0 0; min-height: 2px; transition: height 0.3s ease; }
+
+/* Footer */
+.demerzel-critic__footer { font-size: 9px; color: #484f58; border-top: 1px solid #21262d; padding-top: 4px; margin-top: 4px; }
+
 /* ─── RESPONSIVE — tablet ─── */
 @media (max-width: 1024px) {
   .prime-radiant__health { font-size: 10px; padding: 4px 8px; }
