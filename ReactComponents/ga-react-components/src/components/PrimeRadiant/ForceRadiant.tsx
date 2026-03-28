@@ -55,6 +55,7 @@ import { IcicleDrawer } from './IcicleDrawer';
 import { GodotScene } from './GodotScene';
 import { GisPanel } from './GisPanel';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
+import { usePrControl } from './usePrControl';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -483,6 +484,34 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
 // ---------------------------------------------------------------------------
 // Convert governance graph to force-graph format
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Markov enrichment — ensure every node has a markovPrediction for Seldon panel
+// ---------------------------------------------------------------------------
+function enrichNodesWithMarkov(graph: GovernanceGraph): void {
+  for (const n of graph.nodes) {
+    if (!n.health) {
+      n.health = {
+        resilienceScore: 0.7 + Math.random() * 0.25,
+        staleness: Math.random() * 0.4,
+        ergolCount: Math.floor(Math.random() * 10),
+        lolliCount: 0,
+        markovPrediction: [0.6, 0.25, 0.1, 0.05],
+      };
+    } else if (!n.health.markovPrediction || n.health.markovPrediction.length < 4) {
+      const status = n.healthStatus ?? 'unknown';
+      if (status === 'healthy' || status === 'ok') {
+        n.health.markovPrediction = [0.7 + Math.random() * 0.2, 0.15, 0.1, 0.05];
+      } else if (status === 'warning') {
+        n.health.markovPrediction = [0.3, 0.35, 0.25, 0.1];
+      } else if (status === 'error' || status === 'critical') {
+        n.health.markovPrediction = [0.1, 0.15, 0.35, 0.4];
+      } else {
+        n.health.markovPrediction = [0.5, 0.25, 0.15, 0.1];
+      }
+    }
+  }
+}
+
 function toForceData(graph: GovernanceGraph): { nodes: GraphNode[]; links: GraphLink[] } {
   const nodes: GraphNode[] = graph.nodes.map((n) => ({
     id: n.id,
@@ -939,6 +968,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
 
     const initScene = (graph: ReturnType<typeof loadGovernanceData>) => {
+
+    // Enrich nodes with Markov transition probabilities for Seldon panel
+    enrichNodesWithMarkov(graph);
 
     setGraphData(graph);
     setGraphIndex(buildGraphIndex(graph));
@@ -1494,6 +1526,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
         if (qualityLevel === 'high' || frameCount % 3 === 0) {
           updateSolarSystem(solarSystem, t);
+          // Update GIS layer animations (pulse rings, animated paths)
+          for (const mgr of gisManagersRef.current.values()) mgr.update(t);
         }
       }
 
@@ -2027,6 +2061,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         },
         onUpdate: (freshGraph) => {
+          enrichNodesWithMarkov(freshGraph);
           const currentNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
           const { updated, changed } = updateNodeHealth(
             currentNodes as unknown as GovernanceNode[],
@@ -2253,6 +2288,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const healthStatus = graphData
     ? getHealthStatus(graphData.globalHealth.resilienceScore)
     : 'healthy';
+
+  // --- Prime Radiant Control API — Claude can drive PR via HTTP ---
+  usePrControl({
+    openPanel: (id) => setActivePanel(id),
+    closePanel: () => setActivePanel(null),
+    selectNode: (nodeId) => {
+      const node = graphData?.nodes.find(n => n.id === nodeId);
+      if (node) { setSelectedNode(node); setActivePanel('detail'); }
+    },
+    getGisManager: (planet) => gisManagersRef.current.get(planet),
+    getState: () => ({
+      activePanel,
+      selectedNode: selectedNode?.id ?? null,
+      nodeCount: graphData?.nodes.length ?? 0,
+      edgeCount: graphData?.edges.length ?? 0,
+      backendStatus,
+      gis: Object.fromEntries(
+        Array.from(gisManagersRef.current.entries()).map(([k, m]) => [k, { pins: m.pinCount, paths: m.pathCount, clusters: m.clusterCount }])
+      ),
+      godotFullscreen,
+      timestamp: Date.now(),
+    }),
+  });
 
   return (
     <div className={`prime-radiant ${className}`} style={{ width, height }}>

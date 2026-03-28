@@ -68,6 +68,52 @@ function truncate(s: string, n: number): string {
 // Persistence
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// AI Summary (best-effort, non-blocking)
+// ---------------------------------------------------------------------------
+
+async function fetchSummary(url: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    // Try the chatbot API first
+    const res = await fetch('/api/chatbot/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: `Summarize this URL in one sentence for governance triage: ${url}` }),
+      signal: controller.signal,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.answer ?? data?.response ?? data?.message;
+      if (typeof text === 'string' && text.trim()) return text.trim();
+    }
+  } catch { /* fall through */ }
+
+  try {
+    // Fallback to chat endpoint
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `Summarize: ${url}` }),
+      signal: controller.signal,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.answer ?? data?.response ?? data?.message;
+      if (typeof text === 'string' && text.trim()) return text.trim();
+    }
+  } catch { /* fall through */ }
+
+  clearTimeout(timeout);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Persistence
+// ---------------------------------------------------------------------------
+
 const STORAGE_KEY = 'ixql-triage-inbox';
 
 function loadItems(): TriageItem[] {
@@ -134,6 +180,21 @@ export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPane
       timestamp: new Date().toISOString(),
     };
     setItems(prev => [item, ...prev]);
+
+    // Best-effort AI summary for URLs
+    if (type === 'url') {
+      const itemId = item.id;
+      // Mark as loading
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, summary: '...' } : i));
+      fetchSummary(content).then(summary => {
+        if (summary) {
+          setItems(prev => prev.map(i => i.id === itemId ? { ...i, summary } : i));
+        } else {
+          // Remove the loading placeholder
+          setItems(prev => prev.map(i => i.id === itemId ? { ...i, summary: undefined } : i));
+        }
+      });
+    }
   }, []);
 
   // ─── Drop handler ───
@@ -279,6 +340,12 @@ export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPane
                     <span className="prime-radiant__triage-item-preview">{item.preview}</span>
                     <button className="prime-radiant__triage-item-remove" onClick={() => removeItem(item.id)}>×</button>
                   </div>
+                  {item.summary === '...' && (
+                    <div className="prime-radiant__triage-item-summary"><em>Summarizing...</em></div>
+                  )}
+                  {item.summary && item.summary !== '...' && (
+                    <div className="prime-radiant__triage-item-summary">{item.summary}</div>
+                  )}
                   <div className="prime-radiant__triage-item-actions">
                     {cat && (
                       <span
