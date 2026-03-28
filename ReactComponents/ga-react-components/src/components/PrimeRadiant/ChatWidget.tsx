@@ -414,6 +414,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isSpeakingRef = useRef(false);
+  const startListeningRef = useRef<() => void>(() => {});
   const panelRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioBlobUrlRef = useRef<string | null>(null);
@@ -509,8 +510,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
 
     const onSpeechDone = () => {
       isSpeakingRef.current = false;
-      // Resume always-listen after TTS finishes
-      if (alwaysListen) setTimeout(() => startListening(), 300);
+      // Resume always-listen after TTS finishes (use ref to avoid circular dep)
+      if (alwaysListen) setTimeout(() => startListeningRef.current(), 300);
     };
 
     try {
@@ -550,7 +551,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       speechSynthesis.addEventListener('end', onSpeechDone, { once: true });
       setTimeout(onSpeechDone, 10000);
     }
-  }, [ttsEnabled, stopAudio, speakWithBrowserTts, alwaysListen, isListening, startListening]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- startListening ref avoids circular dep
+  }, [ttsEnabled, stopAudio, speakWithBrowserTts, alwaysListen]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -699,6 +701,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     setIsListening(true);
     setVoiceState('listening');
   }, [sendMessage, alwaysListen, locale]);
+  startListeningRef.current = startListening;
 
   const toggleListening = useCallback(() => {
     if (isListening) {
