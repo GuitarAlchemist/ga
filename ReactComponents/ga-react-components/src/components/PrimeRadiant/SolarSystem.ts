@@ -85,6 +85,37 @@ interface PlanetDef {
   moons?: MoonDef[];
 }
 
+// ── Real orbital positions — J2000 mean longitude elements (NASA/JPL) ──
+// Returns the current mean longitude in radians for a planet, so planets
+// appear at their actual approximate positions in the sky right now.
+function getRealOrbitalAngle(planetName: string): number {
+  // J2000 epoch: 2000-01-01 12:00 TT
+  const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
+  const now = Date.now();
+  const daysSinceJ2000 = (now - J2000) / 86_400_000;
+  const T = daysSinceJ2000 / 36525; // Julian centuries
+
+  // Mean longitude at J2000 (L0, degrees) and rate (Ldot, degrees/century)
+  // Source: Standish (1992) — JPL Planetary Ephemeris DE405
+  const elements: Record<string, { L0: number; Ldot: number }> = {
+    mercury:  { L0: 252.251,  Ldot: 149472.675 },
+    venus:    { L0: 181.980,  Ldot:  58517.816 },
+    earth:    { L0: 100.464,  Ldot:  35999.373 },
+    mars:     { L0: 355.453,  Ldot:  19140.299 },
+    jupiter:  { L0:  34.351,  Ldot:   3034.906 },
+    saturn:   { L0:  49.558,  Ldot:   1222.114 },
+    uranus:   { L0: 313.238,  Ldot:    428.267 },
+    neptune:  { L0: 304.880,  Ldot:    218.486 },
+  };
+
+  const el = elements[planetName];
+  if (!el) return 0;
+
+  // Mean longitude in degrees, then convert to radians
+  const L = (el.L0 + el.Ldot * T) % 360;
+  return L * Math.PI / 180;
+}
+
 // ── Noise library for procedural moon shaders ──
 const NOISE_LIB = `
 float h(vec3 p){return fract(sin(dot(p,vec3(1.3,1.7,1.9)))*43758.5);}
@@ -1036,6 +1067,9 @@ export function createSolarSystem(scale: number): THREE.Group {
     if (def.tilt) mesh.rotation.z = def.tilt;
     orbit.add(mesh);
 
+    // Real orbital position — compute mean longitude for current date (J2000 Keplerian elements)
+    orbit.rotation.y = getRealOrbitalAngle(def.name);
+
     // Atmosphere shell — Fresnel glow on limb, transparent at center
     if (def.atmosphere) {
       const atmoSegs = def.radius > 0.5 ? 32 : 24;
@@ -1725,8 +1759,9 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
   for (const { mesh, orbit, def, clouds, cloudsHigh } of planets) {
-    // Orbit rotation
-    orbit.rotation.y = time * def.speed * 0.1;
+    // Orbit rotation — real orbital position + animated drift
+    const realAngle = getRealOrbitalAngle(def.name);
+    orbit.rotation.y = realAngle + time * def.speed * 0.1;
 
     if (def.name === 'earth') {
       // ── Real-time Earth rotation based on UTC ──
@@ -1814,7 +1849,7 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       const segments = trail.userData.trailSegments as number;
       const alphaAttr = trail.geometry.getAttribute('aAlpha') as THREE.BufferAttribute;
       // Current planet angle in its orbit
-      const planetAngle = time * def.speed * 0.1; // matches orbit.rotation.y
+      const planetAngle = getRealOrbitalAngle(def.name) + time * def.speed * 0.1; // matches orbit.rotation.y
       for (let i = 0; i <= segments; i++) {
         const vertAngle = (i / segments) * Math.PI * 2;
         // Angular distance from planet (0 to PI)
