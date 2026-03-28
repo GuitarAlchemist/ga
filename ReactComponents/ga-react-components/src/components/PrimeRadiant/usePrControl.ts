@@ -5,7 +5,9 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import type { GisLayerManager, GisPin, GisPath } from './GisLayer';
+import type { GovernanceNode } from './types';
 import type { PanelId } from './PanelRegistry';
+import { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
 
 // ---------------------------------------------------------------------------
 // Command types — what Claude can tell Prime Radiant to do
@@ -39,6 +41,8 @@ export interface PrResult {
 // - navigate:planet {planetName}
 // - state:report  — returns full state snapshot
 // - ixql:exec {command}
+// - ixql:gis-query {planet?, nodes: GovernanceNode[]}  — map IXQL results to GIS pins
+// - ixql:gis-clear {planet?}  — clear IXQL-generated GIS pins
 
 export interface PrControlHandlers {
   openPanel: (id: PanelId) => void;
@@ -162,6 +166,24 @@ export function usePrControl(handlers: PrControlHandlers): void {
             throw new Error('IXQL executor not available');
           }
           break;
+
+        case 'ixql:gis-query': {
+          const mgr = h.getGisManager(params.planet as string ?? 'earth');
+          if (!mgr) throw new Error(`No GIS manager for ${params.planet ?? 'earth'}`);
+          const nodes = params.nodes as GovernanceNode[];
+          if (!Array.isArray(nodes)) throw new Error('params.nodes must be a GovernanceNode[]');
+          ixqlToGis(nodes, mgr);
+          result.data = { pinCount: mgr.pinCount };
+          break;
+        }
+
+        case 'ixql:gis-clear': {
+          const mgr = h.getGisManager(params.planet as string ?? 'earth');
+          if (!mgr) throw new Error(`No GIS manager for ${params.planet ?? 'earth'}`);
+          clearIxqlPins(mgr);
+          result.data = { pinCount: mgr.pinCount };
+          break;
+        }
 
         default:
           throw new Error(`Unknown action: ${action}`);
