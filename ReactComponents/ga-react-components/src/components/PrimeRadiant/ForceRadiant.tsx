@@ -26,6 +26,7 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
+import { startVisualCriticLoop } from './VisualCriticLoop';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
@@ -801,6 +802,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
     let pollingHandleOuter: LivePollingHandle | undefined;
     let cloudCleanupOuter: (() => void) | undefined;
+    let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
@@ -1840,6 +1842,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     autoZoomTimeoutOuter = autoZoomTimeout;
     pollingHandleOuter = pollingHandle;
     cloudCleanupOuter = stopCloudUpdates;
+
+    // ─── DEMERZEL VISUAL CRITIC — autonomous self-healing loop ───
+    // Captures canvas → Claude vision → IXQL fixes → algedonic signals
+    const criticCanvas = containerRef.current?.querySelector('canvas');
+    if (criticCanvas) {
+      criticCleanupOuter = startVisualCriticLoop(criticCanvas as HTMLCanvasElement, {
+        enabled: true,           // Demerzel drives
+        intervalMs: 90_000,      // analyze every 90 seconds
+        autoFix: true,           // auto-execute IXQL commands
+        onResult: (result) => {
+          // Log to console with quality indicator
+          const bar = '█'.repeat(result.quality) + '░'.repeat(10 - result.quality);
+          console.info(`[Demerzel] Visual Quality: [${bar}] ${result.quality}/10`);
+          if (result.signal_type === 'pain') {
+            console.warn(`[Demerzel] Pain signal: ${result.signal_description}`);
+          }
+        },
+        onIxqlCommand: handleIxqlCommand,
+      });
+    }
+
     }; // end initScene
 
     // Kick off async init
@@ -1851,6 +1874,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
       cloudCleanupOuter?.();
+      criticCleanupOuter?.();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
       }
