@@ -140,7 +140,7 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       {/* App Bar */}
       <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper }}>
         <Toolbar>
@@ -220,7 +220,7 @@ const Layout = ({ children }: LayoutProps) => {
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flex: 1, bgcolor: theme.palette.background.default }}>
+      <Box component="main" sx={{ flex: 1, overflow: 'hidden', bgcolor: theme.palette.background.default }}>
         {children}
       </Box>
     </Box>

@@ -21,7 +21,7 @@ const PrimeRadiantTest: React.FC = () => {
   }, []);
 
   return (
-    <Container maxWidth={false} disableGutters sx={{ flex: 1, overflow: 'hidden' }}>
+    <Container maxWidth={false} disableGutters sx={{ height: '100%', overflow: 'hidden' }}>
       <Suspense fallback={
         <div style={{
           width: '100%',
