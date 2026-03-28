@@ -29,6 +29,8 @@ import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import type { GraphContext } from './DataFetcher';
+import { healthBindingEngine } from './HealthBindingEngine';
+import { useHealthBindings } from './useHealthBindings';
 import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
@@ -533,6 +535,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<ReturnType<typeof ForceGraph3D> | null>(null);
 
+  // Phase 3: Declarative health bindings → IconRail status dots
+  const panelHealthStatuses = useHealthBindings();
+
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
   const [activePanel, setActivePanel] = useState<PanelId | null>(null);
@@ -626,6 +631,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       panelRegistry.unregister(cmd.id);
       dynamicPanelDefsRef.current.delete(cmd.id);
       setActivePanel(prev => prev === cmd.id ? null : prev);
+      return;
+    }
+
+    // Phase 3: BIND HEALTH — register declarative health rule
+    if (cmd.type === 'bind-health') {
+      const bindingId = cmd.targetKind === 'panel' ? cmd.targetId : `node:${cmd.targetSelector.map(p => p.field).join(',')}`;
+      healthBindingEngine.register({ id: bindingId, command: cmd });
       return;
     }
   }, []);
@@ -2542,11 +2554,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <IconRail
         activePanel={activePanel}
         onPanelToggle={handlePanelToggle}
-        panelStatuses={{
-          cicd: 'error',
-          algedonic: 'warn',
-          activity: 'ok',
-        }}
+        panelStatuses={panelHealthStatuses}
       />
 
       {/* Click-outside-to-close backdrop */}
