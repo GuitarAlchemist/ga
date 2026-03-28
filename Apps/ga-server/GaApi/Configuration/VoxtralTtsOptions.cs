@@ -21,12 +21,12 @@ public sealed class VoxtralTtsOptions
     /// <summary>
     ///     Voxtral model identifier.
     /// </summary>
-    public string Model { get; set; } = "mistral-tts-latest";
+    public string Model { get; set; } = "voxtral-mini-tts-2603";
 
     /// <summary>
-    ///     Preset voice identifier for Demerzel.
+    ///     Preset voice ID for Demerzel (Oliver - Neutral, British male, articulate).
     /// </summary>
-    public string Voice { get; set; } = "mistral_aria";
+    public string Voice { get; set; } = "e3596645-b1af-469e-b857-f18ddedc7652";
 
     /// <summary>
     ///     Audio response format (mp3, wav, flac, opus, pcm).

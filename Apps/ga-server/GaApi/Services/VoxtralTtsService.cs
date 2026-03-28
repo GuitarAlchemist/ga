@@ -1,6 +1,7 @@
 namespace GaApi.Services;
 
 using System.Net.Http.Json;
+using System.Text.Json;
 using Configuration;
 using Microsoft.Extensions.Options;
 
@@ -31,7 +32,7 @@ public sealed class VoxtralTtsService(
                 {
                     model = options.Model,
                     input = text,
-                    voice = options.Voice,
+                    voice_id = options.Voice,
                     response_format = options.ResponseFormat
                 })
             };
@@ -40,13 +41,23 @@ public sealed class VoxtralTtsService(
             using var response = await client.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 logger.LogWarning(
-                    "Voxtral TTS API returned {StatusCode}: {Reason}",
-                    (int)response.StatusCode, response.ReasonPhrase);
+                    "Voxtral TTS API returned {StatusCode}: {Body}",
+                    (int)response.StatusCode, errorBody);
                 return null;
             }
 
-            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            // Voxtral returns JSON with base64-encoded audio_data
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("audio_data", out var audioData))
+            {
+                return Convert.FromBase64String(audioData.GetString() ?? string.Empty);
+            }
+
+            logger.LogWarning("Voxtral TTS response missing audio_data field");
+            return null;
         }
         catch (OperationCanceledException)
         {
