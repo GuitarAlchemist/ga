@@ -27,6 +27,7 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
+import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
@@ -567,9 +568,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // IXql command handler — dispatches visual overrides, panel CRUD, and more
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
     const fg = graphRef.current;
-    if (!result.ok) return;
+    if (!result.ok) {
+      recordInvocation('parse-error', false);
+      return;
+    }
 
     const cmd = result.command;
+    recordInvocation(cmd.type, true);
 
     if (cmd.type === 'reset') {
       // Clear all IXql overrides
