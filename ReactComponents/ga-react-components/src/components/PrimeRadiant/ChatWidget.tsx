@@ -649,13 +649,37 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
 
       void speakText(fullText);
     } catch {
-      // Fallback to mock if Claude API unavailable
-      const response = await askDemerzel(trimmed, selectedNode, (lang) => {
-        // Auto-switch locale when Demerzel detects a different language
-        if (lang !== locale) setLocale(lang);
-      });
+      // Try backend Ollama chatbot first, then fall back to mock patterns
+      let response: DemerzelResponse | null = null;
+      try {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const chatRes = await fetch(`${baseUrl}/api/chatbot/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: trimmed }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (chatRes.ok) {
+          const data = await chatRes.json();
+          const answer = data.naturalLanguageAnswer || data.answer || '';
+          if (answer) {
+            response = { text: answer };
+            // Auto-detect language from the response
+            const lang = detectLanguage(trimmed);
+            if (lang && lang !== locale) setLocale(lang);
+          }
+        }
+      } catch { /* Backend unavailable — fall through to mock */ }
+
+      // Final fallback: client-side mock patterns
+      if (!response) {
+        response = await askDemerzel(trimmed, selectedNode, (lang) => {
+          if (lang !== locale) setLocale(lang);
+        });
+      }
+
       setMessages((prev) => prev.map(m =>
-        m.id === botMsgId ? { ...m, content: response.text, markdown: response.markdown, raw: response.raw } : m,
+        m.id === botMsgId ? { ...m, content: response!.text, markdown: response!.markdown, raw: response!.raw } : m,
       ));
       void speakText(response.text);
 
