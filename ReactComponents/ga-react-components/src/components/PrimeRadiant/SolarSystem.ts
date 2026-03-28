@@ -198,24 +198,24 @@ const MIRANDA_FRAG = NOISE_LIB + `
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
 // ── Kepler-accurate planet scaling ──
-// Radius: LINEAR proportional to real diameter (Jupiter really is ~11x Earth)
-// Distance: log-compressed AU (preserves ordering, keeps outer planets reachable)
+// Radius: power-law (ratio^0.7) — more proportional than sqrt, keeps small planets visible
+//   Jupiter = 5.1x Earth (real 11x, old sqrt was 3.3x)
+// Distance: AU^0.4 — tighter compression than sqrt, compact orrery
 // Speed: Kepler's 3rd law: period ∝ AU^1.5, so angular speed ∝ AU^-1.5
-const EARTH_DIST = 8.0;     // Earth's distance in scene units (1 AU)
-const EARTH_RADIUS = 0.12;  // Earth's radius in scene units (small enough for gas giants)
+const EARTH_DIST = 6.0;     // Earth's distance in scene units (1 AU)
+const EARTH_RADIUS = 0.35;  // Earth's radius in scene units
 const EARTH_SPEED = 3.0;    // Earth's orbital speed in scene units
 
 function keplerDistance(au: number): number {
-  // Log-compressed: d = EARTH_DIST * (1 + ln(au)) for au >= 1, linear below 1 AU
-  // This preserves inner planet spacing while compressing outer planets
+  // Power-law compression: AU^0.4 (tighter than sqrt, keeps orrery compact)
   if (au <= 0) return 0;
-  if (au <= 1) return EARTH_DIST * au; // linear for inner solar system
-  return EARTH_DIST * (1 + Math.log(au)); // log above 1 AU
+  return EARTH_DIST * Math.pow(au, 0.4);
 }
 function keplerRadius(diameterKm: number): number {
-  // TRUE proportional scaling — preserves real size ratios
+  // Power-law: ratio^0.7 — better than sqrt (0.5) at preserving real proportions
+  // Jupiter = 5.1x Earth (real 11x), Mercury = 0.50x Earth (real 0.38x)
   const ratio = diameterKm / 12_742; // relative to Earth
-  return Math.max(0.03, EARTH_RADIUS * ratio);
+  return Math.max(0.08, EARTH_RADIUS * Math.pow(ratio, 0.7));
 }
 function keplerSpeed(au: number): number {
   // Kepler's 3rd law: angular speed ∝ distance^-1.5
@@ -226,8 +226,8 @@ function keplerSpeed(au: number): number {
 const PLANETS: PlanetDef[] = [
   {
     name: 'mercury',
-    radius: keplerRadius(4_879),       // 0.046 (real: 0.38x Earth)
-    distance: keplerDistance(0.39),     // 3.12 (linear: 0.39 AU)
+    radius: keplerRadius(4_879),       // 0.18 (0.50x Earth)
+    distance: keplerDistance(0.39),     // 4.06
     speed: keplerSpeed(0.39),          // 12.3 (fast!)
     texture: '2k_mercury.jpg',
     textureDisplacement: '2k_mercury_displacement.jpg',
@@ -235,8 +235,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'venus',
-    radius: keplerRadius(12_104),      // 0.114 (real: 0.95x Earth)
-    distance: keplerDistance(0.72),     // 5.76 (linear: 0.72 AU)
+    radius: keplerRadius(12_104),      // 0.34 (0.97x Earth)
+    distance: keplerDistance(0.72),     // 5.17
     speed: keplerSpeed(0.72),          // 4.91
     texture: '2k_venus_surface.jpg',
     textureDisplacement: '2k_venus_displacement.jpg',
@@ -245,8 +245,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'earth',
-    radius: EARTH_RADIUS,              // 0.12 (reference = 1.0x)
-    distance: EARTH_DIST,             // 8.0 (1.0 AU)
+    radius: EARTH_RADIUS,              // 0.35 (reference = 1.0x)
+    distance: EARTH_DIST,             // 6.0 (1.0 AU)
     speed: EARTH_SPEED,               // 3.0
     texture: '2k_earth_daymap.jpg',
     textureNight: '2k_earth_nightmap.jpg',
@@ -256,13 +256,13 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: 0.033, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY }, // real: 0.27x Earth
+      { name: 'moon', radius: 0.12, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY }, // ~0.34x Earth (slightly exaggerated for visibility)
     ],
   },
   {
     name: 'mars',
-    radius: keplerRadius(6_779),       // 0.064 (real: 0.53x Earth)
-    distance: keplerDistance(1.52),     // 11.35 (log: 1+ln(1.52) AU)
+    radius: keplerRadius(6_779),       // 0.22 (0.64x Earth)
+    distance: keplerDistance(1.52),     // 7.10
     speed: keplerSpeed(1.52),          // 1.60
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
@@ -275,8 +275,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'jupiter',
-    radius: keplerRadius(139_820),     // 1.32 (real: 10.97x Earth)
-    distance: keplerDistance(5.2),      // 21.17 (log: 1+ln(5.2) AU)
+    radius: keplerRadius(139_820),     // 1.80 (5.14x Earth)
+    distance: keplerDistance(5.2),      // 12.36
     speed: keplerSpeed(5.2),           // 0.253
     texture: '2k_jupiter.jpg',
     atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
@@ -295,8 +295,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'saturn',
-    radius: keplerRadius(116_460),     // 1.10 (real: 9.14x Earth)
-    distance: keplerDistance(9.54),     // 26.12 (log: 1+ln(9.54) AU)
+    radius: keplerRadius(116_460),     // 1.58 (4.52x Earth)
+    distance: keplerDistance(9.54),     // 15.20
     speed: keplerSpeed(9.54),          // 0.102
     texture: '2k_saturn.jpg',
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
@@ -351,8 +351,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'uranus',
-    radius: keplerRadius(50_724),      // 0.478 (real: 3.98x Earth)
-    distance: keplerDistance(19.2),     // 31.65 (log: 1+ln(19.2) AU)
+    radius: keplerRadius(50_724),      // 0.97 (2.78x Earth)
+    distance: keplerDistance(19.2),     // 18.65
     speed: keplerSpeed(19.2),          // 0.0357
     tilt: 1.71,
     texture: '2k_uranus.jpg',
@@ -370,8 +370,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'neptune',
-    radius: keplerRadius(49_244),      // 0.464 (real: 3.86x Earth)
-    distance: keplerDistance(30.06),    // 35.22 (log: 1+ln(30.06) AU)
+    radius: keplerRadius(49_244),      // 0.95 (2.71x Earth)
+    distance: keplerDistance(30.06),    // 20.90
     speed: keplerSpeed(30.06),         // 0.0182
     texture: '2k_neptune.jpg',
     atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
@@ -788,7 +788,9 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(ambient);
 
   // ── Sun (animated shader — roiling plasma with limb darkening) ──
-  const sunGeo = new THREE.SphereGeometry(2 * scale, 48, 48);
+  // Sun = 109x Earth diameter; use power-law capped at ~5x Jupiter for orrery fit
+  const sunRadius = Math.min(keplerRadius(1_392_700), 8); // cap to avoid screen-filling
+  const sunGeo = new THREE.SphereGeometry(sunRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
   const sunMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -961,7 +963,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     map: createFlareTexture(256, 'rgba(255,220,150,0.08)', 0.4),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  mainGlow.scale.set(4 * scale, 4 * scale, 1);
+  mainGlow.scale.set(sunRadius * 2 * scale, sunRadius * 2 * scale, 1);
   flareGroup.add(mainGlow);
 
   // Inner hot core (tiny, white)
@@ -978,7 +980,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     opacity: 0.3,
   }));
-  streak.scale.set(8 * scale, 0.3 * scale, 1);
+  streak.scale.set(sunRadius * 4 * scale, 0.3 * scale, 1);
   flareGroup.add(streak);
 
   // Secondary rainbow ghosts (very subtle)
