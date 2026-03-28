@@ -2166,7 +2166,67 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       )}
 
       <GalacticClock />
-      <ChatWidget selectedNode={selectedNode} />
+      <ChatWidget
+        selectedNode={selectedNode}
+        onNavigateToPlanet={(planet) => {
+          // Reuse the same planet navigation logic as the planet bar
+          const fg = graphRef.current;
+          if (!fg) return;
+          const name = planet.toLowerCase();
+
+          if (name === 'demerzel') {
+            const cam = fg.camera() as THREE.PerspectiveCamera;
+            const faceOffset = new THREE.Vector3(-50, -8, -40);
+            faceOffset.applyQuaternion(cam.quaternion);
+            const facePos = cam.position.clone().add(faceOffset);
+            fg.cameraPosition(
+              { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
+              { x: facePos.x, y: facePos.y, z: facePos.z },
+              1200,
+            );
+            return;
+          }
+
+          solarFollowCameraRef.current = false;
+          const group = fg.scene().getObjectByName('sun')?.parent;
+          if (!group) return;
+          const obj = group.getObjectByName(name);
+          if (!obj) return;
+
+          const pw = new THREE.Vector3();
+          obj.getWorldPosition(pw);
+          const worldScale = obj.getWorldScale(new THREE.Vector3()).x;
+          const camDist = Math.max(worldScale * 0.35 * 2.5, 0.02);
+
+          fg.cameraPosition(
+            { x: pw.x + camDist * 0.3, y: pw.y + camDist * 0.4, z: pw.z + camDist * 0.85 },
+            { x: pw.x, y: pw.y, z: pw.z },
+            1500,
+          );
+          setTimeout(() => { solarFollowCameraRef.current = true; }, 1600);
+        }}
+        onNavigateToNode={(query) => {
+          // Find and navigate to a governance node matching the query
+          const fg = graphRef.current;
+          if (!fg || !graphData) return;
+          const q = query.toLowerCase();
+          const node = graphData.nodes.find(n =>
+            n.name.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)
+          );
+          if (node) {
+            const gn = (fg.graphData() as { nodes: GraphNode[] }).nodes.find(n => n.id === node.id);
+            if (gn && gn.x !== undefined) {
+              fg.cameraPosition(
+                { x: gn.x, y: (gn.y ?? 0) + 20, z: (gn.z ?? 0) + 60 },
+                { x: gn.x, y: gn.y ?? 0, z: gn.z ?? 0 },
+                1200,
+              );
+              setSelectedNode(node);
+              setActivePanel('detail');
+            }
+          }
+        }}
+      />
       <TutorialOverlay />
       <IxqlCommandInput onCommand={handleIxqlCommand} />
 
