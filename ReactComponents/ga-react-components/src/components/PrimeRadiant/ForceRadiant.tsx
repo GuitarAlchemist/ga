@@ -1066,10 +1066,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     } catch { /* some browsers block GPU detection */ }
 
-    // Build perf info DOM (hidden by default — visible via CSS hover on container)
+    // Build perf info DOM
     const perfEl = document.createElement('div');
     perfEl.className = 'prime-radiant__perf-info';
-    perfEl.style.display = 'none';
     const badgeEl = document.createElement('div');
     badgeEl.className = 'prime-radiant__perf-badge';
     badgeEl.textContent = '-- FPS';
