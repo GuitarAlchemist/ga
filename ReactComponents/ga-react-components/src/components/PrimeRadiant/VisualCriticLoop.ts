@@ -15,6 +15,8 @@ export interface VisualCriticResult {
   suggestions: string[];
 }
 
+export type CriticPhase = 'idle' | 'capturing' | 'analyzing' | 'executing' | 'complete';
+
 export interface VisualCriticConfig {
   apiBaseUrl?: string;        // default: '' (same origin)
   intervalMs?: number;        // default: 60000 (60s)
@@ -22,6 +24,7 @@ export interface VisualCriticConfig {
   autoFix?: boolean;          // default: true (execute IXQL commands automatically)
   onResult?: (result: VisualCriticResult) => void;
   onIxqlCommand?: (result: IxqlParseResult) => void;
+  onPhaseChange?: (phase: CriticPhase) => void;
 }
 
 /**
@@ -42,6 +45,7 @@ export function startVisualCriticLoop(
     autoFix = true,
     onResult,
     onIxqlCommand,
+    onPhaseChange,
   } = config;
 
   if (!enabled) {
@@ -55,11 +59,14 @@ export function startVisualCriticLoop(
     if (!running) return;
 
     try {
-      // Capture canvas as base64 PNG
+      // Phase 1: Capture
+      onPhaseChange?.('capturing');
       const dataUrl = canvas.toDataURL('image/png');
       const base64 = dataUrl.split(',')[1];
-      if (!base64) return;
+      if (!base64) { onPhaseChange?.('idle'); return; }
 
+      // Phase 2: Analyze
+      onPhaseChange?.('analyzing');
       console.info('[VisualCritic] Capturing screenshot for analysis...');
 
       const response = await fetch(`${apiBaseUrl}/api/governance/visual-critic`, {
@@ -90,6 +97,9 @@ export function startVisualCriticLoop(
       // Callback
       onResult?.(result);
 
+      // Phase 3: Execute
+      onPhaseChange?.('executing');
+
       // Execute IXQL commands
       if (autoFix && result.ixql_commands?.length && onIxqlCommand) {
         for (const cmd of result.ixql_commands) {
@@ -102,8 +112,12 @@ export function startVisualCriticLoop(
           }
         }
       }
+      // Phase 4: Complete
+      onPhaseChange?.('complete');
+      setTimeout(() => onPhaseChange?.('idle'), 5000); // back to idle after 5s
     } catch (err) {
       console.warn('[VisualCritic] Analysis error:', err);
+      onPhaseChange?.('idle');
     }
   }
 
