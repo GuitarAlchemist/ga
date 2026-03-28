@@ -6162,3 +6162,250 @@
   font-size: 10px;
   color: rgba(255, 255, 255, 0.25);
 }
+
+/* =========================================================================
+   GIS Panel (gis-panel__)
+   ========================================================================= */
+
+.gis-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gis-panel::-webkit-scrollbar { width: 4px; }
+.gis-panel::-webkit-scrollbar-thumb { background: rgba(51, 204, 255, 0.3); border-radius: 2px; }
+
+.gis-panel__planet-bar {
+  display: flex;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.gis-panel__planet-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  transition: all 0.12s ease;
+}
+
+.gis-panel__planet-btn:hover { background: rgba(51, 204, 255, 0.08); color: #33ccff; }
+.gis-panel__planet-btn--active { background: rgba(51, 204, 255, 0.15); color: #33ccff; border-color: rgba(51, 204, 255, 0.3); }
+
+.gis-panel__stats {
+  display: flex;
+  gap: 12px;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.gis-panel__section {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.gis-panel__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 6px;
+}
+
+.gis-panel__presets {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gis-panel__preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.gis-panel__preset-btn:hover { background: rgba(51, 204, 255, 0.08); border-color: rgba(51, 204, 255, 0.2); color: #33ccff; }
+
+.gis-panel__cluster-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gis-panel__toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 3px 10px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.gis-panel__toggle--on { background: rgba(51, 204, 255, 0.15); color: #33ccff; border-color: rgba(51, 204, 255, 0.3); }
+
+.gis-panel__slider { flex: 1; accent-color: #33ccff; }
+.gis-panel__slider-val { color: rgba(255, 255, 255, 0.4); font-size: 10px; min-width: 24px; }
+
+.gis-panel__add-btn {
+  background: rgba(51, 204, 255, 0.1);
+  border: 1px solid rgba(51, 204, 255, 0.15);
+  border-radius: 3px;
+  color: #33ccff;
+  padding: 1px 6px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+}
+
+.gis-panel__add-btn:hover { background: rgba(51, 204, 255, 0.25); }
+
+.gis-panel__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.gis-panel__form-row { display: flex; gap: 4px; }
+
+.gis-panel__input,
+.gis-panel__textarea {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 10px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.gis-panel__input:focus,
+.gis-panel__textarea:focus { border-color: rgba(51, 204, 255, 0.4); }
+
+.gis-panel__input--icon { max-width: 40px; text-align: center; }
+
+.gis-panel__textarea { resize: vertical; min-height: 40px; }
+
+.gis-panel__color { width: 28px; height: 28px; border: none; background: none; cursor: pointer; padding: 0; }
+
+.gis-panel__btn {
+  background: rgba(51, 204, 255, 0.15);
+  border: 1px solid rgba(51, 204, 255, 0.25);
+  border-radius: 4px;
+  color: #33ccff;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.gis-panel__btn:hover { background: rgba(51, 204, 255, 0.3); }
+.gis-panel__btn--danger { color: #FF4444; border-color: rgba(255, 68, 68, 0.2); background: rgba(255, 68, 68, 0.08); }
+.gis-panel__btn--danger:hover { background: rgba(255, 68, 68, 0.2); }
+
+/* ─── Library Comic Actions + PDF Reader ─── */
+.prime-radiant__library-item-actions {
+  display: flex; gap: 6px; margin-top: 6px;
+}
+.prime-radiant__library-read-btn, .prime-radiant__library-download-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; padding: 3px 8px; border-radius: 4px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.prime-radiant__library-read-btn {
+  background: rgba(255, 215, 0, 0.15); color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+.prime-radiant__library-read-btn:hover {
+  background: rgba(255, 215, 0, 0.25); border-color: #FFD700;
+}
+.prime-radiant__library-download-btn {
+  background: rgba(79, 195, 247, 0.1); color: #4FC3F7;
+  border: 1px solid rgba(79, 195, 247, 0.2);
+}
+.prime-radiant__library-download-btn:hover {
+  background: rgba(79, 195, 247, 0.2); border-color: #4FC3F7;
+}
+
+/* PDF Reader overlay */
+.prime-radiant__library-reader-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex; align-items: center; justify-content: center;
+}
+.prime-radiant__library-reader {
+  width: 90vw; height: 90vh; max-width: 1000px;
+  background: #0d1117; border: 1px solid #30363d;
+  border-radius: 8px; display: flex; flex-direction: column;
+  overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.prime-radiant__library-reader-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 14px; border-bottom: 1px solid #21262d;
+  font-family: 'JetBrains Mono', monospace;
+}
+.prime-radiant__library-reader-title { display: flex; flex-direction: column; gap: 2px; }
+.prime-radiant__library-reader-book {
+  font-size: 13px; font-weight: 600; color: #FFD700;
+}
+.prime-radiant__library-reader-author {
+  font-size: 9px; color: #8b949e; font-style: italic;
+}
+.prime-radiant__library-reader-actions { display: flex; gap: 8px; align-items: center; }
+.prime-radiant__library-reader-dl {
+  font-size: 9px; color: #4FC3F7; text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 8px; border: 1px solid rgba(79, 195, 247, 0.2);
+  border-radius: 3px;
+}
+.prime-radiant__library-reader-dl:hover { background: rgba(79, 195, 247, 0.1); }
+.prime-radiant__library-reader-close {
+  background: none; border: 1px solid #30363d; color: #8b949e;
+  width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+.prime-radiant__library-reader-close:hover { color: #FF4444; border-color: #FF4444; }
+.prime-radiant__library-reader-legal {
+  padding: 4px 14px; font-size: 8px; color: #6e7681;
+  background: rgba(255, 215, 0, 0.03); border-bottom: 1px solid #21262d;
+  font-family: 'JetBrains Mono', monospace;
+}
+.prime-radiant__library-reader-frame {
+  flex: 1; border: none; background: #fff;
+}

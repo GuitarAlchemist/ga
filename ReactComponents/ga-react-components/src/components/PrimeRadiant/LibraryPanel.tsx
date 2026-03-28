@@ -12,6 +12,7 @@ interface CurriculumReference {
   departments: string[];
   level: string;
   curriculum_fit: string;
+  archiveId?: string;  // Archive.org filename for PDF embed
 }
 
 interface CurriculumData {
@@ -65,17 +66,22 @@ async function fetchCurriculumRefs(): Promise<CurriculumData | null> {
     website: 'https://www.savoir-sans-frontieres.com/JPP/telechargeables/free_downloads.htm',
     acknowledgement: 'Scientific comics by Jean-Pierre Petit, astrophysicist, distributed freely by the Association Savoir sans Frontières',
     references: [
-      { title: 'Topo the World', topic: 'Topology — surfaces, homeomorphisms, Boy\'s surface', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Foundations of topological thinking for TDA and Poincaré embeddings' },
-      { title: 'Here\'s Looking at Euclid', topic: 'Geometry — Euclidean constructions, geometric reasoning', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Geometric foundations for fretboard geometry and spatial reasoning' },
-      { title: 'Bourbakof', topic: 'Abstract algebra — group theory, mathematical structures', departments: ['mathematics', 'music'], level: 'undergraduate', curriculum_fit: 'Group theory for pitch class groups, symmetry in music theory' },
-      { title: 'Logotron', topic: 'Mathematical logic — formal systems, proof theory', departments: ['mathematics', 'philosophy', 'computer-science'], level: 'undergraduate', curriculum_fit: 'Foundations for tetravalent logic, formal verification, grammar theory' },
-      { title: 'Computer Magic', topic: 'Computing — information theory, digital logic, algorithms', departments: ['computer-science'], level: 'high-school', curriculum_fit: 'Fundamentals for understanding constrained generation and digital signal processing' },
-      { title: 'Run Robot Run', topic: 'Robotics — automation, control systems, agent behavior', departments: ['computer-science', 'cognitive-science'], level: 'high-school', curriculum_fit: 'Agent behavior foundations, governance as control theory analogy' },
-      { title: 'Everything is Relative', topic: 'Special and general relativity — spacetime, reference frames', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Reference frame thinking applicable to multi-perspective governance' },
-      { title: 'The Silence Barrier', topic: 'Wave mechanics — sound, barriers, propagation', departments: ['physics', 'music'], level: 'high-school', curriculum_fit: 'Acoustics foundations for understanding string vibration and harmonics' },
-      { title: 'The Black Hole', topic: 'Astrophysics — gravitational collapse, spacetime curvature', departments: ['physics', 'mathematics'], level: 'undergraduate', curriculum_fit: 'Extreme physics as thinking tool for boundary conditions and singularities' },
-      { title: 'The Economicon', topic: 'Economics — market dynamics, resource allocation', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Resource allocation thinking for budget management and prioritization' },
-      { title: 'Big Bang', topic: 'Cosmology — origin of the universe, early physics', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Large-scale systems thinking, initial conditions and emergence' },
+      { title: 'Topo the World', topic: 'Topology — surfaces, homeomorphisms, Boy\'s surface', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Foundations of topological thinking for TDA and Poincaré embeddings', archiveId: 'Topo_the_world_eng' },
+      { title: 'Here\'s Looking at Euclid', topic: 'Geometry — Euclidean constructions, geometric reasoning', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Geometric foundations for fretboard geometry and spatial reasoning', archiveId: 'HERE_S_LOOKING_AT_EUCLID' },
+      { title: 'Bourbakof', topic: 'Abstract algebra — group theory, mathematical structures', departments: ['mathematics', 'music'], level: 'undergraduate', curriculum_fit: 'Group theory for pitch class groups, symmetry in music theory', archiveId: 'Bourbakof_en' },
+      { title: 'Logotron', topic: 'Mathematical logic — formal systems, proof theory', departments: ['mathematics', 'philosophy', 'computer-science'], level: 'undergraduate', curriculum_fit: 'Foundations for tetravalent logic, formal verification, grammar theory', archiveId: 'logotron_eng' },
+      { title: 'Computer Magic', topic: 'Computing — information theory, digital logic, algorithms', departments: ['computer-science'], level: 'high-school', curriculum_fit: 'Fundamentals for understanding constrained generation and digital signal processing', archiveId: 'COMPUTER_MAGIC' },
+      { title: 'Run Robot Run', topic: 'Robotics — automation, control systems, agent behavior', departments: ['computer-science', 'cognitive-science'], level: 'high-school', curriculum_fit: 'Agent behavior foundations, governance as control theory analogy', archiveId: 'RUN_ROBOT_RUN' },
+      { title: 'Everything is Relative', topic: 'Special and general relativity — spacetime, reference frames', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Reference frame thinking applicable to multi-perspective governance', archiveId: 'EVERYTHING_IS_RELATIVE' },
+      { title: 'The Silence Barrier', topic: 'Wave mechanics — sound, barriers, propagation', departments: ['physics', 'music'], level: 'high-school', curriculum_fit: 'Acoustics foundations for understanding string vibration and harmonics', archiveId: 'THE_SILENCE_BARRIER' },
+      { title: 'The Black Hole', topic: 'Astrophysics — gravitational collapse, spacetime curvature', departments: ['physics', 'mathematics'], level: 'undergraduate', curriculum_fit: 'Extreme physics as thinking tool for boundary conditions and singularities', archiveId: 'THE_BLACK_HOLE' },
+      { title: 'The Economicon', topic: 'Economics — market dynamics, resource allocation', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Resource allocation thinking for budget management and prioritization', archiveId: 'The_Economicon' },
+      { title: 'Big Bang', topic: 'Cosmology — origin of the universe, early physics', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Large-scale systems thinking, initial conditions and emergence', archiveId: 'BIG_BANG' },
+      { title: 'A Cosmic Story', topic: 'Cosmology — history of the universe from Big Bang to life', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Narrative cosmology for big-picture systems thinking', archiveId: 'cosmicstory_eng-1' },
+      { title: 'Flight of Fancy', topic: 'Aerodynamics — flight mechanics, lift and drag', departments: ['physics'], level: 'high-school', curriculum_fit: 'Fluid dynamics intuition applicable to signal flow analysis', archiveId: 'FLIGHT_OF_FANCY' },
+      { title: 'A Thousand Billion Suns', topic: 'Stellar physics — star formation, nuclear fusion, supernovae', departments: ['physics'], level: 'high-school to undergraduate', curriculum_fit: 'Energy transformation and lifecycle thinking for system evolution', archiveId: 'thousand_billion_suns_eng' },
+      { title: 'The Dark Side of the Universe', topic: 'Dark matter and dark energy — cosmological mysteries', departments: ['physics', 'futurology'], level: 'undergraduate', curriculum_fit: 'Unknown unknowns — epistemic humility in governance', archiveId: 'The_Dark_Side_of_the_Universe' },
+      { title: 'For a Fistful of Amperes', topic: 'Electromagnetism — circuits, magnetism, EM waves', departments: ['physics'], level: 'high-school', curriculum_fit: 'Electromagnetic foundations for signal processing analogies', archiveId: 'For_a_fistful_of_amperes' },
     ],
   };
 }
@@ -88,6 +94,7 @@ export const LibraryPanel: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<string | null>(null);
+  const [readingComic, setReadingComic] = useState<CurriculumReference | null>(null);
 
   useEffect(() => {
     fetchCurriculumRefs().then(setData);
@@ -186,6 +193,25 @@ export const LibraryPanel: React.FC = () => {
                       <div className="prime-radiant__library-item-meta">
                         Level: {ref.level}
                       </div>
+                      {ref.archiveId && (
+                        <div className="prime-radiant__library-item-actions">
+                          <button
+                            className="prime-radiant__library-read-btn"
+                            onClick={(e) => { e.stopPropagation(); setReadingComic(ref); }}
+                          >
+                            📖 Read Comic
+                          </button>
+                          <a
+                            href={`https://archive.org/download/TheseAnglaise/${ref.archiveId}.pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="prime-radiant__library-download-btn"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            ⬇ PDF
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -196,6 +222,41 @@ export const LibraryPanel: React.FC = () => {
           {filtered.length === 0 && (
             <div className="prime-radiant__library-empty">No references in this department</div>
           )}
+        </div>
+      )}
+
+      {/* PDF Reader overlay */}
+      {readingComic && readingComic.archiveId && (
+        <div className="prime-radiant__library-reader-overlay">
+          <div className="prime-radiant__library-reader">
+            <div className="prime-radiant__library-reader-header">
+              <div className="prime-radiant__library-reader-title">
+                <span className="prime-radiant__library-reader-book">{readingComic.title}</span>
+                <span className="prime-radiant__library-reader-author">Jean-Pierre Petit — Savoir sans Frontières</span>
+              </div>
+              <div className="prime-radiant__library-reader-actions">
+                <a
+                  href={`https://archive.org/download/TheseAnglaise/${readingComic.archiveId}.pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="prime-radiant__library-reader-dl"
+                >⬇ Download PDF</a>
+                <button
+                  className="prime-radiant__library-reader-close"
+                  onClick={() => setReadingComic(null)}
+                >✕</button>
+              </div>
+            </div>
+            <div className="prime-radiant__library-reader-legal">
+              Public Domain (Mark 1.0) — Free for educational use. Scientific comics by Jean-Pierre Petit, astrophysicist.
+              Distributed by Association Savoir sans Frontières. Source: Archive.org
+            </div>
+            <iframe
+              className="prime-radiant__library-reader-frame"
+              src={`https://archive.org/download/TheseAnglaise/${readingComic.archiveId}.pdf`}
+              title={readingComic.title}
+            />
+          </div>
         </div>
       )}
     </div>
