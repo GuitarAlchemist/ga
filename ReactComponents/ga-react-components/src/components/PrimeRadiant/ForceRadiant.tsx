@@ -1188,7 +1188,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
 
       // ─── Starfield follows camera (skybox behavior) ───
-      starField.position.copy(fg.camera().position);
+      // Stars follow camera exactly, but Milky Way lags slightly for parallax depth
+      const camPos = fg.camera().position;
+      starField.position.copy(camPos);
+      // Milky Way parallax: offset by a fraction of camera position → feels infinitely far
+      milkyWayMesh.position.set(-camPos.x * 0.002, -camPos.y * 0.002, -camPos.z * 0.002);
 
       // ─── Edge undulation — sinusoidal curvature on active edges ───
       // Skip on low quality for performance
