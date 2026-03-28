@@ -50,7 +50,7 @@ const LEVEL_ICON: Record<string, string> = {
 async function fetchCurriculumRefs(): Promise<CurriculumData | null> {
   // Try backend API first
   try {
-    const res = await fetch('/api/governance/file-content?path=governance/demerzel/state/streeling/curriculum-references.json');
+    const res = await fetch('/api/governance/file-content?filePath=governance/demerzel/state/streeling/curriculum-references.json');
     if (res.ok) {
       const text = await res.text();
       return JSON.parse(text);
