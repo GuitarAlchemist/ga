@@ -221,7 +221,7 @@ const PLANETS: PlanetDef[] = [
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
     textureSpecular: '2k_earth_specular.jpg',
-    textureDisplacement: '2k_earth_displacement.jpg',
+    // textureDisplacement removed — file doesn't exist, causes load errors
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
@@ -277,6 +277,16 @@ const PLANETS: PlanetDef[] = [
       { name: 'pandora', radius: 0.009, distance: 1.24, speed: 5.1, fragment: ICY_WHITE },
       { name: 'epimetheus', radius: 0.01, distance: 1.35, speed: 4.6, fragment: ICY_WHITE },
       { name: 'janus', radius: 0.012, distance: 1.36, speed: 4.5, fragment: ICY_WHITE },
+      // Trojan moons (co-orbital with larger moons)
+      { name: 'calypso', radius: 0.005, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },    // Tethys trailing trojan
+      { name: 'telesto', radius: 0.005, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },    // Tethys leading trojan
+      { name: 'helene', radius: 0.006, distance: 2.6, speed: 2.5, fragment: ICY_WHITE },     // Dione leading trojan
+      { name: 'polydeuces', radius: 0.003, distance: 2.6, speed: 2.5, fragment: ICY_WHITE }, // Dione trailing trojan
+      // Outer irregular moons
+      { name: 'siarnaq', radius: 0.008, distance: 6.5, speed: 0.2, inclination: 0.8, fragment: ROCKY_DARK },
+      { name: 'paaliaq', radius: 0.007, distance: 7.0, speed: 0.18, inclination: 0.7, fragment: ROCKY_DARK },
+      { name: 'ymir', radius: 0.006, distance: 8.0, speed: -0.1, inclination: 2.8, fragment: ROCKY_DARK },   // retrograde
+      { name: 'tarvos', radius: 0.005, distance: 7.5, speed: 0.15, inclination: 0.6, fragment: ROCKY_DARK },
     ],
   },
   {
