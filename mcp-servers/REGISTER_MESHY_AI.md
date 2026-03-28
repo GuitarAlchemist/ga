@@ -1,62 +1,53 @@
-# Register Meshy AI MCP Server with Augment Code
+# Register Meshy AI MCP Server with Claude Code
 
-## 🎯 Quick Start Guide
+## Quick Start Guide
 
-This guide will help you register the Meshy AI MCP server with Augment Code so you can generate 3D models using AI directly from your IDE.
-
----
-
-## 📋 Prerequisites
-
-- ✅ Python 3.9+ installed
-- ✅ Meshy AI account (free tier available)
-- ✅ Augment Code installed
+This guide registers the Meshy AI MCP server with Claude Code so you can generate 3D models using AI directly from your IDE.
 
 ---
 
-## 🚀 Step-by-Step Setup
+## Prerequisites
+
+- Node.js 18+ installed
+- Meshy AI account (free tier available)
+- Claude Code (or another MCP-compatible client)
+
+---
+
+## Step-by-Step Setup
 
 ### Step 1: Get Your Meshy AI API Key
 
 1. **Visit Meshy AI**: https://www.meshy.ai/
 2. **Sign up** for a free account (or log in)
-3. **Navigate to API Settings**:
-   - Click on your profile icon (top right)
-   - Select "API Keys" or "Developer Settings"
+3. **Navigate to API Settings**: https://app.meshy.ai/settings/api
 4. **Create/Copy your API Key**
-   - Click "Create API Key" if you don't have one
-   - Copy the API key (you'll need it in Step 3)
 
 **Free Tier Includes**:
 - 200 credits per month
-- Text-to-3D generation
-- Image-to-3D generation
-- Texture generation
-- Model optimization
+- Text-to-3D, Image-to-3D, Texture, Remeshing, Rigging, Animation
 
 ---
 
-### Step 2: Install Python Dependencies
+### Step 2: Install and Build
 
-Open PowerShell and run:
+Open a terminal and run:
 
 ```powershell
 # Navigate to the Meshy AI MCP server directory
 cd C:\Users\spare\source\repos\ga\mcp-servers\meshy-ai
 
-# Create virtual environment (recommended)
-python -m venv .venv
-
-# Activate virtual environment
-.\.venv\Scripts\activate
-
 # Install dependencies
-pip install -r requirements.txt
+npm ci
+
+# Build TypeScript to dist/
+npm run build
 ```
 
-**Expected output**:
+**Expected output** (build):
 ```
-Successfully installed mcp-1.6.0 python-dotenv-1.0.0 httpx-0.26.0 pydantic-2.6.4
+> meshy-ai-mcp-server@1.0.0 build
+> tsc
 ```
 
 ---
@@ -65,144 +56,121 @@ Successfully installed mcp-1.6.0 python-dotenv-1.0.0 httpx-0.26.0 pydantic-2.6.4
 
 Create a `.env` file in the `mcp-servers/meshy-ai` directory:
 
-```powershell
-# Copy the example file
-copy .env.example .env
-
-# Edit the .env file with your API key
-notepad .env
-```
-
-**Edit `.env` file**:
 ```env
-# Meshy AI API Key
 MESHY_API_KEY=msy_YOUR_ACTUAL_API_KEY_HERE
-
-# MCP Server Configuration
-MCP_PORT=8081
-
-# Task timeout in seconds
-TASK_TIMEOUT=300
 ```
 
 **Replace** `msy_YOUR_ACTUAL_API_KEY_HERE` with your actual API key from Step 1.
+
+Optional variables:
+
+```env
+# Override API base URL (default: https://api.meshy.ai/openapi)
+MESHY_API_BASE=https://api.meshy.ai/openapi
+
+# Streaming timeout in milliseconds (default: 300000 = 5 minutes)
+MESHY_STREAM_TIMEOUT_MS=300000
+```
 
 ---
 
 ### Step 4: Test the MCP Server
 
-Before registering with Augment, test that the server works:
+Before registering with Claude Code, verify the server starts:
 
 ```powershell
-# Make sure you're in the meshy-ai directory with venv activated
 cd C:\Users\spare\source\repos\ga\mcp-servers\meshy-ai
-.\.venv\Scripts\activate
 
-# Test the server
-python src/server.py
+# Smoke test -- should print a JSON-RPC initialize response
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}' | node dist/index.js
 ```
 
-**Expected output**:
-```
-Meshy AI MCP Server started successfully
-Listening on port 8081
-```
-
-Press `Ctrl+C` to stop the server.
+**Expected**: A JSON response containing `"serverInfo":{"name":"Meshy AI MCP Server (Node)","version":"1.0.0"}`.
 
 ---
 
-### Step 5: Register with Augment Code
+### Step 5: Register with Claude Code
 
-**Option A: Using Augment Settings File (Recommended)**
-
-1. **Open Augment settings file**:
-   ```
-   C:\Users\spare\.augment\settings.json
-   ```
-
-2. **Add the Meshy AI MCP server configuration**:
+Add a `meshy-ai` entry to your project's `.mcp.json` file (at the repo root):
 
 ```json
 {
   "mcpServers": {
     "meshy-ai": {
-      "command": "python",
+      "command": "node",
       "args": [
-        "C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/src/server.py"
+        "mcp-servers/meshy-ai/dist/index.js"
       ],
       "env": {
         "MESHY_API_KEY": "msy_YOUR_ACTUAL_API_KEY_HERE"
-      },
-      "disabled": false,
-      "autoApprove": [],
-      "alwaysAllow": []
+      }
     }
   }
 }
 ```
 
 **Important Notes**:
-- Use **forward slashes** (`/`) in the path, not backslashes
+- Use **forward slashes** (`/`) in the path
 - Replace `msy_YOUR_ACTUAL_API_KEY_HERE` with your actual API key
-- If you already have other MCP servers, add `"meshy-ai": { ... }` to the existing `"mcpServers"` object
+- If you already have other MCP servers in `.mcp.json`, add `"meshy-ai": { ... }` to the existing `"mcpServers"` object
 
-**Option B: Using Virtual Environment Python (Alternative)**
-
-If you want to use the virtual environment Python explicitly:
+**Alternative**: Reference an environment variable instead of hardcoding the key:
 
 ```json
 {
   "mcpServers": {
     "meshy-ai": {
-      "command": "C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/.venv/Scripts/python.exe",
+      "command": "node",
       "args": [
-        "C:/Users/spare/source/repos/ga/mcp-servers/meshy-ai/src/server.py"
+        "mcp-servers/meshy-ai/dist/index.js"
       ],
       "env": {
-        "MESHY_API_KEY": "msy_YOUR_ACTUAL_API_KEY_HERE"
-      },
-      "disabled": false,
-      "autoApprove": [],
-      "alwaysAllow": []
+        "MESHY_API_KEY": "${MESHY_API_KEY}"
+      }
     }
   }
 }
 ```
 
----
+Then set the variable:
 
-### Step 6: Restart Augment Code
-
-1. **Close Augment Code** completely
-2. **Reopen Augment Code**
-3. The Meshy AI MCP server should now be available
+```powershell
+[System.Environment]::SetEnvironmentVariable('MESHY_API_KEY', 'msy_YOUR_KEY', 'User')
+```
 
 ---
 
-## 🎨 Usage Examples
+### Step 6: Restart Claude Code
 
-Once registered, you can use Meshy AI directly from Augment Code:
+1. Close Claude Code completely
+2. Reopen Claude Code
+3. The Meshy AI MCP server tools should now be available
 
-### Example 1: Generate a 3D Model from Text
+---
+
+## Usage Examples
+
+Once registered, you can use Meshy AI directly from Claude Code:
+
+### Generate a 3D Model from Text
 
 ```
 Using Meshy AI, create a detailed Egyptian ankh with gold metallic texture
 ```
 
-### Example 2: Convert Image to 3D
+### Convert Image to 3D
 
 ```
 Using Meshy AI, convert this image to a 3D model: https://example.com/image.jpg
 ```
 
-### Example 3: Apply Texture to Existing Model
+### Apply Texture to Existing Model
 
 ```
 Using Meshy AI, apply a rusty metal texture to this 3D model: https://example.com/model.glb
 ```
 
-### Example 4: Optimize a Model
+### Optimize a Model
 
 ```
 Using Meshy AI, remesh this model to 50,000 polygons: https://example.com/model.glb
@@ -210,79 +178,79 @@ Using Meshy AI, remesh this model to 50,000 polygons: https://example.com/model.
 
 ---
 
-## 🔧 Available Tools
+## Available Tools
 
 The Meshy AI MCP server provides these tools:
 
 ### Creation Tools
-- `create_text_to_3d_task` - Generate 3D model from text
-- `create_image_to_3d_task` - Generate 3D model from image
-- `create_text_to_texture_task` - Apply textures using text
-- `create_remesh_task` - Optimize and clean up models
+- `create_text_to_3d_task` -- Generate 3D model from text
+- `create_image_to_3d_task` -- Generate 3D model from image
+- `create_text_to_texture_task` -- Apply textures using text
+- `create_remesh_task` -- Optimize and clean up models
+- `create_rigging_task` -- Auto-rig a 3D character
+- `create_animation_task` -- Animate a rigged model
 
 ### Management Tools
-- `retrieve_text_to_3d_task` - Check task status
-- `list_text_to_3d_tasks` - List all tasks
-- `stream_text_to_3d_task` - Real-time progress updates
-- `get_balance` - Check API credits
+- `retrieve_*_task` -- Check task status
+- `list_*_tasks` -- List all tasks
+- `stream_*_task` -- Real-time progress updates
+- `get_balance` -- Check API credits
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Issue: "MESHY_API_KEY environment variable is not set"
 
-**Solution**: Make sure you've created the `.env` file with your API key, or added it to the Augment settings.
+**Solution**: Make sure you have created the `.env` file with your API key, or that the key is in the `.mcp.json` env block.
 
-### Issue: "Module 'mcp' not found"
+### Issue: "Cannot find module" or TypeScript errors
 
-**Solution**: Install dependencies:
+**Solution**: Rebuild the project:
 ```powershell
 cd C:\Users\spare\source\repos\ga\mcp-servers\meshy-ai
-.\.venv\Scripts\activate
-pip install -r requirements.txt
+npm ci
+npm run build
 ```
 
 ### Issue: "Connection refused" or "Server not responding"
 
-**Solution**: 
-1. Check that Python is installed and in PATH
-2. Verify the path in Augment settings is correct
-3. Test the server manually: `python src/server.py`
+**Solution**:
+1. Check that Node.js 18+ is installed: `node --version`
+2. Verify the path in `.mcp.json` is correct
+3. Test the server manually with the smoke test in Step 4
 
 ### Issue: "Invalid API key"
 
-**Solution**: 
+**Solution**:
 1. Verify your API key is correct
 2. Check that you copied the entire key (starts with `msy_`)
-3. Make sure there are no extra spaces or quotes
+3. Make sure there are no extra spaces
 
 ---
 
-## 📚 Resources
+## Resources
 
 - **Meshy AI Website**: https://www.meshy.ai/
 - **Meshy AI Discover**: https://www.meshy.ai/discover
 - **Meshy AI API Docs**: https://docs.meshy.ai/
 - **MCP Server Repo**: https://github.com/pasie15/meshy-ai-mcp-server
-- **Augment Code**: https://www.augmentcode.com/
+- **Model Context Protocol**: https://modelcontextprotocol.io/
 
 ---
 
-## ✅ Verification Checklist
+## Verification Checklist
 
-Before using the MCP server, verify:
-
-- [ ] Python 3.9+ is installed
+- [ ] Node.js 18+ installed
 - [ ] Meshy AI account created
 - [ ] API key obtained from Meshy AI
-- [ ] Dependencies installed (`pip install -r requirements.txt`)
+- [ ] Dependencies installed (`npm ci`)
+- [ ] TypeScript built (`npm run build`)
 - [ ] `.env` file created with API key
-- [ ] Server tested manually (`python src/server.py`)
-- [ ] Augment settings updated with MCP server config
-- [ ] Augment Code restarted
+- [ ] Server tested with smoke test
+- [ ] `.mcp.json` updated with meshy-ai entry
+- [ ] Claude Code restarted
 
----
-
-**Status**: Ready to generate amazing 3D models with AI! 🎉
+**Runtime**: Node.js (TypeScript, compiled to `dist/index.js`)
+**Transport**: stdio (MCP standard)
 
