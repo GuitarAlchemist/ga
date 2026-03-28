@@ -512,6 +512,7 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
   const baseSegments = def.radius > 0.5 ? 48 : def.radius > 0.2 ? 32 : 24;
   const segments = def.textureDisplacement ? Math.max(baseSegments, 64) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
+  geo.computeBoundingSphere(); // pre-compute for zoom-to-planet framing
 
   if (def.texture) {
     const map = loadTex(def.texture);
