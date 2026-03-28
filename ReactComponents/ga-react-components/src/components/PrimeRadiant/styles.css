@@ -391,13 +391,13 @@
 }
 
 .prime-radiant__health-dot--healthy {
-  background: #FFD700;
-  box-shadow: 0 0 8px #FFD700;
+  background: #33CC66;
+  box-shadow: 0 0 8px #33CC66;
 }
 
 .prime-radiant__health-dot--watch {
-  background: #FFA500;
-  box-shadow: 0 0 8px #FFA500;
+  background: #FFB300;
+  box-shadow: 0 0 8px #FFB300;
 }
 
 .prime-radiant__health-dot--freeze {
