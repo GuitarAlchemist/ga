@@ -1306,7 +1306,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
       if (solarFollowCameraRef.current) {
-        _solarOffset.set(6, 4, -12);
+        _solarOffset.set(12, 6, -20);
         _solarOffset.applyQuaternion(cam.quaternion);
         solarSystem.position.copy(cam.position).add(_solarOffset);
       } else {
@@ -1679,7 +1679,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
-    const solarSystem = createSolarSystem(0.03);
+    const solarSystem = createSolarSystem(0.15);
     fg.scene().add(solarSystem);
 
     // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
@@ -2208,8 +2208,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                       planetWorldRadius = (mesh.geometry.boundingSphere?.radius ?? 0.35) * worldScale;
                     }
                   }
-                  // Camera distance: 5x radius — enough to see planet clearly
-                  const camDist = Math.max(planetWorldRadius * 5, 0.05);
+                  // Camera distance: 4x radius at new 0.15 scale — fills screen nicely
+                  const camDist = Math.max(planetWorldRadius * 4, 0.3);
                   // Approach from slightly above and to the side for a nice angle
                   fg.cameraPosition(
                     { x: wp.x + camDist * 0.3, y: wp.y + camDist * 0.4, z: wp.z + camDist * 0.85 },
