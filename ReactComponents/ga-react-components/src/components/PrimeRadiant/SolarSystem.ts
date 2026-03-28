@@ -787,6 +787,97 @@ export function createSolarSystem(scale: number): THREE.Group {
   sun.name = 'sun';
   group.add(sun);
 
+  // ── Sun lens flare — multi-element sprite flare with anamorphic streak ──
+  const flareGroup = new THREE.Group();
+  flareGroup.name = 'sun-flare';
+
+  // Generate a radial gradient texture for flare elements
+  function createFlareTexture(size: number, color: string, falloff: number): THREE.CanvasTexture {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const cx = c.getContext('2d')!;
+    const g = cx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    g.addColorStop(0, color);
+    g.addColorStop(falloff, color.replace(/[\d.]+\)$/, '0.15)'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, size, size);
+    const t = new THREE.CanvasTexture(c);
+    t.needsUpdate = true;
+    return t;
+  }
+
+  // Generate an anamorphic streak texture (horizontal lens artifact)
+  function createStreakTexture(w: number, h: number): THREE.CanvasTexture {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const cx = c.getContext('2d')!;
+    const g = cx.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, 'rgba(255,200,100,0)');
+    g.addColorStop(0.15, 'rgba(255,220,150,0.06)');
+    g.addColorStop(0.4, 'rgba(255,240,200,0.2)');
+    g.addColorStop(0.5, 'rgba(255,250,240,0.35)');
+    g.addColorStop(0.6, 'rgba(255,240,200,0.2)');
+    g.addColorStop(0.85, 'rgba(255,220,150,0.06)');
+    g.addColorStop(1, 'rgba(255,200,100,0)');
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, w, h);
+    // Thin vertical center line
+    const g2 = cx.createLinearGradient(0, 0, 0, h);
+    g2.addColorStop(0, 'rgba(255,255,255,0)');
+    g2.addColorStop(0.4, 'rgba(255,255,255,0.15)');
+    g2.addColorStop(0.5, 'rgba(255,255,255,0.3)');
+    g2.addColorStop(0.6, 'rgba(255,255,255,0.15)');
+    g2.addColorStop(1, 'rgba(255,255,255,0)');
+    cx.fillStyle = g2;
+    cx.fillRect(0, 0, w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.needsUpdate = true;
+    return t;
+  }
+
+  // Primary glow (large, warm)
+  const mainGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createFlareTexture(256, 'rgba(255,220,150,0.4)', 0.5),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  mainGlow.scale.set(8 * scale, 8 * scale, 1);
+  flareGroup.add(mainGlow);
+
+  // Inner hot core (small, white)
+  const hotCore = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createFlareTexture(128, 'rgba(255,255,240,0.6)', 0.3),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  hotCore.scale.set(4 * scale, 4 * scale, 1);
+  flareGroup.add(hotCore);
+
+  // Anamorphic horizontal streak
+  const streak = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createStreakTexture(512, 32),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  streak.scale.set(20 * scale, 0.8 * scale, 1);
+  flareGroup.add(streak);
+
+  // Secondary rainbow ghosts (displaced along view axis)
+  const ghostColors = ['rgba(100,180,255,0.12)', 'rgba(255,150,100,0.08)', 'rgba(150,255,150,0.06)'];
+  const ghostScales = [2.5, 1.5, 3.0];
+  const ghostOffsets = [5, 8, 12];
+  for (let i = 0; i < ghostColors.length; i++) {
+    const ghost = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: createFlareTexture(128, ghostColors[i], 0.6),
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    ghost.scale.set(ghostScales[i] * scale, ghostScales[i] * scale, 1);
+    ghost.position.x = ghostOffsets[i] * scale;
+    ghost.name = `flare-ghost-${i}`;
+    flareGroup.add(ghost);
+  }
+
+  group.add(flareGroup);
+  group.userData.flareGroup = flareGroup;
+
   // Sun corona glow
   const coronaGeo = new THREE.SphereGeometry(3 * scale, 16, 16);
   const coronaMat = new THREE.ShaderMaterial({
@@ -1134,6 +1225,21 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
         alphaAttr.setX(i, alpha);
       }
       alphaAttr.needsUpdate = true;
+    }
+  }
+
+  // ── Animate sun lens flare ──
+  const flareGroup = group.userData.flareGroup as THREE.Group | undefined;
+  if (flareGroup) {
+    // Pulse the main glow subtly
+    const pulse = 1.0 + 0.15 * Math.sin(time * 0.3) + 0.08 * Math.sin(time * 0.7);
+    const mainGlow = flareGroup.children[0];
+    if (mainGlow) mainGlow.scale.setScalar(8 * 0.03 * pulse); // scale * pulse
+
+    // Rotate streak slowly for cinematic feel
+    const streak = flareGroup.children[2];
+    if (streak) {
+      streak.material.rotation = time * 0.02;
     }
   }
 
