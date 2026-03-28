@@ -2146,11 +2146,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 if (obj) {
                   const wp = new THREE.Vector3();
                   obj.getWorldPosition(wp);
-                  // Zoom close — solar system is at 0.03 scale, so planets are very small
+                  // Solar system is at 0.03 scale — planets are tiny in world space
+                  // Get the planet's world-space radius to compute proper zoom distance
+                  const worldScale = obj.getWorldScale(new THREE.Vector3()).x;
+                  // Planet radius in local coords varies (earth=0.35, jupiter=0.7, etc.)
+                  // Use bounding sphere if available, otherwise estimate from scale
+                  let planetWorldRadius = worldScale * 0.35; // fallback estimate
+                  if (obj.children.length > 0) {
+                    const mesh = obj.children[0] as THREE.Mesh;
+                    if (mesh.geometry) {
+                      mesh.geometry.computeBoundingSphere();
+                      planetWorldRadius = (mesh.geometry.boundingSphere?.radius ?? 0.35) * worldScale;
+                    }
+                  }
+                  // Camera distance: ~2.5x radius fills ~75% of screen
+                  const camDist = Math.max(planetWorldRadius * 2.5, 0.02);
+                  // Approach from slightly above and to the side for a nice angle
                   fg.cameraPosition(
-                    { x: wp.x, y: wp.y + 0.3, z: wp.z + 1.0 },
+                    { x: wp.x + camDist * 0.3, y: wp.y + camDist * 0.4, z: wp.z + camDist * 0.85 },
                     { x: wp.x, y: wp.y, z: wp.z },
-                    1200,
+                    1500,
                   );
                 } else {
                   // Fallback: zoom to solar system center
