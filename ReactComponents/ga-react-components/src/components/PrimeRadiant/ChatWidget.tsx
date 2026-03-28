@@ -413,6 +413,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isSpeakingRef = useRef(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioBlobUrlRef = useRef<string | null>(null);
@@ -500,6 +501,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     stopAudio();
     speechSynthesis.cancel();
 
+    // Pause recognition while speaking to prevent feedback
+    isSpeakingRef.current = true;
+    if (recognitionRef.current && isListening) {
+      try { recognitionRef.current.stop(); } catch { /* ignore */ }
+    }
+
+    const onSpeechDone = () => {
+      isSpeakingRef.current = false;
+      // Resume always-listen after TTS finishes
+      if (alwaysListen) setTimeout(() => startListening(), 300);
+    };
+
     try {
       const baseUrl = typeof import.meta !== 'undefined'
         ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL ?? 'https://localhost:7001'
@@ -512,8 +525,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       });
 
       if (!response.ok) {
-        // Server returned 503 (not configured) or other error — fallback
         speakWithBrowserTts(text);
+        // Browser TTS end detection
+        speechSynthesis.addEventListener('end', onSpeechDone, { once: true });
+        setTimeout(onSpeechDone, 10000); // safety fallback
         return;
       }
 
@@ -527,13 +542,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         URL.revokeObjectURL(url);
         audioBlobUrlRef.current = null;
         audioRef.current = null;
+        onSpeechDone();
       };
       await audio.play();
     } catch {
-      // Network error or other failure — fallback to browser TTS
       speakWithBrowserTts(text);
+      speechSynthesis.addEventListener('end', onSpeechDone, { once: true });
+      setTimeout(onSpeechDone, 10000);
     }
-  }, [ttsEnabled, stopAudio, speakWithBrowserTts]);
+  }, [ttsEnabled, stopAudio, speakWithBrowserTts, alwaysListen, isListening, startListening]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -628,6 +645,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   }, [input, sendMessage]);
 
   const startListening = useCallback(() => {
+    // Don't listen while TTS is playing — prevents feedback loop
+    if (isSpeakingRef.current) {
+      if (alwaysListen) setTimeout(() => startListening(), 500);
+      return;
+    }
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
 
@@ -648,10 +670,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
           setVoiceState('understood');
           setTimeout(() => setVoiceState('idle'), 1500);
         });
-        // In always-listen mode, restart after a short pause (wait for TTS to finish)
-        if (alwaysListen) {
-          setTimeout(() => startListening(), 2000);
-        } else {
+        // Always-listen restart is now handled by speakText's onSpeechDone callback
+        // This prevents the mic from picking up TTS audio
+        if (!alwaysListen) {
           setIsListening(false);
         }
       }
@@ -664,10 +685,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       if (alwaysListen) setTimeout(() => startListening(), 1000);
     };
     recognition.onend = () => {
-      // In always-listen mode, restart if not manually stopped
-      if (alwaysListen) {
+      // In always-listen mode, restart only if not currently speaking TTS
+      if (alwaysListen && !isSpeakingRef.current) {
         setTimeout(() => startListening(), 500);
-      } else {
+      } else if (!alwaysListen) {
         setIsListening(false);
         if (voiceState === 'listening') setVoiceState('idle');
       }
