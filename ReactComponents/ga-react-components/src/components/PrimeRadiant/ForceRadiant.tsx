@@ -809,6 +809,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let cloudCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+    let solarDblClickHandler: (() => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
 
@@ -1705,7 +1706,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Check all meshes in solar system (planets + moons) recursively
       const hits = solarRaycaster.intersectObjects(solarSystem.children, true);
 
-      const hitName = hits.length > 0 ? (hits[0].object.name || null) : null;
+      // Only consider hits on named objects (skip rings, atmospheres, orbit lines)
+      const namedHit = hits.find(h => h.object.name);
+      const hitName = namedHit ? namedHit.object.name : null;
       if (hitName !== currentHoveredPlanet) {
         currentHoveredPlanet = hitName;
         showPlanetLabel(solarSystem, hitName);
@@ -1719,7 +1722,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Single click — just show label (handled by hover)
     };
 
-    // Double-click on a planet/moon → fly camera to it
+    // Double-click on a planet/moon → fly camera closer to it
     const onSolarDblClick = () => {
       if (!currentHoveredPlanet) return;
       const group = fg.scene().getObjectByName('sun')?.parent;
@@ -1728,13 +1731,22 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const obj = group.getObjectByName(currentHoveredPlanet);
       if (!obj) return;
 
-      // Freeze solar system, snapshot position, fly there
+      // Freeze solar system, snapshot position, fly toward it
       solarFollowCameraRef.current = false;
       const wp = new THREE.Vector3();
       obj.getWorldPosition(wp);
 
+      // Keep enough distance so OrbitControls zoom still works (above minDistance)
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      const camPos = cam.position.clone();
+      const dir = wp.clone().sub(camPos).normalize();
+      const dist = camPos.distanceTo(wp);
+      // Fly to 40% of current distance (never closer than 2 units)
+      const flyDist = Math.max(dist * 0.4, 2);
+      const target = wp.clone().sub(dir.multiplyScalar(flyDist));
+
       fg.cameraPosition(
-        { x: wp.x + 0.15, y: wp.y + 0.1, z: wp.z + 0.25 },
+        { x: target.x, y: target.y, z: target.z },
         { x: wp.x, y: wp.y, z: wp.z },
         1500,
       );
@@ -1745,6 +1757,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     solarMouseMoveHandler = onSolarMouseMove;
     solarClickHandler = onSolarClick;
+    solarDblClickHandler = onSolarDblClick;
     container.addEventListener('mousemove', onSolarMouseMove);
     container.addEventListener('click', onSolarClick);
     container.addEventListener('dblclick', onSolarDblClick);
@@ -1895,7 +1908,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
       if (solarClickHandler) {
         container.removeEventListener('click', solarClickHandler);
-        container.removeEventListener('dblclick', solarClickHandler); // cleanup dblclick too
+      }
+      if (solarDblClickHandler) {
+        container.removeEventListener('dblclick', solarDblClickHandler);
       }
       if (graphRef.current) {
         (graphRef.current as ReturnType<typeof ForceGraph3D> & { _destructor: () => void })._destructor();
@@ -2210,9 +2225,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               const pw = new THREE.Vector3();
               obj.getWorldPosition(pw);
 
-              // Fly camera: 0.3 units from planet, slight angle
+              // Fly camera toward planet — keep enough distance for zoom to work
+              const cam = fg.camera() as THREE.PerspectiveCamera;
+              const camP = cam.position.clone();
+              const dir = pw.clone().sub(camP).normalize();
+              const dist = camP.distanceTo(pw);
+              const flyDist = Math.max(dist * 0.4, 2);
+              const tgt = pw.clone().sub(dir.multiplyScalar(flyDist));
+
               fg.cameraPosition(
-                { x: pw.x + 0.15, y: pw.y + 0.1, z: pw.z + 0.25 },
+                { x: tgt.x, y: tgt.y, z: tgt.z },
                 { x: pw.x, y: pw.y, z: pw.z },
                 1500,
               );
