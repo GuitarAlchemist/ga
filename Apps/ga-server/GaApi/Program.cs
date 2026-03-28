@@ -62,6 +62,9 @@ builder.Services.AddSignalR();
 // Belief state service — reads/updates tetravalent belief files
 builder.Services.AddSingleton<BeliefStateService>();
 
+// Visual critic — Claude vision analysis of Prime Radiant screenshots
+builder.Services.AddSingleton<VisualCriticService>();
+
 // Governance file watcher — pushes updates via SignalR when governance files change
 builder.Services.AddHostedService<GovernanceWatcherService>();
 
