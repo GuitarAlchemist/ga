@@ -1702,8 +1702,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const cam = fg.camera() as THREE.PerspectiveCamera;
       solarRaycaster.setFromCamera(solarMouse, cam);
 
-      const planetMeshes = getPlanetMeshes(solarSystem);
-      const hits = solarRaycaster.intersectObjects(planetMeshes, false);
+      // Check all meshes in solar system (planets + moons) recursively
+      const hits = solarRaycaster.intersectObjects(solarSystem.children, true);
 
       const hitName = hits.length > 0 ? (hits[0].object.name || null) : null;
       if (hitName !== currentHoveredPlanet) {
@@ -1716,14 +1716,38 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
 
     const onSolarClick = () => {
-      // Planet tracking disabled — was causing freezes and jitter
-      // Click just shows/hides the label for now
+      // Single click — just show label (handled by hover)
+    };
+
+    // Double-click on a planet/moon → fly camera to it
+    const onSolarDblClick = () => {
+      if (!currentHoveredPlanet) return;
+      const group = fg.scene().getObjectByName('sun')?.parent;
+      if (!group) return;
+
+      const obj = group.getObjectByName(currentHoveredPlanet);
+      if (!obj) return;
+
+      // Freeze solar system, snapshot position, fly there
+      solarFollowCameraRef.current = false;
+      const wp = new THREE.Vector3();
+      obj.getWorldPosition(wp);
+
+      fg.cameraPosition(
+        { x: wp.x + 0.15, y: wp.y + 0.1, z: wp.z + 0.25 },
+        { x: wp.x, y: wp.y, z: wp.z },
+        1500,
+      );
+
+      // Resume follow after animation
+      setTimeout(() => { solarFollowCameraRef.current = true; }, 1600);
     };
 
     solarMouseMoveHandler = onSolarMouseMove;
     solarClickHandler = onSolarClick;
     container.addEventListener('mousemove', onSolarMouseMove);
     container.addEventListener('click', onSolarClick);
+    container.addEventListener('dblclick', onSolarDblClick);
 
     // ─── JARVIS SPACE STATION — modular station with docking animation ───
     const spaceStation = createSpaceStation(0.6);
@@ -1871,6 +1895,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
       if (solarClickHandler) {
         container.removeEventListener('click', solarClickHandler);
+        container.removeEventListener('dblclick', solarClickHandler); // cleanup dblclick too
       }
       if (graphRef.current) {
         (graphRef.current as ReturnType<typeof ForceGraph3D> & { _destructor: () => void })._destructor();
