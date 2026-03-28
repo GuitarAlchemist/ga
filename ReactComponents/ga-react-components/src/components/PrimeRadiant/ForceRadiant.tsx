@@ -2222,7 +2222,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
-      {/* GalacticClock removed — declutter top-left */}
+      <GalacticClock />
 
       {/* Viewer presence indicator */}
       {viewers.length > 0 && (
