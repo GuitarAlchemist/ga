@@ -50,9 +50,11 @@ import { LibraryPanel } from './LibraryPanel';
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LiveNotebook } from './LiveNotebook';
-import { TriageDropZone } from './TriageDropZone';
+import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
 import { GodotScene } from './GodotScene';
+import { GisPanel } from './GisPanel';
+import { createGisLayer, type GisLayerManager } from './GisLayer';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -569,6 +571,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   // Godot fullscreen overlay toggle (independent of panel state)
   const [godotFullscreen, setGodotFullscreen] = useState(false);
+
+  // GIS layer managers (one per planet)
+  const gisManagersRef = useRef<Map<string, GisLayerManager>>(new Map());
+  const [gisManagers, setGisManagers] = useState<Map<string, GisLayerManager>>(new Map());
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
@@ -1868,6 +1874,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Auto-LOD: load high-res satellite imagery when camera is close to Earth
     const stopEarthLOD = enableEarthAutoLOD(solarSystem, () => fg.camera());
 
+    // GIS layers — create managers for planets with surfaces
+    const gisMgrs = new Map<string, GisLayerManager>();
+    for (const name of ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury']) {
+      const mgr = createGisLayer(solarSystem, name);
+      if (mgr) gisMgrs.set(name, mgr);
+    }
+    gisManagersRef.current = gisMgrs;
+    setGisManagers(gisMgrs);
+
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
     solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
@@ -2721,7 +2736,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             beliefs={beliefs}
           />
         )}
-        {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
+        {activePanel === 'algedonic' && (
+          <AlgedonicPanel
+            signals={algedonicSignals}
+            onTriageAction={(action, signalName, source) => {
+              pushToTriage('text', `[${source}] ${signalName.replace(/_/g, ' ')}: ${action}`, 'task');
+            }}
+          />
+        )}
         {activePanel === 'godot' && (
           <GodotScene
             mode="panel"
@@ -2732,8 +2754,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             onExpand={() => { setGodotFullscreen(true); setActivePanel(null); }}
           />
         )}
+        {activePanel === 'gis' && (
+          <GisPanel managers={gisManagers} />
+        )}
         {/* Simple side panels — registry-backed lookup */}
-        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot'].includes(activePanel) && (() => {
+        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot', 'gis'].includes(activePanel) && (() => {
           const SIMPLE_PANELS: Record<string, React.FC> = {
             activity: ActivityPanel,
             backlog: BacklogPanel,

@@ -147,6 +147,10 @@ function timeAgo(dateStr: string): string {
 export interface AlgedonicPanelProps {
   /** Live signals from SignalR. If provided, used instead of mock data. */
   signals?: AlgedonicSignal[];
+  /** Called when user wants to address a signal — sends to Demerzel chat */
+  onAskDemerzel?: (question: string) => void;
+  /** Called when user sends a recommended action to triage inbox */
+  onTriageAction?: (action: string, signalName: string, source: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +229,7 @@ const SIGNAL_DETAILS: Record<string, { articles: string[]; actions: string[]; vs
   },
 };
 
-export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signalsProp }) => {
+export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signalsProp, onAskDemerzel, onTriageAction }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pain' | 'pleasure'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -365,13 +369,36 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                           <span className="prime-radiant__algedonic-detail-label">Recommended Actions</span>
                           {details.actions.map((a, i) => (
                             <div key={i} className="prime-radiant__algedonic-detail-action">
-                              {'\u2192'} {a}
+                              <span>{'\u2192'} {a}</span>
+                              {onTriageAction && (
+                                <button
+                                  className="prime-radiant__algedonic-triage-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onTriageAction(a, s.signal, s.source);
+                                  }}
+                                  title="Send to triage inbox"
+                                >
+                                  {'📥'}
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
                         <div className="prime-radiant__algedonic-detail-ts">
                           {new Date(s.timestamp).toLocaleString()}
                         </div>
+                        {onAskDemerzel && (
+                          <button
+                            className="prime-radiant__algedonic-address-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
+                            }}
+                          >
+                            Address with Demerzel
+                          </button>
+                        )}
                       </div>
                     )}
                     {isExpanded && !details && (
@@ -384,6 +411,17 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                           <span className="prime-radiant__algedonic-detail-label">Source System</span>
                           <span style={{ color: SOURCE_COLOR[s.source] ?? '#8b949e' }}>{s.source.toUpperCase()}</span>
                         </div>
+                        {onAskDemerzel && (
+                          <button
+                            className="prime-radiant__algedonic-address-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
+                            }}
+                          >
+                            Address with Demerzel
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
