@@ -20,6 +20,7 @@ export interface ChatWidgetProps {
   selectedNode?: GovernanceNode | null;
   onNavigateToNode?: (nodeId: string) => void;
   onNavigateToPlanet?: (planetName: string) => void;
+  onLoadArcGIS?: (layer: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +135,7 @@ const GOVERNANCE_RESPONSES: Record<string, string> = {
 // Navigation command result
 interface DemerzelResponse {
   text: string;
-  action?: { type: 'navigate-planet'; planet: string } | { type: 'navigate-node'; query: string };
+  action?: { type: 'navigate-planet'; planet: string } | { type: 'navigate-node'; query: string } | { type: 'arcgis'; layer: string };
   markdown?: boolean;
   raw?: string;
 }
@@ -279,6 +280,35 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
     return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
   }
 
+  // ArcGIS / map overlay intent
+  const arcgisMatch = q.match(/\b(?:arcgis|gis|map|satellite|topo|borders|streets|imagery|carte|frontières)\b/i);
+  if (arcgisMatch && (q.includes('earth') || q.includes('terre') || mentionedPlanet === 'earth')) {
+    // Detect which layer
+    let layer = 'borders';
+    if (/\b(satellite|imagery|imagerie)\b/i.test(q)) layer = 'imagery';
+    else if (/\b(street|rue|road|route)\b/i.test(q)) layer = 'streets';
+    else if (/\b(topo|terrain|relief)\b/i.test(q)) layer = 'topo';
+    else if (/\b(dark|sombre|noir)\b/i.test(q)) layer = 'darkgray';
+    else if (/\b(border|frontier|frontière|country|pays)\b/i.test(q)) layer = 'borders';
+
+    return {
+      text: isFr
+        ? `Chargement de la couche ArcGIS "${layer}" sur la Terre... Les tuiles vont apparaître sur le globe.`
+        : `Loading ArcGIS "${layer}" layer on Earth... Tiles will appear on the globe.`,
+      action: { type: 'arcgis', layer },
+    };
+  }
+
+  // List available map layers
+  if (/\b(list|show).*(map|layer|gis|carte|couche)\b/i.test(q)) {
+    return {
+      text: isFr
+        ? '**Couches ArcGIS disponibles:**\n\n• imagery — Imagerie satellite\n• streets — Plan des rues\n• topo — Carte topographique\n• borders — Frontières et noms de lieux\n• darkgray — Fond sombre\n\n_Dites "arcgis borders on earth" pour charger._'
+        : '**Available ArcGIS layers:**\n\n• imagery — Satellite imagery\n• streets — Street map\n• topo — Topographic map\n• borders — Country borders & labels\n• darkgray — Dark gray base\n\n_Say "arcgis borders on earth" to load._',
+      markdown: true,
+    };
+  }
+
   if (mentionedPlanet && (isNavIntent || isZoomIntent)) {
     return {
       text: isFr
@@ -363,7 +393,7 @@ function detectLocale(): string {
   return 'auto';
 }
 
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigateToNode, onNavigateToPlanet }) => {
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigateToNode, onNavigateToPlanet, onLoadArcGIS }) => {
   const [locale, setLocale] = useState(detectLocale);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => [{
@@ -376,7 +406,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const [rawViewIds, setRawViewIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true); // Demerzel speaks by default
+  const [alwaysListen, setAlwaysListen] = useState(false); // Continuous listening mode
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -579,12 +610,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
           onNavigateToPlanet(response.action.planet);
         } else if (response.action.type === 'navigate-node' && onNavigateToNode) {
           onNavigateToNode(response.action.query);
+        } else if (response.action.type === 'arcgis' && onLoadArcGIS) {
+          onLoadArcGIS(response.action.layer);
         }
       }
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, selectedNode, speakText, stopAudio, onNavigateToNode, onNavigateToPlanet]);
+  }, [isLoading, messages, selectedNode, speakText, stopAudio, onNavigateToNode, onNavigateToPlanet, onLoadArcGIS]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
