@@ -18,6 +18,7 @@ export interface TriageItem {
   category: TriageCategory | 'pending';
   timestamp: string;
   summary?: string;           // AI-generated summary
+  dispatched?: boolean;       // sent to target panel
 }
 
 const CATEGORY_META: Record<TriageCategory, { label: string; icon: string; color: string; panel: string }> = {
@@ -148,11 +149,19 @@ function saveItems(items: TriageItem[]): void {
 // Component
 // ---------------------------------------------------------------------------
 
-interface TriageDropZoneProps {
-  onNavigateToPanel?: (panelId: string) => void;
+export interface TriageDispatch {
+  category: TriageCategory;
+  content: string;
+  summary?: string;
+  type: string;
 }
 
-export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPanel }) => {
+interface TriageDropZoneProps {
+  onNavigateToPanel?: (panelId: string) => void;
+  onDispatch?: (dispatch: TriageDispatch) => void;
+}
+
+export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPanel, onDispatch }) => {
   const [items, setItems] = useState<TriageItem[]>(loadItems);
   const [dragOver, setDragOver] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -248,6 +257,22 @@ export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPane
   const removeItem = useCallback((id: string) => {
     setItems(prev => prev.filter(item => item.id !== id));
   }, []);
+
+  // ─── Dispatch to panel ───
+  const dispatchItem = useCallback((id: string) => {
+    const item = items.find(i => i.id === id);
+    if (!item || item.category === 'pending' || item.dispatched) return;
+    if (onDispatch) {
+      onDispatch({
+        category: item.category as TriageCategory,
+        content: item.content,
+        summary: item.summary,
+        type: item.type,
+      });
+    }
+    setItems(prev => prev.map(i => i.id === id ? { ...i, dispatched: true } : i));
+    if (onNavigateToPanel) onNavigateToPanel(CATEGORY_META[item.category as TriageCategory].panel);
+  }, [items, onDispatch, onNavigateToPanel]);
 
   // ─── Navigate to panel ───
   const goToPanel = useCallback((cat: TriageCategory) => {
@@ -357,8 +382,21 @@ export const TriageDropZone: React.FC<TriageDropZoneProps> = ({ onNavigateToPane
                         {cat.icon} {cat.label}
                       </span>
                     )}
+                    {/* Send to panel */}
+                    {cat && !item.dispatched && (
+                      <button
+                        className="prime-radiant__triage-send-btn"
+                        onClick={() => dispatchItem(item.id)}
+                        title={`Send to ${cat.label} panel`}
+                      >
+                        Send →
+                      </button>
+                    )}
+                    {item.dispatched && (
+                      <span className="prime-radiant__triage-sent">✓ Sent</span>
+                    )}
                     {/* Reclassify buttons */}
-                    {(Object.keys(CATEGORY_META) as TriageCategory[])
+                    {!item.dispatched && (Object.keys(CATEGORY_META) as TriageCategory[])
                       .filter(k => k !== item.category)
                       .map(k => (
                         <button
