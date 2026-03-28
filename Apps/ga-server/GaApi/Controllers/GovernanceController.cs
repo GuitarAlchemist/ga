@@ -333,7 +333,8 @@ public class GovernanceController(
 
                     // Count subagents: look for a subagents/ subdirectory with recently modified files
                     var subagentCount = 0;
-                    var subagentsDir = Path.Combine(projectDir, "subagents");
+                    var sessionDir = Path.Combine(projectDir, Path.GetFileNameWithoutExtension(jsonlFile));
+                    var subagentsDir = Path.Combine(sessionDir, "subagents");
                     if (Directory.Exists(subagentsDir))
                     {
                         subagentCount = Directory.EnumerateFiles(subagentsDir, "*", SearchOption.AllDirectories)
@@ -352,14 +353,6 @@ public class GovernanceController(
                     });
                 }
             }
-
-            // Sort by most recently active first
-            sessions.Sort((a, b) =>
-            {
-                var aTime = ((dynamic)a).lastActiveAt as string ?? "";
-                var bTime = ((dynamic)b).lastActiveAt as string ?? "";
-                return string.Compare(bTime, aTime, StringComparison.Ordinal);
-            });
 
             return Ok(new { sessions });
         }
@@ -414,11 +407,13 @@ public class GovernanceController(
 
         try
         {
-            // Read the last non-empty line from the JSONL file
+            // Read the last non-empty line by seeking from end of file (fast for large files)
             string? lastLine = null;
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            const int tailBytes = 8192; // Read last 8KB — enough for one JSONL line
+            var seekPos = Math.Max(0, stream.Length - tailBytes);
+            stream.Seek(seekPos, SeekOrigin.Begin);
             using var reader = new StreamReader(stream);
-
             while (reader.ReadLine() is { } line)
             {
                 if (!string.IsNullOrWhiteSpace(line))
