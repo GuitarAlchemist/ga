@@ -3035,6 +3035,50 @@
   }
   .prime-radiant__planet-bar::-webkit-scrollbar { display: none; }
   .prime-radiant__planet-label { display: none; }
+
+  /* Planet nav — reposition for mobile: bottom-left above tab bar */
+  .planet-nav {
+    position: fixed;
+    left: 4px;
+    top: auto;
+    bottom: 60px;  /* above the 52px icon-rail tab bar */
+    z-index: 30;
+  }
+
+  .planet-nav__toggle {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .planet-nav__menu {
+    top: auto;
+    bottom: 50px;  /* open upward from toggle */
+    left: 0;
+    width: 160px;
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .planet-nav__menu::-webkit-scrollbar { display: none; }
+
+  .planet-nav__item {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .planet-nav__gis-header {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .planet-nav__gis-item {
+    min-height: 44px;
+    padding: 8px 12px 8px 24px;
+  }
 }
 
 /* ─── Touch-friendly tap targets ─── */
