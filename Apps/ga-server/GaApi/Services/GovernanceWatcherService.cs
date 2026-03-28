@@ -13,6 +13,7 @@ public sealed class GovernanceWatcherService(
     IConfiguration configuration,
     IHubContext<GovernanceHub> hubContext,
     BeliefStateService beliefStateService,
+    VisualCriticService visualCriticService,
     ILogger<GovernanceWatcherService> logger)
     : BackgroundService
 {
@@ -57,7 +58,7 @@ public sealed class GovernanceWatcherService(
 
                 // Force refresh the controller cache
                 var controller = new GovernanceController(configuration, logger as ILogger<GovernanceController>
-                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance, hubContext, beliefStateService);
+                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GovernanceController>.Instance, hubContext, beliefStateService, visualCriticService);
                 controller.Refresh();
                 var result = controller.GetGraph();
 
