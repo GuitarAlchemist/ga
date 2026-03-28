@@ -13,11 +13,12 @@ import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
+import { PlanetNav } from './PlanetNav';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, getArcGISLayers } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, removeArcGISOverlay, getArcGISLayers, addLocationMarker, enableEarthAutoLOD } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
@@ -32,10 +33,13 @@ import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
-import { IconRail, type PanelId } from './IconRail';
+import { IconRail } from './IconRail';
+import type { PanelId } from './PanelRegistry';
+import { panelRegistry } from './PanelRegistry';
 import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
 import { CICDPanel } from './CICDPanel';
 import { ClaudeCodePanel } from './ClaudeCodePanel';
+import { LibraryPanel } from './LibraryPanel';
 import type { AlgedonicSignalEvent } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LiveNotebook } from './LiveNotebook';
@@ -553,9 +557,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // Phase 3: IXql command handler — applies visual overrides to graph nodes
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
     const fg = graphRef.current;
-    if (!fg || !result.ok || !result.command) return;
+    if (!fg || !result.ok) return;
 
-    if (result.command.type === 'reset') {
+    const cmd = result.command;
+
+    if (cmd.type === 'reset') {
       // Clear all IXql overrides
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
@@ -566,16 +572,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
 
-    const cmd = result.command;
-    if (cmd.target === 'nodes' && cmd.predicates && cmd.assignments) {
+    if (cmd.type === 'select' && cmd.target === 'nodes' && cmd.predicates.length > 0 && cmd.assignments.length > 0) {
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
-        const matches = cmd.predicates!.every(p =>
+        const matches = cmd.predicates.every(p =>
           evaluatePredicate(p, n as unknown as Record<string, unknown>),
         );
         if (matches && n.__threeObj) {
           const overrides: Record<string, unknown> = {};
-          cmd.assignments!.forEach(a => { overrides[a.property] = a.value; });
+          cmd.assignments.forEach(a => { overrides[a.property] = a.value; });
           n.__threeObj.userData.ixqlOverrides = overrides;
         }
       });
@@ -809,6 +814,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let autoZoomTimeoutOuter: ReturnType<typeof setTimeout> | null = null;
     let pollingHandleOuter: LivePollingHandle | undefined;
     let cloudCleanupOuter: (() => void) | undefined;
+    let markerCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -1349,11 +1355,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         _solarOffset.set(12, 6, -20);
         _solarOffset.applyQuaternion(cam.quaternion);
         solarSystem.position.copy(cam.position).add(_solarOffset);
-      } else {
-        // Planet tracking disabled — was causing freezes and jitter on phone
-        // Auto-resume follow mode
-        solarFollowCameraRef.current = true;
       }
+      // When solarFollowCameraRef is false, solar system stays frozen in place
+      // (planet zoom mode — user clicks Reset View to resume)
       // Phase 1.2: Quality-gate solar system updates (after position set)
       if (qualityLevel !== 'low') {
         solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
@@ -1733,6 +1737,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Static 2k_earth_clouds.jpg looks better until proper reprojection is implemented
     const stopCloudUpdates = () => {}; // no-op
 
+    // Add "you are here" location marker on Earth
+    const removeLocationMarker = addLocationMarker(solarSystem);
+
+    // Auto-LOD: load high-res satellite imagery when camera is close to Earth
+    const stopEarthLOD = enableEarthAutoLOD(solarSystem, () => fg.camera());
+
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
     solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
@@ -1926,6 +1936,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     autoZoomTimeoutOuter = autoZoomTimeout;
     pollingHandleOuter = pollingHandle;
     cloudCleanupOuter = stopCloudUpdates;
+    markerCleanupOuter = removeLocationMarker;
 
     // ─── DEMERZEL AUTONOMOUS DRIVER — rule-based IXQL self-healing ───
     // Evaluates governance graph health → emits IXQL commands → no LLM needed
@@ -1959,6 +1970,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
       cloudCleanupOuter?.();
+      markerCleanupOuter?.();
+      lodCleanupOuter?.();
       criticCleanupOuter?.();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
@@ -2319,6 +2332,83 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* DemerzelCriticOverlay disabled — re-enable when driver is stable */}
       {/* <DemerzelCriticOverlay state={criticState} /> */}
 
+      {/* Planet nav — left side collapsible menu */}
+      <PlanetNav
+        onNavigateToPlanet={(target) => {
+          const fg = graphRef.current;
+          if (!fg) return;
+
+          if (target === 'demerzel-head') {
+            const cam = fg.camera() as THREE.PerspectiveCamera;
+            const faceOffset = new THREE.Vector3(-50, -8, -40);
+            faceOffset.applyQuaternion(cam.quaternion);
+            const facePos = cam.position.clone().add(faceOffset);
+            fg.cameraPosition(
+              { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
+              { x: facePos.x, y: facePos.y, z: facePos.z },
+              1200,
+            );
+            solarFollowCameraRef.current = true;
+            trackedPlanetRef.current = null;
+            setTrackedPlanetName(null);
+            return;
+          }
+
+          solarFollowCameraRef.current = false;
+          const group = fg.scene().getObjectByName('sun')?.parent;
+          if (!group) return;
+          const obj = group.getObjectByName(target);
+          if (!obj) return;
+          const pw = new THREE.Vector3();
+          obj.getWorldPosition(pw);
+          // Get planet radius for close zoom — fall back to bounding sphere
+          const mesh = obj as THREE.Mesh;
+          mesh.geometry?.computeBoundingSphere();
+          const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
+          // Position camera at 3x planet radius — close enough to fill the view
+          const zoomDist = planetRadius * 3.5;
+          const cam = fg.camera() as THREE.PerspectiveCamera;
+          const camP = cam.position.clone();
+          const dir = pw.clone().sub(camP).normalize();
+          const tgt = pw.clone().sub(dir.multiplyScalar(zoomDist));
+          fg.cameraPosition(
+            { x: tgt.x, y: tgt.y, z: tgt.z },
+            { x: pw.x, y: pw.y, z: pw.z },
+            1500,
+          );
+          // Don't resume follow — keep solar system frozen so planet stays visible
+          // User clicks Reset View to resume normal mode
+        }}
+        onLoadArcGIS={(layer) => {
+          const fg = graphRef.current;
+          if (!fg) return;
+          const solarGroup = fg.scene().getObjectByName('sun')?.parent;
+          if (!solarGroup) return;
+          loadArcGISOverlay(solarGroup as THREE.Group, layer as 'imagery' | 'streets' | 'topo' | 'borders' | 'darkgray')
+            .then(() => console.log(`[PrimeRadiant] ArcGIS ${layer} loaded on Earth`))
+            .catch(err => console.warn(`[PrimeRadiant] ArcGIS ${layer} failed:`, err));
+        }}
+        onRemoveArcGIS={(layer) => {
+          const fg = graphRef.current;
+          if (!fg) return;
+          const solarGroup = fg.scene().getObjectByName('sun')?.parent;
+          if (!solarGroup) return;
+          removeArcGISOverlay(solarGroup as THREE.Group, layer);
+        }}
+        onResetView={() => {
+          const fg = graphRef.current;
+          if (!fg) return;
+          solarFollowCameraRef.current = true;
+          trackedPlanetRef.current = null;
+          setTrackedPlanetName(null);
+          fg.cameraPosition(
+            { x: 0, y: 40, z: 120 },
+            { x: 0, y: 0, z: 0 },
+            1500,
+          );
+        }}
+      />
+
       {/* Planet quick-nav bar — bottom center */}
       <div className="prime-radiant__planet-bar">
         {[
@@ -2434,6 +2524,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           </svg>
         </button>
 
+        {/* Panels with custom props — explicit conditionals */}
         {activePanel === 'detail' && showDetailPanel && (
           <DetailPanel
             node={selectedNode}
@@ -2442,9 +2533,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             onNavigate={handleNavigate}
           />
         )}
-        {activePanel === 'activity' && <ActivityPanel />}
-        {activePanel === 'backlog' && <BacklogPanel />}
-        {activePanel === 'agent' && <AgentPanel />}
         {activePanel === 'seldon' && graphData && (
           <SeldonDashboard
             open={true}
@@ -2453,10 +2541,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             selectedNode={selectedNode}
           />
         )}
-        {activePanel === 'llm' && <LLMStatus />}
         {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
-        {activePanel === 'cicd' && <CICDPanel />}
-        {activePanel === 'claude' && <ClaudeCodePanel />}
+        {/* Simple side panels — registry-backed lookup */}
+        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook'].includes(activePanel) && (() => {
+          const SIMPLE_PANELS: Record<string, React.FC> = {
+            activity: ActivityPanel,
+            backlog: BacklogPanel,
+            agent: AgentPanel,
+            llm: LLMStatus,
+            cicd: CICDPanel,
+            claude: ClaudeCodePanel,
+            library: LibraryPanel,
+          };
+          const Component = SIMPLE_PANELS[activePanel];
+          if (Component) return React.createElement(Component);
+          // Dynamic panel from registry (IXQL CREATE PANEL)
+          const reg = panelRegistry.get(activePanel);
+          if (reg?.component) return React.createElement(reg.component);
+          if (reg) return React.createElement('div', { style: { padding: '1rem', color: '#ccc' } }, `Dynamic panel: ${activePanel}`);
+          return null;
+        })()}
       </div>
 
       {/* CourseViewer renders as full-screen overlay, outside side panel */}

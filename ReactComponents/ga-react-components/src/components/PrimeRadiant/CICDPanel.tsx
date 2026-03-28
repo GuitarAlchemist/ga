@@ -1,7 +1,8 @@
 // src/components/PrimeRadiant/CICDPanel.tsx
 // GitHub Actions CI/CD status panel for the Prime Radiant command center
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import type { PanelStatus } from './IconRail';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -118,6 +119,46 @@ function fallbackRuns(): WorkflowRun[] {
     { id: 'fb-9', name: 'CI', repo: 'ix', branch: 'master', status: 'success', startedAt: new Date(now - 21600000).toISOString(), duration: '1m 55s', url: 'https://github.com/GuitarAlchemist/ix/actions' },
     { id: 'fb-10', name: 'Cargo test', repo: 'ix', branch: 'master', status: 'success', startedAt: new Date(now - 25200000).toISOString(), duration: '3m 10s', url: 'https://github.com/GuitarAlchemist/ix/actions' },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Hook — exposes CI/CD health for icon rail status dot
+// ---------------------------------------------------------------------------
+export interface CICDHealth {
+  status: PanelStatus;
+  failCount: number;
+  runningCount: number;
+  totalCount: number;
+  failingRepos: string[];
+}
+
+export function useCICDHealth(): CICDHealth {
+  const [health, setHealth] = useState<CICDHealth>({ status: null, failCount: 0, runningCount: 0, totalCount: 0, failingRepos: [] });
+
+  const refresh = useCallback(async () => {
+    const runs = await fetchWorkflowRuns();
+    if (runs.length === 0) { setHealth({ status: null, failCount: 0, runningCount: 0, totalCount: 0, failingRepos: [] }); return; }
+    // Look at the most recent run per repo to determine overall status
+    const latestByRepo = new Map<string, WorkflowRun>();
+    for (const run of runs) {
+      if (!latestByRepo.has(run.repo)) latestByRepo.set(run.repo, run);
+    }
+    const latest = [...latestByRepo.values()];
+    const failing = latest.filter(r => r.status === 'failure');
+    const failCount = failing.length;
+    const failingRepos = failing.map(r => r.repo.toLowerCase());
+    const runningCount = runs.filter(r => r.status === 'in_progress' || r.status === 'queued').length;
+    const status: PanelStatus = failCount > 0 ? 'error' : runningCount > 0 ? 'warn' : 'ok';
+    setHealth({ status, failCount, runningCount, totalCount: runs.length, failingRepos });
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 60000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  return health;
 }
 
 // ---------------------------------------------------------------------------

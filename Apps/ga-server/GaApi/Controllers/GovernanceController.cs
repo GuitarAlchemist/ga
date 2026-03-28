@@ -407,41 +407,56 @@ public class GovernanceController(
 
         try
         {
-            // Read the last non-empty line by seeking from end of file (fast for large files)
-            string? lastLine = null;
+            // Scan the first ~16KB of the file for session init metadata.
+            // JSONL format: early lines contain "type":"user" with sessionId/cwd/gitBranch,
+            // and first "type":"assistant" line has the model name.
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            const int tailBytes = 8192; // Read last 8KB — enough for one JSONL line
-            var seekPos = Math.Max(0, stream.Length - tailBytes);
-            stream.Seek(seekPos, SeekOrigin.Begin);
-            using var reader = new StreamReader(stream);
-            while (reader.ReadLine() is { } line)
+            const int headBytes = 16384;
+            var bytesToRead = (int)Math.Min(stream.Length, headBytes);
+            var buffer = new byte[bytesToRead];
+            _ = stream.Read(buffer, 0, bytesToRead);
+            var headText = System.Text.Encoding.UTF8.GetString(buffer);
+
+            foreach (var line in headText.Split('\n'))
             {
-                if (!string.IsNullOrWhiteSpace(line))
-                    lastLine = line;
-            }
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
-            if (lastLine != null)
-            {
-                using var doc = JsonDocument.Parse(lastLine);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("sessionId", out var sid))
-                    sessionId = sid.GetString() ?? sessionId;
-                if (root.TryGetProperty("model", out var m))
-                    model = m.GetString() ?? model;
-                if (root.TryGetProperty("gitBranch", out var gb))
-                    gitBranch = gb.GetString() ?? "";
-                if (root.TryGetProperty("cwd", out var c))
-                    cwd = c.GetString() ?? "";
-
-                // Some session formats nest these differently — try message-level metadata
-                if (string.IsNullOrEmpty(model) || model == "unknown")
+                try
                 {
-                    if (root.TryGetProperty("message", out var msg) && msg.ValueKind == JsonValueKind.Object)
+                    using var doc = JsonDocument.Parse(line);
+                    var root = doc.RootElement;
+
+                    // Pick up sessionId, cwd, gitBranch from any line that has them
+                    if (root.TryGetProperty("sessionId", out var sid))
                     {
-                        if (msg.TryGetProperty("model", out var mm))
-                            model = mm.GetString() ?? model;
+                        var val = sid.GetString();
+                        if (!string.IsNullOrEmpty(val)) sessionId = val;
                     }
+                    if (root.TryGetProperty("gitBranch", out var gb))
+                    {
+                        var val = gb.GetString();
+                        if (!string.IsNullOrEmpty(val)) gitBranch = val;
+                    }
+                    if (root.TryGetProperty("cwd", out var c))
+                    {
+                        var val = c.GetString();
+                        if (!string.IsNullOrEmpty(val)) cwd = val;
+                    }
+
+                    // Model appears on assistant messages
+                    if (model == "unknown" && root.TryGetProperty("model", out var m))
+                    {
+                        var val = m.GetString();
+                        if (!string.IsNullOrEmpty(val)) model = val;
+                    }
+
+                    // Stop once we have everything
+                    if (model != "unknown" && !string.IsNullOrEmpty(gitBranch) && !string.IsNullOrEmpty(cwd))
+                        break;
+                }
+                catch (JsonException)
+                {
+                    // Partial line at buffer boundary — skip
                 }
             }
         }

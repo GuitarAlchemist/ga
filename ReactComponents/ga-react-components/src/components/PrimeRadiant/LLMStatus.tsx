@@ -1,7 +1,8 @@
 // src/components/PrimeRadiant/LLMStatus.tsx
 // Compact LLM provider status — models, tokens, credits, active plan
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import type { PanelStatus } from './IconRail';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -136,6 +137,29 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
   }
 
   return providers;
+}
+
+// ---------------------------------------------------------------------------
+// Hook — exposes LLM health for icon rail status dot
+// ---------------------------------------------------------------------------
+export function useLLMHealth(): PanelStatus {
+  const [status, setStatus] = useState<PanelStatus>(null);
+
+  const refresh = useCallback(async () => {
+    const providers = await fetchLLMProviders();
+    if (providers.length === 0) { setStatus(null); return; }
+    const hasError = providers.some(p => p.status === 'depleted');
+    const hasWarn = providers.some(p => p.status === 'limited');
+    setStatus(hasError ? 'error' : hasWarn ? 'warn' : 'ok');
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 60000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  return status;
 }
 
 // ---------------------------------------------------------------------------

@@ -56,11 +56,11 @@ export const IxqlCommandInput: React.FC<IxqlCommandInputProps> = ({ onCommand })
     if (result.ok) {
       onCommand(result);
       setError(null);
-      if (result.command?.type === 'reset') {
+      if (result.command.type === 'reset') {
         setValue('');
       }
     } else {
-      setError(result.error ?? 'Parse error');
+      setError(result.error);
     }
   };
 
