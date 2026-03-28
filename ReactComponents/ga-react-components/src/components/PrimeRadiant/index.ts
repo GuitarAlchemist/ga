@@ -26,6 +26,7 @@ export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
 export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates, togglePlanetAtmosphere } from './SolarSystem';
 export { startVisualCriticLoop } from './VisualCriticLoop';
+export { startDemerzelDriver } from './DemerzelIxqlDriver';
 export type { VisualCriticResult, VisualCriticConfig, CriticPhase } from './VisualCriticLoop';
 export { DemerzelCriticOverlay } from './DemerzelCriticOverlay';
 export type { CriticState } from './DemerzelCriticOverlay';
