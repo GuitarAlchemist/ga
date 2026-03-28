@@ -14,6 +14,7 @@ interface ChatMessage {
   timestamp: number;
   markdown?: boolean;  // render as markdown
   raw?: string;        // raw source to toggle
+  suggestions?: string[];  // quick-reply suggestions
 }
 
 export interface ChatWidgetProps {
@@ -153,6 +154,64 @@ const PLANET_FACTS: Record<string, string> = {
   neptune: 'The windiest planet. Supersonic winds at 2,100 km/h. Deep blue from methane.',
   moon: 'Earth\'s companion. Tidally locked — same face always toward us. 384,400 km away.',
 };
+
+// ---------------------------------------------------------------------------
+// Contextual suggestions — Demerzel proactively offers next steps
+// ---------------------------------------------------------------------------
+function getSuggestions(response: DemerzelResponse, question: string, context?: GovernanceNode | null): string[] {
+  const q = question.toLowerCase();
+  const suggestions: string[] = [];
+
+  // After planet navigation → offer related actions
+  if (response.action?.type === 'navigate-planet') {
+    const planet = response.action.planet;
+    if (planet === 'earth') {
+      suggestions.push('Show ArcGIS borders', 'Take a screenshot', 'Go to Moon');
+    } else {
+      suggestions.push(`Tell me about ${planet}`, 'Go to Earth', 'Take a screenshot');
+    }
+    return suggestions;
+  }
+
+  // After ArcGIS layer load → offer other layers or navigation
+  if (response.action?.type === 'arcgis') {
+    suggestions.push('Show satellite imagery', 'Show topo map', 'List map layers');
+    return suggestions;
+  }
+
+  // After artifact listing → offer to view one
+  if (response.text.includes('artifacts:')) {
+    if (q.includes('skill')) suggestions.push('Show skill demerzel-audit', 'Show skill seldon-research');
+    else if (q.includes('persona')) suggestions.push('Show persona demerzel', 'Show persona seldon');
+    else if (q.includes('polic')) suggestions.push('Show policy alignment', 'Show policy rollback');
+    else if (q.includes('constitution')) suggestions.push('Show constitution default', 'Show constitution asimov');
+    return suggestions;
+  }
+
+  // After viewing an artifact → offer related actions
+  if (response.raw) {
+    suggestions.push('List policies', 'List personas', 'What is tetravalent logic?');
+    return suggestions;
+  }
+
+  // Context-aware: viewing a governance node
+  if (context) {
+    suggestions.push(`List ${context.type}s`, 'Show constitution', 'What is the Zeroth Law?');
+    return suggestions;
+  }
+
+  // Default suggestions when no specific context
+  if (q.includes('governance') || q.includes('constitution') || q.includes('zeroth')) {
+    suggestions.push('List personas', 'List policies', 'Go to Jupiter');
+  } else if (q.includes('planet') || q.includes('solar') || q.includes('space')) {
+    suggestions.push('Go to Earth', 'Go to Saturn', 'Go to Mars');
+  } else {
+    // General fallback suggestions
+    suggestions.push('Go to Earth', 'List skills', 'What is the Zeroth Law?');
+  }
+
+  return suggestions;
+}
 
 // Auto-detect language from text — returns language code or null if unclear
 function detectLanguage(text: string): string | null {
@@ -432,9 +491,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     role: 'assistant',
     content: WELCOME_MESSAGES[detectLocale()] ?? WELCOME_MESSAGES.en,
     timestamp: Date.now(),
+    suggestions: ['Go to Earth', 'List personas', 'What is the Zeroth Law?'],
   }]);
   const [input, setInput] = useState('');
   const [rawViewIds, setRawViewIds] = useState<Set<string>>(new Set());
+  const [showContext, setShowContext] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'processing' | 'understood'>('idle');
@@ -647,6 +708,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         } catch { /* ignore parse errors */ }
       }
 
+      // Add contextual suggestions after Claude responds
+      const claudeSuggestions = getSuggestions(
+        { text: fullText },
+        trimmed,
+        selectedNode,
+      );
+      setMessages((prev) => prev.map(m =>
+        m.id === botMsgId ? { ...m, suggestions: claudeSuggestions } : m,
+      ));
+
       void speakText(fullText);
     } catch {
       // Try backend Ollama chatbot first, then fall back to mock patterns
@@ -678,8 +749,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         });
       }
 
+      const suggestions = getSuggestions(response, trimmed, selectedNode);
       setMessages((prev) => prev.map(m =>
-        m.id === botMsgId ? { ...m, content: response!.text, markdown: response!.markdown, raw: response!.raw } : m,
+        m.id === botMsgId ? { ...m, content: response!.text, markdown: response!.markdown, raw: response!.raw, suggestions } : m,
       ));
       void speakText(response.text);
 
@@ -865,6 +937,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
               ))}
             </select>
             <button
+              className={`chat-widget__context-btn ${showContext ? 'chat-widget__context-btn--active' : ''}`}
+              onClick={() => setShowContext((v) => !v)}
+              title="Show Demerzel's context"
+              aria-label="Show context info"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+            </button>
+            <button
               className="chat-widget__clear-btn"
               onClick={() => {
                 stopAudio();
@@ -892,6 +976,46 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
             </button>
           </div>
         </div>
+
+        {/* Context popover */}
+        {showContext && (
+          <div className="chat-widget__context-popover">
+            <div className="chat-widget__context-title">Demerzel's Context</div>
+            <div className="chat-widget__context-row">
+              <span className="chat-widget__context-label">Backend</span>
+              <span className="chat-widget__context-value">
+                {CLAUDE_PROXY_URL ? 'Claude API (streaming)' : getUserApiKey() ? 'Claude API (direct)' : 'Local fallback'}
+              </span>
+            </div>
+            <div className="chat-widget__context-row">
+              <span className="chat-widget__context-label">Language</span>
+              <span className="chat-widget__context-value">
+                {locale === 'auto' ? 'Auto-detect' : SUPPORTED_LANGS.find(l => l.code === locale)?.name ?? locale}
+              </span>
+            </div>
+            <div className="chat-widget__context-row">
+              <span className="chat-widget__context-label">Selected node</span>
+              <span className="chat-widget__context-value">
+                {selectedNode ? `${selectedNode.name} (${selectedNode.type})` : 'None'}
+              </span>
+            </div>
+            <div className="chat-widget__context-row">
+              <span className="chat-widget__context-label">Messages</span>
+              <span className="chat-widget__context-value">{messages.length}</span>
+            </div>
+            <div className="chat-widget__context-row">
+              <span className="chat-widget__context-label">Voice</span>
+              <span className="chat-widget__context-value">
+                {ttsEnabled ? 'On' : 'Off'}{alwaysListen ? ' / Always-listen' : ''}
+              </span>
+            </div>
+            <div className="chat-widget__context-desc">
+              Demerzel responds using governance knowledge from the Prime Radiant — constitutions,
+              policies, personas, and schemas. She can navigate the solar system and browse artifacts
+              from the Demerzel governance repo.
+            </div>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="chat-widget__messages">
@@ -931,6 +1055,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
                           <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
                         </svg>
                       </button>
+                    </div>
+                  )}
+                  {/* Suggestion chips — only on the last assistant message */}
+                  {msg.role === 'assistant' && msg.suggestions && msg.suggestions.length > 0
+                    && msg.id === messages.filter(m => m.role === 'assistant').at(-1)?.id && (
+                    <div className="chat-widget__suggestions">
+                      {msg.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          className="chat-widget__suggestion-chip"
+                          onClick={() => sendMessage(suggestion)}
+                          disabled={isLoading}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

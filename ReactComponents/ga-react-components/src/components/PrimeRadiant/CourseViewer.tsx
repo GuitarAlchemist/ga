@@ -309,16 +309,25 @@ export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => 
     });
   }, []);
 
-  // Rescue stuck items: on mount, re-schedule simulation for any items still 'queued'
+  // Rescue stuck items: on mount, re-schedule simulation for any incomplete items
+  // (covers both 'queued' AND in-progress items whose timers were lost on unmount/reload)
   const simRescuedRef = useRef(false);
   useEffect(() => {
     if (simRescuedRef.current) return;
     simRescuedRef.current = true;
-    courseQueue.filter(r => r.status === 'queued').forEach(r => scheduleSimulation('course', r.id));
-    researchQueue.filter(r => r.status === 'queued').forEach(r => scheduleSimulation('research', r.id));
-    translationQueue.filter(r => r.status === 'queued').forEach(r =>
-      scheduleSimulation('translation', `tq::${r.courseId}::${r.targetLanguage}`)
-    );
+    courseQueue.filter(r => r.status !== 'completed').forEach(r => {
+      // Reset stuck in-progress items back to queued so simulation starts fresh
+      if (r.status !== 'queued') setCourseQueue(prev => prev.map(x => x.id === r.id ? { ...x, status: 'queued', progress: 0, assignedTo: undefined } : x));
+      scheduleSimulation('course', r.id);
+    });
+    researchQueue.filter(r => r.status !== 'completed').forEach(r => {
+      if (r.status !== 'queued') setResearchQueue(prev => prev.map(x => x.id === r.id ? { ...x, status: 'queued', progress: 0, assignedTo: undefined } : x));
+      scheduleSimulation('research', r.id);
+    });
+    translationQueue.filter(r => r.status !== 'completed').forEach(r => {
+      if (r.status !== 'queued') setTranslationQueue(prev => prev.map(x => x.courseId === r.courseId && x.targetLanguage === r.targetLanguage ? { ...x, status: 'queued', progress: 0, assignedTo: undefined } : x));
+      scheduleSimulation('translation', `tq::${r.courseId}::${r.targetLanguage}`);
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cancel helpers

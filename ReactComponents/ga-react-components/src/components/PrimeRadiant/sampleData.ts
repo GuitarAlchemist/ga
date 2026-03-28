@@ -84,7 +84,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.85, lolliCount: 1, ergolCount: 3 },
+      health: { resilienceScore: 0.85, lolliCount: 1, ergolCount: 3, markovPrediction: [0.55, 0.28, 0.12, 0.05] },
     },
     {
       id: 'pol-conscience',
@@ -94,7 +94,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.2.0',
-      health: { resilienceScore: 0.78, lolliCount: 0, ergolCount: 5 },
+      health: { resilienceScore: 0.78, lolliCount: 0, ergolCount: 5, markovPrediction: [0.48, 0.30, 0.15, 0.07] },
     },
     {
       id: 'pol-intuition',
@@ -104,7 +104,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.72, lolliCount: 1, ergolCount: 2 },
+      health: { resilienceScore: 0.72, lolliCount: 1, ergolCount: 2, markovPrediction: [0.40, 0.30, 0.20, 0.10], staleness: 0.25 },
     },
     {
       id: 'pol-seldon',
@@ -114,7 +114,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.68, lolliCount: 0, ergolCount: 4 },
+      health: { resilienceScore: 0.68, lolliCount: 0, ergolCount: 4, markovPrediction: [0.35, 0.30, 0.22, 0.13], staleness: 0.30 },
     },
     {
       id: 'pol-streeling',
@@ -134,7 +134,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.65, lolliCount: 1, ergolCount: 2 },
+      health: { resilienceScore: 0.65, lolliCount: 1, ergolCount: 2, markovPrediction: [0.30, 0.28, 0.25, 0.17], staleness: 0.40 },
     },
     {
       id: 'pol-autonomous',
@@ -144,7 +144,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.88, lolliCount: 0, ergolCount: 5 },
+      health: { resilienceScore: 0.88, lolliCount: 0, ergolCount: 5, markovPrediction: [0.65, 0.22, 0.10, 0.03] },
     },
     {
       id: 'pol-weakness',
@@ -154,7 +154,7 @@ export const SAMPLE_GOVERNANCE_GRAPH: GovernanceGraph = {
       color: '#4CB050',
       repo: 'demerzel',
       version: '1.0.0',
-      health: { resilienceScore: 0.7, lolliCount: 0, ergolCount: 3 },
+      health: { resilienceScore: 0.7, lolliCount: 0, ergolCount: 3, markovPrediction: [0.42, 0.28, 0.18, 0.12], staleness: 0.20 },
     },
 
     // ─── Personas ───

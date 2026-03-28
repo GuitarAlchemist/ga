@@ -1,6 +1,6 @@
 // src/components/PrimeRadiant/IxqlControlParser.ts
-// Minimal IXql subset parser for Prime Radiant visualization control
-// Grammar: SELECT nodes|edges WHERE <predicate> SET <assignments> | RESET
+// IXQL parser for Prime Radiant visualization control and declarative UI
+// Grammar: SELECT | RESET | CREATE PANEL | CREATE NODE | BIND HEALTH | DROP | LINK | GROUP | SAVE
 
 export interface IxqlPredicate {
   field: string;       // dotted path: "health.staleness", "type", "name"
@@ -13,18 +13,90 @@ export interface IxqlAssignment {
   value: string | number | boolean;
 }
 
-export interface IxqlCommand {
-  type: 'select' | 'reset';
-  target?: 'nodes' | 'edges';
-  predicates?: IxqlPredicate[];
-  assignments?: IxqlAssignment[];
+// ── Command variant interfaces ──
+
+export interface SelectCommand {
+  type: 'select';
+  target: 'nodes' | 'edges';
+  predicates: IxqlPredicate[];
+  assignments: IxqlAssignment[];
 }
 
-export interface IxqlParseResult {
-  ok: boolean;
-  command?: IxqlCommand;
-  error?: string;
+export interface ResetCommand {
+  type: 'reset';
 }
+
+export interface CreatePanelCommand {
+  type: 'create-panel';
+  id: string;
+  source: string;
+  wherePredicates: IxqlPredicate[];
+  layout: 'list-detail' | 'dashboard' | 'status' | 'custom';
+  icon: string;
+  showFields: string[];
+  filter: { field: string; mode: 'chips' | 'dropdown' | 'search' } | null;
+}
+
+export interface BindHealthCommand {
+  type: 'bind-health';
+  targetKind: 'panel' | 'node';
+  targetId: string;       // panel id or node selector field
+  targetSelector: IxqlPredicate[]; // for node targeting (WHERE predicates)
+  source: string;
+  conditions: { predicate: IxqlPredicate; status: string }[];
+  fallback: string;
+}
+
+export interface DropCommand {
+  type: 'drop';
+  targetKind: 'panel';
+  id: string;
+}
+
+export interface CreateNodeCommand {
+  type: 'create-node';
+  id: string;
+  nodeType: string;
+  parent: string | null;
+}
+
+export interface LinkCommand {
+  type: 'link';
+  from: string;
+  to: string;
+  edgeType: string | null;
+}
+
+export interface GroupCommand {
+  type: 'group';
+  predicates: IxqlPredicate[];
+  byField: string;
+}
+
+export interface SaveCommand {
+  type: 'save';
+  targetKind: 'panel' | 'graph';
+  id: string | null;
+}
+
+// ── Discriminated union ──
+
+export type IxqlCommand =
+  | SelectCommand
+  | ResetCommand
+  | CreatePanelCommand
+  | BindHealthCommand
+  | DropCommand
+  | CreateNodeCommand
+  | LinkCommand
+  | GroupCommand
+  | SaveCommand;
+
+// ── Parse result as discriminated union ──
+
+export type IxqlParseResult =
+  | { ok: true; command: IxqlCommand }
+  | { ok: false; error: string };
 
 const VISUAL_PROPS = new Set(['glow', 'pulse', 'size', 'color', 'visible', 'opacity', 'speed']);
 const OPERATORS = ['>=', '<=', '!=', '>', '<', '=', '~'] as const;
@@ -79,95 +151,354 @@ function tokenize(input: string): string[] {
   return tokens;
 }
 
+// ── Shared parsing helpers ──
+
+type ParserContext = {
+  tokens: string[];
+  pos: number;
+};
+
+function peek(ctx: ParserContext): string | undefined {
+  return ctx.tokens[ctx.pos]?.toUpperCase();
+}
+
+function peekRaw(ctx: ParserContext): string | undefined {
+  return ctx.tokens[ctx.pos];
+}
+
+function next(ctx: ParserContext): string | undefined {
+  return ctx.tokens[ctx.pos++];
+}
+
+function nextRaw(ctx: ParserContext): string {
+  const t = ctx.tokens[ctx.pos++];
+  if (t === undefined) throw new Error('Unexpected end of input');
+  return t;
+}
+
+function expect(ctx: ParserContext, val: string): string {
+  const t = next(ctx);
+  if (t?.toUpperCase() !== val) throw new Error(`Expected '${val}', got '${t ?? 'end of input'}'`);
+  return t;
+}
+
+function parsePredicates(ctx: ParserContext): IxqlPredicate[] {
+  const predicates: IxqlPredicate[] = [];
+  do {
+    const field = nextRaw(ctx);
+
+    const opToken = nextRaw(ctx);
+    if (!OPERATORS.includes(opToken as typeof OPERATORS[number])) {
+      throw new Error(`Expected operator (>, <, =, >=, <=, !=, ~), got '${opToken}'`);
+    }
+
+    const valToken = nextRaw(ctx);
+    const numVal = Number(valToken);
+    const value = isNaN(numVal) ? valToken : numVal;
+
+    predicates.push({ field, operator: opToken as IxqlPredicate['operator'], value });
+  } while (peek(ctx) === 'AND' && next(ctx));
+  return predicates;
+}
+
+function parseValue(token: string): string | number | boolean {
+  if (token === 'true') return true;
+  if (token === 'false') return false;
+  const numVal = Number(token);
+  if (!isNaN(numVal)) return numVal;
+  return token;
+}
+
+// ── SELECT command parser ──
+
+function parseSelect(ctx: ParserContext): SelectCommand {
+  const targetToken = next(ctx)?.toLowerCase();
+  if (targetToken !== 'nodes' && targetToken !== 'edges') {
+    throw new Error(`Expected 'nodes' or 'edges', got '${targetToken}'`);
+  }
+  const target = targetToken as 'nodes' | 'edges';
+
+  // WHERE (optional)
+  const predicates: IxqlPredicate[] = [];
+  if (peek(ctx) === 'WHERE') {
+    next(ctx);
+    predicates.push(...parsePredicates(ctx));
+  }
+
+  // SET (optional)
+  const assignments: IxqlAssignment[] = [];
+  if (peek(ctx) === 'SET') {
+    next(ctx);
+    do {
+      if (peek(ctx) === ',') next(ctx);
+
+      const prop = next(ctx)?.toLowerCase();
+      if (!prop) throw new Error('Expected property name after SET');
+      if (!VISUAL_PROPS.has(prop)) {
+        throw new Error(`Unknown visual property '${prop}'. Valid: ${[...VISUAL_PROPS].join(', ')}`);
+      }
+
+      expect(ctx, '=');
+      const valToken = nextRaw(ctx);
+      assignments.push({ property: prop, value: parseValue(valToken) });
+    } while (peek(ctx) === ',' || (ctx.pos < ctx.tokens.length && peek(ctx) !== undefined));
+  }
+
+  return { type: 'select', target, predicates, assignments };
+}
+
+// ── CREATE PANEL parser ──
+
+function parseCreatePanel(ctx: ParserContext): CreatePanelCommand {
+  const id = nextRaw(ctx);
+
+  // FROM clause (required)
+  expect(ctx, 'FROM');
+  const source = nextRaw(ctx);
+
+  // WHERE clause (optional, after FROM)
+  const wherePredicates: IxqlPredicate[] = [];
+  if (peek(ctx) === 'WHERE') {
+    next(ctx);
+    wherePredicates.push(...parsePredicates(ctx));
+  }
+
+  // LAYOUT clause (required)
+  expect(ctx, 'LAYOUT');
+  const layoutToken = nextRaw(ctx).toLowerCase();
+  const validLayouts = ['list-detail', 'dashboard', 'status', 'custom'];
+  if (!validLayouts.includes(layoutToken)) {
+    throw new Error(`Expected layout type (${validLayouts.join(', ')}), got '${layoutToken}'`);
+  }
+  const layout = layoutToken as CreatePanelCommand['layout'];
+
+  // ICON clause (optional)
+  let icon = '';
+  if (peek(ctx) === 'ICON') {
+    next(ctx);
+    icon = nextRaw(ctx);
+  }
+
+  // SHOW clause (optional)
+  const showFields: string[] = [];
+  if (peek(ctx) === 'SHOW') {
+    next(ctx);
+    showFields.push(nextRaw(ctx));
+    while (peek(ctx) === ',') {
+      next(ctx); // consume comma
+      showFields.push(nextRaw(ctx));
+    }
+  }
+
+  // FILTER clause (optional)
+  let filter: CreatePanelCommand['filter'] = null;
+  if (peek(ctx) === 'FILTER') {
+    next(ctx);
+    const field = nextRaw(ctx);
+    expect(ctx, 'AS');
+    const modeToken = nextRaw(ctx).toLowerCase();
+    const validModes = ['chips', 'dropdown', 'search'];
+    if (!validModes.includes(modeToken)) {
+      throw new Error(`Expected filter mode (${validModes.join(', ')}), got '${modeToken}'`);
+    }
+    filter = { field, mode: modeToken as 'chips' | 'dropdown' | 'search' };
+  }
+
+  return { type: 'create-panel', id, source, wherePredicates, layout, icon, showFields, filter };
+}
+
+// ── CREATE NODE parser ──
+
+function parseCreateNode(ctx: ParserContext): CreateNodeCommand {
+  const id = nextRaw(ctx);
+
+  expect(ctx, 'TYPE');
+  const nodeType = nextRaw(ctx);
+
+  let parent: string | null = null;
+  if (peek(ctx) === 'IN') {
+    next(ctx);
+    parent = nextRaw(ctx);
+  }
+
+  return { type: 'create-node', id, nodeType, parent };
+}
+
+// ── BIND HEALTH parser ──
+
+function parseBindHealth(ctx: ParserContext): BindHealthCommand {
+  let targetKind: 'panel' | 'node';
+  let targetId = '';
+  const targetSelector: IxqlPredicate[] = [];
+
+  const kindToken = peek(ctx);
+  if (kindToken === 'PANEL') {
+    next(ctx);
+    targetKind = 'panel';
+    targetId = nextRaw(ctx);
+  } else if (kindToken === 'NODE') {
+    next(ctx);
+    targetKind = 'node';
+    if (peek(ctx) === 'WHERE') {
+      next(ctx);
+      targetSelector.push(...parsePredicates(ctx));
+    }
+  } else {
+    throw new Error(`Expected 'PANEL' or 'NODE' after BIND, got '${peekRaw(ctx) ?? 'end of input'}'`);
+  }
+
+  expect(ctx, 'HEALTH');
+  expect(ctx, 'FROM');
+  const source = nextRaw(ctx);
+
+  // WHEN conditions
+  const conditions: { predicate: IxqlPredicate; status: string }[] = [];
+  while (peek(ctx) === 'WHEN') {
+    next(ctx);
+    const preds = parsePredicates(ctx);
+    if (preds.length !== 1) {
+      throw new Error('BIND HEALTH WHEN clause expects exactly one predicate');
+    }
+    expect(ctx, 'SET');
+    const status = nextRaw(ctx);
+    conditions.push({ predicate: preds[0], status });
+  }
+
+  // ELSE SET fallback
+  let fallback = 'ok';
+  if (peek(ctx) === 'ELSE') {
+    next(ctx);
+    expect(ctx, 'SET');
+    fallback = nextRaw(ctx);
+  }
+
+  return { type: 'bind-health', targetKind, targetId, targetSelector, source, conditions, fallback };
+}
+
+// ── DROP parser ──
+
+function parseDrop(ctx: ParserContext): DropCommand {
+  expect(ctx, 'PANEL');
+  const id = nextRaw(ctx);
+  return { type: 'drop', targetKind: 'panel', id };
+}
+
+// ── LINK parser ──
+
+function parseLink(ctx: ParserContext): LinkCommand {
+  const from = nextRaw(ctx);
+  expect(ctx, 'TO');
+  const to = nextRaw(ctx);
+
+  let edgeType: string | null = null;
+  if (peek(ctx) === 'TYPE') {
+    next(ctx);
+    edgeType = nextRaw(ctx);
+  }
+
+  return { type: 'link', from, to, edgeType };
+}
+
+// ── GROUP parser ──
+
+function parseGroup(ctx: ParserContext): GroupCommand {
+  // GROUP <target> WHERE <predicates> BY <field>
+  // <target> is consumed but the semantics are in the WHERE predicates
+  nextRaw(ctx); // consume target (e.g. "nodes")
+
+  const predicates: IxqlPredicate[] = [];
+  if (peek(ctx) === 'WHERE') {
+    next(ctx);
+    predicates.push(...parsePredicates(ctx));
+  }
+
+  expect(ctx, 'BY');
+  const byField = nextRaw(ctx);
+
+  return { type: 'group', predicates, byField };
+}
+
+// ── SAVE parser ──
+
+function parseSave(ctx: ParserContext): SaveCommand {
+  const kindToken = peek(ctx);
+  if (kindToken === 'PANEL') {
+    next(ctx);
+    const id = nextRaw(ctx);
+    return { type: 'save', targetKind: 'panel', id };
+  }
+  if (kindToken === 'GRAPH') {
+    next(ctx);
+    return { type: 'save', targetKind: 'graph', id: null };
+  }
+  throw new Error(`Expected 'PANEL' or 'GRAPH' after SAVE, got '${peekRaw(ctx) ?? 'end of input'}'`);
+}
+
+// ── Main entry point ──
+
 export function parseIxqlCommand(input: string): IxqlParseResult {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, error: 'Empty command' };
 
-  // RESET command
+  // RESET command (fast path)
   if (trimmed.toUpperCase() === 'RESET') {
     return { ok: true, command: { type: 'reset' } };
   }
 
   const tokens = tokenize(trimmed);
-  let pos = 0;
-
-  const peek = () => tokens[pos]?.toUpperCase();
-  const next = () => tokens[pos++];
-  const expect = (val: string) => {
-    const t = next();
-    if (t?.toUpperCase() !== val) throw new Error(`Expected '${val}', got '${t ?? 'end of input'}'`);
-    return t;
-  };
+  const ctx: ParserContext = { tokens, pos: 0 };
 
   try {
-    // SELECT
-    expect('SELECT');
+    const keyword = peek(ctx);
 
-    // Target: nodes | edges
-    const targetToken = next()?.toLowerCase();
-    if (targetToken !== 'nodes' && targetToken !== 'edges') {
-      throw new Error(`Expected 'nodes' or 'edges', got '${targetToken}'`);
-    }
-    const target = targetToken as 'nodes' | 'edges';
+    switch (keyword) {
+      case 'SELECT': {
+        next(ctx);
+        return { ok: true, command: parseSelect(ctx) };
+      }
 
-    // WHERE (optional)
-    const predicates: IxqlPredicate[] = [];
-    if (peek() === 'WHERE') {
-      next(); // consume WHERE
-      // Parse predicates (field op value), joined by AND
-      do {
-        const field = next();
-        if (!field) throw new Error('Expected field name after WHERE');
-
-        const opToken = next();
-        if (!opToken || !OPERATORS.includes(opToken as typeof OPERATORS[number])) {
-          throw new Error(`Expected operator (>, <, =, >=, <=, !=, ~), got '${opToken}'`);
+      case 'CREATE': {
+        next(ctx);
+        const subKeyword = peek(ctx);
+        if (subKeyword === 'PANEL') {
+          next(ctx);
+          return { ok: true, command: parseCreatePanel(ctx) };
         }
-
-        const valToken = next();
-        if (valToken === undefined) throw new Error('Expected value after operator');
-
-        const numVal = Number(valToken);
-        const value = isNaN(numVal) ? valToken : numVal;
-
-        predicates.push({ field, operator: opToken as IxqlPredicate['operator'], value });
-      } while (peek() === 'AND' && next());
-    }
-
-    // SET (optional)
-    const assignments: IxqlAssignment[] = [];
-    if (peek() === 'SET') {
-      next(); // consume SET
-      do {
-        if (peek() === ',') next(); // consume comma separator
-
-        const prop = next()?.toLowerCase();
-        if (!prop) throw new Error('Expected property name after SET');
-        if (!VISUAL_PROPS.has(prop)) {
-          throw new Error(`Unknown visual property '${prop}'. Valid: ${[...VISUAL_PROPS].join(', ')}`);
+        if (subKeyword === 'NODE') {
+          next(ctx);
+          return { ok: true, command: parseCreateNode(ctx) };
         }
+        throw new Error(`Expected 'PANEL' or 'NODE' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
+      }
 
-        expect('=');
+      case 'BIND': {
+        next(ctx);
+        return { ok: true, command: parseBindHealth(ctx) };
+      }
 
-        const valToken = next();
-        if (valToken === undefined) throw new Error(`Expected value for '${prop}'`);
+      case 'DROP': {
+        next(ctx);
+        return { ok: true, command: parseDrop(ctx) };
+      }
 
-        let value: string | number | boolean = valToken;
-        if (valToken === 'true') value = true;
-        else if (valToken === 'false') value = false;
-        else {
-          const numVal = Number(valToken);
-          if (!isNaN(numVal)) value = numVal;
-        }
+      case 'LINK': {
+        next(ctx);
+        return { ok: true, command: parseLink(ctx) };
+      }
 
-        assignments.push({ property: prop, value });
-      } while (peek() === ',' || (pos < tokens.length && peek() !== undefined));
+      case 'GROUP': {
+        next(ctx);
+        return { ok: true, command: parseGroup(ctx) };
+      }
+
+      case 'SAVE': {
+        next(ctx);
+        return { ok: true, command: parseSave(ctx) };
+      }
+
+      default:
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, DROP, LINK, GROUP, or SAVE` };
     }
-
-    return {
-      ok: true,
-      command: { type: 'select', target, predicates, assignments },
-    };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

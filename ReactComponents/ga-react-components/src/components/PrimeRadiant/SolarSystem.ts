@@ -245,6 +245,7 @@ const PLANETS: PlanetDef[] = [
     radius: EARTH_RADIUS,
     distance: EARTH_DIST,             // keplerDistance(1.0) = 6.5
     speed: EARTH_SPEED,               // keplerSpeed(1.0) = 3.0
+    tilt: 0.4091,                     // 23.44° axial tilt in radians
     texture: '2k_earth_daymap.jpg',
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
@@ -261,13 +262,14 @@ const PLANETS: PlanetDef[] = [
     radius: keplerRadius(6_779),       // 0.26
     distance: keplerDistance(1.52),     // 8.01
     speed: keplerSpeed(1.52),          // 1.60
+    tilt: 0.4396,                      // 25.19° axial tilt
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
-    atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.2, power: 4.0 },
+    atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.08, power: 5.0 }, // Mars: extremely thin (~1% of Earth)
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'phobos', radius: 0.03, distance: 0.5, speed: 4.0, fragment: ROCKY_DARK },
-      { name: 'deimos', radius: 0.02, distance: 0.75, speed: 2.5, fragment: ROCKY_DARK },
+      { name: 'phobos', radius: 0.06, distance: 0.6, speed: 4.0, fragment: ROCKY_DARK },   // enlarged for visibility (real: 11km)
+      { name: 'deimos', radius: 0.04, distance: 0.9, speed: 2.5, fragment: ROCKY_DARK },   // enlarged for visibility (real: 6km)
     ],
   },
   {
@@ -760,8 +762,8 @@ function createPlanetLabel(name: string, scale: number): THREE.Sprite {
     depthTest: false,
   });
   const sprite = new THREE.Sprite(mat);
-  // Smaller, delicate scale matching 512x128 canvas aspect ratio
-  const labelScale = Math.max(scale * 5, 0.04);
+  // Scale proportional to planet size — label is ~1.5x planet diameter
+  const labelScale = Math.max(scale * 1.2, 0.015);
   sprite.scale.set(labelScale, labelScale * 0.25, 1);
   sprite.visible = false;
   sprite.name = `label-${name}`;
@@ -1206,6 +1208,13 @@ export function createSolarSystem(scale: number): THREE.Group {
         moonMesh.position.x = moonDef.distance * scale;
         moonOrbit.add(moonMesh);
 
+        // Moon label (initially hidden, shown on hover)
+        const moonLabel = createPlanetLabel(moonDef.name, scale * 0.5);
+        moonLabel.position.copy(moonMesh.position);
+        moonLabel.position.y += moonDef.radius * scale + 0.015;
+        moonOrbit.add(moonLabel);
+        planetLabels.set(moonDef.name, moonLabel);
+
         // Titan atmosphere
         if (moonDef.name === 'titan') {
           const titanAtmoGeo = new THREE.SphereGeometry((moonDef.radius + 0.03) * scale, 12, 12);
@@ -1351,28 +1360,71 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
     // Orbit rotation
     orbit.rotation.y = time * def.speed * 0.1;
 
-    // Planet self-rotation
-    // Realistic self-rotation: Earth ~24h, scale to visible but not dizzying
-    mesh.rotation.y = time * 0.08;
-
-    // Primary clouds rotate noticeably faster than the planet
-    if (clouds) {
-      clouds.rotation.y = time * 0.62;
-    }
-
-    // High-altitude clouds rotate slower, opposite tilt for parallax
-    if (cloudsHigh) {
-      cloudsHigh.rotation.y = time * 0.45;
-    }
-
-    // Sync ArcGIS overlays with Earth rotation
     if (def.name === 'earth') {
+      // ── Real-time Earth rotation based on UTC ──
+      // The orbit group rotates continuously (orbit.rotation.y), which changes
+      // which direction Earth's local axes point. mesh.rotation.y is in the
+      // orbit's local frame, so we must compensate for the orbit angle.
+      //
+      // Total rotation of texture = orbit.rotation.y + mesh.rotation.y
+      // We need the subsolar meridian to face toward the Sun (at the group origin).
+      // Earth is offset along +X in the orbit group, so the Sun is in the -X direction.
+      // At total_rotation=0, Greenwich (u=0.5) faces +Z. The Sun is at -X = -π/2.
+      // So: total_rotation = -π/2 + subsolarLon → mesh.rotation.y = -π/2 + subsolarLon - orbit.rotation.y
+      const now = new Date();
+      const utcHours = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+      const subsolarLonRad = ((12.0 - utcHours) * 15.0) * Math.PI / 180;
+      mesh.rotation.y = -Math.PI / 2 + subsolarLonRad - orbit.rotation.y;
+
+      // Clouds drift slowly relative to surface
+      if (clouds) clouds.rotation.y = mesh.rotation.y + time * 0.003;
+      if (cloudsHigh) cloudsHigh.rotation.y = mesh.rotation.y - time * 0.002;
+
+      // Sync ArcGIS overlays with Earth rotation
       const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
       if (overlays) {
         for (const overlay of Object.values(overlays)) {
           overlay.rotation.y = mesh.rotation.y;
         }
       }
+
+      // Sync location marker with Earth rotation
+      const marker = group.userData.locationMarker as THREE.Mesh | undefined;
+      if (marker && marker.userData.latLon) {
+        const { lat, lon } = marker.userData.latLon as { lat: number; lon: number };
+        const earthMesh = mesh;
+        const earthGeo = earthMesh.geometry as THREE.SphereGeometry;
+        const r = earthGeo.parameters.radius * 1.02;
+        const phi = (90 - lat) * Math.PI / 180;
+        const theta = (lon + 180) * Math.PI / 180;
+        marker.position.set(
+          -r * Math.sin(phi) * Math.cos(theta),
+          r * Math.cos(phi),
+          r * Math.sin(phi) * Math.sin(theta),
+        );
+        // Marker is child of orbit, so apply mesh rotation manually
+        const rotY = mesh.rotation.y;
+        const x = marker.position.x;
+        const z = marker.position.z;
+        marker.position.x = x * Math.cos(rotY) - z * Math.sin(rotY);
+        marker.position.z = x * Math.sin(rotY) + z * Math.cos(rotY);
+        // Add Earth mesh local position offset
+        marker.position.add(mesh.position);
+        // Update marker shader time
+        if (marker.material instanceof THREE.ShaderMaterial && marker.material.uniforms.uTime) {
+          marker.material.uniforms.uTime.value = time;
+        }
+        // Sync ring position with marker
+        const ring = group.userData.locationRing as THREE.Mesh | undefined;
+        if (ring) {
+          ring.position.copy(marker.position);
+        }
+      }
+    } else {
+      // Other planets: animated rotation
+      mesh.rotation.y = time * 0.08;
+      if (clouds) clouds.rotation.y = time * 0.62;
+      if (cloudsHigh) cloudsHigh.rotation.y = time * 0.45;
     }
 
     // Update planet shader uniforms — sun position for day/night + bump
@@ -1691,12 +1743,16 @@ export async function loadArcGISOverlay(
 
   const ZOOM = 3;
   const TILES = 1 << ZOOM; // 8
-  const CANVAS_SIZE = TILES * 256; // 2048
+  const TILE_PX = 256;
+  const MERC_SIZE = TILES * TILE_PX; // 2048 — Mercator canvas
+  const EQ_W = MERC_SIZE;            // equirectangular output width
+  const EQ_H = MERC_SIZE / 2;        // equirectangular is 2:1 aspect (but we use square for sphere UV)
 
-  const canvas = document.createElement('canvas');
-  canvas.width = CANVAS_SIZE;
-  canvas.height = CANVAS_SIZE;
-  const ctx = canvas.getContext('2d')!;
+  // Step 1: Composite tiles into a Mercator canvas
+  const mercCanvas = document.createElement('canvas');
+  mercCanvas.width = MERC_SIZE;
+  mercCanvas.height = MERC_SIZE;
+  const mercCtx = mercCanvas.getContext('2d')!;
 
   // ArcGIS tile URL format: {baseUrl}/{z}/{y}/{x}
   const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
@@ -1715,33 +1771,65 @@ export async function loadArcGISOverlay(
     return () => {};
   }
 
-  // Composite tiles — ArcGIS uses web Mercator, need to reproject to equirectangular
-  // For low zoom levels, simple placement works reasonably well
   for (const t of loaded) {
     if (t.img) {
-      ctx.drawImage(t.img, t.x * 256, t.y * 256, 256, 256);
+      mercCtx.drawImage(t.img, t.x * TILE_PX, t.y * TILE_PX, TILE_PX, TILE_PX);
     }
   }
 
-  console.info(`[SolarSystem] ArcGIS ${layer}: ${loaded.length}/${TILES * TILES} tiles loaded`);
+  // Step 2: Reproject Mercator → Equirectangular
+  // Mercator Y maps latitude via: y_merc = 0.5 - ln(tan(π/4 + lat/2)) / (2π)  (normalized 0..1)
+  // Equirectangular Y maps latitude linearly: y_eq = 0.5 - lat/π  (normalized 0..1)
+  const CANVAS_SIZE = MERC_SIZE; // output same resolution
+  const canvas = document.createElement('canvas');
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
+  const ctx = canvas.getContext('2d')!;
+
+  // Web Mercator max latitude ≈ 85.051°
+  const MAX_LAT = 85.051 * Math.PI / 180;
+
+  // For each row in the equirectangular output, find the corresponding Mercator source row
+  for (let eqY = 0; eqY < CANVAS_SIZE; eqY++) {
+    // Equirectangular: linear latitude mapping
+    // eqY=0 → +90° (north pole), eqY=CANVAS_SIZE → -90° (south pole)
+    const lat = Math.PI / 2 - (eqY / CANVAS_SIZE) * Math.PI;
+
+    // Clamp to Mercator bounds
+    const clampedLat = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat));
+
+    // Convert latitude to Mercator Y (0..1, 0=top=north)
+    const mercYNorm = (1 - (Math.log(Math.tan(Math.PI / 4 + clampedLat / 2)) / Math.PI)) / 2;
+    const srcY = Math.floor(mercYNorm * MERC_SIZE);
+
+    if (srcY >= 0 && srcY < MERC_SIZE) {
+      // Copy one row from Mercator canvas to equirectangular output
+      ctx.drawImage(mercCanvas, 0, srcY, MERC_SIZE, 1, 0, eqY, CANVAS_SIZE, 1);
+    }
+  }
+
+  console.info(`[SolarSystem] ArcGIS ${layer}: ${loaded.length}/${TILES * TILES} tiles loaded (reprojected)`);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.needsUpdate = true;
 
-  // Determine if this is an overlay (transparent) or full base map
+  // Overlay opacity — borders are semi-transparent; base maps blend lightly
+  const LAYER_OPACITY: Record<string, number> = {
+    borders: 0.75,
+    imagery: 0.6,
+    streets: 0.4,
+    topo: 0.5,
+    darkgray: 0.5,
+  };
   const isOverlay = layer === 'borders';
-  const scale = group.userData.planets?.[0]?.mesh
-    ? 1.0
-    : 0.15; // fallback
-  const earthScale = earth.def.radius * (group.children[0]?.scale.x || 0.15);
 
   const mat = new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
-    opacity: isOverlay ? 0.8 : 0.9,
+    opacity: LAYER_OPACITY[layer] ?? 0.5,
     depthWrite: false,
-    side: isOverlay ? THREE.FrontSide : THREE.FrontSide,
+    side: THREE.FrontSide,
   });
 
   // Create overlay sphere slightly above Earth surface
@@ -1775,4 +1863,179 @@ export async function loadArcGISOverlay(
 /** Get available ArcGIS layer names */
 export function getArcGISLayers(): string[] {
   return Object.keys(ARCGIS_SERVICES);
+}
+
+/** Remove a specific ArcGIS overlay layer from Earth */
+export function removeArcGISOverlay(group: THREE.Group, layer: string): void {
+  const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
+  if (!overlays || !overlays[layer]) return;
+
+  const mesh = overlays[layer];
+  mesh.parent?.remove(mesh);
+  (mesh.geometry as THREE.SphereGeometry).dispose();
+  (mesh.material as THREE.MeshBasicMaterial).dispose();
+  const mat = mesh.material as THREE.MeshBasicMaterial;
+  if (mat.map) mat.map.dispose();
+  delete overlays[layer];
+}
+
+/** Get currently active ArcGIS overlay layer names */
+export function getActiveArcGISLayers(group: THREE.Group): string[] {
+  const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
+  return overlays ? Object.keys(overlays) : [];
+}
+
+/**
+ * Add a "you are here" location marker on Earth.
+ * Uses browser Geolocation API. Returns a cleanup function.
+ */
+export function addLocationMarker(group: THREE.Group): () => void {
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) return () => {};
+
+  // Create marker mesh — tiny glowing sphere, proportional to Earth
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const earthR = earthGeo.parameters.radius;
+  const markerSize = earthR * 0.02; // 2% of Earth radius
+  const markerGeo = new THREE.SphereGeometry(markerSize, 8, 8);
+  const markerMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vViewDir = normalize(cameraPosition - wp.xyz);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      void main() {
+        float pulse = 0.7 + 0.3 * sin(uTime * 3.0);
+        float fresnel = pow(1.0 - abs(dot(vNormal, vViewDir)), 2.0);
+        vec3 color = mix(vec3(0.2, 0.8, 1.0), vec3(1.0, 1.0, 1.0), fresnel);
+        gl_FragColor = vec4(color * pulse, 1.0);
+      }
+    `,
+    transparent: false,
+  });
+  const marker = new THREE.Mesh(markerGeo, markerMat);
+  marker.name = 'location-marker';
+
+  // Outer glow ring
+  const ringGeo = new THREE.RingGeometry(markerSize * 1.5, markerSize * 2.5, 16);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x33ccff,
+    transparent: true,
+    opacity: 0.4,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.name = 'location-ring';
+
+  // Default to (0,0) until geolocation resolves
+  marker.userData.latLon = { lat: 0, lon: 0 };
+  earth.orbit.add(marker);
+  earth.orbit.add(ring);
+  group.userData.locationMarker = marker;
+  group.userData.locationRing = ring;
+
+  // Request geolocation
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        marker.userData.latLon = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        console.info(`[SolarSystem] Location marker: ${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°`);
+      },
+      (err) => {
+        console.warn('[SolarSystem] Geolocation denied, marker at 0°,0°:', err.message);
+      },
+      { enableHighAccuracy: false, timeout: 10000 },
+    );
+  }
+
+  return () => {
+    earth.orbit.remove(marker);
+    earth.orbit.remove(ring);
+    markerGeo.dispose();
+    markerMat.dispose();
+    ringGeo.dispose();
+    ringMat.dispose();
+    delete group.userData.locationMarker;
+    delete group.userData.locationRing;
+  };
+}
+
+/**
+ * Enable auto-LOD for Earth — loads higher-resolution ArcGIS satellite imagery
+ * when the camera is close, removes it when zooming out.
+ * Call this once; it returns a cleanup function.
+ */
+export function enableEarthAutoLOD(
+  group: THREE.Group,
+  getCamera: () => THREE.Camera,
+): () => void {
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) return () => {};
+
+  let currentLOD: 'low' | 'high' = 'low';
+  let loading = false;
+  let hiResCleanup: (() => void) | null = null;
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const earthRadius = earthGeo.parameters.radius;
+
+  const checkInterval = setInterval(() => {
+    if (loading) return;
+
+    const cam = getCamera();
+    const earthWorldPos = new THREE.Vector3();
+    earth.mesh.getWorldPosition(earthWorldPos);
+    const dist = cam.position.distanceTo(earthWorldPos);
+    const relDist = dist / earthRadius; // distance in Earth radii
+
+    if (relDist < 8 && currentLOD === 'low') {
+      // Close — load high-res imagery overlay
+      loading = true;
+      currentLOD = 'high';
+      console.info('[SolarSystem] Earth LOD: loading high-res imagery...');
+
+      // Load at zoom 5 (32x32 = 1024 tiles, 8192px canvas) — but cap at zoom 4 for performance
+      loadArcGISOverlay(group, 'imagery')
+        .then((cleanup) => {
+          hiResCleanup = cleanup;
+          // Make it more opaque for hi-res mode
+          const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
+          const imgOverlay = overlays?.['imagery'];
+          if (imgOverlay) {
+            (imgOverlay.material as THREE.MeshBasicMaterial).opacity = 0.85;
+          }
+          console.info('[SolarSystem] Earth LOD: high-res loaded');
+        })
+        .catch(() => { currentLOD = 'low'; })
+        .finally(() => { loading = false; });
+    } else if (relDist > 12 && currentLOD === 'high') {
+      // Far — remove high-res overlay
+      if (hiResCleanup) {
+        hiResCleanup();
+        hiResCleanup = null;
+      }
+      removeArcGISOverlay(group, 'imagery');
+      currentLOD = 'low';
+      console.info('[SolarSystem] Earth LOD: reverted to base texture');
+    }
+  }, 2000); // check every 2 seconds
+
+  return () => {
+    clearInterval(checkInterval);
+    if (hiResCleanup) hiResCleanup();
+  };
 }
