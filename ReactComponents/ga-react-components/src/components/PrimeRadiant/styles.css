@@ -2826,22 +2826,32 @@
     gap: 4px;
   }
 
-  /* Icon rail → bottom tab bar */
+  /* Icon rail → bottom tab bar (scrollable when many panels) */
   .icon-rail {
     flex-direction: row;
     width: 100%;
-    height: 48px;
+    height: 52px;
     border-left: none;
     border-top: 1px solid #30363d;
     padding: 0 4px;
-    justify-content: space-around;
+    justify-content: flex-start;
     flex-shrink: 0;
     order: 2; /* after canvas area */
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;          /* Firefox */
+    gap: 2px;
+  }
+
+  .icon-rail::-webkit-scrollbar {
+    display: none;                   /* Chrome/Safari */
   }
 
   .icon-rail__btn {
     min-width: 44px;
     min-height: 44px;
+    flex-shrink: 0;
   }
 
   .icon-rail__btn--active::before {
@@ -5611,6 +5621,20 @@
 .prime-radiant__triage-item-summary {
   font-size: 8px; color: #8b949e; padding: 2px 0 0 20px;
   line-height: 1.3; font-style: italic;
+}
+.prime-radiant__triage-send-btn {
+  font-size: 7px; padding: 1px 6px; border-radius: 3px;
+  background: rgba(51, 204, 102, 0.15); color: #33CC66;
+  border: 1px solid rgba(51, 204, 102, 0.3); cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  transition: background 0.15s;
+}
+.prime-radiant__triage-send-btn:hover {
+  background: rgba(51, 204, 102, 0.25); border-color: #33CC66;
+}
+.prime-radiant__triage-sent {
+  font-size: 7px; color: #33CC66; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* Drop target overlay */

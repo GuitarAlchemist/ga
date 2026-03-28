@@ -56,6 +56,8 @@ import { GodotScene } from './GodotScene';
 import { GisPanel } from './GisPanel';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
+import { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
+import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -604,6 +606,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // GIS layer managers (one per planet)
   const gisManagersRef = useRef<Map<string, GisLayerManager>>(new Map());
   const [gisManagers, setGisManagers] = useState<Map<string, GisLayerManager>>(new Map());
+  const signalRGisBridgeRef = useRef<SignalRGisBridgeHandle | null>(null);
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
@@ -1917,6 +1920,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     gisManagersRef.current = gisMgrs;
     setGisManagers(gisMgrs);
 
+    // ─── SignalR → GIS bridge (algedonic signals + belief changes → live pins) ───
+    const earthGis = gisMgrs.get('earth');
+    if (earthGis) {
+      signalRGisBridgeRef.current = startSignalRGisBridge(earthGis, (event) => {
+        console.log('[SignalRGisBridge]', event);
+      });
+    }
+
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
     solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
@@ -2091,7 +2102,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             setGraphIndex(buildGraphIndex(freshGraph));
           }
         },
-        onAlgedonicSignal: handleAlgedonicSignal,
+        onAlgedonicSignal: (signal) => {
+          handleAlgedonicSignal(signal);
+          signalRGisBridgeRef.current?.handleAlgedonicSignal(signal);
+        },
+        onBeliefUpdate: (belief) => {
+          signalRGisBridgeRef.current?.handleBeliefUpdate(belief);
+        },
         onViewersChanged: (viewerList) => {
           setViewers(viewerList);
           // Track our own connection ID — it's the one we just added
@@ -2145,6 +2162,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
+      signalRGisBridgeRef.current?.cleanup();
+      signalRGisBridgeRef.current = null;
       cloudCleanupOuter?.();
       markerCleanupOuter?.();
       lodCleanupOuter?.();
@@ -2745,7 +2764,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <IcicleDrawer graphData={graphData} />
 
       {/* Triage drop zone — bottom center, drag/paste anything for AI classification */}
-      <TriageDropZone onNavigateToPanel={(panelId) => setActivePanel(panelId as PanelId)} />
+      <TriageDropZone
+        onNavigateToPanel={(panelId) => setActivePanel(panelId as PanelId)}
+        onDispatch={(dispatch) => {
+          // Store dispatched items in localStorage for target panels to pick up
+          const key = `ixql-triage-dispatched-${dispatch.category}`;
+          const existing = JSON.parse(localStorage.getItem(key) ?? '[]');
+          existing.unshift({
+            content: dispatch.content,
+            summary: dispatch.summary,
+            type: dispatch.type,
+            timestamp: new Date().toISOString(),
+          });
+          localStorage.setItem(key, JSON.stringify(existing.slice(0, 50)));
+        }}
+      />
 
       </div>{/* end canvas-area */}
 
