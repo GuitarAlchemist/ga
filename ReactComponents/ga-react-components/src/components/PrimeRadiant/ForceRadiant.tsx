@@ -2789,7 +2789,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               }, 1600);
             }}
           >
-            <span style={{ fontSize: '14px' }}>{p.icon}</span>
+            <span style={{ fontSize: '10px', lineHeight: 1 }}>{p.icon}</span>
             <span className="prime-radiant__planet-label">{p.name}</span>
           </button>
         ))}

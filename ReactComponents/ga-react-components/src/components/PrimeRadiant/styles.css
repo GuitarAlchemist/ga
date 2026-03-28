@@ -2043,36 +2043,49 @@
   transform: translateX(-50%);
   z-index: 20;
   display: flex;
-  gap: 2px;
+  gap: 0;
   background: rgba(13, 17, 23, 0.8);
   border: 1px solid #21262d;
-  border-radius: 20px;
-  padding: 3px 6px;
+  border-radius: 14px;
+  padding: 2px 4px;
   backdrop-filter: blur(6px);
 }
 .prime-radiant__planet-btn {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1px;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 3px 5px;
+  padding: 4px 5px;
   border-radius: 8px;
   transition: background 0.2s;
 }
 .prime-radiant__planet-btn:hover {
-  background: rgba(255, 215, 0, 0.1);
+  background: rgba(255, 215, 0, 0.12);
 }
 .prime-radiant__planet-label {
-  font-size: 7px;
-  color: #6b7280;
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  font-size: 9px;
+  color: #e6edf3;
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.3px;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 21;
 }
 .prime-radiant__planet-btn:hover .prime-radiant__planet-label {
-  color: #FFD700;
+  display: block;
 }
 /* ─── GIS layer toggle panel ─── */
 .prime-radiant__gis-panel {
@@ -5535,7 +5548,7 @@
 
 /* ─── Triage Drop Zone ─── */
 .prime-radiant__triage {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: 0; right: 16px; left: auto; transform: none;
   z-index: 35; pointer-events: auto;
   transition: all 0.3s ease;
 }
@@ -5570,7 +5583,7 @@
 }
 
 /* Expanded panel */
-.prime-radiant__triage--expanded { bottom: 0; left: 50%; }
+.prime-radiant__triage--expanded { bottom: 0; right: 16px; left: auto; transform: none; }
 .prime-radiant__triage-panel {
   width: 380px; max-height: 320px;
   background: rgba(13, 17, 23, 0.94);
