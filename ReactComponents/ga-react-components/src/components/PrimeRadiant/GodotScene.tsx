@@ -7,6 +7,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GodotSceneBuilder } from './GodotSceneBuilder';
+import { createGodotReactSync, type GodotReactSyncHandle } from './GodotReactSync';
+import type { GisLayerManager } from './GisLayer';
 
 // ---------------------------------------------------------------------------
 // Message protocol — React <-> Godot postMessage bridge
@@ -43,6 +45,8 @@ export interface GodotSceneProps {
   onReady?: () => void;
   /** Called when user clicks "expand" in panel mode */
   onExpand?: () => void;
+  /** GIS layer manager for the Godot <-> React sync bridge */
+  gisManager?: GisLayerManager | null;
 }
 
 // Default location for the Godot web export (served from public/ or a known path)
@@ -59,11 +63,32 @@ export const GodotScene: React.FC<GodotSceneProps> = ({
   onClose,
   onReady,
   onExpand,
+  gisManager,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const readyRef = useRef(false);
+  const syncRef = useRef<GodotReactSyncHandle | null>(null);
+
+  // --- Godot <-> React sync bridge (panel viewer mode) ---
+  useEffect(() => {
+    if (mode !== 'panel' || !gisManager) return;
+
+    // Defer creation until iframe is mounted and Godot is ready
+    if (!iframeRef.current || !readyRef.current) return;
+
+    const sync = createGodotReactSync(
+      iframeRef.current,
+      gisManager,
+      (nodeId) => onNodeClick?.(nodeId),
+    );
+    syncRef.current = sync;
+    return () => {
+      sync.cleanup();
+      syncRef.current = null;
+    };
+  }, [mode, gisManager, onNodeClick]);
 
   // --- Inbound message handler (Godot -> React) ---
   useEffect(() => {
