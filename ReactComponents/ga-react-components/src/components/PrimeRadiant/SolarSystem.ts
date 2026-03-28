@@ -1539,20 +1539,24 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
       ctx.drawImage(img, x * tileW, y * tileH, tileW, tileH);
     }
 
-    // Extract clouds: GIBS tiles are true-color satellite imagery (land + ocean + clouds).
-    // Clouds are bright white; extract brightness and use as cloud alpha overlay.
+    // Extract clouds: GIBS tiles are true-color (land + ocean + clouds).
+    // Clouds are bright AND low-saturation (white/gray). Land is bright but colored.
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i], g = data[i + 1], b = data[i + 2];
       const brightness = (r + g + b) / 3;
-      // Only treat bright pixels as clouds (threshold: > 160 brightness)
-      // Below threshold = land/ocean = transparent
-      const cloudAlpha = Math.max(0, (brightness - 140) / 115) * 255;
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const saturation = maxC > 0 ? (maxC - minC) / maxC : 0;
+      // Clouds: bright (>180) AND low saturation (<0.25) — filters out colored land
+      // Deserts are bright but yellowish (high sat), ocean is dark, ice is white (kept)
+      const isCloud = brightness > 180 && saturation < 0.25;
+      const cloudAlpha = isCloud ? Math.min(255, (brightness - 180) / 75 * 255) : 0;
       data[i] = 255;
       data[i + 1] = 255;
       data[i + 2] = 255;
-      data[i + 3] = Math.min(255, cloudAlpha * 1.3);
+      data[i + 3] = cloudAlpha;
     }
     ctx.putImageData(imageData, 0, 0);
 
@@ -1590,15 +1594,17 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
       ctx.drawImage(img, x * tileW, y * tileH, tileW, tileH);
     }
 
-    // OWM alpha processing
+    // OWM alpha processing — OWM tiles are already cloud-only, just boost contrast
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
       const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      // Only bright areas are clouds, cut threshold to avoid haze
+      const alpha = brightness > 100 ? Math.min(255, (brightness - 100) / 155 * 255) : 0;
       data[i] = 255;
       data[i + 1] = 255;
       data[i + 2] = 255;
-      data[i + 3] = Math.min(255, brightness * 1.5);
+      data[i + 3] = alpha;
     }
     ctx.putImageData(imageData, 0, 0);
 
