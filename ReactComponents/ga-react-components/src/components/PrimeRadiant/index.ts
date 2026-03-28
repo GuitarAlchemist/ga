@@ -24,7 +24,7 @@ export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealth
 export type { BeliefState, TetravalentStatus, BeliefEvidence, EvidenceItem } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
-export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates, togglePlanetAtmosphere } from './SolarSystem';
+export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates, togglePlanetAtmosphere, toggleEarthClouds, toggleEarthBorders } from './SolarSystem';
 export { startVisualCriticLoop } from './VisualCriticLoop';
 export { startDemerzelDriver } from './DemerzelIxqlDriver';
 export type { VisualCriticResult, VisualCriticConfig, CriticPhase } from './VisualCriticLoop';

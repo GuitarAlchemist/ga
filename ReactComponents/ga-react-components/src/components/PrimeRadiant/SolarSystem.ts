@@ -837,42 +837,64 @@ export function createSolarSystem(scale: number): THREE.Group {
         // Base texture color
         vec3 baseTex = texture2D(uSunTex, vUv).rgb;
 
-        // Granulation — high-frequency convection cells
-        float granulation = fbm(vPos * 12.0 + vec3(t * 0.3, t * 0.2, t * 0.25));
+        // ── Multi-scale convection (realistic solar granulation) ──
+        // Fine granulation — convection cells (~1000km on real sun)
+        float fineGran = fbm(vPos * 18.0 + vec3(t * 0.4, t * 0.3, t * 0.35));
+        // Medium granulation — supergranulation cells
+        float medGran = fbm(vPos * 6.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
+        // Large-scale plasma flow — differential rotation bands
+        float flow = fbm(vPos * 2.0 + vec3(t * 0.05, t * 0.03, -t * 0.04));
 
-        // Large-scale turbulence — slow-rolling plasma currents
-        float turbulence = fbm(vPos * 3.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
+        // ── Sunspots — darker, cooler magnetic regions ──
+        float spotNoise = fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01));
+        float spots = smoothstep(0.58, 0.68, spotNoise);
+        // Penumbra around spots (lighter ring)
+        float penumbra = smoothstep(0.52, 0.58, spotNoise) * (1.0 - spots);
 
-        // Sunspots — darker regions that drift slowly
-        float spots = smoothstep(0.58, 0.65, fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01)));
+        // ── Faculae — bright regions near sunspots ──
+        float faculae = smoothstep(0.45, 0.52, spotNoise) * (1.0 - spots) * (1.0 - penumbra);
 
-        // Build surface color
-        vec3 deepOrange = vec3(0.85, 0.35, 0.05);
-        vec3 brightYellow = vec3(1.0, 0.92, 0.7);
-        vec3 hotWhite = vec3(1.0, 0.98, 0.95);
+        // ── Color palette (no atmosphere — pure photosphere) ──
+        vec3 deepRed = vec3(0.7, 0.2, 0.02);      // spot umbra
+        vec3 warmOrange = vec3(0.95, 0.55, 0.12);  // penumbra
+        vec3 brightYellow = vec3(1.0, 0.88, 0.55); // normal photosphere
+        vec3 hotWhite = vec3(1.0, 0.97, 0.88);     // granulation peaks
+        vec3 faculaeBright = vec3(1.0, 0.95, 0.75); // faculae (slightly brighter than avg)
 
-        // Blend texture with procedural plasma
-        vec3 plasma = mix(deepOrange, brightYellow, turbulence);
-        plasma = mix(plasma, hotWhite, granulation * 0.3);
-        vec3 col = mix(baseTex * 1.1, plasma, 0.55);
+        // Build photosphere color from convection layers
+        vec3 photosphere = mix(brightYellow, hotWhite, fineGran * 0.5);
+        photosphere = mix(photosphere, warmOrange, (1.0 - medGran) * 0.2);
+        // Blend texture with procedural (texture provides large-scale structure)
+        vec3 col = mix(baseTex * 1.05, photosphere, 0.6);
 
-        // Apply sunspots (darker cooler regions)
-        col = mix(col, vec3(0.4, 0.15, 0.02), spots * 0.6);
+        // Apply features
+        col = mix(col, deepRed, spots * 0.75);            // dark spot umbra
+        col = mix(col, warmOrange, penumbra * 0.4);        // lighter penumbra ring
+        col = mix(col, faculaeBright, faculae * 0.25);     // bright faculae
 
-        // Flare hotspots — occasional bright blue-white flares
-        float flare = smoothstep(0.72, 0.85, noise(vPos * 8.0 + vec3(t * 0.5, -t * 0.3, t * 0.4)));
-        col += vec3(0.6, 0.7, 1.0) * flare * 0.35;
+        // ── Prominence-like bright eruptions at the limb ──
+        float limb = 1.0 - abs(dot(normalize(vNormal), normalize(vViewDir)));
+        float prominence = smoothstep(0.7, 0.95, limb) * smoothstep(0.6, 0.75, noise(vPos * 5.0 + vec3(t * 0.3)));
+        col += vec3(1.0, 0.4, 0.1) * prominence * 0.5;
 
-        // Limb darkening — edges darker than center
-        float limbFactor = pow(max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 0.4);
-        col *= mix(0.3, 1.0, limbFactor);
+        // ── Coronal bright points (tiny hot flashes) ──
+        float coronalPt = smoothstep(0.78, 0.88, noise(vPos * 12.0 + vec3(t * 0.8, -t * 0.5, t * 0.6)));
+        col += vec3(0.5, 0.6, 1.0) * coronalPt * 0.15;
 
-        // Pulsing emissive brightness
-        float pulse = 1.0 + 0.04 * sin(uTime * 0.5) + 0.02 * sin(uTime * 1.3);
+        // ── Limb darkening (realistic — edges are cooler/dimmer) ──
+        float limbFactor = pow(max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 0.35);
+        // Color shift at limb: redder at edges (lower layers visible obliquely)
+        vec3 limbColor = mix(vec3(0.8, 0.3, 0.05), vec3(1.0), limbFactor);
+        col *= limbColor;
+        col *= mix(0.25, 1.0, limbFactor);
+
+        // ── Subtle magnetic field lines (very faint texture) ──
+        float magField = sin(vPos.y * 30.0 + flow * 5.0) * 0.02 * (1.0 - limbFactor);
+        col += vec3(1.0, 0.8, 0.4) * magField;
+
+        // Gentle pulsing (5-minute solar oscillation analog)
+        float pulse = 1.0 + 0.02 * sin(uTime * 0.3) + 0.01 * sin(uTime * 0.8);
         col *= pulse;
-
-        // Slight boost to overall brightness
-        col *= 1.15;
 
         gl_FragColor = vec4(col, 1.0);
       }
@@ -1059,6 +1081,26 @@ export function createSolarSystem(scale: number): THREE.Group {
 
     let cloudsMesh: THREE.Mesh | undefined;
     let cloudsHighMesh: THREE.Mesh | undefined;
+
+    // Earth country borders overlay (initially hidden, toggled by user)
+    if (def.name === 'earth') {
+      const bordersTex = loadTex('2k_earth_borders.png');
+      bordersTex.colorSpace = THREE.SRGBColorSpace;
+      const bordersMat = new THREE.MeshBasicMaterial({
+        map: bordersTex,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+      });
+      const bordersMesh = new THREE.Mesh(
+        new THREE.SphereGeometry((def.radius + 0.005) * scale, 32, 32),
+        bordersMat,
+      );
+      bordersMesh.name = 'earth-borders';
+      bordersMesh.visible = false; // off by default
+      bordersMesh.position.copy(mesh.position);
+      orbit.add(bordersMesh);
+    }
 
     // Earth clouds — two layers for depth parallax
     if (def.name === 'earth' && def.textureClouds) {
@@ -1250,6 +1292,30 @@ export function togglePlanetAtmosphere(group: THREE.Group, planetName: string): 
 }
 
 /** Get all planet mesh names (for raycasting targets). */
+/**
+ * Toggle Earth's cloud layers on/off. Returns new visibility state.
+ */
+export function toggleEarthClouds(group: THREE.Group): boolean {
+  const clouds = group.getObjectByName('earth-clouds');
+  const cloudsHigh = group.getObjectByName('earth-clouds-high');
+  const newState = clouds ? !clouds.visible : false;
+  if (clouds) clouds.visible = newState;
+  if (cloudsHigh) cloudsHigh.visible = newState;
+  return newState;
+}
+
+/**
+ * Toggle Earth's country borders overlay on/off. Returns new visibility state.
+ */
+export function toggleEarthBorders(group: THREE.Group): boolean {
+  const borders = group.getObjectByName('earth-borders');
+  if (borders) {
+    borders.visible = !borders.visible;
+    return borders.visible;
+  }
+  return false;
+}
+
 export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
   const planets = group.userData.planets as { mesh: THREE.Mesh }[] | undefined;
   if (!planets) return [];
