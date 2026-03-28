@@ -6365,6 +6365,15 @@
 .gis-panel__btn--danger { color: #FF4444; border-color: rgba(255, 68, 68, 0.2); background: rgba(255, 68, 68, 0.08); }
 .gis-panel__btn--danger:hover { background: rgba(255, 68, 68, 0.2); }
 
+.gis-panel__hint {
+  padding: 6px 12px;
+  font-size: 10px;
+  color: rgba(255, 179, 0, 0.6);
+  background: rgba(255, 179, 0, 0.05);
+  border-bottom: 1px solid rgba(255, 179, 0, 0.08);
+  line-height: 1.4;
+}
+
 /* ─── Library Comic Actions + PDF Reader ─── */
 .prime-radiant__library-item-actions {
   display: flex; gap: 6px; margin-top: 6px;

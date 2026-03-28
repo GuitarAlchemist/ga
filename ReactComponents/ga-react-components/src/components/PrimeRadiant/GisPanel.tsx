@@ -57,7 +57,19 @@ const PRESET_PATHS: Record<string, GisPath[]> = {
   ],
 };
 
-const PLANETS = ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury', 'uranus', 'neptune'];
+// Planet capabilities — controls what GIS features are available per planet
+const PLANET_META: Record<string, { label: string; hasRealGeo: boolean; description: string }> = {
+  earth:   { label: 'Earth',   hasRealGeo: true,  description: 'Real geography — cities, coordinates, satellite data' },
+  mars:    { label: 'Mars',    hasRealGeo: false, description: 'Abstract surface — governance markers only' },
+  venus:   { label: 'Venus',   hasRealGeo: false, description: 'Abstract surface — governance markers only' },
+  jupiter: { label: 'Jupiter', hasRealGeo: false, description: 'Gas giant — orbital markers only' },
+  saturn:  { label: 'Saturn',  hasRealGeo: false, description: 'Gas giant — orbital markers only' },
+  mercury: { label: 'Mercury', hasRealGeo: false, description: 'Abstract surface — governance markers only' },
+};
+
+// Presets scoped by planet capability
+const EARTH_ONLY_PRESETS = new Set(['World Capitals', 'AI Data Centers', 'Data Flow']);
+const PLANETS = Object.keys(PLANET_META);
 
 // ---------------------------------------------------------------------------
 // Component
@@ -157,16 +169,27 @@ export const GisPanel: React.FC<GisPanelProps> = ({ managers }) => {
     <div className="gis-panel">
       {/* Planet selector */}
       <div className="gis-panel__planet-bar">
-        {PLANETS.filter(p => !managers || managers.has(p)).map(p => (
-          <button
-            key={p}
-            className={`gis-panel__planet-btn ${activePlanet === p ? 'gis-panel__planet-btn--active' : ''}`}
-            onClick={() => setActivePlanet(p)}
-          >
-            {p.charAt(0).toUpperCase() + p.slice(1)}
-          </button>
-        ))}
+        {PLANETS.filter(p => !managers || managers.has(p)).map(p => {
+          const meta = PLANET_META[p];
+          return (
+            <button
+              key={p}
+              className={`gis-panel__planet-btn ${activePlanet === p ? 'gis-panel__planet-btn--active' : ''}`}
+              onClick={() => setActivePlanet(p)}
+              title={meta?.description}
+            >
+              {meta?.label ?? p}
+            </button>
+          );
+        })}
       </div>
+      {/* Planet capability hint */}
+      {PLANET_META[activePlanet] && !PLANET_META[activePlanet].hasRealGeo && (
+        <div className="gis-panel__hint">
+          Abstract surface — real-world locations (cities, coordinates) not applicable.
+          Use governance markers or custom pins.
+        </div>
+      )}
 
       {/* Stats bar */}
       <div className="gis-panel__stats">
@@ -175,20 +198,24 @@ export const GisPanel: React.FC<GisPanelProps> = ({ managers }) => {
         <span>{manager?.clusterCount ?? 0} clusters</span>
       </div>
 
-      {/* Preset datasets */}
+      {/* Preset datasets — filtered by planet capability */}
       <div className="gis-panel__section">
         <div className="gis-panel__section-header">Presets</div>
         <div className="gis-panel__presets">
-          {Object.keys(PRESET_PINS).map(name => (
-            <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPins(name)}>
-              📍 {name}
-            </button>
-          ))}
-          {Object.keys(PRESET_PATHS).map(name => (
-            <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPaths(name)}>
-              🛤 {name}
-            </button>
-          ))}
+          {Object.keys(PRESET_PINS)
+            .filter(name => !EARTH_ONLY_PRESETS.has(name) || activePlanet === 'earth')
+            .map(name => (
+              <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPins(name)}>
+                📍 {name}
+              </button>
+            ))}
+          {Object.keys(PRESET_PATHS)
+            .filter(name => !EARTH_ONLY_PRESETS.has(name) || activePlanet === 'earth')
+            .map(name => (
+              <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPaths(name)}>
+                🛤 {name}
+              </button>
+            ))}
         </div>
       </div>
 
