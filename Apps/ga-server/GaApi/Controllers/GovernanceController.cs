@@ -483,9 +483,21 @@ public class GovernanceController(
             }
         }
 
-        // Departments → personas (matching names)
+        // Departments → first constitution (organizational hierarchy)
         foreach (var dept in departments)
         {
+            if (constitutions.Count > 0)
+            {
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{constitutions[0].Id}-{dept.Id}",
+                    Source = constitutions[0].Id,
+                    Target = dept.Id,
+                    Type = "constitutional-hierarchy",
+                    Weight = 0.6,
+                });
+            }
+            // Also connect to matching persona if names align
             var matchingPersona = personas.FirstOrDefault(p =>
                 dept.Name.Contains(p.Name, StringComparison.OrdinalIgnoreCase) ||
                 p.Name.Contains(dept.Name, StringComparison.OrdinalIgnoreCase));
@@ -498,6 +510,90 @@ public class GovernanceController(
                     Target = matchingPersona.Id,
                     Type = "policy-persona",
                     Weight = 0.7,
+                });
+            }
+        }
+
+        // Schemas → policies (schemas validate governance artifacts)
+        var schemas = nodes.Where(n => n.Type == "schema").ToList();
+        foreach (var schema in schemas)
+        {
+            if (policies.Count > 0)
+            {
+                // Connect each schema to a related policy (round-robin)
+                var policy = policies[schemas.IndexOf(schema) % policies.Count];
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{policy.Id}-{schema.Id}",
+                    Source = policy.Id,
+                    Target = schema.Id,
+                    Type = "policy-schema",
+                    Weight = 0.4,
+                });
+            }
+        }
+
+        // Tests → constitutions (tests verify governance compliance)
+        var tests = nodes.Where(n => n.Type == "test").ToList();
+        foreach (var test in tests)
+        {
+            if (constitutions.Count > 0)
+            {
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{constitutions[0].Id}-{test.Id}",
+                    Source = constitutions[0].Id,
+                    Target = test.Id,
+                    Type = "governance-test",
+                    Weight = 0.3,
+                });
+            }
+        }
+
+        // Pipelines → policies (pipelines enforce policy automation)
+        var pipelines = nodes.Where(n => n.Type == "pipeline").ToList();
+        foreach (var pipeline in pipelines)
+        {
+            if (policies.Count > 0)
+            {
+                var policy = policies[pipelines.IndexOf(pipeline) % policies.Count];
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{policy.Id}-{pipeline.Id}",
+                    Source = policy.Id,
+                    Target = pipeline.Id,
+                    Type = "policy-pipeline",
+                    Weight = 0.4,
+                });
+            }
+        }
+
+        // IxQL examples → pipelines or schemas (IxQL queries governance)
+        var ixqls = nodes.Where(n => n.Type == "ixql").ToList();
+        foreach (var ixql in ixqls)
+        {
+            if (pipelines.Count > 0)
+            {
+                var pipeline = pipelines[ixqls.IndexOf(ixql) % pipelines.Count];
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{pipeline.Id}-{ixql.Id}",
+                    Source = pipeline.Id,
+                    Target = ixql.Id,
+                    Type = "pipeline-ixql",
+                    Weight = 0.3,
+                });
+            }
+            else if (schemas.Count > 0)
+            {
+                var schema = schemas[ixqls.IndexOf(ixql) % schemas.Count];
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"edge-{schema.Id}-{ixql.Id}",
+                    Source = schema.Id,
+                    Target = ixql.Id,
+                    Type = "schema-ixql",
+                    Weight = 0.3,
                 });
             }
         }
