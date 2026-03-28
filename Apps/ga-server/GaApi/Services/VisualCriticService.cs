@@ -55,6 +55,9 @@ public class VisualCriticService
         signal_severity: "critical" if quality < 3, "warning" if quality < 5, "info" otherwise
         """;
 
+    private readonly string _ollamaUrl;
+    private readonly string _ollamaModel;
+
     public VisualCriticService(IConfiguration configuration, ILogger<VisualCriticService> logger, IHttpClientFactory httpFactory)
     {
         _logger = logger;
@@ -62,6 +65,8 @@ public class VisualCriticService
         _model = configuration["Anthropic:VisionModel"] ?? "claude-haiku-4-5-20251001";
         _apiKey = configuration["Anthropic:ApiKey"]
             ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+        _ollamaUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+        _ollamaModel = configuration["Ollama:VisionModel"] ?? "llava:7b";
     }
 
     public async Task<VisualCriticResult> AnalyzeScreenshotAsync(
@@ -69,17 +74,20 @@ public class VisualCriticService
         string mediaType = "image/png",
         CancellationToken ct = default)
     {
-        if (string.IsNullOrEmpty(_apiKey))
+        // Try Claude first, fall back to Ollama (free, local)
+        if (!string.IsNullOrEmpty(_apiKey))
         {
-            return new VisualCriticResult
-            {
-                Quality = 0,
-                Issues = ["No ANTHROPIC_API_KEY configured"],
-                SignalType = "pain",
-                SignalSeverity = "warning",
-                SignalDescription = "Visual critic unavailable — no API key",
-            };
+            var claudeResult = await TryClaudeAsync(base64Image, mediaType, ct);
+            if (claudeResult != null) return claudeResult;
+            _logger.LogWarning("[VisualCritic] Claude failed, falling back to Ollama");
         }
+
+        return await TryOllamaAsync(base64Image, ct);
+    }
+
+    private async Task<VisualCriticResult?> TryClaudeAsync(
+        string base64Image, string mediaType, CancellationToken ct)
+    {
 
         // Build raw Anthropic API request with vision content
         var requestBody = new
@@ -131,15 +139,8 @@ public class VisualCriticService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("[VisualCritic] API error {Code}: {Body}", response.StatusCode, responseText[..Math.Min(200, responseText.Length)]);
-                return new VisualCriticResult
-                {
-                    Quality = 0,
-                    Issues = [$"API error: {response.StatusCode}"],
-                    SignalType = "pain",
-                    SignalSeverity = "warning",
-                    SignalDescription = $"Visual critic API error: {response.StatusCode}",
-                };
+                _logger.LogWarning("[VisualCritic] Claude API error {Code}: {Body}", response.StatusCode, responseText[..Math.Min(200, responseText.Length)]);
+                return null; // fall through to Ollama
             }
 
             // Parse Anthropic response → extract text content
@@ -171,14 +172,71 @@ public class VisualCriticService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[VisualCritic] Analysis failed");
+            _logger.LogWarning(ex, "[VisualCritic] Claude analysis failed");
+            return null; // fall through to Ollama
+        }
+    }
+
+    private async Task<VisualCriticResult> TryOllamaAsync(string base64Image, CancellationToken ct)
+    {
+        try
+        {
+            var requestBody = new
+            {
+                model = _ollamaModel,
+                prompt = "Analyze this screenshot of a 3D solar system visualization. Focus on Earth's visual quality. " +
+                         "Rate quality 1-10. Return ONLY valid JSON: " +
+                         "{\"quality\":N,\"issues\":[\"...\"],\"ixql_commands\":[],\"signal_type\":\"pain|pleasure\",\"signal_severity\":\"info|warning|critical\",\"signal_description\":\"...\",\"suggestions\":[\"...\"]}",
+                images = new[] { base64Image },
+                stream = false,
+                format = "json",
+            };
+
+            var json = JsonSerializer.Serialize(requestBody);
+            var response = await _http.PostAsync(
+                $"{_ollamaUrl}/api/generate",
+                new StringContent(json, Encoding.UTF8, "application/json"), ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errBody = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning("[VisualCritic] Ollama error {Code}: {Body}", response.StatusCode, errBody[..Math.Min(200, errBody.Length)]);
+                return new VisualCriticResult
+                {
+                    Quality = 0,
+                    Issues = [$"Ollama error: {response.StatusCode}"],
+                    SignalType = "pain", SignalSeverity = "warning",
+                    SignalDescription = "Visual critic: both Claude and Ollama failed",
+                };
+            }
+
+            var responseText = await response.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(responseText);
+            var text = doc.RootElement.GetProperty("response").GetString() ?? "{}";
+
+            // Strip code fences
+            text = text.Trim();
+            if (text.StartsWith("```")) text = text[(text.IndexOf('\n') + 1)..];
+            if (text.EndsWith("```")) text = text[..text.LastIndexOf("```")];
+            text = text.Trim();
+
+            var result = JsonSerializer.Deserialize<VisualCriticResult>(text,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            _logger.LogInformation("[VisualCritic] Ollama quality: {Quality}/10, Issues: {Count}",
+                result?.Quality ?? 0, result?.Issues?.Length ?? 0);
+
+            return result ?? new VisualCriticResult();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[VisualCritic] Ollama analysis failed");
             return new VisualCriticResult
             {
                 Quality = 0,
-                Issues = [$"Analysis failed: {ex.Message}"],
-                SignalType = "pain",
-                SignalSeverity = "warning",
-                SignalDescription = "Visual critic analysis failed",
+                Issues = [$"Both Claude and Ollama failed: {ex.Message}"],
+                SignalType = "pain", SignalSeverity = "warning",
+                SignalDescription = "Visual critic unavailable",
             };
         }
     }
