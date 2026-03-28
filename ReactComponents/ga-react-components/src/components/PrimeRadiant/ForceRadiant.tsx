@@ -1305,24 +1305,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         if (tracked) {
           const trackedObj = solarSystem.getObjectByName(tracked);
           if (trackedObj) {
+            // Disable orbit controls during tracking to prevent jitter
+            // (touch/mouse input fights the lerp, causing oscillation)
+            const controls = fg.controls() as { enabled?: boolean; target?: THREE.Vector3 };
+            if (controls.enabled !== undefined) controls.enabled = false;
+
             const wp = new THREE.Vector3();
             trackedObj.getWorldPosition(wp);
-            // Offset proportional to planet size — fills most of viewport
-            // Get the planet's bounding sphere radius for proper framing
             const geo = (trackedObj as THREE.Mesh).geometry;
             const planetRadius = geo?.boundingSphere?.radius ?? 0.02;
-            const viewDist = planetRadius * 1.8; // close enough to nearly fill screen
-            const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist); // nearly centered, slight upward tilt
+            const viewDist = planetRadius * 1.8;
+            const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist);
             const targetCamPos = wp.clone().add(offset);
-            // Use matched lerp speeds to prevent jitter from speed mismatch
-            const lerpSpeed = 0.08;
-            cam.position.lerp(targetCamPos, lerpSpeed);
-            const controls = fg.controls() as { target?: THREE.Vector3 };
+            // Strong lerp for smooth, jitter-free tracking
+            cam.position.lerp(targetCamPos, 0.12);
             if (controls.target) {
-              controls.target.lerp(wp, lerpSpeed);
+              controls.target.lerp(wp, 0.12);
             }
           }
         } else {
+          // Re-enable orbit controls when not tracking
+          const controls = fg.controls() as { enabled?: boolean };
+          if (controls.enabled !== undefined) controls.enabled = true;
           // Auto-resume follow when camera moves far from the solar system
           const distToSolar = cam.position.distanceTo(solarSystem.position);
           if (distToSolar > 20) {
