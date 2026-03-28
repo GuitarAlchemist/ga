@@ -1048,11 +1048,39 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let lastFpsCheck = Date.now();
     let currentFps = 60;
     let qualityLevel: 'high' | 'medium' | 'low' = 'high';
-    // FPS counter element
-    const fpsEl = document.createElement('div');
-    fpsEl.style.cssText = 'position:absolute;top:8px;left:8px;color:#8b949e;font:11px/1 "JetBrains Mono",monospace;z-index:20;pointer-events:none;';
+    // ─── Performance info panel (FPS + GPU + memory) ───
+    // Detect GPU name from WebGL context
+    let gpuName = 'Unknown GPU';
+    let maxTextureSize = 0;
+    try {
+      const canvas = container.querySelector('canvas');
+      if (canvas) {
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl) {
+          const ext = gl.getExtension('WEBGL_debug_renderer_info');
+          if (ext) {
+            gpuName = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string || 'Unknown GPU';
+          }
+          maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number || 0;
+        }
+      }
+    } catch { /* some browsers block GPU detection */ }
+
+    // Build perf info DOM
+    const perfEl = document.createElement('div');
+    perfEl.className = 'prime-radiant__perf-info';
+    const badgeEl = document.createElement('div');
+    badgeEl.className = 'prime-radiant__perf-badge';
+    badgeEl.textContent = '-- FPS';
+    const detailsEl = document.createElement('div');
+    detailsEl.className = 'prime-radiant__perf-details';
+    perfEl.appendChild(badgeEl);
+    perfEl.appendChild(detailsEl);
     container.style.position = 'relative';
-    container.appendChild(fpsEl);
+    container.appendChild(perfEl);
+    // Expand on hover
+    perfEl.addEventListener('mouseenter', () => perfEl.classList.add('prime-radiant__perf-info--expanded'));
+    perfEl.addEventListener('mouseleave', () => perfEl.classList.remove('prime-radiant__perf-info--expanded'));
 
     let lastCameraSave = 0;
     // Pre-allocate reusable vectors OUTSIDE the tick loop (zero GC pressure)
@@ -1088,8 +1116,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         currentFps = frameCount;
         frameCount = 0;
         lastFpsCheck = now;
-        fpsEl.textContent = `${currentFps} FPS${qualityLevel !== 'high' ? ' [' + qualityLevel + ']' : ''}`;
-        fpsEl.style.color = currentFps >= 45 ? '#33CC66' : currentFps >= 25 ? '#FFB300' : '#FF4444';
+        // Performance grade from FPS
+        const grade = currentFps >= 60 ? 'Excellent' : currentFps >= 45 ? 'Good' : currentFps >= 30 ? 'Fair' : 'Poor';
+        const gradeColor = currentFps >= 60 ? '#33CC66' : currentFps >= 45 ? '#88CC33' : currentFps >= 30 ? '#FFB300' : '#FF4444';
+        const qualityTag = qualityLevel !== 'high' ? ` [${qualityLevel}]` : '';
+        badgeEl.innerHTML = `<span style="color:${gradeColor}">${currentFps} FPS</span> <span class="prime-radiant__perf-grade" style="color:${gradeColor}">${grade}</span>${qualityTag}`;
+        // Update details (only when expanded — cheap innerHTML update once per second)
+        const perf = performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
+        const heapInfo = perf.memory
+          ? `${Math.round(perf.memory.usedJSHeapSize / 1048576)} MB / ${Math.round(perf.memory.jsHeapSizeLimit / 1048576)} MB`
+          : 'N/A';
+        const texInfo = maxTextureSize ? `Max Tex: ${maxTextureSize}px` : '';
+        detailsEl.innerHTML = [
+          `<div class="prime-radiant__perf-row"><span class="prime-radiant__perf-label">GPU</span><span class="prime-radiant__perf-value">${gpuName}</span></div>`,
+          `<div class="prime-radiant__perf-row"><span class="prime-radiant__perf-label">Grade</span><span class="prime-radiant__perf-value" style="color:${gradeColor}">${grade}${qualityTag}</span></div>`,
+          `<div class="prime-radiant__perf-row"><span class="prime-radiant__perf-label">JS Heap</span><span class="prime-radiant__perf-value">${heapInfo}</span></div>`,
+          texInfo ? `<div class="prime-radiant__perf-row"><span class="prime-radiant__perf-label">Texture</span><span class="prime-radiant__perf-value">${texInfo}</span></div>` : '',
+        ].join('');
 
         // Auto-downgrade
         if (currentFps < 20 && qualityLevel !== 'low') {
