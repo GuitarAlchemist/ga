@@ -1283,6 +1283,9 @@ export function createSolarSystem(scale: number): THREE.Group {
           moonOrbit.add(geyser);
         }
 
+        // Spread moons around orbit — deterministic phase from distance + speed
+        moonOrbit.rotation.y = moonDef.distance * 3.14159 + moonDef.speed * 1.618;
+
         orbit.add(moonOrbit);
         moonInstances.push({ mesh: moonMesh, def: moonDef, planetMesh: mesh, orbitGroup: moonOrbit });
       }
@@ -1926,7 +1929,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   const moons = group.userData.moonInstances as MoonInstance[] | undefined;
   if (moons) {
     for (const { mesh, def, orbitGroup } of moons) {
-      orbitGroup.rotation.y = time * def.speed * 0.3;
+      const moonPhase = def.distance * 3.14159 + def.speed * 1.618;
+      orbitGroup.rotation.y = moonPhase + time * def.speed * 0.3;
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
 
       if (mesh.material instanceof THREE.ShaderMaterial) {
