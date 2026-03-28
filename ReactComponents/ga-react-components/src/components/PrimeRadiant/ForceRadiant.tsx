@@ -1957,12 +1957,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <div className="prime-radiant__canvas-area">
         <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
 
-      {/* Backend connection status badge */}
-      <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}
-        title={backendStatus === 'connected' ? 'Backend API is connected and responding' : backendStatus === 'checking' ? 'Checking backend connection...' : 'Backend API is unreachable — some features may be unavailable'}
-      >
+      {/* Backend connection status badge with capabilities popover */}
+      <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
         <span className="prime-radiant__backend-dot" />
         <span>{backendStatus === 'connected' ? 'API Connected' : backendStatus === 'checking' ? 'Checking...' : 'API Offline'}</span>
+        <div className="prime-radiant__api-popover">
+          {backendStatus === 'connected' ? (
+            <>
+              <div className="prime-radiant__api-popover-title">Backend Capabilities</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Chatbot (Ollama RAG)</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Governance Graph + SignalR</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Algedonic Signals</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Voice TTS (Voxtral)</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">File Content Viewer</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">YouTube → Tab Pipeline</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Vector Search (OPTIC-K)</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">GraphQL (HotChocolate)</div>
+            </>
+          ) : backendStatus === 'disconnected' ? (
+            <>
+              <div className="prime-radiant__api-popover-title">Backend Offline</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--off">Chatbot unavailable</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--off">Live governance updates paused</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Graph (cached data)</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">3D visualization</div>
+              <div className="prime-radiant__api-popover-item prime-radiant__api-popover-item--ok">Planet navigation</div>
+            </>
+          ) : (
+            <div className="prime-radiant__api-popover-title">Checking connection...</div>
+          )}
+        </div>
       </div>
 
       {/* HUD overlays on the canvas — floating, center-top */}
