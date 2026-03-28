@@ -1052,6 +1052,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     container.appendChild(fpsEl);
 
     let lastCameraSave = 0;
+    // Pre-allocate reusable vectors OUTSIDE the tick loop (zero GC pressure)
+    const _tarsOffset = new THREE.Vector3();
+    const _faceOffset = new THREE.Vector3();
+    const _solarOffset = new THREE.Vector3();
+    const _stationOffset = new THREE.Vector3();
+    const _trackWp = new THREE.Vector3();
+    const _trackOffset = new THREE.Vector3();
+
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
@@ -1275,16 +1283,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
-      const tarsOffset = new THREE.Vector3(-50, -28, -50);
-      tarsOffset.applyQuaternion(cam.quaternion);
-      tarsRobot.position.copy(cam.position).add(tarsOffset);
+      _tarsOffset.set(-50, -28, -50);
+      _tarsOffset.applyQuaternion(cam.quaternion);
+      tarsRobot.position.copy(cam.position).add(_tarsOffset);
       tarsRobot.quaternion.copy(cam.quaternion);
 
       // Demerzel face — far left, above TARS
       updateDemerzelFace(demerzelFace, t, cam.position, false);
-      const faceOffset = new THREE.Vector3(-50, -8, -40);
-      faceOffset.applyQuaternion(cam.quaternion);
-      demerzelFace.position.copy(cam.position).add(faceOffset);
+      _faceOffset.set(-50, -8, -40);
+      _faceOffset.applyQuaternion(cam.quaternion);
+      demerzelFace.position.copy(cam.position).add(_faceOffset);
       demerzelFace.quaternion.copy(cam.quaternion);
 
       // (Trantor removed — replaced by Earth + nebulae)
@@ -1298,9 +1306,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
       if (solarFollowCameraRef.current) {
-        const solarOffset = new THREE.Vector3(6, 4, -12);
-        solarOffset.applyQuaternion(cam.quaternion);
-        solarSystem.position.copy(cam.position).add(solarOffset);
+        _solarOffset.set(6, 4, -12);
+        _solarOffset.applyQuaternion(cam.quaternion);
+        solarSystem.position.copy(cam.position).add(_solarOffset);
       } else {
         // ─── Planet tracking mode — camera follows orbiting planet ───
         const tracked = trackedPlanetRef.current;
@@ -1312,19 +1320,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             if (controls.enabled !== undefined) controls.enabled = false;
             if (controls.autoRotate !== undefined) controls.autoRotate = false;
 
-            const wp = new THREE.Vector3();
-            trackedObj.getWorldPosition(wp);
+            trackedObj.getWorldPosition(_trackWp);
             const geo = (trackedObj as THREE.Mesh).geometry;
             const planetRadius = geo?.boundingSphere?.radius ?? 0.02;
             const viewDist = planetRadius * 1.8;
-            const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist);
-            const targetCamPos = wp.clone().add(offset);
-
-            // Direct copy (no lerp) — eliminates ALL jitter on phone
-            // The orbit itself provides smooth motion
-            cam.position.copy(targetCamPos);
+            _trackOffset.set(0, planetRadius * 0.05, viewDist);
+            // Direct set — zero allocations, zero jitter
+            cam.position.copy(_trackWp).add(_trackOffset);
             if (controls.target) {
-              controls.target.copy(wp);
+              controls.target.copy(_trackWp);
             }
           }
         } else {
@@ -1344,9 +1348,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (qualityLevel !== 'low') {
         updateSpaceStation(spaceStation, t);
       }
-      const stationOffset = new THREE.Vector3(-8, 8, -20);
-      stationOffset.applyQuaternion(cam.quaternion);
-      spaceStation.position.copy(cam.position).add(stationOffset);
+      _stationOffset.set(-8, 8, -20);
+      _stationOffset.applyQuaternion(cam.quaternion);
+      spaceStation.position.copy(cam.position).add(_stationOffset);
 
       // ─── Algedonic ripple animation ───
       const ripples = activeRipplesRef.current;
