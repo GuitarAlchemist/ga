@@ -2172,22 +2172,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 return;
               }
 
-              // Pin solar system in place, find planet, fly camera to it
-              solarFollowCameraRef.current = false;
-
+              // Solar system follows camera — so planet position is
+              // always relative to camera. Get the local offset of
+              // the planet within the solar system, then compute
+              // where the camera needs to be so that offset lands in view.
               const group = fg.scene().getObjectByName('sun')?.parent;
               if (!group) return;
 
-              const target = group.getObjectByName(p.target);
-              if (!target) return;
+              const obj = group.getObjectByName(p.target);
+              if (!obj) return;
 
-              const wp = new THREE.Vector3();
-              target.getWorldPosition(wp);
+              // Get planet position in solar system local space
+              const localPos = new THREE.Vector3();
+              obj.getWorldPosition(localPos);
+              group.worldToLocal(localPos);
 
-              // Simple: fly to 0.5 units away from planet, look at it
+              // Solar system offset from camera (must match the tick loop)
+              // _solarOffset is set to (12, 6, -20) then rotated by camera quaternion
+              // For a simple approach: the solar system is always ~24 units away
+              // Just zoom to that distance along the direction to the planet
+              const cam = fg.camera();
+              const solarWorldPos = new THREE.Vector3();
+              group.getWorldPosition(solarWorldPos);
+
+              // Planet world position
+              const planetWorld = new THREE.Vector3();
+              obj.getWorldPosition(planetWorld);
+
+              // Fly camera close to the planet (0.3 units away)
+              const dir = new THREE.Vector3().subVectors(planetWorld, cam.position).normalize();
+              const dist = cam.position.distanceTo(planetWorld);
+              const flyTo = cam.position.clone().add(dir.multiplyScalar(dist - 0.3));
+
               fg.cameraPosition(
-                { x: wp.x + 0.2, y: wp.y + 0.15, z: wp.z + 0.4 },
-                { x: wp.x, y: wp.y, z: wp.z },
+                { x: flyTo.x, y: flyTo.y, z: flyTo.z },
+                { x: planetWorld.x, y: planetWorld.y, z: planetWorld.z },
                 1200,
               );
             }}
