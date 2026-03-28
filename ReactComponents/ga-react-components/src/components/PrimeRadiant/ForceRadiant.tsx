@@ -1280,6 +1280,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — compact orrery, top-right of view ───
       // Phase 1.2: Quality-gate solar system updates
       if (qualityLevel !== 'low') {
+        solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
         if (qualityLevel === 'high' || frameCount % 3 === 0) {
           updateSolarSystem(solarSystem, t);
         }

@@ -1279,18 +1279,62 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
     }
   }
 
-  // ── Animate sun lens flare ──
+  // ── Animate sun lens flare (quality-adaptive) ──
   const flareGroup = group.userData.flareGroup as THREE.Group | undefined;
+  const quality = group.userData.qualityLevel as string | undefined;
   if (flareGroup) {
-    // Pulse the main glow subtly
-    const pulse = 1.0 + 0.15 * Math.sin(time * 0.3) + 0.08 * Math.sin(time * 0.7);
-    const mainGlow = flareGroup.children[0];
-    if (mainGlow) mainGlow.scale.setScalar(8 * 0.03 * pulse); // scale * pulse
+    if (quality === 'low') {
+      // Low quality: hide flare entirely
+      flareGroup.visible = false;
+    } else if (quality === 'medium') {
+      // Medium: show main glow only, hide ghosts and streak
+      flareGroup.visible = true;
+      for (let i = 0; i < flareGroup.children.length; i++) {
+        flareGroup.children[i].visible = i === 0; // only main glow
+      }
+      const mainGlow = flareGroup.children[0];
+      if (mainGlow) mainGlow.scale.setScalar(6 * 0.03);
+    } else {
+      // High quality: full cinematic lens flare
+      flareGroup.visible = true;
+      for (const child of flareGroup.children) child.visible = true;
 
-    // Rotate streak slowly for cinematic feel
-    const streak = flareGroup.children[2];
-    if (streak) {
-      streak.material.rotation = time * 0.02;
+      const pulse = 1.0 + 0.15 * Math.sin(time * 0.3) + 0.08 * Math.sin(time * 0.7);
+      const shimmer = 1.0 + 0.03 * Math.sin(time * 2.1) + 0.02 * Math.sin(time * 3.7); // fast shimmer
+
+      // Main glow — pulsing with shimmer
+      const mainGlow = flareGroup.children[0];
+      if (mainGlow) {
+        const s = 8 * 0.03 * pulse * shimmer;
+        mainGlow.scale.set(s, s, 1);
+      }
+
+      // Hot core — inverse shimmer for contrast
+      const hotCore = flareGroup.children[1];
+      if (hotCore) {
+        const s = 4 * 0.03 * (2.0 - shimmer);
+        hotCore.scale.set(s, s, 1);
+      }
+
+      // Anamorphic streak — slow rotation + breathing width
+      const streak = flareGroup.children[2];
+      if (streak) {
+        (streak as THREE.Sprite).material.rotation = time * 0.02;
+        const breathe = 1.0 + 0.2 * Math.sin(time * 0.5);
+        streak.scale.set(20 * 0.03 * breathe, 0.8 * 0.03 * pulse, 1);
+      }
+
+      // Ghost elements — drift along a line, color-shift
+      for (let i = 3; i < flareGroup.children.length; i++) {
+        const ghost = flareGroup.children[i];
+        const idx = i - 3;
+        const drift = Math.sin(time * 0.2 + idx * 1.5) * 0.03;
+        ghost.position.x = (5 + idx * 3.5) * 0.03 + drift;
+        ghost.position.y = Math.cos(time * 0.15 + idx * 2.0) * 0.01;
+        // Fade ghosts based on pulse
+        const mat = (ghost as THREE.Sprite).material;
+        mat.opacity = 0.5 + 0.5 * Math.sin(time * 0.4 + idx);
+      }
     }
   }
 
