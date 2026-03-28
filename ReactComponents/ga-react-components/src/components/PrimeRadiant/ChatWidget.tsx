@@ -643,7 +643,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       setInput(transcript);
 
       if (event.results[event.results.length - 1].isFinal) {
-        sendMessage(transcript);
+        setVoiceState('processing');
+        sendMessage(transcript).then(() => {
+          setVoiceState('understood');
+          setTimeout(() => setVoiceState('idle'), 1500);
+        });
         // In always-listen mode, restart after a short pause (wait for TTS to finish)
         if (alwaysListen) {
           setTimeout(() => startListening(), 2000);
@@ -655,6 +659,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
 
     recognition.onerror = () => {
       setIsListening(false);
+      if (voiceState === 'listening') setVoiceState('idle');
       // Retry in always-listen mode
       if (alwaysListen) setTimeout(() => startListening(), 1000);
     };
@@ -664,6 +669,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         setTimeout(() => startListening(), 500);
       } else {
         setIsListening(false);
+        if (voiceState === 'listening') setVoiceState('idle');
       }
     };
 
@@ -677,6 +683,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
+      setVoiceState('idle');
       return;
     }
     startListening();
@@ -684,13 +691,45 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
 
   const toggleOpen = useCallback(() => setIsOpen((o) => !o), []);
 
+  // Global hotkey: hold V to voice input (works even when collapsed)
+  useEffect(() => {
+    let held = false;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'v' && !e.ctrlKey && !e.metaKey && !e.altKey && !held && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        held = true;
+        if (!isListening) startListening();
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'v' && held) {
+        held = false;
+        // Don't stop if always-listen is on
+        if (!alwaysListen && isListening) {
+          recognitionRef.current?.stop();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [isListening, startListening, alwaysListen]);
+
+  const triggerClasses = [
+    'chat-widget__trigger',
+    voiceState !== 'idle' ? `chat-widget__trigger--${voiceState}` : '',
+    alwaysListen ? 'chat-widget__trigger--always-listen' : '',
+  ].filter(Boolean).join(' ');
+
   return (
     <>
       {/* Floating trigger button */}
       <button
-        className="chat-widget__trigger"
+        className={triggerClasses}
         onClick={toggleOpen}
-        title="Ask Demerzel"
+        title="Ask Demerzel (hold V for voice)"
         aria-label="Open Demerzel chat"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

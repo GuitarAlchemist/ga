@@ -925,6 +925,61 @@
   box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
 }
 
+/* Voice state: listening — pulsing cyan ring */
+.chat-widget__trigger--listening {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.6);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+@keyframes voice-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.6); }
+  50% { box-shadow: 0 0 0 12px rgba(0, 212, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+}
+
+/* Voice state: processing — spinning ring */
+.chat-widget__trigger--processing {
+  border-color: #f0a030;
+  box-shadow: 0 0 12px rgba(240, 160, 48, 0.4);
+  animation: voice-spin 0.8s linear infinite;
+}
+@keyframes voice-spin {
+  0% { box-shadow: 0 0 8px 2px rgba(240, 160, 48, 0.6), 4px 0 0 rgba(240, 160, 48, 0.8); }
+  25% { box-shadow: 0 0 8px 2px rgba(240, 160, 48, 0.6), 0 4px 0 rgba(240, 160, 48, 0.8); }
+  50% { box-shadow: 0 0 8px 2px rgba(240, 160, 48, 0.6), -4px 0 0 rgba(240, 160, 48, 0.8); }
+  75% { box-shadow: 0 0 8px 2px rgba(240, 160, 48, 0.6), 0 -4px 0 rgba(240, 160, 48, 0.8); }
+  100% { box-shadow: 0 0 8px 2px rgba(240, 160, 48, 0.6), 4px 0 0 rgba(240, 160, 48, 0.8); }
+}
+
+/* Voice state: understood — green flash */
+.chat-widget__trigger--understood {
+  border-color: #3fb950;
+  box-shadow: 0 0 16px rgba(63, 185, 80, 0.6);
+  animation: voice-flash 0.3s ease-out;
+}
+@keyframes voice-flash {
+  0% { transform: scale(1.2); box-shadow: 0 0 24px rgba(63, 185, 80, 0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 16px rgba(63, 185, 80, 0.6); }
+}
+
+/* Always-listen indicator — small green dot */
+.chat-widget__trigger--always-listen::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3fb950;
+  border: 1.5px solid #0d1117;
+  animation: always-listen-dot 2s ease-in-out infinite;
+}
+@keyframes always-listen-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .chat-widget__panel {
   position: absolute;
   top: 70px;
@@ -1222,17 +1277,13 @@
 /* ─── Galactic Standard Time clock ─── */
 .prime-radiant__gst-clock {
   position: absolute;
-  bottom: 32px;
+  top: 42px;
   left: 8px;
-  color: #8b949e;
-  font: 9px/1 'JetBrains Mono', monospace;
+  color: #FFD700;
+  font: 10px/1 'JetBrains Mono', monospace;
   z-index: 20;
   pointer-events: none;
-  opacity: 0.4;
-  transition: opacity 0.3s;
-}
-.prime-radiant:hover .prime-radiant__gst-clock {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 /* ─── Tutorial Overlay ─── */
