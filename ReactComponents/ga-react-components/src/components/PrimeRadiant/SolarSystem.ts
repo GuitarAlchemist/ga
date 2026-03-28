@@ -197,26 +197,54 @@ const MIRANDA_FRAG = NOISE_LIB + `
 // ── Unused placeholder for procedural planet fallback ──
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
-// ── Planet definitions with realistic proportional distances ──
-// Distances: inner planets clustered (3.8–8.5), gap, outer planets spread (16–48)
-// Speeds: Kepler's 3rd law (∝ distance^-1.5), Earth = 3.0 at d=6.5
+// ── Kepler-accurate planet scaling ──
+// Distance: sqrt-compressed AU (inner planets visible, outer not too far)
+// Radius: sqrt-compressed diameter (Jupiter big but not screen-filling)
+// Speed: Kepler's 3rd law: period ∝ AU^1.5, so angular speed ∝ AU^-1.5
+const EARTH_DIST = 6.5;     // Earth's distance in scene units
+const EARTH_RADIUS = 0.35;  // Earth's radius in scene units
+const EARTH_SPEED = 3.0;    // Earth's orbital speed in scene units
+
+function keplerDistance(au: number): number {
+  // sqrt compression: preserves relative ordering, compresses outer planets
+  return EARTH_DIST * Math.sqrt(au);
+}
+function keplerRadius(diameterKm: number): number {
+  // sqrt compression on ratio to Earth, min 0.06 for visibility
+  const ratio = diameterKm / 12_742; // relative to Earth
+  return Math.max(0.06, EARTH_RADIUS * Math.sqrt(ratio));
+}
+function keplerSpeed(au: number): number {
+  // Kepler's 3rd law: angular speed ∝ distance^-1.5
+  if (au <= 0) return 0;
+  return EARTH_SPEED * Math.pow(au, -1.5);
+}
 
 const PLANETS: PlanetDef[] = [
   {
-    name: 'mercury', radius: 0.12, distance: 3.8, speed: 6.7,
+    name: 'mercury',
+    radius: keplerRadius(4_879),       // 0.22
+    distance: keplerDistance(0.39),     // 4.06
+    speed: keplerSpeed(0.39),          // 12.3 (fast!)
     texture: '2k_mercury.jpg',
     textureDisplacement: '2k_mercury_displacement.jpg',
     fragment: PROC_PLACEHOLDER,
   },
   {
-    name: 'venus', radius: 0.3, distance: 5.0, speed: 4.4,
+    name: 'venus',
+    radius: keplerRadius(12_104),      // 0.34
+    distance: keplerDistance(0.72),     // 5.52
+    speed: keplerSpeed(0.72),          // 4.91
     texture: '2k_venus_surface.jpg',
     textureDisplacement: '2k_venus_displacement.jpg',
     atmosphere: { color: '0.95, 0.75, 0.25', intensity: 0.45, power: 2.5 },
     fragment: PROC_PLACEHOLDER,
   },
   {
-    name: 'earth', radius: 0.35, distance: 6.5, speed: 3.0,
+    name: 'earth',
+    radius: EARTH_RADIUS,
+    distance: EARTH_DIST,             // keplerDistance(1.0) = 6.5
+    speed: EARTH_SPEED,               // keplerSpeed(1.0) = 3.0
     texture: '2k_earth_daymap.jpg',
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
@@ -229,7 +257,10 @@ const PLANETS: PlanetDef[] = [
     ],
   },
   {
-    name: 'mars', radius: 0.18, distance: 8.5, speed: 2.0,
+    name: 'mars',
+    radius: keplerRadius(6_779),       // 0.26
+    distance: keplerDistance(1.52),     // 8.01
+    speed: keplerSpeed(1.52),          // 1.60
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
     atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.2, power: 4.0 },
@@ -240,7 +271,10 @@ const PLANETS: PlanetDef[] = [
     ],
   },
   {
-    name: 'jupiter', radius: 0.9, distance: 16, speed: 0.78,
+    name: 'jupiter',
+    radius: keplerRadius(139_820),     // 1.16
+    distance: keplerDistance(5.2),      // 14.82
+    speed: keplerSpeed(5.2),           // 0.253
     texture: '2k_jupiter.jpg',
     atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
@@ -257,7 +291,10 @@ const PLANETS: PlanetDef[] = [
     ],
   },
   {
-    name: 'saturn', radius: 0.75, distance: 24, speed: 0.42,
+    name: 'saturn',
+    radius: keplerRadius(116_460),     // 1.06
+    distance: keplerDistance(9.54),     // 20.08
+    speed: keplerSpeed(9.54),          // 0.102
     texture: '2k_saturn.jpg',
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
@@ -310,7 +347,11 @@ const PLANETS: PlanetDef[] = [
     ],
   },
   {
-    name: 'uranus', radius: 0.45, distance: 36, speed: 0.23, tilt: 1.71,
+    name: 'uranus',
+    radius: keplerRadius(50_724),      // 0.70
+    distance: keplerDistance(19.2),     // 28.49
+    speed: keplerSpeed(19.2),          // 0.0357
+    tilt: 1.71,
     texture: '2k_uranus.jpg',
     atmosphere: { color: '0.4, 0.85, 0.75', intensity: 0.3, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
@@ -325,7 +366,10 @@ const PLANETS: PlanetDef[] = [
     ],
   },
   {
-    name: 'neptune', radius: 0.42, distance: 48, speed: 0.15,
+    name: 'neptune',
+    radius: keplerRadius(49_244),      // 0.69
+    distance: keplerDistance(30.06),    // 35.63
+    speed: keplerSpeed(30.06),         // 0.0182
     texture: '2k_neptune.jpg',
     atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
@@ -1388,9 +1432,12 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
   const earthEntry = planets.find(p => p.def.name === 'earth');
   if (!earthEntry?.clouds) return () => {};
 
+  // Canvas matches Mercator tile grid (8x8 at zoom 3 = square)
+  // Three.js SphereGeometry UV maps equirectangular, but Mercator tiles are square
+  // Using 2048x2048 avoids vertical squishing artifacts and seam gaps
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
-  canvas.height = 1024;
+  canvas.height = 2048;
   const ctx = canvas.getContext('2d')!;
   const canvasTexture = new THREE.CanvasTexture(canvas);
   canvasTexture.colorSpace = THREE.SRGBColorSpace;
