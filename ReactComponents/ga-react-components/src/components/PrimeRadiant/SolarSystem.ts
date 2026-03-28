@@ -198,24 +198,21 @@ const MIRANDA_FRAG = NOISE_LIB + `
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
 // ── Kepler-accurate planet scaling ──
-// Radius: power-law (ratio^0.7) — more proportional than sqrt, keeps small planets visible
-//   Jupiter = 5.1x Earth (real 11x, old sqrt was 3.3x)
-// Distance: AU^0.4 — tighter compression than sqrt, compact orrery
+// Distance: sqrt-compressed AU (inner planets visible, outer not too far)
+// Radius: sqrt-compressed diameter (Jupiter big but not screen-filling)
 // Speed: Kepler's 3rd law: period ∝ AU^1.5, so angular speed ∝ AU^-1.5
-const EARTH_DIST = 6.0;     // Earth's distance in scene units (1 AU)
+const EARTH_DIST = 6.5;     // Earth's distance in scene units
 const EARTH_RADIUS = 0.35;  // Earth's radius in scene units
 const EARTH_SPEED = 3.0;    // Earth's orbital speed in scene units
 
 function keplerDistance(au: number): number {
-  // Power-law compression: AU^0.4 (tighter than sqrt, keeps orrery compact)
-  if (au <= 0) return 0;
-  return EARTH_DIST * Math.pow(au, 0.4);
+  // sqrt compression: preserves relative ordering, compresses outer planets
+  return EARTH_DIST * Math.sqrt(au);
 }
 function keplerRadius(diameterKm: number): number {
-  // Power-law: ratio^0.7 — better than sqrt (0.5) at preserving real proportions
-  // Jupiter = 5.1x Earth (real 11x), Mercury = 0.50x Earth (real 0.38x)
+  // sqrt compression on ratio to Earth, min 0.06 for visibility
   const ratio = diameterKm / 12_742; // relative to Earth
-  return Math.max(0.08, EARTH_RADIUS * Math.pow(ratio, 0.7));
+  return Math.max(0.06, EARTH_RADIUS * Math.sqrt(ratio));
 }
 function keplerSpeed(au: number): number {
   // Kepler's 3rd law: angular speed ∝ distance^-1.5
@@ -226,7 +223,7 @@ function keplerSpeed(au: number): number {
 const PLANETS: PlanetDef[] = [
   {
     name: 'mercury',
-    radius: keplerRadius(4_879),       // 0.18 (0.50x Earth)
+    radius: keplerRadius(4_879),       // 0.22
     distance: keplerDistance(0.39),     // 4.06
     speed: keplerSpeed(0.39),          // 12.3 (fast!)
     texture: '2k_mercury.jpg',
@@ -235,8 +232,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'venus',
-    radius: keplerRadius(12_104),      // 0.34 (0.97x Earth)
-    distance: keplerDistance(0.72),     // 5.17
+    radius: keplerRadius(12_104),      // 0.34
+    distance: keplerDistance(0.72),     // 5.52
     speed: keplerSpeed(0.72),          // 4.91
     texture: '2k_venus_surface.jpg',
     textureDisplacement: '2k_venus_displacement.jpg',
@@ -245,9 +242,9 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'earth',
-    radius: EARTH_RADIUS,              // 0.35 (reference = 1.0x)
-    distance: EARTH_DIST,             // 6.0 (1.0 AU)
-    speed: EARTH_SPEED,               // 3.0
+    radius: EARTH_RADIUS,
+    distance: EARTH_DIST,             // keplerDistance(1.0) = 6.5
+    speed: EARTH_SPEED,               // keplerSpeed(1.0) = 3.0
     texture: '2k_earth_daymap.jpg',
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
@@ -256,13 +253,13 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: 0.12, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY }, // ~0.34x Earth (slightly exaggerated for visibility)
+      { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
     ],
   },
   {
     name: 'mars',
-    radius: keplerRadius(6_779),       // 0.22 (0.64x Earth)
-    distance: keplerDistance(1.52),     // 7.10
+    radius: keplerRadius(6_779),       // 0.26
+    distance: keplerDistance(1.52),     // 8.01
     speed: keplerSpeed(1.52),          // 1.60
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
@@ -275,8 +272,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'jupiter',
-    radius: keplerRadius(139_820),     // 1.80 (5.14x Earth)
-    distance: keplerDistance(5.2),      // 12.36
+    radius: keplerRadius(139_820),     // 1.16
+    distance: keplerDistance(5.2),      // 14.82
     speed: keplerSpeed(5.2),           // 0.253
     texture: '2k_jupiter.jpg',
     atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
@@ -295,8 +292,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'saturn',
-    radius: keplerRadius(116_460),     // 1.58 (4.52x Earth)
-    distance: keplerDistance(9.54),     // 15.20
+    radius: keplerRadius(116_460),     // 1.06
+    distance: keplerDistance(9.54),     // 20.08
     speed: keplerSpeed(9.54),          // 0.102
     texture: '2k_saturn.jpg',
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
@@ -351,8 +348,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'uranus',
-    radius: keplerRadius(50_724),      // 0.97 (2.78x Earth)
-    distance: keplerDistance(19.2),     // 18.65
+    radius: keplerRadius(50_724),      // 0.70
+    distance: keplerDistance(19.2),     // 28.49
     speed: keplerSpeed(19.2),          // 0.0357
     tilt: 1.71,
     texture: '2k_uranus.jpg',
@@ -370,8 +367,8 @@ const PLANETS: PlanetDef[] = [
   },
   {
     name: 'neptune',
-    radius: keplerRadius(49_244),      // 0.95 (2.71x Earth)
-    distance: keplerDistance(30.06),    // 20.90
+    radius: keplerRadius(49_244),      // 0.69
+    distance: keplerDistance(30.06),    // 35.63
     speed: keplerSpeed(30.06),         // 0.0182
     texture: '2k_neptune.jpg',
     atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
@@ -788,9 +785,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(ambient);
 
   // ── Sun (animated shader — roiling plasma with limb darkening) ──
-  // Sun = 109x Earth diameter; use power-law capped at ~5x Jupiter for orrery fit
-  const sunRadius = Math.min(keplerRadius(1_392_700), 8); // cap to avoid screen-filling
-  const sunGeo = new THREE.SphereGeometry(sunRadius * scale, 48, 48);
+  const sunGeo = new THREE.SphereGeometry(2 * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
   const sunMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -963,7 +958,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     map: createFlareTexture(256, 'rgba(255,220,150,0.08)', 0.4),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  mainGlow.scale.set(sunRadius * 2 * scale, sunRadius * 2 * scale, 1);
+  mainGlow.scale.set(4 * scale, 4 * scale, 1);
   flareGroup.add(mainGlow);
 
   // Inner hot core (tiny, white)
@@ -980,7 +975,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     opacity: 0.3,
   }));
-  streak.scale.set(sunRadius * 4 * scale, 0.3 * scale, 1);
+  streak.scale.set(8 * scale, 0.3 * scale, 1);
   flareGroup.add(streak);
 
   // Secondary rainbow ghosts (very subtle)
@@ -1145,18 +1140,16 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(cloudsHighMesh);
     }
 
-    // Saturn rings (textured) — scale relative to planet radius
+    // Saturn rings (textured)
     if (def.name === 'saturn') {
-      const rInner = def.radius * 1.2 * scale;
-      const rOuter = def.radius * 2.3 * scale;
-      const ringGeo = new THREE.RingGeometry(rInner, rOuter, 128);
+      const ringGeo = new THREE.RingGeometry(1.3 * scale, 2.0 * scale, 128);
       // Adjust UVs so texture maps radially
       const pos = ringGeo.attributes.position;
       const uv = ringGeo.attributes.uv;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         const r = Math.sqrt(x * x + z * z);
-        const rNorm = (r - rInner) / (rOuter - rInner);
+        const rNorm = (r - 1.3 * scale) / ((2.0 - 1.3) * scale);
         uv.setXY(i, rNorm, 0.5);
       }
       const ringTex = loadTex('2k_saturn_ring_alpha.png');
@@ -1173,9 +1166,9 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(ring);
     }
 
-    // Uranus faint ring — scale relative to planet radius
+    // Uranus faint ring
     if (def.name === 'uranus') {
-      const ringGeo = new THREE.RingGeometry(def.radius * 1.3 * scale, def.radius * 1.7 * scale, 48);
+      const ringGeo = new THREE.RingGeometry(0.7 * scale, 0.9 * scale, 48);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x99aabb, side: THREE.DoubleSide,
         transparent: true, opacity: 0.1, depthWrite: false,
@@ -1187,9 +1180,9 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(ring);
     }
 
-    // Neptune faint ring — scale relative to planet radius
+    // Neptune faint ring
     if (def.name === 'neptune') {
-      const ringGeo = new THREE.RingGeometry(def.radius * 1.2 * scale, def.radius * 1.5 * scale, 48);
+      const ringGeo = new THREE.RingGeometry(0.65 * scale, 0.8 * scale, 48);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x667799, side: THREE.DoubleSide,
         transparent: true, opacity: 0.06, depthWrite: false,
