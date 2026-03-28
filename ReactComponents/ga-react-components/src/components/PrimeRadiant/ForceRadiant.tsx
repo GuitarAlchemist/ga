@@ -1763,7 +1763,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     container.addEventListener('dblclick', onSolarDblClick);
 
     // ─── JARVIS SPACE STATION — modular station with docking animation ───
-    const spaceStation = createSpaceStation(0.6);
+    const spaceStation = createSpaceStation(0.12);
     fg.scene().add(spaceStation);
 
     // ─── Auto-select the most connected (central) node on load ───
