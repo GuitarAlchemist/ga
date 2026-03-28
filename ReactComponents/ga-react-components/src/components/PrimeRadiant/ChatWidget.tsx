@@ -48,6 +48,7 @@ async function askClaudeStreaming(
   messages: { role: string; content: string }[],
   onChunk: (text: string) => void,
   signal?: AbortSignal,
+  locale?: string,
 ): Promise<string> {
   const proxyUrl = CLAUDE_PROXY_URL;
   const userKey = getUserApiKey();
@@ -62,10 +63,16 @@ async function askClaudeStreaming(
     headers['Authorization'] = `Bearer ${userKey}`;
   }
 
+  // System prompt with language instruction
+  const langName = SUPPORTED_LANGS.find(l => l.code === locale)?.name;
+  const system = locale && locale !== 'en' && langName
+    ? `You are Demerzel, a governance AI from the Prime Radiant. You MUST respond entirely in ${langName}. Never switch to English.`
+    : 'You are Demerzel, a governance AI from the Prime Radiant.';
+
   const response = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ messages, stream: true }),
+    body: JSON.stringify({ system, messages, stream: true }),
     signal,
   });
 
@@ -377,9 +384,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
         .filter(m => m.role === 'user' || m.role === 'assistant')
         .slice(-10) // Last 10 messages for context
         .map(m => ({ role: m.role, content: m.content }));
-      const langHint = locale !== 'en' ? ` [Respond in ${SUPPORTED_LANGS.find(l => l.code === locale)?.name ?? locale}]` : '';
       const ctxHint = selectedNode ? ` [Context: viewing "${selectedNode.name}" (${selectedNode.type})]` : '';
-      apiMessages.push({ role: 'user', content: trimmed + ctxHint + langHint });
+      apiMessages.push({ role: 'user', content: trimmed + ctxHint });
 
       const fullText = await askClaudeStreaming(
         apiMessages,
@@ -389,6 +395,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
             m.id === botMsgId ? { ...m, content: m.content + chunk } : m,
           ));
         },
+        undefined,
+        locale,
       );
 
       // Parse navigation actions from Claude's response
@@ -529,6 +537,26 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
                 <option key={l.code} value={l.code}>{l.label}</option>
               ))}
             </select>
+            <button
+              className="chat-widget__clear-btn"
+              onClick={() => {
+                stopAudio();
+                speechSynthesis.cancel();
+                setMessages([{
+                  id: 'welcome',
+                  role: 'assistant',
+                  content: WELCOME_MESSAGES[locale] ?? WELCOME_MESSAGES.en,
+                  timestamp: Date.now(),
+                }]);
+              }}
+              title="Clear conversation"
+              aria-label="Clear conversation"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
             <button className="chat-widget__close-btn" onClick={toggleOpen} aria-label="Close chat">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
