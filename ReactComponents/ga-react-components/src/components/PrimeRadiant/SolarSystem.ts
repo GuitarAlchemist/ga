@@ -1145,16 +1145,18 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(cloudsHighMesh);
     }
 
-    // Saturn rings (textured)
+    // Saturn rings (textured) — scale relative to planet radius
     if (def.name === 'saturn') {
-      const ringGeo = new THREE.RingGeometry(1.3 * scale, 2.0 * scale, 128);
+      const rInner = def.radius * 1.2 * scale;
+      const rOuter = def.radius * 2.3 * scale;
+      const ringGeo = new THREE.RingGeometry(rInner, rOuter, 128);
       // Adjust UVs so texture maps radially
       const pos = ringGeo.attributes.position;
       const uv = ringGeo.attributes.uv;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         const r = Math.sqrt(x * x + z * z);
-        const rNorm = (r - 1.3 * scale) / ((2.0 - 1.3) * scale);
+        const rNorm = (r - rInner) / (rOuter - rInner);
         uv.setXY(i, rNorm, 0.5);
       }
       const ringTex = loadTex('2k_saturn_ring_alpha.png');
@@ -1171,9 +1173,9 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(ring);
     }
 
-    // Uranus faint ring
+    // Uranus faint ring — scale relative to planet radius
     if (def.name === 'uranus') {
-      const ringGeo = new THREE.RingGeometry(0.7 * scale, 0.9 * scale, 48);
+      const ringGeo = new THREE.RingGeometry(def.radius * 1.3 * scale, def.radius * 1.7 * scale, 48);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x99aabb, side: THREE.DoubleSide,
         transparent: true, opacity: 0.1, depthWrite: false,
@@ -1185,9 +1187,9 @@ export function createSolarSystem(scale: number): THREE.Group {
       orbit.add(ring);
     }
 
-    // Neptune faint ring
+    // Neptune faint ring — scale relative to planet radius
     if (def.name === 'neptune') {
-      const ringGeo = new THREE.RingGeometry(0.65 * scale, 0.8 * scale, 48);
+      const ringGeo = new THREE.RingGeometry(def.radius * 1.2 * scale, def.radius * 1.5 * scale, 48);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x667799, side: THREE.DoubleSide,
         transparent: true, opacity: 0.06, depthWrite: false,
