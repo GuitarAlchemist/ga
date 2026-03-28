@@ -2172,43 +2172,30 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 return;
               }
 
-              // Solar system follows camera — so planet position is
-              // always relative to camera. Get the local offset of
-              // the planet within the solar system, then compute
-              // where the camera needs to be so that offset lands in view.
+              // FREEZE solar system in place, fly camera to planet, then resume
+              solarFollowCameraRef.current = false;
+
               const group = fg.scene().getObjectByName('sun')?.parent;
               if (!group) return;
 
               const obj = group.getObjectByName(p.target);
               if (!obj) return;
 
-              // Get planet position in solar system local space
-              const localPos = new THREE.Vector3();
-              obj.getWorldPosition(localPos);
-              group.worldToLocal(localPos);
+              // Snapshot planet world position NOW (before camera moves)
+              const pw = new THREE.Vector3();
+              obj.getWorldPosition(pw);
 
-              // Solar system offset from camera (must match the tick loop)
-              // _solarOffset is set to (12, 6, -20) then rotated by camera quaternion
-              // For a simple approach: the solar system is always ~24 units away
-              // Just zoom to that distance along the direction to the planet
-              const cam = fg.camera();
-              const solarWorldPos = new THREE.Vector3();
-              group.getWorldPosition(solarWorldPos);
-
-              // Planet world position
-              const planetWorld = new THREE.Vector3();
-              obj.getWorldPosition(planetWorld);
-
-              // Fly camera close to the planet (0.3 units away)
-              const dir = new THREE.Vector3().subVectors(planetWorld, cam.position).normalize();
-              const dist = cam.position.distanceTo(planetWorld);
-              const flyTo = cam.position.clone().add(dir.multiplyScalar(dist - 0.3));
-
+              // Fly camera: 0.3 units from planet, slight angle
               fg.cameraPosition(
-                { x: flyTo.x, y: flyTo.y, z: flyTo.z },
-                { x: planetWorld.x, y: planetWorld.y, z: planetWorld.z },
-                1200,
+                { x: pw.x + 0.15, y: pw.y + 0.1, z: pw.z + 0.25 },
+                { x: pw.x, y: pw.y, z: pw.z },
+                1500,
               );
+
+              // Resume follow after animation completes
+              setTimeout(() => {
+                solarFollowCameraRef.current = true;
+              }, 1600);
             }}
           >
             <span style={{ fontSize: '14px' }}>{p.icon}</span>
