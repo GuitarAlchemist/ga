@@ -1341,15 +1341,35 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             if (mat.uniforms?.uTime) {
               mat.uniforms.uTime.value = t;
             }
-            // Phase 3: Apply IXql glow/color overrides
+            // IXQL visual overrides — color, glow, pulse, opacity
             const overrides = group.userData.ixqlOverrides as Record<string, unknown> | undefined;
             if (overrides) {
-              if (overrides.glow && mat.uniforms?.uColor) {
-                mat.uniforms.uColor.value = new THREE.Color(overrides.glow as string);
+              // Color override
+              if (overrides.color && mat.uniforms?.uColor) {
+                mat.uniforms.uColor.value = new THREE.Color(String(overrides.color));
               }
+              // Glow: boost emissive intensity
+              if (overrides.glow && mat.uniforms?.uColor) {
+                const baseColor = mat.uniforms.uColor.value as THREE.Color;
+                const boost = 1.0 + Math.sin(t * 3.0) * 0.3;
+                mat.uniforms.uColor.value = baseColor.clone().multiplyScalar(boost);
+              }
+              // Pulse: oscillate scale
+              if (overrides.pulse) {
+                const pulseScale = 1.0 + Math.sin(t * 5.0) * 0.25;
+                group.scale.setScalar(pulseScale);
+              }
+              // Opacity override
               if (overrides.opacity !== undefined && mat.uniforms?.uOpacity) {
                 mat.uniforms.uOpacity.value = Number(overrides.opacity);
               }
+              // Visibility
+              if (overrides.visible === false) {
+                group.visible = false;
+              }
+            } else {
+              // Reset pulse scale if no overrides
+              if (group.scale.x !== 1) group.scale.setScalar(1);
             }
           }
         }
@@ -2445,7 +2465,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       />
       <TutorialOverlay />
       <IxqlCommandInput onCommand={handleIxqlCommand} />
-      <IxqlDemoButton onCommand={handleIxqlCommand} />
+      <IxqlDemoButton
+        onCommand={handleIxqlCommand}
+        onCameraReset={() => {
+          const fg = graphRef.current;
+          if (fg) fg.zoomToFit(800, 50);
+        }}
+      />
 
       {/* Demerzel visual critic overlay — shows self-improvement process */}
       {/* DemerzelCriticOverlay disabled — re-enable when driver is stable */}
@@ -2527,21 +2553,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           );
         }}
         onLaunchGodot={() => {
-          // Connect to Godot MCP and play the Prime Radiant scene
-          fetch('http://localhost:6505', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0', id: 1, method: 'tools/call',
-              params: { name: 'play_scene', arguments: {} },
-            }),
-          }).then(() => {
-            console.log('[PrimeRadiant] Godot 3D Engine launched');
-          }).catch(() => {
-            // Godot not running — try opening it
-            window.open('godot://run', '_blank');
-            console.warn('[PrimeRadiant] Godot MCP not reachable on port 6505');
-          });
+          // Try WebSocket connection to Godot MCP
+          try {
+            const ws = new WebSocket('ws://localhost:6505');
+            ws.onopen = () => {
+              ws.send(JSON.stringify({
+                jsonrpc: '2.0', id: 1, method: 'tools/call',
+                params: { name: 'play_scene', arguments: {} },
+              }));
+              console.log('[PrimeRadiant] Godot 3D Engine launched via MCP');
+              setTimeout(() => ws.close(), 2000);
+            };
+            ws.onerror = () => {
+              alert('Godot is not running.\n\n1. Open the ga-godot project in Godot Editor\n2. Press F5 to run the Prime Radiant scene\n\nThe 3D Governance Engine will launch.');
+            };
+          } catch {
+            alert('Godot MCP not available. Open Godot Editor and press F5.');
+          }
         }}
       />
 
