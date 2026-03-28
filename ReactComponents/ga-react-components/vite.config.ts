@@ -97,6 +97,44 @@ function primeRadiantControlPlugin(): Plugin {
                 });
             });
 
+            // ── POST /pr/batch — Claude sends multiple commands at once ──
+            server.middlewares.use('/pr/batch', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                let body = '';
+                req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+                req.on('end', () => {
+                    try {
+                        const { commands } = JSON.parse(body) as { commands: { action: string; params?: Record<string, unknown> }[] };
+                        if (!Array.isArray(commands)) {
+                            res.writeHead(400, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ ok: false, error: 'commands must be an array' }));
+                            return;
+                        }
+                        const commandIds: string[] = [];
+                        for (const { action, params } of commands) {
+                            const cmd: PrCommand = {
+                                id: `cmd-${++cmdCounter}-${Date.now()}`,
+                                action,
+                                params: params ?? {},
+                                timestamp: Date.now(),
+                            };
+                            pendingCommands.push(cmd);
+                            commandIds.push(cmd.id);
+                            // Push each command to SSE clients as a separate event
+                            const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
+                            for (const client of sseClients) {
+                                client.write(sseData);
+                            }
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ ok: true, commandIds }));
+                    } catch {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ ok: false, error: 'Invalid JSON' }));
+                    }
+                });
+            });
+
             // ── GET /pr/state — Claude reads current state ──
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }

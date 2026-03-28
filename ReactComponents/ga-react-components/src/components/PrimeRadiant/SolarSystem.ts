@@ -62,6 +62,11 @@ interface MoonDef {
   fragment: string;
   texture?: string;              // optional texture file
   textureDisplacement?: string;  // height map for terrain displacement
+  irregular?: {                  // non-spherical body shape
+    elongation: [number, number, number]; // axis scale factors [x, y, z] (1.0 = sphere)
+    roughness: number;            // noise amplitude (0-1)
+    craters?: number;             // number of impact craters to carve
+  };
 }
 
 interface PlanetDef {
@@ -1163,6 +1168,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         depthWrite: false,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.name = 'saturn-ring';
       ring.rotation.x = Math.PI / 2.2;
       ring.position.copy(mesh.position);
       orbit.add(ring);
@@ -1325,6 +1331,88 @@ export function toggleEarthBorders(group: THREE.Group): boolean {
   return false;
 }
 
+/**
+ * Toggle NASA GIBS MODIS snow cover overlay on Earth.
+ * Loads MODIS_Terra_Snow_Cover tiles at zoom 2, composes into alphaMap.
+ * Returns true if snow cover was enabled, false if removed.
+ */
+export function toggleSnowCover(group: THREE.Group): boolean {
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) return false;
+
+  // Check if already exists
+  const existing = earth.orbit.getObjectByName('snowCoverMesh') as THREE.Mesh | undefined;
+  if (existing) {
+    earth.orbit.remove(existing);
+    existing.geometry.dispose();
+    const mat = existing.material as THREE.MeshBasicMaterial;
+    if (mat.alphaMap) mat.alphaMap.dispose();
+    mat.dispose();
+    return false;
+  }
+
+  // Create snow cover sphere slightly above Earth
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const earthRadius = earthGeo.parameters.radius;
+  const snowRadius = earthRadius * 1.005;
+
+  const snowGeo = new THREE.SphereGeometry(snowRadius, 64, 64);
+  // Placeholder white material; texture loaded async
+  const snowMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+    depthWrite: false,
+    side: THREE.FrontSide,
+  });
+  const snowMesh = new THREE.Mesh(snowGeo, snowMat);
+  snowMesh.name = 'snowCoverMesh';
+  snowMesh.userData.snowCoverMesh = true;
+  snowMesh.position.copy(earth.mesh.position);
+  snowMesh.rotation.copy(earth.mesh.rotation);
+  earth.orbit.add(snowMesh);
+
+  // Load MODIS snow cover tiles asynchronously (EPSG:4326, zoom 2 = 4x2 tiles)
+  const date = getYesterdayDate();
+  const ZOOM = 2;
+  const COLS = 1 << ZOOM;  // 4
+  const ROWS = COLS / 2;   // 2 (EPSG:4326 is 2:1 aspect)
+  const TILE_PX = 256;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = COLS * TILE_PX;
+  canvas.height = ROWS * TILE_PX;
+  const ctx = canvas.getContext('2d')!;
+
+  const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const url = `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Terra_Snow_Cover/default/${date}/250m/${ZOOM}/${y}/${x}.png`;
+      fetches.push(fetchTile(url).then(img => ({ x, y, img })));
+    }
+  }
+
+  Promise.all(fetches).then(tiles => {
+    // If mesh was removed while loading, bail out
+    if (!snowMesh.parent) return;
+
+    for (const t of tiles) {
+      if (t.img) {
+        ctx.drawImage(t.img, t.x * TILE_PX, t.y * TILE_PX, TILE_PX, TILE_PX);
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    snowMat.alphaMap = tex;
+    snowMat.needsUpdate = true;
+    console.info(`[SolarSystem] Snow cover: ${tiles.filter(t => t.img).length}/${COLS * ROWS} tiles loaded`);
+  });
+
+  return true;
+}
+
 export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
   const planets = group.userData.planets as { mesh: THREE.Mesh }[] | undefined;
   if (!planets) return [];
@@ -1333,6 +1421,286 @@ export function getPlanetMeshes(group: THREE.Group): THREE.Mesh[] {
   const meshes = planets.map(p => p.mesh);
   if (sun instanceof THREE.Mesh) meshes.unshift(sun);
   return meshes;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PLANET SHADER EFFECTS — Aurora, Ring Glow, Jupiter Storm
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Toggle aurora borealis effect on Earth.
+ * Creates a thin torus mesh near Earth's north pole (~65-75° latitude)
+ * with animated green/purple curtain shader.
+ * Returns true if aurora was enabled, false if disabled.
+ */
+export function toggleAurora(group: THREE.Group): boolean {
+  // Remove if already present
+  const existing = group.userData.auroraMesh as THREE.Mesh | undefined;
+  if (existing) {
+    existing.parent?.remove(existing);
+    existing.geometry.dispose();
+    (existing.material as THREE.ShaderMaterial).dispose();
+    delete group.userData.auroraMesh;
+    return false;
+  }
+
+  // Find Earth orbit to parent the aurora
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  if (!planets) return false;
+  const earth = planets.find(p => p.def.name === 'earth');
+  if (!earth) return false;
+
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const earthRadius = earthGeo.parameters.radius;
+
+  // Torus at ~70° latitude (aurora oval)
+  const auroraRadius = earthRadius * Math.cos(70 * Math.PI / 180); // horizontal radius at 70° lat
+  const auroraHeight = earthRadius * Math.sin(70 * Math.PI / 180); // height above equator
+  const tubeRadius = earthRadius * 0.06;
+
+  const auroraGeo = new THREE.TorusGeometry(auroraRadius, tubeRadius, 16, 64);
+
+  const auroraMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vPos;
+      varying vec2 vUv;
+      void main() {
+        vPos = position;
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      varying vec3 vPos;
+      varying vec2 vUv;
+
+      float hash(float p) { return fract(sin(p * 127.1) * 43758.5453); }
+      float noise(float p) {
+        float i = floor(p);
+        float f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(hash(i), hash(i + 1.0), f);
+      }
+
+      void main() {
+        // Flowing curtain effect along the torus
+        float curtain = sin(vUv.x * 20.0 + uTime * 2.0) * 0.5 + 0.5;
+        curtain *= noise(vUv.x * 30.0 + uTime * 1.5);
+
+        // Vertical fade — strongest at tube center
+        float vFade = 1.0 - abs(vUv.y - 0.5) * 2.0;
+        vFade = pow(vFade, 0.8);
+
+        // Color: green core with purple edges
+        vec3 green = vec3(0.1, 0.9, 0.3);
+        vec3 purple = vec3(0.5, 0.1, 0.8);
+        float colorMix = sin(vUv.x * 8.0 + uTime * 0.7) * 0.5 + 0.5;
+        vec3 col = mix(green, purple, colorMix * 0.4);
+
+        float alpha = curtain * vFade * 0.5;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
+
+  const auroraMesh = new THREE.Mesh(auroraGeo, auroraMat);
+  auroraMesh.name = 'earth-aurora';
+  // Position at Earth's north pole latitude, flat horizontal
+  auroraMesh.rotation.x = Math.PI / 2;
+  auroraMesh.position.copy(earth.mesh.position);
+  auroraMesh.position.y += auroraHeight;
+
+  earth.orbit.add(auroraMesh);
+  group.userData.auroraMesh = auroraMesh;
+  return true;
+}
+
+/**
+ * Toggle a golden glow overlay on Saturn's rings.
+ * Adds/removes a bloom-like emissive ring that pulses gently.
+ * Returns true if glow was enabled, false if disabled.
+ */
+export function toggleRingGlow(group: THREE.Group): boolean {
+  // Remove if already present
+  const existing = group.userData.ringGlowMesh as THREE.Mesh | undefined;
+  if (existing) {
+    existing.parent?.remove(existing);
+    existing.geometry.dispose();
+    (existing.material as THREE.ShaderMaterial).dispose();
+    delete group.userData.ringGlowMesh;
+    return false;
+  }
+
+  // Find Saturn's orbit group and ring
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  if (!planets) return false;
+  const saturn = planets.find(p => p.def.name === 'saturn');
+  if (!saturn) return false;
+
+  const saturnRing = saturn.orbit.getObjectByName('saturn-ring') as THREE.Mesh | undefined;
+  if (!saturnRing) return false;
+
+  // Create a slightly larger ring overlay for the glow
+  const ringGeo = (saturnRing.geometry as THREE.RingGeometry);
+  const params = ringGeo.parameters;
+  const glowGeo = new THREE.RingGeometry(
+    params.innerRadius * 0.98,
+    params.outerRadius * 1.02,
+    128,
+  );
+
+  const glowMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      varying vec3 vPos;
+      void main() {
+        vUv = uv;
+        vPos = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      varying vec2 vUv;
+      varying vec3 vPos;
+
+      void main() {
+        // Radial position for edge fade
+        float r = length(vPos.xy);
+        float pulse = 0.6 + 0.4 * sin(uTime * 1.2);
+        // Golden glow color
+        vec3 gold = vec3(1.0, 0.85, 0.3);
+        // Fade at inner/outer edges
+        float edgeFade = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
+        float alpha = edgeFade * pulse * 0.35;
+        gl_FragColor = vec4(gold, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
+
+  const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+  glowMesh.name = 'saturn-ring-glow';
+  // Match Saturn ring orientation and position
+  glowMesh.rotation.copy(saturnRing.rotation);
+  glowMesh.position.copy(saturnRing.position);
+
+  saturn.orbit.add(glowMesh);
+  group.userData.ringGlowMesh = glowMesh;
+  return true;
+}
+
+/**
+ * Toggle Jupiter's Great Red Spot storm effect.
+ * Creates a small oval mesh at ~22°S latitude with animated swirl shader.
+ * Returns true if storm was enabled, false if disabled.
+ */
+export function toggleJupiterStorm(group: THREE.Group): boolean {
+  // Remove if already present
+  const existing = group.userData.stormMesh as THREE.Mesh | undefined;
+  if (existing) {
+    existing.parent?.remove(existing);
+    existing.geometry.dispose();
+    (existing.material as THREE.ShaderMaterial).dispose();
+    delete group.userData.stormMesh;
+    return false;
+  }
+
+  // Find Jupiter
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  if (!planets) return false;
+  const jupiter = planets.find(p => p.def.name === 'jupiter');
+  if (!jupiter) return false;
+
+  const jupiterGeo = jupiter.mesh.geometry as THREE.SphereGeometry;
+  const jupiterRadius = jupiterGeo.parameters.radius;
+
+  // Oval disc for the storm (~22°S latitude)
+  const stormGeo = new THREE.CircleGeometry(jupiterRadius * 0.18, 32);
+  // Stretch into oval
+  const posAttr = stormGeo.attributes.position;
+  for (let i = 0; i < posAttr.count; i++) {
+    posAttr.setY(i, posAttr.getY(i) * 0.6); // flatten vertically
+  }
+  posAttr.needsUpdate = true;
+
+  const stormMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      varying vec2 vUv;
+
+      void main() {
+        // Center UVs
+        vec2 c = vUv - 0.5;
+        float dist = length(c);
+
+        // Rotating spiral pattern
+        float angle = atan(c.y, c.x);
+        float spiral = sin(angle * 3.0 - dist * 20.0 + uTime * 1.5) * 0.5 + 0.5;
+
+        // Red/brown storm colors
+        vec3 red = vec3(0.75, 0.2, 0.1);
+        vec3 brown = vec3(0.55, 0.3, 0.15);
+        vec3 col = mix(red, brown, spiral);
+
+        // Fade at edges (circular falloff)
+        float fade = smoothstep(0.5, 0.2, dist);
+        float alpha = fade * 0.7;
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  const stormMesh = new THREE.Mesh(stormGeo, stormMat);
+  stormMesh.name = 'jupiter-storm';
+
+  // Position at Great Red Spot: ~22°S latitude, on the surface
+  const latRad = -22 * Math.PI / 180; // 22° south
+  const lonRad = 0; // arbitrary longitude (it will rotate with Jupiter)
+  const r = jupiterRadius * 1.01; // slightly above surface
+
+  stormMesh.position.set(
+    r * Math.cos(latRad) * Math.cos(lonRad),
+    r * Math.sin(latRad),
+    r * Math.cos(latRad) * Math.sin(lonRad),
+  );
+
+  // Orient the disc to face outward from Jupiter's center
+  stormMesh.lookAt(0, 0, 0);
+  stormMesh.rotateY(Math.PI); // face outward, not inward
+
+  // Parent to Jupiter mesh so it rotates with the planet
+  jupiter.mesh.add(stormMesh);
+  group.userData.stormMesh = stormMesh;
+  return true;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1386,6 +1754,12 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
         for (const overlay of Object.values(overlays)) {
           overlay.rotation.y = mesh.rotation.y;
         }
+      }
+
+      // Sync focused patch with Earth rotation
+      const focusedPatch = group.userData.focusedPatch as THREE.Mesh | undefined;
+      if (focusedPatch) {
+        focusedPatch.rotation.y = mesh.rotation.y;
       }
 
       // Sync location marker with Earth rotation
@@ -1515,15 +1889,29 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
 
   // ── Animate all moons ──
   const moons = group.userData.moonInstances as MoonInstance[] | undefined;
-  if (!moons) return;
+  if (moons) {
+    for (const { mesh, def, orbitGroup } of moons) {
+      orbitGroup.rotation.y = time * def.speed * 0.3;
+      mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
 
-  for (const { mesh, def, orbitGroup } of moons) {
-    orbitGroup.rotation.y = time * def.speed * 0.3;
-    mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
-
-    if (mesh.material instanceof THREE.ShaderMaterial) {
-      if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
+      if (mesh.material instanceof THREE.ShaderMaterial) {
+        if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
+      }
     }
+  }
+
+  // ── Animate shader effects (aurora, storm, ring glow) ──
+  const auroraMesh = group.userData.auroraMesh as THREE.Mesh | undefined;
+  if (auroraMesh && auroraMesh.material instanceof THREE.ShaderMaterial) {
+    auroraMesh.material.uniforms.uTime.value = time;
+  }
+  const stormMesh = group.userData.stormMesh as THREE.Mesh | undefined;
+  if (stormMesh && stormMesh.material instanceof THREE.ShaderMaterial) {
+    stormMesh.material.uniforms.uTime.value = time;
+  }
+  const ringGlowMesh = group.userData.ringGlowMesh as THREE.Mesh | undefined;
+  if (ringGlowMesh && ringGlowMesh.material instanceof THREE.ShaderMaterial) {
+    ringGlowMesh.material.uniforms.uTime.value = time;
   }
 }
 
@@ -1733,6 +2121,7 @@ const ARCGIS_SERVICES: Record<string, string> = {
 export async function loadArcGISOverlay(
   group: THREE.Group,
   layer: keyof typeof ARCGIS_SERVICES = 'borders',
+  zoom = 3,
 ): Promise<() => void> {
   const baseUrl = ARCGIS_SERVICES[layer];
   if (!baseUrl) throw new Error(`Unknown ArcGIS layer: ${layer}`);
@@ -1741,10 +2130,10 @@ export async function loadArcGISOverlay(
   const earth = planets?.find(p => p.def.name === 'earth');
   if (!earth) throw new Error('Earth not found in solar system');
 
-  const ZOOM = 3;
-  const TILES = 1 << ZOOM; // 8
+  const ZOOM = zoom;
+  const TILES = 1 << ZOOM;
   const TILE_PX = 256;
-  const MERC_SIZE = TILES * TILE_PX; // 2048 — Mercator canvas
+  const MERC_SIZE = TILES * TILE_PX;
   const EQ_W = MERC_SIZE;            // equirectangular output width
   const EQ_H = MERC_SIZE / 2;        // equirectangular is 2:1 aspect (but we use square for sphere UV)
 
@@ -1987,11 +2376,14 @@ export function enableEarthAutoLOD(
   const earth = planets?.find(p => p.def.name === 'earth');
   if (!earth) return () => {};
 
-  let currentLOD: 'low' | 'high' = 'low';
+  // LOD tiers: zoom 4 (4K) for medium, zoom 5 (8K) for close
+  let currentLOD: 'base' | 'mid' | 'high' | 'ultra' = 'base';
+  let lastPatchCenter: { lat: number; lon: number } | null = null;
   let loading = false;
-  let hiResCleanup: (() => void) | null = null;
   const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
   const earthRadius = earthGeo.parameters.radius;
+  // Use a unique layer key for LOD so it doesn't conflict with user-toggled imagery
+  const LOD_KEY = '_lod_imagery';
 
   const checkInterval = setInterval(() => {
     if (loading) return;
@@ -2000,42 +2392,398 @@ export function enableEarthAutoLOD(
     const earthWorldPos = new THREE.Vector3();
     earth.mesh.getWorldPosition(earthWorldPos);
     const dist = cam.position.distanceTo(earthWorldPos);
-    const relDist = dist / earthRadius; // distance in Earth radii
+    const relDist = dist / earthRadius;
 
-    if (relDist < 8 && currentLOD === 'low') {
-      // Close — load high-res imagery overlay
-      loading = true;
-      currentLOD = 'high';
-      console.info('[SolarSystem] Earth LOD: loading high-res imagery...');
+    // Determine desired LOD
+    let desired: 'base' | 'mid' | 'high' | 'ultra' = 'base';
+    if (relDist < 1.5) desired = 'ultra';   // extreme close-up — focused street-level patch
+    else if (relDist < 3) desired = 'high'; // very close — zoom 5
+    else if (relDist < 8) desired = 'mid';  // medium — zoom 4
 
-      // Load at zoom 5 (32x32 = 1024 tiles, 8192px canvas) — but cap at zoom 4 for performance
-      loadArcGISOverlay(group, 'imagery')
-        .then((cleanup) => {
-          hiResCleanup = cleanup;
-          // Make it more opaque for hi-res mode
-          const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
-          const imgOverlay = overlays?.['imagery'];
-          if (imgOverlay) {
-            (imgOverlay.material as THREE.MeshBasicMaterial).opacity = 0.85;
+    if (desired === currentLOD) return;
+
+    const overlays = (group.userData.arcgisOverlays ?? {}) as Record<string, THREE.Mesh>;
+    group.userData.arcgisOverlays = overlays;
+    const oldMesh = overlays[LOD_KEY] ?? null;
+
+    if (desired === 'base') {
+      // ── Smooth fade out ──
+      if (oldMesh) {
+        const oldMat = oldMesh.material as THREE.MeshBasicMaterial;
+        const fadeOut = () => {
+          oldMat.opacity -= 0.04;
+          if (oldMat.opacity <= 0) {
+            oldMesh.parent?.remove(oldMesh);
+            oldMesh.geometry.dispose();
+            if (oldMat.map) oldMat.map.dispose();
+            oldMat.dispose();
+            delete overlays[LOD_KEY];
+          } else {
+            requestAnimationFrame(fadeOut);
           }
-          console.info('[SolarSystem] Earth LOD: high-res loaded');
-        })
-        .catch(() => { currentLOD = 'low'; })
-        .finally(() => { loading = false; });
-    } else if (relDist > 12 && currentLOD === 'high') {
-      // Far — remove high-res overlay
-      if (hiResCleanup) {
-        hiResCleanup();
-        hiResCleanup = null;
+        };
+        fadeOut();
       }
-      removeArcGISOverlay(group, 'imagery');
-      currentLOD = 'low';
-      console.info('[SolarSystem] Earth LOD: reverted to base texture');
+      currentLOD = 'base';
+      return;
     }
-  }, 2000); // check every 2 seconds
+
+    // Load new LOD tier
+    loading = true;
+    const zoom = desired === 'high' ? 5 : 4;
+    console.info(`[SolarSystem] Earth LOD: loading zoom ${zoom}...`);
+
+    const svcUrl = ARCGIS_SERVICES.imagery;
+    const nTiles = 1 << zoom;
+    const tileSize = 256;
+    const mercSize = nTiles * tileSize;
+
+    const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
+    for (let y = 0; y < nTiles; y++) {
+      for (let x = 0; x < nTiles; x++) {
+        fetches.push(fetchTile(`${svcUrl}/${zoom}/${y}/${x}`).then(img => ({ x, y, img })));
+      }
+    }
+
+    Promise.all(fetches).then(results => {
+      const loaded = results.filter(t => t.img);
+      if (loaded.length === 0) { loading = false; return; }
+
+      // Composite Mercator tiles
+      const mercCanvas = document.createElement('canvas');
+      mercCanvas.width = mercSize;
+      mercCanvas.height = mercSize;
+      const mercCtx = mercCanvas.getContext('2d')!;
+      for (const t of loaded) {
+        if (t.img) mercCtx.drawImage(t.img, t.x * tileSize, t.y * tileSize, tileSize, tileSize);
+      }
+
+      // Reproject Mercator → Equirectangular
+      const eqCanvas = document.createElement('canvas');
+      eqCanvas.width = mercSize;
+      eqCanvas.height = mercSize;
+      const eqCtx = eqCanvas.getContext('2d')!;
+      const MAX_LAT = 85.051 * Math.PI / 180;
+      for (let eqY = 0; eqY < mercSize; eqY++) {
+        const lat = Math.PI / 2 - (eqY / mercSize) * Math.PI;
+        const clampedLat = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat));
+        const mercYNorm = (1 - (Math.log(Math.tan(Math.PI / 4 + clampedLat / 2)) / Math.PI)) / 2;
+        const srcY = Math.floor(mercYNorm * mercSize);
+        if (srcY >= 0 && srcY < mercSize) {
+          eqCtx.drawImage(mercCanvas, 0, srcY, mercSize, 1, 0, eqY, mercSize, 1);
+        }
+      }
+
+      const tex = new THREE.CanvasTexture(eqCanvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+
+      // ── Smooth crossfade: new overlay fades in from 0 ──
+      const TARGET_OPACITY = 0.85;
+      const newMat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 0,
+        depthWrite: false, side: THREE.FrontSide,
+      });
+
+      const overlayRadius = earthRadius * 1.004;
+      const overlayGeo = new THREE.SphereGeometry(overlayRadius, 64, 64);
+      const newMesh = new THREE.Mesh(overlayGeo, newMat);
+      newMesh.name = `earth-arcgis-${LOD_KEY}`;
+      newMesh.position.copy(earth.mesh.position);
+      newMesh.rotation.copy(earth.mesh.rotation);
+      earth.orbit.add(newMesh);
+
+      // Crossfade animation
+      const crossfade = () => {
+        // Fade in new
+        newMat.opacity = Math.min(newMat.opacity + 0.025, TARGET_OPACITY);
+        // Fade out old
+        if (oldMesh && oldMesh.parent) {
+          const oldMat = oldMesh.material as THREE.MeshBasicMaterial;
+          oldMat.opacity -= 0.04;
+          if (oldMat.opacity <= 0) {
+            oldMesh.parent.remove(oldMesh);
+            oldMesh.geometry.dispose();
+            if (oldMat.map) oldMat.map.dispose();
+            oldMat.dispose();
+          }
+        }
+        if (newMat.opacity < TARGET_OPACITY) {
+          requestAnimationFrame(crossfade);
+        }
+      };
+      requestAnimationFrame(crossfade);
+
+      overlays[LOD_KEY] = newMesh;
+      currentLOD = desired;
+      console.info(`[SolarSystem] Earth LOD: zoom ${zoom} — ${loaded.length} tiles, crossfading...`);
+
+    }).catch(() => {}).finally(() => { loading = false; });
+
+    // For ultra tier, also load focused street-level patch
+    if (desired === 'ultra') {
+      const target = getCameraEarthTarget(group, getCamera());
+      if (target) {
+        const needsReload = !lastPatchCenter
+          || Math.abs(target.lat - lastPatchCenter.lat) > 2
+          || Math.abs(target.lon - lastPatchCenter.lon) > 2;
+        if (needsReload) {
+          lastPatchCenter = { ...target };
+          loadFocusedPatch(group, target.lat, target.lon, 13, 8).catch(() => {});
+        }
+      }
+    } else {
+      // Remove focused patch when not ultra
+      const patch = group.userData.focusedPatch as THREE.Mesh | undefined;
+      if (patch) {
+        // Fade out
+        const pMat = patch.material as THREE.MeshBasicMaterial;
+        const fadeOutPatch = () => {
+          pMat.opacity -= 0.05;
+          if (pMat.opacity <= 0) {
+            patch.parent?.remove(patch);
+            patch.geometry.dispose();
+            if (pMat.map) pMat.map.dispose();
+            pMat.dispose();
+            delete group.userData.focusedPatch;
+          } else {
+            requestAnimationFrame(fadeOutPatch);
+          }
+        };
+        fadeOutPatch();
+        lastPatchCenter = null;
+      }
+    }
+  }, 2000);
 
   return () => {
     clearInterval(checkInterval);
-    if (hiResCleanup) hiResCleanup();
+    // Clean up LOD overlay
+    const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
+    if (overlays?.[LOD_KEY]) {
+      const mesh = overlays[LOD_KEY];
+      mesh.parent?.remove(mesh);
+      (mesh.geometry as THREE.BufferGeometry).dispose();
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      if (mat.map) mat.map.dispose();
+      mat.dispose();
+      delete overlays[LOD_KEY];
+    }
+    // Clean up focused patch
+    const patch = group.userData.focusedPatch as THREE.Mesh | undefined;
+    if (patch) {
+      patch.parent?.remove(patch);
+      (patch.geometry as THREE.BufferGeometry).dispose();
+      const pm = patch.material as THREE.MeshBasicMaterial;
+      if (pm.map) pm.map.dispose();
+      pm.dispose();
+      delete group.userData.focusedPatch;
+    }
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// FOCUSED HIGH-RES TILE PATCH — loads street-level tiles around camera target
+// ─────────────────────────────────────────────────────────────
+
+/** Convert lat/lon to Mercator tile coordinates at a given zoom */
+function latLonToTile(lat: number, lon: number, zoom: number): { x: number; y: number } {
+  const n = 1 << zoom;
+  const x = Math.floor((lon + 180) / 360 * n);
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
+}
+
+/** Convert tile coordinates back to lat/lon (north-west corner) */
+function tileToLatLon(x: number, y: number, zoom: number): { lat: number; lon: number } {
+  const n = 1 << zoom;
+  const lon = x / n * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)));
+  return { lat: latRad * 180 / Math.PI, lon };
+}
+
+/**
+ * Raycast from camera to Earth to find the lat/lon being looked at.
+ * Returns null if camera isn't pointing at Earth.
+ */
+export function getCameraEarthTarget(
+  group: THREE.Group,
+  camera: THREE.Camera,
+): { lat: number; lon: number } | null {
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) return null;
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+  const hits = raycaster.intersectObject(earth.mesh);
+  if (hits.length === 0) return null;
+
+  const hit = hits[0];
+  // Convert hit point to Earth-local coordinates
+  const localPoint = earth.mesh.worldToLocal(hit.point.clone());
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const r = earthGeo.parameters.radius;
+
+  // Spherical coordinates → lat/lon
+  const lat = Math.asin(localPoint.y / r) * 180 / Math.PI;
+  const lon = Math.atan2(localPoint.z, localPoint.x) * 180 / Math.PI;
+
+  return { lat, lon };
+}
+
+/**
+ * Load a focused high-res tile patch on Earth around a given lat/lon.
+ * Creates a small curved mesh with high-zoom satellite imagery.
+ * Returns a cleanup function.
+ */
+export async function loadFocusedPatch(
+  group: THREE.Group,
+  lat: number,
+  lon: number,
+  zoom = 12,
+  gridSize = 6,  // 6x6 tiles
+): Promise<() => void> {
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) return () => {};
+
+  const earthGeo = earth.mesh.geometry as THREE.SphereGeometry;
+  const earthRadius = earthGeo.parameters.radius;
+
+  // Remove existing focused patch
+  const existing = group.userData.focusedPatch as THREE.Mesh | undefined;
+  if (existing) {
+    existing.parent?.remove(existing);
+    (existing.geometry as THREE.BufferGeometry).dispose();
+    const em = existing.material as THREE.MeshBasicMaterial;
+    if (em.map) em.map.dispose();
+    em.dispose();
+  }
+
+  // Get center tile and surrounding grid
+  const center = latLonToTile(lat, lon, zoom);
+  const half = Math.floor(gridSize / 2);
+  const tileCount = 1 << zoom;
+
+  // Fetch tiles
+  const baseUrl = ARCGIS_SERVICES.imagery;
+  const fetches: Promise<{ tx: number; ty: number; img: HTMLImageElement | null }>[] = [];
+  for (let dy = -half; dy < half; dy++) {
+    for (let dx = -half; dx < half; dx++) {
+      const tx = (center.x + dx + tileCount) % tileCount;
+      const ty = Math.max(0, Math.min(tileCount - 1, center.y + dy));
+      fetches.push(fetchTile(`${baseUrl}/${zoom}/${ty}/${tx}`).then(img => ({ tx: dx + half, ty: dy + half, img })));
+    }
+  }
+
+  const tiles = await Promise.all(fetches);
+  const loaded = tiles.filter(t => t.img);
+  if (loaded.length === 0) return () => {};
+
+  // Composite tiles
+  const canvasSize = gridSize * 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  const ctx = canvas.getContext('2d')!;
+  for (const t of loaded) {
+    if (t.img) ctx.drawImage(t.img, t.tx * 256, t.ty * 256, 256, 256);
+  }
+
+  // Calculate the lat/lon bounds of this tile grid
+  const nwTile = {
+    x: (center.x - half + tileCount) % tileCount,
+    y: Math.max(0, center.y - half),
+  };
+  const seTile = {
+    x: (center.x + half + tileCount) % tileCount,
+    y: Math.min(tileCount - 1, center.y + half),
+  };
+  const nw = tileToLatLon(nwTile.x, nwTile.y, zoom);
+  const se = tileToLatLon(seTile.x, seTile.y + 1, zoom);
+
+  // Create a curved patch mesh (section of sphere)
+  const latSteps = 32;
+  const lonSteps = 32;
+  const latStart = se.lat * Math.PI / 180;
+  const latEnd = nw.lat * Math.PI / 180;
+  const lonStart = nw.lon * Math.PI / 180;
+  const lonEnd = se.lon * Math.PI / 180;
+  const patchRadius = earthRadius * 1.003; // slightly above surface
+
+  const vertices: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  for (let j = 0; j <= latSteps; j++) {
+    const latFrac = j / latSteps;
+    const latAngle = latStart + (latEnd - latStart) * (1 - latFrac); // flip: top=north
+    for (let i = 0; i <= lonSteps; i++) {
+      const lonFrac = i / lonSteps;
+      const lonAngle = lonStart + (lonEnd - lonStart) * lonFrac;
+
+      // Spherical → Cartesian (Three.js: Y=up)
+      const x = patchRadius * Math.cos(latAngle) * Math.cos(lonAngle);
+      const y = patchRadius * Math.sin(latAngle);
+      const z = patchRadius * Math.cos(latAngle) * Math.sin(lonAngle);
+      vertices.push(x, y, z);
+      uvs.push(lonFrac, latFrac);
+    }
+  }
+
+  for (let j = 0; j < latSteps; j++) {
+    for (let i = 0; i < lonSteps; i++) {
+      const a = j * (lonSteps + 1) + i;
+      const b = a + 1;
+      const c = a + lonSteps + 1;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const patchGeo = new THREE.BufferGeometry();
+  patchGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  patchGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  patchGeo.setIndex(indices);
+  patchGeo.computeVertexNormals();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+
+  const TARGET_PATCH_OPACITY = 0.92;
+  const patchMat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    opacity: 0, // start invisible, fade in
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  // Smooth fade in
+  const fadeInPatch = () => {
+    patchMat.opacity = Math.min(patchMat.opacity + 0.03, TARGET_PATCH_OPACITY);
+    if (patchMat.opacity < TARGET_PATCH_OPACITY) requestAnimationFrame(fadeInPatch);
+  };
+  requestAnimationFrame(fadeInPatch);
+
+  const patchMesh = new THREE.Mesh(patchGeo, patchMat);
+  patchMesh.name = 'earth-focused-patch';
+  // Position relative to Earth mesh in orbit group
+  patchMesh.position.copy(earth.mesh.position);
+  earth.orbit.add(patchMesh);
+  group.userData.focusedPatch = patchMesh;
+
+  console.info(`[SolarSystem] Focused patch: ${loaded.length} tiles at zoom ${zoom}, ${nw.lat.toFixed(1)}°/${nw.lon.toFixed(1)}° to ${se.lat.toFixed(1)}°/${se.lon.toFixed(1)}°`);
+
+  return () => {
+    earth.orbit.remove(patchMesh);
+    patchGeo.dispose();
+    patchMat.dispose();
+    tex.dispose();
+    delete group.userData.focusedPatch;
   };
 }

@@ -463,12 +463,102 @@ export class GisLayerManager {
     this.state.clusters = [];
   }
 
+  // --- Heatmap operations ---
+
+  addHeatPoints(points: GisHeatPoint[]): void {
+    this.state.heatPoints.push(...points);
+    this.rebuildHeatmap();
+    this.notify();
+  }
+
+  clearHeatmap(): void {
+    this.state.heatPoints = [];
+    if (this.state.heatMesh) {
+      this.gisGroup.remove(this.state.heatMesh);
+      this.state.heatMesh.geometry.dispose();
+      if (this.state.heatMesh.material instanceof THREE.Material) {
+        this.state.heatMesh.material.dispose();
+      }
+      this.state.heatMesh = null;
+    }
+    this.notify();
+  }
+
+  private rebuildHeatmap(): void {
+    // Remove old heatmap mesh
+    if (this.state.heatMesh) {
+      this.gisGroup.remove(this.state.heatMesh);
+      this.state.heatMesh.geometry.dispose();
+      if (this.state.heatMesh.material instanceof THREE.Material) {
+        this.state.heatMesh.material.dispose();
+      }
+      this.state.heatMesh = null;
+    }
+
+    if (this.state.heatPoints.length === 0) return;
+
+    // Low-poly sphere shell slightly above the planet surface
+    const heatRadius = this.planetRadius * 1.02;
+    const segments = 32;
+    const geo = new THREE.SphereGeometry(heatRadius, segments, segments);
+    const posAttr = geo.attributes.position;
+    const vertexCount = posAttr.count;
+
+    // Build vertex colors by sampling proximity to heat points
+    const colors = new Float32Array(vertexCount * 3);
+    const cold = new THREE.Color(0x0044ff); // blue
+    const hot = new THREE.Color(0xff2200);  // red
+
+    for (let i = 0; i < vertexCount; i++) {
+      const vx = posAttr.getX(i);
+      const vy = posAttr.getY(i);
+      const vz = posAttr.getZ(i);
+
+      // Convert vertex position back to lat/lon
+      const r = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      const lat = Math.asin(vy / r) * (180 / Math.PI);
+      const lon = Math.atan2(vz, -vx) * (180 / Math.PI) - 180;
+
+      // Compute heat influence from all heat points (inverse distance weighting)
+      let heat = 0;
+      for (const hp of this.state.heatPoints) {
+        const dist = haversineDistance({ lat, lon }, { lat: hp.lat, lon: hp.lon });
+        // Influence falls off with distance; 15-degree half-life
+        const influence = hp.intensity * Math.exp(-dist / 15);
+        heat = Math.max(heat, influence);
+      }
+      heat = Math.min(1, heat);
+
+      const c = cold.clone().lerp(hot, heat);
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const mat = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.45,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.FrontSide,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.name = 'gis-heatmap';
+    this.state.heatMesh = mesh;
+    this.gisGroup.add(mesh);
+  }
+
   // --- Clear all ---
 
   clearAll(): void {
     for (const [id] of this.state.pins) this.removePin(id);
     for (const [id] of this.state.paths) this.removePath(id);
     this.clearClusters();
+    this.clearHeatmap();
     this.notify();
   }
 
