@@ -17,7 +17,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, getArcGISLayers } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
@@ -2301,6 +2301,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               setActivePanel('detail');
             }
           }
+        }}
+        onLoadArcGIS={(layer) => {
+          const fg = graphRef.current;
+          if (!fg) return;
+          const solarGroup = fg.scene().getObjectByName('sun')?.parent;
+          if (!solarGroup) return;
+          loadArcGISOverlay(solarGroup as THREE.Group, layer as 'imagery' | 'streets' | 'topo' | 'borders' | 'darkgray')
+            .then(() => console.log(`[PrimeRadiant] ArcGIS ${layer} loaded on Earth`))
+            .catch(err => console.warn(`[PrimeRadiant] ArcGIS ${layer} failed:`, err));
         }}
       />
       <TutorialOverlay />

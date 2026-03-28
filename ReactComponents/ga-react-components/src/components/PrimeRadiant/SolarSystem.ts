@@ -1365,6 +1365,16 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       cloudsHigh.rotation.y = time * 0.45;
     }
 
+    // Sync ArcGIS overlays with Earth rotation
+    if (def.name === 'earth') {
+      const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
+      if (overlays) {
+        for (const overlay of Object.values(overlays)) {
+          overlay.rotation.y = mesh.rotation.y;
+        }
+      }
+    }
+
     // Update planet shader uniforms — sun position for day/night + bump
     if (mesh.material instanceof THREE.ShaderMaterial) {
       const u = mesh.material.uniforms;
@@ -1648,4 +1658,121 @@ export function startLiveCloudUpdates(group: THREE.Group, apiKey?: string): () =
   }, CLOUD_REFRESH_MS);
 
   return () => clearInterval(interval);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ARCGIS TILE OVERLAY — composites web map tiles onto Earth sphere
+// ─────────────────────────────────────────────────────────────
+
+const ARCGIS_SERVICES: Record<string, string> = {
+  imagery: 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile',
+  streets: 'https://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer/tile',
+  topo: 'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile',
+  borders: 'https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile',
+  darkgray: 'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile',
+};
+
+/**
+ * Load ArcGIS tile layer onto the Earth sphere.
+ * @param group - Solar system group from createSolarSystem
+ * @param layer - 'imagery' | 'streets' | 'topo' | 'borders' | 'darkgray'
+ * @returns cleanup function to remove the overlay
+ */
+export async function loadArcGISOverlay(
+  group: THREE.Group,
+  layer: keyof typeof ARCGIS_SERVICES = 'borders',
+): Promise<() => void> {
+  const baseUrl = ARCGIS_SERVICES[layer];
+  if (!baseUrl) throw new Error(`Unknown ArcGIS layer: ${layer}`);
+
+  const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef }[] | undefined;
+  const earth = planets?.find(p => p.def.name === 'earth');
+  if (!earth) throw new Error('Earth not found in solar system');
+
+  const ZOOM = 3;
+  const TILES = 1 << ZOOM; // 8
+  const CANVAS_SIZE = TILES * 256; // 2048
+
+  const canvas = document.createElement('canvas');
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
+  const ctx = canvas.getContext('2d')!;
+
+  // ArcGIS tile URL format: {baseUrl}/{z}/{y}/{x}
+  const fetches: Promise<{ x: number; y: number; img: HTMLImageElement | null }>[] = [];
+  for (let y = 0; y < TILES; y++) {
+    for (let x = 0; x < TILES; x++) {
+      const url = `${baseUrl}/${ZOOM}/${y}/${x}`;
+      fetches.push(fetchTile(url).then(img => ({ x, y, img })));
+    }
+  }
+
+  const tiles = await Promise.all(fetches);
+  const loaded = tiles.filter(t => t.img);
+
+  if (loaded.length === 0) {
+    console.warn(`[SolarSystem] No ArcGIS ${layer} tiles loaded`);
+    return () => {};
+  }
+
+  // Composite tiles — ArcGIS uses web Mercator, need to reproject to equirectangular
+  // For low zoom levels, simple placement works reasonably well
+  for (const t of loaded) {
+    if (t.img) {
+      ctx.drawImage(t.img, t.x * 256, t.y * 256, 256, 256);
+    }
+  }
+
+  console.info(`[SolarSystem] ArcGIS ${layer}: ${loaded.length}/${TILES * TILES} tiles loaded`);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+
+  // Determine if this is an overlay (transparent) or full base map
+  const isOverlay = layer === 'borders';
+  const scale = group.userData.planets?.[0]?.mesh
+    ? 1.0
+    : 0.15; // fallback
+  const earthScale = earth.def.radius * (group.children[0]?.scale.x || 0.15);
+
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    opacity: isOverlay ? 0.8 : 0.9,
+    depthWrite: false,
+    side: isOverlay ? THREE.FrontSide : THREE.FrontSide,
+  });
+
+  // Create overlay sphere slightly above Earth surface
+  const earthMesh = earth.mesh;
+  const earthGeo = earthMesh.geometry as THREE.SphereGeometry;
+  const earthRadius = earthGeo.parameters.radius;
+  const overlayRadius = earthRadius * (isOverlay ? 1.01 : 1.005);
+
+  const overlayGeo = new THREE.SphereGeometry(overlayRadius, 64, 64);
+  const overlayMesh = new THREE.Mesh(overlayGeo, mat);
+  overlayMesh.name = `earth-arcgis-${layer}`;
+  overlayMesh.position.copy(earthMesh.position);
+  // Match Earth's rotation
+  overlayMesh.rotation.copy(earthMesh.rotation);
+
+  earth.orbit.add(overlayMesh);
+
+  // Store reference for animation sync
+  group.userData.arcgisOverlays = group.userData.arcgisOverlays || {};
+  (group.userData.arcgisOverlays as Record<string, THREE.Mesh>)[layer] = overlayMesh;
+
+  return () => {
+    earth.orbit.remove(overlayMesh);
+    overlayGeo.dispose();
+    mat.dispose();
+    tex.dispose();
+    delete (group.userData.arcgisOverlays as Record<string, THREE.Mesh>)[layer];
+  };
+}
+
+/** Get available ArcGIS layer names */
+export function getArcGISLayers(): string[] {
+  return Object.keys(ARCGIS_SERVICES);
 }
