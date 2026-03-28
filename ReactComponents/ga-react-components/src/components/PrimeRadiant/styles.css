@@ -188,7 +188,8 @@
 .prime-radiant__side-panel .prime-radiant__backlog,
 .prime-radiant__side-panel .prime-radiant__agents,
 .prime-radiant__side-panel .seldon-dashboard,
-.prime-radiant__side-panel .prime-radiant__llm-status {
+.prime-radiant__side-panel .prime-radiant__llm-status,
+.prime-radiant__side-panel .prime-radiant__library {
   position: relative;
   top: auto;
   left: auto;
@@ -5604,4 +5605,550 @@
   background: rgba(255, 215, 0, 0.08); border: 2px dashed #FFD700; border-radius: 10px 10px 0 0;
   font-size: 12px; color: #FFD700; font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* =========================================================================
+   Godot Scene — panel + fullscreen overlay
+   ========================================================================= */
+
+/* --- Panel mode (inside side panel) --- */
+.godot-scene--panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(5, 5, 15, 0.95);
+}
+
+.godot-scene__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.godot-scene__title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8B5CF6;
+  letter-spacing: 0.5px;
+}
+
+.godot-scene__header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.godot-scene__expand-btn {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 6px;
+  color: #8B5CF6;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.godot-scene__expand-btn:hover {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #A78BFA;
+}
+
+.godot-scene__iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #000;
+}
+
+/* --- Loading state --- */
+.godot-scene__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.godot-scene__loading--fullscreen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.godot-scene__spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8B5CF6;
+  border-radius: 50%;
+  animation: godotSpin 0.8s linear infinite;
+}
+
+@keyframes godotSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Error state --- */
+.godot-scene__error {
+  padding: 24px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.godot-scene__hint {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+}
+
+.godot-scene__hint code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #8B5CF6;
+  font-size: 10px;
+}
+
+/* --- Fullscreen overlay --- */
+.godot-scene__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: godotOverlayFadeIn 0.2s ease-out;
+}
+
+@keyframes godotOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.godot-scene--fullscreen {
+  width: 96vw;
+  height: 94vh;
+  max-width: 1920px;
+  background: rgba(5, 5, 15, 0.98);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 60px rgba(139, 92, 246, 0.15), 0 0 120px rgba(0, 0, 0, 0.5);
+}
+
+.godot-scene__fs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+  flex-shrink: 0;
+  background: rgba(10, 10, 25, 0.9);
+}
+
+.godot-scene__fs-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8B5CF6;
+  letter-spacing: 0.5px;
+}
+
+.godot-scene__fs-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.godot-scene__fs-close:hover {
+  background: rgba(255, 70, 70, 0.15);
+  border-color: rgba(255, 70, 70, 0.3);
+  color: #FF4444;
+}
+
+.godot-scene--fullscreen .godot-scene__iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #000;
+  border-radius: 0 0 12px 12px;
+}
+
+/* --- Tabs in panel header --- */
+.godot-scene__tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.godot-scene__tab {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.godot-scene__tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.godot-scene__tab--active {
+  color: #8B5CF6;
+  background: rgba(139, 92, 246, 0.12);
+}
+
+/* =========================================================================
+   Godot Scene Builder (gsb__)
+   ========================================================================= */
+
+.gsb {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gsb::-webkit-scrollbar { width: 4px; }
+.gsb::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 2px; }
+
+/* --- Connection status --- */
+.gsb__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gsb__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gsb__status--connected .gsb__status-dot { background: #33CC66; box-shadow: 0 0 6px #33CC66; }
+.gsb__status--connecting .gsb__status-dot { background: #FFB300; animation: godotSpin 1s linear infinite; }
+.gsb__status--disconnected .gsb__status-dot { background: #666; }
+.gsb__status--error .gsb__status-dot { background: #FF4444; }
+
+.gsb__status-text {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.gsb__reconnect-btn,
+.gsb__refresh-btn {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+  color: #8B5CF6;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.gsb__reconnect-btn:hover,
+.gsb__refresh-btn:hover {
+  background: rgba(139, 92, 246, 0.25);
+}
+
+/* --- Sections --- */
+.gsb__section {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.gsb__section--log {
+  flex: 1;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+.gsb__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 6px;
+}
+
+.gsb__section-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.gsb__mini-btn {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 3px;
+  color: #8B5CF6;
+  padding: 1px 6px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+}
+
+.gsb__mini-btn:hover { background: rgba(139, 92, 246, 0.25); }
+.gsb__mini-btn--danger { color: #FF4444; border-color: rgba(255, 68, 68, 0.2); background: rgba(255, 68, 68, 0.08); }
+.gsb__mini-btn--danger:hover { background: rgba(255, 68, 68, 0.2); }
+
+/* --- Quick actions grid --- */
+.gsb__quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.gsb__quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  transition: all 0.12s ease;
+  text-align: left;
+}
+
+.gsb__quick-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.2);
+  color: #A78BFA;
+}
+
+/* --- Scene tree --- */
+.gsb__tree {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.gsb__tree::-webkit-scrollbar { width: 3px; }
+.gsb__tree::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.2); border-radius: 2px; }
+
+.gsb__tree-node {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  text-align: left;
+  border-radius: 3px;
+  transition: background 0.1s ease;
+}
+
+.gsb__tree-node:hover { background: rgba(255, 255, 255, 0.04); }
+.gsb__tree-node--selected { background: rgba(139, 92, 246, 0.15); color: #A78BFA; }
+
+.gsb__tree-icon { font-size: 11px; flex-shrink: 0; }
+.gsb__tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gsb__tree-type { color: rgba(255, 255, 255, 0.25); font-size: 9px; flex-shrink: 0; }
+
+.gsb__tree-empty {
+  padding: 12px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.25);
+  font-style: italic;
+}
+
+/* --- Dialogs (inline) --- */
+.gsb__dialog {
+  background: rgba(20, 20, 40, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gsb__dialog-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8B5CF6;
+}
+
+.gsb__dialog-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* --- Inputs --- */
+.gsb__input,
+.gsb__select,
+.gsb__textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 5px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gsb__input:focus,
+.gsb__select:focus,
+.gsb__textarea:focus {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.gsb__select { cursor: pointer; }
+.gsb__select option { background: #1a1a2e; }
+
+.gsb__textarea {
+  resize: vertical;
+  min-height: 40px;
+}
+
+.gsb__input--method { font-weight: 600; }
+
+/* --- Buttons --- */
+.gsb__btn {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+  color: #A78BFA;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.12s ease;
+}
+
+.gsb__btn:hover { background: rgba(139, 92, 246, 0.35); }
+.gsb__btn--ghost { background: transparent; border-color: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+.gsb__btn--ghost:hover { background: rgba(255, 255, 255, 0.05); }
+.gsb__btn--exec { width: 100%; margin-top: 4px; }
+
+.gsb__command-row {
+  margin-bottom: 4px;
+}
+
+/* --- Command log --- */
+.gsb__log {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 150px;
+}
+
+.gsb__log::-webkit-scrollbar { width: 3px; }
+.gsb__log::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.2); border-radius: 2px; }
+
+.gsb__log-empty {
+  padding: 8px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-style: italic;
+}
+
+.gsb__log-entry {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gsb__log-method {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gsb__log-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.gsb__log-status--pending { color: #FFB300; background: rgba(255, 179, 0, 0.1); }
+.gsb__log-status--success { color: #33CC66; background: rgba(51, 204, 102, 0.1); }
+.gsb__log-status--error { color: #FF4444; background: rgba(255, 68, 68, 0.1); }
+
+.gsb__log-result {
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 60px;
+  overflow-y: auto;
+}
+
+/* --- Disconnected state --- */
+.gsb__disconnected {
+  padding: 24px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.6;
+}
+
+.gsb__hint {
+  margin-top: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.25);
 }
