@@ -10,7 +10,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle } from './DataLoader';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
@@ -534,6 +534,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
+  const [viewers, setViewers] = useState<ViewerInfo[]>([]);
+  const selfConnectionIdRef = useRef<string | null>(null);
 
   // Algedonic effect refs — mutable state for animation loop (no re-render needed)
   const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
@@ -1862,6 +1864,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         },
         onAlgedonicSignal: handleAlgedonicSignal,
+        onViewersChanged: (viewerList) => {
+          setViewers(viewerList);
+          // Track our own connection ID — it's the one we just added
+          if (!selfConnectionIdRef.current && viewerList.length > 0) {
+            // The most recently connected viewer is likely us
+            const sorted = [...viewerList].sort((a, b) =>
+              new Date(b.connectedAt).getTime() - new Date(a.connectedAt).getTime(),
+            );
+            selfConnectionIdRef.current = sorted[0].connectionId;
+          }
+        },
         onError: (err) => console.warn('[PrimeRadiant] Live poll error:', err.message),
       });
     }
@@ -2166,6 +2179,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       )}
 
       <GalacticClock />
+
+      {/* Viewer presence indicator */}
+      {viewers.length > 0 && (
+        <div
+          className="prime-radiant__viewers"
+          title={`${viewers.length} viewer${viewers.length !== 1 ? 's' : ''} online:\n${viewers.map(v => `${v.browser} (${v.color})`).join('\n')}`}
+        >
+          {viewers.slice(0, 8).map(v => (
+            <span
+              key={v.connectionId}
+              className={`prime-radiant__viewer-dot${v.connectionId === selfConnectionIdRef.current ? ' prime-radiant__viewer-dot--self' : ''}`}
+              style={{ backgroundColor: v.color }}
+            />
+          ))}
+          {viewers.length > 8 && (
+            <span className="prime-radiant__viewer-count">+{viewers.length - 8}</span>
+          )}
+        </div>
+      )}
+
       <ChatWidget
         selectedNode={selectedNode}
         onNavigateToPlanet={(planet) => {
