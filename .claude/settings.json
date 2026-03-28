@@ -20,16 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"$hookData = $input | ConvertFrom-Json; $f = $hookData.tool_input.file_path; if ($f -match 'GA\\.Business\\.DSL|GaSurfaceSyntaxParser|GaClosureRegistry|PipelineClosures|GaComputationExpression') { Write-Host '🔍 DSL file changed — running fast DSL tests...'; dotnet test Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj --no-build -q 2>&1 | Select-Object -Last 5 }\""
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "pwsh -NoProfile -Command \"$hookData = $input | ConvertFrom-Json; $f = $hookData.tool_input.file_path; if ($f -match '\\.agent/(skills|agents)|\\.claude/settings') { Write-Host '🛡️  Agent config changed: ' + $f }\""
+            "command": "pwsh -NoProfile -Command \"try { $hookData = $input | ConvertFrom-Json; $f = $hookData.tool_input.file_path; if ($f -and $f -match 'GA\\.Business\\.DSL') { Write-Host 'DSL file changed' } } catch { }\""
           }
         ]
       }
@@ -39,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -Command \"Write-Host ''; Write-Host '🎸 Guitar Alchemist — Session Context' -ForegroundColor Cyan; Write-Host ('  Branch : ' + (git branch --show-current)) -ForegroundColor Gray; Write-Host ('  Last 3 : ' + ((git log --oneline -3) -join ' | ')) -ForegroundColor Gray; $open = (git diff --stat HEAD 2>$null | Select-Object -Last 1); if ($open) { Write-Host ('  Dirty  : ' + $open) -ForegroundColor Yellow }; Write-Host '  Skills : /compound  /feature  /ga  /ce:review' -ForegroundColor DarkCyan; Write-Host ''\""
+            "command": "pwsh -NoProfile -Command \"Write-Host ''; Write-Host 'Guitar Alchemist Session' -ForegroundColor Cyan; Write-Host ('  Branch: ' + (git branch --show-current)) -ForegroundColor Gray; try { $vite = (Invoke-WebRequest -Uri 'http://localhost:5176' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop).StatusCode; Write-Host ('  Vite: OK (' + $vite + ')') -ForegroundColor Green } catch { Write-Host '  Vite: DOWN (port 5176) - run: pwsh Scripts/start-dev.ps1' -ForegroundColor Red }; try { $api = (Invoke-WebRequest -Uri 'http://localhost:5232/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop).Content; Write-Host ('  API: ' + $api) -ForegroundColor $(if($api -eq 'Healthy'){'Green'}else{'Yellow'}) } catch { Write-Host '  API: DOWN (port 5232)' -ForegroundColor Red }; Write-Host ''\""
           }
         ]
       }
