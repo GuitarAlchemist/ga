@@ -160,29 +160,59 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
   const q = question.toLowerCase();
   const isFr = detectFrench(q);
 
-  // Navigation commands — "find X", "go to X", "show X", "zoom to X" (EN + FR)
-  const navMatch = q.match(/(?:find|go to|show|zoom to|navigate to|fly to|take me to|montre|aller à|voir|cherche|trouve|va vers)\s+(.+)/);
-  if (navMatch) {
-    const target = navMatch[1].trim();
-    const planet = PLANET_NAMES.find((p) => target.includes(p));
-    if (planet) {
+  // Detect any planet mentioned in the input
+  const mentionedPlanet = PLANET_NAMES.find((p) => q.includes(p));
+
+  // Navigation intent — broad natural language matching
+  const isNavIntent = /\b(go|fly|zoom|navigate|take me|show me|let'?s go|bring me|move|closer|approach|visit|look at|see)\b/.test(q)
+    || /\b(aller|montre|voir|cherche|trouve|va vers|approche|visite|regarde)\b/.test(q);
+
+  // Zoom / close-up intent
+  const isZoomIntent = /\b(zoom|close[- ]?up|closer|magnif|enlarge|approach|agrand|rapproch)\b/i.test(q);
+
+  // Screenshot intent
+  const isScreenshotIntent = /\b(picture|photo|screenshot|capture|snap|image|screen\s?shot)\b/i.test(q);
+
+  if (isScreenshotIntent) {
+    // Take a screenshot of the canvas
+    const canvas = document.querySelector('.prime-radiant canvas') as HTMLCanvasElement | null;
+    if (canvas) {
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `prime-radiant-${mentionedPlanet || 'screenshot'}-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
       return {
-        text: `Navigating to ${planet.charAt(0).toUpperCase() + planet.slice(1)}. ${PLANET_FACTS[planet] ?? ''}`,
-        action: { type: 'navigate-planet', planet },
+        text: isFr
+          ? `Capture enregistrée ! ${mentionedPlanet ? PLANET_FACTS[mentionedPlanet] ?? '' : ''}`
+          : `Screenshot saved! ${mentionedPlanet ? PLANET_FACTS[mentionedPlanet] ?? '' : ''}`,
       };
     }
-    // Try as governance node
+    return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
+  }
+
+  if (mentionedPlanet && (isNavIntent || isZoomIntent)) {
     return {
-      text: `Searching for "${target}" in the governance graph...`,
+      text: isFr
+        ? `Navigation vers ${mentionedPlanet.charAt(0).toUpperCase() + mentionedPlanet.slice(1)}. ${PLANET_FACTS[mentionedPlanet] ?? ''}`
+        : `Navigating to ${mentionedPlanet.charAt(0).toUpperCase() + mentionedPlanet.slice(1)}. ${PLANET_FACTS[mentionedPlanet] ?? ''}`,
+      action: { type: 'navigate-planet', planet: mentionedPlanet },
+    };
+  }
+
+  // Explicit navigation command patterns — "find X", "go to X"
+  const navMatch = q.match(/(?:find|go to|show|navigate to|fly to|take me to|montre|aller à|voir|cherche|trouve|va vers)\s+(.+)/);
+  if (navMatch) {
+    const target = navMatch[1].trim();
+    return {
+      text: isFr ? `Recherche de « ${target} » dans le graphe de gouvernance...` : `Searching for "${target}" in the governance graph...`,
       action: { type: 'navigate-node', query: target },
     };
   }
 
-  // Planet info — just asking about a planet
-  for (const name of PLANET_NAMES) {
-    if (q.includes(name)) {
-      return { text: PLANET_FACTS[name] ?? `${name} is part of our solar system.` };
-    }
+  // Planet info — just asking about a planet (no action intent)
+  if (mentionedPlanet) {
+    return { text: PLANET_FACTS[mentionedPlanet] ?? `${mentionedPlanet} is part of our solar system.` };
   }
 
   // Context-aware
