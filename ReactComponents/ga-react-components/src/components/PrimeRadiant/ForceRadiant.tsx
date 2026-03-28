@@ -1053,6 +1053,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     let lastCameraSave = 0;
     fg.onEngineTick(() => {
+      try {
       const t = Date.now() * 0.001;
 
       // ─── Save camera state every 2 seconds ───
@@ -1398,6 +1399,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           const eased = progress * progress; // ease-in (slow start)
           bloomPass.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
         }
+      }
+      } catch (err) {
+        // Never let a single tick error kill the animation loop
+        console.warn('[PrimeRadiant] Tick error:', err);
       }
     });
 
