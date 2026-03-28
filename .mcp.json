@@ -15,6 +15,14 @@
       "command": "cargo",
       "args": ["run", "--release", "-p", "ix-agent"],
       "cwd": "C:/Users/spare/source/repos/ix"
+    },
+    "meshy-ai": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["mcp-servers/meshy-ai/dist/index.js"],
+      "env": {
+        "MESHY_API_KEY": "${MESHY_API_KEY}"
+      }
     }
   }
 }
