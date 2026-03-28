@@ -128,7 +128,7 @@ type DisplayStatus = WorkflowRun['status'] | 'resolved';
 const STATUS_CONFIG: Record<DisplayStatus, { color: string; icon: string; label: string }> = {
   success: { color: '#33CC66', icon: '\u2713', label: 'passing' },
   failure: { color: '#FF4444', icon: '\u2717', label: 'failing' },
-  resolved: { color: '#FFB300', icon: '\u2713', label: 'resolved' },
+  resolved: { color: '#6b7280', icon: '\u2713', label: 'resolved' },
   in_progress: { color: '#FFB300', icon: '\u25CF', label: 'running' },
   queued: { color: '#6b7280', icon: '\u25CB', label: 'queued' },
   cancelled: { color: '#6b7280', icon: '\u2212', label: 'cancelled' },
@@ -231,7 +231,7 @@ export const CICDPanel: React.FC = () => {
           <span className="prime-radiant__activity-count">
             <span style={{ color: '#33CC66' }}>{passing} passing</span>
             {failing > 0 && <span style={{ color: '#FF4444' }}> &middot; {failing} failing</span>}
-            {resolved > 0 && <span style={{ color: '#FFB300' }}> &middot; {resolved} resolved</span>}
+            {resolved > 0 && <span style={{ color: '#33CC66', opacity: 0.7 }}> &middot; {resolved} resolved</span>}
             {running > 0 && <span style={{ color: '#FFB300' }}> &middot; {running} running</span>}
           </span>
         </span>
@@ -249,7 +249,7 @@ export const CICDPanel: React.FC = () => {
             const repoFailing = repoRuns.filter(r => r.status === 'failure' && !resolvedRunIds.has(r.id)).length;
             const repoResolved = repoRuns.filter(r => r.status === 'failure' && resolvedRunIds.has(r.id)).length;
             const repoRunning = repoRuns.filter(r => r.status === 'in_progress').length;
-            const repoHealthColor = repoFailing > 0 ? '#FF4444' : (repoResolved > 0 || repoRunning > 0) ? '#FFB300' : '#33CC66';
+            const repoHealthColor = repoFailing > 0 ? '#FF4444' : repoRunning > 0 ? '#FFB300' : '#33CC66';
             return (
               <div key={repo} style={{ marginBottom: 12 }}>
                 <div style={{
@@ -288,7 +288,7 @@ export const CICDPanel: React.FC = () => {
                   }}>
                     <span style={{ color: '#33CC66' }}>{repoPassing}✓</span>
                     {repoFailing > 0 && <span style={{ color: '#FF4444' }}>{repoFailing}✗</span>}
-                    {repoResolved > 0 && <span style={{ color: '#FFB300' }} title="Transient failures that resolved">{repoResolved}↻</span>}
+                    {repoResolved > 0 && <span style={{ color: '#33CC66' }} title="Previously failed, now passing">{repoResolved} fixed</span>}
                     {repoRunning > 0 && <span style={{ color: '#FFB300' }}>{repoRunning}●</span>}
                   </span>
                   {/* Per-repo fix button */}
@@ -379,9 +379,9 @@ export const CICDPanel: React.FC = () => {
                       className="prime-radiant__commit-item"
                       style={{
                         cursor: 'pointer',
-                        borderLeft: isFailing ? '2px solid #FF4444' : isResolved ? '2px solid #FFB300' : '2px solid transparent',
+                        borderLeft: isFailing ? '2px solid #FF4444' : isResolved ? '2px solid #30363d' : '2px solid transparent',
                         paddingLeft: 10,
-                        opacity: isResolved ? 0.7 : 1,
+                        opacity: isResolved ? 0.5 : 1,
                       }}
                       onClick={() => window.open(run.url, '_blank')}
                       title={`${run.name} on ${run.branch} — ${cfg.label}${isResolved ? ' (transient — later run succeeded)' : ''}`}
@@ -395,17 +395,36 @@ export const CICDPanel: React.FC = () => {
                         textAlign: 'center',
                         flexShrink: 0,
                       }}>
-                        {isResolved ? '↻' : cfg.icon}
+                        {cfg.icon}
                       </span>
 
                       {/* Workflow name */}
-                      <span className="prime-radiant__commit-msg" style={{
-                        color: isFailing ? '#FF4444' : isResolved ? '#FFB300' : '#c9d1d9',
+                      <span className={`prime-radiant__commit-msg${isResolved ? ' cicd-run--resolved' : ''}`} style={{
+                        color: isFailing ? '#FF4444' : isResolved ? '#6b7280' : '#c9d1d9',
                         fontWeight: isFailing ? 600 : 400,
                         textDecoration: isResolved ? 'line-through' : 'none',
                       }}>
                         {run.name}
                       </span>
+
+                      {/* Resolved badge */}
+                      {isResolved && (
+                        <span className="cicd-badge--resolved" style={{
+                          fontSize: '0.55rem',
+                          fontWeight: 600,
+                          color: '#33CC66',
+                          background: 'rgba(51, 204, 102, 0.12)',
+                          border: '1px solid rgba(51, 204, 102, 0.3)',
+                          borderRadius: 8,
+                          padding: '1px 6px',
+                          lineHeight: 1.4,
+                          flexShrink: 0,
+                          letterSpacing: '0.02em',
+                          textTransform: 'uppercase',
+                        }}>
+                          fixed
+                        </span>
+                      )}
 
                       {/* Branch */}
                       <span style={{
@@ -521,7 +540,8 @@ export const CICDPanel: React.FC = () => {
               {failing > 0 && remediation.status !== 'running' && (
                 <button
                   onClick={() => {
-                    const failedRepos = [...new Set(runs.filter(r => r.status === 'failure').map(r => r.repo))];
+                    const currentlyFailing = runs.filter(r => r.status === 'failure' && !resolvedRunIds.has(r.id));
+                    const failedRepos = [...new Set(currentlyFailing.map(r => r.repo))];
                     const state: RemediationState = {
                       status: 'running',
                       startedAt: new Date().toISOString(),
@@ -538,7 +558,7 @@ export const CICDPanel: React.FC = () => {
                       type: 'emergency_remediation',
                       repos: failedRepos,
                       failingCount: failing,
-                      failedWorkflows: runs.filter(r => r.status === 'failure').map(r => ({ name: r.name, repo: r.repo, url: r.url })),
+                      failedWorkflows: currentlyFailing.map(r => ({ name: r.name, repo: r.repo, url: r.url })),
                       requestedAt: new Date().toISOString(),
                     };
                     const existing = JSON.parse(localStorage.getItem('prime-radiant-remediation-queue') ?? '[]');
