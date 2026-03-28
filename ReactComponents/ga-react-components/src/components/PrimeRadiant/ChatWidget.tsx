@@ -285,18 +285,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const speakWithBrowserTts = useCallback((text: string) => {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = navigator.language;
+    utterance.lang = locale;
     utterance.rate = 0.9;
     utterance.pitch = 0.85;
     const voices = speechSynthesis.getVoices();
-    const preferred = voices.find((v) => v.name.includes('Google UK English Female'))
-      ?? voices.find((v) => v.name.includes('Google') && v.lang.startsWith('en'))
-      ?? voices.find((v) => v.name.includes('Samantha'))
-      ?? voices.find((v) => v.lang.startsWith('en') && v.localService === false)
-      ?? voices[0];
+    // Pick a voice matching the selected locale
+    const preferred = locale === 'fr'
+      ? (voices.find((v) => v.name.includes('Google') && v.lang.startsWith('fr'))
+        ?? voices.find((v) => v.lang.startsWith('fr') && v.localService === false)
+        ?? voices.find((v) => v.lang.startsWith('fr')))
+      : (voices.find((v) => v.name.includes('Google UK English Female'))
+        ?? voices.find((v) => v.name.includes('Google') && v.lang.startsWith('en'))
+        ?? voices.find((v) => v.name.includes('Samantha'))
+        ?? voices.find((v) => v.lang.startsWith('en') && v.localService === false));
     if (preferred) utterance.voice = preferred;
     speechSynthesis.speak(utterance);
-  }, []);
+  }, [locale]);
 
   /** Speak text via Voxtral backend, falling back to browser TTS on failure */
   const speakText = useCallback(async (text: string) => {
@@ -441,7 +445,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = navigator.language;
+    recognition.lang = locale;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
