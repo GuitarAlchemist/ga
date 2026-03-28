@@ -26,7 +26,8 @@ if (-not (Test-Junction $activePath)) {
 }
 
 $active = Get-ActiveSlot
-$dll = Join-Path $activePath "net10.0\GaApi.dll"
+$slotDir = Join-Path $activePath "net10.0"
+$dll = Join-Path $slotDir "GaApi.dll"
 
 if (-not (Test-Path $dll)) {
     Write-Host "ERROR: GaApi.dll not found at $dll" -ForegroundColor Red
@@ -34,8 +35,19 @@ if (-not (Test-Path $dll)) {
     exit 1
 }
 
+# Ensure runtime config files exist (build redirect sometimes misses these)
+$debugDir = Join-Path (Get-GaApiBinPath) "Debug\net10.0"
+foreach ($f in @("GaApi.runtimeconfig.json", "GaApi.deps.json")) {
+    $target = Join-Path $slotDir $f
+    $source = Join-Path $debugDir $f
+    if (-not (Test-Path $target) -and (Test-Path $source)) {
+        Copy-Item $source $target
+        Write-Host "  Copied missing $f from Debug" -ForegroundColor Gray
+    }
+}
+
 Write-Host "Starting GaApi from $active slot..." -ForegroundColor Cyan
-Start-Process -FilePath "dotnet" -ArgumentList $dll -WindowStyle Hidden
+Start-Process -FilePath "dotnet" -ArgumentList $dll,"--urls","http://localhost:5232" -WindowStyle Hidden
 
 if (Test-ServerHealth -TimeoutSeconds $HealthTimeout) {
     $proc = Get-GaApiProcess
