@@ -149,12 +149,19 @@ const PLANET_FACTS: Record<string, string> = {
   moon: 'Earth\'s companion. Tidally locked — same face always toward us. 384,400 km away.',
 };
 
+// Detect if text is in French (for mock fallback)
+function detectFrench(text: string): boolean {
+  return /[àâéèêëïîôùûüÿçœæ]/.test(text)
+    || /\b(bonjour|salut|merci|oui|non|je|nous|vous|les|des|est|une?|dans|pour|sur|avec|qui|que|quoi|comment|pourquoi|montre|aller|voir)\b/i.test(text);
+}
+
 async function askDemerzel(question: string, context?: GovernanceNode | null): Promise<DemerzelResponse> {
   await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
   const q = question.toLowerCase();
+  const isFr = detectFrench(q);
 
-  // Navigation commands — "find X", "go to X", "show X", "zoom to X"
-  const navMatch = q.match(/(?:find|go to|show|zoom to|navigate to|fly to|take me to)\s+(.+)/);
+  // Navigation commands — "find X", "go to X", "show X", "zoom to X" (EN + FR)
+  const navMatch = q.match(/(?:find|go to|show|zoom to|navigate to|fly to|take me to|montre|aller à|voir|cherche|trouve|va vers)\s+(.+)/);
   if (navMatch) {
     const target = navMatch[1].trim();
     const planet = PLANET_NAMES.find((p) => target.includes(p));
@@ -181,7 +188,10 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
   // Context-aware
   if (context) {
     const typeInfo = GOVERNANCE_RESPONSES[context.type] ?? '';
-    return { text: `You are viewing "${context.name}" (${context.type}). ${context.description}${typeInfo ? ' ' + typeInfo : ''}` };
+    const text = isFr
+      ? `Vous consultez « ${context.name} » (${context.type}). ${context.description}${typeInfo ? ' ' + typeInfo : ''}`
+      : `You are viewing "${context.name}" (${context.type}). ${context.description}${typeInfo ? ' ' + typeInfo : ''}`;
+    return { text };
   }
 
   // Governance keyword matching
@@ -189,7 +199,11 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
     if (q.includes(key)) return { text: response };
   }
 
-  return { text: 'I am Demerzel. Ask me about governance (policies, constitutions, personas, logic) or say "find Earth" to navigate the solar system. Try "go to Jupiter" or "show Mars".' };
+  return {
+    text: isFr
+      ? 'Je suis Demerzel. Posez-moi des questions sur la gouvernance (politiques, constitutions, personas, logique) ou dites « montre la Terre » pour naviguer dans le système solaire.'
+      : 'I am Demerzel. Ask me about governance (policies, constitutions, personas, logic) or say "find Earth" to navigate the solar system. Try "go to Jupiter" or "show Mars".',
+  };
 }
 
 // ---------------------------------------------------------------------------
