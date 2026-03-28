@@ -50,7 +50,9 @@ import { LibraryPanel } from './LibraryPanel';
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LiveNotebook } from './LiveNotebook';
+import { TriageDropZone } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
+import { GodotScene } from './GodotScene';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -564,6 +566,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [criticState, setCriticState] = useState<CriticState>({
     phase: 'idle', result: null, history: [], lastAnalysis: null,
   });
+
+  // Godot fullscreen overlay toggle (independent of panel state)
+  const [godotFullscreen, setGodotFullscreen] = useState(false);
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
@@ -2655,6 +2660,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Bottom drawer — icicle navigator + file viewer */}
       <IcicleDrawer graphData={graphData} />
 
+      {/* Triage drop zone — bottom center, drag/paste anything for AI classification */}
+      <TriageDropZone onNavigateToPanel={(panelId) => setActivePanel(panelId as PanelId)} />
+
       </div>{/* end canvas-area */}
 
       {/* Icon rail — right edge (desktop/tablet) or bottom tab bar (phone) */}
@@ -2703,8 +2711,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           />
         )}
         {activePanel === 'algedonic' && <AlgedonicPanel signals={algedonicSignals} />}
+        {activePanel === 'godot' && (
+          <GodotScene
+            mode="panel"
+            onNodeClick={(nodeId) => {
+              const node = graphData?.nodes.find(n => n.id === nodeId);
+              if (node) { setSelectedNode(node); setActivePanel('detail'); }
+            }}
+            onExpand={() => { setGodotFullscreen(true); setActivePanel(null); }}
+          />
+        )}
         {/* Simple side panels — registry-backed lookup */}
-        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook'].includes(activePanel) && (() => {
+        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot'].includes(activePanel) && (() => {
           const SIMPLE_PANELS: Record<string, React.FC> = {
             activity: ActivityPanel,
             backlog: BacklogPanel,
@@ -2743,6 +2761,22 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* LiveNotebook renders as full-screen overlay, outside side panel */}
       {activePanel === 'notebook' && (
         <LiveNotebook open={true} onClose={() => setActivePanel(null)} />
+      )}
+
+      {/* Godot 3D fullscreen overlay — independent of panel state */}
+      {godotFullscreen && (
+        <GodotScene
+          mode="fullscreen"
+          onClose={() => setGodotFullscreen(false)}
+          onNodeClick={(nodeId) => {
+            const node = graphData?.nodes.find(n => n.id === nodeId);
+            if (node) {
+              setGodotFullscreen(false);
+              setSelectedNode(node);
+              setActivePanel('detail');
+            }
+          }}
+        />
       )}
 
     </div>
