@@ -63,11 +63,12 @@ async function askClaudeStreaming(
     headers['Authorization'] = `Bearer ${userKey}`;
   }
 
-  // System prompt with language instruction
-  const langName = SUPPORTED_LANGS.find(l => l.code === locale)?.name;
-  const system = locale && locale !== 'en' && langName
-    ? `You are Demerzel, a governance AI from the Prime Radiant. You MUST respond entirely in ${langName}. Never switch to English.`
-    : 'You are Demerzel, a governance AI from the Prime Radiant.';
+  // System prompt — auto-detect language from user input, or honor explicit locale
+  const langName = locale && locale !== 'auto' ? SUPPORTED_LANGS.find(l => l.code === locale)?.name : null;
+  const langInstruction = langName
+    ? `You MUST respond entirely in ${langName}. Never switch to another language.`
+    : 'Detect the language of the user\'s message and respond in that same language. Match the user\'s language exactly.';
+  const system = `You are Demerzel, a governance AI from the Prime Radiant. ${langInstruction}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -196,6 +197,7 @@ async function askDemerzel(question: string, context?: GovernanceNode | null): P
 // ---------------------------------------------------------------------------
 // Supported languages with display names
 const SUPPORTED_LANGS = [
+  { code: 'auto', label: 'Auto', name: '' },
   { code: 'en', label: 'EN', name: 'English' },
   { code: 'fr', label: 'FR', name: 'Français' },
   { code: 'es', label: 'ES', name: 'Español' },
@@ -220,8 +222,7 @@ const WELCOME_MESSAGES: Record<string, string> = {
 };
 
 function detectLocale(): string {
-  const lang = navigator.language?.split('-')[0]?.toLowerCase() ?? 'en';
-  return SUPPORTED_LANGS.some(l => l.code === lang) ? lang : 'en';
+  return 'auto';
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigateToNode, onNavigateToPlanet }) => {
@@ -292,19 +293,32 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const speakWithBrowserTts = useCallback((text: string) => {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = locale;
     utterance.rate = 0.9;
     utterance.pitch = 0.85;
     const voices = speechSynthesis.getVoices();
-    // Pick a voice matching the selected locale
-    const preferred = locale === 'fr'
-      ? (voices.find((v) => v.name.includes('Google') && v.lang.startsWith('fr'))
-        ?? voices.find((v) => v.lang.startsWith('fr') && v.localService === false)
-        ?? voices.find((v) => v.lang.startsWith('fr')))
-      : (voices.find((v) => v.name.includes('Google UK English Female'))
-        ?? voices.find((v) => v.name.includes('Google') && v.lang.startsWith('en'))
+
+    // Detect language: use explicit locale, or sniff from text for auto mode
+    let lang = locale;
+    if (lang === 'auto') {
+      // Simple heuristic: check for common non-ASCII or language-specific patterns
+      if (/[àâéèêëïîôùûüÿçœæ]/.test(text) || /\b(je|nous|vous|les|des|est|une?|dans|pour|sur|avec)\b/i.test(text)) lang = 'fr';
+      else if (/[áéíóúñ¿¡]/.test(text) || /\b(el|los|las|una?|por|para|con|que)\b/i.test(text)) lang = 'es';
+      else if (/[äöüß]/.test(text) || /\b(der|die|das|ist|und|ein|eine)\b/i.test(text)) lang = 'de';
+      else if (/[àèéìíòóùú]/.test(text) || /\b(il|gli|della|sono|che|per|una?)\b/i.test(text)) lang = 'it';
+      else lang = 'en';
+    }
+
+    utterance.lang = lang;
+    // Pick a voice matching detected/selected language
+    const findVoice = (prefix: string) =>
+      voices.find((v) => v.name.includes('Google') && v.lang.startsWith(prefix))
+      ?? voices.find((v) => v.lang.startsWith(prefix) && v.localService === false)
+      ?? voices.find((v) => v.lang.startsWith(prefix));
+    const preferred = lang === 'en'
+      ? (voices.find((v) => v.name.includes('Google UK English Female'))
         ?? voices.find((v) => v.name.includes('Samantha'))
-        ?? voices.find((v) => v.lang.startsWith('en') && v.localService === false));
+        ?? findVoice('en'))
+      : findVoice(lang);
     if (preferred) utterance.voice = preferred;
     speechSynthesis.speak(utterance);
   }, [locale]);
@@ -453,7 +467,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = locale;
+    recognition.lang = locale === 'auto' ? navigator.language : locale;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
