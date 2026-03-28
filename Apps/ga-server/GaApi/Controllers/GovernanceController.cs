@@ -16,7 +16,8 @@ public class GovernanceController(
     IConfiguration configuration,
     ILogger<GovernanceController> logger,
     IHubContext<GovernanceHub> hubContext,
-    Services.BeliefStateService beliefStateService)
+    Services.BeliefStateService beliefStateService,
+    Services.VisualCriticService visualCriticService)
     : ControllerBase
 {
     // Cache the governance graph (regenerated on demand or every 5 minutes)
@@ -158,6 +159,44 @@ public class GovernanceController(
 
         Response.Headers.Append("X-Screenshot-Captured-At", capturedAt.Value.ToString("O"));
         return File(bytes, contentType);
+    }
+
+    /// <summary>
+    ///     Visual critic — analyze a Prime Radiant screenshot with Claude vision.
+    ///     Returns quality score, issues, IXQL commands, and algedonic signal.
+    ///     Future: refactor as ix pipeline connector.
+    /// </summary>
+    [HttpPost("visual-critic")]
+    public async Task<ActionResult<Services.VisualCriticResult>> AnalyzeVisual(
+        [FromBody] VisualCriticRequest request,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(request.Image))
+            return BadRequest(new { error = "image (base64) is required" });
+
+        var result = await visualCriticService.AnalyzeScreenshotAsync(
+            request.Image, request.MediaType ?? "image/png", ct);
+
+        // Broadcast algedonic signal via SignalR if quality is notable
+        if (result.SignalType != null)
+        {
+            await hubContext.Clients.All.SendAsync("AlgedonicSignal", new
+            {
+                signal = "visual_critic",
+                type = result.SignalType,
+                severity = result.SignalSeverity,
+                description = result.SignalDescription,
+                quality = result.Quality,
+            }, ct);
+        }
+
+        return Ok(result);
+    }
+
+    public class VisualCriticRequest
+    {
+        public string Image { get; set; } = "";
+        public string? MediaType { get; set; }
     }
 
     /// <summary>

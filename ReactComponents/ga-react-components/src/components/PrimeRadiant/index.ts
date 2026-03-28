@@ -25,6 +25,8 @@ export type { BeliefState, TetravalentStatus, BeliefEvidence, EvidenceItem } fro
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
 export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates, togglePlanetAtmosphere } from './SolarSystem';
+export { startVisualCriticLoop } from './VisualCriticLoop';
+export type { VisualCriticResult, VisualCriticConfig } from './VisualCriticLoop';
 export { GalacticClock } from './GalacticClock';
 export { TutorialOverlay } from './TutorialOverlay';
 export { ActivityPanel } from './ActivityPanel';
