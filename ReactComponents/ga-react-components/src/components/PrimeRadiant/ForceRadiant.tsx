@@ -32,6 +32,7 @@ import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
+import { reactiveEngine } from './ReactiveEngine';
 import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
@@ -643,6 +644,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (cmd.type === 'bind-health') {
       const bindingId = cmd.targetKind === 'panel' ? cmd.targetId : `node:${cmd.targetSelector.map(p => p.field).join(',')}`;
       healthBindingEngine.register({ id: bindingId, command: cmd });
+      return;
+    }
+
+    // Phase 5: ON...THEN — register reactive trigger
+    if (cmd.type === 'on-changed') {
+      const ruleId = `on:${cmd.source}`;
+      reactiveEngine.register(ruleId, cmd, (result) => handleIxqlCommand(result));
       return;
     }
   }, []);
@@ -2035,6 +2043,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
+      reactiveEngine.dispose();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
       }
@@ -2468,6 +2477,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             { x: 0, y: 0, z: 0 },
             1500,
           );
+        }}
+        onLaunchGodot={() => {
+          // Connect to Godot MCP and play the Prime Radiant scene
+          fetch('http://localhost:6505', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1, method: 'tools/call',
+              params: { name: 'play_scene', arguments: {} },
+            }),
+          }).then(() => {
+            console.log('[PrimeRadiant] Godot 3D Engine launched');
+          }).catch(() => {
+            // Godot not running — try opening it
+            window.open('godot://run', '_blank');
+            console.warn('[PrimeRadiant] Godot MCP not reachable on port 6505');
+          });
         }}
       />
 

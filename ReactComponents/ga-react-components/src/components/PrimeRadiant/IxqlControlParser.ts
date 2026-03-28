@@ -1,6 +1,6 @@
 // src/components/PrimeRadiant/IxqlControlParser.ts
 // IXQL parser for Prime Radiant visualization control and declarative UI
-// Active grammar: SELECT | RESET | CREATE PANEL | BIND HEALTH
+// Active grammar: SELECT | RESET | CREATE PANEL | BIND HEALTH | ON...THEN
 
 export interface IxqlPredicate {
   field: string;       // dotted path: "health.staleness", "type", "name"
@@ -47,6 +47,14 @@ export interface BindHealthCommand {
   fallback: string;
 }
 
+// IXQL Phase 5: Reactive trigger — executes action when source data changes
+export interface OnChangedCommand {
+  type: 'on-changed';
+  source: string;              // "health.llm", "/api/...", "panel://backlog"
+  wherePredicates: IxqlPredicate[];
+  action: IxqlCommand;         // the THEN action (recursive — can be any command)
+}
+
 // GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface DropCommand {
   type: 'drop';
@@ -91,6 +99,7 @@ export type IxqlCommand =
   | ResetCommand
   | CreatePanelCommand
   | BindHealthCommand
+  | OnChangedCommand
   | DropCommand
   | CreateNodeCommand
   | LinkCommand
@@ -363,6 +372,33 @@ function parseBindHealth(ctx: ParserContext): BindHealthCommand {
   return { type: 'bind-health', targetKind, targetId, targetSelector, source, conditions, fallback };
 }
 
+// ── ON...THEN parser ──
+
+function parseOnChanged(ctx: ParserContext): OnChangedCommand {
+  const source = nextRaw(ctx);
+  expect(ctx, 'CHANGED');
+
+  // Optional WHERE predicates
+  const wherePredicates: IxqlPredicate[] = [];
+  if (peek(ctx) === 'WHERE') {
+    next(ctx);
+    wherePredicates.push(...parsePredicates(ctx));
+  }
+
+  expect(ctx, 'THEN');
+
+  // Collect remaining tokens and re-parse as a sub-command
+  const remaining = ctx.tokens.slice(ctx.pos).join(' ');
+  const subResult = parseIxqlCommand(remaining);
+  if (!subResult.ok) {
+    throw new Error(`Invalid THEN clause: ${subResult.error}`);
+  }
+  // Consume all remaining tokens
+  ctx.pos = ctx.tokens.length;
+
+  return { type: 'on-changed', source, wherePredicates, action: subResult.command };
+}
+
 // ── Main entry point ──
 
 export function parseIxqlCommand(input: string): IxqlParseResult {
@@ -401,8 +437,13 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
         return { ok: true, command: parseBindHealth(ctx) };
       }
 
+      case 'ON': {
+        next(ctx);
+        return { ok: true, command: parseOnChanged(ctx) };
+      }
+
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, or BIND` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, or ON` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
