@@ -1299,13 +1299,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // (Trantor removed — replaced by Earth + nebulae)
 
       // ─── Solar system — compact orrery, top-right of view ───
-      // Phase 1.2: Quality-gate solar system updates
-      if (qualityLevel !== 'low') {
-        solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
-        if (qualityLevel === 'high' || frameCount % 3 === 0) {
-          updateSolarSystem(solarSystem, t);
-        }
-      }
+      // Position FIRST so updateSolarSystem gets correct Sun world position for terminator
       if (solarFollowCameraRef.current) {
         _solarOffset.set(12, 6, -20);
         _solarOffset.applyQuaternion(cam.quaternion);
@@ -1314,6 +1308,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Planet tracking disabled — was causing freezes and jitter on phone
         // Auto-resume follow mode
         solarFollowCameraRef.current = true;
+      }
+      // Phase 1.2: Quality-gate solar system updates (after position set)
+      if (qualityLevel !== 'low') {
+        solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
+        if (qualityLevel === 'high' || frameCount % 3 === 0) {
+          updateSolarSystem(solarSystem, t);
+        }
       }
 
       // ─── Jarvis Space Station — top-left of view ───

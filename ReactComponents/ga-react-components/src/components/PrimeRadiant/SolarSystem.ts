@@ -1335,7 +1335,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
-  // Sun world position (group origin)
+  // Sun world position (group origin) — force matrix update for correct terminator
+  group.updateWorldMatrix(true, false);
   group.getWorldPosition(_sunWorldPos);
 
   // Animate sun shader
