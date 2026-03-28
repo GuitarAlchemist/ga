@@ -236,6 +236,18 @@ export default defineConfig({
                 secure: false,
                 ws: true,
             },
+            // Ollama proxy — avoids CORS when checking local Ollama
+            '/proxy/ollama': {
+                target: 'http://localhost:11434',
+                changeOrigin: true,
+                rewrite: (p: string) => p.replace(/^\/proxy\/ollama/, ''),
+            },
+            // Docker Model Runner proxy — avoids CORS
+            '/proxy/docker-models': {
+                target: 'http://localhost:12434',
+                changeOrigin: true,
+                rewrite: (p: string) => p.replace(/^\/proxy\/docker-models/, ''),
+            },
             // Godot MCP relay — browser connects here, Vite proxies to MCP server
             '/ws/godot-mcp': {
                 target: 'ws://127.0.0.1:6505',
