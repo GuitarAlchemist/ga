@@ -12,6 +12,8 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  markdown?: boolean;  // render as markdown
+  raw?: string;        // raw source to toggle
 }
 
 export interface ChatWidgetProps {
@@ -133,6 +135,8 @@ const GOVERNANCE_RESPONSES: Record<string, string> = {
 interface DemerzelResponse {
   text: string;
   action?: { type: 'navigate-planet'; planet: string } | { type: 'navigate-node'; query: string };
+  markdown?: boolean;
+  raw?: string;
 }
 
 const PLANET_NAMES = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'moon'];
@@ -155,10 +159,94 @@ function detectFrench(text: string): boolean {
     || /\b(bonjour|salut|merci|oui|non|je|nous|vous|les|des|est|une?|dans|pour|sur|avec|qui|que|quoi|comment|pourquoi|montre|aller|voir)\b/i.test(text);
 }
 
+// ── Artifact / Skill viewer ──
+const GITHUB_RAW = 'https://raw.githubusercontent.com/GuitarAlchemist/Demerzel/master';
+
+// Known artifact paths by type
+const ARTIFACT_PATHS: Record<string, { dir: string; ext: string }> = {
+  skill: { dir: '.claude/skills', ext: 'SKILL.md' },
+  policy: { dir: 'policies', ext: '.yaml' },
+  persona: { dir: 'personas', ext: '.persona.yaml' },
+  constitution: { dir: 'constitutions', ext: '.md' },
+  schema: { dir: 'schemas', ext: '.json' },
+};
+
+async function fetchArtifact(type: string, name: string): Promise<string | null> {
+  const info = ARTIFACT_PATHS[type];
+  if (!info) return null;
+  const path = type === 'skill'
+    ? `${info.dir}/${name}/${info.ext}`
+    : `${info.dir}/${name}${info.ext}`;
+  try {
+    const resp = await fetch(`${GITHUB_RAW}/${path}`);
+    if (!resp.ok) return null;
+    return await resp.text();
+  } catch { return null; }
+}
+
+async function listArtifacts(type: string): Promise<string[]> {
+  const info = ARTIFACT_PATHS[type];
+  if (!info) return [];
+  try {
+    const resp = await fetch(`https://api.github.com/repos/GuitarAlchemist/Demerzel/contents/${info.dir}`);
+    if (!resp.ok) return [];
+    const items = await resp.json() as { name: string; type: string }[];
+    return items
+      .filter(i => type === 'skill' ? i.type === 'dir' : i.name.endsWith(info.ext))
+      .map(i => type === 'skill' ? i.name : i.name.replace(info.ext, ''));
+  } catch { return []; }
+}
+
+// Simple markdown → HTML renderer (no external deps)
+function renderMarkdown(md: string): string {
+  return md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    // Bold/italic
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Code blocks
+    .replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // Lists
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
+    // Horizontal rules
+    .replace(/^---$/gm, '<hr/>')
+    // Line breaks
+    .replace(/\n\n/g, '<br/><br/>')
+    .replace(/\n/g, '<br/>');
+}
+
 async function askDemerzel(question: string, context?: GovernanceNode | null): Promise<DemerzelResponse> {
-  await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
   const q = question.toLowerCase();
   const isFr = detectFrench(q);
+
+  // ── List artifacts: "list skills", "list policies", "show all personas" ──
+  const listMatch = q.match(/\b(?:list|show all|ls|all)\s+(skills?|policies|personas?|constitutions?|schemas?)\b/);
+  if (listMatch) {
+    const typeRaw = listMatch[1].replace(/s$/, ''); // normalize plural
+    const type = typeRaw === 'policie' ? 'policy' : typeRaw;
+    const items = await listArtifacts(type);
+    if (items.length === 0) return { text: `No ${type} artifacts found.` };
+    const formatted = items.map(i => `• ${i}`).join('\n');
+    return { text: `**${items.length} ${type} artifacts:**\n\n${formatted}\n\n_Say "show ${type} [name]" to view one._`, markdown: true };
+  }
+
+  // ── Show specific artifact: "show skill demerzel-audit", "show policy alignment" ──
+  const showMatch = q.match(/\b(?:show|view|open|read|display|cat)\s+(skill|policy|persona|constitution|schema)\s+(.+)/);
+  if (showMatch) {
+    const type = showMatch[1];
+    const name = showMatch[2].trim().replace(/['"]/g, '');
+    const content = await fetchArtifact(type, name);
+    if (!content) return { text: `Could not find ${type} "${name}". Try "list ${type}s" to see available ones.` };
+    return { text: content, markdown: true, raw: content };
+  }
+
+  await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
 
   // Detect any planet mentioned in the input
   const mentionedPlanet = PLANET_NAMES.find((p) => q.includes(p));
@@ -285,6 +373,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     timestamp: Date.now(),
   }]);
   const [input, setInput] = useState('');
+  const [rawViewIds, setRawViewIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -481,7 +570,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       // Fallback to mock if Claude API unavailable
       const response = await askDemerzel(trimmed, selectedNode);
       setMessages((prev) => prev.map(m =>
-        m.id === botMsgId ? { ...m, content: response.text } : m,
+        m.id === botMsgId ? { ...m, content: response.text, markdown: response.markdown, raw: response.raw } : m,
       ));
       void speakText(response.text);
 
@@ -632,26 +721,48 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
 
         {/* Messages */}
         <div className="chat-widget__messages">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`chat-widget__msg chat-widget__msg--${msg.role}`}>
-              <div className="chat-widget__msg-bubble">
-                {msg.content}
-                {msg.role === 'assistant' && msg.content && (
-                  <button
-                    className="chat-widget__replay-btn"
-                    onClick={() => void speakText(msg.content)}
-                    title="Replay this message"
-                    aria-label="Replay message"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
-                  </button>
-                )}
+          {messages.map((msg) => {
+            const showRaw = rawViewIds.has(msg.id);
+            const hasRaw = !!msg.raw;
+            const isMarkdown = !!msg.markdown && !showRaw;
+            return (
+              <div key={msg.id} className={`chat-widget__msg chat-widget__msg--${msg.role}`}>
+                <div className="chat-widget__msg-bubble">
+                  {isMarkdown
+                    ? <div className="chat-widget__md" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+                    : msg.content}
+                  {msg.role === 'assistant' && msg.content && (
+                    <div className="chat-widget__msg-actions">
+                      {hasRaw && (
+                        <button
+                          className="chat-widget__raw-toggle"
+                          onClick={() => setRawViewIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(msg.id)) next.delete(msg.id); else next.add(msg.id);
+                            return next;
+                          })}
+                          title={showRaw ? 'Show rendered' : 'Show raw source'}
+                        >
+                          {showRaw ? '📄' : '</>'}
+                        </button>
+                      )}
+                      <button
+                        className="chat-widget__replay-btn"
+                        onClick={() => void speakText(msg.content)}
+                        title="Replay this message"
+                        aria-label="Replay message"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {isLoading && (
             <div className="chat-widget__msg chat-widget__msg--assistant">
               <div className="chat-widget__msg-bubble chat-widget__msg-bubble--loading">
