@@ -54,8 +54,9 @@ Set-SlotTarget -Slot $oldActive  # Next build targets the now-inactive old slot
 
 # Step 4: Start server and verify
 Write-Host "[3/4] Starting server from $newActive slot..." -ForegroundColor White
+Ensure-SlotRuntimeFiles -Slot $newActive
 $slotDll = Join-Path (Get-SlotBinPath -Slot $newActive) "net10.0\GaApi.dll"
-Start-Process -FilePath "dotnet" -ArgumentList $slotDll -WindowStyle Hidden
+Start-Process -FilePath "dotnet" -ArgumentList $slotDll,"--urls","http://localhost:5232" -WindowStyle Hidden
 
 Write-Host "[4/4] Health check..." -ForegroundColor White
 $healthy = Test-ServerHealth -TimeoutSeconds $HealthTimeout

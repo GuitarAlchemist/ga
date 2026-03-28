@@ -39,8 +39,9 @@ Set-SlotState -State $state
 Set-SlotTarget -Slot $current
 
 # Start server
+Ensure-SlotRuntimeFiles -Slot $target
 $slotDll = Join-Path (Get-SlotBinPath -Slot $target) "net10.0\GaApi.dll"
-Start-Process -FilePath "dotnet" -ArgumentList $slotDll -WindowStyle Hidden
+Start-Process -FilePath "dotnet" -ArgumentList $slotDll,"--urls","http://localhost:5232" -WindowStyle Hidden
 
 $healthy = Test-ServerHealth -TimeoutSeconds 30
 if ($healthy) {
