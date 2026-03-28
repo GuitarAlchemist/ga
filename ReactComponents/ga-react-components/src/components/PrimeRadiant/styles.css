@@ -121,9 +121,8 @@
   width: 0;
   flex-shrink: 0;
   overflow: hidden;
-  background: rgba(13, 17, 23, 0.95);
+  background: #0d1117;
   border-left: 1px solid #30363d;
-  backdrop-filter: blur(12px);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 20;
