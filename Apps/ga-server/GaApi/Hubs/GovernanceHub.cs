@@ -1,9 +1,19 @@
 namespace GaApi.Hubs;
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using Controllers;
 using Models;
 using Services;
+
+/// <summary>
+///     Tracks a connected Prime Radiant viewer for presence display.
+/// </summary>
+public sealed record ViewerInfo(
+    string ConnectionId,
+    string Color,
+    string Browser,
+    DateTime ConnectedAt);
 
 /// <summary>
 ///     SignalR hub for real-time governance graph updates.
@@ -16,12 +26,14 @@ using Services;
 ///       "BeliefUpdate"      — pushed when a belief state changes (tetravalent T/F/U/C)
 ///       "BeliefsSnapshot"   — full list of current belief states
 ///       "AlgedonicSignal"   — pain/pleasure signal from belief state transitions
+///       "ViewersChanged"    — current list of connected viewers (presence)
 ///       "Connected"         — welcome message with current node count
 ///
 ///     Client → Server methods:
-///       Subscribe()      — register for updates
+///       Subscribe()        — register for updates
 ///       SubscribeBeliefs() — register for belief state updates
-///       RequestRefresh() — request immediate full graph push
+///       RequestRefresh()   — request immediate full graph push
+///       GetViewers()       — returns current viewer list to calling client
 /// </summary>
 public sealed class GovernanceHub(
     ILogger<GovernanceHub> logger)
@@ -29,11 +41,37 @@ public sealed class GovernanceHub(
 {
     private static int _connectionCount;
 
+    // ─── Viewer presence tracking ───
+    private static readonly ConcurrentDictionary<string, ViewerInfo> ConnectedViewers = new();
+
+    private static readonly string[] ViewerPalette =
+    [
+        "#58a6ff", "#3fb950", "#d2a8ff", "#f0883e",
+        "#ff7b72", "#79c0ff", "#7ee787", "#ffa657",
+        "#ff9bce", "#d1d5da",
+    ];
+
+    private static string ParseBrowser(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+        if (userAgent.Contains("Edg/", StringComparison.Ordinal)) return "Edge";
+        if (userAgent.Contains("Chrome/", StringComparison.Ordinal)) return "Chrome";
+        if (userAgent.Contains("Firefox/", StringComparison.Ordinal)) return "Firefox";
+        if (userAgent.Contains("Safari/", StringComparison.Ordinal)) return "Safari";
+        return "Unknown";
+    }
+
     public override async Task OnConnectedAsync()
     {
         Interlocked.Increment(ref _connectionCount);
         logger.LogInformation("Governance client connected: {ConnectionId} (total: {Count})",
             Context.ConnectionId, _connectionCount);
+
+        // Register viewer presence
+        var userAgent = Context.GetHttpContext()?.Request.Headers.UserAgent.ToString();
+        var color = ViewerPalette[Math.Abs(Context.ConnectionId.GetHashCode()) % ViewerPalette.Length];
+        var viewer = new ViewerInfo(Context.ConnectionId, color, ParseBrowser(userAgent), DateTime.UtcNow);
+        ConnectedViewers.TryAdd(Context.ConnectionId, viewer);
 
         await Clients.Caller.SendAsync("Connected", new
         {
@@ -45,12 +83,16 @@ public sealed class GovernanceHub(
         await base.OnConnectedAsync();
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         Interlocked.Decrement(ref _connectionCount);
+        ConnectedViewers.TryRemove(Context.ConnectionId, out _);
         logger.LogInformation("Governance client disconnected: {ConnectionId} (total: {Count})",
             Context.ConnectionId, _connectionCount);
-        return base.OnDisconnectedAsync(exception);
+
+        // Notify remaining governance subscribers
+        await Clients.Group("governance").SendAsync("ViewersChanged", ConnectedViewers.Values.ToList());
+        await base.OnDisconnectedAsync(exception);
     }
 
     /// <summary>
@@ -64,7 +106,23 @@ public sealed class GovernanceHub(
 
         // Push current graph immediately
         await RequestRefresh();
+
+        // Broadcast updated viewer list to all governance subscribers
+        await Clients.Group("governance").SendAsync("ViewersChanged", ConnectedViewers.Values.ToList());
     }
+
+    /// <summary>
+    ///     Returns the current viewer list to the calling client.
+    /// </summary>
+    public async Task GetViewers() =>
+        await Clients.Caller.SendAsync("ViewersChanged", ConnectedViewers.Values.ToList());
+
+    /// <summary>
+    ///     Broadcast the current viewer list to all governance subscribers.
+    ///     Called from backend services when viewer state needs refreshing.
+    /// </summary>
+    public static async Task BroadcastViewers(IHubContext<GovernanceHub> hubContext) =>
+        await hubContext.Clients.Group("governance").SendAsync("ViewersChanged", ConnectedViewers.Values.ToList());
 
     /// <summary>
     ///     Client requests an immediate full graph refresh.

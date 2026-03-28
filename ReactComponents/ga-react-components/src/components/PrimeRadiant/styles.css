@@ -4010,3 +4010,39 @@
     width: 95%;
   }
 }
+
+/* ─── Viewer Presence Indicator ─── */
+.prime-radiant__viewers {
+  position: absolute;
+  top: 50px;
+  left: 8px;
+  z-index: 10;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.prime-radiant__viewer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.prime-radiant__viewer-dot:hover {
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.prime-radiant__viewer-dot--self {
+  box-shadow: 0 0 0 2px white;
+}
+
+.prime-radiant__viewer-count {
+  font-size: 10px;
+  color: #8b949e;
+  margin-left: 4px;
+}

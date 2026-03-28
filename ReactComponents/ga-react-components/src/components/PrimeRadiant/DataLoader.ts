@@ -189,6 +189,8 @@ export interface LiveDataConfig {
   onBeliefsSnapshot?: (beliefs: BeliefState[]) => void;
   /** Called when an algedonic signal arrives via SignalR */
   onAlgedonicSignal?: (signal: AlgedonicSignalEvent) => void;
+  /** Called when viewer presence list changes */
+  onViewersChanged?: (viewers: ViewerInfo[]) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +208,16 @@ export interface AlgedonicSignalEvent {
   nodeId?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Viewer presence info (matches backend ViewerInfo record)
+// ---------------------------------------------------------------------------
+export interface ViewerInfo {
+  connectionId: string;
+  color: string;
+  browser: string;
+  connectedAt: string;
+}
+
 export interface LivePollingHandle {
   /** Stop polling and disconnect SignalR */
   stop: () => void;
@@ -214,7 +226,7 @@ export interface LivePollingHandle {
 }
 
 export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal, onViewersChanged } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -272,6 +284,12 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         onAlgedonicSignal?.(data);
       });
 
+      // Viewer presence tracking
+      connection.on('ViewersChanged', (data: ViewerInfo[]) => {
+        console.log(`[Governance] Viewers changed: ${data.length} online`);
+        onViewersChanged?.(data);
+      });
+
       connection.onreconnecting(() => {
         onStatusChange?.('disconnected');
         // Start polling as fallback while reconnecting
@@ -304,6 +322,11 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
       // Subscribe to belief updates
       if (onBeliefUpdate || onBeliefsSnapshot) {
         await connection.invoke('SubscribeBeliefs');
+      }
+
+      // Request initial viewer list
+      if (onViewersChanged) {
+        await connection.invoke('GetViewers');
       }
 
       // Fetch recent algedonic signals on initial connect
