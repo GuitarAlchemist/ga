@@ -1296,12 +1296,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           if (trackedObj) {
             const wp = new THREE.Vector3();
             trackedObj.getWorldPosition(wp);
-            // Offset proportional to planet size — fills ~50% of viewport
+            // Offset proportional to planet size — fills most of viewport
             // Get the planet's bounding sphere radius for proper framing
             const geo = (trackedObj as THREE.Mesh).geometry;
             const planetRadius = geo?.boundingSphere?.radius ?? 0.02;
-            const viewDist = planetRadius * 3.5; // ~50% screen fill at default FOV
-            const offset = new THREE.Vector3(0, planetRadius * 0.8, viewDist);
+            const viewDist = planetRadius * 1.8; // close enough to nearly fill screen
+            const offset = new THREE.Vector3(0, planetRadius * 0.05, viewDist); // nearly centered, slight upward tilt
             const targetCamPos = wp.clone().add(offset);
             cam.position.lerp(targetCamPos, 0.04);
             // Smoothly update lookAt by lerping the controls target
