@@ -50,6 +50,8 @@ const initialState: LanderState = {
   missionTime: '0:00',
   contactLight: false,
   gameState: 'waiting',
+  calloutText: '',
+  cinematicMode: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -319,6 +321,33 @@ export const LunarLander: React.FC<LunarLanderProps> = ({
           </div>
 
           {/* Contact light */}
+          {/* Ground Control callout text */}
+          {state.calloutText && (
+            <div style={{
+              position: 'absolute', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,170,0,0.3)',
+              borderRadius: '6px', padding: '8px 20px',
+              fontFamily: "'Courier New', monospace", fontSize: '13px',
+              color: '#ffcc44', letterSpacing: '0.5px', whiteSpace: 'nowrap',
+              animation: 'fadeIn 0.3s ease-out',
+            }}>
+              <span style={{ color: '#88aaff', marginRight: '8px' }}>HOUSTON:</span>
+              {state.calloutText}
+            </div>
+          )}
+
+          {/* Cinematic mode indicator */}
+          {state.cinematicMode && (
+            <div style={{
+              position: 'absolute', top: '60px', left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.6)', borderRadius: '4px', padding: '4px 14px',
+              fontFamily: "'Courier New', monospace", fontSize: '11px',
+              color: '#ff4444', letterSpacing: '2px', textTransform: 'uppercase',
+            }}>
+              CINEMATIC — press V to exit
+            </div>
+          )}
+
           {state.contactLight && (
             <div style={styles.contactLight}>CONTACT LIGHT</div>
           )}
