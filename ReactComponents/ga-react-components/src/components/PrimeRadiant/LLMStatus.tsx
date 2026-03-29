@@ -214,7 +214,8 @@ function checkVoxtral(): LLMProvider {
 }
 
 function checkCodex(): LLMProvider {
-  const configured = isEnvTrue('VITE_CODEX_CONFIGURED');
+  // Codex uses OPENAI_API_KEY — if OpenAI is configured, Codex inherits
+  const configured = isEnvTrue('VITE_CODEX_CONFIGURED') || isEnvTrue('VITE_OPENAI_CONFIGURED');
   return {
     name: 'Codex',
     icon: 'X',
