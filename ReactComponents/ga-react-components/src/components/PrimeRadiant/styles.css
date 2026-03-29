@@ -1486,6 +1486,31 @@
   color: #4FC3F7;
   box-shadow: 0 0 14px rgba(79, 195, 247, 0.3);
 }
+.brainstorm-trigger--urgent {
+  border-color: #FF4444;
+  animation: brainstorm-urgent-pulse 2s ease-in-out infinite;
+}
+@keyframes brainstorm-urgent-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
+}
+.brainstorm-trigger__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #FF4444;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1.5px solid rgba(13, 17, 23, 0.9);
+}
 
 .brainstorm-panel {
   position: absolute;
@@ -1635,6 +1660,50 @@
   font-family: 'JetBrains Mono', monospace;
 }
 .brainstorm-panel__card-start:hover { background: rgba(79, 195, 247, 0.2); }
+.brainstorm-panel__card-link {
+  font-size: 9px;
+  color: #8b949e;
+  text-decoration: none;
+}
+.brainstorm-panel__card-link:hover { color: #4FC3F7; text-decoration: underline; }
+.brainstorm-panel__card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.brainstorm-panel__card-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.brainstorm-panel__card-tensor {
+  font-size: 8px;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  padding: 0 4px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-panel__time {
+  font-size: 9px;
+  color: #484f58;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-panel__loading-icon {
+  display: inline-block;
+  animation: brainstorm-spin 1s linear infinite;
+  margin-right: 6px;
+}
+@keyframes brainstorm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.brainstorm-panel__group-icon {
+  margin-right: 4px;
+}
 
 .prime-radiant__tutorial-overlay {
   position: absolute;
