@@ -2,9 +2,10 @@
 // Vertical icon rail (desktop/tablet) / bottom tab bar (phone) for panel navigation
 // Now data-driven from the PanelRegistry.
 
-import React from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { usePanelRegistry, ICON_CATALOG } from './PanelRegistry';
 import type { PanelId, BuiltInPanelId } from './PanelRegistry';
+import { RailPopover } from './RailPopover';
 
 export type { PanelId, BuiltInPanelId };
 
@@ -29,8 +30,32 @@ const STATUS_COLORS: Record<NonNullable<PanelStatus>, string> = {
   critical: '#FF0000',
 };
 
+/** State for the popover hover target. */
+interface PopoverState {
+  panelId: string;
+  label: string;
+  anchorTop: number;
+}
+
 export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, panelStatuses = {} }) => {
   const registrations = usePanelRegistry();
+  const railRef = useRef<HTMLDivElement>(null);
+  const [popover, setPopover] = useState<PopoverState | null>(null);
+
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>, item: RailItem) => {
+    const btn = e.currentTarget;
+    const rail = railRef.current;
+    if (!rail) return;
+    const railRect = rail.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    // Position the popover vertically aligned with the button
+    const anchorTop = btnRect.top - railRect.top + btnRect.height / 2;
+    setPopover({ panelId: item.id, label: item.label, anchorTop });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setPopover(null);
+  }, []);
 
   const items: RailItem[] = registrations.map((reg) => ({
     id: reg.definition.id as PanelId,
@@ -39,7 +64,7 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
   }));
 
   return (
-    <div className="icon-rail">
+    <div className="icon-rail" ref={railRef}>
       {items.map((item) => {
         const status = panelStatuses[item.id] ?? null;
         return (
@@ -47,6 +72,8 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
             key={item.id}
             className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
             onClick={() => onPanelToggle(item.id)}
+            onMouseEnter={(e) => handleMouseEnter(e, item)}
+            onMouseLeave={handleMouseLeave}
             aria-label={`Toggle ${item.label} panel`}
           >
             {item.icon}
@@ -60,6 +87,12 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
           </button>
         );
       })}
+      <RailPopover
+        panelType={popover?.panelId ?? ''}
+        label={popover?.label ?? ''}
+        anchorTop={popover?.anchorTop ?? 0}
+        visible={popover !== null}
+      />
     </div>
   );
 };
