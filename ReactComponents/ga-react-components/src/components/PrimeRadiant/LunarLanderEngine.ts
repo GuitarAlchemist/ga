@@ -27,6 +27,7 @@ export interface LanderState {
   gameState: GameState;
   calloutText: string;
   cinematicMode: boolean;
+  mothershipVisible: boolean;
 }
 
 export interface LanderStats {
@@ -315,6 +316,24 @@ export class LunarLanderEngine {
   // Callbacks
   private landedCallbacks: LandedCallback[] = [];
 
+  // Alien mothership Easter egg
+  private mothership: THREE.Group | null = null;
+  private mothershipActive = false;
+  private mothershipProgress = 0;
+  private mothershipTriggered = false;
+  private mothershipShouldAppear = false;
+  private mothershipLight: THREE.PointLight | null = null;
+  private mothershipUndersideLights: THREE.Mesh[] = [];
+  private mothershipAltitude = 400;
+  private mothershipStartX = 0;
+  private mothershipEndX = 0;
+  private mothershipCalloutSpoken = false;
+  // Mothership audio
+  private mothershipOsc: OscillatorNode | null = null;
+  private mothershipGain: GainNode | null = null;
+  private mothershipOsc2: OscillatorNode | null = null;
+  private mothershipGain2: GainNode | null = null;
+
   // Disposed flag
   private disposed = false;
 
@@ -417,6 +436,16 @@ export class LunarLanderEngine {
     this.cinematicSlowMo = 1.0;
     this.lastCalloutText = '';
 
+    // Reset mothership
+    this.mothershipActive = false;
+    this.mothershipTriggered = false;
+    this.mothershipShouldAppear = false;
+    this.mothershipProgress = 0;
+    this.mothershipCalloutSpoken = false;
+    if (this.mothership) this.mothership.visible = false;
+    if (this.mothershipGain) this.mothershipGain.gain.value = 0;
+    if (this.mothershipGain2) this.mothershipGain2.gain.value = 0;
+
     this.camera.position.set(40, START_ALTITUDE + 20, 80);
     this.orbitControls.target.copy(this.lm.pos);
     this.orbitControls.update();
@@ -439,10 +468,21 @@ export class LunarLanderEngine {
     window.removeEventListener('keyup', this.boundKeyUp);
     window.removeEventListener('blur', this.boundBlur);
 
-    // Audio cleanup
+    // Audio cleanup (including mothership oscillators)
+    if (this.mothershipOsc) { try { this.mothershipOsc.stop(); } catch { /* ignore */ } }
+    if (this.mothershipOsc2) { try { this.mothershipOsc2.stop(); } catch { /* ignore */ } }
+    this.mothershipOsc = null;
+    this.mothershipOsc2 = null;
+    this.mothershipGain = null;
+    this.mothershipGain2 = null;
     if (this.audioCtx) {
       try { this.audioCtx.close(); } catch { /* ignore */ }
     }
+
+    // Mothership cleanup
+    this.mothership = null;
+    this.mothershipLight = null;
+    this.mothershipUndersideLights = [];
 
     // Three.js cleanup
     this.renderer.dispose();
@@ -516,6 +556,7 @@ export class LunarLanderEngine {
       gameState: this.gameState,
       calloutText: (performance.now() - this.lastCalloutDisplayTime < 4000) ? this.lastCalloutText : '',
       cinematicMode: this.cinematicActive,
+      mothershipVisible: this.mothershipActive,
     };
   }
 
@@ -1542,6 +1583,280 @@ export class LunarLanderEngine {
     }
   }
 
+  // ── Alien Mothership Easter Egg ──────────────────────────────
+
+  private buildMothership(): THREE.Group {
+    const group = new THREE.Group();
+
+    // Hull material — dark metallic with blue emissive edges
+    const hullMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2a,
+      metalness: 0.9,
+      roughness: 0.2,
+      emissive: 0x0a0a1a,
+      emissiveIntensity: 0.15,
+    });
+
+    // Main hull — elongated disc via LatheGeometry with custom profile
+    // Profile: wide center tapering to thin edges, ~200m wide (radius 100), ~40m tall
+    const hullProfile: THREE.Vector2[] = [];
+    const profileSteps = 24;
+    for (let i = 0; i <= profileSteps; i++) {
+      const t = i / profileSteps; // 0 = center axis, 1 = outer edge
+      const r = t * 100; // radius up to 100m (200m diameter)
+      // Height profile: thick at center, tapering to thin at edges
+      const thickness = 20 * Math.pow(1 - t * t, 0.6); // max 20m half-height at center
+      if (i <= profileSteps / 2) {
+        // Top half of profile (going outward along top surface)
+        const angle = t;
+        hullProfile.push(new THREE.Vector2(r, thickness * (1 - angle * 0.3)));
+      }
+    }
+    // Complete the profile by going back along the bottom
+    for (let i = profileSteps / 2; i >= 0; i--) {
+      const t = (i / profileSteps) * 2;
+      const r = t * 100;
+      const thickness = 20 * Math.pow(1 - t * t, 0.6);
+      hullProfile.push(new THREE.Vector2(r, -thickness * (1 - t * 0.3)));
+    }
+
+    const hullGeo = new THREE.LatheGeometry(hullProfile, 48);
+    const hull = new THREE.Mesh(hullGeo, hullMat);
+    hull.castShadow = true;
+    group.add(hull);
+
+    // Surface detail — concentric ring grooves (torus rings embedded in hull)
+    const ringMat = new THREE.MeshStandardMaterial({
+      color: 0x222238,
+      metalness: 0.95,
+      roughness: 0.15,
+      emissive: 0x0808ff,
+      emissiveIntensity: 0.1,
+    });
+    const ringRadii = [25, 45, 65, 82];
+    for (const rr of ringRadii) {
+      const torusGeo = new THREE.TorusGeometry(rr, 0.8, 8, 64);
+      const torus = new THREE.Mesh(torusGeo, ringMat);
+      torus.rotation.x = Math.PI / 2;
+      torus.position.y = 2; // slightly above center
+      group.add(torus);
+    }
+
+    // Edge glow rings — blue emissive
+    const edgeGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x0022aa,
+      metalness: 0.5,
+      roughness: 0.3,
+      emissive: 0x1144ff,
+      emissiveIntensity: 0.8,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const edgeRing1 = new THREE.Mesh(new THREE.TorusGeometry(98, 1.2, 8, 64), edgeGlowMat);
+    edgeRing1.rotation.x = Math.PI / 2;
+    group.add(edgeRing1);
+    const edgeRing2 = new THREE.Mesh(new THREE.TorusGeometry(95, 0.6, 8, 64), edgeGlowMat);
+    edgeRing2.rotation.x = Math.PI / 2;
+    edgeRing2.position.y = -3;
+    group.add(edgeRing2);
+
+    // Underside — grid of small glowing lights
+    this.mothershipUndersideLights = [];
+    const lightMat = new THREE.MeshBasicMaterial({
+      color: 0x88bbff,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const lightGeo = new THREE.SphereGeometry(0.8, 6, 6);
+    // Create a grid pattern on the underside
+    for (let gx = -6; gx <= 6; gx++) {
+      for (let gz = -6; gz <= 6; gz++) {
+        const dist = Math.sqrt(gx * gx + gz * gz);
+        if (dist > 6.5) continue; // circular pattern
+        const lightSphere = new THREE.Mesh(lightGeo, lightMat.clone());
+        lightSphere.position.set(gx * 10, -15, gz * 10);
+        // Store distance from center for wave animation
+        lightSphere.userData.distFromCenter = dist;
+        group.add(lightSphere);
+        this.mothershipUndersideLights.push(lightSphere);
+      }
+    }
+
+    // Central core — bright emissive sphere underneath (tractor beam look)
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0x44aaff,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const core = new THREE.Mesh(new THREE.SphereGeometry(8, 24, 24), coreMat);
+    core.position.y = -18;
+    group.add(core);
+
+    // Tractor beam cone
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0x2266ff,
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const beamGeo = new THREE.ConeGeometry(40, 120, 24, 1, true);
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.position.y = -78;
+    group.add(beam);
+
+    // Blue PointLight underneath for terrain illumination
+    this.mothershipLight = new THREE.PointLight(0x2244ff, 0.4, 600, 1.5);
+    this.mothershipLight.position.y = -20;
+    group.add(this.mothershipLight);
+
+    // Hide by default
+    group.visible = false;
+    this.scene.add(group);
+    return group;
+  }
+
+  private initMothershipAudio(): void {
+    if (!this.audioCtx) return;
+    const ctx = this.audioCtx;
+
+    // Deep sub-bass rumble — barely audible
+    this.mothershipOsc = ctx.createOscillator();
+    this.mothershipOsc.type = 'sine';
+    this.mothershipOsc.frequency.value = 28;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 60;
+    filter.Q.value = 2;
+
+    this.mothershipGain = ctx.createGain();
+    this.mothershipGain.gain.value = 0;
+
+    this.mothershipOsc.connect(filter);
+    filter.connect(this.mothershipGain);
+    this.mothershipGain.connect(ctx.destination);
+    this.mothershipOsc.start();
+
+    // Secondary oscillator for eerie harmonic
+    this.mothershipOsc2 = ctx.createOscillator();
+    this.mothershipOsc2.type = 'sine';
+    this.mothershipOsc2.frequency.value = 42;
+
+    this.mothershipGain2 = ctx.createGain();
+    this.mothershipGain2.gain.value = 0;
+
+    const filter2 = ctx.createBiquadFilter();
+    filter2.type = 'lowpass';
+    filter2.frequency.value = 80;
+
+    this.mothershipOsc2.connect(filter2);
+    filter2.connect(this.mothershipGain2);
+    this.mothershipGain2.connect(ctx.destination);
+    this.mothershipOsc2.start();
+  }
+
+  private updateMothership(dt: number): void {
+    // Trigger check: 30% chance, once per landing attempt, when altitude < 200
+    if (!this.mothershipTriggered && this.gameState === 'flying' && this.lm.altitude < 200) {
+      this.mothershipTriggered = true;
+      this.mothershipShouldAppear = Math.random() < 0.3;
+      if (this.mothershipShouldAppear) {
+        this.mothershipActive = true;
+        this.mothershipProgress = 0;
+        this.mothershipAltitude = 300 + Math.random() * 200; // 300-500m
+        // Enter from one side, exit the other (~1200m travel across)
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        this.mothershipStartX = -600 * direction;
+        this.mothershipEndX = 600 * direction;
+        this.mothershipCalloutSpoken = false;
+
+        if (!this.mothership) {
+          this.mothership = this.buildMothership();
+        }
+        this.mothership.visible = true;
+
+        // Init audio if needed
+        if (!this.mothershipOsc) {
+          this.initMothershipAudio();
+        }
+      }
+    }
+
+    if (!this.mothershipActive || !this.mothership) return;
+
+    // Progress: 0 to 1 over ~40 seconds
+    this.mothershipProgress += dt / 40;
+
+    if (this.mothershipProgress >= 1) {
+      // Done — hide the mothership
+      this.mothershipActive = false;
+      this.mothership.visible = false;
+      if (this.mothershipGain) this.mothershipGain.gain.value = 0;
+      if (this.mothershipGain2) this.mothershipGain2.gain.value = 0;
+      if (this.mothershipLight) this.mothershipLight.intensity = 0;
+      return;
+    }
+
+    const p = this.mothershipProgress;
+
+    // Smooth easing for entry/exit
+    const easedP = p; // linear traverse is fine — it's huge and slow
+
+    // Position: lerp from start to end
+    const x = this.mothershipStartX + (this.mothershipEndX - this.mothershipStartX) * easedP;
+    const z = Math.sin(p * Math.PI * 2) * 30; // slight lateral drift
+    const groundY = this.sampleTerrainHeight(x, z);
+    const y = groundY + this.mothershipAltitude;
+
+    this.mothership.position.set(x, y, z);
+
+    // Slight wobble/rotation
+    this.mothership.rotation.y += dt * 0.08; // slow spin
+    this.mothership.rotation.x = Math.sin(p * Math.PI * 4) * 0.015; // subtle wobble
+    this.mothership.rotation.z = Math.cos(p * Math.PI * 3) * 0.01;
+
+    // Underside lights pulse — wave propagating from center outward
+    const time = performance.now() * 0.001;
+    for (const light of this.mothershipUndersideLights) {
+      const dist = light.userData.distFromCenter as number;
+      const wave = Math.sin(time * 3 - dist * 0.8) * 0.5 + 0.5;
+      const mat = light.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.3 + wave * 0.7;
+      // Color shift in the wave
+      const r = 0.3 + wave * 0.2;
+      const g = 0.6 + wave * 0.3;
+      const b = 1.0;
+      mat.color.setRGB(r, g, b);
+    }
+
+    // Terrain light intensity — brighter when overhead-ish
+    if (this.mothershipLight) {
+      const overhead = 1 - Math.abs(p - 0.5) * 2; // peaks at p=0.5
+      this.mothershipLight.intensity = 0.15 + overhead * 0.5;
+    }
+
+    // Audio — fade in/out, very quiet
+    if (this.mothershipGain) {
+      const fadeIn = Math.min(1, p * 5);       // fade in over first 20%
+      const fadeOut = Math.min(1, (1 - p) * 5); // fade out over last 20%
+      const vol = fadeIn * fadeOut * 0.04; // very faint
+      this.mothershipGain.gain.value += (vol - this.mothershipGain.gain.value) * 0.1;
+    }
+    if (this.mothershipGain2) {
+      const fadeIn = Math.min(1, p * 5);
+      const fadeOut = Math.min(1, (1 - p) * 5);
+      const vol = fadeIn * fadeOut * 0.025;
+      this.mothershipGain2.gain.value += (vol - this.mothershipGain2.gain.value) * 0.1;
+    }
+
+    // Ground control callout when mothership is ~30% through (overhead area)
+    if (!this.mothershipCalloutSpoken && p > 0.3) {
+      this.mothershipCalloutSpoken = true;
+      this.speakCallout("Eagle, Houston... we're seeing something on radar we can't explain. Continue your descent.");
+    }
+  }
+
   // ── Physics ─────────────────────────────────────────────────
 
   private physicsStep(dt: number): void {
@@ -1690,6 +2005,9 @@ export class LunarLanderEngine {
 
     // Cinematic camera (overrides normal camera when active)
     this.updateCinematic(dt);
+
+    // Alien mothership Easter egg
+    this.updateMothership(dt);
   }
 
   // ── Landing Evaluation ──────────────────────────────────────
