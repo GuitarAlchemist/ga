@@ -23,6 +23,15 @@
       "env": {
         "MESHY_API_KEY": "${MESHY_API_KEY}"
       }
+    },
+    "demerzel": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "Apps/demerzel-bridge/DemerzelBridge/DemerzelBridge.csproj", "--no-build"],
+      "env": {
+        "DEMERZEL_API_KEY": "${DEMERZEL_API_KEY}",
+        "DEMERZEL_URL": "http://localhost:8200"
+      }
     }
   }
 }
