@@ -1333,7 +1333,7 @@ export class LunarLanderEngine {
 
       const n1 = fbm(vx * 0.015, vz * 0.015, 2, 2.0, 0.5);
       const n2 = fbm(vx * 0.05, vz * 0.05, 2, 2.0, 0.5);
-      let base = 0.22 + n1 * 0.12 + n2 * 0.05;
+      let base = 0.15 + n1 * 0.14 + n2 * 0.06; // darker regolith with more variation
       base += vy * 0.002;
       base -= slope * 0.2;
       if (vy < -5) base -= 0.03;
@@ -1406,9 +1406,9 @@ export class LunarLanderEngine {
         '  vec3 bumpNormal = normalize(cross(dpdx, dpdy));',
         '  vec3 N = normalize(mix(vNormal, bumpNormal, 0.6));',
         '  float NdotL = max(dot(N, sunDir), 0.0);',
-        '  vec3 diffuse = vColor * sunColor * NdotL;',
-        '  vec3 ambient = vColor * ambientColor * ambientStrength;',
-        '  float craterDark = 1.0 - 0.3 * max(0.0, -dot(N, sunDir));',
+        '  vec3 diffuse = vColor * sunColor * NdotL * 1.4;',
+        '  vec3 ambient = vColor * ambientColor * ambientStrength * 0.5;',
+        '  float craterDark = 1.0 - 0.5 * max(0.0, -dot(N, sunDir));',
         '  vec3 sparkleCoord = floor(vWorldPos * 2.0);',
         '  float sparkleRand = hash31(sparkleCoord);',
         '  vec3 halfVec = normalize(vViewDir + sunDir);',
