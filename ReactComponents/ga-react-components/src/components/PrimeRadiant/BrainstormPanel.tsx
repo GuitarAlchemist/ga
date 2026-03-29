@@ -215,29 +215,28 @@ async function runPipelineStage(
   title: string,
   source: string | undefined,
 ): Promise<string> {
-  // Try backend API first
-  try {
-    const res = await fetch('/api/pipeline/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage, title, source }),
-    });
-    if (res.ok) {
-      const data = await res.json() as { result: string };
-      return data.result;
-    }
-  } catch { /* fallback */ }
+  // Call the real backend API — runs Claude Code CLI or Ollama
+  const res = await fetch('/api/pipeline/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stage, title, source }),
+  });
 
-  // Mock fallback — simulate stage execution
-  await new Promise(r => setTimeout(r, 800));
-  const mocks: Record<string, string> = {
-    brainstorm: `Brainstormed "${title}" — 4 providers queried, 3 key ideas surfaced.`,
-    plan: `Plan created for "${title}" — 5 phases, estimated M effort.`,
-    implement: `Implementation started for "${title}" — branch created.`,
-    review: `Review complete for "${title}" — 0 blockers, 2 suggestions.`,
-    compound: `Learnings documented for "${title}" — saved to docs/compound/.`,
-  };
-  return mocks[stage] ?? `Stage ${stage} complete.`;
+  if (res.status === 401) {
+    throw new Error('Admin access required');
+  }
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => 'Unknown error');
+    throw new Error(`Pipeline failed: ${err}`);
+  }
+
+  const data = await res.json() as { stage: string; success: boolean; output: string; durationMs: number };
+  if (!data.success) {
+    throw new Error(data.output);
+  }
+
+  return `${data.output} (${Math.round(data.durationMs / 1000)}s)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -302,9 +301,15 @@ export const BrainstormPanel: React.FC = () => {
       log: [...(prev?.itemId === itemId ? prev.log : [])],
       autopilot: prev?.autopilot ?? false,
     }));
-    const result = await runPipelineStage(stage, rec.title, rec.source);
-    setPipeline(prev => prev ? { ...prev, log: [...prev.log, `[${stage}] ${result}`] } : null);
-    return result;
+    try {
+      const result = await runPipelineStage(stage, rec.title, rec.source);
+      setPipeline(prev => prev ? { ...prev, stage: 'idle', log: [...prev.log, `[${stage}] ${result}`] } : null);
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setPipeline(prev => prev ? { ...prev, stage: 'idle', log: [...prev.log, `[${stage}] ERROR: ${msg}`] } : null);
+      return undefined;
+    }
   }, [recommendations]);
 
   // Run full pipeline (autopilot)
