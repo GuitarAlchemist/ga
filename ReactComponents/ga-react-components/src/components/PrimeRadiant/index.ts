@@ -74,6 +74,8 @@ export { GisLayerManager, createGisLayer } from './GisLayer';
 export type { GisPin, GisPath, GisCluster, GisHeatPoint } from './GisLayer';
 export { usePrControl } from './usePrControl';
 export type { PrCommand, PrResult, PrControlHandlers } from './usePrControl';
+export { LunarLander } from './LunarLander';
+export type { LunarLanderProps, LunarLanderStats } from './LunarLander';
 export { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
 export { startSignalRGisBridge } from './SignalRGisBridge';
 export type { SignalRGisBridgeHandle } from './SignalRGisBridge';

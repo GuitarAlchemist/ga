@@ -6925,3 +6925,148 @@
 .prime-radiant__library-reader-frame {
   flex: 1; border: none; background: #fff;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Lunar Lander — Apollo LM descent simulator overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lunar-lander__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lunar-lander-fade-in 0.3s ease-out;
+}
+
+@keyframes lunar-lander-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lunar-lander__container {
+  width: 96vw;
+  height: 94vh;
+  max-width: 1800px;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+  border: 1px solid rgba(212, 160, 23, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(212, 160, 23, 0.05), 0 0 160px rgba(0, 0, 0, 0.7);
+}
+
+.lunar-lander__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(20, 18, 10, 0.95);
+  border-bottom: 1px solid rgba(212, 160, 23, 0.1);
+  flex-shrink: 0;
+}
+
+.lunar-lander__header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #d4a017;
+}
+
+.lunar-lander__title {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #d4a017;
+}
+
+.lunar-lander__status {
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.lunar-lander__status--active {
+  color: #44ff44;
+  background: rgba(68, 255, 68, 0.1);
+  border: 1px solid rgba(68, 255, 68, 0.2);
+  animation: lunar-lander-pulse 2s ease-in-out infinite;
+}
+
+.lunar-lander__status--success {
+  color: #44ff44;
+  background: rgba(68, 255, 68, 0.12);
+  border: 1px solid rgba(68, 255, 68, 0.3);
+}
+
+.lunar-lander__status--fail {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.12);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+@keyframes lunar-lander-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.lunar-lander__header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lunar-lander__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid rgba(212, 160, 23, 0.2);
+  border-radius: 4px;
+  color: #887030;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lunar-lander__btn:hover {
+  color: #d4a017;
+  border-color: rgba(212, 160, 23, 0.4);
+  background: rgba(212, 160, 23, 0.05);
+}
+
+.lunar-lander__close {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #8b949e;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.lunar-lander__close:hover {
+  color: #d4a017;
+  border-color: rgba(212, 160, 23, 0.3);
+  background: rgba(212, 160, 23, 0.05);
+}
+
+.lunar-lander__iframe {
+  flex: 1;
+  border: none;
+  background: #000;
+  width: 100%;
+}

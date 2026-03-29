@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar';
 export type PanelId = BuiltInPanelId | (string & {});
 
 export interface PanelDefinition {
@@ -105,6 +105,12 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('path', { key: 'p1', d: 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' }),
     h('line', { key: 'l1', x1: 2, y1: 12, x2: 22, y2: 12 }),
   ]),
+  lunar: svg([
+    h('path', { key: 'p1', d: 'M12 3a6 6 0 0 0 0 12 9 9 0 0 0 9-9' }),
+    h('circle', { key: 'c1', cx: 9, cy: 8, r: 1, fill: 'currentColor', stroke: 'none' }),
+    h('circle', { key: 'c2', cx: 14, cy: 11, r: 0.7, fill: 'currentColor', stroke: 'none' }),
+    h('circle', { key: 'c3', cx: 11, cy: 13, r: 0.5, fill: 'currentColor', stroke: 'none' }),
+  ]),
 };
 
 // ---------------------------------------------------------------------------
@@ -187,6 +193,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side' },
   { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side' },
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side' },
+  { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay' },
 ];
 
 for (const def of BUILTIN_PANELS) {
