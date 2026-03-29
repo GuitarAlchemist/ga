@@ -65,6 +65,9 @@ builder.Services.AddSingleton<BeliefStateService>();
 // Visual critic — Claude vision analysis of Prime Radiant screenshots
 builder.Services.AddSingleton<VisualCriticService>();
 
+// Pipeline execution — runs brainstorm/plan/build/review/compound via Claude Code CLI
+builder.Services.AddSingleton<PipelineExecutionService>();
+
 // Governance file watcher — pushes updates via SignalR when governance files change
 builder.Services.AddHostedService<GovernanceWatcherService>();
 
@@ -220,6 +223,7 @@ app.MapReverseProxy();
 // Map SignalR hubs
 app.MapHub<ChatbotHub>("/hubs/chatbot");
 app.MapHub<GovernanceHub>("/hubs/governance");
+app.MapHub<PipelineHub>("/hubs/pipeline");
 
 // Map Aspire default endpoints (health checks, liveness)
 app.MapDefaultEndpoints();
