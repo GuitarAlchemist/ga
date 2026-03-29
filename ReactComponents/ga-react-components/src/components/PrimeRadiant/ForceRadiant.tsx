@@ -2499,6 +2499,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
         <span className="prime-radiant__backend-dot" />
         <span>{backendStatus === 'connected' ? 'API Connected' : backendStatus === 'checking' ? 'Checking...' : 'API Offline'}</span>
+        <span className={`prime-radiant__admin-badge prime-radiant__admin-badge--${isAdmin ? 'admin' : 'view'}`}>
+          {isAdmin ? 'Admin' : 'View'}
+        </span>
         <div className="prime-radiant__api-popover">
           {backendStatus === 'connected' ? (
             <>
