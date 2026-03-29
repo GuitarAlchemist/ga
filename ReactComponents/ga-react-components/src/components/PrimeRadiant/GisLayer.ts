@@ -125,7 +125,7 @@ const PULSE_RING_GEO = new THREE.RingGeometry(0.01, 0.02, 12);
 function createPinMesh(pin: GisPin, radius: number): THREE.Group {
   const group = new THREE.Group();
   const color = new THREE.Color(pin.color ?? '#ff4444');
-  const sz = pin.size ?? 1.0;
+  const sz = (pin.size ?? 1.0) * radius * 0.15; // scale with planet radius
 
   // Pin body (cone)
   const coneMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 });
