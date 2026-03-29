@@ -1237,20 +1237,7 @@ export class LunarLanderEngine {
   // ── Horizon Atmosphere Glow ────────────────────────────────
 
   private buildHorizonGlow(): void {
-    // Thin luminous band at the lunar horizon — static-charged dust glow
-    const ringGeo = new THREE.TorusGeometry(TERRAIN_SIZE * 0.5, 1.5, 8, 64);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xdddddd,
-      transparent: true,
-      opacity: 0.04,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = -2;
-    this.scene.add(ring);
+    // Intentionally empty — the torus glow was too visible and broke immersion
   }
 
   // ── Terrain ─────────────────────────────────────────────────
