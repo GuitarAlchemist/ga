@@ -116,6 +116,47 @@
   50% { transform: scale(1.4); opacity: 0.6; }
 }
 
+/* ─── Rail Popover — hover cards ─── */
+.rail-popover {
+  position: absolute;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+  width: 200px;
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 30;
+  animation: rail-popover-in 0.15s ease-out;
+}
+@keyframes rail-popover-in {
+  from { opacity: 0; transform: translateY(-50%) translateX(4px); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+.rail-popover__title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e6edf3;
+  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.rail-popover__metric {
+  font-size: 10px;
+  color: #8b949e;
+  line-height: 1.4;
+}
+.rail-popover__metric--secondary {
+  color: #6b7280;
+}
+.rail-popover__hint {
+  font-size: 9px;
+  color: #484f58;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 /* ─── Side Panel — one at a time ─── */
 .prime-radiant__side-panel {
   width: 0;
@@ -189,7 +230,10 @@
 .prime-radiant__side-panel .prime-radiant__agents,
 .prime-radiant__side-panel .seldon-dashboard,
 .prime-radiant__side-panel .prime-radiant__llm-status,
-.prime-radiant__side-panel .prime-radiant__library {
+.prime-radiant__side-panel .prime-radiant__library,
+.prime-radiant__side-panel .gis-panel,
+.prime-radiant__side-panel .godot-scene,
+.prime-radiant__side-panel .gsb {
   position: relative;
   top: auto;
   left: auto;
@@ -1416,6 +1460,181 @@
   box-shadow: 0 0 14px rgba(255, 215, 0, 0.5);
   transform: scale(1.1);
 }
+
+/* ─── Brainstorm Panel ─── */
+.brainstorm-trigger {
+  position: absolute;
+  top: 158px;
+  left: 8px;
+  z-index: 25;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #30363d;
+  background: rgba(13, 17, 23, 0.85);
+  color: #8b949e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(6px);
+}
+.brainstorm-trigger:hover {
+  transform: scale(1.1);
+  border-color: #4FC3F7;
+  color: #4FC3F7;
+  box-shadow: 0 0 14px rgba(79, 195, 247, 0.3);
+}
+
+.brainstorm-panel {
+  position: absolute;
+  top: 158px;
+  left: 52px;
+  width: 340px;
+  max-height: 60vh;
+  z-index: 26;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: brainstorm-in 0.2s ease-out;
+}
+@keyframes brainstorm-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.brainstorm-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #21262d;
+}
+.brainstorm-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-panel__close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.brainstorm-panel__close:hover { color: #e6edf3; }
+
+.brainstorm-panel__auto {
+  margin: 8px 12px 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(79, 195, 247, 0.3);
+  background: rgba(79, 195, 247, 0.08);
+  color: #4FC3F7;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.brainstorm-panel__auto:hover { background: rgba(79, 195, 247, 0.15); }
+.brainstorm-panel__auto:disabled { opacity: 0.5; cursor: default; }
+
+.brainstorm-panel__input-row {
+  display: flex;
+  gap: 4px;
+  padding: 4px 12px 8px;
+}
+.brainstorm-panel__input {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: rgba(22, 27, 34, 0.8);
+  color: #e6edf3;
+  font-size: 11px;
+  font-family: inherit;
+}
+.brainstorm-panel__input:focus { border-color: #4FC3F7; outline: none; }
+.brainstorm-panel__go {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: rgba(48, 54, 61, 0.4);
+  color: #8b949e;
+  font-size: 10px;
+  cursor: pointer;
+}
+.brainstorm-panel__go:hover { background: rgba(48, 54, 61, 0.8); color: #e6edf3; }
+.brainstorm-panel__go:disabled { opacity: 0.4; }
+
+.brainstorm-panel__results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 12px;
+}
+.brainstorm-panel__loading,
+.brainstorm-panel__empty {
+  text-align: center;
+  font-size: 11px;
+  color: #8b949e;
+  padding: 16px 0;
+  font-style: italic;
+}
+.brainstorm-panel__group {
+  margin-top: 8px;
+}
+.brainstorm-panel__group-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-panel__card {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid #21262d;
+  border-left: 3px solid;
+  border-radius: 4px;
+}
+.brainstorm-panel__card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e6edf3;
+  margin-bottom: 2px;
+}
+.brainstorm-panel__card-rationale {
+  font-size: 10px;
+  color: #8b949e;
+  line-height: 1.4;
+}
+.brainstorm-panel__card-source {
+  font-size: 9px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.brainstorm-panel__card-start {
+  font-size: 9px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid rgba(79, 195, 247, 0.3);
+  background: rgba(79, 195, 247, 0.08);
+  color: #4FC3F7;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-panel__card-start:hover { background: rgba(79, 195, 247, 0.2); }
 
 .prime-radiant__tutorial-overlay {
   position: absolute;
@@ -3246,6 +3465,132 @@
   display: block; font-size: 8px; color: #6b7280; margin-top: 1px;
   line-height: 1.3;
 }
+
+/* ─── Backlog AI Assessment Cards ─── */
+.prime-radiant__backlog-item-wrap { display: flex; flex-direction: column; }
+.prime-radiant__backlog-item--selected { background: rgba(255, 215, 0, 0.06); border-left-color: #FFD700; }
+.prime-radiant__backlog-item-expand { margin-left: auto; font-size: 8px; color: #484f58; flex-shrink: 0; }
+
+.backlog-assess {
+  margin: 0 6px 6px 16px;
+  padding: 8px 10px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  font-size: 10px;
+  color: #c9d1d9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.backlog-assess__loading {
+  color: #8b949e;
+  font-style: italic;
+  text-align: center;
+  padding: 8px;
+}
+.backlog-assess__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.backlog-assess__badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.backlog-assess__effort {
+  font-size: 10px;
+  font-weight: 700;
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', monospace;
+}
+.backlog-assess__belief {
+  margin-left: auto;
+  font-size: 9px;
+  color: #8b949e;
+  font-family: 'JetBrains Mono', monospace;
+}
+.backlog-assess__infra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.backlog-assess__infra-label {
+  font-size: 9px;
+  color: #8b949e;
+  flex-shrink: 0;
+}
+.backlog-assess__infra-bar {
+  flex: 1;
+  height: 4px;
+  background: #21262d;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.backlog-assess__infra-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.backlog-assess__infra-pct {
+  font-size: 9px;
+  color: #8b949e;
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 28px;
+  text-align: right;
+}
+.backlog-assess__approach {
+  font-size: 10px;
+  color: #8b949e;
+  line-height: 1.4;
+}
+.backlog-assess__deps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.backlog-assess__deps-label {
+  font-size: 9px;
+  color: #6b7280;
+  width: 100%;
+}
+.backlog-assess__dep {
+  font-size: 9px;
+  color: #c9d1d9;
+  background: rgba(48, 54, 61, 0.5);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.backlog-assess__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.backlog-assess__refresh,
+.backlog-assess__start {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: rgba(48, 54, 61, 0.4);
+  color: #8b949e;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+.backlog-assess__refresh:hover { background: rgba(48, 54, 61, 0.8); color: #e6edf3; }
+.backlog-assess__start {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #FFD700;
+}
+.backlog-assess__start:hover { background: rgba(255, 215, 0, 0.2); }
 
 /* ─── Agent Teams Panel ─── */
 .prime-radiant__agents {
@@ -6253,95 +6598,103 @@
    ========================================================================= */
 
 .gis-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-height: 0;
   overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.8);
+  padding: 0 !important;
 }
 
 .gis-panel::-webkit-scrollbar { width: 4px; }
 .gis-panel::-webkit-scrollbar-thumb { background: rgba(51, 204, 255, 0.3); border-radius: 2px; }
 
 .gis-panel__planet-bar {
-  display: flex;
-  gap: 2px;
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex !important;
+  gap: 4px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
 }
 
 .gis-panel__planet-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
   color: rgba(255, 255, 255, 0.5);
-  padding: 3px 8px;
+  padding: 4px 10px;
   cursor: pointer;
   font-size: 10px;
   font-family: inherit;
   transition: all 0.12s ease;
 }
 
-.gis-panel__planet-btn:hover { background: rgba(51, 204, 255, 0.08); color: #33ccff; }
-.gis-panel__planet-btn--active { background: rgba(51, 204, 255, 0.15); color: #33ccff; border-color: rgba(51, 204, 255, 0.3); }
+.gis-panel__planet-btn:hover { background: rgba(51, 204, 255, 0.1); color: #33ccff; }
+.gis-panel__planet-btn--active { background: rgba(51, 204, 255, 0.18); color: #33ccff; border-color: rgba(51, 204, 255, 0.35); }
 
 .gis-panel__stats {
-  display: flex;
-  gap: 12px;
-  padding: 6px 12px;
-  color: rgba(255, 255, 255, 0.35);
+  display: flex !important;
+  gap: 16px;
+  padding: 8px 12px;
+  color: rgba(255, 255, 255, 0.4);
   font-size: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gis-panel__stats span {
+  white-space: nowrap;
 }
 
 .gis-panel__section {
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .gis-panel__section-header {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.35);
-  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
 }
 
 .gis-panel__presets {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .gis-panel__preset-btn {
-  display: flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
   color: rgba(255, 255, 255, 0.7);
-  padding: 5px 8px;
+  padding: 5px 10px;
   cursor: pointer;
   font-size: 10px;
   font-family: inherit;
   text-align: left;
   transition: all 0.12s ease;
+  white-space: nowrap;
 }
 
-.gis-panel__preset-btn:hover { background: rgba(51, 204, 255, 0.08); border-color: rgba(51, 204, 255, 0.2); color: #33ccff; }
+.gis-panel__preset-btn:hover { background: rgba(51, 204, 255, 0.1); border-color: rgba(51, 204, 255, 0.25); color: #33ccff; }
 
 .gis-panel__cluster-row {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .gis-panel__toggle {
