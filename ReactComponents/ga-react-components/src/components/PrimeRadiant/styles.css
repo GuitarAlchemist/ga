@@ -3359,17 +3359,10 @@
     border-radius: 12px;
   }
 
-  /* Icon rail scroll hint — gradient fade on right edge */
-  .icon-rail::after {
-    content: '';
-    position: sticky;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 24px;
-    flex-shrink: 0;
-    background: linear-gradient(to right, transparent, rgba(13, 17, 23, 0.95));
-    pointer-events: none;
+  /* Icon rail scroll hint — mask fades edges to signal scrollability */
+  .icon-rail {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 24px), transparent 100%);
   }
 
   /* GST clock — smaller */
@@ -3395,23 +3388,19 @@
   /* Connection list — compact */
   .prime-radiant__detail-connection { padding: 4px 6px; font-size: 10px; }
 
-  /* Planet bar — scrollable, above tab bar */
-  .prime-radiant__planet-bar {
-    max-width: calc(100vw - 20px);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    bottom: 4px;
-  }
-  .prime-radiant__planet-bar::-webkit-scrollbar { display: none; }
-  .prime-radiant__planet-label { display: none; }
+  /* Phone declutter — hide desktop-only overlays that have rail equivalents */
+  .prime-radiant__planet-bar { display: none; }        /* planets accessible via PlanetNav toggle */
+  .prime-radiant__triage { display: none; }            /* triage accessible via backlog panel */
+  .prime-radiant__perf-info { display: none; }         /* FPS counter not needed on phone */
+  .rail-popover { display: none; }                     /* popovers don't work on touch */
+  .icicle-drawer { display: none; }                    /* drawer is desktop-only file browser */
 
-  /* Planet nav — reposition for mobile: bottom-left above tab bar */
+  /* Planet nav — compact toggle only, top-left */
   .planet-nav {
     position: fixed;
-    left: 4px;
+    left: 6px;
     top: auto;
-    bottom: 116px;  /* above chat trigger (68px) + trigger height (44px) + gap */
+    bottom: 68px;  /* just above the chat trigger */
     z-index: 30;
   }
 
@@ -3420,6 +3409,12 @@
     height: 44px;
     min-width: 44px;
     min-height: 44px;
+  }
+
+  .planet-nav__menu {
+    top: auto;
+    bottom: 50px;
+    max-height: 50vh;
   }
 
   .planet-nav__menu {
