@@ -661,56 +661,133 @@ export class LunarLanderEngine {
 
   // ── Audio ───────────────────────────────────────────────────
 
+  private engineNoiseNode: AudioBufferSourceNode | null = null;
+  private rcsNoiseNode: AudioBufferSourceNode | null = null;
+
+  private createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
+    const sampleRate = ctx.sampleRate;
+    const length = Math.floor(sampleRate * duration);
+    const buffer = ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
   private initAudio(): void {
     try {
       this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     } catch {
       return;
     }
+    const ctx = this.audioCtx;
 
-    // Engine: low rumble
-    this.engineOsc = this.audioCtx.createOscillator();
+    // === MAIN ENGINE: layered noise + oscillators for rich rocket rumble ===
+
+    // Layer 1: Filtered white noise (broadband combustion roar)
+    const noiseBuffer = this.createNoiseBuffer(ctx, 4);
+    this.engineNoiseNode = ctx.createBufferSource();
+    this.engineNoiseNode.buffer = noiseBuffer;
+    this.engineNoiseNode.loop = true;
+
+    const noiseLowpass = ctx.createBiquadFilter();
+    noiseLowpass.type = 'lowpass';
+    noiseLowpass.frequency.value = 300;
+    noiseLowpass.Q.value = 0.7;
+
+    const noiseHighpass = ctx.createBiquadFilter();
+    noiseHighpass.type = 'highpass';
+    noiseHighpass.frequency.value = 30;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0;
+
+    this.engineNoiseNode.connect(noiseHighpass);
+    noiseHighpass.connect(noiseLowpass);
+    noiseLowpass.connect(noiseGain);
+
+    // Layer 2: Low sub-bass oscillator (engine chamber resonance)
+    this.engineOsc = ctx.createOscillator();
     this.engineOsc.type = 'sawtooth';
-    this.engineOsc.frequency.value = 80;
+    this.engineOsc.frequency.value = 55;
 
-    const engineFilter = this.audioCtx.createBiquadFilter();
-    engineFilter.type = 'lowpass';
-    engineFilter.frequency.value = 180;
-    engineFilter.Q.value = 1;
+    const oscFilter = ctx.createBiquadFilter();
+    oscFilter.type = 'lowpass';
+    oscFilter.frequency.value = 120;
+    oscFilter.Q.value = 2;
 
-    this.engineGain = this.audioCtx.createGain();
-    this.engineGain.gain.value = 0;
+    const oscGain = ctx.createGain();
+    oscGain.gain.value = 0;
 
-    const vibrato = this.audioCtx.createOscillator();
-    vibrato.frequency.value = 7;
-    const vibratoGain = this.audioCtx.createGain();
-    vibratoGain.gain.value = 3;
+    // Layer 3: Vibrato modulation (irregular combustion)
+    const vibrato = ctx.createOscillator();
+    vibrato.frequency.value = 5.5;
+    const vibratoGain = ctx.createGain();
+    vibratoGain.gain.value = 4;
     vibrato.connect(vibratoGain);
     vibratoGain.connect(this.engineOsc.frequency);
-    vibrato.start();
 
-    this.engineOsc.connect(engineFilter);
-    engineFilter.connect(this.engineGain);
-    this.engineGain.connect(this.audioCtx.destination);
+    // Layer 4: Second oscillator for thickness
+    const engineOsc2 = ctx.createOscillator();
+    engineOsc2.type = 'triangle';
+    engineOsc2.frequency.value = 42;
+    const osc2Gain = ctx.createGain();
+    osc2Gain.gain.value = 0;
+    engineOsc2.connect(osc2Gain);
+
+    // Mix all layers into master engine gain
+    this.engineGain = ctx.createGain();
+    this.engineGain.gain.value = 0;
+
+    noiseGain.connect(this.engineGain);
+    this.engineOsc.connect(oscFilter);
+    oscFilter.connect(oscGain);
+    oscGain.connect(this.engineGain);
+    osc2Gain.connect(this.engineGain);
+
+    // Compressor to prevent clipping
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -12;
+    compressor.ratio.value = 4;
+    this.engineGain.connect(compressor);
+    compressor.connect(ctx.destination);
+
+    // Start all oscillators
+    this.engineNoiseNode.start();
     this.engineOsc.start();
+    vibrato.start();
+    engineOsc2.start();
 
-    // RCS: short hiss
-    this.rcsOsc = this.audioCtx.createOscillator();
-    this.rcsOsc.type = 'square';
-    this.rcsOsc.frequency.value = 180;
+    // Store sub-gains for throttle modulation
+    (this.engineGain as any)._noiseGain = noiseGain;
+    (this.engineGain as any)._oscGain = oscGain;
+    (this.engineGain as any)._osc2Gain = osc2Gain;
+    (this.engineGain as any)._noiseLowpass = noiseLowpass;
+    (this.engineGain as any)._engineOsc = this.engineOsc;
 
-    const rcsFilter = this.audioCtx.createBiquadFilter();
-    rcsFilter.type = 'bandpass';
-    rcsFilter.frequency.value = 350;
-    rcsFilter.Q.value = 3;
+    // === RCS: sharp pneumatic hiss (nitrogen gas) ===
+    this.rcsNoiseNode = ctx.createBufferSource();
+    this.rcsNoiseNode.buffer = this.createNoiseBuffer(ctx, 2);
+    this.rcsNoiseNode.loop = true;
 
-    this.rcsGain = this.audioCtx.createGain();
+    const rcsBandpass = ctx.createBiquadFilter();
+    rcsBandpass.type = 'bandpass';
+    rcsBandpass.frequency.value = 2000;
+    rcsBandpass.Q.value = 1.5;
+
+    const rcsHighpass = ctx.createBiquadFilter();
+    rcsHighpass.type = 'highpass';
+    rcsHighpass.frequency.value = 800;
+
+    this.rcsGain = ctx.createGain();
     this.rcsGain.gain.value = 0;
 
-    this.rcsOsc.connect(rcsFilter);
-    rcsFilter.connect(this.rcsGain);
-    this.rcsGain.connect(this.audioCtx.destination);
-    this.rcsOsc.start();
+    this.rcsNoiseNode.connect(rcsHighpass);
+    rcsHighpass.connect(rcsBandpass);
+    rcsBandpass.connect(this.rcsGain);
+    this.rcsGain.connect(ctx.destination);
+    this.rcsNoiseNode.start();
   }
 
   private playLandingThud(intensity: number): void {
@@ -2399,15 +2476,25 @@ export class LunarLanderEngine {
       this.emitRCSJets('trans', 2, this._rcsTransVec.clone());
     }
 
-    // Audio
+    // Audio — modulate all engine layers by throttle
     if (this.engineGain) {
-      const targetGain = this.lm.throttle * 0.18;
-      this.engineGain.gain.value += (targetGain - this.engineGain.gain.value) * 0.1;
-      if (this.engineOsc) this.engineOsc.frequency.value = 55 + this.lm.throttle * 70;
+      const t = this.lm.throttle;
+      const masterTarget = t * 0.22;
+      this.engineGain.gain.value += (masterTarget - this.engineGain.gain.value) * 0.08;
+
+      // Modulate sub-layers for richer sound at different throttle levels
+      const eg = this.engineGain as any;
+      if (eg._noiseGain) eg._noiseGain.gain.value += (t * 0.15 - eg._noiseGain.gain.value) * 0.1;
+      if (eg._oscGain) eg._oscGain.gain.value += (t * 0.12 - eg._oscGain.gain.value) * 0.1;
+      if (eg._osc2Gain) eg._osc2Gain.gain.value += (t * 0.08 - eg._osc2Gain.gain.value) * 0.1;
+      // Pitch rises with throttle (combustion pressure)
+      if (eg._engineOsc) eg._engineOsc.frequency.value = 45 + t * 55;
+      // Filter opens with throttle (more harmonics at high thrust)
+      if (eg._noiseLowpass) eg._noiseLowpass.frequency.value = 150 + t * 400;
     }
     if (this.rcsGain) {
-      const rcsTarget = (rcsAnyRot || rcsAnyTrans) ? 0.05 : 0;
-      this.rcsGain.gain.value += (rcsTarget - this.rcsGain.gain.value) * 0.15;
+      const rcsTarget = (rcsAnyRot || rcsAnyTrans) ? 0.08 : 0;
+      this.rcsGain.gain.value += (rcsTarget - this.rcsGain.gain.value) * 0.2;
     }
 
     // Autopilot
