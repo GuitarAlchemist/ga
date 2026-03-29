@@ -3161,10 +3161,10 @@
     height: 100dvh;           /* dynamic viewport height (accounts for mobile browser chrome) */
   }
 
-  /* Canvas area fills available space above tab bar */
+  /* Canvas area fills available space, padded for fixed rail */
   .prime-radiant__canvas-area {
     flex: 1;
-    padding-bottom: 0;
+    padding-bottom: 52px;  /* space for fixed icon rail */
   }
 
   /* Health bar — compact, left-aligned on phone */
@@ -3177,8 +3177,12 @@
     gap: 4px;
   }
 
-  /* Icon rail → bottom tab bar (scrollable when many panels) */
+  /* Icon rail → fixed bottom tab bar (never covered by other elements) */
   .icon-rail {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     flex-direction: row;
     width: 100%;
     height: 52px;
@@ -3187,12 +3191,13 @@
     padding: 0 4px;
     justify-content: flex-start;
     flex-shrink: 0;
-    order: 2; /* after canvas area */
+    z-index: 40;               /* above everything — the primary navigation on phone */
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;          /* Firefox */
     gap: 2px;
+    background: rgba(13, 17, 23, 0.98);  /* solid bg so canvas doesn't bleed through */
   }
 
   .icon-rail::-webkit-scrollbar {
@@ -3236,9 +3241,9 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 52px;             /* stop above the fixed icon rail */
     width: 0;
-    height: 100dvh;
+    height: auto;
     z-index: 35;
     border-left: none;
     box-shadow: none;
@@ -3261,7 +3266,7 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 52px;             /* stop above the fixed icon rail */
     z-index: 34;              /* just below side panel (35) */
   }
 
@@ -3344,7 +3349,7 @@
     left: 8px;
     top: auto;
   }
-  .chat-widget__trigger { bottom: 68px; font-size: 14px; }      /* above 52px rail + gap */
+  .chat-widget__trigger { bottom: 62px; font-size: 14px; z-index: 41; }  /* above fixed rail */
   .prime-radiant__tutorial-btn { display: none; }                /* hidden — brainstorm panel replaces it */
 
   /* Floating brainstorm trigger — hidden on phone (it's in the rail now) */
@@ -3353,10 +3358,11 @@
   /* Chat panel — full width bottom sheet, above rail */
   .chat-widget__panel {
     width: calc(100vw - 16px);
-    height: 50vh;
+    height: 45vh;
     left: 8px;
-    bottom: 68px;
+    bottom: 62px;
     border-radius: 12px;
+    z-index: 42;
   }
 
   /* Icon rail scroll hint — mask fades edges to signal scrollability */
@@ -3395,13 +3401,13 @@
   .rail-popover { display: none; }                     /* popovers don't work on touch */
   .icicle-drawer { display: none; }                    /* drawer is desktop-only file browser */
 
-  /* Planet nav — compact toggle only, top-left */
+  /* Planet nav — compact toggle only, above chat trigger */
   .planet-nav {
     position: fixed;
     left: 6px;
     top: auto;
-    bottom: 68px;  /* just above the chat trigger */
-    z-index: 30;
+    bottom: 108px;  /* above chat trigger (62px + 44px trigger + 2px gap) */
+    z-index: 41;
   }
 
   .planet-nav__toggle {
