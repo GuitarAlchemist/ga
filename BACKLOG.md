@@ -53,6 +53,20 @@ These are real problems guitarists hit. They're the North Star for every feature
 - ~~JPP comics inline PDF reader (16 comics, Public Domain)~~
 - ~~Seldon beliefs + Markov predictions populated~~
 - ~~/devfix skill + session-start health check~~
+- ~~[SHIPPED] Admin-only access (#30)~~
+- ~~[SHIPPED] Rich hover popovers (#32)~~
+- ~~[SHIPPED] LLM Status panel real checks (#33)~~
+- ~~[SHIPPED] Backlog beliefs with AI assessment (#34)~~
+- ~~[SHIPPED] Brainstorm button / What's Next (#36)~~
+- ~~[SHIPPED] Godot integration plan (#37)~~
+- ~~[SHIPPED] JPP Library panel (#38)~~
+- ~~[SHIPPED] Health→graph visualization (#39)~~
+- ~~[SHIPPED] Epistemic Constitution + CognitionModel~~
+- ~~[SHIPPED] IXQL epistemic commands~~
+- ~~[SHIPPED] Meshy AI MCP server~~
+- ~~[SHIPPED] Blue-green build MSBuild hook~~
+- ~~[SHIPPED] Mobile phone layout fixes~~
+- ~~[SHIPPED] GIS preset fixes~~
 
 ### Active Ideas
 - **3D animated IX pipeline flow** — click IXql node → expands into animated pipeline with particles flowing through stages. Uses IxqlParser.
