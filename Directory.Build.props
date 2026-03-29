@@ -36,7 +36,10 @@
     <PackageReference Update="Microsoft.SemanticKernel" Version="1.38.0"/>
     <PackageReference Update="Microsoft.SemanticKernel.Core" Version="1.38.0"/>
     <PackageReference Update="Microsoft.SemanticKernel.Abstractions" Version="1.38.0"/>
-    <PackageReference Update="FSharp.Core" Version="10.0.104"/>
+    <!-- FSharp.Core version managed by the SDK — do not pin explicitly.
+         F# projects get FSharp.Core from the SDK; C# projects consuming F#
+         assemblies inherit the transitive reference automatically.
+         Pinning here caused CS1705 when CI SDK shipped a newer FSharp.Core. -->
 
     <!-- MSB3277 conflict resolution -->
     <PackageReference Update="System.Numerics.Tensors" Version="10.0.2"/>
