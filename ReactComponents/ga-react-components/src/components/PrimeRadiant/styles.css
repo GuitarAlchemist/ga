@@ -116,6 +116,47 @@
   50% { transform: scale(1.4); opacity: 0.6; }
 }
 
+/* ─── Group dividers + LEDs ─── */
+.icon-rail__divider {
+  width: 28px;
+  height: 1px;
+  background: #30363d;
+  margin: 4px auto;
+  flex-shrink: 0;
+}
+
+.icon-rail__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
+.icon-rail__group-label {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #484f58;
+  line-height: 1;
+  user-select: none;
+}
+
+.icon-rail__group-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+
+.icon-rail__group-led--pulse {
+  animation: rail-dot-pulse 1.5s ease-in-out infinite;
+}
+
 /* ─── Rail Popover — hover cards ─── */
 .rail-popover {
   position: absolute;
