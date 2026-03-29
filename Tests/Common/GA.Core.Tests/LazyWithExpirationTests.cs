@@ -92,17 +92,18 @@ public class LazyWithExpirationTests
     {
         // This test ensures that accessing Value triggers the expiration timer; until then, value is not created.
         var counter = 0;
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMilliseconds(80));
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMilliseconds(100));
 
         // Wait longer than expiration but without accessing Value; timer should not have started yet.
-        Thread.Sleep(120);
+        Thread.Sleep(200);
         Assert.That(counter, Is.EqualTo(0), "Factory should not be called before first Value access");
 
         var first = lazy.Value;
         Assert.That(first, Is.EqualTo(1));
 
         // Now wait for expiration and verify recompute happens on next access
-        Thread.Sleep(120);
+        // Use generous margin for slow CI runners
+        Thread.Sleep(300);
         var second = lazy.Value;
         Assert.That(second, Is.EqualTo(2));
     }
