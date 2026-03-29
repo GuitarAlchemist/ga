@@ -241,9 +241,20 @@ async function runPipelineStage(
 }
 
 // ---------------------------------------------------------------------------
+// Admin check — only owner can run pipeline actions
+// ---------------------------------------------------------------------------
+function checkIsAdmin(): boolean {
+  if (typeof window === 'undefined') return false;
+  const { hostname } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  return localStorage.getItem('pr-admin-token') === 'ga-owner-2026';
+}
+
+// ---------------------------------------------------------------------------
 // Component — side panel (no floating trigger)
 // ---------------------------------------------------------------------------
 export const BrainstormPanel: React.FC = () => {
+  const isAdmin = checkIsAdmin();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -355,15 +366,23 @@ export const BrainstormPanel: React.FC = () => {
         <button className="brainstorm-side__auto" onClick={() => analyze()} disabled={loading}>
           {loading ? 'Scanning...' : "What's next?"}
         </button>
-        <button
-          className="brainstorm-side__autopilot"
-          onClick={pipeline?.autopilot ? stopPipeline : autoPick}
-          disabled={loading || recommendations.length === 0}
-          title={pipeline?.autopilot ? 'Stop autopilot' : 'Auto-pick top item and run full pipeline'}
-        >
-          {pipeline?.autopilot ? '\u23F9 Stop' : '\u25B6 Autopilot'}
-        </button>
+        {isAdmin && (
+          <button
+            className="brainstorm-side__autopilot"
+            onClick={pipeline?.autopilot ? stopPipeline : autoPick}
+            disabled={loading || recommendations.length === 0}
+            title={pipeline?.autopilot ? 'Stop autopilot' : 'Auto-pick top item and run full pipeline'}
+          >
+            {pipeline?.autopilot ? '\u23F9 Stop' : '\u25B6 Autopilot'}
+          </button>
+        )}
       </div>
+
+      {!isAdmin && (
+        <div className="brainstorm-side__readonly">
+          Read-only mode — pipeline actions require admin access
+        </div>
+      )}
 
       {/* Focused query */}
       <div className="brainstorm-side__input-row">
@@ -405,8 +424,8 @@ export const BrainstormPanel: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Pipeline action buttons */}
-                    <div className="brainstorm-side__pipeline">
+                    {/* Pipeline action buttons — admin only */}
+                    {isAdmin && <div className="brainstorm-side__pipeline">
                       {PIPELINE_STAGES.map(({ stage, label, icon, color }) => {
                         const isActive = isPipelineTarget && pipeline?.stage === stage;
                         const isDone = isPipelineTarget && pipeline?.log.some(l => l.startsWith(`[${stage}]`));
@@ -433,9 +452,9 @@ export const BrainstormPanel: React.FC = () => {
                         <span>{'\u25B6'}</span>
                         <span className="brainstorm-side__stage-label">All</span>
                       </button>
-                    </div>
+                    </div>}
 
-                    {/* Pipeline log */}
+                    {/* Pipeline log — visible to all (read-only context) */}
                     {isPipelineTarget && pipeline.log.length > 0 && (
                       <div className="brainstorm-side__log">
                         {pipeline.log.map((line, i) => (
