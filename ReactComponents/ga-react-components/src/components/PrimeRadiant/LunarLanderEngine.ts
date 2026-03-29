@@ -59,7 +59,7 @@ const RCS_FORCE      = 440;
 const THROTTLE_RATE  = 0.20;
 const START_ALTITUDE = 500;
 const TERRAIN_SIZE   = 2000;
-const TERRAIN_SEGS   = 256;
+const TERRAIN_SEGS   = 128; // 256 was 65K verts — 128 = 16K, plenty for visual quality
 const STAR_COUNT     = 8000;
 const EXHAUST_COUNT  = 120;
 const DUST_COUNT     = 250;
@@ -356,9 +356,9 @@ export class LunarLanderEngine {
     this.camera.position.set(40, START_ALTITUDE + 20, 80);
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     this.renderer.setSize(w, h);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -852,17 +852,14 @@ export class LunarLanderEngine {
     this.shadowLight = new THREE.DirectionalLight(0xfff8e8, 3.0);
     this.shadowLight.position.set(300, 180, -400);
     this.shadowLight.castShadow = true;
-    this.shadowLight.shadow.mapSize.set(4096, 4096);
-    this.shadowLight.shadow.camera.left = -60;
-    this.shadowLight.shadow.camera.right = 60;
-    this.shadowLight.shadow.camera.top = 60;
-    this.shadowLight.shadow.camera.bottom = -60;
-    this.shadowLight.shadow.camera.near = 10;
-    this.shadowLight.shadow.camera.far = 1200;
-    this.shadowLight.shadow.bias = -0.0003;
-    this.shadowLight.shadow.normalBias = 0.02;
-    this.shadowLight.shadow.radius = 2; // soft edge
-    this.shadowLight.shadow.normalBias = 0.02;
+    this.shadowLight.shadow.mapSize.set(1024, 1024);
+    this.shadowLight.shadow.camera.left = -30;
+    this.shadowLight.shadow.camera.right = 30;
+    this.shadowLight.shadow.camera.top = 30;
+    this.shadowLight.shadow.camera.bottom = -30;
+    this.shadowLight.shadow.camera.near = 50;
+    this.shadowLight.shadow.camera.far = 800;
+    this.shadowLight.shadow.bias = -0.001;
     this.scene.add(this.shadowLight);
     this.scene.add(this.shadowLight.target);
 
