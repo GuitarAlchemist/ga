@@ -33,6 +33,7 @@ export interface LanderState {
   calloutText: string;
   cinematicMode: boolean;
   mothershipVisible: boolean;
+  autopilot: boolean;
 }
 
 export interface LanderStats {
@@ -62,9 +63,9 @@ const PHYSICS_DT     = 1 / 120;
 const RCS_TORQUE     = 500;
 const RCS_FORCE      = 440;
 const THROTTLE_RATE  = 0.20;
-const START_ALTITUDE = 500;
-const TERRAIN_SIZE   = 2000;
-const TERRAIN_SEGS   = 128; // 256 was 65K verts — 128 = 16K, plenty for visual quality
+const START_ALTITUDE = 800; // higher start = more time to react
+const TERRAIN_SIZE   = 3000; // 3km wide — good coverage without too many verts
+const TERRAIN_SEGS   = 160; // ~26K verts — 60fps target
 const MOON_RADIUS    = 1737400; // meters
 const STAR_COUNT     = 8000;
 const EXHAUST_COUNT  = 120;
@@ -581,6 +582,7 @@ export class LunarLanderEngine {
       gameState: this.gameState,
       calloutText: (performance.now() - this.lastCalloutDisplayTime < 4000) ? this.lastCalloutText : '',
       cinematicMode: this.cinematicActive,
+      autopilot: this.autopilotEnabled,
       mothershipVisible: this.mothershipActive,
     };
   }
@@ -591,10 +593,13 @@ export class LunarLanderEngine {
 
   // ── LM State Reset ─────────────────────────────────────────
 
+  // Autopilot state
+  private autopilotEnabled = false;
+
   private resetLMState(): void {
     this.lm = {
       pos: new THREE.Vector3(0, START_ALTITUDE, 0),
-      vel: new THREE.Vector3(2.0, -5.0, 0.5),
+      vel: new THREE.Vector3(1.5, -2.0, 0.3), // gentler initial descent
       quat: new THREE.Quaternion(),
       angVel: new THREE.Vector3(0, 0, 0),
       fuel: FUEL_MASS_INIT,
@@ -605,6 +610,53 @@ export class LunarLanderEngine {
       flightTime: 0,
     };
     this.lm.quat.setFromEuler(new THREE.Euler(0.02, 0.1, -0.01, 'YXZ'));
+    this.autopilotEnabled = false;
+  }
+
+  /** Toggle autopilot — press A key */
+  toggleAutopilot(): void {
+    this.autopilotEnabled = !this.autopilotEnabled;
+  }
+
+  get isAutopilot(): boolean { return this.autopilotEnabled; }
+
+  private runAutopilot(): void {
+    if (!this.autopilotEnabled || this.gameState !== 'flying') return;
+    const alt = this.lm.altitude;
+    const vSpeed = this.lm.vel.y;
+    const hSpeed = Math.sqrt(this.lm.vel.x ** 2 + this.lm.vel.z ** 2);
+
+    // Target descent rate based on altitude (gentle profile)
+    let targetVSpeed: number;
+    if (alt > 300) targetVSpeed = -8;      // high: moderate descent
+    else if (alt > 100) targetVSpeed = -5;  // mid: slow down
+    else if (alt > 30) targetVSpeed = -2;   // low: careful
+    else if (alt > 5) targetVSpeed = -0.8;  // terminal: very gentle
+    else targetVSpeed = -0.3;               // touchdown: barely moving
+
+    // Throttle to match target vertical speed
+    const vError = vSpeed - targetVSpeed; // negative = falling too fast
+    if (vError < -0.5) {
+      // Falling too fast — increase throttle
+      this.lm.throttle = Math.min(1, this.lm.throttle + 0.015);
+    } else if (vError > 0.5) {
+      // Falling too slow or rising — decrease throttle
+      this.lm.throttle = Math.max(0, this.lm.throttle - 0.01);
+    }
+
+    // Kill horizontal speed with gentle RCS
+    const mass = DRY_MASS + this.lm.fuel;
+    if (hSpeed > 0.5 && alt < 200) {
+      const hDir = new THREE.Vector3(this.lm.vel.x, 0, this.lm.vel.z).normalize();
+      const rcsForce = hDir.multiplyScalar(-RCS_THRUST * 0.5 / mass);
+      this.lm.vel.x += rcsForce.x * PHYSICS_DT;
+      this.lm.vel.z += rcsForce.z * PHYSICS_DT;
+    }
+
+    // Level the craft
+    const euler = new THREE.Euler().setFromQuaternion(this.lm.quat, 'YXZ');
+    if (Math.abs(euler.x) > 0.02) this.lm.angVel.x -= euler.x * 0.5;
+    if (Math.abs(euler.z) > 0.02) this.lm.angVel.z -= euler.z * 0.5;
   }
 
   // ── Audio ───────────────────────────────────────────────────
@@ -2358,6 +2410,9 @@ export class LunarLanderEngine {
       this.rcsGain.gain.value += (rcsTarget - this.rcsGain.gain.value) * 0.15;
     }
 
+    // Autopilot
+    this.runAutopilot();
+
     // Ground Control callouts
     this.checkCallouts();
 
@@ -2513,6 +2568,15 @@ export class LunarLanderEngine {
 
     if (e.code === 'KeyV') {
       this.toggleCinematic();
+    }
+
+    if (e.code === 'KeyA') {
+      this.toggleAutopilot();
+      if (this.autopilotEnabled) {
+        this.speakCallout("Autopilot engaged. Sit back and enjoy the ride, Eagle.");
+      } else {
+        this.speakCallout("Autopilot disengaged. You have manual control.");
+      }
     }
 
     if (e.code === 'KeyR') {
