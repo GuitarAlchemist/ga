@@ -12,12 +12,23 @@ import type { PanelStatus } from './IconRail';
 
 type ProviderStatus = 'active' | 'configured' | 'not-configured' | 'offline';
 
+type ProviderCategory = 'cloud' | 'local' | 'tools';
+
+const CATEGORY_LABELS: Record<ProviderCategory, string> = {
+  cloud: 'Cloud AI',
+  local: 'Local',
+  tools: 'Tools',
+};
+
+const CATEGORY_ORDER: ProviderCategory[] = ['cloud', 'local', 'tools'];
+
 interface LLMProvider {
   name: string;
   icon: string;
   detail: string;          // model name or summary (e.g. "3 models loaded")
   status: ProviderStatus;
   statusHint?: string;     // tooltip text
+  category: ProviderCategory;
   usage?: {
     today: number;
     thisWeek: number;
@@ -102,6 +113,7 @@ async function checkOllama(): Promise<LLMProvider> {
     detail: 'local inference',
     status: 'offline',
     statusHint: 'localhost:11434 not reachable',
+    category: 'local',
   };
 
   try {
@@ -137,6 +149,7 @@ async function checkDockerModelRunner(): Promise<LLMProvider> {
     detail: 'Docker Model Runner',
     status: 'offline',
     statusHint: 'localhost:12434 not reachable',
+    category: 'local',
   };
 
   try {
@@ -176,6 +189,7 @@ function checkAnthropic(): LLMProvider {
     detail: 'Claude Opus 4.6',
     status: usage.percentUsed !== undefined && usage.percentUsed > 90 ? 'configured' : status,
     statusHint: proxyUrl ? `Proxy: ${proxyUrl}` : 'Claude Code session active',
+    category: 'cloud',
     usage,
   };
 }
@@ -188,6 +202,7 @@ function checkOpenAI(): LLMProvider {
     detail: 'GPT-4o',
     status: configured ? 'configured' : 'not-configured',
     statusHint: configured ? 'API key configured' : 'Set VITE_OPENAI_CONFIGURED=1',
+    category: 'cloud',
   };
 }
 
@@ -199,6 +214,7 @@ function checkGemini(): LLMProvider {
     detail: 'Gemini 2.5 Pro',
     status: configured ? 'configured' : 'not-configured',
     statusHint: configured ? 'API key configured' : 'Set VITE_GEMINI_CONFIGURED=1',
+    category: 'cloud',
   };
 }
 
@@ -210,6 +226,7 @@ function checkVoxtral(): LLMProvider {
     detail: 'Mistral voxtral-mini-tts',
     status: configured ? 'configured' : 'not-configured',
     statusHint: configured ? 'API key configured' : 'Set VITE_VOXTRAL_CONFIGURED=1',
+    category: 'tools',
   };
 }
 
@@ -222,6 +239,7 @@ function checkCodex(): LLMProvider {
     detail: 'OpenAI Codex CLI',
     status: configured ? 'configured' : 'not-configured',
     statusHint: configured ? 'codex CLI available' : 'Set VITE_CODEX_CONFIGURED=1',
+    category: 'tools',
   };
 }
 
@@ -241,6 +259,7 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
         detail: p.detail ?? (p.models ? p.models.join(', ') : `${p.modelCount ?? 0} models`),
         status: mapBackendStatus(p.status),
         statusHint: p.models?.join(', '),
+        category: providerCategory(p.name),
       }));
     }
   } catch { /* backend not available — do client-side checks */ }
@@ -267,6 +286,13 @@ function providerIcon(name: string): string {
     voxtral: 'V', 'docker models': '\u{1F433}', codex: 'X',
   };
   return map[name.toLowerCase()] ?? name.charAt(0);
+}
+
+function providerCategory(name: string): ProviderCategory {
+  const n = name.toLowerCase();
+  if (['ollama', 'docker models', 'docker'].includes(n)) return 'local';
+  if (['voxtral', 'codex', 'voxtral tts'].includes(n)) return 'tools';
+  return 'cloud';
 }
 
 function mapBackendStatus(s: string): ProviderStatus {
@@ -411,79 +437,102 @@ export const LLMStatus: React.FC = () => {
         </span>
       </div>
 
-      {/* Provider list */}
+      {/* Provider list — grouped by category */}
       {!collapsed && (
         <div className="prime-radiant__llm-list">
-          {providers.map((p) => (
-            <div
-              key={p.name}
-              className="prime-radiant__llm-item"
-              title={p.statusHint ?? `${p.name}: ${STATUS_LABELS[p.status]}`}
-            >
-              <span className="prime-radiant__llm-icon" style={{
-                color: STATUS_COLORS[p.status],
-                minWidth: 22,
-                textAlign: 'center',
-              }}>{p.icon}</span>
-              <div className="prime-radiant__llm-info" style={{ flex: 1, minWidth: 0 }}>
-                <div className="prime-radiant__llm-model" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}>
-                  <span style={{ fontWeight: 600 }}>{p.name}</span>
-                  <span className="prime-radiant__llm-badge" style={{
-                    fontSize: '0.7em',
-                    padding: '1px 6px',
-                    borderRadius: 8,
-                    backgroundColor: `${STATUS_COLORS[p.status]}22`,
-                    color: STATUS_COLORS[p.status],
-                    border: `1px solid ${STATUS_COLORS[p.status]}44`,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {STATUS_SYMBOLS[p.status]} {STATUS_LABELS[p.status]}
-                  </span>
-                </div>
-                <div className="prime-radiant__llm-meta" style={{
-                  fontSize: '0.8em',
-                  color: '#999',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {p.detail}
-                </div>
-              </div>
+          {CATEGORY_ORDER.map((cat) => {
+            const catProviders = providers.filter(p => p.category === cat);
+            if (catProviders.length === 0) return null;
+            // Aggregate worst status for category LED
+            // Best status in group for LED
+            const bestStatus = catProviders.some(p => p.status === 'active') ? 'active'
+              : catProviders.some(p => p.status === 'configured') ? 'configured'
+              : catProviders.some(p => p.status === 'offline') ? 'offline'
+              : 'not-configured';
 
-              {/* Usage bar for providers that track usage */}
-              {p.usage && p.usage.dailyLimit && p.usage.dailyLimit > 0 && (
-                <div className="prime-radiant__llm-usage" style={{ width: 80 }}>
-                  <div className="prime-radiant__llm-usage-bar" style={{
-                    height: 4,
-                    backgroundColor: '#333',
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                  }}>
-                    <div
-                      className="prime-radiant__llm-usage-fill"
-                      style={{
-                        height: '100%',
-                        width: `${Math.min(p.usage.percentUsed ?? 0, 100)}%`,
-                        backgroundColor:
-                          (p.usage.percentUsed ?? 0) > 80 ? '#FF4444'
-                          : (p.usage.percentUsed ?? 0) > 50 ? '#FFB300'
-                          : '#33CC66',
-                        transition: 'width 0.3s',
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '0.65em', color: '#888', textAlign: 'right' }}>
-                    {formatTokens(p.usage.today)}/{formatTokens(p.usage.dailyLimit)}
-                  </div>
+            return (
+              <div key={cat} className="prime-radiant__llm-category">
+                <div className="prime-radiant__llm-category-header">
+                  <span className="prime-radiant__llm-category-label">{CATEGORY_LABELS[cat]}</span>
+                  <span
+                    className="prime-radiant__llm-category-led"
+                    style={{ backgroundColor: STATUS_COLORS[bestStatus] }}
+                    title={`${CATEGORY_LABELS[cat]}: ${STATUS_LABELS[bestStatus]}`}
+                  />
                 </div>
-              )}
-            </div>
-          ))}
+                {catProviders.map((p) => (
+                  <div
+                    key={p.name}
+                    className="prime-radiant__llm-item"
+                    title={p.statusHint ?? `${p.name}: ${STATUS_LABELS[p.status]}`}
+                  >
+                    <span className="prime-radiant__llm-icon" style={{
+                      color: STATUS_COLORS[p.status],
+                      minWidth: 22,
+                      textAlign: 'center',
+                    }}>{p.icon}</span>
+                    <div className="prime-radiant__llm-info" style={{ flex: 1, minWidth: 0 }}>
+                      <div className="prime-radiant__llm-model" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}>
+                        <span style={{ fontWeight: 600 }}>{p.name}</span>
+                        <span className="prime-radiant__llm-badge" style={{
+                          fontSize: '0.7em',
+                          padding: '1px 6px',
+                          borderRadius: 8,
+                          backgroundColor: `${STATUS_COLORS[p.status]}22`,
+                          color: STATUS_COLORS[p.status],
+                          border: `1px solid ${STATUS_COLORS[p.status]}44`,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {STATUS_SYMBOLS[p.status]} {STATUS_LABELS[p.status]}
+                        </span>
+                      </div>
+                      <div className="prime-radiant__llm-meta" style={{
+                        fontSize: '0.8em',
+                        color: '#999',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {p.detail}
+                      </div>
+                    </div>
+
+                    {/* Usage bar for providers that track usage */}
+                    {p.usage && p.usage.dailyLimit && p.usage.dailyLimit > 0 && (
+                      <div className="prime-radiant__llm-usage" style={{ width: 80 }}>
+                        <div className="prime-radiant__llm-usage-bar" style={{
+                          height: 4,
+                          backgroundColor: '#333',
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                        }}>
+                          <div
+                            className="prime-radiant__llm-usage-fill"
+                            style={{
+                              height: '100%',
+                              width: `${Math.min(p.usage.percentUsed ?? 0, 100)}%`,
+                              backgroundColor:
+                                (p.usage.percentUsed ?? 0) > 80 ? '#FF4444'
+                                : (p.usage.percentUsed ?? 0) > 50 ? '#FFB300'
+                                : '#33CC66',
+                              transition: 'width 0.3s',
+                            }}
+                          />
+                        </div>
+                        <div style={{ fontSize: '0.65em', color: '#888', textAlign: 'right' }}>
+                          {formatTokens(p.usage.today)}/{formatTokens(p.usage.dailyLimit)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
