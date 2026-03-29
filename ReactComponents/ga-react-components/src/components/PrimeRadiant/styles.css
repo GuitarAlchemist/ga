@@ -3172,8 +3172,9 @@
     font-size: 9px;
     padding: 3px 6px;
     top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: auto;
+    right: 8px;                /* move to top-right to avoid button overlap */
+    transform: none;
     gap: 4px;
   }
 
@@ -3339,28 +3340,30 @@
     padding: 8px 10px;
   }
 
-  /* Buttons — above the tab bar (52px rail + 8px margin) */
-  .chat-widget__trigger,
-  .prime-radiant__tutorial-btn {
-    width: 38px;
-    height: 38px;
+  /* Floating buttons — top-left vertical stack */
+  .chat-widget__trigger {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    bottom: auto;
+    width: 40px;
+    height: 40px;
     min-width: 44px;
     min-height: 44px;
-    left: 8px;
-    top: auto;
+    font-size: 14px;
+    z-index: 41;
   }
-  .chat-widget__trigger { bottom: 62px; font-size: 14px; z-index: 41; }  /* above fixed rail */
-  .prime-radiant__tutorial-btn { display: none; }                /* hidden — brainstorm panel replaces it */
-
-  /* Floating brainstorm trigger — hidden on phone (it's in the rail now) */
+  .prime-radiant__tutorial-btn { display: none; }
   .brainstorm-trigger { display: none; }
 
-  /* Chat panel — full width bottom sheet, above rail */
+  /* Chat panel — drops down from trigger, top-left */
   .chat-widget__panel {
-    width: calc(100vw - 16px);
-    height: 45vh;
+    position: fixed;
+    top: 56px;
     left: 8px;
-    bottom: 62px;
+    bottom: 60px;             /* stop above rail */
+    width: calc(100vw - 16px);
+    height: auto;
     border-radius: 12px;
     z-index: 42;
   }
@@ -3401,12 +3404,12 @@
   .rail-popover { display: none; }                     /* popovers don't work on touch */
   .icicle-drawer { display: none; }                    /* drawer is desktop-only file browser */
 
-  /* Planet nav — compact toggle only, above chat trigger */
+  /* Planet nav — top-left, below chat trigger */
   .planet-nav {
     position: fixed;
-    left: 6px;
-    top: auto;
-    bottom: 108px;  /* above chat trigger (62px + 44px trigger + 2px gap) */
+    left: 8px;
+    top: 56px;       /* below chat trigger (8px + 44px + 4px gap) */
+    bottom: auto;
     z-index: 41;
   }
 
@@ -3418,14 +3421,8 @@
   }
 
   .planet-nav__menu {
-    top: auto;
-    bottom: 50px;
-    max-height: 50vh;
-  }
-
-  .planet-nav__menu {
-    top: auto;
-    bottom: 50px;  /* open upward from toggle */
+    top: 48px;           /* open downward from toggle */
+    bottom: auto;
     left: 0;
     width: 160px;
     max-height: 60vh;
