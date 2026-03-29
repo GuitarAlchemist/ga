@@ -766,6 +766,95 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       reactiveEngine.register(ruleId, cmd, (result) => handleIxqlCommand(result));
       return;
     }
+
+    // ── Epistemic Constitution commands (Articles E-0 to E-9) ──
+
+    if (cmd.type === 'show-epistemic') {
+      if (!fg) return;
+      const nodes = fg.graphData().nodes as GraphNode[];
+
+      // Epistemic tensor visual mappings
+      const TENSOR_COLORS: Record<string, string> = {
+        'C_T': '#FFD700',   // wisdom = gold
+        'T_C': '#CE93D8',   // hunch = shimmer purple
+        'U_F': '#4FC3F7',   // blindspot discovered = bright blue
+        'U_U': '#6b7280',   // absolute unknown = gray
+        'C_C': '#FF4444',   // contradictory ground = red
+      };
+
+      if (cmd.visualize) {
+        // Apply visual overrides based on epistemic query
+        nodes.forEach((node: GraphNode) => {
+          const n = node as GraphNode & { __threeObj?: THREE.Object3D };
+          if (!n.__threeObj) return;
+          const nodeData = n as unknown as Record<string, unknown>;
+          const matches = cmd.predicates.length === 0 ||
+            cmd.predicates.every(p => evaluatePredicate(p, nodeData));
+          if (matches) {
+            const tensor = (nodeData['tensorConfig'] as string) ?? 'U_U';
+            const overrides: Record<string, unknown> = {
+              glow: TENSOR_COLORS[tensor] ?? '#8b949e',
+              pulse: tensor === 'C_T' ? 1.5 : tensor.startsWith('C') ? 2.0 : 0,
+              opacity: tensor === 'U_U' ? 0.4 : 1.0,
+            };
+            // High viscosity = rigid/frozen appearance
+            const viscosity = Number(nodeData['viscosity'] ?? 0);
+            if (viscosity > 0.8) {
+              overrides['speed'] = 0;
+              overrides['color'] = '#88ccdd';
+            }
+            n.__threeObj.userData.ixqlOverrides = overrides;
+          }
+        });
+      }
+
+      // Log the query for telemetry
+      console.log(`[IXQL] SHOW ${cmd.target}`, {
+        predicates: cmd.predicates,
+        orderBy: cmd.orderBy,
+        limit: cmd.limit,
+        visualize: cmd.visualize,
+        matchCount: cmd.visualize ? nodes.filter((n: GraphNode) => {
+          const d = n as unknown as Record<string, unknown>;
+          return cmd.predicates.length === 0 || cmd.predicates.every(p => evaluatePredicate(p, d));
+        }).length : 'n/a',
+      });
+      return;
+    }
+
+    if (cmd.type === 'methylate') {
+      console.log(`[IXQL] METHYLATE strategy '${cmd.strategyId}'`, cmd.reason ? `reason: ${cmd.reason}` : '');
+      // Store methylation state in localStorage for persistence
+      const key = `epistemic-methylation-${cmd.strategyId}`;
+      localStorage.setItem(key, JSON.stringify({
+        methylated: true,
+        reason: cmd.reason,
+        methylatedAt: new Date().toISOString(),
+      }));
+      return;
+    }
+
+    if (cmd.type === 'demethylate') {
+      console.log(`[IXQL] DEMETHYLATE strategy '${cmd.strategyId}'`);
+      localStorage.removeItem(`epistemic-methylation-${cmd.strategyId}`);
+      return;
+    }
+
+    if (cmd.type === 'amnesia') {
+      const scheduledFor = new Date(Date.now() + cmd.scheduleDays * 86400000).toISOString();
+      console.log(`[IXQL] AMNESIA belief '${cmd.beliefId}' scheduled for ${scheduledFor}`);
+      const schedule = JSON.parse(localStorage.getItem('epistemic-amnesia-schedule') ?? '[]');
+      schedule.push({ beliefId: cmd.beliefId, scheduledFor, executed: false });
+      localStorage.setItem('epistemic-amnesia-schedule', JSON.stringify(schedule));
+      return;
+    }
+
+    if (cmd.type === 'broadcast') {
+      console.log(`[IXQL] BROADCAST ${cmd.target}`, { predicates: cmd.predicates });
+      // Federated epistemology: broadcast via Galactic Protocol (Article E-9)
+      // In production, this would send to SignalR hub for peer agents
+      return;
+    }
   }, []);
 
   // ─── Create a ripple ring mesh at a world position ───

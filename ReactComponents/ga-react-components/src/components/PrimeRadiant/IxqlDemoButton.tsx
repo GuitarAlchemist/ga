@@ -47,6 +47,24 @@ const DEMOS: DemoStep[] = [
     cmd: 'ON health.demo-beliefs CHANGED THEN SELECT nodes WHERE type = belief SET glow = true, color = #FFD700',
   },
   {
+    variant: 'SHOW BELIEFS',
+    label: 'Epistemic: find wisdom',
+    description: 'Highlights all C_T (stable paradox) nodes in gold — these represent wisdom states where Demerzel knows a contradiction is irreducible.',
+    cmd: 'SHOW BELIEFS WHERE tensorConfig = C_T VISUALIZE',
+  },
+  {
+    variant: 'SHOW BELIEFS',
+    label: 'Epistemic: viscous beliefs',
+    description: 'Finds beliefs with high viscosity (resistance to change). These are the most dangerous — potentially calcified assumptions.',
+    cmd: 'SHOW BELIEFS WHERE viscosity > 0.8 VISUALIZE',
+  },
+  {
+    variant: 'SHOW TENSOR',
+    label: 'Epistemic: tensor heatmap',
+    description: 'Applies epistemic tensor coloring to all nodes — gold=wisdom, purple=hunches, blue=blindspots, red=contradictions, gray=unknowns.',
+    cmd: 'SHOW TENSOR VISUALIZE',
+  },
+  {
     variant: 'RESET',
     label: 'Clean slate',
     description: 'Clears all visual overrides on nodes and edges, returning the graph to its default state.',

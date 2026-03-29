@@ -55,6 +55,43 @@ export interface OnChangedCommand {
   action: IxqlCommand;         // the THEN action (recursive — can be any command)
 }
 
+// ── Epistemic Constitution (Articles E-0 to E-9) ──
+
+export type EpistemicTarget = 'beliefs' | 'strategies' | 'tensor' | 'learners' | 'journal' | 'incompetence';
+export type TensorConfig = 'T_T' | 'T_F' | 'T_U' | 'T_C' | 'F_T' | 'F_F' | 'F_U' | 'F_C' | 'U_T' | 'U_F' | 'U_U' | 'U_C' | 'C_T' | 'C_F' | 'C_U' | 'C_C';
+
+export interface ShowEpistemicCommand {
+  type: 'show-epistemic';
+  target: EpistemicTarget;
+  predicates: IxqlPredicate[];
+  orderBy: string | null;
+  limit: number | null;
+  visualize: boolean;         // Apply visual overrides to matching graph nodes
+}
+
+export interface MethylateCommand {
+  type: 'methylate';
+  strategyId: string;
+  reason: string | null;
+}
+
+export interface DemethylateCommand {
+  type: 'demethylate';
+  strategyId: string;
+}
+
+export interface AmnesiaCommand {
+  type: 'amnesia';
+  beliefId: string;
+  scheduleDays: number;       // Days until deletion
+}
+
+export interface BroadcastCommand {
+  type: 'broadcast';
+  target: 'beliefs' | 'tensor';
+  predicates: IxqlPredicate[];
+}
+
 // GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface DropCommand {
   type: 'drop';
@@ -100,6 +137,11 @@ export type IxqlCommand =
   | CreatePanelCommand
   | BindHealthCommand
   | OnChangedCommand
+  | ShowEpistemicCommand
+  | MethylateCommand
+  | DemethylateCommand
+  | AmnesiaCommand
+  | BroadcastCommand
   | DropCommand
   | CreateNodeCommand
   | LinkCommand
@@ -401,6 +443,90 @@ function parseOnChanged(ctx: ParserContext): OnChangedCommand {
 
 // ── Main entry point ──
 
+// ── Epistemic command parsers (Articles E-0 to E-9) ──
+
+const EPISTEMIC_TARGETS = new Set<EpistemicTarget>(['beliefs', 'strategies', 'tensor', 'learners', 'journal', 'incompetence']);
+
+function parseShowEpistemic(ctx: ParserContext): ShowEpistemicCommand {
+  const targetRaw = next(ctx);
+  const target = targetRaw.toLowerCase() as EpistemicTarget;
+  if (!EPISTEMIC_TARGETS.has(target)) {
+    throw new Error(`Expected BELIEFS, STRATEGIES, TENSOR, LEARNERS, JOURNAL, or INCOMPETENCE after SHOW, got '${targetRaw}'`);
+  }
+
+  let predicates: IxqlPredicate[] = [];
+  let orderBy: string | null = null;
+  let limit: number | null = null;
+  let visualize = false;
+
+  while (ctx.pos < ctx.tokens.length) {
+    const kw = peek(ctx);
+    if (kw === 'WHERE') {
+      next(ctx);
+      predicates = parsePredicates(ctx);
+    } else if (kw === 'ORDER') {
+      next(ctx);
+      if (peek(ctx) === 'BY') next(ctx);
+      orderBy = nextRaw(ctx);
+    } else if (kw === 'LIMIT') {
+      next(ctx);
+      limit = parseInt(nextRaw(ctx), 10);
+      if (isNaN(limit)) throw new Error('LIMIT requires a number');
+    } else if (kw === 'VISUALIZE') {
+      next(ctx);
+      visualize = true;
+    } else {
+      break;
+    }
+  }
+
+  return { type: 'show-epistemic', target, predicates, orderBy, limit, visualize };
+}
+
+function parseMethylate(ctx: ParserContext): MethylateCommand {
+  const strategyId = nextRaw(ctx);
+  let reason: string | null = null;
+  if (ctx.pos < ctx.tokens.length && peek(ctx) === 'REASON') {
+    next(ctx);
+    reason = ctx.tokens.slice(ctx.pos).join(' ');
+    ctx.pos = ctx.tokens.length;
+  }
+  return { type: 'methylate', strategyId, reason };
+}
+
+function parseDemethylate(ctx: ParserContext): DemethylateCommand {
+  const strategyId = nextRaw(ctx);
+  return { type: 'demethylate', strategyId };
+}
+
+function parseAmnesia(ctx: ParserContext): AmnesiaCommand {
+  const beliefId = nextRaw(ctx);
+  let scheduleDays = 7; // default 7 days
+  if (ctx.pos < ctx.tokens.length && peek(ctx) === 'IN') {
+    next(ctx);
+    scheduleDays = parseInt(nextRaw(ctx), 10);
+    if (isNaN(scheduleDays)) throw new Error('AMNESIA IN requires a number of days');
+    if (peek(ctx) === 'DAYS') next(ctx); // consume optional DAYS keyword
+  }
+  return { type: 'amnesia', beliefId, scheduleDays };
+}
+
+function parseBroadcast(ctx: ParserContext): BroadcastCommand {
+  const targetRaw = next(ctx);
+  const target = targetRaw.toLowerCase() as 'beliefs' | 'tensor';
+  if (target !== 'beliefs' && target !== 'tensor') {
+    throw new Error(`Expected BELIEFS or TENSOR after BROADCAST, got '${targetRaw}'`);
+  }
+  let predicates: IxqlPredicate[] = [];
+  if (ctx.pos < ctx.tokens.length && peek(ctx) === 'WHERE') {
+    next(ctx);
+    predicates = parsePredicates(ctx);
+  }
+  return { type: 'broadcast', target, predicates };
+}
+
+// ── Main entry point ──
+
 export function parseIxqlCommand(input: string): IxqlParseResult {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, error: 'Empty command' };
@@ -442,8 +568,33 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
         return { ok: true, command: parseOnChanged(ctx) };
       }
 
+      case 'SHOW': {
+        next(ctx);
+        return { ok: true, command: parseShowEpistemic(ctx) };
+      }
+
+      case 'METHYLATE': {
+        next(ctx);
+        return { ok: true, command: parseMethylate(ctx) };
+      }
+
+      case 'DEMETHYLATE': {
+        next(ctx);
+        return { ok: true, command: parseDemethylate(ctx) };
+      }
+
+      case 'AMNESIA': {
+        next(ctx);
+        return { ok: true, command: parseAmnesia(ctx) };
+      }
+
+      case 'BROADCAST': {
+        next(ctx);
+        return { ok: true, command: parseBroadcast(ctx) };
+      }
+
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, or ON` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
