@@ -25,6 +25,8 @@ export interface LanderState {
   missionTime: string;
   contactLight: boolean;
   gameState: GameState;
+  calloutText: string;
+  cinematicMode: boolean;
 }
 
 export interface LanderStats {
@@ -261,6 +263,18 @@ export class LunarLanderEngine {
   private rcsOsc: OscillatorNode | null = null;
   private rcsGain: GainNode | null = null;
 
+  // Ground Control callouts — real Apollo 11 transcript phrases
+  private calloutQueue: { altitude: number; text: string; spoken: boolean }[] = [];
+  private lastCalloutTime = 0;
+
+  // Cinematic camera system (GTA V style)
+  private cinematicActive = false;
+  private cinematicTimer = 0;
+  private cinematicAngle = 0;
+  private cinematicPhase: 'idle' | 'approach-sweep' | 'low-orbit' | 'landing-dolly' | 'post-land-orbit' = 'idle';
+  private cinematicSlowMo = 1.0;
+  private prevTimeScale = 1.0;
+
   // State
   private lm!: LMState;
   private gameState: GameState = 'waiting';
@@ -396,6 +410,13 @@ export class LunarLanderEngine {
     this.camInitialized = false;
     this.physicsAccum = 0;
 
+    // Reset callouts + cinematics
+    this.initCallouts();
+    this.cinematicActive = false;
+    this.cinematicPhase = 'idle';
+    this.cinematicSlowMo = 1.0;
+    this.lastCalloutText = '';
+
     this.camera.position.set(40, START_ALTITUDE + 20, 80);
     this.orbitControls.target.copy(this.lm.pos);
     this.orbitControls.update();
@@ -493,6 +514,8 @@ export class LunarLanderEngine {
       missionTime,
       contactLight: this.lm.contactLight,
       gameState: this.gameState,
+      calloutText: (performance.now() - this.lastCalloutDisplayTime < 4000) ? this.lastCalloutText : '',
+      cinematicMode: this.cinematicActive,
     };
   }
 
@@ -599,6 +622,188 @@ export class LunarLanderEngine {
     o2.stop(ctx.currentTime + 0.3);
   }
 
+  // ── Ground Control Callouts (Apollo 11 transcript) ─────────
+
+  private initCallouts(): void {
+    this.calloutQueue = [
+      { altitude: 480, text: "Houston, Eagle. We're GO for powered descent.", spoken: false },
+      { altitude: 400, text: "Eagle, Houston. You are GO for landing.", spoken: false },
+      { altitude: 300, text: "Altitude three hundred. Looking good.", spoken: false },
+      { altitude: 200, text: "Eagle looking great. You're GO.", spoken: false },
+      { altitude: 150, text: "Altitude one fifty. Descent rate looking good.", spoken: false },
+      { altitude: 100, text: "One hundred feet. Three and a half down.", spoken: false },
+      { altitude: 75, text: "Seventy five feet. Looking good. Down a half.", spoken: false },
+      { altitude: 60, text: "Sixty seconds of fuel remaining.", spoken: false },
+      { altitude: 40, text: "Forty feet. Down two and a half. Picking up some dust.", spoken: false },
+      { altitude: 30, text: "Thirty feet. Two and a half down. Faint shadow.", spoken: false },
+      { altitude: 20, text: "Twenty feet. Kicking up some dust.", spoken: false },
+      { altitude: 10, text: "Ten feet. Two and a half down.", spoken: false },
+      { altitude: 5, text: "Five feet. Drifting forward just a little.", spoken: false },
+      { altitude: 1.5, text: "Contact light.", spoken: false },
+    ];
+  }
+
+  private checkCallouts(): void {
+    if (this.gameState !== 'flying') return;
+    const now = performance.now();
+    if (now - this.lastCalloutTime < 3000) return; // min 3s between callouts
+
+    for (const c of this.calloutQueue) {
+      if (!c.spoken && this.lm.altitude <= c.altitude) {
+        c.spoken = true;
+        this.lastCalloutTime = now;
+        this.speakCallout(c.text);
+        break;
+      }
+    }
+  }
+
+  private speakCallout(text: string): void {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    u.pitch = 0.85;
+    u.volume = 0.7;
+    // Try to find a male English voice
+    const voices = window.speechSynthesis.getVoices();
+    const maleEn = voices.find(v => v.lang.startsWith('en') && /male|david|james|daniel/i.test(v.name));
+    if (maleEn) u.voice = maleEn;
+    else {
+      const anyEn = voices.find(v => v.lang.startsWith('en'));
+      if (anyEn) u.voice = anyEn;
+    }
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+
+    // Post callout text for HUD display
+    this.lastCalloutText = text;
+    this.lastCalloutDisplayTime = performance.now();
+  }
+
+  private lastCalloutText = '';
+  private lastCalloutDisplayTime = 0;
+
+  private speakLandingResult(success: boolean): void {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const text = success
+      ? "Houston, Tranquility Base here. The Eagle has landed."
+      : "Houston, we've had a problem.";
+    setTimeout(() => this.speakCallout(text), 500);
+    if (success) {
+      setTimeout(() => this.speakCallout("Roger, Tranquility. We copy you on the ground. You got a bunch of guys about to turn blue. We're breathing again. Thanks a lot."), 5000);
+    }
+  }
+
+  // ── GTA V Style Cinematic Camera ──────────────────────────
+
+  /** Toggle cinematic mode with V key */
+  toggleCinematic(): void {
+    this.cinematicActive = !this.cinematicActive;
+    if (this.cinematicActive) {
+      this.cinematicPhase = 'approach-sweep';
+      this.cinematicTimer = 0;
+      this.cinematicAngle = 0;
+    } else {
+      this.cinematicPhase = 'idle';
+      this.cinematicSlowMo = 1.0;
+    }
+  }
+
+  get isCinematic(): boolean { return this.cinematicActive; }
+
+  private updateCinematic(dt: number): void {
+    if (!this.cinematicActive || this.gameState !== 'flying') return;
+    this.cinematicTimer += dt;
+    this.cinematicAngle += dt * 0.15;
+
+    const lmPos = this.lm.pos;
+    const alt = this.lm.altitude;
+
+    // Auto-switch cinematic phase based on altitude
+    if (alt > 200) this.cinematicPhase = 'approach-sweep';
+    else if (alt > 50) this.cinematicPhase = 'low-orbit';
+    else this.cinematicPhase = 'landing-dolly';
+
+    // Slow-mo ramp as we get close to surface
+    this.cinematicSlowMo = alt < 20 ? 0.3 : alt < 50 ? 0.6 : 1.0;
+
+    const cam = this.camera;
+    switch (this.cinematicPhase) {
+      case 'approach-sweep': {
+        // Wide sweeping orbit — dramatic establishing shot
+        const dist = 80 + Math.sin(this.cinematicTimer * 0.1) * 30;
+        const height = 40 + Math.sin(this.cinematicTimer * 0.15) * 15;
+        const angle = this.cinematicAngle;
+        cam.position.set(
+          lmPos.x + Math.cos(angle) * dist,
+          lmPos.y + height,
+          lmPos.z + Math.sin(angle) * dist,
+        );
+        cam.lookAt(lmPos.x, lmPos.y - 5, lmPos.z);
+        break;
+      }
+      case 'low-orbit': {
+        // Tighter orbit with dramatic low angles
+        const t = this.cinematicTimer;
+        const cutIndex = Math.floor(t / 4) % 3; // cut every 4 seconds
+        const dist = [35, 20, 50][cutIndex];
+        const heightOff = [-5, 0, 15][cutIndex]; // some angles look UP at the LM
+        const speedMult = [1, -0.7, 0.5][cutIndex];
+        const angle = this.cinematicAngle * speedMult;
+        cam.position.set(
+          lmPos.x + Math.cos(angle) * dist,
+          lmPos.y + heightOff,
+          lmPos.z + Math.sin(angle) * dist,
+        );
+        cam.lookAt(lmPos.x, lmPos.y, lmPos.z);
+        break;
+      }
+      case 'landing-dolly': {
+        // Close-up tracking shot — dolly alongside, looking slightly up
+        const t = this.cinematicTimer;
+        const cutIndex = Math.floor(t / 3) % 4;
+        switch (cutIndex) {
+          case 0: // Side profile — engine and dust
+            cam.position.set(lmPos.x + 12, lmPos.y - 2, lmPos.z + 5);
+            cam.lookAt(lmPos.x, lmPos.y - 3, lmPos.z);
+            break;
+          case 1: // Ground looking up — dramatic low angle
+            cam.position.set(lmPos.x + 8, lmPos.y - alt + 1, lmPos.z + 8);
+            cam.lookAt(lmPos.x, lmPos.y, lmPos.z);
+            break;
+          case 2: // Behind and above — descent trajectory shot
+            cam.position.set(lmPos.x - 15, lmPos.y + 10, lmPos.z - 10);
+            cam.lookAt(lmPos.x, lmPos.y - 5, lmPos.z);
+            break;
+          case 3: // Extreme close-up on footpads
+            cam.position.set(lmPos.x + 4, lmPos.y - alt + 2, lmPos.z + 3);
+            cam.lookAt(lmPos.x, lmPos.y - alt + 0.5, lmPos.z);
+            break;
+        }
+        break;
+      }
+      case 'post-land-orbit': {
+        // Slow victory orbit after landing
+        const dist = 25;
+        const angle = this.cinematicAngle * 0.3;
+        cam.position.set(
+          lmPos.x + Math.cos(angle) * dist,
+          lmPos.y + 8,
+          lmPos.z + Math.sin(angle) * dist,
+        );
+        cam.lookAt(lmPos.x, lmPos.y, lmPos.z);
+        break;
+      }
+    }
+  }
+
+  private startPostLandCinematic(): void {
+    this.cinematicActive = true;
+    this.cinematicPhase = 'post-land-orbit';
+    this.cinematicTimer = 0;
+    this.cinematicAngle = 0;
+  }
+
   // ── Lighting ────────────────────────────────────────────────
 
   private buildLighting(): void {
@@ -606,14 +811,16 @@ export class LunarLanderEngine {
     this.shadowLight = new THREE.DirectionalLight(0xfff8e8, 3.0);
     this.shadowLight.position.set(300, 180, -400);
     this.shadowLight.castShadow = true;
-    this.shadowLight.shadow.mapSize.set(2048, 2048);
-    this.shadowLight.shadow.camera.left = -80;
-    this.shadowLight.shadow.camera.right = 80;
-    this.shadowLight.shadow.camera.top = 80;
-    this.shadowLight.shadow.camera.bottom = -80;
-    this.shadowLight.shadow.camera.near = 50;
+    this.shadowLight.shadow.mapSize.set(4096, 4096);
+    this.shadowLight.shadow.camera.left = -60;
+    this.shadowLight.shadow.camera.right = 60;
+    this.shadowLight.shadow.camera.top = 60;
+    this.shadowLight.shadow.camera.bottom = -60;
+    this.shadowLight.shadow.camera.near = 10;
     this.shadowLight.shadow.camera.far = 1200;
-    this.shadowLight.shadow.bias = -0.0005;
+    this.shadowLight.shadow.bias = -0.0003;
+    this.shadowLight.shadow.normalBias = 0.02;
+    this.shadowLight.shadow.radius = 2; // soft edge
     this.shadowLight.shadow.normalBias = 0.02;
     this.scene.add(this.shadowLight);
     this.scene.add(this.shadowLight.target);
@@ -1477,6 +1684,12 @@ export class LunarLanderEngine {
       const rcsTarget = (rcsAnyRot || rcsAnyTrans) ? 0.05 : 0;
       this.rcsGain.gain.value += (rcsTarget - this.rcsGain.gain.value) * 0.15;
     }
+
+    // Ground Control callouts
+    this.checkCallouts();
+
+    // Cinematic camera (overrides normal camera when active)
+    this.updateCinematic(dt);
   }
 
   // ── Landing Evaluation ──────────────────────────────────────
@@ -1520,11 +1733,15 @@ export class LunarLanderEngine {
     this.lm.pos.y = groundY + 0.1;
     this.lm.altitude = 0.1;
 
-    // Audio
+    // Audio + voice callout
     const impactIntensity = Math.min(1, vSpeed / 5);
     this.playLandingThud(impactIntensity);
     if (this.engineGain) this.engineGain.gain.value = 0;
     if (this.rcsGain) this.rcsGain.gain.value = 0;
+    this.speakLandingResult(success);
+
+    // GTA V style post-landing cinematic orbit
+    this.startPostLandCinematic();
 
     // Fire callbacks
     for (const cb of this.landedCallbacks) {
@@ -1614,7 +1831,12 @@ export class LunarLanderEngine {
     this.keys[e.code] = true;
 
     if (e.code === 'KeyC' && this.gameState === 'flying') {
+      this.cinematicActive = false; // exit cinematic on camera cycle
       this.cameraMode = (this.cameraMode + 1) % CAMERA_MODES.length;
+    }
+
+    if (e.code === 'KeyV') {
+      this.toggleCinematic();
     }
 
     if (e.code === 'KeyR') {
