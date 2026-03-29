@@ -251,6 +251,9 @@ export class LunarLanderEngine {
   private terrain!: THREE.Mesh;
   private terrainGeom!: THREE.BufferGeometry;
   private shadowLight!: THREE.DirectionalLight;
+  private engineBellMesh: THREE.Mesh | null = null;
+  private engineBellMat: THREE.MeshStandardMaterial | null = null;
+  private earthGroupRef: THREE.Group | null = null;
 
   // Particle systems
   private exhaustSys!: THREE.Points;
@@ -803,12 +806,17 @@ export class LunarLanderEngine {
 
   private speakLandingResult(success: boolean): void {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const text = success
-      ? "Houston, Tranquility Base here. The Eagle has landed."
-      : "Houston, we've had a problem.";
-    setTimeout(() => this.speakCallout(text), 500);
     if (success) {
-      setTimeout(() => this.speakCallout("Roger, Tranquility. We copy you on the ground. You got a bunch of guys about to turn blue. We're breathing again. Thanks a lot."), 5000);
+      setTimeout(() => this.speakCallout("Houston, Tranquility Base here. The Eagle has landed."), 500);
+      setTimeout(() => this.speakCallout("Roger, Tranquility. You got a bunch of guys about to turn blue. We're breathing again. Thanks a lot."), 5000);
+      setTimeout(() => this.speakCallout("Also, Dave in guidance says you owe him twenty bucks."), 10000);
+    } else {
+      const vSpeed = Math.abs(this.lm.vel.y);
+      if (vSpeed < 4) {
+        setTimeout(() => this.speakCallout("Well... that was technically a landing. We'll workshop the technique."), 500);
+      } else {
+        setTimeout(() => this.speakCallout("...That's coming out of your paycheck, Eagle."), 500);
+      }
     }
   }
 
@@ -1104,6 +1112,15 @@ export class LunarLanderEngine {
       const curvatureDrop = (distFromCenter * distFromCenter) / (2 * 1737400);
       h -= curvatureDrop;
 
+      // Circular edge blend — fade terrain features to flat near edges
+      // so the square PlaneGeometry edges merge seamlessly into the round skirt
+      const edgeDist = distFromCenter / (TERRAIN_SIZE / 2);
+      if (edgeDist > 0.75) {
+        const fade = 1 - smoothstep(0.75, 1.0, edgeDist);
+        h *= fade;
+        h -= (1 - fade) * curvatureDrop * 2; // extra droop at edges
+      }
+
       pos.setY(i, h);
     }
 
@@ -1145,26 +1162,29 @@ export class LunarLanderEngine {
     this.terrain.receiveShadow = true;
     this.scene.add(this.terrain);
 
-    // Horizon skirt — large ring that fades from regolith gray to black
-    // Hides the square terrain edges and creates a smooth lunar horizon
-    const skirtInner = TERRAIN_SIZE / 2 * 0.95;
-    const skirtOuter = TERRAIN_SIZE * 4;
-    const skirtSegs = 64;
-    const skirtGeo = new THREE.RingGeometry(skirtInner, skirtOuter, skirtSegs, 4);
+    // Horizon skirt — circular disc that extends far beyond terrain, curving down
+    // Uses a circular PlaneGeometry so there are NO square edges at all
+    const skirtRadius = TERRAIN_SIZE * 6; // 6x terrain = 12km wide disc
+    const skirtSegs = 96;
+    const skirtGeo = new THREE.CircleGeometry(skirtRadius, skirtSegs);
     skirtGeo.rotateX(-Math.PI / 2);
-    // Apply curvature to skirt and fade vertex colors
     const skirtPos = skirtGeo.attributes.position as THREE.BufferAttribute;
     const skirtColors = new Float32Array(skirtPos.count * 3);
+    const halfTerrain = TERRAIN_SIZE / 2;
     for (let i = 0; i < skirtPos.count; i++) {
       const sx = skirtPos.getX(i);
       const sz = skirtPos.getZ(i);
       const dist = Math.sqrt(sx * sx + sz * sz);
-      // Curvature drop
+      // Strong curvature drop — makes the disc curve over the horizon
       const drop = (dist * dist) / (2 * 1737400);
-      skirtPos.setY(i, -drop - 2); // slightly below terrain edge
-      // Fade from regolith gray to black
-      const t = Math.max(0, (dist - skirtInner) / (skirtOuter - skirtInner));
-      const brightness = 0.22 * (1 - t * t); // quadratic fade
+      // Extra drop beyond terrain edge to push it below sightline
+      const beyondEdge = Math.max(0, dist - halfTerrain);
+      const extraDrop = beyondEdge * 0.08; // slope down aggressively
+      skirtPos.setY(i, -drop - extraDrop - 3);
+      // Color: match terrain gray near center, fade to pure black at edge
+      const t = Math.min(1, dist / skirtRadius);
+      const edgeFade = Math.max(0, dist - halfTerrain * 0.8) / (skirtRadius - halfTerrain * 0.8);
+      const brightness = 0.22 * Math.max(0, 1 - edgeFade * edgeFade);
       skirtColors[i * 3] = brightness * 1.03;
       skirtColors[i * 3 + 1] = brightness;
       skirtColors[i * 3 + 2] = brightness * 0.93;
@@ -1172,9 +1192,10 @@ export class LunarLanderEngine {
     skirtGeo.setAttribute('color', new THREE.BufferAttribute(skirtColors, 3));
     const skirtMat = new THREE.MeshBasicMaterial({
       vertexColors: true,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide, // only top face visible
     });
     const skirt = new THREE.Mesh(skirtGeo, skirtMat);
+    skirt.renderOrder = -1; // render behind terrain
     this.scene.add(skirt);
 
     // Landing zone markers
@@ -1964,7 +1985,7 @@ export class LunarLanderEngine {
     // Ground control callout when mothership is ~30% through (overhead area)
     if (!this.mothershipCalloutSpoken && p > 0.3) {
       this.mothershipCalloutSpoken = true;
-      this.speakCallout("Eagle, Houston... we're seeing something on radar we can't explain. Continue your descent.");
+      this.speakCallout("Eagle, Houston... we're seeing something on radar we can't explain. Probably just a weather balloon. Continue your descent. ...Right?");
     }
   }
 
@@ -2320,6 +2341,29 @@ export class LunarLanderEngine {
     this.updateCamera(dt);
     this.updateShadowCamera();
 
-    this.renderer.render(this.scene, this.camera);
+    // Update terrain shader uniforms
+    if (this.terrain && this.terrain.material instanceof THREE.ShaderMaterial) {
+      this.terrain.material.uniforms.cameraPos.value.copy(this.camera.position);
+      this.terrain.material.uniforms.time.value = performance.now() * 0.001;
+    }
+
+    // Engine bell red-hot glow proportional to throttle
+    if (this.engineBellMat) {
+      const t = this.lm.throttle;
+      if (t > 0.01 && this.lm.fuel > 0) {
+        this.engineBellMat.emissive.setRGB(0.8 * t, 0.15 * t, 0.02 * t);
+        this.engineBellMat.emissiveIntensity = t * 0.6;
+      } else {
+        this.engineBellMat.emissive.setRGB(0, 0, 0);
+        this.engineBellMat.emissiveIntensity = 0;
+      }
+    }
+
+    // Update Earth Fresnel view vector
+    if (this.earthGroupRef && this.earthGroupRef.userData.updateFresnel) {
+      this.earthGroupRef.userData.updateFresnel();
+    }
+
+    this.composer.render();
   };
 }
