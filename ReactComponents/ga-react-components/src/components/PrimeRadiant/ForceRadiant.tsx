@@ -19,7 +19,7 @@ import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
-import { createSolarSystem, updateSolarSystem, showPlanetLabel, getPlanetMeshes, startLiveCloudUpdates, loadArcGISOverlay, removeArcGISOverlay, getArcGISLayers, addLocationMarker, enableEarthAutoLOD, getCameraEarthTarget, loadFocusedPatch } from './SolarSystem';
+import { createSolarSystem, updateSolarSystem, showPlanetLabel, loadArcGISOverlay, removeArcGISOverlay, addLocationMarker, enableEarthAutoLOD } from './SolarSystem';
 import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
@@ -35,9 +35,9 @@ import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
 import { reactiveEngine } from './ReactiveEngine';
-import { startVisualCriticLoop, type CriticPhase } from './VisualCriticLoop';
+import { type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
-import { DemerzelCriticOverlay, type CriticState } from './DemerzelCriticOverlay';
+import { type CriticState } from './DemerzelCriticOverlay';
 import { BacklogPanel } from './BacklogPanel';
 import { AgentPanel } from './AgentPanel';
 import { SeldonDashboard } from './SeldonDashboard';
@@ -58,7 +58,6 @@ import { GodotScene } from './GodotScene';
 import { GisPanel } from './GisPanel';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
-import { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
 import './styles.css';
 
@@ -85,7 +84,7 @@ interface EdgePropagation {
 // ---------------------------------------------------------------------------
 const PR_ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // sha256('admin')
 
-function checkIsAdmin(): boolean {
+function _checkIsAdmin(): boolean {
   if (typeof window === 'undefined') return false;
   // localhost / 127.0.0.1 → always admin (single-user dev tool)
   const host = window.location.hostname;
@@ -638,8 +637,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
-  const [trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
-  const [criticState, setCriticState] = useState<CriticState>({
+  const [_trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
+  const [_criticState, setCriticState] = useState<CriticState>({
     phase: 'idle', result: null, history: [], lastAnalysis: null,
   });
 
@@ -1084,7 +1083,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ── Mobile/low-end detection — skip heavy resources upfront ──
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const isLowEnd = isMobile || navigator.hardwareConcurrency <= 4 || window.innerWidth < 768;
-    const pixelBudget = isLowEnd ? 0.5 : 1.0; // render at half resolution on mobile
     if (isLowEnd) {
       console.info(`[PrimeRadiant] Low-end mode: mobile=${isMobile}, cores=${navigator.hardwareConcurrency}, width=${window.innerWidth}`);
     }
