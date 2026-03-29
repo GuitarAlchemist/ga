@@ -2116,8 +2116,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
 
     // Double-click on a planet/moon → fly camera closer to it
+    // Special: double-click on Moon launches Lunar Lander simulation
     const onSolarDblClick = () => {
       if (!currentHoveredPlanet) return;
+
+      // Moon → launch Lunar Lander
+      if (currentHoveredPlanet === 'moon') {
+        setActivePanel('lunar');
+        return;
+      }
+
       const group = fg.scene().getObjectByName('sun')?.parent;
       if (!group) return;
 
@@ -2664,8 +2672,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         </div>
       )}
 
-      <BrainstormPanel />
-
       <ChatWidget
         selectedNode={selectedNode}
         onNavigateToPlanet={(planet) => {
@@ -2825,6 +2831,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             1500,
           );
         }}
+        onLaunchLunarLander={() => setActivePanel('lunar')}
         onLaunchGodot={() => {
           // Try WebSocket connection to Godot MCP
           try {
@@ -3023,6 +3030,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             cicd: CICDPanel,
             claude: ClaudeCodePanel,
             library: LibraryPanel,
+            brainstorm: BrainstormPanel,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);

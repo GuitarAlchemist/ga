@@ -1705,6 +1705,33 @@
   margin-right: 4px;
 }
 
+/* ─── Brainstorm Side Panel ("What's Next?") ─── */
+.brainstorm-side { padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.brainstorm-side__header { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #21262d; }
+.brainstorm-side__title { font-size: 12px; font-weight: 600; color: #e6edf3; font-family: 'JetBrains Mono', monospace; flex: 1; }
+.brainstorm-side__time { font-size: 9px; color: #484f58; font-family: 'JetBrains Mono', monospace; }
+.brainstorm-side__refresh { background: none; border: none; color: #8b949e; cursor: pointer; padding: 4px; border-radius: 4px; }
+.brainstorm-side__refresh:hover { color: #e6edf3; }
+.brainstorm-side__refresh:disabled { opacity: 0.4; }
+.brainstorm-side__auto { margin: 8px 12px 4px; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(79, 195, 247, 0.3); background: rgba(79, 195, 247, 0.08); color: #4FC3F7; font-size: 11px; font-family: 'JetBrains Mono', monospace; cursor: pointer; text-align: left; transition: background 0.15s; }
+.brainstorm-side__auto:hover { background: rgba(79, 195, 247, 0.15); }
+.brainstorm-side__auto:disabled { opacity: 0.5; cursor: default; }
+.brainstorm-side__input-row { padding: 4px 12px 8px; }
+.brainstorm-side__input { width: 100%; padding: 5px 8px; border-radius: 4px; border: 1px solid #30363d; background: rgba(22, 27, 34, 0.8); color: #e6edf3; font-size: 11px; font-family: inherit; box-sizing: border-box; }
+.brainstorm-side__input:focus { border-color: #4FC3F7; outline: none; }
+.brainstorm-side__results { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+.brainstorm-side__loading, .brainstorm-side__empty { text-align: center; font-size: 11px; color: #8b949e; padding: 16px 0; font-style: italic; }
+.brainstorm-side__group { margin-top: 8px; }
+.brainstorm-side__group-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+.brainstorm-side__card { padding: 6px 8px; margin-bottom: 4px; background: rgba(22, 27, 34, 0.6); border: 1px solid #21262d; border-left: 3px solid; border-radius: 4px; }
+.brainstorm-side__card-title { font-size: 11px; font-weight: 600; color: #e6edf3; margin-bottom: 2px; }
+.brainstorm-side__card-rationale { font-size: 10px; color: #8b949e; line-height: 1.4; }
+.brainstorm-side__card-footer { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.brainstorm-side__card-source { font-size: 9px; color: #6b7280; }
+.brainstorm-side__card-tensor { font-size: 8px; color: #FFD700; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); padding: 0 4px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
+.brainstorm-side__card-link { margin-left: auto; font-size: 9px; color: #4FC3F7; text-decoration: none; }
+.brainstorm-side__card-link:hover { text-decoration: underline; }
+
 .prime-radiant__tutorial-overlay {
   position: absolute;
   inset: 0;

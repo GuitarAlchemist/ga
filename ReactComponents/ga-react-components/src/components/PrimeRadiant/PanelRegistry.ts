@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm';
 export type PanelId = BuiltInPanelId | (string & {});
 
 export interface PanelDefinition {
@@ -105,6 +105,10 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('path', { key: 'p1', d: 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' }),
     h('line', { key: 'l1', x1: 2, y1: 12, x2: 22, y2: 12 }),
   ]),
+  brainstorm: svg([
+    h('path', { key: 'p1', d: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707' }),
+    h('path', { key: 'p2', d: 'M8.464 15.536a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' }),
+  ]),
   lunar: svg([
     h('path', { key: 'p1', d: 'M12 3a6 6 0 0 0 0 12 9 9 0 0 0 9-9' }),
     h('circle', { key: 'c1', cx: 9, cy: 8, r: 1, fill: 'currentColor', stroke: 'none' }),
@@ -193,6 +197,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side' },
   { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side' },
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side' },
+  { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side' },
   { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay' },
 ];
 
