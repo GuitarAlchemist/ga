@@ -50,6 +50,7 @@ import { ClaudeCodePanel } from './ClaudeCodePanel';
 import { LibraryPanel } from './LibraryPanel';
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
+import { LunarLander } from './LunarLander';
 import { LiveNotebook } from './LiveNotebook';
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
@@ -3013,7 +3014,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           <GisPanel managers={gisManagers} />
         )}
         {/* Simple side panels — registry-backed lookup */}
-        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot', 'gis'].includes(activePanel) && (() => {
+        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot', 'gis', 'lunar'].includes(activePanel) && (() => {
           const SIMPLE_PANELS: Record<string, React.FC> = {
             activity: ActivityPanel,
             backlog: BacklogPanel,
@@ -3052,6 +3053,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* LiveNotebook renders as full-screen overlay, outside side panel */}
       {activePanel === 'notebook' && (
         <LiveNotebook open={true} onClose={() => setActivePanel(null)} />
+      )}
+
+      {/* Lunar Lander renders as full-screen overlay, outside side panel */}
+      {activePanel === 'lunar' && (
+        <LunarLander open={true} onClose={() => setActivePanel(null)} />
       )}
 
       {/* Godot 3D fullscreen overlay — independent of panel state */}
