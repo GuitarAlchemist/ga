@@ -1,7 +1,7 @@
 // src/components/PrimeRadiant/PlanetNav.tsx
 // Collapsible planet navigation + GIS layer toggles — left-side overlay
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,6 +42,20 @@ const GIS_LAYERS = [
 // ---------------------------------------------------------------------------
 export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoadArcGIS, onRemoveArcGIS, onResetView, onLaunchGodot, onLaunchLunarLander }) => {
   const [expanded, setExpanded] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close panel when clicking outside
+  useEffect(() => {
+    if (!expanded) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    };
+    // Delay to avoid closing on the toggle click itself
+    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 50);
+    return () => { clearTimeout(timer); document.removeEventListener('mousedown', handler); };
+  }, [expanded]);
   const [showGIS, setShowGIS] = useState(false);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [gisLoading, setGisLoading] = useState<string | null>(null);
@@ -82,7 +96,7 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
 
       {/* Expanded planet list */}
       {expanded && (
-        <div className="planet-nav__menu">
+        <div className="planet-nav__menu" ref={menuRef}>
           <div className="planet-nav__title">Solar System</div>
           {onResetView && (
             <button
@@ -100,20 +114,30 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
             </button>
           )}
           {PLANETS.map((p) => (
-            <button
-              key={p.target}
-              className="planet-nav__item"
-              onClick={() => handlePlanet(p.target)}
-              title={`Navigate to ${p.name}`}
-            >
-              <span
-                className="planet-nav__dot"
-                style={{ color: p.color ?? '#FFD700' }}
+            <div key={p.target} className="planet-nav__item-row">
+              <button
+                className="planet-nav__item"
+                onClick={() => handlePlanet(p.target)}
+                title={`Navigate to ${p.name}`}
               >
-                {p.icon}
-              </span>
-              <span className="planet-nav__name">{p.name}</span>
-            </button>
+                <span
+                  className="planet-nav__dot"
+                  style={{ color: p.color ?? '#FFD700' }}
+                >
+                  {p.icon}
+                </span>
+                <span className="planet-nav__name">{p.name}</span>
+              </button>
+              {p.target === 'moon' && onLaunchLunarLander && (
+                <button
+                  className="planet-nav__play-btn"
+                  onClick={(e) => { e.stopPropagation(); onLaunchLunarLander(); }}
+                  title="Land on the Moon — Apollo LM Simulator"
+                >
+                  ▶
+                </button>
+              )}
+            </div>
           ))}
 
           {/* GIS layers sub-section */}

@@ -2228,11 +2228,16 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
+.planet-nav__item-row {
+  display: flex;
+  align-items: center;
+}
+
 .planet-nav__item {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  flex: 1;
   padding: 5px 12px;
   background: none;
   border: none;
@@ -2246,6 +2251,24 @@
 .planet-nav__item:hover {
   background: rgba(255, 215, 0, 0.08);
   color: #e6edf3;
+}
+
+.planet-nav__play-btn {
+  background: rgba(255, 170, 0, 0.12);
+  border: 1px solid rgba(255, 170, 0, 0.2);
+  border-radius: 4px;
+  color: #ffaa00;
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+
+.planet-nav__play-btn:hover {
+  background: rgba(255, 170, 0, 0.25);
+  color: #ffcc44;
 }
 
 .planet-nav__dot {
