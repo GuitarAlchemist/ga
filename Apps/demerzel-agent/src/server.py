@@ -2,17 +2,26 @@
 
 Run with:
   cd Apps/demerzel-agent
-  uvicorn src.server:app --host 0.0.0.0 --port 8200
+  DEMERZEL_API_KEY=your-secret-key uvicorn src.server:app --host 0.0.0.0 --port 8200
+
+Security: All endpoints require Authorization: Bearer <DEMERZEL_API_KEY> header.
+Agent discovery (GET /agents) is public. All run endpoints require auth.
 """
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncGenerator
 
 from acp_sdk.models import Message, Metadata, Capability
 from acp_sdk.server import RunYield, RunYieldResume, agent, create_app
 
 from .agents import governance_agent, pipeline_agent, epistemic_agent, whats_next_agent
+
+# ---------------------------------------------------------------------------
+# API Key — required for all mutation/run endpoints
+# ---------------------------------------------------------------------------
+DEMERZEL_API_KEY = os.environ.get("DEMERZEL_API_KEY", "")
 
 # ---------------------------------------------------------------------------
 # Agent 1: Governance
@@ -135,8 +144,67 @@ app = create_app(
 )
 
 
+# ---------------------------------------------------------------------------
+# Auth middleware — protect run endpoints with API key
+# ---------------------------------------------------------------------------
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+
+class ApiKeyMiddleware(BaseHTTPMiddleware):
+    """Require Bearer token for all /runs endpoints. Discovery (/agents) is public."""
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        # Allow agent discovery without auth (ACP standard)
+        if request.url.path.startswith("/agents") or request.url.path in ("/", "/docs", "/openapi.json"):
+            return await call_next(request)
+
+        # Allow health checks
+        if request.method == "GET" and request.url.path == "/health":
+            return await call_next(request)
+
+        # Require API key for everything else (runs, sessions)
+        if not DEMERZEL_API_KEY:
+            # No key configured — allow localhost only
+            client_host = request.client.host if request.client else ""
+            if client_host in ("127.0.0.1", "::1", "localhost"):
+                return await call_next(request)
+            return JSONResponse(
+                status_code=401,
+                content={"error": "DEMERZEL_API_KEY not configured and request is not from localhost"},
+            )
+
+        auth = request.headers.get("authorization", "")
+        if auth == f"Bearer {DEMERZEL_API_KEY}":
+            return await call_next(request)
+
+        # Also accept X-API-Key header
+        api_key = request.headers.get("x-api-key", "")
+        if api_key == DEMERZEL_API_KEY:
+            return await call_next(request)
+
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Invalid or missing API key. Use Authorization: Bearer <key> or X-API-Key: <key>"},
+        )
+
+
+app.add_middleware(ApiKeyMiddleware)
+
+
 def main():
     import uvicorn
+
+    if not DEMERZEL_API_KEY:
+        import warnings
+        warnings.warn(
+            "DEMERZEL_API_KEY not set — server allows localhost access only. "
+            "Set DEMERZEL_API_KEY env var for remote access.",
+            stacklevel=1,
+        )
+
     uvicorn.run("src.server:app", host="0.0.0.0", port=8200, reload=True)
 
 
