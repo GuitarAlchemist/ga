@@ -1731,6 +1731,48 @@
 .brainstorm-side__card-tensor { font-size: 8px; color: #FFD700; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); padding: 0 4px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
 .brainstorm-side__card-link { margin-left: auto; font-size: 9px; color: #4FC3F7; text-decoration: none; }
 .brainstorm-side__card-link:hover { text-decoration: underline; }
+.brainstorm-side__card--active { border-color: rgba(79, 195, 247, 0.3); background: rgba(79, 195, 247, 0.04); }
+
+/* Actions row */
+.brainstorm-side__actions { display: flex; gap: 4px; padding: 8px 12px 4px; }
+.brainstorm-side__auto { flex: 1; }
+.brainstorm-side__autopilot {
+  padding: 8px 12px; border-radius: 6px;
+  border: 1px solid rgba(51, 204, 102, 0.3);
+  background: rgba(51, 204, 102, 0.08);
+  color: #33CC66; font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer; transition: background 0.15s; white-space: nowrap;
+}
+.brainstorm-side__autopilot:hover { background: rgba(51, 204, 102, 0.15); }
+.brainstorm-side__autopilot:disabled { opacity: 0.4; cursor: default; }
+
+/* Pipeline stage buttons */
+.brainstorm-side__pipeline {
+  display: flex; gap: 2px; margin-top: 6px; flex-wrap: wrap;
+}
+.brainstorm-side__stage {
+  display: flex; align-items: center; gap: 2px;
+  padding: 2px 6px; border-radius: 3px;
+  border: 1px solid #21262d;
+  background: rgba(22, 27, 34, 0.6);
+  color: #8b949e; font-size: 9px;
+  cursor: pointer; transition: all 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+}
+.brainstorm-side__stage:hover { background: rgba(48, 54, 61, 0.8); color: #e6edf3; border-color: var(--stage-color, #30363d); }
+.brainstorm-side__stage--active { border-color: var(--stage-color, #4FC3F7); color: var(--stage-color, #4FC3F7); animation: stage-pulse 1s ease-in-out infinite; }
+.brainstorm-side__stage--done { color: #33CC66; border-color: rgba(51, 204, 102, 0.3); }
+.brainstorm-side__stage--auto { border-color: rgba(51, 204, 102, 0.3); color: #33CC66; }
+.brainstorm-side__stage--auto:hover { background: rgba(51, 204, 102, 0.1); }
+.brainstorm-side__stage:disabled { opacity: 0.5; cursor: default; }
+.brainstorm-side__stage-label { font-size: 8px; }
+@keyframes stage-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* Pipeline log */
+.brainstorm-side__log { margin-top: 6px; padding: 4px 6px; background: rgba(13, 17, 23, 0.8); border-radius: 4px; border: 1px solid #21262d; }
+.brainstorm-side__log-line { font-size: 9px; color: #8b949e; line-height: 1.5; font-family: 'JetBrains Mono', monospace; }
+.brainstorm-side__log-done { font-size: 9px; color: #33CC66; font-weight: 600; margin-top: 2px; }
 
 .prime-radiant__tutorial-overlay {
   position: absolute;
