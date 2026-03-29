@@ -11,11 +11,32 @@ import React, { useSyncExternalStore } from 'react';
 export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence';
 export type PanelId = BuiltInPanelId | (string & {});
 
+// ---------------------------------------------------------------------------
+// Panel groups — ordered sections in the IconRail
+// ---------------------------------------------------------------------------
+
+export type PanelGroupId = 'governance' | 'agents' | 'knowledge' | 'viz' | 'ops';
+
+export interface PanelGroupDef {
+  id: PanelGroupId;
+  label: string;
+  order: number;
+}
+
+export const PANEL_GROUPS: PanelGroupDef[] = [
+  { id: 'governance', label: 'Gov',       order: 0 },
+  { id: 'agents',     label: 'Agents',    order: 1 },
+  { id: 'knowledge',  label: 'Knowledge', order: 2 },
+  { id: 'viz',        label: 'Viz',       order: 3 },
+  { id: 'ops',        label: 'Ops',       order: 4 },
+];
+
 export interface PanelDefinition {
   id: string;
   label: string;
   icon: string;            // ICON_CATALOG key
   renderMode: 'side' | 'overlay';
+  group?: PanelGroupId;    // rail grouping
   layout?: string;
   source?: string;
   showFields?: string[];
@@ -189,23 +210,28 @@ export function usePanelRegistry(): PanelRegistration[] {
 // ---------------------------------------------------------------------------
 
 const BUILTIN_PANELS: PanelDefinition[] = [
-  { id: 'activity',   label: 'Activity',      icon: 'activity',   renderMode: 'side' },
-  { id: 'backlog',    label: 'Backlog',        icon: 'backlog',    renderMode: 'side' },
-  { id: 'agent',      label: 'Agents',         icon: 'agent',      renderMode: 'side' },
-  { id: 'seldon',     label: 'Seldon',         icon: 'seldon',     renderMode: 'side' },
-  { id: 'llm',        label: 'LLM',            icon: 'llm',        renderMode: 'side' },
-  { id: 'detail',     label: 'Detail',         icon: 'detail',     renderMode: 'side' },
-  { id: 'algedonic',  label: 'Signals',        icon: 'algedonic',  renderMode: 'side' },
-  { id: 'cicd',       label: 'CI/CD',          icon: 'cicd',       renderMode: 'side' },
-  { id: 'university', label: 'University',     icon: 'university', renderMode: 'overlay' },
-  { id: 'claude',     label: 'Claude Code',    icon: 'claude',     renderMode: 'side' },
-  { id: 'notebook',   label: 'Live Notebook',  icon: 'notebook',   renderMode: 'overlay' },
-  { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side' },
-  { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side' },
-  { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side' },
-  { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side' },
-  { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay' },
-  { id: 'presence',   label: 'Presence',        icon: 'presence',   renderMode: 'side' },
+  // ── Governance ──
+  { id: 'activity',   label: 'Activity',      icon: 'activity',   renderMode: 'side',    group: 'governance' },
+  { id: 'algedonic',  label: 'Signals',        icon: 'algedonic',  renderMode: 'side',    group: 'governance' },
+  { id: 'detail',     label: 'Detail',         icon: 'detail',     renderMode: 'side',    group: 'governance' },
+  { id: 'backlog',    label: 'Backlog',        icon: 'backlog',    renderMode: 'side',    group: 'governance' },
+  // ── Agents ──
+  { id: 'agent',      label: 'Agents',         icon: 'agent',      renderMode: 'side',    group: 'agents' },
+  { id: 'seldon',     label: 'Seldon',         icon: 'seldon',     renderMode: 'side',    group: 'agents' },
+  { id: 'llm',        label: 'LLM',            icon: 'llm',        renderMode: 'side',    group: 'agents' },
+  { id: 'claude',     label: 'Claude Code',    icon: 'claude',     renderMode: 'side',    group: 'agents' },
+  { id: 'presence',   label: 'Presence',        icon: 'presence',   renderMode: 'side',    group: 'agents' },
+  // ── Knowledge ──
+  { id: 'university', label: 'University',     icon: 'university', renderMode: 'overlay', group: 'knowledge' },
+  { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side',    group: 'knowledge' },
+  { id: 'notebook',   label: 'Live Notebook',  icon: 'notebook',   renderMode: 'overlay', group: 'knowledge' },
+  { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side',    group: 'knowledge' },
+  // ── Visualization ──
+  { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side',    group: 'viz' },
+  { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side',    group: 'viz' },
+  { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay', group: 'viz' },
+  // ── Ops ──
+  { id: 'cicd',       label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
 ];
 
 for (const def of BUILTIN_PANELS) {
