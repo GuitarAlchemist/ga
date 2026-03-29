@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apollo Lunar Roving Vehicle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #000; font-family: 'Courier New', monospace;
+    user-select: none; -webkit-user-select: none;
+  }
+  #canvas-container {
+    width: 100%; height: 100%;
+    position: absolute; top: 0; left: 0;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* START OVERLAY */
+  #start-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, rgba(20,15,5,0.92) 0%, rgba(0,0,0,0.97) 80%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; cursor: pointer;
+  }
+  #start-overlay .logo-line {
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, #d4a017, transparent);
+    margin: 12px 0;
+  }
+  #start-overlay h1 {
+    color: #d4a017; font-size: 42px; letter-spacing: 10px;
+    text-shadow: 0 0 30px rgba(212,160,23,0.4);
+    font-weight: 300;
+  }
+  #start-overlay h2 {
+    color: #a08020; font-size: 14px; letter-spacing: 6px;
+    font-weight: 300; margin-top: 4px;
+  }
+  #start-overlay .start-btn {
+    color: #d4a017; font-size: 20px; border: 1px solid rgba(212,160,23,0.5);
+    padding: 14px 50px; letter-spacing: 6px; margin-top: 30px;
+    animation: pulse 2.5s ease-in-out infinite;
+    transition: border-color 0.3s, text-shadow 0.3s;
+  }
+  #start-overlay .start-btn:hover {
+    border-color: #d4a017;
+    text-shadow: 0 0 20px rgba(212,160,23,0.6);
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  #start-overlay .controls-preview {
+    color: #665530; font-size: 11px; margin-top: 40px; text-align: center;
+    line-height: 2.2; letter-spacing: 2px;
+  }
+  #start-overlay .mission-info {
+    color: #554422; font-size: 10px; margin-top: 20px; text-align: center;
+    line-height: 1.8; letter-spacing: 1px;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10; display: none;
+  }
+  .hud-panel {
+    position: absolute; padding: 10px 14px;
+    background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(212,160,23,0.25);
+    color: #d4a017; font-size: 12px; line-height: 1.7;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(212,160,23,0.25);
+    border-radius: 2px;
+    backdrop-filter: blur(2px);
+  }
+  .hud-panel .label {
+    color: #887030; font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .hud-panel .value {
+    color: #d4a017; font-size: 15px; font-weight: bold;
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-panel .value.warn { color: #ff4444; text-shadow: 0 0 8px rgba(255,68,68,0.4); }
+  .hud-panel .value.caution { color: #ffaa22; }
+  .hud-panel .value.safe { color: #44ff44; text-shadow: 0 0 8px rgba(68,255,68,0.3); }
+
+  #hud-left { top: 20px; left: 20px; min-width: 180px; }
+  #hud-right { top: 20px; right: 20px; min-width: 180px; text-align: right; }
+  #hud-bottom { bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 280px; }
+
+  /* O2 bar */
+  .o2-bar-outer {
+    width: 100%; height: 8px; background: rgba(212,160,23,0.15);
+    border: 1px solid rgba(212,160,23,0.3); margin-top: 4px;
+  }
+  .o2-bar-inner {
+    height: 100%; background: #d4a017; transition: width 0.5s linear;
+  }
+  .o2-bar-inner.low { background: #ff4444; }
+  .o2-bar-inner.caution { background: #ffaa22; }
+
+  /* Minimap */
+  #minimap {
+    position: absolute; top: 20px; right: 220px;
+    width: 160px; height: 160px;
+    border: 1px solid rgba(212,160,23,0.3);
+    background: rgba(0,0,0,0.75);
+    border-radius: 2px;
+  }
+  #minimap canvas {
+    width: 100%; height: 100%;
+  }
+
+  /* Message overlay */
+  #message-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: #d4a017; font-size: 28px; letter-spacing: 6px;
+    text-shadow: 0 0 20px rgba(212,160,23,0.5);
+    text-align: center; display: none; z-index: 20;
+    pointer-events: none;
+  }
+  #message-overlay .sub {
+    font-size: 14px; letter-spacing: 3px; margin-top: 10px;
+    color: #887030;
+  }
+
+  /* End screen */
+  #end-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    z-index: 50;
+  }
+  #end-screen h1 {
+    color: #d4a017; font-size: 36px; letter-spacing: 8px; font-weight: 300;
+  }
+  #end-screen .stats {
+    color: #a08020; font-size: 14px; letter-spacing: 2px;
+    margin-top: 20px; line-height: 2.2; text-align: center;
+  }
+  #end-screen .restart-btn {
+    color: #d4a017; font-size: 16px; border: 1px solid rgba(212,160,23,0.5);
+    padding: 12px 40px; letter-spacing: 4px; margin-top: 30px;
+    cursor: pointer; transition: border-color 0.3s;
+  }
+  #end-screen .restart-btn:hover {
+    border-color: #d4a017; text-shadow: 0 0 15px rgba(212,160,23,0.5);
+  }
+
+  /* Pickup indicator */
+  #pickup-indicator {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    color: #44aaff; font-size: 16px; letter-spacing: 3px;
+    text-shadow: 0 0 12px rgba(68,170,255,0.5);
+    display: none; pointer-events: none; z-index: 15;
+  }
+
+  #fps-counter {
+    position: absolute; bottom: 8px; right: 8px;
+    color: #554422; font-size: 10px; letter-spacing: 1px;
+    z-index: 11; pointer-events: none;
+  }
+
+  /* Help overlay */
+  #help-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9); border: 1px solid rgba(212,160,23,0.3);
+    padding: 30px 40px; z-index: 30; display: none;
+    color: #d4a017; font-size: 12px; line-height: 2.2;
+    letter-spacing: 1px; min-width: 340px;
+  }
+  #help-overlay .key {
+    display: inline-block; min-width: 100px; color: #ffcc44;
+    letter-spacing: 2px;
+  }
+  #help-overlay h3 {
+    color: #887030; font-size: 10px; letter-spacing: 3px;
+    margin: 8px 0 4px; border-bottom: 1px solid rgba(212,160,23,0.15);
+    padding-bottom: 4px;
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-left" class="hud-panel">
+    <div><span class="label">SPEED</span></div>
+    <div><span class="value" id="hud-speed">0.0</span> <span style="font-size:10px">KM/H</span></div>
+    <div style="margin-top:6px"><span class="label">HEADING</span></div>
+    <div><span class="value" id="hud-heading">N 000</span></div>
+    <div style="margin-top:6px"><span class="label">DISTANCE FROM LM</span></div>
+    <div><span class="value" id="hud-distance">0</span> <span style="font-size:10px">M</span></div>
+    <div style="margin-top:6px"><span class="label">ODOMETER</span></div>
+    <div><span class="value" id="hud-odometer">0.0</span> <span style="font-size:10px">KM</span></div>
+  </div>
+  <div id="hud-right" class="hud-panel">
+    <div><span class="label">SAMPLES</span></div>
+    <div><span class="value" id="hud-samples">0 / 10</span></div>
+    <div style="margin-top:6px"><span class="label">OXYGEN</span></div>
+    <div><span class="value" id="hud-o2-time">15:00</span></div>
+    <div class="o2-bar-outer"><div class="o2-bar-inner" id="hud-o2-bar" style="width:100%"></div></div>
+    <div style="margin-top:6px"><span class="label">CAMERA</span></div>
+    <div><span class="value" id="hud-camera" style="font-size:11px">CHASE</span></div>
+  </div>
+  <div id="minimap"><canvas id="minimap-canvas" width="160" height="160"></canvas></div>
+</div>
+
+<div id="pickup-indicator">PRESS E TO COLLECT SAMPLE</div>
+
+<div id="message-overlay">
+  <div id="msg-text"></div>
+  <div class="sub" id="msg-sub"></div>
+</div>
+
+<div id="end-screen">
+  <h1 id="end-title">MISSION COMPLETE</h1>
+  <div class="stats" id="end-stats"></div>
+  <div class="restart-btn" onclick="location.reload()">RESTART MISSION</div>
+</div>
+
+<div id="help-overlay">
+  <h3>DRIVING</h3>
+  <div><span class="key">W / UP</span> DRIVE FORWARD</div>
+  <div><span class="key">S / DOWN</span> REVERSE</div>
+  <div><span class="key">A / LEFT</span> STEER LEFT</div>
+  <div><span class="key">D / RIGHT</span> STEER RIGHT</div>
+  <div><span class="key">SPACE</span> BRAKE</div>
+  <h3>ACTIONS</h3>
+  <div><span class="key">E</span> COLLECT SAMPLE</div>
+  <h3>CAMERA</h3>
+  <div><span class="key">C</span> CYCLE CAMERA</div>
+  <h3>SYSTEM</h3>
+  <div><span class="key">H</span> TOGGLE HELP</div>
+</div>
+
+<!-- START OVERLAY -->
+<div id="start-overlay">
+  <div class="logo-line"></div>
+  <h1>LUNAR ROVER</h1>
+  <h2>APOLLO ROVING VEHICLE</h2>
+  <div class="logo-line"></div>
+  <div class="start-btn">BEGIN EVA</div>
+  <div class="controls-preview">
+    W A S D — DRIVE &nbsp;&bull;&nbsp; E — COLLECT &nbsp;&bull;&nbsp; C — CAMERA<br>
+    SPACE — BRAKE &nbsp;&bull;&nbsp; H — HELP
+  </div>
+  <div class="mission-info">
+    COLLECT 10 ROCK SAMPLES AND RETURN TO THE LM<br>
+    OXYGEN SUPPLY: 15 MINUTES &nbsp;&bull;&nbsp; MAX SPEED: 13 KM/H
+  </div>
+</div>
+
+<div id="fps-counter">-- FPS</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ================================================================
+//  CONSTANTS
+// ================================================================
+const MOON_GRAVITY   = 1.625;
+const PHYSICS_DT     = 1 / 120;
+const TERRAIN_SIZE   = 2000;
+const TERRAIN_SEGS   = 256;
+const STAR_COUNT     = 8000;
+const MAX_SPEED_MS   = 13 / 3.6;    // 13 km/h in m/s
+const ACCEL_FORCE    = 4.0;         // m/s^2
+const BRAKE_FORCE    = 6.0;
+const STEER_RATE     = 1.8;         // rad/s
+const DRAG_COEFF     = 0.3;
+const SAMPLE_COUNT   = 10;
+const SAMPLE_RADIUS  = 5;           // pickup distance
+const O2_TOTAL       = 15 * 60;     // 15 minutes in seconds
+const LM_RETURN_DIST = 12;          // distance to count as "returned"
+const CAMERA_MODES   = ['CHASE', 'FIRST_PERSON', 'ORBIT'];
+const DUST_COUNT     = 200;
+
+// ================================================================
+//  NOISE FUNCTIONS (same as lander)
+// ================================================================
+function hash2D(ix, iy) {
+  let n = ix * 374761393 + iy * 668265263;
+  n = (n ^ (n >> 13)) * 1274126177;
+  n = n ^ (n >> 16);
+  return (n & 0x7fffffff) / 0x7fffffff;
+}
+
+function smoothNoise2D(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const v00 = hash2D(ix, iy), v10 = hash2D(ix+1, iy);
+  const v01 = hash2D(ix, iy+1), v11 = hash2D(ix+1, iy+1);
+  return (v00 + (v10-v00)*ux) + ((v01 + (v11-v01)*ux) - (v00 + (v10-v00)*ux)) * uy;
+}
+
+function fbm(x, y, octaves, lac, gain) {
+  let val = 0, amp = 1, freq = 1, total = 0;
+  for (let i = 0; i < octaves; i++) {
+    val += smoothNoise2D(x*freq, y*freq) * amp;
+    total += amp; amp *= gain; freq *= lac;
+  }
+  return val / total;
+}
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge1) / (edge0 - edge1)));
+  return t * t * (3 - 2 * t);
+}
+
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ================================================================
+//  GLOBAL STATE
+// ================================================================
+let scene, camera, renderer, orbitControls;
+let terrain, terrainGeom;
+let shadowLight;
+let clock;
+let audioCtx, motorOsc, motorGain, crunchNoise, crunchGain;
+
+// Rover state
+const roverState = {
+  position: new THREE.Vector3(8, 0, 8),
+  velocity: new THREE.Vector3(),
+  heading: 0,
+  speed: 0,
+  steerAngle: 0,
+  wheelRotation: 0,
+  grounded: true,
+  verticalVel: 0,
+};
+
+// Game state
+const gameState = {
+  started: false,
+  ended: false,
+  o2Remaining: O2_TOTAL,
+  samplesCollected: 0,
+  odometer: 0,
+  maxDistFromLM: 0,
+  pickingUp: false,
+  pickupTimer: 0,
+  pickupTarget: null,
+  elapsedTime: 0,
+  outcome: null, // 'win', 'partial', 'lose'
+};
+
+// Camera state
+let cameraMode = 0; // index into CAMERA_MODES
+const chaseCamOffset = new THREE.Vector3(0, 4, -10);
+const chaseCamLookOffset = new THREE.Vector3(0, 1.5, 5);
+
+// Input
+const keys = {};
+
+// Objects
+let roverGroup, wheelMeshes = [], lmGroup;
+let sampleMarkers = [];
+let dustParticles, dustGeo;
+
+// Raycasting
+const altRay = new THREE.Raycaster();
+const downVec = new THREE.Vector3(0, -1, 0);
+
+// ================================================================
+//  INIT
+// ================================================================
+function init() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.00015);
+
+  camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.5, 30000);
+  camera.position.set(0, 8, -15);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  orbitControls = new OrbitControls(camera, renderer.domElement);
+  orbitControls.enableDamping = true;
+  orbitControls.dampingFactor = 0.08;
+  orbitControls.enabled = false;
+
+  // Lighting
+  shadowLight = new THREE.DirectionalLight(0xfff8e8, 3.0);
+  shadowLight.position.set(300, 180, -400);
+  shadowLight.castShadow = true;
+  shadowLight.shadow.mapSize.set(2048, 2048);
+  shadowLight.shadow.camera.left = -100;
+  shadowLight.shadow.camera.right = 100;
+  shadowLight.shadow.camera.top = 100;
+  shadowLight.shadow.camera.bottom = -100;
+  shadowLight.shadow.camera.near = 50;
+  shadowLight.shadow.camera.far = 1200;
+  shadowLight.shadow.bias = -0.0005;
+  shadowLight.shadow.normalBias = 0.02;
+  scene.add(shadowLight);
+  scene.add(shadowLight.target);
+
+  scene.add(new THREE.AmbientLight(0x334466, 0.12));
+  scene.add(new THREE.HemisphereLight(0x444466, 0x111111, 0.08));
+
+  buildStarfield();
+  buildEarth();
+  buildTerrain();
+  buildLM();
+  buildRover();
+  placeSamples();
+  buildDustSystem();
+
+  clock = new THREE.Clock(false);
+
+  // Input listeners
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'KeyH') toggleHelp();
+    if (e.code === 'KeyC' && gameState.started && !gameState.ended) cycleCamera();
+    if (e.code === 'KeyE' && gameState.started && !gameState.ended) tryPickup();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  window.addEventListener('resize', onResize);
+
+  // Start overlay
+  document.getElementById('start-overlay').addEventListener('click', startGame);
+
+  // Pre-render
+  renderer.render(scene, camera);
+
+  // PostMessage ready
+  window.parent.postMessage({ type: 'rover:ready' }, '*');
+
+  // Render loop
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  document.getElementById('start-overlay').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  gameState.started = true;
+  clock.start();
+  initAudio();
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ================================================================
+//  STARFIELD
+// ================================================================
+function buildStarfield() {
+  const positions = new Float32Array(STAR_COUNT * 3);
+  const colors = new Float32Array(STAR_COUNT * 3);
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 20000 + Math.random() * 5000;
+    const i3 = i * 3;
+    positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+    positions[i3+1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[i3+2] = r * Math.cos(phi);
+    const brightness = 0.3 + Math.random() * 0.7;
+    const temp = Math.random();
+    if (temp < 0.08) {
+      colors[i3] = brightness*0.7; colors[i3+1] = brightness*0.8; colors[i3+2] = brightness;
+    } else if (temp < 0.15) {
+      colors[i3] = brightness; colors[i3+1] = brightness*0.6; colors[i3+2] = brightness*0.3;
+    } else {
+      colors[i3] = brightness; colors[i3+1] = brightness*0.98; colors[i3+2] = brightness*0.95;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 1.5, vertexColors: true, sizeAttenuation: false, transparent: true, opacity: 0.85,
+  })));
+}
+
+// ================================================================
+//  EARTH
+// ================================================================
+function buildEarth() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(
+    new THREE.SphereGeometry(150, 48, 48),
+    new THREE.MeshPhongMaterial({ color: 0x2244aa, emissive: 0x112244, emissiveIntensity: 0.4, shininess: 40 })
+  ));
+  g.add(new THREE.Mesh(
+    new THREE.SphereGeometry(156, 48, 48),
+    new THREE.MeshBasicMaterial({ color: 0x6699ff, transparent: true, opacity: 0.12, side: THREE.BackSide })
+  ));
+  const dist = 16000;
+  const elev = Math.sin(30 * Math.PI/180) * dist;
+  const horiz = Math.cos(30 * Math.PI/180) * dist;
+  g.position.set(horiz * 0.7, elev, -horiz * 0.7);
+  scene.add(g);
+}
+
+// ================================================================
+//  TERRAIN
+// ================================================================
+let craterList = [];
+
+function buildTerrain() {
+  terrainGeom = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
+  terrainGeom.rotateX(-Math.PI / 2);
+  const pos = terrainGeom.attributes.position;
+  const vCount = pos.count;
+
+  const rng = mulberry32(42);
+  craterList = [];
+  for (let i = 0; i < 80; i++) {
+    const cx = (rng() - 0.5) * TERRAIN_SIZE * 0.9;
+    const cz = (rng() - 0.5) * TERRAIN_SIZE * 0.9;
+    if (Math.sqrt(cx*cx + cz*cz) < 30) continue;
+    craterList.push({
+      x: cx, z: cz,
+      radius: 6 + rng() * 60,
+      depth: 1.5 + rng() * 14,
+      rimHeight: 0.2 + rng() * 0.4,
+    });
+  }
+
+  for (let i = 0; i < vCount; i++) {
+    const vx = pos.getX(i), vz = pos.getZ(i);
+    let h = 0;
+    h += fbm(vx*0.002, vz*0.002, 5, 2.0, 0.5) * 50 - 25;
+    h += fbm(vx*0.008, vz*0.008, 4, 2.2, 0.45) * 10;
+    h += fbm(vx*0.03, vz*0.03, 3, 2.0, 0.5) * 3;
+    h += fbm(vx*0.1, vz*0.1, 2, 2.0, 0.5) * 0.8;
+
+    for (const c of craterList) {
+      const dx = vx - c.x, dz = vz - c.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      const r = c.radius;
+      if (dist < r * 1.4) {
+        const t = dist / r;
+        if (t < 1.0) {
+          h -= c.depth * (1 - t*t);
+          if (t < 0.3) h += c.depth * 0.15 * (1 - t/0.3);
+        } else if (t < 1.4) {
+          const rimT = (t - 1.0) / 0.4;
+          h += c.depth * c.rimHeight * Math.pow(1 - rimT, 2);
+        }
+      }
+    }
+
+    // Flatten LM zone
+    const lzDist = Math.sqrt(vx*vx + vz*vz);
+    if (lzDist < 40) {
+      const blend = smoothstep(40, 15, lzDist);
+      h = h * (1 - blend);
+    }
+
+    pos.setY(i, h);
+  }
+
+  terrainGeom.computeVertexNormals();
+
+  // Vertex colors
+  const vertColors = new Float32Array(vCount * 3);
+  const normals = terrainGeom.attributes.normal;
+  for (let i = 0; i < vCount; i++) {
+    const vx = pos.getX(i), vy = pos.getY(i), vz = pos.getZ(i);
+    const ny = normals.getY(i);
+    const slope = 1 - ny;
+    const n1 = fbm(vx*0.015, vz*0.015, 2, 2.0, 0.5);
+    const n2 = fbm(vx*0.05, vz*0.05, 2, 2.0, 0.5);
+    let base = 0.22 + n1*0.12 + n2*0.05;
+    base += vy * 0.002;
+    base -= slope * 0.2;
+    if (vy < -5) base -= 0.03;
+    base = Math.max(0.08, Math.min(0.5, base));
+    vertColors[i*3] = base * 1.03;
+    vertColors[i*3+1] = base;
+    vertColors[i*3+2] = base * 0.93;
+  }
+  terrainGeom.setAttribute('color', new THREE.BufferAttribute(vertColors, 3));
+
+  terrain = new THREE.Mesh(terrainGeom, new THREE.MeshStandardMaterial({
+    vertexColors: true, roughness: 0.95, metalness: 0.0,
+  }));
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+}
+
+function sampleTerrainHeight(x, z) {
+  altRay.set(new THREE.Vector3(x, 500, z), downVec);
+  altRay.far = 1000;
+  const hits = altRay.intersectObject(terrain, false);
+  return hits.length > 0 ? hits[0].point.y : 0;
+}
+
+function sampleTerrainNormal(x, z) {
+  altRay.set(new THREE.Vector3(x, 500, z), downVec);
+  altRay.far = 1000;
+  const hits = altRay.intersectObject(terrain, false);
+  return hits.length > 0 ? hits[0].face.normal.clone() : new THREE.Vector3(0, 1, 0);
+}
+
+// ================================================================
+//  LM (DESCENT STAGE ONLY)
+// ================================================================
+function buildLM() {
+  lmGroup = new THREE.Group();
+
+  const kaptonGold = new THREE.MeshStandardMaterial({
+    color: 0xc8a832, roughness: 0.55, metalness: 0.75,
+    emissive: 0x1a1200, emissiveIntensity: 0.08,
+  });
+  const silverMetal = new THREE.MeshStandardMaterial({
+    color: 0xaaaaaa, roughness: 0.3, metalness: 0.8,
+  });
+  const legMat = new THREE.MeshStandardMaterial({
+    color: 0xbbbbbb, roughness: 0.45, metalness: 0.7,
+  });
+  const padMat = new THREE.MeshStandardMaterial({
+    color: 0x999999, roughness: 0.7, metalness: 0.4,
+  });
+
+  // Octagonal body
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 1.7, 8), kaptonGold);
+  body.castShadow = true;
+  lmGroup.add(body);
+
+  // Rims
+  lmGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.08, 8), silverMetal).translateY(0.85));
+  lmGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 0.08, 8), silverMetal).translateY(-0.85));
+
+  // Lower skirt
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 1.7, 0.7, 8), kaptonGold);
+  skirt.position.y = -1.2;
+  lmGroup.add(skirt);
+
+  // Landing legs (4)
+  for (let i = 0; i < 4; i++) {
+    const angle = (i * Math.PI / 2) + Math.PI / 4;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    const footX = cos * 4.0, footZ = sin * 4.0, footY = -3.0;
+
+    // Primary strut
+    const strutLen = new THREE.Vector3(footX - cos*2, footY, footZ - sin*2).length();
+    const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, strutLen, 6), legMat);
+    strut.position.set((cos*2+footX)/2, footY/2, (sin*2+footZ)/2);
+    strut.lookAt(new THREE.Vector3(footX, footY, footZ));
+    strut.rotateX(Math.PI/2);
+    lmGroup.add(strut);
+
+    // Secondary strut
+    const s2Len = new THREE.Vector3(footX-cos*1.5, footY-0.7, footZ-sin*1.5).length();
+    const s2 = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, s2Len, 6), legMat);
+    s2.position.set((cos*1.5+footX)/2, (0.7+footY)/2, (sin*1.5+footZ)/2);
+    s2.lookAt(new THREE.Vector3(footX, footY, footZ));
+    s2.rotateX(Math.PI/2);
+    lmGroup.add(s2);
+
+    // Footpad
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.08, 8), padMat);
+    pad.position.set(footX, footY, footZ);
+    lmGroup.add(pad);
+  }
+
+  // Ascent stage suggestion (simple box on top)
+  const ascent = new THREE.Mesh(
+    new THREE.BoxGeometry(2.2, 1.4, 2.2),
+    new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.5, metalness: 0.6 })
+  );
+  ascent.position.y = 1.6;
+  ascent.castShadow = true;
+  lmGroup.add(ascent);
+
+  // Windows on ascent
+  const windowMat = new THREE.MeshStandardMaterial({
+    color: 0x0a1520, roughness: 0.05, metalness: 0.95,
+    emissive: 0x001118, emissiveIntensity: 0.15,
+  });
+  for (let s = -1; s <= 1; s += 2) {
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.45), windowMat);
+    win.position.set(s * 0.55, 1.9, 1.11);
+    lmGroup.add(win);
+  }
+
+  // Flag on nearby ground
+  const flagPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, 3, 4),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc })
+  );
+  const flagY = sampleTerrainHeight(6, -3);
+  flagPole.position.set(6, flagY + 1.5, -3);
+  scene.add(flagPole);
+
+  const flag = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.2, 0.8),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+  );
+  flag.position.set(6.65, flagY + 2.6, -3);
+  scene.add(flag);
+
+  // Position LM
+  const lmY = sampleTerrainHeight(0, 0);
+  lmGroup.position.set(0, lmY + 3.0, 0);
+  scene.add(lmGroup);
+}
+
+// ================================================================
+//  ROVER — PROCEDURAL LRV GEOMETRY
+// ================================================================
+function buildRover() {
+  roverGroup = new THREE.Group();
+  wheelMeshes = [];
+
+  const aluminumMat = new THREE.MeshStandardMaterial({
+    color: 0xb8b8b8, roughness: 0.35, metalness: 0.8,
+  });
+  const darkMat = new THREE.MeshStandardMaterial({
+    color: 0x555555, roughness: 0.6, metalness: 0.5,
+  });
+  const seatMat = new THREE.MeshStandardMaterial({
+    color: 0x444444, roughness: 0.8, metalness: 0.2,
+  });
+  const wireMat = new THREE.MeshStandardMaterial({
+    color: 0x999999, roughness: 0.4, metalness: 0.7, wireframe: true,
+  });
+  const antennaMat = new THREE.MeshStandardMaterial({
+    color: 0xdddddd, roughness: 0.2, metalness: 0.9,
+  });
+
+  // ── CHASSIS FRAME ──
+  // Two parallel rails
+  const railGeo = new THREE.BoxGeometry(3.2, 0.06, 0.08);
+  for (let s = -1; s <= 1; s += 2) {
+    const rail = new THREE.Mesh(railGeo, aluminumMat);
+    rail.position.set(0, 0, s * 0.8);
+    rail.castShadow = true;
+    roverGroup.add(rail);
+  }
+  // Cross members
+  for (let x = -1.2; x <= 1.2; x += 0.6) {
+    const cross = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.7), aluminumMat);
+    cross.position.set(x, 0, 0);
+    roverGroup.add(cross);
+  }
+
+  // ── FLOOR PANEL ──
+  const floor = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 0.03, 1.5),
+    new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.7, metalness: 0.3 })
+  );
+  floor.position.y = 0.04;
+  roverGroup.add(floor);
+
+  // ── SEATS (2) ──
+  for (let s = -1; s <= 1; s += 2) {
+    // Seat bottom
+    const seatBot = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.5), seatMat);
+    seatBot.position.set(-0.15, 0.35, s * 0.35);
+    roverGroup.add(seatBot);
+    // Seat back
+    const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.5), seatMat);
+    seatBack.position.set(-0.45, 0.65, s * 0.35);
+    roverGroup.add(seatBack);
+  }
+
+  // ── CONSOLE (front) ──
+  const console = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.3, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7, metalness: 0.4 })
+  );
+  console.position.set(0.8, 0.3, 0);
+  roverGroup.add(console);
+
+  // T-handle
+  const tHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), darkMat);
+  tHandle.position.set(0.85, 0.6, 0);
+  tHandle.rotation.x = -0.3;
+  roverGroup.add(tHandle);
+
+  // ── WHEELS (4) — wire mesh torus ──
+  const wheelPositions = [
+    new THREE.Vector3( 1.35, -0.25,  0.95),  // front-right
+    new THREE.Vector3( 1.35, -0.25, -0.95),  // front-left
+    new THREE.Vector3(-1.35, -0.25,  0.95),  // rear-right
+    new THREE.Vector3(-1.35, -0.25, -0.95),  // rear-left
+  ];
+
+  for (let i = 0; i < 4; i++) {
+    const wheelGroup = new THREE.Group();
+
+    // Wire mesh wheel (torus)
+    const torus = new THREE.Mesh(
+      new THREE.TorusGeometry(0.4, 0.12, 8, 24),
+      wireMat
+    );
+    torus.rotation.y = Math.PI / 2;
+    wheelGroup.add(torus);
+
+    // Solid inner hub
+    const hub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.15, 8),
+      aluminumMat
+    );
+    hub.rotation.x = Math.PI / 2;
+    wheelGroup.add(hub);
+
+    // Chevron treads (just a second torus, slightly larger, sparser)
+    const tread = new THREE.Mesh(
+      new THREE.TorusGeometry(0.42, 0.05, 4, 12),
+      new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.6, wireframe: true })
+    );
+    tread.rotation.y = Math.PI / 2;
+    wheelGroup.add(tread);
+
+    wheelGroup.position.copy(wheelPositions[i]);
+    roverGroup.add(wheelGroup);
+    wheelMeshes.push(wheelGroup);
+
+    // Fender
+    const fenderGeo = new THREE.BoxGeometry(0.65, 0.03, 0.35);
+    const fender = new THREE.Mesh(fenderGeo, aluminumMat);
+    fender.position.set(wheelPositions[i].x, wheelPositions[i].y + 0.45, wheelPositions[i].z);
+    roverGroup.add(fender);
+
+    // Suspension strut
+    const strutt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.35, 4),
+      darkMat
+    );
+    strutt.position.set(wheelPositions[i].x, wheelPositions[i].y + 0.18, wheelPositions[i].z * 0.85);
+    roverGroup.add(strutt);
+  }
+
+  // ── HIGH-GAIN ANTENNA DISH ──
+  const dishGroup = new THREE.Group();
+  // Mast
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.8, 6), aluminumMat);
+  mast.position.y = 0.9;
+  dishGroup.add(mast);
+  // Dish
+  const dishGeo = new THREE.SphereGeometry(0.5, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
+  const dish = new THREE.Mesh(dishGeo, antennaMat);
+  dish.position.y = 1.85;
+  dish.rotation.x = Math.PI;
+  dishGroup.add(dish);
+  // Feed horn
+  const feedHorn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, 0.3, 6), darkMat);
+  feedHorn.position.y = 1.65;
+  dishGroup.add(feedHorn);
+  dishGroup.position.set(1.3, 0.1, 0);
+  roverGroup.add(dishGroup);
+
+  // ── TV CAMERA ON FRONT ──
+  const camGroup = new THREE.Group();
+  // Tripod leg
+  const camPole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.6, 4), darkMat);
+  camPole.position.y = 0.3;
+  camGroup.add(camPole);
+  // Camera body
+  const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 0.2), darkMat);
+  camBody.position.y = 0.65;
+  camGroup.add(camBody);
+  // Lens
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 8),
+    new THREE.MeshStandardMaterial({ color: 0x112233, roughness: 0.1, metalness: 0.9 }));
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(0, 0.65, 0.14);
+  camGroup.add(lens);
+  camGroup.position.set(1.5, 0.1, 0.4);
+  roverGroup.add(camGroup);
+
+  // ── TOOL PALLET (back) ──
+  const toolPallet = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.15, 1.4),
+    new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.6, metalness: 0.4 })
+  );
+  toolPallet.position.set(-1.4, 0.15, 0);
+  roverGroup.add(toolPallet);
+
+  // ── LOW-GAIN ANTENNA (whip) ──
+  const whip = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.5, 4), aluminumMat);
+  whip.position.set(-1.2, 0.85, 0.6);
+  whip.rotation.z = 0.15;
+  roverGroup.add(whip);
+
+  roverGroup.castShadow = true;
+
+  // Position rover near LM
+  const ry = sampleTerrainHeight(8, 8);
+  roverState.position.set(8, ry + 0.65, 8);
+  roverGroup.position.copy(roverState.position);
+
+  scene.add(roverGroup);
+}
+
+// ================================================================
+//  ROCK SAMPLES
+// ================================================================
+function placeSamples() {
+  const rng = mulberry32(123);
+  sampleMarkers = [];
+
+  for (let i = 0; i < SAMPLE_COUNT; i++) {
+    let sx, sz, attempts = 0;
+    do {
+      const angle = rng() * Math.PI * 2;
+      const dist = 80 + rng() * 700;
+      sx = Math.cos(angle) * dist;
+      sz = Math.sin(angle) * dist;
+      attempts++;
+    } while (attempts < 50 && Math.sqrt(sx*sx + sz*sz) < 60);
+
+    const sy = sampleTerrainHeight(sx, sz);
+
+    // Glowing blue marker
+    const markerGroup = new THREE.Group();
+
+    // Beacon column
+    const beacon = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.15, 2.5, 6),
+      new THREE.MeshBasicMaterial({ color: 0x2288ff, transparent: true, opacity: 0.3 })
+    );
+    beacon.position.y = 1.25;
+    markerGroup.add(beacon);
+
+    // Base ring
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.2, 0.08, 6, 24),
+      new THREE.MeshBasicMaterial({ color: 0x44aaff })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.1;
+    markerGroup.add(ring);
+
+    // Rock
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.4, 0),
+      new THREE.MeshStandardMaterial({ color: 0x555544, roughness: 0.9 })
+    );
+    rock.position.y = 0.3;
+    rock.rotation.set(rng()*3, rng()*3, rng()*3);
+    markerGroup.add(rock);
+
+    // Point light
+    const light = new THREE.PointLight(0x4488ff, 2, 15);
+    light.position.y = 1.5;
+    markerGroup.add(light);
+
+    markerGroup.position.set(sx, sy, sz);
+
+    scene.add(markerGroup);
+    sampleMarkers.push({
+      group: markerGroup,
+      x: sx, z: sz,
+      collected: false,
+      beacon: beacon,
+      ring: ring,
+    });
+  }
+}
+
+// ================================================================
+//  DUST PARTICLE SYSTEM
+// ================================================================
+function buildDustSystem() {
+  const positions = new Float32Array(DUST_COUNT * 3);
+  const velocities = new Float32Array(DUST_COUNT * 3);
+  const lifetimes = new Float32Array(DUST_COUNT);
+
+  for (let i = 0; i < DUST_COUNT; i++) {
+    positions[i*3] = 0; positions[i*3+1] = -100; positions[i*3+2] = 0;
+    lifetimes[i] = 0;
+  }
+
+  dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  dustGeo._velocities = velocities;
+  dustGeo._lifetimes = lifetimes;
+  dustGeo._nextIdx = 0;
+
+  const dustMat = new THREE.PointsMaterial({
+    color: 0x998877,
+    size: 0.6,
+    transparent: true,
+    opacity: 0.4,
+    sizeAttenuation: true,
+    depthWrite: false,
+  });
+
+  dustParticles = new THREE.Points(dustGeo, dustMat);
+  scene.add(dustParticles);
+}
+
+function emitDust(x, y, z, speed) {
+  const count = Math.floor(speed * 3);
+  const pos = dustGeo.attributes.position;
+  const vel = dustGeo._velocities;
+  const life = dustGeo._lifetimes;
+
+  for (let i = 0; i < count && i < 8; i++) {
+    const idx = dustGeo._nextIdx;
+    dustGeo._nextIdx = (dustGeo._nextIdx + 1) % DUST_COUNT;
+
+    pos.setXYZ(idx, x + (Math.random()-0.5)*1.5, y + Math.random()*0.3, z + (Math.random()-0.5)*1.5);
+    vel[idx*3] = (Math.random()-0.5) * 2;
+    vel[idx*3+1] = 0.5 + Math.random() * 1.5;
+    vel[idx*3+2] = (Math.random()-0.5) * 2;
+    life[idx] = 1.5 + Math.random() * 1.0;
+  }
+  pos.needsUpdate = true;
+}
+
+function updateDust(dt) {
+  const pos = dustGeo.attributes.position;
+  const vel = dustGeo._velocities;
+  const life = dustGeo._lifetimes;
+
+  for (let i = 0; i < DUST_COUNT; i++) {
+    if (life[i] <= 0) continue;
+    life[i] -= dt;
+    if (life[i] <= 0) {
+      pos.setY(i, -100);
+      continue;
+    }
+    vel[i*3+1] -= MOON_GRAVITY * 0.3 * dt;
+    pos.setX(i, pos.getX(i) + vel[i*3] * dt);
+    pos.setY(i, pos.getY(i) + vel[i*3+1] * dt);
+    pos.setZ(i, pos.getZ(i) + vel[i*3+2] * dt);
+  }
+  pos.needsUpdate = true;
+}
+
+// ================================================================
+//  AUDIO
+// ================================================================
+function initAudio() {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Electric motor hum
+    motorOsc = audioCtx.createOscillator();
+    motorOsc.type = 'sawtooth';
+    motorOsc.frequency.value = 45;
+    motorGain = audioCtx.createGain();
+    motorGain.gain.value = 0;
+
+    const motorFilter = audioCtx.createBiquadFilter();
+    motorFilter.type = 'lowpass';
+    motorFilter.frequency.value = 200;
+    motorFilter.Q.value = 2;
+
+    motorOsc.connect(motorFilter);
+    motorFilter.connect(motorGain);
+    motorGain.connect(audioCtx.destination);
+    motorOsc.start();
+
+    // Wheel crunch noise
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.15;
+    }
+    crunchNoise = audioCtx.createBufferSource();
+    crunchNoise.buffer = noiseBuffer;
+    crunchNoise.loop = true;
+
+    crunchGain = audioCtx.createGain();
+    crunchGain.gain.value = 0;
+
+    const crunchFilter = audioCtx.createBiquadFilter();
+    crunchFilter.type = 'bandpass';
+    crunchFilter.frequency.value = 400;
+    crunchFilter.Q.value = 0.5;
+
+    crunchNoise.connect(crunchFilter);
+    crunchFilter.connect(crunchGain);
+    crunchGain.connect(audioCtx.destination);
+    crunchNoise.start();
+  } catch(e) { /* audio not available */ }
+}
+
+function playPickupChime() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1600, audioCtx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.4);
+}
+
+function playO2Warning() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = 600;
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0, audioCtx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.2);
+  gain.gain.setValueAtTime(0, audioCtx.currentTime + 0.3);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.35);
+}
+
+let lastO2Warn = 0;
+
+// ================================================================
+//  PHYSICS
+// ================================================================
+let physicsAccum = 0;
+
+function updatePhysics(frameDt) {
+  if (!gameState.started || gameState.ended) return;
+
+  physicsAccum += Math.min(frameDt, 0.1);
+
+  while (physicsAccum >= PHYSICS_DT) {
+    physicsAccum -= PHYSICS_DT;
+    physicsStep(PHYSICS_DT);
+  }
+}
+
+function physicsStep(dt) {
+  const rs = roverState;
+
+  // ── Input ──
+  let accelInput = 0;
+  let steerInput = 0;
+  let braking = false;
+
+  if (keys['KeyW'] || keys['ArrowUp']) accelInput = 1;
+  if (keys['KeyS'] || keys['ArrowDown']) accelInput = -1;
+  if (keys['KeyA'] || keys['ArrowLeft']) steerInput = 1;
+  if (keys['KeyD'] || keys['ArrowRight']) steerInput = -1;
+  if (keys['Space']) braking = true;
+
+  // Steering (smooth)
+  const targetSteer = steerInput * 0.5;
+  rs.steerAngle += (targetSteer - rs.steerAngle) * Math.min(1, dt * 5);
+
+  // Speed-dependent steering reduction
+  const speedFactor = 1 - (Math.abs(rs.speed) / MAX_SPEED_MS) * 0.5;
+  const effectiveSteer = rs.steerAngle * speedFactor;
+
+  // Heading change (bicycle model)
+  if (Math.abs(rs.speed) > 0.1) {
+    rs.heading += effectiveSteer * STEER_RATE * (rs.speed > 0 ? 1 : -1) * dt;
+  }
+
+  // Acceleration
+  const forward = new THREE.Vector3(Math.sin(rs.heading), 0, Math.cos(rs.heading));
+
+  if (accelInput !== 0 && !braking) {
+    rs.speed += accelInput * ACCEL_FORCE * dt;
+  }
+
+  // Braking
+  if (braking) {
+    if (Math.abs(rs.speed) < 0.1) {
+      rs.speed = 0;
+    } else {
+      rs.speed -= Math.sign(rs.speed) * BRAKE_FORCE * dt;
+    }
+  }
+
+  // Rolling friction (no air resistance on Moon, but tire flex)
+  rs.speed -= rs.speed * DRAG_COEFF * dt;
+
+  // Speed clamp
+  rs.speed = Math.max(-MAX_SPEED_MS * 0.5, Math.min(MAX_SPEED_MS, rs.speed));
+
+  // Position update
+  const moveVec = forward.clone().multiplyScalar(rs.speed * dt);
+  rs.position.add(moveVec);
+
+  // Terrain boundary
+  const halfSize = TERRAIN_SIZE * 0.48;
+  rs.position.x = Math.max(-halfSize, Math.min(halfSize, rs.position.x));
+  rs.position.z = Math.max(-halfSize, Math.min(halfSize, rs.position.z));
+
+  // ── Terrain following (4-point sampling) ──
+  const wheelOffsets = [
+    { x: 1.35, z: 0.95 },
+    { x: 1.35, z: -0.95 },
+    { x: -1.35, z: 0.95 },
+    { x: -1.35, z: -0.95 },
+  ];
+
+  const cosH = Math.cos(rs.heading), sinH = Math.sin(rs.heading);
+  let avgY = 0;
+  const wheelHeights = [];
+
+  for (const wo of wheelOffsets) {
+    const wx = rs.position.x + wo.x * sinH + wo.z * cosH;
+    const wz = rs.position.z + wo.x * cosH - wo.z * sinH;
+    const wh = sampleTerrainHeight(wx, wz);
+    wheelHeights.push(wh);
+    avgY += wh;
+  }
+  avgY /= 4;
+
+  const targetY = avgY + 0.65; // chassis clearance
+
+  // Suspension: spring-damper for vertical
+  if (rs.position.y < targetY) {
+    // Push up
+    rs.verticalVel += (targetY - rs.position.y) * 20 * dt;
+    rs.verticalVel *= 0.85; // damping
+  } else {
+    // Gravity pulls down
+    rs.verticalVel -= MOON_GRAVITY * dt;
+  }
+
+  rs.position.y += rs.verticalVel * dt;
+
+  // Don't sink through terrain
+  if (rs.position.y < targetY - 0.1) {
+    rs.position.y = targetY;
+    rs.verticalVel = Math.max(0, rs.verticalVel);
+  }
+
+  // Slight bounce on bumps
+  const heightDiff = Math.abs(targetY - rs.position.y);
+  if (heightDiff > 0.3 && rs.verticalVel < 0) {
+    rs.verticalVel *= -0.3; // bounce
+  }
+
+  // Wheel rotation
+  rs.wheelRotation += rs.speed * dt * 2.5;
+
+  // Odometer
+  gameState.odometer += Math.abs(rs.speed) * dt;
+
+  // O2 countdown
+  gameState.o2Remaining -= dt;
+  gameState.elapsedTime += dt;
+
+  // O2 warnings
+  const o2 = gameState.o2Remaining;
+  if ((o2 <= 180 && o2 > 179.5 && lastO2Warn < 1) ||
+      (o2 <= 60 && o2 > 59.5 && lastO2Warn < 2)) {
+    playO2Warning();
+    lastO2Warn = o2 <= 60 ? 2 : 1;
+    showMessage(o2 <= 60 ? 'O2 CRITICAL' : 'O2 LOW', o2 <= 60 ? '1 MINUTE REMAINING' : '3 MINUTES REMAINING');
+  }
+
+  // Pickup in progress
+  if (gameState.pickingUp) {
+    gameState.pickupTimer -= dt;
+    if (gameState.pickupTimer <= 0) {
+      completePickup();
+    }
+  }
+
+  // Distance tracking
+  const distFromLM = Math.sqrt(rs.position.x*rs.position.x + rs.position.z*rs.position.z);
+  gameState.maxDistFromLM = Math.max(gameState.maxDistFromLM, distFromLM);
+
+  // ── Win/Lose checks ──
+  if (gameState.o2Remaining <= 0) {
+    gameState.o2Remaining = 0;
+    if (distFromLM < LM_RETURN_DIST) {
+      endGame(gameState.samplesCollected === SAMPLE_COUNT ? 'win' : 'partial');
+    } else {
+      endGame('lose');
+    }
+  }
+
+  // Win: all samples + returned
+  if (gameState.samplesCollected === SAMPLE_COUNT && distFromLM < LM_RETURN_DIST) {
+    endGame('win');
+  }
+}
+
+// ================================================================
+//  GAMEPLAY ACTIONS
+// ================================================================
+function tryPickup() {
+  if (gameState.pickingUp) return;
+  if (Math.abs(roverState.speed) > 0.5) return; // must be nearly stopped
+
+  const rx = roverState.position.x, rz = roverState.position.z;
+
+  for (const s of sampleMarkers) {
+    if (s.collected) continue;
+    const dx = rx - s.x, dz = rz - s.z;
+    if (Math.sqrt(dx*dx + dz*dz) < SAMPLE_RADIUS) {
+      gameState.pickingUp = true;
+      gameState.pickupTimer = 1.0;
+      gameState.pickupTarget = s;
+      showMessage('COLLECTING SAMPLE...', '');
+      return;
+    }
+  }
+}
+
+function completePickup() {
+  const s = gameState.pickupTarget;
+  if (!s) return;
+
+  s.collected = true;
+  gameState.samplesCollected++;
+  gameState.pickingUp = false;
+  gameState.pickupTarget = null;
+
+  // Animate out
+  scene.remove(s.group);
+
+  playPickupChime();
+  showMessage('SAMPLE COLLECTED', `${gameState.samplesCollected} / ${SAMPLE_COUNT}`);
+
+  // Check if all collected — prompt return
+  if (gameState.samplesCollected === SAMPLE_COUNT) {
+    setTimeout(() => showMessage('ALL SAMPLES COLLECTED', 'RETURN TO THE LM'), 1500);
+  }
+}
+
+function endGame(outcome) {
+  if (gameState.ended) return;
+  gameState.ended = true;
+  gameState.outcome = outcome;
+
+  const endScreen = document.getElementById('end-screen');
+  const endTitle = document.getElementById('end-title');
+  const endStats = document.getElementById('end-stats');
+
+  const titles = {
+    win: 'MISSION COMPLETE',
+    partial: 'EVA TERMINATED',
+    lose: 'OXYGEN DEPLETED',
+  };
+  endTitle.textContent = titles[outcome];
+
+  const timeUsed = Math.floor(gameState.elapsedTime);
+  const minutes = Math.floor(timeUsed / 60);
+  const seconds = timeUsed % 60;
+
+  endStats.innerHTML = `
+    SAMPLES COLLECTED: ${gameState.samplesCollected} / ${SAMPLE_COUNT}<br>
+    DISTANCE TRAVELED: ${(gameState.odometer / 1000).toFixed(2)} KM<br>
+    MAX DISTANCE FROM LM: ${Math.floor(gameState.maxDistFromLM)} M<br>
+    TIME: ${minutes}:${String(seconds).padStart(2, '0')}<br>
+    ${outcome === 'win' ? '<br style="line-height:3">OUTSTANDING WORK, ASTRONAUT' :
+      outcome === 'partial' ? '<br style="line-height:3">SAMPLES PARTIALLY RECOVERED' :
+      '<br style="line-height:3">THE CREW DID NOT SURVIVE'}
+  `;
+
+  endScreen.style.display = 'flex';
+
+  // PostMessage
+  window.parent.postMessage({
+    type: 'rover:completed',
+    outcome,
+    samples: gameState.samplesCollected,
+    distance: gameState.odometer,
+    time: timeUsed,
+  }, '*');
+}
+
+let messageTimer = 0;
+function showMessage(text, sub) {
+  const el = document.getElementById('message-overlay');
+  document.getElementById('msg-text').textContent = text;
+  document.getElementById('msg-sub').textContent = sub || '';
+  el.style.display = 'block';
+  messageTimer = 2.5;
+}
+
+// ================================================================
+//  CAMERA
+// ================================================================
+function cycleCamera() {
+  cameraMode = (cameraMode + 1) % CAMERA_MODES.length;
+  orbitControls.enabled = (CAMERA_MODES[cameraMode] === 'ORBIT');
+  document.getElementById('hud-camera').textContent = CAMERA_MODES[cameraMode].replace('_', ' ');
+}
+
+function updateCamera() {
+  const rs = roverState;
+  const mode = CAMERA_MODES[cameraMode];
+
+  if (mode === 'CHASE') {
+    // Behind and above the rover
+    const cosH = Math.cos(rs.heading), sinH = Math.sin(rs.heading);
+    const offsetX = -sinH * 10;
+    const offsetZ = -cosH * 10;
+    const targetCam = new THREE.Vector3(
+      rs.position.x + offsetX,
+      rs.position.y + 5,
+      rs.position.z + offsetZ
+    );
+    camera.position.lerp(targetCam, 0.05);
+
+    const lookAt = new THREE.Vector3(
+      rs.position.x + sinH * 5,
+      rs.position.y + 1,
+      rs.position.z + cosH * 5
+    );
+    camera.lookAt(lookAt);
+
+  } else if (mode === 'FIRST_PERSON') {
+    // Driver's eye position
+    const cosH = Math.cos(rs.heading), sinH = Math.sin(rs.heading);
+    camera.position.set(
+      rs.position.x - sinH * 0.15,
+      rs.position.y + 1.8,
+      rs.position.z - cosH * 0.15
+    );
+    camera.lookAt(
+      rs.position.x + sinH * 10,
+      rs.position.y + 1.2,
+      rs.position.z + cosH * 10
+    );
+
+  } else if (mode === 'ORBIT') {
+    orbitControls.target.copy(rs.position);
+    orbitControls.update();
+  }
+
+  // Shadow light follows rover
+  shadowLight.position.set(
+    rs.position.x + 300,
+    180,
+    rs.position.z - 400
+  );
+  shadowLight.target.position.copy(rs.position);
+}
+
+// ================================================================
+//  VISUAL UPDATE
+// ================================================================
+function updateVisuals(dt) {
+  const rs = roverState;
+
+  // ── Rover transform ──
+  roverGroup.position.copy(rs.position);
+  roverGroup.rotation.y = rs.heading;
+
+  // ── Terrain slope tilt ──
+  // Calculate pitch and roll from wheel heights
+  const cosH = Math.cos(rs.heading), sinH = Math.sin(rs.heading);
+  const wheelOffsets = [
+    { x: 1.35, z: 0.95 },
+    { x: 1.35, z: -0.95 },
+    { x: -1.35, z: 0.95 },
+    { x: -1.35, z: -0.95 },
+  ];
+
+  const wh = [];
+  for (const wo of wheelOffsets) {
+    const wx = rs.position.x + wo.x * sinH + wo.z * cosH;
+    const wz = rs.position.z + wo.x * cosH - wo.z * sinH;
+    wh.push(sampleTerrainHeight(wx, wz));
+  }
+
+  // Pitch (front vs rear)
+  const frontAvg = (wh[0] + wh[1]) / 2;
+  const rearAvg = (wh[2] + wh[3]) / 2;
+  const pitch = Math.atan2(rearAvg - frontAvg, 2.7);
+
+  // Roll (left vs right)
+  const leftAvg = (wh[1] + wh[3]) / 2;
+  const rightAvg = (wh[0] + wh[2]) / 2;
+  const roll = Math.atan2(rightAvg - leftAvg, 1.9);
+
+  // Apply smooth tilt
+  const targetEuler = new THREE.Euler(pitch, rs.heading, roll, 'YXZ');
+  const targetQuat = new THREE.Quaternion().setFromEuler(targetEuler);
+  roverGroup.quaternion.slerp(targetQuat, 0.1);
+
+  // ── Wheel rotation ──
+  for (let i = 0; i < wheelMeshes.length; i++) {
+    // Spin wheels around Z (local forward)
+    wheelMeshes[i].children[0].rotation.z = rs.wheelRotation;
+    wheelMeshes[i].children[2].rotation.z = rs.wheelRotation;
+
+    // Front wheels steer
+    if (i < 2) {
+      wheelMeshes[i].rotation.y = rs.steerAngle;
+    }
+  }
+
+  // ── Dust emission ──
+  if (Math.abs(rs.speed) > 0.5 && rs.grounded) {
+    // Emit from rear wheels
+    for (let i = 2; i < 4; i++) {
+      const wo = wheelOffsets[i];
+      const wx = rs.position.x + wo.x * sinH + wo.z * cosH;
+      const wz = rs.position.z + wo.x * cosH - wo.z * sinH;
+      emitDust(wx, rs.position.y - 0.4, wz, Math.abs(rs.speed));
+    }
+  }
+  updateDust(dt);
+
+  // ── Sample marker animation ──
+  const time = clock.getElapsedTime();
+  for (const s of sampleMarkers) {
+    if (s.collected) continue;
+    s.beacon.material.opacity = 0.2 + 0.15 * Math.sin(time * 2 + s.x);
+    s.ring.rotation.z = time * 0.5;
+    s.group.children[1].position.y = 0.1 + Math.sin(time * 1.5) * 0.05;
+  }
+
+  // ── Pickup indicator ──
+  const pickupEl = document.getElementById('pickup-indicator');
+  if (!gameState.pickingUp && !gameState.ended) {
+    let nearSample = false;
+    const rx = rs.position.x, rz = rs.position.z;
+    for (const s of sampleMarkers) {
+      if (s.collected) continue;
+      const dx = rx - s.x, dz = rz - s.z;
+      if (Math.sqrt(dx*dx + dz*dz) < SAMPLE_RADIUS) {
+        nearSample = true;
+        break;
+      }
+    }
+    pickupEl.style.display = nearSample ? 'block' : 'none';
+  } else {
+    pickupEl.style.display = 'none';
+  }
+
+  // ── Audio ──
+  if (motorGain && audioCtx) {
+    const absSpeed = Math.abs(rs.speed);
+    motorGain.gain.value = Math.min(0.06, absSpeed / MAX_SPEED_MS * 0.06);
+    motorOsc.frequency.value = 45 + absSpeed / MAX_SPEED_MS * 80;
+    if (crunchGain) {
+      crunchGain.gain.value = Math.min(0.04, absSpeed / MAX_SPEED_MS * 0.04);
+    }
+  }
+
+  // ── Message timer ──
+  if (messageTimer > 0) {
+    messageTimer -= dt;
+    if (messageTimer <= 0) {
+      document.getElementById('message-overlay').style.display = 'none';
+    }
+  }
+}
+
+// ================================================================
+//  HUD
+// ================================================================
+function updateHUD() {
+  const rs = roverState;
+  const speedKmh = Math.abs(rs.speed) * 3.6;
+  document.getElementById('hud-speed').textContent = speedKmh.toFixed(1);
+
+  // Heading compass
+  let headingDeg = ((rs.heading * 180 / Math.PI) % 360 + 360) % 360;
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const dirIdx = Math.round(headingDeg / 45) % 8;
+  document.getElementById('hud-heading').textContent =
+    `${dirs[dirIdx]} ${String(Math.round(headingDeg)).padStart(3, '0')}`;
+
+  // Distance from LM
+  const distFromLM = Math.sqrt(rs.position.x*rs.position.x + rs.position.z*rs.position.z);
+  const distEl = document.getElementById('hud-distance');
+  distEl.textContent = Math.floor(distFromLM);
+  distEl.className = 'value' + (distFromLM > 500 ? ' caution' : distFromLM > 800 ? ' warn' : '');
+
+  // Odometer
+  document.getElementById('hud-odometer').textContent = (gameState.odometer / 1000).toFixed(2);
+
+  // Samples
+  const sampEl = document.getElementById('hud-samples');
+  sampEl.textContent = `${gameState.samplesCollected} / ${SAMPLE_COUNT}`;
+  sampEl.className = 'value' + (gameState.samplesCollected === SAMPLE_COUNT ? ' safe' : '');
+
+  // O2
+  const o2 = Math.max(0, gameState.o2Remaining);
+  const o2Min = Math.floor(o2 / 60);
+  const o2Sec = Math.floor(o2 % 60);
+  const o2El = document.getElementById('hud-o2-time');
+  o2El.textContent = `${o2Min}:${String(o2Sec).padStart(2, '0')}`;
+  o2El.className = 'value' + (o2 < 60 ? ' warn' : o2 < 180 ? ' caution' : '');
+
+  const o2Bar = document.getElementById('hud-o2-bar');
+  const o2Pct = (o2 / O2_TOTAL) * 100;
+  o2Bar.style.width = o2Pct + '%';
+  o2Bar.className = 'o2-bar-inner' + (o2Pct < 10 ? ' low' : o2Pct < 25 ? ' caution' : '');
+
+  // Minimap
+  drawMinimap();
+}
+
+// ================================================================
+//  MINIMAP
+// ================================================================
+function drawMinimap() {
+  const canvas = document.getElementById('minimap-canvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const scale = w / (TERRAIN_SIZE * 1.1);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+
+  // Terrain boundary
+  ctx.strokeStyle = 'rgba(212,160,23,0.2)';
+  ctx.strokeRect(
+    cx - TERRAIN_SIZE*0.5*scale, cy - TERRAIN_SIZE*0.5*scale,
+    TERRAIN_SIZE*scale, TERRAIN_SIZE*scale
+  );
+
+  // LM position (center)
+  ctx.fillStyle = '#ffcc44';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sample locations
+  for (const s of sampleMarkers) {
+    if (s.collected) {
+      ctx.fillStyle = 'rgba(68,255,68,0.5)';
+    } else {
+      ctx.fillStyle = '#4488ff';
+    }
+    ctx.beginPath();
+    ctx.arc(cx + s.x * scale, cy + s.z * scale, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rover position
+  const rs = roverState;
+  const rx = cx + rs.position.x * scale;
+  const rz = cy + rs.position.z * scale;
+
+  ctx.fillStyle = '#ff4444';
+  ctx.beginPath();
+  ctx.arc(rx, rz, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rover heading indicator
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(rx, rz);
+  ctx.lineTo(
+    rx + Math.sin(rs.heading) * 8,
+    rz + Math.cos(rs.heading) * 8
+  );
+  ctx.stroke();
+}
+
+// ================================================================
+//  HELP
+// ================================================================
+function toggleHelp() {
+  const el = document.getElementById('help-overlay');
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// ================================================================
+//  GAME LOOP
+// ================================================================
+let fpsFrames = 0, fpsTime = 0;
+
+function gameLoop() {
+  requestAnimationFrame(gameLoop);
+
+  const dt = clock.getDelta();
+
+  if (gameState.started && !gameState.ended) {
+    updatePhysics(dt);
+    updateVisuals(dt);
+    updateCamera();
+    updateHUD();
+  } else if (!gameState.started) {
+    // Slow orbit before start
+    const t = performance.now() * 0.0001;
+    camera.position.set(Math.sin(t) * 20, 8, Math.cos(t) * 20);
+    camera.lookAt(0, 2, 0);
+  }
+
+  renderer.render(scene, camera);
+
+  // FPS counter
+  fpsFrames++;
+  fpsTime += dt;
+  if (fpsTime >= 0.5) {
+    document.getElementById('fps-counter').textContent = Math.round(fpsFrames / fpsTime) + ' FPS';
+    fpsFrames = 0;
+    fpsTime = 0;
+  }
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+init();
+
+</script>
+</body>
+</html>
