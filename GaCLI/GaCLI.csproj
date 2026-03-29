@@ -24,7 +24,7 @@
     <Compile Remove="Commands\ExplainVoicingCommand.cs" />
     
     <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.1" />
-    <PackageReference Include="FSharp.Core" Version="10.0.104" />
+
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1" />
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.91.241101.1" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.38.0" />
