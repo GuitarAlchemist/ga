@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crater Golf — Lunar Links</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #000; font-family: 'Courier New', monospace;
+    user-select: none; -webkit-user-select: none;
+  }
+  #canvas-container {
+    width: 100%; height: 100%;
+    position: absolute; top: 0; left: 0;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* SCANLINES */
+  #scanlines {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 50;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
+    );
+  }
+
+  /* START OVERLAY */
+  #start-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, rgba(20,15,5,0.92) 0%, rgba(0,0,0,0.97) 80%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; cursor: pointer;
+  }
+  #start-overlay .logo-line {
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, #d4a017, transparent);
+    margin: 12px 0;
+  }
+  #start-overlay h1 {
+    color: #d4a017; font-size: 48px; letter-spacing: 10px;
+    text-shadow: 0 0 30px rgba(212,160,23,0.4);
+    font-weight: 300;
+  }
+  #start-overlay h2 {
+    color: #a08020; font-size: 16px; letter-spacing: 6px;
+    font-weight: 300; margin-top: 4px;
+  }
+  #start-overlay .start-btn {
+    color: #d4a017; font-size: 20px; border: 1px solid rgba(212,160,23,0.5);
+    padding: 14px 50px; letter-spacing: 6px; margin-top: 30px;
+    animation: pulse 2.5s ease-in-out infinite;
+    transition: border-color 0.3s, text-shadow 0.3s;
+  }
+  #start-overlay .start-btn:hover {
+    border-color: #d4a017;
+    text-shadow: 0 0 20px rgba(212,160,23,0.6);
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+  #start-overlay .controls-preview {
+    color: #665530; font-size: 11px; margin-top: 40px; text-align: center;
+    line-height: 2.4; letter-spacing: 2px;
+  }
+  #start-overlay .mission-info {
+    color: #554422; font-size: 10px; margin-top: 20px; text-align: center;
+    line-height: 1.8; letter-spacing: 1px;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10; display: none;
+  }
+  .hud-panel {
+    position: absolute; padding: 12px 16px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(212,160,23,0.25);
+    color: #d4a017; font-size: 13px; line-height: 1.7;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(212,160,23,0.25);
+    border-radius: 2px;
+    backdrop-filter: blur(2px);
+  }
+  .hud-panel .label {
+    color: #887030; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .hud-panel .value {
+    color: #d4a017; font-size: 16px; font-weight: bold;
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-panel .value.good { color: #44ff44; text-shadow: 0 0 8px rgba(68,255,68,0.3); }
+  .hud-panel .value.warn { color: #ff4444; text-shadow: 0 0 8px rgba(255,68,68,0.4); }
+
+  #hud-top-left { top: 20px; left: 20px; min-width: 180px; }
+  #hud-top-right { top: 20px; right: 20px; min-width: 180px; text-align: right; }
+  #hud-bottom { bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+  #hud-angle {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: #887030; letter-spacing: 2px;
+  }
+
+  .hud-row { margin-top: 8px; }
+  .hud-row:first-child { margin-top: 0; }
+
+  /* CALLOUT */
+  #callout {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: #44ff44; font-size: 36px; letter-spacing: 8px;
+    text-shadow: 0 0 30px rgba(68,255,68,0.7), 0 0 60px rgba(68,255,68,0.3);
+    display: none; z-index: 20; font-weight: bold;
+    animation: callout-pop 0.3s ease-out;
+    pointer-events: none;
+  }
+  @keyframes callout-pop {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+
+  /* SCORECARD */
+  #scorecard {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, rgba(20,15,5,0.95) 0%, rgba(0,0,0,0.98) 80%);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  #scorecard h1 {
+    color: #d4a017; font-size: 36px; letter-spacing: 8px; font-weight: 300;
+    margin-bottom: 8px;
+  }
+  #scorecard .line {
+    width: 300px; height: 1px;
+    background: linear-gradient(90deg, transparent, #d4a017, transparent);
+    margin: 12px 0 24px 0;
+  }
+  #scorecard table {
+    border-collapse: collapse; color: #d4a017; font-size: 14px;
+    letter-spacing: 1px;
+  }
+  #scorecard th {
+    color: #887030; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; padding: 4px 14px;
+    border-bottom: 1px solid rgba(212,160,23,0.2);
+  }
+  #scorecard td {
+    padding: 6px 14px; text-align: center;
+    border-bottom: 1px solid rgba(212,160,23,0.08);
+  }
+  #scorecard td.under { color: #44ff44; }
+  #scorecard td.over { color: #ff6644; }
+  #scorecard td.even { color: #d4a017; }
+  #scorecard .total-row td {
+    font-size: 18px; font-weight: bold;
+    border-top: 1px solid rgba(212,160,23,0.3);
+    padding-top: 12px;
+  }
+  #scorecard .play-again {
+    color: #d4a017; font-size: 16px; border: 1px solid rgba(212,160,23,0.5);
+    padding: 12px 40px; letter-spacing: 6px; margin-top: 30px;
+    cursor: pointer; background: none; font-family: inherit;
+    transition: border-color 0.3s, text-shadow 0.3s;
+  }
+  #scorecard .play-again:hover {
+    border-color: #d4a017;
+    text-shadow: 0 0 20px rgba(212,160,23,0.6);
+  }
+  #scorecard .verdict {
+    color: #a08020; font-size: 14px; letter-spacing: 4px;
+    margin-top: 16px; font-weight: 300;
+  }
+
+  /* POWER METER (shown during drag) */
+  #power-meter {
+    position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 12px;
+    background: rgba(100,80,20,0.2);
+    border: 1px solid rgba(212,160,23,0.3);
+    display: none; z-index: 15; pointer-events: none;
+    border-radius: 1px;
+  }
+  #power-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #44aa44, #d4a017, #ff4444);
+    border-radius: 1px;
+    transition: width 0.05s linear;
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div id="scanlines"></div>
+
+<!-- START OVERLAY -->
+<div id="start-overlay">
+  <h1>CRATER GOLF</h1>
+  <div class="logo-line"></div>
+  <h2>LUNAR LINKS</h2>
+  <div class="start-btn">TEE OFF</div>
+  <div class="controls-preview">
+    CLICK + DRAG TO AIM &amp; SET POWER<br>
+    MOUSE WHEEL — ADJUST LAUNCH ANGLE<br>
+    R — RESET BALL &middot; C — CAMERA MODE
+  </div>
+  <div class="mission-info">
+    9 HOLES &middot; 1/6 GRAVITY &middot; NO ATMOSPHERE<br>
+    TRANQUILITY BASE GOLF CLUB — EST. 1971
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-panel" id="hud-top-left">
+    <div class="hud-row"><span class="label">HOLE</span><br><span class="value" id="hud-hole">1</span><span style="color:#887030;font-size:12px"> / 9</span></div>
+    <div class="hud-row"><span class="label">PAR</span><br><span class="value" id="hud-par">3</span></div>
+    <div class="hud-row"><span class="label">STROKE</span><br><span class="value" id="hud-stroke">0</span></div>
+  </div>
+  <div class="hud-panel" id="hud-top-right">
+    <div class="hud-row"><span class="label">TO FLAG</span><br><span class="value" id="hud-dist">---</span><span style="color:#887030;font-size:10px"> M</span></div>
+    <div class="hud-row"><span class="label">SPEED</span><br><span class="value" id="hud-speed">0.0</span><span style="color:#887030;font-size:10px"> M/S</span></div>
+    <div class="hud-row"><span class="label">TOTAL</span><br><span class="value" id="hud-total">0</span></div>
+  </div>
+  <div class="hud-panel" id="hud-bottom">
+    <span class="label">DRAG TO AIM</span> &middot;
+    <span class="label">WHEEL: ANGLE</span> &middot;
+    <span class="label" id="hud-angle-label">ANGLE: 30&deg;</span>
+  </div>
+  <div id="hud-angle"></div>
+</div>
+
+<div id="callout"></div>
+
+<div id="power-meter"><div id="power-fill"></div></div>
+
+<!-- SCORECARD -->
+<div id="scorecard">
+  <h1>SCORECARD</h1>
+  <div class="line"></div>
+  <table id="score-table">
+    <thead>
+      <tr><th>HOLE</th><th>PAR</th><th>STROKES</th><th>SCORE</th></tr>
+    </thead>
+    <tbody id="score-body"></tbody>
+  </table>
+  <div class="verdict" id="verdict"></div>
+  <button class="play-again" id="play-again-btn">PLAY AGAIN</button>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ================================================================
+//  CONSTANTS
+// ================================================================
+const TERRAIN_SIZE = 500;
+const TERRAIN_SEGS = 128;
+const MOON_GRAVITY = 1.625;
+const BALL_RADIUS  = 0.02;
+const BALL_VISUAL_RADIUS = 0.35; // visual size for visibility
+const COR = 0.4;                 // coefficient of restitution
+const ROLLING_FRICTION = 0.985;  // per-frame multiplier
+const ROLLING_STOP = 0.08;       // speed below which ball stops
+const CUP_RADIUS = 0.5;          // ball sinks if within this
+const CUP_MAX_SPEED = 2.0;       // max speed to sink
+const MAX_POWER = 80;             // m/s launch speed cap
+const DRAG_SCALE = 0.4;          // pixels to power scale
+const STAR_COUNT = 4000;
+const DT = 1 / 120;              // physics timestep
+
+// ================================================================
+//  HOLE DEFINITIONS
+// ================================================================
+// Each hole: { tee: [x,z], flag: [x,z], par }
+// We'll place these procedurally after terrain is built
+let holes = [];
+let currentHole = 0;
+let strokes = [];
+let currentStrokes = 0;
+
+// ================================================================
+//  INLINE 2D NOISE — hash-based, no library (from lunar lander)
+// ================================================================
+function hash2D(ix, iy) {
+  let n = ix * 374761393 + iy * 668265263;
+  n = (n ^ (n >> 13)) * 1274126177;
+  n = n ^ (n >> 16);
+  return (n & 0x7fffffff) / 0x7fffffff;
+}
+
+function smoothNoise2D(x, y) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = x - ix;
+  const fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const v00 = hash2D(ix,     iy);
+  const v10 = hash2D(ix + 1, iy);
+  const v01 = hash2D(ix,     iy + 1);
+  const v11 = hash2D(ix + 1, iy + 1);
+  const a = v00 + (v10 - v00) * ux;
+  const b = v01 + (v11 - v01) * ux;
+  return a + (b - a) * uy;
+}
+
+function fbm(x, y, octaves, lacunarity, gain) {
+  let value = 0, amplitude = 1, frequency = 1, totalAmp = 0;
+  for (let i = 0; i < octaves; i++) {
+    value    += smoothNoise2D(x * frequency, y * frequency) * amplitude;
+    totalAmp += amplitude;
+    amplitude *= gain;
+    frequency *= lacunarity;
+  }
+  return value / totalAmp;
+}
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge1) / (edge0 - edge1)));
+  return t * t * (3 - 2 * t);
+}
+
+// Seeded RNG (mulberry32)
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ================================================================
+//  GLOBALS
+// ================================================================
+let scene, camera, renderer, orbitControls;
+let terrain, terrainGeom;
+let shadowLight;
+let audioCtx;
+let clock, physicsAccum = 0;
+
+// Ball state
+let ball = {
+  pos: new THREE.Vector3(),
+  vel: new THREE.Vector3(),
+  mesh: null,
+  trail: null,
+  trailPoints: [],
+  inFlight: false,
+  sunk: false,
+};
+
+// Swing state
+let swing = {
+  dragging: false,
+  startX: 0, startY: 0,
+  currentX: 0, currentY: 0,
+  launchAngle: 30,  // degrees
+  arrowHelper: null,
+  powerLine: null,
+};
+
+// Camera
+let cameraMode = 0; // 0=orbit, 1=follow
+const camSmoothPos = new THREE.Vector3();
+const camSmoothTarget = new THREE.Vector3();
+let camInitialized = false;
+
+// Game state
+let gameState = 'waiting'; // waiting | aiming | flight | stopped | sunk | scorecard
+
+// Craters list (for terrain gen)
+let craterList = [];
+
+// Flag + cup meshes
+let flagGroup = null;
+let cupMesh = null;
+let teeMarker = null;
+
+// Direction arrow
+let aimArrow = null;
+let aimArcLine = null;
+
+// FPS
+let fpsFrames = 0, fpsTime = 0, fpsDisplay = 0;
+
+// ================================================================
+//  DOM REFS
+// ================================================================
+const hudEl        = document.getElementById('hud');
+const startOverlay = document.getElementById('start-overlay');
+const scorecardEl  = document.getElementById('scorecard');
+const calloutEl    = document.getElementById('callout');
+const powerMeter   = document.getElementById('power-meter');
+const powerFill    = document.getElementById('power-fill');
+
+const hudHole   = document.getElementById('hud-hole');
+const hudPar    = document.getElementById('hud-par');
+const hudStroke = document.getElementById('hud-stroke');
+const hudDist   = document.getElementById('hud-dist');
+const hudSpeed  = document.getElementById('hud-speed');
+const hudTotal  = document.getElementById('hud-total');
+const hudAngle  = document.getElementById('hud-angle-label');
+
+// ================================================================
+//  AUDIO
+// ================================================================
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playSwing() {
+  if (!audioCtx) return;
+  // Whoosh — filtered noise burst
+  const dur = 0.25;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / data.length;
+    data[i] = (Math.random() * 2 - 1) * (1 - t) * 0.3;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + dur);
+  filter.Q.value = 1;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+  src.connect(filter).connect(gain).connect(audioCtx.destination);
+  src.start();
+}
+
+function playBounce(intensity) {
+  if (!audioCtx) return;
+  // Dull thud — low sine + noise
+  const dur = 0.12;
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(80 + intensity * 40, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + dur);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(Math.min(0.5, intensity * 0.15), audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+function playSink() {
+  if (!audioCtx) return;
+  // Ding — two tones
+  [880, 1320].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.5);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + i * 0.12);
+    osc.stop(audioCtx.currentTime + i * 0.12 + 0.5);
+  });
+}
+
+function playApplause() {
+  if (!audioCtx) return;
+  // Noise burst with bandpass — approximation of clapping
+  const dur = 1.5;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / data.length;
+    // Irregular bursts
+    const envelope = Math.sin(t * Math.PI) * (0.5 + 0.5 * Math.sin(t * 60));
+    data[i] = (Math.random() * 2 - 1) * envelope * 0.15;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 3000;
+  filter.Q.value = 0.5;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.3;
+  src.connect(filter).connect(gain).connect(audioCtx.destination);
+  src.start();
+}
+
+// ================================================================
+//  THREE.JS SCENE SETUP
+// ================================================================
+function initScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 50000);
+  camera.position.set(0, 20, 40);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.7;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  orbitControls = new OrbitControls(camera, renderer.domElement);
+  orbitControls.enableDamping = true;
+  orbitControls.dampingFactor = 0.08;
+  orbitControls.minDistance = 2;
+  orbitControls.maxDistance = 300;
+  orbitControls.maxPolarAngle = Math.PI * 0.48;
+  orbitControls.target.set(0, 0, 0);
+
+  // Lighting — low-angle sun like Apollo photos
+  shadowLight = new THREE.DirectionalLight(0xfff8e8, 3.0);
+  shadowLight.position.set(300, 180, -400);
+  shadowLight.castShadow = true;
+  shadowLight.shadow.mapSize.set(2048, 2048);
+  shadowLight.shadow.camera.left   = -250;
+  shadowLight.shadow.camera.right  =  250;
+  shadowLight.shadow.camera.top    =  250;
+  shadowLight.shadow.camera.bottom = -250;
+  shadowLight.shadow.camera.near   =  50;
+  shadowLight.shadow.camera.far    = 1200;
+  shadowLight.shadow.bias = -0.0005;
+  shadowLight.shadow.normalBias = 0.02;
+  scene.add(shadowLight);
+  scene.add(shadowLight.target);
+
+  const ambient = new THREE.AmbientLight(0x334466, 0.15);
+  scene.add(ambient);
+
+  const hemi = new THREE.HemisphereLight(0x444466, 0x111111, 0.08);
+  scene.add(hemi);
+
+  buildStarfield();
+  buildEarth();
+  buildTerrain();
+  buildBall();
+  buildAimHelpers();
+
+  generateHoles();
+  setupHole(0);
+
+  clock = new THREE.Clock(false);
+}
+
+// ================================================================
+//  STARFIELD
+// ================================================================
+function buildStarfield() {
+  const positions = new Float32Array(STAR_COUNT * 3);
+  const colors    = new Float32Array(STAR_COUNT * 3);
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 20000 + Math.random() * 5000;
+    const i3    = i * 3;
+    positions[i3]     = r * Math.sin(phi) * Math.cos(theta);
+    positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[i3 + 2] = r * Math.cos(phi);
+    const brightness = 0.3 + Math.random() * 0.7;
+    const temp = Math.random();
+    if (temp < 0.08) {
+      colors[i3] = brightness * 0.7; colors[i3+1] = brightness * 0.8; colors[i3+2] = brightness;
+    } else if (temp < 0.15) {
+      colors[i3] = brightness; colors[i3+1] = brightness * 0.6; colors[i3+2] = brightness * 0.3;
+    } else {
+      colors[i3] = brightness; colors[i3+1] = brightness * 0.98; colors[i3+2] = brightness * 0.95;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 1.5, vertexColors: true, sizeAttenuation: false,
+    transparent: true, opacity: 0.85,
+  });
+  scene.add(new THREE.Points(geo, mat));
+}
+
+// ================================================================
+//  EARTH IN SKY
+// ================================================================
+function buildEarth() {
+  const earthGroup = new THREE.Group();
+  const earthGeo = new THREE.SphereGeometry(150, 48, 48);
+  const earthMat = new THREE.MeshPhongMaterial({
+    color: 0x2244aa, emissive: 0x112244, emissiveIntensity: 0.4,
+    shininess: 40, specular: 0x333355,
+  });
+  earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
+  const atmosGeo = new THREE.SphereGeometry(156, 48, 48);
+  const atmosMat = new THREE.MeshBasicMaterial({
+    color: 0x6699ff, transparent: true, opacity: 0.12, side: THREE.BackSide,
+  });
+  earthGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
+  const dist = 16000;
+  const elev = Math.sin(30 * Math.PI / 180) * dist;
+  const horiz = Math.cos(30 * Math.PI / 180) * dist;
+  earthGroup.position.set(horiz * 0.7, elev, -horiz * 0.7);
+  scene.add(earthGroup);
+}
+
+// ================================================================
+//  TERRAIN
+// ================================================================
+function buildTerrain() {
+  terrainGeom = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
+  terrainGeom.rotateX(-Math.PI / 2);
+
+  const pos    = terrainGeom.attributes.position;
+  const vCount = pos.count;
+
+  // Generate craters
+  craterList = [];
+  const rng = mulberry32(71); // different seed than lander
+  for (let i = 0; i < 35; i++) {
+    const cx = (rng() - 0.5) * TERRAIN_SIZE * 0.85;
+    const cz = (rng() - 0.5) * TERRAIN_SIZE * 0.85;
+    craterList.push({
+      x: cx, z: cz,
+      radius: 6 + rng() * 50,
+      depth:  1.5 + rng() * 12,
+      rimHeight: 0.15 + rng() * 0.35,
+    });
+  }
+
+  // Sculpt vertices
+  for (let i = 0; i < vCount; i++) {
+    const vx = pos.getX(i);
+    const vz = pos.getZ(i);
+
+    let h = 0;
+    h += fbm(vx * 0.002, vz * 0.002, 5, 2.0, 0.5) * 40 - 20;
+    h += fbm(vx * 0.008, vz * 0.008, 4, 2.2, 0.45) * 8;
+    h += fbm(vx * 0.03,  vz * 0.03,  3, 2.0, 0.5)  * 2.5;
+    h += fbm(vx * 0.1,   vz * 0.1,   2, 2.0, 0.5)  * 0.6;
+
+    // Stamp craters
+    for (const c of craterList) {
+      const dx = vx - c.x;
+      const dz = vz - c.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      const r = c.radius;
+      if (dist < r * 1.4) {
+        const t = dist / r;
+        if (t < 1.0) {
+          h -= c.depth * (1 - t * t);
+          if (t < 0.3) h += c.depth * 0.15 * (1 - t / 0.3);
+        } else if (t < 1.4) {
+          const rimT = (t - 1.0) / 0.4;
+          h += c.depth * c.rimHeight * Math.pow(1 - rimT, 2);
+        }
+      }
+    }
+
+    pos.setY(i, h);
+  }
+
+  terrainGeom.computeVertexNormals();
+
+  // Vertex colors
+  const vertColors = new Float32Array(vCount * 3);
+  const normals = terrainGeom.attributes.normal;
+  for (let i = 0; i < vCount; i++) {
+    const vx = pos.getX(i);
+    const vy = pos.getY(i);
+    const vz = pos.getZ(i);
+    const ny = normals.getY(i);
+    const slope = 1 - ny;
+
+    const n1 = fbm(vx * 0.015, vz * 0.015, 2, 2.0, 0.5);
+    const n2 = fbm(vx * 0.05,  vz * 0.05,  2, 2.0, 0.5);
+    let base = 0.22 + n1 * 0.12 + n2 * 0.05;
+    base += vy * 0.002;
+    base -= slope * 0.2;
+    if (vy < -5) base -= 0.03;
+    base = Math.max(0.08, Math.min(0.5, base));
+
+    vertColors[i * 3]     = base * 1.03;
+    vertColors[i * 3 + 1] = base * 1.0;
+    vertColors[i * 3 + 2] = base * 0.93;
+  }
+
+  terrainGeom.setAttribute('color', new THREE.BufferAttribute(vertColors, 3));
+
+  const terrainMat = new THREE.MeshStandardMaterial({
+    vertexColors: true, roughness: 0.95, metalness: 0.0,
+  });
+
+  terrain = new THREE.Mesh(terrainGeom, terrainMat);
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+}
+
+// ================================================================
+//  TERRAIN HEIGHT SAMPLING (raycast)
+// ================================================================
+const altRay  = new THREE.Raycaster();
+const downVec = new THREE.Vector3(0, -1, 0);
+
+function sampleTerrainHeight(x, z) {
+  const origin = new THREE.Vector3(x, 500, z);
+  altRay.set(origin, downVec);
+  altRay.far = 1000;
+  const hits = altRay.intersectObject(terrain, false);
+  return hits.length > 0 ? hits[0].point.y : 0;
+}
+
+function sampleTerrainNormal(x, z) {
+  const origin = new THREE.Vector3(x, 500, z);
+  altRay.set(origin, downVec);
+  altRay.far = 1000;
+  const hits = altRay.intersectObject(terrain, false);
+  return hits.length > 0 ? hits[0].face ? hits[0].normal.clone() : new THREE.Vector3(0,1,0) : new THREE.Vector3(0,1,0);
+}
+
+// Get slope (flatness) — returns deviation from flat (0 = perfectly flat)
+function getSlope(x, z) {
+  const s = 1.5;
+  const hC = sampleTerrainHeight(x, z);
+  const hN = sampleTerrainHeight(x, z - s);
+  const hS = sampleTerrainHeight(x, z + s);
+  const hE = sampleTerrainHeight(x + s, z);
+  const hW = sampleTerrainHeight(x - s, z);
+  return Math.abs(hN - hC) + Math.abs(hS - hC) + Math.abs(hE - hC) + Math.abs(hW - hC);
+}
+
+// ================================================================
+//  HOLE GENERATION
+// ================================================================
+function generateHoles() {
+  const rng = mulberry32(137);
+  holes = [];
+
+  // We generate candidate flat spots, then pick pairs at good distances
+  const candidates = [];
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const x = (rng() - 0.5) * TERRAIN_SIZE * 0.75;
+    const z = (rng() - 0.5) * TERRAIN_SIZE * 0.75;
+    const slope = getSlope(x, z);
+    if (slope < 3.0) {
+      candidates.push({ x, z, slope });
+    }
+  }
+
+  // Sort by flatness
+  candidates.sort((a, b) => a.slope - b.slope);
+
+  // Pick 9 hole pairs
+  const usedPositions = [];
+  const minSep = 30; // minimum separation between any two positions
+
+  function isFarEnough(x, z) {
+    for (const p of usedPositions) {
+      const d = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
+      if (d < minSep) return false;
+    }
+    return true;
+  }
+
+  // Target distances for holes (par correlates with distance)
+  const holeTargets = [
+    { minDist: 50, maxDist: 100, par: 3 },
+    { minDist: 80, maxDist: 150, par: 3 },
+    { minDist: 100, maxDist: 180, par: 4 },
+    { minDist: 60, maxDist: 120, par: 3 },
+    { minDist: 150, maxDist: 250, par: 4 },
+    { minDist: 100, maxDist: 200, par: 4 },
+    { minDist: 200, maxDist: 300, par: 5 },
+    { minDist: 70, maxDist: 130, par: 3 },
+    { minDist: 180, maxDist: 300, par: 5 },
+  ];
+
+  for (const target of holeTargets) {
+    let bestPair = null;
+    let bestScore = Infinity;
+
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = i + 1; j < candidates.length; j++) {
+        const a = candidates[i], b = candidates[j];
+        const d = Math.sqrt((a.x - b.x) ** 2 + (a.z - b.z) ** 2);
+        if (d < target.minDist || d > target.maxDist) continue;
+        if (!isFarEnough(a.x, a.z) || !isFarEnough(b.x, b.z)) continue;
+        const score = a.slope + b.slope + Math.abs(d - (target.minDist + target.maxDist) / 2) * 0.1;
+        if (score < bestScore) {
+          bestScore = score;
+          bestPair = { tee: a, flag: b };
+        }
+      }
+    }
+
+    if (bestPair) {
+      holes.push({
+        tee: [bestPair.tee.x, bestPair.tee.z],
+        flag: [bestPair.flag.x, bestPair.flag.z],
+        par: target.par,
+      });
+      usedPositions.push({ x: bestPair.tee.x, z: bestPair.tee.z });
+      usedPositions.push({ x: bestPair.flag.x, z: bestPair.flag.z });
+    }
+  }
+
+  // Fallback: if we didn't get 9 holes, fill with generated ones
+  while (holes.length < 9) {
+    const tx = (rng() - 0.5) * 200;
+    const tz = (rng() - 0.5) * 200;
+    const angle = rng() * Math.PI * 2;
+    const dist = 60 + rng() * 100;
+    holes.push({
+      tee: [tx, tz],
+      flag: [tx + Math.cos(angle) * dist, tz + Math.sin(angle) * dist],
+      par: dist < 100 ? 3 : dist < 200 ? 4 : 5,
+    });
+  }
+}
+
+// ================================================================
+//  BALL
+// ================================================================
+function buildBall() {
+  const geo = new THREE.SphereGeometry(BALL_VISUAL_RADIUS, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xffffff, roughness: 0.3, metalness: 0.1,
+    emissive: 0x333333, emissiveIntensity: 0.3,
+  });
+  ball.mesh = new THREE.Mesh(geo, mat);
+  ball.mesh.castShadow = true;
+  scene.add(ball.mesh);
+
+  // Trail line
+  const trailGeo = new THREE.BufferGeometry();
+  const trailMat = new THREE.LineBasicMaterial({
+    color: 0x887744, transparent: true, opacity: 0.4,
+  });
+  ball.trail = new THREE.Line(trailGeo, trailMat);
+  scene.add(ball.trail);
+}
+
+function resetTrail() {
+  ball.trailPoints = [];
+  ball.trail.geometry.dispose();
+  ball.trail.geometry = new THREE.BufferGeometry();
+}
+
+function addTrailPoint(x, y, z) {
+  ball.trailPoints.push(x, y + 0.1, z);
+  // Keep trail limited
+  if (ball.trailPoints.length > 3000) {
+    ball.trailPoints.splice(0, 3);
+  }
+  const arr = new Float32Array(ball.trailPoints);
+  ball.trail.geometry.dispose();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  ball.trail.geometry = geo;
+}
+
+// ================================================================
+//  AIM HELPERS
+// ================================================================
+function buildAimHelpers() {
+  // Direction arrow
+  const arrowGeo = new THREE.BufferGeometry();
+  const arrowMat = new THREE.LineBasicMaterial({ color: 0xd4a017, transparent: true, opacity: 0.8 });
+  aimArrow = new THREE.Line(arrowGeo, arrowMat);
+  scene.add(aimArrow);
+
+  // Arc preview
+  const arcMat = new THREE.LineBasicMaterial({ color: 0xd4a017, transparent: true, opacity: 0.35 });
+  aimArcLine = new THREE.Line(new THREE.BufferGeometry(), arcMat);
+  scene.add(aimArcLine);
+}
+
+function updateAimVisuals(dirX, dirZ, power) {
+  if (power < 0.5) {
+    aimArrow.visible = false;
+    aimArcLine.visible = false;
+    return;
+  }
+
+  aimArrow.visible = true;
+  aimArcLine.visible = true;
+
+  const bx = ball.pos.x, by = ball.pos.y, bz = ball.pos.z;
+  const len = Math.min(power * 0.3, 20);
+
+  // Arrow: straight line from ball in aim direction
+  const arrowPts = new Float32Array([
+    bx, by + 0.5, bz,
+    bx + dirX * len, by + 0.5, bz + dirZ * len,
+    // arrowhead
+    bx + dirX * len - dirX * 1.5 + dirZ * 0.8, by + 0.5, bz + dirZ * len - dirZ * 1.5 - dirX * 0.8,
+    bx + dirX * len, by + 0.5, bz + dirZ * len,
+    bx + dirX * len - dirX * 1.5 - dirZ * 0.8, by + 0.5, bz + dirZ * len - dirZ * 1.5 + dirX * 0.8,
+  ]);
+  aimArrow.geometry.dispose();
+  const ag = new THREE.BufferGeometry();
+  ag.setAttribute('position', new THREE.BufferAttribute(arrowPts, 3));
+  aimArrow.geometry = ag;
+
+  // Arc: simulated trajectory preview
+  const angleRad = swing.launchAngle * Math.PI / 180;
+  const speed = power;
+  const vH = speed * Math.cos(angleRad); // horizontal speed
+  const vY = speed * Math.sin(angleRad); // vertical speed
+  const vx = dirX * vH;
+  const vz = dirZ * vH;
+
+  const arcPts = [];
+  let ax = bx, ay = by + 0.5, az = bz;
+  let avy = vY;
+  const arcDt = 0.3;
+  for (let step = 0; step < 200; step++) {
+    arcPts.push(ax, ay, az);
+    ax += vx * arcDt;
+    az += vz * arcDt;
+    avy -= MOON_GRAVITY * arcDt;
+    ay += avy * arcDt;
+
+    // Stop if below terrain
+    const th = sampleTerrainHeight(ax, az);
+    if (ay < th) break;
+    // Stop if too far
+    if (Math.sqrt((ax - bx) ** 2 + (az - bz) ** 2) > 400) break;
+  }
+
+  aimArcLine.geometry.dispose();
+  const arcGeo = new THREE.BufferGeometry();
+  arcGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arcPts), 3));
+  aimArcLine.geometry = arcGeo;
+}
+
+function hideAimVisuals() {
+  aimArrow.visible = false;
+  aimArcLine.visible = false;
+}
+
+// ================================================================
+//  FLAG & CUP
+// ================================================================
+function buildFlagAndCup(fx, fz) {
+  // Remove old
+  if (flagGroup) { scene.remove(flagGroup); }
+  if (cupMesh) { scene.remove(cupMesh); }
+  if (teeMarker) { scene.remove(teeMarker); }
+
+  const fy = sampleTerrainHeight(fx, fz);
+
+  // Flag pole
+  flagGroup = new THREE.Group();
+
+  const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, 4, 8);
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
+  const pole = new THREE.Mesh(poleGeo, poleMat);
+  pole.position.y = 2;
+  pole.castShadow = true;
+  flagGroup.add(pole);
+
+  // Flag — stiff triangle (Apollo-style, wire-framed horizontal)
+  const flagShape = new THREE.Shape();
+  flagShape.moveTo(0, 0);
+  flagShape.lineTo(1.5, 0);
+  flagShape.lineTo(1.5, -0.2);
+  flagShape.lineTo(0.1, -0.6);
+  flagShape.lineTo(0, -0.8);
+  flagShape.lineTo(0, 0);
+
+  const flagGeo = new THREE.ShapeGeometry(flagShape);
+  const flagMat = new THREE.MeshStandardMaterial({
+    color: 0xff2222, roughness: 0.8, metalness: 0.0,
+    side: THREE.DoubleSide,
+    emissive: 0x440000, emissiveIntensity: 0.2,
+  });
+  const flagMesh = new THREE.Mesh(flagGeo, flagMat);
+  flagMesh.position.set(0.04, 3.8, 0);
+  flagMesh.castShadow = true;
+  flagGroup.add(flagMesh);
+
+  // Wire frame support (horizontal rod at top of flag)
+  const wireGeo = new THREE.CylinderGeometry(0.015, 0.015, 1.5, 6);
+  wireGeo.rotateZ(Math.PI / 2);
+  const wireMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.3, metalness: 0.8 });
+  const wire = new THREE.Mesh(wireGeo, wireMat);
+  wire.position.set(0.79, 3.8, 0);
+  flagGroup.add(wire);
+
+  flagGroup.position.set(fx, fy, fz);
+  scene.add(flagGroup);
+
+  // Cup — dark circle on surface
+  const cupGeo = new THREE.CircleGeometry(CUP_RADIUS, 24);
+  cupGeo.rotateX(-Math.PI / 2);
+  const cupMat = new THREE.MeshStandardMaterial({
+    color: 0x111111, roughness: 1.0, metalness: 0.0,
+  });
+  cupMesh = new THREE.Mesh(cupGeo, cupMat);
+  cupMesh.position.set(fx, fy + 0.02, fz);
+  scene.add(cupMesh);
+
+  // Tee marker
+  const teeX = holes[currentHole].tee[0];
+  const teeZ = holes[currentHole].tee[1];
+  const teeY = sampleTerrainHeight(teeX, teeZ);
+
+  const teeGeo = new THREE.CircleGeometry(1.0, 16);
+  teeGeo.rotateX(-Math.PI / 2);
+  const teeMat = new THREE.MeshStandardMaterial({
+    color: 0xd4a017, roughness: 0.9, metalness: 0.0,
+    transparent: true, opacity: 0.5,
+  });
+  teeMarker = new THREE.Mesh(teeGeo, teeMat);
+  teeMarker.position.set(teeX, teeY + 0.03, teeZ);
+  scene.add(teeMarker);
+}
+
+// ================================================================
+//  HOLE SETUP
+// ================================================================
+function setupHole(index) {
+  currentHole = index;
+  currentStrokes = 0;
+  ball.sunk = false;
+  ball.inFlight = false;
+
+  const hole = holes[index];
+  const tx = hole.tee[0], tz = hole.tee[1];
+  const ty = sampleTerrainHeight(tx, tz) + BALL_VISUAL_RADIUS;
+
+  ball.pos.set(tx, ty, tz);
+  ball.vel.set(0, 0, 0);
+  ball.mesh.position.copy(ball.pos);
+
+  resetTrail();
+  buildFlagAndCup(hole.flag[0], hole.flag[1]);
+
+  // Camera: look at ball from slightly behind and above
+  const fx = hole.flag[0], fz = hole.flag[1];
+  const dx = fx - tx, dz = fz - tz;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  const ndx = dx / dist, ndz = dz / dist;
+
+  camera.position.set(tx - ndx * 15, ty + 12, tz - ndz * 15);
+  orbitControls.target.set(tx, ty, tz);
+  camInitialized = false;
+
+  gameState = 'stopped';
+  hideAimVisuals();
+
+  updateHUD();
+}
+
+// ================================================================
+//  SWING / LAUNCH
+// ================================================================
+function launchBall(dirX, dirZ, power) {
+  const angleRad = swing.launchAngle * Math.PI / 180;
+  const speed = Math.min(power, MAX_POWER);
+  const vH = speed * Math.cos(angleRad);
+  const vY = speed * Math.sin(angleRad);
+
+  ball.vel.set(dirX * vH, vY, dirZ * vH);
+  ball.inFlight = true;
+  ball.sunk = false;
+  currentStrokes++;
+  gameState = 'flight';
+
+  playSwing();
+  hideAimVisuals();
+  updateHUD();
+}
+
+// ================================================================
+//  PHYSICS
+// ================================================================
+function physicsTick(dt) {
+  if (!ball.inFlight) return;
+
+  // Gravity
+  ball.vel.y -= MOON_GRAVITY * dt;
+
+  // Integrate position
+  ball.pos.x += ball.vel.x * dt;
+  ball.pos.y += ball.vel.y * dt;
+  ball.pos.z += ball.vel.z * dt;
+
+  // Terrain collision
+  const terrainY = sampleTerrainHeight(ball.pos.x, ball.pos.z);
+  const terrainH = terrainY + BALL_VISUAL_RADIUS;
+
+  if (ball.pos.y <= terrainH) {
+    ball.pos.y = terrainH;
+
+    // Get terrain normal for bounce
+    const normal = sampleTerrainNormal(ball.pos.x, ball.pos.z);
+    if (normal.y < 0.3) normal.set(0, 1, 0); // safety for weird normals
+
+    // Reflect velocity about normal
+    const dot = ball.vel.dot(normal);
+    if (dot < 0) {
+      ball.vel.sub(normal.multiplyScalar(2 * dot));
+      ball.vel.multiplyScalar(COR);
+
+      const speed = ball.vel.length();
+      if (speed > 0.5) {
+        playBounce(speed);
+      }
+
+      // Add trail point at bounce
+      addTrailPoint(ball.pos.x, terrainY, ball.pos.z);
+    }
+  }
+
+  // Rolling on surface
+  if (ball.pos.y <= terrainH + 0.05 && ball.vel.y < 1.0 && ball.vel.y > -1.0) {
+    // Apply rolling friction to horizontal component
+    ball.vel.x *= ROLLING_FRICTION;
+    ball.vel.z *= ROLLING_FRICTION;
+
+    // Slope influence
+    const slopeX = (sampleTerrainHeight(ball.pos.x + 0.5, ball.pos.z) -
+                    sampleTerrainHeight(ball.pos.x - 0.5, ball.pos.z));
+    const slopeZ = (sampleTerrainHeight(ball.pos.x, ball.pos.z + 0.5) -
+                    sampleTerrainHeight(ball.pos.x, ball.pos.z - 0.5));
+    ball.vel.x -= slopeX * MOON_GRAVITY * dt * 0.5;
+    ball.vel.z -= slopeZ * MOON_GRAVITY * dt * 0.5;
+
+    // Keep ball on surface
+    ball.pos.y = terrainH;
+    if (ball.vel.y < 0) ball.vel.y = 0;
+  }
+
+  // Check if ball stopped
+  const hSpeed = Math.sqrt(ball.vel.x ** 2 + ball.vel.z ** 2);
+  const totalSpeed = ball.vel.length();
+  if (totalSpeed < ROLLING_STOP && ball.pos.y <= terrainH + 0.1) {
+    ball.vel.set(0, 0, 0);
+    ball.pos.y = terrainH;
+    ball.inFlight = false;
+    gameState = 'stopped';
+
+    // Check cup
+    const hole = holes[currentHole];
+    const dx = ball.pos.x - hole.flag[0];
+    const dz = ball.pos.z - hole.flag[1];
+    const distToFlag = Math.sqrt(dx * dx + dz * dz);
+    if (distToFlag < CUP_RADIUS) {
+      sinkBall();
+    }
+  }
+
+  // Check cup while moving (if close and slow enough)
+  if (ball.inFlight) {
+    const hole = holes[currentHole];
+    const dx = ball.pos.x - hole.flag[0];
+    const dz = ball.pos.z - hole.flag[1];
+    const distToFlag = Math.sqrt(dx * dx + dz * dz);
+    if (distToFlag < CUP_RADIUS && totalSpeed < CUP_MAX_SPEED) {
+      ball.vel.set(0, 0, 0);
+      ball.inFlight = false;
+      sinkBall();
+    }
+  }
+
+  // Out of bounds check
+  const halfSize = TERRAIN_SIZE / 2;
+  if (Math.abs(ball.pos.x) > halfSize || Math.abs(ball.pos.z) > halfSize) {
+    // Reset to last position
+    const hole = holes[currentHole];
+    const tx = hole.tee[0], tz = hole.tee[1];
+    const ty = sampleTerrainHeight(tx, tz) + BALL_VISUAL_RADIUS;
+    ball.pos.set(tx, ty, tz);
+    ball.vel.set(0, 0, 0);
+    ball.inFlight = false;
+    gameState = 'stopped';
+    currentStrokes++; // penalty stroke
+    showCallout('OUT OF BOUNDS', '#ff4444');
+  }
+
+  // Trail
+  if (ball.inFlight && Math.random() < 0.3) {
+    addTrailPoint(ball.pos.x, sampleTerrainHeight(ball.pos.x, ball.pos.z), ball.pos.z);
+  }
+
+  // Update mesh
+  ball.mesh.position.copy(ball.pos);
+}
+
+// ================================================================
+//  BALL SINK
+// ================================================================
+function sinkBall() {
+  ball.sunk = true;
+  gameState = 'sunk';
+
+  // Animate ball down
+  const hole = holes[currentHole];
+  const fy = sampleTerrainHeight(hole.flag[0], hole.flag[1]);
+  ball.pos.set(hole.flag[0], fy - 0.5, hole.flag[1]);
+  ball.mesh.position.copy(ball.pos);
+
+  playSink();
+
+  // Score callout
+  const par = hole.par;
+  const diff = currentStrokes - par;
+  let text, color;
+  if (currentStrokes === 1) { text = 'HOLE IN ONE!'; color = '#ffff00'; playApplause(); }
+  else if (diff === -3) { text = 'ALBATROSS!'; color = '#00ffff'; playApplause(); }
+  else if (diff === -2) { text = 'EAGLE!'; color = '#44ff44'; playApplause(); }
+  else if (diff === -1) { text = 'BIRDIE!'; color = '#44ff44'; playApplause(); }
+  else if (diff === 0) { text = 'PAR'; color = '#d4a017'; }
+  else if (diff === 1) { text = 'BOGEY'; color = '#ff8844'; }
+  else if (diff === 2) { text = 'DOUBLE BOGEY'; color = '#ff4444'; }
+  else { text = '+' + diff; color = '#ff4444'; }
+
+  showCallout(text, color);
+
+  strokes[currentHole] = currentStrokes;
+
+  // Advance to next hole after delay
+  setTimeout(() => {
+    if (currentHole < 8) {
+      setupHole(currentHole + 1);
+    } else {
+      showScorecard();
+    }
+  }, 2500);
+}
+
+// ================================================================
+//  CALLOUT
+// ================================================================
+function showCallout(text, color) {
+  calloutEl.textContent = text;
+  calloutEl.style.color = color || '#44ff44';
+  calloutEl.style.textShadow = `0 0 30px ${color || '#44ff44'}80, 0 0 60px ${color || '#44ff44'}40`;
+  calloutEl.style.display = 'block';
+  calloutEl.style.animation = 'none';
+  calloutEl.offsetHeight; // reflow
+  calloutEl.style.animation = 'callout-pop 0.3s ease-out';
+
+  setTimeout(() => { calloutEl.style.display = 'none'; }, 2000);
+}
+
+// ================================================================
+//  SCORECARD
+// ================================================================
+function showScorecard() {
+  gameState = 'scorecard';
+  hudEl.style.display = 'none';
+
+  const body = document.getElementById('score-body');
+  body.innerHTML = '';
+
+  let totalStrokes = 0, totalPar = 0;
+  for (let i = 0; i < 9; i++) {
+    const s = strokes[i] || 0;
+    const p = holes[i].par;
+    totalStrokes += s;
+    totalPar += p;
+    const diff = s - p;
+    const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+    const scoreStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : '' + diff);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i + 1}</td><td>${p}</td><td>${s}</td><td class="${cls}">${scoreStr}</td>`;
+    body.appendChild(tr);
+  }
+
+  // Total row
+  const totalDiff = totalStrokes - totalPar;
+  const totalCls = totalDiff < 0 ? 'under' : totalDiff > 0 ? 'over' : 'even';
+  const totalStr = totalDiff === 0 ? 'EVEN' : (totalDiff > 0 ? '+' + totalDiff : '' + totalDiff);
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td>TOT</td><td>${totalPar}</td><td>${totalStrokes}</td><td class="${totalCls}">${totalStr}</td>`;
+  body.appendChild(totalTr);
+
+  // Verdict
+  const verdict = document.getElementById('verdict');
+  if (totalDiff <= -9) verdict.textContent = 'LEGENDARY ASTRONAUT';
+  else if (totalDiff <= -5) verdict.textContent = 'MOON MASTER';
+  else if (totalDiff < 0) verdict.textContent = 'UNDER PAR — WELL PLAYED';
+  else if (totalDiff === 0) verdict.textContent = 'EVEN PAR — SOLID ROUND';
+  else if (totalDiff <= 5) verdict.textContent = 'NEEDS MORE PRACTICE';
+  else verdict.textContent = 'PERHAPS TRY MINI GOLF';
+
+  scorecardEl.style.display = 'flex';
+
+  // PostMessage
+  try {
+    window.parent.postMessage({
+      type: 'golf:completed',
+      score: totalStrokes,
+      par: totalPar,
+      differential: totalDiff,
+    }, '*');
+  } catch (e) { /* iframe security */ }
+}
+
+// ================================================================
+//  HUD UPDATE
+// ================================================================
+function updateHUD() {
+  if (gameState === 'scorecard') return;
+
+  const hole = holes[currentHole];
+  hudHole.textContent = currentHole + 1;
+  hudPar.textContent = hole.par;
+  hudStroke.textContent = currentStrokes;
+
+  const dx = ball.pos.x - hole.flag[0];
+  const dz = ball.pos.z - hole.flag[1];
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  hudDist.textContent = dist.toFixed(1);
+
+  const speed = ball.vel.length();
+  hudSpeed.textContent = speed.toFixed(1);
+
+  let totalSoFar = 0;
+  for (let i = 0; i < currentHole; i++) totalSoFar += (strokes[i] || 0);
+  totalSoFar += currentStrokes;
+  hudTotal.textContent = totalSoFar;
+
+  hudAngle.textContent = `ANGLE: ${swing.launchAngle}\u00B0`;
+}
+
+// ================================================================
+//  CAMERA
+// ================================================================
+function updateCamera(dt) {
+  const smoothFactor = 1 - Math.exp(-4 * dt);
+
+  if (ball.inFlight) {
+    // Follow mode
+    const speed = ball.vel.length();
+    const dirX = speed > 0.1 ? ball.vel.x / speed : 0;
+    const dirZ = speed > 0.1 ? ball.vel.z / speed : 0;
+
+    const targetPos = new THREE.Vector3(
+      ball.pos.x - dirX * 15,
+      ball.pos.y + 8 + speed * 0.15,
+      ball.pos.z - dirZ * 15
+    );
+    const targetLook = ball.pos.clone();
+    targetLook.y += 1;
+
+    if (!camInitialized) {
+      camSmoothPos.copy(targetPos);
+      camSmoothTarget.copy(targetLook);
+      camInitialized = true;
+    }
+
+    camSmoothPos.lerp(targetPos, smoothFactor);
+    camSmoothTarget.lerp(targetLook, smoothFactor);
+
+    camera.position.copy(camSmoothPos);
+    camera.lookAt(camSmoothTarget);
+    orbitControls.enabled = false;
+  } else {
+    // Orbit mode around ball
+    orbitControls.enabled = true;
+    orbitControls.target.lerp(ball.pos, smoothFactor * 2);
+  }
+}
+
+// ================================================================
+//  INPUT
+// ================================================================
+function initInput() {
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (gameState !== 'stopped') return;
+    if (e.button !== 0) return;
+
+    swing.dragging = true;
+    swing.startX = e.clientX;
+    swing.startY = e.clientY;
+    swing.currentX = e.clientX;
+    swing.currentY = e.clientY;
+
+    powerMeter.style.display = 'block';
+    powerFill.style.width = '0%';
+    gameState = 'aiming';
+    orbitControls.enabled = false;
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!swing.dragging) return;
+    swing.currentX = e.clientX;
+    swing.currentY = e.clientY;
+
+    const dx = swing.currentX - swing.startX;
+    const dy = swing.currentY - swing.startY;
+    const dragDist = Math.sqrt(dx * dx + dy * dy);
+    const power = Math.min(dragDist * DRAG_SCALE, MAX_POWER);
+
+    powerFill.style.width = (power / MAX_POWER * 100) + '%';
+
+    // Convert screen drag to world direction
+    // Drag down = hit forward (away from camera)
+    const cam = camera;
+    const forward = new THREE.Vector3();
+    cam.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+    // Screen drag maps: right = screen X, forward = screen -Y (drag down = forward)
+    const worldDirX = -dx * right.x + -dy * forward.x;
+    const worldDirZ = -dx * right.z + -dy * forward.z;
+    const worldLen = Math.sqrt(worldDirX * worldDirX + worldDirZ * worldDirZ);
+
+    if (worldLen > 0.01) {
+      updateAimVisuals(worldDirX / worldLen, worldDirZ / worldLen, power);
+    }
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+    if (!swing.dragging) return;
+    swing.dragging = false;
+    powerMeter.style.display = 'none';
+
+    const dx = swing.currentX - swing.startX;
+    const dy = swing.currentY - swing.startY;
+    const dragDist = Math.sqrt(dx * dx + dy * dy);
+    const power = Math.min(dragDist * DRAG_SCALE, MAX_POWER);
+
+    if (power < 1) {
+      gameState = 'stopped';
+      hideAimVisuals();
+      orbitControls.enabled = true;
+      return;
+    }
+
+    // Convert to world direction (same logic as mousemove)
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+    const worldDirX = -dx * right.x + -dy * forward.x;
+    const worldDirZ = -dx * right.z + -dy * forward.z;
+    const worldLen = Math.sqrt(worldDirX * worldDirX + worldDirZ * worldDirZ);
+
+    if (worldLen > 0.01) {
+      launchBall(worldDirX / worldLen, worldDirZ / worldLen, power);
+    } else {
+      gameState = 'stopped';
+      hideAimVisuals();
+      orbitControls.enabled = true;
+    }
+  });
+
+  // Mouse wheel: adjust launch angle
+  canvas.addEventListener('wheel', (e) => {
+    if (gameState === 'stopped' || gameState === 'aiming') {
+      e.preventDefault();
+      swing.launchAngle += (e.deltaY > 0 ? -2 : 2);
+      swing.launchAngle = Math.max(5, Math.min(75, swing.launchAngle));
+      updateHUD();
+    }
+  }, { passive: false });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+
+    if (key === 'r' && (gameState === 'stopped' || gameState === 'flight')) {
+      // Reset ball to tee
+      const hole = holes[currentHole];
+      const tx = hole.tee[0], tz = hole.tee[1];
+      const ty = sampleTerrainHeight(tx, tz) + BALL_VISUAL_RADIUS;
+      ball.pos.set(tx, ty, tz);
+      ball.vel.set(0, 0, 0);
+      ball.inFlight = false;
+      ball.mesh.position.copy(ball.pos);
+      gameState = 'stopped';
+      currentStrokes++; // penalty
+      showCallout('RESET +1', '#ff8844');
+      updateHUD();
+    }
+
+    if (key === 'c') {
+      cameraMode = (cameraMode + 1) % 2;
+    }
+  });
+
+  // Prevent context menu
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// ================================================================
+//  MAIN LOOP
+// ================================================================
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  // FPS counter
+  fpsFrames++;
+  fpsTime += dt;
+  if (fpsTime >= 1) {
+    fpsDisplay = fpsFrames;
+    fpsFrames = 0;
+    fpsTime = 0;
+  }
+
+  // Physics (fixed timestep)
+  if (gameState === 'flight') {
+    physicsAccum += dt;
+    while (physicsAccum >= DT) {
+      physicsTick(DT);
+      physicsAccum -= DT;
+    }
+  }
+
+  // Camera
+  updateCamera(dt || 0.016);
+  orbitControls.update();
+
+  // Rotate flag to always face camera (billboard Y-axis)
+  if (flagGroup) {
+    // Just rotate the flag mesh to face camera
+    const flagWorld = new THREE.Vector3();
+    flagGroup.getWorldPosition(flagWorld);
+    const camDir = new THREE.Vector3();
+    camDir.subVectors(camera.position, flagWorld);
+    camDir.y = 0;
+    flagGroup.rotation.y = Math.atan2(camDir.x, camDir.z);
+  }
+
+  // HUD
+  updateHUD();
+
+  renderer.render(scene, camera);
+}
+
+// ================================================================
+//  START GAME
+// ================================================================
+function startGame() {
+  initAudio();
+  startOverlay.style.display = 'none';
+  hudEl.style.display = 'block';
+  strokes = [];
+  currentHole = 0;
+  setupHole(0);
+  clock.start();
+  camInitialized = false;
+
+  // PostMessage
+  try {
+    window.parent.postMessage({ type: 'golf:ready' }, '*');
+  } catch (e) { /* iframe security */ }
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+initScene();
+initInput();
+
+// Start overlay click
+startOverlay.addEventListener('click', startGame);
+
+// Play again
+document.getElementById('play-again-btn').addEventListener('click', () => {
+  scorecardEl.style.display = 'none';
+  hudEl.style.display = 'block';
+  strokes = [];
+  currentHole = 0;
+  generateHoles(); // new course each time
+  setupHole(0);
+  gameState = 'stopped';
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Start animation loop (renders start screen too)
+clock = new THREE.Clock(false);
+animate();
+
+</script>
+</body>
+</html>
