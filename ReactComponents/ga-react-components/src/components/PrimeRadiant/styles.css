@@ -1732,6 +1732,7 @@
 .brainstorm-side__card-link { margin-left: auto; font-size: 9px; color: #4FC3F7; text-decoration: none; }
 .brainstorm-side__card-link:hover { text-decoration: underline; }
 .brainstorm-side__card--active { border-color: rgba(79, 195, 247, 0.3); background: rgba(79, 195, 247, 0.04); }
+.brainstorm-side__readonly { font-size: 9px; color: #8b949e; text-align: center; padding: 4px 12px; border-bottom: 1px solid #21262d; font-style: italic; }
 
 /* Actions row */
 .brainstorm-side__actions { display: flex; gap: 4px; padding: 8px 12px 4px; }
