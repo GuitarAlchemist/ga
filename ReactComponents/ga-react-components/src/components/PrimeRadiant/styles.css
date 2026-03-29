@@ -3311,23 +3311,42 @@
     padding: 8px 10px;
   }
 
-  /* Buttons — smaller, tighter */
+  /* Buttons — above the tab bar (52px rail + 8px margin) */
   .chat-widget__trigger,
   .prime-radiant__tutorial-btn {
-    width: 34px;
-    height: 34px;
-    left: 10px;
+    width: 38px;
+    height: 38px;
+    min-width: 44px;
+    min-height: 44px;
+    left: 8px;
+    top: auto;
   }
-  .chat-widget__trigger { bottom: 10px; font-size: 14px; }
-  .prime-radiant__tutorial-btn { bottom: 52px; font-size: 13px; }
+  .chat-widget__trigger { bottom: 68px; font-size: 14px; }      /* above 52px rail + gap */
+  .prime-radiant__tutorial-btn { display: none; }                /* hidden — brainstorm panel replaces it */
 
-  /* Chat panel — full width bottom sheet */
+  /* Floating brainstorm trigger — hidden on phone (it's in the rail now) */
+  .brainstorm-trigger { display: none; }
+
+  /* Chat panel — full width bottom sheet, above rail */
   .chat-widget__panel {
-    width: calc(100vw - 20px);
+    width: calc(100vw - 16px);
     height: 50vh;
-    left: 10px;
-    bottom: 52px;
+    left: 8px;
+    bottom: 68px;
     border-radius: 12px;
+  }
+
+  /* Icon rail scroll hint — gradient fade on right edge */
+  .icon-rail::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    flex-shrink: 0;
+    background: linear-gradient(to right, transparent, rgba(13, 17, 23, 0.95));
+    pointer-events: none;
   }
 
   /* GST clock — smaller */
@@ -3369,7 +3388,7 @@
     position: fixed;
     left: 4px;
     top: auto;
-    bottom: 60px;  /* above the 52px icon-rail tab bar */
+    bottom: 116px;  /* above chat trigger (68px) + trigger height (44px) + gap */
     z-index: 30;
   }
 
