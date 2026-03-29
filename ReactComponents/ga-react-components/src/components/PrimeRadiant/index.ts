@@ -76,6 +76,8 @@ export { usePrControl } from './usePrControl';
 export type { PrCommand, PrResult, PrControlHandlers } from './usePrControl';
 export { LunarLander } from './LunarLander';
 export type { LunarLanderProps, LunarLanderStats } from './LunarLander';
+export { LunarLanderEngine } from './LunarLanderEngine';
+export type { LanderState, LanderStats } from './LunarLanderEngine';
 export { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
 export { startSignalRGisBridge } from './SignalRGisBridge';
 export type { SignalRGisBridgeHandle } from './SignalRGisBridge';
