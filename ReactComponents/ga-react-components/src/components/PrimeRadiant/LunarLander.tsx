@@ -52,6 +52,8 @@ const initialState: LanderState = {
   gameState: 'waiting',
   calloutText: '',
   cinematicMode: false,
+  mothershipVisible: false,
+  autopilot: false,
 };
 
 // ---------------------------------------------------------------------------
