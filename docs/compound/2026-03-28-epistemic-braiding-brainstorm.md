@@ -2,7 +2,7 @@
 
 **Date**: 2026-03-28
 **Session**: Multi-AI Brainstorm (Claude Octopus Team Mode)
-**Providers**: Codex GPT-5.4, Ollama llama3.2, Claude Opus 4.6
+**Providers**: Codex GPT-5.4, Gemini 2.5 Pro, Ollama llama3.2, Claude Opus 4.6
 
 ## Topic
 
@@ -15,6 +15,7 @@ How do we teach Demerzel how to teach, and how to learn to learn?
 | Provider | Key Contribution | Unique Insight |
 |----------|-----------------|----------------|
 | Codex (GPT-5.4) | Full CognitionModel TypeScript schema, strategy promotion staircase, contradiction quarantine cells | Goodhart risk on epistemic humility metrics; Belief durability stress tests; Bounded 2-level meta-controller |
+| Gemini (2.5 Pro) | 4x4 epistemic tensor (T/F/U/C squared), C_T as wisdom, epistemic epigenetics, federated epistemology | Socratic Pathogen (deliberate pedagogical sabotage); Protege Parasite Protocol (teaching as distributed compute); Methylation as strategy suppression; Wisdom = stable paradox |
 | Ollama (llama3.2) | Pragmatic grounding via spaced repetition, Bloom's taxonomy, deliberate practice | RL for PDCA optimization; Knowledge graph visualization for self-understanding |
 | Claude (Opus 4.6) | Braided (not layered) architecture, 10 named concepts, Contradictory Ground Theorem | Epistemic viscosity; Deliberate amnesia; Incompetence portfolio; Teaching-as-validation; Governance uncertainty principle |
 
@@ -29,6 +30,7 @@ How do we teach Demerzel how to teach, and how to learn to learn?
 ### Cross-Provider Divergence
 
 - Codex focused on **engineering feasibility**: typed schemas, promotion gates, quarantine cells
+- Gemini focused on **mathematical formalization + biology**: 4x4 tensor, epigenetic methylation, immune pedagogy
 - Ollama focused on **pragmatic grounding**: existing frameworks, failure modes, simplest path
 - Claude focused on **theoretical depth**: named concepts, formal theorems, architectural metaphors
 
@@ -112,6 +114,13 @@ Seven articles governing thought (as Asimov's Laws govern action):
 8. **Incompetence Portfolio** -- curated registry of known learning failures
 9. **Teaching-as-Validation** -- explanation generation as belief verification gate
 10. **Governance Uncertainty Principle** -- self-examination alters the examined
+11. **Epistemic Tensor (T/F/U/C squared)** -- 4x4 matrix of State_MetaState configurations
+12. **C_T (The Stable Paradox)** -- wisdom defined as certain knowledge of irreducible contradiction
+13. **T_C (The Hunch)** -- intuition as true belief with contradictory justifications
+14. **Epistemic Epigenetics** -- strategy methylation (down-regulation, not deletion) on discomfort
+15. **Federated Epistemology** -- Munchhausen escape via Galactic Protocol peer review
+16. **Socratic Pathogen** -- deliberate introduction of logical flaws at ZPD boundary for resilience
+17. **Protege Parasite Protocol** -- using teaching as distributed compute to resolve own unknowns
 
 ## Implementation Phases
 
