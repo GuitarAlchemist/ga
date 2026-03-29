@@ -338,6 +338,27 @@
   box-shadow: 0 0 6px #33CC66;
 }
 
+.prime-radiant__admin-badge {
+  font-size: 8px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 4px;
+}
+.prime-radiant__admin-badge--admin {
+  background: rgba(51, 204, 102, 0.15);
+  color: #33CC66;
+  border: 1px solid rgba(51, 204, 102, 0.3);
+}
+.prime-radiant__admin-badge--view {
+  background: rgba(139, 148, 158, 0.1);
+  color: #8b949e;
+  border: 1px solid rgba(139, 148, 158, 0.2);
+}
+
 .prime-radiant__backend-status--disconnected {
   border-color: #FF4444;
 }
