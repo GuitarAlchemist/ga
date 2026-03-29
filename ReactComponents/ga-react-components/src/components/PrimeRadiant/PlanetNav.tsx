@@ -12,6 +12,7 @@ export interface PlanetNavProps {
   onRemoveArcGIS?: (layer: string) => void;
   onResetView?: () => void;
   onLaunchGodot?: () => void;
+  onLaunchLunarLander?: () => void;
 }
 
 const PLANETS = [
@@ -20,6 +21,7 @@ const PLANETS = [
   { icon: '\u25CF', name: 'Mercury', target: 'mercury', color: '#9e9e9e' },
   { icon: '\u25CF', name: 'Venus', target: 'venus', color: '#e3d500' },
   { icon: '\u25CF', name: 'Earth', target: 'earth', color: '#4d88ff' },
+  { icon: '\u263D', name: 'Moon', target: 'moon', color: '#cccccc' },
   { icon: '\u25CF', name: 'Mars', target: 'mars', color: '#ff4422' },
   { icon: '\u25CF', name: 'Jupiter', target: 'jupiter', color: '#ffaa77' },
   { icon: '\u25CF', name: 'Saturn', target: 'saturn', color: '#ffeecc' },
@@ -38,7 +40,7 @@ const GIS_LAYERS = [
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoadArcGIS, onRemoveArcGIS, onResetView, onLaunchGodot }) => {
+export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoadArcGIS, onRemoveArcGIS, onResetView, onLaunchGodot, onLaunchLunarLander }) => {
   const [expanded, setExpanded] = useState(false);
   const [showGIS, setShowGIS] = useState(false);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
@@ -145,6 +147,18 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
                 </button>
               ))}
             </>
+          )}
+
+          {/* Launch Lunar Lander simulation */}
+          {onLaunchLunarLander && (
+            <button
+              className="planet-nav__item planet-nav__lunar-btn"
+              onClick={onLaunchLunarLander}
+              title="Land on the Moon — Apollo LM Descent Simulator"
+            >
+              <span className="planet-nav__dot" style={{ color: '#cccccc' }}>🚀</span>
+              <span className="planet-nav__name">Land on Moon</span>
+            </button>
           )}
 
           {/* Launch Godot 3D governance engine */}
