@@ -366,14 +366,25 @@ export class LunarLanderEngine {
     this.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 50000);
     this.camera.position.set(40, START_ALTITUDE + 20, 80);
 
-    // Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+    // Renderer — optimized WebGL with stencil/alpha disabled for perf
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        powerPreference: 'high-performance',
+        alpha: false,
+        stencil: false,
+        depth: true,
+      });
+    } catch {
+      this.renderer = new THREE.WebGLRenderer({ antialias: false });
+    }
     this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.7;
+    this.renderer.info.autoReset = false;
     container.appendChild(this.renderer.domElement);
 
     // OrbitControls
@@ -933,23 +944,60 @@ export class LunarLanderEngine {
   private speakCallout(text: string): void {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
-    u.pitch = 0.85;
+    u.rate = 0.9;
+    u.pitch = 0.8;
     u.volume = 0.7;
-    // Try to find a male English voice
+    // Prefer high-quality Google/Microsoft voices, then male English
     const voices = window.speechSynthesis.getVoices();
-    const maleEn = voices.find(v => v.lang.startsWith('en') && /male|david|james|daniel/i.test(v.name));
-    if (maleEn) u.voice = maleEn;
+    const googleOrMs = voices.find(
+      v => v.lang.startsWith('en') && /google|microsoft/i.test(v.name),
+    );
+    const maleEn = voices.find(
+      v => v.lang.startsWith('en') && /male|david|james|daniel/i.test(v.name),
+    );
+    if (googleOrMs) u.voice = googleOrMs;
+    else if (maleEn) u.voice = maleEn;
     else {
       const anyEn = voices.find(v => v.lang.startsWith('en'));
       if (anyEn) u.voice = anyEn;
     }
+
+    // Radio crackle before speech
+    this.playRadioCrackle();
+
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
+
+    // Radio crackle after utterance ends
+    u.onend = () => {
+      setTimeout(() => this.playRadioCrackle(), 200);
+    };
 
     // Post callout text for HUD display
     this.lastCalloutText = text;
     this.lastCalloutDisplayTime = performance.now();
+  }
+
+  private playRadioCrackle(): void {
+    if (!this.audioCtx) return;
+    const ctx = this.audioCtx;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.7 ? 0.3 : 0.05);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1200;
+    bp.Q.value = 2;
+    const g = ctx.createGain();
+    g.gain.value = 0.15;
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(ctx.destination);
+    src.start();
   }
 
   private lastCalloutText = '';
@@ -1923,16 +1971,114 @@ export class LunarLanderEngine {
   // ── Particle Systems ────────────────────────────────────────
 
   private buildParticleSystems(): void {
-    this.exhaustSys = createParticlePool(this.scene, EXHAUST_COUNT, 1.0, 0xc0ddff, THREE.AdditiveBlending);
-    this.dustSys = createParticlePool(this.scene, DUST_COUNT, 2.0, 0x887766, THREE.NormalBlending);
-    (this.dustSys.material as THREE.PointsMaterial).opacity = 0.4;
+    // Engine exhaust — custom ShaderMaterial for hot-core-to-transparent fade
+    this.exhaustSys = this.createShaderParticlePool(
+      EXHAUST_COUNT, 1.2, THREE.AdditiveBlending, 'exhaust',
+    );
 
+    // Dust — warm tan-gray regolith with normal blending
+    this.dustSys = createParticlePool(this.scene, DUST_COUNT, 2.5, 0x998877, THREE.NormalBlending);
+    (this.dustSys.material as THREE.PointsMaterial).opacity = 0.5;
+
+    // RCS jets — brighter, 15 particles per system for sharper bursts
+    const rcsCount = 45; // 15 per burst × 3 buffered
     this.rcsSystemsByName = {
-      pitch: createParticlePool(this.scene, RCS_PART_COUNT, 0.35, 0xeeeeff, THREE.AdditiveBlending),
-      roll: createParticlePool(this.scene, RCS_PART_COUNT, 0.35, 0xeeeeff, THREE.AdditiveBlending),
-      yaw: createParticlePool(this.scene, RCS_PART_COUNT, 0.35, 0xeeeeff, THREE.AdditiveBlending),
-      trans: createParticlePool(this.scene, RCS_PART_COUNT, 0.35, 0xeeeeff, THREE.AdditiveBlending),
+      pitch: this.createShaderParticlePool(rcsCount, 0.5, THREE.AdditiveBlending, 'rcs'),
+      roll: this.createShaderParticlePool(rcsCount, 0.5, THREE.AdditiveBlending, 'rcs'),
+      yaw: this.createShaderParticlePool(rcsCount, 0.5, THREE.AdditiveBlending, 'rcs'),
+      trans: this.createShaderParticlePool(rcsCount, 0.5, THREE.AdditiveBlending, 'rcs'),
     };
+  }
+
+  /** Create a particle pool with custom vertex/fragment shaders for age-based rendering */
+  private createShaderParticlePool(
+    count: number,
+    baseSize: number,
+    blending: THREE.Blending,
+    type: 'exhaust' | 'rcs',
+  ): THREE.Points {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const ages = new Float32Array(count);       // normalized age 0-1
+    const sizes = new Float32Array(count);      // per-particle size
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3 + 1] = -99999;
+      ages[i] = 1.0; // fully expired
+      sizes[i] = baseSize;
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aAge', new THREE.BufferAttribute(ages, 1));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+
+    const vertexShader = `
+      attribute float aAge;
+      attribute float aSize;
+      varying float vAge;
+      void main() {
+        vAge = aAge;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        // Size grows with age (expanding in vacuum)
+        float expand = ${type === 'exhaust' ? '1.0 + aAge * 2.5' : '1.0 + aAge * 0.5'};
+        gl_PointSize = aSize * expand * (300.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `;
+
+    const fragmentShader = type === 'exhaust'
+      ? `
+      varying float vAge;
+      void main() {
+        // Soft circular shape
+        vec2 center = gl_PointCoord - vec2(0.5);
+        float dist = length(center);
+        float alpha = smoothstep(0.5, 0.15, dist);
+        // Color: white-blue core -> orange -> transparent
+        vec3 coreColor = vec3(0.85, 0.9, 1.0);
+        vec3 midColor = vec3(1.0, 0.6, 0.15);
+        vec3 outerColor = vec3(0.8, 0.25, 0.05);
+        vec3 color = mix(coreColor, midColor, smoothstep(0.0, 0.4, vAge));
+        color = mix(color, outerColor, smoothstep(0.3, 0.8, vAge));
+        float fadeOut = 1.0 - smoothstep(0.5, 1.0, vAge);
+        gl_FragColor = vec4(color, alpha * fadeOut);
+      }
+    `
+      : `
+      varying float vAge;
+      void main() {
+        // RCS: white-hot core fading to transparent very quickly
+        vec2 center = gl_PointCoord - vec2(0.5);
+        float dist = length(center);
+        float alpha = smoothstep(0.5, 0.05, dist);
+        vec3 color = mix(vec3(1.0, 1.0, 1.0), vec3(0.7, 0.8, 1.0), vAge);
+        float fadeOut = 1.0 - smoothstep(0.1, 0.6, vAge);
+        gl_FragColor = vec4(color, alpha * fadeOut * 1.5);
+      }
+    `;
+
+    const mat = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      blending,
+      depthWrite: false,
+    });
+
+    const mesh = new THREE.Points(geo, mat);
+    mesh.frustumCulled = false;
+
+    mesh.userData = {
+      count,
+      lifetimes: new Float32Array(count),
+      maxLife: new Float32Array(count),
+      velocities: new Float32Array(count * 3),
+      active: new Uint8Array(count),
+      nextSlot: 0,
+    } as ParticleUserData;
+
+    this.scene.add(mesh);
+    return mesh;
   }
 
   private emitEngineExhaust(): void {
@@ -1971,26 +2117,30 @@ export class LunarLanderEngine {
     if (this.lm.altitude > DUST_START_ALT || this.lm.throttle <= 0.001 || this.lm.fuel <= 0) return;
 
     const intensity = this.lm.throttle * Math.pow(1 - this.lm.altitude / DUST_START_ALT, 1.5);
-    const count = Math.ceil(intensity * 8);
+    const count = Math.ceil(intensity * 10);
     const groundY = this.lm.pos.y - this.lm.altitude;
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const r = 0.5 + Math.random() * 4;
+      const r = 0.3 + Math.random() * 5;
       this._tmpEmitPos.set(
         this.lm.pos.x + Math.cos(angle) * r,
-        groundY + 0.1 + Math.random() * 0.3,
+        groundY + 0.05 + Math.random() * 0.2,
         this.lm.pos.z + Math.sin(angle) * r,
       );
 
-      const speed = 4 + Math.random() * 18 * intensity;
+      // Ballistic arc: higher upward velocity + strong outward for natural billowing
+      const outSpeed = 5 + Math.random() * 22 * intensity;
+      const upSpeed = 2.5 + Math.random() * 8 * intensity;
+      // Add tangential component for swirl effect
+      const tangent = angle + (Math.random() - 0.5) * 0.8;
       this._tmpEmitVel.set(
-        Math.cos(angle) * speed + (Math.random() - 0.5) * 2,
-        1.5 + Math.random() * 6 * intensity,
-        Math.sin(angle) * speed + (Math.random() - 0.5) * 2,
+        Math.cos(angle) * outSpeed + Math.cos(tangent) * (Math.random() * 3),
+        upSpeed,
+        Math.sin(angle) * outSpeed + Math.sin(tangent) * (Math.random() * 3),
       );
 
-      emitParticle(this.dustSys, this._tmpEmitPos, this._tmpEmitVel, 0.8 + Math.random() * 2.5);
+      emitParticle(this.dustSys, this._tmpEmitPos, this._tmpEmitVel, 1.2 + Math.random() * 3.0);
     }
   }
 
@@ -2004,18 +2154,19 @@ export class LunarLanderEngine {
     this._tmpEmitPos.set(quadLocal.x, quadLocal.y + 2.0, quadLocal.z);
     this.lmGroup.localToWorld(this._tmpEmitPos);
 
-    for (let i = 0; i < 2; i++) {
+    // 15 particles per burst for brighter, sharper RCS jets
+    for (let i = 0; i < 15; i++) {
       this._tmpEmitVel
         .set(
-          direction.x + (Math.random() - 0.5) * 1.5,
-          direction.y + (Math.random() - 0.5) * 1.5,
-          direction.z + (Math.random() - 0.5) * 1.5,
+          direction.x + (Math.random() - 0.5) * 1.2,
+          direction.y + (Math.random() - 0.5) * 1.2,
+          direction.z + (Math.random() - 0.5) * 1.2,
         )
         .normalize()
-        .multiplyScalar(4 + Math.random() * 6);
+        .multiplyScalar(5 + Math.random() * 8);
       this._tmpEmitVel.applyQuaternion(this.lm.quat);
 
-      emitParticle(sys, this._tmpEmitPos, this._tmpEmitVel, 0.08 + Math.random() * 0.12);
+      emitParticle(sys, this._tmpEmitPos, this._tmpEmitVel, 0.04 + Math.random() * 0.08);
     }
   }
 
@@ -2026,6 +2177,9 @@ export class LunarLanderEngine {
       const ud = sys.userData as ParticleUserData;
       const pos = (sys.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
       const vel = ud.velocities;
+      // Age attribute for shader-based systems
+      const ageAttr = sys.geometry.attributes.aAge as THREE.BufferAttribute | undefined;
+      const ageArr = ageAttr ? ageAttr.array as Float32Array : null;
 
       for (let i = 0; i < ud.count; i++) {
         if (!ud.active[i]) continue;
@@ -2033,6 +2187,7 @@ export class LunarLanderEngine {
         if (ud.lifetimes[i] <= 0) {
           ud.active[i] = 0;
           pos[i * 3 + 1] = -99999;
+          if (ageArr) ageArr[i] = 1.0;
           continue;
         }
 
@@ -2040,18 +2195,24 @@ export class LunarLanderEngine {
         pos[i * 3 + 1] += vel[i * 3 + 1] * dt;
         pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
 
-        // Gravity on dust
+        // Update normalized age (0 = just born, 1 = expired)
+        if (ageArr && ud.maxLife[i] > 0) {
+          ageArr[i] = 1.0 - ud.lifetimes[i] / ud.maxLife[i];
+        }
+
+        // Gravity on dust — full lunar gravity for ballistic arcs
         if (sys === this.dustSys) {
-          vel[i * 3 + 1] -= MOON_GRAVITY * 0.4 * dt;
+          vel[i * 3 + 1] -= MOON_GRAVITY * dt;
           if (pos[i * 3 + 1] < this.landingZoneCenter.y) {
             vel[i * 3 + 1] = 0;
-            vel[i * 3] *= 0.95;
-            vel[i * 3 + 2] *= 0.95;
+            vel[i * 3] *= 0.92;
+            vel[i * 3 + 2] *= 0.92;
           }
         }
       }
 
       (sys.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+      if (ageAttr) ageAttr.needsUpdate = true;
     }
   }
 
@@ -2741,6 +2902,7 @@ export class LunarLanderEngine {
       this.earthGroupRef.userData.updateFresnel();
     }
 
+    this.renderer.info.reset();
     this.composer.render();
   };
 }
