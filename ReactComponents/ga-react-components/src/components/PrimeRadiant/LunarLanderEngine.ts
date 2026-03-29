@@ -4,6 +4,11 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { Lensflare, LensflareElement } from 'three/examples/jsm/objects/Lensflare.js';
 
 // ================================================================
 //  PUBLIC TYPES
@@ -60,6 +65,7 @@ const THROTTLE_RATE  = 0.20;
 const START_ALTITUDE = 500;
 const TERRAIN_SIZE   = 2000;
 const TERRAIN_SEGS   = 128; // 256 was 65K verts — 128 = 16K, plenty for visual quality
+const MOON_RADIUS    = 1737400; // meters
 const STAR_COUNT     = 8000;
 const EXHAUST_COUNT  = 120;
 const DUST_COUNT     = 250;
@@ -242,6 +248,7 @@ export class LunarLanderEngine {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private composer!: EffectComposer;
   private orbitControls: OrbitControls;
   private clock: THREE.Clock;
   private container: HTMLDivElement;
@@ -387,9 +394,23 @@ export class LunarLanderEngine {
     this.buildLighting();
     this.buildStarfield();
     this.buildEarth();
+    this.buildSunDisc();
     this.buildTerrain();
+    this.buildHorizonGlow();
     this.buildLunarModule();
     this.buildParticleSystems();
+
+    // Post-processing: subtle bloom
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(w, h),
+      0.15,  // strength
+      0.4,   // radius
+      0.85,  // threshold
+    );
+    this.composer.addPass(bloomPass);
+    this.composer.addPass(new OutputPass());
 
     // Input
     this.boundKeyDown = this.onKeyDown.bind(this);
@@ -401,7 +422,7 @@ export class LunarLanderEngine {
     window.addEventListener('blur', this.boundBlur);
 
     // Pre-render one frame
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
   // ── Public API ──────────────────────────────────────────────
@@ -509,6 +530,7 @@ export class LunarLanderEngine {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    if (this.composer) this.composer.setSize(width, height);
   }
 
   cycleCamera(): void {
@@ -845,10 +867,12 @@ export class LunarLanderEngine {
     const lmPos = this.lm.pos;
     const alt = this.lm.altitude;
 
-    // Auto-switch cinematic phase based on altitude
-    if (alt > 200) this.cinematicPhase = 'approach-sweep';
-    else if (alt > 50) this.cinematicPhase = 'low-orbit';
-    else this.cinematicPhase = 'landing-dolly';
+    // Auto-switch cinematic phase based on altitude (skip if post-land)
+    if (this.cinematicPhase !== 'post-land-orbit') {
+      if (alt > 200) this.cinematicPhase = 'approach-sweep';
+      else if (alt > 50) this.cinematicPhase = 'low-orbit';
+      else this.cinematicPhase = 'landing-dolly';
+    }
 
     // Slow-mo ramp as we get close to surface
     this.cinematicSlowMo = alt < 20 ? 0.3 : alt < 50 ? 0.6 : 1.0;
@@ -933,8 +957,8 @@ export class LunarLanderEngine {
   // ── Lighting ────────────────────────────────────────────────
 
   private buildLighting(): void {
-    // Sun — low angle like Apollo landing photos
-    this.shadowLight = new THREE.DirectionalLight(0xfff8e8, 3.0);
+    // Sun — low angle, slightly warm (0xfff4e0)
+    this.shadowLight = new THREE.DirectionalLight(0xfff4e0, 3.0);
     this.shadowLight.position.set(300, 180, -400);
     this.shadowLight.castShadow = true;
     this.shadowLight.shadow.mapSize.set(1024, 1024);
@@ -947,6 +971,18 @@ export class LunarLanderEngine {
     this.shadowLight.shadow.bias = -0.001;
     this.scene.add(this.shadowLight);
     this.scene.add(this.shadowLight.target);
+
+    // Fill light from opposite side — simulates terrain bounce
+    const fillLight = new THREE.DirectionalLight(0xc0c8d8, 0.15);
+    fillLight.position.set(-200, 50, 300);
+    fillLight.castShadow = false;
+    this.scene.add(fillLight);
+
+    // Rim light from behind — backlights LM silhouette
+    const rimLight = new THREE.DirectionalLight(0xdde4f0, 0.25);
+    rimLight.position.set(-100, 60, -350);
+    rimLight.castShadow = false;
+    this.scene.add(rimLight);
 
     // Earthshine ambient
     const ambient = new THREE.AmbientLight(0x334466, 0.12);
@@ -962,6 +998,7 @@ export class LunarLanderEngine {
   private buildStarfield(): void {
     const positions = new Float32Array(STAR_COUNT * 3);
     const colors = new Float32Array(STAR_COUNT * 3);
+    const sizes = new Float32Array(STAR_COUNT);
 
     for (let i = 0; i < STAR_COUNT; i++) {
       const theta = Math.random() * Math.PI * 2;
@@ -973,77 +1010,247 @@ export class LunarLanderEngine {
       positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       positions[i3 + 2] = r * Math.cos(phi);
 
-      const brightness = 0.3 + Math.random() * 0.7;
+      // Power-law size: many dim, few bright
+      const u = Math.random();
+      sizes[i] = 0.5 + Math.pow(u, 3.0) * 2.5;
+
+      const brightness = 0.2 + Math.pow(u, 2.0) * 0.8;
       const temp = Math.random();
-      if (temp < 0.08) {
+      if (temp < 0.06) {
+        // Blue-white hot
         colors[i3] = brightness * 0.7;
-        colors[i3 + 1] = brightness * 0.8;
+        colors[i3 + 1] = brightness * 0.85;
         colors[i3 + 2] = brightness;
-      } else if (temp < 0.15) {
+      } else if (temp < 0.12) {
+        // Yellow solar type
         colors[i3] = brightness;
-        colors[i3 + 1] = brightness * 0.6;
+        colors[i3 + 1] = brightness * 0.92;
+        colors[i3 + 2] = brightness * 0.7;
+      } else if (temp < 0.15) {
+        // Red giants
+        colors[i3] = brightness;
+        colors[i3 + 1] = brightness * 0.5;
         colors[i3 + 2] = brightness * 0.3;
       } else {
+        // White/warm white majority
         colors[i3] = brightness;
-        colors[i3 + 1] = brightness * 0.98;
-        colors[i3 + 2] = brightness * 0.95;
+        colors[i3 + 1] = brightness * 0.97;
+        colors[i3 + 2] = brightness * 0.93;
       }
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const mat = new THREE.PointsMaterial({
-      size: 1.5,
+    const starMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 1.5) },
+      },
+      vertexShader: [
+        'attribute float size;',
+        'varying vec3 vColor;',
+        'uniform float uPixelRatio;',
+        'void main() {',
+        '  vColor = color;',
+        '  vec4 mvp = modelViewMatrix * vec4(position, 1.0);',
+        '  gl_Position = projectionMatrix * mvp;',
+        '  gl_PointSize = size * uPixelRatio;',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        'varying vec3 vColor;',
+        'void main() {',
+        '  vec2 c = gl_PointCoord - 0.5;',
+        '  float d = dot(c, c);',
+        '  if (d > 0.25) discard;',
+        '  float alpha = 1.0 - smoothstep(0.1, 0.25, d);',
+        '  gl_FragColor = vec4(vColor, alpha * 0.9);',
+        '}',
+      ].join('\n'),
       vertexColors: true,
-      sizeAttenuation: false,
       transparent: true,
-      opacity: 0.85,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
     });
 
-    this.scene.add(new THREE.Points(geo, mat));
+    this.scene.add(new THREE.Points(geo, starMat));
   }
 
   // ── Earth ───────────────────────────────────────────────────
 
+  private createEarthTexture(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+
+    // Ocean base
+    ctx.fillStyle = '#1a3a7a';
+    ctx.fillRect(0, 0, 256, 128);
+
+    // Simplified continents
+    ctx.fillStyle = '#2a6a2a';
+    ctx.beginPath(); ctx.ellipse(140, 52, 14, 22, 0.1, 0, Math.PI * 2); ctx.fill(); // Africa
+    ctx.beginPath(); ctx.ellipse(135, 30, 10, 8, -0.2, 0, Math.PI * 2); ctx.fill(); // Europe
+    ctx.beginPath(); ctx.ellipse(175, 35, 25, 15, 0.1, 0, Math.PI * 2); ctx.fill(); // Asia
+    ctx.beginPath(); ctx.ellipse(60, 32, 18, 14, 0.2, 0, Math.PI * 2); ctx.fill(); // N. America
+    ctx.beginPath(); ctx.ellipse(80, 72, 10, 18, 0.15, 0, Math.PI * 2); ctx.fill(); // S. America
+    ctx.beginPath(); ctx.ellipse(210, 78, 10, 7, 0, 0, Math.PI * 2); ctx.fill(); // Australia
+
+    // Desert tint
+    ctx.fillStyle = '#8a7a3a';
+    ctx.beginPath(); ctx.ellipse(150, 45, 12, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Ice caps
+    ctx.fillStyle = '#ddeeff';
+    ctx.fillRect(0, 0, 256, 6);
+    ctx.fillRect(0, 122, 256, 6);
+
+    // Cloud swirls
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#ffffff';
+    const rng = mulberry32(99);
+    for (let ci = 0; ci < 18; ci++) {
+      const cx = rng() * 256;
+      const cy = rng() * 128;
+      const cr = 5 + rng() * 20;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, cr, cr * 0.4, rng() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    return tex;
+  }
+
   private buildEarth(): void {
     const earthGroup = new THREE.Group();
 
-    const earthGeo = new THREE.SphereGeometry(150, 48, 48);
+    // Blue marble with canvas texture
+    const earthTex = this.createEarthTexture();
+    const earthGeo = new THREE.SphereGeometry(35, 48, 48);
     const earthMat = new THREE.MeshPhongMaterial({
-      color: 0x2244aa,
+      map: earthTex,
       emissive: 0x112244,
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.3,
       shininess: 40,
       specular: 0x333355,
     });
     earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
 
-    const atmosGeo = new THREE.SphereGeometry(156, 48, 48);
-    const atmosMat = new THREE.MeshBasicMaterial({
-      color: 0x6699ff,
+    // Fresnel atmosphere glow shell
+    const atmosGeo = new THREE.SphereGeometry(36.5, 48, 48);
+    const atmosMat = new THREE.ShaderMaterial({
+      uniforms: {
+        glowColor: { value: new THREE.Color(0x4488ff) },
+        viewVector: { value: new THREE.Vector3() },
+      },
+      vertexShader: `
+        varying float vIntensity;
+        uniform vec3 viewVector;
+        void main() {
+          vec3 worldNormal = normalize(normalMatrix * normal);
+          vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+          vec3 viewDir = normalize(viewVector - worldPos);
+          vIntensity = pow(1.0 - abs(dot(worldNormal, viewDir)), 3.0);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 glowColor;
+        varying float vIntensity;
+        void main() {
+          gl_FragColor = vec4(glowColor, vIntensity * 0.6);
+        }
+      `,
+      side: THREE.FrontSide,
       transparent: true,
-      opacity: 0.12,
-      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     earthGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
 
-    const limbGeo = new THREE.SphereGeometry(152, 48, 48);
-    const limbMat = new THREE.MeshBasicMaterial({
-      color: 0x88bbff,
-      transparent: true,
-      opacity: 0.08,
-      side: THREE.FrontSide,
-    });
-    earthGroup.add(new THREE.Mesh(limbGeo, limbMat));
-
-    const dist = 16000;
-    const elev = Math.sin((30 * Math.PI) / 180) * dist;
-    const horiz = Math.cos((30 * Math.PI) / 180) * dist;
+    // Position Earth clearly above horizon at ~35 degrees elevation
+    const dist = 6000;
+    const elev = Math.sin((35 * Math.PI) / 180) * dist;
+    const horiz = Math.cos((35 * Math.PI) / 180) * dist;
     earthGroup.position.set(horiz * 0.7, elev, -horiz * 0.7);
 
     this.scene.add(earthGroup);
+
+    // Store reference for Fresnel updates
+    this.earthGroupRef = earthGroup;
+    // Store atmosMat reference for per-frame viewVector update
+    earthGroup.userData.updateFresnel = () => {
+      atmosMat.uniforms.viewVector.value.copy(this.camera.position);
+    };
+  }
+
+  // ── Sun Disc + Lens Flare ──────────────────────────────────
+
+  private createFlareTexture(size: number, coreRatio: number): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const half = size / 2;
+    const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
+    gradient.addColorStop(0, 'rgba(255,255,255,1.0)');
+    gradient.addColorStop(coreRatio, 'rgba(255,245,220,0.6)');
+    gradient.addColorStop(0.5, 'rgba(255,220,180,0.15)');
+    gradient.addColorStop(1, 'rgba(255,200,150,0.0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  private buildSunDisc(): void {
+    // Sun direction matches the shadow light
+    const sunDir = new THREE.Vector3(300, 180, -400).normalize();
+    const sunDist = 15000;
+    const sunPos = sunDir.clone().multiplyScalar(sunDist);
+
+    // Visible sun disc -- bright emissive sphere
+    const sunGeo = new THREE.SphereGeometry(80, 16, 16);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xfff8e0 });
+    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunMesh.position.copy(sunPos);
+    this.scene.add(sunMesh);
+
+    // Lens flare
+    const flareTexMain = this.createFlareTexture(256, 0.15);
+    const flareTexRing = this.createFlareTexture(128, 0.4);
+
+    const lensflare = new Lensflare();
+    lensflare.addElement(new LensflareElement(flareTexMain, 700, 0, new THREE.Color(0xfff8e0)));
+    lensflare.addElement(new LensflareElement(flareTexRing, 300, 0.15, new THREE.Color(0xffeedd)));
+    lensflare.addElement(new LensflareElement(flareTexRing, 150, 0.4, new THREE.Color(0xddccaa)));
+    lensflare.addElement(new LensflareElement(flareTexRing, 100, 0.7, new THREE.Color(0xccbbaa)));
+    lensflare.position.copy(sunPos);
+    this.scene.add(lensflare);
+  }
+
+  // ── Horizon Atmosphere Glow ────────────────────────────────
+
+  private buildHorizonGlow(): void {
+    // Thin luminous band at the lunar horizon — static-charged dust glow
+    const ringGeo = new THREE.TorusGeometry(TERRAIN_SIZE * 0.5, 1.5, 8, 64);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xdddddd,
+      transparent: true,
+      opacity: 0.04,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = -2;
+    this.scene.add(ring);
   }
 
   // ── Terrain ─────────────────────────────────────────────────
@@ -1109,7 +1316,7 @@ export class LunarLanderEngine {
 
       // Apply lunar curvature — Moon radius 1,737,400m
       const distFromCenter = Math.sqrt(vx * vx + vz * vz);
-      const curvatureDrop = (distFromCenter * distFromCenter) / (2 * 1737400);
+      const curvatureDrop = (distFromCenter * distFromCenter) / (2 * MOON_RADIUS);
       h -= curvatureDrop;
 
       // Circular edge blend — fade terrain features to flat near edges
@@ -1152,14 +1359,89 @@ export class LunarLanderEngine {
 
     this.terrainGeom.setAttribute('color', new THREE.BufferAttribute(vertColors, 3));
 
-    const terrainMat = new THREE.MeshStandardMaterial({
+    // Apply lunar curvature: subtract d^2 / (2*R) from Y for each vertex
+    for (let ci = 0; ci < vCount; ci++) {
+      const cvx = pos.getX(ci);
+      const cvz = pos.getZ(ci);
+      const d2 = cvx * cvx + cvz * cvz;
+      pos.setY(ci, pos.getY(ci) - d2 / (2 * MOON_RADIUS));
+    }
+    this.terrainGeom.computeVertexNormals();
+
+    // Custom ShaderMaterial: procedural bump, sparkle, crater shadows, horizon fog
+    const terrainMat = new THREE.ShaderMaterial({
+      uniforms: {
+        sunDir: { value: new THREE.Vector3(300, 180, -400).normalize() },
+        sunColor: { value: new THREE.Color(0xfff4e0) },
+        ambientColor: { value: new THREE.Color(0x334466) },
+        ambientStrength: { value: 0.12 },
+        terrainTime: { value: 0.0 },
+        camPos: { value: new THREE.Vector3() },
+        fogColor: { value: new THREE.Color(0x1a1510) },
+      },
+      vertexShader: [
+        'varying vec3 vColor;',
+        'varying vec3 vWorldPos;',
+        'varying vec3 vNormal;',
+        'varying vec3 vViewDir;',
+        'void main() {',
+        '  vColor = color;',
+        '  vec4 worldPos = modelMatrix * vec4(position, 1.0);',
+        '  vWorldPos = worldPos.xyz;',
+        '  vNormal = normalize(normalMatrix * normal);',
+        '  vViewDir = normalize(cameraPosition - worldPos.xyz);',
+        '  gl_Position = projectionMatrix * viewMatrix * worldPos;',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        '#extension GL_OES_standard_derivatives : enable',
+        'uniform vec3 sunDir;',
+        'uniform vec3 sunColor;',
+        'uniform vec3 ambientColor;',
+        'uniform float ambientStrength;',
+        'uniform float terrainTime;',
+        'uniform vec3 camPos;',
+        'uniform vec3 fogColor;',
+        'varying vec3 vColor;',
+        'varying vec3 vWorldPos;',
+        'varying vec3 vNormal;',
+        'varying vec3 vViewDir;',
+        '',
+        'float hash31(vec3 p) {',
+        '  p = fract(p * vec3(443.897, 441.423, 437.195));',
+        '  p += dot(p, p.yzx + 19.19);',
+        '  return fract((p.x + p.y) * p.z);',
+        '}',
+        '',
+        'void main() {',
+        '  vec3 dpdx = dFdx(vWorldPos);',
+        '  vec3 dpdy = dFdy(vWorldPos);',
+        '  vec3 bumpNormal = normalize(cross(dpdx, dpdy));',
+        '  vec3 N = normalize(mix(vNormal, bumpNormal, 0.6));',
+        '  float NdotL = max(dot(N, sunDir), 0.0);',
+        '  vec3 diffuse = vColor * sunColor * NdotL;',
+        '  vec3 ambient = vColor * ambientColor * ambientStrength;',
+        '  float craterDark = 1.0 - 0.3 * max(0.0, -dot(N, sunDir));',
+        '  vec3 sparkleCoord = floor(vWorldPos * 2.0);',
+        '  float sparkleRand = hash31(sparkleCoord);',
+        '  vec3 halfVec = normalize(vViewDir + sunDir);',
+        '  float specAngle = max(dot(N, halfVec), 0.0);',
+        '  float sparkle = 0.0;',
+        '  if (sparkleRand > 0.992) sparkle = pow(specAngle, 80.0) * 2.5;',
+        '  else if (sparkleRand > 0.98) sparkle = pow(specAngle, 40.0) * 0.5;',
+        '  float dist = length(vWorldPos - camPos);',
+        '  float fogFactor = clamp(1.0 - exp(-dist * 0.0003), 0.0, 0.4);',
+        '  vec3 color = (diffuse + ambient) * craterDark + vec3(sparkle);',
+        '  color = mix(color, fogColor, fogFactor);',
+        '  gl_FragColor = vec4(color, 1.0);',
+        '}',
+      ].join('\n'),
       vertexColors: true,
-      roughness: 0.95,
-      metalness: 0.0,
+      lights: false,
     });
 
     this.terrain = new THREE.Mesh(this.terrainGeom, terrainMat);
-    this.terrain.receiveShadow = true;
+    this.terrain.receiveShadow = false; // custom shader handles lighting
     this.scene.add(this.terrain);
 
     // Horizon skirt — circular disc that extends far beyond terrain, curving down
@@ -1176,7 +1458,7 @@ export class LunarLanderEngine {
       const sz = skirtPos.getZ(i);
       const dist = Math.sqrt(sx * sx + sz * sz);
       // Strong curvature drop — makes the disc curve over the horizon
-      const drop = (dist * dist) / (2 * 1737400);
+      const drop = (dist * dist) / (2 * MOON_RADIUS);
       // Extra drop beyond terrain edge to push it below sightline
       const beyondEdge = Math.max(0, dist - halfTerrain);
       const extraDrop = beyondEdge * 0.08; // slope down aggressively
@@ -1243,36 +1525,46 @@ export class LunarLanderEngine {
   private buildLunarModule(): void {
     this.lmGroup = new THREE.Group();
 
-    // Material palette
+    // Material palette — enhanced
     const kaptonGold = new THREE.MeshStandardMaterial({
-      color: 0xc8a832, roughness: 0.55, metalness: 0.75,
+      color: 0xc8a832, roughness: 0.3, metalness: 0.8,
       emissive: 0x1a1200, emissiveIntensity: 0.08,
     });
     const kaptonDark = new THREE.MeshStandardMaterial({
-      color: 0x998822, roughness: 0.6, metalness: 0.6,
+      color: 0x998822, roughness: 0.5, metalness: 0.65,
     });
     const silverMetal = new THREE.MeshStandardMaterial({
-      color: 0xaaaaaa, roughness: 0.3, metalness: 0.8,
+      color: 0xcccccc, roughness: 0.2, metalness: 0.9,
     });
     const grayMetal = new THREE.MeshStandardMaterial({
-      color: 0x888888, roughness: 0.5, metalness: 0.6,
+      color: 0x999999, roughness: 0.35, metalness: 0.75,
     });
     const darkMetal = new THREE.MeshStandardMaterial({
-      color: 0x555555, roughness: 0.6, metalness: 0.5,
+      color: 0x555555, roughness: 0.5, metalness: 0.6,
+    });
+    // Ascent cabin: dark thermal blanket with blue-black tint
+    const cabinMat = new THREE.MeshStandardMaterial({
+      color: 0x2a2a35, roughness: 0.7, metalness: 0.4,
+      emissive: 0x050510, emissiveIntensity: 0.05,
     });
     const windowMat = new THREE.MeshStandardMaterial({
-      color: 0x0a1520, roughness: 0.05, metalness: 0.95,
-      emissive: 0x001118, emissiveIntensity: 0.15,
+      color: 0x080e18, roughness: 0.02, metalness: 0.98,
+      emissive: 0x001118, emissiveIntensity: 0.2,
+      transparent: true, opacity: 0.85,
     });
+    // Brushed aluminum legs
     const legMat = new THREE.MeshStandardMaterial({
-      color: 0xbbbbbb, roughness: 0.45, metalness: 0.7,
+      color: 0xc8c8c8, roughness: 0.35, metalness: 0.85,
     });
     const padMat = new THREE.MeshStandardMaterial({
-      color: 0x999999, roughness: 0.7, metalness: 0.4,
+      color: 0x999999, roughness: 0.65, metalness: 0.45,
     });
+    // Engine bell: dark, gets emissive glow when throttled
     const bellMat = new THREE.MeshStandardMaterial({
-      color: 0x777777, roughness: 0.2, metalness: 0.9, side: THREE.DoubleSide,
+      color: 0x555555, roughness: 0.15, metalness: 0.95, side: THREE.DoubleSide,
+      emissive: 0x000000, emissiveIntensity: 0.0,
     });
+    this.engineBellMat = bellMat;
 
     // ── DESCENT STAGE ──
     const descent = new THREE.Group();
@@ -1303,12 +1595,13 @@ export class LunarLanderEngine {
     skirt.castShadow = true;
     descent.add(skirt);
 
-    // Engine bell (DPS)
+    // Engine bell (DPS) — red-hot glow when throttled
     const engBellGeo = new THREE.ConeGeometry(0.65, 1.4, 16, 1, true);
     const bell = new THREE.Mesh(engBellGeo, bellMat);
     bell.rotation.x = Math.PI;
     bell.position.y = -2.2;
     descent.add(bell);
+    this.engineBellMesh = bell;
 
     // Inner engine throat
     const throatGeo = new THREE.CylinderGeometry(0.2, 0.35, 0.4, 12, 1, true);
@@ -1402,9 +1695,9 @@ export class LunarLanderEngine {
     const ascent = new THREE.Group();
     ascent.name = 'ascent';
 
-    // Crew cabin
+    // Crew cabin — dark thermal blanket with blue-black tint
     const cabinGeo = new THREE.BoxGeometry(2.6, 1.9, 2.6);
-    const cabin = new THREE.Mesh(cabinGeo, grayMetal);
+    const cabin = new THREE.Mesh(cabinGeo, cabinMat);
     cabin.castShadow = true;
     ascent.add(cabin);
 
@@ -1579,7 +1872,7 @@ export class LunarLanderEngine {
   // ── Particle Systems ────────────────────────────────────────
 
   private buildParticleSystems(): void {
-    this.exhaustSys = createParticlePool(this.scene, EXHAUST_COUNT, 0.7, 0xaaccff, THREE.AdditiveBlending);
+    this.exhaustSys = createParticlePool(this.scene, EXHAUST_COUNT, 1.0, 0xc0ddff, THREE.AdditiveBlending);
     this.dustSys = createParticlePool(this.scene, DUST_COUNT, 2.0, 0x887766, THREE.NormalBlending);
     (this.dustSys.material as THREE.PointsMaterial).opacity = 0.4;
 
@@ -1599,7 +1892,8 @@ export class LunarLanderEngine {
       this._tmpEmitPos.copy(this.engineBellLocalPos);
       this.lmGroup.localToWorld(this._tmpEmitPos);
 
-      const spread = 0.4 + (1 - this.lm.throttle) * 0.3;
+      // Wider cone in vacuum
+      const spread = 0.7 + (1 - this.lm.throttle) * 0.5;
       this._tmpEmitVel
         .set((Math.random() - 0.5) * spread, -1, (Math.random() - 0.5) * spread)
         .normalize();
@@ -1609,6 +1903,16 @@ export class LunarLanderEngine {
       this._tmpEmitVel.add(this.lm.vel);
 
       emitParticle(this.exhaustSys, this._tmpEmitPos, this._tmpEmitVel, 0.15 + Math.random() * 0.25);
+    }
+
+    // Central bright core particle at nozzle
+    if (this.lm.throttle > 0.1) {
+      this._tmpEmitPos.copy(this.engineBellLocalPos);
+      this._tmpEmitPos.y += 0.2;
+      this.lmGroup.localToWorld(this._tmpEmitPos);
+      this._tmpEmitVel.set(0, -1, 0).applyQuaternion(this.lm.quat).multiplyScalar(5);
+      this._tmpEmitVel.add(this.lm.vel);
+      emitParticle(this.exhaustSys, this._tmpEmitPos, this._tmpEmitVel, 0.06 + Math.random() * 0.04);
     }
   }
 
@@ -2343,8 +2647,8 @@ export class LunarLanderEngine {
 
     // Update terrain shader uniforms
     if (this.terrain && this.terrain.material instanceof THREE.ShaderMaterial) {
-      this.terrain.material.uniforms.cameraPos.value.copy(this.camera.position);
-      this.terrain.material.uniforms.time.value = performance.now() * 0.001;
+      this.terrain.material.uniforms.camPos.value.copy(this.camera.position);
+      this.terrain.material.uniforms.terrainTime.value = performance.now() * 0.001;
     }
 
     // Engine bell red-hot glow proportional to throttle
