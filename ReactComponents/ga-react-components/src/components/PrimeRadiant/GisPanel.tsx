@@ -82,6 +82,9 @@ export const GisPanel: React.FC<GisPanelProps> = ({ managers }) => {
   const [clusteringEnabled, setClusteringEnabled] = useState(false);
   const [clusterRadius, setClusterRadius] = useState(10);
 
+  // Preset feedback
+  const [lastLoadedPreset, setLastLoadedPreset] = useState<string | null>(null);
+
   // Add Pin form
   const [showAddPin, setShowAddPin] = useState(false);
   const [pinLat, setPinLat] = useState('');
@@ -143,16 +146,41 @@ export const GisPanel: React.FC<GisPanelProps> = ({ managers }) => {
   }, [manager, pathPointsStr, pathColor]);
 
   const handlePresetPins = useCallback((name: string) => {
-    if (!manager) return;
+    // Try current manager first, then fall back to searching all managers
+    let mgr = manager;
+    if (!mgr && managers) {
+      mgr = managers.get('earth') ?? managers.values().next().value ?? null;
+    }
+    if (!mgr) {
+      console.warn('[GisPanel] No GIS manager available for presets. Solar system may not be initialized yet.');
+      return;
+    }
     const pins = PRESET_PINS[name];
-    if (pins) manager.addPins(pins);
-  }, [manager]);
+    if (pins) {
+      mgr.addPins(pins);
+      setPinCount(mgr.pinCount);
+      setLastLoadedPreset(name);
+      setTimeout(() => setLastLoadedPreset(null), 2000);
+    }
+  }, [manager, managers]);
 
   const handlePresetPaths = useCallback((name: string) => {
-    if (!manager) return;
+    let mgr = manager;
+    if (!mgr && managers) {
+      mgr = managers.get('earth') ?? managers.values().next().value ?? null;
+    }
+    if (!mgr) {
+      console.warn('[GisPanel] No GIS manager available for presets.');
+      return;
+    }
     const paths = PRESET_PATHS[name];
-    if (paths) paths.forEach(p => manager.addPath(p));
-  }, [manager]);
+    if (paths) {
+      paths.forEach(p => mgr!.addPath(p));
+      setPathCount(mgr.pathCount);
+      setLastLoadedPreset(name);
+      setTimeout(() => setLastLoadedPreset(null), 2000);
+    }
+  }, [manager, managers]);
 
   const toggleClustering = useCallback(() => {
     if (!manager) return;
@@ -200,20 +228,31 @@ export const GisPanel: React.FC<GisPanelProps> = ({ managers }) => {
 
       {/* Preset datasets — filtered by planet capability */}
       <div className="gis-panel__section">
-        <div className="gis-panel__section-header">Presets</div>
+        <div className="gis-panel__section-header">
+          Presets
+          {!manager && <span style={{ fontSize: '9px', color: '#FF4444', marginLeft: 8 }}>loading...</span>}
+        </div>
         <div className="gis-panel__presets">
           {Object.keys(PRESET_PINS)
             .filter(name => !EARTH_ONLY_PRESETS.has(name) || activePlanet === 'earth')
             .map(name => (
-              <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPins(name)}>
-                📍 {name}
+              <button
+                key={name}
+                className={`gis-panel__preset-btn ${lastLoadedPreset === name ? 'gis-panel__preset-btn--loaded' : ''}`}
+                onClick={() => handlePresetPins(name)}
+              >
+                {lastLoadedPreset === name ? '✓' : '📍'} {name}
               </button>
             ))}
           {Object.keys(PRESET_PATHS)
             .filter(name => !EARTH_ONLY_PRESETS.has(name) || activePlanet === 'earth')
             .map(name => (
-              <button key={name} className="gis-panel__preset-btn" onClick={() => handlePresetPaths(name)}>
-                🛤 {name}
+              <button
+                key={name}
+                className={`gis-panel__preset-btn ${lastLoadedPreset === name ? 'gis-panel__preset-btn--loaded' : ''}`}
+                onClick={() => handlePresetPaths(name)}
+              >
+                {lastLoadedPreset === name ? '✓' : '🛤'} {name}
               </button>
             ))}
         </div>
