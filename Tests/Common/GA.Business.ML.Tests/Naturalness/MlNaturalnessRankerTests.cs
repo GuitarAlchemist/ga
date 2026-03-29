@@ -9,6 +9,7 @@ using Domain.Core.Instruments.Primitives;
 using Domain.Services.Fretboard.Analysis;
 
 [TestFixture]
+[Category("RequiresModel")]
 public class MlNaturalnessRankerTests
 {
     private MlNaturalnessRanker _ranker;
