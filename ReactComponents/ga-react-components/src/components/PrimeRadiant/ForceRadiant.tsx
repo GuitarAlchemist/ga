@@ -54,11 +54,14 @@ import { LunarLander } from './LunarLander';
 import { LiveNotebook } from './LiveNotebook';
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
-import { GodotScene } from './GodotScene';
+import { GodotScene, setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
 import { GisPanel } from './GisPanel';
+import { PresencePanel } from './PresencePanel';
+import { getConnectionLog } from './ConnectionLog';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
+import { useAgentPresence } from './AgentPresence';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -618,6 +621,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
   const [beliefs, setBeliefs] = useState<BeliefState[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  // A2A agent presence — live status of ix, TARS, GA, Seldon, Demerzel
+  const a2aAgents = useAgentPresence();
   // Admin mode: true on localhost or when token matches
   const [isAdmin] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -1024,6 +1029,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   // ─── Algedonic signal handler — creates ripples, propagation, checks compounding ───
   const handleAlgedonicSignal = useCallback((signal: AlgedonicSignalEvent) => {
+    // Drive Demerzel's face emotion from governance signals
+    if (signal.type === 'pain') {
+      setDemerzelEmotion(signal.severity === 'critical' ? 'alert' : 'concerned');
+    } else {
+      setDemerzelEmotion('pleased');
+    }
+
     // Append to panel state
     const panelSignal: AlgedonicSignal = {
       id: signal.id,
@@ -2269,6 +2281,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           signalRGisBridgeRef.current?.handleBeliefUpdate(belief);
         },
         onViewersChanged: (viewerList) => {
+          // Diff previous vs new viewer list for connect/disconnect logging
+          const prevIds = new Set(viewers.map(v => v.connectionId));
+          const nextIds = new Set(viewerList.map(v => v.connectionId));
+          const connLog = getConnectionLog();
+
+          // Detect new connections
+          for (const v of viewerList) {
+            if (!prevIds.has(v.connectionId)) {
+              const isSelf = v.connectionId === selfConnectionIdRef.current;
+              connLog.logConnect(v.connectionId, v.browser, v.color, isSelf);
+            }
+          }
+          // Detect disconnections
+          for (const v of viewers) {
+            if (!nextIds.has(v.connectionId)) {
+              const isSelf = v.connectionId === selfConnectionIdRef.current;
+              connLog.logDisconnect(v.connectionId, v.browser, v.color, isSelf);
+            }
+          }
+
           setViewers(viewerList);
           // Track our own connection ID — it's the one we just added
           if (!selfConnectionIdRef.current && viewerList.length > 0) {
@@ -3022,8 +3054,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         {activePanel === 'gis' && (
           <GisPanel managers={gisManagers} />
         )}
+        {activePanel === 'presence' && (
+          <PresencePanel
+            viewers={viewers}
+            selfConnectionId={selfConnectionIdRef.current}
+            agents={a2aAgents}
+          />
+        )}
         {/* Simple side panels — registry-backed lookup */}
-        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot', 'gis', 'lunar'].includes(activePanel) && (() => {
+        {activePanel && !['detail', 'seldon', 'algedonic', 'university', 'notebook', 'godot', 'gis', 'presence', 'lunar'].includes(activePanel) && (() => {
           const SIMPLE_PANELS: Record<string, React.FC> = {
             activity: ActivityPanel,
             backlog: BacklogPanel,

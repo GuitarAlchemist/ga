@@ -3,6 +3,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { GovernanceNode } from './types';
+import { setDemerzelSpeaking, setDemerzelEmotion } from './GodotScene';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -663,6 +664,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
+    setDemerzelEmotion('thinking');
+    setDemerzelSpeaking(true);
 
     // Create placeholder assistant message for streaming
     const botMsgId = `bot-${Date.now()}`;
@@ -766,6 +769,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       }
     } finally {
       setIsLoading(false);
+      setDemerzelSpeaking(false);
+      setDemerzelEmotion('calm');
     }
   }, [isLoading, messages, selectedNode, speakText, stopAudio, onNavigateToNode, onNavigateToPlanet, onLoadArcGIS]);
 

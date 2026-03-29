@@ -232,6 +232,7 @@
 .prime-radiant__side-panel .prime-radiant__llm-status,
 .prime-radiant__side-panel .prime-radiant__library,
 .prime-radiant__side-panel .gis-panel,
+.prime-radiant__side-panel .presence-panel,
 .prime-radiant__side-panel .godot-scene,
 .prime-radiant__side-panel .gsb {
   position: relative;
@@ -7201,4 +7202,564 @@
   border: none;
   background: #000;
   width: 100%;
+}
+
+/* =========================================================================
+   Presence Panel (presence-panel__)
+   ========================================================================= */
+
+.presence-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: rgba(13, 17, 23, 0.95);
+  color: #c9d1d9;
+  font-size: 13px;
+  padding: 0;
+}
+
+.presence-panel::-webkit-scrollbar { width: 4px; }
+.presence-panel::-webkit-scrollbar-thumb { background: rgba(212, 160, 23, 0.3); border-radius: 2px; }
+
+.presence-panel__section {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.presence-panel__section:last-child {
+  border-bottom: none;
+}
+
+.presence-panel__section--discord {
+  border-left: 2px solid rgba(114, 137, 218, 0.3);
+}
+
+.presence-panel__heading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d4a017;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presence-panel__sub-heading {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+  margin: 10px 0 6px;
+}
+
+.presence-panel__count {
+  background: rgba(212, 160, 23, 0.15);
+  color: #d4a017;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.presence-panel__empty {
+  color: #484f58;
+  font-style: italic;
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+/* ── Viewer list ── */
+
+.presence-panel__viewer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.presence-panel__viewer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.presence-panel__viewer:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.presence-panel__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: presence-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes presence-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.presence-panel__viewer-name {
+  flex: 1;
+  color: #c9d1d9;
+  font-size: 12px;
+}
+
+.presence-panel__viewer-duration {
+  color: #8b949e;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.presence-panel__badge {
+  background: rgba(212, 160, 23, 0.2);
+  color: #d4a017;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* ── Discord section ── */
+
+.presence-panel__discord-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.presence-panel__discord-status--online {
+  background: rgba(67, 181, 129, 0.2);
+  color: #43b581;
+}
+
+.presence-panel__discord-status--offline {
+  background: rgba(116, 127, 141, 0.2);
+  color: #747f8d;
+}
+
+.presence-panel__discord-retry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #747f8d;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.presence-panel__discord-members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.presence-panel__discord-member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.presence-panel__discord-member:hover {
+  background: rgba(114, 137, 218, 0.06);
+}
+
+.presence-panel__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.presence-panel__avatar--small {
+  width: 20px;
+  height: 20px;
+}
+
+.presence-panel__avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(114, 137, 218, 0.25);
+  color: #7289da;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.presence-panel__discord-username {
+  flex: 1;
+  color: #c9d1d9;
+  font-size: 12px;
+}
+
+.presence-panel__discord-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.presence-panel__discord-messages {
+  margin-top: 4px;
+}
+
+.presence-panel__discord-msg {
+  display: flex;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.presence-panel__discord-msg:last-child {
+  border-bottom: none;
+}
+
+.presence-panel__discord-msg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.presence-panel__discord-msg-author {
+  color: #7289da;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.presence-panel__discord-msg-time {
+  color: #484f58;
+  font-size: 10px;
+}
+
+.presence-panel__discord-msg-content {
+  margin: 2px 0 0;
+  color: #8b949e;
+  font-size: 12px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.presence-panel__discord-send {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.presence-panel__discord-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(114, 137, 218, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #c9d1d9;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.presence-panel__discord-input:focus {
+  border-color: rgba(114, 137, 218, 0.5);
+}
+
+.presence-panel__discord-input::placeholder {
+  color: #484f58;
+}
+
+.presence-panel__btn {
+  background: rgba(212, 160, 23, 0.12);
+  border: 1px solid rgba(212, 160, 23, 0.25);
+  border-radius: 6px;
+  color: #d4a017;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.presence-panel__btn:hover:not(:disabled) {
+  background: rgba(212, 160, 23, 0.2);
+  border-color: rgba(212, 160, 23, 0.4);
+}
+
+.presence-panel__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.presence-panel__btn--small {
+  padding: 3px 8px;
+  font-size: 10px;
+}
+
+/* ── Session timeline ── */
+
+.presence-panel__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.presence-panel__event {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
+.presence-panel__event-time {
+  color: #d4a017;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.presence-panel__event-dash {
+  color: #30363d;
+  flex-shrink: 0;
+}
+
+.presence-panel__event-desc {
+  color: #8b949e;
+}
+
+/* ── Connection Log (persistent) ── */
+
+.presence-panel__section--connlog {
+  border-left: 2px solid rgba(212, 160, 23, 0.2);
+}
+
+.presence-panel__btn--clear {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.presence-panel__btn--clear:hover {
+  opacity: 1;
+  color: #f85149;
+  background: rgba(248, 81, 73, 0.1);
+}
+
+.presence-panel__connlog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.presence-panel__connlog-list::-webkit-scrollbar { width: 3px; }
+.presence-panel__connlog-list::-webkit-scrollbar-thumb { background: rgba(212, 160, 23, 0.2); border-radius: 2px; }
+
+.presence-panel__connlog-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.presence-panel__connlog-entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.presence-panel__connlog-icon {
+  font-size: 8px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.presence-panel__connlog-entry--connect .presence-panel__connlog-icon {
+  color: #43b581;
+}
+
+.presence-panel__connlog-entry--disconnect .presence-panel__connlog-icon {
+  color: #f85149;
+}
+
+.presence-panel__dot--small {
+  width: 7px;
+  height: 7px;
+  animation: none;
+}
+
+.presence-panel__connlog-browser {
+  flex: 1;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.presence-panel__badge--small {
+  font-size: 8px;
+  padding: 0 3px;
+}
+
+.presence-panel__connlog-time {
+  color: #484f58;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ─── A2A Agent Presence ─── */
+
+.presence-panel__agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.presence-panel__agent {
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: border-color 0.2s;
+}
+
+.presence-panel__agent--online {
+  border-color: rgba(67, 181, 129, 0.3);
+}
+
+.presence-panel__agent--degraded {
+  border-color: rgba(250, 166, 26, 0.3);
+}
+
+.presence-panel__agent--offline {
+  border-color: rgba(240, 71, 71, 0.2);
+  opacity: 0.7;
+}
+
+.presence-panel__agent-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.presence-panel__agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.presence-panel__agent--online .presence-panel__agent-dot {
+  box-shadow: 0 0 6px rgba(67, 181, 129, 0.6);
+}
+
+.presence-panel__agent-name {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.presence-panel__agent-version {
+  color: #484f58;
+  font-size: 10px;
+}
+
+.presence-panel__agent-status {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.presence-panel__agent-status--online { color: #43b581; }
+.presence-panel__agent-status--degraded { color: #faa61a; }
+.presence-panel__agent-status--offline { color: #f04747; }
+.presence-panel__agent-status--unknown { color: #747f8d; }
+
+.presence-panel__agent-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.presence-panel__agent-desc {
+  color: #8b949e;
+  font-size: 10px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-panel__agent-latency {
+  color: #43b581;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.presence-panel__agent-port {
+  color: #484f58;
+  font-size: 10px;
+}
+
+.presence-panel__agent-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.presence-panel__agent-skill {
+  background: rgba(88, 166, 255, 0.1);
+  color: #58a6ff;
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(88, 166, 255, 0.15);
+}
+
+.presence-panel__agent-skill--more {
+  background: rgba(139, 148, 158, 0.1);
+  color: #8b949e;
+  border-color: rgba(139, 148, 158, 0.15);
+}
+
+.presence-panel__agent-lastseen {
+  color: #484f58;
+  font-size: 9px;
+}
+
+.presence-panel__count--online {
+  color: #43b581;
+  margin-left: 4px;
 }

@@ -19,14 +19,18 @@ export type GodotInboundMessage =
   | { type: 'governance:update'; nodes: unknown[]; edges: unknown[] }
   | { type: 'governance:select'; nodeId: string }
   | { type: 'governance:algedonic'; signal: unknown }
-  | { type: 'governance:belief'; nodeId: string; state: string; confidence: number };
+  | { type: 'governance:belief'; nodeId: string; state: string; confidence: number }
+  | { type: 'demerzel:emotion'; emotion: string }
+  | { type: 'demerzel:speaking'; speaking: boolean }
+  | { type: 'demerzel:auto-cycle'; enabled: boolean };
 
 /** Messages received from Godot */
 export type GodotOutboundMessage =
   | { type: 'godot:ready' }
   | { type: 'godot:node-clicked'; nodeId: string }
   | { type: 'godot:algedonic'; severity: string; description: string }
-  | { type: 'godot:camera-changed'; position: { x: number; y: number; z: number } };
+  | { type: 'godot:camera-changed'; position: { x: number; y: number; z: number } }
+  | { type: 'demerzel:emotion-changed'; emotion: string };
 
 // ---------------------------------------------------------------------------
 // Props
@@ -281,3 +285,30 @@ export const GodotScene: React.FC<GodotSceneProps> = ({
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Utility: post Demerzel face commands to any Godot iframe on the page.
+// Falls back gracefully if no iframe is found (e.g. Godot panel not open).
+// ---------------------------------------------------------------------------
+
+function findGodotIframe(): HTMLIFrameElement | null {
+  return document.querySelector<HTMLIFrameElement>('iframe.godot-scene__iframe');
+}
+
+/** Tell Demerzel's Godot face to show an emotion */
+export function setDemerzelEmotion(emotion: string): void {
+  const iframe = findGodotIframe();
+  iframe?.contentWindow?.postMessage({ type: 'demerzel:emotion', emotion }, '*');
+}
+
+/** Tell Demerzel's Godot face to start/stop speaking */
+export function setDemerzelSpeaking(speaking: boolean): void {
+  const iframe = findGodotIframe();
+  iframe?.contentWindow?.postMessage({ type: 'demerzel:speaking', speaking }, '*');
+}
+
+/** Enable/disable auto-cycling of Demerzel's emotions */
+export function setDemerzelAutoCycle(enabled: boolean): void {
+  const iframe = findGodotIframe();
+  iframe?.contentWindow?.postMessage({ type: 'demerzel:auto-cycle', enabled }, '*');
+}
