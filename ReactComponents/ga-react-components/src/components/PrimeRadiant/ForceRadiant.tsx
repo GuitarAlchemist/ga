@@ -13,6 +13,7 @@ import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { ChatWidget } from './ChatWidget';
+import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
@@ -75,6 +76,24 @@ interface EdgePropagation {
   startTime: number;
   color: string;
   hop: number;
+}
+
+// ---------------------------------------------------------------------------
+// Admin detection — local dev tool defaults to admin on localhost.
+// For deployed instances, set localStorage 'pr-admin-token' to the known hash.
+// ---------------------------------------------------------------------------
+const PR_ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // sha256('admin')
+
+function checkIsAdmin(): boolean {
+  if (typeof window === 'undefined') return false;
+  // localhost / 127.0.0.1 → always admin (single-user dev tool)
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+  // Deployed: check localStorage token against known hash
+  try {
+    const token = localStorage.getItem('pr-admin-token');
+    return token === PR_ADMIN_HASH;
+  } catch { return false; }
 }
 
 // Module-level mobile detection for node creation (before component mounts)
@@ -599,6 +618,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [algedonicSignals, setAlgedonicSignals] = useState<AlgedonicSignal[]>([]);
   const [beliefs, setBeliefs] = useState<BeliefState[]>([]);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  // Admin mode: true on localhost or when token matches
+  const [isAdmin] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const { hostname } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+    return localStorage.getItem('pr-admin-token') === 'ga-owner-2026';
+  });
   const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
   const [viewers, setViewers] = useState<ViewerInfo[]>([]);
   const selfConnectionIdRef = useRef<string | null>(null);
@@ -2513,6 +2539,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               </div>
             )}
           </span>
+
+          {/* Admin indicator */}
+          <span className="prime-radiant__health-metric" title={isAdmin ? 'Admin mode (full access)' : 'Read-only mode'}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isAdmin ? '#33CC66' : '#8b949e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {isAdmin
+                ? <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>
+                : <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><line x1="12" y1="16" x2="12" y2="16.01" /></>
+              }
+            </svg>
+            <span>{isAdmin ? 'Admin' : 'View'}</span>
+          </span>
         </div>
       )}
 
@@ -2536,6 +2573,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           )}
         </div>
       )}
+
+      <BrainstormPanel />
 
       <ChatWidget
         selectedNode={selectedNode}

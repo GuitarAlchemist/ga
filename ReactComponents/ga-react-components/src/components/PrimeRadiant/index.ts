@@ -58,6 +58,7 @@ export { CICDPanel, useCICDHealth } from './CICDPanel';
 export type { CICDHealth } from './CICDPanel';
 export { ClaudeCodePanel } from './ClaudeCodePanel';
 export { LibraryPanel } from './LibraryPanel';
+export { BrainstormPanel } from './BrainstormPanel';
 export { BeliefWidget, AlgedonicWidget, HexavalentWidget, StateWidget, IxqlPreview } from './GovernanceWidgets';
 export type { BeliefWidgetProps, AlgedonicWidgetProps, HexavalentWidgetProps, StateWidgetProps, IxqlPreviewProps } from './GovernanceWidgets';
 export { LiveNotebook } from './LiveNotebook';
