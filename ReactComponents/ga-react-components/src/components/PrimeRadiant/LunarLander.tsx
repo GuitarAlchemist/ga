@@ -406,6 +406,24 @@ export const LunarLander: React.FC<LunarLanderProps> = ({
         </div>
       )}
 
+      {/* ── Always-visible control hints (bottom center) ── */}
+      {state.gameState === 'flying' && !helpVisible && (
+        <div style={{
+          position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.5)', borderRadius: '8px', padding: '6px 14px',
+          fontFamily: "'Courier New', monospace", fontSize: '9px', letterSpacing: '1px',
+          color: 'rgba(255,170,0,0.5)', pointerEvents: 'none',
+        }}>
+          <span><b style={{color:'#ffaa00'}}>SHIFT</b> THRUST UP</span>
+          <span><b style={{color:'#ffaa00'}}>CTRL</b> THRUST DOWN</span>
+          <span><b style={{color:'#ffaa00'}}>ARROWS</b> STEER</span>
+          <span><b style={{color:'#ffaa00'}}>A</b> AUTOPILOT{state.autopilot ? ' ON' : ''}</span>
+          <span><b style={{color:'#ffaa00'}}>V</b> CINEMATIC</span>
+          <span><b style={{color:'#ffaa00'}}>H</b> HELP</span>
+        </div>
+      )}
+
       {/* ── Help overlay ── */}
       {helpVisible && (
         <div style={styles.helpOverlay}>
