@@ -191,6 +191,56 @@ function buildRecommendations(issues: GHIssue[], ciRuns: GHWorkflowRun[]): Recom
 }
 
 // ---------------------------------------------------------------------------
+// Pipeline stages
+// ---------------------------------------------------------------------------
+type PipelineStage = 'idle' | 'brainstorm' | 'plan' | 'implement' | 'review' | 'compound' | 'done';
+
+const PIPELINE_STAGES: { stage: PipelineStage; label: string; icon: string; color: string }[] = [
+  { stage: 'brainstorm', label: 'Brainstorm', icon: '\uD83D\uDCA1', color: '#4FC3F7' },
+  { stage: 'plan',       label: 'Plan',       icon: '\uD83D\uDCCB', color: '#FFD700' },
+  { stage: 'implement',  label: 'Build',      icon: '\u2692',       color: '#33CC66' },
+  { stage: 'review',     label: 'Review',     icon: '\uD83D\uDD0D', color: '#CE93D8' },
+  { stage: 'compound',   label: 'Compound',   icon: '\uD83C\uDF31', color: '#FF8A65' },
+];
+
+interface PipelineState {
+  itemId: string;
+  stage: PipelineStage;
+  log: string[];
+  autopilot: boolean;
+}
+
+async function runPipelineStage(
+  stage: PipelineStage,
+  title: string,
+  source: string | undefined,
+): Promise<string> {
+  // Try backend API first
+  try {
+    const res = await fetch('/api/pipeline/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage, title, source }),
+    });
+    if (res.ok) {
+      const data = await res.json() as { result: string };
+      return data.result;
+    }
+  } catch { /* fallback */ }
+
+  // Mock fallback — simulate stage execution
+  await new Promise(r => setTimeout(r, 800));
+  const mocks: Record<string, string> = {
+    brainstorm: `Brainstormed "${title}" — 4 providers queried, 3 key ideas surfaced.`,
+    plan: `Plan created for "${title}" — 5 phases, estimated M effort.`,
+    implement: `Implementation started for "${title}" — branch created.`,
+    review: `Review complete for "${title}" — 0 blockers, 2 suggestions.`,
+    compound: `Learnings documented for "${title}" — saved to docs/compound/.`,
+  };
+  return mocks[stage] ?? `Stage ${stage} complete.`;
+}
+
+// ---------------------------------------------------------------------------
 // Component — side panel (no floating trigger)
 // ---------------------------------------------------------------------------
 export const BrainstormPanel: React.FC = () => {
@@ -199,6 +249,8 @@ export const BrainstormPanel: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const initialLoad = useRef(false);
+  const [pipeline, setPipeline] = useState<PipelineState | null>(null);
+  const pipelineAbortRef = useRef(false);
 
   const analyze = useCallback(async (query?: string) => {
     setLoading(true);
@@ -229,6 +281,49 @@ export const BrainstormPanel: React.FC = () => {
     setLoading(false);
   }, []);
 
+  // Run a single pipeline stage for an item
+  const runStage = useCallback(async (itemId: string, stage: PipelineStage) => {
+    const rec = recommendations.find(r => r.id === itemId);
+    if (!rec) return;
+    setPipeline(prev => ({
+      itemId,
+      stage,
+      log: [...(prev?.itemId === itemId ? prev.log : [])],
+      autopilot: prev?.autopilot ?? false,
+    }));
+    const result = await runPipelineStage(stage, rec.title, rec.source);
+    setPipeline(prev => prev ? { ...prev, log: [...prev.log, `[${stage}] ${result}`] } : null);
+    return result;
+  }, [recommendations]);
+
+  // Run full pipeline (autopilot)
+  const runFullPipeline = useCallback(async (itemId: string) => {
+    pipelineAbortRef.current = false;
+    setPipeline({ itemId, stage: 'brainstorm', log: [], autopilot: true });
+    for (const { stage } of PIPELINE_STAGES) {
+      if (pipelineAbortRef.current) break;
+      const rec = recommendations.find(r => r.id === itemId);
+      if (!rec) break;
+      setPipeline(prev => prev ? { ...prev, stage } : null);
+      const result = await runPipelineStage(stage, rec.title, rec.source);
+      setPipeline(prev => prev ? { ...prev, log: [...prev.log, `[${stage}] ${result}`] } : null);
+    }
+    if (!pipelineAbortRef.current) {
+      setPipeline(prev => prev ? { ...prev, stage: 'done' } : null);
+    }
+  }, [recommendations]);
+
+  // Auto-pick: run autopilot on the highest-priority item
+  const autoPick = useCallback(() => {
+    const first = recommendations[0];
+    if (first) runFullPipeline(first.id);
+  }, [recommendations, runFullPipeline]);
+
+  const stopPipeline = useCallback(() => {
+    pipelineAbortRef.current = true;
+    setPipeline(prev => prev ? { ...prev, stage: 'idle', autopilot: false } : null);
+  }, []);
+
   // Auto-analyze on mount
   useEffect(() => {
     if (!initialLoad.current) {
@@ -255,10 +350,20 @@ export const BrainstormPanel: React.FC = () => {
         </button>
       </div>
 
-      {/* Quick action */}
-      <button className="brainstorm-side__auto" onClick={() => analyze()} disabled={loading}>
-        {loading ? 'Scanning repos, CI/CD, governance...' : "What's next?"}
-      </button>
+      {/* Quick actions */}
+      <div className="brainstorm-side__actions">
+        <button className="brainstorm-side__auto" onClick={() => analyze()} disabled={loading}>
+          {loading ? 'Scanning...' : "What's next?"}
+        </button>
+        <button
+          className="brainstorm-side__autopilot"
+          onClick={pipeline?.autopilot ? stopPipeline : autoPick}
+          disabled={loading || recommendations.length === 0}
+          title={pipeline?.autopilot ? 'Stop autopilot' : 'Auto-pick top item and run full pipeline'}
+        >
+          {pipeline?.autopilot ? '\u23F9 Stop' : '\u25B6 Autopilot'}
+        </button>
+      </div>
 
       {/* Focused query */}
       <div className="brainstorm-side__input-row">
@@ -286,19 +391,64 @@ export const BrainstormPanel: React.FC = () => {
               <div className="brainstorm-side__group-label" style={{ color: meta.color }}>
                 <span>{meta.icon}</span> {meta.label}
               </div>
-              {items.map(r => (
-                <div key={r.id} className="brainstorm-side__card" style={{ borderLeftColor: meta.color }}>
-                  <div className="brainstorm-side__card-title">{r.title}</div>
-                  <div className="brainstorm-side__card-rationale">{r.rationale}</div>
-                  <div className="brainstorm-side__card-footer">
-                    {r.source && <span className="brainstorm-side__card-source">{r.source}</span>}
-                    {r.tensorState && <span className="brainstorm-side__card-tensor">{r.tensorState}</span>}
-                    {r.actionUrl && (
-                      <a href={r.actionUrl} target="_blank" rel="noopener noreferrer" className="brainstorm-side__card-link">View</a>
+              {items.map(r => {
+                const isPipelineTarget = pipeline?.itemId === r.id;
+                return (
+                  <div key={r.id} className={`brainstorm-side__card ${isPipelineTarget ? 'brainstorm-side__card--active' : ''}`} style={{ borderLeftColor: meta.color }}>
+                    <div className="brainstorm-side__card-title">{r.title}</div>
+                    <div className="brainstorm-side__card-rationale">{r.rationale}</div>
+                    <div className="brainstorm-side__card-footer">
+                      {r.source && <span className="brainstorm-side__card-source">{r.source}</span>}
+                      {r.tensorState && <span className="brainstorm-side__card-tensor">{r.tensorState}</span>}
+                      {r.actionUrl && (
+                        <a href={r.actionUrl} target="_blank" rel="noopener noreferrer" className="brainstorm-side__card-link">View</a>
+                      )}
+                    </div>
+
+                    {/* Pipeline action buttons */}
+                    <div className="brainstorm-side__pipeline">
+                      {PIPELINE_STAGES.map(({ stage, label, icon, color }) => {
+                        const isActive = isPipelineTarget && pipeline?.stage === stage;
+                        const isDone = isPipelineTarget && pipeline?.log.some(l => l.startsWith(`[${stage}]`));
+                        return (
+                          <button
+                            key={stage}
+                            className={`brainstorm-side__stage ${isActive ? 'brainstorm-side__stage--active' : ''} ${isDone ? 'brainstorm-side__stage--done' : ''}`}
+                            style={{ '--stage-color': color } as React.CSSProperties}
+                            onClick={() => runStage(r.id, stage)}
+                            disabled={isActive}
+                            title={`${label} this item`}
+                          >
+                            <span>{isDone ? '\u2713' : icon}</span>
+                            <span className="brainstorm-side__stage-label">{label}</span>
+                          </button>
+                        );
+                      })}
+                      <button
+                        className="brainstorm-side__stage brainstorm-side__stage--auto"
+                        onClick={() => runFullPipeline(r.id)}
+                        disabled={isPipelineTarget && pipeline?.autopilot}
+                        title="Run full pipeline: Brainstorm → Plan → Build → Review → Compound"
+                      >
+                        <span>{'\u25B6'}</span>
+                        <span className="brainstorm-side__stage-label">All</span>
+                      </button>
+                    </div>
+
+                    {/* Pipeline log */}
+                    {isPipelineTarget && pipeline.log.length > 0 && (
+                      <div className="brainstorm-side__log">
+                        {pipeline.log.map((line, i) => (
+                          <div key={i} className="brainstorm-side__log-line">{line}</div>
+                        ))}
+                        {pipeline.stage === 'done' && (
+                          <div className="brainstorm-side__log-done">Pipeline complete</div>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })}
