@@ -19,13 +19,18 @@ React (panels, controls) <--postMessage/WebSocket--> Godot (3D viewport)
 
 ## Phases
 
-### Phase 1: Bridge Protocol (S — 1-2 days)
-- [ ] Define typed bridge event schema (`BridgeEvent<T>` union type)
-- [ ] Events: `navigate-to-planet`, `highlight-node`, `update-belief-weather`, `camera-sync`
-- [ ] WebSocket server in Godot (port 6505, already scaffolded in MCP)
-- [ ] React `useGodotBridge()` hook wrapping the WS connection
-- [ ] Fallback: postMessage for WASM embed, WS for desktop
-- **Files**: `GodotBridge.ts`, `useGodotBridge.ts` in PrimeRadiant/
+### Phase 1: Bridge Protocol (S — 1-2 days) ✅
+- [x] Define typed bridge event schema (`BridgeEvent<T>` union type) — 17 event types
+- [x] Events: `navigate-to-planet`, `highlight-node`, `update-belief-weather`, `camera-sync`
+- [x] A2A agent events: `agent-connect`, `agent-disconnect`, `agent-status`, `agent-invoke`, `agent-result`
+- [x] WebSocket transport (port 6505, auto-reconnect)
+- [x] React `useGodotBridge()` hook wrapping the WS connection
+- [x] Fallback: postMessage for WASM embed, WS for desktop
+- [x] `GodotScene.tsx` — iframe embed with panel/fullscreen modes, Demerzel face controls
+- [x] `AgentPresence.ts` — A2A tracker polling ACP (Demerzel/Seldon), GA health, MCP agents (ix/TARS)
+- [x] `PresencePanel.tsx` — viewers + A2A agents + Discord + session timeline + connection log
+- [x] `ConnectionLog.ts` — persistent admin connection log with rotation/scavenge
+- **Files**: `GodotBridge.ts`, `useGodotBridge.ts`, `GodotScene.tsx`, `AgentPresence.ts`, `PresencePanel.tsx`, `ConnectionLog.ts`
 
 ### Phase 2: Constitutional Gravity Engine (L — 3-5 days)
 - [ ] Godot scene: central gravity well = Asimov constitution

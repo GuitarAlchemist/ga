@@ -16,7 +16,15 @@ export type BridgeEventType =
   | 'epistemic-tensor-update'
   | 'algedonic-signal'
   | 'screenshot-request'
-  | 'screenshot-response';
+  | 'screenshot-response'
+  | 'demerzel-set-emotion'
+  | 'demerzel-set-speaking'
+  | 'demerzel-emotion-changed'
+  | 'agent-connect'
+  | 'agent-disconnect'
+  | 'agent-status'
+  | 'agent-invoke'
+  | 'agent-result';
 
 export interface BridgeEvent<T = unknown> {
   type: BridgeEventType;
@@ -57,6 +65,58 @@ export interface ScreenshotResponsePayload {
   imageBase64: string;
   width: number;
   height: number;
+}
+
+// ---------------------------------------------------------------------------
+// A2A Agent payloads
+// ---------------------------------------------------------------------------
+
+/** Known A2A agent identifiers in the ecosystem */
+export type A2AAgentId = 'demerzel' | 'ix' | 'tars' | 'ga' | 'seldon';
+
+export interface A2AAgentSkill {
+  id: string;
+  name: string;
+  tags: string[];
+}
+
+export interface AgentConnectPayload {
+  agentId: A2AAgentId;
+  name: string;
+  description: string;
+  version: string;
+  url: string;
+  port: number;
+  skills: A2AAgentSkill[];
+  capabilities: { streaming: boolean; pushNotifications: boolean; stateTransitionHistory: boolean };
+}
+
+export interface AgentDisconnectPayload {
+  agentId: A2AAgentId;
+  reason?: string;
+}
+
+export type A2AAgentStatus = 'online' | 'degraded' | 'offline' | 'unknown';
+
+export interface AgentStatusPayload {
+  agentId: A2AAgentId;
+  status: A2AAgentStatus;
+  latencyMs?: number;
+  lastSeen: string;
+  activeSkill?: string;
+}
+
+export interface AgentInvokePayload {
+  agentId: A2AAgentId;
+  skillId: string;
+  input: string;
+}
+
+export interface AgentResultPayload {
+  agentId: A2AAgentId;
+  skillId: string;
+  output: string;
+  durationMs: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,6 +260,19 @@ export class GodotBridge {
 
   requestScreenshot(): void {
     this.send('screenshot-request', {});
+  }
+
+  // A2A agent events
+  notifyAgentConnect(payload: AgentConnectPayload): void {
+    this.send('agent-connect', payload);
+  }
+
+  notifyAgentDisconnect(agentId: A2AAgentId, reason?: string): void {
+    this.send('agent-disconnect', { agentId, reason } as AgentDisconnectPayload);
+  }
+
+  notifyAgentStatus(payload: AgentStatusPayload): void {
+    this.send('agent-status', payload);
   }
 
   // Listen for events from Godot

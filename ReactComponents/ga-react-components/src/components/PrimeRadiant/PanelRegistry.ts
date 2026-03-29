@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence';
 export type PanelId = BuiltInPanelId | (string & {});
 
 export interface PanelDefinition {
@@ -115,6 +115,12 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('circle', { key: 'c2', cx: 14, cy: 11, r: 0.7, fill: 'currentColor', stroke: 'none' }),
     h('circle', { key: 'c3', cx: 11, cy: 13, r: 0.5, fill: 'currentColor', stroke: 'none' }),
   ]),
+  presence: svg([
+    h('path', { key: 'p1', d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+    h('circle', { key: 'c1', cx: 9, cy: 7, r: 4 }),
+    h('path', { key: 'p2', d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
+    h('path', { key: 'p3', d: 'M16 3.13a4 4 0 0 1 0 7.75' }),
+  ]),
 };
 
 // ---------------------------------------------------------------------------
@@ -199,6 +205,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side' },
   { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side' },
   { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay' },
+  { id: 'presence',   label: 'Presence',        icon: 'presence',   renderMode: 'side' },
 ];
 
 for (const def of BUILTIN_PANELS) {
