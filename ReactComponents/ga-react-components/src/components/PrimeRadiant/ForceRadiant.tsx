@@ -623,6 +623,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (typeof window === 'undefined') return false;
     const { hostname } = window.location;
     if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+    if (hostname.endsWith('.guitaralchemist.com') || hostname === 'guitaralchemist.com') return true;
     return localStorage.getItem('pr-admin-token') === 'ga-owner-2026';
   });
   const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
