@@ -6826,6 +6826,7 @@
 }
 
 .gis-panel__preset-btn:hover { background: rgba(51, 204, 255, 0.1); border-color: rgba(51, 204, 255, 0.25); color: #33ccff; }
+.gis-panel__preset-btn--loaded { background: rgba(51, 204, 102, 0.15) !important; border-color: rgba(51, 204, 102, 0.4) !important; color: #33CC66 !important; }
 
 .gis-panel__cluster-row {
   display: flex !important;
