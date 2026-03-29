@@ -961,11 +961,11 @@ export class LunarLanderEngine {
     this.shadowLight = new THREE.DirectionalLight(0xfff4e0, 3.0);
     this.shadowLight.position.set(300, 180, -400);
     this.shadowLight.castShadow = true;
-    this.shadowLight.shadow.mapSize.set(1024, 1024);
-    this.shadowLight.shadow.camera.left = -30;
-    this.shadowLight.shadow.camera.right = 30;
-    this.shadowLight.shadow.camera.top = 30;
-    this.shadowLight.shadow.camera.bottom = -30;
+    this.shadowLight.shadow.mapSize.set(2048, 2048);
+    this.shadowLight.shadow.camera.left = -50;
+    this.shadowLight.shadow.camera.right = 50;
+    this.shadowLight.shadow.camera.top = 50;
+    this.shadowLight.shadow.camera.bottom = -50;
     this.shadowLight.shadow.camera.near = 50;
     this.shadowLight.shadow.camera.far = 800;
     this.shadowLight.shadow.bias = -0.001;
@@ -1355,80 +1355,15 @@ export class LunarLanderEngine {
     }
     this.terrainGeom.computeVertexNormals();
 
-    // Custom ShaderMaterial: procedural bump, sparkle, crater shadows, horizon fog
-    const terrainMat = new THREE.ShaderMaterial({
-      uniforms: {
-        sunDir: { value: new THREE.Vector3(300, 180, -400).normalize() },
-        sunColor: { value: new THREE.Color(0xfff4e0) },
-        ambientColor: { value: new THREE.Color(0x334466) },
-        ambientStrength: { value: 0.12 },
-        terrainTime: { value: 0.0 },
-        camPos: { value: new THREE.Vector3() },
-        fogColor: { value: new THREE.Color(0x1a1510) },
-      },
-      vertexShader: [
-        'varying vec3 vColor;',
-        'varying vec3 vWorldPos;',
-        'varying vec3 vNormal;',
-        'varying vec3 vViewDir;',
-        'void main() {',
-        '  vColor = color;',
-        '  vec4 worldPos = modelMatrix * vec4(position, 1.0);',
-        '  vWorldPos = worldPos.xyz;',
-        '  vNormal = normalize(normalMatrix * normal);',
-        '  vViewDir = normalize(cameraPosition - worldPos.xyz);',
-        '  gl_Position = projectionMatrix * viewMatrix * worldPos;',
-        '}',
-      ].join('\n'),
-      fragmentShader: [
-        '#extension GL_OES_standard_derivatives : enable',
-        'uniform vec3 sunDir;',
-        'uniform vec3 sunColor;',
-        'uniform vec3 ambientColor;',
-        'uniform float ambientStrength;',
-        'uniform float terrainTime;',
-        'uniform vec3 camPos;',
-        'uniform vec3 fogColor;',
-        'varying vec3 vColor;',
-        'varying vec3 vWorldPos;',
-        'varying vec3 vNormal;',
-        'varying vec3 vViewDir;',
-        '',
-        'float hash31(vec3 p) {',
-        '  p = fract(p * vec3(443.897, 441.423, 437.195));',
-        '  p += dot(p, p.yzx + 19.19);',
-        '  return fract((p.x + p.y) * p.z);',
-        '}',
-        '',
-        'void main() {',
-        '  vec3 dpdx = dFdx(vWorldPos);',
-        '  vec3 dpdy = dFdy(vWorldPos);',
-        '  vec3 bumpNormal = normalize(cross(dpdx, dpdy));',
-        '  vec3 N = normalize(mix(vNormal, bumpNormal, 0.6));',
-        '  float NdotL = max(dot(N, sunDir), 0.0);',
-        '  vec3 diffuse = vColor * sunColor * NdotL * 1.4;',
-        '  vec3 ambient = vColor * ambientColor * ambientStrength * 0.5;',
-        '  float craterDark = 1.0 - 0.5 * max(0.0, -dot(N, sunDir));',
-        '  vec3 sparkleCoord = floor(vWorldPos * 2.0);',
-        '  float sparkleRand = hash31(sparkleCoord);',
-        '  vec3 halfVec = normalize(vViewDir + sunDir);',
-        '  float specAngle = max(dot(N, halfVec), 0.0);',
-        '  float sparkle = 0.0;',
-        '  if (sparkleRand > 0.992) sparkle = pow(specAngle, 80.0) * 2.5;',
-        '  else if (sparkleRand > 0.98) sparkle = pow(specAngle, 40.0) * 0.5;',
-        '  float dist = length(vWorldPos - camPos);',
-        '  float fogFactor = clamp(1.0 - exp(-dist * 0.0003), 0.0, 0.4);',
-        '  vec3 color = (diffuse + ambient) * craterDark + vec3(sparkle);',
-        '  color = mix(color, fogColor, fogFactor);',
-        '  gl_FragColor = vec4(color, 1.0);',
-        '}',
-      ].join('\n'),
+    // Simple MeshStandardMaterial — vertex colors + shadow receiving = visible craters
+    const terrainMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      lights: false,
+      roughness: 0.95,
+      metalness: 0.0,
     });
 
     this.terrain = new THREE.Mesh(this.terrainGeom, terrainMat);
-    this.terrain.receiveShadow = false; // custom shader handles lighting
+    this.terrain.receiveShadow = true;
     this.scene.add(this.terrain);
 
     // Horizon skirt — circular disc that extends far beyond terrain, curving down
