@@ -1579,36 +1579,31 @@ export class LunarLanderEngine {
     skirt.renderOrder = -1; // render behind terrain
     this.scene.add(skirt);
 
-    // Landing zone markers
-    const markerColor = 0x887733;
-    const markerMat = new THREE.MeshBasicMaterial({ color: markerColor });
-    const lzY = this.sampleTerrainHeight(0, 0) + 0.08;
+    // Landing zone markers — subtle dark lines, not bright blobs
+    const markerMat = new THREE.MeshBasicMaterial({
+      color: 0x3a3020,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+    });
+    const lzY = this.sampleTerrainHeight(0, 0) + 0.05;
     this.landingZoneCenter.y = lzY;
 
-    // Cross arms
+    // Thin cross arms
     for (let a = 0; a < 4; a++) {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(14, 0.06, 0.3), markerMat);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(10, 0.03, 0.15), markerMat);
       arm.rotation.y = (a * Math.PI) / 4;
       arm.position.y = lzY;
       this.scene.add(arm);
     }
 
-    // Concentric circles
-    [15, 28].forEach((radius) => {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(radius - 0.15, radius + 0.15, 48), markerMat);
+    // Concentric circles — thin rings
+    [12, 22].forEach((radius) => {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(radius - 0.08, radius + 0.08, 48), markerMat);
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = lzY;
       this.scene.add(ring);
     });
-
-    // Dot markers
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * Math.PI) / 4;
-      const dot = new THREE.Mesh(new THREE.CircleGeometry(0.5, 8), markerMat);
-      dot.rotation.x = -Math.PI / 2;
-      dot.position.set(Math.cos(angle) * 21, lzY + 0.02, Math.sin(angle) * 21);
-      this.scene.add(dot);
-    }
   }
 
   private sampleTerrainHeight(x: number, z: number): number {
