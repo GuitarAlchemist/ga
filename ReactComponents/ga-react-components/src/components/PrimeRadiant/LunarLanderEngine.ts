@@ -665,21 +665,39 @@ export class LunarLanderEngine {
 
   // ── Ground Control Callouts (Apollo 11 transcript) ─────────
 
+  private situationalCalloutCooldowns: Record<string, number> = {};
+
   private initCallouts(): void {
+    this.situationalCalloutCooldowns = {};
     this.calloutQueue = [
-      { altitude: 480, text: "Houston, Eagle. We're GO for powered descent.", spoken: false },
-      { altitude: 400, text: "Eagle, Houston. You are GO for landing.", spoken: false },
-      { altitude: 300, text: "Altitude three hundred. Looking good.", spoken: false },
-      { altitude: 200, text: "Eagle looking great. You're GO.", spoken: false },
-      { altitude: 150, text: "Altitude one fifty. Descent rate looking good.", spoken: false },
-      { altitude: 100, text: "One hundred feet. Three and a half down.", spoken: false },
+      { altitude: 490, text: "Houston, Eagle. We're GO for powered descent.", spoken: false },
+      { altitude: 460, text: "Eagle, Houston. You are GO for landing. All stations, stay sharp.", spoken: false },
+      { altitude: 420, text: "Altitude four twenty. Trajectory nominal. Better than my golf swing, anyway.", spoken: false },
+      { altitude: 380, text: "Three eighty. Descent rate looks good. Guidance is converging.", spoken: false },
+      { altitude: 340, text: "Eagle, you're right down the line. Beautiful.", spoken: false },
+      { altitude: 300, text: "Three hundred feet. Looking good. The guys in the back row just started a betting pool.", spoken: false },
+      { altitude: 260, text: "Two sixty. Fuel looks nominal. Unlike the coffee machine down here.", spoken: false },
+      { altitude: 220, text: "Two twenty. Rate of descent is good.", spoken: false },
+      { altitude: 200, text: "Two hundred. You're doing great. No pressure... literally.", spoken: false },
+      { altitude: 180, text: "One eighty. Eagle looking great. You're GO.", spoken: false },
+      { altitude: 150, text: "One fifty. Descent rate looking good. Fuel quantity good.", spoken: false },
+      { altitude: 130, text: "One thirty. Altitude velocity lights are looking good.", spoken: false },
+      { altitude: 110, text: "One ten. You're GO for landing. Repeat, GO.", spoken: false },
+      { altitude: 100, text: "One hundred feet. Three and a half down. Looking good.", spoken: false },
+      { altitude: 85, text: "Eighty five feet. Fuel's holding. Nice and easy.", spoken: false },
       { altitude: 75, text: "Seventy five feet. Looking good. Down a half.", spoken: false },
-      { altitude: 60, text: "Sixty seconds of fuel remaining.", spoken: false },
+      { altitude: 60, text: "Sixty feet. Down two and a half.", spoken: false },
+      { altitude: 50, text: "Fifty feet. The vending machine just ate my quarter. So at least YOUR day is going better.", spoken: false },
       { altitude: 40, text: "Forty feet. Down two and a half. Picking up some dust.", spoken: false },
-      { altitude: 30, text: "Thirty feet. Two and a half down. Faint shadow.", spoken: false },
-      { altitude: 20, text: "Twenty feet. Kicking up some dust.", spoken: false },
-      { altitude: 10, text: "Ten feet. Two and a half down.", spoken: false },
+      { altitude: 35, text: "Thirty five. Steady... steady...", spoken: false },
+      { altitude: 30, text: "Thirty feet. My hands are sweatier than yours right now. Faint shadow.", spoken: false },
+      { altitude: 25, text: "Twenty five. Easy correction.", spoken: false },
+      { altitude: 20, text: "Twenty feet. Kicking up some dust. Almost there.", spoken: false },
+      { altitude: 15, text: "Fifteen feet. Down a half.", spoken: false },
+      { altitude: 10, text: "Ten feet. Two and a half down. Looking good.", spoken: false },
+      { altitude: 7, text: "Seven feet. Easy does it.", spoken: false },
       { altitude: 5, text: "Five feet. Drifting forward just a little.", spoken: false },
+      { altitude: 3, text: "Three feet.", spoken: false },
       { altitude: 1.5, text: "Contact light.", spoken: false },
     ];
   }
@@ -687,15 +705,74 @@ export class LunarLanderEngine {
   private checkCallouts(): void {
     if (this.gameState !== 'flying') return;
     const now = performance.now();
-    if (now - this.lastCalloutTime < 3000) return; // min 3s between callouts
+    if (now - this.lastCalloutTime < 4000) return; // min 4s between callouts
 
+    // Altitude-based callouts
     for (const c of this.calloutQueue) {
       if (!c.spoken && this.lm.altitude <= c.altitude) {
         c.spoken = true;
         this.lastCalloutTime = now;
         this.speakCallout(c.text);
-        break;
+        return;
       }
+    }
+
+    // Situational callouts
+    this.checkSituationalCallouts(now);
+  }
+
+  private checkSituationalCallouts(now: number): void {
+    const canSpeak = (key: string, cooldownMs: number): boolean => {
+      const last = this.situationalCalloutCooldowns[key] || 0;
+      if (now - last < cooldownMs) return false;
+      this.situationalCalloutCooldowns[key] = now;
+      return true;
+    };
+
+    const hSpeed = Math.sqrt(this.lm.vel.x ** 2 + this.lm.vel.z ** 2);
+    const fuelPct = (this.lm.fuel / FUEL_MASS_INIT) * 100;
+    const lmUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.lm.quat);
+    const tiltDeg = Math.acos(Math.min(1, Math.max(-1, lmUp.dot(new THREE.Vector3(0, 1, 0))))) * (180 / Math.PI);
+
+    // High lateral speed at low altitude
+    if (hSpeed > 5 && this.lm.altitude < 80 && canSpeak('drift', 20000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Eagle, you're drifting. Correct lateral velocity.");
+      return;
+    }
+
+    // No throttle at high altitude
+    if (this.lm.throttle < 0.01 && this.lm.altitude > 100 && this.lm.altitude < 400 && canSpeak('nothrottle', 30000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Uh, Eagle... you planning to use that engine at some point?");
+      return;
+    }
+
+    // Low fuel warnings
+    if (fuelPct < 10 && fuelPct > 0 && canSpeak('bingo', 25000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Bingo fuel, Eagle. Land this thing or we're all updating our resumes.");
+      return;
+    }
+    if (fuelPct < 30 && fuelPct >= 10 && canSpeak('lowfuel', 25000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Thirty percent fuel. No pressure. Well, actually, all the pressure.");
+      return;
+    }
+
+    // Excessive tilt
+    if (tiltDeg > 10 && this.lm.altitude < 100 && canSpeak('tilt', 15000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Eagle, you're tilting. My coffee cup is straighter than you right now.");
+      return;
+    }
+
+    // Perfect vertical descent
+    if (hSpeed < 0.3 && Math.abs(this.lm.vel.y) < 3 && Math.abs(this.lm.vel.y) > 0.5
+      && this.lm.altitude < 60 && this.lm.altitude > 10 && canSpeak('perfect', 30000)) {
+      this.lastCalloutTime = now;
+      this.speakCallout("Textbook descent, Eagle. You're making the simulator guys look bad.");
+      return;
     }
   }
 
@@ -1022,6 +1099,11 @@ export class LunarLanderEngine {
         h = h * (1 - blend);
       }
 
+      // Apply lunar curvature — Moon radius 1,737,400m
+      const distFromCenter = Math.sqrt(vx * vx + vz * vz);
+      const curvatureDrop = (distFromCenter * distFromCenter) / (2 * 1737400);
+      h -= curvatureDrop;
+
       pos.setY(i, h);
     }
 
@@ -1062,6 +1144,38 @@ export class LunarLanderEngine {
     this.terrain = new THREE.Mesh(this.terrainGeom, terrainMat);
     this.terrain.receiveShadow = true;
     this.scene.add(this.terrain);
+
+    // Horizon skirt — large ring that fades from regolith gray to black
+    // Hides the square terrain edges and creates a smooth lunar horizon
+    const skirtInner = TERRAIN_SIZE / 2 * 0.95;
+    const skirtOuter = TERRAIN_SIZE * 4;
+    const skirtSegs = 64;
+    const skirtGeo = new THREE.RingGeometry(skirtInner, skirtOuter, skirtSegs, 4);
+    skirtGeo.rotateX(-Math.PI / 2);
+    // Apply curvature to skirt and fade vertex colors
+    const skirtPos = skirtGeo.attributes.position as THREE.BufferAttribute;
+    const skirtColors = new Float32Array(skirtPos.count * 3);
+    for (let i = 0; i < skirtPos.count; i++) {
+      const sx = skirtPos.getX(i);
+      const sz = skirtPos.getZ(i);
+      const dist = Math.sqrt(sx * sx + sz * sz);
+      // Curvature drop
+      const drop = (dist * dist) / (2 * 1737400);
+      skirtPos.setY(i, -drop - 2); // slightly below terrain edge
+      // Fade from regolith gray to black
+      const t = Math.max(0, (dist - skirtInner) / (skirtOuter - skirtInner));
+      const brightness = 0.22 * (1 - t * t); // quadratic fade
+      skirtColors[i * 3] = brightness * 1.03;
+      skirtColors[i * 3 + 1] = brightness;
+      skirtColors[i * 3 + 2] = brightness * 0.93;
+    }
+    skirtGeo.setAttribute('color', new THREE.BufferAttribute(skirtColors, 3));
+    const skirtMat = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      side: THREE.DoubleSide,
+    });
+    const skirt = new THREE.Mesh(skirtGeo, skirtMat);
+    this.scene.add(skirt);
 
     // Landing zone markers
     const markerColor = 0x887733;
