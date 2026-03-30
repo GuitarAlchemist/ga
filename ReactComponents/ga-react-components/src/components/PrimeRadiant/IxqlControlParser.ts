@@ -82,6 +82,31 @@ export interface CreateGridPanelCommand {
   subscribe: string[];
 }
 
+// ── Phase 7: Visualization — CREATE VIZ "id" KIND force-graph ──
+
+export type VizKind = 'force-graph' | 'timeline' | 'bar' | 'sparkline';
+
+export interface CreateVizCommand {
+  type: 'create-viz';
+  id: string;
+  kind: VizKind;
+  source: string;
+  wherePredicates: IxqlPredicate[];
+  pipe: PipeStep[];
+  nodeField: string | null;          // field for node labels
+  edgeSource: string | null;         // SOURCE for edges (force-graph)
+  edgeFrom: string | null;           // field for edge source
+  edgeTo: string | null;             // field for edge target
+  colorField: string | null;         // field for node/bar coloring
+  sizeField: string | null;          // field for node size / bar height
+  labelField: string | null;         // field for labels
+  layout: { breakpoint: string; cols: number }[];
+  governedBy: number[];
+  publish: { signal: string; as: string } | null;
+  subscribe: string[];
+  refresh: number | null;
+}
+
 export interface BindHealthCommand {
   type: 'bind-health';
   targetKind: 'panel' | 'node';
@@ -181,6 +206,7 @@ export type IxqlCommand =
   | ResetCommand
   | CreatePanelCommand
   | CreateGridPanelCommand
+  | CreateVizCommand
   | BindHealthCommand
   | OnChangedCommand
   | ShowEpistemicCommand
@@ -704,6 +730,150 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
   };
 }
 
+// ── CREATE VIZ parser ──
+
+const VIZ_KINDS = new Set(['FORCE-GRAPH', 'TIMELINE', 'BAR', 'SPARKLINE']);
+
+function parseCreateViz(ctx: ParserContext, id: string): CreateVizCommand {
+  const kindToken = nextRaw(ctx).toLowerCase();
+  if (!VIZ_KINDS.has(kindToken.toUpperCase())) {
+    throw new Error(`Unknown VIZ KIND '${kindToken}'. Supported: force-graph, timeline, bar, sparkline`);
+  }
+
+  let source = '';
+  const wherePredicates: IxqlPredicate[] = [];
+  const pipe: PipeStep[] = [];
+  let nodeField: string | null = null;
+  let edgeSource: string | null = null;
+  let edgeFrom: string | null = null;
+  let edgeTo: string | null = null;
+  let colorField: string | null = null;
+  let sizeField: string | null = null;
+  let labelField: string | null = null;
+  const layout: { breakpoint: string; cols: number }[] = [];
+  const governedBy: number[] = [];
+  let publish: { signal: string; as: string } | null = null;
+  const subscribe: string[] = [];
+  let refresh: number | null = null;
+
+  while (ctx.pos < ctx.tokens.length) {
+    const kw = peek(ctx);
+    switch (kw) {
+      case 'SOURCE':
+      case 'FROM':
+        next(ctx);
+        source = nextRaw(ctx);
+        if (peek(ctx) === 'WHERE') {
+          next(ctx);
+          wherePredicates.push(...parsePredicates(ctx));
+        }
+        break;
+
+      case 'PIPE':
+        next(ctx);
+        pipe.push(parsePipeStep(ctx));
+        break;
+
+      case 'NODES':
+        next(ctx);
+        nodeField = nextRaw(ctx);
+        break;
+
+      case 'EDGES':
+        next(ctx);
+        edgeSource = nextRaw(ctx);
+        if (peek(ctx) === 'FROM') { next(ctx); edgeFrom = nextRaw(ctx); }
+        if (peek(ctx) === 'TO') { next(ctx); edgeTo = nextRaw(ctx); }
+        break;
+
+      case 'COLOR':
+        next(ctx);
+        colorField = nextRaw(ctx);
+        break;
+
+      case 'SIZE':
+        next(ctx);
+        sizeField = nextRaw(ctx);
+        break;
+
+      case 'LABEL':
+        next(ctx);
+        labelField = nextRaw(ctx);
+        break;
+
+      case 'LAYOUT':
+        next(ctx);
+        layout.push(...parseLayoutBreakpoints(ctx));
+        break;
+
+      case 'GOVERNED': {
+        next(ctx);
+        if (peek(ctx) === 'BY') next(ctx);
+        const articleClause = nextRaw(ctx);
+        const eqIdx = articleClause.indexOf('=');
+        if (eqIdx !== -1 && articleClause.substring(0, eqIdx).toLowerCase() === 'article') {
+          const nums = articleClause.substring(eqIdx + 1).split(',');
+          for (const n of nums) {
+            const parsed = parseInt(n.trim(), 10);
+            if (!isNaN(parsed)) governedBy.push(parsed);
+          }
+        } else {
+          const num = parseInt(articleClause, 10);
+          if (!isNaN(num)) governedBy.push(num);
+        }
+        break;
+      }
+
+      case 'PUBLISH':
+        next(ctx);
+        {
+          const signal = nextRaw(ctx);
+          let as = signal;
+          if (peek(ctx) === 'AS') { next(ctx); as = nextRaw(ctx); }
+          publish = { signal, as };
+        }
+        break;
+
+      case 'SUBSCRIBE':
+        next(ctx);
+        subscribe.push(nextRaw(ctx));
+        while (peek(ctx) === ',') { next(ctx); subscribe.push(nextRaw(ctx)); }
+        break;
+
+      case 'REFRESH':
+        next(ctx);
+        refresh = parseDuration(nextRaw(ctx));
+        break;
+
+      default:
+        throw new Error(`Unexpected clause '${peekRaw(ctx)}' in CREATE VIZ`);
+    }
+  }
+
+  if (!source) throw new Error('CREATE VIZ requires a SOURCE clause');
+
+  return {
+    type: 'create-viz',
+    id,
+    kind: kindToken as VizKind,
+    source,
+    wherePredicates,
+    pipe,
+    nodeField,
+    edgeSource,
+    edgeFrom,
+    edgeTo,
+    colorField,
+    sizeField,
+    labelField,
+    layout,
+    governedBy,
+    publish,
+    subscribe,
+    refresh,
+  };
+}
+
 // ── BIND HEALTH parser ──
 
 function parseBindHealth(ctx: ParserContext): BindHealthCommand {
@@ -904,7 +1074,13 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
           ctx.pos--;
           return { ok: true, command: parseCreatePanel(ctx) };
         }
-        throw new Error(`Expected 'PANEL' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
+        if (subKeyword === 'VIZ') {
+          next(ctx);
+          const vizId = nextRaw(ctx);
+          if (peek(ctx) === 'KIND') { next(ctx); }
+          return { ok: true, command: parseCreateViz(ctx, vizId) };
+        }
+        throw new Error(`Expected 'PANEL' or 'VIZ' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
       }
 
       case 'BIND': {

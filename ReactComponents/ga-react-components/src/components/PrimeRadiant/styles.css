@@ -10082,3 +10082,35 @@
 .prime-radiant__algedonic-result-text--error {
   color: #f85149;
 }
+
+/* ── IXQL Viz Panel ── */
+
+.ixql-viz-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(13, 17, 23, 0.95);
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ixql-viz-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.ixql-viz-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.ixql-viz-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

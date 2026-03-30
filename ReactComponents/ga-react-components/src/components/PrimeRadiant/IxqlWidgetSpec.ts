@@ -2,7 +2,7 @@
 // WidgetSpec types and compiler — transforms IXQL AST → renderable widget descriptors.
 // Phase 1: PanelSpec (AG-Grid). Future: VizSpec (D3), FormSpec (MUI).
 
-import type { CreateGridPanelCommand, ProjectionField, PipeStep, IxqlPredicate } from './IxqlControlParser';
+import type { CreateGridPanelCommand, CreateVizCommand, ProjectionField, PipeStep, IxqlPredicate, VizKind } from './IxqlControlParser';
 
 // ---------------------------------------------------------------------------
 // Whitelisted pure functions for PROJECT expressions
@@ -73,8 +73,27 @@ export interface PanelSpec {
   live: boolean;
 }
 
-// Future: VizSpec, FormSpec
-export type WidgetSpec = PanelSpec;
+export interface VizSpec {
+  type: 'viz';
+  id: string;
+  kind: VizKind;
+  binding: DataBindingSpec;
+  pipeline: PipelineSpec | null;
+  nodeField: string | null;
+  edgeSource: string | null;
+  edgeFrom: string | null;
+  edgeTo: string | null;
+  colorField: string | null;
+  sizeField: string | null;
+  labelField: string | null;
+  layout: ResponsiveLayoutSpec;
+  governedBy: number[];
+  publish: { signal: string; as: string } | null;
+  subscribe: string[];
+  refresh: number | null;
+}
+
+export type WidgetSpec = PanelSpec | VizSpec;
 
 // ---------------------------------------------------------------------------
 // Compiler: CreateGridPanelCommand → PanelSpec
@@ -135,6 +154,32 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
     subscribe: cmd.subscribe,
     refresh: cmd.refresh,
     live: cmd.live,
+  };
+}
+
+export function compileViz(cmd: CreateVizCommand): VizSpec {
+  return {
+    type: 'viz',
+    id: cmd.id,
+    kind: cmd.kind,
+    binding: {
+      source: cmd.source,
+      wherePredicates: cmd.wherePredicates,
+      dependsOn: cmd.subscribe,
+    },
+    pipeline: cmd.pipe.length > 0 ? { steps: cmd.pipe } : null,
+    nodeField: cmd.nodeField,
+    edgeSource: cmd.edgeSource,
+    edgeFrom: cmd.edgeFrom,
+    edgeTo: cmd.edgeTo,
+    colorField: cmd.colorField,
+    sizeField: cmd.sizeField,
+    labelField: cmd.labelField,
+    layout: compileLayout(cmd.layout),
+    governedBy: cmd.governedBy,
+    publish: cmd.publish,
+    subscribe: cmd.subscribe,
+    refresh: cmd.refresh,
   };
 }
 
