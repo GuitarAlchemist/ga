@@ -161,7 +161,7 @@ function renderBeliefCell(content: string): React.ReactNode {
       Array.isArray(data) ? data : [data];
 
     const statusColors: Record<string, string> = {
-      T: '#4caf50', F: '#f44336', U: '#ff9800', C: '#ab47bc',
+      T: '#22c55e', P: '#a3e635', U: '#6b7280', D: '#f97316', F: '#ef4444', C: '#d946ef',
     };
 
     return (
