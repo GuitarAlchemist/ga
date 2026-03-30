@@ -3,7 +3,7 @@
 // Panels publish selection events; subscribers receive them reactively.
 // Throttled to prevent broadcast storms from rapid interactions.
 
-import { useSyncExternalStore, useCallback } from 'react';
+import { useSyncExternalStore, useCallback, useRef } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -102,19 +102,38 @@ export function useSignal(name: string): DashboardSignal | undefined {
   return allSignals.get(name);
 }
 
-/** Subscribe to multiple signals. Returns a map of signal name → signal. */
+/** Subscribe to multiple signals. Returns a stable map that only changes when relevant signals change. */
 export function useSignals(names: string[]): Map<string, DashboardSignal> {
   const allSignals = useSyncExternalStore(
     (cb) => signalBus.subscribe(cb),
     () => signalBus.getAll(),
   );
-  // Filter to only requested signals
-  const result = new Map<string, DashboardSignal>();
+  const prevRef = useRef<Map<string, DashboardSignal>>(new Map());
+
+  // Check if any relevant signal actually changed (by timestamp)
+  let changed = false;
   for (const name of names) {
-    const sig = allSignals.get(name);
-    if (sig) result.set(name, sig);
+    const current = allSignals.get(name);
+    const prev = prevRef.current.get(name);
+    if (current?.timestamp !== prev?.timestamp) { changed = true; break; }
   }
-  return result;
+  // Also check if a previously-present signal was removed
+  if (!changed) {
+    for (const name of prevRef.current.keys()) {
+      if (names.indexOf(name) >= 0 && !allSignals.has(name)) { changed = true; break; }
+    }
+  }
+
+  if (changed) {
+    const result = new Map<string, DashboardSignal>();
+    for (const name of names) {
+      const sig = allSignals.get(name);
+      if (sig) result.set(name, sig);
+    }
+    prevRef.current = result;
+  }
+
+  return prevRef.current;
 }
 
 /** Publish a signal from a panel. Returns a stable callback. */

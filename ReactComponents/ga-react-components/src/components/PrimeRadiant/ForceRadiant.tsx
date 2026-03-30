@@ -3141,7 +3141,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           if (reg?.component) return React.createElement(reg.component);
           // Phase 6: Render IxqlGridPanel for IXQL CREATE PANEL KIND grid
           const gridSpec = gridPanelSpecsRef.current.get(activePanel);
-          if (gridSpec) return React.createElement(IxqlGridPanel, { spec: gridSpec });
+          if (gridSpec) {
+            const gridGraphCtx: GraphContext | undefined = graphRef.current
+              ? {
+                  nodes: (graphRef.current.graphData().nodes as Record<string, unknown>[]),
+                  edges: (graphRef.current.graphData().links as Record<string, unknown>[]),
+                }
+              : undefined;
+            return React.createElement(IxqlGridPanel, { spec: gridSpec, graphContext: gridGraphCtx });
+          }
           // Phase 2: Render DynamicPanel for IXQL-created panels
           const dynDef = dynamicPanelDefsRef.current.get(activePanel);
           if (dynDef) {

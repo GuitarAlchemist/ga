@@ -17,7 +17,6 @@ import type { PanelSpec, CompiledProjectionField } from './IxqlWidgetSpec';
 import { applyProjection } from './IxqlWidgetSpec';
 import { executePipeline } from './IxqlPipeEngine';
 import { resolve } from './DataFetcher';
-import type { IxqlPredicate } from './IxqlControlParser';
 import { signalBus, useSignals, usePublish } from './DashboardSignalBus';
 
 // ---------------------------------------------------------------------------
@@ -244,9 +243,10 @@ function enhanceColDefs(
 
 export interface IxqlGridPanelProps {
   spec: PanelSpec;
+  graphContext?: import('./DataFetcher').GraphContext;
 }
 
-export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec }) => {
+export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext }) => {
   const [rowData, setRowData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -261,7 +261,8 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec }) => {
     try {
       const raw = await resolve(
         spec.binding.source,
-        spec.binding.wherePredicates as IxqlPredicate[],
+        spec.binding.wherePredicates,
+        graphContext,
       );
 
       let rows = raw as Record<string, unknown>[];
@@ -283,7 +284,7 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec }) => {
     } finally {
       setLoading(false);
     }
-  }, [spec.binding.source, spec.binding.wherePredicates, spec.projection]);
+  }, [spec.binding.source, spec.binding.wherePredicates, spec.projection, spec.pipeline, graphContext]);
 
   // Initial load + polling
   useEffect(() => {
