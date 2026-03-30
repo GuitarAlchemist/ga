@@ -115,7 +115,7 @@ function highlightIxql(code: string): string {
     .replace(/>/g, '&gt;');
 
   // keywords in gold
-  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE'];
+  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE'];
   for (const kw of keywords) {
     escaped = escaped.replace(
       new RegExp(`\\b(${kw})\\b`, 'g'),
@@ -372,6 +372,24 @@ function renderReactCell(content: string): React.ReactNode {
   );
 }
 
+function formatGridHeader(field: string): string {
+  const words: string[] = [];
+  let current = '';
+  for (let i = 0; i < field.length; i++) {
+    const ch = field[i];
+    if (ch === '_') {
+      if (current) { words.push(current); current = ''; }
+    } else if (i > 0 && ch >= 'A' && ch <= 'Z' && field[i - 1] >= 'a' && field[i - 1] <= 'z') {
+      if (current) words.push(current);
+      current = ch;
+    } else {
+      current += ch;
+    }
+  }
+  if (current) words.push(current);
+  return words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 function renderGridCell(content: string): React.ReactNode {
   // Parse the IXQL command from cell content
   const trimmed = content.trim();
@@ -386,7 +404,7 @@ function renderGridCell(content: string): React.ReactNode {
       }
       // Auto-generate columns from first row
       const colDefs: ColDef[] = Object.keys(rows[0]).map(key => ({
-        headerName: key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase()),
+        headerName: formatGridHeader(key),
         field: key,
         sortable: true,
         filter: true,
@@ -753,6 +771,58 @@ function createSampleNotebooks(): NotebookDocument[] {
             },
           }),
           status: 'complete',
+        },
+      ],
+    },
+    {
+      id: 'sample-data-explorer',
+      title: 'Data Explorer',
+      description: 'Interactive grid tables for exploring governance data — beliefs, nodes, and custom queries',
+      createdAt: '2026-03-29T10:00:00Z',
+      updatedAt: '2026-03-29T10:00:00Z',
+      cells: [
+        {
+          id: 'de-1',
+          type: 'markdown',
+          content: '# Data Explorer\n\nInteractive AG-Grid tables powered by **IXQL CREATE PANEL KIND grid**. Each grid supports sorting, filtering, and column resizing. Tetravalent values (T/F/U/C) and confidence scores render with visual indicators.\n\n---\n\n## Live Beliefs',
+          status: 'idle',
+        },
+        {
+          id: 'de-2',
+          type: 'grid',
+          content: 'CREATE PANEL "live-beliefs" KIND grid SOURCE governance.beliefs PROJECT { id, proposition, truth_value, confidence } REFRESH 30s GOVERNED BY article=7 PUBLISH selection AS selectedBelief',
+          status: 'idle',
+        },
+        {
+          id: 'de-3',
+          type: 'markdown',
+          content: '## Governance Graph Nodes\n\nAll nodes in the force-directed governance graph, with health metrics:',
+          status: 'idle',
+        },
+        {
+          id: 'de-4',
+          type: 'grid',
+          content: 'CREATE PANEL "graph-nodes" KIND grid SOURCE graph://nodes PROJECT { name, type, description, healthStatus } GOVERNED BY article=8',
+          status: 'idle',
+        },
+        {
+          id: 'de-5',
+          type: 'markdown',
+          content: '## Inline JSON Data\n\nYou can also paste raw JSON arrays directly into grid cells:',
+          status: 'idle',
+        },
+        {
+          id: 'de-6',
+          type: 'grid',
+          content: JSON.stringify([
+            { policy: 'alignment', version: '3.2.0', articles: '1,2,5', status: 'T', coverage: 0.95 },
+            { policy: 'rollback', version: '2.1.0', articles: '3,6', status: 'T', coverage: 0.88 },
+            { policy: 'self-modification', version: '1.4.0', articles: '9,10', status: 'U', coverage: 0.62 },
+            { policy: 'kaizen', version: '2.0.0', articles: '8,11', status: 'T', coverage: 0.91 },
+            { policy: 'proto-conscience', version: '0.9.0', articles: '4,5,11', status: 'C', coverage: 0.45 },
+            { policy: 'governance-audit', version: '1.8.0', articles: '7,8', status: 'T', coverage: 0.93 },
+          ], null, 2),
+          status: 'idle',
         },
       ],
     },

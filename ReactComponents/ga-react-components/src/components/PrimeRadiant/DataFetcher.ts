@@ -78,24 +78,36 @@ export async function godotCommand(tool: string, args: Record<string, unknown> =
   return callGodotMcp(tool, args);
 }
 
+// Governance dot-notation shortcuts: governance.beliefs → /api/governance/beliefs
+const GOVERNANCE_SHORTCUTS: Record<string, string> = {
+  'governance.beliefs':     '/api/governance/beliefs',
+  'governance.backlog':     '/api/governance/backlog',
+  'governance.predictions': '/api/governance/predictions',
+  'governance.graph':       '/api/governance',
+};
+
 function classifySource(source: string): SourceKind {
   const s = source.trim();
   if (s === 'graph://nodes') return 'graph-nodes';
   if (s === 'graph://edges') return 'graph-edges';
   if (s.startsWith('godot://')) return 'godot';
+  if (GOVERNANCE_SHORTCUTS[s]) return 'api';  // governance.X → api
   if (s.startsWith('/api/') || s.startsWith('http://') || s.startsWith('https://')) return 'api';
   if (s.startsWith('governance/') || s.startsWith('governance\\')) return 'governance';
   return 'unknown';
 }
 
 function toApiUrl(source: string, kind: SourceKind): string {
+  const s = source.trim();
+  // Resolve governance shortcuts first
+  if (GOVERNANCE_SHORTCUTS[s]) return GOVERNANCE_SHORTCUTS[s];
   switch (kind) {
     case 'api':
-      return source.trim();
+      return s;
     case 'governance':
-      return `/api/governance/file-content?filePath=${encodeURIComponent(source.trim())}`;
+      return `/api/governance/file-content?filePath=${encodeURIComponent(s)}`;
     default:
-      return source.trim();
+      return s;
   }
 }
 
