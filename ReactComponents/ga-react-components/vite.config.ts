@@ -254,17 +254,29 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/acp/, ''),
             },
-            // Voxtral TTS proxy — keeps MISTRAL_API_KEY server-side
+            // Voxtral TTS proxy — injects MISTRAL_API_KEY server-side
             '/proxy/voxtral': {
                 target: 'https://api.mistral.ai',
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/voxtral/, ''),
+                configure: (proxy) => {
+                    proxy.on('proxyReq', (proxyReq) => {
+                        const key = process.env.MISTRAL_API_KEY;
+                        if (key) proxyReq.setHeader('Authorization', `Bearer ${key}`);
+                    });
+                },
             },
-            // Codestral proxy — keeps CODESTRAL_API_KEY server-side
+            // Codestral proxy — injects CODESTRAL_API_KEY server-side
             '/proxy/codestral': {
                 target: 'https://codestral.mistral.ai',
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/codestral/, ''),
+                configure: (proxy) => {
+                    proxy.on('proxyReq', (proxyReq) => {
+                        const key = process.env.CODESTRAL_API_KEY;
+                        if (key) proxyReq.setHeader('Authorization', `Bearer ${key}`);
+                    });
+                },
             },
             // Godot MCP relay — browser connects here, Vite proxies to MCP server
             '/ws/godot-mcp': {
