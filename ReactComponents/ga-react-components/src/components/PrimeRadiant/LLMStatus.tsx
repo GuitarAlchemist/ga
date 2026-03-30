@@ -243,6 +243,18 @@ function checkCodex(): LLMProvider {
   };
 }
 
+function checkCodestral(): LLMProvider {
+  const configured = isEnvTrue('VITE_CODESTRAL_CONFIGURED');
+  return {
+    name: 'Codestral',
+    icon: 'M',
+    detail: 'Mistral Codestral',
+    status: configured ? 'configured' : 'not-configured',
+    statusHint: configured ? 'Codestral API key configured' : 'Set VITE_CODESTRAL_CONFIGURED=1',
+    category: 'tools',
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregated fetch — tries backend first, then client-side checks
 // ---------------------------------------------------------------------------
@@ -276,14 +288,15 @@ async function fetchLLMProviders(): Promise<LLMProvider[]> {
   const gemini = checkGemini();
   const voxtral = checkVoxtral();
   const codex = checkCodex();
+  const codestral = checkCodestral();
 
-  return [anthropic, ollama, openai, gemini, voxtral, docker, codex];
+  return [anthropic, ollama, openai, gemini, voxtral, docker, codex, codestral];
 }
 
 function providerIcon(name: string): string {
   const map: Record<string, string> = {
     anthropic: 'A', ollama: '\u{1F999}', openai: 'O', gemini: 'G',
-    voxtral: 'V', 'docker models': '\u{1F433}', codex: 'X',
+    voxtral: 'V', 'docker models': '\u{1F433}', codex: 'X', codestral: 'M',
   };
   return map[name.toLowerCase()] ?? name.charAt(0);
 }
@@ -291,7 +304,7 @@ function providerIcon(name: string): string {
 function providerCategory(name: string): ProviderCategory {
   const n = name.toLowerCase();
   if (['ollama', 'docker models', 'docker'].includes(n)) return 'local';
-  if (['voxtral', 'codex', 'voxtral tts'].includes(n)) return 'tools';
+  if (['voxtral', 'codex', 'voxtral tts', 'codestral'].includes(n)) return 'tools';
   return 'cloud';
 }
 
