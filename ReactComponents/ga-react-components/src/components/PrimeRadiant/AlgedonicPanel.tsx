@@ -2,6 +2,7 @@
 // Algedonic signal panel — real-time pain/pleasure governance alerts
 
 import React, { useState } from 'react';
+import { SignalGraph } from './SignalGraph';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -263,6 +264,7 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
   const [localSignals, setLocalSignals] = useState<AlgedonicSignal[]>([]);
 
   // Create form state
@@ -323,6 +325,12 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                 {f === 'all' ? 'All' : f === 'pain' ? 'Pain' : 'Pleasure'}
               </button>
             ))}
+            <button
+              className={`algedonic-panel__graph-toggle${showGraph ? ' algedonic-panel__graph-toggle--active' : ''}`}
+              onClick={() => setShowGraph(v => !v)}
+            >
+              {showGraph ? '\u25C9' : '\u25CE'} Graph
+            </button>
             <button
               className={`algedonic-panel__create-toggle${showCreateForm ? ' algedonic-panel__create-toggle--active' : ''}`}
               onClick={() => setShowCreateForm(v => !v)}
@@ -413,6 +421,14 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                 </button>
               </div>
             </div>
+          )}
+
+          {/* Signal interaction graph */}
+          {showGraph && (
+            <SignalGraph
+              signals={allSignals}
+              onNodeClick={(signal) => setExpandedId(expandedId === signal.id ? null : signal.id)}
+            />
           )}
 
           {/* Timeline */}
