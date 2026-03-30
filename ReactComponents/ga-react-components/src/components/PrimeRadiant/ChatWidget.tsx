@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { GovernanceNode } from './types';
 import { setDemerzelSpeaking, setDemerzelEmotion } from './GodotScene';
+import { useDemerzelVoice } from './VoxtralTTS';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -503,14 +504,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   const [ttsEnabled, setTtsEnabled] = useState(true); // Demerzel speaks by default
   const [alwaysListen, setAlwaysListen] = useState(false); // Continuous listening mode
 
+  // Demerzel voice — Voxtral TTS with Web Speech API fallback
+  const demerzelVoice = useDemerzelVoice();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isSpeakingRef = useRef(false);
   const startListeningRef = useRef<() => void>(() => {});
   const panelRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioBlobUrlRef = useRef<string | null>(null);
 
   // Close on click outside
   useEffect(() => {
@@ -538,122 +540,37 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
-      stopAudio();
-      speechSynthesis.cancel();
+      demerzelVoice.stop();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only on unmount
   }, []);
 
-  /** Stop any currently playing audio and revoke blob URL */
-  const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+  // Track demerzelVoice.speaking to sync isSpeakingRef and resume always-listen
+  useEffect(() => {
+    isSpeakingRef.current = demerzelVoice.speaking;
+    if (!demerzelVoice.speaking && alwaysListen) {
+      setTimeout(() => startListeningRef.current(), 300);
     }
-    if (audioBlobUrlRef.current) {
-      URL.revokeObjectURL(audioBlobUrlRef.current);
-      audioBlobUrlRef.current = null;
-    }
-  }, []);
+  }, [demerzelVoice.speaking, alwaysListen]);
 
-  /** Fallback: use browser Web Speech API */
-  const speakWithBrowserTts = useCallback((text: string) => {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 0.85;
-    const voices = speechSynthesis.getVoices();
-
-    // Detect language: use explicit locale, or sniff from text for auto mode
-    let lang = locale;
-    if (lang === 'auto') {
-      // Simple heuristic: check for common non-ASCII or language-specific patterns
-      if (/[àâéèêëïîôùûüÿçœæ]/.test(text) || /\b(je|nous|vous|les|des|est|une?|dans|pour|sur|avec)\b/i.test(text)) lang = 'fr';
-      else if (/[áéíóúñ¿¡]/.test(text) || /\b(el|los|las|una?|por|para|con|que)\b/i.test(text)) lang = 'es';
-      else if (/[äöüß]/.test(text) || /\b(der|die|das|ist|und|ein|eine)\b/i.test(text)) lang = 'de';
-      else if (/[àèéìíòóùú]/.test(text) || /\b(il|gli|della|sono|che|per|una?)\b/i.test(text)) lang = 'it';
-      else lang = 'en';
-    }
-
-    utterance.lang = getLocaleForCode(lang);
-    // Pick a voice matching detected/selected language
-    const findVoice = (prefix: string) =>
-      voices.find((v) => v.name.includes('Google') && v.lang.startsWith(prefix))
-      ?? voices.find((v) => v.lang.startsWith(prefix) && v.localService === false)
-      ?? voices.find((v) => v.lang.startsWith(prefix));
-    const preferred = lang === 'en'
-      ? (voices.find((v) => v.name.includes('Google UK English Female'))
-        ?? voices.find((v) => v.name.includes('Samantha'))
-        ?? findVoice('en'))
-      : findVoice(lang);
-    if (preferred) utterance.voice = preferred;
-    speechSynthesis.speak(utterance);
-  }, [locale]);
-
-  /** Speak text via Voxtral backend, falling back to browser TTS on failure */
+  /** Speak text via Voxtral TTS pipeline (Voxtral -> /api/tts -> Web Speech fallback) */
   const speakText = useCallback(async (text: string) => {
     if (!ttsEnabled) return;
-    stopAudio();
-    speechSynthesis.cancel();
 
     // Pause recognition while speaking to prevent feedback
-    isSpeakingRef.current = true;
     if (recognitionRef.current && isListening) {
       try { recognitionRef.current.stop(); } catch { /* ignore */ }
     }
 
-    const onSpeechDone = () => {
-      isSpeakingRef.current = false;
-      // Resume always-listen after TTS finishes (use ref to avoid circular dep)
-      if (alwaysListen) setTimeout(() => startListeningRef.current(), 300);
-    };
-
-    try {
-      const baseUrl = typeof import.meta !== 'undefined'
-        ? (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL ?? 'https://localhost:7001'
-        : 'https://localhost:7001';
-
-      const response = await fetch(`${baseUrl}/api/tts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        speakWithBrowserTts(text);
-        // Browser TTS end detection
-        speechSynthesis.addEventListener('end', onSpeechDone, { once: true });
-        setTimeout(onSpeechDone, 10000); // safety fallback
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      audioBlobUrlRef.current = url;
-
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        audioBlobUrlRef.current = null;
-        audioRef.current = null;
-        onSpeechDone();
-      };
-      await audio.play();
-    } catch {
-      speakWithBrowserTts(text);
-      speechSynthesis.addEventListener('end', onSpeechDone, { once: true });
-      setTimeout(onSpeechDone, 10000);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- startListening ref avoids circular dep
-  }, [ttsEnabled, stopAudio, speakWithBrowserTts, alwaysListen]);
+    await demerzelVoice.speak(text);
+  }, [ttsEnabled, demerzelVoice, isListening]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isLoading) return;
 
-    // Stop any ongoing speech (both Voxtral audio and browser TTS)
-    stopAudio();
-    speechSynthesis.cancel();
+    // Stop any ongoing speech (Voxtral audio, /api/tts, and browser TTS)
+    demerzelVoice.stop();
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -772,7 +689,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       setDemerzelSpeaking(false);
       setDemerzelEmotion('calm');
     }
-  }, [isLoading, messages, selectedNode, speakText, stopAudio, onNavigateToNode, onNavigateToPlanet, onLoadArcGIS]);
+  }, [isLoading, messages, selectedNode, speakText, demerzelVoice, onNavigateToNode, onNavigateToPlanet, onLoadArcGIS]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -906,7 +823,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
           <div className="chat-widget__header-actions">
             <button
               className={`chat-widget__tts-btn ${ttsEnabled ? 'chat-widget__tts-btn--active' : ''}`}
-              onClick={() => { setTtsEnabled((v) => !v); if (ttsEnabled) { stopAudio(); speechSynthesis.cancel(); } }}
+              onClick={() => { setTtsEnabled((v) => !v); if (ttsEnabled) { demerzelVoice.stop(); } }}
               title={ttsEnabled ? 'Disable voice output' : 'Enable voice output'}
               aria-label="Toggle text-to-speech"
             >
@@ -919,6 +836,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
                   </>
                 )}
               </svg>
+              {demerzelVoice.speaking && <span className="chat-widget__speaking-indicator" />}
             </button>
             <select
               className="chat-widget__lang-select"
@@ -956,8 +874,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
             <button
               className="chat-widget__clear-btn"
               onClick={() => {
-                stopAudio();
-                speechSynthesis.cancel();
+                demerzelVoice.stop();
                 setMessages([{
                   id: 'welcome',
                   role: 'assistant',
@@ -1011,7 +928,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
             <div className="chat-widget__context-row">
               <span className="chat-widget__context-label">Voice</span>
               <span className="chat-widget__context-value">
-                {ttsEnabled ? 'On' : 'Off'}{alwaysListen ? ' / Always-listen' : ''}
+                {ttsEnabled ? 'On' : 'Off'}{alwaysListen ? ' / Always-listen' : ''}{demerzelVoice.speaking ? ' (speaking)' : ''}{demerzelVoice.available ? '' : ' (unavailable)'}
               </span>
             </div>
             <div className="chat-widget__context-desc">
@@ -1051,7 +968,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
                       )}
                       <button
                         className="chat-widget__replay-btn"
-                        onClick={() => void speakText(msg.content)}
+                        onClick={() => void demerzelVoice.speak(msg.content)}
                         title="Replay this message"
                         aria-label="Replay message"
                       >

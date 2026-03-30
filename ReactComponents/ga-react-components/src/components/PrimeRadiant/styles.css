@@ -9228,3 +9228,35 @@
 .prime-radiant__llm-model {
   font-size: 10px;
   color: #c9d1d9;
+.chat-widget__speaking-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #33CC66;
+  animation: speaking-pulse 1s ease-in-out infinite;
+}
+
+@keyframes speaking-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.chat-widget__msg-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  vertical-align: middle;
+  float: right;
+}
+.chat-widget__msg-bubble:hover .chat-widget__msg-actions { opacity: 1; }
+
+.chat-widget__replay-btn,
+.chat-widget__raw-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
