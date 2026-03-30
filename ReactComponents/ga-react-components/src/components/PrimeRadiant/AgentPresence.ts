@@ -141,8 +141,9 @@ class AgentPresenceTracker {
 
   constructor(config: AgentPresenceConfig = {}) {
     this.pollIntervalMs = config.pollIntervalMs ?? 10_000;
-    this.acpBaseUrl = config.acpBaseUrl ?? 'http://localhost:8200';
-    this.gaApiBaseUrl = config.gaApiBaseUrl ?? 'https://localhost:7001';
+    // Use Vite proxy to avoid CORS (browser → /proxy/acp → localhost:8200)
+    this.acpBaseUrl = config.acpBaseUrl ?? '/proxy/acp';
+    this.gaApiBaseUrl = config.gaApiBaseUrl ?? '/api';
 
     // Initialize all agents as unknown
     this.agents = new Map();

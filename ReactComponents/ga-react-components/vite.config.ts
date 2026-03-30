@@ -248,6 +248,24 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/docker-models/, ''),
             },
+            // Demerzel ACP proxy — avoids CORS when polling agent presence
+            '/proxy/acp': {
+                target: 'http://localhost:8200',
+                changeOrigin: true,
+                rewrite: (p: string) => p.replace(/^\/proxy\/acp/, ''),
+            },
+            // Voxtral TTS proxy — keeps MISTRAL_API_KEY server-side
+            '/proxy/voxtral': {
+                target: 'https://api.mistral.ai',
+                changeOrigin: true,
+                rewrite: (p: string) => p.replace(/^\/proxy\/voxtral/, ''),
+            },
+            // Codestral proxy — keeps CODESTRAL_API_KEY server-side
+            '/proxy/codestral': {
+                target: 'https://codestral.mistral.ai',
+                changeOrigin: true,
+                rewrite: (p: string) => p.replace(/^\/proxy\/codestral/, ''),
+            },
             // Godot MCP relay — browser connects here, Vite proxies to MCP server
             '/ws/godot-mcp': {
                 target: 'ws://127.0.0.1:6505',
