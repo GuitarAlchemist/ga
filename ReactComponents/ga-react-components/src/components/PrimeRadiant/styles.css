@@ -9090,6 +9090,18 @@
 
 .course-viewer__close {
   background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.course-viewer__close:hover {
+  color: #e6edf3;
+  background: rgba(110, 118, 129, 0.2);
+}
+
 .activity-panel__team-card {
   display: flex;
   align-items: center;
@@ -9530,6 +9542,8 @@
 .course-viewer__subtitle {
   font-size: 11px;
   color: #8b949e;
+}
+
 .algedonic-panel__graph-toggle {
   background: none;
   border: 1px solid #30363d;
@@ -9541,7 +9555,7 @@
   cursor: pointer;
   transition: all 0.15s;
   margin-left: auto;
---
+}
 .algedonic-panel__graph-toggle:hover {
   background: rgba(179, 146, 240, 0.1);
   border-color: #b392f0;
