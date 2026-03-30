@@ -46,20 +46,40 @@ export type ProjectionField = {
 
 export type GridPanelKind = 'grid';
 
+// ── PIPE transform types ──
+
+export type AggregateFunction = 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
+
+export interface AggregateSpec {
+  fn: AggregateFunction;
+  field: string | null;  // null for COUNT (counts rows)
+  alias: string;         // output field name: count, sum_effort, etc.
+}
+
+export type PipeStep =
+  | { kind: 'filter'; predicates: IxqlPredicate[] }
+  | { kind: 'sort'; field: string; direction: 'ASC' | 'DESC' }
+  | { kind: 'limit'; count: number }
+  | { kind: 'skip'; count: number }
+  | { kind: 'distinct'; field: string | null }
+  | { kind: 'flatten'; field: string }
+  | { kind: 'group'; byField: string; aggregates: AggregateSpec[] };
+
 export interface CreateGridPanelCommand {
   type: 'create-grid-panel';
   id: string;
   kind: GridPanelKind;
-  template: string | null;           // TEMPLATE governance.belief-grid
-  source: string;                    // SOURCE governance.beliefs
-  wherePredicates: IxqlPredicate[];  // WHERE clause after SOURCE
-  project: ProjectionField[];        // PROJECT { id, truth_value, ageDays: DAYS_SINCE(updated_at) }
-  refresh: number | null;            // REFRESH 30s → 30000 (ms)
-  live: boolean;                     // LIVE true → SignalR upgrade
-  layout: { breakpoint: string; cols: number }[]; // LAYOUT md:6 lg:4
-  governedBy: number[];              // GOVERNED BY article=7,3
-  publish: { signal: string; as: string } | null;   // PUBLISH selection AS selectedBelief
-  subscribe: string[];               // SUBSCRIBE selectedNode, otherSignal
+  template: string | null;
+  source: string;
+  wherePredicates: IxqlPredicate[];
+  project: ProjectionField[];
+  pipe: PipeStep[];                  // PIPE FILTER/SORT/LIMIT/SKIP/DISTINCT/FLATTEN/GROUP BY
+  refresh: number | null;
+  live: boolean;
+  layout: { breakpoint: string; cols: number }[];
+  governedBy: number[];
+  publish: { signal: string; as: string } | null;
+  subscribe: string[];
 }
 
 export interface BindHealthCommand {
@@ -454,6 +474,105 @@ function parseProjectClause(ctx: ParserContext): ProjectionField[] {
   return fields;
 }
 
+// ── PIPE step parser ──
+
+const PIPE_STEP_KEYWORDS = new Set(['FILTER', 'SORT', 'LIMIT', 'SKIP', 'DISTINCT', 'FLATTEN', 'GROUP']);
+const AGGREGATE_FUNCTIONS = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
+
+// Clause keywords that end a PIPE step (so we know when to stop consuming tokens)
+const CLAUSE_KEYWORDS = new Set(['PIPE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'PUBLISH', 'SUBSCRIBE', 'TEMPLATE', 'SOURCE', 'FROM']);
+
+function parseAggregate(token: string): AggregateSpec {
+  const upper = token.toUpperCase();
+  // COUNT has no field argument
+  if (upper === 'COUNT') {
+    return { fn: 'COUNT', field: null, alias: 'count' };
+  }
+  // SUM(field), AVG(field), MIN(field), MAX(field)
+  const parenOpen = token.indexOf('(');
+  const parenClose = token.lastIndexOf(')');
+  if (parenOpen > 0 && parenClose === token.length - 1) {
+    const fnName = token.substring(0, parenOpen).toUpperCase();
+    if (!AGGREGATE_FUNCTIONS.has(fnName)) {
+      throw new Error(`Unknown aggregate function '${fnName}'. Supported: COUNT, SUM, AVG, MIN, MAX`);
+    }
+    const field = token.substring(parenOpen + 1, parenClose);
+    return { fn: fnName as AggregateFunction, field, alias: fnName.toLowerCase() + '_' + field };
+  }
+  throw new Error(`Invalid aggregate '${token}'. Expected COUNT, SUM(field), AVG(field), MIN(field), or MAX(field)`);
+}
+
+function parsePipeStep(ctx: ParserContext): PipeStep {
+  const stepKw = peek(ctx);
+  if (!stepKw || !PIPE_STEP_KEYWORDS.has(stepKw)) {
+    throw new Error(`Expected PIPE step (${[...PIPE_STEP_KEYWORDS].join(', ')}), got '${peekRaw(ctx) ?? 'end of input'}'`);
+  }
+  next(ctx);
+
+  switch (stepKw) {
+    case 'FILTER':
+      return { kind: 'filter', predicates: parsePredicates(ctx) };
+
+    case 'SORT': {
+      const field = nextRaw(ctx);
+      let direction: 'ASC' | 'DESC' = 'ASC';
+      const dirToken = peek(ctx);
+      if (dirToken === 'ASC' || dirToken === 'DESC') {
+        direction = dirToken;
+        next(ctx);
+      }
+      return { kind: 'sort', field, direction };
+    }
+
+    case 'LIMIT': {
+      const count = parseInt(nextRaw(ctx), 10);
+      if (isNaN(count) || count < 0) throw new Error('PIPE LIMIT requires a non-negative integer');
+      return { kind: 'limit', count };
+    }
+
+    case 'SKIP': {
+      const count = parseInt(nextRaw(ctx), 10);
+      if (isNaN(count) || count < 0) throw new Error('PIPE SKIP requires a non-negative integer');
+      return { kind: 'skip', count };
+    }
+
+    case 'DISTINCT': {
+      // Optional field — if next token is not a clause keyword, it's a field
+      let field: string | null = null;
+      const nextKw = peek(ctx);
+      if (nextKw && !CLAUSE_KEYWORDS.has(nextKw) && !PIPE_STEP_KEYWORDS.has(nextKw)) {
+        field = nextRaw(ctx);
+      }
+      return { kind: 'distinct', field };
+    }
+
+    case 'FLATTEN': {
+      const field = nextRaw(ctx);
+      return { kind: 'flatten', field };
+    }
+
+    case 'GROUP': {
+      if (peek(ctx) === 'BY') next(ctx);
+      const byField = nextRaw(ctx);
+      const aggregates: AggregateSpec[] = [];
+      // Parse aggregates until we hit a clause keyword or end
+      while (ctx.pos < ctx.tokens.length) {
+        const nxt = peek(ctx);
+        if (!nxt || CLAUSE_KEYWORDS.has(nxt)) break;
+        aggregates.push(parseAggregate(nextRaw(ctx)));
+      }
+      if (aggregates.length === 0) {
+        // Default to COUNT if no aggregates specified
+        aggregates.push({ fn: 'COUNT', field: null, alias: 'count' });
+      }
+      return { kind: 'group', byField, aggregates };
+    }
+
+    default:
+      throw new Error(`Unknown PIPE step '${stepKw}'`);
+  }
+}
+
 function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCommand {
   const kindToken = nextRaw(ctx).toLowerCase();
   if (kindToken !== 'grid') {
@@ -464,6 +583,7 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
   let source = '';
   const wherePredicates: IxqlPredicate[] = [];
   let project: ProjectionField[] = [];
+  const pipe: PipeStep[] = [];
   let refresh: number | null = null;
   let live = false;
   const layout: { breakpoint: string; cols: number }[] = [];
@@ -504,6 +624,11 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
       case 'LIVE':
         next(ctx);
         live = nextRaw(ctx).toLowerCase() === 'true';
+        break;
+
+      case 'PIPE':
+        next(ctx);
+        pipe.push(parsePipeStep(ctx));
         break;
 
       case 'LAYOUT':
@@ -569,6 +694,7 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
     source,
     wherePredicates,
     project,
+    pipe,
     refresh,
     live,
     layout,

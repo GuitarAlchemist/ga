@@ -115,7 +115,7 @@ function highlightIxql(code: string): string {
     .replace(/>/g, '&gt;');
 
   // keywords in gold
-  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE'];
+  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE', 'SORT', 'SKIP', 'DISTINCT', 'FLATTEN', 'ASC', 'DESC', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
   for (const kw of keywords) {
     escaped = escaped.replace(
       new RegExp(`\\b(${kw})\\b`, 'g'),

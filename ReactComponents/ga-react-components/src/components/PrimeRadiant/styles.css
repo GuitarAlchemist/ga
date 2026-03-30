@@ -9228,6 +9228,8 @@
 .prime-radiant__llm-model {
   font-size: 10px;
   color: #c9d1d9;
+}
+
 .chat-widget__speaking-indicator {
   position: absolute;
   top: -2px;
@@ -9260,6 +9262,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.chat-widget__replay-btn:hover,
+.chat-widget__raw-toggle:hover {
+  color: #e6edf3;
+  background: rgba(110, 118, 129, 0.2);
+}
+
 .signal-graph__container {
   margin: 4px;
   border: 1px solid #21262d;
@@ -9535,12 +9551,6 @@
   border-color: #b392f0;
   color: #d2b8ff;
 }
-.signal-graph__container {
-  margin: 4px;
-  border: 1px solid #21262d;
-  border-radius: 6px;
-  background: rgba(13, 17, 23, 0.6);
-  overflow: hidden;
 .admin-inbox__header {
   display: flex;
   align-items: center;
@@ -9879,6 +9889,16 @@
 .ixql-grid-panel__refresh-badge {
   font-size: 10px;
   color: #8b949e;
+}
+
+.ixql-grid-panel__pipe-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ff8c00;
+  background: rgba(255, 140, 0, 0.12);
+  padding: 2px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
 }
 
 .ixql-grid-panel__loading,

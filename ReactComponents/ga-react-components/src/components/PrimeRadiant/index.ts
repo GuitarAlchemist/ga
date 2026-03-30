@@ -42,12 +42,13 @@ export type { SeldonDashboardProps } from './SeldonDashboard';
 export { createSpaceStation, updateSpaceStation } from './SpaceStation';
 export { IxqlCommandInput } from './IxqlCommandInput';
 export { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
-export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand } from './IxqlControlParser';
-// IXQL UI Composition — Phase 1: Grid panels
+export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand, PipeStep, AggregateSpec, AggregateFunction } from './IxqlControlParser';
+// IXQL UI Composition — Phase 1: Grid panels + PIPE transforms
 export { IxqlGridPanel } from './IxqlGridPanel';
 export type { IxqlGridPanelProps } from './IxqlGridPanel';
 export { compileGridPanel, applyProjection } from './IxqlWidgetSpec';
-export type { PanelSpec, WidgetSpec, DataBindingSpec, ProjectionSpec, ResponsiveLayoutSpec } from './IxqlWidgetSpec';
+export type { PanelSpec, WidgetSpec, DataBindingSpec, ProjectionSpec, PipelineSpec, ResponsiveLayoutSpec } from './IxqlWidgetSpec';
+export { executePipeline } from './IxqlPipeEngine';
 export { signalBus, useSignal, useSignals, usePublish } from './DashboardSignalBus';
 export type { DashboardSignal } from './DashboardSignalBus';
 export { PLANET_ASTRO_DATA } from './SolarSystem';
