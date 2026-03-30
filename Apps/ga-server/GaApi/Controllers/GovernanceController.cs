@@ -304,6 +304,95 @@ public class GovernanceController(
     }
 
     /// <summary>
+    ///     Get IXQL grammar metadata — sections, keywords, productions, data sources.
+    ///     Used by Prime Radiant for autocomplete and validation.
+    /// </summary>
+    [HttpGet("grammar")]
+    [ResponseCache(Duration = 600)]
+    public ActionResult GetGrammarMetadata()
+    {
+        var demerzelRoot = configuration["Governance:DemerzelRoot"] ?? FindDemerzelRoot();
+        if (demerzelRoot == null)
+            return Ok(new { sections = Array.Empty<object>(), keywords = Array.Empty<string>() });
+
+        var grammarFile = Path.Combine(demerzelRoot, "grammars", "sci-ml-pipelines.ebnf");
+        if (!System.IO.File.Exists(grammarFile))
+            return Ok(new { sections = Array.Empty<object>(), keywords = Array.Empty<string>() });
+
+        var lines = System.IO.File.ReadAllLines(grammarFile);
+
+        // Extract sections (lines preceded by ==== delimiter)
+        var sections = new List<object>();
+        for (var i = 1; i < lines.Length; i++)
+        {
+            if (!lines[i - 1].Contains("====")) continue;
+            var line = lines[i];
+            var openIdx = line.IndexOf("(*");
+            var closeIdx = line.IndexOf("*)");
+            if (openIdx < 0 || closeIdx < 0) continue;
+            var content = line.Substring(openIdx + 2, closeIdx - openIdx - 2).Trim();
+            var dotIdx = content.IndexOf('.');
+            if (dotIdx <= 0 || dotIdx > 3) continue;
+            if (!int.TryParse(content.Substring(0, dotIdx), out var num)) continue;
+            var title = content.Substring(dotIdx + 1).Trim();
+            if (title.Length > 3)
+                sections.Add(new { number = num, title });
+        }
+
+        // Extract productions (lines with ::=)
+        var productions = new List<string>();
+        foreach (var line in lines)
+        {
+            var idx = line.IndexOf("::=");
+            if (idx > 0)
+            {
+                var name = line.Substring(0, idx).Trim();
+                if (name.Length > 0 && name.Length < 60)
+                    productions.Add(name);
+            }
+        }
+
+        // Extract ix.io.* tool names from productions
+        var ioTools = productions
+            .Where(p => p.StartsWith("ix_io_"))
+            .Select(p => "ix.io." + p.Substring(6))
+            .ToList();
+
+        // Static IXQL UI command keywords (from IxqlControlParser)
+        var uiKeywords = new[]
+        {
+            "SELECT", "RESET", "CREATE", "PANEL", "VIZ", "KIND", "grid", "force-graph", "bar", "sparkline", "timeline",
+            "FROM", "SOURCE", "WHERE", "AND", "SET", "PROJECT", "PIPE", "FILTER", "SORT", "LIMIT", "SKIP",
+            "DISTINCT", "FLATTEN", "GROUP", "BY", "ASC", "DESC", "COUNT", "SUM", "AVG", "MIN", "MAX",
+            "REFRESH", "LIVE", "LAYOUT", "GOVERNED", "PUBLISH", "SUBSCRIBE", "TEMPLATE",
+            "BIND", "HEALTH", "WHEN", "ELSE", "ON", "CHANGED", "THEN",
+            "SHOW", "beliefs", "strategies", "tensor", "learners", "journal", "incompetence",
+            "METHYLATE", "DEMETHYLATE", "AMNESIA", "BROADCAST", "VISUALIZE",
+            "NODES", "EDGES", "COLOR", "SIZE", "LABEL",
+        };
+
+        // Governance shortcuts as data sources
+        var dataSources = new[]
+        {
+            "governance.beliefs", "governance.backlog", "governance.predictions", "governance.graph",
+            "graph://nodes", "graph://edges",
+            "godot://scene_tree", "godot://project_info", "godot://scripts", "godot://performance",
+        };
+
+        return Ok(new
+        {
+            sections,
+            productions = productions.Take(100),
+            productionCount = productions.Count,
+            ioTools,
+            uiKeywords,
+            dataSources,
+            grammarFile = "grammars/sci-ml-pipelines.ebnf",
+            sectionCount = sections.Count,
+        });
+    }
+
+    /// <summary>
     ///     Detect active Claude Code sessions by scanning ~/.claude/projects/ for recently modified .jsonl files.
     /// </summary>
     [HttpGet("claude-sessions")]
