@@ -59,6 +59,8 @@ export { CommitTooltip } from './CommitTooltip';
 export { AlgedonicPanel } from './AlgedonicPanel';
 export { createAlgedonicSignal } from './AlgedonicPanel';
 export { SignalGraph } from './SignalGraph';
+export { remediateSignal, useRemediation } from './DemerzelRemediation';
+export type { RemediationRisk, RemediationAction, RemediationResult, UseRemediationResult } from './DemerzelRemediation';
 export type { SignalGraphProps } from './SignalGraph';
 export { AdminInbox } from './AdminInbox';
 export { captureCanvas, captureFullPage, captureAndPost, useScreenshotCapture } from './ScreenshotCapture';

@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { SignalGraph } from './SignalGraph';
+import { useRemediation, type RemediationResult } from './DemerzelRemediation';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -267,6 +268,9 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
   const [showGraph, setShowGraph] = useState(false);
   const [localSignals, setLocalSignals] = useState<AlgedonicSignal[]>([]);
 
+  // Demerzel auto-remediation
+  const remediation = useRemediation();
+
   // Create form state
   const [formType, setFormType] = useState<AlgedonicSignalType>('pain');
   const [formSeverity, setFormSeverity] = useState<AlgedonicSeverity>('warning');
@@ -336,6 +340,17 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
               onClick={() => setShowCreateForm(v => !v)}
             >
               + New Signal
+            </button>
+            <button
+              className="prime-radiant__algedonic-fixall-btn"
+              disabled={remediation.remediating}
+              onClick={() => {
+                const active = filtered.filter(s => s.status === 'active');
+                if (active.length > 0) remediation.remediateAll(active);
+              }}
+              title="Auto-fix all active signals via Demerzel ACP"
+            >
+              {remediation.remediating ? 'Fixing...' : `Fix All (${filtered.filter(s => s.status === 'active').length})`}
             </button>
           </div>
 
@@ -531,17 +546,48 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                         <div className="prime-radiant__algedonic-detail-ts">
                           {new Date(s.timestamp).toLocaleString()}
                         </div>
-                        {onAskDemerzel && (
-                          <button
-                            className="prime-radiant__algedonic-address-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
-                            }}
-                          >
-                            Address with Demerzel
-                          </button>
-                        )}
+                        {(() => {
+                          const result = remediation.getResult(s.id);
+                          return (
+                            <div className="prime-radiant__algedonic-actions">
+                              <button
+                                className="prime-radiant__algedonic-autofix-btn"
+                                disabled={remediation.remediating || result?.status === 'running'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  remediation.remediate(s);
+                                }}
+                              >
+                                {result?.status === 'running' ? 'Fixing...' : result?.status === 'success' ? 'Fixed' : result?.status === 'escalated' ? 'Escalated' : 'Auto-fix'}
+                              </button>
+                              {onAskDemerzel && (
+                                <button
+                                  className="prime-radiant__algedonic-address-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
+                                  }}
+                                >
+                                  Ask
+                                </button>
+                              )}
+                              {result && result.status !== 'running' && (
+                                <div className={`prime-radiant__algedonic-result prime-radiant__algedonic-result--${result.status}`}>
+                                  <span className="prime-radiant__algedonic-result-badge">
+                                    {result.status === 'success' ? '✓' : result.status === 'escalated' ? '⚠' : '✗'} {result.risk} risk → {result.agentUsed}
+                                    {result.durationMs ? ` (${result.durationMs}ms)` : ''}
+                                  </span>
+                                  {result.response && (
+                                    <pre className="prime-radiant__algedonic-result-text">{result.response}</pre>
+                                  )}
+                                  {result.error && (
+                                    <pre className="prime-radiant__algedonic-result-text prime-radiant__algedonic-result-text--error">{result.error}</pre>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                     {isExpanded && !details && (
@@ -554,17 +600,48 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                           <span className="prime-radiant__algedonic-detail-label">Source System</span>
                           <span style={{ color: SOURCE_COLOR[s.source] ?? '#8b949e' }}>{s.source.toUpperCase()}</span>
                         </div>
-                        {onAskDemerzel && (
-                          <button
-                            className="prime-radiant__algedonic-address-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
-                            }}
-                          >
-                            Address with Demerzel
-                          </button>
-                        )}
+                        {(() => {
+                          const result = remediation.getResult(s.id);
+                          return (
+                            <div className="prime-radiant__algedonic-actions">
+                              <button
+                                className="prime-radiant__algedonic-autofix-btn"
+                                disabled={remediation.remediating || result?.status === 'running'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  remediation.remediate(s);
+                                }}
+                              >
+                                {result?.status === 'running' ? 'Fixing...' : result?.status === 'success' ? 'Fixed' : result?.status === 'escalated' ? 'Escalated' : 'Auto-fix'}
+                              </button>
+                              {onAskDemerzel && (
+                                <button
+                                  className="prime-radiant__algedonic-address-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAskDemerzel(`How should I address the "${s.signal.replace(/_/g, ' ')}" algedonic signal from ${s.source}? ${s.description ?? ''}`);
+                                  }}
+                                >
+                                  Ask
+                                </button>
+                              )}
+                              {result && result.status !== 'running' && (
+                                <div className={`prime-radiant__algedonic-result prime-radiant__algedonic-result--${result.status}`}>
+                                  <span className="prime-radiant__algedonic-result-badge">
+                                    {result.status === 'success' ? '✓' : result.status === 'escalated' ? '⚠' : '✗'} {result.risk} risk → {result.agentUsed}
+                                    {result.durationMs ? ` (${result.durationMs}ms)` : ''}
+                                  </span>
+                                  {result.response && (
+                                    <pre className="prime-radiant__algedonic-result-text">{result.response}</pre>
+                                  )}
+                                  {result.error && (
+                                    <pre className="prime-radiant__algedonic-result-text prime-radiant__algedonic-result-text--error">{result.error}</pre>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
