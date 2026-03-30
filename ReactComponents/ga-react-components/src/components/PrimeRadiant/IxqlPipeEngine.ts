@@ -60,7 +60,7 @@ function stepFilter(
 
 function stepSort(
   data: Record<string, unknown>[],
-  step: { kind: 'sort'; field: string; direction: 'ASC' | 'DESC' },
+  step: Extract<PipeStep, { type: 'sort' }>,
 ): Record<string, unknown>[] {
   const sorted = [...data];
   const dir = step.direction === 'DESC' ? -1 : 1;
@@ -98,14 +98,14 @@ function stepSort(
 
 function stepLimit(
   data: Record<string, unknown>[],
-  step: { kind: 'limit'; count: number },
+  step: Extract<PipeStep, { type: 'limit' }>,
 ): Record<string, unknown>[] {
   return data.slice(0, step.count);
 }
 
 function stepSkip(
   data: Record<string, unknown>[],
-  step: { kind: 'skip'; count: number },
+  step: Extract<PipeStep, { type: 'skip' }>,
 ): Record<string, unknown>[] {
   return data.slice(step.count);
 }
@@ -116,7 +116,7 @@ function stepSkip(
 
 function stepDistinct(
   data: Record<string, unknown>[],
-  step: { kind: 'distinct'; field: string | null },
+  step: Extract<PipeStep, { type: 'distinct' }>,
 ): Record<string, unknown>[] {
   const seen = new Set<string>();
   const result: Record<string, unknown>[] = [];
@@ -137,11 +137,12 @@ function stepDistinct(
 
 // ---------------------------------------------------------------------------
 // FLATTEN — expand array fields into N rows
+// NOTE: Only supports top-level field names (not dotted paths like "tags.keywords")
 // ---------------------------------------------------------------------------
 
 function stepFlatten(
   data: Record<string, unknown>[],
-  step: { kind: 'flatten'; field: string },
+  step: Extract<PipeStep, { type: 'flatten' }>,
 ): Record<string, unknown>[] {
   const result: Record<string, unknown>[] = [];
 
@@ -165,7 +166,7 @@ function stepFlatten(
 
 function stepGroup(
   data: Record<string, unknown>[],
-  step: { kind: 'group'; byField: string; aggregates: AggregateSpec[] },
+  step: Extract<PipeStep, { type: 'group' }>,
 ): Record<string, unknown>[] {
   // Build groups
   const groups = new Map<string, Record<string, unknown>[]>();
