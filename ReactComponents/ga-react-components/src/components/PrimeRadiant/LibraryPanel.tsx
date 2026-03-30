@@ -432,8 +432,8 @@ export const LibraryPanel: React.FC = () => {
               src={(() => {
                 const col = readingComic.collection ?? ARCHIVE_COLLECTIONS[readingComic.language];
                 return col
-                  ? `https://archive.org/embed/${col}/${readingComic.archiveId}.pdf`
-                  : `https://archive.org/embed/${readingComic.archiveId}`;
+                  ? `https://archive.org/download/${col}/${encodeURIComponent(readingComic.archiveId ?? '')}.pdf`
+                  : `https://archive.org/download/${readingComic.archiveId}`;
               })()}
               title={readingComic.title}
             />
