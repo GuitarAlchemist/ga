@@ -66,6 +66,8 @@ export { remediateSignal, useRemediation } from './DemerzelRemediation';
 export type { RemediationRisk, RemediationAction, RemediationResult, UseRemediationResult } from './DemerzelRemediation';
 export type { SignalGraphProps } from './SignalGraph';
 export { AdminInbox } from './AdminInbox';
+export { readDeepLink, writeDeepLink, getShareableUrl, shareCurrentState, useDeepLink } from './DeepLink';
+export type { DeepLinkState, UseDeepLinkResult } from './DeepLink';
 export { captureCanvas, captureFullPage, captureAndPost, useScreenshotCapture } from './ScreenshotCapture';
 export { ScreenshotButton } from './ScreenshotButton';
 export { ScreenshotPreview } from './ScreenshotPreview';

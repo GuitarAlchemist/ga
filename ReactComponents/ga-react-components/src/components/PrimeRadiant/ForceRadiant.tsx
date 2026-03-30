@@ -72,6 +72,7 @@ import { SeldonFacultyPanel } from './SeldonFacultyPanel';
 import { CodeTribunal } from './CodeTribunal';
 import { AdminInbox } from './AdminInbox';
 import { ScreenshotButton } from './ScreenshotButton';
+import { useDeepLink } from './DeepLink';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -633,6 +634,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   // A2A agent presence — live status of ix, TARS, GA, Seldon, Demerzel
   const a2aAgents = useAgentPresence();
+  // Deep linking — read/write URL params for shareable state
+  const [shareToast, setShareToast] = useState(false);
+  const deepLink = useDeepLink({
+    activePanel,
+    selectedNodeId: selectedNode?.id ?? null,
+    onPanelChange: (p) => setActivePanel(p),
+    onNodeSelect: (id) => {
+      const node = graphData?.nodes.find(n => n.id === id);
+      if (node) { setSelectedNode(node); setActivePanel('detail'); }
+    },
+  });
   // Admin mode: true on localhost or when token matches
   const [isAdmin] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -2755,6 +2767,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             <>
               <span style={{ color: '#30363d', margin: '0 4px' }}>|</span>
               <ScreenshotButton />
+              <span
+                style={{ cursor: 'pointer', marginLeft: 6, opacity: shareToast ? 1 : 0.6, transition: 'opacity 0.2s', position: 'relative' }}
+                title="Copy shareable URL"
+                onClick={async () => {
+                  await deepLink.share();
+                  setShareToast(true);
+                  setTimeout(() => setShareToast(false), 2000);
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={shareToast ? '#33CC66' : '#8b949e'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                {shareToast && (
+                  <span style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50)', fontSize: 9, color: '#33CC66', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                    Copied!
+                  </span>
+                )}
+              </span>
             </>
           )}
         </div>
