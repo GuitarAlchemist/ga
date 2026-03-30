@@ -12,9 +12,16 @@ interface CurriculumReference {
   departments: string[];
   level: string;
   curriculum_fit: string;
-  archiveId?: string;  // Archive.org filename for PDF embed
+  archiveId?: string;  // Archive.org filename (without .pdf) within the collection
+  collection?: string; // Archive.org collection identifier
   language: SupportedLanguage;
 }
+
+/** Archive.org collection per language — comics are files within these collections */
+const ARCHIVE_COLLECTIONS: Partial<Record<SupportedLanguage, string>> = {
+  en: 'TheseAnglaise',
+  fr: 'SavoirSansFrontieres',
+};
 
 type SupportedLanguage = 'en' | 'fr' | 'es' | 'vi' | 'hi' | 'ar' | 'ru' | 'de' | 'sv' | 'tr' | 'cs' | 'ro' | 'it' | 'pt';
 
@@ -101,21 +108,21 @@ const CURRICULUM_DATA: CurriculumData = {
     { title: 'For a Fistful of Amperes', topic: 'Electromagnetism \u2014 circuits, magnetism, EM waves', departments: ['physics'], level: 'high-school', curriculum_fit: 'Electromagnetic foundations for signal processing analogies', archiveId: 'For_a_fistful_of_amperes', language: 'en' },
     // --- French editions (originals) ---
     { title: 'Le Topologicon', topic: 'Topologie \u2014 surfaces, hom\u00e9omorphismes, surface de Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Fondations de la pens\u00e9e topologique pour TDA et plongements de Poincar\u00e9', archiveId: 'le_topologicon', language: 'fr' },
-    { title: 'Le Geometricon', topic: 'G\u00e9om\u00e9trie \u2014 constructions euclidiennes, raisonnement g\u00e9om\u00e9trique', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fondations g\u00e9om\u00e9triques pour la g\u00e9om\u00e9trie du manche et le raisonnement spatial', archiveId: 'LeGeometricon', language: 'fr' },
+    { title: 'Le Geometricon', topic: 'G\u00e9om\u00e9trie \u2014 constructions euclidiennes, raisonnement g\u00e9om\u00e9trique', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fondations g\u00e9om\u00e9triques pour la g\u00e9om\u00e9trie du manche et le raisonnement spatial', archiveId: 'LE GEOMETRICON', language: 'fr' },
     { title: 'Les Aventures d\u2019Anselme Lanturlu: Bourbakof', topic: 'Alg\u00e8bre abstraite \u2014 th\u00e9orie des groupes, structures math\u00e9matiques', departments: ['mathematics', 'music'], level: 'undergraduate', curriculum_fit: 'Th\u00e9orie des groupes pour les classes de hauteurs, sym\u00e9trie en th\u00e9orie musicale', archiveId: 'Bourbakof_fr', language: 'fr' },
     { title: 'Le Logotron', topic: 'Logique math\u00e9matique \u2014 syst\u00e8mes formels, th\u00e9orie de la preuve', departments: ['mathematics', 'philosophy', 'computer-science'], level: 'undergraduate', curriculum_fit: 'Fondations pour la logique t\u00e9travalente, v\u00e9rification formelle, th\u00e9orie des grammaires', archiveId: 'logotron_fr', language: 'fr' },
-    { title: 'L\u2019Informatique', topic: 'Informatique \u2014 th\u00e9orie de l\u2019information, logique num\u00e9rique, algorithmes', departments: ['computer-science'], level: 'high-school', curriculum_fit: 'Fondamentaux pour la g\u00e9n\u00e9ration contrainte et le traitement du signal num\u00e9rique', archiveId: 'linformatique', language: 'fr' },
-    { title: 'Robot mais pas trop', topic: 'Robotique \u2014 automatisation, syst\u00e8mes de contr\u00f4le, comportement d\u2019agents', departments: ['computer-science', 'cognitive-science'], level: 'high-school', curriculum_fit: 'Fondations du comportement d\u2019agents, gouvernance comme analogie de contr\u00f4le', archiveId: 'robot_mais_pas_trop', language: 'fr' },
+    { title: 'L\u2019Informatique', topic: 'Informatique \u2014 th\u00e9orie de l\u2019information, logique num\u00e9rique, algorithmes', departments: ['computer-science'], level: 'high-school', curriculum_fit: 'Fondamentaux pour la g\u00e9n\u00e9ration contrainte et le traitement du signal num\u00e9rique', archiveId: 'MONEYBACK_DECOUVRE_L_INFORMATIQUE', language: 'fr' },
+    { title: 'Robot mais pas trop', topic: 'Robotique \u2014 automatisation, syst\u00e8mes de contr\u00f4le, comportement d\u2019agents', departments: ['computer-science', 'cognitive-science'], level: 'high-school', curriculum_fit: 'Fondations du comportement d\u2019agents, gouvernance comme analogie de contr\u00f4le', archiveId: 'A QUOI REVENT LES ROBOTS', language: 'fr' },
     { title: 'Tout est relatif', topic: 'Relativit\u00e9 restreinte et g\u00e9n\u00e9rale \u2014 espace-temps, r\u00e9f\u00e9rentiels', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Pens\u00e9e en r\u00e9f\u00e9rentiels applicable \u00e0 la gouvernance multi-perspectives', archiveId: 'toutestrelatifjpp', language: 'fr' },
-    { title: 'Le Mur du Silence', topic: 'M\u00e9canique des ondes \u2014 son, barri\u00e8res, propagation', departments: ['physics', 'music'], level: 'high-school', curriculum_fit: 'Fondations acoustiques pour la vibration des cordes et les harmoniques', archiveId: 'le_mur_du_silence', language: 'fr' },
+    { title: 'Le Mur du Silence', topic: 'M\u00e9canique des ondes \u2014 son, barri\u00e8res, propagation', departments: ['physics', 'music'], level: 'high-school', curriculum_fit: 'Fondations acoustiques pour la vibration des cordes et les harmoniques', archiveId: 'LE MUR DU SILENCE', language: 'fr' },
     { title: 'Le Trou Noir', topic: 'Astrophysique \u2014 effondrement gravitationnel, courbure de l\u2019espace-temps', departments: ['physics', 'mathematics'], level: 'undergraduate', curriculum_fit: 'Physique extr\u00eame comme outil de r\u00e9flexion sur les conditions limites et singularit\u00e9s', archiveId: 'le_trou_noir', language: 'fr' },
-    { title: 'L\u2019Economicon', topic: '\u00c9conomie \u2014 dynamiques de march\u00e9, allocation de ressources', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Pens\u00e9e en allocation de ressources pour la gestion budg\u00e9taire et la priorisation', archiveId: 'leconomicon', language: 'fr' },
+    { title: 'L\u2019Economicon', topic: '\u00c9conomie \u2014 dynamiques de march\u00e9, allocation de ressources', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Pens\u00e9e en allocation de ressources pour la gestion budg\u00e9taire et la priorisation', archiveId: 'ECONOMICON', language: 'fr' },
     { title: 'Big Bang', topic: 'Cosmologie \u2014 origine de l\u2019univers, physique primordiale', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Pens\u00e9e syst\u00e9mique \u00e0 grande \u00e9chelle, conditions initiales et \u00e9mergence', archiveId: 'big_bang_jpp', language: 'fr' },
     { title: 'Cosmic Story', topic: 'Cosmologie \u2014 histoire de l\u2019univers du Big Bang \u00e0 la vie', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Cosmologie narrative pour la pens\u00e9e syst\u00e9mique globale', archiveId: 'cosmic_story_fr', language: 'fr' },
-    { title: 'Si on volait\u2009?', topic: 'A\u00e9rodynamique \u2014 m\u00e9canique du vol, portance et tra\u00een\u00e9e', departments: ['physics'], level: 'high-school', curriculum_fit: 'Intuition de dynamique des fluides applicable \u00e0 l\u2019analyse du flux de signaux', archiveId: 'si_on_volait', language: 'fr' },
+    { title: 'Si on volait\u2009?', topic: 'A\u00e9rodynamique \u2014 m\u00e9canique du vol, portance et tra\u00een\u00e9e', departments: ['physics'], level: 'high-school', curriculum_fit: 'Intuition de dynamique des fluides applicable \u00e0 l\u2019analyse du flux de signaux', archiveId: 'mecavol', language: 'fr' },
     { title: 'Mille milliards de soleils', topic: 'Physique stellaire \u2014 formation d\u2019\u00e9toiles, fusion nucl\u00e9aire, supernovae', departments: ['physics'], level: 'high-school to undergraduate', curriculum_fit: 'Transformation d\u2019\u00e9nergie et pens\u00e9e en cycle de vie pour l\u2019\u00e9volution des syst\u00e8mes', archiveId: 'mille_milliards_de_soleils', language: 'fr' },
     { title: 'La Face cach\u00e9e de l\u2019Univers', topic: 'Mati\u00e8re noire et \u00e9nergie sombre \u2014 myst\u00e8res cosmologiques', departments: ['physics', 'futurology'], level: 'undergraduate', curriculum_fit: 'Inconnues inconnues \u2014 humilit\u00e9 \u00e9pist\u00e9mique en gouvernance', archiveId: 'la_face_cachee_de_lunivers', language: 'fr' },
-    { title: 'Pour une poign\u00e9e d\u2019amp\u00e8res', topic: '\u00c9lectromagn\u00e9tisme \u2014 circuits, magn\u00e9tisme, ondes EM', departments: ['physics'], level: 'high-school', curriculum_fit: 'Fondations \u00e9lectromagn\u00e9tiques pour les analogies de traitement du signal', archiveId: 'pour_une_poignee_damperes', language: 'fr' },
+    { title: 'Pour une poign\u00e9e d\u2019amp\u00e8res', topic: '\u00c9lectromagn\u00e9tisme \u2014 circuits, magn\u00e9tisme, ondes EM', departments: ['physics'], level: 'high-school', curriculum_fit: 'Fondations \u00e9lectromagn\u00e9tiques pour les analogies de traitement du signal', archiveId: 'ET POUR QUELQUES AMPERES DE PLUS', language: 'fr' },
     // --- Spanish (ESPANOL) ---
     { title: 'Topologicón', topic: 'Topología — superficies, homeomorfismos, superficie de Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Fundamentos del pensamiento topológico para TDA y embeddings de Poincaré', archiveId: 'topologicon_es', language: 'es' },
     { title: 'Geometricón', topic: 'Geometría — construcciones euclidianas, razonamiento geométrico', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fundamentos geométricos para la geometría del mástil y razonamiento espacial', archiveId: 'geometricon_es', language: 'es' },
@@ -422,7 +429,12 @@ export const LibraryPanel: React.FC = () => {
             </div>
             <iframe
               className="prime-radiant__library-reader-frame"
-              src={`https://archive.org/embed/${readingComic.archiveId}`}
+              src={(() => {
+                const col = readingComic.collection ?? ARCHIVE_COLLECTIONS[readingComic.language];
+                return col
+                  ? `https://archive.org/embed/${col}/${readingComic.archiveId}.pdf`
+                  : `https://archive.org/embed/${readingComic.archiveId}`;
+              })()}
               title={readingComic.title}
             />
           </div>
