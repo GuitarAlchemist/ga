@@ -43,6 +43,9 @@ export interface PrResult {
 // - ixql:exec {command}
 // - ixql:gis-query {planet?, nodes: GovernanceNode[]}  — map IXQL results to GIS pins
 // - ixql:gis-clear {planet?}  — clear IXQL-generated GIS pins
+// - demerzel:emotion {emotion: "calm"|"concerned"|"thinking"|"pleased"|"alert"}
+// - demerzel:speaking {speaking: boolean}
+// - camera:fly {x, y, z, lookAt?: {x, y, z}, durationMs?}
 
 export interface PrControlHandlers {
   openPanel: (id: PanelId) => void;
@@ -51,6 +54,9 @@ export interface PrControlHandlers {
   getGisManager: (planet: string) => GisLayerManager | undefined;
   getState: () => Record<string, unknown>;
   executeIxql?: (command: string) => void;
+  setDemerzelEmotion?: (emotion: string) => void;
+  setDemerzelSpeaking?: (speaking: boolean) => void;
+  flyCamera?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, durationMs?: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +190,34 @@ export function usePrControl(handlers: PrControlHandlers): void {
           result.data = { pinCount: mgr.pinCount };
           break;
         }
+
+        case 'demerzel:emotion':
+          if (h.setDemerzelEmotion) {
+            h.setDemerzelEmotion(params.emotion as string);
+          } else {
+            throw new Error('Demerzel emotion handler not available');
+          }
+          break;
+
+        case 'demerzel:speaking':
+          if (h.setDemerzelSpeaking) {
+            h.setDemerzelSpeaking(params.speaking as boolean);
+          } else {
+            throw new Error('Demerzel speaking handler not available');
+          }
+          break;
+
+        case 'camera:fly':
+          if (h.flyCamera) {
+            h.flyCamera(
+              params as unknown as { x: number; y: number; z: number },
+              params.lookAt as { x: number; y: number; z: number } | undefined,
+              params.durationMs as number | undefined,
+            );
+          } else {
+            throw new Error('Camera fly handler not available');
+          }
+          break;
 
         default:
           throw new Error(`Unknown action: ${action}`);
