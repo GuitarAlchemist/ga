@@ -23,6 +23,8 @@ export { LIVE_GOVERNANCE_GRAPH } from './liveData';
 export { searchNodes, getHealthStatus, deriveGovernanceHealthStatus, applyHealthColors, buildGraphIndex } from './DataLoader';
 export type { BeliefState, TetravalentStatus, BeliefEvidence, EvidenceItem } from './DataLoader';
 export { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
+export { createRiggedDemerzelFace, updateRiggedDemerzelFace, setRiggedEmotion } from './DemerzelRiggedFace';
+export type { RiggedEmotion } from './DemerzelRiggedFace';
 export { createTarsRobot, updateTarsRobot } from './TarsRobot';
 export { createSolarSystem, updateSolarSystem, startLiveCloudUpdates, togglePlanetAtmosphere, toggleEarthClouds, toggleEarthBorders, toggleSnowCover, toggleAurora, toggleRingGlow, toggleJupiterStorm } from './SolarSystem';
 export { startVisualCriticLoop } from './VisualCriticLoop';
@@ -91,3 +93,15 @@ export type { UseGodotBridgeResult } from './useGodotBridge';
 export { ixqlToGis, clearIxqlPins } from './IxqlGisBridge';
 export { startSignalRGisBridge } from './SignalRGisBridge';
 export type { SignalRGisBridgeHandle } from './SignalRGisBridge';
+// Layer 1: Multi-Model Fan-Out
+export { fanOutQuery, getProvider, getProvidersByCategory, useMultiModelQuery, MODEL_PROVIDERS } from './MultiModelFanOut';
+export type { ModelProvider, ProviderEndpoint, FanOutRequest, FanOutResult, FanOutResultStatus, FanOutResponse, MultiModelQueryState, UseMultiModelQueryResult } from './MultiModelFanOut';
+// Layer 2: Theory Tribunal
+export { TheoryTribunal } from './TheoryTribunal';
+// Layer 3: Demerzel Voice
+export { speakAsDemerzel, stopSpeaking, isTTSAvailable, useDemerzelVoice } from './VoxtralTTS';
+export type { TTSRequest, TTSResponse, DemerzelVoiceHook } from './VoxtralTTS';
+// Layer 4: Seldon Faculty
+export { SeldonFacultyPanel } from './SeldonFacultyPanel';
+export { getFaculty, getFacultyForDepartment, getFacultyByProvider, askFacultyMember, useSeldonFaculty } from './SeldonFaculty';
+export type { FacultyMember, FacultyStatus, FacultyWithStatus, SeldonFacultyState } from './SeldonFaculty';

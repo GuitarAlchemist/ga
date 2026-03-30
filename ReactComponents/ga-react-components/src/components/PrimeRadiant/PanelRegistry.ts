@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -136,6 +136,19 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('circle', { key: 'c2', cx: 14, cy: 11, r: 0.7, fill: 'currentColor', stroke: 'none' }),
     h('circle', { key: 'c3', cx: 11, cy: 13, r: 0.5, fill: 'currentColor', stroke: 'none' }),
   ]),
+  tribunal: svg([
+    h('line', { key: 'l1', x1: 12, y1: 2, x2: 12, y2: 10 }),
+    h('line', { key: 'l2', x1: 4, y1: 10, x2: 20, y2: 10 }),
+    h('path', { key: 'p1', d: 'M4 10l-2 6h8l-2-6' }),
+    h('path', { key: 'p2', d: 'M16 10l-2 6h8l-2-6' }),
+    h('line', { key: 'l3', x1: 12, y1: 18, x2: 12, y2: 22 }),
+  ]),
+  faculty: svg([
+    h('path', { key: 'p1', d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+    h('circle', { key: 'c1', cx: 9, cy: 7, r: 4 }),
+    h('path', { key: 'p2', d: 'M22 2L13 11' }),
+    h('path', { key: 'p3', d: 'M16 5l3 3' }),
+  ]),
   presence: svg([
     h('path', { key: 'p1', d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
     h('circle', { key: 'c1', cx: 9, cy: 7, r: 4 }),
@@ -221,11 +234,13 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'llm',        label: 'LLM',            icon: 'llm',        renderMode: 'side',    group: 'agents' },
   { id: 'claude',     label: 'Claude Code',    icon: 'claude',     renderMode: 'side',    group: 'agents' },
   { id: 'presence',   label: 'Presence',        icon: 'presence',   renderMode: 'side',    group: 'agents' },
+  { id: 'tribunal',  label: 'Tribunal',        icon: 'tribunal',   renderMode: 'side',    group: 'agents' },
   // ── Knowledge ──
   { id: 'university', label: 'University',     icon: 'university', renderMode: 'overlay', group: 'knowledge' },
   { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side',    group: 'knowledge' },
   { id: 'notebook',   label: 'Live Notebook',  icon: 'notebook',   renderMode: 'overlay', group: 'knowledge' },
   { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side',    group: 'knowledge' },
+  { id: 'faculty',    label: 'Faculty',          icon: 'faculty',    renderMode: 'side',    group: 'knowledge' },
   // ── Visualization ──
   { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side',    group: 'viz' },
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side',    group: 'viz' },

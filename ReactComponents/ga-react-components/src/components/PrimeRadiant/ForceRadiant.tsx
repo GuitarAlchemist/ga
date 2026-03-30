@@ -17,6 +17,7 @@ import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
+import { createRiggedDemerzelFace, updateRiggedDemerzelFace } from './DemerzelRiggedFace';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
 import { createSolarSystem, updateSolarSystem, showPlanetLabel, loadArcGISOverlay, removeArcGISOverlay, addLocationMarker, enableEarthAutoLOD } from './SolarSystem';
@@ -55,6 +56,7 @@ import { LiveNotebook } from './LiveNotebook';
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
 import { GodotScene, setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
+import { DemerzelFaceOverlay } from './DemerzelFaceOverlay';
 import { GisPanel } from './GisPanel';
 import { PresencePanel } from './PresencePanel';
 import { getConnectionLog } from './ConnectionLog';
@@ -62,6 +64,8 @@ import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
 import { useAgentPresence } from './AgentPresence';
+import { TheoryTribunal } from './TheoryTribunal';
+import { SeldonFacultyPanel } from './SeldonFacultyPanel';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1399,6 +1403,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Pre-allocate reusable vectors OUTSIDE the tick loop (zero GC pressure)
     const _tarsOffset = new THREE.Vector3();
     const _faceOffset = new THREE.Vector3();
+    const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
     const _trackWp = new THREE.Vector3();
@@ -1667,12 +1672,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       tarsRobot.position.copy(cam.position).add(_tarsOffset);
       tarsRobot.quaternion.copy(cam.quaternion);
 
-      // Demerzel face — far left, above TARS
+      // Demerzel procedural face — far left, above TARS
       updateDemerzelFace(demerzelFace, t, cam.position, false);
       _faceOffset.set(-50, -8, -40);
       _faceOffset.applyQuaternion(cam.quaternion);
       demerzelFace.position.copy(cam.position).add(_faceOffset);
       demerzelFace.quaternion.copy(cam.quaternion);
+
+      // (Rigged face rendered in separate overlay — DemerzelFaceOverlay component)
 
       // (Trantor removed — replaced by Earth + nebulae)
 
@@ -2504,7 +2511,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     openPanel: (id) => setActivePanel(id),
     closePanel: () => setActivePanel(null),
     selectNode: (nodeId) => {
-      const node = graphData?.nodes.find(n => n.id === nodeId);
+      // Exact match first, then partial/contains match
+      const node = graphData?.nodes.find(n => n.id === nodeId)
+        ?? graphData?.nodes.find(n => n.id.toLowerCase().includes(nodeId.toLowerCase()));
       if (node) { setSelectedNode(node); setActivePanel('detail'); }
     },
     getGisManager: (planet) => gisManagersRef.current.get(planet),
@@ -2520,6 +2529,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       godotFullscreen,
       timestamp: Date.now(),
     }),
+    setDemerzelEmotion: (emotion) => {
+      setDemerzelEmotion(emotion);
+    },
+    setDemerzelSpeaking: (speaking) => {
+      setDemerzelSpeaking(speaking);
+    },
+    flyCamera: (pos, lookAt, durationMs) => {
+      const fg = graphRef.current;
+      if (!fg) return;
+      fg.cameraPosition(
+        pos,
+        lookAt ?? { x: 0, y: 0, z: 0 },
+        durationMs ?? 1200,
+      );
+    },
   });
 
   return (
@@ -2705,6 +2729,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           )}
         </div>
       )}
+
+      <DemerzelFaceOverlay size={100} />
 
       <ChatWidget
         selectedNode={selectedNode}
@@ -3072,6 +3098,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             claude: ClaudeCodePanel,
             library: LibraryPanel,
             brainstorm: BrainstormPanel,
+            tribunal: TheoryTribunal,
+            faculty: SeldonFacultyPanel,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);
