@@ -2,7 +2,8 @@
 // Vertical icon rail (desktop/tablet) / bottom tab bar (phone) for panel navigation.
 // Data-driven from PanelRegistry — panels are grouped with LED status indicators.
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePanelRegistry, ICON_CATALOG, PANEL_GROUPS } from './PanelRegistry';
 import type { PanelId, BuiltInPanelId, PanelGroupId, PanelGroupDef } from './PanelRegistry';
 import { RailPopover } from './RailPopover';
@@ -23,6 +24,38 @@ interface IconRailProps {
   onPanelToggle: (panelId: PanelId) => void;
   panelStatuses?: Partial<Record<string, PanelStatus>>;
 }
+
+/** IDs of panels shown directly in the mobile tab bar (before the overflow button). */
+const MOBILE_VISIBLE_IDS: PanelId[] = ['activity', 'algedonic', 'agent', 'tribunal', 'godot', 'cicd'];
+
+/** Hook: returns true when viewport is at most 640px wide. */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches,
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 640px)');
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
+}
+
+const h = React.createElement;
+
+/** Three-dot vertical ellipsis icon for the overflow button. */
+const OverflowIcon: React.ReactNode = h(
+  'svg',
+  { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'currentColor' },
+  [
+    h('circle', { key: 'c1', cx: 12, cy: 5, r: 2 }),
+    h('circle', { key: 'c2', cx: 12, cy: 12, r: 2 }),
+    h('circle', { key: 'c3', cx: 12, cy: 19, r: 2 }),
+  ],
+);
 
 const STATUS_COLORS: Record<NonNullable<PanelStatus>, string> = {
   ok: '#33CC66',
@@ -101,6 +134,8 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
   const registrations = usePanelRegistry();
   const railRef = useRef<HTMLDivElement>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>, item: RailItem) => {
     const btn = e.currentTarget;
@@ -128,57 +163,178 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
 
   const groups = useMemo(() => groupItems(items), [items]);
 
-  return (
-    <div className="icon-rail" ref={railRef}>
-      {groups.map((section, gi) => {
-        const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
-        return (
-          <React.Fragment key={section.group.id}>
-            {/* Group divider with label + LED */}
-            {gi > 0 && <div className="icon-rail__divider" />}
-            <div className="icon-rail__group-header" title={section.group.label}>
-              <span className="icon-rail__group-label">{section.group.label}</span>
-              {groupStatus && (
-                <span
-                  className={`icon-rail__group-led ${groupStatus === 'critical' ? 'icon-rail__group-led--pulse' : ''}`}
-                  style={{ backgroundColor: STATUS_COLORS[groupStatus] }}
-                  title={`${section.group.label}: ${groupStatus}`}
-                />
-              )}
-            </div>
+  // Mobile: filter items to only MOBILE_VISIBLE_IDS
+  const mobileVisibleSet = useMemo(() => new Set<string>(MOBILE_VISIBLE_IDS), []);
 
-            {/* Panel buttons */}
-            {section.items.map((item) => {
-              const status = panelStatuses[item.id] ?? null;
-              return (
+  const handleOverflowSelect = useCallback((panelId: PanelId) => {
+    setOverflowOpen(false);
+    onPanelToggle(panelId);
+  }, [onPanelToggle]);
+
+  // Close overflow drawer when switching away from mobile
+  useEffect(() => {
+    if (!isMobile) setOverflowOpen(false);
+  }, [isMobile]);
+
+  // Desktop: render as-is
+  if (!isMobile) {
+    return (
+      <div className="icon-rail" ref={railRef}>
+        {groups.map((section, gi) => {
+          const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
+          return (
+            <React.Fragment key={section.group.id}>
+              {gi > 0 && <div className="icon-rail__divider" />}
+              <div className="icon-rail__group-header" title={section.group.label}>
+                <span className="icon-rail__group-label">{section.group.label}</span>
+                {groupStatus && (
+                  <span
+                    className={`icon-rail__group-led ${groupStatus === 'critical' ? 'icon-rail__group-led--pulse' : ''}`}
+                    style={{ backgroundColor: STATUS_COLORS[groupStatus] }}
+                    title={`${section.group.label}: ${groupStatus}`}
+                  />
+                )}
+              </div>
+              {section.items.map((item) => {
+                const status = panelStatuses[item.id] ?? null;
+                return (
+                  <button
+                    key={item.id}
+                    className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
+                    onClick={() => onPanelToggle(item.id)}
+                    onMouseEnter={(e) => handleMouseEnter(e, item)}
+                    onMouseLeave={handleMouseLeave}
+                    aria-label={`Toggle ${item.label} panel`}
+                  >
+                    {item.icon}
+                    <span className="icon-rail__tooltip">{item.label}</span>
+                    {status && (
+                      <span
+                        className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                        style={{ backgroundColor: STATUS_COLORS[status] }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
+        <RailPopover
+          panelType={popover?.panelId ?? ''}
+          label={popover?.label ?? ''}
+          anchorTop={popover?.anchorTop ?? 0}
+          visible={popover !== null}
+        />
+      </div>
+    );
+  }
+
+  // Mobile: show only MOBILE_VISIBLE_IDS + overflow button
+  return (
+    <>
+      <div className="icon-rail" ref={railRef}>
+        {items
+          .filter((item) => mobileVisibleSet.has(item.id))
+          .map((item) => {
+            const status = panelStatuses[item.id] ?? null;
+            return (
+              <button
+                key={item.id}
+                className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
+                onClick={() => onPanelToggle(item.id)}
+                aria-label={`Toggle ${item.label} panel`}
+              >
+                {item.icon}
+                <span className="icon-rail__tooltip">{item.label}</span>
+                {status && (
+                  <span
+                    className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                    style={{ backgroundColor: STATUS_COLORS[status] }}
+                  />
+                )}
+              </button>
+            );
+          })}
+
+        {/* Overflow "more" button */}
+        <button
+          className={`icon-rail__btn icon-rail__overflow-btn ${overflowOpen ? 'icon-rail__btn--active' : ''}`}
+          onClick={() => setOverflowOpen((prev) => !prev)}
+          aria-label="More panels"
+        >
+          {OverflowIcon}
+          <span className="icon-rail__tooltip">More</span>
+        </button>
+      </div>
+
+      {/* Overflow drawer — rendered via portal so it's above everything */}
+      {overflowOpen &&
+        createPortal(
+          <>
+            {/* Backdrop */}
+            <div
+              className="icon-rail__overflow-backdrop"
+              onClick={() => setOverflowOpen(false)}
+            />
+
+            {/* Drawer */}
+            <div className="icon-rail__overflow-drawer">
+              <div className="icon-rail__overflow-drawer-header">
+                <span className="icon-rail__overflow-drawer-title">All Panels</span>
                 <button
-                  key={item.id}
-                  className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
-                  onClick={() => onPanelToggle(item.id)}
-                  onMouseEnter={(e) => handleMouseEnter(e, item)}
-                  onMouseLeave={handleMouseLeave}
-                  aria-label={`Toggle ${item.label} panel`}
+                  className="icon-rail__overflow-drawer-close"
+                  onClick={() => setOverflowOpen(false)}
+                  aria-label="Close panel drawer"
                 >
-                  {item.icon}
-                  <span className="icon-rail__tooltip">{item.label}</span>
-                  {status && (
-                    <span
-                      className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
-                      style={{ backgroundColor: STATUS_COLORS[status] }}
-                    />
-                  )}
+                  &times;
                 </button>
-              );
-            })}
-          </React.Fragment>
-        );
-      })}
-      <RailPopover
-        panelType={popover?.panelId ?? ''}
-        label={popover?.label ?? ''}
-        anchorTop={popover?.anchorTop ?? 0}
-        visible={popover !== null}
-      />
-    </div>
+              </div>
+
+              {groups.map((section) => {
+                const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
+                return (
+                  <div key={section.group.id} className="icon-rail__overflow-group">
+                    <div className="icon-rail__overflow-group-label">
+                      {section.group.label}
+                      {groupStatus && (
+                        <span
+                          className={`icon-rail__group-led ${groupStatus === 'critical' ? 'icon-rail__group-led--pulse' : ''}`}
+                          style={{ backgroundColor: STATUS_COLORS[groupStatus], marginLeft: 6 }}
+                        />
+                      )}
+                    </div>
+                    <div className="icon-rail__overflow-grid">
+                      {section.items.map((item) => {
+                        const status = panelStatuses[item.id] ?? null;
+                        return (
+                          <button
+                            key={item.id}
+                            className={`icon-rail__overflow-item ${activePanel === item.id ? 'icon-rail__overflow-item--active' : ''}`}
+                            onClick={() => handleOverflowSelect(item.id)}
+                            aria-label={`Open ${item.label} panel`}
+                          >
+                            <span className="icon-rail__overflow-item-icon">
+                              {item.icon}
+                              {status && (
+                                <span
+                                  className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                                  style={{ backgroundColor: STATUS_COLORS[status] }}
+                                />
+                              )}
+                            </span>
+                            <span className="icon-rail__overflow-item-label">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>,
+          document.body,
+        )}
+    </>
   );
 };
