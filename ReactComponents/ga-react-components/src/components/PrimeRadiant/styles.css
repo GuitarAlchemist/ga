@@ -4220,6 +4220,115 @@
   flex-wrap: wrap;
 }
 
+/* ─── LLM Session Usage Tracker ─── */
+.prime-radiant__llm-session-usage {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(13, 17, 23, 0.6);
+  border-top: 1px solid #21262d;
+  border-radius: 0 0 8px 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.prime-radiant__llm-session-header {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 6px;
+}
+
+.prime-radiant__llm-usage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 0.75em;
+}
+
+.prime-radiant__llm-usage-row--critical {
+  animation: llm-usage-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes llm-usage-pulse {
+  0%, 100% { background: transparent; }
+  50% { background: rgba(255, 68, 68, 0.12); }
+}
+
+.prime-radiant__llm-usage-model-name {
+  min-width: 80px;
+  max-width: 120px;
+  color: #e6edf3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prime-radiant__llm-usage-bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.prime-radiant__llm-session-bar {
+  flex: 1;
+  height: 4px;
+  background: #21262d;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.prime-radiant__llm-session-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.prime-radiant__llm-usage-pct {
+  font-size: 0.85em;
+  color: #8b949e;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prime-radiant__llm-usage-tokens {
+  font-size: 0.85em;
+  color: #8b949e;
+  white-space: nowrap;
+}
+
+.prime-radiant__llm-usage-cost {
+  font-size: 0.85em;
+  color: #ffd700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prime-radiant__llm-usage-alert {
+  color: #FF4444;
+  font-weight: 700;
+  font-size: 0.9em;
+  animation: llm-usage-pulse 1.5s ease-in-out infinite;
+}
+
+.prime-radiant__llm-session-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #21262d;
+  font-size: 0.8em;
+  color: #8b949e;
+}
+
+.prime-radiant__llm-session-cost {
+  color: #ffd700;
+  font-weight: 600;
+}
+
 /* ─── Algedonic Panel ─── */
 .prime-radiant__algedonic {
   position: relative;

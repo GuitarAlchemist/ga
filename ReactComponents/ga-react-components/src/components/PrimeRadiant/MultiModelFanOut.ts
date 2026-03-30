@@ -3,6 +3,7 @@
 // in parallel and collects results with timing metadata.
 
 import { useState, useCallback } from 'react';
+import { recordUsage } from './LLMUsageTracker';
 
 // ---------------------------------------------------------------------------
 // Provider types
@@ -260,6 +261,14 @@ async function callProvider(provider: ModelProvider, input: AdapterInput): Promi
 
     const json: unknown = await response.json();
     const content = adapter.extractContent(json);
+
+    // Record token usage for the session tracker
+    const usageData = json as { usage?: { input_tokens?: number; output_tokens?: number; prompt_tokens?: number; completion_tokens?: number } };
+    const inputTokens = usageData?.usage?.input_tokens ?? usageData?.usage?.prompt_tokens ?? 0;
+    const outputTokens = usageData?.usage?.output_tokens ?? usageData?.usage?.completion_tokens ?? 0;
+    if (inputTokens > 0 || outputTokens > 0) {
+      recordUsage(provider.id, inputTokens, outputTokens, response.headers);
+    }
 
     return {
       model: provider.id,

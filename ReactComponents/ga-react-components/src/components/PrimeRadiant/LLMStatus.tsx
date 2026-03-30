@@ -5,6 +5,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import type { PanelStatus } from './IconRail';
+import { useSessionUsage, getQuotaPercent } from './LLMUsageTracker';
+import type { ModelUsage } from './LLMUsageTracker';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -401,6 +403,11 @@ export const LLMStatus: React.FC = () => {
   const activeCount = providers.filter(p => p.status === 'active').length;
   const configuredCount = providers.filter(p => p.status === 'configured').length;
 
+  // Session usage tracking
+  const sessionUsage = useSessionUsage();
+  const modelUsages = Array.from(sessionUsage.models.values());
+  const totalRequests = modelUsages.reduce((sum, m) => sum + m.requestCount, 0);
+
   return (
     <div className="prime-radiant__llm-status">
       {/* Header row */}
@@ -546,6 +553,79 @@ export const LLMStatus: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Session Usage Tracking */}
+      {!collapsed && modelUsages.length > 0 && (
+        <div className="prime-radiant__llm-session-usage">
+          <div className="prime-radiant__llm-session-header">
+            Session Usage
+            <span style={{ fontSize: '0.75em', color: '#888', marginLeft: 8 }}>
+              {totalRequests} request{totalRequests !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Per-model usage bars */}
+          {modelUsages.map((mu: ModelUsage) => {
+            const quota = getQuotaPercent(mu.model);
+            const hasQuota = quota >= 0;
+            const isLow = hasQuota && quota < 10;
+            const usedPercent = hasQuota ? 100 - quota : 0;
+
+            return (
+              <div
+                key={mu.model}
+                className={`prime-radiant__llm-usage-row${isLow ? ' prime-radiant__llm-usage-row--critical' : ''}`}
+                title={`${mu.model}: ${formatTokens(mu.inputTokens)} in / ${formatTokens(mu.outputTokens)} out`}
+              >
+                <div className="prime-radiant__llm-usage-model-name">
+                  {mu.model}
+                </div>
+                <div className="prime-radiant__llm-usage-bar-container">
+                  {hasQuota ? (
+                    <>
+                      <div className="prime-radiant__llm-session-bar">
+                        <div
+                          className="prime-radiant__llm-session-bar-fill"
+                          style={{
+                            width: `${Math.min(usedPercent, 100)}%`,
+                            backgroundColor:
+                              usedPercent > 90 ? '#FF4444'
+                              : usedPercent > 70 ? '#FFB300'
+                              : '#33CC66',
+                          }}
+                        />
+                      </div>
+                      <span className="prime-radiant__llm-usage-pct">
+                        {quota}% left
+                      </span>
+                    </>
+                  ) : (
+                    <span className="prime-radiant__llm-usage-tokens">
+                      {formatTokens(mu.inputTokens)} in / {formatTokens(mu.outputTokens)} out
+                    </span>
+                  )}
+                </div>
+                <span className="prime-radiant__llm-usage-cost">
+                  ${mu.estimatedCostUsd.toFixed(4)}
+                </span>
+                {isLow && (
+                  <span className="prime-radiant__llm-usage-alert" title="Quota critically low">
+                    !!
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Total session cost */}
+          <div className="prime-radiant__llm-session-total">
+            <span>Session total</span>
+            <span className="prime-radiant__llm-session-cost">
+              ${sessionUsage.totalCostUsd.toFixed(4)} USD
+            </span>
+          </div>
         </div>
       )}
     </div>

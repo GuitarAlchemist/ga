@@ -2,7 +2,7 @@
 // WidgetSpec types and compiler — transforms IXQL AST → renderable widget descriptors.
 // Phase 1: PanelSpec (AG-Grid). Future: VizSpec (D3), FormSpec (MUI).
 
-import type { CreateGridPanelCommand, CreateVizCommand, ProjectionField, PipeStep, IxqlPredicate, VizKind } from './IxqlControlParser';
+import type { CreateGridPanelCommand, CreateVizCommand, CreateFormCommand, ProjectionField, PipeStep, IxqlPredicate, VizKind, FormFieldDef } from './IxqlControlParser';
 
 // ---------------------------------------------------------------------------
 // Whitelisted pure functions for PROJECT expressions
@@ -93,7 +93,19 @@ export interface VizSpec {
   refresh: number | null;
 }
 
-export type WidgetSpec = PanelSpec | VizSpec;
+export interface FormSpec {
+  type: 'form';
+  id: string;
+  fields: FormFieldDef[];
+  constraints: { field: string; condition: string }[];
+  submitCommand: string | null;
+  onSuccess: string[];
+  hexavalent: boolean;
+  governedBy: number[];
+  subscribe: string[];
+}
+
+export type WidgetSpec = PanelSpec | VizSpec | FormSpec;
 
 // ---------------------------------------------------------------------------
 // Compiler: CreateGridPanelCommand → PanelSpec
@@ -180,6 +192,20 @@ export function compileViz(cmd: CreateVizCommand): VizSpec {
     publish: cmd.publish,
     subscribe: cmd.subscribe,
     refresh: cmd.refresh,
+  };
+}
+
+export function compileForm(cmd: CreateFormCommand): FormSpec {
+  return {
+    type: 'form',
+    id: cmd.id,
+    fields: cmd.fields,
+    constraints: cmd.constraints,
+    submitCommand: cmd.submitCommand,
+    onSuccess: cmd.onSuccess,
+    hexavalent: cmd.hexavalent,
+    governedBy: cmd.governedBy,
+    subscribe: cmd.subscribe,
   };
 }
 

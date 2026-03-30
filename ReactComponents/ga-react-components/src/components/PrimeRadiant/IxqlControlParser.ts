@@ -162,6 +162,32 @@ export interface BroadcastCommand {
   predicates: IxqlPredicate[];
 }
 
+// ── Phase 8: Form — CREATE FORM "id" ──
+
+export type FormFieldType = 'enum' | 'slider' | 'text' | 'number' | 'toggle';
+
+export interface FormFieldDef {
+  name: string;
+  fieldType: FormFieldType;
+  options?: string[];        // for enum
+  min?: number;              // for slider/number
+  max?: number;              // for slider/number
+  required?: boolean;
+  label?: string;
+}
+
+export interface CreateFormCommand {
+  type: 'create-form';
+  id: string;
+  fields: FormFieldDef[];
+  constraints: { field: string; condition: string }[];
+  submitCommand: string | null;      // SUBMIT COMMAND governance.updateBelief
+  onSuccess: string[];               // ON_SUCCESS REFRESH "panel-id"
+  hexavalent: boolean;               // HEXAVALENT validation=true
+  governedBy: number[];
+  subscribe: string[];
+}
+
 // GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
 export interface DropCommand {
   type: 'drop';
@@ -207,6 +233,7 @@ export type IxqlCommand =
   | CreatePanelCommand
   | CreateGridPanelCommand
   | CreateVizCommand
+  | CreateFormCommand
   | BindHealthCommand
   | OnChangedCommand
   | ShowEpistemicCommand
@@ -269,6 +296,8 @@ function tokenize(input: string): string[] {
     if (input[i] === ',') { tokens.push(','); i++; continue; }
     if (input[i] === '{') { tokens.push('{'); i++; continue; }
     if (input[i] === '}') { tokens.push('}'); i++; continue; }
+    if (input[i] === '[') { tokens.push('['); i++; continue; }
+    if (input[i] === ']') { tokens.push(']'); i++; continue; }
     if (input[i] === ':') { tokens.push(':'); i++; continue; }
 
     // Word or number (includes parenthesized args like DAYS_SINCE(updated_at))
@@ -952,6 +981,216 @@ function parseOnChanged(ctx: ParserContext): OnChangedCommand {
   return { type: 'on-changed', source, wherePredicates, action: subResult.command };
 }
 
+// ── CREATE FORM parser ──
+
+function parseFormFieldType(raw: string): { fieldType: FormFieldType; options?: string[]; min?: number; max?: number } {
+  // enum(T,P,U,D,F,C)  or  slider(0,1)  or  text  or  number  or  toggle
+  const parenOpen = raw.indexOf('(');
+  if (parenOpen < 0) {
+    // No parens — plain type
+    const ft = raw.toLowerCase();
+    if (ft !== 'enum' && ft !== 'slider' && ft !== 'text' && ft !== 'number' && ft !== 'toggle') {
+      throw new Error(`Unknown form field type '${raw}'. Supported: enum, slider, text, number, toggle`);
+    }
+    return { fieldType: ft as FormFieldType };
+  }
+  const parenClose = raw.lastIndexOf(')');
+  if (parenClose < 0) throw new Error(`Missing closing parenthesis in field type '${raw}'`);
+  const typeName = raw.substring(0, parenOpen).toLowerCase();
+  const argsStr = raw.substring(parenOpen + 1, parenClose);
+  const args = argsStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+  if (typeName === 'enum') {
+    return { fieldType: 'enum', options: args };
+  }
+  if (typeName === 'slider' || typeName === 'number') {
+    const min = args.length > 0 ? parseFloat(args[0]) : 0;
+    const max = args.length > 1 ? parseFloat(args[1]) : 1;
+    return { fieldType: typeName as FormFieldType, min, max };
+  }
+  if (typeName !== 'text' && typeName !== 'toggle') {
+    throw new Error(`Unknown form field type '${typeName}'. Supported: enum, slider, text, number, toggle`);
+  }
+  return { fieldType: typeName as FormFieldType };
+}
+
+function parseFieldsList(ctx: ParserContext): FormFieldDef[] {
+  // Expect [ field1: type(args), field2: type(args) ]
+  // The tokenizer has already split [ and ] as structural chars aren't handled —
+  // so we look for [ as a token. The FIELDS keyword has already been consumed.
+  // Fields might be wrapped in [ ... ] or not.
+  const fields: FormFieldDef[] = [];
+
+  // Check for opening bracket (tokenized as part of a word or standalone)
+  let hasBracket = false;
+  if (peekRaw(ctx) === '[') {
+    next(ctx); // consume [
+    hasBracket = true;
+  }
+
+  // Parse fields: name: type(args) separated by commas
+  while (ctx.pos < ctx.tokens.length) {
+    const raw = peekRaw(ctx);
+    if (!raw || raw === ']') {
+      if (raw === ']') next(ctx);
+      break;
+    }
+    if (raw === ',') { next(ctx); continue; }
+
+    // Check if this is a clause keyword (end of FIELDS section)
+    const upper = raw.toUpperCase();
+    if (!hasBracket && (upper === 'CONSTRAIN' || upper === 'REQUIRE' || upper === 'HEXAVALENT' ||
+        upper === 'SUBMIT' || upper === 'ON_SUCCESS' || upper === 'GOVERNED' || upper === 'SUBSCRIBE')) {
+      break;
+    }
+
+    const fieldName = nextRaw(ctx);
+    expect(ctx, ':');
+    const typeToken = nextRaw(ctx);
+    const parsed = parseFormFieldType(typeToken);
+
+    fields.push({
+      name: fieldName,
+      fieldType: parsed.fieldType,
+      options: parsed.options,
+      min: parsed.min,
+      max: parsed.max,
+    });
+  }
+
+  return fields;
+}
+
+function parseCreateForm(ctx: ParserContext, id: string): CreateFormCommand {
+  const fields: FormFieldDef[] = [];
+  const constraints: { field: string; condition: string }[] = [];
+  let submitCommand: string | null = null;
+  const onSuccess: string[] = [];
+  let hexavalent = false;
+  const governedBy: number[] = [];
+  const subscribe: string[] = [];
+
+  // Parse clauses in any order
+  while (ctx.pos < ctx.tokens.length) {
+    const kw = peek(ctx);
+    switch (kw) {
+      case 'FIELDS':
+        next(ctx);
+        fields.push(...parseFieldsList(ctx));
+        break;
+
+      case 'CONSTRAIN': {
+        next(ctx);
+        const field = nextRaw(ctx);
+        expect(ctx, 'TO');
+        // Collect condition tokens until next clause keyword
+        let condition = '';
+        while (ctx.pos < ctx.tokens.length) {
+          const nxt = peek(ctx);
+          if (!nxt) break;
+          if (nxt === 'CONSTRAIN' || nxt === 'REQUIRE' || nxt === 'HEXAVALENT' ||
+              nxt === 'SUBMIT' || nxt === 'ON_SUCCESS' || nxt === 'GOVERNED' || nxt === 'SUBSCRIBE' || nxt === 'FIELDS') break;
+          condition += (condition ? ' ' : '') + nextRaw(ctx);
+        }
+        constraints.push({ field, condition });
+        break;
+      }
+
+      case 'REQUIRE': {
+        next(ctx);
+        const field = nextRaw(ctx);
+        expect(ctx, 'WHEN');
+        let condition = '';
+        while (ctx.pos < ctx.tokens.length) {
+          const nxt = peek(ctx);
+          if (!nxt) break;
+          if (nxt === 'CONSTRAIN' || nxt === 'REQUIRE' || nxt === 'HEXAVALENT' ||
+              nxt === 'SUBMIT' || nxt === 'ON_SUCCESS' || nxt === 'GOVERNED' || nxt === 'SUBSCRIBE' || nxt === 'FIELDS') break;
+          condition += (condition ? ' ' : '') + nextRaw(ctx);
+        }
+        constraints.push({ field, condition: 'REQUIRE WHEN ' + condition });
+        break;
+      }
+
+      case 'HEXAVALENT': {
+        next(ctx);
+        // Parse validation=true  (tokenized as "validation=true")
+        const valToken = nextRaw(ctx);
+        const eqIdx = valToken.indexOf('=');
+        if (eqIdx >= 0) {
+          hexavalent = valToken.substring(eqIdx + 1).toLowerCase() === 'true';
+        } else {
+          hexavalent = true;
+        }
+        break;
+      }
+
+      case 'SUBMIT': {
+        next(ctx);
+        if (peek(ctx) === 'COMMAND') next(ctx);
+        submitCommand = nextRaw(ctx);
+        break;
+      }
+
+      case 'ON_SUCCESS': {
+        next(ctx);
+        if (peek(ctx) === 'REFRESH') next(ctx);
+        onSuccess.push(nextRaw(ctx));
+        while (peek(ctx) === ',') {
+          next(ctx);
+          onSuccess.push(nextRaw(ctx));
+        }
+        break;
+      }
+
+      case 'GOVERNED': {
+        next(ctx);
+        if (peek(ctx) === 'BY') next(ctx);
+        const articleClause = nextRaw(ctx);
+        const eqIdx = articleClause.indexOf('=');
+        if (eqIdx !== -1 && articleClause.substring(0, eqIdx).toLowerCase() === 'article') {
+          const nums = articleClause.substring(eqIdx + 1).split(',');
+          for (const n of nums) {
+            const parsed = parseInt(n.trim(), 10);
+            if (!isNaN(parsed)) governedBy.push(parsed);
+          }
+        } else {
+          const num = parseInt(articleClause, 10);
+          if (!isNaN(num)) governedBy.push(num);
+        }
+        break;
+      }
+
+      case 'SUBSCRIBE': {
+        next(ctx);
+        subscribe.push(nextRaw(ctx));
+        while (peek(ctx) === ',') {
+          next(ctx);
+          subscribe.push(nextRaw(ctx));
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unexpected clause '${peekRaw(ctx)}' in CREATE FORM`);
+    }
+  }
+
+  if (fields.length === 0) throw new Error('CREATE FORM requires a FIELDS clause');
+
+  return {
+    type: 'create-form',
+    id,
+    fields,
+    constraints,
+    submitCommand,
+    onSuccess,
+    hexavalent,
+    governedBy,
+    subscribe,
+  };
+}
+
 // ── Main entry point ──
 
 // ── Epistemic command parsers (Articles E-0 to E-9) ──
@@ -1080,7 +1319,12 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
           if (peek(ctx) === 'KIND') { next(ctx); }
           return { ok: true, command: parseCreateViz(ctx, vizId) };
         }
-        throw new Error(`Expected 'PANEL' or 'VIZ' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
+        if (subKeyword === 'FORM') {
+          next(ctx);
+          const formId = nextRaw(ctx);
+          return { ok: true, command: parseCreateForm(ctx, formId) };
+        }
+        throw new Error(`Expected 'PANEL', 'VIZ', or 'FORM' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
       }
 
       case 'BIND': {
@@ -1119,7 +1363,7 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
       }
 
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE (PANEL/PANEL KIND grid), BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE (PANEL/VIZ/FORM), BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };

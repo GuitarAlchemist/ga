@@ -8,14 +8,15 @@ import type { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { IxqlGridPanel } from './IxqlGridPanel';
+import { IxqlFormPanel } from './IxqlFormPanel';
 import { parseIxqlCommand } from './IxqlControlParser';
-import { compileGridPanel } from './IxqlWidgetSpec';
+import { compileGridPanel, compileForm } from './IxqlWidgetSpec';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type CellType = 'markdown' | 'ixql' | 'react' | 'belief' | 'algedonic' | 'chart' | 'state' | 'grid';
+type CellType = 'markdown' | 'ixql' | 'react' | 'belief' | 'algedonic' | 'chart' | 'state' | 'grid' | 'form';
 
 interface NotebookCell {
   id: string;
@@ -24,6 +25,7 @@ interface NotebookCell {
   output?: string;
   status?: 'idle' | 'running' | 'complete' | 'error';
   collapsed?: boolean;
+  subscribe?: string[];       // Signal names this cell subscribes to (auto-re-fetch)
 }
 
 interface NotebookDocument {
@@ -55,6 +57,7 @@ const CELL_TYPE_COLORS: Record<CellType, string> = {
   chart:     '#00bcd4',
   state:     '#ab47bc',
   grid:      '#ff8c00',
+  form:      '#e74c3c',
 };
 
 const CELL_TYPE_LABELS: Record<CellType, string> = {
@@ -66,6 +69,7 @@ const CELL_TYPE_LABELS: Record<CellType, string> = {
   chart:     'CHART',
   state:     'PDCA',
   grid:      'GRID',
+  form:      'FORM',
 };
 
 // ---------------------------------------------------------------------------
@@ -115,7 +119,7 @@ function highlightIxql(code: string): string {
     .replace(/>/g, '&gt;');
 
   // keywords in gold
-  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'VIZ', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE', 'SORT', 'SKIP', 'DISTINCT', 'FLATTEN', 'ASC', 'DESC', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'NODES', 'EDGES', 'COLOR', 'SIZE', 'LABEL'];
+  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'VIZ', 'FORM', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE', 'SORT', 'SKIP', 'DISTINCT', 'FLATTEN', 'ASC', 'DESC', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'NODES', 'EDGES', 'COLOR', 'SIZE', 'LABEL', 'FIELDS', 'CONSTRAIN', 'REQUIRE', 'HEXAVALENT', 'SUBMIT', 'COMMAND', 'ON_SUCCESS'];
   for (const kw of keywords) {
     escaped = escaped.replace(
       new RegExp(`\\b(${kw})\\b`, 'g'),
@@ -465,6 +469,42 @@ function renderGridCell(content: string): React.ReactNode {
   );
 }
 
+function renderFormCell(content: string): React.ReactNode {
+  // Parse as IXQL CREATE FORM command
+  const trimmed = content.trim();
+  const result = parseIxqlCommand(trimmed);
+  if (result.ok && result.command.type === 'create-form') {
+    const spec = compileForm(result.command);
+    return (
+      <div style={{ minHeight: 120 }}>
+        <IxqlFormPanel spec={spec} />
+      </div>
+    );
+  }
+
+  // Show syntax-highlighted source and error
+  return (
+    <div style={{ padding: 12 }}>
+      <div style={{
+        background: '#0a0a14', padding: 12, borderRadius: 4, fontSize: 12,
+        fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap',
+        border: '1px solid rgba(231,76,60,0.15)', lineHeight: 1.5,
+        marginBottom: 8,
+      }}>
+        <div dangerouslySetInnerHTML={{ __html: highlightIxql(content) }} />
+      </div>
+      {!result.ok && (
+        <div style={{ color: '#e74c3c', fontSize: 11, marginTop: 4 }}>
+          {result.error}
+        </div>
+      )}
+      <div style={{ color: '#666', fontSize: 10, marginTop: 8 }}>
+        Syntax: CREATE FORM "id" FIELDS [ name: type(args), ... ] [HEXAVALENT validation=true] [SUBMIT COMMAND endpoint]
+      </div>
+    </div>
+  );
+}
+
 function highlightJsx(code: string): string {
   let escaped = code
     .replace(/&/g, '&amp;')
@@ -657,6 +697,15 @@ async function executeCell(cell: NotebookCell): Promise<CellExecutionResult> {
         return { output: `[Grid] Panel "${gridResult.command.id}" compiled. Source: ${gridResult.command.source}` };
       }
       return { output: `[Grid] ${!gridResult.ok ? gridResult.error : 'Not a grid panel command.'}` };
+    }
+    case 'form': {
+      const formContent = cell.content.trim();
+      const formResult = parseIxqlCommand(formContent);
+      if (formResult.ok && formResult.command.type === 'create-form') {
+        const fieldCount = formResult.command.fields.length;
+        return { output: `[Form] "${formResult.command.id}" compiled. ${fieldCount} field(s).${formResult.command.hexavalent ? ' Hexavalent validation enabled.' : ''}` };
+      }
+      return { output: `[Form] ${!formResult.ok ? formResult.error : 'Not a form command.'}` };
     }
     case 'state':
       return { output: '[PDCA] State snapshot captured.' };
@@ -870,11 +919,24 @@ function createSampleNotebooks(): NotebookDocument[] {
         {
           id: 'de-9',
           type: 'markdown',
-          content: '## D3 Visualization\n\nForce-graph of governance nodes with hexavalent coloring:',
+          content: '## Belief Editor (Cross-Cell Reactive)\n\nThis form **subscribes** to the `selectedBelief` signal published by the beliefs grid above. Select a row in the grid and this form pre-fills with the selection:',
           status: 'idle',
         },
         {
           id: 'de-10',
+          type: 'form',
+          content: 'CREATE FORM "belief-editor" FIELDS [ truth_value: enum(T,P,U,D,F,C), confidence: slider(0,1), justification: text ] HEXAVALENT validation=true SUBMIT COMMAND governance.updateBelief ON_SUCCESS REFRESH "live-beliefs" GOVERNED BY article=3 SUBSCRIBE selectedBelief',
+          status: 'idle',
+          subscribe: ['selectedBelief'],
+        },
+        {
+          id: 'de-11',
+          type: 'markdown',
+          content: '## D3 Visualization\n\nForce-graph of governance nodes with hexavalent coloring:',
+          status: 'idle',
+        },
+        {
+          id: 'de-12',
           type: 'ixql',
           content: 'CREATE VIZ "gov-network" KIND force-graph SOURCE graph://nodes LABEL name COLOR healthStatus SIZE confidence',
           status: 'idle',
@@ -922,7 +984,7 @@ const AddCellButton: React.FC<{ onAdd: (type: CellType) => void }> = ({ onAdd })
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const types: CellType[] = ['markdown', 'ixql', 'grid', 'react', 'belief', 'algedonic', 'chart', 'state'];
+  const types: CellType[] = ['markdown', 'ixql', 'grid', 'form', 'react', 'belief', 'algedonic', 'chart', 'state'];
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
@@ -1066,6 +1128,9 @@ const CellView: React.FC<{
       case 'grid':
         return renderGridCell(cell.content);
 
+      case 'form':
+        return renderFormCell(cell.content);
+
       default:
         return <pre style={{ color: '#888', fontSize: 12 }}>{cell.content}</pre>;
     }
@@ -1081,11 +1146,15 @@ const CellView: React.FC<{
     }
   }, [editing]);
 
+  const isReactive = cell.subscribe && cell.subscribe.length > 0;
+
   return (
     <div style={{
       border: '1px solid rgba(255,215,0,0.1)', borderRadius: 6,
       background: 'rgba(255,255,255,0.02)', overflow: 'hidden',
       transition: 'border-color 0.2s',
+      borderLeft: isReactive ? '3px solid #e74c3c' : undefined,
+      animation: isReactive ? 'nb-reactive-pulse 2s ease-in-out infinite' : undefined,
     }}>
       {/* Cell toolbar */}
       <div style={{
@@ -1326,6 +1395,7 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
       markdown: '## Section\n\nWrite markdown here...',
       ixql: 'SELECT nodes WHERE type = policy SET glow = true',
       grid: 'CREATE PANEL "my-grid" KIND grid SOURCE governance.beliefs PROJECT { id, proposition, truth_value, confidence } REFRESH 30s',
+      form: 'CREATE FORM "my-form" FIELDS [ truth_value: enum(T,P,U,D,F,C), confidence: slider(0,1), notes: text ] HEXAVALENT validation=true GOVERNED BY article=3',
       react: 'const MyComponent = () => {\n  return <div>Hello, Prime Radiant</div>;\n};',
       belief: JSON.stringify([{ claim: 'New claim', status: 'U', confidence: 0.5, evidence: 'Pending investigation' }], null, 2),
       algedonic: JSON.stringify([{ signal: 'new_signal', type: 'pain', severity: 'info', source: 'manual', description: 'Describe the signal' }], null, 2),
@@ -1414,6 +1484,10 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
       {/* Inline keyframes */}
       <style>{`
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes nb-reactive-pulse {
+          0%,100% { border-left-color: #e74c3c; }
+          50% { border-left-color: rgba(231,76,60,0.3); }
+        }
         .nb-sidebar-item:hover { background: rgba(255,215,0,0.08) !important; }
       `}</style>
 
