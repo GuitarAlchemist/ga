@@ -68,10 +68,28 @@ These are real problems guitarists hit. They're the North Star for every feature
 - ~~[SHIPPED] Mobile phone layout fixes~~
 - ~~[SHIPPED] GIS preset fixes~~
 
+### Shipped (2026-03-29 multi-model orchestration session)
+- ~~Godot Bridge Phase 1 (bridge protocol, useGodotBridge, GodotScene, A2A agent presence)~~
+- ~~Grouped IconRail with LED status indicators (5 groups, 22 panels)~~
+- ~~LLM Provider categories with LEDs (8 providers: Cloud AI / Local / Tools)~~
+- ~~Mistral guitar-alchemist agent (cross-model theory validator)~~
+- ~~Multi-Model Fan-Out (parallel provider query service)~~
+- ~~Theory Tribunal (multi-model music theory consensus panel)~~
+- ~~Demerzel Voice (VoxtralTTS pipeline with Godot lip sync)~~
+- ~~Seldon Faculty (LLM providers as university department heads)~~
+- ~~Code Lab (multi-model code generation with diff view)~~
+- ~~Signal Creation Form (create algedonic signals from UI)~~
+- ~~Mobile Overflow Menu (bottom sheet drawer for 22 panels)~~
+- ~~Admin Inbox (triaged items with approve/reject/defer)~~
+- ~~Weak Signal Interaction Graph (canvas force graph)~~
+- ~~Screenshot Capture (camera button + preview overlay)~~
+- ~~Active Teams accordion (Claude Code agent teams in ActivityPanel)~~
+- ~~FE screenshot capture via Demerzel~~
+- ~~Claude teams accordion~~
+- ~~Voxtral/Codestral/ACP Vite proxy with auth headers~~
+
 ### Active Ideas
 - **3D animated IX pipeline flow** — click IXql node → expands into animated pipeline with particles flowing through stages. Uses IxqlParser.
-- **FE screenshot capture via Demerzel** — backend sends SignalR command, FE captures canvas, returns image for reports/dashboards
-- **Claude teams accordion** — show active Claude Code agent teams in ActivityPanel, hover shows members + activity
 - **Commit detail hover** — hover a commit in ActivityPanel shows diff stats, files changed, author
 - **GitHub token for API rate limits** — authenticated requests (5,000/hr vs 60/hr) for the multi-repo ActivityPanel
 - **Progressive pipeline zoom** — far = IXql node, medium = orbiting sub-nodes, close = full animated flow diagram
@@ -82,8 +100,6 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **Terminal node filaments** — leaf/terminal nodes emit thin glowing filaments with lit dots at the end
 
 ### New Ideas (from 2026-03-28 session)
-- **Admin inbox panel** — dedicated panel for triaged items awaiting human review, with approve/reject/defer actions
-- **Weak signal interactions graph** — algedonic signals shown as a network, not flat list (per JPP article: "analyze interactions, not isolated lists")
 - **IXQL Phase 6: FALLBACK + BACKOFF** — chaos resilience: `CREATE PANEL ... FALLBACK source2 BACKOFF exponential 5s..300s TOLERANCE 3`
 - **IXQL meta-combination** — `panel://` cross-references so panels can read from other panels' data
 - **Grammar telemetry dashboard** — visualize IXQL variant adoption rates from localStorage telemetry
