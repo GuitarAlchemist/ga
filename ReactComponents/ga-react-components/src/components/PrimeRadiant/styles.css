@@ -32,7 +32,7 @@
   border-left: 1px solid #30363d;
   padding: 8px 0;
   gap: 4px;
-  z-index: 20;
+  z-index: 25;
   backdrop-filter: blur(8px);
 }
 
