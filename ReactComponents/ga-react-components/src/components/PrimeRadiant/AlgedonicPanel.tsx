@@ -345,12 +345,12 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
               className="prime-radiant__algedonic-fixall-btn"
               disabled={remediation.remediating}
               onClick={() => {
-                const active = filtered.filter(s => s.status === 'active');
+                const active = signals.filter(s => s.status === 'active');
                 if (active.length > 0) remediation.remediateAll(active);
               }}
               title="Auto-fix all active signals via Demerzel ACP"
             >
-              {remediation.remediating ? 'Fixing...' : `Fix All (${filtered.filter(s => s.status === 'active').length})`}
+              {remediation.remediating ? 'Fixing...' : `Fix All (${signals.filter(s => s.status === 'active').length})`}
             </button>
           </div>
 
