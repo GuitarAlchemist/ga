@@ -1102,7 +1102,7 @@
 .chat-widget__panel {
   position: absolute;
   top: 70px;
-  left: 52px;
+  left: 160px;  /* clear DemerzelFaceOverlay (100px wide at left:52) */
   z-index: 25;
   width: 350px;
   height: 500px;
@@ -9541,3 +9541,289 @@
   border-radius: 6px;
   background: rgba(13, 17, 23, 0.6);
   overflow: hidden;
+.admin-inbox__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #21262d;
+}
+.admin-inbox__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #e6edf3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-inbox__total-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  background: #f85149;
+  color: #fff;
+}
+.admin-inbox__body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+.admin-inbox__section {
+  margin: 0;
+}
+.admin-inbox__section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #8b949e;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-inbox__section-header:hover {
+  background: rgba(48, 54, 61, 0.4);
+}
+.admin-inbox__section-chevron {
+  font-size: 8px;
+  width: 12px;
+  text-align: center;
+}
+.admin-inbox__section-label {
+  flex: 1;
+  text-align: left;
+}
+.admin-inbox__section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 8px;
+  color: #fff;
+}
+.admin-inbox__section-items {
+  padding: 2px 8px 6px 8px;
+}
+.admin-inbox__empty {
+  font-size: 11px;
+  color: #484f58;
+  padding: 6px 12px;
+  font-style: italic;
+}
+.admin-inbox__item {
+  background: rgba(22, 27, 34, 0.8);
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  transition: opacity 0.4s, transform 0.4s;
+}
+.admin-inbox__item--fade {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+.admin-inbox__item--shake {
+  animation: admin-inbox-shake 0.4s ease;
+  opacity: 0;
+}
+@keyframes admin-inbox-shake {
+  0%   { transform: translateX(0); opacity: 1; }
+  20%  { transform: translateX(-8px); }
+  40%  { transform: translateX(8px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); opacity: 0.3; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+.admin-inbox__item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.admin-inbox__category-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #fff;
+}
+.admin-inbox__item-time {
+  font-size: 10px;
+  color: #484f58;
+}
+.admin-inbox__item-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #e6edf3;
+  margin-bottom: 2px;
+}
+.admin-inbox__item-source {
+  font-size: 10px;
+  color: #6e7681;
+  margin-bottom: 6px;
+}
+.admin-inbox__actions {
+  display: flex;
+  gap: 4px;
+}
+.admin-inbox__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b949e;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.admin-inbox__action:hover {
+  background: rgba(48, 54, 61, 0.6);
+  color: #e6edf3;
+}
+.admin-inbox__action--approve:hover {
+  border-color: #3fb950;
+  color: #3fb950;
+}
+.admin-inbox__action--reject:hover {
+  border-color: #f85149;
+  color: #f85149;
+}
+.admin-inbox__action--defer:hover {
+  border-color: #8b949e;
+  color: #8b949e;
+}
+.admin-inbox__action--ask:hover {
+  border-color: #4FC3F7;
+  color: #4FC3F7;
+}
+.admin-inbox__action--asking {
+  opacity: 0.5;
+  cursor: default;
+}
+.screenshot__button {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.screenshot__button:hover svg {
+  stroke: #58a6ff;
+}
+
+.screenshot__button--capturing {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.screenshot__flash {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.3);
+  z-index: 9999;
+  pointer-events: none;
+  animation: screenshot-flash 0.3s ease-out forwards;
+}
+
+@keyframes screenshot-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.screenshot__preview {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 200;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 6px;
+  backdrop-filter: blur(8px);
+  animation: screenshot-slide-in 0.25s ease-out;
+  max-width: 200px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.screenshot__preview--expanded {
+  max-width: 80vw;
+  max-height: 80vh;
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%);
+  z-index: 1000;
+}
+
+@keyframes screenshot-slide-in {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.screenshot__image {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.screenshot__preview--expanded .screenshot__image {
+  max-height: 70vh;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.screenshot__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.screenshot__btn {
+  background: rgba(48, 54, 61, 0.8);
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  color: #c9d1d9;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.screenshot__btn:hover {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: #58a6ff;
+}
+
+.screenshot__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+}
