@@ -270,6 +270,7 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
 
   // Demerzel auto-remediation
   const remediation = useRemediation();
+  const [createAllStatus, setCreateAllStatus] = useState<string | null>(null);
 
   // Create form state
   const [formType, setFormType] = useState<AlgedonicSignalType>('pain');
@@ -663,19 +664,34 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
               return missing.length > 0 ? (
                 <button
                   className="prime-radiant__algedonic-create-all-btn"
+                  disabled={remediation.remediating}
                   onClick={() => {
                     const created = missing.map(s =>
                       createAlgedonicSignal(s.type, s.severity, s.source, s.reason),
                     );
                     setLocalSignals(prev => [...created, ...prev]);
                     created.forEach(signal => onSignalCreated?.(signal));
+                    // Auto-remediate all newly created signals via Demerzel ACP
+                    setCreateAllStatus(`Created ${created.length} signals, remediating...`);
+                    remediation.remediateAll(created).then(() => {
+                      setCreateAllStatus(`Created ${created.length} signals, remediation complete`);
+                      setTimeout(() => setCreateAllStatus(null), 4000);
+                    }).catch(() => {
+                      setCreateAllStatus(`Created ${created.length} signals, remediation failed`);
+                      setTimeout(() => setCreateAllStatus(null), 4000);
+                    });
                   }}
                 >
-                  Create All Missing ({missing.length})
+                  {remediation.remediating ? 'Remediating...' : `Create All Missing (${missing.length})`}
                 </button>
               ) : null;
             })()}
           </div>
+          {createAllStatus && (
+            <div className="prime-radiant__algedonic-desc" style={{ padding: '4px 12px', color: '#FFD700', fontSize: '10px' }}>
+              {createAllStatus}
+            </div>
+          )}
           {showSuggestions && (
             <div className="prime-radiant__algedonic-suggestions">
               {getMissingSuggestions(allSignals).map((s) => (

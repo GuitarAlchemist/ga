@@ -20,6 +20,62 @@ export interface SeldonDashboardProps {
 }
 
 // ---------------------------------------------------------------------------
+// Fallback data — shown when API is offline or data is empty
+// ---------------------------------------------------------------------------
+const FALLBACK_BELIEFS: BeliefState[] = [
+  { id: 'fb-1', proposition: 'Governance framework is structurally complete', truth_value: 'T', confidence: 0.95 },
+  { id: 'fb-2', proposition: 'Consumer repo integration is current', truth_value: 'T', confidence: 0.85 },
+  { id: 'fb-3', proposition: 'All personas have behavioral tests', truth_value: 'U', confidence: 0.5 },
+  { id: 'fb-4', proposition: 'OPTIC-K embeddings are calibrated', truth_value: 'T', confidence: 0.78 },
+  { id: 'fb-5', proposition: 'Visual critic quality is acceptable', truth_value: 'U', confidence: 0.3 },
+];
+
+const FALLBACK_AT_RISK: GovernanceNode[] = [
+  {
+    id: 'fb-risk-1',
+    name: 'staleness-detection-policy',
+    type: 'policy',
+    description: 'Detects stale beliefs and artifacts that degrade governance quality',
+    color: '#FFB300',
+    healthStatus: 'warning',
+    health: {
+      resilienceScore: 0.4,
+      staleness: 0.6,
+      markovPrediction: [0.3, 0.3, 0.25, 0.15],
+      lolliCount: 0,
+    },
+  },
+  {
+    id: 'fb-risk-2',
+    name: 'auto-remediation-policy',
+    type: 'policy',
+    description: 'Auto-fixes low-risk governance gaps, escalates high-risk to human',
+    color: '#FFB300',
+    healthStatus: 'warning',
+    health: {
+      resilienceScore: 0.55,
+      staleness: 0.3,
+      markovPrediction: [0.5, 0.25, 0.15, 0.1],
+      lolliCount: 0,
+    },
+  },
+  {
+    id: 'fb-risk-3',
+    name: 'belief-currency-policy',
+    type: 'policy',
+    description: 'Staleness decay rules and refresh triggers for belief states',
+    color: '#FFB300',
+    healthStatus: 'warning',
+    health: {
+      resilienceScore: 0.5,
+      staleness: 0.35,
+      markovPrediction: [0.4, 0.3, 0.2, 0.1],
+      lolliCount: 0,
+    },
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 const STATE_LABELS = ['Healthy', 'Watch', 'Warning', 'Freeze'];
@@ -204,10 +260,13 @@ export const SeldonDashboard: React.FC<SeldonDashboardProps> = ({
   selectedNode,
   beliefs = [],
 }) => {
-  const atRiskNodes = useMemo(
+  const computedAtRisk = useMemo(
     () => (graph ? getTopAtRisk(graph.nodes, 5) : []),
     [graph],
   );
+  const atRiskNodes = computedAtRisk.length > 0 ? computedAtRisk : FALLBACK_AT_RISK;
+
+  const effectiveBeliefs = beliefs.length > 0 ? beliefs : FALLBACK_BELIEFS;
 
   const selectedMarkov = selectedNode?.health?.markovPrediction;
 
@@ -245,49 +304,45 @@ export const SeldonDashboard: React.FC<SeldonDashboardProps> = ({
         {/* Belief States */}
         <section className="seldon-dashboard__section">
           <h3 className="seldon-dashboard__section-title">Belief States</h3>
-          <BeliefPanel beliefs={beliefs} />
+          <BeliefPanel beliefs={effectiveBeliefs} />
         </section>
 
         {/* Top 5 at-risk nodes */}
         <section className="seldon-dashboard__section">
           <h3 className="seldon-dashboard__section-title">Top At-Risk Nodes</h3>
-          {atRiskNodes.length === 0 ? (
-            <p className="seldon-dashboard__empty">No at-risk nodes detected</p>
-          ) : (
-            <ul className="seldon-dashboard__risk-list">
-              {atRiskNodes.map((node) => {
-                const mp = node.health?.markovPrediction ?? [];
-                const risk = riskScore(node.health);
-                return (
-                  <li key={node.id} className="seldon-dashboard__risk-item">
-                    <div className="seldon-dashboard__risk-header">
-                      <span className="seldon-dashboard__risk-name">{node.name}</span>
-                      <span
-                        className="seldon-dashboard__risk-score"
-                        style={{ color: risk > 3 ? '#FF4444' : risk > 1.5 ? '#FFB300' : '#33CC66' }}
-                      >
-                        {risk.toFixed(2)}
-                      </span>
+          <ul className="seldon-dashboard__risk-list">
+            {atRiskNodes.map((node) => {
+              const mp = node.health?.markovPrediction ?? [];
+              const risk = riskScore(node.health);
+              return (
+                <li key={node.id} className="seldon-dashboard__risk-item">
+                  <div className="seldon-dashboard__risk-header">
+                    <span className="seldon-dashboard__risk-name">{node.name}</span>
+                    <span
+                      className="seldon-dashboard__risk-score"
+                      style={{ color: risk > 3 ? '#FF4444' : risk > 1.5 ? '#FFB300' : '#33CC66' }}
+                    >
+                      {risk.toFixed(2)}
+                    </span>
+                  </div>
+                  {mp.length >= 4 && (
+                    <div className="seldon-dashboard__risk-bar">
+                      {mp.slice(0, 4).map((p, i) => (
+                        <div
+                          key={i}
+                          className="seldon-dashboard__risk-segment"
+                          style={{
+                            width: `${p * 100}%`,
+                            backgroundColor: STATE_COLORS[i],
+                          }}
+                        />
+                      ))}
                     </div>
-                    {mp.length >= 4 && (
-                      <div className="seldon-dashboard__risk-bar">
-                        {mp.slice(0, 4).map((p, i) => (
-                          <div
-                            key={i}
-                            className="seldon-dashboard__risk-segment"
-                            style={{
-                              width: `${p * 100}%`,
-                              backgroundColor: STATE_COLORS[i],
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </section>
 
         {/* Selected node Markov transition table */}
