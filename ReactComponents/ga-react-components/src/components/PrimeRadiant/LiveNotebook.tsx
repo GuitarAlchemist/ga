@@ -3,12 +3,19 @@
 // Supports markdown, IXQL, React preview, belief, algedonic, chart, and PDCA state cells
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import type { ColDef } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { IxqlGridPanel } from './IxqlGridPanel';
+import { parseIxqlCommand } from './IxqlControlParser';
+import { compileGridPanel } from './IxqlWidgetSpec';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type CellType = 'markdown' | 'ixql' | 'react' | 'belief' | 'algedonic' | 'chart' | 'state';
+type CellType = 'markdown' | 'ixql' | 'react' | 'belief' | 'algedonic' | 'chart' | 'state' | 'grid';
 
 interface NotebookCell {
   id: string;
@@ -47,6 +54,7 @@ const CELL_TYPE_COLORS: Record<CellType, string> = {
   algedonic: '#f44336',
   chart:     '#00bcd4',
   state:     '#ab47bc',
+  grid:      '#ff8c00',
 };
 
 const CELL_TYPE_LABELS: Record<CellType, string> = {
@@ -57,6 +65,7 @@ const CELL_TYPE_LABELS: Record<CellType, string> = {
   algedonic: 'ALGEDONIC',
   chart:     'CHART',
   state:     'PDCA',
+  grid:      'GRID',
 };
 
 // ---------------------------------------------------------------------------
@@ -363,6 +372,81 @@ function renderReactCell(content: string): React.ReactNode {
   );
 }
 
+function renderGridCell(content: string): React.ReactNode {
+  // Parse the IXQL command from cell content
+  const trimmed = content.trim();
+
+  // If it's a JSON array/object, render directly as an inline AG-Grid
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const data = JSON.parse(trimmed);
+      const rows: Record<string, unknown>[] = Array.isArray(data) ? data : [data];
+      if (rows.length === 0) {
+        return <div style={{ color: '#888', fontSize: 12 }}>No data</div>;
+      }
+      // Auto-generate columns from first row
+      const colDefs: ColDef[] = Object.keys(rows[0]).map(key => ({
+        headerName: key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase()),
+        field: key,
+        sortable: true,
+        filter: true,
+        resizable: true,
+      }));
+      return (
+        <div
+          className="ag-theme-alpine-dark"
+          style={{ height: Math.min(rows.length * 28 + 64, 360), width: '100%' }}
+        >
+          <AgGridReact
+            rowData={rows}
+            columnDefs={colDefs}
+            defaultColDef={{ sortable: true, filter: true, resizable: true, minWidth: 80 }}
+            headerHeight={30}
+            rowHeight={26}
+            animateRows={true}
+            domLayout={rows.length <= 10 ? 'autoHeight' : 'normal'}
+          />
+        </div>
+      );
+    } catch {
+      // Not valid JSON — fall through to IXQL parsing
+    }
+  }
+
+  // Try parsing as IXQL CREATE PANEL KIND grid
+  const result = parseIxqlCommand(trimmed);
+  if (result.ok && result.command.type === 'create-grid-panel') {
+    const spec = compileGridPanel(result.command);
+    return (
+      <div style={{ height: 320 }}>
+        <IxqlGridPanel spec={spec} />
+      </div>
+    );
+  }
+
+  // Show parse error or syntax help
+  return (
+    <div style={{ padding: 12 }}>
+      <div style={{
+        background: '#0a0a14', padding: 12, borderRadius: 4, fontSize: 12,
+        fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap',
+        border: '1px solid rgba(255,140,0,0.15)', lineHeight: 1.5,
+        marginBottom: 8,
+      }}>
+        <div dangerouslySetInnerHTML={{ __html: highlightIxql(content) }} />
+      </div>
+      {!result.ok && (
+        <div style={{ color: '#ff8c00', fontSize: 11, marginTop: 4 }}>
+          {result.error}
+        </div>
+      )}
+      <div style={{ color: '#666', fontSize: 10, marginTop: 8 }}>
+        Syntax: CREATE PANEL "id" KIND grid SOURCE source.path [PROJECT {'{'} field1, field2 {'}'}] [REFRESH 30s]
+      </div>
+    </div>
+  );
+}
+
 function highlightJsx(code: string): string {
   let escaped = code
     .replace(/&/g, '&amp;')
@@ -523,6 +607,24 @@ async function executeCell(cell: NotebookCell): Promise<CellExecutionResult> {
       return {
         output: `[React] Component compiled. No errors.\n  Bundle: ${(Math.random() * 50 + 5).toFixed(1)}KB`,
       };
+    case 'grid': {
+      // Parse and validate the grid command
+      const gridContent = cell.content.trim();
+      if (gridContent.startsWith('[') || gridContent.startsWith('{')) {
+        try {
+          const data = JSON.parse(gridContent);
+          const rows = Array.isArray(data) ? data : [data];
+          return { output: `[Grid] Rendered ${rows.length} row(s) from inline JSON.` };
+        } catch {
+          return { output: '[Grid] Invalid JSON data.' };
+        }
+      }
+      const gridResult = parseIxqlCommand(gridContent);
+      if (gridResult.ok && gridResult.command.type === 'create-grid-panel') {
+        return { output: `[Grid] Panel "${gridResult.command.id}" compiled. Source: ${gridResult.command.source}` };
+      }
+      return { output: `[Grid] ${!gridResult.ok ? gridResult.error : 'Not a grid panel command.'}` };
+    }
     case 'state':
       return { output: '[PDCA] State snapshot captured.' };
     default:
@@ -595,6 +697,18 @@ function createSampleNotebooks(): NotebookDocument[] {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
           }),
           status: 'complete',
+        },
+        {
+          id: 'gh-6',
+          type: 'markdown',
+          content: '## Belief Grid\n\nInteractive AG-Grid table with tetravalent rendering and sortable columns:',
+          status: 'idle',
+        },
+        {
+          id: 'gh-7',
+          type: 'grid',
+          content: 'CREATE PANEL "notebook-beliefs" KIND grid SOURCE /api/governance/beliefs PROJECT { id, truth_value, confidence, proposition } REFRESH 60s GOVERNED BY article=7',
+          status: 'idle',
         },
       ],
     },
@@ -683,7 +797,7 @@ const AddCellButton: React.FC<{ onAdd: (type: CellType) => void }> = ({ onAdd })
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const types: CellType[] = ['markdown', 'ixql', 'react', 'belief', 'algedonic', 'chart', 'state'];
+  const types: CellType[] = ['markdown', 'ixql', 'grid', 'react', 'belief', 'algedonic', 'chart', 'state'];
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
@@ -807,6 +921,9 @@ const CellView: React.FC<{
 
       case 'state':
         return renderStateCell(cell.content);
+
+      case 'grid':
+        return renderGridCell(cell.content);
 
       default:
         return <pre style={{ color: '#888', fontSize: 12 }}>{cell.content}</pre>;

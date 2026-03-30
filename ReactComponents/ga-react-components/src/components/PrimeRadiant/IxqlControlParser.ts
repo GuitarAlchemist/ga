@@ -37,6 +37,31 @@ export interface CreatePanelCommand {
   filter: { field: string; mode: 'chips' | 'dropdown' | 'search' } | null;
 }
 
+// ── Phase 6: Grid panel — CREATE PANEL "id" KIND grid ──
+
+export type ProjectionField = {
+  name: string;          // output alias (or raw field name)
+  expression: string;    // raw field path or function call like DAYS_SINCE(updated_at)
+};
+
+export type GridPanelKind = 'grid';
+
+export interface CreateGridPanelCommand {
+  type: 'create-grid-panel';
+  id: string;
+  kind: GridPanelKind;
+  template: string | null;           // TEMPLATE governance.belief-grid
+  source: string;                    // SOURCE governance.beliefs
+  wherePredicates: IxqlPredicate[];  // WHERE clause after SOURCE
+  project: ProjectionField[];        // PROJECT { id, truth_value, ageDays: DAYS_SINCE(updated_at) }
+  refresh: number | null;            // REFRESH 30s → 30000 (ms)
+  live: boolean;                     // LIVE true → SignalR upgrade
+  layout: { breakpoint: string; cols: number }[]; // LAYOUT md:6 lg:4
+  governedBy: number[];              // GOVERNED BY article=7,3
+  publish: { signal: string; as: string } | null;   // PUBLISH selection AS selectedBelief
+  subscribe: string[];               // SUBSCRIBE selectedNode, otherSignal
+}
+
 export interface BindHealthCommand {
   type: 'bind-health';
   targetKind: 'panel' | 'node';
@@ -135,6 +160,7 @@ export type IxqlCommand =
   | SelectCommand
   | ResetCommand
   | CreatePanelCommand
+  | CreateGridPanelCommand
   | BindHealthCommand
   | OnChangedCommand
   | ShowEpistemicCommand
@@ -193,12 +219,15 @@ function tokenize(input: string): string[] {
       continue;
     }
 
-    // Comma
+    // Structural characters
     if (input[i] === ',') { tokens.push(','); i++; continue; }
+    if (input[i] === '{') { tokens.push('{'); i++; continue; }
+    if (input[i] === '}') { tokens.push('}'); i++; continue; }
+    if (input[i] === ':') { tokens.push(':'); i++; continue; }
 
-    // Word or number
+    // Word or number (includes parenthesized args like DAYS_SINCE(updated_at))
     let word = '';
-    while (i < input.length && !/[\s,>=<!~'"']/.test(input[i])) {
+    while (i < input.length && !/[\s,>=<!~'"{}:]/.test(input[i])) {
       word += input[i];
       i++;
     }
@@ -361,6 +390,185 @@ function parseCreatePanel(ctx: ParserContext): CreatePanelCommand {
   }
 
   return { type: 'create-panel', id, source, wherePredicates, layout, icon, showFields, filter };
+}
+
+// ── CREATE PANEL ... KIND grid parser ──
+
+function parseDuration(token: string): number {
+  const match = token.match(/^(\d+)(ms|s|m|h)?$/i);
+  if (!match) throw new Error(`Invalid duration '${token}'. Expected e.g. 30s, 5m, 1000ms`);
+  const num = parseInt(match[1], 10);
+  const unit = (match[2] ?? 'ms').toLowerCase();
+  switch (unit) {
+    case 'ms': return num;
+    case 's': return num * 1000;
+    case 'm': return num * 60_000;
+    case 'h': return num * 3_600_000;
+    default: return num;
+  }
+}
+
+function parseLayoutBreakpoints(ctx: ParserContext): { breakpoint: string; cols: number }[] {
+  const layouts: { breakpoint: string; cols: number }[] = [];
+  // Tokenizer splits md:6 into md, :, 6 — parse as three tokens
+  const BP_NAMES = new Set(['XS', 'SM', 'MD', 'LG', 'XL']);
+  while (ctx.pos < ctx.tokens.length) {
+    const raw = peek(ctx);
+    if (!raw || !BP_NAMES.has(raw)) break;
+    const bp = nextRaw(ctx).toLowerCase();
+    expect(ctx, ':');
+    const cols = parseInt(nextRaw(ctx), 10);
+    if (isNaN(cols)) throw new Error(`Expected column number after ${bp}:`);
+    layouts.push({ breakpoint: bp, cols });
+  }
+  return layouts;
+}
+
+function parseProjectClause(ctx: ParserContext): ProjectionField[] {
+  const fields: ProjectionField[] = [];
+  // Expect opening {
+  expect(ctx, '{');
+  while (ctx.pos < ctx.tokens.length) {
+    if (peekRaw(ctx) === '}') { next(ctx); break; }
+    if (peek(ctx) === ',') { next(ctx); continue; }
+
+    const firstToken = nextRaw(ctx);
+
+    // Check for alias: "ageDays: DAYS_SINCE(updated_at)" pattern
+    if (peekRaw(ctx) === ':') {
+      next(ctx); // consume ':'
+      // Collect everything until comma or closing brace
+      let expr = '';
+      while (ctx.pos < ctx.tokens.length && peekRaw(ctx) !== ',' && peekRaw(ctx) !== '}') {
+        expr += (expr ? ' ' : '') + nextRaw(ctx);
+      }
+      fields.push({ name: firstToken, expression: expr });
+    } else {
+      // No alias — field name is both name and expression
+      fields.push({ name: firstToken, expression: firstToken });
+    }
+  }
+  return fields;
+}
+
+function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCommand {
+  const kindToken = nextRaw(ctx).toLowerCase();
+  if (kindToken !== 'grid') {
+    throw new Error(`Unknown panel KIND '${kindToken}'. Supported: grid`);
+  }
+
+  let template: string | null = null;
+  let source = '';
+  const wherePredicates: IxqlPredicate[] = [];
+  let project: ProjectionField[] = [];
+  let refresh: number | null = null;
+  let live = false;
+  const layout: { breakpoint: string; cols: number }[] = [];
+  const governedBy: number[] = [];
+  let publish: { signal: string; as: string } | null = null;
+  const subscribe: string[] = [];
+
+  // Parse clauses in any order
+  while (ctx.pos < ctx.tokens.length) {
+    const kw = peek(ctx);
+    switch (kw) {
+      case 'TEMPLATE':
+        next(ctx);
+        template = nextRaw(ctx);
+        break;
+
+      case 'SOURCE':
+      case 'FROM':
+        next(ctx);
+        source = nextRaw(ctx);
+        // Optional WHERE after SOURCE
+        if (peek(ctx) === 'WHERE') {
+          next(ctx);
+          wherePredicates.push(...parsePredicates(ctx));
+        }
+        break;
+
+      case 'PROJECT':
+        next(ctx);
+        project = parseProjectClause(ctx);
+        break;
+
+      case 'REFRESH':
+        next(ctx);
+        refresh = parseDuration(nextRaw(ctx));
+        break;
+
+      case 'LIVE':
+        next(ctx);
+        live = nextRaw(ctx).toLowerCase() === 'true';
+        break;
+
+      case 'LAYOUT':
+        next(ctx);
+        layout.push(...parseLayoutBreakpoints(ctx));
+        break;
+
+      case 'GOVERNED': {
+        next(ctx);
+        if (peek(ctx) === 'BY') next(ctx);
+        // Parse article=7 or article=7,3
+        const articleClause = nextRaw(ctx);
+        const match = articleClause.match(/^article=(.+)$/i);
+        if (match) {
+          governedBy.push(...match[1].split(',').map(n => parseInt(n.trim(), 10)));
+        } else {
+          // Just a number
+          const num = parseInt(articleClause, 10);
+          if (!isNaN(num)) governedBy.push(num);
+        }
+        break;
+      }
+
+      case 'PUBLISH':
+        next(ctx);
+        {
+          const signal = nextRaw(ctx);
+          let as = signal;
+          if (peek(ctx) === 'AS') {
+            next(ctx);
+            as = nextRaw(ctx);
+          }
+          publish = { signal, as };
+        }
+        break;
+
+      case 'SUBSCRIBE':
+        next(ctx);
+        subscribe.push(nextRaw(ctx));
+        while (peek(ctx) === ',') {
+          next(ctx);
+          subscribe.push(nextRaw(ctx));
+        }
+        break;
+
+      default:
+        // Unknown clause — stop parsing
+        throw new Error(`Unexpected clause '${peekRaw(ctx)}' in CREATE PANEL KIND grid`);
+    }
+  }
+
+  if (!source) throw new Error('CREATE PANEL KIND grid requires a SOURCE clause');
+
+  return {
+    type: 'create-grid-panel',
+    id,
+    kind: 'grid',
+    template,
+    source,
+    wherePredicates,
+    project,
+    refresh,
+    live,
+    layout,
+    governedBy,
+    publish,
+    subscribe,
+  };
 }
 
 // ── BIND HEALTH parser ──
@@ -553,6 +761,14 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
         const subKeyword = peek(ctx);
         if (subKeyword === 'PANEL') {
           next(ctx);
+          const panelId = nextRaw(ctx);
+          // Branch: if next token is KIND → new grid panel grammar
+          if (peek(ctx) === 'KIND') {
+            next(ctx);
+            return { ok: true, command: parseCreateGridPanel(ctx, panelId) };
+          }
+          // Legacy path: FROM/LAYOUT grammar — put panelId back by rewinding
+          ctx.pos--;
           return { ok: true, command: parseCreatePanel(ctx) };
         }
         throw new Error(`Expected 'PANEL' after CREATE, got '${peekRaw(ctx) ?? 'end of input'}'`);
@@ -594,7 +810,7 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
       }
 
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE (PANEL/PANEL KIND grid), BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
