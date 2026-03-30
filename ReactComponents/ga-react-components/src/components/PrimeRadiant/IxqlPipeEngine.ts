@@ -30,7 +30,7 @@ function executeStep(
   data: Record<string, unknown>[],
   step: PipeStep,
 ): Record<string, unknown>[] {
-  switch (step.kind) {
+  switch (step.type) {
     case 'filter':   return stepFilter(data, step);
     case 'sort':     return stepSort(data, step);
     case 'limit':    return stepLimit(data, step);
@@ -47,7 +47,7 @@ function executeStep(
 
 function stepFilter(
   data: Record<string, unknown>[],
-  step: Extract<PipeStep, { kind: 'filter' }>,
+  step: Extract<PipeStep, { type: 'filter' }>,
 ): Record<string, unknown>[] {
   return data.filter(row =>
     step.predicates.every(p => evaluatePredicate(p, row)),
