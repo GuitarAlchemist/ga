@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -155,6 +155,16 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('path', { key: 'p2', d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
     h('path', { key: 'p3', d: 'M16 3.13a4 4 0 0 1 0 7.75' }),
   ]),
+  inbox: svg([
+    h('polyline', { key: 'pl', points: '22 12 16 12 14 15 10 15 8 12 2 12' }),
+    h('path', { key: 'p', d: 'M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z' }),
+  ]),
+  grid: svg([
+    h('rect', { key: 'r1', x: 3, y: 3, width: 7, height: 7, rx: 1 }),
+    h('rect', { key: 'r2', x: 14, y: 3, width: 7, height: 7, rx: 1 }),
+    h('rect', { key: 'r3', x: 3, y: 14, width: 7, height: 7, rx: 1 }),
+    h('rect', { key: 'r4', x: 14, y: 14, width: 7, height: 7, rx: 1 }),
+  ]),
 };
 
 // ---------------------------------------------------------------------------
@@ -228,6 +238,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'algedonic',  label: 'Signals',        icon: 'algedonic',  renderMode: 'side',    group: 'governance' },
   { id: 'detail',     label: 'Detail',         icon: 'detail',     renderMode: 'side',    group: 'governance' },
   { id: 'backlog',    label: 'Backlog',        icon: 'backlog',    renderMode: 'side',    group: 'governance' },
+  { id: 'inbox',      label: 'Inbox',          icon: 'inbox',      renderMode: 'side',    group: 'governance' },
   // ── Agents ──
   { id: 'agent',      label: 'Agents',         icon: 'agent',      renderMode: 'side',    group: 'agents' },
   { id: 'seldon',     label: 'Seldon',         icon: 'seldon',     renderMode: 'side',    group: 'agents' },

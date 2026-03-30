@@ -32,6 +32,8 @@ import { IxqlDemoButton } from './IxqlDemoButton';
 import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
+import { IxqlGridPanel } from './IxqlGridPanel';
+import { compileGridPanel, type PanelSpec } from './IxqlWidgetSpec';
 import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
@@ -67,6 +69,8 @@ import { useAgentPresence } from './AgentPresence';
 import { TheoryTribunal } from './TheoryTribunal';
 import { SeldonFacultyPanel } from './SeldonFacultyPanel';
 import { CodeTribunal } from './CodeTribunal';
+import { AdminInbox } from './AdminInbox';
+import { ScreenshotButton } from './ScreenshotButton';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -663,6 +667,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
+  // Phase 6: Grid panel specs created via IXQL CREATE PANEL KIND grid
+  const gridPanelSpecsRef = useRef<Map<string, PanelSpec>>(new Map());
 
   // IXql command handler — dispatches visual overrides, panel CRUD, and more
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -756,10 +762,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
 
+    // Phase 6: CREATE PANEL KIND grid — compile to PanelSpec and register
+    if (cmd.type === 'create-grid-panel') {
+      const spec = compileGridPanel(cmd);
+      gridPanelSpecsRef.current.set(cmd.id, spec);
+      panelRegistry.register({
+        definition: {
+          id: cmd.id,
+          label: cmd.id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          icon: 'grid',
+          renderMode: 'side',
+          group: 'governance',
+        },
+      });
+      setActivePanel(cmd.id);
+      return;
+    }
+
     // Phase 2: DROP PANEL — unregister and close if active
     if (cmd.type === 'drop') {
       panelRegistry.unregister(cmd.id);
       dynamicPanelDefsRef.current.delete(cmd.id);
+      gridPanelSpecsRef.current.delete(cmd.id);
       setActivePanel(prev => prev === cmd.id ? null : prev);
       return;
     }
@@ -2707,6 +2731,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             </svg>
             <span>{isAdmin ? 'Admin' : 'View'}</span>
           </span>
+          {isAdmin && (
+            <>
+              <span style={{ color: '#30363d', margin: '0 4px' }}>|</span>
+              <ScreenshotButton />
+            </>
+          )}
         </div>
       )}
 
@@ -3102,12 +3132,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             tribunal: TheoryTribunal,
             faculty: SeldonFacultyPanel,
             'code-tribunal': CodeTribunal,
+            inbox: AdminInbox,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);
           // Dynamic panel from registry (IXQL CREATE PANEL)
           const reg = panelRegistry.get(activePanel);
           if (reg?.component) return React.createElement(reg.component);
+          // Phase 6: Render IxqlGridPanel for IXQL CREATE PANEL KIND grid
+          const gridSpec = gridPanelSpecsRef.current.get(activePanel);
+          if (gridSpec) return React.createElement(IxqlGridPanel, { spec: gridSpec });
           // Phase 2: Render DynamicPanel for IXQL-created panels
           const dynDef = dynamicPanelDefsRef.current.get(activePanel);
           if (dynDef) {
