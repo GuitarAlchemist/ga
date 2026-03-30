@@ -115,7 +115,7 @@ function highlightIxql(code: string): string {
     .replace(/>/g, '&gt;');
 
   // keywords in gold
-  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE', 'SORT', 'SKIP', 'DISTINCT', 'FLATTEN', 'ASC', 'DESC', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
+  const keywords = ['FROM', 'WHERE', 'SELECT', 'PIPE', 'INTO', 'FILTER', 'MAP', 'REDUCE', 'EMIT', 'JOIN', 'GROUP', 'ORDER', 'LIMIT', 'AS', 'WITH', 'SET', 'GET', 'QUERY', 'SUBSCRIBE', 'TRANSFORM', 'VALIDATE', 'CREATE', 'PANEL', 'VIZ', 'KIND', 'SOURCE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'BY', 'PUBLISH', 'TEMPLATE', 'SORT', 'SKIP', 'DISTINCT', 'FLATTEN', 'ASC', 'DESC', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'NODES', 'EDGES', 'COLOR', 'SIZE', 'LABEL'];
   for (const kw of keywords) {
     escaped = escaped.replace(
       new RegExp(`\\b(${kw})\\b`, 'g'),
@@ -853,6 +853,30 @@ function createSampleNotebooks(): NotebookDocument[] {
             { policy: 'proto-conscience', version: '0.9.0', articles: '4,5,11', status: 'C', coverage: 0.45 },
             { policy: 'governance-audit', version: '1.8.0', articles: '7,8', status: 'T', coverage: 0.93 },
           ], null, 2),
+          status: 'idle',
+        },
+        {
+          id: 'de-7',
+          type: 'markdown',
+          content: '## Godot Scene Tree\n\nLive data from the Godot engine (requires Godot MCP on port 6505):',
+          status: 'idle',
+        },
+        {
+          id: 'de-8',
+          type: 'grid',
+          content: 'CREATE PANEL "godot-scene" KIND grid SOURCE godot://scene_tree',
+          status: 'idle',
+        },
+        {
+          id: 'de-9',
+          type: 'markdown',
+          content: '## D3 Visualization\n\nForce-graph of governance nodes with hexavalent coloring:',
+          status: 'idle',
+        },
+        {
+          id: 'de-10',
+          type: 'ixql',
+          content: 'CREATE VIZ "gov-network" KIND force-graph SOURCE graph://nodes LABEL name COLOR healthStatus SIZE confidence',
           status: 'idle',
         },
       ],

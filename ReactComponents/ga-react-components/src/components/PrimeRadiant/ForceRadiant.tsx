@@ -33,7 +33,8 @@ import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import { IxqlGridPanel } from './IxqlGridPanel';
-import { compileGridPanel, type PanelSpec } from './IxqlWidgetSpec';
+import { IxqlVizPanel } from './IxqlVizPanel';
+import { compileGridPanel, compileViz, type PanelSpec, type VizSpec } from './IxqlWidgetSpec';
 import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
@@ -669,6 +670,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
   // Phase 6: Grid panel specs created via IXQL CREATE PANEL KIND grid
   const gridPanelSpecsRef = useRef<Map<string, PanelSpec>>(new Map());
+  const vizSpecsRef = useRef<Map<string, VizSpec>>(new Map());
 
   // IXql command handler — dispatches visual overrides, panel CRUD, and more
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -779,11 +781,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
 
+    // Phase 7: CREATE VIZ — compile to VizSpec and register
+    if (cmd.type === 'create-viz') {
+      const vizSpec = compileViz(cmd);
+      vizSpecsRef.current.set(cmd.id, vizSpec);
+      panelRegistry.register({
+        definition: {
+          id: cmd.id,
+          label: cmd.id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          icon: 'activity',
+          renderMode: 'side',
+          group: 'viz',
+        },
+      });
+      setActivePanel(cmd.id);
+      return;
+    }
+
     // Phase 2: DROP PANEL — unregister and close if active
     if (cmd.type === 'drop') {
       panelRegistry.unregister(cmd.id);
       dynamicPanelDefsRef.current.delete(cmd.id);
       gridPanelSpecsRef.current.delete(cmd.id);
+      vizSpecsRef.current.delete(cmd.id);
       setActivePanel(prev => prev === cmd.id ? null : prev);
       return;
     }
@@ -3149,6 +3169,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 }
               : undefined;
             return React.createElement(IxqlGridPanel, { spec: gridSpec, graphContext: gridGraphCtx });
+          }
+          // Phase 7: Render IxqlVizPanel for IXQL CREATE VIZ
+          const vizSpec = vizSpecsRef.current.get(activePanel);
+          if (vizSpec) {
+            const vizGraphCtx: GraphContext | undefined = graphRef.current
+              ? {
+                  nodes: (graphRef.current.graphData().nodes as Record<string, unknown>[]),
+                  edges: (graphRef.current.graphData().links as Record<string, unknown>[]),
+                }
+              : undefined;
+            return React.createElement(IxqlVizPanel, { spec: vizSpec, graphContext: vizGraphCtx });
           }
           // Phase 2: Render DynamicPanel for IXQL-created panels
           const dynDef = dynamicPanelDefsRef.current.get(activePanel);
