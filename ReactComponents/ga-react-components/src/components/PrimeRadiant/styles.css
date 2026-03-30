@@ -9260,3 +9260,284 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+.signal-graph__container {
+  margin: 4px;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  background: rgba(13, 17, 23, 0.6);
+  overflow: hidden;
+  animation: signal-graph-slide 0.25s ease-out;
+}
+@keyframes signal-graph-slide {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 300px; }
+}
+.signal-graph__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.signal-graph__tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 6px 8px;
+  max-width: 160px;
+  z-index: 10;
+  animation: signal-graph-fade 0.12s ease-out;
+}
+@keyframes signal-graph-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.signal-graph__tooltip-name {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 2px;
+  text-transform: capitalize;
+}
+.signal-graph__tooltip-meta {
+  font-size: 9px;
+  color: #8b949e;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 3px;
+}
+.signal-graph__tooltip-sep {
+  margin: 0 4px;
+}
+.signal-graph__tooltip-desc {
+  font-size: 8px;
+  color: #6e7681;
+  line-height: 1.3;
+}
+.signal-graph__fallback-label {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 8px;
+  color: #484f58;
+  font-style: italic;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── Belief Heatmap ─── */
+.prime-radiant__belief-heatmap {
+  position: absolute;
+  top: 340px;
+  right: 8px;
+  z-index: 20;
+  width: 240px;
+  background: rgba(13, 17, 23, 0.88);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: auto;
+}
+.prime-radiant__belief-heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+  user-select: none;
+}
+.prime-radiant__belief-heatmap-header:hover { background: rgba(255, 255, 255, 0.03); }
+.prime-radiant__belief-heatmap-title {
+  font-size: 10px;
+  color: #c4b5fd;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.prime-radiant__belief-heatmap-badge {
+  margin-left: 6px;
+  font-size: 8px;
+  font-weight: 400;
+  color: #c4b5fd;
+  background: rgba(196, 181, 253, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: none;
+}
+.prime-radiant__belief-heatmap-toggle {
+  font-size: 8px;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-body {
+  padding: 6px 8px;
+}
+.prime-radiant__belief-heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.prime-radiant__belief-heatmap-row--header {
+  margin-bottom: 4px;
+}
+.prime-radiant__belief-heatmap-label {
+  width: 28px;
+  min-width: 28px;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 4px;
+}
+.prime-radiant__belief-heatmap-time {
+  flex: 1;
+  text-align: center;
+  font-size: 7px;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-cell {
+  flex: 1;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  cursor: default;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.prime-radiant__belief-heatmap-cell:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 6px currentColor;
+  z-index: 1;
+}
+.prime-radiant__belief-heatmap-tooltip {
+  margin-top: 6px;
+  padding: 4px 6px;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  text-align: center;
+}
+.prime-radiant__belief-heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #161b22;
+  font-size: 8px;
+  font-weight: 600;
+}
+.prime-radiant__belief-heatmap-legend-label {
+  font-size: 7px;
+  font-weight: 400;
+  color: #484f58;
+}
+.prime-radiant__belief-heatmap-gradient {
+  width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #33CC66, #DDBB33, #FF4444);
+}
+
+/* ─── Responsive: hide new panels on small screens ─── */
+@media (max-width: 768px) {
+  .prime-radiant__algedonic { display: none; }
+  .prime-radiant__belief-heatmap { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Course Viewer — Streeling University course browser
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.course-viewer__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: courseViewerFadeIn 0.2s ease-out;
+}
+
+@keyframes courseViewerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.course-viewer {
+  width: 92vw;
+  height: 88vh;
+  max-width: 1400px;
+  background: rgba(10, 10, 20, 0.97);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.05), 0 0 120px rgba(0, 0, 0, 0.6);
+}
+
+.course-viewer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.course-viewer__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-viewer__logo {
+  flex-shrink: 0;
+}
+
+.course-viewer__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFD700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.course-viewer__subtitle {
+  font-size: 11px;
+  color: #8b949e;
+.algedonic-panel__graph-toggle {
+  background: none;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  color: #b392f0;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+--
+.algedonic-panel__graph-toggle:hover {
+  background: rgba(179, 146, 240, 0.1);
+  border-color: #b392f0;
+}
+.algedonic-panel__graph-toggle--active {
+  background: rgba(179, 146, 240, 0.15);
+  border-color: #b392f0;
+  color: #d2b8ff;
+}
+.signal-graph__container {
+  margin: 4px;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  background: rgba(13, 17, 23, 0.6);
+  overflow: hidden;
