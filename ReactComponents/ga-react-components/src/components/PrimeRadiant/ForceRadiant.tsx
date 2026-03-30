@@ -66,6 +66,7 @@ import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGis
 import { useAgentPresence } from './AgentPresence';
 import { TheoryTribunal } from './TheoryTribunal';
 import { SeldonFacultyPanel } from './SeldonFacultyPanel';
+import { CodeTribunal } from './CodeTribunal';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -3100,6 +3101,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             brainstorm: BrainstormPanel,
             tribunal: TheoryTribunal,
             faculty: SeldonFacultyPanel,
+            'code-tribunal': CodeTribunal,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);

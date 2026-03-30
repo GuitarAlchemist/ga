@@ -8395,3 +8395,249 @@
   opacity: 0.4;
   cursor: default;
 }
+/* ─── Code Tribunal ─── */
+
+.code-tribunal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+  overflow-y: auto;
+  color: #e6edf3;
+}
+
+.code-tribunal__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.code-tribunal__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.code-tribunal__subtitle {
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.code-tribunal__input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.code-tribunal__textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.code-tribunal__textarea:focus {
+  border-color: #58a6ff;
+}
+
+.code-tribunal__textarea::placeholder {
+  color: #484f58;
+}
+
+.code-tribunal__controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.code-tribunal__select {
+  padding: 4px 8px;
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.code-tribunal__select:focus {
+  border-color: #58a6ff;
+}
+
+.code-tribunal__submit {
+  margin-left: auto;
+  padding: 4px 14px;
+  background: rgba(88, 166, 255, 0.15);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 6px;
+  color: #58a6ff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-tribunal__submit:hover:not(:disabled) {
+  background: rgba(88, 166, 255, 0.25);
+}
+
+.code-tribunal__submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.code-tribunal__hint {
+  font-size: 9px;
+  color: #484f58;
+  text-align: right;
+}
+
+.code-tribunal__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.code-tribunal__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(88, 166, 255, 0.2);
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: code-tribunal-spin 0.8s linear infinite;
+}
+
+@keyframes code-tribunal-spin {
+  to { transform: rotate(360deg); }
+}
+
+.code-tribunal__results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-tribunal__card {
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-tribunal__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(48, 54, 61, 0.3);
+  border-bottom: 1px solid #30363d;
+}
+
+.code-tribunal__model-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c9d1d9;
+}
+
+.code-tribunal__latency {
+  font-size: 10px;
+  color: #43b581;
+  font-variant-numeric: tabular-nums;
+}
+
+.code-tribunal__code-block {
+  margin: 0;
+  padding: 10px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #e6edf3;
+  white-space: pre;
+}
+
+.code-tribunal__code-line {
+  min-height: 1.5em;
+}
+
+.code-tribunal__error {
+  padding: 10px;
+  font-size: 11px;
+  color: #f85149;
+  background: rgba(248, 81, 73, 0.05);
+}
+
+.code-tribunal__diff-toggle {
+  align-self: flex-start;
+  padding: 4px 12px;
+  background: rgba(192, 132, 252, 0.1);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  border-radius: 6px;
+  color: #c084fc;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-tribunal__diff-toggle:hover {
+  background: rgba(192, 132, 252, 0.2);
+}
+
+.code-tribunal__diff {
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-tribunal__diff-header {
+  padding: 6px 10px;
+  background: rgba(48, 54, 61, 0.3);
+  border-bottom: 1px solid #30363d;
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.code-tribunal__diff-block {
+  margin: 0;
+  padding: 10px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.code-tribunal__diff-line {
+  min-height: 1.5em;
+}
+
+.code-tribunal__diff-line--same {
+  color: #8b949e;
+}
+
+.code-tribunal__diff-line--added {
+  color: #3fb950;
+  background: rgba(63, 185, 80, 0.08);
+}
+
+.code-tribunal__diff-line--removed {
+  color: #f85149;
+  background: rgba(248, 81, 73, 0.08);
+}
