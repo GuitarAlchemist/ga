@@ -151,6 +151,34 @@ export interface AlgedonicPanelProps {
   onAskDemerzel?: (question: string) => void;
   /** Called when user sends a recommended action to triage inbox */
   onTriageAction?: (action: string, signalName: string, source: string) => void;
+  /** Called when user creates a new signal from the UI */
+  onSignalCreated?: (signal: AlgedonicSignal) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Signal factory — exported helper to create properly formatted signals
+// ---------------------------------------------------------------------------
+let _signalCounter = 0;
+
+export function createAlgedonicSignal(
+  type: AlgedonicSignalType,
+  severity: AlgedonicSeverity,
+  source: string,
+  description?: string,
+): AlgedonicSignal {
+  _signalCounter += 1;
+  return {
+    id: `alg-user-${Date.now()}-${_signalCounter}`,
+    timestamp: new Date().toISOString(),
+    signal: description
+      ? description.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40)
+      : `${type}_signal`,
+    type,
+    source,
+    severity,
+    status: 'active',
+    description: description || undefined,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -229,13 +257,22 @@ const SIGNAL_DETAILS: Record<string, { articles: string[]; actions: string[]; vs
   },
 };
 
-export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signalsProp, onAskDemerzel, onTriageAction }) => {
+export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signalsProp, onAskDemerzel, onTriageAction, onSignalCreated }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pain' | 'pleasure'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [localSignals, setLocalSignals] = useState<AlgedonicSignal[]>([]);
 
-  const allSignals = signalsProp && signalsProp.length > 0 ? signalsProp : mockAlgedonicSignals;
+  // Create form state
+  const [formType, setFormType] = useState<AlgedonicSignalType>('pain');
+  const [formSeverity, setFormSeverity] = useState<AlgedonicSeverity>('warning');
+  const [formSource, setFormSource] = useState('user');
+  const [formDescription, setFormDescription] = useState('');
+
+  const baseSignals = signalsProp && signalsProp.length > 0 ? signalsProp : mockAlgedonicSignals;
+  const allSignals = [...localSignals, ...baseSignals];
 
   const signals = allSignals.filter(
     (s) => filter === 'all' || s.type === filter,
@@ -272,7 +309,7 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
 
       {!collapsed && (
         <>
-          {/* Filter bar */}
+          {/* Filter bar + New Signal button */}
           <div className="prime-radiant__algedonic-filters">
             {(['all', 'pain', 'pleasure'] as const).map((f) => (
               <button
@@ -286,7 +323,97 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
                 {f === 'all' ? 'All' : f === 'pain' ? 'Pain' : 'Pleasure'}
               </button>
             ))}
+            <button
+              className={`algedonic-panel__create-toggle${showCreateForm ? ' algedonic-panel__create-toggle--active' : ''}`}
+              onClick={() => setShowCreateForm(v => !v)}
+            >
+              + New Signal
+            </button>
           </div>
+
+          {/* Signal creation form */}
+          {showCreateForm && (
+            <div className="algedonic-panel__create-form">
+              <div className="algedonic-panel__create-row">
+                <label className="algedonic-panel__create-label">Type</label>
+                <select
+                  className="algedonic-panel__create-select"
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value as AlgedonicSignalType)}
+                >
+                  <option value="pain">Pain</option>
+                  <option value="pleasure">Pleasure</option>
+                </select>
+              </div>
+              <div className="algedonic-panel__create-row">
+                <label className="algedonic-panel__create-label">Severity</label>
+                <select
+                  className="algedonic-panel__create-select"
+                  value={formSeverity}
+                  onChange={(e) => setFormSeverity(e.target.value as AlgedonicSeverity)}
+                >
+                  <option value="emergency">Emergency</option>
+                  <option value="warning">Warning</option>
+                  <option value="info">Info</option>
+                </select>
+              </div>
+              <div className="algedonic-panel__create-row">
+                <label className="algedonic-panel__create-label">Source</label>
+                <input
+                  className="algedonic-panel__create-input"
+                  type="text"
+                  value={formSource}
+                  onChange={(e) => setFormSource(e.target.value)}
+                  placeholder="user"
+                />
+              </div>
+              <div className="algedonic-panel__create-row">
+                <label className="algedonic-panel__create-label">Description</label>
+                <input
+                  className="algedonic-panel__create-input"
+                  type="text"
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="Optional description"
+                />
+              </div>
+              <div className="algedonic-panel__create-actions">
+                <button
+                  className="algedonic-panel__create-submit"
+                  onClick={() => {
+                    const signal = createAlgedonicSignal(
+                      formType,
+                      formSeverity,
+                      formSource || 'user',
+                      formDescription || undefined,
+                    );
+                    setLocalSignals(prev => [signal, ...prev]);
+                    onSignalCreated?.(signal);
+                    // Fire-and-forget POST to governance API
+                    fetch('/api/governance/signals', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(signal),
+                    }).catch(() => { /* swallow — optimistic update already applied */ });
+                    // Reset form
+                    setFormType('pain');
+                    setFormSeverity('warning');
+                    setFormSource('user');
+                    setFormDescription('');
+                    setShowCreateForm(false);
+                  }}
+                >
+                  Submit
+                </button>
+                <button
+                  className="algedonic-panel__create-cancel"
+                  onClick={() => setShowCreateForm(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="prime-radiant__algedonic-timeline">
