@@ -16,6 +16,8 @@ let godotWsReady = false;
 const godotPending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
 let godotMsgId = 0;
 
+// SECURITY NOTE: Godot MCP uses unauthenticated WebSocket on localhost.
+// Acceptable for local development; do NOT expose port 6505 externally.
 function getGodotWs(): WebSocket {
   if (godotWs && godotWs.readyState === WebSocket.OPEN) return godotWs;
 
@@ -86,13 +88,26 @@ const GOVERNANCE_SHORTCUTS: Record<string, string> = {
   'governance.graph':       '/api/governance',
 };
 
+function isSameOrigin(url: string): boolean {
+  if (url.startsWith('/')) return true; // relative paths are same-origin
+  if (typeof window === 'undefined') return false;
+  const origin = window.location.origin;
+  return url.startsWith(origin + '/') || url.startsWith(origin + '?');
+}
+
 function classifySource(source: string): SourceKind {
   const s = source.trim();
   if (s === 'graph://nodes') return 'graph-nodes';
   if (s === 'graph://edges') return 'graph-edges';
   if (s.startsWith('godot://')) return 'godot';
   if (GOVERNANCE_SHORTCUTS[s]) return 'api';  // governance.X → api
-  if (s.startsWith('/api/') || s.startsWith('http://') || s.startsWith('https://')) return 'api';
+  if (s.startsWith('/api/')) return 'api';     // relative API paths — safe
+  // External URLs: only allow same-origin to prevent data exfiltration
+  if (s.startsWith('http://') || s.startsWith('https://')) {
+    if (isSameOrigin(s)) return 'api';
+    console.warn(`[DataFetcher] Blocked cross-origin source: ${s}`);
+    return 'unknown';
+  }
   if (s.startsWith('governance/') || s.startsWith('governance\\')) return 'governance';
   return 'unknown';
 }

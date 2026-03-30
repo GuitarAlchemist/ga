@@ -57,13 +57,13 @@ export interface AggregateSpec {
 }
 
 export type PipeStep =
-  | { kind: 'filter'; predicates: IxqlPredicate[] }
-  | { kind: 'sort'; field: string; direction: 'ASC' | 'DESC' }
-  | { kind: 'limit'; count: number }
-  | { kind: 'skip'; count: number }
-  | { kind: 'distinct'; field: string | null }
-  | { kind: 'flatten'; field: string }
-  | { kind: 'group'; byField: string; aggregates: AggregateSpec[] };
+  | { type: 'filter'; predicates: IxqlPredicate[] }
+  | { type: 'sort'; field: string; direction: 'ASC' | 'DESC' }
+  | { type: 'limit'; count: number }
+  | { type: 'skip'; count: number }
+  | { type: 'distinct'; field: string | null }
+  | { type: 'flatten'; field: string }
+  | { type: 'group'; byField: string; aggregates: AggregateSpec[] };
 
 export interface CreateGridPanelCommand {
   type: 'create-grid-panel';
@@ -511,7 +511,7 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
 
   switch (stepKw) {
     case 'FILTER':
-      return { kind: 'filter', predicates: parsePredicates(ctx) };
+      return { type: 'filter', predicates: parsePredicates(ctx) };
 
     case 'SORT': {
       const field = nextRaw(ctx);
@@ -521,19 +521,19 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
         direction = dirToken;
         next(ctx);
       }
-      return { kind: 'sort', field, direction };
+      return { type: 'sort', field, direction };
     }
 
     case 'LIMIT': {
       const count = parseInt(nextRaw(ctx), 10);
       if (isNaN(count) || count < 0) throw new Error('PIPE LIMIT requires a non-negative integer');
-      return { kind: 'limit', count };
+      return { type: 'limit', count };
     }
 
     case 'SKIP': {
       const count = parseInt(nextRaw(ctx), 10);
       if (isNaN(count) || count < 0) throw new Error('PIPE SKIP requires a non-negative integer');
-      return { kind: 'skip', count };
+      return { type: 'skip', count };
     }
 
     case 'DISTINCT': {
@@ -543,12 +543,12 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
       if (nextKw && !CLAUSE_KEYWORDS.has(nextKw) && !PIPE_STEP_KEYWORDS.has(nextKw)) {
         field = nextRaw(ctx);
       }
-      return { kind: 'distinct', field };
+      return { type: 'distinct', field };
     }
 
     case 'FLATTEN': {
       const field = nextRaw(ctx);
-      return { kind: 'flatten', field };
+      return { type: 'flatten', field };
     }
 
     case 'GROUP': {
@@ -565,7 +565,7 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
         // Default to COUNT if no aggregates specified
         aggregates.push({ fn: 'COUNT', field: null, alias: 'count' });
       }
-      return { kind: 'group', byField, aggregates };
+      return { type: 'group', byField, aggregates };
     }
 
     default:
@@ -974,11 +974,8 @@ export function evaluatePredicate(
     case '>=': return Number(actual) >= Number(expected);
     case '<=': return Number(actual) <= Number(expected);
     case '~': {
-      try {
-        return new RegExp(String(expected), 'i').test(String(actual));
-      } catch {
-        return false;
-      }
+      // Case-insensitive substring match (no regex — avoids ReDoS)
+      return String(actual).toLowerCase().indexOf(String(expected).toLowerCase()) >= 0;
     }
     default: return false;
   }
