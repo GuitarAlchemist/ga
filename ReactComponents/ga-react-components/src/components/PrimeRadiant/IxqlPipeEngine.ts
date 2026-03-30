@@ -47,7 +47,7 @@ function executeStep(
 
 function stepFilter(
   data: Record<string, unknown>[],
-  step: { kind: 'filter'; predicates: typeof step.predicates },
+  step: Extract<PipeStep, { kind: 'filter' }>,
 ): Record<string, unknown>[] {
   return data.filter(row =>
     step.predicates.every(p => evaluatePredicate(p, row)),
@@ -74,16 +74,16 @@ function stepSort(
     if (va == null) return 1;
     if (vb == null) return -1;
 
-    // Numeric comparison if both are numbers
-    const na = Number(va);
-    const nb = Number(vb);
+    // Numeric comparison if both are actually numeric (not empty strings)
+    const sa = String(va);
+    const sb = String(vb);
+    const na = sa === '' ? NaN : Number(va);
+    const nb = sb === '' ? NaN : Number(vb);
     if (!isNaN(na) && !isNaN(nb)) {
       return (na - nb) * dir;
     }
 
-    // String comparison
-    const sa = String(va);
-    const sb = String(vb);
+    // String comparison (sa/sb already defined above)
     if (sa < sb) return -1 * dir;
     if (sa > sb) return 1 * dir;
     return 0;
@@ -122,8 +122,9 @@ function stepDistinct(
   const result: Record<string, unknown>[] = [];
 
   for (const row of data) {
+    const rawVal = step.field ? resolveField(row, step.field) : undefined;
     const key = step.field
-      ? String(resolveField(row, step.field) ?? '')
+      ? (rawVal === null ? '__null__' : rawVal === undefined ? '__undefined__' : String(rawVal))
       : JSON.stringify(row);
     if (!seen.has(key)) {
       seen.add(key);

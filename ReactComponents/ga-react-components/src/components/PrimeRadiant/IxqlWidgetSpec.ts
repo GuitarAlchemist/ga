@@ -2,7 +2,7 @@
 // WidgetSpec types and compiler — transforms IXQL AST → renderable widget descriptors.
 // Phase 1: PanelSpec (AG-Grid). Future: VizSpec (D3), FormSpec (MUI).
 
-import type { CreateGridPanelCommand, ProjectionField, PipeStep } from './IxqlControlParser';
+import type { CreateGridPanelCommand, ProjectionField, PipeStep, IxqlPredicate } from './IxqlControlParser';
 
 // ---------------------------------------------------------------------------
 // Whitelisted pure functions for PROJECT expressions
@@ -31,7 +31,7 @@ const PURE_FUNCTIONS: Record<string, PureFn> = {
 
 export interface DataBindingSpec {
   source: string;            // registered data source path
-  wherePredicates: unknown[];
+  wherePredicates: IxqlPredicate[];
   dependsOn: string[];       // signal names this widget subscribes to
 }
 
@@ -142,15 +142,7 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
 // Runtime: apply projection to a data row
 // ---------------------------------------------------------------------------
 
-function resolveFieldPath(obj: unknown, path: string): unknown {
-  const parts = path.split('.');
-  let current: unknown = obj;
-  for (const part of parts) {
-    if (current == null || typeof current !== 'object') return undefined;
-    current = (current as Record<string, unknown>)[part];
-  }
-  return current;
-}
+import { resolveField } from './DataFetcher';
 
 export function applyProjection(
   row: Record<string, unknown>,
@@ -158,7 +150,7 @@ export function applyProjection(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const field of projection.fields) {
-    const raw = resolveFieldPath(row, field.sourcePath);
+    const raw = resolveField(row, field.sourcePath);
     result[field.name] = field.transform ? field.transform(raw) : raw;
   }
   return result;
