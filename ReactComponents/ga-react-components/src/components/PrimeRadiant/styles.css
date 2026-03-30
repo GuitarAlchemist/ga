@@ -5922,6 +5922,35 @@
   font-size: 9px;
 }
 
+.prime-radiant__library-lang-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.prime-radiant__library-lang-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.prime-radiant__library-lang-btn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #c9d1d9;
+}
+
+.prime-radiant__library-lang-btn--active {
+  background: rgba(31, 111, 235, 0.1);
+  border-color: rgba(31, 111, 235, 0.4);
+  color: #58a6ff;
+}
+
 .prime-radiant__library-filters {
   display: flex;
   flex-wrap: wrap;
@@ -9992,6 +10021,20 @@
 .prime-radiant__algedonic-fixall-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+.prime-radiant__algedonic-create-all-btn {
+  background: rgba(31, 111, 235, 0.1);
+  border: 1px solid rgba(31, 111, 235, 0.3);
+  border-radius: 4px;
+  color: #58a6ff;
+  font-size: 10px;
+  font-family: inherit;
+  padding: 3px 8px;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.prime-radiant__algedonic-create-all-btn:hover {
+  background: rgba(31, 111, 235, 0.25);
 }
 .prime-radiant__algedonic-result {
   border-radius: 4px;
