@@ -617,10 +617,25 @@ async function executeCell(cell: NotebookCell): Promise<CellExecutionResult> {
       return await fetchAlgedonicData();
     case 'chart':
       return await fetchChartData();
-    case 'ixql':
-      return {
-        output: `[IXQL] Pipeline executed successfully.\n  Rows processed: ${Math.floor(Math.random() * 500) + 50}\n  Duration: ${(Math.random() * 2 + 0.1).toFixed(2)}s\n  Status: OK`,
-      };
+    case 'ixql': {
+      // If it's a CREATE PANEL KIND grid command, parse and validate
+      const ixqlContent = cell.content.trim().toUpperCase();
+      if (ixqlContent.startsWith('CREATE') && ixqlContent.includes('KIND')) {
+        const ixqlResult = parseIxqlCommand(cell.content.trim());
+        if (ixqlResult.ok && ixqlResult.command.type === 'create-grid-panel') {
+          return { output: `[IXQL] Grid panel "${ixqlResult.command.id}" compiled.\n  Source: ${ixqlResult.command.source}\n  Fields: ${ixqlResult.command.project.length || 'auto'}\n  Refresh: ${ixqlResult.command.refresh ? (ixqlResult.command.refresh / 1000) + 's' : 'off'}` };
+        }
+        if (!ixqlResult.ok) {
+          return { output: `[IXQL] Parse error: ${ixqlResult.error}` };
+        }
+      }
+      // Try parsing as any IXQL command
+      const anyResult = parseIxqlCommand(cell.content.trim());
+      if (anyResult.ok) {
+        return { output: `[IXQL] Command parsed: ${anyResult.command.type}\n  Status: OK` };
+      }
+      return { output: `[IXQL] ${anyResult.error}` };
+    }
     case 'react':
       return {
         output: `[React] Component compiled. No errors.\n  Bundle: ${(Math.random() * 50 + 5).toFixed(1)}KB`,
@@ -966,16 +981,27 @@ const CellView: React.FC<{
           />
         );
 
-      case 'ixql':
+      case 'ixql': {
+        // Show highlighted source + live grid preview if it's a grid command
+        const ixqlParsed = cell.status === 'complete' ? parseIxqlCommand(cell.content.trim()) : null;
+        const isGridCmd = ixqlParsed?.ok && ixqlParsed.command.type === 'create-grid-panel';
         return (
-          <div style={{
-            background: '#0a0a14', padding: 12, borderRadius: 4, fontSize: 12,
-            fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap',
-            border: '1px solid rgba(255,215,0,0.1)', lineHeight: 1.5,
-          }}>
-            <div dangerouslySetInnerHTML={{ __html: highlightIxql(cell.content) }} />
+          <div>
+            <div style={{
+              background: '#0a0a14', padding: 12, borderRadius: 4, fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap',
+              border: '1px solid rgba(255,215,0,0.1)', lineHeight: 1.5,
+            }}>
+              <div dangerouslySetInnerHTML={{ __html: highlightIxql(cell.content) }} />
+            </div>
+            {isGridCmd && (
+              <div style={{ height: 280, marginTop: 8 }}>
+                <IxqlGridPanel spec={compileGridPanel(ixqlParsed.command)} />
+              </div>
+            )}
           </div>
         );
+      }
 
       case 'react':
         return renderReactCell(cell.content);
