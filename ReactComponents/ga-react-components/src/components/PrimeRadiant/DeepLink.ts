@@ -139,11 +139,14 @@ export function useDeepLink(opts: UseDeepLinkOptions): UseDeepLinkResult {
   const initialState = useRef(readDeepLink());
   const currentState = useRef<DeepLinkState>(initialState.current);
 
-  // Apply initial deep link on mount
+  // Apply initial deep link after a short delay — lets the 3D scene initialize first
   useEffect(() => {
-    const s = initialState.current;
-    if (s.panel) opts.onPanelChange(s.panel);
-    if (s.node) opts.onNodeSelect(s.node);
+    const timeout = setTimeout(() => {
+      const s = initialState.current;
+      if (s.panel) opts.onPanelChange(s.panel);
+      if (s.node) opts.onNodeSelect(s.node);
+    }, 2000); // 2s delay for scene init
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
