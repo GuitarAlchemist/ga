@@ -2,7 +2,7 @@
 // WidgetSpec types and compiler — transforms IXQL AST → renderable widget descriptors.
 // Phase 1: PanelSpec (AG-Grid). Future: VizSpec (D3), FormSpec (MUI).
 
-import type { CreateGridPanelCommand, ProjectionField } from './IxqlControlParser';
+import type { CreateGridPanelCommand, ProjectionField, PipeStep } from './IxqlControlParser';
 
 // ---------------------------------------------------------------------------
 // Whitelisted pure functions for PROJECT expressions
@@ -53,6 +53,10 @@ export interface ResponsiveLayoutSpec {
   xl?: number;
 }
 
+export interface PipelineSpec {
+  steps: PipeStep[];
+}
+
 export interface PanelSpec {
   type: 'panel';
   id: string;
@@ -60,12 +64,13 @@ export interface PanelSpec {
   template: string | null;
   binding: DataBindingSpec;
   projection: ProjectionSpec | null;
+  pipeline: PipelineSpec | null;   // PIPE transforms between fetch and projection
   layout: ResponsiveLayoutSpec;
   governedBy: number[];
   publish: { signal: string; as: string } | null;
   subscribe: string[];
-  refresh: number | null;    // ms
-  live: boolean;             // SignalR upgrade
+  refresh: number | null;
+  live: boolean;
 }
 
 // Future: VizSpec, FormSpec
@@ -123,6 +128,7 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
     projection: cmd.project.length > 0
       ? { fields: cmd.project.map(compileProjectionField) }
       : null,
+    pipeline: cmd.pipe.length > 0 ? { steps: cmd.pipe } : null,
     layout: compileLayout(cmd.layout),
     governedBy: cmd.governedBy,
     publish: cmd.publish,

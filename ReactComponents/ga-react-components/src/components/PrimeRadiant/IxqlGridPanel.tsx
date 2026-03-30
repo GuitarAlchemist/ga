@@ -15,6 +15,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 
 import type { PanelSpec, CompiledProjectionField } from './IxqlWidgetSpec';
 import { applyProjection } from './IxqlWidgetSpec';
+import { executePipeline } from './IxqlPipeEngine';
 import { resolve } from './DataFetcher';
 import type { IxqlPredicate } from './IxqlControlParser';
 import { signalBus, useSignals, usePublish } from './DashboardSignalBus';
@@ -265,6 +266,11 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec }) => {
 
       let rows = raw as Record<string, unknown>[];
 
+      // Apply PIPE transforms if defined
+      if (spec.pipeline) {
+        rows = executePipeline(rows, spec.pipeline.steps);
+      }
+
       // Apply projection if defined
       if (spec.projection) {
         rows = rows.map(row => applyProjection(row, spec.projection!));
@@ -354,6 +360,12 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec }) => {
         {spec.live && (
           <span className="ixql-grid-panel__live-badge" title="Live updates via SignalR">
             LIVE
+          </span>
+        )}
+        {spec.pipeline && spec.pipeline.steps.length > 0 && (
+          <span className="ixql-grid-panel__pipe-badge"
+            title={`${spec.pipeline.steps.length} transform step${spec.pipeline.steps.length > 1 ? 's' : ''}`}>
+            PIPE {spec.pipeline.steps.length}
           </span>
         )}
         <GovernedByBadge articles={spec.governedBy} />
