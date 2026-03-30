@@ -23,37 +23,47 @@ import { signalBus, useSignals, usePublish } from './DashboardSignalBus';
 // Tetravalent cell renderer
 // ---------------------------------------------------------------------------
 
-const TETRAVALENT_COLORS: Record<string, string> = {
-  TRUE: '#33CC66',
-  FALSE: '#FF4444',
-  UNKNOWN: '#888888',
-  CONTRADICTORY: '#FF44FF',
-  T: '#33CC66',
-  F: '#FF4444',
-  U: '#888888',
-  C: '#FF44FF',
+// Hexavalent logic: T/P/U/D/F/C (extends tetravalent with Probable and Doubtful)
+// See: Demerzel/logic/hexavalent-logic.md
+const HEXAVALENT_COLORS: Record<string, string> = {
+  TRUE: '#22c55e',
+  PROBABLE: '#a3e635',
+  UNKNOWN: '#6b7280',
+  DOUBTFUL: '#f97316',
+  FALSE: '#ef4444',
+  CONTRADICTORY: '#d946ef',
+  T: '#22c55e',
+  P: '#a3e635',
+  U: '#6b7280',
+  D: '#f97316',
+  F: '#ef4444',
+  C: '#d946ef',
 };
 
-const TETRAVALENT_LABELS: Record<string, string> = {
+const HEXAVALENT_LABELS: Record<string, string> = {
   TRUE: 'T',
-  FALSE: 'F',
+  PROBABLE: 'P',
   UNKNOWN: 'U',
+  DOUBTFUL: 'D',
+  FALSE: 'F',
   CONTRADICTORY: 'C',
   T: 'T',
-  F: 'F',
+  P: 'P',
   U: 'U',
+  D: 'D',
+  F: 'F',
   C: 'C',
 };
 
-function isTetravalent(value: unknown): boolean {
+function isHexavalent(value: unknown): boolean {
   if (typeof value !== 'string') return false;
-  return value.toUpperCase() in TETRAVALENT_COLORS;
+  return value.toUpperCase() in HEXAVALENT_COLORS;
 }
 
-const TetravalentCellRenderer: React.FC<{ value: unknown }> = ({ value }) => {
+const HexavalentCellRenderer: React.FC<{ value: unknown }> = ({ value }) => {
   const str = String(value).toUpperCase();
-  const color = TETRAVALENT_COLORS[str] ?? '#888';
-  const label = TETRAVALENT_LABELS[str] ?? String(value);
+  const color = HEXAVALENT_COLORS[str] ?? '#888';
+  const label = HEXAVALENT_LABELS[str] ?? String(value);
   return (
     <span style={{
       display: 'inline-flex',
@@ -214,11 +224,11 @@ function enhanceColDefs(
     const val = sample[field];
 
     // Tetravalent detection
-    if (isTetravalent(val)) {
+    if (isHexavalent(val)) {
       return {
         ...col,
         cellRenderer: (params: { value: unknown }) =>
-          React.createElement(TetravalentCellRenderer, { value: params.value }),
+          React.createElement(HexavalentCellRenderer, { value: params.value }),
         width: 100,
       };
     }
