@@ -9827,3 +9827,87 @@
   background: rgba(0, 0, 0, 0.6);
   z-index: 999;
 }
+
+/* ── IXQL Grid Panel ── */
+
+.ixql-grid-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(13, 17, 23, 0.95);
+  color: #e6edf3;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ixql-grid-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.ixql-grid-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.ixql-grid-panel__count {
+  font-size: 11px;
+  color: #8b949e;
+  margin-left: auto;
+}
+
+.ixql-grid-panel__live-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #33CC66;
+  background: rgba(51, 204, 102, 0.12);
+  padding: 2px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  animation: ixql-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ixql-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.ixql-grid-panel__refresh-badge {
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.ixql-grid-panel__loading,
+.ixql-grid-panel__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-size: 12px;
+}
+
+.ixql-grid-panel__loading { color: #8b949e; }
+.ixql-grid-panel__error { color: #f85149; }
+
+.ixql-grid-panel__grid {
+  flex: 1;
+  min-height: 0;
+}
+
+/* AG-Grid dark theme overrides for Prime Radiant */
+.ixql-grid-panel .ag-theme-alpine-dark {
+  --ag-background-color: rgba(13, 17, 23, 0.95);
+  --ag-header-background-color: rgba(22, 27, 34, 0.95);
+  --ag-odd-row-background-color: rgba(22, 27, 34, 0.4);
+  --ag-row-hover-color: rgba(255, 215, 0, 0.06);
+  --ag-selected-row-background-color: rgba(255, 215, 0, 0.1);
+  --ag-border-color: #30363d;
+  --ag-header-foreground-color: #8b949e;
+  --ag-foreground-color: #e6edf3;
+  --ag-font-size: 12px;
+  --ag-font-family: 'JetBrains Mono', monospace;
+}
