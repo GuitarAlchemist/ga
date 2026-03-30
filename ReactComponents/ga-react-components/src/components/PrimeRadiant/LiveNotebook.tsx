@@ -747,45 +747,61 @@ function createSampleNotebooks(): NotebookDocument[] {
     },
     {
       id: 'sample-ix-pipeline',
-      title: 'IX Pipeline Demo',
-      description: 'IXQL pipeline examples with execution outputs and state tracking',
-      createdAt: '2026-03-27T08:00:00Z',
-      updatedAt: '2026-03-27T08:00:00Z',
+      title: 'IXQL Command Lab',
+      description: 'Live IXQL commands — visual control, grid queries, health binding, and reactive triggers',
+      createdAt: '2026-03-29T10:00:00Z',
+      updatedAt: '2026-03-29T10:00:00Z',
       cells: [
         {
           id: 'ix-1',
           type: 'markdown',
-          content: '# IX Pipeline Demo\n\nThis notebook demonstrates **IXQL** pipelines for querying and transforming governance data. Each pipeline cell can be executed independently.\n\n---',
+          content: '# IXQL Command Lab\n\nThis notebook demonstrates **live IXQL commands** you can execute against the Prime Radiant. Each cell runs a real command — try hitting the play button.\n\n---\n\n## Visual Node Selection\n\nHighlight policy nodes and make them glow:',
           status: 'idle',
         },
         {
           id: 'ix-2',
           type: 'ixql',
-          content: 'FROM beliefs\nWHERE confidence >= 0.7\nSELECT claim, status, confidence\nORDER confidence DESC\nLIMIT 10',
-          output: '[IXQL] Pipeline executed successfully.\n  Rows processed: 147\n  Duration: 0.34s\n  Status: OK',
-          status: 'complete',
+          content: 'SELECT nodes WHERE type = policy SET glow = true, color = #ffd700',
+          status: 'idle',
         },
         {
           id: 'ix-3',
-          type: 'ixql',
-          content: 'FROM personas\nPIPE VALIDATE schema("persona.schema.json")\nPIPE FILTER has_behavioral_test = true\nEMIT INTO governance_report\n// Cross-validate all active personas',
-          output: '[IXQL] Pipeline executed successfully.\n  Rows processed: 14\n  Duration: 0.12s\n  Status: OK',
-          status: 'complete',
+          type: 'markdown',
+          content: '## Grid Query\n\nCreate a live data grid from governance beliefs with auto-refresh:',
+          status: 'idle',
         },
         {
           id: 'ix-4',
+          type: 'ixql',
+          content: 'CREATE PANEL "lab-beliefs" KIND grid SOURCE governance.beliefs PROJECT { id, proposition, truth_value, confidence } REFRESH 30s GOVERNED BY article=7',
+          status: 'idle',
+        },
+        {
+          id: 'ix-5',
+          type: 'markdown',
+          content: '## Epistemic Commands\n\nQuery the belief system directly:',
+          status: 'idle',
+        },
+        {
+          id: 'ix-6',
+          type: 'ixql',
+          content: 'SHOW beliefs WHERE confidence > 0.7 ORDER confidence LIMIT 5 VISUALIZE',
+          status: 'idle',
+        },
+        {
+          id: 'ix-7',
           type: 'state',
           content: JSON.stringify({
-            phase: 'Check',
-            description: 'Validating pipeline outputs against governance constraints',
+            phase: 'Do',
+            description: 'Executing IXQL commands against live governance graph',
             metrics: {
-              'rows_processed': 161,
-              'schemas_validated': 14,
-              'violations': 0,
-              'resilience': 0.88,
+              'commands_available': 10,
+              'grid_panels': 'CREATE PANEL KIND grid',
+              'visual_control': 'SELECT/SET',
+              'epistemic': 'SHOW/METHYLATE/BROADCAST',
             },
           }),
-          status: 'complete',
+          status: 'idle',
         },
       ],
     },
@@ -942,7 +958,12 @@ const CellView: React.FC<{
   cell: NotebookCell;
   onUpdate: (id: string, patch: Partial<NotebookCell>) => void;
   onDelete: (id: string) => void;
-}> = ({ cell, onUpdate, onDelete }) => {
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onDuplicate?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}> = ({ cell, onUpdate, onDelete, onMoveUp, onMoveDown, onDuplicate, isFirst, isLast }) => {
   const [editing, setEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -1067,6 +1088,35 @@ const CellView: React.FC<{
         )}
 
         <div style={{ flex: 1 }} />
+
+        {/* Move up */}
+        {onMoveUp && !isFirst && (
+          <button onClick={onMoveUp} title="Move up"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 11, padding: '0 3px' }}
+            onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = '#ccc'; }}
+            onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = '#555'; }}
+          >{'\u25B2'}</button>
+        )}
+
+        {/* Move down */}
+        {onMoveDown && !isLast && (
+          <button onClick={onMoveDown} title="Move down"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 11, padding: '0 3px' }}
+            onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = '#ccc'; }}
+            onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = '#555'; }}
+          >{'\u25BC'}</button>
+        )}
+
+        {/* Duplicate */}
+        {onDuplicate && (
+          <button onClick={onDuplicate} title="Duplicate cell"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 12, padding: '0 3px', fontFamily: "'JetBrains Mono', monospace" }}
+            onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = '#ccc'; }}
+            onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = '#555'; }}
+          >{'\u2398'}</button>
+        )}
+
+        <span style={{ width: 1, height: 14, background: '#30363d', margin: '0 2px' }} />
 
         {/* Edit / Preview toggle */}
         <button
@@ -1250,7 +1300,8 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
   const addCellAt = useCallback((index: number, type: CellType) => {
     const defaults: Record<CellType, string> = {
       markdown: '## Section\n\nWrite markdown here...',
-      ixql: 'FROM beliefs\nWHERE confidence >= 0.5\nSELECT claim, status',
+      ixql: 'SELECT nodes WHERE type = policy SET glow = true',
+      grid: 'CREATE PANEL "my-grid" KIND grid SOURCE governance.beliefs PROJECT { id, proposition, truth_value, confidence } REFRESH 30s',
       react: 'const MyComponent = () => {\n  return <div>Hello, Prime Radiant</div>;\n};',
       belief: JSON.stringify([{ claim: 'New claim', status: 'U', confidence: 0.5, evidence: 'Pending investigation' }], null, 2),
       algedonic: JSON.stringify([{ signal: 'new_signal', type: 'pain', severity: 'info', source: 'manual', description: 'Describe the signal' }], null, 2),
@@ -1268,6 +1319,51 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
       cells: [...nb.cells.slice(0, index), cell, ...nb.cells.slice(index)],
     }));
   }, [updateNotebook]);
+
+  const moveCell = useCallback((cellId: string, direction: 'up' | 'down') => {
+    updateNotebook(nb => {
+      const idx = nb.cells.findIndex(c => c.id === cellId);
+      if (idx < 0) return nb;
+      const target = direction === 'up' ? idx - 1 : idx + 1;
+      if (target < 0 || target >= nb.cells.length) return nb;
+      const cells = [...nb.cells];
+      [cells[idx], cells[target]] = [cells[target], cells[idx]];
+      return { ...nb, cells };
+    });
+  }, [updateNotebook]);
+
+  const duplicateCell = useCallback((cellId: string) => {
+    updateNotebook(nb => {
+      const idx = nb.cells.findIndex(c => c.id === cellId);
+      if (idx < 0) return nb;
+      const original = nb.cells[idx];
+      const copy: NotebookCell = {
+        ...original,
+        id: genId('cell'),
+        status: 'idle',
+        output: undefined,
+      };
+      const cells = [...nb.cells];
+      cells.splice(idx + 1, 0, copy);
+      return { ...nb, cells };
+    });
+  }, [updateNotebook]);
+
+  const runAllCells = useCallback(() => {
+    if (!activeNotebook) return;
+    for (const cell of activeNotebook.cells) {
+      if (cell.type !== 'markdown') {
+        updateCell(cell.id, { status: 'running', output: undefined });
+        executeCell(cell).then(result => {
+          const patch: Partial<NotebookCell> = { status: 'complete', output: result.output };
+          if (result.content) patch.content = result.content;
+          updateCell(cell.id, patch);
+        }).catch((err: unknown) => {
+          updateCell(cell.id, { status: 'error', output: `[Error] ${err instanceof Error ? err.message : String(err)}` });
+        });
+      }
+    }
+  }, [activeNotebook, updateCell]);
 
   const updateTitle = useCallback((title: string) => {
     updateNotebook(nb => ({ ...nb, title }));
@@ -1361,8 +1457,26 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
                   fontSize: 12, fontWeight: nb.id === activeId ? 'bold' : 'normal',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{nb.title}</div>
-                <div style={{ color: '#666', fontSize: 9, marginTop: 2 }}>
-                  {nb.cells.length} cell{nb.cells.length !== 1 ? 's' : ''}
+                {nb.description && (
+                  <div style={{ color: '#555', fontSize: 9, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {nb.description}
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 3 }}>
+                  <span style={{ color: '#555', fontSize: 9 }}>
+                    {nb.cells.length} cell{nb.cells.length !== 1 ? 's' : ''}
+                  </span>
+                  {/* Cell type dots */}
+                  {(() => {
+                    const types = new Set(nb.cells.map(c => c.type));
+                    return [...types].map(t => (
+                      <span key={t} style={{
+                        width: 5, height: 5, borderRadius: '50%',
+                        background: CELL_TYPE_COLORS[t],
+                        display: 'inline-block',
+                      }} title={CELL_TYPE_LABELS[t]} />
+                    ));
+                  })()}
                 </div>
               </div>
               {!nb.id.startsWith('sample-') && (
@@ -1416,8 +1530,41 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
                 {activeNotebook.description && (
                   <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{activeNotebook.description}</div>
                 )}
-                <div style={{ color: '#555', fontSize: 10, marginTop: 4 }}>
-                  Updated: {new Date(activeNotebook.updatedAt).toLocaleString()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                  <span style={{ color: '#555', fontSize: 10 }}>
+                    Updated: {new Date(activeNotebook.updatedAt).toLocaleString()}
+                  </span>
+
+                  {/* Cell type stats */}
+                  <span style={{ display: 'flex', gap: 4 }}>
+                    {(() => {
+                      const counts: Partial<Record<CellType, number>> = {};
+                      for (const c of activeNotebook.cells) {
+                        counts[c.type] = (counts[c.type] ?? 0) + 1;
+                      }
+                      return Object.entries(counts).map(([type, count]) => (
+                        <span key={type} style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 6,
+                          background: CELL_TYPE_COLORS[type as CellType] + '22',
+                          color: CELL_TYPE_COLORS[type as CellType],
+                        }}>
+                          {count} {CELL_TYPE_LABELS[type as CellType]}
+                        </span>
+                      ));
+                    })()}
+                  </span>
+
+                  <div style={{ flex: 1 }} />
+
+                  {/* Run All */}
+                  <button
+                    onClick={runAllCells}
+                    style={{
+                      background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)',
+                      borderRadius: 4, color: '#ffd700', cursor: 'pointer', padding: '3px 10px',
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                    }}
+                  >{'\u25B6\u25B6'} Run All</button>
                 </div>
               </div>
 
@@ -1431,6 +1578,11 @@ export const LiveNotebook: React.FC<LiveNotebookProps> = ({ open, onClose }) => 
                     cell={cell}
                     onUpdate={updateCell}
                     onDelete={deleteCell}
+                    onMoveUp={() => moveCell(cell.id, 'up')}
+                    onMoveDown={() => moveCell(cell.id, 'down')}
+                    onDuplicate={() => duplicateCell(cell.id)}
+                    isFirst={idx === 0}
+                    isLast={idx === activeNotebook.cells.length - 1}
                   />
                   <AddCellButton onAdd={type => addCellAt(idx + 1, type)} />
                 </React.Fragment>
