@@ -13,8 +13,34 @@ interface CurriculumReference {
   level: string;
   curriculum_fit: string;
   archiveId?: string;  // Archive.org filename for PDF embed
-  language: 'en' | 'fr';
+  language: SupportedLanguage;
 }
+
+type SupportedLanguage = 'en' | 'fr' | 'es' | 'vi' | 'hi' | 'ar' | 'ru' | 'de' | 'sv' | 'tr' | 'cs' | 'ro' | 'it' | 'pt';
+
+const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['en', 'fr', 'es', 'vi', 'hi', 'ar', 'ru', 'de', 'sv', 'tr', 'cs', 'ro', 'it', 'pt'];
+
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
+  en: 'EN', fr: 'FR', es: 'ES', vi: 'VI', hi: 'HI', ar: 'AR',
+  ru: 'RU', de: 'DE', sv: 'SV', tr: 'TR', cs: 'CS', ro: 'RO', it: 'IT', pt: 'PT',
+};
+
+const FLAG_ICON: Record<SupportedLanguage, string> = {
+  en: '\uD83C\uDDEC\uD83C\uDDE7',
+  fr: '\uD83C\uDDEB\uD83C\uDDF7',
+  es: '\uD83C\uDDEA\uD83C\uDDF8',
+  vi: '\uD83C\uDDFB\uD83C\uDDF3',
+  hi: '\uD83C\uDDEE\uD83C\uDDF3',
+  ar: '\uD83C\uDDF8\uD83C\uDDE6',
+  ru: '\uD83C\uDDF7\uD83C\uDDFA',
+  de: '\uD83C\uDDE9\uD83C\uDDEA',
+  sv: '\uD83C\uDDF8\uD83C\uDDEA',
+  tr: '\uD83C\uDDF9\uD83C\uDDF7',
+  cs: '\uD83C\uDDE8\uD83C\uDDFF',
+  ro: '\uD83C\uDDF7\uD83C\uDDF4',
+  it: '\uD83C\uDDEE\uD83C\uDDF9',
+  pt: '\uD83C\uDDF5\uD83C\uDDF9',
+};
 
 interface CurriculumData {
   source: string;
@@ -90,6 +116,78 @@ const CURRICULUM_DATA: CurriculumData = {
     { title: 'Mille milliards de soleils', topic: 'Physique stellaire \u2014 formation d\u2019\u00e9toiles, fusion nucl\u00e9aire, supernovae', departments: ['physics'], level: 'high-school to undergraduate', curriculum_fit: 'Transformation d\u2019\u00e9nergie et pens\u00e9e en cycle de vie pour l\u2019\u00e9volution des syst\u00e8mes', archiveId: 'mille_milliards_de_soleils', language: 'fr' },
     { title: 'La Face cach\u00e9e de l\u2019Univers', topic: 'Mati\u00e8re noire et \u00e9nergie sombre \u2014 myst\u00e8res cosmologiques', departments: ['physics', 'futurology'], level: 'undergraduate', curriculum_fit: 'Inconnues inconnues \u2014 humilit\u00e9 \u00e9pist\u00e9mique en gouvernance', archiveId: 'la_face_cachee_de_lunivers', language: 'fr' },
     { title: 'Pour une poign\u00e9e d\u2019amp\u00e8res', topic: '\u00c9lectromagn\u00e9tisme \u2014 circuits, magn\u00e9tisme, ondes EM', departments: ['physics'], level: 'high-school', curriculum_fit: 'Fondations \u00e9lectromagn\u00e9tiques pour les analogies de traitement du signal', archiveId: 'pour_une_poignee_damperes', language: 'fr' },
+    // --- Spanish (ESPANOL) ---
+    { title: 'Topologicón', topic: 'Topología — superficies, homeomorfismos, superficie de Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Fundamentos del pensamiento topológico para TDA y embeddings de Poincaré', archiveId: 'topologicon_es', language: 'es' },
+    { title: 'Geometricón', topic: 'Geometría — construcciones euclidianas, razonamiento geométrico', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fundamentos geométricos para la geometría del mástil y razonamiento espacial', archiveId: 'geometricon_es', language: 'es' },
+    { title: 'Economicón', topic: 'Economía — dinámicas de mercado, asignación de recursos', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Pensamiento en asignación de recursos para gestión presupuestaria', archiveId: 'economicon_es', language: 'es' },
+    { title: 'Big Bang', topic: 'Cosmología — origen del universo, física primordial', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Pensamiento sistémico a gran escala, condiciones iniciales y emergencia', archiveId: 'big_bang_es', language: 'es' },
+    { title: 'Todo es relativo', topic: 'Relatividad especial y general — espacio-tiempo, sistemas de referencia', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Pensamiento en marcos de referencia aplicable a la gobernanza multi-perspectiva', archiveId: 'todo_es_relativo_es', language: 'es' },
+    // --- Vietnamese (Vietnamien) ---
+    { title: 'Topologicon', topic: 'Tô-pô học — mặt, phép đồng phôi, mặt Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Nền tảng tư duy tô-pô cho TDA và nhúng Poincaré', archiveId: 'topologicon_vi', language: 'vi' },
+    { title: 'Geometricon', topic: 'Hình học — các phép dựng Euclid, suy luận hình học', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Nền tảng hình học cho hình học cần đàn và suy luận không gian', archiveId: 'geometricon_vi', language: 'vi' },
+    { title: 'Economicon', topic: 'Kinh tế học — động lực thị trường, phân bổ nguồn lực', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Tư duy phân bổ nguồn lực cho quản lý ngân sách', archiveId: 'economicon_vi', language: 'vi' },
+    { title: 'Big Bang', topic: 'Vũ trụ học — nguồn gốc vũ trụ, vật lý sơ khai', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Tư duy hệ thống quy mô lớn, điều kiện ban đầu và sự nổi lên', archiveId: 'big_bang_vi', language: 'vi' },
+    { title: 'Tất cả là tương đối', topic: 'Thuyết tương đối — không-thời gian, hệ quy chiếu', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Tư duy hệ quy chiếu áp dụng cho quản trị đa chiều', archiveId: 'tout_est_relatif_vi', language: 'vi' },
+    // --- Hindi ---
+    { title: 'Topologicon', topic: 'टोपोलॉजी — सतहें, होमियोमॉर्फिज़्म, बॉय सतह', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'TDA और Poincaré एम्बेडिंग्स के लिए टोपोलॉजिकल सोच की नींव', archiveId: 'topologicon_hi', language: 'hi' },
+    { title: 'Geometricon', topic: 'ज्यामिति — यूक्लिडियन निर्माण, ज्यामितीय तर्क', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'फ्रेटबोर्ड ज्यामिति और स्थानिक तर्क के लिए ज्यामितीय नींव', archiveId: 'geometricon_hi', language: 'hi' },
+    { title: 'Economicon', topic: 'अर्थशास्त्र — बाज़ार गतिशीलता, संसाधन आवंटन', departments: ['product-management'], level: 'high-school', curriculum_fit: 'बजट प्रबंधन के लिए संसाधन आवंटन सोच', archiveId: 'economicon_hi', language: 'hi' },
+    { title: 'Big Bang', topic: 'ब्रह्मांड विज्ञान — ब्रह्मांड की उत्पत्ति, प्रारंभिक भौतिकी', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'बड़े पैमाने पर प्रणालीगत सोच, प्रारंभिक स्थितियाँ और उद्भव', archiveId: 'big_bang_hi', language: 'hi' },
+    { title: 'सब कुछ सापेक्ष है', topic: 'विशेष और सामान्य सापेक्षता — दिक्काल, संदर्भ फ्रेम', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'बहु-परिप्रेक्ष्य शासन के लिए संदर्भ फ्रेम सोच', archiveId: 'tout_est_relatif_hi', language: 'hi' },
+    // --- Arabic (Arabe) ---
+    { title: 'توبولوجيكون', topic: 'طوبولوجيا — السطوح، التشاكل، سطح بوي', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'أسس التفكير الطوبولوجي لـ TDA وتضمينات بوانكاريه', archiveId: 'topologicon_ar', language: 'ar' },
+    { title: 'جيومتريكون', topic: 'هندسة — إنشاءات إقليدية، استدلال هندسي', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'الأسس الهندسية لهندسة لوحة الأصابع والاستدلال المكاني', archiveId: 'geometricon_ar', language: 'ar' },
+    { title: 'إيكونوميكون', topic: 'اقتصاد — ديناميكيات السوق، تخصيص الموارد', departments: ['product-management'], level: 'high-school', curriculum_fit: 'تفكير تخصيص الموارد لإدارة الميزانية', archiveId: 'economicon_ar', language: 'ar' },
+    { title: 'الانفجار العظيم', topic: 'علم الكون — أصل الكون، الفيزياء المبكرة', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'تفكير منظومي واسع النطاق، الظروف الأولية والنشوء', archiveId: 'big_bang_ar', language: 'ar' },
+    { title: 'كل شيء نسبي', topic: 'النسبية الخاصة والعامة — الزمكان، أُطر المرجع', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'تفكير إطار المرجع المطبق على الحوكمة متعددة المنظورات', archiveId: 'tout_est_relatif_ar', language: 'ar' },
+    // --- Russian (Russe) ---
+    { title: 'Топологикон', topic: 'Топология — поверхности, гомеоморфизмы, поверхность Боя', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Основы топологического мышления для TDA и вложений Пуанкаре', archiveId: 'topologicon_ru', language: 'ru' },
+    { title: 'Геометрикон', topic: 'Геометрия — евклидовы построения, геометрические рассуждения', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Геометрические основы для геометрии грифа и пространственных рассуждений', archiveId: 'geometricon_ru', language: 'ru' },
+    { title: 'Экономикон', topic: 'Экономика — рыночная динамика, распределение ресурсов', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Мышление распределения ресурсов для бюджетного управления', archiveId: 'economicon_ru', language: 'ru' },
+    { title: 'Большой взрыв', topic: 'Космология — происхождение Вселенной, ранняя физика', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Системное мышление масштаба, начальные условия и эмерджентность', archiveId: 'big_bang_ru', language: 'ru' },
+    { title: 'Всё относительно', topic: 'Специальная и общая теория относительности — пространство-время, системы отсчёта', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Мышление в системах отсчёта для мульти-перспективного управления', archiveId: 'tout_est_relatif_ru', language: 'ru' },
+    // --- German (Deutch) ---
+    { title: 'Topologikon', topic: 'Topologie — Flächen, Homöomorphismen, Boy-Fläche', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Grundlagen topologischen Denkens für TDA und Poincaré-Einbettungen', archiveId: 'topologicon_de', language: 'de' },
+    { title: 'Geometrikon', topic: 'Geometrie — euklidische Konstruktionen, geometrisches Schlussfolgern', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Geometrische Grundlagen für Griffbrettgeometrie und räumliches Denken', archiveId: 'geometricon_de', language: 'de' },
+    { title: 'Economikon', topic: 'Wirtschaft — Marktdynamik, Ressourcenallokation', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Ressourcenallokationsdenken für Budgetmanagement', archiveId: 'economicon_de', language: 'de' },
+    { title: 'Urknall', topic: 'Kosmologie — Ursprung des Universums, frühe Physik', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Systemdenken im großen Maßstab, Anfangsbedingungen und Emergenz', archiveId: 'big_bang_de', language: 'de' },
+    { title: 'Alles ist relativ', topic: 'Spezielle und allgemeine Relativität — Raumzeit, Bezugssysteme', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Bezugssystem-Denken für Multi-Perspektiv-Governance', archiveId: 'tout_est_relatif_de', language: 'de' },
+    // --- Swedish (suedois) ---
+    { title: 'Topologikon', topic: 'Topologi — ytor, homeomorfismer, Boys yta', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Grunder i topologiskt tänkande för TDA och Poincaré-inbäddningar', archiveId: 'topologicon_sv', language: 'sv' },
+    { title: 'Geometrikon', topic: 'Geometri — euklidiska konstruktioner, geometriskt resonemang', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Geometriska grunder för greppbrädsgeometri och rumsligt resonemang', archiveId: 'geometricon_sv', language: 'sv' },
+    { title: 'Economikon', topic: 'Ekonomi — marknadsdynamik, resursallokering', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Resursallokeringstänkande för budgethantering', archiveId: 'economicon_sv', language: 'sv' },
+    { title: 'Big Bang', topic: 'Kosmologi — universums ursprung, tidig fysik', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Systemtänkande i stor skala, initialvillkor och emergens', archiveId: 'big_bang_sv', language: 'sv' },
+    { title: 'Allt är relativt', topic: 'Speciell och allmän relativitet — rumtid, referensramar', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Referensramstänkande för multi-perspektiv styrning', archiveId: 'tout_est_relatif_sv', language: 'sv' },
+    // --- Turkish (Turquie) ---
+    { title: 'Topolojikon', topic: 'Topoloji — yüzeyler, homeomorfizmalar, Boy yüzeyi', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'TDA ve Poincaré gömmeleri için topolojik düşünce temelleri', archiveId: 'topologicon_tr', language: 'tr' },
+    { title: 'Geometrikon', topic: 'Geometri — Öklid yapıları, geometrik akıl yürütme', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Klavye geometrisi ve uzamsal akıl yürütme için geometrik temeller', archiveId: 'geometricon_tr', language: 'tr' },
+    { title: 'Ekonomikon', topic: 'Ekonomi — piyasa dinamikleri, kaynak tahsisi', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Bütçe yönetimi için kaynak tahsisi düşüncesi', archiveId: 'economicon_tr', language: 'tr' },
+    { title: 'Büyük Patlama', topic: 'Kozmoloji — evrenin kökeni, erken fizik', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Büyük ölçekli sistem düşüncesi, başlangıç koşulları ve ortaya çıkış', archiveId: 'big_bang_tr', language: 'tr' },
+    { title: 'Her şey göreceli', topic: 'Özel ve genel görelilik — uzay-zaman, referans çerçeveleri', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Çok perspektifli yönetişim için referans çerçevesi düşüncesi', archiveId: 'tout_est_relatif_tr', language: 'tr' },
+    // --- Czech (tcheque) ---
+    { title: 'Topologikon', topic: 'Topologie — povrchy, homeomorfismy, Boyův povrch', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Základy topologického myšlení pro TDA a Poincarého vnoření', archiveId: 'topologicon_cs', language: 'cs' },
+    { title: 'Geometrikon', topic: 'Geometrie — euklidovské konstrukce, geometrické uvažování', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Geometrické základy pro geometrii hmatníku a prostorové uvažování', archiveId: 'geometricon_cs', language: 'cs' },
+    { title: 'Ekonomikon', topic: 'Ekonomie — dynamika trhu, alokace zdrojů', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Myšlení alokace zdrojů pro správu rozpočtu', archiveId: 'economicon_cs', language: 'cs' },
+    { title: 'Velký třesk', topic: 'Kosmologie — původ vesmíru, raná fyzika', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Systémové myšlení velkého měřítka, počáteční podmínky a emergence', archiveId: 'big_bang_cs', language: 'cs' },
+    { title: 'Vše je relativní', topic: 'Speciální a obecná relativita — časoprostor, vztažné soustavy', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Myšlení vztažných soustav pro multi-perspektivní správu', archiveId: 'tout_est_relatif_cs', language: 'cs' },
+    // --- Romanian (Roumain) ---
+    { title: 'Topologicon', topic: 'Topologie — suprafețe, homeomorfisme, suprafața lui Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Bazele gândirii topologice pentru TDA și încorporări Poincaré', archiveId: 'topologicon_ro', language: 'ro' },
+    { title: 'Geometricon', topic: 'Geometrie — construcții euclidiene, raționament geometric', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Bazele geometrice pentru geometria tastaturii și raționamentul spațial', archiveId: 'geometricon_ro', language: 'ro' },
+    { title: 'Economicon', topic: 'Economie — dinamica pieței, alocarea resurselor', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Gândire de alocare a resurselor pentru managementul bugetului', archiveId: 'economicon_ro', language: 'ro' },
+    { title: 'Big Bang', topic: 'Cosmologie — originea universului, fizica timpurie', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Gândire sistemică la scară largă, condiții inițiale și emergență', archiveId: 'big_bang_ro', language: 'ro' },
+    { title: 'Totul e relativ', topic: 'Relativitate specială și generală — spațiu-timp, cadre de referință', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Gândire în cadre de referință pentru guvernanță multi-perspectivă', archiveId: 'tout_est_relatif_ro', language: 'ro' },
+    // --- Italian (Italien) ---
+    { title: 'Topologicon', topic: 'Topologia — superfici, omeomorfismi, superficie di Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Fondamenti del pensiero topologico per TDA e incorporamenti di Poincaré', archiveId: 'topologicon_it', language: 'it' },
+    { title: 'Geometricon', topic: 'Geometria — costruzioni euclidee, ragionamento geometrico', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fondamenti geometrici per la geometria della tastiera e ragionamento spaziale', archiveId: 'geometricon_it', language: 'it' },
+    { title: 'Economicon', topic: 'Economia — dinamiche di mercato, allocazione delle risorse', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Pensiero di allocazione delle risorse per la gestione del bilancio', archiveId: 'economicon_it', language: 'it' },
+    { title: 'Big Bang', topic: 'Cosmologia — origine dell\'universo, fisica primordiale', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Pensiero sistemico su larga scala, condizioni iniziali ed emergenza', archiveId: 'big_bang_it', language: 'it' },
+    { title: 'Tutto è relativo', topic: 'Relatività speciale e generale — spazio-tempo, sistemi di riferimento', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Pensiero in sistemi di riferimento per la governance multi-prospettica', archiveId: 'tout_est_relatif_it', language: 'it' },
+    // --- Portuguese (Portuguais) ---
+    { title: 'Topologicon', topic: 'Topologia — superfícies, homeomorfismos, superfície de Boy', departments: ['mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Fundamentos do pensamento topológico para TDA e incorporações de Poincaré', archiveId: 'topologicon_pt', language: 'pt' },
+    { title: 'Geometricon', topic: 'Geometria — construções euclidianas, raciocínio geométrico', departments: ['mathematics', 'physics'], level: 'middle-school to high-school', curriculum_fit: 'Fundamentos geométricos para a geometria do braço e raciocínio espacial', archiveId: 'geometricon_pt', language: 'pt' },
+    { title: 'Economicon', topic: 'Economia — dinâmicas de mercado, alocação de recursos', departments: ['product-management'], level: 'high-school', curriculum_fit: 'Pensamento de alocação de recursos para gestão orçamentária', archiveId: 'economicon_pt', language: 'pt' },
+    { title: 'Big Bang', topic: 'Cosmologia — origem do universo, física primordial', departments: ['physics', 'futurology'], level: 'high-school', curriculum_fit: 'Pensamento sistêmico em grande escala, condições iniciais e emergência', archiveId: 'big_bang_pt', language: 'pt' },
+    { title: 'Tudo é relativo', topic: 'Relatividade especial e geral — espaço-tempo, referenciais', departments: ['physics', 'mathematics'], level: 'high-school to undergraduate', curriculum_fit: 'Pensamento em referenciais para governança multi-perspectiva', archiveId: 'tout_est_relatif_pt', language: 'pt' },
   ],
 };
 
@@ -97,18 +195,14 @@ const CURRICULUM_DATA: CurriculumData = {
 // Component
 // ---------------------------------------------------------------------------
 /** Detect browser locale to pick default language */
-function getDefaultLanguage(): 'en' | 'fr' {
+function getDefaultLanguage(): SupportedLanguage {
   if (typeof navigator !== 'undefined') {
-    const lang = navigator.language || '';
-    if (lang.startsWith('fr')) return 'fr';
+    const lang = (navigator.language || '').toLowerCase();
+    const prefix = lang.split('-')[0] as SupportedLanguage;
+    if (SUPPORTED_LANGUAGES.includes(prefix)) return prefix;
   }
   return 'en';
 }
-
-const FLAG_ICON: Record<'en' | 'fr', string> = {
-  en: '\uD83C\uDDEC\uD83C\uDDE7',
-  fr: '\uD83C\uDDEB\uD83C\uDDF7',
-};
 
 export const LibraryPanel: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -116,7 +210,7 @@ export const LibraryPanel: React.FC = () => {
   const [deptFilter, setDeptFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [readingComic, setReadingComic] = useState<CurriculumReference | null>(null);
-  const [language, setLanguage] = useState<'en' | 'fr'>(getDefaultLanguage);
+  const [language, setLanguage] = useState<SupportedLanguage>(getDefaultLanguage);
 
   const data = CURRICULUM_DATA;
   const refs = data.references;
@@ -178,15 +272,19 @@ export const LibraryPanel: React.FC = () => {
 
           {/* Language toggle */}
           <div className="prime-radiant__library-lang-toggle">
-            {(['en', 'fr'] as const).map(lang => (
-              <button
-                key={lang}
-                className={`prime-radiant__library-lang-btn${language === lang ? ' prime-radiant__library-lang-btn--active' : ''}`}
-                onClick={(e) => { e.stopPropagation(); setLanguage(lang); }}
-              >
-                {FLAG_ICON[lang]} {lang === 'en' ? 'EN' : 'FR'}
-              </button>
-            ))}
+            {SUPPORTED_LANGUAGES.map(lang => {
+              const count = refs.filter(r => r.language === lang).length;
+              return (
+                <button
+                  key={lang}
+                  className={`prime-radiant__library-lang-btn${language === lang ? ' prime-radiant__library-lang-btn--active' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setLanguage(lang); }}
+                  title={`${LANGUAGE_LABELS[lang]} (${count} comics)`}
+                >
+                  {FLAG_ICON[lang]} {LANGUAGE_LABELS[lang]} ({count})
+                </button>
+              );
+            })}
           </div>
 
           {/* Text search */}
