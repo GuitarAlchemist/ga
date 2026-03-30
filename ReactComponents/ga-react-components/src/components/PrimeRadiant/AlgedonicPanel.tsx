@@ -658,6 +658,23 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
             >
               {showSuggestions ? '\u25BC' : '\u25B6'} Missing Signals ({getMissingSuggestions(allSignals).length})
             </button>
+            {(() => {
+              const missing = getMissingSuggestions(allSignals);
+              return missing.length > 0 ? (
+                <button
+                  className="prime-radiant__algedonic-create-all-btn"
+                  onClick={() => {
+                    const created = missing.map(s =>
+                      createAlgedonicSignal(s.type, s.severity, s.source, s.reason),
+                    );
+                    setLocalSignals(prev => [...created, ...prev]);
+                    created.forEach(signal => onSignalCreated?.(signal));
+                  }}
+                >
+                  Create All Missing ({missing.length})
+                </button>
+              ) : null;
+            })()}
           </div>
           {showSuggestions && (
             <div className="prime-radiant__algedonic-suggestions">
