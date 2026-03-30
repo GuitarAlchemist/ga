@@ -395,16 +395,19 @@ function parseCreatePanel(ctx: ParserContext): CreatePanelCommand {
 // ── CREATE PANEL ... KIND grid parser ──
 
 function parseDuration(token: string): number {
-  const match = token.match(/^(\d+)(ms|s|m|h)?$/i);
-  if (!match) throw new Error(`Invalid duration '${token}'. Expected e.g. 30s, 5m, 1000ms`);
-  const num = parseInt(match[1], 10);
-  const unit = (match[2] ?? 'ms').toLowerCase();
+  const lower = token.toLowerCase();
+  // Find where digits end and unit begins
+  let numEnd = 0;
+  while (numEnd < lower.length && lower[numEnd] >= '0' && lower[numEnd] <= '9') numEnd++;
+  if (numEnd === 0) throw new Error(`Invalid duration '${token}'. Expected e.g. 30s, 5m, 1000ms`);
+  const num = parseInt(lower.substring(0, numEnd), 10);
+  const unit = lower.substring(numEnd) || 'ms';
   switch (unit) {
     case 'ms': return num;
     case 's': return num * 1000;
     case 'm': return num * 60_000;
     case 'h': return num * 3_600_000;
-    default: return num;
+    default: throw new Error(`Invalid duration unit '${unit}'. Expected ms, s, m, or h`);
   }
 }
 
@@ -513,9 +516,13 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
         if (peek(ctx) === 'BY') next(ctx);
         // Parse article=7 or article=7,3
         const articleClause = nextRaw(ctx);
-        const match = articleClause.match(/^article=(.+)$/i);
-        if (match) {
-          governedBy.push(...match[1].split(',').map(n => parseInt(n.trim(), 10)));
+        const eqIdx = articleClause.indexOf('=');
+        if (eqIdx !== -1 && articleClause.substring(0, eqIdx).toLowerCase() === 'article') {
+          const nums = articleClause.substring(eqIdx + 1).split(',');
+          for (const n of nums) {
+            const parsed = parseInt(n.trim(), 10);
+            if (!isNaN(parsed)) governedBy.push(parsed);
+          }
         } else {
           // Just a number
           const num = parseInt(articleClause, 10);

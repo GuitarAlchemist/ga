@@ -77,9 +77,13 @@ const TetravalentCellRenderer: React.FC<{ value: unknown }> = ({ value }) => {
 // Confidence bar renderer (0.0–1.0 values)
 // ---------------------------------------------------------------------------
 
+const CONFIDENCE_KEYWORDS = ['confidence', 'score', 'resilience', 'staleness'];
+
 function isConfidenceValue(name: string, value: unknown): boolean {
   if (typeof value !== 'number') return false;
-  return value >= 0 && value <= 1 && /confidence|score|resilience|staleness/i.test(name);
+  if (value < 0 || value > 1) return false;
+  const lower = name.toLowerCase();
+  return CONFIDENCE_KEYWORDS.some(kw => lower.includes(kw));
 }
 
 const ConfidenceCellRenderer: React.FC<{ value: number }> = ({ value }) => {
@@ -178,10 +182,22 @@ function buildColDefs(
 }
 
 function formatHeaderName(field: string): string {
-  return field
-    .replace(/_/g, ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/\b\w/g, c => c.toUpperCase());
+  // Split on underscores and camelCase boundaries, then title-case
+  const words: string[] = [];
+  let current = '';
+  for (let i = 0; i < field.length; i++) {
+    const ch = field[i];
+    if (ch === '_') {
+      if (current) { words.push(current); current = ''; }
+    } else if (i > 0 && ch >= 'A' && ch <= 'Z' && field[i - 1] >= 'a' && field[i - 1] <= 'z') {
+      if (current) words.push(current);
+      current = ch;
+    } else {
+      current += ch;
+    }
+  }
+  if (current) words.push(current);
+  return words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 // Post-process ColDefs with smart cell renderers based on data

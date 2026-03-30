@@ -79,10 +79,11 @@ function compileProjectionField(field: ProjectionField): CompiledProjectionField
   const { name, expression } = field;
 
   // Check for function call: FUNC_NAME(arg)
-  const fnMatch = expression.match(/^([A-Z_]+)\((.+)\)$/);
-  if (fnMatch) {
-    const fnName = fnMatch[1];
-    const argPath = fnMatch[2];
+  const parenOpen = expression.indexOf('(');
+  const parenClose = expression.lastIndexOf(')');
+  if (parenOpen > 0 && parenClose === expression.length - 1) {
+    const fnName = expression.substring(0, parenOpen);
+    const argPath = expression.substring(parenOpen + 1, parenClose);
     const fn = PURE_FUNCTIONS[fnName];
     if (!fn) {
       throw new Error(`Unknown function '${fnName}' in PROJECT. Allowed: ${Object.keys(PURE_FUNCTIONS).join(', ')}`);
