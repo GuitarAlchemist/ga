@@ -34,7 +34,8 @@ import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import { IxqlGridPanel } from './IxqlGridPanel';
 import { IxqlVizPanel } from './IxqlVizPanel';
-import { compileGridPanel, compileViz, type PanelSpec, type VizSpec } from './IxqlWidgetSpec';
+import { IxqlFormPanel } from './IxqlFormPanel';
+import { compileGridPanel, compileViz, compileForm, type PanelSpec, type VizSpec, type FormSpec } from './IxqlWidgetSpec';
 import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
@@ -73,6 +74,7 @@ import { CodeTribunal } from './CodeTribunal';
 import { AdminInbox } from './AdminInbox';
 import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
+import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -683,6 +685,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // Phase 6: Grid panel specs created via IXQL CREATE PANEL KIND grid
   const gridPanelSpecsRef = useRef<Map<string, PanelSpec>>(new Map());
   const vizSpecsRef = useRef<Map<string, VizSpec>>(new Map());
+  // Phase 8: Form specs created via IXQL CREATE FORM
+  const formSpecsRef = useRef<Map<string, FormSpec>>(new Map());
 
   // IXql command handler — dispatches visual overrides, panel CRUD, and more
   const handleIxqlCommand = useCallback((result: IxqlParseResult) => {
@@ -810,12 +814,30 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
 
+    // Phase 8: CREATE FORM — compile to FormSpec and register
+    if (cmd.type === 'create-form') {
+      const formSpec = compileForm(cmd);
+      formSpecsRef.current.set(cmd.id, formSpec);
+      panelRegistry.register({
+        definition: {
+          id: cmd.id,
+          label: cmd.id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          icon: 'detail',
+          renderMode: 'side',
+          group: 'governance',
+        },
+      });
+      setActivePanel(cmd.id);
+      return;
+    }
+
     // Phase 2: DROP PANEL — unregister and close if active
     if (cmd.type === 'drop') {
       panelRegistry.unregister(cmd.id);
       dynamicPanelDefsRef.current.delete(cmd.id);
       gridPanelSpecsRef.current.delete(cmd.id);
       vizSpecsRef.current.delete(cmd.id);
+      formSpecsRef.current.delete(cmd.id);
       setActivePanel(prev => prev === cmd.id ? null : prev);
       return;
     }
@@ -1759,6 +1781,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
 
+      // ─── Crystal Eiffel Tower — sparking below the graph ───
+      if (eiffelHandle) eiffelHandle.update(t);
+
       // ─── Jarvis Space Station — top-left of view ───
       if (qualityLevel !== 'low') {
         updateSpaceStation(spaceStation, t);
@@ -2126,6 +2151,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const solarSystem = createSolarSystem(0.15);
     fg.scene().add(solarSystem);
 
+    // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
+    let eiffelHandle: CrystalEiffelTowerHandle | null = null;
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
+      eiffelHandle = createCrystalEiffelTower(fg.scene());
+      eiffelHandle.group.position.set(0, -50, -80);
+    }
+
     // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
     // Static 2k_earth_clouds.jpg looks better until proper reprojection is implemented
     const stopCloudUpdates = () => {}; // no-op
@@ -2423,6 +2455,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
+      eiffelHandle?.dispose();
       reactiveEngine.dispose();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
@@ -3211,6 +3244,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
                 }
               : undefined;
             return React.createElement(IxqlVizPanel, { spec: vizSpec, graphContext: vizGraphCtx });
+          }
+          // Phase 8: Render IxqlFormPanel for IXQL CREATE FORM
+          const formSpec = formSpecsRef.current.get(activePanel);
+          if (formSpec) {
+            return React.createElement(IxqlFormPanel, { spec: formSpec });
           }
           // Phase 2: Render DynamicPanel for IXQL-created panels
           const dynDef = dynamicPanelDefsRef.current.get(activePanel);
