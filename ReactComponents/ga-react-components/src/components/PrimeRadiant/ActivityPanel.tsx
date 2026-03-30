@@ -15,6 +15,15 @@ export interface Activity {
   category: 'governance' | 'research' | 'build' | 'test' | 'deploy';
 }
 
+interface TeamInfo {
+  id: string;
+  name: string;
+  status: 'running' | 'completed' | 'pending';
+  task: string;
+  duration: string;
+  members: number;
+}
+
 interface CommitInfo {
   hash: string;
   message: string;
@@ -304,6 +313,18 @@ async function fetchActivities(): Promise<Activity[]> {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+const FALLBACK_TEAMS: TeamInfo[] = [
+  { id: '1', name: 'layer1-fanout', status: 'completed', task: 'Multi-Model Fan-Out endpoint', duration: '4m 8s', members: 1 },
+  { id: '2', name: 'layer2-tribunal', status: 'completed', task: 'Theory Tribunal panel', duration: '5m 26s', members: 1 },
+  { id: '3', name: 'voice-wire', status: 'running', task: 'Wire Demerzel voice to ChatWidget', duration: '2m 15s', members: 1 },
+];
+
+const TEAM_STATUS_COLOR: Record<TeamInfo['status'], string> = {
+  running: '#58A6FF',
+  completed: '#33CC66',
+  pending: '#6b7280',
+};
+
 const STATUS_COLOR: Record<Activity['status'], string> = {
   active: '#33CC66',
   pending: '#888888',
@@ -425,6 +446,31 @@ export const ActivityPanel: React.FC = () => {
 
       {!panelCollapsed && (
         <>
+          {/* Active Teams accordion */}
+          <AccordionSection
+            title="Active Teams"
+            badge={`${FALLBACK_TEAMS.length}`}
+            defaultOpen={true}
+          >
+            {FALLBACK_TEAMS.map((team) => (
+              <div
+                key={team.id}
+                className="activity-panel__team-card"
+                style={{ opacity: team.status === 'completed' ? 0.6 : 1 }}
+              >
+                <span
+                  className="activity-panel__team-dot"
+                  style={{ backgroundColor: TEAM_STATUS_COLOR[team.status] }}
+                />
+                <div className="activity-panel__team-info">
+                  <div className="activity-panel__team-name">{team.name}</div>
+                  <div className="activity-panel__team-task">{team.task}</div>
+                </div>
+                <span className="activity-panel__team-duration">{team.duration}</span>
+              </div>
+            ))}
+          </AccordionSection>
+
           {/* Activities accordion */}
           <AccordionSection
             title="Activities"
