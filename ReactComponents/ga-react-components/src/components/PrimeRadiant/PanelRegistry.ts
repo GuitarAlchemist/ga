@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -246,7 +246,8 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side',    group: 'viz' },
   { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay', group: 'viz' },
   // ── Ops ──
-  { id: 'cicd',       label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
+  { id: 'cicd',          label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
+  { id: 'code-tribunal', label: 'Code Lab',       icon: 'claude',     renderMode: 'side',    group: 'ops' },
 ];
 
 for (const def of BUILTIN_PANELS) {

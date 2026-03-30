@@ -101,6 +101,8 @@ export { TheoryTribunal } from './TheoryTribunal';
 // Layer 3: Demerzel Voice
 export { speakAsDemerzel, stopSpeaking, isTTSAvailable, useDemerzelVoice } from './VoxtralTTS';
 export type { TTSRequest, TTSResponse, DemerzelVoiceHook } from './VoxtralTTS';
+// Layer 5: Code Tribunal
+export { CodeTribunal } from './CodeTribunal';
 // Layer 4: Seldon Faculty
 export { SeldonFacultyPanel } from './SeldonFacultyPanel';
 export { getFaculty, getFacultyForDepartment, getFacultyByProvider, askFacultyMember, useSeldonFaculty } from './SeldonFaculty';
