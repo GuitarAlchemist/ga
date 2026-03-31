@@ -1194,6 +1194,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let solarDblClickHandler: (() => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
+    let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
@@ -1782,7 +1783,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Crystal Eiffel Tower — sparking below the graph ───
-      if (eiffelHandle) eiffelHandle.update(t);
+      if (eiffelHandleOuter) eiffelHandleOuter.update(t);
 
       // ─── Jarvis Space Station — top-left of view ───
       if (qualityLevel !== 'low') {
@@ -2152,10 +2153,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
-    let eiffelHandle: CrystalEiffelTowerHandle | null = null;
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
-      eiffelHandle = createCrystalEiffelTower(fg.scene());
-      eiffelHandle.group.position.set(0, -50, -80);
+      eiffelHandleOuter = createCrystalEiffelTower(fg.scene());
+      eiffelHandleOuter.group.position.set(0, -50, -80);
     }
 
     // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
@@ -2455,7 +2455,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
-      eiffelHandle?.dispose();
+      eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
