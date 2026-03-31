@@ -1372,29 +1372,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         return (srcActive && tgtActive) ? l.width * 2.0 : l.width;
       })
       .linkOpacity(0.25)
+      // Link particles = governance signal flow
+      // Count: edge weight (heavier relationships flow more)
+      // Width: small by default, bigger on error (signal urgency)
+      // Speed: health urgency (errors = fast pulse, healthy = calm drift)
+      // Color: health-aware (error=red, warning=amber, healthy=subtle)
       .linkDirectionalParticles((link: object) => {
-        const { src, tgt } = getLinkNodes(link as GraphLink);
+        const l = link as GraphLink;
+        const { src, tgt } = getLinkNodes(l);
         const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
         const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
-        return (srcActive && tgtActive) ? 6 : 2;
+        // Edge weight drives particle density (heavier = more governance flow)
+        const weight = l.weight ?? 0.5;
+        return (srcActive && tgtActive) ? Math.round(2 + weight * 4) : 1;
       })
       .linkDirectionalParticleWidth((link: object) => {
         const { src, tgt } = getLinkNodes(link as GraphLink);
-        const bothError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
-        return bothError ? 2.5 : 1.0;
+        const anyError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
+        const anyContradictory = src?.healthStatus === 'contradictory' || tgt?.healthStatus === 'contradictory';
+        // Smaller default — errors get visible, healthy is subtle
+        return anyError ? 1.5 : anyContradictory ? 1.2 : 0.5;
       })
       .linkDirectionalParticleSpeed((link: object) => {
         const { src, tgt } = getLinkNodes(link as GraphLink);
         const anyError = src?.healthStatus === 'error' || tgt?.healthStatus === 'error';
         const anyWarning = src?.healthStatus === 'warning' || tgt?.healthStatus === 'warning';
-        return anyError ? 0.006 : anyWarning ? 0.003 : 0.002;
+        // Faster = more urgent. Healthy drift is nearly invisible.
+        return anyError ? 0.008 : anyWarning ? 0.004 : 0.001;
       })
       .linkDirectionalParticleColor((link: object) => {
         const { src, tgt } = getLinkNodes(link as GraphLink);
         const urgentNode = [src, tgt].find((n) => n?.healthStatus === 'error')
           ?? [src, tgt].find((n) => n?.healthStatus === 'contradictory')
           ?? [src, tgt].find((n) => n?.healthStatus === 'warning');
-        return urgentNode ? urgentNode.color : (link as GraphLink).color;
+        if (urgentNode) return HEALTH_STATUS_COLORS[urgentNode.healthStatus ?? 'unknown'];
+        return (link as GraphLink).color ?? '#30363d';
       })
       .linkCurvature((link: object) => {
         // Dynamic curvature — stored on link object, animated per tick
@@ -2455,40 +2467,60 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     graphRef.current = fg;
 
-    // ─── Terminal filaments — data-driven tendrils on leaf nodes ───
-    // Filament count reflects real governance depth: more connections = more filaments.
-    // Color reflects node health status. Speed reflects staleness.
+    // ─── Terminal filaments — governance-driven tendrils on leaf nodes ───
+    // Each filament represents a real governance relationship:
+    //   Count = incoming edges (how many things govern this node)
+    //   Color = health status color (not just node color)
+    //   Length = staleness (stale nodes reach further, seeking reconnection)
+    //   Speed = health urgency (errors pulse faster)
     setTimeout(() => {
       if (disposed) return;
       const graphNodes = fg.graphData().nodes as GraphNode[];
       const graphLinks = fg.graphData().links as GraphLink[];
-      // Find terminal nodes (no outgoing edges)
       const sourceIds = new Set(graphLinks.map(l => getLinkNodeId(l.source)));
-      // Count incoming edges per node for filament density
+      // Count incoming edges per node
       const incomingCount = new Map<string, number>();
       for (const l of graphLinks) {
         const targetId = getLinkNodeId(l.target);
         incomingCount.set(targetId, (incomingCount.get(targetId) ?? 0) + 1);
       }
+      // Terminal nodes = leaves with no outgoing edges
       const terminalNodes = graphNodes
         .filter(n => !sourceIds.has(n.id) && n.x !== undefined)
-        .map(n => ({
-          position: new THREE.Vector3(n.x ?? 0, n.y ?? 0, n.z ?? 0),
-          color: new THREE.Color(n.color),
-          nodeId: n.id,
-        }));
+        .map(n => {
+          const hs = n.healthStatus ?? 'unknown';
+          // Use health status color, not generic node color
+          const healthColor = HEALTH_STATUS_COLORS[hs] ?? '#888888';
+          return {
+            position: new THREE.Vector3(n.x ?? 0, n.y ?? 0, n.z ?? 0),
+            color: new THREE.Color(healthColor),
+            nodeId: n.id,
+          };
+        });
       if (terminalNodes.length > 0) {
-        // Data-driven filament count: 1 base + 1 per incoming connection (max 6)
+        // Per-node filament count: 1 base + 1 per incoming connection (max 5)
+        // This means a well-governed node (many incoming policies) has more tendrils
         const avgIncoming = terminalNodes.reduce((sum, n) =>
           sum + (incomingCount.get(n.nodeId) ?? 0), 0) / terminalNodes.length;
-        const filamentCount = Math.min(6, Math.max(2, Math.round(1 + avgIncoming)));
+        const filamentCount = Math.min(5, Math.max(1, Math.round(avgIncoming)));
+        // Staleness drives length — stale nodes reach further
+        const avgStaleness = graphNodes.reduce((sum, n) =>
+          sum + (n.health?.staleness ?? 0), 0) / Math.max(1, graphNodes.length);
+        const lengthMin = 2 + avgStaleness * 3;  // stale → longer reach
+        const lengthMax = lengthMin + 4;
+        // Health urgency drives speed — errors pulse faster
+        const hasErrors = graphNodes.some(n => n.healthStatus === 'error');
+        const speed = hasErrors ? 1.5 : 0.6;
         filamentsHandle = createTerminalFilaments(terminalNodes, {
           count: filamentCount,
-          speed: 0.8,
+          length: [lengthMin, lengthMax],
+          speed,
+          opacity: 0.5,
+          tipSize: 0.12,
         });
         fg.scene().add(filamentsHandle.group);
       }
-    }, 4000); // Wait for force layout to settle
+    }, 4000);
 
     // ─── Fix camera near plane for solar system zoom ───
     const fgCam = fg.camera() as THREE.PerspectiveCamera;
