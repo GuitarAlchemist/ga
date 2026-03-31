@@ -170,7 +170,14 @@ export const DemerzelFaceOverlay: React.FC<DemerzelFaceOverlayProps> = ({
     };
     stateRef.current = state;
 
-    // Load face model
+    // Load face model — suppress KTX2 texture errors during parsing.
+    // The model loads fine without KTX2 since we override materials with holoMat.
+    const origError = console.error;
+    console.error = (...args: unknown[]) => {
+      if (typeof args[0] === 'string' && args[0].includes('KTX2')) return; // suppress
+      if (args[0] instanceof Error && args[0].message.includes('KTX2')) return;
+      origError.apply(console, args);
+    };
     const loader = new GLTFLoader();
     loader.load(src, (gltf) => {
       const root = gltf.scene;
@@ -219,6 +226,10 @@ export const DemerzelFaceOverlay: React.FC<DemerzelFaceOverlayProps> = ({
 
       applyPreset(state, 'calm');
       console.log(`[DemerzelFaceOverlay] Loaded ${state.shapeMap.size} blend shapes, bbox: ${bsize.x.toFixed(3)}x${bsize.y.toFixed(3)}x${bsize.z.toFixed(3)}`);
+      console.error = origError; // restore after successful load
+    }, undefined, (err) => {
+      console.error = origError; // restore on error too
+      console.warn('[DemerzelFaceOverlay] GLTF load error:', err instanceof Error ? err.message : String(err));
     });
 
     // Animation loop
