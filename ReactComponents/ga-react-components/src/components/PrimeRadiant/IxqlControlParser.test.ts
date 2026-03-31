@@ -136,8 +136,36 @@ describe('parseIxqlCommand', () => {
   it('parses SHOW beliefs', () => {
     const r = parseIxqlCommand('SHOW beliefs');
     expect(r.ok).toBe(true);
+    if (r.ok) expect(r.command.type).toBe('show-epistemic');
+  });
+
+  it('parses SHOW learners (previously unrouted)', () => {
+    const r = parseIxqlCommand('SHOW learners');
+    expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.command.type).toBe('show-epistemic');
+      const cmd = r.command as { target: string };
+      expect(cmd.target).toBe('learners');
+    }
+  });
+
+  it('parses SHOW journal (previously unrouted)', () => {
+    const r = parseIxqlCommand('SHOW journal');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.command.type).toBe('show-epistemic');
+      const cmd = r.command as { target: string };
+      expect(cmd.target).toBe('journal');
+    }
+  });
+
+  it('parses SHOW incompetence (previously unrouted)', () => {
+    const r = parseIxqlCommand('SHOW incompetence');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.command.type).toBe('show-epistemic');
+      const cmd = r.command as { target: string };
+      expect(cmd.target).toBe('incompetence');
     }
   });
 

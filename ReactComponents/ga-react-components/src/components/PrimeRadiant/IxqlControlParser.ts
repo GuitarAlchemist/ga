@@ -1400,22 +1400,32 @@ function parseOnViolation(ctx: ParserContext): OnViolationCommand {
   const severity = sevToken as ViolationSeverity;
 
   // THEN clause — one or more IXQL commands separated by AND
+  // Only split on AND when followed by a top-level command keyword,
+  // NOT when AND appears inside a WHERE predicate (e.g., WHERE a=1 AND b=2)
   expect(ctx, 'THEN');
   const actions: string[] = [];
+  const TOP_LEVEL_COMMANDS = new Set(['SELECT', 'RESET', 'CREATE', 'BIND', 'ON', 'SHOW', 'SAVE', 'METHYLATE', 'DEMETHYLATE', 'AMNESIA', 'BROADCAST', 'DIAGNOSE', 'HEALTH', 'FIX', 'HIDE']);
 
-  // Collect tokens for the first action until we hit AND, NOTIFY, or end
   let actionTokens: string[] = [];
   while (ctx.pos < ctx.tokens.length) {
     const kw = peek(ctx);
-    if (kw === 'AND') {
-      if (actionTokens.length > 0) {
-        actions.push(actionTokens.join(' '));
-        actionTokens = [];
-      }
-      next(ctx); // consume AND
-      continue;
-    }
     if (kw === 'NOTIFY') break;
+    // Only split on AND if the token after AND is a top-level command
+    if (kw === 'AND') {
+      const afterAnd = ctx.pos + 1 < ctx.tokens.length
+        ? ctx.tokens[ctx.pos + 1].toUpperCase()
+        : '';
+      if (TOP_LEVEL_COMMANDS.has(afterAnd)) {
+        // This AND separates two actions
+        if (actionTokens.length > 0) {
+          actions.push(actionTokens.join(' '));
+          actionTokens = [];
+        }
+        next(ctx); // consume AND
+        continue;
+      }
+      // AND inside a WHERE predicate — keep it as part of the action
+    }
     actionTokens.push(nextRaw(ctx));
   }
   if (actionTokens.length > 0) {
@@ -1547,8 +1557,9 @@ export function parseIxqlCommand(input: string, _depth: number = 0): IxqlParseRe
 
       case 'SHOW': {
         next(ctx);
-        const showTarget = peek(ctx);
-        if (showTarget === 'EPISTEMIC' || showTarget === 'BELIEFS' || showTarget === 'STRATEGIES' || showTarget === 'TENSOR') {
+        const showTarget = peek(ctx)?.toLowerCase();
+        // Route all valid epistemic targets to the epistemic parser
+        if (showTarget && EPISTEMIC_TARGETS.has(showTarget as EpistemicTarget)) {
           return { ok: true, command: parseShowEpistemic(ctx) };
         }
         // General SHOW: tower, filaments, panel ids, etc.
