@@ -3,10 +3,12 @@
 // Supports hexavalent enum fields (T/P/U/D/F/C), sliders, text, number, toggle.
 // GOVERNED BY badge, SUBMIT COMMAND, ON_SUCCESS REFRESH via DashboardSignalBus.
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { FormSpec } from './IxqlWidgetSpec';
 import type { FormFieldDef } from './IxqlControlParser';
 import { signalBus, useSignals } from './DashboardSignalBus';
+import { generateFormProof, publishRenderProof } from './RenderProof';
+import { isValidTransition, publishTransition, type HexavalentValue } from './HexavalentTemporal';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -83,9 +85,29 @@ const EnumField: React.FC<{
   value: string;
   onChange: (v: string) => void;
   hexavalent: boolean;
-}> = ({ field, value, onChange, hexavalent }) => {
+  panelId?: string;
+}> = ({ field, value, onChange, hexavalent, panelId }) => {
   const options = field.options || [];
-  const isHexavalent = hexavalent && options.every(o => HEXAVALENT_COLORS[o] !== undefined);
+  const isHexavalentEnum = hexavalent && options.every(o => HEXAVALENT_COLORS[o] !== undefined);
+
+  // Hexavalent transition constraints: only adjacent values are clickable
+  const handleClick = useCallback((opt: string) => {
+    if (isHexavalentEnum && value) {
+      const from = value.toUpperCase() as HexavalentValue;
+      const to = opt.toUpperCase() as HexavalentValue;
+      if (!isValidTransition(from, to)) return; // blocked
+      // Publish transition event for audit trail
+      publishTransition({
+        field: field.name,
+        panelId: panelId ?? 'form',
+        fromValue: from,
+        toValue: to,
+        timestamp: Date.now(),
+        actor: 'user',
+      });
+    }
+    onChange(opt);
+  }, [isHexavalentEnum, value, field.name, panelId, onChange]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -95,25 +117,44 @@ const EnumField: React.FC<{
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {options.map(opt => {
           const isSelected = value === opt;
-          const color = isHexavalent ? HEXAVALENT_COLORS[opt] : '#ffd700';
+          const color = isHexavalentEnum ? HEXAVALENT_COLORS[opt] : '#ffd700';
+          // Determine if this option is reachable via one-step transition
+          const isAllowed = !isHexavalentEnum || isSelected ||
+            isValidTransition(
+              (value || 'U').toUpperCase() as HexavalentValue,
+              opt.toUpperCase() as HexavalentValue,
+            );
+          // CSS temporal class for hexavalent buttons
+          const hexClass = isHexavalentEnum ? (
+            opt === 'C' ? 'hex-cell--contradictory' :
+            opt === 'P' ? 'hex-cell--probable' :
+            opt === 'D' ? 'hex-cell--doubtful' : ''
+          ) : '';
           return (
             <button
               key={opt}
-              onClick={() => onChange(opt)}
-              title={isHexavalent ? (HEXAVALENT_LABELS[opt] || opt) : opt}
+              className={isSelected ? hexClass : ''}
+              onClick={() => handleClick(opt)}
+              disabled={!isAllowed}
+              title={
+                isHexavalentEnum
+                  ? (HEXAVALENT_LABELS[opt] || opt) + (isAllowed ? '' : ' (transition not allowed)')
+                  : opt
+              }
               style={{
                 background: isSelected ? color : 'rgba(255,255,255,0.05)',
-                color: isSelected ? '#000' : (isHexavalent ? color : '#e6edf3'),
+                color: isSelected ? '#000' : (isHexavalentEnum ? color : '#e6edf3'),
                 border: `1px solid ${isSelected ? color : 'rgba(255,255,255,0.1)'}`,
                 borderRadius: 4,
                 padding: '6px 14px',
-                cursor: 'pointer',
+                cursor: isAllowed ? 'pointer' : 'not-allowed',
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 13,
                 fontWeight: 'bold',
                 transition: 'all 0.15s',
-                minWidth: isHexavalent ? 40 : undefined,
+                minWidth: isHexavalentEnum ? 40 : undefined,
                 textAlign: 'center',
+                opacity: isAllowed ? 1 : 0.3,
               }}
             >
               {opt}
@@ -121,6 +162,11 @@ const EnumField: React.FC<{
           );
         })}
       </div>
+      {isHexavalentEnum && (
+        <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+          Transition: one step at a time (T-P-U-D-F). C reachable from any.
+        </div>
+      )}
     </div>
   );
 };
@@ -300,6 +346,19 @@ export const IxqlFormPanel: React.FC<IxqlFormPanelProps> = ({ spec }) => {
     }
   }, [signalValues, spec.subscribe, spec.fields]);
 
+  // Generate and publish form render proof on mount and when values change
+  React.useEffect(() => {
+    const proof = generateFormProof(
+      spec.id,
+      spec.fields.map(f => f.name),
+      spec.fields.map(f => f.fieldType),
+      spec.hexavalent,
+      !!spec.submitCommand,
+      values,
+    );
+    publishRenderProof(proof);
+  }, [spec.id, spec.fields, spec.hexavalent, spec.submitCommand, values]);
+
   const updateValue = useCallback((name: string, value: unknown) => {
     setValues(prev => ({ ...prev, [name]: value }));
     setSubmitResult(null);
@@ -393,6 +452,7 @@ export const IxqlFormPanel: React.FC<IxqlFormPanelProps> = ({ spec }) => {
                   value={String(values[field.name] || '')}
                   onChange={v => updateValue(field.name, v)}
                   hexavalent={spec.hexavalent}
+                  panelId={spec.id}
                 />
               );
             case 'slider':

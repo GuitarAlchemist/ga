@@ -62,6 +62,18 @@ export type { PanelSpec, VizSpec, FormSpec, WidgetSpec, DataBindingSpec, Project
 export { IxqlVizPanel } from './IxqlVizPanel';
 export type { IxqlVizPanelProps } from './IxqlVizPanel';
 export { executePipeline } from './IxqlPipeEngine';
+// Phase 5: Render Verification — Godel Dual-Buffer
+export { generateGridProof, generateVizProof, generateFormProof, publishRenderProof, cognitiveChecksum, dataFingerprint, classifyDivergences } from './RenderProof';
+export type { RenderProof, GridRenderProof, VizRenderProof, FormRenderProof, DivergenceSeverity, CaptureQuality } from './RenderProof';
+// Phase 6: Hexavalent Temporal Semantics
+export { DecayTracker, isValidTransition, getAllowedTransitions, publishTransition, adaptiveRefreshInterval, decayAnimationDelay, decayAnimationDuration } from './HexavalentTemporal';
+export type { HexavalentValue, HexavalentTransitionEvent, DecayConfig, DecayEvent } from './HexavalentTemporal';
+// Phase 7: Constitutional Case Law
+export { caseLawStore, fileCase, findPrecedent, detectStandingOrder, resolveFromConfidence, generateCaseId } from './CaseLaw';
+export type { ConstitutionalCase, CasePredicate, StandingOrder, CaseIndex, CaseIndexEntry, CaseStats, PrecedentResult, PrecedentTier, ResolutionAction } from './CaseLaw';
+// Phase 8: Living Grammar Extension Registry
+export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistry';
+export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
 export { signalBus, useSignal, useSignals, usePublish } from './DashboardSignalBus';
 export type { DashboardSignal } from './DashboardSignalBus';
 export { PLANET_ASTRO_DATA } from './SolarSystem';

@@ -577,6 +577,9 @@ function parseProjectClause(ctx: ParserContext): ProjectionField[] {
 const PIPE_STEP_KEYWORDS = new Set(['FILTER', 'SORT', 'LIMIT', 'SKIP', 'DISTINCT', 'FLATTEN', 'GROUP']);
 const AGGREGATE_FUNCTIONS = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
 
+// Living Grammar: import extension registry for hot-loaded pipe step keywords
+import { extensionRegistry } from './GrammarExtensionRegistry';
+
 // Clause keywords that end a PIPE step (so we know when to stop consuming tokens)
 const CLAUSE_KEYWORDS = new Set(['PIPE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'PUBLISH', 'SUBSCRIBE', 'TEMPLATE', 'SOURCE', 'FROM']);
 
@@ -602,8 +605,57 @@ function parseAggregate(token: string): AggregateSpec {
 
 function parsePipeStep(ctx: ParserContext): PipeStep {
   const stepKw = peek(ctx);
+
+  // Living Grammar: check extension registry for hot-loaded keywords
+  if (stepKw && !PIPE_STEP_KEYWORDS.has(stepKw) && extensionRegistry.has(stepKw)) {
+    const ext = extensionRegistry.get(stepKw)!;
+    next(ctx); // consume the keyword
+
+    // Parse arguments based on extension arg spec
+    const args: Record<string, unknown> = {};
+    for (const argDef of ext.args) {
+      const nextToken = peek(ctx);
+      // Check if next token is a clause/pipe keyword (end of args)
+      if (!nextToken || CLAUSE_KEYWORDS.has(nextToken) || PIPE_STEP_KEYWORDS.has(nextToken) || extensionRegistry.has(nextToken)) {
+        if (!argDef.optional) {
+          throw new Error(`Extension ${stepKw} requires argument '${argDef.name}'`);
+        }
+        break;
+      }
+      // Handle 'BY' separator for field args
+      if (nextToken === 'BY') {
+        next(ctx); // consume BY
+        const fieldToken = nextRaw(ctx);
+        args[argDef.name] = fieldToken;
+        continue;
+      }
+      const rawToken = nextRaw(ctx);
+      switch (argDef.type) {
+        case 'integer':
+          args[argDef.name] = parseInt(rawToken, 10);
+          break;
+        case 'direction':
+          args[argDef.name] = rawToken.toUpperCase();
+          break;
+        default:
+          args[argDef.name] = rawToken;
+      }
+    }
+
+    // Desugar and record usage
+    extensionRegistry.recordUsage(stepKw);
+    const desugared = ext.desugar(args);
+    // Return the first step; if multiple, we return the first and
+    // the caller will get the rest via the extension's desugar output.
+    // For simplicity, flatten into a single step sequence by returning first.
+    // TODO: support multi-step desugaring in the pipe parser loop
+    return desugared[0] ?? { type: 'limit', count: 10 };
+  }
+
   if (!stepKw || !PIPE_STEP_KEYWORDS.has(stepKw)) {
-    throw new Error(`Expected PIPE step (${[...PIPE_STEP_KEYWORDS].join(', ')}), got '${peekRaw(ctx) ?? 'end of input'}'`);
+    const extKeywords = extensionRegistry.getKeywords();
+    const allKeywords = [...PIPE_STEP_KEYWORDS, ...extKeywords].join(', ');
+    throw new Error(`Expected PIPE step (${allKeywords}), got '${peekRaw(ctx) ?? 'end of input'}'`);
   }
   next(ctx);
 

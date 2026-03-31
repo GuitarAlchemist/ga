@@ -10093,6 +10093,40 @@
   --ag-font-family: 'JetBrains Mono', monospace;
 }
 
+/* ─── Hexavalent Temporal Animations ─── */
+/* P/D cells: fade toward U (gray) over the half-life duration */
+@keyframes hex-decay {
+  from { opacity: 1.0; }
+  to   { opacity: 0.35; }
+}
+
+/* C cells: magenta pulse — draws attention to contradictions */
+@keyframes hex-pulse {
+  0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 4px #d946ef); }
+  50%      { opacity: 1.0; filter: drop-shadow(0 0 10px #d946ef); }
+}
+
+.hex-cell--probable,
+.hex-cell--doubtful {
+  animation: hex-decay 240s ease-in forwards;
+}
+
+.hex-cell--contradictory {
+  animation: hex-pulse 1s ease-in-out infinite;
+}
+
+/* Stable values: no animation */
+.hex-cell--true,
+.hex-cell--false,
+.hex-cell--unknown {
+  animation: none;
+}
+
+/* Staleness ring on refresh badge */
+.ixql-refresh-badge--fresh { border-color: #22c55e; }
+.ixql-refresh-badge--aging { border-color: #f97316; }
+.ixql-refresh-badge--stale { border-color: #ef4444; }
+
 /* ─── Demerzel Auto-Remediation ─── */
 .prime-radiant__algedonic-actions {
   display: flex;
