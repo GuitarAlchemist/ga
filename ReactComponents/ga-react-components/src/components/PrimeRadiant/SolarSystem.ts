@@ -233,34 +233,64 @@ const MIRANDA_FRAG = NOISE_LIB + `
 // ── Unused placeholder for procedural planet fallback ──
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
-// ── Kepler-accurate planet scaling ──
-// Distance: sqrt-compressed AU (inner planets visible, outer not too far)
-// Radius: sqrt-compressed diameter (Jupiter big but not screen-filling)
-// Speed: Kepler's 3rd law: period ∝ AU^1.5, so angular speed ∝ AU^-1.5
-const EARTH_DIST = 6.5;     // Earth's distance in scene units
+// ── Astronomically accurate planet scaling ──
+// Sizes: TRUE linear ratio to Earth (Jupiter really is 11x Earth).
+//   Camera zoom handles visibility — no artificial inflation.
+// Distances: TRUE linear AU ratio. Use zoom to explore.
+// Speed: Kepler's 3rd law: angular speed ∝ AU^-1.5
+// Orbits: Elliptical with real eccentricity from JPL data.
+const EARTH_DIST = 6.5;     // 1 AU in scene units
 const EARTH_RADIUS = 0.35;  // Earth's radius in scene units
-const EARTH_SPEED = 3.0;    // Earth's orbital speed in scene units
+const EARTH_SPEED = 3.0;    // Earth's orbital speed (animation, not real-time)
+
+// Real orbital eccentricities (JPL/NASA)
+const ECCENTRICITY: Record<string, number> = {
+  mercury: 0.2056, venus: 0.0068, earth: 0.0167, mars: 0.0934,
+  jupiter: 0.0489, saturn: 0.0565, uranus: 0.0457, neptune: 0.0113,
+};
+
+// Real orbital inclinations in radians (relative to ecliptic)
+const INCLINATION: Record<string, number> = {
+  mercury: 0.1222, venus: 0.0593, earth: 0, mars: 0.0323,
+  jupiter: 0.0228, saturn: 0.0435, uranus: 0.0135, neptune: 0.0309,
+};
 
 function keplerDistance(au: number): number {
-  // sqrt compression: preserves relative ordering, compresses outer planets
-  return EARTH_DIST * Math.sqrt(au);
+  // TRUE linear AU — no compression. Camera zoom handles visibility.
+  return EARTH_DIST * au;
 }
 function keplerRadius(diameterKm: number): number {
-  // Real proportional ratio to Earth — no sqrt compression.
-  // Jupiter should look 11x Earth, not 3.3x. Min 0.06 for visibility.
-  // Cube-root compression on gas giants only to keep them from overwhelming the scene.
-  const ratio = diameterKm / 12_742; // relative to Earth
-  if (ratio > 4) {
-    // Gas giants: cube-root compression (Jupiter 11x → 2.2x Earth visual, Saturn 9x → 2.1x)
-    return Math.max(0.06, EARTH_RADIUS * Math.pow(ratio, 0.4));
-  }
-  // Terrestrials: linear ratio (true proportions)
-  return Math.max(0.06, EARTH_RADIUS * ratio);
+  // TRUE linear ratio to Earth — real proportions.
+  // Jupiter is 11x Earth. Mercury is 0.38x Earth. No minimum floor.
+  const ratio = diameterKm / 12_742;
+  return EARTH_RADIUS * ratio;
 }
 function keplerSpeed(au: number): number {
   // Kepler's 3rd law: angular speed ∝ distance^-1.5
   if (au <= 0) return 0;
   return EARTH_SPEED * Math.pow(au, -1.5);
+}
+
+/** Solve Kepler's equation M = E - e*sin(E) via Newton's method */
+function solveKepler(M: number, e: number): number {
+  let E = M; // initial guess
+  for (let i = 0; i < 10; i++) {
+    const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    E -= dE;
+    if (Math.abs(dE) < 1e-8) break;
+  }
+  return E;
+}
+
+/** Get position on elliptical orbit given mean anomaly and eccentricity */
+function ellipticalPosition(meanAnomaly: number, e: number, semiMajor: number): { x: number; z: number } {
+  const E = solveKepler(meanAnomaly, e);
+  const cosE = Math.cos(E);
+  const sinE = Math.sin(E);
+  // Convert eccentric anomaly to heliocentric coords
+  const x = semiMajor * (cosE - e);
+  const z = semiMajor * Math.sqrt(1 - e * e) * sinE;
+  return { x, z };
 }
 
 const PLANETS: PlanetDef[] = [
@@ -692,16 +722,23 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
 }
 
 // ── Create orbit trail with per-vertex fading ──
-function createOrbitTrail(distance: number, scale: number, color: number = 0x334466): THREE.Line {
+function createOrbitTrail(distance: number, scale: number, color: number = 0x334466, planetName?: string): THREE.Line {
   const segments = 128;
   const positions = new Float32Array((segments + 1) * 3);
   const alphas = new Float32Array(segments + 1);
+  const e = planetName ? (ECCENTRICITY[planetName] ?? 0) : 0;
+  const incl = planetName ? (INCLINATION[planetName] ?? 0) : 0;
   for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
-    positions[i * 3] = Math.cos(angle) * distance * scale;
-    positions[i * 3 + 1] = 0;
-    positions[i * 3 + 2] = Math.sin(angle) * distance * scale;
-    alphas[i] = 0.08; // initial uniform alpha
+    // Elliptical orbit: r = a(1-e²) / (1 + e*cos(θ))
+    const r = distance * (1 - e * e) / (1 + e * Math.cos(angle));
+    const x = Math.cos(angle) * r * scale;
+    const y = Math.sin(angle) * r * scale * Math.sin(incl); // inclination
+    const z = Math.sin(angle) * r * scale * Math.cos(incl);
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    alphas[i] = 0.08;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -1062,7 +1099,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     orbit.name = `orbit-${def.name}`;
 
     // Orbit trail (with per-vertex alpha for fading)
-    const trail = createOrbitTrail(def.distance, scale);
+    const trail = createOrbitTrail(def.distance, scale, 0x334466, def.name);
     trail.name = `trail-${def.name}`;
     group.add(trail); // add to group root, not orbit (orbit rotates)
     orbitTrails.set(def.name, trail);
