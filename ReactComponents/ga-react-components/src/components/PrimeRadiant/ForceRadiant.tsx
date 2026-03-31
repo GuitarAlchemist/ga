@@ -40,6 +40,8 @@ import type { GraphContext } from './DataFetcher';
 import { healthBindingEngine } from './HealthBindingEngine';
 import { useHealthBindings } from './useHealthBindings';
 import { reactiveEngine } from './ReactiveEngine';
+import { violationMonitor } from './ViolationMonitor';
+import { savedQueryStore } from './SavedQueryStore';
 import { type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { type CriticState } from './DemerzelCriticOverlay';
@@ -856,6 +858,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
 
+    // Phase 10: ON VIOLATION — register agentic violation rule
+    if (cmd.type === 'on-violation') {
+      const ruleId = `violation:${cmd.source}:${cmd.severity}`;
+      violationMonitor.registerViolation({
+        id: ruleId,
+        source: cmd.source,
+        predicates: cmd.condition,
+        severity: cmd.severity,
+        actions: cmd.actions,
+        notify: cmd.notify,
+      });
+      return;
+    }
+
+    // Phase 10: SAVE QUERY — persist named query as governance artifact
+    if (cmd.type === 'save') {
+      // Reconstruct command text from parsed fields (raw input not available in callback)
+      const cmdText = `SAVE QUERY "${cmd.id}"${cmd.asArtifact ? ' AS artifact' : ''}${cmd.rationale ? ` RATIONALE "${cmd.rationale}"` : ''}`;
+      savedQueryStore.save(cmd.id, cmdText, cmd.asArtifact, cmd.rationale);
+      return;
+    }
+
     // ── Epistemic Constitution commands (Articles E-0 to E-9) ──
 
     if (cmd.type === 'show-epistemic') {
@@ -945,6 +969,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       return;
     }
   }, []);
+
+  // Phase 10: Wire violation monitor dispatch to IXQL handler
+  useEffect(() => {
+    violationMonitor.setDispatch((result) => handleIxqlCommand(result));
+  }, [handleIxqlCommand]);
 
   // ─── Create a ripple ring mesh at a world position ───
   const createRippleAtPosition = useCallback((
@@ -2368,6 +2397,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             setGraphData(freshGraph);
             setGraphIndex(buildGraphIndex(freshGraph));
           }
+          // Phase 10: Feed live data to violation monitor for agentic checks
+          for (const node of freshGraph.nodes) {
+            violationMonitor.checkViolations(node as unknown as Record<string, unknown>, 'governance');
+          }
         },
         onAlgedonicSignal: (signal) => {
           handleAlgedonicSignal(signal);
@@ -2457,6 +2490,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       criticCleanupOuter?.();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
+      violationMonitor.dispose();
       if (solarMouseMoveHandler) {
         container.removeEventListener('mousemove', solarMouseMoveHandler);
       }
