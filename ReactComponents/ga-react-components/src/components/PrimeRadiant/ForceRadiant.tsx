@@ -1515,6 +1515,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Pre-allocate reusable vectors OUTSIDE the tick loop (zero GC pressure)
     const _tarsOffset = new THREE.Vector3();
     const _faceOffset = new THREE.Vector3();
+    let _filamentPosMap: Map<string, THREE.Vector3> | null = null;
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
@@ -1816,15 +1817,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
       if (filamentsHandle) {
-        // Build live position map from force graph nodes
-        const livePositions = new Map<string, THREE.Vector3>();
+        // Reuse persistent map — avoid GC pressure from 180 Vector3s/frame
+        if (!_filamentPosMap) _filamentPosMap = new Map();
         const allNodes = fg.graphData().nodes as GraphNode[];
         for (const n of allNodes) {
           if (n.x !== undefined) {
-            livePositions.set(n.id, new THREE.Vector3(n.x, n.y ?? 0, n.z ?? 0));
+            let v = _filamentPosMap.get(n.id);
+            if (!v) { v = new THREE.Vector3(); _filamentPosMap.set(n.id, v); }
+            v.set(n.x, n.y ?? 0, n.z ?? 0);
           }
         }
-        filamentsHandle.update(t, livePositions);
+        filamentsHandle.update(t, _filamentPosMap);
       }
 
       // ─── Crystal Eiffel Tower — sparking below the graph ───
