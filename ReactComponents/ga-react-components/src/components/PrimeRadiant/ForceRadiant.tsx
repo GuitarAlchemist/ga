@@ -2675,14 +2675,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     ];
     const fetchBeliefs = async () => {
       try {
-        const res = await fetch('/api/governance/file-content?filePath=governance/state/beliefs/core-beliefs.belief.json');
+        // Try SignalR first (already connected), HTTP as last resort
+        const res = await fetch('/api/governance/file-content?filePath=governance/state/beliefs/core-beliefs.belief.json', {
+          signal: AbortSignal.timeout(3000),
+        });
         if (res.ok) {
           const data = await res.json();
           setBeliefs(Array.isArray(data) ? data : FALLBACK_BELIEFS);
           return;
         }
-      } catch { /* fall through */ }
-      setBeliefs(FALLBACK_BELIEFS);
+      } catch { /* SignalR will provide beliefs — this is just a fallback */ }
+      // Don't override if SignalR already delivered beliefs
+      setBeliefs(prev => prev.length > 0 ? prev : FALLBACK_BELIEFS);
     };
     fetchBeliefs();
     const interval = setInterval(fetchBeliefs, 60_000);
