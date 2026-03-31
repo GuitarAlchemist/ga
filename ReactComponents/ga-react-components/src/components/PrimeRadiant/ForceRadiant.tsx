@@ -649,7 +649,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     onPanelChange: (p) => setActivePanel(p),
     onNodeSelect: (id) => {
       const node = graphData?.nodes.find(n => n.id === id);
-      if (node) { setSelectedNode(node); setActivePanel('detail'); }
+      if (node) {
+        setSelectedNode(node);
+        setActivePanel('detail');
+        // Zoom camera to the node
+        const fg = graphRef.current;
+        if (fg) {
+          const fgNodes = fg.graphData().nodes as (GraphNode & { x?: number; y?: number; z?: number })[];
+          const fNode = fgNodes.find(n => n.id === id);
+          if (fNode?.x !== undefined) {
+            fg.cameraPosition(
+              { x: fNode.x, y: (fNode.y ?? 0) + 20, z: (fNode.z ?? 0) + 50 },
+              { x: fNode.x, y: fNode.y ?? 0, z: fNode.z ?? 0 },
+              1500,
+            );
+          }
+        }
+      }
     },
   });
   // Admin mode: true on localhost or when token matches
