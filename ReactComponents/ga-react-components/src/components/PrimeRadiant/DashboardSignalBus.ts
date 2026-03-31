@@ -62,16 +62,20 @@ class SignalBusStore {
     return this.snapshot;
   }
 
-  /** Clear a specific signal. */
+  /** Clear a specific signal. Also cancels any pending throttled publish. */
   clear(name: string): void {
+    const pending = this.throttleTimers.get(name);
+    if (pending) { clearTimeout(pending); this.throttleTimers.delete(name); }
     if (this.signals.delete(name)) {
       this.dirty = true;
       this.notify();
     }
   }
 
-  /** Clear all signals. */
+  /** Clear all signals and cancel all pending throttled publishes. */
   clearAll(): void {
+    for (const timer of this.throttleTimers.values()) clearTimeout(timer);
+    this.throttleTimers.clear();
     this.signals.clear();
     this.dirty = true;
     this.notify();

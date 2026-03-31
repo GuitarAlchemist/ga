@@ -184,9 +184,8 @@ export function findPrecedent(
     return { tier: 3, cases: tier3, confidence: TIER_CONFIDENCE[3], standingOrder: null };
   }
 
-  // Tier 4: Same severity + same resolution type
+  // Tier 4: Article overlap with any severity (broadest article-based match)
   const tier4 = resolved.filter(c =>
-    c.severity === 'critical' && // only match critical precedents at tier 4
     hasArticleOverlap(c.violated_articles, violatedArticles) &&
     c.false_positive !== true
   );

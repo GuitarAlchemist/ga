@@ -167,14 +167,18 @@ class ViolationMonitorImpl {
 
     const executedActions: string[] = [];
 
-    // Execute each IXQL action
+    // Execute each IXQL action — isolated so one failure doesn't abort the rest
     for (const actionStr of rule.actions) {
-      const parsed = parseIxqlCommand(actionStr);
-      if (parsed.ok && this.dispatch) {
-        this.dispatch(parsed);
-        executedActions.push(actionStr);
-        recordInvocation('on-violation:action', true);
-      } else {
+      try {
+        const parsed = parseIxqlCommand(actionStr);
+        if (parsed.ok && this.dispatch) {
+          this.dispatch(parsed);
+          executedActions.push(actionStr);
+          recordInvocation('on-violation:action', true);
+        } else {
+          recordInvocation('on-violation:action', false);
+        }
+      } catch {
         recordInvocation('on-violation:action', false);
       }
     }
