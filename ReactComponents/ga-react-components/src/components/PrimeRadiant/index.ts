@@ -50,6 +50,10 @@ export type { TerminalFilamentsHandle, FilamentConfig } from './TerminalFilament
 export type { NodeMaterialDef } from './CrystalNodeMaterials';
 export { createSignalAura } from './SignalAura';
 export type { SignalAuraHandle } from './SignalAura';
+export { createBeliefWeather } from './BeliefWeather';
+export type { BeliefWeatherHandle } from './BeliefWeather';
+export { createBeliefVisuals, applyStalenessDecay, applyConfidenceGlow } from './BeliefVisuals';
+export type { BeliefVisualsHandle, ConstellationGroup } from './BeliefVisuals';
 export { IxqlCodeGen } from './IxqlCodeGen';
 export type { IxqlCodeGenProps } from './IxqlCodeGen';
 export { completeCode, completeIxql, useCodeCompletion } from './CodestralComplete';
