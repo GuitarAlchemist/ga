@@ -80,6 +80,7 @@ import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './Cryst
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { IxqlCodeGen } from './IxqlCodeGen';
+import { QAPanel } from './QAPanel';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -3398,6 +3399,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             'code-tribunal': CodeTribunal,
             inbox: AdminInbox,
             'ixql-gen': IxqlCodeGen,
+            qa: QAPanel,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);

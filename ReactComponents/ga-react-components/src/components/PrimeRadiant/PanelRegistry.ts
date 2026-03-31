@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -164,6 +164,11 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('line', { key: 'l1', x1: 12, y1: 19, x2: 20, y2: 19 }),
     h('path', { key: 'p1', d: 'M20 5l-4 4m0-4l4 4', strokeWidth: 1.5 }),
   ]),
+  // QA — shield with checkmark (governance self-test)
+  qa: svg([
+    h('path', { key: 'shield', d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' }),
+    h('polyline', { key: 'check', points: '9 12 11 14 15 10' }),
+  ]),
   grid: svg([
     h('rect', { key: 'r1', x: 3, y: 3, width: 7, height: 7, rx: 1 }),
     h('rect', { key: 'r2', x: 14, y: 3, width: 7, height: 7, rx: 1 }),
@@ -265,6 +270,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'cicd',          label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
   { id: 'code-tribunal', label: 'Code Lab',       icon: 'claude',     renderMode: 'side',    group: 'ops' },
   { id: 'ixql-gen',      label: 'IXQL Gen',       icon: 'ixql-gen',   renderMode: 'side',    group: 'ops' },
+  { id: 'qa',            label: 'QA',             icon: 'qa',         renderMode: 'side',    group: 'ops' },
 ];
 
 for (const def of BUILTIN_PANELS) {
