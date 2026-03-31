@@ -5,6 +5,7 @@
 // See: Demerzel deep dive — Living Grammar
 
 import type { PipeStep, IxqlPredicate } from './IxqlControlParser';
+import { setExtensionRegistry } from './IxqlControlParser';
 import { signalBus } from './DashboardSignalBus';
 
 // ---------------------------------------------------------------------------
@@ -412,3 +413,7 @@ extensionRegistry.register({
   usageCount: 0,
   description: 'TOP N [BY field [ASC|DESC]] — shorthand for SORT + LIMIT',
 });
+
+// Wire into parser — breaks the circular dependency
+// Both modules are now loaded, so setExtensionRegistry is safe to call.
+setExtensionRegistry(extensionRegistry);

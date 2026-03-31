@@ -3,8 +3,9 @@
 // predicate evaluation, extension registry, and edge cases.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
+// Import GrammarExtensionRegistry FIRST to trigger setExtensionRegistry() wiring
 import { extensionRegistry } from './GrammarExtensionRegistry';
+import { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
 
 // ---------------------------------------------------------------------------
 // Parsing: Core commands
@@ -209,7 +210,10 @@ describe('parseIxqlCommand', () => {
 
 describe('grammar extensions', () => {
   it('parses TOP N BY field via extension registry', () => {
+    // Verify registry is wired
+    expect(extensionRegistry.has('TOP')).toBe(true);
     const r = parseIxqlCommand('CREATE PANEL "top5" KIND grid SOURCE beliefs PIPE TOP 5 BY severity DESC');
+    if (!r.ok) console.error('TOP parse failed:', r.error);
     expect(r.ok).toBe(true);
     if (r.ok) {
       const cmd = r.command as { type: string; pipe: Array<{ type: string }> };

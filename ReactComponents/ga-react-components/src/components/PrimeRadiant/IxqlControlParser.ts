@@ -2,8 +2,23 @@
 // IXQL parser for Prime Radiant visualization control and declarative UI
 // Active grammar: SELECT | RESET | CREATE PANEL | BIND HEALTH | ON...THEN
 
-// Living Grammar: extension registry for hot-loaded pipe step keywords
-import { extensionRegistry } from './GrammarExtensionRegistry';
+// Living Grammar: extension registry — late-bound reference to break circular dependency
+// (GrammarExtensionRegistry imports type { PipeStep } from this file)
+// The registry is set after both modules have loaded via setExtensionRegistry().
+interface ExtensionRegistryRef {
+  has(kw: string): boolean;
+  get(kw: string): { args: Array<{ name: string; type: string; optional: boolean }>; desugar: (args: Record<string, unknown>) => PipeStep[] } | undefined;
+  getKeywords(): string[];
+  recordUsage(kw: string): void;
+}
+let _extensionRegistry: ExtensionRegistryRef | null = null;
+export function setExtensionRegistry(reg: ExtensionRegistryRef): void {
+  _extensionRegistry = reg;
+}
+function getExtensionRegistry(): ExtensionRegistryRef {
+  // Return a no-op stub if not yet wired (prevents crash during module load)
+  return _extensionRegistry ?? { has: () => false, get: () => undefined, getKeywords: () => [], recordUsage: () => {} };
+}
 
 export interface IxqlPredicate {
   field: string;       // dotted path: "health.staleness", "type", "name"
@@ -613,8 +628,8 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
   const stepKw = peek(ctx);
 
   // Living Grammar: check extension registry for hot-loaded keywords
-  if (stepKw && !PIPE_STEP_KEYWORDS.has(stepKw) && extensionRegistry.has(stepKw)) {
-    const ext = extensionRegistry.get(stepKw)!;
+  if (stepKw && !PIPE_STEP_KEYWORDS.has(stepKw) && getExtensionRegistry().has(stepKw)) {
+    const ext = getExtensionRegistry().get(stepKw)!;
     next(ctx); // consume the keyword
 
     // Parse arguments based on extension arg spec
@@ -623,7 +638,7 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
     for (const argDef of ext.args) {
       const nextToken = peek(ctx);
       // Check if next token is a clause/pipe keyword (end of args)
-      if (!nextToken || CLAUSE_KEYWORDS.has(nextToken) || PIPE_STEP_KEYWORDS.has(nextToken) || extensionRegistry.has(nextToken)) {
+      if (!nextToken || CLAUSE_KEYWORDS.has(nextToken) || PIPE_STEP_KEYWORDS.has(nextToken) || getExtensionRegistry().has(nextToken)) {
         if (!argDef.optional) {
           throw new Error(`Extension ${stepKw} requires argument '${argDef.name}'`);
         }
@@ -653,7 +668,7 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
     }
 
     // Desugar and record usage — return ALL desugared steps
-    extensionRegistry.recordUsage(stepKw);
+    getExtensionRegistry().recordUsage(stepKw);
     const desugared = ext.desugar(args);
     if (desugared.length === 0) {
       throw new Error(`Extension ${stepKw} desugared to zero steps`);
@@ -662,7 +677,7 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
   }
 
   if (!stepKw || !PIPE_STEP_KEYWORDS.has(stepKw)) {
-    const extKeywords = extensionRegistry.getKeywords();
+    const extKeywords = getExtensionRegistry().getKeywords();
     const allKeywords = [...PIPE_STEP_KEYWORDS, ...extKeywords].join(', ');
     throw new Error(`Expected PIPE step (${allKeywords}), got '${peekRaw(ctx) ?? 'end of input'}'`);
   }
