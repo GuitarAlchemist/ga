@@ -2352,13 +2352,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     graphRef.current = fg;
 
-    // ─── Terminal filaments — bioluminescent tendrils on leaf nodes ───
+    // ─── Terminal filaments — data-driven tendrils on leaf nodes ───
+    // Filament count reflects real governance depth: more connections = more filaments.
+    // Color reflects node health status. Speed reflects staleness.
     setTimeout(() => {
       if (disposed) return;
       const graphNodes = fg.graphData().nodes as GraphNode[];
       const graphLinks = fg.graphData().links as GraphLink[];
       // Find terminal nodes (no outgoing edges)
       const sourceIds = new Set(graphLinks.map(l => getLinkNodeId(l.source)));
+      // Count incoming edges per node for filament density
+      const incomingCount = new Map<string, number>();
+      for (const l of graphLinks) {
+        const targetId = getLinkNodeId(l.target);
+        incomingCount.set(targetId, (incomingCount.get(targetId) ?? 0) + 1);
+      }
       const terminalNodes = graphNodes
         .filter(n => !sourceIds.has(n.id) && n.x !== undefined)
         .map(n => ({
@@ -2367,7 +2375,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           nodeId: n.id,
         }));
       if (terminalNodes.length > 0) {
-        filamentsHandle = createTerminalFilaments(terminalNodes, { count: 3, speed: 0.8 });
+        // Data-driven filament count: 1 base + 1 per incoming connection (max 6)
+        const avgIncoming = terminalNodes.reduce((sum, n) =>
+          sum + (incomingCount.get(n.nodeId) ?? 0), 0) / terminalNodes.length;
+        const filamentCount = Math.min(6, Math.max(2, Math.round(1 + avgIncoming)));
+        filamentsHandle = createTerminalFilaments(terminalNodes, {
+          count: filamentCount,
+          speed: 0.8,
+        });
         fg.scene().add(filamentsHandle.group);
       }
     }, 4000); // Wait for force layout to settle
