@@ -88,6 +88,9 @@ export type { ConstitutionalCase, CasePredicate, StandingOrder, CaseIndex, CaseI
 // Phase 8: Living Grammar Extension Registry
 export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistry';
 export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
+// Auto-Remediation — console error collection + self-healing
+export { autoRemediation } from './AutoRemediation';
+export type { ConsoleIssue, RemediationAction } from './AutoRemediation';
 // QA Panel — automated self-tests running in the live UI
 export { QAPanel } from './QAPanel';
 // User Identity — display name + future OAuth upgrade path
