@@ -1784,7 +1784,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
       } // end quality gate
 
-      // ─── Ambient dust drift ───
+      // ─── Ambient dust drift (temporal: skip on non-temporal frames) ───
+      if (!isTemporalFrame) { /* skip dust */ } else {
       const dPos = ambientDust.geometry.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < dustCount; i++) {
         let x = dPos.getX(i) + dustVelocities[i*3] * 0.016;
@@ -1797,6 +1798,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         dPos.setXYZ(i, x, y, z);
       }
       dPos.needsUpdate = true;
+      } // end temporal dust skip
 
       // ─── Orbital rings track their nodes ───
       for (const ring of ringMeshes) {
@@ -1854,9 +1856,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
 
+      // ─── Temporal rendering — skip non-critical updates on alternate frames ───
+      // High: every frame | Medium: every 2nd | Low: every 4th
+      const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
+      const isTemporalFrame = frameCount % temporalSkip === 0;
+
       // ─── Terminal filaments — organic sway + pulsing tips ───
-      if (filamentsHandle) {
-        // Reuse persistent map — avoid GC pressure from 180 Vector3s/frame
+      if (filamentsHandle && isTemporalFrame) {
         if (!_filamentPosMap) _filamentPosMap = new Map();
         const allNodes = fg.graphData().nodes as GraphNode[];
         for (const n of allNodes) {
@@ -1870,10 +1876,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Crystal Eiffel Tower — sparking below the graph ───
-      if (eiffelHandleOuter) eiffelHandleOuter.update(t);
+      if (eiffelHandleOuter && isTemporalFrame) eiffelHandleOuter.update(t);
 
       // ─── Jarvis Space Station — top-left of view ───
-      if (qualityLevel !== 'low') {
+      if (qualityLevel !== 'low' && isTemporalFrame) {
         updateSpaceStation(spaceStation, t);
       }
       _stationOffset.set(-8, 8, -20);
