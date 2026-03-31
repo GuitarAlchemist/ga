@@ -1,12 +1,12 @@
 // src/components/PrimeRadiant/IconRail.tsx
-// Vertical icon rail (desktop/tablet) / bottom tab bar (phone) for panel navigation.
-// Data-driven from PanelRegistry — panels are grouped with LED status indicators.
+// VS Code Activity Bar pattern — 5 group icons with panel picker flyout.
+// Desktop: vertical rail with group buttons + slide-out picker.
+// Mobile: bottom tab bar with 5 groups + overflow drawer filtered by group.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePanelRegistry, ICON_CATALOG, PANEL_GROUPS } from './PanelRegistry';
 import type { PanelId, BuiltInPanelId, PanelGroupId, PanelGroupDef } from './PanelRegistry';
-import { RailPopover } from './RailPopover';
 
 export type { PanelId, BuiltInPanelId };
 
@@ -25,9 +25,6 @@ interface IconRailProps {
   panelStatuses?: Partial<Record<string, PanelStatus>>;
 }
 
-/** IDs of panels shown directly in the mobile tab bar (before the overflow button). */
-const MOBILE_VISIBLE_IDS: PanelId[] = ['activity', 'algedonic', 'agent', 'tribunal', 'godot', 'cicd'];
-
 /** Hook: returns true when viewport is at most 640px wide. */
 function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(() =>
@@ -44,19 +41,6 @@ function useIsMobile(): boolean {
   return isMobile;
 }
 
-const h = React.createElement;
-
-/** Three-dot vertical ellipsis icon for the overflow button. */
-const OverflowIcon: React.ReactNode = h(
-  'svg',
-  { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'currentColor' },
-  [
-    h('circle', { key: 'c1', cx: 12, cy: 5, r: 2 }),
-    h('circle', { key: 'c2', cx: 12, cy: 12, r: 2 }),
-    h('circle', { key: 'c3', cx: 12, cy: 19, r: 2 }),
-  ],
-);
-
 const STATUS_COLORS: Record<NonNullable<PanelStatus>, string> = {
   ok: '#33CC66',
   warn: '#FFB300',
@@ -72,12 +56,23 @@ const STATUS_SEVERITY: Record<NonNullable<PanelStatus>, number> = {
   critical: 3,
 };
 
-/** State for the popover hover target. */
-interface PopoverState {
-  panelId: string;
-  label: string;
-  anchorTop: number;
-}
+/** Representative icon key per group */
+const GROUP_ICON_KEY: Record<PanelGroupId, string> = {
+  governance: 'activity',
+  agents: 'agent',
+  knowledge: 'university',
+  viz: 'godot',
+  ops: 'cicd',
+};
+
+/** Short label per group (displayed under the icon) */
+const GROUP_SHORT_LABEL: Record<PanelGroupId, string> = {
+  governance: 'GOV',
+  agents: 'AGENTS',
+  knowledge: 'KNOW',
+  viz: 'VIZ',
+  ops: 'OPS',
+};
 
 /** Aggregate worst status from a list of panel statuses */
 function aggregateGroupStatus(
@@ -113,9 +108,9 @@ function groupItems(items: RailItem[]): { group: PanelGroupDef; items: RailItem[
 
   const result: { group: PanelGroupDef; items: RailItem[] }[] = [];
   for (const gDef of PANEL_GROUPS) {
-    const groupItems = groupMap.get(gDef.id);
-    if (groupItems && groupItems.length > 0) {
-      result.push({ group: gDef, items: groupItems });
+    const gItems = groupMap.get(gDef.id);
+    if (gItems && gItems.length > 0) {
+      result.push({ group: gDef, items: gItems });
     }
   }
 
@@ -133,23 +128,9 @@ function groupItems(items: RailItem[]): { group: PanelGroupDef; items: RailItem[
 export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, panelStatuses = {} }) => {
   const registrations = usePanelRegistry();
   const railRef = useRef<HTMLDivElement>(null);
-  const [popover, setPopover] = useState<PopoverState | null>(null);
-  const [overflowOpen, setOverflowOpen] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState<PanelGroupId | null>(null);
+  const [overflowGroup, setOverflowGroup] = useState<PanelGroupId | null>(null);
   const isMobile = useIsMobile();
-
-  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>, item: RailItem) => {
-    const btn = e.currentTarget;
-    const rail = railRef.current;
-    if (!rail) return;
-    const railRect = rail.getBoundingClientRect();
-    const btnRect = btn.getBoundingClientRect();
-    const anchorTop = btnRect.top - railRect.top + btnRect.height / 2;
-    setPopover({ panelId: item.id, label: item.label, anchorTop });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setPopover(null);
-  }, []);
 
   const items: RailItem[] = useMemo(() =>
     registrations.map((reg) => ({
@@ -163,174 +144,226 @@ export const IconRail: React.FC<IconRailProps> = ({ activePanel, onPanelToggle, 
 
   const groups = useMemo(() => groupItems(items), [items]);
 
-  // Mobile: filter items to only MOBILE_VISIBLE_IDS
-  const mobileVisibleSet = useMemo(() => new Set<string>(MOBILE_VISIBLE_IDS), []);
+  /** Does this group contain the active panel? */
+  const groupContainsActive = useCallback(
+    (groupId: PanelGroupId): boolean =>
+      groups.some((g) => g.group.id === groupId && g.items.some((it) => it.id === activePanel)),
+    [groups, activePanel],
+  );
 
+  /** Desktop: toggle picker for a group */
+  const handleGroupClick = useCallback((groupId: PanelGroupId) => {
+    setExpandedGroup((prev) => (prev === groupId ? null : groupId));
+  }, []);
+
+  /** Desktop: select a panel from the picker */
+  const handlePickerSelect = useCallback((panelId: PanelId) => {
+    onPanelToggle(panelId);
+    setExpandedGroup(null);
+  }, [onPanelToggle]);
+
+  /** Mobile: tap group → open overflow drawer filtered to that group */
+  const handleMobileGroupTap = useCallback((groupId: PanelGroupId) => {
+    setOverflowGroup((prev) => (prev === groupId ? null : groupId));
+  }, []);
+
+  /** Mobile: select panel from overflow */
   const handleOverflowSelect = useCallback((panelId: PanelId) => {
-    setOverflowOpen(false);
+    setOverflowGroup(null);
     onPanelToggle(panelId);
   }, [onPanelToggle]);
 
-  // Close overflow drawer when switching away from mobile
+  // Close expanded group / overflow when switching layout
   useEffect(() => {
-    if (!isMobile) setOverflowOpen(false);
+    if (isMobile) {
+      setExpandedGroup(null);
+    } else {
+      setOverflowGroup(null);
+    }
   }, [isMobile]);
 
-  // Desktop: render as-is
+  // Close picker when clicking outside (desktop)
+  useEffect(() => {
+    if (!expandedGroup) return;
+    const handleClick = (e: MouseEvent) => {
+      const rail = railRef.current;
+      if (rail && !rail.contains(e.target as Node)) {
+        setExpandedGroup(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [expandedGroup]);
+
+  // Find items for the expanded group
+  const pickerItems = useMemo(() => {
+    if (!expandedGroup) return [];
+    const section = groups.find((g) => g.group.id === expandedGroup);
+    return section?.items ?? [];
+  }, [expandedGroup, groups]);
+
+  const pickerLabel = useMemo(() => {
+    if (!expandedGroup) return '';
+    const section = groups.find((g) => g.group.id === expandedGroup);
+    return section?.group.label ?? '';
+  }, [expandedGroup, groups]);
+
+  // ─── Desktop ───
   if (!isMobile) {
     return (
       <div className="icon-rail" ref={railRef}>
-        {groups.map((section, gi) => {
+        {groups.map((section) => {
+          const gId = section.group.id;
           const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
+          const isActive = groupContainsActive(gId);
+          const isExpanded = expandedGroup === gId;
+          const iconNode = ICON_CATALOG[GROUP_ICON_KEY[gId]] ?? ICON_CATALOG['detail'];
+
           return (
-            <React.Fragment key={section.group.id}>
-              {gi > 0 && <div className="icon-rail__divider" />}
-              <div className="icon-rail__group-header" title={section.group.label}>
-                <span className="icon-rail__group-label">{section.group.label}</span>
-                {groupStatus && (
-                  <span
-                    className={`icon-rail__group-led ${groupStatus === 'critical' ? 'icon-rail__group-led--pulse' : ''}`}
-                    style={{ backgroundColor: STATUS_COLORS[groupStatus] }}
-                    title={`${section.group.label}: ${groupStatus}`}
-                  />
-                )}
-              </div>
-              {section.items.map((item) => {
-                const status = panelStatuses[item.id] ?? null;
-                return (
-                  <button
-                    key={item.id}
-                    className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
-                    onClick={() => onPanelToggle(item.id)}
-                    onMouseEnter={(e) => handleMouseEnter(e, item)}
-                    onMouseLeave={handleMouseLeave}
-                    aria-label={`Toggle ${item.label} panel`}
-                  >
+            <button
+              key={gId}
+              className={
+                'icon-rail__group-btn' +
+                (isActive ? ' icon-rail__group-btn--active' : '') +
+                (isExpanded ? ' icon-rail__group-btn--expanded' : '')
+              }
+              onClick={() => handleGroupClick(gId)}
+              aria-label={`${section.group.label} panels`}
+              title={section.group.label}
+            >
+              <span className="icon-rail__group-btn-icon">{iconNode}</span>
+              <span className="icon-rail__group-btn-label">{GROUP_SHORT_LABEL[gId]}</span>
+              {groupStatus && (
+                <span
+                  className={`icon-rail__status-dot ${groupStatus === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                  style={{ backgroundColor: STATUS_COLORS[groupStatus] }}
+                />
+              )}
+            </button>
+          );
+        })}
+
+        {/* Panel picker flyout */}
+        {expandedGroup && (
+          <div className="icon-rail__picker">
+            <div className="icon-rail__picker-header">{pickerLabel}</div>
+            {pickerItems.map((item) => {
+              const status = panelStatuses[item.id] ?? null;
+              const isItemActive = activePanel === item.id;
+              return (
+                <button
+                  key={item.id}
+                  className={
+                    'icon-rail__picker-item' +
+                    (isItemActive ? ' icon-rail__picker-item--active' : '')
+                  }
+                  onClick={() => handlePickerSelect(item.id)}
+                  aria-label={`Open ${item.label} panel`}
+                >
+                  <span className="icon-rail__picker-item-icon">
                     {item.icon}
-                    <span className="icon-rail__tooltip">{item.label}</span>
                     {status && (
                       <span
                         className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
                         style={{ backgroundColor: STATUS_COLORS[status] }}
                       />
                     )}
-                  </button>
-                );
-              })}
-            </React.Fragment>
-          );
-        })}
-        <RailPopover
-          panelType={popover?.panelId ?? ''}
-          label={popover?.label ?? ''}
-          anchorTop={popover?.anchorTop ?? 0}
-          visible={popover !== null}
-        />
+                  </span>
+                  <span className="icon-rail__picker-item-label">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
 
-  // Mobile: show only MOBILE_VISIBLE_IDS + overflow button
+  // ─── Mobile ───
+  // Find overflow items for the tapped group
+  const overflowSection = overflowGroup
+    ? groups.find((g) => g.group.id === overflowGroup)
+    : null;
+
   return (
     <>
       <div className="icon-rail" ref={railRef}>
-        {items
-          .filter((item) => mobileVisibleSet.has(item.id))
-          .map((item) => {
-            const status = panelStatuses[item.id] ?? null;
-            return (
-              <button
-                key={item.id}
-                className={`icon-rail__btn ${activePanel === item.id ? 'icon-rail__btn--active' : ''}`}
-                onClick={() => onPanelToggle(item.id)}
-                aria-label={`Toggle ${item.label} panel`}
-              >
-                {item.icon}
-                <span className="icon-rail__tooltip">{item.label}</span>
-                {status && (
-                  <span
-                    className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
-                    style={{ backgroundColor: STATUS_COLORS[status] }}
-                  />
-                )}
-              </button>
-            );
-          })}
+        {groups.map((section) => {
+          const gId = section.group.id;
+          const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
+          const isActive = groupContainsActive(gId);
+          const isExpanded = overflowGroup === gId;
+          const iconNode = ICON_CATALOG[GROUP_ICON_KEY[gId]] ?? ICON_CATALOG['detail'];
 
-        {/* Overflow "more" button */}
-        <button
-          className={`icon-rail__btn icon-rail__overflow-btn ${overflowOpen ? 'icon-rail__btn--active' : ''}`}
-          onClick={() => setOverflowOpen((prev) => !prev)}
-          aria-label="More panels"
-        >
-          {OverflowIcon}
-          <span className="icon-rail__tooltip">More</span>
-        </button>
+          return (
+            <button
+              key={gId}
+              className={
+                'icon-rail__btn icon-rail__group-btn-mobile' +
+                (isActive ? ' icon-rail__btn--active' : '') +
+                (isExpanded ? ' icon-rail__group-btn-mobile--expanded' : '')
+              }
+              onClick={() => handleMobileGroupTap(gId)}
+              aria-label={`${section.group.label} panels`}
+            >
+              {iconNode}
+              <span className="icon-rail__group-btn-label-mobile">{GROUP_SHORT_LABEL[gId]}</span>
+              {groupStatus && (
+                <span
+                  className={`icon-rail__status-dot ${groupStatus === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                  style={{ backgroundColor: STATUS_COLORS[groupStatus] }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Overflow drawer — rendered via portal so it's above everything */}
-      {overflowOpen &&
+      {/* Overflow drawer filtered to tapped group */}
+      {overflowSection &&
         createPortal(
           <>
-            {/* Backdrop */}
             <div
               className="icon-rail__overflow-backdrop"
-              onClick={() => setOverflowOpen(false)}
+              onClick={() => setOverflowGroup(null)}
             />
-
-            {/* Drawer */}
             <div className="icon-rail__overflow-drawer">
               <div className="icon-rail__overflow-drawer-header">
-                <span className="icon-rail__overflow-drawer-title">All Panels</span>
+                <span className="icon-rail__overflow-drawer-title">
+                  {overflowSection.group.label}
+                </span>
                 <button
                   className="icon-rail__overflow-drawer-close"
-                  onClick={() => setOverflowOpen(false)}
+                  onClick={() => setOverflowGroup(null)}
                   aria-label="Close panel drawer"
                 >
                   &times;
                 </button>
               </div>
-
-              {groups.map((section) => {
-                const groupStatus = aggregateGroupStatus(section.items, panelStatuses);
-                return (
-                  <div key={section.group.id} className="icon-rail__overflow-group">
-                    <div className="icon-rail__overflow-group-label">
-                      {section.group.label}
-                      {groupStatus && (
-                        <span
-                          className={`icon-rail__group-led ${groupStatus === 'critical' ? 'icon-rail__group-led--pulse' : ''}`}
-                          style={{ backgroundColor: STATUS_COLORS[groupStatus], marginLeft: 6 }}
-                        />
-                      )}
-                    </div>
-                    <div className="icon-rail__overflow-grid">
-                      {section.items.map((item) => {
-                        const status = panelStatuses[item.id] ?? null;
-                        return (
-                          <button
-                            key={item.id}
-                            className={`icon-rail__overflow-item ${activePanel === item.id ? 'icon-rail__overflow-item--active' : ''}`}
-                            onClick={() => handleOverflowSelect(item.id)}
-                            aria-label={`Open ${item.label} panel`}
-                          >
-                            <span className="icon-rail__overflow-item-icon">
-                              {item.icon}
-                              {status && (
-                                <span
-                                  className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
-                                  style={{ backgroundColor: STATUS_COLORS[status] }}
-                                />
-                              )}
-                            </span>
-                            <span className="icon-rail__overflow-item-label">{item.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+              <div className="icon-rail__overflow-grid" style={{ padding: '8px 16px' }}>
+                {overflowSection.items.map((item) => {
+                  const status = panelStatuses[item.id] ?? null;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`icon-rail__overflow-item ${activePanel === item.id ? 'icon-rail__overflow-item--active' : ''}`}
+                      onClick={() => handleOverflowSelect(item.id)}
+                      aria-label={`Open ${item.label} panel`}
+                    >
+                      <span className="icon-rail__overflow-item-icon">
+                        {item.icon}
+                        {status && (
+                          <span
+                            className={`icon-rail__status-dot ${status === 'critical' ? 'icon-rail__status-dot--pulse' : ''}`}
+                            style={{ backgroundColor: STATUS_COLORS[status] }}
+                          />
+                        )}
+                      </span>
+                      <span className="icon-rail__overflow-item-label">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </>,
           document.body,
