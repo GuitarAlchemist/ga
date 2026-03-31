@@ -176,36 +176,29 @@ export const healthBindingEngine = new HealthBindingEngineImpl();
 // that drive the IconRail status dots.
 // ---------------------------------------------------------------------------
 
-// LLM health: poll /api/llm/status, escalate on depleted/limited providers
-healthBindingEngine.register({
-  id: 'llm',
-  command: {
-    type: 'bind-health',
-    targetKind: 'panel',
-    targetId: 'llm',
-    targetSelector: [],
-    source: '/api/llm/status',
-    conditions: [
+// LLM + CI/CD health: only register if endpoints exist (avoids 404 noise).
+// Probe once, then register if available.
+if (typeof window !== 'undefined') {
+  const probeAndRegister = async (id: string, source: string, targetId: string, conditions: BindHealthCommand['conditions'], fallback: BindHealthCommand['fallback']) => {
+    try {
+      const res = await fetch(source, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+      if (!res.ok) return; // endpoint doesn't exist — skip registration
+    } catch { return; }
+    healthBindingEngine.register({
+      id,
+      command: { type: 'bind-health', targetKind: 'panel', targetId, targetSelector: [], source, conditions, fallback },
+    });
+  };
+
+  // Delay probes to avoid startup noise
+  setTimeout(() => {
+    probeAndRegister('llm', '/api/llm/status', 'llm', [
       { predicate: { field: 'status', operator: '=', value: 'depleted' }, status: 'error' },
       { predicate: { field: 'status', operator: '=', value: 'limited' }, status: 'warn' },
-    ],
-    fallback: 'ok',
-  },
-});
-
-// CI/CD health: poll GitHub Actions status, escalate on failures
-healthBindingEngine.register({
-  id: 'cicd',
-  command: {
-    type: 'bind-health',
-    targetKind: 'panel',
-    targetId: 'cicd',
-    targetSelector: [],
-    source: '/api/cicd/status',
-    conditions: [
+    ], 'ok');
+    probeAndRegister('cicd', '/api/cicd/status', 'cicd', [
       { predicate: { field: 'status', operator: '=', value: 'failure' }, status: 'error' },
       { predicate: { field: 'status', operator: '=', value: 'in_progress' }, status: 'warn' },
-    ],
-    fallback: 'ok',
-  },
-});
+    ], 'ok');
+  }, 15_000);
+}
