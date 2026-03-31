@@ -46,7 +46,12 @@ export { createCrystalEiffelTower } from './CrystalEiffelTower';
 export type { CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 export { IxqlCommandInput } from './IxqlCommandInput';
 export { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
-export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, CreateVizCommand, CreateFormCommand, FormFieldDef, VizKind, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand, PipeStep, AggregateSpec, AggregateFunction } from './IxqlControlParser';
+export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, CreateVizCommand, CreateFormCommand, FormFieldDef, VizKind, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand, OnViolationCommand, ViolationSeverity, PipeStep, AggregateSpec, AggregateFunction, DiagnoseCommand, HealthCheckCommand, ShowCommand, HideCommand, FixCommand } from './IxqlControlParser';
+// Phase 10: Agentic Dashboards — violation monitoring and saved queries
+export { violationMonitor, useViolationMonitor, useViolationCounts } from './ViolationMonitor';
+export type { ViolationRule, ActiveViolation } from './ViolationMonitor';
+export { savedQueryStore, useSavedQueries } from './SavedQueryStore';
+export type { SavedQuery } from './SavedQueryStore';
 // IXQL UI Composition — Phase 1: Grid panels + PIPE transforms
 export { IxqlGridPanel } from './IxqlGridPanel';
 export type { IxqlGridPanelProps } from './IxqlGridPanel';

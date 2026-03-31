@@ -218,14 +218,51 @@ export interface GroupCommand {
   byField: string;
 }
 
-// GRAMMAR-RESERVED — not yet dispatched; awaiting 3-5 recurrence proof
+// Phase 10: SAVE QUERY — persist named queries as governance artifacts
 export interface SaveCommand {
   type: 'save';
-  targetKind: 'panel' | 'graph';
-  id: string | null;
+  targetKind: 'query' | 'panel' | 'graph';
+  id: string;
+  asArtifact: boolean;         // true when "AS artifact" is specified
+  rationale: string | null;    // optional RATIONALE clause
+}
+
+// Phase 10: ON VIOLATION — agentic trigger for governance violations
+export type ViolationSeverity = 'info' | 'warning' | 'critical';
+
+export interface OnViolationCommand {
+  type: 'on-violation';
+  source: string;              // panel id or data source
+  condition: IxqlPredicate[];  // WHEN predicates
+  severity: ViolationSeverity;
+  actions: string[];           // IXQL commands to execute
+  notify: string | null;       // NOTIFY VIA channel name
 }
 
 // ── Discriminated union ──
+
+export interface DiagnoseCommand {
+  type: 'diagnose';
+}
+
+export interface HealthCheckCommand {
+  type: 'health-check';
+}
+
+export interface ShowCommand {
+  type: 'show';
+  target: string; // 'tower' | 'filaments' | 'milkyway' | panel id
+}
+
+export interface HideCommand {
+  type: 'hide';
+  target: string;
+}
+
+export interface FixCommand {
+  type: 'fix';
+  target: 'errors' | 'signals' | 'all';
+}
 
 export type IxqlCommand =
   | SelectCommand
@@ -245,7 +282,13 @@ export type IxqlCommand =
   | CreateNodeCommand
   | LinkCommand
   | GroupCommand
-  | SaveCommand;
+  | SaveCommand
+  | OnViolationCommand
+  | DiagnoseCommand
+  | HealthCheckCommand
+  | ShowCommand
+  | HideCommand
+  | FixCommand;
 
 // ── Parse result as discriminated union ──
 
@@ -1275,15 +1318,104 @@ function parseBroadcast(ctx: ParserContext): BroadcastCommand {
   return { type: 'broadcast', target, predicates };
 }
 
+// ── ON VIOLATION parser ──
+// Grammar: ON VIOLATION IN "source" WHEN field op value SEVERITY level THEN cmd1 [AND cmd2] [NOTIFY VIA channel]
+
+function parseOnViolation(ctx: ParserContext): OnViolationCommand {
+  // Expect IN keyword
+  expect(ctx, 'IN');
+  const source = nextRaw(ctx);
+
+  // WHEN clause — at least one predicate
+  expect(ctx, 'WHEN');
+  const condition = parsePredicates(ctx);
+
+  // SEVERITY clause
+  expect(ctx, 'SEVERITY');
+  const sevToken = nextRaw(ctx).toLowerCase();
+  if (sevToken !== 'info' && sevToken !== 'warning' && sevToken !== 'critical') {
+    throw new Error(`Expected severity (info, warning, critical), got '${sevToken}'`);
+  }
+  const severity = sevToken as ViolationSeverity;
+
+  // THEN clause — one or more IXQL commands separated by AND
+  expect(ctx, 'THEN');
+  const actions: string[] = [];
+
+  // Collect tokens for the first action until we hit AND, NOTIFY, or end
+  let actionTokens: string[] = [];
+  while (ctx.pos < ctx.tokens.length) {
+    const kw = peek(ctx);
+    if (kw === 'AND') {
+      if (actionTokens.length > 0) {
+        actions.push(actionTokens.join(' '));
+        actionTokens = [];
+      }
+      next(ctx); // consume AND
+      continue;
+    }
+    if (kw === 'NOTIFY') break;
+    actionTokens.push(nextRaw(ctx));
+  }
+  if (actionTokens.length > 0) {
+    actions.push(actionTokens.join(' '));
+  }
+  if (actions.length === 0) {
+    throw new Error('ON VIOLATION requires at least one THEN action');
+  }
+
+  // Optional NOTIFY VIA clause
+  let notify: string | null = null;
+  if (peek(ctx) === 'NOTIFY') {
+    next(ctx); // consume NOTIFY
+    expect(ctx, 'VIA');
+    notify = nextRaw(ctx);
+  }
+
+  return { type: 'on-violation', source, condition, severity, actions, notify };
+}
+
+// ── SAVE QUERY parser ──
+// Grammar: SAVE QUERY "name" [AS artifact] [RATIONALE "text"]
+
+function parseSaveQuery(ctx: ParserContext): SaveCommand {
+  expect(ctx, 'QUERY');
+  const id = nextRaw(ctx);
+
+  let asArtifact = false;
+  if (peek(ctx) === 'AS') {
+    next(ctx); // consume AS
+    const asTarget = nextRaw(ctx).toLowerCase();
+    if (asTarget === 'artifact') {
+      asArtifact = true;
+    }
+  }
+
+  let rationale: string | null = null;
+  if (peek(ctx) === 'RATIONALE') {
+    next(ctx); // consume RATIONALE
+    rationale = nextRaw(ctx);
+  }
+
+  return { type: 'save', targetKind: 'query', id, asArtifact, rationale };
+}
+
 // ── Main entry point ──
 
 export function parseIxqlCommand(input: string): IxqlParseResult {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, error: 'Empty command' };
 
-  // RESET command (fast path)
-  if (trimmed.toUpperCase() === 'RESET') {
+  // Fast-path single-word commands
+  const upper = trimmed.toUpperCase();
+  if (upper === 'RESET') {
     return { ok: true, command: { type: 'reset' } };
+  }
+  if (upper === 'DIAGNOSE') {
+    return { ok: true, command: { type: 'diagnose' } };
+  }
+  if (upper === 'HEALTH' || upper === 'HEALTH CHECK') {
+    return { ok: true, command: { type: 'health-check' } };
   }
 
   const tokens = tokenize(trimmed);
@@ -1334,12 +1466,28 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
 
       case 'ON': {
         next(ctx);
+        // Distinguish ON VIOLATION IN from ON <source> CHANGED
+        if (peek(ctx) === 'VIOLATION') {
+          next(ctx); // consume VIOLATION
+          return { ok: true, command: parseOnViolation(ctx) };
+        }
         return { ok: true, command: parseOnChanged(ctx) };
+      }
+
+      case 'SAVE': {
+        next(ctx);
+        return { ok: true, command: parseSaveQuery(ctx) };
       }
 
       case 'SHOW': {
         next(ctx);
-        return { ok: true, command: parseShowEpistemic(ctx) };
+        const showTarget = peek(ctx);
+        if (showTarget === 'EPISTEMIC' || showTarget === 'BELIEFS' || showTarget === 'STRATEGIES' || showTarget === 'TENSOR') {
+          return { ok: true, command: parseShowEpistemic(ctx) };
+        }
+        // General SHOW: tower, filaments, panel ids, etc.
+        const target = nextRaw(ctx);
+        return { ok: true, command: { type: 'show', target } };
       }
 
       case 'METHYLATE': {
@@ -1362,8 +1510,34 @@ export function parseIxqlCommand(input: string): IxqlParseResult {
         return { ok: true, command: parseBroadcast(ctx) };
       }
 
+      // ── Diagnostic commands ──
+
+      case 'DIAGNOSE': {
+        next(ctx);
+        return { ok: true, command: { type: 'diagnose' } };
+      }
+
+      case 'HEALTH': {
+        next(ctx);
+        if (peek(ctx) === 'CHECK') next(ctx); // optional CHECK
+        return { ok: true, command: { type: 'health-check' } };
+      }
+
+      case 'HIDE': {
+        next(ctx);
+        const target = nextRaw(ctx);
+        return { ok: true, command: { type: 'hide', target } };
+      }
+
+      case 'FIX': {
+        next(ctx);
+        const target = (peekRaw(ctx) ?? 'all').toLowerCase() as 'errors' | 'signals' | 'all';
+        if (peek(ctx)) next(ctx);
+        return { ok: true, command: { type: 'fix', target } };
+      }
+
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE (PANEL/VIZ/FORM), BIND, ON, SHOW, METHYLATE, DEMETHYLATE, AMNESIA, or BROADCAST` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, ON, SHOW, HIDE, FIX, DIAGNOSE, HEALTH CHECK, METHYLATE, DEMETHYLATE, AMNESIA, BROADCAST, or SAVE` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
