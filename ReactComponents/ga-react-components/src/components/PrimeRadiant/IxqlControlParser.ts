@@ -110,6 +110,7 @@ export interface CreateVizCommand {
   refresh: number | null;
 }
 
+// GRAMMAR-ACTIVE but dispatch handled by ForceRadiant parent component
 export interface BindHealthCommand {
   type: 'bind-health';
   targetKind: 'panel' | 'node';
@@ -133,6 +134,7 @@ export interface OnChangedCommand {
 export type EpistemicTarget = 'beliefs' | 'strategies' | 'tensor' | 'learners' | 'journal' | 'incompetence';
 export type TensorConfig = 'T_T' | 'T_F' | 'T_U' | 'T_C' | 'F_T' | 'F_F' | 'F_U' | 'F_C' | 'U_T' | 'U_F' | 'U_U' | 'U_C' | 'C_T' | 'C_F' | 'C_U' | 'C_C';
 
+// GRAMMAR-ACTIVE — dispatch handled by ForceRadiant parent component
 export interface ShowEpistemicCommand {
   type: 'show-epistemic';
   target: EpistemicTarget;
@@ -142,23 +144,27 @@ export interface ShowEpistemicCommand {
   visualize: boolean;         // Apply visual overrides to matching graph nodes
 }
 
+// GRAMMAR-ACTIVE — dispatch handled by ForceRadiant parent component
 export interface MethylateCommand {
   type: 'methylate';
   strategyId: string;
   reason: string | null;
 }
 
+// GRAMMAR-ACTIVE — dispatch handled by ForceRadiant parent component
 export interface DemethylateCommand {
   type: 'demethylate';
   strategyId: string;
 }
 
+// GRAMMAR-ACTIVE — dispatch handled by ForceRadiant parent component
 export interface AmnesiaCommand {
   type: 'amnesia';
   beliefId: string;
   scheduleDays: number;       // Days until deletion
 }
 
+// GRAMMAR-ACTIVE — dispatch handled by ForceRadiant parent component
 export interface BroadcastCommand {
   type: 'broadcast';
   target: 'beliefs' | 'tensor';

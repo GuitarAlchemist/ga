@@ -3,7 +3,7 @@
 // Panels publish selection events; subscribers receive them reactively.
 // Throttled to prevent broadcast storms from rapid interactions.
 
-import { useSyncExternalStore, useCallback, useRef } from 'react';
+import { useSyncExternalStore, useCallback, useRef, useMemo } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -109,31 +109,36 @@ export function useSignals(names: string[]): Map<string, DashboardSignal> {
     () => signalBus.getAll(),
   );
   const prevRef = useRef<Map<string, DashboardSignal>>(new Map());
+  const prevTimestampsRef = useRef<string>('');
 
-  // Check if any relevant signal actually changed (by timestamp)
-  let changed = false;
-  for (const name of names) {
-    const current = allSignals.get(name);
-    const prev = prevRef.current.get(name);
-    if (current?.timestamp !== prev?.timestamp) { changed = true; break; }
-  }
-  // Also check if a previously-present signal was removed
-  if (!changed) {
-    for (const name of prevRef.current.keys()) {
-      if (names.indexOf(name) >= 0 && !allSignals.has(name)) { changed = true; break; }
-    }
-  }
-
-  if (changed) {
-    const result = new Map<string, DashboardSignal>();
+  // Build a timestamp key for relevant signals — stable comparison without ref mutation during render
+  const relevantKey = useMemo(() => {
+    const parts: string[] = [];
     for (const name of names) {
       const sig = allSignals.get(name);
-      if (sig) result.set(name, sig);
+      parts.push(name + ':' + (sig?.timestamp ?? 0));
     }
-    prevRef.current = result;
-  }
+    return parts.join('|');
+  }, [allSignals, names]);
 
-  return prevRef.current;
+  // Only rebuild the result map when the timestamp key changes
+  // useMemo ensures no ref mutation during render — safe for concurrent mode
+  const result = useMemo(() => {
+    if (relevantKey === prevTimestampsRef.current) {
+      return prevRef.current;
+    }
+    const map = new Map<string, DashboardSignal>();
+    for (const name of names) {
+      const sig = allSignals.get(name);
+      if (sig) map.set(name, sig);
+    }
+    // Update refs after computing (useMemo body runs once per unique deps)
+    prevRef.current = map;
+    prevTimestampsRef.current = relevantKey;
+    return map;
+  }, [relevantKey, allSignals, names]);
+
+  return result;
 }
 
 /** Publish a signal from a panel. Returns a stable callback. */
