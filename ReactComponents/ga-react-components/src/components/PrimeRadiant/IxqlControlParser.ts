@@ -87,7 +87,7 @@ export interface CreateGridPanelCommand {
 
 // ── Phase 7: Visualization — CREATE VIZ "id" KIND force-graph ──
 
-export type VizKind = 'force-graph' | 'timeline' | 'bar' | 'sparkline';
+export type VizKind = 'force-graph' | 'timeline' | 'bar' | 'sparkline' | 'truth-lattice';
 
 export interface CreateVizCommand {
   type: 'create-viz';
@@ -865,7 +865,7 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
 
 // ── CREATE VIZ parser ──
 
-const VIZ_KINDS = new Set(['FORCE-GRAPH', 'TIMELINE', 'BAR', 'SPARKLINE']);
+const VIZ_KINDS = new Set(['FORCE-GRAPH', 'TIMELINE', 'BAR', 'SPARKLINE', 'TRUTH-LATTICE']);
 
 function parseCreateViz(ctx: ParserContext, id: string): CreateVizCommand {
   const kindToken = nextRaw(ctx).toLowerCase();

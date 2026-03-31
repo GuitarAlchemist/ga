@@ -100,6 +100,16 @@ describe('parseIxqlCommand', () => {
     }
   });
 
+  it('parses CREATE VIZ KIND truth-lattice', () => {
+    const r = parseIxqlCommand('CREATE VIZ "lattice" KIND truth-lattice SOURCE governance.beliefs');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      const cmd = r.command as { type: string; kind: string; source: string };
+      expect(cmd.kind).toBe('truth-lattice');
+      expect(cmd.source).toBe('governance.beliefs');
+    }
+  });
+
   it('parses CREATE FORM with bracket fields', () => {
     const r = parseIxqlCommand('CREATE FORM "editor" FIELDS [ name: text ]');
     if (!r.ok) {
