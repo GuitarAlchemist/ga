@@ -81,6 +81,8 @@ import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { QAPanel } from './QAPanel';
+import { autoRemediation } from './AutoRemediation';
+import { proofVerifier } from './ProofVerifier';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1000,6 +1002,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   useEffect(() => {
     violationMonitor.setDispatch((result) => handleIxqlCommand(result));
   }, [handleIxqlCommand]);
+
+  // ─── Self-governance: auto-remediation + proof verification ───
+  useEffect(() => {
+    autoRemediation.start();
+    proofVerifier.start();
+    return () => {
+      autoRemediation.stop();
+      proofVerifier.stop();
+    };
+  }, []);
 
   // ─── Create a ripple ring mesh at a world position ───
   const createRippleAtPosition = useCallback((
