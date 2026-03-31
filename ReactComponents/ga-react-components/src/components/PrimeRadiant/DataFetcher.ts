@@ -86,6 +86,35 @@ const GOVERNANCE_SHORTCUTS: Record<string, string> = {
   'governance.backlog':     '/api/governance/backlog',
   'governance.predictions': '/api/governance/predictions',
   'governance.graph':       '/api/governance',
+  'governance.epistemic.beliefs':      '/api/governance/beliefs',
+  'governance.epistemic.strategies':   '/api/governance/strategies',
+  'governance.epistemic.tensor':       '/api/governance/tensor',
+  'governance.epistemic.learners':     '/api/governance/learners',
+  'governance.epistemic.journal':      '/api/governance/journal',
+  'governance.epistemic.incompetence': '/api/governance/incompetence',
+};
+
+// Offline fallback data — used when API is unreachable
+const OFFLINE_FALLBACK: Record<string, Record<string, unknown>[]> = {
+  'governance.beliefs': [
+    { id: 'belief-001', proposition: 'Governance artifacts are append-only', truth_value: 'T', confidence: 0.95, article: 1, updated_at: '2026-03-30T12:00:00Z' },
+    { id: 'belief-002', proposition: 'TARS-ix bridge is production-ready', truth_value: 'P', confidence: 0.72, article: 9, updated_at: '2026-03-31T08:00:00Z' },
+    { id: 'belief-003', proposition: 'Hexavalent logic handles all edge cases', truth_value: 'P', confidence: 0.68, article: 1, updated_at: '2026-03-31T10:00:00Z' },
+    { id: 'belief-004', proposition: 'Parser covers all IXQL commands', truth_value: 'D', confidence: 0.45, article: 7, updated_at: '2026-03-30T18:00:00Z' },
+    { id: 'belief-005', proposition: 'Signal bus handles 50+ concurrent panels', truth_value: 'U', confidence: 0.5, article: 8, updated_at: '2026-03-29T14:00:00Z' },
+    { id: 'belief-006', proposition: 'Constitutional gate blocks all bypass vectors', truth_value: 'P', confidence: 0.78, article: 9, updated_at: '2026-03-31T09:00:00Z' },
+    { id: 'belief-007', proposition: 'Render proofs detect all divergences', truth_value: 'D', confidence: 0.42, article: 8, updated_at: '2026-03-31T06:00:00Z' },
+    { id: 'belief-008', proposition: 'Case law precedent search is sound', truth_value: 'T', confidence: 0.91, article: 7, updated_at: '2026-03-31T11:00:00Z' },
+    { id: 'belief-009', proposition: 'Form transition constraints prevent invalid state', truth_value: 'T', confidence: 0.88, article: 3, updated_at: '2026-03-31T07:00:00Z' },
+    { id: 'belief-010', proposition: 'DecayTracker has zero allocation in tick', truth_value: 'C', confidence: 0.55, article: 8, updated_at: '2026-03-31T10:30:00Z' },
+  ],
+  'governance.backlog': [
+    { id: 'backlog-001', title: 'Fix SHOW EPISTEMIC routing', status: 'done', severity: 3, type: 'bug' },
+    { id: 'backlog-002', title: 'Truth Lattice Panel', status: 'done', severity: 5, type: 'feature' },
+    { id: 'backlog-003', title: 'TARS-ix MCP bridge', status: 'deferred', severity: 4, type: 'feature' },
+    { id: 'backlog-004', title: 'Evidence Ribbon widget', status: 'planned', severity: 3, type: 'feature' },
+    { id: 'backlog-005', title: 'Contradiction Matrix', status: 'planned', severity: 4, type: 'feature' },
+  ],
 };
 
 function isSameOrigin(url: string): boolean {
@@ -185,13 +214,20 @@ export async function resolve(
       case 'api':
       case 'governance': {
         const url = toApiUrl(source, kind);
-        const res = await fetch(url);
-        if (!res.ok) {
-          console.warn(`[DataFetcher] ${res.status} from ${url}`);
-          return [];
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            console.warn(`[DataFetcher] ${res.status} from ${url} — trying offline fallback`);
+            raw = OFFLINE_FALLBACK[source.trim()] ?? [];
+            break;
+          }
+          const json: unknown = await res.json();
+          raw = Array.isArray(json) ? json : [json];
+        } catch {
+          // Network error — use offline fallback
+          console.warn(`[DataFetcher] Network error for ${url} — using offline fallback`);
+          raw = OFFLINE_FALLBACK[source.trim()] ?? [];
         }
-        const json: unknown = await res.json();
-        raw = Array.isArray(json) ? json : [json];
         break;
       }
       default:
