@@ -29,7 +29,7 @@ import { ActivityPanel } from './ActivityPanel';
 import { LLMStatus } from './LLMStatus';
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { IxqlDemoButton } from './IxqlDemoButton';
-import { evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
+import { parseIxqlCommand, evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
 import { recordInvocation } from './IxqlTelemetry';
 import { DynamicPanel, type DynamicPanelDefinition } from './DynamicPanel';
 import { IxqlGridPanel } from './IxqlGridPanel';
@@ -1372,11 +1372,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           if (elapsed >= 0 && elapsed < window) {
             // Fade the propagation color over the window
             const fade = 1 - elapsed / window;
-            const c = new THREE.Color(prop.color);
-            // Mix with original color based on fade
-            const orig = new THREE.Color(l.color);
-            orig.lerp(c, fade);
-            return '#' + orig.getHexString();
+            // Pre-allocated colors to avoid per-frame allocation
+            _linkColorA.set(prop.color);
+            _linkColorB.set(l.color);
+            _linkColorB.lerp(_linkColorA, fade);
+            return '#' + _linkColorB.getHexString();
           }
         }
         return l.color;
@@ -1490,10 +1490,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // Add bloom post-processing — reduced on mobile to save GPU fill rate
-    const bloomSize = isLowEnd
-      ? new THREE.Vector2(container.clientWidth * 0.5, container.clientHeight * 0.5)
-      : new THREE.Vector2(container.clientWidth, container.clientHeight);
+    // Add bloom post-processing — always half-resolution (bloom is a blur effect,
+    // full-res produces identical visual quality but costs 4x fill rate per internal pass)
+    const bloomSize = new THREE.Vector2(
+      Math.floor(container.clientWidth * 0.5),
+      Math.floor(container.clientHeight * 0.5),
+    );
     const bloomPass = new UnrealBloomPass(
       bloomSize,
       isLowEnd ? 0.3 : 0.6,   // strength
@@ -1580,6 +1582,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _trackOffset = new THREE.Vector3();
     const _tickVec3 = new THREE.Vector3(); // pre-allocated for zoom inertia
     const _tickColor = new THREE.Color();  // pre-allocated for IXQL color overrides
+    const _linkColorA = new THREE.Color(); // pre-allocated for edge propagation lerp
+    const _linkColorB = new THREE.Color();
 
     fg.onEngineTick(() => {
       try {
@@ -1730,18 +1734,35 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           group.scale.setScalar(newScale);
         }
 
-        // Phase 2.2: Activity effects — dim stale nodes
+        // Phase 2.2: Activity effects — dim stale nodes (cached refs, no traverse)
         if (staleness > 0.5) {
-          group.traverse((child: THREE.Object3D) => {
-            if (child instanceof THREE.Mesh && child.material instanceof THREE.ShaderMaterial) {
-              if (child.material.uniforms?.uOpacity) {
+          // Use cached core mesh ref if available; fall back to traverse on first encounter
+          const cachedCore = group.userData._cachedCoreMesh as (THREE.Mesh & { material: THREE.ShaderMaterial }) | undefined;
+          if (cachedCore?.material?.uniforms?.uOpacity) {
+            cachedCore.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
+          } else {
+            // One-time traverse to cache the reference
+            group.traverse((child: THREE.Object3D) => {
+              if (child instanceof THREE.Mesh && child.material instanceof THREE.ShaderMaterial && child.material.uniforms?.uOpacity) {
+                group.userData._cachedCoreMesh = child;
                 child.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
               }
+            });
+          }
+          // Cached sprite ref for opacity
+          const cachedSprite = group.userData._cachedSprite as THREE.Sprite | undefined;
+          if (cachedSprite) {
+            (cachedSprite.material as THREE.SpriteMaterial).opacity = 0.5 * prom.opacity * stalenessDim;
+          } else {
+            // One-time find + cache
+            for (const child of group.children) {
+              if (child instanceof THREE.Sprite) {
+                group.userData._cachedSprite = child;
+                (child.material as THREE.SpriteMaterial).opacity = 0.5 * prom.opacity * stalenessDim;
+                break;
+              }
             }
-            if (child instanceof THREE.Sprite) {
-              (child.material as THREE.SpriteMaterial).opacity = 0.5 * prom.opacity * stalenessDim;
-            }
-          });
+          }
         }
 
         // Spin — active nodes rotate, faster = more urgent
@@ -1864,10 +1885,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       dPos.needsUpdate = true;
       } // end temporal dust skip
 
-      // ─── Orbital rings track their nodes ───
+      // ─── Orbital rings track their nodes (O(1) lookup via nodeMap) ───
       for (const ring of ringMeshes) {
         const nodeId = ring.userData.trackNodeId as string;
-        const rNode = (fg.graphData() as { nodes: GraphNode[] }).nodes.find((nd) => nd.id === nodeId) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
+        const rNode = nodeMap.get(nodeId) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
         if (rNode?.x !== undefined) {
           ring.position.set(rNode.x, rNode.y ?? 0, rNode.z ?? 0);
           ring.rotation.x = ring.userData.ringTilt + t * 0.2;
@@ -3509,9 +3530,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             faculty: SeldonFacultyPanel,
             'code-tribunal': CodeTribunal,
             inbox: AdminInbox,
-            'ixql-gen': IxqlCodeGen,
             qa: QAPanel,
           };
+          // IxqlCodeGen needs onRunCommand prop — handle specially
+          if (activePanel === 'ixql-gen') {
+            return React.createElement(IxqlCodeGen, {
+              onRunCommand: (ixql: string) => {
+                const result = parseIxqlCommand(ixql);
+                handleIxqlCommand(result);
+              },
+            });
+          }
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);
           // Dynamic panel from registry (IXQL CREATE PANEL)
