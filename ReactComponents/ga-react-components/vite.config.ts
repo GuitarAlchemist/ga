@@ -1,9 +1,27 @@
-import {defineConfig} from 'vite'
+import {defineConfig, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
-import { createReadStream, existsSync, statSync } from 'fs'
+import { createReadStream, existsSync, statSync, readFileSync } from 'fs'
 import type { Plugin } from 'vite'
+
+// Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
+try {
+  const envLocal = path.resolve(__dirname, '.env.local');
+  if (existsSync(envLocal)) {
+    const lines = readFileSync(envLocal, 'utf-8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq > 0) {
+        const key = trimmed.slice(0, eq).trim();
+        const val = trimmed.slice(eq + 1).trim();
+        if (!process.env[key]) process.env[key] = val;
+      }
+    }
+  }
+} catch { /* ignore */ }
 
 // Serve Godot HTML5 export files from /godot/ path during dev
 function godotStaticPlugin(): Plugin {
