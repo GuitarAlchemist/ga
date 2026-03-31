@@ -1244,6 +1244,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
+    let zoomInertiaHandlerOuter: ((e: WheelEvent) => void) | null = null;
+    let zoomVelocityRef = { v: 0 };
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
@@ -1544,14 +1546,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const t = Date.now() * 0.001;
 
       // ─── Zoom inertia — apply momentum and decay ───
-      if (Math.abs(zoomVelocity) > 0.001) {
-        const cam = fg.camera() as THREE.PerspectiveCamera;
-        const dir = new THREE.Vector3();
-        cam.getWorldDirection(dir);
-        cam.position.addScaledVector(dir, -zoomVelocity);
-        zoomVelocity *= ZOOM_FRICTION;
+      if (Math.abs(zoomVelocityRef.v) > 0.001) {
+        const zCam = fg.camera() as THREE.PerspectiveCamera;
+        const zDir = new THREE.Vector3();
+        zCam.getWorldDirection(zDir);
+        zCam.position.addScaledVector(zDir, -zoomVelocityRef.v);
+        zoomVelocityRef.v *= 0.92;
       } else {
-        zoomVelocity = 0;
+        zoomVelocityRef.v = 0;
       }
 
       // ─── Save camera state every 2 seconds ───
@@ -1952,14 +1954,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     // ─── Zoom inertia — OrbitControls damping doesn't affect zoom ───
-    let zoomVelocity = 0;
-    const ZOOM_FRICTION = 0.92;  // decay per frame (lower = more friction)
+    const ZOOM_FRICTION = 0.92;
     const ZOOM_SENSITIVITY = 0.15;
-    const zoomInertiaHandler = (e: WheelEvent) => {
-      // Accumulate velocity from wheel deltas
-      zoomVelocity += Math.sign(e.deltaY) * ZOOM_SENSITIVITY;
+    zoomInertiaHandlerOuter = (e: WheelEvent) => {
+      zoomVelocityRef.v += Math.sign(e.deltaY) * ZOOM_SENSITIVITY;
     };
-    container.addEventListener('wheel', zoomInertiaHandler, { passive: true });
+    container.addEventListener('wheel', zoomInertiaHandlerOuter, { passive: true });
 
     // ─── AMBIENT PARTICLE FIELD ───
     // Reduced from 5000 for performance
@@ -2628,7 +2628,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
-      container.removeEventListener('wheel', zoomInertiaHandler);
+      if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();

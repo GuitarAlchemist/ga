@@ -228,8 +228,11 @@ export const DemerzelFaceOverlay: React.FC<DemerzelFaceOverlayProps> = ({
       console.log(`[DemerzelFaceOverlay] Loaded ${state.shapeMap.size} blend shapes, bbox: ${bsize.x.toFixed(3)}x${bsize.y.toFixed(3)}x${bsize.z.toFixed(3)}`);
       console.error = origError; // restore after successful load
     }, undefined, (err) => {
-      console.error = origError; // restore on error too
-      console.warn('[DemerzelFaceOverlay] GLTF load error:', err instanceof Error ? err.message : String(err));
+      console.error = origError;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes('KTX2')) {
+        console.warn('[DemerzelFaceOverlay] GLTF load error:', msg);
+      }
     });
 
     // Animation loop
