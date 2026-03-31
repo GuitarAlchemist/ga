@@ -140,6 +140,8 @@ function stepDistinct(
 // NOTE: Only supports top-level field names (not dotted paths like "tags.keywords")
 // ---------------------------------------------------------------------------
 
+const MAX_FLATTEN_ROWS = 10_000; // Safety cap to prevent DoS from huge nested arrays
+
 function stepFlatten(
   data: Record<string, unknown>[],
   step: Extract<PipeStep, { type: 'flatten' }>,
@@ -151,10 +153,12 @@ function stepFlatten(
     if (Array.isArray(val)) {
       for (const item of val) {
         result.push({ ...row, [step.field]: item });
+        if (result.length >= MAX_FLATTEN_ROWS) return result; // safety cap
       }
     } else {
       result.push(row);
     }
+    if (result.length >= MAX_FLATTEN_ROWS) return result;
   }
 
   return result;
