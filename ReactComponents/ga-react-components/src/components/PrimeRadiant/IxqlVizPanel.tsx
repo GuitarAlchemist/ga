@@ -11,6 +11,10 @@ import { resolve, resolveField } from './DataFetcher';
 import type { GraphContext } from './DataFetcher';
 import { executePipeline } from './IxqlPipeEngine';
 import { useSignals, usePublish } from './DashboardSignalBus';
+import {
+  generateVizProof, publishRenderProof, cognitiveChecksum, dataFingerprint,
+  classifyDivergences,
+} from './RenderProof';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -312,6 +316,8 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [renderDivergences, setRenderDivergences] = useState<string[]>([]);
+  const [checksum, setChecksum] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 400 });
   const publishSignal = usePublish(spec.id);
@@ -343,12 +349,46 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
       }
       setData(rows);
       setError(null);
+
+      // Generate viz render proof
+      const labelField = spec.labelField ?? 'name';
+      const labels = rows.map(r => String(r[labelField] ?? ''));
+      const uniqueLabels = new Set(labels).size;
+      const colorField = spec.colorField;
+      let colorCoverage = 1.0;
+      if (colorField) {
+        const mapped = rows.filter(r => {
+          const v = String(r[colorField] ?? '').toUpperCase();
+          return v in HEXAVALENT_NODE_COLORS;
+        });
+        colorCoverage = rows.length > 0 ? mapped.length / rows.length : 1.0;
+      }
+
+      const proof = generateVizProof(
+        spec.id,
+        spec.kind,
+        rows,
+        spec.kind === 'force-graph' ? rows.length : 0,
+        0, // link count computed in graphData memo
+        colorCoverage,
+        uniqueLabels,
+        null, // simulation alpha measured later
+        0,
+      );
+      setRenderDivergences(proof.divergences);
+
+      const specStr = JSON.stringify({ source: spec.binding.source, kind: spec.kind });
+      const fp = dataFingerprint(rows);
+      const scene = `kind:${spec.kind};pts:${rows.length};labels:${uniqueLabels}`;
+      setChecksum(cognitiveChecksum(specStr, fp, scene));
+
+      publishRenderProof(proof);
     } catch (err) {
       setError(String(err));
     } finally {
       setLoading(false);
     }
-  }, [spec.binding.source, spec.binding.wherePredicates, spec.pipeline, graphContext]);
+  }, [spec.binding.source, spec.binding.wherePredicates, spec.pipeline, spec.id, spec.kind, spec.labelField, spec.colorField, graphContext]);
 
   useEffect(() => {
     fetchData();
@@ -430,6 +470,22 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
         <span style={{ fontSize: 10, color: '#6b7280', marginLeft: 'auto' }}>
           {spec.kind} | {data.length} items
         </span>
+        {renderDivergences.length > 0 && (
+          <span
+            style={{
+              background: classifyDivergences(renderDivergences) === 'critical' ? '#ef444422' : '#f9731622',
+              border: `1px solid ${classifyDivergences(renderDivergences) === 'critical' ? '#ef444444' : '#f9731644'}`,
+              borderRadius: 4,
+              color: classifyDivergences(renderDivergences) === 'critical' ? '#ef4444' : '#f97316',
+              fontSize: 9,
+              fontWeight: 'bold',
+              padding: '1px 6px',
+            }}
+            title={renderDivergences.join('\n') + '\nChecksum: ' + checksum}
+          >
+            {renderDivergences.length} div.
+          </span>
+        )}
       </div>
       <div className="ixql-viz-panel__body" style={{ flex: 1, minHeight: 0 }}>
         {spec.kind === 'force-graph' && (

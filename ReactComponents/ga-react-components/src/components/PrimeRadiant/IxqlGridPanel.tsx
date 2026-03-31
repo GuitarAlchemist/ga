@@ -18,6 +18,11 @@ import { applyProjection } from './IxqlWidgetSpec';
 import { executePipeline } from './IxqlPipeEngine';
 import { resolve } from './DataFetcher';
 import { signalBus, useSignals, usePublish } from './DashboardSignalBus';
+import {
+  generateGridProof, publishRenderProof, cognitiveChecksum, dataFingerprint,
+  classifyDivergences,
+  type GridRenderProof, type DivergenceSeverity,
+} from './RenderProof';
 
 // ---------------------------------------------------------------------------
 // Tetravalent cell renderer
@@ -60,12 +65,23 @@ function isHexavalent(value: unknown): boolean {
   return value.toUpperCase() in HEXAVALENT_COLORS;
 }
 
+// Map hexavalent values to CSS temporal classes
+const HEX_CSS_CLASS: Record<string, string> = {
+  T: 'hex-cell--true', TRUE: 'hex-cell--true',
+  P: 'hex-cell--probable', PROBABLE: 'hex-cell--probable',
+  U: 'hex-cell--unknown', UNKNOWN: 'hex-cell--unknown',
+  D: 'hex-cell--doubtful', DOUBTFUL: 'hex-cell--doubtful',
+  F: 'hex-cell--false', FALSE: 'hex-cell--false',
+  C: 'hex-cell--contradictory', CONTRADICTORY: 'hex-cell--contradictory',
+};
+
 const HexavalentCellRenderer: React.FC<{ value: unknown }> = ({ value }) => {
   const str = String(value).toUpperCase();
   const color = HEXAVALENT_COLORS[str] ?? '#888';
   const label = HEXAVALENT_LABELS[str] ?? String(value);
+  const cssClass = HEX_CSS_CLASS[str] ?? '';
   return (
-    <span style={{
+    <span className={cssClass} style={{
       display: 'inline-flex',
       alignItems: 'center',
       gap: 4,
@@ -154,6 +170,68 @@ const GovernedByBadge: React.FC<{ articles: number[] }> = ({ articles }) => {
           A{a}
         </span>
       ))}
+    </span>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Divergence badge — shows render verification warnings inline
+// ---------------------------------------------------------------------------
+
+const DivergenceBadge: React.FC<{ divergences: string[]; checksum: string }> = ({ divergences, checksum }) => {
+  const [expanded, setExpanded] = useState(false);
+  if (divergences.length === 0) return null;
+  const severity = classifyDivergences(divergences);
+  const color = severity === 'critical' ? '#ef4444' : severity === 'warning' ? '#f97316' : '#6b7280';
+
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          background: `${color}22`,
+          border: `1px solid ${color}44`,
+          borderRadius: 4,
+          color,
+          cursor: 'pointer',
+          fontSize: 9,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontWeight: 'bold',
+          padding: '1px 6px',
+          lineHeight: '16px',
+        }}
+        title={divergences.join('\n')}
+      >
+        {divergences.length} divergence{divergences.length > 1 ? 's' : ''}
+      </button>
+      {expanded && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          right: 0,
+          marginTop: 4,
+          background: '#161b22',
+          border: '1px solid #30363d',
+          borderRadius: 6,
+          padding: '8px 10px',
+          fontSize: 10,
+          color: '#e6edf3',
+          minWidth: 280,
+          maxWidth: 400,
+          zIndex: 100,
+          fontFamily: "'JetBrains Mono', monospace",
+          lineHeight: 1.5,
+        }}>
+          {divergences.map((d, i) => (
+            <div key={i} style={{ marginBottom: 4, color }}>
+              {d}
+            </div>
+          ))}
+          <div style={{ marginTop: 6, color: '#6b7280', fontSize: 9 }}>
+            Checksum: {checksum}
+          </div>
+        </div>
+      )}
     </span>
   );
 };
@@ -260,6 +338,8 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext
   const [rowData, setRowData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [renderDivergences, setRenderDivergences] = useState<string[]>([]);
+  const [checksum, setChecksum] = useState('');
   const gridApiRef = useRef<GridApi | null>(null);
   const publishSignal = usePublish(spec.id);
 
@@ -289,12 +369,35 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext
 
       setRowData(rows);
       setError(null);
+
+      // Generate render proof
+      const columnNames = spec.projection
+        ? spec.projection.fields.map(f => f.name)
+        : rows.length > 0 ? Object.keys(rows[0]) : [];
+      const pipeSteps = spec.pipeline ? spec.pipeline.steps.map(s => s.kind) : [];
+      const proof = generateGridProof(
+        spec.id,
+        rows,
+        columnNames,
+        pipeSteps,
+        raw.length,
+        rows.length > 50,
+        0,
+      );
+      setRenderDivergences(proof.divergences);
+
+      const specStr = JSON.stringify({ source: spec.binding.source, projection: spec.projection });
+      const fp = dataFingerprint(rows);
+      const scene = `cols:${columnNames.length};rows:${rows.length};hex:${proof.cellTypes.hexavalentCells}`;
+      setChecksum(cognitiveChecksum(specStr, fp, scene));
+
+      publishRenderProof(proof);
     } catch (err) {
       setError(String(err));
     } finally {
       setLoading(false);
     }
-  }, [spec.binding.source, spec.binding.wherePredicates, spec.projection, spec.pipeline, graphContext]);
+  }, [spec.binding.source, spec.binding.wherePredicates, spec.projection, spec.pipeline, spec.id, graphContext]);
 
   // Initial load + polling
   useEffect(() => {
@@ -385,6 +488,7 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext
             ⟳ {spec.refresh >= 60000 ? `${spec.refresh / 60000}m` : `${spec.refresh / 1000}s`}
           </span>
         )}
+        <DivergenceBadge divergences={renderDivergences} checksum={checksum} />
       </div>
 
       <div

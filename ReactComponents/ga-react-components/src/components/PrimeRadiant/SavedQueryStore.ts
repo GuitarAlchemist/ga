@@ -15,6 +15,8 @@ export interface SavedQuery {
   rationale: string | null;
   version: number;
   savedAt: number;           // epoch ms
+  grammarVersion?: string;   // grammar version at save time (Living Grammar)
+  usesExperimentalKeywords?: string[];  // trial keywords used in this query
 }
 
 type Listener = () => void;
