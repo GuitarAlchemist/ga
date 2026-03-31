@@ -101,20 +101,26 @@ interface EdgePropagation {
 }
 
 // ---------------------------------------------------------------------------
-// Admin detection — local dev tool defaults to admin on localhost.
-// For deployed instances, set localStorage 'pr-admin-token' to the known hash.
+// Admin detection — UI-only gate (NOT a security boundary).
+// Admin mode controls panel visibility, not backend authorization.
+// For deployed instances, set localStorage 'pr-admin-token' to the token value.
+// SECURITY NOTE: This is a cosmetic gate. Backend endpoints must enforce their
+// own authorization. Do not rely on isAdmin for destructive operations.
 // ---------------------------------------------------------------------------
-const PR_ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // sha256('admin')
+const PR_ADMIN_TOKENS = new Set([
+  '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+  // Add deployment-specific tokens here (keep out of public repos)
+]);
 
 function _checkIsAdmin(): boolean {
   if (typeof window === 'undefined') return false;
   // localhost / 127.0.0.1 → always admin (single-user dev tool)
   const host = window.location.hostname;
   if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
-  // Deployed: check localStorage token against known hash
+  // Deployed: check localStorage token against known set
   try {
     const token = localStorage.getItem('pr-admin-token');
-    return token === PR_ADMIN_HASH;
+    return token !== null && PR_ADMIN_TOKENS.has(token);
   } catch { return false; }
 }
 
