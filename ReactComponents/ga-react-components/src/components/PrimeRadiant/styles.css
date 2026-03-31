@@ -10787,3 +10787,108 @@
 .ixql-gen__run-btn:hover {
   background: rgba(126, 231, 135, 0.25);
 }
+
+/* ─── Scene Options — left rail ─── */
+.scene-options {
+  position: absolute;
+  top: 120px;
+  left: 8px;
+  z-index: 30;
+  font-family: 'JetBrains Mono', monospace;
+}
+.scene-options__toggle {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: rgba(13, 17, 23, 0.85);
+  color: #8b949e;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: all 0.15s;
+}
+.scene-options__toggle:hover {
+  color: #e6edf3;
+  border-color: #58a6ff;
+}
+.scene-options__panel {
+  margin-top: 4px;
+  width: 160px;
+  background: rgba(13, 17, 23, 0.92);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 0;
+  backdrop-filter: blur(8px);
+  animation: sceneOptSlide 0.15s ease-out;
+}
+@keyframes sceneOptSlide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.scene-options__title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #484f58;
+  padding: 0 10px 6px;
+  border-bottom: 1px solid #21262d;
+  margin-bottom: 4px;
+}
+.scene-options__group {
+  margin-bottom: 2px;
+}
+.scene-options__group-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #484f58;
+  padding: 4px 10px 2px;
+}
+.scene-options__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 10px;
+  border: none;
+  background: none;
+  color: #6e7681;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.1s;
+}
+.scene-options__item:hover {
+  background: rgba(88, 166, 255, 0.08);
+  color: #c9d1d9;
+}
+.scene-options__item--on {
+  color: #e6edf3;
+}
+.scene-options__icon {
+  font-size: 12px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.scene-options__label {
+  flex: 1;
+}
+.scene-options__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #30363d;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.scene-options__dot--on {
+  background: #33CC66;
+  box-shadow: 0 0 4px #33CC66;
+}

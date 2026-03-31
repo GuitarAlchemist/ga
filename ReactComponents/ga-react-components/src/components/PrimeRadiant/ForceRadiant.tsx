@@ -80,6 +80,7 @@ import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './Cryst
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { IxqlCodeGen } from './IxqlCodeGen';
+import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
 import { autoRemediation } from './AutoRemediation';
 import { proofVerifier } from './ProofVerifier';
@@ -650,6 +651,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   // A2A agent presence — live status of ix, TARS, GA, Seldon, Demerzel
   const a2aAgents = useAgentPresence();
+  // Scene options — toggles for visual features
+  const sceneOptionsRef = React.useRef<SceneOptionsState>({});
+  const handleSceneOptions = React.useCallback((opts: SceneOptionsState) => {
+    sceneOptionsRef.current = opts;
+  }, []);
   // Deep linking — read/write URL params for shareable state
   const [shareToast, setShareToast] = useState(false);
   const deepLink = useDeepLink({
@@ -1588,6 +1594,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         zoomVelocityRef.v *= 0.92;
       } else {
         zoomVelocityRef.v = 0;
+      }
+
+      // ─── Apply scene options toggles ───
+      const sOpts = sceneOptionsRef.current;
+      if (Object.keys(sOpts).length > 0) {
+        starField.visible = sOpts.stars !== false;
+        ambientDust.visible = sOpts.dust !== false && qualityLevel !== 'low';
+        if (filamentsHandle) filamentsHandle.group.visible = sOpts.filaments !== false && qualityLevel !== 'low';
+        if (eiffelHandleOuter) eiffelHandleOuter.group.visible = sOpts.tower === true;
+        if (controls) controls.autoRotate = sOpts.autorotate !== false;
       }
 
       // ─── Save camera state every 2 seconds ───
@@ -3100,6 +3116,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       )}
 
       <GalacticClock />
+      <SceneOptions onChange={handleSceneOptions} />
 
       {/* Viewer presence indicator */}
       {viewers.length > 0 && (
