@@ -180,12 +180,33 @@ const GovernedByBadge: React.FC<{ articles: number[] }> = ({ articles }) => {
 
 const DivergenceBadge: React.FC<{ divergences: string[]; checksum: string }> = ({ divergences, checksum }) => {
   const [expanded, setExpanded] = useState(false);
+  const wrapperRef = useRef<HTMLSpanElement>(null);
+
+  // Click-outside and Escape to close
+  useEffect(() => {
+    if (!expanded) return;
+    const handleClick = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [expanded]);
+
   if (divergences.length === 0) return null;
   const severity = classifyDivergences(divergences);
   const color = severity === 'critical' ? '#ef4444' : severity === 'warning' ? '#f97316' : '#6b7280';
 
   return (
-    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+    <span ref={wrapperRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
@@ -374,7 +395,7 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext
       const columnNames = spec.projection
         ? spec.projection.fields.map(f => f.name)
         : rows.length > 0 ? Object.keys(rows[0]) : [];
-      const pipeSteps = spec.pipeline ? spec.pipeline.steps.map(s => s.kind) : [];
+      const pipeSteps = spec.pipeline ? spec.pipeline.steps.map(s => s.type) : [];
       const proof = generateGridProof(
         spec.id,
         rows,

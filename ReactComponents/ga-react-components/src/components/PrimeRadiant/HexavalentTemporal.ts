@@ -114,7 +114,16 @@ export class DecayTracker {
         return i;
       }
     }
-    // New slot
+    // Reuse an untracked slot first
+    for (let i = 0; i < this.size; i++) {
+      if (this.values[i] === 0) {
+        this.fieldIds[i] = fieldId;
+        this.timestamps[i] = Date.now();
+        this.values[i] = value === 'P' ? 1 : 2;
+        return i;
+      }
+    }
+    // Append new slot
     if (this.size < this.timestamps.length) {
       const idx = this.size;
       this.fieldIds[idx] = fieldId;
@@ -246,7 +255,7 @@ export function adaptiveRefreshInterval(
 
   const volatility = totalWeight / totalCells; // [0, 1]
   const factor = (1 - volatility) * (1 - volatility); // quadratic
-  return Math.max(minIntervalMs, Math.round(baseIntervalMs * factor + minIntervalMs));
+  return Math.max(minIntervalMs, Math.round(baseIntervalMs * factor));
 }
 
 /**

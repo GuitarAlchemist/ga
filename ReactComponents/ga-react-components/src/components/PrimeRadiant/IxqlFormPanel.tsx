@@ -346,17 +346,20 @@ export const IxqlFormPanel: React.FC<IxqlFormPanelProps> = ({ spec }) => {
     }
   }, [signalValues, spec.subscribe, spec.fields]);
 
-  // Generate and publish form render proof on mount and when values change
+  // Generate and publish form render proof — debounced to avoid firing on every keystroke
   React.useEffect(() => {
-    const proof = generateFormProof(
-      spec.id,
-      spec.fields.map(f => f.name),
-      spec.fields.map(f => f.fieldType),
-      spec.hexavalent,
-      !!spec.submitCommand,
-      values,
-    );
-    publishRenderProof(proof);
+    const timer = setTimeout(() => {
+      const proof = generateFormProof(
+        spec.id,
+        spec.fields.map(f => f.name),
+        spec.fields.map(f => f.fieldType),
+        spec.hexavalent,
+        !!spec.submitCommand,
+        values,
+      );
+      publishRenderProof(proof);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [spec.id, spec.fields, spec.hexavalent, spec.submitCommand, values]);
 
   const updateValue = useCallback((name: string, value: unknown) => {

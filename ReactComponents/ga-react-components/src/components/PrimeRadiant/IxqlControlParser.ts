@@ -2,6 +2,9 @@
 // IXQL parser for Prime Radiant visualization control and declarative UI
 // Active grammar: SELECT | RESET | CREATE PANEL | BIND HEALTH | ON...THEN
 
+// Living Grammar: extension registry for hot-loaded pipe step keywords
+import { extensionRegistry } from './GrammarExtensionRegistry';
+
 export interface IxqlPredicate {
   field: string;       // dotted path: "health.staleness", "type", "name"
   operator: '>' | '<' | '=' | '>=' | '<=' | '!=' | '~';
@@ -577,9 +580,6 @@ function parseProjectClause(ctx: ParserContext): ProjectionField[] {
 const PIPE_STEP_KEYWORDS = new Set(['FILTER', 'SORT', 'LIMIT', 'SKIP', 'DISTINCT', 'FLATTEN', 'GROUP']);
 const AGGREGATE_FUNCTIONS = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
 
-// Living Grammar: import extension registry for hot-loaded pipe step keywords
-import { extensionRegistry } from './GrammarExtensionRegistry';
-
 // Clause keywords that end a PIPE step (so we know when to stop consuming tokens)
 const CLAUSE_KEYWORDS = new Set(['PIPE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'PUBLISH', 'SUBSCRIBE', 'TEMPLATE', 'SOURCE', 'FROM']);
 
@@ -603,7 +603,7 @@ function parseAggregate(token: string): AggregateSpec {
   throw new Error(`Invalid aggregate '${token}'. Expected COUNT, SUM(field), AVG(field), MIN(field), or MAX(field)`);
 }
 
-function parsePipeStep(ctx: ParserContext): PipeStep {
+function parsePipeSteps(ctx: ParserContext): PipeStep[] {
   const stepKw = peek(ctx);
 
   // Living Grammar: check extension registry for hot-loaded keywords
@@ -642,14 +642,13 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
       }
     }
 
-    // Desugar and record usage
+    // Desugar and record usage — return ALL desugared steps
     extensionRegistry.recordUsage(stepKw);
     const desugared = ext.desugar(args);
-    // Return the first step; if multiple, we return the first and
-    // the caller will get the rest via the extension's desugar output.
-    // For simplicity, flatten into a single step sequence by returning first.
-    // TODO: support multi-step desugaring in the pipe parser loop
-    return desugared[0] ?? { type: 'limit', count: 10 };
+    if (desugared.length === 0) {
+      throw new Error(`Extension ${stepKw} desugared to zero steps`);
+    }
+    return desugared;
   }
 
   if (!stepKw || !PIPE_STEP_KEYWORDS.has(stepKw)) {
@@ -661,7 +660,7 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
 
   switch (stepKw) {
     case 'FILTER':
-      return { type: 'filter', predicates: parsePredicates(ctx) };
+      return [{ type: 'filter', predicates: parsePredicates(ctx) }];
 
     case 'SORT': {
       const field = nextRaw(ctx);
@@ -671,19 +670,19 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
         direction = dirToken;
         next(ctx);
       }
-      return { type: 'sort', field, direction };
+      return [{ type: 'sort', field, direction }];
     }
 
     case 'LIMIT': {
       const count = parseInt(nextRaw(ctx), 10);
       if (isNaN(count) || count < 0) throw new Error('PIPE LIMIT requires a non-negative integer');
-      return { type: 'limit', count };
+      return [{ type: 'limit', count }];
     }
 
     case 'SKIP': {
       const count = parseInt(nextRaw(ctx), 10);
       if (isNaN(count) || count < 0) throw new Error('PIPE SKIP requires a non-negative integer');
-      return { type: 'skip', count };
+      return [{ type: 'skip', count }];
     }
 
     case 'DISTINCT': {
@@ -693,12 +692,12 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
       if (nextKw && !CLAUSE_KEYWORDS.has(nextKw) && !PIPE_STEP_KEYWORDS.has(nextKw)) {
         field = nextRaw(ctx);
       }
-      return { type: 'distinct', field };
+      return [{ type: 'distinct', field }];
     }
 
     case 'FLATTEN': {
       const field = nextRaw(ctx);
-      return { type: 'flatten', field };
+      return [{ type: 'flatten', field }];
     }
 
     case 'GROUP': {
@@ -715,7 +714,7 @@ function parsePipeStep(ctx: ParserContext): PipeStep {
         // Default to COUNT if no aggregates specified
         aggregates.push({ fn: 'COUNT', field: null, alias: 'count' });
       }
-      return { type: 'group', byField, aggregates };
+      return [{ type: 'group', byField, aggregates }];
     }
 
     default:
@@ -778,7 +777,7 @@ function parseCreateGridPanel(ctx: ParserContext, id: string): CreateGridPanelCo
 
       case 'PIPE':
         next(ctx);
-        pipe.push(parsePipeStep(ctx));
+        pipe.push(...parsePipeSteps(ctx));
         break;
 
       case 'LAYOUT':
@@ -895,7 +894,7 @@ function parseCreateViz(ctx: ParserContext, id: string): CreateVizCommand {
 
       case 'PIPE':
         next(ctx);
-        pipe.push(parsePipeStep(ctx));
+        pipe.push(...parsePipeSteps(ctx));
         break;
 
       case 'NODES':

@@ -138,7 +138,7 @@ export function findPrecedent(
   source: string,
   panelType: string,
 ): PrecedentResult | null {
-  const resolved = index.cases.filter(c => c.outcome !== 'pending');
+  const resolved = index.cases.filter(c => c.outcome === 'upheld');
   if (resolved.length === 0) return null;
 
   // Check standing orders first — they take priority
@@ -146,7 +146,7 @@ export function findPrecedent(
     if (so.status !== 'active') continue;
     const articleMatch = violatedArticles.some(a => {
       const prefix = extractArticlePrefix(a);
-      return prefix.indexOf(String(so.article)) >= 0;
+      return prefix === 'Article ' + so.article;
     });
     if (articleMatch && source.indexOf(so.source_pattern) >= 0) {
       return {
@@ -262,7 +262,6 @@ export function fileCase(
 ): ConstitutionalCase {
   // Extract article number from first violated article
   const firstArticle = violatedArticles[0] ?? 'Article 1';
-  const numMatch = firstArticle.match ? undefined : undefined;
   let articleNum = 1;
   // Extract number without regex — find "Article " then parse the number
   const articleIdx = firstArticle.indexOf('Article ');
@@ -410,6 +409,13 @@ class CaseLawStore {
 
   /** Get stats */
   getStats(): CaseStats { return this.index.stats; }
+
+  /** Reset store for test isolation */
+  reset(): void {
+    this.cases = [];
+    this.index = { cases: [], standing_orders: [], stats: { total: 0, pending: 0, upheld: 0, overturned: 0, modified: 0, false_positives: 0 } };
+    this.standingOrders = [];
+  }
 }
 
 export const caseLawStore = new CaseLawStore();
