@@ -128,11 +128,12 @@ export function dataFingerprint(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return 'empty';
   const parts: string[] = [];
   parts.push(String(rows.length));
-  // Sample first, middle, and last rows for efficiency
-  const indices = [0];
-  if (rows.length > 2) indices.push(Math.floor(rows.length / 2));
-  if (rows.length > 1) indices.push(rows.length - 1);
-  for (const idx of indices) {
+  // Sample sqrt(N) evenly-spaced rows for adequate coverage
+  // 100 rows → 10 samples, 1000 rows → ~32 samples, 10 rows → 4 samples
+  const sampleCount = Math.min(rows.length, Math.max(3, Math.ceil(Math.sqrt(rows.length))));
+  const step = rows.length / sampleCount;
+  for (let s = 0; s < sampleCount; s++) {
+    const idx = Math.min(Math.floor(s * step), rows.length - 1);
     const row = rows[idx];
     const keys = Object.keys(row).sort();
     for (const k of keys) {

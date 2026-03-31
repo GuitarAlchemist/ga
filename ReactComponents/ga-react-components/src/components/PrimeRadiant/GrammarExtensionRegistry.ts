@@ -104,12 +104,24 @@ export interface ConstitutionalGateResult {
  * Returns allowed=false with violation reasons if blocked.
  */
 export function constitutionalGate(keyword: string): ConstitutionalGateResult {
-  const upper = keyword.toUpperCase();
+  // Normalize: strip zero-width chars, combining marks, and non-alphanumeric chars
+  // Prevents unicode bypass (e.g., I\u200BGNORE, I\u0307GNORE)
+  let normalized = '';
+  for (let i = 0; i < keyword.length; i++) {
+    const code = keyword.charCodeAt(i);
+    // Keep only ASCII alphanumeric and underscore
+    if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122) ||
+        (code >= 48 && code <= 57) || code === 95) {
+      normalized += keyword[i];
+    }
+  }
+  const upper = normalized.toUpperCase();
   const violations: string[] = [];
 
   for (const pattern of BLOCKED_PATTERNS) {
     for (const blocked of pattern.keywords) {
-      if (upper === blocked || upper.indexOf(blocked) >= 0) {
+      // Exact match only — prevents over-blocking (e.g., SIGNORE != IGNORE)
+      if (upper === blocked) {
         violations.push(
           `Keyword "${keyword}" blocked by Articles ${pattern.articles.join(', ')}: ${pattern.reason}`
         );
