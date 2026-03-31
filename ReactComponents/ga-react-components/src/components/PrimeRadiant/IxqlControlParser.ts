@@ -612,7 +612,8 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
     next(ctx); // consume the keyword
 
     // Parse arguments based on extension arg spec
-    const args: Record<string, unknown> = {};
+    // Object.create(null) prevents prototype pollution via __proto__/constructor args
+    const args: Record<string, unknown> = Object.create(null);
     for (const argDef of ext.args) {
       const nextToken = peek(ctx);
       // Check if next token is a clause/pipe keyword (end of args)
