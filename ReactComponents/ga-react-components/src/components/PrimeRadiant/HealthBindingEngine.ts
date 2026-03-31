@@ -190,8 +190,14 @@ if (typeof window !== 'undefined') {
     });
   };
 
-  // Delay probes to avoid startup noise
-  setTimeout(() => {
+  // Delay probes — only probe optional health endpoints after main API is confirmed up.
+  // These endpoints may not exist on all deployments, so probe quietly at 30s.
+  setTimeout(async () => {
+    // Check if main API is up first
+    try {
+      const main = await fetch('/api/chatbot/status', { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+      if (!main.ok) return; // API not up — skip optional health probes
+    } catch { return; }
     probeAndRegister('llm', '/api/llm/status', 'llm', [
       { predicate: { field: 'status', operator: '=', value: 'depleted' }, status: 'error' },
       { predicate: { field: 'status', operator: '=', value: 'limited' }, status: 'warn' },
@@ -200,5 +206,5 @@ if (typeof window !== 'undefined') {
       { predicate: { field: 'status', operator: '=', value: 'failure' }, status: 'error' },
       { predicate: { field: 'status', operator: '=', value: 'in_progress' }, status: 'warn' },
     ], 'ok');
-  }, 15_000);
+  }, 30_000);
 }
