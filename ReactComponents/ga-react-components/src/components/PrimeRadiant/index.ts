@@ -44,6 +44,8 @@ export type { SeldonDashboardProps } from './SeldonDashboard';
 export { createSpaceStation, updateSpaceStation } from './SpaceStation';
 export { createCrystalEiffelTower } from './CrystalEiffelTower';
 export type { CrystalEiffelTowerHandle } from './CrystalEiffelTower';
+export { getNodeMaterial, getNodeMaterialWithGlow, getMaterialDef, disposeCrystalMaterials } from './CrystalNodeMaterials';
+export type { NodeMaterialDef } from './CrystalNodeMaterials';
 export { IxqlCommandInput } from './IxqlCommandInput';
 export { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
 export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, CreateVizCommand, CreateFormCommand, FormFieldDef, VizKind, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand, OnViolationCommand, ViolationSeverity, PipeStep, AggregateSpec, AggregateFunction, DiagnoseCommand, HealthCheckCommand, ShowCommand, HideCommand, FixCommand } from './IxqlControlParser';

@@ -1,0 +1,259 @@
+// src/components/PrimeRadiant/CrystalNodeMaterials.ts
+// Metallic & crystal materials for governance graph nodes.
+// Each node type gets a distinct precious material treatment.
+// Designed via Octopus UI/UX Design Intelligence.
+
+import * as THREE from 'three';
+import type { GovernanceNodeType } from './types';
+
+// ---------------------------------------------------------------------------
+// Material definitions — one per governance artifact type
+// ---------------------------------------------------------------------------
+
+export interface NodeMaterialDef {
+  color: number;
+  metalness: number;
+  roughness: number;
+  clearcoat: number;
+  clearcoatRoughness: number;
+  transmission: number;     // 0 = opaque metal, >0 = crystal/glass
+  ior: number;              // index of refraction (glass ~1.5, crystal ~2.0, diamond ~2.42)
+  thickness: number;        // refraction depth
+  iridescence: number;      // 0-1 rainbow sheen
+  iridescenceIOR: number;
+  sheen: number;            // 0-1 velvet/silk sheen
+  sheenColor: number;
+  emissive: number;
+  emissiveIntensity: number;
+  envMapIntensity: number;
+}
+
+const MATERIAL_DEFS: Record<GovernanceNodeType, NodeMaterialDef> = {
+  // Constitution — Polished Gold Crown: commanding, warm, regal
+  constitution: {
+    color: 0xFFD700,
+    metalness: 0.95,
+    roughness: 0.08,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    transmission: 0,
+    ior: 1.5,
+    thickness: 0,
+    iridescence: 0.3,
+    iridescenceIOR: 1.8,
+    sheen: 0.4,
+    sheenColor: 0xFFA500,
+    emissive: 0xFFAA00,
+    emissiveIntensity: 0.15,
+    envMapIntensity: 2.0,
+  },
+
+  // Department — Brushed Silver Orb: organizational, clean, structural
+  department: {
+    color: 0xC0C0C0,
+    metalness: 0.9,
+    roughness: 0.25,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.15,
+    transmission: 0,
+    ior: 1.5,
+    thickness: 0,
+    iridescence: 0.1,
+    iridescenceIOR: 1.5,
+    sheen: 0.2,
+    sheenColor: 0xE8E8E8,
+    emissive: 0x888888,
+    emissiveIntensity: 0.08,
+    envMapIntensity: 1.5,
+  },
+
+  // Policy — Patinated Bronze Shield: warm, aged, trustworthy
+  policy: {
+    color: 0xCD7F32,
+    metalness: 0.85,
+    roughness: 0.35,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.3,
+    transmission: 0,
+    ior: 1.5,
+    thickness: 0,
+    iridescence: 0.2,
+    iridescenceIOR: 1.6,
+    sheen: 0.3,
+    sheenColor: 0x8B6914,
+    emissive: 0x8B4513,
+    emissiveIntensity: 0.1,
+    envMapIntensity: 1.2,
+  },
+
+  // Persona — Amethyst Crystal: translucent purple, mystical inner glow
+  persona: {
+    color: 0x9966CC,
+    metalness: 0.05,
+    roughness: 0.05,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.02,
+    transmission: 0.85,
+    ior: 1.9,
+    thickness: 1.5,
+    iridescence: 0.6,
+    iridescenceIOR: 2.0,
+    sheen: 0,
+    sheenColor: 0x000000,
+    emissive: 0x7B2FBE,
+    emissiveIntensity: 0.25,
+    envMapIntensity: 1.8,
+  },
+
+  // Pipeline — Oxidized Copper Wire: teal patina, iridescent
+  pipeline: {
+    color: 0xB87333,
+    metalness: 0.8,
+    roughness: 0.4,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.2,
+    transmission: 0,
+    ior: 1.5,
+    thickness: 0,
+    iridescence: 0.8,
+    iridescenceIOR: 1.7,
+    sheen: 0.5,
+    sheenColor: 0x2FCED6,
+    emissive: 0x2E8B8B,
+    emissiveIntensity: 0.12,
+    envMapIntensity: 1.4,
+  },
+
+  // Schema — Diamond: clear crystal, maximum refraction, brilliant
+  schema: {
+    color: 0xE8E8F0,
+    metalness: 0,
+    roughness: 0,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0,
+    transmission: 0.95,
+    ior: 2.42,
+    thickness: 0.8,
+    iridescence: 0.4,
+    iridescenceIOR: 2.2,
+    sheen: 0,
+    sheenColor: 0x000000,
+    emissive: 0xAABBFF,
+    emissiveIntensity: 0.15,
+    envMapIntensity: 3.0,
+  },
+
+  // Test — Emerald: green gem, faceted, deep color
+  test: {
+    color: 0x50C878,
+    metalness: 0.05,
+    roughness: 0.08,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    transmission: 0.75,
+    ior: 1.58,
+    thickness: 1.2,
+    iridescence: 0.3,
+    iridescenceIOR: 1.7,
+    sheen: 0,
+    sheenColor: 0x000000,
+    emissive: 0x228B22,
+    emissiveIntensity: 0.2,
+    envMapIntensity: 2.0,
+  },
+
+  // IXQL — Rose Gold: modern, warm pink-gold, reflective
+  ixql: {
+    color: 0xE8A090,
+    metalness: 0.92,
+    roughness: 0.12,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.08,
+    transmission: 0,
+    ior: 1.5,
+    thickness: 0,
+    iridescence: 0.5,
+    iridescenceIOR: 1.9,
+    sheen: 0.6,
+    sheenColor: 0xFFB6C1,
+    emissive: 0xCC6666,
+    emissiveIntensity: 0.1,
+    envMapIntensity: 2.0,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Material cache — one MeshPhysicalMaterial per type
+// ---------------------------------------------------------------------------
+
+const materialCache = new Map<GovernanceNodeType, THREE.MeshPhysicalMaterial>();
+
+/** Create or retrieve a cached MeshPhysicalMaterial for a node type */
+export function getNodeMaterial(type: GovernanceNodeType): THREE.MeshPhysicalMaterial {
+  const cached = materialCache.get(type);
+  if (cached) return cached;
+
+  const def = MATERIAL_DEFS[type];
+  if (!def) {
+    // Fallback: generic glass
+    const fallback = new THREE.MeshPhysicalMaterial({
+      color: 0x888888,
+      metalness: 0.5,
+      roughness: 0.3,
+      clearcoat: 0.5,
+      transparent: true,
+      opacity: 0.9,
+    });
+    materialCache.set(type, fallback);
+    return fallback;
+  }
+
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: def.color,
+    metalness: def.metalness,
+    roughness: def.roughness,
+    clearcoat: def.clearcoat,
+    clearcoatRoughness: def.clearcoatRoughness,
+    transmission: def.transmission,
+    ior: def.ior,
+    thickness: def.thickness,
+    iridescence: def.iridescence,
+    iridescenceIOR: def.iridescenceIOR,
+    sheen: def.sheen,
+    sheenColor: new THREE.Color(def.sheenColor),
+    emissive: new THREE.Color(def.emissive),
+    emissiveIntensity: def.emissiveIntensity,
+    envMapIntensity: def.envMapIntensity,
+    transparent: def.transmission > 0,
+    opacity: def.transmission > 0 ? 0.95 : 1.0,
+    side: THREE.DoubleSide,
+  });
+
+  materialCache.set(type, mat);
+  return mat;
+}
+
+/** Get a clone with adjusted emissive intensity (for health-based glow) */
+export function getNodeMaterialWithGlow(
+  type: GovernanceNodeType,
+  glowMultiplier: number,
+): THREE.MeshPhysicalMaterial {
+  const base = getNodeMaterial(type);
+  const clone = base.clone();
+  const def = MATERIAL_DEFS[type];
+  if (def) {
+    clone.emissiveIntensity = def.emissiveIntensity * glowMultiplier;
+  }
+  return clone;
+}
+
+/** Get the raw material definition for a type (for UI/debug) */
+export function getMaterialDef(type: GovernanceNodeType): NodeMaterialDef | undefined {
+  return MATERIAL_DEFS[type];
+}
+
+/** Dispose all cached materials */
+export function disposeCrystalMaterials(): void {
+  for (const mat of materialCache.values()) mat.dispose();
+  materialCache.clear();
+}
