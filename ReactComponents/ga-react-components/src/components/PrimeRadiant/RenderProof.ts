@@ -148,6 +148,10 @@ export function dataFingerprint(rows: Record<string, unknown>[]): string {
 // ---------------------------------------------------------------------------
 
 const HEXAVALENT_VALUES = new Set(['T', 'P', 'U', 'D', 'F', 'C', 'TRUE', 'PROBABLE', 'UNKNOWN', 'DOUBTFUL', 'FALSE', 'CONTRADICTORY']);
+const HEXAVALENT_NORMALIZE: Record<string, string> = {
+  TRUE: 'T', PROBABLE: 'P', UNKNOWN: 'U', DOUBTFUL: 'D', FALSE: 'F', CONTRADICTORY: 'C',
+  T: 'T', P: 'P', U: 'U', D: 'D', F: 'F', C: 'C',
+};
 const CONFIDENCE_KEYWORDS = ['confidence', 'score', 'resilience', 'staleness'];
 
 export function generateGridProof(
@@ -178,22 +182,8 @@ export function generateGridProof(
         const upper = val.toUpperCase();
         if (HEXAVALENT_VALUES.has(upper)) {
           hexavalentCells++;
-          const short = upper.charAt(0) === 'T' && upper.length > 1 ? upper.charAt(0) :
-                         upper.charAt(0) === 'P' && upper !== 'P' ? 'P' :
-                         upper.charAt(0) === 'U' && upper !== 'U' ? 'U' :
-                         upper.charAt(0) === 'D' && upper !== 'D' ? 'D' :
-                         upper.charAt(0) === 'F' && upper !== 'F' ? 'F' :
-                         upper.charAt(0) === 'C' && upper !== 'C' ? 'C' :
-                         upper;
-          // Normalize to single letter
-          const key = short.length === 1 ? short :
-                      upper === 'TRUE' ? 'T' :
-                      upper === 'PROBABLE' ? 'P' :
-                      upper === 'UNKNOWN' ? 'U' :
-                      upper === 'DOUBTFUL' ? 'D' :
-                      upper === 'FALSE' ? 'F' :
-                      upper === 'CONTRADICTORY' ? 'C' : upper;
-          if (hexDist[key] !== undefined) hexDist[key]++;
+          const key = HEXAVALENT_NORMALIZE[upper];
+          if (key && hexDist[key] !== undefined) hexDist[key]++;
         }
       }
       if (typeof val === 'number' && val >= 0 && val <= 1) {

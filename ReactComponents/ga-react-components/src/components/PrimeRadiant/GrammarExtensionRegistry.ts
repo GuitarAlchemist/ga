@@ -246,6 +246,13 @@ class ExtensionRegistryImpl {
     return buffer;
   }
 
+  /** Reset registry for test isolation */
+  reset(): void {
+    this.extensions.clear();
+    this.version = { major: 1, minor: 0, patch: 0 };
+    this.telemetryBuffer = [];
+  }
+
   // -----------------------------------------------------------------------
   // Proposal processing — accept TARS grammar proposals
   // -----------------------------------------------------------------------
@@ -276,8 +283,7 @@ class ExtensionRegistryImpl {
     // Build desugar function from spec
     const desugar = buildDesugarFunction(proposal.desugar_spec);
 
-    // Auto-approve as trial if confidence >= 0.9 and sugar-only
-    const status: ExtensionStatus = proposal.confidence >= 0.9 ? 'trial' : 'trial';
+    const status: ExtensionStatus = 'trial';
 
     const ext: PipeStepExtension = {
       keyword: proposal.keyword,
