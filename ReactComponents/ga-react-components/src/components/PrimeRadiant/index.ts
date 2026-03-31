@@ -74,6 +74,9 @@ export type { ConstitutionalCase, CasePredicate, StandingOrder, CaseIndex, CaseI
 // Phase 8: Living Grammar Extension Registry
 export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistry';
 export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
+// Step 5: Truth Lattice Panel — hexavalent state transition visualization
+export { IxqlTruthLatticePanel } from './IxqlTruthLatticePanel';
+export type { IxqlTruthLatticePanelProps } from './IxqlTruthLatticePanel';
 // Step 4: ProofVerifier — closes governance self-verification loop
 export { proofVerifier } from './ProofVerifier';
 export type { ProofHistoryEntry, ProofDivergenceAlert } from './ProofVerifier';

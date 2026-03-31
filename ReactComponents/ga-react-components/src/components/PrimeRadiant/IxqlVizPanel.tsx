@@ -15,6 +15,7 @@ import {
   generateVizProof, publishRenderProof, cognitiveChecksum, dataFingerprint,
   classifyDivergences,
 } from './RenderProof';
+import { IxqlTruthLatticePanel } from './IxqlTruthLatticePanel';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -530,6 +531,9 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
           <div style={{ padding: 24, color: '#6b7280', fontSize: 12 }}>
             Timeline visualization — coming in Phase 2b
           </div>
+        )}
+        {spec.kind === 'truth-lattice' && (
+          <IxqlTruthLatticePanel spec={spec} graphContext={graphContext} />
         )}
       </div>
     </div>
