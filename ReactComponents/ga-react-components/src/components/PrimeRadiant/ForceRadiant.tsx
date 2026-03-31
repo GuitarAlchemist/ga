@@ -1515,6 +1515,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let lastFpsCheck = Date.now();
     let currentFps = 60;
     let qualityLevel: 'high' | 'medium' | 'low' = isLowEnd ? 'low' : 'high';
+    let qualityBudget = isLowEnd ? -0.5 : 1.0; // -1.0 to 1.0 smooth quality target
     // ─── Performance info panel (FPS + GPU + memory) ───
     // Detect GPU name from WebGL context
     let gpuName = 'Unknown GPU';
@@ -1616,26 +1617,40 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           texInfo ? `<div class="prime-radiant__perf-row"><span class="prime-radiant__perf-label">Texture</span><span class="prime-radiant__perf-value">${texInfo}</span></div>` : '',
         ].join('');
 
-        // Auto-downgrade
-        if (currentFps < 25 && qualityLevel !== 'low') {
-          qualityLevel = 'low';
-          ambientDust.visible = false;
-          starField.visible = false;
-          demerzelFace.visible = false;
-          bloomPass.strength = 0.15;
-          if (filamentsHandle) filamentsHandle.group.visible = false;
-        } else if (currentFps < 40 && qualityLevel === 'high') {
-          qualityLevel = 'medium';
-          ambientDust.visible = false;
-          bloomPass.strength = 0.3;
-        } else if (currentFps >= 55 && qualityLevel !== 'high') {
-          qualityLevel = 'high';
-          ambientDust.visible = true;
-          starField.visible = true;
-          demerzelFace.visible = true;
-          bloomPass.strength = 0.5;
-          if (filamentsHandle) filamentsHandle.group.visible = true;
+        // ─── Auto-regulation: smooth FPS-driven quality control ───
+        // Target: 45 FPS. Adjusts multiple knobs gradually, not in hard steps.
+        // Each knob has a cost (FPS impact) and visual importance (what to shed first).
+        const TARGET_FPS = 45;
+        const fpsDelta = currentFps - TARGET_FPS;
+
+        // Quality budget: -1.0 (shed everything) to +1.0 (max quality)
+        // Smooth toward target using exponential moving average
+        const targetBudget = Math.max(-1, Math.min(1, fpsDelta / 30));
+        qualityBudget = qualityBudget + (targetBudget - qualityBudget) * 0.15;
+
+        // Shed order (first to go → last to go):
+        // 1. Ambient dust (cheap visual, high particle count)
+        // 2. Bloom strength (GPU-heavy post-process)
+        // 3. Filaments (moderate GPU cost)
+        // 4. Starfield (many points)
+        // 5. Demerzel face (3D mesh)
+        // 6. Pixel ratio (nuclear option — reduces resolution)
+        ambientDust.visible = qualityBudget > -0.7;
+        bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+        if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
+        starField.visible = qualityBudget > -0.6;
+        demerzelFace.visible = qualityBudget > -0.8;
+
+        // Pixel ratio — only reduce as last resort, restore when budget recovers
+        const renderer = fg.renderer();
+        if (qualityBudget < -0.9 && renderer.getPixelRatio() > 1.0) {
+          renderer.setPixelRatio(1.0);
+        } else if (qualityBudget > 0.3 && renderer.getPixelRatio() < Math.min(window.devicePixelRatio, 1.5)) {
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         }
+
+        // Update quality level label for display
+        qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
       }
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
