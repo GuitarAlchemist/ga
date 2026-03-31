@@ -34,10 +34,14 @@ async function fetchGrammarMetadata(): Promise<GrammarMetadata> {
   } catch { /* fallback to static */ }
   // Fallback: static keywords if backend unavailable
   cachedGrammar = {
-    uiKeywords: ['SELECT', 'RESET', 'CREATE', 'PANEL', 'VIZ', 'KIND', 'grid', 'force-graph',
-      'FROM', 'SOURCE', 'WHERE', 'SET', 'PROJECT', 'PIPE', 'FILTER', 'SORT', 'LIMIT',
-      'GROUP', 'BY', 'SHOW', 'beliefs', 'BIND', 'HEALTH', 'GOVERNED'],
-    dataSources: ['governance.beliefs', 'governance.backlog', 'governance.graph', 'graph://nodes', 'graph://edges'],
+    uiKeywords: ['SELECT', 'RESET', 'CREATE', 'PANEL', 'VIZ', 'FORM', 'KIND', 'grid', 'force-graph',
+      'bar', 'sparkline', 'truth-lattice', 'FROM', 'SOURCE', 'WHERE', 'SET', 'PROJECT',
+      'PIPE', 'FILTER', 'SORT', 'LIMIT', 'SKIP', 'DISTINCT', 'FLATTEN', 'TOP',
+      'GROUP', 'BY', 'SHOW', 'beliefs', 'strategies', 'tensor', 'learners',
+      'BIND', 'HEALTH', 'GOVERNED', 'REFRESH', 'PUBLISH', 'SUBSCRIBE',
+      'ON', 'VIOLATION', 'SAVE', 'QUERY', 'HEXAVALENT', 'DIAGNOSE'],
+    dataSources: ['governance.beliefs', 'governance.backlog', 'governance.graph',
+      'governance.predictions', 'graph://nodes', 'graph://edges'],
     ioTools: [],
     sectionCount: 0,
   };
@@ -61,7 +65,7 @@ function getSuggestions(input: string, grammar: GrammarMetadata): string[] {
 
   // After KIND, suggest panel/viz kinds
   if (upper.endsWith('KIND ')) {
-    return ['grid', 'force-graph', 'bar', 'sparkline', 'timeline'];
+    return ['grid', 'force-graph', 'bar', 'sparkline', 'timeline', 'truth-lattice'];
   }
 
   // After PIPE, suggest step keywords
