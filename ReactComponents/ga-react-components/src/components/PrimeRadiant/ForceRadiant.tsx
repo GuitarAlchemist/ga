@@ -2082,6 +2082,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           float mwNoise = fbm(dir * 6.0);
           col += vec3(0.03, 0.025, 0.04) * milkyWay * mwNoise;
 
+          // Sagittarius A* — supermassive black hole at galactic center
+          // Gravitational lensing ring: bright accretion disk around a dark core
+          vec3 sgrADir = normalize(vec3(0.0, -0.02, -1.0)); // galactic center direction
+          float sgrDist = length(dir - sgrADir);
+          // Dark core — light cannot escape
+          float blackHole = 1.0 - smoothstep(0.0, 0.012, sgrDist);
+          col *= (1.0 - blackHole * 0.8); // dim the center
+          // Accretion disk — hot glowing ring around the event horizon
+          float ring = exp(-800.0 * pow(sgrDist - 0.015, 2.0));
+          col += vec3(1.0, 0.7, 0.3) * ring * 0.15; // hot orange-white ring
+          // Outer halo — warped light from behind
+          float halo = exp(-200.0 * pow(sgrDist - 0.025, 2.0));
+          col += vec3(0.8, 0.5, 0.2) * halo * 0.06;
+          // Faint relativistic jet hint (vertical)
+          float jet = exp(-2000.0 * (dir.x - sgrADir.x) * (dir.x - sgrADir.x))
+                    * exp(-50.0 * (dir.z - sgrADir.z) * (dir.z - sgrADir.z))
+                    * smoothstep(0.0, 0.1, abs(dir.y));
+          col += vec3(0.3, 0.4, 1.0) * jet * 0.03; // faint blue jets
+
           // Nearby bright stars (fixed positions, glowing)
           vec3 stars[5];
           vec3 starColors[5];
@@ -2103,37 +2122,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             col += starColors[i] * (glow + halo);
           }
 
-          // ─── Nearby galaxies ───
+          // ─── Nearby galaxies (boosted visibility) ───
           // Andromeda (M31) — large, tilted elliptical smudge
           vec3 andromedaDir = normalize(vec3(0.2, 0.35, -0.9));
           float andrDist = length(dir - andromedaDir);
-          float andrCore = exp(-800.0 * andrDist * andrDist) * 0.12;
-          float andrDisk = exp(-80.0 * andrDist * andrDist) * 0.04;
-          // Elliptical stretch — flatten along one axis
+          float andrCore = exp(-600.0 * andrDist * andrDist) * 0.4;
+          float andrDisk = exp(-40.0 * andrDist * andrDist) * 0.12;
           vec3 andrLocal = dir - andromedaDir;
           float andrTilt = dot(andrLocal, normalize(vec3(0.5, 1.0, 0.2)));
-          float andrEllipse = exp(-200.0 * andrTilt * andrTilt);
+          float andrEllipse = exp(-120.0 * andrTilt * andrTilt);
           col += vec3(0.85, 0.82, 0.95) * (andrCore + andrDisk * andrEllipse);
 
-          // Triangulum Galaxy (M33) — smaller, fainter, near Andromeda
+          // Triangulum Galaxy (M33) — smaller, near Andromeda
           vec3 m33Dir = normalize(vec3(0.35, 0.5, -0.78));
           float m33Dist = length(dir - m33Dir);
-          float m33Glow = exp(-300.0 * m33Dist * m33Dist) * 0.03;
-          float m33Halo = exp(-60.0 * m33Dist * m33Dist) * 0.015;
+          float m33Glow = exp(-400.0 * m33Dist * m33Dist) * 0.12;
+          float m33Halo = exp(-50.0 * m33Dist * m33Dist) * 0.05;
           col += vec3(0.7, 0.75, 0.9) * (m33Glow + m33Halo);
 
           // Large Magellanic Cloud (LMC) — southern sky, irregular, blue
           vec3 lmcDir = normalize(vec3(0.6, -0.7, 0.35));
           float lmcDist = length(dir - lmcDir);
-          float lmcCore = exp(-100.0 * lmcDist * lmcDist) * 0.05;
+          float lmcCore = exp(-60.0 * lmcDist * lmcDist) * 0.15;
           float lmcNoise = fbm(dir * 8.0 + vec3(5.0, 2.0, 1.0));
-          col += vec3(0.4, 0.5, 0.8) * lmcCore * (0.5 + lmcNoise);
+          col += vec3(0.5, 0.6, 0.9) * lmcCore * (0.6 + lmcNoise);
 
           // Small Magellanic Cloud (SMC) — companion to LMC
           vec3 smcDir = normalize(vec3(0.45, -0.6, 0.6));
           float smcDist = length(dir - smcDir);
-          float smcGlow = exp(-200.0 * smcDist * smcDist) * 0.025;
-          col += vec3(0.5, 0.55, 0.75) * smcGlow;
+          float smcGlow = exp(-150.0 * smcDist * smcDist) * 0.08;
+          col += vec3(0.5, 0.6, 0.8) * smcGlow;
 
           // ─── Cosmic Microwave Background ───
           // Very faint, large-scale temperature anisotropy pattern
