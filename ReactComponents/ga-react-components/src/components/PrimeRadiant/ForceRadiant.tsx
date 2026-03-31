@@ -1543,6 +1543,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       try {
       const t = Date.now() * 0.001;
 
+      // ─── Zoom inertia — apply momentum and decay ───
+      if (Math.abs(zoomVelocity) > 0.001) {
+        const cam = fg.camera() as THREE.PerspectiveCamera;
+        const dir = new THREE.Vector3();
+        cam.getWorldDirection(dir);
+        cam.position.addScaledVector(dir, -zoomVelocity);
+        zoomVelocity *= ZOOM_FRICTION;
+      } else {
+        zoomVelocity = 0;
+      }
+
       // ─── Save camera state every 2 seconds ───
       const now2 = Date.now();
       if (now2 - lastCameraSave > 2000) {
@@ -1939,6 +1950,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       (controls as Record<string, unknown>).rotateSpeed = 0.8;
       (controls as Record<string, unknown>).panSpeed = 0.6;
     }
+
+    // ─── Zoom inertia — OrbitControls damping doesn't affect zoom ───
+    let zoomVelocity = 0;
+    const ZOOM_FRICTION = 0.92;  // decay per frame (lower = more friction)
+    const ZOOM_SENSITIVITY = 0.15;
+    const zoomInertiaHandler = (e: WheelEvent) => {
+      // Accumulate velocity from wheel deltas
+      zoomVelocity += Math.sign(e.deltaY) * ZOOM_SENSITIVITY;
+    };
+    container.addEventListener('wheel', zoomInertiaHandler, { passive: true });
 
     // ─── AMBIENT PARTICLE FIELD ───
     // Reduced from 5000 for performance
@@ -2607,6 +2628,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
+      container.removeEventListener('wheel', zoomInertiaHandler);
       filamentsHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
