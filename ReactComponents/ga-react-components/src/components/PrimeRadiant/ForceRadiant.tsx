@@ -77,6 +77,7 @@ import { AdminInbox } from './AdminInbox';
 import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
+import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -477,11 +478,11 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   // Store health state on group for animation tick
   group.userData.healthStatus = hs;
 
-  // 1. Raymarched volumetric core — shape encodes artifact type
+  // 1. Crystal/metallic core — MeshPhysicalMaterial per governance type
   const geoFactory = TYPE_GEOMETRY[node.type] ?? ((r: number) => new THREE.SphereGeometry(r, 32, 32));
   const coreGeo = geoFactory(radius * 0.5);
   if (!coreGeo.attributes.normal) coreGeo.computeVertexNormals();
-  const coreMat = createVolumetricMaterial(nodeColor, complexity, intensity);
+  const coreMat = getNodeMaterialWithGlow(node.type, prominence.glowIntensity);
   const core = new THREE.Mesh(coreGeo, coreMat);
   core.userData = { isVolumetricCore: true };
   group.add(core);
