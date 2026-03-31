@@ -146,19 +146,28 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddProblemDetails();
 
-// Per-IP rate limiting: 60 requests/minute, queue up to 5 overflow requests
+// Per-IP rate limiting: 300 requests/minute to support Prime Radiant multi-panel polling
+// (health check every 30s + N panels × refresh intervals + governance queries + grammar API)
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
-        RateLimitPartition.GetFixedWindowLimiter(
+    {
+        // Exempt health/status endpoints from rate limiting
+        var path = ctx.Request.Path.Value ?? "";
+        if (path.Contains("/status") || path.Contains("/health"))
+        {
+            return RateLimitPartition.GetNoLimiter("health");
+        }
+        return RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? ctx.Request.Headers.Host.ToString(),
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 60,
+                PermitLimit = 300,
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 5
-            }));
+                QueueLimit = 10
+            });
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
