@@ -287,9 +287,18 @@ class ExtensionRegistryImpl {
       return { accepted: false, reason: `Only ${proposal.evidence.occurrences} occurrences, need >= 10` };
     }
 
-    // Check for name collision
+    // Check for name collision with existing extensions
     if (this.has(proposal.keyword)) {
       return { accepted: false, reason: `Keyword "${proposal.keyword}" already registered` };
+    }
+
+    // Check for collision with built-in pipe step keywords
+    const BUILTINS = ['FILTER', 'SORT', 'LIMIT', 'SKIP', 'DISTINCT', 'FLATTEN', 'GROUP',
+                      'PIPE', 'PROJECT', 'REFRESH', 'LIVE', 'LAYOUT', 'GOVERNED', 'PUBLISH',
+                      'SUBSCRIBE', 'TEMPLATE', 'SOURCE', 'FROM', 'SELECT', 'RESET', 'CREATE',
+                      'BIND', 'ON', 'SHOW', 'SAVE', 'WHERE', 'SET', 'AND', 'BY'];
+    if (BUILTINS.indexOf(proposal.keyword.toUpperCase()) >= 0) {
+      return { accepted: false, reason: `Keyword "${proposal.keyword}" collides with built-in keyword` };
     }
 
     // Build desugar function from spec

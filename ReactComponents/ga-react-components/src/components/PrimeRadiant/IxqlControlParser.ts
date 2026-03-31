@@ -638,9 +638,12 @@ function parsePipeSteps(ctx: ParserContext): PipeStep[] {
       }
       const rawToken = nextRaw(ctx);
       switch (argDef.type) {
-        case 'integer':
-          args[argDef.name] = parseInt(rawToken, 10);
+        case 'integer': {
+          const parsed = parseInt(rawToken, 10);
+          if (isNaN(parsed)) throw new Error(`Extension ${stepKw} argument '${argDef.name}' must be an integer, got '${rawToken}'`);
+          args[argDef.name] = parsed;
           break;
+        }
         case 'direction':
           args[argDef.name] = rawToken.toUpperCase();
           break;
