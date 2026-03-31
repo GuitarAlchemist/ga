@@ -1547,17 +1547,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _stationOffset = new THREE.Vector3();
     const _trackWp = new THREE.Vector3();
     const _trackOffset = new THREE.Vector3();
+    const _tickVec3 = new THREE.Vector3(); // pre-allocated for zoom inertia
+    const _tickColor = new THREE.Color();  // pre-allocated for IXQL color overrides
 
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
 
       // ─── Zoom inertia — apply momentum and decay ───
+      // Pre-allocated vector — no allocation per tick
       if (Math.abs(zoomVelocityRef.v) > 0.001) {
         const zCam = fg.camera() as THREE.PerspectiveCamera;
-        const zDir = new THREE.Vector3();
-        zCam.getWorldDirection(zDir);
-        zCam.position.addScaledVector(zDir, -zoomVelocityRef.v);
+        zCam.getWorldDirection(_tickVec3);
+        zCam.position.addScaledVector(_tickVec3, -zoomVelocityRef.v);
         zoomVelocityRef.v *= 0.92;
       } else {
         zoomVelocityRef.v = 0;
@@ -1654,7 +1656,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           breathe = 1 + raw * 0.02;
         }
         // Spin + prominence — must come before adaptive sizing which uses prom
-        const prom = HEALTH_PROMINENCE[hs];
+        const prom = HEALTH_PROMINENCE[hs] ?? HEALTH_PROMINENCE['unknown'];
 
         // Phase 2.1: Adaptive sizing — scale by importance
         const importance = importanceMap.get(n.id) ?? 0.5;
@@ -1708,15 +1710,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             // IXQL visual overrides — color, glow, pulse, opacity
             const overrides = group.userData.ixqlOverrides as Record<string, unknown> | undefined;
             if (overrides) {
-              // Color override
+              // Color override — use pre-allocated _tickColor (no allocation per tick)
               if (overrides.color && mat.uniforms?.uColor) {
-                mat.uniforms.uColor.value = new THREE.Color(String(overrides.color));
+                try {
+                  _tickColor.set(String(overrides.color));
+                  (mat.uniforms.uColor.value as THREE.Color).copy(_tickColor);
+                } catch { /* invalid color string — skip */ }
               }
-              // Glow: boost emissive intensity
+              // Glow: boost emissive intensity (in-place, no clone)
               if (overrides.glow && mat.uniforms?.uColor) {
-                const baseColor = mat.uniforms.uColor.value as THREE.Color;
                 const boost = 1.0 + Math.sin(t * 3.0) * 0.3;
-                mat.uniforms.uColor.value = baseColor.clone().multiplyScalar(boost);
+                (mat.uniforms.uColor.value as THREE.Color).multiplyScalar(boost);
               }
               // Pulse: oscillate scale
               if (overrides.pulse) {
