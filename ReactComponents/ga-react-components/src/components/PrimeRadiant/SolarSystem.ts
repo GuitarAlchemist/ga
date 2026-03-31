@@ -246,9 +246,16 @@ function keplerDistance(au: number): number {
   return EARTH_DIST * Math.sqrt(au);
 }
 function keplerRadius(diameterKm: number): number {
-  // sqrt compression on ratio to Earth, min 0.06 for visibility
+  // Real proportional ratio to Earth — no sqrt compression.
+  // Jupiter should look 11x Earth, not 3.3x. Min 0.06 for visibility.
+  // Cube-root compression on gas giants only to keep them from overwhelming the scene.
   const ratio = diameterKm / 12_742; // relative to Earth
-  return Math.max(0.06, EARTH_RADIUS * Math.sqrt(ratio));
+  if (ratio > 4) {
+    // Gas giants: cube-root compression (Jupiter 11x → 2.2x Earth visual, Saturn 9x → 2.1x)
+    return Math.max(0.06, EARTH_RADIUS * Math.pow(ratio, 0.4));
+  }
+  // Terrestrials: linear ratio (true proportions)
+  return Math.max(0.06, EARTH_RADIUS * ratio);
 }
 function keplerSpeed(au: number): number {
   // Kepler's 3rd law: angular speed ∝ distance^-1.5
