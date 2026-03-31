@@ -102,6 +102,7 @@ export interface FormSpec {
   onSuccess: string[];
   hexavalent: boolean;
   governedBy: number[];
+  publish: { signal: string; as: string } | null;
   subscribe: string[];
 }
 
@@ -146,6 +147,11 @@ function compileLayout(
 }
 
 export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
+  // Auto-subscribe to __refresh__ signal so ON_SUCCESS REFRESH from forms works
+  const subscribe = [...cmd.subscribe];
+  if (subscribe.indexOf('__refresh__' + cmd.id) < 0) {
+    subscribe.push('__refresh__' + cmd.id);
+  }
   return {
     type: 'panel',
     id: cmd.id,
@@ -154,7 +160,7 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
     binding: {
       source: cmd.source,
       wherePredicates: cmd.wherePredicates,
-      dependsOn: cmd.subscribe,
+      dependsOn: subscribe,
     },
     projection: cmd.project.length > 0
       ? { fields: cmd.project.map(compileProjectionField) }
@@ -163,13 +169,17 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
     layout: compileLayout(cmd.layout),
     governedBy: cmd.governedBy,
     publish: cmd.publish,
-    subscribe: cmd.subscribe,
+    subscribe,
     refresh: cmd.refresh,
     live: cmd.live,
   };
 }
 
 export function compileViz(cmd: CreateVizCommand): VizSpec {
+  const subscribe = [...cmd.subscribe];
+  if (subscribe.indexOf('__refresh__' + cmd.id) < 0) {
+    subscribe.push('__refresh__' + cmd.id);
+  }
   return {
     type: 'viz',
     id: cmd.id,
@@ -177,7 +187,7 @@ export function compileViz(cmd: CreateVizCommand): VizSpec {
     binding: {
       source: cmd.source,
       wherePredicates: cmd.wherePredicates,
-      dependsOn: cmd.subscribe,
+      dependsOn: subscribe,
     },
     pipeline: cmd.pipe.length > 0 ? { steps: cmd.pipe } : null,
     nodeField: cmd.nodeField,
@@ -190,12 +200,17 @@ export function compileViz(cmd: CreateVizCommand): VizSpec {
     layout: compileLayout(cmd.layout),
     governedBy: cmd.governedBy,
     publish: cmd.publish,
-    subscribe: cmd.subscribe,
+    subscribe,
     refresh: cmd.refresh,
   };
 }
 
 export function compileForm(cmd: CreateFormCommand): FormSpec {
+  // Auto-subscribe to __refresh__ signal so ON_SUCCESS REFRESH works
+  const subscribe = [...cmd.subscribe];
+  if (subscribe.indexOf('__refresh__' + cmd.id) < 0) {
+    subscribe.push('__refresh__' + cmd.id);
+  }
   return {
     type: 'form',
     id: cmd.id,
@@ -205,7 +220,8 @@ export function compileForm(cmd: CreateFormCommand): FormSpec {
     onSuccess: cmd.onSuccess,
     hexavalent: cmd.hexavalent,
     governedBy: cmd.governedBy,
-    subscribe: cmd.subscribe,
+    publish: null, // forms don't publish by default; future: PUBLISH clause in grammar
+    subscribe,
   };
 }
 

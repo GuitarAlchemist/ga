@@ -398,8 +398,18 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
     }
   }, [fetchData, spec.refresh]);
 
+  // Re-fetch when subscribed signals change (timestamp-gated to prevent re-fetch loops)
+  const lastSubTimestamp = useRef(0);
   useEffect(() => {
-    if (subscribedSignals.size > 0) fetchData();
+    if (subscribedSignals.size === 0) return;
+    let latestTs = 0;
+    for (const [, sig] of subscribedSignals) {
+      if (sig.timestamp > latestTs) latestTs = sig.timestamp;
+    }
+    if (latestTs > lastSubTimestamp.current) {
+      lastSubTimestamp.current = latestTs;
+      fetchData();
+    }
   }, [subscribedSignals, fetchData]);
 
   // Build graph nodes/links for force-graph
@@ -430,7 +440,7 @@ export const IxqlVizPanel: React.FC<IxqlVizPanelProps> = ({ spec, graphContext }
     }
 
     return { nodes, links };
-  }, [data, spec]);
+  }, [data, spec.kind, spec.labelField, spec.nodeField, spec.colorField, spec.sizeField, spec.edgeFrom, spec.edgeTo]);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     if (spec.publish) {

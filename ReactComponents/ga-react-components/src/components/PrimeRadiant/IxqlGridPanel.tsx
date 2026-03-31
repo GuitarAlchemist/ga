@@ -430,9 +430,17 @@ export const IxqlGridPanel: React.FC<IxqlGridPanelProps> = ({ spec, graphContext
     }
   }, [fetchData, spec.refresh]);
 
-  // Re-fetch when subscribed signals change
+  // Re-fetch when subscribed signals change (filter out internal render proof signals)
+  const lastSubTimestamp = useRef(0);
   useEffect(() => {
-    if (subscribedSignals.size > 0) {
+    if (subscribedSignals.size === 0) return;
+    // Check if any user-subscribed signal actually changed (skip __renderProof__ / __renderDivergence__)
+    let latestTs = 0;
+    for (const [, sig] of subscribedSignals) {
+      if (sig.timestamp > latestTs) latestTs = sig.timestamp;
+    }
+    if (latestTs > lastSubTimestamp.current) {
+      lastSubTimestamp.current = latestTs;
       fetchData();
     }
   }, [subscribedSignals, fetchData]);
