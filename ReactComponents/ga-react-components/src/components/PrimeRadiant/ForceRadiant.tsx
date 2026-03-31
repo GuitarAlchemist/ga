@@ -1929,10 +1929,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.3;
       controls.enableDamping = true;
-      controls.dampingFactor = 0.08;
-      controls.zoomSpeed = 0.8;
+      controls.dampingFactor = 0.12;   // smooth inertia on all movements
+      controls.zoomSpeed = 1.2;        // faster zoom response
       (controls as Record<string, unknown>).minDistance = 0.05;
       (controls as Record<string, unknown>).maxDistance = 500;
+      (controls as Record<string, unknown>).enableZoom = true;
+      (controls as Record<string, unknown>).rotateSpeed = 0.8;
+      (controls as Record<string, unknown>).panSpeed = 0.6;
     }
 
     // ─── AMBIENT PARTICLE FIELD ───
