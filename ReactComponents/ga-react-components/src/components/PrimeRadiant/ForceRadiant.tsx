@@ -1583,22 +1583,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         ].join('');
 
         // Auto-downgrade
-        if (currentFps < 20 && qualityLevel !== 'low') {
+        if (currentFps < 25 && qualityLevel !== 'low') {
           qualityLevel = 'low';
           ambientDust.visible = false;
           starField.visible = false;
           demerzelFace.visible = false;
-          bloomPass.strength = 0.2;
-        } else if (currentFps < 35 && qualityLevel === 'high') {
+          bloomPass.strength = 0.15;
+          if (filamentsHandle) filamentsHandle.group.visible = false;
+        } else if (currentFps < 40 && qualityLevel === 'high') {
           qualityLevel = 'medium';
           ambientDust.visible = false;
-          bloomPass.strength = 0.4;
-        } else if (currentFps >= 50 && qualityLevel !== 'high') {
+          bloomPass.strength = 0.3;
+        } else if (currentFps >= 55 && qualityLevel !== 'high') {
           qualityLevel = 'high';
           ambientDust.visible = true;
           starField.visible = true;
           demerzelFace.visible = true;
-          bloomPass.strength = 0.6;
+          bloomPass.strength = 0.5;
+          if (filamentsHandle) filamentsHandle.group.visible = true;
         }
       }
       fg.graphData().nodes.forEach((node: object) => {

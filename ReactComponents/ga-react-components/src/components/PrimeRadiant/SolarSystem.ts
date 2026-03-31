@@ -1067,6 +1067,28 @@ export function createSolarSystem(scale: number): THREE.Group {
     if (def.tilt) mesh.rotation.z = def.tilt;
     orbit.add(mesh);
 
+    // Orbit path line — faint circle showing the orbital track
+    const orbitLineSegs = 64;
+    const orbitLinePoints: THREE.Vector3[] = [];
+    for (let s = 0; s <= orbitLineSegs; s++) {
+      const angle = (s / orbitLineSegs) * Math.PI * 2;
+      orbitLinePoints.push(new THREE.Vector3(
+        Math.cos(angle) * def.distance * scale,
+        0,
+        Math.sin(angle) * def.distance * scale,
+      ));
+    }
+    const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitLinePoints);
+    const orbitLineMat = new THREE.LineBasicMaterial({
+      color: 0x334466,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+    });
+    const orbitLine = new THREE.Line(orbitLineGeo, orbitLineMat);
+    orbitLine.name = `${def.name}-orbit-path`;
+    group.add(orbitLine); // add to group root (not orbit, since orbit rotates)
+
     // Real orbital position — compute mean longitude for current date (J2000 Keplerian elements)
     orbit.rotation.y = getRealOrbitalAngle(def.name);
 
