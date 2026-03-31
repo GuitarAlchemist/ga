@@ -186,16 +186,22 @@ const MATERIAL_DEFS: Record<GovernanceNodeType, NodeMaterialDef> = {
 // Material cache — one MeshPhysicalMaterial per type
 // ---------------------------------------------------------------------------
 
-const materialCache = new Map<GovernanceNodeType, THREE.MeshPhysicalMaterial>();
+const materialCache = new Map<string, THREE.MeshPhysicalMaterial>();
+
+/** Detect low-end device (mobile or few cores) */
+const _isLowEnd = typeof navigator !== 'undefined' && (
+  /Mobi|Android/i.test(navigator.userAgent) || navigator.hardwareConcurrency <= 4
+);
 
 /** Create or retrieve a cached MeshPhysicalMaterial for a node type */
-export function getNodeMaterial(type: GovernanceNodeType): THREE.MeshPhysicalMaterial {
-  const cached = materialCache.get(type);
+export function getNodeMaterial(type: GovernanceNodeType, lowEnd?: boolean): THREE.MeshPhysicalMaterial {
+  const isLow = lowEnd ?? _isLowEnd;
+  const cacheKey = `${type}-${isLow ? 'low' : 'high'}`;
+  const cached = materialCache.get(cacheKey);
   if (cached) return cached;
 
   const def = MATERIAL_DEFS[type];
   if (!def) {
-    // Fallback: generic glass
     const fallback = new THREE.MeshPhysicalMaterial({
       color: 0x888888,
       metalness: 0.5,
@@ -204,32 +210,36 @@ export function getNodeMaterial(type: GovernanceNodeType): THREE.MeshPhysicalMat
       transparent: true,
       opacity: 0.9,
     });
-    materialCache.set(type, fallback);
+    materialCache.set(cacheKey, fallback);
     return fallback;
   }
+
+  // On low-end: disable transmission (avoids double-render), reduce iridescence
+  const transmission = isLow ? 0 : def.transmission;
+  const iridescence = isLow ? Math.min(def.iridescence, 0.2) : def.iridescence;
 
   const mat = new THREE.MeshPhysicalMaterial({
     color: def.color,
     metalness: def.metalness,
-    roughness: def.roughness,
-    clearcoat: def.clearcoat,
+    roughness: isLow ? Math.max(def.roughness, 0.2) : def.roughness,
+    clearcoat: isLow ? Math.min(def.clearcoat, 0.5) : def.clearcoat,
     clearcoatRoughness: def.clearcoatRoughness,
-    transmission: def.transmission,
+    transmission,
     ior: def.ior,
-    thickness: def.thickness,
-    iridescence: def.iridescence,
+    thickness: transmission > 0 ? def.thickness : 0,
+    iridescence,
     iridescenceIOR: def.iridescenceIOR,
     sheen: def.sheen,
     sheenColor: new THREE.Color(def.sheenColor),
     emissive: new THREE.Color(def.emissive),
     emissiveIntensity: def.emissiveIntensity,
-    envMapIntensity: def.envMapIntensity,
-    transparent: def.transmission > 0,
-    opacity: def.transmission > 0 ? 0.95 : 1.0,
+    envMapIntensity: isLow ? 1.0 : def.envMapIntensity,
+    transparent: transmission > 0 || isLow,
+    opacity: transmission > 0 ? 0.95 : (isLow && def.transmission > 0 ? 0.85 : 1.0),
     side: THREE.DoubleSide,
   });
 
-  materialCache.set(type, mat);
+  materialCache.set(cacheKey, mat);
   return mat;
 }
 
