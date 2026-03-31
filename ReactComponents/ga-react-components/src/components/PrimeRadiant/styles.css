@@ -10603,3 +10603,187 @@
   letter-spacing: 0.5px;
   flex-shrink: 0;
 }
+.ixql-gen__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.ixql-gen__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.ixql-gen__subtitle {
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.ixql-gen__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ixql-gen__example-btn {
+  padding: 4px 10px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  color: #c4b5fd;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ixql-gen__example-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.ixql-gen__example-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ixql-gen__input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ixql-gen__textarea {
+  width: 100%;
+  min-height: 70px;
+  padding: 8px 10px;
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-family: inherit;
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ixql-gen__textarea:focus {
+  border-color: #8b5cf6;
+}
+
+.ixql-gen__textarea::placeholder {
+  color: #484f58;
+}
+
+.ixql-gen__controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ixql-gen__hint {
+  font-size: 10px;
+  color: #484f58;
+}
+
+.ixql-gen__generate-btn {
+  margin-left: auto;
+  padding: 4px 14px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  color: #8b5cf6;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ixql-gen__generate-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.25);
+}
+
+.ixql-gen__generate-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ixql-gen__error {
+  padding: 8px 10px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: 11px;
+}
+
+.ixql-gen__output-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ixql-gen__output-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ixql-gen__output {
+  padding: 10px 12px;
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #7ee787;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.ixql-gen__output-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.ixql-gen__copy-btn {
+  padding: 4px 12px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 6px;
+  color: #58a6ff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ixql-gen__copy-btn:hover {
+  background: rgba(88, 166, 255, 0.2);
+}
+
+.ixql-gen__run-btn {
+  padding: 4px 14px;
+  background: rgba(126, 231, 135, 0.15);
+  border: 1px solid rgba(126, 231, 135, 0.3);
+  border-radius: 6px;
+  color: #7ee787;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ixql-gen__run-btn:hover {
+  background: rgba(126, 231, 135, 0.25);
+}

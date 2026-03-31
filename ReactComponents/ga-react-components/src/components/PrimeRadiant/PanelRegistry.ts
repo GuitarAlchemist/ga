@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -159,6 +159,11 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('polyline', { key: 'pl', points: '22 12 16 12 14 15 10 15 8 12 2 12' }),
     h('path', { key: 'p', d: 'M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z' }),
   ]),
+  'ixql-gen': svg([
+    h('polyline', { key: 'pl', points: '4 17 10 11 4 5' }),
+    h('line', { key: 'l1', x1: 12, y1: 19, x2: 20, y2: 19 }),
+    h('path', { key: 'p1', d: 'M20 5l-4 4m0-4l4 4', strokeWidth: 1.5 }),
+  ]),
   grid: svg([
     h('rect', { key: 'r1', x: 3, y: 3, width: 7, height: 7, rx: 1 }),
     h('rect', { key: 'r2', x: 14, y: 3, width: 7, height: 7, rx: 1 }),
@@ -259,6 +264,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   // ── Ops ──
   { id: 'cicd',          label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
   { id: 'code-tribunal', label: 'Code Lab',       icon: 'claude',     renderMode: 'side',    group: 'ops' },
+  { id: 'ixql-gen',      label: 'IXQL Gen',       icon: 'ixql-gen',   renderMode: 'side',    group: 'ops' },
 ];
 
 for (const def of BUILTIN_PANELS) {
