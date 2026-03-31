@@ -1815,7 +1815,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
-      if (filamentsHandle) filamentsHandle.update(t);
+      if (filamentsHandle) {
+        // Build live position map from force graph nodes
+        const livePositions = new Map<string, THREE.Vector3>();
+        const allNodes = fg.graphData().nodes as GraphNode[];
+        for (const n of allNodes) {
+          if (n.x !== undefined) {
+            livePositions.set(n.id, new THREE.Vector3(n.x, n.y ?? 0, n.z ?? 0));
+          }
+        }
+        filamentsHandle.update(t, livePositions);
+      }
 
       // ─── Crystal Eiffel Tower — sparking below the graph ───
       if (eiffelHandleOuter) eiffelHandleOuter.update(t);

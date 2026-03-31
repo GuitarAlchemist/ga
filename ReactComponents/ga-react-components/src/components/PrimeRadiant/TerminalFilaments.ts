@@ -26,7 +26,10 @@ export interface FilamentConfig {
 interface FilamentData {
   line: THREE.Line;
   tip: THREE.Mesh;
-  basePositions: Float32Array;  // original curve positions
+  basePositions: Float32Array;  // original curve positions (relative to origin)
+  origin: THREE.Vector3;        // initial origin position
+  direction: THREE.Vector3;     // filament direction
+  nodeId: string;               // track which node this belongs to
   phase: number;                // animation phase offset
   swaySpeed: number;            // individual sway rate
   swayAmplitude: number;        // individual sway magnitude
@@ -36,7 +39,8 @@ interface FilamentData {
 
 export interface TerminalFilamentsHandle {
   group: THREE.Group;
-  update: (time: number) => void;
+  /** Call each frame with elapsed time. Optionally pass current node positions for tracking. */
+  update: (time: number, nodePositions?: Map<string, THREE.Vector3>) => void;
   dispose: () => void;
 }
 
@@ -52,16 +56,14 @@ function randomRange(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-/** Generate a curved filament path — organic bezier-like curve */
-function generateFilamentCurve(
-  origin: THREE.Vector3,
+/** Generate a curved filament path RELATIVE to origin (origin = 0,0,0) */
+function generateFilamentCurveRelative(
   direction: THREE.Vector3,
   length: number,
   segments: number,
 ): Float32Array {
   const positions = new Float32Array((segments + 1) * 3);
 
-  // Create a gentle S-curve along the direction with organic wobble
   const perpA = new THREE.Vector3().crossVectors(direction, new THREE.Vector3(0, 1, 0)).normalize();
   if (perpA.lengthSq() < 0.01) perpA.crossVectors(direction, new THREE.Vector3(1, 0, 0)).normalize();
   const perpB = new THREE.Vector3().crossVectors(direction, perpA).normalize();
@@ -72,13 +74,13 @@ function generateFilamentCurve(
 
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    // Taper: filament gets thinner toward the tip
     const taper = 1.0 - t * 0.3;
     const wobble = Math.sin(t * Math.PI * wobbleFreq) * taper;
 
-    positions[i * 3]     = origin.x + direction.x * length * t + perpA.x * wobble * wobbleA + perpB.x * wobble * wobbleB * 0.5;
-    positions[i * 3 + 1] = origin.y + direction.y * length * t + perpA.y * wobble * wobbleA + perpB.y * wobble * wobbleB * 0.5;
-    positions[i * 3 + 2] = origin.z + direction.z * length * t + perpA.z * wobble * wobbleA + perpB.z * wobble * wobbleB * 0.5;
+    // Relative to origin (0,0,0) — will be offset by node position in update()
+    positions[i * 3]     = direction.x * length * t + perpA.x * wobble * wobbleA + perpB.x * wobble * wobbleB * 0.5;
+    positions[i * 3 + 1] = direction.y * length * t + perpA.y * wobble * wobbleA + perpB.y * wobble * wobbleB * 0.5;
+    positions[i * 3 + 2] = direction.z * length * t + perpA.z * wobble * wobbleA + perpB.z * wobble * wobbleB * 0.5;
   }
 
   return positions;
@@ -127,7 +129,7 @@ export function createTerminalFilaments(
       dir.add(toCenter.multiplyScalar(0.5)).normalize();
 
       const filLength = randomRange(lengthRange[0], lengthRange[1]);
-      const positions = generateFilamentCurve(node.position, dir, filLength, segments);
+      const positions = generateFilamentCurveRelative(dir, filLength, segments);
 
       // Line geometry
       const geo = new THREE.BufferGeometry();
@@ -166,9 +168,13 @@ export function createTerminalFilaments(
       });
       const tip = new THREE.Mesh(tipGeo, tipMat);
 
-      // Position tip at end of filament
+      // Position tip at end of filament (relative + node origin)
       const endIdx = segments * 3;
-      tip.position.set(positions[endIdx], positions[endIdx + 1], positions[endIdx + 2]);
+      tip.position.set(
+        node.position.x + positions[endIdx],
+        node.position.y + positions[endIdx + 1],
+        node.position.z + positions[endIdx + 2],
+      );
 
       group.add(line);
       group.add(tip);
@@ -177,6 +183,9 @@ export function createTerminalFilaments(
         line,
         tip,
         basePositions: positions,
+        origin: node.position.clone(),
+        direction: dir.clone(),
+        nodeId: node.nodeId,
         phase: Math.random() * Math.PI * 2,
         swaySpeed: randomRange(0.3, 0.8) * speed,
         swayAmplitude: randomRange(0.1, 0.4),
@@ -189,23 +198,25 @@ export function createTerminalFilaments(
   // ---------------------------------------------------------------------------
   // Animation update
   // ---------------------------------------------------------------------------
-  function update(time: number): void {
+  function update(time: number, nodePositions?: Map<string, THREE.Vector3>): void {
     for (const fil of filaments) {
+      // Track current node position (force graph moves nodes)
+      const currentOrigin = nodePositions?.get(fil.nodeId) ?? fil.origin;
+
       const posAttr = fil.line.geometry.attributes.position as THREE.BufferAttribute;
       const positions = posAttr.array as Float32Array;
 
-      // Organic sway — each segment moves with a time-offset sine wave
+      // Organic sway — relative positions + current node origin
       for (let i = 0; i <= segments; i++) {
         const t = i / segments;
-        // Sway increases toward the tip (root stays anchored)
         const swayFactor = t * t * fil.swayAmplitude;
         const swayX = Math.sin(time * fil.swaySpeed + fil.phase + t * 3.0) * swayFactor;
         const swayY = Math.cos(time * fil.swaySpeed * 0.7 + fil.phase + t * 2.5) * swayFactor * 0.6;
         const swayZ = Math.sin(time * fil.swaySpeed * 0.5 + fil.phase * 1.3 + t * 2.0) * swayFactor * 0.4;
 
-        positions[i * 3]     = fil.basePositions[i * 3]     + swayX;
-        positions[i * 3 + 1] = fil.basePositions[i * 3 + 1] + swayY;
-        positions[i * 3 + 2] = fil.basePositions[i * 3 + 2] + swayZ;
+        positions[i * 3]     = currentOrigin.x + fil.basePositions[i * 3]     + swayX;
+        positions[i * 3 + 1] = currentOrigin.y + fil.basePositions[i * 3 + 1] + swayY;
+        positions[i * 3 + 2] = currentOrigin.z + fil.basePositions[i * 3 + 2] + swayZ;
       }
       posAttr.needsUpdate = true;
 
