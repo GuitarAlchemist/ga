@@ -1649,8 +1649,8 @@
 /* ─── Galactic Standard Time clock ─── */
 .prime-radiant__gst-clock {
   position: absolute;
-  top: 42px;
-  left: 8px;
+  top: 34px;
+  left: 56px;  /* right of icon rail */
   color: #FFD700;
   font: 10px/1 'JetBrains Mono', monospace;
   z-index: 20;
@@ -6028,7 +6028,7 @@
 .prime-radiant__perf-info {
   position: absolute;
   top: 8px;
-  left: 8px;
+  left: 56px;  /* right of icon rail (48px + 8px gap) */
   z-index: 20;
   font: 11px/1.4 'JetBrains Mono', monospace;
   color: #8b949e;
