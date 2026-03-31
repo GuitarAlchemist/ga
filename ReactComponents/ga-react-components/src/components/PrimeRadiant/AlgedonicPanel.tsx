@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { SignalGraph } from './SignalGraph';
-import { useRemediation, type RemediationResult } from './DemerzelRemediation';
+import { useRemediation } from './DemerzelRemediation';
 
 // ---------------------------------------------------------------------------
 // Types

@@ -82,8 +82,10 @@ class HealthBindingEngineImpl {
     // Clean up existing binding with same id
     this.unregister(binding.id);
     this.bindings.set(binding.id, binding);
-    // Immediate evaluation + start polling
-    this.evaluate(binding);
+    // Delay first evaluation by 10s — avoids noisy 404s on startup before backend is confirmed
+    setTimeout(() => {
+      if (this.bindings.has(binding.id)) this.evaluate(binding);
+    }, 10_000);
     const timer = setInterval(() => this.evaluate(binding), 60_000);
     this.pollTimers.set(binding.id, timer);
   }
