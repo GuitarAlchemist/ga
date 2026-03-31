@@ -190,13 +190,16 @@ function buildCrossBraces(
   }
 }
 
-// ── Spark points (small point lights at junction positions) ──
+// ── Spark points (emissive meshes — no PointLights to save GPU) ──
 interface SparkPoint {
-  light: THREE.PointLight;
+  mesh: THREE.Mesh;
+  material: THREE.MeshBasicMaterial;
   baseIntensity: number;
   phaseOffset: number;
   position: THREE.Vector3;
 }
+
+const sparkGeo = new THREE.SphereGeometry(0.15, 4, 4); // shared geometry
 
 function createSparks(group: THREE.Group): SparkPoint[] {
   const sparks: SparkPoint[] = [];
@@ -210,12 +213,20 @@ function createSparks(group: THREE.Group): SparkPoint[] {
     const z = Math.sin(angle) * radius;
     const y = fraction * TOWER_HEIGHT;
 
-    const light = new THREE.PointLight(0xaaddff, 2, 8, 2);
-    light.position.set(x, y, z);
-    group.add(light);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xaaddff,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(sparkGeo, mat);
+    mesh.position.set(x, y, z);
+    group.add(mesh);
 
     sparks.push({
-      light,
+      mesh,
+      material: mat,
       baseIntensity: 1.5 + Math.random() * 2,
       phaseOffset: Math.random() * Math.PI * 2,
       position: new THREE.Vector3(x, y, z),
@@ -456,10 +467,12 @@ export function createCrystalEiffelTower(scene: THREE.Scene): CrystalEiffelTower
     // Pulse spark lights
     for (const spark of sparks) {
       const pulse = Math.sin(time * 8 + spark.phaseOffset) * 0.5 + 0.5;
-      spark.light.intensity = spark.baseIntensity * pulse;
+      spark.material.opacity = 0.3 + pulse * 0.7;
+      const scale = 0.5 + pulse * 1.0;
+      spark.mesh.scale.setScalar(scale);
       // Flicker color between blue and white
       const mix = pulse * 0.3;
-      spark.light.color.setRGB(0.7 + mix, 0.85 + mix * 0.15, 1.0);
+      spark.material.color.setRGB(0.7 + mix, 0.85 + mix * 0.15, 1.0);
     }
 
     // Regenerate arcs periodically
