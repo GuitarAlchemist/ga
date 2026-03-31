@@ -88,6 +88,9 @@ export type { ConstitutionalCase, CasePredicate, StandingOrder, CaseIndex, CaseI
 // Phase 8: Living Grammar Extension Registry
 export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistry';
 export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
+// User Identity — display name + future OAuth upgrade path
+export { identityStore, useUserIdentity } from './UserIdentity';
+export type { UserIdentity } from './UserIdentity';
 // Step 5: Truth Lattice Panel — hexavalent state transition visualization
 export { IxqlTruthLatticePanel } from './IxqlTruthLatticePanel';
 export type { IxqlTruthLatticePanelProps } from './IxqlTruthLatticePanel';

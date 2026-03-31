@@ -216,6 +216,8 @@ export interface ViewerInfo {
   color: string;
   browser: string;
   connectedAt: string;
+  displayName?: string;
+  avatarUrl?: string | null;
 }
 
 export interface LivePollingHandle {
