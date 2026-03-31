@@ -79,6 +79,7 @@ import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
+import { IxqlCodeGen } from './IxqlCodeGen';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -3306,6 +3307,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             faculty: SeldonFacultyPanel,
             'code-tribunal': CodeTribunal,
             inbox: AdminInbox,
+            'ixql-gen': IxqlCodeGen,
           };
           const Component = SIMPLE_PANELS[activePanel];
           if (Component) return React.createElement(Component);

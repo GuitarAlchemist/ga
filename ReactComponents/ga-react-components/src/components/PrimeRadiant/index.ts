@@ -48,6 +48,10 @@ export { getNodeMaterial, getNodeMaterialWithGlow, getMaterialDef, disposeCrysta
 export { createTerminalFilaments } from './TerminalFilaments';
 export type { TerminalFilamentsHandle, FilamentConfig } from './TerminalFilaments';
 export type { NodeMaterialDef } from './CrystalNodeMaterials';
+export { IxqlCodeGen } from './IxqlCodeGen';
+export type { IxqlCodeGenProps } from './IxqlCodeGen';
+export { completeCode, completeIxql, useCodeCompletion } from './CodestralComplete';
+export type { UseCodeCompletionResult } from './CodestralComplete';
 export { IxqlCommandInput } from './IxqlCommandInput';
 export { parseIxqlCommand, evaluatePredicate } from './IxqlControlParser';
 export type { IxqlCommand, IxqlPredicate, IxqlAssignment, IxqlParseResult, SelectCommand, ResetCommand, CreatePanelCommand, CreateGridPanelCommand, CreateVizCommand, CreateFormCommand, FormFieldDef, VizKind, ProjectionField, BindHealthCommand, DropCommand, CreateNodeCommand, LinkCommand, GroupCommand, SaveCommand, OnViolationCommand, ViolationSeverity, PipeStep, AggregateSpec, AggregateFunction, DiagnoseCommand, HealthCheckCommand, ShowCommand, HideCommand, FixCommand } from './IxqlControlParser';
