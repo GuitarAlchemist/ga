@@ -78,6 +78,7 @@ import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
+import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1225,6 +1226,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
+    let filamentsHandle: TerminalFilamentsHandle | null = null;
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
@@ -1812,6 +1814,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
 
+      // ─── Terminal filaments — organic sway + pulsing tips ───
+      if (filamentsHandle) filamentsHandle.update(t);
+
       // ─── Crystal Eiffel Tower — sparking below the graph ───
       if (eiffelHandleOuter) eiffelHandleOuter.update(t);
 
@@ -2334,6 +2339,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     graphRef.current = fg;
 
+    // ─── Terminal filaments — bioluminescent tendrils on leaf nodes ───
+    setTimeout(() => {
+      if (disposed) return;
+      const graphNodes = fg.graphData().nodes as GraphNode[];
+      const graphLinks = fg.graphData().links as GraphLink[];
+      // Find terminal nodes (no outgoing edges)
+      const sourceIds = new Set(graphLinks.map(l => getLinkNodeId(l.source)));
+      const terminalNodes = graphNodes
+        .filter(n => !sourceIds.has(n.id) && n.x !== undefined)
+        .map(n => ({
+          position: new THREE.Vector3(n.x ?? 0, n.y ?? 0, n.z ?? 0),
+          color: new THREE.Color(n.color),
+          nodeId: n.id,
+        }));
+      if (terminalNodes.length > 0) {
+        filamentsHandle = createTerminalFilaments(terminalNodes, { count: 3, speed: 0.8 });
+        fg.scene().add(filamentsHandle.group);
+      }
+    }, 4000); // Wait for force layout to settle
+
     // ─── Fix camera near plane for solar system zoom ───
     const fgCam = fg.camera() as THREE.PerspectiveCamera;
     fgCam.near = 0.001;
@@ -2489,6 +2514,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       markerCleanupOuter?.();
       lodCleanupOuter?.();
       criticCleanupOuter?.();
+      filamentsHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
       violationMonitor.dispose();
