@@ -90,6 +90,9 @@ export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistr
 export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
 // IXQL State Management — eigengovernance of constitutive parameters
 export { stateRegistry } from './StateRegistry';
+// Vitality Decay + Focal Crystallization
+export { vitalityManager, focalQuality } from './VitalityManager';
+export type { PanelVitality, FocalPoint } from './VitalityManager';
 export type { StateParam, StateClass, BudgetDef, StateChangeEvent, StateExplanation } from './StateRegistry';
 // Auto-Remediation — console error collection + self-healing
 export { autoRemediation } from './AutoRemediation';
