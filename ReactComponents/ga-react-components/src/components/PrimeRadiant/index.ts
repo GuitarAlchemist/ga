@@ -74,6 +74,9 @@ export type { ConstitutionalCase, CasePredicate, StandingOrder, CaseIndex, CaseI
 // Phase 8: Living Grammar Extension Registry
 export { extensionRegistry, constitutionalGate } from './GrammarExtensionRegistry';
 export type { PipeStepExtension, ExtensionStatus, ExtensionArg, GrammarVersion, GrammarProposal, ConstitutionalGateResult, TelemetryEvent } from './GrammarExtensionRegistry';
+// Step 1: IxqlDispatcher — extracted from ForceRadiant God Component
+export { dispatchIxqlCommand } from './IxqlDispatcher';
+export type { DispatchContext, DispatchResult } from './IxqlDispatcher';
 export { signalBus, useSignal, useSignals, usePublish } from './DashboardSignalBus';
 export type { DashboardSignal } from './DashboardSignalBus';
 export { PLANET_ASTRO_DATA } from './SolarSystem';
