@@ -48,6 +48,8 @@ export { getNodeMaterial, getNodeMaterialWithGlow, getMaterialDef, disposeCrysta
 export { createTerminalFilaments } from './TerminalFilaments';
 export type { TerminalFilamentsHandle, FilamentConfig } from './TerminalFilaments';
 export type { NodeMaterialDef } from './CrystalNodeMaterials';
+export { createSignalAura } from './SignalAura';
+export type { SignalAuraHandle } from './SignalAura';
 export { IxqlCodeGen } from './IxqlCodeGen';
 export type { IxqlCodeGenProps } from './IxqlCodeGen';
 export { completeCode, completeIxql, useCodeCompletion } from './CodestralComplete';
