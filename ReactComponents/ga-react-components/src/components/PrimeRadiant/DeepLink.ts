@@ -145,7 +145,7 @@ export function useDeepLink(opts: UseDeepLinkOptions): UseDeepLinkResult {
       const s = initialState.current;
       if (s.panel) opts.onPanelChange(s.panel);
       if (s.node) opts.onNodeSelect(s.node);
-    }, 2000); // 2s delay for scene init
+    }, 4000); // 4s delay — force graph needs time to stabilize node positions
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
