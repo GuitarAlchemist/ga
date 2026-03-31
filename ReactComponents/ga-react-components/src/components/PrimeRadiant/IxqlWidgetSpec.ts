@@ -170,7 +170,7 @@ export function compileGridPanel(cmd: CreateGridPanelCommand): PanelSpec {
     governedBy: cmd.governedBy,
     publish: cmd.publish,
     subscribe,
-    refresh: cmd.refresh,
+    refresh: cmd.refresh !== null ? Math.max(cmd.refresh, 1000) : null, // min 1s to prevent polling DoS
     live: cmd.live,
   };
 }
@@ -201,7 +201,7 @@ export function compileViz(cmd: CreateVizCommand): VizSpec {
     governedBy: cmd.governedBy,
     publish: cmd.publish,
     subscribe,
-    refresh: cmd.refresh,
+    refresh: cmd.refresh !== null ? Math.max(cmd.refresh, 1000) : null, // min 1s to prevent polling DoS
   };
 }
 

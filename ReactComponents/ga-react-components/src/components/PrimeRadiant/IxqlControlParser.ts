@@ -1075,7 +1075,7 @@ function parseOnChanged(ctx: ParserContext): OnChangedCommand {
 
   // Collect remaining tokens and re-parse as a sub-command
   const remaining = ctx.tokens.slice(ctx.pos).join(' ');
-  const subResult = parseIxqlCommand(remaining);
+  const subResult = parseIxqlCommand(remaining, _currentParseDepth + 1);
   if (!subResult.ok) {
     throw new Error(`Invalid THEN clause: ${subResult.error}`);
   }
@@ -1463,7 +1463,12 @@ function parseSaveQuery(ctx: ParserContext): SaveCommand {
 
 // ── Main entry point ──
 
-export function parseIxqlCommand(input: string): IxqlParseResult {
+const MAX_PARSE_DEPTH = 10; // Prevent stack overflow from recursive ON...THEN nesting
+let _currentParseDepth = 0;  // Module-level depth tracker (safe: parsing is synchronous)
+
+export function parseIxqlCommand(input: string, _depth: number = 0): IxqlParseResult {
+  _currentParseDepth = _depth;
+  if (_depth > MAX_PARSE_DEPTH) return { ok: false, error: `Maximum nesting depth (${MAX_PARSE_DEPTH}) exceeded` };
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, error: 'Empty command' };
 
