@@ -1788,6 +1788,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
       } // end quality gate
 
+      // ─── Temporal rendering — skip non-critical updates on alternate frames ───
+      // High: every frame | Medium: every 2nd | Low: every 4th
+      const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
+      const isTemporalFrame = frameCount % temporalSkip === 0;
+
       // ─── Ambient dust drift (temporal: skip on non-temporal frames) ───
       if (!isTemporalFrame) { /* skip dust */ } else {
       const dPos = ambientDust.geometry.attributes.position as THREE.BufferAttribute;
@@ -1859,11 +1864,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           for (const mgr of gisManagersRef.current.values()) mgr.update(t);
         }
       }
-
-      // ─── Temporal rendering — skip non-critical updates on alternate frames ───
-      // High: every frame | Medium: every 2nd | Low: every 4th
-      const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
-      const isTemporalFrame = frameCount % temporalSkip === 0;
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
       if (filamentsHandle && isTemporalFrame) {
