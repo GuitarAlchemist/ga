@@ -2048,6 +2048,49 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             col += starColors[i] * (glow + halo);
           }
 
+          // ─── Nearby galaxies ───
+          // Andromeda (M31) — large, tilted elliptical smudge
+          vec3 andromedaDir = normalize(vec3(0.2, 0.35, -0.9));
+          float andrDist = length(dir - andromedaDir);
+          float andrCore = exp(-800.0 * andrDist * andrDist) * 0.12;
+          float andrDisk = exp(-80.0 * andrDist * andrDist) * 0.04;
+          // Elliptical stretch — flatten along one axis
+          vec3 andrLocal = dir - andromedaDir;
+          float andrTilt = dot(andrLocal, normalize(vec3(0.5, 1.0, 0.2)));
+          float andrEllipse = exp(-200.0 * andrTilt * andrTilt);
+          col += vec3(0.85, 0.82, 0.95) * (andrCore + andrDisk * andrEllipse);
+
+          // Triangulum Galaxy (M33) — smaller, fainter, near Andromeda
+          vec3 m33Dir = normalize(vec3(0.35, 0.5, -0.78));
+          float m33Dist = length(dir - m33Dir);
+          float m33Glow = exp(-300.0 * m33Dist * m33Dist) * 0.03;
+          float m33Halo = exp(-60.0 * m33Dist * m33Dist) * 0.015;
+          col += vec3(0.7, 0.75, 0.9) * (m33Glow + m33Halo);
+
+          // Large Magellanic Cloud (LMC) — southern sky, irregular, blue
+          vec3 lmcDir = normalize(vec3(0.6, -0.7, 0.35));
+          float lmcDist = length(dir - lmcDir);
+          float lmcCore = exp(-100.0 * lmcDist * lmcDist) * 0.05;
+          float lmcNoise = fbm(dir * 8.0 + vec3(5.0, 2.0, 1.0));
+          col += vec3(0.4, 0.5, 0.8) * lmcCore * (0.5 + lmcNoise);
+
+          // Small Magellanic Cloud (SMC) — companion to LMC
+          vec3 smcDir = normalize(vec3(0.45, -0.6, 0.6));
+          float smcDist = length(dir - smcDir);
+          float smcGlow = exp(-200.0 * smcDist * smcDist) * 0.025;
+          col += vec3(0.5, 0.55, 0.75) * smcGlow;
+
+          // ─── Cosmic Microwave Background ───
+          // Very faint, large-scale temperature anisotropy pattern
+          // Subtle warm/cool spots across the entire sky
+          float cmb = fbm(dir * 2.0 + vec3(42.0, 17.0, 73.0));
+          float cmbAnisotropy = (cmb - 0.5) * 0.008; // extremely subtle
+          // CMB is ~2.7K — map to faint red-blue temperature fluctuations
+          vec3 cmbWarm = vec3(0.015, 0.003, 0.0);   // warm spots (red)
+          vec3 cmbCool = vec3(0.0, 0.003, 0.015);    // cool spots (blue)
+          col += cmbAnisotropy > 0.0 ? cmbWarm * cmbAnisotropy * 100.0
+                                     : cmbCool * abs(cmbAnisotropy) * 100.0;
+
           gl_FragColor = vec4(col, 1.0);
         }
       `,
