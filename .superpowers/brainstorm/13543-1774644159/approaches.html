@@ -1,0 +1,93 @@
+<h2>Blue/Green Binary Swap — 3 Approaches</h2>
+<p class="subtitle">Click the approach you prefer, or tell me in the terminal</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Junction Swap (Recommended)</h3>
+      <p><strong>How:</strong> Two physical directories (<code>bin/blue/</code>, <code>bin/green/</code>). A Windows junction <code>bin/active → blue|green</code>. Server always runs from <code>bin/active/</code>. Build targets the inactive slot. Swap = move junction.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Instant atomic swap (junction move is ~1ms)</li>
+            <li>Zero file copying during swap</li>
+            <li>Works with any launch method (VS, dotnet run, Aspire)</li>
+            <li>Both slots always exist — rollback is just re-pointing</li>
+            <li>SAC trusts the blue slot while green builds</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Needs MSBuild OutputPath override</li>
+            <li>Junction management on Windows needs admin or dev mode</li>
+            <li>IDE (VS) needs config to understand the indirection</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Shadow Copy + Hot Reload</h3>
+      <p><strong>How:</strong> Build normally to <code>bin/Debug/</code>. Pre-build hook copies current bin to <code>bin/shadow/</code>. If SAC blocks, server falls back to shadow copy. Uses .NET's <code>AssemblyLoadContext</code> for runtime swap.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>No MSBuild changes — normal build flow</li>
+            <li>Runtime hot-swap without process restart</li>
+            <li>Familiar shadow-copy pattern from IIS</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Requires custom AssemblyLoadContext (complex)</li>
+            <li>Shadow copy = full directory copy on every build (~153 DLLs)</li>
+            <li>Hot reload doesn't work for startup code changes</li>
+            <li>SAC blocks happen at load time — can't retry mid-process</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Publish Slots + Launcher Script</h3>
+      <p><strong>How:</strong> <code>dotnet publish</code> to <code>deploy/blue/</code> or <code>deploy/green/</code>. A PowerShell launcher script manages which slot runs. <code>ga start</code> / <code>ga swap</code> / <code>ga rollback</code> commands.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Published output = trimmed, optimized, self-contained</li>
+            <li>Clean separation from build output</li>
+            <li>CLI commands are intuitive</li>
+            <li>Closest to real blue/green deployment pattern</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li><code>dotnet publish</code> is slower than <code>dotnet build</code></li>
+            <li>Published DLLs are ALSO new — SAC blocks them too</li>
+            <li>Separate from IDE debugging flow</li>
+            <li>More disk space (two full published outputs)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1.5rem; border-left: 3px solid #60a5fa; background: rgba(96,165,250,0.08); border-radius: 8px;">
+  <h3>💡 Recommendation: A (Junction Swap)</h3>
+  <p>It's the only approach where the inactive slot's binaries <strong>age in place</strong> — building SAC reputation while the active slot runs. By the time you swap, SAC may already trust them. B and C both produce fresh files that SAC will block just the same.</p>
+  <p>The key insight: <strong>don't copy, don't publish — build directly into the slot and let the files sit there gaining trust.</strong></p>
+</div>
