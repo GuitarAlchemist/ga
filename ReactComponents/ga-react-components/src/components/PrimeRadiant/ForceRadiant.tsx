@@ -2915,6 +2915,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   // --- Prime Radiant Control API — Claude can drive PR via HTTP ---
   usePrControl({
+    executeIxql: (command) => {
+      const result = parseIxqlCommand(command);
+      handleIxqlCommand(result);
+    },
     openPanel: (id) => setActivePanel(id),
     closePanel: () => setActivePanel(null),
     selectNode: (nodeId) => {
