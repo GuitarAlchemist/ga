@@ -868,11 +868,12 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(ambient);
 
   // ── Sun (animated shader — roiling plasma with limb darkening) ──
-  // Sun: visually larger than Jupiter but not engulfing orbits.
-  // Real ratio is 10x Jupiter, but that would swallow inner planets in the orrery.
-  // Use 3x Jupiter's visual radius as a compromise.
+  // Sun: visually larger than Jupiter but not engulfing inner orbits.
+  // Real ratio is 10x Jupiter, but the orrery distance scale is compressed
+  // (1 AU = 6.5 scene units, Sun radius at real scale = 5.7 units → swallows Earth).
+  // Use 1.3x Jupiter so Sun is clearly the biggest object but orbits are clear.
   const jupiterVisualRadius = keplerRadius(139_820); // ~3.84 at linear
-  const sunVisualRadius = jupiterVisualRadius * 3;   // Sun ~3x Jupiter visually
+  const sunVisualRadius = jupiterVisualRadius * 1.3;  // Sun ~1.3x Jupiter visually
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
   const sunMat = new THREE.ShaderMaterial({
@@ -1281,8 +1282,8 @@ export function createSolarSystem(scale: number): THREE.Group {
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.name = 'saturn-ring';
       ring.rotation.x = Math.PI / 2.2;
-      ring.position.copy(mesh.position);
-      orbit.add(ring);
+      // Parent to mesh so ring follows planet through elliptical orbit
+      mesh.add(ring);
     }
 
     // Uranus faint ring
@@ -1295,8 +1296,7 @@ export function createSolarSystem(scale: number): THREE.Group {
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = Math.PI / 2;
       ring.rotation.z = 1.71;
-      ring.position.copy(mesh.position);
-      orbit.add(ring);
+      mesh.add(ring);
     }
 
     // Neptune faint ring
@@ -1308,8 +1308,7 @@ export function createSolarSystem(scale: number): THREE.Group {
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = Math.PI / 2.05;
-      ring.position.copy(mesh.position);
-      orbit.add(ring);
+      mesh.add(ring);
     }
 
     // ── Create moons ──
@@ -2014,7 +2013,9 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   // ── Animate all moons ──
   const moons = group.userData.moonInstances as MoonInstance[] | undefined;
   if (moons) {
-    for (const { mesh, def, orbitGroup } of moons) {
+    for (const { mesh, def, planetMesh, orbitGroup } of moons) {
+      // Moon orbit follows planet mesh position (planet moves via elliptical calc)
+      orbitGroup.position.copy(planetMesh.position);
       const moonPhase = def.distance * 3.14159 + def.speed * 1.618;
       orbitGroup.rotation.y = moonPhase + time * def.speed * 0.3;
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
