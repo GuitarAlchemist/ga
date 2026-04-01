@@ -868,7 +868,12 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(ambient);
 
   // ── Sun (animated shader — roiling plasma with limb darkening) ──
-  const sunGeo = new THREE.SphereGeometry(2 * scale, 48, 48);
+  // Sun: visually larger than Jupiter but not engulfing orbits.
+  // Real ratio is 10x Jupiter, but that would swallow inner planets in the orrery.
+  // Use 3x Jupiter's visual radius as a compromise.
+  const jupiterVisualRadius = keplerRadius(139_820); // ~3.84 at linear
+  const sunVisualRadius = jupiterVisualRadius * 3;   // Sun ~3x Jupiter visually
+  const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
   const sunMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -1080,7 +1085,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.userData.flareGroup = flareGroup;
 
   // Sun corona glow (subtle — bloom post-process amplifies this)
-  const coronaGeo = new THREE.SphereGeometry(2.5 * scale, 16, 16);
+  const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.25 * scale, 16, 16);
   const coronaMat = new THREE.ShaderMaterial({
     uniforms: {},
     vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 wp=modelMatrix*vec4(position,1.);vViewDir=normalize(cameraPosition-wp.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
