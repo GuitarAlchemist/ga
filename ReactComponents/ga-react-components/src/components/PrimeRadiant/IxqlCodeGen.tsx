@@ -122,9 +122,22 @@ export const IxqlCodeGen: React.FC<IxqlCodeGenProps> = ({ onRunCommand }) => {
     void generate(prompt);
   }, [generate]);
 
+  const [runStatus, setRunStatus] = useState<string | null>(null);
+
   const handleRun = useCallback(() => {
-    if (output && onRunCommand) {
+    if (!output) {
+      setRunStatus('No command generated — click an example or type a prompt first');
+      return;
+    }
+    if (!onRunCommand) {
+      setRunStatus('Command dispatch not connected');
+      return;
+    }
+    try {
       onRunCommand(output);
+      setRunStatus('Executed: ' + output.substring(0, 60) + (output.length > 60 ? '...' : ''));
+    } catch (err) {
+      setRunStatus('Error: ' + String(err));
     }
   }, [output, onRunCommand]);
 
@@ -206,6 +219,17 @@ export const IxqlCodeGen: React.FC<IxqlCodeGenProps> = ({ onRunCommand }) => {
               </button>
             )}
           </div>
+        </div>
+      )}
+      {runStatus && (
+        <div style={{
+          padding: '6px 12px',
+          fontSize: 10,
+          color: runStatus.startsWith('Error') ? '#ef4444' : runStatus.startsWith('No ') ? '#f97316' : '#22c55e',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          fontFamily: "'JetBrains Mono', monospace",
+        }}>
+          {runStatus}
         </div>
       )}
     </div>
