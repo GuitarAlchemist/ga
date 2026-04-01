@@ -240,7 +240,7 @@ const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,
 // Speed: Kepler's 3rd law: angular speed ∝ AU^-1.5
 // Orbits: Elliptical with real eccentricity from JPL data.
 const EARTH_DIST = 6.5;     // 1 AU in scene units
-const EARTH_RADIUS = 0.35;  // Earth's radius in scene units
+const EARTH_RADIUS = 0.12;  // Earth's radius — small enough that inner orbits have visible gaps
 const EARTH_SPEED = 3.0;    // Earth's orbital speed (animation, not real-time)
 
 // Real orbital eccentricities (JPL/NASA)
@@ -1187,8 +1187,8 @@ export function createSolarSystem(scale: number): THREE.Group {
       });
       const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
       atmoMesh.name = `atmo-${def.name}`;
-      atmoMesh.position.copy(mesh.position);
-      orbit.add(atmoMesh);
+      // Parent to mesh so atmosphere follows planet through elliptical orbit
+      mesh.add(atmoMesh);
     }
 
     // Planet name label (initially hidden)
@@ -1238,8 +1238,8 @@ export function createSolarSystem(scale: number): THREE.Group {
         cloudsMat,
       );
       cloudsMesh.name = 'earth-clouds';
-      cloudsMesh.position.copy(mesh.position);
-      orbit.add(cloudsMesh);
+      // Parent to mesh so clouds follow Earth through elliptical orbit
+      mesh.add(cloudsMesh);
 
       // High-altitude thin cloud layer — parallax depth
       const cloudsHighTex = loadTex(def.textureClouds);
@@ -1255,8 +1255,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         cloudsHighMat,
       );
       cloudsHighMesh.name = 'earth-clouds-high';
-      cloudsHighMesh.position.copy(mesh.position);
-      orbit.add(cloudsHighMesh);
+      mesh.add(cloudsHighMesh);
     }
 
     // Saturn rings (textured)
