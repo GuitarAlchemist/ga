@@ -27,17 +27,25 @@ interface ChatResponse {
 const CODESTRAL_ENDPOINT = '/proxy/codestral/v1/chat/completions';
 const MODEL = 'codestral-latest';
 
-const SYSTEM_PROMPT = `You are an IXQL command generator for Prime Radiant governance visualization.
+const SYSTEM_PROMPT = `You are an IXQL command generator for the Prime Radiant governance visualization engine.
+This system governs the GuitarAlchemist ecosystem: ix (Rust ML), TARS (F# reasoning), Demerzel (governance), and GA (music).
 
-Commands:
-- SELECT * WHERE health.staleness > 0.5 SET glow = true, color = "#FF4444"
+IXQL commands:
+- SELECT nodes WHERE type = "policy" SET glow = true pulse = 2
+- SELECT edges SET color = "#ffd700"
 - RESET
-- CREATE PANEL "my-panel" KIND grid FROM "/api/data" COLUMNS name, status
-- BIND HEALTH "panel-id" TO "/api/status" WHEN status = "error" THEN error
-- SHOW tower | HIDE tower
+- CREATE PANEL "id" KIND grid SOURCE governance.beliefs PROJECT { id, proposition, truth_value, confidence } PIPE FILTER confidence > 0.7 SORT confidence DESC LIMIT 20 REFRESH 30s GOVERNED BY article=1,7
+- CREATE VIZ "id" KIND force-graph SOURCE governance.graph
+- CREATE VIZ "id" KIND truth-lattice SOURCE governance.beliefs
+- CREATE VIZ "id" KIND bar SOURCE governance.backlog
+- CREATE FORM "id" FIELDS [ truth_value: enum(T,P,U,D,F,C), confidence: slider(0,1) ] HEXAVALENT validation=true SUBMIT COMMAND governance.updateBelief ON_SUCCESS REFRESH "beliefs-panel" GOVERNED BY article=3
+- SHOW beliefs | SHOW strategies | SHOW tensor | SHOW learners | SHOW journal | SHOW incompetence
+- ON VIOLATION IN beliefs WHEN staleness > 0.8 SEVERITY critical THEN SELECT nodes WHERE type = "belief" SET pulse = 3 NOTIFY VIA algedonic
+- SAVE QUERY "name" AS artifact RATIONALE "why"
+- PIPE FILTER field op value | SORT field ASC/DESC | LIMIT n | SKIP n | DISTINCT field | GROUP BY field COUNT | TOP n BY field
 - DIAGNOSE | HEALTH CHECK
-- FIX errors | FIX signals | FIX all
 
+Hexavalent logic: T=True, P=Probable, U=Unknown, D=Doubtful, F=False, C=Contradictory.
 Return ONLY the IXQL command, no explanation.`;
 
 interface QuickExample {
@@ -46,11 +54,15 @@ interface QuickExample {
 }
 
 const EXAMPLES: QuickExample[] = [
-  { label: 'Show all warning nodes', prompt: 'Show all warning nodes' },
-  { label: 'Create a panel for beliefs', prompt: 'Create a panel for beliefs' },
-  { label: 'Highlight stale policies', prompt: 'Highlight stale policies' },
-  { label: 'Health check', prompt: 'Health check' },
-  { label: 'Fix all signals', prompt: 'Fix all signals' },
+  // Real ix/TARS/Demerzel governance use cases
+  { label: 'Belief dashboard', prompt: 'Create a grid panel showing all governance beliefs with truth value, confidence, and staleness, sorted by confidence descending, refreshing every 30 seconds, governed by Article 1 Truthfulness' },
+  { label: 'Truth lattice', prompt: 'Create a truth lattice visualization from governance beliefs to see how beliefs move through T/P/U/D/F/C states' },
+  { label: 'Stale policy alert', prompt: 'Set up a violation monitor that fires when any belief staleness exceeds 0.8, severity critical, highlighting those nodes with red pulse and notifying the algedonic channel' },
+  { label: 'Contradictions', prompt: 'Show all nodes where truth_value is Contradictory and make them pulse magenta with high opacity' },
+  { label: 'ix ML pipeline status', prompt: 'Create a grid panel showing the backlog items filtered to type=feature, sorted by severity descending, top 10, governed by Article 8 Observability' },
+  { label: 'Belief editor form', prompt: 'Create a hexavalent form for editing beliefs with truth_value enum (T,P,U,D,F,C), confidence slider 0 to 1, and justification text field, submitting to governance.updateBelief, refreshing the beliefs panel on success' },
+  { label: 'Constitutional compliance', prompt: 'Show all policies governed by Article 9 Bounded Autonomy and highlight any with confidence below 0.5 in orange' },
+  { label: 'TARS reasoning health', prompt: 'Create a bar chart visualization of governance predictions grouped by status, to see the health of TARS reasoning outputs' },
 ];
 
 // ---------------------------------------------------------------------------
