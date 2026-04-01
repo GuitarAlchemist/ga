@@ -1827,8 +1827,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       milkyWayMesh.position.set(-camPos.x * 0.002, -camPos.y * 0.002, -camPos.z * 0.002);
 
       // ─── Edge undulation — sinusoidal curvature on active edges ───
-      // Skip on low quality for performance
-      if (qualityLevel === 'low') { /* skip undulation */ } else {
+      // Skip on low/medium quality OR non-temporal frames for performance
+      if (qualityLevel === 'low' || !isTemporalFrame) { /* skip undulation */ } else {
       // Phase 2.3: Type-specific edge undulation (R3)
       const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
       links.forEach((link, idx: number) => {
@@ -1869,21 +1869,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
       const isTemporalFrame = frameCount % temporalSkip === 0;
 
-      // ─── Ambient dust drift (temporal: skip on non-temporal frames) ───
-      if (!isTemporalFrame) { /* skip dust */ } else {
-      const dPos = ambientDust.geometry.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < dustCount; i++) {
-        let x = dPos.getX(i) + dustVelocities[i*3] * 0.016;
-        let y = dPos.getY(i) + dustVelocities[i*3+1] * 0.016;
-        let z = dPos.getZ(i) + dustVelocities[i*3+2] * 0.016;
+      // ─── Ambient dust drift — direct typed array (no getX/setXYZ overhead) ───
+      if (isTemporalFrame) {
+        const dArr = (ambientDust.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
         const halfR = dustRange / 2;
-        if (Math.abs(x) > halfR) x *= -0.9;
-        if (Math.abs(y) > halfR) y *= -0.9;
-        if (Math.abs(z) > halfR) z *= -0.9;
-        dPos.setXYZ(i, x, y, z);
+        for (let i = 0; i < dustCount; i++) {
+          const i3 = i * 3;
+          let x = dArr[i3]     + dustVelocities[i3]     * 0.016;
+          let y = dArr[i3 + 1] + dustVelocities[i3 + 1] * 0.016;
+          let z = dArr[i3 + 2] + dustVelocities[i3 + 2] * 0.016;
+          if (x > halfR || x < -halfR) x *= -0.9;
+          if (y > halfR || y < -halfR) y *= -0.9;
+          if (z > halfR || z < -halfR) z *= -0.9;
+          dArr[i3]     = x;
+          dArr[i3 + 1] = y;
+          dArr[i3 + 2] = z;
+        }
+        (ambientDust.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
       }
-      dPos.needsUpdate = true;
-      } // end temporal dust skip
 
       // ─── Orbital rings track their nodes (O(1) lookup via nodeMap) ───
       for (const ring of ringMeshes) {
@@ -2080,7 +2083,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       else { dustColors[i*3] = 0.2; dustColors[i*3+1] = 0.15; dustColors[i*3+2] = 0.35; }                 // violet
     }
     const dustGeo = new THREE.BufferGeometry();
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const dustPosAttr = new THREE.BufferAttribute(dustPositions, 3);
+    dustPosAttr.setUsage(THREE.DynamicDrawUsage); // hint GPU: updated every frame
+    dustGeo.setAttribute('position', dustPosAttr);
     dustGeo.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
     const dustMat = new THREE.PointsMaterial({
       size: 0.3, vertexColors: true, transparent: true, opacity: 0.35,
@@ -2310,6 +2315,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     starField.add(brightStars);
     starField.add(dimStars);
     starField.renderOrder = -1;
+    // Stars are static relative to the starField group — skip per-child matrix updates
+    skySphere.matrixAutoUpdate = false; skySphere.updateMatrix();
+    brightStars.matrixAutoUpdate = false; brightStars.updateMatrix();
+    dimStars.matrixAutoUpdate = false; dimStars.updateMatrix();
     fg.scene().add(starField);
 
     // M key toggles Milky Way visibility
