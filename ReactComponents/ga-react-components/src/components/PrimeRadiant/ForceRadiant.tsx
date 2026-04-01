@@ -1926,8 +1926,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Placed far enough from the governance graph center to not overlap,
       // but in the same scene so camera zoom affects it naturally.
       if (solarFollowCameraRef.current) {
-        // Fixed world position — offset from graph center, not camera
-        solarSystem.position.set(120, 30, -80);
+        // Fixed world position — far from graph center so they don't overlap
+        solarSystem.position.set(250, 50, -200);
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -2150,9 +2150,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           // Gravitational lensing ring: bright accretion disk around a dark core
           vec3 sgrADir = normalize(vec3(0.0, -0.02, -1.0)); // galactic center direction
           float sgrDist = length(dir - sgrADir);
-          // Dark core — light cannot escape
-          float blackHole = 1.0 - smoothstep(0.0, 0.012, sgrDist);
-          col *= (1.0 - blackHole * 0.8); // dim the center
+          // Dark core — subtle dimming, not a visible black sphere
+          float blackHole = 1.0 - smoothstep(0.0, 0.006, sgrDist);
+          col *= (1.0 - blackHole * 0.3); // very subtle dimming
           // Accretion disk — hot glowing ring around the event horizon
           float ring = exp(-800.0 * pow(sgrDist - 0.015, 2.0));
           col += vec3(1.0, 0.7, 0.3) * ring * 0.15; // hot orange-white ring
