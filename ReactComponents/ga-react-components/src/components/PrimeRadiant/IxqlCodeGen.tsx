@@ -193,6 +193,34 @@ export const IxqlCodeGen: React.FC<IxqlCodeGenProps> = ({ onRunCommand }) => {
         </div>
       </div>
 
+      {/* Quick Run — execute IXQL directly without AI generation */}
+      {onRunCommand && (
+        <div style={{ padding: '6px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 9, color: '#6b7280', marginBottom: 4, fontWeight: 'bold' }}>Quick Run (no AI needed)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            {[
+              { label: 'Beliefs Grid', cmd: 'CREATE PANEL "beliefs" KIND grid SOURCE governance.beliefs REFRESH 30000 GOVERNED BY article=1' },
+              { label: 'Truth Lattice', cmd: 'CREATE VIZ "lattice" KIND truth-lattice SOURCE governance.beliefs' },
+              { label: 'Glow Policies', cmd: 'SELECT nodes WHERE type = "policy" SET glow = true pulse = 2' },
+              { label: 'Show Beliefs', cmd: 'SHOW beliefs' },
+              { label: 'Reset', cmd: 'RESET' },
+            ].map(q => (
+              <button
+                key={q.label}
+                onClick={() => { onRunCommand(q.cmd); setRunStatus('Executed: ' + q.cmd.substring(0, 50) + '...'); }}
+                style={{
+                  background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                  borderRadius: 4, color: '#22c55e', fontSize: 9, padding: '2px 6px',
+                  cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Error */}
       {error && (
         <div className="ixql-gen__error">{error}</div>
