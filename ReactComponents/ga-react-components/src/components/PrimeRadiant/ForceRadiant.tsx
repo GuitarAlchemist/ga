@@ -1925,14 +1925,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — camera-relative orrery ───
-      // Fixed world position doesn't work — graph nodes spread 100s of units
-      // and overlap with any fixed position. Camera-follow keeps it visible
-      // at a consistent offset regardless of graph layout.
+      // ─── Solar system — fixed WORLD offset, not camera-relative ───
+      // Camera-relative causes the orrery to swing into the graph when rotating.
+      // Fixed world Y=2000 puts it far above the graph plane (graph spreads ~200 units XZ).
       if (solarFollowCameraRef.current) {
-        _solarOffset.set(isLowEnd ? 10 : 0, isLowEnd ? 5 : 200, isLowEnd ? -18 : 0);
-        _solarOffset.applyQuaternion(cam.quaternion);
-        solarSystem.position.copy(cam.position).add(_solarOffset);
+        if (isLowEnd) {
+          // Mobile: camera-relative (small screen, need it in view)
+          _solarOffset.set(10, 5, -18);
+          _solarOffset.applyQuaternion(cam.quaternion);
+          solarSystem.position.copy(cam.position).add(_solarOffset);
+        } else {
+          // Desktop: fixed world position FAR above the graph plane
+          solarSystem.position.set(0, 2000, 0);
+        }
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
