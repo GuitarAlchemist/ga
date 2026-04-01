@@ -1922,12 +1922,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — compact orrery, top-right of view ───
-      // Position FIRST so updateSolarSystem gets correct Sun world position for terminator
+      // ─── Solar system — fixed world position, same zoom rules as graph ───
+      // Placed far enough from the governance graph center to not overlap,
+      // but in the same scene so camera zoom affects it naturally.
       if (solarFollowCameraRef.current) {
-        _solarOffset.set(12, 6, -20);
-        _solarOffset.applyQuaternion(cam.quaternion);
-        solarSystem.position.copy(cam.position).add(_solarOffset);
+        // Fixed world position — offset from graph center, not camera
+        solarSystem.position.set(120, 30, -80);
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
