@@ -856,6 +856,7 @@ function createPlanetLabel(name: string, scale: number): THREE.Sprite {
 export function createSolarSystem(scale: number): THREE.Group {
   const group = new THREE.Group();
   group.userData.isSolarSystem = true;
+  group.userData.scale = scale;
 
   // ── Lighting for textured planets ──
   const sunLight = new THREE.PointLight(0xffffff, 1.5, 80 * scale);
@@ -1831,10 +1832,19 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
 
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
+  const scale = group.userData.scale as number ?? 0.15;
+
   for (const { mesh, orbit, def, clouds, cloudsHigh } of planets) {
-    // Orbit rotation — real orbital position + animated drift
+    // Elliptical orbit — position planet using Kepler's equation
     const realAngle = getRealOrbitalAngle(def.name);
-    orbit.rotation.y = realAngle + time * def.speed * 0.1;
+    const meanAnomaly = realAngle + time * def.speed * 0.1;
+    const e = ECCENTRICITY[def.name] ?? 0;
+    const incl = INCLINATION[def.name] ?? 0;
+    const pos = ellipticalPosition(meanAnomaly, e, def.distance * scale);
+    // Apply inclination
+    mesh.position.set(pos.x, pos.z * Math.sin(incl), pos.z * Math.cos(incl));
+    // Reset orbit group rotation — position is now computed directly
+    orbit.rotation.y = 0;
 
     if (def.name === 'earth') {
       // ── Real-time Earth rotation based on UTC ──
