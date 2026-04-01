@@ -1,0 +1,71 @@
+<h2>Section 1: Directory Layout & Junction Architecture</h2>
+<p class="subtitle">The physical structure on disk</p>
+
+<div class="mockup">
+  <div class="mockup-header">Directory Structure — ga/</div>
+  <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; padding: 1.5rem;">
+    <div style="color: #94a3b8;">ga/</div>
+    <div style="color: #94a3b8;">├── Apps/ga-server/GaApi/</div>
+    <div style="color: #94a3b8;">│   ├── bin/</div>
+    <div style="color: #60a5fa;">│   │   ├── <strong>blue/</strong>net10.0/          ← physical dir, 153+ DLLs</div>
+    <div style="color: #34d399;">│   │   ├── <strong>green/</strong>net10.0/         ← physical dir, 153+ DLLs</div>
+    <div style="color: #fbbf24;">│   │   ├── <strong>active</strong> → blue/ <em>or</em> green/  ← NTFS junction point</div>
+    <div style="color: #f87171;">│   │   └── <strong>.slot-state</strong>              ← JSON: which slot is active, last swap time</div>
+    <div style="color: #94a3b8;">│   └── ...</div>
+    <div style="color: #94a3b8;">├── Common/GA.*/                       ← library projects (same pattern)</div>
+    <div style="color: #94a3b8;">├── Scripts/</div>
+    <div style="color: #c084fc;">│   ├── <strong>ga-build.ps1</strong>               ← builds to inactive slot</div>
+    <div style="color: #c084fc;">│   ├── <strong>ga-swap.ps1</strong>                ← moves junction, restarts server</div>
+    <div style="color: #c084fc;">│   ├── <strong>ga-start.ps1</strong>               ← starts from active slot</div>
+    <div style="color: #c084fc;">│   ├── <strong>ga-rollback.ps1</strong>            ← emergency swap to other slot</div>
+    <div style="color: #c084fc;">│   └── <strong>ga-status.ps1</strong>              ← shows slot health, SAC trust</div>
+    <div style="color: #94a3b8;">├── Directory.Build.props               ← OutputPath override</div>
+    <div style="color: #94a3b8;">└── .slot-state.json                    ← solution-level slot tracking</div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>How It Works</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div style="padding: 1rem; background: rgba(96,165,250,0.1); border-radius: 8px; border: 1px solid rgba(96,165,250,0.3);">
+      <h4 style="color: #60a5fa; margin-top: 0;">🔵 Blue Slot (active)</h4>
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        <li>Server runs from here</li>
+        <li>SAC trusts these binaries</li>
+        <li>Never touched during build</li>
+        <li>Junction <code>active → blue/</code></li>
+      </ul>
+    </div>
+    <div style="padding: 1rem; background: rgba(52,211,153,0.1); border-radius: 8px; border: 1px solid rgba(52,211,153,0.3);">
+      <h4 style="color: #34d399; margin-top: 0;">🟢 Green Slot (inactive)</h4>
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        <li>Build output goes here</li>
+        <li>DLLs aging, gaining SAC trust</li>
+        <li>Health-checked before swap</li>
+        <li>Becomes active after swap</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Swap Sequence</h3>
+  <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 14px;">
+    <div style="padding: 0.5rem 1rem; background: rgba(96,165,250,0.15); border-radius: 6px;">1. Stop server</div>
+    <span style="color: #64748b;">→</span>
+    <div style="padding: 0.5rem 1rem; background: rgba(251,191,36,0.15); border-radius: 6px;">2. Remove junction</div>
+    <span style="color: #64748b;">→</span>
+    <div style="padding: 0.5rem 1rem; background: rgba(52,211,153,0.15); border-radius: 6px;">3. Re-create junction → green</div>
+    <span style="color: #64748b;">→</span>
+    <div style="padding: 0.5rem 1rem; background: rgba(192,132,252,0.15); border-radius: 6px;">4. Health check</div>
+    <span style="color: #64748b;">→</span>
+    <div style="padding: 0.5rem 1rem; background: rgba(52,211,153,0.15); border-radius: 6px;">5. Start server</div>
+    <span style="color: #64748b;">→</span>
+    <div style="padding: 0.5rem 1rem; background: rgba(248,113,113,0.15); border-radius: 6px;">6. If fail → rollback to blue</div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1rem; border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08); border-radius: 8px;">
+  <h3>Key Detail: MSBuild OutputPath</h3>
+  <p><code>Directory.Build.props</code> reads <code>.slot-state.json</code> to determine the inactive slot, then sets <code>OutputPath</code> accordingly. This means <code>dotnet build</code> anywhere in the solution automatically targets the right slot — no special flags needed.</p>
+</div>
