@@ -1668,7 +1668,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // 5. Demerzel face (3D mesh)
         // 6. Pixel ratio (nuclear option — reduces resolution)
         ambientDust.visible = qualityBudget > -0.7;
-        bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+        // Bloom: disable entirely at very low budget (saves full-screen post-process pass)
+        if (qualityBudget < -0.8) {
+          bloomPass.enabled = false;
+        } else {
+          bloomPass.enabled = true;
+          bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+        }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
         starField.visible = qualityBudget > -0.6;
         demerzelFace.visible = qualityBudget > -0.8;
@@ -1926,9 +1932,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // (Trantor removed — replaced by Earth + nebulae)
 
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
-      // Stays above the camera at all times. No quaternion rotation —
-      // the orrery plane stays horizontal regardless of where you look.
-      if (solarFollowCameraRef.current) {
+      // Hide entirely on very low quality to save draw calls
+      solarSystem.visible = qualityBudget > -0.9;
+      if (solarFollowCameraRef.current && solarSystem.visible) {
         solarSystem.position.set(
           cam.position.x,
           cam.position.y + (isLowEnd ? 15 : 40),
