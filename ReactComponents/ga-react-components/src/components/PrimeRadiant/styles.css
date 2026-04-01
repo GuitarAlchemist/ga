@@ -10792,7 +10792,7 @@
 .scene-options {
   position: absolute;
   top: 120px;
-  left: 8px;
+  left: 56px;  /* right of icon rail (48px + 8px gap) */
   z-index: 30;
   font-family: 'JetBrains Mono', monospace;
 }

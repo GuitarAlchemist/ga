@@ -1085,7 +1085,8 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.userData.flareGroup = flareGroup;
 
   // Sun corona glow (subtle — bloom post-process amplifies this)
-  const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.25 * scale, 16, 16);
+  // Corona: just slightly larger than the Sun — subtle limb glow, not a giant halo
+  const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.08 * scale, 16, 16);
   const coronaMat = new THREE.ShaderMaterial({
     uniforms: {},
     vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 wp=modelMatrix*vec4(position,1.);vViewDir=normalize(cameraPosition-wp.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
