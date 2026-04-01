@@ -1930,7 +1930,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // and overlap with any fixed position. Camera-follow keeps it visible
       // at a consistent offset regardless of graph layout.
       if (solarFollowCameraRef.current) {
-        _solarOffset.set(isLowEnd ? 8 : 15, isLowEnd ? 4 : 8, isLowEnd ? -15 : -25);
+        _solarOffset.set(isLowEnd ? 10 : 60, isLowEnd ? 5 : 25, isLowEnd ? -18 : -80);
         _solarOffset.applyQuaternion(cam.quaternion);
         solarSystem.position.copy(cam.position).add(_solarOffset);
       }
