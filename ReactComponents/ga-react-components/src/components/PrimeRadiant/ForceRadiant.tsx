@@ -1925,19 +1925,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — fixed WORLD offset, not camera-relative ───
-      // Camera-relative causes the orrery to swing into the graph when rotating.
-      // Fixed world Y=2000 puts it far above the graph plane (graph spreads ~200 units XZ).
+      // ─── Solar system — follows camera X/Z but fixed Y offset ───
+      // Stays above the camera at all times. No quaternion rotation —
+      // the orrery plane stays horizontal regardless of where you look.
       if (solarFollowCameraRef.current) {
-        if (isLowEnd) {
-          // Mobile: camera-relative (small screen, need it in view)
-          _solarOffset.set(10, 5, -18);
-          _solarOffset.applyQuaternion(cam.quaternion);
-          solarSystem.position.copy(cam.position).add(_solarOffset);
-        } else {
-          // Desktop: fixed world position FAR above the graph plane
-          solarSystem.position.set(0, 2000, 0);
-        }
+        solarSystem.position.set(
+          cam.position.x,
+          cam.position.y + (isLowEnd ? 15 : 40),
+          cam.position.z,
+        );
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -2410,7 +2406,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
-    const solarSystem = createSolarSystem(0.15);
+    const solarSystem = createSolarSystem(0.06); // smaller scale — fits in ~12 unit radius
     fg.scene().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
