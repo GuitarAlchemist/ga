@@ -1230,11 +1230,11 @@ export function createSolarSystem(scale: number): THREE.Group {
         map: cloudsTex,
         alphaMap: cloudsTex,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.75,
         depthWrite: false,
       });
       cloudsMesh = new THREE.Mesh(
-        new THREE.SphereGeometry((def.radius + 0.015) * scale, 32, 32),
+        new THREE.SphereGeometry(def.radius * 1.015 * scale, 32, 32),
         cloudsMat,
       );
       cloudsMesh.name = 'earth-clouds';
@@ -1247,11 +1247,11 @@ export function createSolarSystem(scale: number): THREE.Group {
         map: cloudsHighTex,
         alphaMap: cloudsHighTex,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.25,
         depthWrite: false,
       });
       cloudsHighMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(def.radius * 1.08 * scale, 32, 32),
+        new THREE.SphereGeometry(def.radius * 1.03 * scale, 32, 32),
         cloudsHighMat,
       );
       cloudsHighMesh.name = 'earth-clouds-high';
