@@ -1931,7 +1931,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           _solarOffset.applyQuaternion(cam.quaternion);
           solarSystem.position.copy(cam.position).add(_solarOffset);
         } else {
-          solarSystem.position.set(250, 50, -200);
+          solarSystem.position.set(500, 80, -400);
         }
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
