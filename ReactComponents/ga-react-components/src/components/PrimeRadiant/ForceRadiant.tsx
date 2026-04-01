@@ -2440,6 +2440,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── Solar system planet hover detection (raycasting) ───
     const solarRaycaster = new THREE.Raycaster();
     solarRaycaster.params.Line = { threshold: 0 }; // ignore lines
+    solarRaycaster.params.Points = { threshold: 0 }; // ignore particle systems
     const solarMouse = new THREE.Vector2();
     let currentHoveredPlanet: string | null = null;
 
@@ -2456,9 +2457,22 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Check all meshes in solar system (planets + moons) recursively
       const hits = solarRaycaster.intersectObjects(solarSystem.children, true);
 
-      // Only consider hits on named objects (skip rings, atmospheres, orbit lines)
-      const namedHit = hits.find(h => h.object.name);
-      const hitName = namedHit ? namedHit.object.name : null;
+      // Find planet/moon name — walk up parent chain if hit is on a child (clouds, ring, atmo)
+      let hitName: string | null = null;
+      for (const h of hits) {
+        let obj: THREE.Object3D | null = h.object;
+        while (obj) {
+          if (obj.name && obj.name.indexOf('-orbit') < 0 && obj.name.indexOf('trail-') < 0 &&
+              obj.name.indexOf('-path') < 0 && obj.name.indexOf('earth-clouds') < 0 &&
+              obj.name.indexOf('atmo-') < 0 && obj.name.indexOf('-ring') < 0 &&
+              obj.name.indexOf('label-') < 0 && obj.name !== 'sun' || obj.name === 'sun') {
+            hitName = obj.name;
+            break;
+          }
+          obj = obj.parent;
+        }
+        if (hitName) break;
+      }
       if (hitName !== currentHoveredPlanet) {
         currentHoveredPlanet = hitName;
         showPlanetLabel(solarSystem, hitName);
