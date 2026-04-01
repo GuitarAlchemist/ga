@@ -1922,12 +1922,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — fixed world position, same zoom rules as graph ───
-      // Placed far enough from the governance graph center to not overlap,
-      // but in the same scene so camera zoom affects it naturally.
+      // ─── Solar system position ───
+      // Desktop: fixed world position (same zoom as graph)
+      // Mobile: camera-relative (too far to see at fixed position on small screen)
       if (solarFollowCameraRef.current) {
-        // Fixed world position — far from graph center so they don't overlap
-        solarSystem.position.set(250, 50, -200);
+        if (isLowEnd) {
+          _solarOffset.set(8, 4, -15);
+          _solarOffset.applyQuaternion(cam.quaternion);
+          solarSystem.position.copy(cam.position).add(_solarOffset);
+        } else {
+          solarSystem.position.set(250, 50, -200);
+        }
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
