@@ -1112,21 +1112,25 @@ export function createSolarSystem(scale: number): THREE.Group {
     orbit.add(mesh);
 
     // Orbit path line — faint circle showing the orbital track
-    const orbitLineSegs = 64;
+    // Elliptical orbit path with real eccentricity + inclination
+    const orbitLineSegs = 128;
     const orbitLinePoints: THREE.Vector3[] = [];
+    const eOrbit = ECCENTRICITY[def.name] ?? 0;
+    const iOrbit = INCLINATION[def.name] ?? 0;
     for (let s = 0; s <= orbitLineSegs; s++) {
-      const angle = (s / orbitLineSegs) * Math.PI * 2;
-      orbitLinePoints.push(new THREE.Vector3(
-        Math.cos(angle) * def.distance * scale,
-        0,
-        Math.sin(angle) * def.distance * scale,
-      ));
+      const theta = (s / orbitLineSegs) * Math.PI * 2;
+      // r = a(1-e²) / (1 + e·cos(θ)) — polar equation of ellipse
+      const r = def.distance * (1 - eOrbit * eOrbit) / (1 + eOrbit * Math.cos(theta));
+      const x = Math.cos(theta) * r * scale;
+      const y = Math.sin(theta) * r * scale * Math.sin(iOrbit);
+      const z = Math.sin(theta) * r * scale * Math.cos(iOrbit);
+      orbitLinePoints.push(new THREE.Vector3(x, y, z));
     }
     const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitLinePoints);
     const orbitLineMat = new THREE.LineBasicMaterial({
-      color: 0x334466,
+      color: 0x4466aa,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.35,
       depthWrite: false,
     });
     const orbitLine = new THREE.Line(orbitLineGeo, orbitLineMat);
