@@ -79,6 +79,8 @@ import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
+import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
+import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
@@ -1269,6 +1271,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
+    let voronoiShellsHandle: VoronoiShellHandle | null = null;
     let zoomInertiaHandlerOuter: ((e: WheelEvent) => void) | null = null;
     let zoomVelocityRef = { v: 0 };
 
@@ -1690,6 +1693,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Update quality level label for display
         qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
       }
+
+      // ─── TSL shared uniforms — single update per frame ───
+      updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (!n.__threeObj) return;
@@ -1951,6 +1957,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           // Update GIS layer animations (pulse rings, animated paths)
           for (const mgr of gisManagersRef.current.values()) mgr.update(t);
         }
+      }
+
+      // ─── Voronoi jurisdiction shells — update seed positions from force layout ───
+      if (voronoiShellsHandle && isTemporalFrame) {
+        voronoiShellsHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
       }
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
@@ -2413,6 +2424,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     const solarSystem = createSolarSystem(0.06); // smaller scale — fits in ~12 unit radius
+    // Set initial position far above origin so it's not visible before first tick
+    const cam0 = fg.camera();
+    solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
     fg.scene().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
@@ -2634,6 +2648,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         });
         fg.scene().add(filamentsHandle.group);
       }
+
+      // ─── Voronoi jurisdiction shells — governance authority boundaries ───
+      if (!isLowEnd && graph.nodes.length >= 6) {
+        voronoiShellsHandle = createVoronoiShells(
+          graph.nodes,
+          graph.edges,
+          fg.scene(),
+          budgetToTier(qualityBudget),
+        );
+      }
     }, 4000);
 
     // ─── Fix camera near plane for solar system zoom ───
@@ -2793,6 +2817,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       criticCleanupOuter?.();
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
+      voronoiShellsHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
       violationMonitor.dispose();
