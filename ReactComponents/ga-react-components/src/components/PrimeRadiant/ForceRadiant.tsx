@@ -81,6 +81,7 @@ import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
+import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
@@ -1274,6 +1275,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let filamentsHandle: TerminalFilamentsHandle | null = null;
     let voronoiShellsHandle: VoronoiShellHandle | null = null;
     let complianceRiversHandle: ComplianceRiverHandle | null = null;
+    let crisisTexturesHandle: CrisisTextureHandle | null = null;
     let zoomInertiaHandlerOuter: ((e: WheelEvent) => void) | null = null;
     let zoomVelocityRef = { v: 0 };
 
@@ -1976,6 +1978,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             graph.edges,
           );
         }
+      }
+
+      // ─── Crisis textures — reaction-diffusion simulation (2Hz internally) ───
+      if (crisisTexturesHandle) {
+        crisisTexturesHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
       }
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
@@ -2682,6 +2689,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           budgetToTier(qualityBudget),
         );
       }
+
+      // ─── Crisis textures — RD Turing patterns on node surfaces ───
+      crisisTexturesHandle = createCrisisTextures(budgetToTier(qualityBudget));
     }, 4000);
 
     // ─── Fix camera near plane for solar system zoom ───
@@ -2843,6 +2853,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       filamentsHandle?.dispose();
       voronoiShellsHandle?.dispose();
       complianceRiversHandle?.dispose();
+      crisisTexturesHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
       violationMonitor.dispose();
