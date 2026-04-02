@@ -80,6 +80,7 @@ import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './Cryst
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
+import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
@@ -1272,6 +1273,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
     let voronoiShellsHandle: VoronoiShellHandle | null = null;
+    let complianceRiversHandle: ComplianceRiverHandle | null = null;
     let zoomInertiaHandlerOuter: ((e: WheelEvent) => void) | null = null;
     let zoomVelocityRef = { v: 0 };
 
@@ -1962,6 +1964,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Voronoi jurisdiction shells — update seed positions from force layout ───
       if (voronoiShellsHandle && isTemporalFrame) {
         voronoiShellsHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
+      }
+
+      // ─── Compliance rivers — flow field particle advection ───
+      if (complianceRiversHandle) {
+        complianceRiversHandle.update(0.016, qualityBudget); // ~60fps dt
+        // Periodically rebuild field as force layout moves nodes
+        if (isTemporalFrame) {
+          complianceRiversHandle.rebuild(
+            fg.graphData().nodes as GraphNode[],
+            graph.edges,
+          );
+        }
       }
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
@@ -2658,6 +2672,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           budgetToTier(qualityBudget),
         );
       }
+
+      // ─── Compliance rivers — flow field particles showing directive flow ───
+      if (graph.edges.length > 0) {
+        complianceRiversHandle = createComplianceRivers(
+          graph.nodes,
+          graph.edges,
+          fg.scene(),
+          budgetToTier(qualityBudget),
+        );
+      }
     }, 4000);
 
     // ─── Fix camera near plane for solar system zoom ───
@@ -2818,6 +2842,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
       voronoiShellsHandle?.dispose();
+      complianceRiversHandle?.dispose();
       eiffelHandleOuter?.dispose();
       reactiveEngine.dispose();
       violationMonitor.dispose();
