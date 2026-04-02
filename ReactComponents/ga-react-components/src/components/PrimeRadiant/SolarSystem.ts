@@ -4,6 +4,8 @@
 // Orbit trails, Kepler speeds, realistic proportions
 
 import * as THREE from 'three';
+import { createSunMaterialTSL } from './shaders/SunMaterialTSL';
+import type { QualityTier } from './shaders/TSLUniforms';
 
 // ── Texture paths (served from public/textures/planets/) ──
 const TEX_BASE = '/textures/planets/';
@@ -15,6 +17,9 @@ const CLOUD_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
 function loadTex(file: string): THREE.Texture {
   const tex = loader.load(TEX_BASE + file);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 8; // sharper at oblique angles
   return tex;
 }
 
@@ -327,7 +332,7 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: 0.1, distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
+      { name: 'moon', radius: keplerRadius(3_474), distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
     ],
   },
   {
@@ -354,10 +359,10 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'io', radius: 0.09, distance: 1.8, speed: 3.5, fragment: IO_FRAG },
-      { name: 'europa', radius: 0.08, distance: 2.3, speed: 2.8, fragment: EUROPA_FRAG },
-      { name: 'ganymede', radius: 0.12, distance: 2.9, speed: 2.0, fragment: GANYMEDE_FRAG },
-      { name: 'callisto', radius: 0.11, distance: 3.6, speed: 1.4, fragment: CALLISTO_FRAG },
+      { name: 'io', radius: keplerRadius(3_643), distance: 1.8, speed: 3.5, fragment: IO_FRAG },
+      { name: 'europa', radius: keplerRadius(3_122), distance: 2.3, speed: 2.8, fragment: EUROPA_FRAG },
+      { name: 'ganymede', radius: keplerRadius(5_268), distance: 2.9, speed: 2.0, fragment: GANYMEDE_FRAG },
+      { name: 'callisto', radius: keplerRadius(4_821), distance: 3.6, speed: 1.4, fragment: CALLISTO_FRAG },
       { name: 'amalthea', radius: 0.025, distance: 1.4, speed: 4.5, fragment: ROCKY_REDDISH },
       { name: 'thebe', radius: 0.015, distance: 1.55, speed: 4.2, fragment: ROCKY_DARK },
       { name: 'metis', radius: 0.01, distance: 1.25, speed: 5.0, fragment: ROCKY_DARK },
@@ -374,14 +379,14 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'mimas', radius: 0.04, distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
-      { name: 'enceladus', radius: 0.045, distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG },
-      { name: 'tethys', radius: 0.06, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },
-      { name: 'dione', radius: 0.065, distance: 2.6, speed: 2.5, fragment: ICY_WHITE },
-      { name: 'rhea', radius: 0.08, distance: 3.1, speed: 2.0, fragment: ICY_WHITE },
-      { name: 'titan', radius: 0.14, distance: 3.8, speed: 1.3, fragment: TITAN_FRAG },
-      { name: 'hyperion', radius: 0.025, distance: 4.3, speed: 1.1, fragment: ROCKY_GREY },
-      { name: 'iapetus', radius: 0.07, distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG },
+      { name: 'mimas', radius: keplerRadius(396), distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
+      { name: 'enceladus', radius: keplerRadius(504), distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG },
+      { name: 'tethys', radius: keplerRadius(1_066), distance: 2.2, speed: 3.0, fragment: ICY_WHITE },
+      { name: 'dione', radius: keplerRadius(1_123), distance: 2.6, speed: 2.5, fragment: ICY_WHITE },
+      { name: 'rhea', radius: keplerRadius(1_527), distance: 3.1, speed: 2.0, fragment: ICY_WHITE },
+      { name: 'titan', radius: keplerRadius(5_150), distance: 3.8, speed: 1.3, fragment: TITAN_FRAG },
+      { name: 'hyperion', radius: keplerRadius(270), distance: 4.3, speed: 1.1, fragment: ROCKY_GREY },
+      { name: 'iapetus', radius: keplerRadius(1_469), distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG },
       { name: 'phoebe', radius: 0.02, distance: 5.8, speed: 0.3, inclination: 2.7, fragment: ROCKY_DARK },
       { name: 'pan', radius: 0.006, distance: 1.15, speed: 5.5, fragment: ICY_WHITE },
       { name: 'atlas', radius: 0.006, distance: 1.18, speed: 5.4, fragment: ICY_WHITE },
@@ -431,11 +436,11 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.4, 0.85, 0.75', intensity: 0.3, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'miranda', radius: 0.03, distance: 1.0, speed: 3.5, fragment: MIRANDA_FRAG },
-      { name: 'ariel', radius: 0.055, distance: 1.4, speed: 2.8, fragment: ICY_BLUE },
-      { name: 'umbriel', radius: 0.055, distance: 1.8, speed: 2.2, fragment: ROCKY_DARK },
-      { name: 'titania', radius: 0.07, distance: 2.3, speed: 1.6, fragment: ICY_BLUE },
-      { name: 'oberon', radius: 0.068, distance: 2.8, speed: 1.2, fragment: ICY_BLUE },
+      { name: 'miranda', radius: keplerRadius(472), distance: 1.0, speed: 3.5, fragment: MIRANDA_FRAG },
+      { name: 'ariel', radius: keplerRadius(1_158), distance: 1.4, speed: 2.8, fragment: ICY_BLUE },
+      { name: 'umbriel', radius: keplerRadius(1_170), distance: 1.8, speed: 2.2, fragment: ROCKY_DARK },
+      { name: 'titania', radius: keplerRadius(1_578), distance: 2.3, speed: 1.6, fragment: ICY_BLUE },
+      { name: 'oberon', radius: keplerRadius(1_523), distance: 2.8, speed: 1.2, fragment: ICY_BLUE },
       { name: 'puck', radius: 0.012, distance: 0.8, speed: 4.2, fragment: ROCKY_DARK },
       { name: 'portia', radius: 0.01, distance: 0.7, speed: 4.5, fragment: ROCKY_DARK },
     ],
@@ -449,8 +454,8 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'triton', radius: 0.09, distance: 1.5, speed: -1.8, fragment: TRITON_FRAG },
-      { name: 'proteus', radius: 0.03, distance: 0.9, speed: 3.0, fragment: ROCKY_DARK },
+      { name: 'triton', radius: keplerRadius(2_707), distance: 1.5, speed: -1.8, fragment: TRITON_FRAG },
+      { name: 'proteus', radius: keplerRadius(420), distance: 0.9, speed: 3.0, fragment: ROCKY_DARK },
       { name: 'nereid', radius: 0.02, distance: 3.0, speed: 0.4, inclination: 0.5, fragment: ROCKY_GREY },
       { name: 'larissa', radius: 0.012, distance: 0.7, speed: 3.8, fragment: ROCKY_DARK },
       { name: 'despina', radius: 0.01, distance: 0.6, speed: 4.2, fragment: ROCKY_DARK },
@@ -647,8 +652,8 @@ const PLANET_FRAG = /* glsl */ `
 
 // ── Create a textured planet mesh with realistic shading ──
 function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
-  // More segments when displacement is active for smoother terrain
-  const baseSegments = def.radius > 0.5 ? 48 : def.radius > 0.2 ? 32 : 24;
+  // More segments for smoother appearance at all zoom levels
+  const baseSegments = def.radius > 0.5 ? 64 : def.radius > 0.1 ? 48 : 32;
   const segments = def.textureDisplacement ? Math.max(baseSegments, 64) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
   geo.computeBoundingSphere(); // pre-compute for zoom-to-planet framing
@@ -696,7 +701,7 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
 
 // ── Create a textured moon mesh, or fall back to procedural shader ──
 function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
-  const baseSegments = def.radius * scale > 0.02 ? 16 : 8;
+  const baseSegments = def.radius > 0.02 ? 24 : 16;
   const segments = def.textureDisplacement ? Math.max(baseSegments, 48) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
 
@@ -876,119 +881,11 @@ export function createSolarSystem(scale: number): THREE.Group {
   const sunVisualRadius = jupiterVisualRadius * 1.3;  // Sun ~1.3x Jupiter visually
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
-  const sunMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uSunTex: { value: sunTex },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
-      void main() {
-        vUv = uv;
-        vPos = position;
-        vNormal = normalize(normalMatrix * normal);
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vViewDir = normalize(cameraPosition - wp.xyz);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      uniform sampler2D uSunTex;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
 
-      // Hash and noise functions
-      float hash(vec3 p) { return fract(sin(dot(p, vec3(1.3, 1.7, 1.9))) * 43758.5); }
-      float noise(vec3 x) {
-        vec3 i = floor(x), f = fract(x);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
-      }
-      float fbm(vec3 p) {
-        float v = 0.0, a = 0.5;
-        for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.1; a *= 0.48; }
-        return v;
-      }
-
-      void main() {
-        float t = uTime * 0.08;
-
-        // Base texture color
-        vec3 baseTex = texture2D(uSunTex, vUv).rgb;
-
-        // ── Multi-scale convection (realistic solar granulation) ──
-        // Fine granulation — convection cells (~1000km on real sun)
-        float fineGran = fbm(vPos * 18.0 + vec3(t * 0.4, t * 0.3, t * 0.35));
-        // Medium granulation — supergranulation cells
-        float medGran = fbm(vPos * 6.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
-        // Large-scale plasma flow — differential rotation bands
-        float flow = fbm(vPos * 2.0 + vec3(t * 0.05, t * 0.03, -t * 0.04));
-
-        // ── Sunspots — darker, cooler magnetic regions ──
-        float spotNoise = fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01));
-        float spots = smoothstep(0.58, 0.68, spotNoise);
-        // Penumbra around spots (lighter ring)
-        float penumbra = smoothstep(0.52, 0.58, spotNoise) * (1.0 - spots);
-
-        // ── Faculae — bright regions near sunspots ──
-        float faculae = smoothstep(0.45, 0.52, spotNoise) * (1.0 - spots) * (1.0 - penumbra);
-
-        // ── Color palette (no atmosphere — pure photosphere) ──
-        vec3 deepRed = vec3(0.7, 0.2, 0.02);      // spot umbra
-        vec3 warmOrange = vec3(0.95, 0.55, 0.12);  // penumbra
-        vec3 brightYellow = vec3(1.0, 0.88, 0.55); // normal photosphere
-        vec3 hotWhite = vec3(1.0, 0.97, 0.88);     // granulation peaks
-        vec3 faculaeBright = vec3(1.0, 0.95, 0.75); // faculae (slightly brighter than avg)
-
-        // Build photosphere color from convection layers
-        vec3 photosphere = mix(brightYellow, hotWhite, fineGran * 0.5);
-        photosphere = mix(photosphere, warmOrange, (1.0 - medGran) * 0.2);
-        // Blend texture with procedural (texture provides large-scale structure)
-        vec3 col = mix(baseTex * 1.05, photosphere, 0.6);
-
-        // Apply features
-        col = mix(col, deepRed, spots * 0.75);            // dark spot umbra
-        col = mix(col, warmOrange, penumbra * 0.4);        // lighter penumbra ring
-        col = mix(col, faculaeBright, faculae * 0.25);     // bright faculae
-
-        // ── Prominence-like bright eruptions at the limb ──
-        float limb = 1.0 - abs(dot(normalize(vNormal), normalize(vViewDir)));
-        float prominence = smoothstep(0.7, 0.95, limb) * smoothstep(0.6, 0.75, noise(vPos * 5.0 + vec3(t * 0.3)));
-        col += vec3(1.0, 0.4, 0.1) * prominence * 0.5;
-
-        // ── Coronal bright points (tiny hot flashes) ──
-        float coronalPt = smoothstep(0.78, 0.88, noise(vPos * 12.0 + vec3(t * 0.8, -t * 0.5, t * 0.6)));
-        col += vec3(0.5, 0.6, 1.0) * coronalPt * 0.15;
-
-        // ── Limb darkening (realistic — edges are cooler/dimmer) ──
-        float limbFactor = pow(max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 0.35);
-        // Color shift at limb: redder at edges (lower layers visible obliquely)
-        vec3 limbColor = mix(vec3(0.8, 0.3, 0.05), vec3(1.0), limbFactor);
-        col *= limbColor;
-        col *= mix(0.25, 1.0, limbFactor);
-
-        // ── Subtle magnetic field lines (very faint texture) ──
-        float magField = sin(vPos.y * 30.0 + flow * 5.0) * 0.02 * (1.0 - limbFactor);
-        col += vec3(1.0, 0.8, 0.4) * magField;
-
-        // Gentle pulsing (5-minute solar oscillation analog)
-        float pulse = 1.0 + 0.02 * sin(uTime * 0.3) + 0.01 * sin(uTime * 0.8);
-        col *= pulse;
-
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-  });
+  // TSL sun material — composable TypeScript nodes, auto-targets WebGPU/WebGL
+  // Quality adapts: 'low' = 3 FBM octaves, no prominences; 'high' = 6 octaves, full effects
+  const sunQuality: QualityTier = scale < 0.05 ? 'low' : 'high';
+  const sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: sunQuality });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -1013,35 +910,6 @@ export function createSolarSystem(scale: number): THREE.Group {
     return t;
   }
 
-  // Generate an anamorphic streak texture (horizontal lens artifact)
-  function createStreakTexture(w: number, h: number): THREE.CanvasTexture {
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const cx = c.getContext('2d')!;
-    const g = cx.createLinearGradient(0, 0, w, 0);
-    g.addColorStop(0, 'rgba(255,200,100,0)');
-    g.addColorStop(0.15, 'rgba(255,220,150,0.06)');
-    g.addColorStop(0.4, 'rgba(255,240,200,0.2)');
-    g.addColorStop(0.5, 'rgba(255,250,240,0.35)');
-    g.addColorStop(0.6, 'rgba(255,240,200,0.2)');
-    g.addColorStop(0.85, 'rgba(255,220,150,0.06)');
-    g.addColorStop(1, 'rgba(255,200,100,0)');
-    cx.fillStyle = g;
-    cx.fillRect(0, 0, w, h);
-    // Thin vertical center line
-    const g2 = cx.createLinearGradient(0, 0, 0, h);
-    g2.addColorStop(0, 'rgba(255,255,255,0)');
-    g2.addColorStop(0.4, 'rgba(255,255,255,0.15)');
-    g2.addColorStop(0.5, 'rgba(255,255,255,0.3)');
-    g2.addColorStop(0.6, 'rgba(255,255,255,0.15)');
-    g2.addColorStop(1, 'rgba(255,255,255,0)');
-    cx.fillStyle = g2;
-    cx.fillRect(0, 0, w, h);
-    const t = new THREE.CanvasTexture(c);
-    t.needsUpdate = true;
-    return t;
-  }
-
   // Primary glow (subtle warm halo — bloom will amplify this)
   const mainGlow = new THREE.Sprite(new THREE.SpriteMaterial({
     map: createFlareTexture(256, 'rgba(255,220,150,0.08)', 0.4),
@@ -1058,29 +926,8 @@ export function createSolarSystem(scale: number): THREE.Group {
   hotCore.scale.set(2.5 * scale, 2.5 * scale, 1);
   flareGroup.add(hotCore);
 
-  // Anamorphic horizontal streak (thin, subtle)
-  const streak = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: createStreakTexture(512, 32),
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    opacity: 0.3,
-  }));
-  streak.scale.set(8 * scale, 0.3 * scale, 1);
-  flareGroup.add(streak);
-
-  // Secondary rainbow ghosts (very subtle)
-  const ghostColors = ['rgba(100,180,255,0.04)', 'rgba(255,150,100,0.03)', 'rgba(150,255,150,0.02)'];
-  const ghostScales = [1.2, 0.8, 1.5];
-  const ghostOffsets = [3, 5, 7];
-  for (let i = 0; i < ghostColors.length; i++) {
-    const ghost = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: createFlareTexture(128, ghostColors[i], 0.6),
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
-    ghost.scale.set(ghostScales[i] * scale, ghostScales[i] * scale, 1);
-    ghost.position.x = ghostOffsets[i] * scale;
-    ghost.name = `flare-ghost-${i}`;
-    flareGroup.add(ghost);
-  }
+  // Anamorphic streak and rainbow ghosts removed — caused distracting
+  // horizontal bar and halo artifacts at typical viewing distances.
 
   group.add(flareGroup);
   group.userData.flareGroup = flareGroup;
@@ -1151,7 +998,7 @@ export function createSolarSystem(scale: number): THREE.Group {
     // Atmosphere shell — Fresnel glow on limb, transparent at center
     if (def.atmosphere) {
       const atmoSegs = def.radius > 0.5 ? 32 : 24;
-      const atmoGeo = new THREE.SphereGeometry(def.radius * 1.05 * scale, atmoSegs, atmoSegs);
+      const atmoGeo = new THREE.SphereGeometry(def.radius * 1.06 * scale, atmoSegs, atmoSegs);
       const atmoMat = new THREE.ShaderMaterial({
         uniforms: {
           uColor: { value: new THREE.Vector3(...def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number]) },
@@ -1226,18 +1073,24 @@ export function createSolarSystem(scale: number): THREE.Group {
       const cloudsTex = loadTex(def.textureClouds);
 
       // Primary cloud layer — alphaMap for defined cloud gaps
+      // At scale 0.06, Earth radius is ~0.007 units — need generous offset
+      // to avoid z-fighting. polygonOffset provides additional GPU-level fix.
       const cloudsMat = new THREE.MeshStandardMaterial({
         map: cloudsTex,
         alphaMap: cloudsTex,
         transparent: true,
         opacity: 0.75,
         depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       });
       cloudsMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(def.radius * 1.015 * scale, 32, 32),
+        new THREE.SphereGeometry(def.radius * 1.04 * scale, 32, 32),
         cloudsMat,
       );
       cloudsMesh.name = 'earth-clouds';
+      cloudsMesh.renderOrder = 1;
       // Parent to mesh so clouds follow Earth through elliptical orbit
       mesh.add(cloudsMesh);
 
@@ -1249,9 +1102,12 @@ export function createSolarSystem(scale: number): THREE.Group {
         transparent: true,
         opacity: 0.25,
         depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
       });
       cloudsHighMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(def.radius * 1.03 * scale, 32, 32),
+        new THREE.SphereGeometry(def.radius * 1.07 * scale, 32, 32),
         cloudsHighMat,
       );
       cloudsHighMesh.name = 'earth-clouds-high';
@@ -1828,11 +1684,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   group.updateWorldMatrix(true, false);
   group.getWorldPosition(_sunWorldPos);
 
-  // Animate sun shader
-  const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
-  if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial && sunMesh.material.uniforms.uTime) {
-    sunMesh.material.uniforms.uTime.value = time;
-  }
+  // Sun animation: TSL material uses built-in `time` node — no manual uniform update needed.
+  // The Three.js renderer updates the time uniform automatically each frame.
 
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
@@ -1958,53 +1811,33 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       // Low quality: hide flare entirely
       flareGroup.visible = false;
     } else if (quality === 'medium') {
-      // Medium: show main glow only, hide ghosts and streak
+      // Medium: show main glow only
       flareGroup.visible = true;
       for (let i = 0; i < flareGroup.children.length; i++) {
-        flareGroup.children[i].visible = i === 0; // only main glow
+        flareGroup.children[i].visible = i === 0;
       }
       const mainGlow = flareGroup.children[0];
-      if (mainGlow) mainGlow.scale.setScalar(6 * 0.03);
+      if (mainGlow) mainGlow.scale.setScalar(6 * scale);
     } else {
-      // High quality: full cinematic lens flare
+      // High quality: glow + hot core (streak and ghosts removed)
       flareGroup.visible = true;
       for (const child of flareGroup.children) child.visible = true;
 
       const pulse = 1.0 + 0.15 * Math.sin(time * 0.3) + 0.08 * Math.sin(time * 0.7);
-      const shimmer = 1.0 + 0.03 * Math.sin(time * 2.1) + 0.02 * Math.sin(time * 3.7); // fast shimmer
+      const shimmer = 1.0 + 0.03 * Math.sin(time * 2.1) + 0.02 * Math.sin(time * 3.7);
 
       // Main glow — subtle pulsing
       const mainGlow = flareGroup.children[0];
       if (mainGlow) {
-        const s = 4 * 0.03 * pulse * shimmer;
+        const s = 4 * scale * pulse * shimmer;
         mainGlow.scale.set(s, s, 1);
       }
 
       // Hot core — inverse shimmer for contrast
       const hotCore = flareGroup.children[1];
       if (hotCore) {
-        const s = 2.5 * 0.03 * (2.0 - shimmer);
+        const s = 2.5 * scale * (2.0 - shimmer);
         hotCore.scale.set(s, s, 1);
-      }
-
-      // Anamorphic streak — slow rotation + subtle breathing
-      const streak = flareGroup.children[2];
-      if (streak) {
-        (streak as THREE.Sprite).material.rotation = time * 0.02;
-        const breathe = 1.0 + 0.1 * Math.sin(time * 0.5);
-        streak.scale.set(8 * 0.03 * breathe, 0.3 * 0.03 * pulse, 1);
-      }
-
-      // Ghost elements — drift along a line, color-shift
-      for (let i = 3; i < flareGroup.children.length; i++) {
-        const ghost = flareGroup.children[i];
-        const idx = i - 3;
-        const drift = Math.sin(time * 0.2 + idx * 1.5) * 0.03;
-        ghost.position.x = (5 + idx * 3.5) * 0.03 + drift;
-        ghost.position.y = Math.cos(time * 0.15 + idx * 2.0) * 0.01;
-        // Fade ghosts based on pulse
-        const mat = (ghost as THREE.Sprite).material;
-        mat.opacity = 0.5 + 0.5 * Math.sin(time * 0.4 + idx);
       }
     }
   }
