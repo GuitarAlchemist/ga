@@ -1698,8 +1698,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
       }
 
-      // ─── TSL shared uniforms — single update per frame ───
-      updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
       fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (!n.__threeObj) return;
@@ -1922,6 +1920,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
+
+      // ─── TSL shared uniforms — single update per frame ───
+      updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
