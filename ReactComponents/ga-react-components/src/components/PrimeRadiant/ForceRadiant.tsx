@@ -2011,6 +2011,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Milky Way parallax: offset by a fraction of camera position → feels infinitely far
       milkyWayMesh.position.set(-camPos.x * 0.002, -camPos.y * 0.002, -camPos.z * 0.002);
 
+      // ─── Temporal rendering — must be computed before any isTemporalFrame usage ───
+      const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
+      const isTemporalFrame = frameCount % temporalSkip === 0;
+
       // ─── Edge undulation — sinusoidal curvature on active edges ───
       // Skip on low/medium quality OR non-temporal frames for performance
       if (qualityLevel === 'low' || !isTemporalFrame) { /* skip undulation */ } else {
@@ -2049,10 +2053,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       });
       } // end quality gate
 
-      // ─── Temporal rendering — skip non-critical updates on alternate frames ───
-      // High: every frame | Medium: every 2nd | Low: every 4th
-      const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
-      const isTemporalFrame = frameCount % temporalSkip === 0;
+      // (temporalSkip + isTemporalFrame declared above edge undulation section)
 
       // ─── Ambient dust drift — direct typed array (no getX/setXYZ overhead) ───
       if (isTemporalFrame) {
