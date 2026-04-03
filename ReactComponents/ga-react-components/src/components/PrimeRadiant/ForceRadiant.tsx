@@ -1547,19 +1547,33 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     };
 
-    // Caustics, Dispersion, Moebius — disabled pending WebGL shader validation.
-    // These passes cause white/blank canvas on some NVIDIA drivers when added
-    // to the EffectComposer even with intensity=0, because ShaderPass compiles
-    // the GLSL immediately and any error blacks out the entire chain.
-    // TODO: validate each shader's GLSL on a throwaway material before adding to composer.
-    // For now, enable via URL param: ?effects=1
-    const enableEffects = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('effects');
-    if (enableEffects && !isLowEnd && !isTablet) {
-      addSafePass('Caustics', CausticsShader, causticsPassRef, { uIntensity: 0.0 });
-      addSafePass('Dispersion', DispersionShader, dispersionPassRef, { uSpread: 0.0 });
+    // Post-processing effects — desktop only, each starts disabled.
+    // Each pass is wrapped in try/catch; if GLSL compile fails, the pass is skipped.
+    if (!isLowEnd && !isTablet) {
+      try {
+        const cp = new ShaderPass(CausticsShader);
+        cp.uniforms.uIntensity.value = 0.0;
+        cp.enabled = false; // completely skip until toggled
+        fg.postProcessingComposer().addPass(cp);
+        causticsPassRef.current = cp;
+      } catch (e) { console.warn('[PR] Caustics pass failed:', e); }
+
+      try {
+        const dp = new ShaderPass(DispersionShader);
+        dp.uniforms.uSpread.value = 0.0;
+        dp.enabled = false;
+        fg.postProcessingComposer().addPass(dp);
+        dispersionPassRef.current = dp;
+      } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
     }
-    if (enableEffects && !isLowEnd) {
-      addSafePass('Moebius', MoebiusShader, moebiusPassRef, { uEnabled: 0.0 });
+    if (!isLowEnd) {
+      try {
+        const mp = new ShaderPass(MoebiusShader);
+        mp.uniforms.uEnabled.value = 0.0;
+        mp.enabled = false;
+        fg.postProcessingComposer().addPass(mp);
+        moebiusPassRef.current = mp;
+      } catch (e) { console.warn('[PR] Moebius pass failed:', e); }
     }
 
     // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
@@ -2435,15 +2449,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion
       if (e.key === 'a' || e.key === 'A') {
         const pass = moebiusPassRef.current;
-        if (pass) pass.uniforms.uEnabled.value = (pass.uniforms.uEnabled.value as number) > 0.5 ? 0.0 : 1.0;
+        if (pass) {
+          const on = !pass.enabled;
+          pass.enabled = on;
+          pass.uniforms.uEnabled.value = on ? 1.0 : 0.0;
+        }
       }
       if (e.key === 'c' || e.key === 'C') {
         const pass = causticsPassRef.current;
-        if (pass) pass.uniforms.uIntensity.value = (pass.uniforms.uIntensity.value as number) > 0.01 ? 0.0 : 0.5;
+        if (pass) {
+          pass.enabled = !pass.enabled;
+          pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
+        }
       }
       if (e.key === 'd' || e.key === 'D') {
         const pass = dispersionPassRef.current;
-        if (pass) pass.uniforms.uSpread.value = (pass.uniforms.uSpread.value as number) > 0.01 ? 0.0 : 0.4;
+        if (pass) {
+          pass.enabled = !pass.enabled;
+          pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
+        }
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
@@ -3165,8 +3189,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const pass = moebiusPassRef.current;
       if (!pass) return;
       if (amount < 0) {
-        pass.uniforms.uEnabled.value = (pass.uniforms.uEnabled.value as number) > 0.5 ? 0.0 : 1.0;
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uEnabled.value = pass.enabled ? 1.0 : 0.0;
       } else {
+        pass.enabled = amount > 0.01;
         pass.uniforms.uEnabled.value = amount;
       }
     },
@@ -3174,8 +3200,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const pass = causticsPassRef.current;
       if (!pass) return;
       if (intensity < 0) {
-        pass.uniforms.uIntensity.value = (pass.uniforms.uIntensity.value as number) > 0.01 ? 0.0 : 0.5;
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
       } else {
+        pass.enabled = intensity > 0.01;
         pass.uniforms.uIntensity.value = intensity;
       }
     },
@@ -3183,8 +3211,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const pass = dispersionPassRef.current;
       if (!pass) return;
       if (spread < 0) {
-        pass.uniforms.uSpread.value = (pass.uniforms.uSpread.value as number) > 0.01 ? 0.0 : 0.4;
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
       } else {
+        pass.enabled = spread > 0.01;
         pass.uniforms.uSpread.value = spread;
       }
     },
