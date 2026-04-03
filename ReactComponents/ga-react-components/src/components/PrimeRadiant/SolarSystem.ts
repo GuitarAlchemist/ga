@@ -1206,28 +1206,85 @@ export function createSolarSystem(scale: number): THREE.Group {
 
     // Saturn rings (textured)
     if (def.name === 'saturn') {
-      const ringGeo = new THREE.RingGeometry(1.3 * scale, 2.0 * scale, 128);
-      // Adjust UVs so texture maps radially
-      const pos = ringGeo.attributes.position;
-      const uv = ringGeo.attributes.uv;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i), z = pos.getZ(i);
+      // Saturn rings — lit ShaderMaterial with Cassini division, backlit glow, sun response
+      const ringInner = 1.3, ringOuter = 2.2;
+      const ringGeo = new THREE.RingGeometry(ringInner * scale, ringOuter * scale, 128, 1);
+      // Remap UVs to radial 0-1 for ring texture
+      const ringPos = ringGeo.attributes.position;
+      const ringUv = ringGeo.attributes.uv;
+      for (let i = 0; i < ringPos.count; i++) {
+        const x = ringPos.getX(i), z = ringPos.getZ(i);
         const r = Math.sqrt(x * x + z * z);
-        const rNorm = (r - 1.3 * scale) / ((2.0 - 1.3) * scale);
-        uv.setXY(i, rNorm, 0.5);
+        const rNorm = (r - ringInner * scale) / ((ringOuter - ringInner) * scale);
+        ringUv.setXY(i, rNorm, 0.5);
       }
       const ringTex = loadTex('2k_saturn_ring_alpha.png');
-      const ringMat = new THREE.MeshBasicMaterial({
-        map: ringTex,
+      const ringMat = new THREE.ShaderMaterial({
+        uniforms: {
+          uRingTex: { value: ringTex },
+          uSunPos: { value: new THREE.Vector3(0, 0, 0) },
+        },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          varying vec3 vWorldPos;
+          varying vec3 vWorldNormal;
+          void main() {
+            vUv = uv;
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform sampler2D uRingTex;
+          uniform vec3 uSunPos;
+          varying vec2 vUv;
+          varying vec3 vWorldPos;
+          varying vec3 vWorldNormal;
+
+          void main() {
+            float r = vUv.x; // 0 = inner edge, 1 = outer edge
+
+            // Sample ring texture (color + alpha from texture)
+            vec4 tex = texture2D(uRingTex, vec2(r, 0.5));
+
+            // Procedural Cassini division and ring density variation
+            // Cassini division: gap at ~0.55-0.60 of ring width
+            float cassini = smoothstep(0.53, 0.55, r) * (1.0 - smoothstep(0.58, 0.60, r));
+            // Encke gap: thin gap at ~0.85
+            float encke = smoothstep(0.83, 0.84, r) * (1.0 - smoothstep(0.86, 0.87, r));
+            float gapAlpha = 1.0 - cassini * 0.9 - encke * 0.7;
+
+            // Ring density: denser in B ring (0.3-0.5), thinner in C ring (0.0-0.2)
+            float density = smoothstep(0.0, 0.15, r) * (1.0 - smoothstep(0.95, 1.0, r));
+            density *= mix(0.4, 1.0, smoothstep(0.2, 0.35, r)); // C ring thinner
+
+            // Sun-facing illumination
+            vec3 sunDir = normalize(uSunPos - vWorldPos);
+            float NdotL = dot(vWorldNormal, sunDir);
+
+            // Front-lit: warm gold. Back-lit: cool transmitted glow
+            vec3 frontColor = tex.rgb * max(NdotL, 0.0) * 1.2;
+            vec3 backColor = tex.rgb * max(-NdotL, 0.0) * 0.4 * vec3(1.0, 0.85, 0.6); // backlit glow
+            vec3 ringColor = frontColor + backColor;
+
+            // Ambient minimum so rings aren't invisible on the dark side
+            ringColor += tex.rgb * 0.05;
+
+            float alpha = tex.a * density * gapAlpha;
+            if (alpha < 0.01) discard;
+
+            gl_FragColor = vec4(ringColor, alpha * 0.85);
+          }
+        `,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.6,
         depthWrite: false,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.name = 'saturn-ring';
-      ring.rotation.x = Math.PI / 2.2;
-      // Parent to mesh so ring follows planet through elliptical orbit
+      ring.rotation.x = Math.PI / 2; // flat equatorial plane
       mesh.add(ring);
     }
 
@@ -1874,6 +1931,14 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       const u = mesh.material.uniforms;
       if (u.uSunPos) u.uSunPos.value.copy(_sunWorldPos);
       if (u.uTime) u.uTime.value = time;
+    }
+
+    // Update Saturn ring shader sun position
+    if (def.name === 'saturn') {
+      const satRing = mesh.getObjectByName('saturn-ring') as THREE.Mesh | undefined;
+      if (satRing && satRing.material instanceof THREE.ShaderMaterial && satRing.material.uniforms.uSunPos) {
+        satRing.material.uniforms.uSunPos.value.copy(_sunWorldPos);
+      }
     }
 
     // ── Fading orbit trail — bright near planet, fades 180° behind ──
