@@ -2878,28 +2878,30 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Voronoi jurisdiction shells — governance authority boundaries ───
+      // TSL materials (MeshBasicNodeMaterial) require WebGPURenderer — skip on WebGLRenderer
       if (!isLowEnd && graph.nodes.length >= 6) {
-        voronoiShellsHandle = createVoronoiShells(
-          graph.nodes,
-          graph.edges,
-          fg.scene(),
-          budgetToTier(qualityBudget),
-        );
+        try {
+          voronoiShellsHandle = createVoronoiShells(graph.nodes, graph.edges, fg.scene(), budgetToTier(qualityBudget));
+        } catch (e) {
+          console.warn('[PrimeRadiant] Voronoi shells disabled (TSL requires WebGPURenderer):', (e as Error).message);
+        }
       }
 
-      // ─── Compliance rivers — flow field particles showing directive flow ───
-      // Skip on low-end devices — particles are expensive
+      // ─── Compliance rivers — flow field particles (TSL PointsNodeMaterial) ───
       if (!isLowEnd && graph.edges.length > 0) {
-        complianceRiversHandle = createComplianceRivers(
-          graph.nodes,
-          graph.edges,
-          fg.scene(),
-          budgetToTier(qualityBudget),
-        );
+        try {
+          complianceRiversHandle = createComplianceRivers(graph.nodes, graph.edges, fg.scene(), budgetToTier(qualityBudget));
+        } catch (e) {
+          console.warn('[PrimeRadiant] Compliance rivers disabled (TSL):', (e as Error).message);
+        }
       }
 
-      // ─── Crisis textures — RD Turing patterns on node surfaces ───
-      crisisTexturesHandle = createCrisisTextures(budgetToTier(qualityBudget));
+      // ─── Crisis textures — RD Turing patterns (TSL MeshStandardNodeMaterial) ───
+      try {
+        crisisTexturesHandle = createCrisisTextures(budgetToTier(qualityBudget));
+      } catch (e) {
+        console.warn('[PrimeRadiant] Crisis textures disabled (TSL):', (e as Error).message);
+      }
     }, 4000);
 
     // ─── Fix camera near plane for solar system zoom ───
