@@ -288,6 +288,33 @@ export interface FixCommand {
   target: 'errors' | 'signals' | 'all';
 }
 
+// ── Rendering control ──
+
+export interface RenderCommand {
+  type: 'render';
+  target: 'moebius' | 'caustics' | 'dispersion' | 'bloom';
+  action: 'on' | 'off' | 'toggle';
+  value?: number; // intensity/spread (0.0-1.0)
+}
+
+// ── Navigation ──
+
+export interface NavigateCommand {
+  type: 'navigate';
+  target: 'planet' | 'node' | 'camera';
+  name?: string;    // planet name or node id
+  x?: number;       // camera coords
+  y?: number;
+  z?: number;
+}
+
+// ── QA ──
+
+export interface QaCommand {
+  type: 'qa';
+  action: 'tour' | 'state' | 'screenshot' | 'report';
+}
+
 export type IxqlCommand =
   | SelectCommand
   | ResetCommand
@@ -312,7 +339,10 @@ export type IxqlCommand =
   | HealthCheckCommand
   | ShowCommand
   | HideCommand
-  | FixCommand;
+  | FixCommand
+  | RenderCommand
+  | NavigateCommand
+  | QaCommand;
 
 // ── Parse result as discriminated union ──
 
@@ -1628,8 +1658,49 @@ export function parseIxqlCommand(input: string, _depth: number = 0): IxqlParseRe
         return { ok: true, command: { type: 'fix', target } };
       }
 
+      // ── RENDER <target> ON|OFF|TOGGLE [<value>] ──
+      case 'RENDER': {
+        next(ctx);
+        const renderTarget = (nextRaw(ctx)).toLowerCase() as RenderCommand['target'];
+        const actionToken = peek(ctx);
+        let renderAction: RenderCommand['action'] = 'toggle';
+        let renderValue: number | undefined;
+        if (actionToken === 'ON') { next(ctx); renderAction = 'on'; }
+        else if (actionToken === 'OFF') { next(ctx); renderAction = 'off'; }
+        else if (actionToken === 'TOGGLE') { next(ctx); renderAction = 'toggle'; }
+        // Optional numeric value (e.g., RENDER CAUSTICS ON 0.5)
+        if (peek(ctx) && !isNaN(Number(peekRaw(ctx)))) {
+          renderValue = Number(nextRaw(ctx));
+        }
+        return { ok: true, command: { type: 'render', target: renderTarget, action: renderAction, value: renderValue } };
+      }
+
+      // ── NAVIGATE PLANET <name> | NAVIGATE NODE <id> | NAVIGATE CAMERA <x> <y> <z> ──
+      case 'NAVIGATE': {
+        next(ctx);
+        const navTarget = (nextRaw(ctx)).toLowerCase() as NavigateCommand['target'];
+        if (navTarget === 'planet' || navTarget === 'node') {
+          const name = nextRaw(ctx);
+          return { ok: true, command: { type: 'navigate', target: navTarget, name } };
+        }
+        if (navTarget === 'camera') {
+          const x = Number(nextRaw(ctx));
+          const y = Number(nextRaw(ctx));
+          const z = Number(nextRaw(ctx));
+          return { ok: true, command: { type: 'navigate', target: 'camera', x, y, z } };
+        }
+        throw new Error(`Expected PLANET, NODE, or CAMERA after NAVIGATE, got '${navTarget}'`);
+      }
+
+      // ── QA TOUR | QA STATE | QA SCREENSHOT | QA REPORT ──
+      case 'QA': {
+        next(ctx);
+        const qaAction = (nextRaw(ctx)).toLowerCase() as QaCommand['action'];
+        return { ok: true, command: { type: 'qa', action: qaAction } };
+      }
+
       default:
-        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, ON, SHOW, HIDE, FIX, DIAGNOSE, HEALTH CHECK, METHYLATE, DEMETHYLATE, AMNESIA, BROADCAST, or SAVE` };
+        return { ok: false, error: `Unknown command '${peekRaw(ctx) ?? 'end of input'}'. Expected SELECT, RESET, CREATE, BIND, ON, SHOW, HIDE, FIX, RENDER, NAVIGATE, QA, DIAGNOSE, HEALTH CHECK, METHYLATE, DEMETHYLATE, AMNESIA, BROADCAST, or SAVE` };
     }
   } catch (e) {
     return { ok: false, error: (e as Error).message };
