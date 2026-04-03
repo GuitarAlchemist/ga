@@ -3246,7 +3246,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const mesh = obj as THREE.Mesh;
       mesh.geometry?.computeBoundingSphere();
       const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = Math.max(planetRadius * 5, 0.08);
+      const zoomDist = Math.max(planetRadius * 2.5, 0.02);
       // Sun is at orrery center. Get direction from planet to sun.
       const sunPos = new THREE.Vector3();
       group.getWorldPosition(sunPos);
