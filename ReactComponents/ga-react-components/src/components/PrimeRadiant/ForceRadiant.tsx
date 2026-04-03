@@ -711,6 +711,37 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const causticsPassRef = useRef<ShaderPass | null>(null);
   const dispersionPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
+  const consoleErrorsRef = useRef<string[]>([]);
+  // Capture console errors + WebGL warnings for remote debugging
+  useEffect(() => {
+    const origError = console.error;
+    const origWarn = console.warn;
+    const buf = consoleErrorsRef.current;
+    console.error = (...args: unknown[]) => {
+      buf.push('[ERROR] ' + args.map(String).join(' '));
+      if (buf.length > 50) buf.shift(); // ring buffer
+      origError.apply(console, args);
+    };
+    console.warn = (...args: unknown[]) => {
+      const msg = args.map(String).join(' ');
+      if (msg.includes('THREE') || msg.includes('WebGL') || msg.includes('shader') || msg.includes('GLSL')) {
+        buf.push('[WARN] ' + msg);
+        if (buf.length > 50) buf.shift();
+      }
+      origWarn.apply(console, args);
+    };
+    // Also capture unhandled errors
+    const onError = (e: ErrorEvent) => {
+      buf.push('[UNCAUGHT] ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+      if (buf.length > 50) buf.shift();
+    };
+    window.addEventListener('error', onError);
+    return () => {
+      console.error = origError;
+      console.warn = origWarn;
+      window.removeEventListener('error', onError);
+    };
+  }, []);
   const videoRecorderRef = useRef<{ recorder: MediaRecorder; chunks: Blob[]; url: string | null } | null>(null);
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
@@ -3204,6 +3235,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       godotFullscreen,
       moebius: moebiusPassRef.current ? (moebiusPassRef.current.uniforms.uEnabled.value as number) > 0.5 : false,
       render: renderMetricsRef.current,
+      errors: consoleErrorsRef.current.slice(-10), // last 10 errors
       device: {
         width: window.innerWidth,
         height: window.innerHeight,
