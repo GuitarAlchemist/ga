@@ -1544,16 +1544,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     };
 
-    // Caustics — desktop only, starts disabled
-    if (!isLowEnd && !isTablet) {
+    // Caustics, Dispersion, Moebius — disabled pending WebGL shader validation.
+    // These passes cause white/blank canvas on some NVIDIA drivers when added
+    // to the EffectComposer even with intensity=0, because ShaderPass compiles
+    // the GLSL immediately and any error blacks out the entire chain.
+    // TODO: validate each shader's GLSL on a throwaway material before adding to composer.
+    // For now, enable via URL param: ?effects=1
+    const enableEffects = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('effects');
+    if (enableEffects && !isLowEnd && !isTablet) {
       addSafePass('Caustics', CausticsShader, causticsPassRef, { uIntensity: 0.0 });
-    }
-    // Dispersion — desktop only, starts disabled
-    if (!isLowEnd && !isTablet) {
       addSafePass('Dispersion', DispersionShader, dispersionPassRef, { uSpread: 0.0 });
     }
-    // Moebius — desktop + tablet non-lowend, starts disabled
-    if (!isLowEnd) {
+    if (enableEffects && !isLowEnd) {
       addSafePass('Moebius', MoebiusShader, moebiusPassRef, { uEnabled: 0.0 });
     }
 
