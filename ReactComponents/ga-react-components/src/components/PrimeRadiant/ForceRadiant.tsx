@@ -2090,28 +2090,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      if (solarFollowCameraRef.current && solarSystem.visible) {
-        // Smooth solar system position — prevents jitter from OrbitControls damping.
-        // Use deadzone: only move if camera moved more than threshold.
-        // Below threshold, snap exactly (no residual drift).
-        const yOff = isLowEnd ? 15 : 40;
-        const tx = cam.position.x;
-        const ty = cam.position.y + yOff;
-        const tz = cam.position.z;
-        const dx = tx - solarSystem.position.x;
-        const dy = ty - solarSystem.position.y;
-        const dz = tz - solarSystem.position.z;
-        const dist = dx * dx + dy * dy + dz * dz;
-        if (dist > 0.01) {
-          // Large movement — lerp smoothly
-          solarSystem.position.x += dx * 0.85;
-          solarSystem.position.y += dy * 0.85;
-          solarSystem.position.z += dz * 0.85;
-        } else if (dist > 0.000001) {
-          // Micro-movement — snap to eliminate residual jitter
-          solarSystem.position.set(tx, ty, tz);
-        }
-        // Below 0.000001 — don't touch (already there)
+      // Solar system is parented to camera — position is always (0, yOff, 0) in camera space.
+      // No per-frame position update needed when following. Eliminates Float32 precision jitter.
+      if (solarFollowCameraRef.current) {
+        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+      }
+      // When frozen (planet zoom), detach from camera to world space
+      // so the orrery stays in place while camera moves
+      if (!solarFollowCameraRef.current && solarSystem.parent === cam) {
+        const wp = new THREE.Vector3();
+        solarSystem.getWorldPosition(wp);
+        cam.remove(solarSystem);
+        fg.scene().add(solarSystem);
+        solarSystem.position.copy(wp);
+      } else if (solarFollowCameraRef.current && solarSystem.parent !== cam) {
+        // Re-attach to camera after freeze
+        fg.scene().remove(solarSystem);
+        cam.add(solarSystem);
+        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -2635,7 +2631,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Set initial position far above origin so it's not visible before first tick
     const cam0 = fg.camera();
     solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
-    fg.scene().add(solarSystem);
+    // Parent solar system to camera — eliminates Float32 precision jitter.
+    // When parented to scene and positioned at camera coords (200,300,500),
+    // tiny planet offsets (0.39) suffer catastrophic cancellation in modelViewMatrix.
+    // Parented to camera, the position is always small (0, 40, 0).
+    const cam0 = fg.camera();
+    cam0.add(solarSystem);
+    solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
