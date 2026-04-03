@@ -1009,8 +1009,74 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     if (cmd.type === 'broadcast') {
       console.log(`[IXQL] BROADCAST ${cmd.target}`, { predicates: cmd.predicates });
-      // Federated epistemology: broadcast via Galactic Protocol (Article E-9)
-      // In production, this would send to SignalR hub for peer agents
+      return;
+    }
+
+    // ── RENDER <target> ON|OFF|TOGGLE ──
+    if (cmd.type === 'render') {
+      const passMap: Record<string, React.MutableRefObject<ShaderPass | null>> = {
+        moebius: moebiusPassRef,
+        caustics: causticsPassRef,
+        dispersion: dispersionPassRef,
+      };
+      const ref = passMap[cmd.target];
+      if (ref?.current) {
+        const pass = ref.current;
+        if (cmd.action === 'toggle') {
+          pass.enabled = !pass.enabled;
+        } else {
+          pass.enabled = cmd.action === 'on';
+        }
+        // Set the primary uniform
+        const uniformKey = cmd.target === 'moebius' ? 'uEnabled'
+          : cmd.target === 'caustics' ? 'uIntensity' : 'uSpread';
+        if (pass.uniforms[uniformKey]) {
+          pass.uniforms[uniformKey].value = pass.enabled ? (cmd.value ?? (cmd.target === 'dispersion' ? 0.4 : cmd.target === 'caustics' ? 0.5 : 1.0)) : 0.0;
+        }
+      }
+      if (cmd.target === 'bloom' && bloomPassRef.current) {
+        bloomPassRef.current.enabled = cmd.action === 'toggle' ? !bloomPassRef.current.enabled : cmd.action === 'on';
+      }
+      return;
+    }
+
+    // ── NAVIGATE PLANET|NODE|CAMERA ──
+    if (cmd.type === 'navigate') {
+      if (!fg) return;
+      if (cmd.target === 'planet' && cmd.name) {
+        setActivePanel(null);
+        solarFollowCameraRef.current = false;
+        const group = fg.scene().getObjectByName('sun')?.parent;
+        if (!group) return;
+        const obj = group.getObjectByName(cmd.name);
+        if (!obj) return;
+        const pw = new THREE.Vector3();
+        obj.getWorldPosition(pw);
+        const mesh = obj as THREE.Mesh;
+        mesh.geometry?.computeBoundingSphere();
+        const r = mesh.geometry?.boundingSphere?.radius ?? 0.5;
+        const cam = fg.camera() as THREE.PerspectiveCamera;
+        const dir = pw.clone().sub(cam.position).normalize();
+        const tgt = pw.clone().sub(dir.multiplyScalar(r * 3.5));
+        fg.cameraPosition({ x: tgt.x, y: tgt.y, z: tgt.z }, { x: pw.x, y: pw.y, z: pw.z }, 1500);
+      }
+      if (cmd.target === 'node' && cmd.name) {
+        const node = (fg.graphData() as { nodes: GraphNode[] }).nodes.find(n => n.id === cmd.name || n.id.toLowerCase().indexOf(cmd.name!.toLowerCase()) >= 0);
+        if (node && node.x !== undefined) {
+          fg.cameraPosition(
+            { x: node.x, y: (node.y ?? 0) + 20, z: (node.z ?? 0) + 60 },
+            { x: node.x, y: node.y ?? 0, z: node.z ?? 0 }, 1200);
+        }
+      }
+      if (cmd.target === 'camera' && cmd.x !== undefined) {
+        fg.cameraPosition({ x: cmd.x, y: cmd.y ?? 0, z: cmd.z ?? 0 }, { x: 0, y: 0, z: 0 }, 1200);
+      }
+      return;
+    }
+
+    // ── QA TOUR|STATE|SCREENSHOT ──
+    if (cmd.type === 'qa') {
+      console.log(`[IXQL] QA ${cmd.action}`);
       return;
     }
   }, []);
