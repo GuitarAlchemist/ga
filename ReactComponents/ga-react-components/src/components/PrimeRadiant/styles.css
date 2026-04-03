@@ -3591,6 +3591,10 @@
   /* Show close button on phone + tinted backdrop */
   .prime-radiant__side-panel-close {
     display: flex;
+    top: max(8px, env(safe-area-inset-top, 8px)); /* respect notch */
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
   }
   .prime-radiant__side-panel-backdrop--active {
     background: rgba(0, 0, 0, 0.4);
@@ -3600,6 +3604,8 @@
     right: 0;
     bottom: 56px;             /* stop above the fixed icon rail */
     z-index: 34;              /* just below side panel (35) */
+    cursor: pointer;          /* indicate tappable */
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Compact detail panel on phone — full-screen overlay */
