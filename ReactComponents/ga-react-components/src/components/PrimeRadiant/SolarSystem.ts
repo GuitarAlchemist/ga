@@ -594,13 +594,15 @@ const PLANET_FRAG = /* glsl */ `
 
     // Diffuse shading (Lambert with slight ambient)
     float diffuse = max(NdotL, 0.0);
-    vec3 litDay = dayColor * (0.03 + 0.97 * diffuse);
+    // Venus special: thick clouds reflect strongly (albedo ~0.75)
+    float albedoBoost = uAtmoColor > 1.5 ? 1.5 : 1.0;
+    vec3 litDay = dayColor * (0.03 + 0.97 * diffuse) * albedoBoost;
 
-    // Specular (Blinn-Phong)
+    // Specular (Blinn-Phong) — toned down to prevent overblown day side
     vec3 halfDir = normalize(sunDir + vViewDir);
     float specAngle = max(dot(N, halfDir), 0.0);
     float specPower = mix(16.0, 64.0, 1.0 - uRoughness);
-    float spec = pow(specAngle, specPower) * (1.0 - uRoughness) * 0.6;
+    float spec = pow(specAngle, specPower) * (1.0 - uRoughness) * 0.35;
     if (uHasSpec > 0.5) {
       float specMask = texture2D(uSpecMap, vUv).r;
       spec *= specMask;
