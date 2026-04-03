@@ -651,19 +651,17 @@ const PLANET_FRAG = /* glsl */ `
 
     // ── Cinematic realism: 5 fixes from multi-AI brainstorm ──
 
-    // Fix 1: Limb darkening via atmospheric extinction (3 lines)
-    // Every photo of Earth shows the center brighter than edges.
-    // This transforms CG→photographic instantly.
-    // Clamp path length to prevent extreme values at limb causing flicker
-    float NdotV_clamped = max(dot(normalize(vWorldNormal), vViewDir), 0.15);
-    float atmPathLen = 0.025 / NdotV_clamped;
-    float extinction = exp(-atmPathLen * 1.5);
-    surfaceColor *= max(extinction, 0.15); // never fully black
+    // Limb darkening — gentle quadratic falloff instead of exponential extinction.
+    // Exponential path length caused flicker: tiny NdotV changes got amplified.
+    // Quadratic is smooth, stable, and still reads as atmospheric.
+    float NdotV_limb = max(dot(normalize(vWorldNormal), vViewDir), 0.0);
+    float limbDarken = mix(0.35, 1.0, NdotV_limb * NdotV_limb); // quadratic: 0.35 at edge, 1.0 at center
+    surfaceColor *= limbDarken;
 
-    // Fix 2: Atmospheric in-scattering (replaces bare Fresnel with true atmosphere)
-    // Adds blue haze at limb that varies with sun angle (Rayleigh phase function)
+    // Atmospheric in-scattering — haze at limb, Rayleigh phase function
+    // Uses 1-NdotV instead of exponential path (stable, no flicker)
     if (uAtmoColor > 0.5) {
-      float inScatter = 1.0 - exp(-atmPathLen * 1.2);
+      float inScatter = pow(1.0 - NdotV_limb, 2.0) * 0.5; // strongest at limb
       float cosTheta = dot(vViewDir, sunDir);
       float rayleigh = 0.75 * (1.0 + cosTheta * cosTheta);
       vec3 atmoTint = uAtmoColor < 1.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.9, 0.6, 0.2);
