@@ -652,9 +652,11 @@ const PLANET_FRAG = /* glsl */ `
     // Fix 1: Limb darkening via atmospheric extinction (3 lines)
     // Every photo of Earth shows the center brighter than edges.
     // This transforms CG→photographic instantly.
-    float atmPathLen = 0.03 / max(dot(normalize(vWorldNormal), vViewDir), 0.1);
-    float extinction = exp(-atmPathLen * 1.8);
-    surfaceColor *= extinction;
+    // Clamp path length to prevent extreme values at limb causing flicker
+    float NdotV_clamped = max(dot(normalize(vWorldNormal), vViewDir), 0.15);
+    float atmPathLen = 0.025 / NdotV_clamped;
+    float extinction = exp(-atmPathLen * 1.5);
+    surfaceColor *= max(extinction, 0.15); // never fully black
 
     // Fix 2: Atmospheric in-scattering (replaces bare Fresnel with true atmosphere)
     // Adds blue haze at limb that varies with sun angle (Rayleigh phase function)
