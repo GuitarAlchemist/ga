@@ -3183,6 +3183,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         pass.uniforms.uSpread.value = spread;
       }
     },
+    showMessage: (text, durationMs = 5000) => {
+      // Create a temporary overlay toast visible on this client
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(0,0,0,0.85);color:#FFD700;padding:20px 40px;border-radius:12px;font-family:monospace;font-size:18px;text-align:center;pointer-events:none;border:1px solid #FFD700;backdrop-filter:blur(8px);animation:fadeIn 0.3s ease';
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.5s';
+        setTimeout(() => el.remove(), 500);
+      }, durationMs);
+    },
   });
 
   return (
