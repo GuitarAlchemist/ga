@@ -319,8 +319,8 @@ export function usePrControl(handlers: PrControlHandlers): void {
 
       es.onerror = () => {
         es?.close();
-        // Reconnect after 2s
-        reconnectTimer = setTimeout(connect, 2000);
+        // Reconnect after 3s — Cloudflare kills SSE at ~100s, this is expected
+        reconnectTimer = setTimeout(connect, 3000);
       };
     }
 
