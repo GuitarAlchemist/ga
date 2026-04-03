@@ -2091,11 +2091,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
       if (solarFollowCameraRef.current && solarSystem.visible) {
-        solarSystem.position.set(
-          cam.position.x,
-          cam.position.y + (isLowEnd ? 15 : 40),
-          cam.position.z,
-        );
+        // Lerp solar system position to prevent jitter from orbit control damping.
+        // Direct snap (position = cam.position) copies micro-movements from OrbitControls,
+        // causing planets to visibly jitter. Lerp smooths this at 90% per frame.
+        const yOff = isLowEnd ? 15 : 40;
+        solarSystem.position.x += (cam.position.x - solarSystem.position.x) * 0.9;
+        solarSystem.position.y += ((cam.position.y + yOff) - solarSystem.position.y) * 0.9;
+        solarSystem.position.z += (cam.position.z - solarSystem.position.z) * 0.9;
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
