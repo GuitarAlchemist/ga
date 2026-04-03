@@ -160,7 +160,9 @@ export function usePrControl(handlers: PrControlHandlers): void {
         }
 
         case 'navigate:node':
+          if (params.silent) h.closePanel(); // QA mode: navigate without opening panel
           h.selectNode(params.nodeId as string);
+          if (params.silent) h.closePanel(); // close again after selectNode opens it
           break;
 
         case 'state:report':
