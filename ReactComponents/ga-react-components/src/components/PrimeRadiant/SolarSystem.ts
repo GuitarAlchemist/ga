@@ -883,9 +883,15 @@ export function createSolarSystem(scale: number): THREE.Group {
   const sunTex = loadTex('2k_sun.jpg');
 
   // TSL sun material — composable TypeScript nodes, auto-targets WebGPU/WebGL
-  // Quality adapts: 'low' = 3 FBM octaves, no prominences; 'high' = 6 octaves, full effects
+  // Falls back to textured MeshBasicMaterial if TSL compilation fails on this renderer.
   const sunQuality: QualityTier = scale < 0.05 ? 'low' : 'high';
-  const sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: sunQuality });
+  let sunMat: THREE.Material;
+  try {
+    sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: sunQuality });
+  } catch (e) {
+    console.warn('[SolarSystem] TSL sun material failed, falling back to basic:', e);
+    sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
+  }
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
