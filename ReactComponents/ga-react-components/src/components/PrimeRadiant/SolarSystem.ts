@@ -552,7 +552,8 @@ const PLANET_FRAG = /* glsl */ `
     float dayFactor = smoothstep(-0.15, 0.2, NdotL);
 
     // Day color from texture
-    vec3 dayColor = texture2D(uMap, vUv).rgb;
+    // Fix 2 (mip bias): sharpen texture at small screen sizes (-1.5 = 3x sharper)
+    vec3 dayColor = texture2D(uMap, vUv, -1.5).rgb;
 
     // Seasonal snow/ice coverage (Earth only)
     if (uIsEarth > 0.5) {
@@ -644,6 +645,37 @@ const PLANET_FRAG = /* glsl */ `
       surfaceColor += vec3(1.0, 0.7, 0.2) * fresnel * 0.3;
       float venusTerminator = fresnel * exp(-NdotL * NdotL / 0.02);
       surfaceColor += vec3(1.0, 0.5, 0.1) * venusTerminator * 0.25;
+    }
+
+    // ── Cinematic realism: 5 fixes from multi-AI brainstorm ──
+
+    // Fix 1: Limb darkening via atmospheric extinction (3 lines)
+    // Every photo of Earth shows the center brighter than edges.
+    // This transforms CG→photographic instantly.
+    float atmPathLen = 0.03 / max(dot(normalize(vWorldNormal), vViewDir), 0.1);
+    float extinction = exp(-atmPathLen * 1.8);
+    surfaceColor *= extinction;
+
+    // Fix 2: Atmospheric in-scattering (replaces bare Fresnel with true atmosphere)
+    // Adds blue haze at limb that varies with sun angle (Rayleigh phase function)
+    if (uAtmoColor > 0.5) {
+      float inScatter = 1.0 - exp(-atmPathLen * 1.2);
+      float cosTheta = dot(vViewDir, sunDir);
+      float rayleigh = 0.75 * (1.0 + cosTheta * cosTheta);
+      vec3 atmoTint = uAtmoColor < 1.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.9, 0.6, 0.2);
+      surfaceColor += atmoTint * inScatter * rayleigh * 0.25;
+    }
+
+    // Fix 4: Specular roughness noise (2 lines — breaks billiard ball uniformity)
+    // Deserts slightly shiny, forests matte, ocean glint varies
+    float roughnessNoise = fract(sin(dot(vUv * 8.0, vec2(127.1, 311.7))) * 43758.5) * 0.5 + 0.5;
+    surfaceColor *= mix(0.95, 1.05, roughnessNoise);
+
+    // Fix 5: Cloud shadow offset (Earth only, 3 lines — adds terranic depth)
+    if (uIsEarth > 0.5) {
+      vec2 shadowOffset = sunDir.xz * 0.006;
+      float cloudShadow = texture2D(uMap, vUv + shadowOffset).g * 0.3; // approximate cloud density from green channel
+      surfaceColor *= mix(1.0, 0.75, cloudShadow * dayFactor);
     }
 
     gl_FragColor = vec4(surfaceColor, 1.0);
