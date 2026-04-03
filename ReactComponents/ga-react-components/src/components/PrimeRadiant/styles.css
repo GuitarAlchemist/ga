@@ -377,24 +377,27 @@
 
 .prime-radiant__side-panel-close {
   display: none; /* Only visible on phone */
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 5;
-  background: rgba(48, 54, 61, 0.95);
-  border: 1px solid #30363d;
+  position: sticky;
+  top: 0;
+  right: 0;
+  z-index: 100;
+  align-self: flex-end;
+  background: rgba(48, 54, 61, 0.98);
+  border: 1px solid #FFD700;
   border-radius: 8px;
-  color: #e6edf3;
+  color: #FFD700;
   cursor: pointer;
   padding: 8px;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  margin: 8px 8px 0 auto;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
 /* Click-outside-to-close backdrop — transparent on desktop, tinted on phone */
