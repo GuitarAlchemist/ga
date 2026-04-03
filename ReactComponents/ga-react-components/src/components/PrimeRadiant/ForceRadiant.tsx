@@ -2091,8 +2091,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
       // Solar system parented to camera — no position update needed for follow mode.
-      // Position is fixed at (0, Y, 0) in camera-local space = no Float32 jitter.
       solarSystem.visible = qualityBudget > -0.9;
+
+      // Planet tracking: when a planet is selected, adjust camera lookAt toward it
+      if (trackedPlanetRef.current && solarSystem.visible) {
+        const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
+        if (trackedObj) {
+          const planetWorldPos = new THREE.Vector3();
+          trackedObj.getWorldPosition(planetWorldPos);
+          // Smoothly look toward the planet (OrbitControls target)
+          const controls = fg.controls() as { target?: THREE.Vector3 };
+          if (controls.target) {
+            controls.target.lerp(planetWorldPos, 0.05); // gentle tracking
+          }
+        }
+      }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
       // Phase 1.2: Quality-gate solar system updates (after position set)
@@ -3228,32 +3241,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Freeze solar system so planet stays in place during camera fly
-      solarFollowCameraRef.current = false;
-      const group = fg.scene().getObjectByName('sun')?.parent;
-      if (!group) return;
-      const obj = group.getObjectByName(planet);
-      if (!obj) return;
-      const pw = new THREE.Vector3();
-      obj.getWorldPosition(pw);
-      const mesh = obj as THREE.Mesh;
-      mesh.geometry?.computeBoundingSphere();
-      const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = Math.max(planetRadius * 2.5, 0.02);
-      // Sun is at orrery center. Get direction from planet to sun.
-      const sunPos = new THREE.Vector3();
-      group.getWorldPosition(sunPos);
-      const toSun = sunPos.clone().sub(pw).normalize();
-      // Place camera on the sun-facing side of the planet — sun behind camera → lit face visible
-      // Offset slightly above for a 3/4 cinematic angle
-      const camTarget = pw.clone()
-        .add(toSun.clone().multiplyScalar(zoomDist))
-        .add(new THREE.Vector3(0, zoomDist * 0.3, 0));
-      fg.cameraPosition(
-        { x: camTarget.x, y: camTarget.y, z: camTarget.z },
-        { x: pw.x, y: pw.y, z: pw.z },
-        1500,
-      );
+      // Solar system is camera-parented at (0, Y, 0). Planet positions are in
+      // orrery-local space. To view a planet, we use lookAt in the tick loop
+      // since flying the camera moves the orrery too (chicken-and-egg).
+      // Instead: set a tracked planet that the tick loop will keep in view.
+      trackedPlanetRef.current = planet;
+      setTrackedPlanetName(planet);
     },
     setMoebiusEnabled: (amount) => {
       const pass = moebiusPassRef.current;
