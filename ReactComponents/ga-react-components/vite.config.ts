@@ -337,35 +337,9 @@ function primeRadiantControlPlugin(): Plugin {
     };
 }
 
-// ---------------------------------------------------------------------------
-// 3d-force-graph WebGPU patch — fixes bug where useWebGPU option is accepted
-// but silently dropped (not forwarded to three-render-objects stateInit).
-// See: patches/3d-force-graph+1.79.1.patch
-// ---------------------------------------------------------------------------
-function patchForceGraphWebGPU(): Plugin {
-  return {
-    name: 'patch-3d-force-graph-webgpu',
-    enforce: 'pre',
-    transform(code, id) {
-      if (!id.includes('3d-force-graph')) return;
-      // Find the stateInit that drops useWebGPU and patch it
-      const bugPattern = /var controlType\s*=\s*_ref5\.controlType\s*,\s*rendererConfig\s*=\s*_ref5\.rendererConfig\s*,\s*extraRenderers\s*=\s*_ref5\.extraRenderers\s*;/;
-      if (!bugPattern.test(code)) return;
-      code = code.replace(
-        bugPattern,
-        'var controlType = _ref5.controlType, rendererConfig = _ref5.rendererConfig, extraRenderers = _ref5.extraRenderers, useWebGPU = _ref5.useWebGPU;',
-      );
-      code = code.replace(
-        /controlType:\s*controlType\s*,\s*rendererConfig:\s*rendererConfig\s*,\s*extraRenderers:\s*extraRenderers\s*\}\)\.objects\(\[forceGraph\]\)/,
-        'controlType: controlType, rendererConfig: rendererConfig, extraRenderers: extraRenderers, useWebGPU: useWebGPU }).objects([forceGraph])',
-      );
-      return { code, map: null };
-    },
-  };
-}
-
 export default defineConfig({
-    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), patchForceGraphWebGPU()],
+    // 3d-force-graph WebGPU bug fixed via patch-package (see patches/3d-force-graph+1.79.1.patch)
+    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin()],
     server: {
         port: 5176,
         host: true,
