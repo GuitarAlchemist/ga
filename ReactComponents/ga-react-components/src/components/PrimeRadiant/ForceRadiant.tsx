@@ -3247,7 +3247,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const mesh = obj as THREE.Mesh;
       mesh.geometry?.computeBoundingSphere();
       const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = Math.max(planetRadius * 4, 0.03);
+      const zoomDist = Math.max(planetRadius * 6, 0.15); // larger min distance for tiny planets
       // Camera target: current camera position adjusted so the planet is in view.
       // The orrery is at cam.y+40. Planet is at (cam.x + localPos.x, cam.y + 40 + localPos.y, cam.z + localPos.z).
       // To see the lit face (sun is at orrery center = cam.y+40), look UP from below.
