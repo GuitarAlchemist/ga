@@ -3055,6 +3055,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         Array.from(gisManagersRef.current.entries()).map(([k, m]) => [k, { pins: m.pinCount, paths: m.pathCount, clusters: m.clusterCount }])
       ),
       godotFullscreen,
+      moebius: moebiusPassRef.current ? (moebiusPassRef.current.uniforms.uEnabled.value as number) > 0.5 : false,
+      device: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        dpr: window.devicePixelRatio,
+        touch: 'ontouchstart' in window,
+        formFactor: window.innerWidth < 768 ? 'phone' : window.innerWidth < 1200 ? 'tablet' : 'desktop',
+        gpu: graphRef.current?.renderer()?.getContext()?.getExtension('WEBGL_debug_renderer_info')
+          ? (graphRef.current.renderer().getContext() as WebGLRenderingContext).getParameter(
+              (graphRef.current.renderer().getContext() as WebGLRenderingContext).getExtension('WEBGL_debug_renderer_info')!.UNMASKED_RENDERER_WEBGL
+            ) : 'unknown',
+      },
       timestamp: Date.now(),
     }),
     setDemerzelEmotion: (emotion) => {
@@ -3071,6 +3083,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         lookAt ?? { x: 0, y: 0, z: 0 },
         durationMs ?? 1200,
       );
+    },
+    setMoebiusEnabled: (amount) => {
+      const pass = moebiusPassRef.current;
+      if (!pass) return;
+      if (amount < 0) {
+        // Toggle
+        const current = pass.uniforms.uEnabled.value as number;
+        pass.uniforms.uEnabled.value = current > 0.5 ? 0.0 : 1.0;
+      } else {
+        pass.uniforms.uEnabled.value = amount;
+      }
     },
   });
 

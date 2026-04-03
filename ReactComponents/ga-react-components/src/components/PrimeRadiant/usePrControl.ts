@@ -57,6 +57,7 @@ export interface PrControlHandlers {
   setDemerzelEmotion?: (emotion: string) => void;
   setDemerzelSpeaking?: (speaking: boolean) => void;
   flyCamera?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, durationMs?: number) => void;
+  setMoebiusEnabled?: (enabled: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -216,6 +217,19 @@ export function usePrControl(handlers: PrControlHandlers): void {
             );
           } else {
             throw new Error('Camera fly handler not available');
+          }
+          break;
+
+        case 'moebius:toggle':
+        case 'moebius:set':
+          if (h.setMoebiusEnabled) {
+            // toggle: flip current state. set: use params.enabled (0.0 or 1.0)
+            const amount = action === 'moebius:toggle'
+              ? -1 // signal to toggle
+              : (params.enabled as number ?? 1.0);
+            h.setMoebiusEnabled(amount);
+          } else {
+            throw new Error('Moebius handler not available');
           }
           break;
 
