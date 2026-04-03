@@ -2090,16 +2090,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      // Solar system follows camera — direct snap.
-      // The Float32 jitter from large world coords is mitigated by the
-      // meanAnomaly wrapping in SolarSystem.ts (prevents unbounded values).
-      if (solarFollowCameraRef.current && solarSystem.visible) {
-        solarSystem.position.set(
-          cam.position.x,
-          cam.position.y + (isLowEnd ? 15 : 40),
-          cam.position.z,
-        );
-      }
+      // Solar system parented to camera — no position update needed for follow mode.
+      // Position is fixed at (0, Y, 0) in camera-local space = no Float32 jitter.
+      solarSystem.visible = qualityBudget > -0.9;
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
       // Phase 1.2: Quality-gate solar system updates (after position set)
@@ -2618,11 +2611,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
-    const solarSystem = createSolarSystem(0.06); // smaller scale — fits in ~12 unit radius
-    // Initial position from camera to avoid first-frame flash at origin
-    const cam0 = fg.camera();
-    solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
-    fg.scene().add(solarSystem);
+    // Parented to camera to eliminate Float32 jitter from large world coordinates.
+    // Position (0, Y, 0) in camera-local space keeps all numbers small.
+    const solarSystem = createSolarSystem(0.06);
+    solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+    fg.camera().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
