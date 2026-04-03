@@ -61,6 +61,7 @@ export interface PrControlHandlers {
   setMoebiusEnabled?: (enabled: number) => void;
   setCausticsIntensity?: (intensity: number) => void;
   setDispersionSpread?: (spread: number) => void;
+  showMessage?: (text: string, durationMs?: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +256,12 @@ export function usePrControl(handlers: PrControlHandlers): void {
             const spread = action === 'dispersion:toggle' ? -1 : (params.spread as number ?? 0.4);
             h.setDispersionSpread(spread);
           } else { throw new Error('Dispersion handler not available'); }
+          break;
+
+        case 'broadcast:message':
+          if (h.showMessage) {
+            h.showMessage(params.text as string, params.durationMs as number | undefined);
+          } else { throw new Error('Message handler not available'); }
           break;
 
         default:
