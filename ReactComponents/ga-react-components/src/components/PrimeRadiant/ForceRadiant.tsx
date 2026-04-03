@@ -2619,11 +2619,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     const solarSystem = createSolarSystem(0.06); // smaller scale — fits in ~12 unit radius
-    // Set initial position far above origin so it's not visible before first tick
-    const cam0 = fg.camera();
-    solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
-    // Add solar system to scene — positioned near camera each frame.
-    // Initial position set from camera to avoid first-frame flash at origin.
+    // Initial position from camera to avoid first-frame flash at origin
     const cam0 = fg.camera();
     solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
     fg.scene().add(solarSystem);
