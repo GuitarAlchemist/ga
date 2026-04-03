@@ -882,16 +882,100 @@ export function createSolarSystem(scale: number): THREE.Group {
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
 
-  // TSL sun material — composable TypeScript nodes, auto-targets WebGPU/WebGL
-  // Falls back to textured MeshBasicMaterial if TSL compilation fails on this renderer.
-  const sunQuality: QualityTier = scale < 0.05 ? 'low' : 'high';
-  let sunMat: THREE.Material;
-  try {
-    sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: sunQuality });
-  } catch (e) {
-    console.warn('[SolarSystem] TSL sun material failed, falling back to basic:', e);
-    sunMat = new THREE.MeshBasicMaterial({ map: sunTex });
-  }
+  // Sun material — GLSL ShaderMaterial (fully self-luminous, no lighting response).
+  // Note: TSL MeshBasicNodeMaterial does NOT work with 3d-force-graph's WebGLRenderer.
+  // TSL materials require WebGPURenderer (renderers/common + renderers/webgpu paths).
+  // The TSL version in shaders/SunMaterialTSL.ts is ready for when we upgrade the renderer.
+  const sunMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uSunTex: { value: sunTex },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+      varying vec3 vPos;
+      void main() {
+        vUv = uv;
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vViewDir = normalize(cameraPosition - wp.xyz);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform sampler2D uSunTex;
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec2 vUv;
+      varying vec3 vPos;
+
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(1.3, 1.7, 1.9))) * 43758.5); }
+      float noise(vec3 x) {
+        vec3 i = floor(x), f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+      }
+      float fbm(vec3 p) {
+        float v = 0.0, a = 0.5;
+        for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.1; a *= 0.48; }
+        return v;
+      }
+
+      void main() {
+        float t = uTime * 0.08;
+        vec3 baseTex = texture2D(uSunTex, vUv).rgb;
+
+        // Multi-scale convection
+        float fineGran = fbm(vPos * 18.0 + vec3(t * 0.4, t * 0.3, t * 0.35));
+        float medGran = fbm(vPos * 6.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
+        float flow = fbm(vPos * 2.0 + vec3(t * 0.05, t * 0.03, -t * 0.04));
+
+        // Sunspots
+        float spotNoise = fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01));
+        float spots = smoothstep(0.58, 0.68, spotNoise);
+        float penumbra = smoothstep(0.52, 0.58, spotNoise) * (1.0 - spots);
+        float faculae = smoothstep(0.45, 0.52, spotNoise) * (1.0 - spots) * (1.0 - penumbra);
+
+        // Vivid photosphere palette
+        vec3 photosphere = mix(vec3(1.0, 0.75, 0.3), vec3(1.0, 0.9, 0.6), fineGran * 0.5);
+        photosphere = mix(photosphere, vec3(1.0, 0.5, 0.08), (1.0 - medGran) * 0.2);
+        vec3 col = mix(baseTex * 1.05, photosphere, 0.6);
+
+        col = mix(col, vec3(0.7, 0.15, 0.02), spots * 0.75);
+        col = mix(col, vec3(1.0, 0.5, 0.08), penumbra * 0.4);
+        col = mix(col, vec3(1.0, 0.85, 0.5), faculae * 0.25);
+
+        // Prominences at limb
+        float edgeFresnel = 1.0 - abs(dot(normalize(vNormal), normalize(vViewDir)));
+        float prominence = smoothstep(0.7, 0.95, edgeFresnel) * smoothstep(0.6, 0.75, noise(vPos * 5.0 + vec3(t * 0.3)));
+        col += vec3(1.0, 0.4, 0.1) * prominence * 0.5;
+
+        // Edge glow (fully self-luminous — NO darkening)
+        col += vec3(1.0, 0.4, 0.08) * pow(edgeFresnel, 4.0) * 0.2;
+
+        // Center boost
+        float centerBoost = pow(1.0 - edgeFresnel, 2.0);
+        col *= 0.9 + 0.15 * centerBoost;
+
+        // Magnetic field lines
+        float magField = sin(vPos.y * 30.0 + flow * 5.0) * 0.02 * edgeFresnel;
+        col += vec3(1.0, 0.8, 0.4) * magField;
+
+        // Gentle pulsing
+        col *= 1.0 + 0.02 * sin(uTime * 0.3) + 0.01 * sin(uTime * 0.8);
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+  });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -1690,8 +1774,11 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   group.updateWorldMatrix(true, false);
   group.getWorldPosition(_sunWorldPos);
 
-  // Sun animation: TSL material uses built-in `time` node — no manual uniform update needed.
-  // The Three.js renderer updates the time uniform automatically each frame.
+  // Animate sun shader (GLSL ShaderMaterial needs manual time update)
+  const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
+  if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial && sunMesh.material.uniforms.uTime) {
+    sunMesh.material.uniforms.uTime.value = time;
+  }
 
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
