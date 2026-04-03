@@ -1346,7 +1346,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let userInteracted = false;
 
     // Create force graph
-    const fg = ForceGraph3D({ controlType: 'orbit' })(container)
+    const fg = ForceGraph3D({
+      controlType: 'orbit',
+      rendererConfig: { preserveDrawingBuffer: true, antialias: true },
+    })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
       .showNavInfo(false)
