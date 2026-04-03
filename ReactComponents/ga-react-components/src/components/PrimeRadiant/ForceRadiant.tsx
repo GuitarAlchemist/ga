@@ -3084,6 +3084,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         durationMs ?? 1200,
       );
     },
+    navigateToPlanet: (planet) => {
+      const fg = graphRef.current;
+      if (!fg) return;
+      solarFollowCameraRef.current = false;
+      const group = fg.scene().getObjectByName('sun')?.parent;
+      if (!group) return;
+      const obj = group.getObjectByName(planet);
+      if (!obj) return;
+      const pw = new THREE.Vector3();
+      obj.getWorldPosition(pw);
+      const mesh = obj as THREE.Mesh;
+      mesh.geometry?.computeBoundingSphere();
+      const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
+      const zoomDist = planetRadius * 3.5;
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      const dir = pw.clone().sub(cam.position).normalize();
+      const tgt = pw.clone().sub(dir.multiplyScalar(zoomDist));
+      fg.cameraPosition(
+        { x: tgt.x, y: tgt.y, z: tgt.z },
+        { x: pw.x, y: pw.y, z: pw.z },
+        1500,
+      );
+    },
     setMoebiusEnabled: (amount) => {
       const pass = moebiusPassRef.current;
       if (!pass) return;
