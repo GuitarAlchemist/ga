@@ -622,7 +622,7 @@ const PLANET_FRAG = /* glsl */ `
     // Warm orange-red band where NdotL is near zero (the golden hour zone)
     if (uAtmoColor > 0.5) {
       // Terminator band: strongest glow where sun is right at the horizon
-      float terminatorBand = exp(-NdotL * NdotL / 0.008); // narrow Gaussian at NdotL=0
+      float terminatorBand = exp(-NdotL * NdotL / 0.03); // wider Gaussian — prevents sub-pixel aliasing flicker
       // Warm gradient: deep red at the darkest edge, golden at the bright edge
       vec3 sunriseColorDeep = vec3(0.8, 0.2, 0.05);   // deep red/orange
       vec3 sunriseColorWarm = vec3(1.0, 0.6, 0.2);    // golden orange
@@ -630,7 +630,7 @@ const PLANET_FRAG = /* glsl */ `
       vec3 sunriseColor = mix(sunriseColorDeep, sunriseColorWarm, warmBlend);
       // Intensity scales with atmosphere (Earth gets more, Mars gets less)
       float atmoStrength = uAtmoColor < 1.5 ? 0.35 : uAtmoColor < 2.5 ? 0.2 : 0.1;
-      surfaceColor += sunriseColor * terminatorBand * atmoStrength;
+      surfaceColor += sunriseColor * terminatorBand * atmoStrength * 0.5; // halved to prevent bright streak
     }
 
     // Atmosphere rim glow
