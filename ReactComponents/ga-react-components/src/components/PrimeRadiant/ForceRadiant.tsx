@@ -3708,18 +3708,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
+          // Find the solar system group via the sun mesh
+          const solarGroup = fg.scene().getObjectByName('sun')?.parent ?? navCam.getObjectByName('sun')?.parent;
+          if (!solarGroup) return;
           // Detach orrery from camera, freeze, fly to planet
-          if (solarSystem.parent === navCam) {
+          if (solarGroup.parent === navCam) {
             const wp = new THREE.Vector3();
-            solarSystem.getWorldPosition(wp);
-            navCam.remove(solarSystem);
-            fg.scene().add(solarSystem);
-            solarSystem.position.copy(wp);
+            solarGroup.getWorldPosition(wp);
+            navCam.remove(solarGroup);
+            fg.scene().add(solarGroup);
+            solarGroup.position.copy(wp);
           }
           solarFollowCameraRef.current = false;
           trackedPlanetRef.current = target;
           setTrackedPlanetName(target);
-          const obj = solarSystem.getObjectByName(target);
+          const obj = solarGroup.getObjectByName(target);
           if (!obj) return;
           const pw = new THREE.Vector3();
           obj.getWorldPosition(pw);
