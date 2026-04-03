@@ -706,7 +706,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const pleasureWindowRef = useRef<number[]>([]);
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const moebiusPassRef = useRef<ShaderPass | null>(null);
-  const renderMetricsRef = useRef({ fps: 60, qualityLevel: 'high' as string, qualityBudget: 1.0 });
+  const renderMetricsRef = useRef({ fps: 60, qualityLevel: 'high' as string, qualityBudget: 1.0, dpr: 1.0 });
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
@@ -1515,8 +1515,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.postProcessingComposer().addPass(bloomPass);
     bloomPassRef.current = bloomPass;
 
-    // Set renderer pixel ratio — cap at 1.5 on mobile to save fill rate
-    if (isLowEnd) {
+    // Set renderer pixel ratio — cap DPR on mobile/tablet to save fill rate and reduce heat
+    // Tablet at DPR 2.625 renders at 2399x3056 = 7.3M pixels — causes thermal throttling
+    const isTablet = 'ontouchstart' in window && window.innerWidth >= 768 && window.innerWidth < 1200;
+    if (isLowEnd || isTablet) {
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
@@ -1652,7 +1654,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         frameCount = 0;
         lastFpsCheck = now;
         // Expose to state API for remote QA
-        renderMetricsRef.current = { fps: currentFps, qualityLevel, qualityBudget };
+        renderMetricsRef.current = { fps: currentFps, qualityLevel, qualityBudget, dpr: fg.renderer().getPixelRatio() };
         // Performance grade from FPS
         const grade = currentFps >= 60 ? 'Excellent' : currentFps >= 45 ? 'Good' : currentFps >= 30 ? 'Fair' : 'Poor';
         const gradeColor = currentFps >= 60 ? '#33CC66' : currentFps >= 45 ? '#88CC33' : currentFps >= 30 ? '#FFB300' : '#FF4444';
