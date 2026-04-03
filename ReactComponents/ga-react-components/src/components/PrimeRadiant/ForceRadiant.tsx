@@ -2062,9 +2062,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const halfR = dustRange / 2;
         for (let i = 0; i < dustCount; i++) {
           const i3 = i * 3;
-          let x = dArr[i3]     + dustVelocities[i3]     * 0.016;
-          let y = dArr[i3 + 1] + dustVelocities[i3 + 1] * 0.016;
-          let z = dArr[i3 + 2] + dustVelocities[i3 + 2] * 0.016;
+          let x = dArr[i3]     + dustVelocities[i3]     * 0.004; // 4x slower dust
+          let y = dArr[i3 + 1] + dustVelocities[i3 + 1] * 0.004;
+          let z = dArr[i3 + 2] + dustVelocities[i3 + 2] * 0.004;
           if (x > halfR || x < -halfR) x *= -0.9;
           if (y > halfR || y < -halfR) y *= -0.9;
           if (z > halfR || z < -halfR) z *= -0.9;
@@ -2087,7 +2087,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── God ray animation ───
-      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
+      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t * 0.3; // slower god rays
       const gr2Mat = godRay2.material as THREE.ShaderMaterial;
       if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
