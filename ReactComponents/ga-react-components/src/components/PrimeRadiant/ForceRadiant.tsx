@@ -2123,16 +2123,20 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      solarSystem.visible = qualityBudget > -0.9;
+      // Solar system always parented to camera — never detach.
+      // Position fixed at (0, Y, 0) in camera space = no Float32 jitter.
 
-      // Solar system follow logic:
-      // - When following (no tracked planet): parented to camera at (0, Y, 0)
-      // - When tracking a planet: detached to scene, frozen in world space
-      if (solarFollowCameraRef.current && solarSystem.parent !== cam) {
-        // Reattach to camera
-        fg.scene().remove(solarSystem);
-        cam.add(solarSystem);
-        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+      // Planet tracking: smoothly point controls.target at tracked planet
+      if (trackedPlanetRef.current && solarSystem.visible) {
+        const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
+        if (trackedObj) {
+          const pw = new THREE.Vector3();
+          trackedObj.getWorldPosition(pw);
+          const controls = fg.controls() as { target?: THREE.Vector3 };
+          if (controls.target) {
+            controls.target.lerp(pw, 0.03);
+          }
+        }
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -3272,36 +3276,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Detach orrery from camera → freeze in world space → fly camera → reattach
-      const cam = fg.camera() as THREE.PerspectiveCamera;
-      if (solarSystem.parent === cam) {
-        // Snapshot world position before detaching
-        const wp = new THREE.Vector3();
-        solarSystem.getWorldPosition(wp);
-        cam.remove(solarSystem);
-        fg.scene().add(solarSystem);
-        solarSystem.position.copy(wp);
-      }
-      solarFollowCameraRef.current = false;
-      // Find planet and fly to it
-      const obj = solarSystem.getObjectByName(planet);
-      if (!obj) return;
-      const pw = new THREE.Vector3();
-      obj.getWorldPosition(pw);
-      const mesh = obj as THREE.Mesh;
-      mesh.geometry?.computeBoundingSphere();
-      const r = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = Math.max(r * 3, 0.03);
-      // Approach from sun-facing side
-      const sunPos = new THREE.Vector3();
-      solarSystem.getWorldPosition(sunPos);
-      const toSun = sunPos.clone().sub(pw).normalize();
-      const camTarget = pw.clone().add(toSun.multiplyScalar(zoomDist)).add(new THREE.Vector3(0, zoomDist * 0.3, 0));
-      fg.cameraPosition(
-        { x: camTarget.x, y: camTarget.y, z: camTarget.z },
-        { x: pw.x, y: pw.y, z: pw.z },
-        1500,
-      );
+      // Simply track the planet — tick loop lerps OrbitControls target toward it.
+      // Solar system stays camera-parented (no detach = no jitter).
       trackedPlanetRef.current = planet;
       setTrackedPlanetName(planet);
     },
@@ -3711,38 +3687,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Find the solar system group via the sun mesh
-          const solarGroup = fg.scene().getObjectByName('sun')?.parent ?? navCam.getObjectByName('sun')?.parent;
-          if (!solarGroup) return;
-          // Detach orrery from camera, freeze, fly to planet
-          if (solarGroup.parent === navCam) {
-            const wp = new THREE.Vector3();
-            solarGroup.getWorldPosition(wp);
-            navCam.remove(solarGroup);
-            fg.scene().add(solarGroup);
-            solarGroup.position.copy(wp);
-          }
-          solarFollowCameraRef.current = false;
+          // Simply track — tick loop lerps controls.target toward planet.
+          // No detach, no camera fly, no jitter.
           trackedPlanetRef.current = target;
           setTrackedPlanetName(target);
-          const obj = solarGroup.getObjectByName(target);
-          if (!obj) return;
-          const pw = new THREE.Vector3();
-          obj.getWorldPosition(pw);
-          const mesh = obj as THREE.Mesh;
-          mesh.geometry?.computeBoundingSphere();
-          const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-          const zoomDist = planetRadius * 3.5;
-          const camP = navCam.position.clone();
-          const dir = pw.clone().sub(camP).normalize();
-          const tgt = pw.clone().sub(dir.multiplyScalar(zoomDist));
-          fg.cameraPosition(
-            { x: tgt.x, y: tgt.y, z: tgt.z },
-            { x: pw.x, y: pw.y, z: pw.z },
-            1500,
-          );
-          // Don't resume follow — keep solar system frozen so planet stays visible
-          // User clicks Reset View to resume normal mode
         }}
         onLoadArcGIS={(layer) => {
           const fg = graphRef.current;
