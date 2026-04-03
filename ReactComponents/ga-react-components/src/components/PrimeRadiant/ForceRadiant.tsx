@@ -81,6 +81,7 @@ import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
+import { MoebiusShader } from './shaders/MoebiusPassTSL';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
@@ -704,6 +705,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const edgePropagationsRef = useRef<Map<string, EdgePropagation>>(new Map());
   const pleasureWindowRef = useRef<number[]>([]);
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
+  const moebiusPassRef = useRef<ShaderPass | null>(null);
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
@@ -1517,6 +1519,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
+    // Moebius Audit Mode — edge detection + cross-hatching post-process
+    // Starts disabled (uEnabled=0), toggled via keyboard shortcut or UI
+    if (!isLowEnd) {
+      const moebiusPass = new ShaderPass(MoebiusShader);
+      moebiusPass.uniforms.uEnabled.value = 0.0; // off by default
+      moebiusPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
+      fg.postProcessingComposer().addPass(moebiusPass);
+      moebiusPassRef.current = moebiusPass;
+    }
+
     // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
     if (!isLowEnd) {
       const chromaticShader = {
@@ -1923,6 +1935,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── TSL shared uniforms — single update per frame ───
       updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
+
+      // Moebius pass time update (for noise displacement animation)
+      if (moebiusPassRef.current) {
+        moebiusPassRef.current.uniforms.uTime.value = t;
+      }
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
@@ -2360,11 +2377,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // M key toggles Milky Way visibility
     milkyWayToggleHandler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
       if (e.key === 'm' || e.key === 'M') {
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
         milkyWayMesh.visible = !milkyWayMesh.visible;
         try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
+      }
+
+      // 'A' key toggles Audit Mode (Moebius post-processing)
+      if (e.key === 'a' || e.key === 'A') {
+        const pass = moebiusPassRef.current;
+        if (pass) {
+          const current = pass.uniforms.uEnabled.value as number;
+          pass.uniforms.uEnabled.value = current > 0.5 ? 0.0 : 1.0;
+        }
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
