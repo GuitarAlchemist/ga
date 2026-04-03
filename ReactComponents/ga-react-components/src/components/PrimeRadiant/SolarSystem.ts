@@ -552,8 +552,8 @@ const PLANET_FRAG = /* glsl */ `
     float dayFactor = smoothstep(-0.15, 0.2, NdotL);
 
     // Day color from texture
-    // Fix 2 (mip bias): sharpen texture at small screen sizes (-1.5 = 3x sharper)
-    vec3 dayColor = texture2D(uMap, vUv, -1.5).rgb;
+    // Day color from texture (anisotropy=8 handles sharpness; mip bias removed — caused flicker)
+    vec3 dayColor = texture2D(uMap, vUv).rgb;
 
     // Seasonal snow/ice coverage (Earth only)
     if (uIsEarth > 0.5) {
