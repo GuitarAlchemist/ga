@@ -2682,7 +2682,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Compliance rivers — flow field particles showing directive flow ───
-      if (graph.edges.length > 0) {
+      // Skip on low-end devices — particles are expensive
+      if (!isLowEnd && graph.edges.length > 0) {
         complianceRiversHandle = createComplianceRivers(
           graph.nodes,
           graph.edges,

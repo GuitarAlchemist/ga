@@ -158,7 +158,7 @@ export function createVoronoiShells(
 
     update(graphNodes: GraphNode[], qualityBudget: number) {
       // Hide shells on very low quality
-      const visible = qualityBudget > -0.5;
+      const visible = qualityBudget > 0.0; // only show on high quality — shells are expensive
 
       for (const shell of shells) {
         shell.mesh.visible = visible;

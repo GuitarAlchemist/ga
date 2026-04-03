@@ -97,7 +97,7 @@ export function createComplianceRivers(
 
     update(dt: number, qualityBudget: number) {
       // Hide on very low quality
-      const visible = qualityBudget > -0.4;
+      const visible = qualityBudget > 0.0; // only show on high quality — particles are expensive
       points.visible = visible;
       if (!visible) return;
 
