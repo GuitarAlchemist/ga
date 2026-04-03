@@ -11,7 +11,6 @@
 // modulates emissive intensity — crisis nodes glow with veins of color.
 
 import * as THREE from 'three';
-import { MeshStandardNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3,
   texture, uv,
@@ -41,9 +40,9 @@ export interface CrisisMaterialOptions {
  * Create a TSL MeshStandardNodeMaterial that blends RD crisis texture
  * with the base governance node appearance.
  */
-export function createCrisisMaterial(options: CrisisMaterialOptions): MeshStandardNodeMaterial {
+export function createCrisisMaterial(options: CrisisMaterialOptions): THREE.MeshStandardNodeMaterial {
   const { baseColor, rdTexture, roughness = 0.3, metalness = 0.8, quality } = options;
-  const material = new MeshStandardNodeMaterial();
+  const material = new THREE.MeshStandardNodeMaterial();
   material.roughness = roughness;
   material.metalness = metalness;
 

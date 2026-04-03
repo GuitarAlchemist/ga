@@ -2471,9 +2471,19 @@
 /* ─── Planet nav — left side collapsible ─── */
 .planet-nav {
   position: absolute;
-  left: 8px;
-  top: 180px;
-  z-index: 22; /* above canvas, but chat panel (25) covers it when open */
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+}
+
+/* Mobile: keep left-side position */
+@media (max-width: 767px) {
+  .planet-nav {
+    top: 180px;
+    left: 8px;
+    transform: none;
+  }
 }
 
 .planet-nav__toggle {
@@ -2502,17 +2512,47 @@
   border-color: #FFD700;
 }
 
-.planet-nav__menu {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 150px;
-  background: rgba(13, 17, 23, 0.92);
-  border: 1px solid #30363d;
-  border-radius: 10px;
-  padding: 6px 0;
-  backdrop-filter: blur(8px);
-  animation: planet-nav-in 0.15s ease-out;
+/* Desktop/tablet: horizontal bar */
+@media (min-width: 768px) {
+  .planet-nav__menu {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    white-space: nowrap;
+    background: rgba(13, 17, 23, 0.92);
+    border: 1px solid #30363d;
+    border-radius: 24px;
+    padding: 6px 12px;
+    backdrop-filter: blur(8px);
+    animation: planet-nav-in 0.15s ease-out;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+  }
+  .planet-nav__title { display: none; }
+  .planet-nav__item-row { display: inline-flex; }
+  .planet-nav__item { flex-direction: column; padding: 4px 6px; gap: 2px; }
+  .planet-nav__name { font-size: 7px; }
+  .planet-nav__dot { font-size: 18px; }
+}
+
+/* Mobile: vertical dropdown */
+@media (max-width: 767px) {
+  .planet-nav__menu {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 150px;
+    background: rgba(13, 17, 23, 0.92);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 6px 0;
+    backdrop-filter: blur(8px);
+    animation: planet-nav-in 0.15s ease-out;
+  }
 }
 
 @keyframes planet-nav-in {

@@ -1,10 +1,9 @@
 // src/components/PrimeRadiant/shaders/SunMaterialTSL.ts
 // TSL (Three.js Shading Language) procedural sun material
 // Uses shared noise library — composable TypeScript nodes
-// Requires WebGPURenderer (auto-compiles to GLSL on WebGL2 fallback backend)
+// Works with both WebGPU and WebGL renderers (auto-compiles to GLSL fallback)
 
 import * as THREE from 'three';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3,
   texture, uv, time,
@@ -25,8 +24,8 @@ export interface SunMaterialOptions {
  * Fully emissive (no lighting) with animated plasma, convection, sunspots,
  * prominences, and edge glow. Quality-adaptive FBM octaves.
  */
-export function createSunMaterialTSL(options: SunMaterialOptions): MeshBasicNodeMaterial {
-  const material = new MeshBasicNodeMaterial();
+export function createSunMaterialTSL(options: SunMaterialOptions): THREE.MeshBasicNodeMaterial {
+  const material = new THREE.MeshBasicNodeMaterial();
   const { sunTexture, quality = 'high' } = options;
   const fbm = quality === 'low' ? fbm3 : fbm6;
 

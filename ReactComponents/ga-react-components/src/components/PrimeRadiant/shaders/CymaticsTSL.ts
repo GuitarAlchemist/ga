@@ -11,7 +11,6 @@
 // Vertex displacement creates physical wave motion visible from any angle.
 
 import * as THREE from 'three';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3,
   uniform, time,
@@ -44,12 +43,12 @@ const CONFLICT_COLOR = new THREE.Color(0xff4422); // red-orange — discordant
  * Returns material + alignment uniform for per-frame updates.
  */
 export function createCymaticsMaterial(options: CymaticsMaterialOptions): {
-  material: MeshBasicNodeMaterial;
+  material: THREE.MeshBasicNodeMaterial;
   /** Update alignment per frame (0=conflict, 1=aligned) */
   alignmentUniform: ReturnType<typeof uniform>;
 } {
   const { alignment, quality } = options;
-  const material = new MeshBasicNodeMaterial();
+  const material = new THREE.MeshBasicNodeMaterial();
   material.transparent = true;
   material.depthWrite = false;
   material.side = THREE.DoubleSide;
