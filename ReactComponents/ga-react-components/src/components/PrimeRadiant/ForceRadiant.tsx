@@ -3243,15 +3243,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       mesh.geometry?.computeBoundingSphere();
       const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
       const zoomDist = planetRadius * 3.5;
-      // Position camera at a 3/4 view with slight elevation — always sees lit side
-      // because the sun is at group origin and planets orbit around it
-      const sunPos = new THREE.Vector3();
-      group.getWorldPosition(sunPos);
-      const toSun = sunPos.clone().sub(pw).normalize(); // planet → sun
-      // Place camera between planet and sun, offset up for cinematic angle
-      const tgt = pw.clone().add(
-        toSun.clone().multiplyScalar(zoomDist * 0.7)  // toward sun
-      ).add(new THREE.Vector3(0, zoomDist * 0.5, 0)); // elevated
+      // Solar system follows camera at Y+40. Sun is at orrery center (above camera).
+      // To see the lit side, approach from below the planet (sun is above) with forward offset.
+      const tgt = pw.clone().add(new THREE.Vector3(
+        zoomDist * 0.3,   // slight lateral offset
+        -zoomDist * 0.6,  // below planet (sun is above → lit face is up/toward sun)
+        zoomDist * 0.7,   // forward offset for depth
+      ));
       fg.cameraPosition(
         { x: tgt.x, y: tgt.y, z: tgt.z },
         { x: pw.x, y: pw.y, z: pw.z },
