@@ -59,6 +59,8 @@ export interface PrControlHandlers {
   flyCamera?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, durationMs?: number) => void;
   navigateToPlanet?: (planet: string) => void;
   setMoebiusEnabled?: (enabled: number) => void;
+  setCausticsIntensity?: (intensity: number) => void;
+  setDispersionSpread?: (spread: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -234,14 +236,25 @@ export function usePrControl(handlers: PrControlHandlers): void {
         case 'moebius:toggle':
         case 'moebius:set':
           if (h.setMoebiusEnabled) {
-            // toggle: flip current state. set: use params.enabled (0.0 or 1.0)
-            const amount = action === 'moebius:toggle'
-              ? -1 // signal to toggle
-              : (params.enabled as number ?? 1.0);
+            const amount = action === 'moebius:toggle' ? -1 : (params.enabled as number ?? 1.0);
             h.setMoebiusEnabled(amount);
-          } else {
-            throw new Error('Moebius handler not available');
-          }
+          } else { throw new Error('Moebius handler not available'); }
+          break;
+
+        case 'caustics:toggle':
+        case 'caustics:set':
+          if (h.setCausticsIntensity) {
+            const intensity = action === 'caustics:toggle' ? -1 : (params.intensity as number ?? 0.5);
+            h.setCausticsIntensity(intensity);
+          } else { throw new Error('Caustics handler not available'); }
+          break;
+
+        case 'dispersion:toggle':
+        case 'dispersion:set':
+          if (h.setDispersionSpread) {
+            const spread = action === 'dispersion:toggle' ? -1 : (params.spread as number ?? 0.4);
+            h.setDispersionSpread(spread);
+          } else { throw new Error('Dispersion handler not available'); }
           break;
 
         default:

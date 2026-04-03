@@ -82,6 +82,8 @@ import { createTerminalFilaments, type TerminalFilamentsHandle } from './Termina
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
 import { MoebiusShader } from './shaders/MoebiusPassTSL';
+import { CausticsShader } from './shaders/CausticsPass';
+import { DispersionShader } from './shaders/DispersionPass';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
@@ -706,6 +708,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const pleasureWindowRef = useRef<number[]>([]);
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const moebiusPassRef = useRef<ShaderPass | null>(null);
+  const causticsPassRef = useRef<ShaderPass | null>(null);
+  const dispersionPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
@@ -1522,6 +1526,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
+    // Caustics — animated constitutional light patterns (desktop only, starts disabled)
+    if (!isLowEnd && !isTablet) {
+      const causticsPass = new ShaderPass(CausticsShader);
+      causticsPass.uniforms.uIntensity.value = 0.0; // off by default
+      causticsPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
+      fg.postProcessingComposer().addPass(causticsPass);
+      causticsPassRef.current = causticsPass;
+    }
+
+    // Hexavalent Dispersion — 6-channel spectral split (desktop only, starts disabled)
+    if (!isLowEnd && !isTablet) {
+      const dispersionPass = new ShaderPass(DispersionShader);
+      dispersionPass.uniforms.uSpread.value = 0.0; // off by default
+      dispersionPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
+      fg.postProcessingComposer().addPass(dispersionPass);
+      dispersionPassRef.current = dispersionPass;
+    }
+
     // Moebius Audit Mode — edge detection + cross-hatching post-process
     // Starts disabled (uEnabled=0), toggled via keyboard shortcut or UI
     if (!isLowEnd) {
@@ -1953,10 +1975,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── TSL shared uniforms — single update per frame ───
       updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
 
-      // Moebius pass time update (for noise displacement animation)
-      if (moebiusPassRef.current) {
-        moebiusPassRef.current.uniforms.uTime.value = t;
-      }
+      // Post-processing pass time updates
+      if (moebiusPassRef.current) moebiusPassRef.current.uniforms.uTime.value = t;
+      if (causticsPassRef.current) causticsPassRef.current.uniforms.uTime.value = t;
+      if (dispersionPassRef.current) dispersionPassRef.current.uniforms.uTime.value = t;
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
@@ -2402,13 +2424,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
       }
 
-      // 'A' key toggles Audit Mode (Moebius post-processing)
+      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion
       if (e.key === 'a' || e.key === 'A') {
         const pass = moebiusPassRef.current;
-        if (pass) {
-          const current = pass.uniforms.uEnabled.value as number;
-          pass.uniforms.uEnabled.value = current > 0.5 ? 0.0 : 1.0;
-        }
+        if (pass) pass.uniforms.uEnabled.value = (pass.uniforms.uEnabled.value as number) > 0.5 ? 0.0 : 1.0;
+      }
+      if (e.key === 'c' || e.key === 'C') {
+        const pass = causticsPassRef.current;
+        if (pass) pass.uniforms.uIntensity.value = (pass.uniforms.uIntensity.value as number) > 0.01 ? 0.0 : 0.5;
+      }
+      if (e.key === 'd' || e.key === 'D') {
+        const pass = dispersionPassRef.current;
+        if (pass) pass.uniforms.uSpread.value = (pass.uniforms.uSpread.value as number) > 0.01 ? 0.0 : 0.4;
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
@@ -3130,11 +3157,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const pass = moebiusPassRef.current;
       if (!pass) return;
       if (amount < 0) {
-        // Toggle
-        const current = pass.uniforms.uEnabled.value as number;
-        pass.uniforms.uEnabled.value = current > 0.5 ? 0.0 : 1.0;
+        pass.uniforms.uEnabled.value = (pass.uniforms.uEnabled.value as number) > 0.5 ? 0.0 : 1.0;
       } else {
         pass.uniforms.uEnabled.value = amount;
+      }
+    },
+    setCausticsIntensity: (intensity) => {
+      const pass = causticsPassRef.current;
+      if (!pass) return;
+      if (intensity < 0) {
+        pass.uniforms.uIntensity.value = (pass.uniforms.uIntensity.value as number) > 0.01 ? 0.0 : 0.5;
+      } else {
+        pass.uniforms.uIntensity.value = intensity;
+      }
+    },
+    setDispersionSpread: (spread) => {
+      const pass = dispersionPassRef.current;
+      if (!pass) return;
+      if (spread < 0) {
+        pass.uniforms.uSpread.value = (pass.uniforms.uSpread.value as number) > 0.01 ? 0.0 : 0.4;
+      } else {
+        pass.uniforms.uSpread.value = spread;
       }
     },
   });
