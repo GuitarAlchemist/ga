@@ -706,6 +706,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const pleasureWindowRef = useRef<number[]>([]);
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const moebiusPassRef = useRef<ShaderPass | null>(null);
+  const renderMetricsRef = useRef({ fps: 60, qualityLevel: 'high' as string, qualityBudget: 1.0 });
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
@@ -1650,6 +1651,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         currentFps = frameCount;
         frameCount = 0;
         lastFpsCheck = now;
+        // Expose to state API for remote QA
+        renderMetricsRef.current = { fps: currentFps, qualityLevel, qualityBudget };
         // Performance grade from FPS
         const grade = currentFps >= 60 ? 'Excellent' : currentFps >= 45 ? 'Good' : currentFps >= 30 ? 'Fair' : 'Poor';
         const gradeColor = currentFps >= 60 ? '#33CC66' : currentFps >= 45 ? '#88CC33' : currentFps >= 30 ? '#FFB300' : '#FF4444';
@@ -3056,6 +3059,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       ),
       godotFullscreen,
       moebius: moebiusPassRef.current ? (moebiusPassRef.current.uniforms.uEnabled.value as number) > 0.5 : false,
+      render: renderMetricsRef.current,
       device: {
         width: window.innerWidth,
         height: window.innerHeight,
