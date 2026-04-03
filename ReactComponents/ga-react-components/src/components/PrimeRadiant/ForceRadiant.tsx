@@ -3690,12 +3690,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         onNavigateToPlanet={(target) => {
           const fg = graphRef.current;
           if (!fg) return;
+          const navCam = fg.camera() as THREE.PerspectiveCamera;
 
           if (target === 'demerzel-head') {
-            const cam = fg.camera() as THREE.PerspectiveCamera;
             const faceOffset = new THREE.Vector3(-50, -8, -40);
-            faceOffset.applyQuaternion(cam.quaternion);
-            const facePos = cam.position.clone().add(faceOffset);
+            faceOffset.applyQuaternion(navCam.quaternion);
+            const facePos = navCam.position.clone().add(faceOffset);
             fg.cameraPosition(
               { x: facePos.x + 5, y: facePos.y + 2, z: facePos.z + 12 },
               { x: facePos.x, y: facePos.y, z: facePos.z },
@@ -3708,11 +3708,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
 
           // Detach orrery from camera, freeze, fly to planet
-          const cam = fg.camera() as THREE.PerspectiveCamera;
-          if (solarSystem.parent === cam) {
+          if (solarSystem.parent === navCam) {
             const wp = new THREE.Vector3();
             solarSystem.getWorldPosition(wp);
-            cam.remove(solarSystem);
+            navCam.remove(solarSystem);
             fg.scene().add(solarSystem);
             solarSystem.position.copy(wp);
           }
@@ -3727,8 +3726,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           mesh.geometry?.computeBoundingSphere();
           const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
           const zoomDist = planetRadius * 3.5;
-          const cam = fg.camera() as THREE.PerspectiveCamera;
-          const camP = cam.position.clone();
+          const camP = navCam.position.clone();
           const dir = pw.clone().sub(camP).normalize();
           const tgt = pw.clone().sub(dir.multiplyScalar(zoomDist));
           fg.cameraPosition(
