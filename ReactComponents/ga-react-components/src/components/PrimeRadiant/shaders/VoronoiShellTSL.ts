@@ -8,6 +8,7 @@
 // displaces the authority of its neighbors ("Jurisdictional Pressure").
 
 import * as THREE from 'three';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3, vec4,
   uniform, time,
@@ -59,14 +60,14 @@ export const CLUSTER_COLORS: Record<string, THREE.Color> = {
  * @returns Material + seed position uniform for per-frame updates
  */
 export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
-  material: THREE.MeshBasicNodeMaterial;
+  material: MeshBasicNodeMaterial;
   /** Update seed positions each frame (world-space positions relative to shell center) */
   seedPositions: THREE.Uniform<THREE.Vector3[]>;
   /** Update active seed count (may be less than array length) */
   activeSeedCount: THREE.Uniform<number>;
 } {
   const { color, seedCount, quality } = options;
-  const material = new THREE.MeshBasicNodeMaterial();
+  const material = new MeshBasicNodeMaterial();
   material.transparent = true;
   material.side = THREE.DoubleSide;
   material.depthWrite = false;
