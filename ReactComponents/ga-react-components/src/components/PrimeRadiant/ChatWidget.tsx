@@ -144,6 +144,18 @@ interface DemerzelResponse {
 }
 
 const PLANET_NAMES = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'moon'];
+
+// Multilingual planet name mapping → English canonical name
+const PLANET_ALIASES: Record<string, string> = {
+  // French
+  soleil: 'sun', mercure: 'mercury', terre: 'earth', lune: 'moon',
+  // Spanish
+  sol: 'sun', tierra: 'earth', marte: 'mars', luna: 'moon',
+  // German
+  sonne: 'sun', erde: 'earth', mond: 'moon',
+  // Common abbreviations
+  jup: 'jupiter', sat: 'saturn', nep: 'neptune', ura: 'uranus', merc: 'mercury',
+};
 const PLANET_FACTS: Record<string, string> = {
   sun: 'Our star — a G-type main-sequence star, 4.6 billion years old. The corona reaches millions of degrees.',
   mercury: 'Closest to the Sun. No atmosphere, extreme temperature swings. Cratered like our Moon.',
@@ -342,7 +354,13 @@ async function askDemerzel(question: string, context?: GovernanceNode | null, on
   await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
 
   // Detect any planet mentioned in the input
-  const mentionedPlanet = PLANET_NAMES.find((p) => q.includes(p));
+  // Check English names first, then multilingual aliases
+  let mentionedPlanet = PLANET_NAMES.find((p) => q.includes(p));
+  if (!mentionedPlanet) {
+    for (const [alias, canonical] of Object.entries(PLANET_ALIASES)) {
+      if (q.includes(alias)) { mentionedPlanet = canonical; break; }
+    }
+  }
 
   // Navigation intent — broad natural language matching
   const isNavIntent = /\b(go|fly|zoom|navigate|take me|show me|let'?s go|bring me|move|closer|approach|visit|look at|see)\b/.test(q)
