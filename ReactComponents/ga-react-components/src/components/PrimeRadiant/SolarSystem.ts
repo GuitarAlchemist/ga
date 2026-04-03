@@ -1876,7 +1876,8 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
     const realAngle = getRealOrbitalAngle(def.name);
     // Wrap meanAnomaly to [0, 2*PI] — unbounded time*speed loses Float32 precision
     const TAU = Math.PI * 2;
-    const meanAnomaly = ((realAngle + time * def.speed * 0.01) % TAU + TAU) % TAU;
+    // Speed 0.001: Mercury completes 1 orbit in ~5100 seconds (~85 min). Imperceptible per-frame.
+    const meanAnomaly = ((realAngle + time * def.speed * 0.001) % TAU + TAU) % TAU;
     const e = ECCENTRICITY[def.name] ?? 0;
     const incl = INCLINATION[def.name] ?? 0;
     const pos = ellipticalPosition(meanAnomaly, e, def.distance * scale);
