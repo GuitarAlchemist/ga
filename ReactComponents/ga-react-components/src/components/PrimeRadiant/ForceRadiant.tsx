@@ -3654,18 +3654,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          solarFollowCameraRef.current = false;
+          // Use tracked planet approach — smooth OrbitControls target lerp
+          // (camera-parented orrery means cameraPosition fly moves planets too)
+          trackedPlanetRef.current = target;
+          setTrackedPlanetName(target);
+          return;
+          // Dead code below — kept for reference if we revert to scene-parented orrery
           const group = fg.scene().getObjectByName('sun')?.parent;
           if (!group) return;
           const obj = group.getObjectByName(target);
           if (!obj) return;
           const pw = new THREE.Vector3();
           obj.getWorldPosition(pw);
-          // Get planet radius for close zoom — fall back to bounding sphere
           const mesh = obj as THREE.Mesh;
           mesh.geometry?.computeBoundingSphere();
           const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-          // Position camera at 3x planet radius — close enough to fill the view
           const zoomDist = planetRadius * 3.5;
           const cam = fg.camera() as THREE.PerspectiveCamera;
           const camP = cam.position.clone();
