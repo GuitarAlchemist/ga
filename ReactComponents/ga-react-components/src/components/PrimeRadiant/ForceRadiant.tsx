@@ -2090,24 +2090,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      // Solar system is parented to camera — position is always (0, yOff, 0) in camera space.
-      // No per-frame position update needed when following. Eliminates Float32 precision jitter.
-      if (solarFollowCameraRef.current) {
-        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
-      }
-      // When frozen (planet zoom), detach from camera to world space
-      // so the orrery stays in place while camera moves
-      if (!solarFollowCameraRef.current && solarSystem.parent === cam) {
-        const wp = new THREE.Vector3();
-        solarSystem.getWorldPosition(wp);
-        cam.remove(solarSystem);
-        fg.scene().add(solarSystem);
-        solarSystem.position.copy(wp);
-      } else if (solarFollowCameraRef.current && solarSystem.parent !== cam) {
-        // Re-attach to camera after freeze
-        fg.scene().remove(solarSystem);
-        cam.add(solarSystem);
-        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+      // Solar system follows camera — direct snap.
+      // The Float32 jitter from large world coords is mitigated by the
+      // meanAnomaly wrapping in SolarSystem.ts (prevents unbounded values).
+      if (solarFollowCameraRef.current && solarSystem.visible) {
+        solarSystem.position.set(
+          cam.position.x,
+          cam.position.y + (isLowEnd ? 15 : 40),
+          cam.position.z,
+        );
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -2631,13 +2622,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Set initial position far above origin so it's not visible before first tick
     const cam0 = fg.camera();
     solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
-    // Parent solar system to camera — eliminates Float32 precision jitter.
-    // When parented to scene and positioned at camera coords (200,300,500),
-    // tiny planet offsets (0.39) suffer catastrophic cancellation in modelViewMatrix.
-    // Parented to camera, the position is always small (0, 40, 0).
+    // Add solar system to scene — positioned near camera each frame.
+    // Initial position set from camera to avoid first-frame flash at origin.
     const cam0 = fg.camera();
-    cam0.add(solarSystem);
-    solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+    solarSystem.position.set(cam0.position.x, cam0.position.y + (isLowEnd ? 15 : 40), cam0.position.z);
+    fg.scene().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
