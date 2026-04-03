@@ -57,6 +57,7 @@ export interface PrControlHandlers {
   setDemerzelEmotion?: (emotion: string) => void;
   setDemerzelSpeaking?: (speaking: boolean) => void;
   flyCamera?: (pos: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, durationMs?: number) => void;
+  navigateToPlanet?: (planet: string) => void;
   setMoebiusEnabled?: (enabled: number) => void;
 }
 
@@ -217,6 +218,14 @@ export function usePrControl(handlers: PrControlHandlers): void {
             );
           } else {
             throw new Error('Camera fly handler not available');
+          }
+          break;
+
+        case 'navigate:planet':
+          if (h.navigateToPlanet) {
+            h.navigateToPlanet(params.planet as string);
+          } else {
+            throw new Error('Planet navigation handler not available');
           }
           break;
 
