@@ -711,6 +711,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const causticsPassRef = useRef<ShaderPass | null>(null);
   const dispersionPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
+  const videoRecorderRef = useRef<{ recorder: MediaRecorder; chunks: Blob[]; url: string | null } | null>(null);
   const surgeBloomRef = useRef<{ startTime: number; originalStrength: number } | null>(null);
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
@@ -3287,6 +3288,43 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     captureScreenshot: async () => {
       const { captureCanvas } = await import('./ScreenshotCapture');
       return captureCanvas();
+    },
+    startVideoCapture: (durationMs = 10000) => {
+      const canvas = containerRef.current?.querySelector('canvas');
+      if (!canvas) return;
+      try {
+        const stream = canvas.captureStream(30); // 30 fps
+        const chunks: Blob[] = [];
+        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.start();
+        videoRecorderRef.current = { recorder, chunks, url: null };
+        // Auto-stop after duration
+        if (durationMs > 0) {
+          setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, durationMs);
+        }
+      } catch (e) {
+        console.warn('[PR] Video capture failed:', e);
+      }
+    },
+    stopVideoCapture: async () => {
+      const rec = videoRecorderRef.current;
+      if (!rec) return null;
+      return new Promise<string | null>((resolve) => {
+        rec.recorder.onstop = () => {
+          const blob = new Blob(rec.chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          rec.url = url;
+          // Auto-download
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `prime-radiant-${Date.now()}.webm`;
+          a.click();
+          resolve(url);
+        };
+        if (rec.recorder.state === 'recording') rec.recorder.stop();
+        else resolve(rec.url);
+      });
     },
     showMessage: (text, durationMs = 5000) => {
       // Create a temporary overlay toast visible on this client

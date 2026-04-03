@@ -63,6 +63,8 @@ export interface PrControlHandlers {
   setDispersionSpread?: (spread: number) => void;
   showMessage?: (text: string, durationMs?: number) => void;
   captureScreenshot?: () => Promise<string>;
+  startVideoCapture?: (durationMs?: number) => void;
+  stopVideoCapture?: () => Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +272,19 @@ export function usePrControl(handlers: PrControlHandlers): void {
             const image = await h.captureScreenshot();
             result.data = { image, timestamp: Date.now() };
           } else { throw new Error('Screenshot handler not available'); }
+          break;
+
+        case 'video:start':
+          if (h.startVideoCapture) {
+            h.startVideoCapture(params.durationMs as number | undefined);
+          } else { throw new Error('Video capture handler not available'); }
+          break;
+
+        case 'video:stop':
+          if (h.stopVideoCapture) {
+            const videoUrl = await h.stopVideoCapture();
+            result.data = { videoUrl, timestamp: Date.now() };
+          } else { throw new Error('Video capture handler not available'); }
           break;
 
         default:
