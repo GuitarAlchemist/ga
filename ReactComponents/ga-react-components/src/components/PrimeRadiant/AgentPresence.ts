@@ -158,12 +158,19 @@ class AgentPresenceTracker {
     }
   }
 
+  private acpFailCount = 0;
+
   /** Start polling all agents */
   start(): void {
     if (this.timer) return;
     // Immediate first poll
     this.pollAll();
-    this.timer = setInterval(() => this.pollAll(), this.pollIntervalMs);
+    this.timer = setInterval(() => {
+      // Back off ACP polling after 3 consecutive failures (stops console spam)
+      if (this.acpFailCount < 3) {
+        this.pollAll();
+      }
+    }, this.pollIntervalMs);
   }
 
   /** Stop polling */
@@ -242,11 +249,14 @@ class AgentPresenceTracker {
           lastSeen: seldonOnline ? now : this.agents.get('seldon')?.lastSeen ?? null,
           lastChecked: now,
         });
+        this.acpFailCount = 0; // reset on success
       } else {
+        this.acpFailCount++;
         this.markOffline('demerzel', now);
         this.markOffline('seldon', now);
       }
     } catch {
+      this.acpFailCount++;
       this.markOffline('demerzel', now);
       this.markOffline('seldon', now);
     }
