@@ -1448,8 +1448,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      useWebGPU: true, // Enables WebGPURenderer with WebGL2 fallback — unlocks TSL materials
-    } as Record<string, unknown>)(container)
+      // useWebGPU: true — DISABLED. WebGPURenderer (even WebGL2 fallback) is incompatible
+      // with existing ShaderMaterial (sun, planets, god rays) and EffectComposer.
+      // All ShaderMaterials must be migrated to NodeMaterial before enabling.
+    })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
       .showNavInfo(false)
