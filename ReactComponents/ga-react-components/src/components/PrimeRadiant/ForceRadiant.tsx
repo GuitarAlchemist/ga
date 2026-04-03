@@ -3093,6 +3093,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     navigateToPlanet: (planet) => {
       const fg = graphRef.current;
       if (!fg) return;
+      setActivePanel(null); // close any open panel during navigation
       solarFollowCameraRef.current = false;
       const group = fg.scene().getObjectByName('sun')?.parent;
       if (!group) return;
