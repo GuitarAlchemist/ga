@@ -135,6 +135,7 @@ export function createVoronoiShells(
     mesh.name = `voronoi-shell-${type}`;
     mesh.frustumCulled = false;
     mesh.renderOrder = -1; // render before opaque nodes
+    mesh.visible = false; // hidden until update() — prevents WebGL crash on TSL NodeMaterial
 
     scene.add(mesh);
     shells.push({
