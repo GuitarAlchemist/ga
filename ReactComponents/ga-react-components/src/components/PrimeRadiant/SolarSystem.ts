@@ -1874,7 +1874,9 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
   for (const { mesh, orbit, def, clouds, cloudsHigh } of planets) {
     // Elliptical orbit — position planet using Kepler's equation
     const realAngle = getRealOrbitalAngle(def.name);
-    const meanAnomaly = realAngle + time * def.speed * 0.1;
+    // Orbital animation slowed 10x — original 0.1 caused visible jitter on close-up
+    // Mercury moved 0.003 scene units/frame, visible as pixel-level position changes
+    const meanAnomaly = realAngle + time * def.speed * 0.01;
     const e = ECCENTRICITY[def.name] ?? 0;
     const incl = INCLINATION[def.name] ?? 0;
     const pos = ellipticalPosition(meanAnomaly, e, def.distance * scale);
