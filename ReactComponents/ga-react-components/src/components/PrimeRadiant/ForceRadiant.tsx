@@ -2090,21 +2090,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      // Solar system parented to camera — no position update needed for follow mode.
       solarSystem.visible = qualityBudget > -0.9;
 
-      // Planet tracking: when a planet is selected, adjust camera lookAt toward it
-      if (trackedPlanetRef.current && solarSystem.visible) {
-        const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
-        if (trackedObj) {
-          const planetWorldPos = new THREE.Vector3();
-          trackedObj.getWorldPosition(planetWorldPos);
-          // Smoothly look toward the planet (OrbitControls target)
-          const controls = fg.controls() as { target?: THREE.Vector3 };
-          if (controls.target) {
-            controls.target.lerp(planetWorldPos, 0.05); // gentle tracking
-          }
-        }
+      // Solar system follow logic:
+      // - When following (no tracked planet): parented to camera at (0, Y, 0)
+      // - When tracking a planet: detached to scene, frozen in world space
+      if (solarFollowCameraRef.current && solarSystem.parent !== cam) {
+        // Reattach to camera
+        fg.scene().remove(solarSystem);
+        cam.add(solarSystem);
+        solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -3241,10 +3236,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Solar system is camera-parented at (0, Y, 0). Planet positions are in
-      // orrery-local space. To view a planet, we use lookAt in the tick loop
-      // since flying the camera moves the orrery too (chicken-and-egg).
-      // Instead: set a tracked planet that the tick loop will keep in view.
+      // Detach orrery from camera → freeze in world space → fly camera → reattach
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      if (solarSystem.parent === cam) {
+        // Snapshot world position before detaching
+        const wp = new THREE.Vector3();
+        solarSystem.getWorldPosition(wp);
+        cam.remove(solarSystem);
+        fg.scene().add(solarSystem);
+        solarSystem.position.copy(wp);
+      }
+      solarFollowCameraRef.current = false;
+      // Find planet and fly to it
+      const obj = solarSystem.getObjectByName(planet);
+      if (!obj) return;
+      const pw = new THREE.Vector3();
+      obj.getWorldPosition(pw);
+      const mesh = obj as THREE.Mesh;
+      mesh.geometry?.computeBoundingSphere();
+      const r = mesh.geometry?.boundingSphere?.radius ?? 0.5;
+      const zoomDist = Math.max(r * 3, 0.03);
+      // Approach from sun-facing side
+      const sunPos = new THREE.Vector3();
+      solarSystem.getWorldPosition(sunPos);
+      const toSun = sunPos.clone().sub(pw).normalize();
+      const camTarget = pw.clone().add(toSun.multiplyScalar(zoomDist)).add(new THREE.Vector3(0, zoomDist * 0.3, 0));
+      fg.cameraPosition(
+        { x: camTarget.x, y: camTarget.y, z: camTarget.z },
+        { x: pw.x, y: pw.y, z: pw.z },
+        1500,
+      );
       trackedPlanetRef.current = planet;
       setTrackedPlanetName(planet);
     },
@@ -3654,15 +3675,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Use tracked planet approach — smooth OrbitControls target lerp
-          // (camera-parented orrery means cameraPosition fly moves planets too)
+          // Detach orrery from camera, freeze, fly to planet
+          const cam = fg.camera() as THREE.PerspectiveCamera;
+          if (solarSystem.parent === cam) {
+            const wp = new THREE.Vector3();
+            solarSystem.getWorldPosition(wp);
+            cam.remove(solarSystem);
+            fg.scene().add(solarSystem);
+            solarSystem.position.copy(wp);
+          }
+          solarFollowCameraRef.current = false;
           trackedPlanetRef.current = target;
           setTrackedPlanetName(target);
-          return;
-          // Dead code below — kept for reference if we revert to scene-parented orrery
-          const group = fg.scene().getObjectByName('sun')?.parent;
-          if (!group) return;
-          const obj = group.getObjectByName(target);
+          const obj = solarSystem.getObjectByName(target);
           if (!obj) return;
           const pw = new THREE.Vector3();
           obj.getWorldPosition(pw);
