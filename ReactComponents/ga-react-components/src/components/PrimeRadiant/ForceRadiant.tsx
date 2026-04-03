@@ -3231,7 +3231,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     navigateToPlanet: (planet) => {
       const fg = graphRef.current;
       if (!fg) return;
-      setActivePanel(null); // close any open panel during navigation
+      setActivePanel(null);
       solarFollowCameraRef.current = false;
       const group = fg.scene().getObjectByName('sun')?.parent;
       if (!group) return;
@@ -3243,9 +3243,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       mesh.geometry?.computeBoundingSphere();
       const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
       const zoomDist = planetRadius * 3.5;
-      const cam = fg.camera() as THREE.PerspectiveCamera;
-      const dir = pw.clone().sub(cam.position).normalize();
-      const tgt = pw.clone().sub(dir.multiplyScalar(zoomDist));
+      // Approach from the sun-lit side: position camera between sun and planet
+      const sunPos = new THREE.Vector3();
+      group.getWorldPosition(sunPos); // sun is at group origin
+      const sunDir = pw.clone().sub(sunPos).normalize(); // planet→sun direction
+      // Camera offset: slightly above and to the side of the sun direction
+      const up = new THREE.Vector3(0, 1, 0);
+      const side = new THREE.Vector3().crossVectors(sunDir, up).normalize();
+      const tgt = pw.clone().sub(sunDir.multiplyScalar(zoomDist)).add(side.multiplyScalar(zoomDist * 0.3)).add(up.clone().multiplyScalar(zoomDist * 0.4));
       fg.cameraPosition(
         { x: tgt.x, y: tgt.y, z: tgt.z },
         { x: pw.x, y: pw.y, z: pw.z },
