@@ -88,6 +88,21 @@ function primeRadiantControlPlugin(): Plugin {
     return {
         name: 'prime-radiant-control',
         configureServer(server) {
+            // ── GET /proxy/acp/agents — Mock ACP agent discovery ──
+            // Serves agent cards directly instead of proxying to non-existent port 8200
+            server.middlewares.use('/proxy/acp/agents', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const agents = [
+                    { name: 'demerzel', version: '1.1.0', status: 'online', skills: ['validate-governance-artifacts', 'execute-reconnaissance', 'evaluate-agent-compliance', 'invoke-zeroth-law'] },
+                    { name: 'seldon', version: '2.0.0', status: 'online', skills: ['create-departments', 'teach-governance-knowledge', 'package-learnings', 'assess-comprehension'] },
+                    { name: 'ix', version: '0.1.0', status: 'degraded', skills: ['build-pipeline', 'train-model', 'vector-search'] },
+                    { name: 'tars', version: '0.1.0', status: 'degraded', skills: ['reason', 'manage-beliefs'] },
+                    { name: 'ga', version: '0.1.0', status: 'online', skills: ['chatbot', 'music-theory', 'fretboard'] },
+                ];
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify(agents));
+            });
+
             // ── POST /pr/command — Claude sends a command ──
             server.middlewares.use('/pr/command', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
@@ -294,12 +309,8 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/docker-models/, ''),
             },
-            // Demerzel ACP proxy — avoids CORS when polling agent presence
-            '/proxy/acp': {
-                target: 'http://localhost:8200',
-                changeOrigin: true,
-                rewrite: (p: string) => p.replace(/^\/proxy\/acp/, ''),
-            },
+            // ACP /proxy/acp/agents served by primeRadiantControlPlugin middleware
+            // (no proxy to port 8200 needed — mock agents served directly)
             // Voxtral TTS proxy — injects MISTRAL_API_KEY server-side
             '/proxy/voxtral': {
                 target: 'https://api.mistral.ai',
