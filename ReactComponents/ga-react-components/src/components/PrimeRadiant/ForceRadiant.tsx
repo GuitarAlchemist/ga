@@ -665,6 +665,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   }, []);
   // Deep linking — read/write URL params for shareable state
   const [shareToast, setShareToast] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const deepLink = useDeepLink({
     activePanel,
     selectedNodeId: selectedNode?.id ?? null,
@@ -3327,10 +3328,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
         recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
         recorder.start();
+        setIsRecording(true);
         videoRecorderRef.current = { recorder, chunks, url: null };
         // Auto-stop after duration
         if (durationMs > 0) {
-          setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, durationMs);
+          setTimeout(() => { if (recorder.state === 'recording') { recorder.stop(); setIsRecording(false); } }, durationMs);
         }
       } catch (e) {
         console.warn('[PR] Video capture failed:', e);
@@ -3351,7 +3353,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           a.click();
           resolve(url);
         };
-        if (rec.recorder.state === 'recording') rec.recorder.stop();
+        if (rec.recorder.state === 'recording') { rec.recorder.stop(); setIsRecording(false); }
         else resolve(rec.url);
       });
     },
@@ -3533,6 +3535,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             <>
               <span style={{ color: '#30363d', margin: '0 4px' }}>|</span>
               <ScreenshotButton />
+              {isRecording && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  marginLeft: 6, color: '#FF4444', fontSize: 11, fontWeight: 'bold',
+                }} title="Backend is recording">
+                  <span style={{
+                    width: 8, height: 8, borderRadius: '50%', background: '#FF4444',
+                    animation: 'pulse-recording 1s ease-in-out infinite',
+                    boxShadow: '0 0 4px #FF4444',
+                  }} />
+                  REC
+                </span>
+              )}
               <span
                 style={{ cursor: 'pointer', marginLeft: 6, opacity: shareToast ? 1 : 0.6, transition: 'opacity 0.2s', position: 'relative' }}
                 title="Copy shareable URL"
