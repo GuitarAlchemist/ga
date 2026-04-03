@@ -80,6 +80,8 @@ function primeRadiantControlPlugin(): Plugin {
     const pendingCommands: PrCommand[] = [];
     const results = new Map<string, PrResult>();
     let currentState: Record<string, unknown> = {};
+    // Per-client state: keyed by clientId from POST /pr/state body
+    const clientStates = new Map<string, Record<string, unknown>>();
     const sseClients: Set<import('http').ServerResponse> = new Set();
     let cmdCounter = 0;
 
@@ -153,21 +155,46 @@ function primeRadiantControlPlugin(): Plugin {
                 });
             });
 
-            // ── GET /pr/state — Claude reads current state ──
+            // ── GET /pr/state — Claude reads state ──
+            // ?client=<id> returns specific client, otherwise returns all clients
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                const clientId = url.searchParams.get('client');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(currentState));
+                if (clientId && clientStates.has(clientId)) {
+                    res.end(JSON.stringify(clientStates.get(clientId)));
+                } else if (clientStates.size > 0) {
+                    // Return all clients + legacy single-state for backward compat
+                    const allClients = Object.fromEntries(clientStates);
+                    res.end(JSON.stringify({ ...currentState, clients: allClients, clientCount: clientStates.size }));
+                } else {
+                    res.end(JSON.stringify(currentState));
+                }
             });
 
-            // ── POST /pr/state — React updates state ──
+            // ── POST /pr/state — React updates state (per-client) ──
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
                     try {
-                        currentState = JSON.parse(body);
+                        const state = JSON.parse(body);
+                        currentState = state; // backward compat
+                        // Store per-client if device info is present
+                        const dev = state.device;
+                        if (dev) {
+                            const clientId = `${dev.formFactor ?? 'unknown'}-${dev.width}x${dev.height}`;
+                            clientStates.set(clientId, { ...state, clientId, lastSeen: Date.now() });
+                            // Auto-cleanup stale clients (not seen in 30s)
+                            const now = Date.now();
+                            for (const [id, s] of clientStates) {
+                                if (now - ((s as Record<string, unknown>).lastSeen as number) > 30000) {
+                                    clientStates.delete(id);
+                                }
+                            }
+                        }
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ ok: true }));
                     } catch {
@@ -238,6 +265,7 @@ export default defineConfig({
     plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin()],
     server: {
         port: 5176,
+        host: true,
         allowedHosts: true,
         hmr: {
             overlay: false,
