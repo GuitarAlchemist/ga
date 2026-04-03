@@ -62,6 +62,7 @@ export interface PrControlHandlers {
   setCausticsIntensity?: (intensity: number) => void;
   setDispersionSpread?: (spread: number) => void;
   showMessage?: (text: string, durationMs?: number) => void;
+  captureScreenshot?: () => Promise<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,6 +263,13 @@ export function usePrControl(handlers: PrControlHandlers): void {
           if (h.showMessage) {
             h.showMessage(params.text as string, params.durationMs as number | undefined);
           } else { throw new Error('Message handler not available'); }
+          break;
+
+        case 'screenshot:capture':
+          if (h.captureScreenshot) {
+            const image = await h.captureScreenshot();
+            result.data = { image, timestamp: Date.now() };
+          } else { throw new Error('Screenshot handler not available'); }
           break;
 
         default:

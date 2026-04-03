@@ -3183,6 +3183,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         pass.uniforms.uSpread.value = spread;
       }
     },
+    captureScreenshot: async () => {
+      const { captureCanvas } = await import('./ScreenshotCapture');
+      return captureCanvas();
+    },
     showMessage: (text, durationMs = 5000) => {
       // Create a temporary overlay toast visible on this client
       const el = document.createElement('div');
