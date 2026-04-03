@@ -85,9 +85,70 @@ function primeRadiantControlPlugin(): Plugin {
     const sseClients: Set<import('http').ServerResponse> = new Set();
     let cmdCounter = 0;
 
+    // ── Backend Observer — watches UI state and sends corrective commands ──
+    let observerTimer: ReturnType<typeof setInterval> | null = null;
+    const observerLog: string[] = [];
+
+    function pushCommand(action: string, params: Record<string, unknown> = {}) {
+        const cmd: PrCommand = {
+            id: `obs-${++cmdCounter}-${Date.now()}`,
+            action,
+            params,
+            timestamp: Date.now(),
+        };
+        pendingCommands.push(cmd);
+        const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
+        for (const client of sseClients) client.write(sseData);
+    }
+
+    function observeAndAdjust() {
+        // Analyze all client states
+        for (const [clientId, state] of clientStates) {
+            const s = state as Record<string, unknown>;
+            const render = s.render as Record<string, unknown> | undefined;
+            const device = s.device as Record<string, unknown> | undefined;
+            const errors = s.errors as string[] | undefined;
+            if (!render) continue;
+
+            const fps = render.fps as number ?? 60;
+            const quality = render.qualityLevel as string ?? 'high';
+            const formFactor = device?.formFactor as string ?? 'unknown';
+
+            // Rule 1: FPS critically low — broadcast warning
+            if (fps < 15 && fps > 0) {
+                const msg = `[Observer] ${formFactor} at ${fps} FPS — performance critical`;
+                if (!observerLog.includes(msg)) {
+                    observerLog.push(msg);
+                    if (observerLog.length > 50) observerLog.shift();
+                    pushCommand('broadcast:message', { text: msg, durationMs: 5000 });
+                }
+            }
+
+            // Rule 2: Errors detected — log them
+            if (errors && errors.length > 0) {
+                for (const err of errors) {
+                    const logEntry = `[${formFactor}] ${err}`;
+                    if (!observerLog.includes(logEntry)) {
+                        observerLog.push(logEntry);
+                        if (observerLog.length > 50) observerLog.shift();
+                    }
+                }
+            }
+        }
+    }
+
     return {
         name: 'prime-radiant-control',
         configureServer(server) {
+            // Start observer loop
+            observerTimer = setInterval(observeAndAdjust, 5000);
+
+            // ── GET /pr/observer — read observer log ──
+            server.middlewares.use('/pr/observer', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ log: observerLog, clientCount: clientStates.size }));
+            });
             // ── GET /proxy/acp/agents — Mock ACP agent discovery ──
             // Serves agent cards directly instead of proxying to non-existent port 8200
             server.middlewares.use('/proxy/acp/agents', (req, res, next) => {
