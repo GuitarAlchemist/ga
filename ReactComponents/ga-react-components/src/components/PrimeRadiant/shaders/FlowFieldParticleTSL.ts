@@ -11,7 +11,6 @@
 //   - phase: lifecycle progress 0-1 → opacity fade in/out
 
 import * as THREE from 'three';
-import { PointsNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3, vec4,
   attribute, time,
@@ -41,9 +40,9 @@ const VIOLATION_COLOR = new THREE.Color(0xff3344);   // red
  *   - aPhase: float [0-1] lifecycle phase (for fade in/out)
  *   - aSpeed: float [0+] velocity magnitude (for size scaling)
  */
-export function createFlowParticleMaterial(options: FlowParticleMaterialOptions): PointsNodeMaterial {
+export function createFlowParticleMaterial(options: FlowParticleMaterialOptions): THREE.PointsNodeMaterial {
   const { quality } = options;
-  const material = new PointsNodeMaterial();
+  const material = new THREE.PointsNodeMaterial();
   material.transparent = true;
   material.depthWrite = false;
   material.blending = THREE.AdditiveBlending;
