@@ -3279,8 +3279,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Simply track the planet — tick loop lerps OrbitControls target toward it.
-      // Solar system stays camera-parented (no detach = no jitter).
+      // Find planet in the camera-parented solar system
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      const solarGroup = cam.getObjectByName('sun')?.parent;
+      if (!solarGroup) return;
+      const obj = solarGroup.getObjectByName(planet);
+      if (!obj) return;
+      // Get planet world position and snap controls target to it
+      const pw = new THREE.Vector3();
+      obj.getWorldPosition(pw);
+      const controls = fg.controls() as { target?: THREE.Vector3 };
+      if (controls.target) {
+        controls.target.copy(pw);
+      }
+      // Zoom camera toward the planet
+      const mesh = obj as THREE.Mesh;
+      mesh.geometry?.computeBoundingSphere();
+      const r = mesh.geometry?.boundingSphere?.radius ?? 0.5;
+      const zoomDist = Math.max(r * 4, 0.02);
+      const dir = pw.clone().sub(cam.position).normalize();
+      const newCamPos = pw.clone().sub(dir.multiplyScalar(zoomDist));
+      cam.position.copy(newCamPos);
       trackedPlanetRef.current = planet;
       setTrackedPlanetName(planet);
     },
@@ -3704,8 +3723,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Simply track — tick loop lerps controls.target toward planet.
-          // No detach, no camera fly, no jitter.
+          // Snap controls target + zoom to planet (same as MCP navigateToPlanet)
+          const navSolarGroup = navCam.getObjectByName('sun')?.parent;
+          if (navSolarGroup) {
+            const navObj = navSolarGroup.getObjectByName(target);
+            if (navObj) {
+              const navPw = new THREE.Vector3();
+              navObj.getWorldPosition(navPw);
+              const navControls = fg.controls() as { target?: THREE.Vector3 };
+              if (navControls.target) navControls.target.copy(navPw);
+              const navMesh = navObj as THREE.Mesh;
+              navMesh.geometry?.computeBoundingSphere();
+              const navR = navMesh.geometry?.boundingSphere?.radius ?? 0.5;
+              const navZoom = Math.max(navR * 4, 0.02);
+              const navDir = navPw.clone().sub(navCam.position).normalize();
+              navCam.position.copy(navPw.clone().sub(navDir.multiplyScalar(navZoom)));
+            }
+          }
           trackedPlanetRef.current = target;
           setTrackedPlanetName(target);
         }}
