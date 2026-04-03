@@ -670,17 +670,9 @@ const PLANET_FRAG = /* glsl */ `
       surfaceColor += atmoTint * inScatter * rayleigh * 0.25;
     }
 
-    // Fix 4: Specular roughness noise (2 lines — breaks billiard ball uniformity)
-    // Deserts slightly shiny, forests matte, ocean glint varies
-    float roughnessNoise = fract(sin(dot(vUv * 8.0, vec2(127.1, 311.7))) * 43758.5) * 0.5 + 0.5;
-    surfaceColor *= mix(0.95, 1.05, roughnessNoise);
-
-    // Fix 5: Cloud shadow offset (Earth only, 3 lines — adds terranic depth)
-    if (uIsEarth > 0.5) {
-      vec2 shadowOffset = sunDir.xz * 0.006;
-      float cloudShadow = texture2D(uMap, vUv + shadowOffset).g * 0.3; // approximate cloud density from green channel
-      surfaceColor *= mix(1.0, 0.75, cloudShadow * dayFactor);
-    }
+    // Roughness noise and cloud shadows removed — both caused flicker.
+    // Roughness noise: GPU sin() hash has inconsistent precision across frames.
+    // Cloud shadows: sunDir.xz changes per frame as planet orbits → shadow shifts.
 
     gl_FragColor = vec4(surfaceColor, 1.0);
   }
