@@ -1526,32 +1526,35 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
-    // Caustics — animated constitutional light patterns (desktop only, starts disabled)
-    if (!isLowEnd && !isTablet) {
-      const causticsPass = new ShaderPass(CausticsShader);
-      causticsPass.uniforms.uIntensity.value = 0.0; // off by default
-      causticsPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
-      fg.postProcessingComposer().addPass(causticsPass);
-      causticsPassRef.current = causticsPass;
-    }
+    // Post-processing effects — each wrapped in try/catch to prevent chain breakage.
+    // A shader compile error in one pass would black out the entire screen if uncaught.
+    const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
+      try {
+        const pass = new ShaderPass(shader);
+        if (overrides) {
+          for (const [k, v] of Object.entries(overrides)) pass.uniforms[k].value = v;
+        }
+        if (pass.uniforms.uResolution) {
+          (pass.uniforms.uResolution.value as THREE.Vector2).set(container.clientWidth, container.clientHeight);
+        }
+        fg.postProcessingComposer().addPass(pass);
+        ref.current = pass;
+      } catch (e) {
+        console.warn(`[PrimeRadiant] ${name} shader failed:`, e);
+      }
+    };
 
-    // Hexavalent Dispersion — 6-channel spectral split (desktop only, starts disabled)
+    // Caustics — desktop only, starts disabled
     if (!isLowEnd && !isTablet) {
-      const dispersionPass = new ShaderPass(DispersionShader);
-      dispersionPass.uniforms.uSpread.value = 0.0; // off by default
-      dispersionPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
-      fg.postProcessingComposer().addPass(dispersionPass);
-      dispersionPassRef.current = dispersionPass;
+      addSafePass('Caustics', CausticsShader, causticsPassRef, { uIntensity: 0.0 });
     }
-
-    // Moebius Audit Mode — edge detection + cross-hatching post-process
-    // Starts disabled (uEnabled=0), toggled via keyboard shortcut or UI
+    // Dispersion — desktop only, starts disabled
+    if (!isLowEnd && !isTablet) {
+      addSafePass('Dispersion', DispersionShader, dispersionPassRef, { uSpread: 0.0 });
+    }
+    // Moebius — desktop + tablet non-lowend, starts disabled
     if (!isLowEnd) {
-      const moebiusPass = new ShaderPass(MoebiusShader);
-      moebiusPass.uniforms.uEnabled.value = 0.0; // off by default
-      moebiusPass.uniforms.uResolution.value.set(container.clientWidth, container.clientHeight);
-      fg.postProcessingComposer().addPass(moebiusPass);
-      moebiusPassRef.current = moebiusPass;
+      addSafePass('Moebius', MoebiusShader, moebiusPassRef, { uEnabled: 0.0 });
     }
 
     // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
