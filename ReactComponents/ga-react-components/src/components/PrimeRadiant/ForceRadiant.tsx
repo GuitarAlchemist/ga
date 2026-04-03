@@ -3232,27 +3232,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      solarFollowCameraRef.current = false;
+      // Keep solar system following camera — freeze causes dark-side views
+      solarFollowCameraRef.current = true;
       const group = fg.scene().getObjectByName('sun')?.parent;
       if (!group) return;
       const obj = group.getObjectByName(planet);
       if (!obj) return;
-      const pw = new THREE.Vector3();
-      obj.getWorldPosition(pw);
+      // Get planet position relative to orrery center (local space)
+      const localPos = new THREE.Vector3();
+      obj.getWorldPosition(localPos);
+      const groupPos = new THREE.Vector3();
+      group.getWorldPosition(groupPos);
+      localPos.sub(groupPos); // planet offset from sun in local orrery coords
       const mesh = obj as THREE.Mesh;
       mesh.geometry?.computeBoundingSphere();
       const planetRadius = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = planetRadius * 3.5;
-      // Solar system follows camera at Y+40. Sun is at orrery center (above camera).
-      // To see the lit side, approach from below the planet (sun is above) with forward offset.
-      const tgt = pw.clone().add(new THREE.Vector3(
-        zoomDist * 0.3,   // slight lateral offset
-        -zoomDist * 0.6,  // below planet (sun is above → lit face is up/toward sun)
-        zoomDist * 0.7,   // forward offset for depth
-      ));
+      const zoomDist = Math.max(planetRadius * 4, 0.03);
+      // Camera target: current camera position adjusted so the planet is in view.
+      // The orrery is at cam.y+40. Planet is at (cam.x + localPos.x, cam.y + 40 + localPos.y, cam.z + localPos.z).
+      // To see the lit face (sun is at orrery center = cam.y+40), look UP from below.
+      const cam = fg.camera() as THREE.PerspectiveCamera;
+      const planetWorld = new THREE.Vector3(
+        cam.position.x + localPos.x,
+        cam.position.y + 40 + localPos.y,
+        cam.position.z + localPos.z,
+      );
+      // Camera below planet, looking up at the lit face
+      const tgt = planetWorld.clone().add(new THREE.Vector3(0, -zoomDist, zoomDist * 0.5));
       fg.cameraPosition(
         { x: tgt.x, y: tgt.y, z: tgt.z },
-        { x: pw.x, y: pw.y, z: pw.z },
+        { x: planetWorld.x, y: planetWorld.y, z: planetWorld.z },
         1500,
       );
     },
