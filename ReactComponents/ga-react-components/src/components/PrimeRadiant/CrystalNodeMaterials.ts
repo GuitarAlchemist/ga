@@ -51,10 +51,10 @@ const MATERIAL_DEFS: Record<GovernanceNodeType, NodeMaterialDef> = {
   // Department — Brushed Silver Orb: organizational, clean, structural
   department: {
     color: 0xC0C0C0,
-    metalness: 0.9,
-    roughness: 0.25,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.15,
+    metalness: 0.7,      // reduced from 0.9 — less specular shimmer
+    roughness: 0.45,     // increased from 0.25 — softer reflections
+    clearcoat: 0.4,      // reduced from 0.8 — less double-reflection flicker
+    clearcoatRoughness: 0.3,  // increased from 0.15
     transmission: 0,
     ior: 1.5,
     thickness: 0,
