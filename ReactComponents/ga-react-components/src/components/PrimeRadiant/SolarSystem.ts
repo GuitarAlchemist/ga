@@ -1185,7 +1185,11 @@ export function createSolarSystem(scale: number): THREE.Group {
     }
 
     // Earth clouds — two layers for depth parallax
-    if (def.name === 'earth' && def.textureClouds) {
+    // Cloud layers disabled — persistent z-fighting with surface at scale 0.06.
+    // The planet shader's atmosphere (limb darkening + in-scattering) provides
+    // the blue haze effect. Clouds caused 58% per-frame pixel changes at the limb.
+    // Re-enable when WebGPURenderer provides proper depth precision.
+    if (false && def.name === 'earth' && def.textureClouds) {
       const cloudsTex = loadTex(def.textureClouds);
 
       // Primary cloud layer — alphaMap for defined cloud gaps
