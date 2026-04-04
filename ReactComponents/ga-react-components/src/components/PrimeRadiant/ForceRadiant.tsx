@@ -2664,7 +2664,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
     const solarSystem = createSolarSystem(8.0);
-    solarSystem.position.set(0, isLowEnd ? 8 : 15, 0);
+    solarSystem.position.set(0, isLowEnd ? 20 : 80, 0);
     fg.camera().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
@@ -3780,7 +3780,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           const solarGroup = sunObj?.parent;
           if (solarGroup && solarGroup.parent !== cam) {
             fg.scene().remove(solarGroup);
-            solarGroup.position.set(0, 15, 0);
+            solarGroup.position.set(0, 80, 0);
             cam.add(solarGroup);
           }
           solarFollowCameraRef.current = true;
