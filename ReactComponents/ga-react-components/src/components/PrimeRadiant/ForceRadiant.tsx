@@ -3725,32 +3725,31 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Navigate to planet — solar system is parented to camera
-          // Get planet's LOCAL position within the solar system group,
-          // then set controls.target so orbit controls center on it
+          // Navigate to planet — DETACH solar system from camera so user can zoom
           const navSolarGroup = navCam.getObjectByName('sun')?.parent;
           if (navSolarGroup) {
+            // Detach: move solar system to world space at its current world position
+            const groupWorldPos = new THREE.Vector3();
+            navSolarGroup.getWorldPosition(groupWorldPos);
+            navCam.remove(navSolarGroup);
+            fg.scene().add(navSolarGroup);
+            navSolarGroup.position.copy(groupWorldPos);
+            solarFollowCameraRef.current = false;
+
+            // Find planet and fly to it
             const navObj = navSolarGroup.getObjectByName(target);
             if (navObj) {
-              // Planet position in solar system LOCAL space
-              const planetLocal = new THREE.Vector3();
-              navObj.getWorldPosition(planetLocal);
-              // Planet's world pos = camera pos + solar system offset + planet offset
-              // controls.target in world space:
-              const navControls = fg.controls() as { target?: THREE.Vector3 };
-              if (navControls.target) {
-                navControls.target.copy(planetLocal);
-                // Move camera close to the planet (0.5 units away)
-                const navMesh = navObj as THREE.Mesh;
-                navMesh.geometry?.computeBoundingSphere();
-                const pRadius = navMesh.geometry?.boundingSphere?.radius ?? 0.1;
-                const viewDist = Math.max(pRadius * 5, 0.3);
-                // Camera offset: slightly above and to the side
-                const camTarget = planetLocal.clone();
-                camTarget.y += viewDist * 0.3;
-                camTarget.x += viewDist;
-                navCam.position.copy(camTarget);
-              }
+              const pw = new THREE.Vector3();
+              navObj.getWorldPosition(pw);
+              const navMesh = navObj as THREE.Mesh;
+              navMesh.geometry?.computeBoundingSphere();
+              const pRadius = navMesh.geometry?.boundingSphere?.radius ?? 0.5;
+              const viewDist = Math.max(pRadius * 5, 2);
+              fg.cameraPosition(
+                { x: pw.x + viewDist, y: pw.y + viewDist * 0.3, z: pw.z + viewDist * 0.5 },
+                { x: pw.x, y: pw.y, z: pw.z },
+                1200,
+              );
             }
           }
           trackedPlanetRef.current = target;
@@ -3775,6 +3774,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         onResetView={() => {
           const fg = graphRef.current;
           if (!fg) return;
+          // Reattach solar system to camera if detached
+          const cam = fg.camera() as THREE.PerspectiveCamera;
+          const sunObj = fg.scene().getObjectByName('sun');
+          const solarGroup = sunObj?.parent;
+          if (solarGroup && solarGroup.parent !== cam) {
+            fg.scene().remove(solarGroup);
+            solarGroup.position.set(0, 15, 0);
+            cam.add(solarGroup);
+          }
           solarFollowCameraRef.current = true;
           trackedPlanetRef.current = null;
           setTrackedPlanetName(null);
