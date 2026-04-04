@@ -6,8 +6,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
+import type { MeshBasicNodeMaterial } from 'three/webgpu';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
+import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
+import { createGodRayMaterialTSL } from './shaders/GodRayTSL';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
@@ -409,30 +413,19 @@ const volumetricFragmentShader = /* glsl */ `
   }
 `;
 
-// Cache shader materials per color+complexity
-const shaderMaterialCache = new Map<string, THREE.ShaderMaterial>();
+// Cache TSL volumetric materials per color+complexity+intensity.
+// Each cache miss creates a fresh TSL material; we return the cached instance
+// directly (TSL NodeMaterial cloning has quirks — share the instance).
+const volumetricMaterialCache = new Map<string, MeshBasicNodeMaterial>();
 
-function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.ShaderMaterial {
+function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): MeshBasicNodeMaterial {
   const key = `${color.getHexString()}-${complexity}-${intensity}`;
-  if (shaderMaterialCache.has(key)) return shaderMaterialCache.get(key)!.clone();
+  const cached = volumetricMaterialCache.get(key);
+  if (cached) return cached;
 
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: color },
-      uTime: { value: 0 },
-      uComplexity: { value: complexity },
-      uIntensity: { value: intensity },
-    },
-    vertexShader: volumetricVertexShader,
-    fragmentShader: volumetricFragmentShader,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.FrontSide,
-  });
-
-  shaderMaterialCache.set(key, mat);
-  return mat.clone();
+  const mat = createVolumetricCoreMaterialTSL({ color, complexity, intensity });
+  volumetricMaterialCache.set(key, mat);
+  return mat;
 }
 
 // ---------------------------------------------------------------------------
@@ -2090,9 +2083,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── God ray animation ───
-      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t * 0.3; // slower god rays
-      const gr2Mat = godRay2.material as THREE.ShaderMaterial;
-      if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
+      // TSL god ray materials use built-in `time` node — no manual update needed.
 
       // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
@@ -2327,149 +2318,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      uniforms: {},
-      vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        varying vec3 vWorldPos;
-
-        vec3 hash33(vec3 p) {
-          p = fract(p * vec3(443.897, 441.423, 437.195));
-          p += dot(p, p.yzx + 19.19);
-          return fract((p.xxy + p.yxx) * p.zyx);
-        }
-        float noise3d(vec3 p) {
-          vec3 i = floor(p); vec3 f = fract(p);
-          f = f*f*(3.0-2.0*f);
-          return mix(mix(mix(dot(hash33(i),f), dot(hash33(i+vec3(1,0,0)),f-vec3(1,0,0)), f.x),
-            mix(dot(hash33(i+vec3(0,1,0)),f-vec3(0,1,0)), dot(hash33(i+vec3(1,1,0)),f-vec3(1,1,0)), f.x), f.y),
-            mix(mix(dot(hash33(i+vec3(0,0,1)),f-vec3(0,0,1)), dot(hash33(i+vec3(1,0,1)),f-vec3(1,0,1)), f.x),
-            mix(dot(hash33(i+vec3(0,1,1)),f-vec3(0,1,1)), dot(hash33(i+vec3(1,1,1)),f-vec3(1,1,1)), f.x), f.y), f.z)*0.5+0.5;
-        }
-        float fbm(vec3 p) {
-          float v=0.0, a=0.5;
-          for(int i=0;i<4;i++) { v+=a*noise3d(p); p*=2.1; a*=0.5; }
-          return v;
-        }
-
-        void main() {
-          vec3 dir = normalize(vWorldPos);
-          float y = dir.y;
-
-          // Base gradient — near black space
-          vec3 col = mix(vec3(0.003, 0.002, 0.008), vec3(0.001, 0.001, 0.004), smoothstep(-0.5, 0.8, y));
-
-          // Orion-like nebula — reddish-pink cloud region
-          float neb1 = fbm(dir * 3.0 + vec3(1.5, 0.0, 2.3));
-          neb1 = smoothstep(0.4, 0.7, neb1);
-          float neb1Mask = smoothstep(0.3, 0.0, length(dir - vec3(0.5, 0.2, -0.8)));
-          col += vec3(0.12, 0.02, 0.04) * neb1 * neb1Mask;
-
-          // Carina-like nebula — blue-teal cloud
-          float neb2 = fbm(dir * 4.0 + vec3(-2.0, 1.0, 0.5));
-          neb2 = smoothstep(0.45, 0.7, neb2);
-          float neb2Mask = smoothstep(0.35, 0.0, length(dir - vec3(-0.6, -0.3, 0.7)));
-          col += vec3(0.02, 0.06, 0.1) * neb2 * neb2Mask;
-
-          // Pillars of creation — golden dust cloud
-          float neb3 = fbm(dir * 5.0 + vec3(0.0, 3.0, -1.0));
-          neb3 = smoothstep(0.5, 0.75, neb3);
-          float neb3Mask = smoothstep(0.25, 0.0, length(dir - vec3(-0.3, 0.7, 0.4)));
-          col += vec3(0.08, 0.05, 0.01) * neb3 * neb3Mask;
-
-          // Milky Way band — bright horizontal band
-          float milkyWay = exp(-8.0 * y * y);
-          float mwNoise = fbm(dir * 6.0);
-          col += vec3(0.03, 0.025, 0.04) * milkyWay * mwNoise;
-
-          // Sagittarius A* — supermassive black hole at galactic center
-          // Gravitational lensing ring: bright accretion disk around a dark core
-          vec3 sgrADir = normalize(vec3(0.0, -0.02, -1.0)); // galactic center direction
-          float sgrDist = length(dir - sgrADir);
-          // Dark core — subtle dimming, not a visible black sphere
-          float blackHole = 1.0 - smoothstep(0.0, 0.006, sgrDist);
-          col *= (1.0 - blackHole * 0.3); // very subtle dimming
-          // Accretion disk — hot glowing ring around the event horizon
-          float ring = exp(-800.0 * pow(sgrDist - 0.015, 2.0));
-          col += vec3(1.0, 0.7, 0.3) * ring * 0.15; // hot orange-white ring
-          // Outer halo — warped light from behind
-          float halo = exp(-200.0 * pow(sgrDist - 0.025, 2.0));
-          col += vec3(0.8, 0.5, 0.2) * halo * 0.06;
-          // Faint relativistic jet hint (vertical)
-          float jet = exp(-2000.0 * (dir.x - sgrADir.x) * (dir.x - sgrADir.x))
-                    * exp(-50.0 * (dir.z - sgrADir.z) * (dir.z - sgrADir.z))
-                    * smoothstep(0.0, 0.1, abs(dir.y));
-          col += vec3(0.3, 0.4, 1.0) * jet * 0.03; // faint blue jets
-
-          // Nearby bright stars (fixed positions, glowing)
-          vec3 stars[5];
-          vec3 starColors[5];
-          stars[0] = normalize(vec3(0.8, 0.1, -0.5));  // Sirius — blue-white
-          stars[1] = normalize(vec3(-0.3, 0.6, 0.7));  // Betelgeuse — orange
-          stars[2] = normalize(vec3(0.1, -0.8, 0.5));  // Rigel — blue
-          stars[3] = normalize(vec3(-0.7, 0.2, -0.6)); // Aldebaran — orange-red
-          stars[4] = normalize(vec3(0.4, 0.7, 0.5));   // Vega — white
-          starColors[0] = vec3(0.7, 0.8, 1.0);
-          starColors[1] = vec3(1.0, 0.5, 0.2);
-          starColors[2] = vec3(0.5, 0.6, 1.0);
-          starColors[3] = vec3(1.0, 0.4, 0.15);
-          starColors[4] = vec3(0.9, 0.92, 1.0);
-
-          for (int i = 0; i < 5; i++) {
-            float d = length(dir - stars[i]);
-            float glow = exp(-500.0 * d * d) * 0.5;   // tight small core
-            float halo = exp(-40.0 * d * d) * 0.08;   // subtle halo
-            col += starColors[i] * (glow + halo);
-          }
-
-          // ─── Nearby galaxies (boosted visibility) ───
-          // Andromeda (M31) — large, tilted elliptical smudge
-          vec3 andromedaDir = normalize(vec3(0.2, 0.35, -0.9));
-          float andrDist = length(dir - andromedaDir);
-          float andrCore = exp(-600.0 * andrDist * andrDist) * 0.4;
-          float andrDisk = exp(-40.0 * andrDist * andrDist) * 0.12;
-          vec3 andrLocal = dir - andromedaDir;
-          float andrTilt = dot(andrLocal, normalize(vec3(0.5, 1.0, 0.2)));
-          float andrEllipse = exp(-120.0 * andrTilt * andrTilt);
-          col += vec3(0.85, 0.82, 0.95) * (andrCore + andrDisk * andrEllipse);
-
-          // Triangulum Galaxy (M33) — smaller, near Andromeda
-          vec3 m33Dir = normalize(vec3(0.35, 0.5, -0.78));
-          float m33Dist = length(dir - m33Dir);
-          float m33Glow = exp(-400.0 * m33Dist * m33Dist) * 0.12;
-          float m33Halo = exp(-50.0 * m33Dist * m33Dist) * 0.05;
-          col += vec3(0.7, 0.75, 0.9) * (m33Glow + m33Halo);
-
-          // Large Magellanic Cloud (LMC) — southern sky, irregular, blue
-          vec3 lmcDir = normalize(vec3(0.6, -0.7, 0.35));
-          float lmcDist = length(dir - lmcDir);
-          float lmcCore = exp(-60.0 * lmcDist * lmcDist) * 0.15;
-          float lmcNoise = fbm(dir * 8.0 + vec3(5.0, 2.0, 1.0));
-          col += vec3(0.5, 0.6, 0.9) * lmcCore * (0.6 + lmcNoise);
-
-          // Small Magellanic Cloud (SMC) — companion to LMC
-          vec3 smcDir = normalize(vec3(0.45, -0.6, 0.6));
-          float smcDist = length(dir - smcDir);
-          float smcGlow = exp(-150.0 * smcDist * smcDist) * 0.08;
-          col += vec3(0.5, 0.6, 0.8) * smcGlow;
-
-          // ─── Cosmic Microwave Background ───
-          // Very faint, large-scale temperature anisotropy pattern
-          // Subtle warm/cool spots across the entire sky
-          float cmb = fbm(dir * 2.0 + vec3(42.0, 17.0, 73.0));
-          float cmbAnisotropy = (cmb - 0.5) * 0.008; // extremely subtle
-          // CMB is ~2.7K — map to faint red-blue temperature fluctuations
-          vec3 cmbWarm = vec3(0.015, 0.003, 0.0);   // warm spots (red)
-          vec3 cmbCool = vec3(0.0, 0.003, 0.015);    // cool spots (blue)
-          col += cmbAnisotropy > 0.0 ? cmbWarm * cmbAnisotropy * 100.0
-                                     : cmbCool * abs(cmbAnisotropy) * 100.0;
-
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `,
-    });
+    const skyMat = createSkyboxNebulaMaterialTSL();
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
@@ -2609,36 +2458,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── GOD RAY LIGHT SHAFTS from center ───
     // Volumetric light cone pointing outward from the graph center
     const godRayGeo = new THREE.ConeGeometry(80, 300, 32, 1, true);
-    const godRayMat = new THREE.ShaderMaterial({
-      transparent: true,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color('#FF6B35') } },
-      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec3 uColor;
-        varying vec2 vUv;
-        void main() {
-          float fade = smoothstep(0.0, 0.5, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
-          float rays = sin(vUv.x * 40.0 + uTime * 0.5) * 0.5 + 0.5;
-          rays *= sin(vUv.x * 17.0 - uTime * 0.3) * 0.5 + 0.5;
-          float alpha = fade * rays * 0.03;
-          gl_FragColor = vec4(uColor, alpha);
-        }
-      `,
-    });
+    const godRayMat = createGodRayMaterialTSL('#FF6B35');
     const godRay = new THREE.Mesh(godRayGeo, godRayMat);
     godRay.rotation.x = Math.PI; // point upward
     fg.scene().add(godRay);
 
-    // Second god ray at different angle
-    const godRay2 = godRay.clone();
-    (godRay2.material as THREE.ShaderMaterial).uniforms = {
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#00CED1') },
-    };
+    // Second god ray — different color, separate TSL instance (clone has quirks)
+    const godRay2Mat = createGodRayMaterialTSL('#00CED1');
+    const godRay2 = new THREE.Mesh(godRayGeo, godRay2Mat);
     godRay2.rotation.set(Math.PI * 0.7, 0, Math.PI * 0.3);
     fg.scene().add(godRay2);
 
