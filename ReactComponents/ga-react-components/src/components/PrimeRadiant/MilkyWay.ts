@@ -4,6 +4,7 @@
 // Renders on a large sphere behind the starfield for depth parallax.
 
 import * as THREE from 'three';
+import { createMilkyWayMaterialTSL } from './shaders/MilkyWayTSL';
 
 const MILKY_WAY_VERTEX = `
   varying vec3 vWorldPos;
@@ -163,14 +164,8 @@ const MILKY_WAY_FRAGMENT = `
  */
 export function createMilkyWay(radius: number = 8000): THREE.Mesh {
   const geo = new THREE.SphereGeometry(radius, 48, 48);
-  const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    vertexShader: MILKY_WAY_VERTEX,
-    fragmentShader: MILKY_WAY_FRAGMENT,
-  });
+  const mat = createMilkyWayMaterialTSL();
+  // TSL Milky Way material configures BackSide + additive + transparent internally.
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'milky-way';
   mesh.renderOrder = -3; // behind sky-nebula (-2)

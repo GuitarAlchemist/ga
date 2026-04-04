@@ -4,6 +4,8 @@
 // Enhanced with eyebrows, lips, emotional states, micro-expressions
 
 import * as THREE from 'three';
+import type { MeshBasicNodeMaterial } from 'three/webgpu';
+import { createHolographicMaterialTSL } from './shaders/HolographicTSL';
 
 // ---------------------------------------------------------------------------
 // Emotional state — drives all facial expressions
@@ -89,21 +91,11 @@ const holoFragmentShader = /* glsl */ `
 // ---------------------------------------------------------------------------
 // Materials
 // ---------------------------------------------------------------------------
-function createHoloMaterial(opacity: number = 0.6): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#FFD700') },
-      uOpacity: { value: opacity },
-      uSpeaking: { value: 0.0 },
-    },
-    vertexShader: holoVertexShader,
-    fragmentShader: holoFragmentShader,
-    transparent: true,
+function createHoloMaterial(opacity: number = 0.6): MeshBasicNodeMaterial {
+  return createHolographicMaterialTSL({
+    color: '#FFD700',
+    opacity,
     wireframe: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
   });
 }
 
@@ -503,12 +495,16 @@ export function updateDemerzelFace(
   leftLid.position.y = emo.eyeWiden > 1 ? (emo.eyeWiden - 1) * 0.2 * s : -(1 - emo.eyeWiden) * 0.15 * s;
   rightLid.position.y = leftLid.position.y;
 
-  // ── Shader uniforms ──
+  // ── TSL holographic uniforms ──
+  // uTime is handled by TSL's built-in `time` node (auto-updates).
+  // uSpeaking is exposed via userData.speakingUniform on each TSL material.
+  const speakValue = speaking ? 1.0 : 0.0;
   group.traverse((child) => {
     if (child instanceof THREE.Mesh) {
-      const mat = child.material as THREE.ShaderMaterial;
-      if (mat.uniforms?.uTime) mat.uniforms.uTime.value = time;
-      if (mat.uniforms?.uSpeaking) mat.uniforms.uSpeaking.value = speaking ? 1.0 : 0.0;
+      const ud = child.material.userData;
+      if (ud?.speakingUniform) {
+        ud.speakingUniform.value = speakValue;
+      }
     }
   });
 
