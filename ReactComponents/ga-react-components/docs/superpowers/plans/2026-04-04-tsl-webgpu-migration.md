@@ -66,16 +66,38 @@ The surge bloom code at `ForceRadiant.tsx:2248-2257` needs updating when the swa
 |------|--------|--------|
 | Fix 5 TSL import bugs | DONE | `8a4627d4` |
 | Create ProceduralMoonTSL.ts (15 variants) | DONE | `7b116ad3` |
-| Extend PlanetSurfaceTSL (night/spec/atmosphere) | TODO | — |
-| Swap 13 ShaderMaterials in SolarSystem.ts | TODO | — |
-| Rewrite createPlanetMesh + createMoonMesh for TSL | TODO | — |
-| Update uniform setters in updateSolarSystem | TODO | — |
-| Swap 3 ShaderMaterials in ForceRadiant.tsx | TODO | — |
-| patch-package three-render-objects | TODO | — |
-| Flip useWebGPU: true | TODO | — |
-| Wire TSL PostProcessing | TODO | — |
-| Remove dead GLSL constants | TODO | — |
-| Visual verification | TODO | — |
+| Extend PlanetSurfaceTSL (night/spec/atmosphere) | DONE | `00f73a83` |
+| Swap 13 ShaderMaterials in SolarSystem.ts | DONE | `7cb30f44` |
+| Rewrite createPlanetMesh + createMoonMesh for TSL | DONE | `7cb30f44` |
+| Update uniform setters in updateSolarSystem | DONE | `7cb30f44` |
+| Swap 3 ShaderMaterials in ForceRadiant.tsx | DONE | `bdfe34a2` |
+| Remove dead GLSL constants | DONE | `6a49a6f9` |
+| patch-package three-render-objects | DEFERRED | — |
+| Flip useWebGPU: true | DEFERRED | — |
+| Wire TSL PostProcessing | DEFERRED | — |
+| Visual verification | NEEDS HUMAN | `npm run dev` |
+
+**Current state (post-migration, still on WebGLRenderer):**
+All 16 `ShaderMaterial` instances (13 in SolarSystem.ts + 3 in
+ForceRadiant.tsx) have been replaced with TSL `NodeMaterial`. TSL
+materials auto-compile to GLSL on WebGL2, so the app should render
+visually on the existing WebGLRenderer with no visible regression.
+`npx tsc --noEmit` passes clean.
+
+**What's deferred (require visual verification + patch-package):**
+- Flipping `useWebGPU: true` still needs `patch-package` on
+  three-render-objects to make `postProcessingComposer` nullable.
+- EffectComposer/UnrealBloomPass/ShaderPass are still wired but will
+  break on WebGPURenderer. Need TSL PostProcessing swap.
+- Procedural moon fragment constants (IO_FRAG, etc.) remain as
+  reference identifiers for the TSL factory lookup; they can be
+  migrated to enum keys if desired.
+
+**Known regressions on TSL-on-WebGL2 (pending user verify):**
+- IXQL color/opacity/glow overrides on volumetric node materials
+  silently no-op (`.uniforms` access on MeshBasicNodeMaterial).
+- Saturn ring sun position now uses world-space (was view-space
+  in GLSL); uniform update was adjusted accordingly.
 
 ---
 
