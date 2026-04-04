@@ -1504,14 +1504,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
         return l.color;
       })
-      .linkWidth((link: object) => {
-        const l = link as GraphLink & { ixqlOverrides?: Record<string, unknown> };
-        if (l.ixqlOverrides?.width) return Number(l.ixqlOverrides.width);
-        const { src, tgt } = getLinkNodes(l);
-        const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
-        const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
-        return (srcActive && tgtActive) ? l.width * 2.0 : l.width;
-      })
+      // PERF: linkWidth=0 forces three-forcegraph to use Line rendering instead
+      // of Mesh. With ANY positive width + curvature, the library rebuilds a new
+      // TubeGeometry every frame PER LINK — with 101 links that was ~27% of frame
+      // time (CPU profile: _TubeGeometry 8.3% + generateSegment 5.8% + others).
+      // Line rendering updates position buffer-attributes in place — nearly free.
+      // Active-link emphasis moves to linkOpacity + linkColor instead of width.
+      .linkWidth(0)
       .linkOpacity(0.25)
       // Link particles = governance signal flow
       // Count: edge weight (heavier relationships flow more)
@@ -2042,43 +2041,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
       const isTemporalFrame = frameCount % temporalSkip === 0;
 
-      // ─── Edge undulation — sinusoidal curvature on active edges ───
-      // Skip on low/medium quality OR non-temporal frames for performance
-      if (qualityLevel === 'low' || !isTemporalFrame) { /* skip undulation */ } else {
-      // Phase 2.3: Type-specific edge undulation (R3)
-      const links = fg.graphData().links as (GraphLink & { _curvature?: number })[];
-      links.forEach((link, idx: number) => {
-        const { src, tgt } = getLinkNodes(link);
-        const srcActive = src?.healthStatus && src.healthStatus !== 'unknown';
-        const tgtActive = tgt?.healthStatus && tgt.healthStatus !== 'unknown';
-
-        // Type-specific undulation parameters
-        const edgeType = link.type ?? 'policy-persona';
-        let amplitude = 0.1;
-        let frequency = 0.4;
-
-        if (edgeType === 'pipeline-flow') {
-          amplitude = 0.3; frequency = 0.5; // Smooth sine, source→target
-        } else if (edgeType === 'constitutional-hierarchy') {
-          amplitude = 0.15; frequency = 0.2; // Stately golden wave
-        } else if (edgeType === 'cross-repo') {
-          amplitude = 0.05; frequency = 2.0; // Shimmer
-        } else if (edgeType === 'lolli') {
-          // Erratic jitter for dead references
-          const jitter = (Math.random() - 0.5) * 0.2;
-          link._curvature = 0.15 + jitter;
-          return;
-        }
-
-        if (srcActive && tgtActive) {
-          const wave = Math.sin(t * frequency * Math.PI * 2 + idx * 0.8) * amplitude;
-          link._curvature = 0.15 + wave;
-        } else {
-          // Inactive edges: very subtle breathing
-          link._curvature = 0.15 + Math.sin(t * 0.3 + idx) * 0.02;
-        }
-      });
-      } // end quality gate
+      // Edge undulation DISABLED: animating _curvature forces three-forcegraph
+      // to rebuild every link's curve geometry every frame (getPoints + setFromPoints
+      // allocations for all 101 edges). With linkWidth=0 the library uses Line
+      // rendering which is already cheap for STATIC curves — we keep the initial
+      // 0.15 curvature from the accessor for visual depth, no animation.
+      // If we want motion back later, use linkDirectionalParticleSpeed (particles
+      // already animate without rebuilding geometry).
+      //
+      // (previous type-specific undulation removed; particles carry the motion)
+      // Keep these locals alive so eslint doesn't complain about the t/isTemporalFrame vars
+      void t; void isTemporalFrame;
 
       // (temporalSkip + isTemporalFrame declared above edge undulation section)
 
